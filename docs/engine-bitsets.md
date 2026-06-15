@@ -6,7 +6,7 @@ The C engine should not carry rich mod objects through hot crafting loops. It sh
 
 This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use.
 
-See [weight-calculation-flow.md](weight-calculation-flow.md) for how candidate masks become weighted roll tables.
+See [item-state-flow.md](item-state-flow.md) for the compact item state that action masks are derived from, and [weight-calculation-flow.md](weight-calculation-flow.md) for how candidate masks become weighted roll tables.
 
 The old flow was:
 
