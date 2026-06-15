@@ -1,0 +1,663 @@
+# Engine Bitset Plan
+
+## Purpose
+
+The C engine should not carry rich mod objects through hot crafting loops. It should operate on dense session-local mod IDs, compact arrays, and bitsets.
+
+This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use.
+
+The old flow was:
+
+```text
+ModRegistry.get_mods_for_base(base)
+  -> scan all global Mod objects
+  -> create base-specific prefix/suffix lists
+
+CraftingEngine._create_mod_pool(item, action)
+  -> scan the base lists again
+  -> filter by item state, tags, fossils, influence, metamods
+  -> build weighted ModPool
+```
+
+The new flow should be:
+
+```text
+build session mod universe
+  -> assign dense mod IDs 0..N-1
+  -> precompute masks and hot arrays
+
+build action pool
+  -> combine masks
+  -> compute or reuse weights
+  -> sample from compact weighted table
+```
+
+## Sparse And Unused Bits
+
+Some unused bits are absolutely fine.
+
+There are three different cases:
+
+1. Padding bits at the end of a bitset word.
+2. Empty masks for mechanics that do not apply to the current base.
+3. Extra session mods included for uncommon mechanics such as recombinators.
+
+All three are acceptable. The rule is that every result must be intersected with the session's valid universe:
+
+```text
+result &= session_universe_mask
+```
+
+For bitsets stored as 64-bit words, the final word will usually contain padding bits beyond `N`. These bits should be zeroed when masks are created and ignored by iteration.
+
+For base-specific mechanics, it is fine if a helmet session has empty cluster-jewel masks, or a bow session has empty eldritch implicit masks. Empty masks are cheap and make code paths simpler.
+
+For recombinators, it is also fine to include a slightly larger session universe. Bitsets are small compared with object-heavy structures. If a session has 2,000 mods, one bitset is 250 bytes. If it has 10,000 mods, one bitset is 1,250 bytes. Correctness and simple uniform representation matter more than shaving a few no-op bits.
+
+## Dense Session Mod IDs
+
+Every session should build a local mod universe:
+
+```text
+session_mod_id: 0..N-1
+```
+
+`session_mod_id` maps to the global compiled data:
+
+```text
+session_global_mod_id[N]
+```
+
+All engine masks are bitsets over `session_mod_id`, not global RePoE IDs.
+
+The normal session universe should include:
+
+- mods that can spawn on the selected base
+- crafted mods available to that item class
+- base implicits
+- essence-only mods reachable by essences
+- fossil added/forced mods reachable by supported fossils
+- corrupted implicits, if supported for the base
+- eldritch implicits, if supported for the base
+- veiled template mods and unveil outcome mods
+
+When recombinators are enabled, the session universe may also include:
+
+- mods currently present on input item A
+- mods currently present on input item B
+- transfer-only mods that are not normal rolls
+- special recombinator-only state mods, if needed
+
+Do not create a separate rich-object path for recombinators unless profiling or correctness proves it necessary.
+
+## Core Per-Mod Arrays
+
+Bitsets answer "which mods?" questions. Per-mod arrays answer "what is this mod?" questions.
+
+Required hot arrays:
+
+```text
+global_mod_id[N]
+group_id[N]
+required_level[N]
+generation_type[N]
+domain_id[N]
+flags[N]
+influence_id[N]
+spawn_weight_offset[N]
+spawn_weight_count[N]
+generation_weight_offset[N]
+generation_weight_count[N]
+implicit_tag_offset[N]
+implicit_tag_count[N]
+stat_offset[N]
+stat_count[N]
+```
+
+`flags[N]` should include common booleans:
+
+- crafted
+- essence_only
+- metamod
+- cluster_notable
+- veiled_template
+- unveiled
+- fractured_transfer_allowed, if recombinator rules need it
+- split_transfer_allowed, if recombinator rules need it
+- corrupted_implicit
+- eldritch_implicit
+- delve
+
+Prefix/suffix should be masks, not only flags, because action filtering constantly intersects on affix side.
+
+## Base Pool Masks
+
+These masks replace the old `Mods.prefixes` and `Mods.suffixes` lists.
+
+```text
+session_universe_mask
+base_spawnable_mask
+prefix_mask
+suffix_mask
+implicit_mask
+crafted_mask
+essence_only_mask
+normal_random_roll_mask
+bench_craftable_mask
+delve_added_mask
+delve_forced_mask
+veiled_template_mask
+unveiled_mask
+corrupted_implicit_mask
+eldritch_implicit_mask
+```
+
+`normal_random_roll_mask` should exclude things the old engine excluded from random rolling:
+
+```text
+normal_random_roll_mask =
+    base_spawnable_mask
+  & ~(crafted_mask | essence_only_mask | implicit_mask | veiled_template_mask)
+```
+
+Some mechanics add back special mods explicitly, such as fossil added mods or essence guaranteed mods.
+
+## Domain And Mechanic Masks
+
+The old registry did domain filtering differently for normal items, jewels, abyss jewels, and cluster jewels.
+
+Represent these as masks:
+
+```text
+domain_item_mask
+domain_misc_mask
+domain_abyss_jewel_mask
+domain_affliction_jewel_mask
+domain_crafted_mask
+domain_delve_mask
+```
+
+The selected base decides which domains are legal for the session. Once the session universe is built, action code should rarely care about raw domains except for special mechanics.
+
+Cluster jewel masks:
+
+```text
+cluster_jewel_mod_mask
+cluster_notable_mask
+cluster_socket_mod_mask
+cluster_enchant_allowed_mask[tag_signature_id]
+```
+
+For non-cluster bases, these can be empty.
+
+## Tag Masks
+
+The old code used tags in three different ways. Keep them distinct.
+
+Spawn-weight tags:
+
+```text
+spawn_tag_mask[tag_id]
+```
+
+A mod is in this mask if its ordered `spawn_weights` contain `tag_id`.
+
+Generation-weight tags:
+
+```text
+generation_tag_mask[tag_id]
+```
+
+A mod is in this mask if its ordered `generation_weights` contain `tag_id`.
+
+Implicit tags:
+
+```text
+implicit_tag_mask[tag_id]
+```
+
+A mod is in this mask if its `implicit_tags` contain `tag_id`.
+
+This distinction matters:
+
+- normal roll eligibility uses spawn weights
+- fossil multipliers use implicit tags
+- harvest targeting uses implicit tags
+- cannot-roll attack/caster uses implicit tags
+
+It is not necessary to allocate a physical mask for every global tag in every session. The session can keep a `tag_id -> mask_index` table and materialize only tags that exist in the session or are referenced by supported actions. But allocating a few empty masks is fine if it keeps the first implementation simpler.
+
+## Item-Level Masks
+
+The old engine checked:
+
+```text
+mod.required_level <= item.ilvl
+```
+
+For a fixed item-level session, build:
+
+```text
+ilvl_allowed_mask
+```
+
+If the UI lets users repeatedly change item level inside one session, either rebuild the session or store level bucket masks:
+
+```text
+required_level_le_1_mask
+required_level_le_2_mask
+...
+required_level_le_100_mask
+```
+
+The fixed `ilvl_allowed_mask` is the better first implementation.
+
+## Group Masks
+
+The old engine excludes mods whose `group` already exists on the item.
+
+Precompute:
+
+```text
+group_mask[group_id]
+```
+
+At runtime:
+
+```text
+current_group_block_mask = OR(group_mask[group] for each current explicit mod)
+```
+
+Then action filtering uses:
+
+```text
+pool &= ~current_group_block_mask
+```
+
+For UI family grouping, keep the old family concept separately:
+
+```text
+family_id = group_id + stat_signature_id
+```
+
+Family grouping is useful for display and target conditions. It is not the same as the exclusivity group used for blocking.
+
+## Influence Masks
+
+The old registry detected influence from spawn weights and stored internal influence names:
+
+- `shaper`
+- `elder`
+- `crusader`
+- `adjudicator`
+- `basilisk`
+- `eyrie`
+
+Use:
+
+```text
+influence_none_mask
+influence_shaper_mask
+influence_elder_mask
+influence_crusader_mask
+influence_adjudicator_mask
+influence_basilisk_mask
+influence_eyrie_mask
+```
+
+For normal rolling:
+
+```text
+influence_allowed_mask =
+    influence_none_mask
+  | masks_for_influences_currently_on_item
+```
+
+For conqueror exalt style actions:
+
+```text
+influence_allowed_mask = mask_for_requested_influence
+```
+
+Effective tags still matter for final weight calculation because influence changes the item's tag set.
+
+## Metamod Masks
+
+The old engine filters cannot-roll metamods using `implicit_tags`.
+
+Precompute:
+
+```text
+attack_tag_mask = implicit_tag_mask[attack]
+caster_tag_mask = implicit_tag_mask[caster]
+```
+
+At runtime:
+
+```text
+metamod_block_mask = empty
+if cannot_roll_attack:
+    metamod_block_mask |= attack_tag_mask
+if cannot_roll_caster:
+    metamod_block_mask |= caster_tag_mask
+```
+
+Then:
+
+```text
+pool &= ~metamod_block_mask
+```
+
+Prefixes-locked and suffixes-locked are not mod-pool filters for adding mods. They matter for removal and reroll actions, where they preserve one side of the item.
+
+## Fossil Masks
+
+The old fossil behavior has four parts:
+
+- positive implicit-tag weight multipliers
+- negative implicit-tag weight multipliers or blocks
+- added mods
+- forced mods
+
+For each fossil set used in a craft, derive:
+
+```text
+fossil_block_mask
+fossil_touched_mask
+fossil_added_mask
+fossil_forced_mask
+fossil_multiplier_table[N]
+sanctified_flag
+```
+
+Filtering:
+
+```text
+pool |= fossil_added_mask_for_affix
+pool &= ~fossil_block_mask
+```
+
+Weighting:
+
+```text
+weight *= fossil_multiplier_table[mod]
+if sanctified:
+    weight *= sanctified_level_multiplier[mod]
+```
+
+Forced mods are not sampled from the normal pool. They are applied first, then their groups become blocked for later random rolls.
+
+## Essence Masks
+
+Essences guarantee a mod by item class.
+
+Store:
+
+```text
+essence_guaranteed_mod_id[essence_id][item_class_id]
+essence_usable_mask[item_class_id]
+```
+
+The guaranteed mod may be `essence_only`, so it must be present in the session universe even if excluded from `normal_random_roll_mask`.
+
+Essence flow:
+
+```text
+add guaranteed mod if its group is not already blocked
+current_group_block_mask |= group_mask[guaranteed.group]
+roll remaining mods from normal_random_roll_mask
+```
+
+## Harvest Masks
+
+Harvest target tags use `implicit_tags`.
+
+For reforge or augment with tag:
+
+```text
+harvest_target_mask = implicit_tag_mask[tag]
+```
+
+Guaranteed tag pool:
+
+```text
+pool =
+    (prefix_mask | suffix_mask)
+  & normal_random_roll_mask
+  & harvest_target_mask
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & influence_allowed_mask
+  & ~current_group_block_mask
+  & ~metamod_block_mask
+```
+
+After the guaranteed mod is added, normal random rolls proceed with its group blocked.
+
+## Veiled Masks
+
+The old code separates:
+
+- generic veiled placeholder mods
+- actual unveiled outcome mods
+
+Masks:
+
+```text
+veiled_prefix_template_mask
+veiled_suffix_template_mask
+unveiled_prefix_mask
+unveiled_suffix_mask
+unveiled_named_syndicate_mask
+unveiled_generic_mask
+```
+
+Unveil option pool:
+
+```text
+pool =
+    unveiled_affix_mask
+  & unveiled_generic_mask
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[base_tag_signature_id]
+  & ~current_group_block_mask
+```
+
+Then sample without replacement.
+
+## Eldritch And Corrupted Implicit Masks
+
+Eldritch implicits are only valid on helmets, body armours, gloves, and boots.
+
+Masks:
+
+```text
+eldritch_searing_mask
+eldritch_eater_mask
+eldritch_tier_allowed_mask[influence_type][tier]
+corrupted_implicit_mask
+```
+
+For bases where these mechanics cannot apply, the masks can exist and be empty.
+
+## Recombination Masks
+
+Recombinators are the reason the session universe may need to include mods that are not normal rolls on the selected target base.
+
+Do not fall back to rich objects by default. Add recombinator masks:
+
+```text
+input_a_mod_mask
+input_b_mod_mask
+input_either_mod_mask
+recomb_transferable_mask
+recomb_target_base_compatible_mask
+recomb_protected_mask
+recomb_blocked_mask
+recomb_special_state_mask
+```
+
+Candidate pool:
+
+```text
+pool =
+    input_either_mod_mask
+  & recomb_transferable_mask
+  & recomb_target_base_compatible_mask
+  & ~recomb_blocked_mask
+```
+
+Then apply group conflict rules:
+
+```text
+pool &= ~current_group_block_mask
+```
+
+Some recombinator behavior may care about metadata that normal rolling ignores, such as source item side, fractured/synthesized/split/corrupted state, or transfer restrictions. Store that as item-state arrays or recombinator-specific flags, not as Python-style mod objects.
+
+The session universe should include any input mods even when they are not spawnable on the current target base. The normal random-roll masks will still exclude them, while recombinator masks can include them.
+
+## Effective Tag Signature Masks
+
+The old engine repeatedly computed:
+
+```text
+base tags + cluster enchant tag + influence tags
+```
+
+The new engine should intern that set as:
+
+```text
+tag_signature_id
+```
+
+For each tag signature, cache:
+
+```text
+positive_spawn_weight_mask[tag_signature_id]
+active_spawn_weight[tag_signature_id][N]
+active_generation_multiplier[tag_signature_id][N]
+```
+
+This preserves RePoE first-match weight order without scanning each mod's ordered weight rows every time an action pool is built.
+
+## Common Pool Formulas
+
+Normal prefix/suffix add:
+
+```text
+pool =
+    affix_mask
+  & normal_random_roll_mask
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & influence_allowed_mask
+  & cluster_notable_allowed_mask
+  & ~current_group_block_mask
+  & ~metamod_block_mask
+```
+
+Conqueror exalt:
+
+```text
+pool =
+    affix_mask
+  & normal_random_roll_mask
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & requested_influence_mask
+  & ~current_group_block_mask
+  & ~metamod_block_mask
+```
+
+Fossil roll:
+
+```text
+pool =
+    affix_mask
+  & (normal_random_roll_mask | fossil_added_mask)
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & influence_allowed_mask
+  & ~current_group_block_mask
+  & ~fossil_block_mask
+```
+
+Harvest guaranteed tag:
+
+```text
+pool =
+    (prefix_mask | suffix_mask)
+  & normal_random_roll_mask
+  & implicit_tag_mask[harvest_tag]
+  & ilvl_allowed_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & influence_allowed_mask
+  & ~current_group_block_mask
+  & ~metamod_block_mask
+```
+
+Bench craft:
+
+```text
+candidate = bit_for_mod[bench_mod_id]
+legal =
+    candidate
+  & bench_craftable_mask
+  & ilvl_allowed_mask
+  & ~current_group_block_mask
+```
+
+Recombinator:
+
+```text
+pool =
+    input_either_mod_mask
+  & recomb_transferable_mask
+  & recomb_target_base_compatible_mask
+  & ~current_group_block_mask
+  & ~recomb_blocked_mask
+```
+
+## Allocation Guidance
+
+Start with a simple mask set, even if a few masks are empty for many bases.
+
+Good fixed masks:
+
+- prefix/suffix
+- normal random roll
+- crafted
+- essence-only
+- ilvl allowed
+- domain masks
+- influence masks
+- metamod attack/caster masks
+- special mechanic masks
+
+Good sparse/on-demand masks:
+
+- tag masks
+- group masks
+- family masks
+- fossil-set masks
+- tag-signature masks
+- recombinator input masks
+
+This keeps the common engine code simple while avoiding huge tables for tags or groups that never appear in the session.
+
+## Invariants
+
+The engine should enforce these invariants:
+
+- Every bitset has the same word length for a session.
+- Padding bits outside `0..N-1` are zeroed or ignored.
+- Public iteration over a bitset must never return IDs outside `0..N-1`.
+- Action pools are always intersected with `session_universe_mask`.
+- `normal_random_roll_mask` never includes crafted, essence-only, implicit, or transfer-only mods.
+- Recombination masks may include mods that normal random rolls cannot use.
+- Weight arrays are valid only for a specific `tag_signature_id` and action context.
+- Group blocking uses `group_id`, not UI family ID.
+- UI family grouping uses `group_id + stat_signature_id`.
+
+The guiding principle: a bit being present should mean "this mod is eligible for this specific rule dimension," not "this mod is globally craftable."

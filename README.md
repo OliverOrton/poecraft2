@@ -8,3 +8,4 @@ Start with:
 
 - [docs/architecture-plan.md](docs/architecture-plan.md)
 - [docs/data-shapes-and-ingest.md](docs/data-shapes-and-ingest.md)
+- [docs/engine-bitsets.md](docs/engine-bitsets.md)
