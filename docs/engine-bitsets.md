@@ -6,6 +6,8 @@ The C engine should not carry rich mod objects through hot crafting loops. It sh
 
 This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use.
 
+See [weight-calculation-flow.md](weight-calculation-flow.md) for how candidate masks become weighted roll tables.
+
 The old flow was:
 
 ```text
@@ -449,7 +451,7 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & harvest_target_mask
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
@@ -479,9 +481,9 @@ Unveil option pool:
 
 ```text
 pool =
-    unveiled_affix_mask
+  unveiled_affix_mask
   & unveiled_generic_mask
-  & positive_spawn_weight_mask[base_tag_signature_id]
+  & positive_unveil_weight_mask[base_tag_signature_id]
   & ~current_group_block_mask
 ```
 
@@ -557,11 +559,13 @@ For each tag signature, cache:
 
 ```text
 positive_spawn_weight_mask[tag_signature_id]
+positive_base_weight_mask[tag_signature_id]
 active_spawn_weight[tag_signature_id][N]
 active_generation_multiplier[tag_signature_id][N]
+base_roll_weight[tag_signature_id][N]
 ```
 
-This preserves RePoE first-match weight order without scanning each mod's ordered weight rows every time an action pool is built.
+This preserves RePoE first-match weight order without scanning each mod's ordered weight rows every time an action pool is built. `positive_spawn_weight_mask` means the raw spawn weight is above zero. `positive_base_weight_mask` means spawn and generation weights have already produced a positive normal explicit-roll weight.
 
 ## Concrete Mask Inventory From Old poeCraft
 
@@ -773,7 +777,7 @@ resistance_conversion_replacement_mask =
   & same_affix_side_as_source
   & required_level_eq_mask[source.required_level]
   & normal_random_roll_mask
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
 ```
@@ -819,7 +823,7 @@ Basic add/reroll actions use:
 ```text
 normal_random_roll_mask
 prefix_mask / suffix_mask
-positive_spawn_weight_mask[tag_signature_id]
+positive_base_weight_mask[tag_signature_id]
 influence_allowed_mask
 current_group_block_mask
 metamod_block_mask
@@ -904,7 +908,7 @@ Normal prefix/suffix add:
 pool =
     affix_mask
   & normal_random_roll_mask
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & cluster_notable_allowed_mask
   & ~current_group_block_mask
@@ -917,7 +921,7 @@ Conqueror exalt:
 pool =
     affix_mask
   & normal_random_roll_mask
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & requested_influence_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
@@ -929,7 +933,7 @@ Fossil roll:
 pool =
     affix_mask
   & (normal_random_roll_mask | fossil_added_mask)
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
   & ~fossil_block_mask
@@ -942,7 +946,7 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & implicit_tag_mask[harvest_tag]
-  & positive_spawn_weight_mask[tag_signature_id]
+  & positive_base_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
