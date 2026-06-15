@@ -95,6 +95,66 @@ The engine should generate action-specific mod pools from this item-local univer
 
 UI-only data such as display names, icons, descriptions, localization, and change history can stay outside the engine and be lazy-loaded by the frontend.
 
+## Session Mod Indexing
+
+Each crafting session should build a compact session-local mod universe. Mods should be assigned dense integer IDs from `0..N-1`, where `N` is the number of mods relevant to the selected item context. This keeps filtering and random selection cache-friendly and avoids repeatedly scanning global mod tables.
+
+The session mod store should use structure-of-arrays layout for hot fields:
+
+- affix type
+- generation type
+- domain
+- required item level
+- tags
+- mod group
+- spawn weights
+- tier/range data
+- influence and special-mechanic flags
+- prefix/suffix occupancy behavior
+
+The engine should precompute bitset indexes over the dense session IDs:
+
+- all prefix mods
+- all suffix mods
+- mods by tag
+- mods by generation type
+- mods by domain
+- mods by influence or special mechanic
+- mods by item-level threshold
+- mods by mod group
+- mods affected by fossil, essence, harvest, bench, metamod, or cannot-roll constraints
+
+Action pool filtering should mostly be bitset algebra:
+
+```text
+candidate_pool =
+    action_base_mask
+    & affix_availability_mask
+    & item_level_mask
+    & required_tag_mask
+    & mechanic_allowed_mask
+    & ~blocked_group_mask
+    & ~cannot_roll_mask
+```
+
+After legality filtering, the engine can build or reuse a weighted selection table for that pool. For small pools a simple cumulative weight array may be enough. For hot repeated pools, an alias table or cached prefix-sum table can avoid rebuilding selection data during large simulation batches.
+
+Action pool cache keys should be explicit and conservative. A key should include the action type plus every item/session feature that can change either legality or weights:
+
+- item level
+- base tags
+- influence state
+- eldritch state
+- fractured/synthesized state
+- existing mod groups
+- prefix/suffix occupancy
+- metamod state
+- fossil and resonator state
+- essence/harvest/bench action parameters
+- cannot-roll and forced-tag constraints
+
+The first implementation should favor correctness with conservative invalidation. Once behavior is validated, profiling can identify which masks and weighted tables are worth caching more aggressively.
+
 ## Validation Strategy
 
 The old implementation should be used as a validation source during the port.
