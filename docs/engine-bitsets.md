@@ -181,10 +181,15 @@ eldritch_implicit_mask
 ```text
 normal_random_roll_mask =
     base_spawnable_mask
-  & ~(crafted_mask | essence_only_mask | implicit_mask | veiled_template_mask)
+  & ~(crafted_mask | essence_only_mask | implicit_mask)
+  & ~(veiled_template_mask | unveiled_mask)
+  & ~(delve_added_mask | delve_forced_mask)
+  & ~(corrupted_implicit_mask | eldritch_implicit_mask)
 ```
 
 Some mechanics add back special mods explicitly, such as fossil added mods or essence guaranteed mods.
+
+`base_spawnable_mask` should be the direct replacement for the old normal base pool after base, item class, item level, domain, spawn-weight, cluster, and influence eligibility have been considered. It should not include crafted bench mods, essence-only mods, implicits, veiled outcome mods, corrupted implicits, eldritch implicits, or recombination-only transfer mods.
 
 ## Domain And Mechanic Masks
 
@@ -558,6 +563,339 @@ active_generation_multiplier[tag_signature_id][N]
 
 This preserves RePoE first-match weight order without scanning each mod's ordered weight rows every time an action pool is built.
 
+## Concrete Mask Inventory From Old poeCraft
+
+The old project effectively had four sources of mod eligibility:
+
+1. Normal explicit mods from `ModRegistry.get_mods_for_base`.
+2. Special explicit registries such as crafted, essence-only, delve, veiled, and unveiled mods.
+3. Implicit registries such as base implicits, corrupted implicits, and eldritch implicits.
+4. Dynamic item state such as current groups, fractured mods, crafted mods on the item, and prefix/suffix locks.
+
+The new engine should make those sources visible as separate masks and small lookup tables. Do not hide them inside one broad "all mods" pool.
+
+### Static Session Masks
+
+These are built once for a base, item level, and supported mechanic set.
+
+```text
+session_universe_mask
+```
+
+Contains every dense session mod ID. This is the outer bound for all masks. It may include recombination input mods and special transfer-only mods that no normal action can roll.
+
+```text
+base_spawnable_mask
+```
+
+Contains normal explicit prefix/suffix mods that replace old `Mods.prefixes` and `Mods.suffixes`. This mask should already be filtered for base type, item class, item level, normal domain rules, cluster jewel rules, and base spawn-weight eligibility. It should exclude essence-only, crafted, implicit, veiled outcome, corrupted implicit, eldritch implicit, and recombination-only mods.
+
+```text
+normal_random_roll_mask
+```
+
+Contains the mods that old `_add_random_mod` could use for ordinary rolling before action-specific filters. This drives transmute, augment, alteration, regal, alchemy, chaos, exalt, the random part of essence crafts, the random part of harvest reforges, and eldritch chaos side rerolls.
+
+```text
+prefix_mask
+suffix_mask
+```
+
+Contain generation-type prefix and suffix mods. These apply across normal explicit mods, crafted mods, veiled templates, unveiled mods, and any special explicit mod that still has an affix side.
+
+```text
+domain_item_mask
+domain_misc_mask
+domain_abyss_jewel_mask
+domain_affliction_jewel_mask
+domain_crafted_mask
+domain_delve_mask
+```
+
+Preserve the old registry distinction between ordinary items, regular jewels, abyss jewels, cluster jewels, crafted mods, and delve mods. These are mostly ingest/session-build masks; hot crafting actions should usually consume the already-derived mechanic masks instead.
+
+```text
+influence_none_mask
+influence_shaper_mask
+influence_elder_mask
+influence_crusader_mask
+influence_adjudicator_mask
+influence_basilisk_mask
+influence_eyrie_mask
+```
+
+Contain mods detected from influence spawn-weight tags. Normal influenced items use `influence_none_mask | item_influence_masks`; conqueror-style exalts use only the requested influence mask.
+
+```text
+crafted_mask
+bench_craftable_mask
+metamod_mask
+metamod_prefixes_locked_mask
+metamod_suffixes_locked_mask
+metamod_no_attack_mask
+metamod_no_caster_mask
+metamod_multimod_mask
+```
+
+`crafted_mask` contains every crafted-domain explicit mod. `bench_craftable_mask` contains only the mods available through the bench for the selected item class. The metamod masks let item state quickly discover whether the current crafted mods enable prefix lock, suffix lock, cannot roll attack, cannot roll caster, or multimod behavior.
+
+```text
+essence_only_mask
+essence_guaranteed_mask
+```
+
+`essence_only_mask` contains mods that should never appear in normal random rolls. `essence_guaranteed_mask` contains all guaranteed essence mods reachable for this session. The actual craft should use the direct essence lookup table described below, then block that mod's group before rolling the remaining random mods.
+
+```text
+delve_added_mask
+delve_forced_mask
+fossil_sell_price_mask
+```
+
+Contain fossil special mods. `delve_added_mask` is unioned into fossil pools for the matching fossil set. `delve_forced_mask` is applied before random fossil rolling. `fossil_sell_price_mask` covers the Gilded Fossil implicit/sell-price special case.
+
+```text
+implicit_mask
+base_implicit_mask
+corrupted_implicit_mask
+eldritch_implicit_mask
+eldritch_searing_mask
+eldritch_eater_mask
+eldritch_tier_mask[influence_type][tier]
+```
+
+Keep explicit affix logic separate from implicit logic. Eldritch ember/ichor actions use the eldritch masks and tier masks. Bloodstained Fossil uses corrupted implicit masks.
+
+```text
+veiled_template_mask
+veiled_prefix_template_mask
+veiled_suffix_template_mask
+unveiled_mask
+unveiled_prefix_mask
+unveiled_suffix_mask
+unveiled_generic_mask
+unveiled_named_syndicate_mask
+```
+
+Veiled exalts and veiled chaos add placeholder/template mods. Unveil consumes the placeholder and offers actual unveiled outcome mods. The old engine excluded named syndicate outcomes from generic unveil pools, so keep `unveiled_generic_mask` separate from `unveiled_named_syndicate_mask`.
+
+```text
+spawn_tag_mask[tag_id]
+generation_tag_mask[tag_id]
+implicit_tag_mask[tag_id]
+```
+
+Keep the three tag dimensions separate. Spawn tags answer "can this mod spawn on this tag signature?" Generation tags answer "how is this mod weighted by generation modifiers?" Implicit tags answer "does this mod count as attack, caster, life, fire, resistance, etc. for fossil, harvest, and metamod targeting?"
+
+```text
+group_mask[group_id]
+family_mask[family_id]
+```
+
+Groups enforce cannot-roll-together behavior. Families are for UI and target grouping. RePoE tiers are separate mods but should usually share the same `group_id`, so the group mask blocks sibling tiers once one tier exists on the item.
+
+```text
+required_level_eq_mask[level]
+```
+
+This is not an item-level eligibility mask. Item level should already be baked into session creation. Keep this only for mechanics that compare tiers after the pool is legal, especially Harvest resistance conversion, which requires the replacement mod to have the same `required_level` as the source mod.
+
+### Dynamic Item-State Masks
+
+These are rebuilt or updated as the item changes.
+
+```text
+current_explicit_mask
+current_prefix_mask
+current_suffix_mask
+current_group_block_mask
+current_fractured_mask
+current_crafted_mask
+current_veiled_template_mask
+current_eldritch_implicit_mask
+```
+
+These replace repeated scans over the current item. `current_group_block_mask` is the most important one for rolling because it blocks every mod in a group that already exists on the item.
+
+```text
+removable_mask
+reroll_preserve_mask
+reroll_remove_mask
+prefix_lock_preserve_mask
+suffix_lock_preserve_mask
+```
+
+These are not catalog masks; they are action-state masks. Annul and harvest augment use `removable_mask`. Chaos, alteration, alchemy, essence, harvest reforge, and fossil crafts use preserve/remove masks to respect fractured mods and, when applicable, prefix/suffix locks.
+
+### Action-Derived Masks
+
+These are built from static masks plus current item state.
+
+```text
+affix_open_mask = prefix_mask or suffix_mask
+```
+
+Selected by open prefix/suffix slots and by the action. Eldritch exalts may force one side based on dominant eldritch influence.
+
+```text
+influence_allowed_mask =
+    influence_none_mask
+  | masks_for_influences_currently_on_item
+```
+
+Normal rolling uses the item influence set. Conqueror exalts replace this with the requested influence mask.
+
+```text
+metamod_block_mask =
+    (cannot_roll_attack ? implicit_tag_mask[attack] : empty)
+  | (cannot_roll_caster ? implicit_tag_mask[caster] : empty)
+```
+
+Cannot-roll attack/caster blocks by implicit tags in the old engine. Prefix/suffix locks are reroll/removal preservation rules, not add-pool filters.
+
+```text
+harvest_target_mask = implicit_tag_mask[harvest_tag]
+```
+
+Harvest reforge and augment guarantee a mod from this target mask before continuing with normal random rolling or removing a different mod.
+
+```text
+resistance_conversion_source_mask =
+    implicit_tag_mask[resistance]
+  & implicit_tag_mask[from_resistance_tag]
+```
+
+```text
+resistance_conversion_replacement_mask =
+    implicit_tag_mask[resistance]
+  & implicit_tag_mask[to_resistance_tag]
+  & ~implicit_tag_mask[from_resistance_tag]
+  & same_affix_side_as_source
+  & required_level_eq_mask[source.required_level]
+  & normal_random_roll_mask
+  & positive_spawn_weight_mask[tag_signature_id]
+  & influence_allowed_mask
+  & ~current_group_block_mask
+```
+
+The old Harvest resistance conversion has stricter requirements than generic Harvest targeting, so it deserves its own derived mask.
+
+```text
+fossil_block_mask
+fossil_added_mask
+fossil_forced_mask
+fossil_touched_mask
+```
+
+These are derived per fossil set. Fossils are one of the places where masks and weight tables must work together: the masks decide inclusion/blocking, while the multiplier table changes final weights.
+
+### Side Tables Beside Masks
+
+Not everything should be a mask. These old behaviors are better represented as compact tables:
+
+```text
+active_spawn_weight[tag_signature_id][mod_id]
+active_generation_multiplier[tag_signature_id][mod_id]
+```
+
+These preserve RePoE first-match weight behavior and avoid re-scanning ordered weight rows.
+
+```text
+essence_guaranteed_mod_id[essence_id][item_class_id]
+bench_mod_id[bench_action_id]
+fossil_multiplier[fossil_set_id][mod_id]
+sanctified_level_multiplier[mod_id]
+unveil_option_weight[tag_signature_id][mod_id]
+eldritch_implicit_weight[influence_type][tier][mod_id]
+corrupted_implicit_weight[tag_signature_id][mod_id]
+```
+
+These should stay as lookups because the action needs a specific selected mod, a selected fossil set, or a weighted table, not just membership. The masks still bound the candidate set before these tables are used.
+
+### Old Action Mapping
+
+Basic add/reroll actions use:
+
+```text
+normal_random_roll_mask
+prefix_mask / suffix_mask
+positive_spawn_weight_mask[tag_signature_id]
+influence_allowed_mask
+current_group_block_mask
+metamod_block_mask
+```
+
+Bench crafting uses:
+
+```text
+bench_craftable_mask
+crafted_mask
+current_group_block_mask
+current_crafted_mask
+metamod_multimod state
+```
+
+Essence crafting uses:
+
+```text
+essence_guaranteed_mod_id
+essence_guaranteed_mask
+normal_random_roll_mask
+current_group_block_mask after the guaranteed mod is added
+```
+
+Fossil crafting uses:
+
+```text
+normal_random_roll_mask
+delve_added_mask
+delve_forced_mask
+fossil_block_mask
+fossil_multiplier table
+sanctified_level_multiplier
+```
+
+Harvest uses:
+
+```text
+implicit_tag_mask[harvest_tag]
+normal_random_roll_mask
+resistance conversion derived masks when converting resistance mods
+removable_mask for augment's remove-different-mod step
+```
+
+Veiled actions use:
+
+```text
+veiled_prefix_template_mask / veiled_suffix_template_mask
+unveiled_prefix_mask / unveiled_suffix_mask
+unveiled_generic_mask
+current_veiled_template_mask
+current_group_block_mask excluding the placeholder being replaced
+```
+
+Eldritch actions use:
+
+```text
+eldritch_searing_mask / eldritch_eater_mask
+eldritch_tier_mask
+normal_random_roll_mask for eldritch exalt/chaos explicit-affix changes
+current_eldritch_implicit_mask
+```
+
+Recombinators should use their own transfer masks over the same session mod IDs:
+
+```text
+input_a_mod_mask
+input_b_mod_mask
+input_either_mod_mask
+recomb_transferable_mask
+recomb_target_base_compatible_mask
+recomb_blocked_mask
+```
+
+This lets recombinators see mods that are irrelevant to normal rolling without making normal rolling slower or less correct.
+
 ## Common Pool Formulas
 
 Normal prefix/suffix add:
@@ -665,7 +1003,7 @@ The engine should enforce these invariants:
 - Padding bits outside `0..N-1` are zeroed or ignored.
 - Public iteration over a bitset must never return IDs outside `0..N-1`.
 - Action pools are always intersected with `session_universe_mask`.
-- `normal_random_roll_mask` never includes crafted, essence-only, implicit, or transfer-only mods.
+- `normal_random_roll_mask` never includes crafted, essence-only, implicit, veiled, unveiled, delve-only, or transfer-only mods.
 - Recombination masks may include mods that normal random rolls cannot use.
 - Weight arrays are valid only for a specific `tag_signature_id` and action context.
 - Group blocking uses `group_id`, not UI family ID.
