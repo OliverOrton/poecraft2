@@ -7,6 +7,7 @@ This repo is intended to house a deterministic crafting simulation engine, a bro
 Start with:
 
 - [docs/architecture-plan.md](docs/architecture-plan.md)
+- [docs/codebase-structure.md](docs/codebase-structure.md)
 - [docs/data-shapes-and-ingest.md](docs/data-shapes-and-ingest.md)
 - [docs/engine-bitsets.md](docs/engine-bitsets.md)
 - [docs/item-state-flow.md](docs/item-state-flow.md)
