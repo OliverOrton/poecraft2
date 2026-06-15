@@ -511,7 +511,7 @@ Build steps:
 
 1. Load the base item and base tags.
 2. Resolve base implicits.
-3. Select candidate global mod IDs for the base.
+3. Select candidate global mod IDs for the base and item level.
 4. Include special pools needed by the session:
    - crafted mods
    - delve/fossil added or forced mods
@@ -564,12 +564,11 @@ Session bitsets:
 - eldritch implicits by influence type and tier
 - unveiled mods by affix type
 
-Item-level filtering can be represented as either:
+Item-level eligibility should be resolved before the engine enters normal action-pool filtering. The session/base pool is created for a selected item level, so tiers above that item level should not appear in `normal_random_roll_mask` at all.
 
-- a precomputed `required_level <= ilvl` bitset per session item level, or
-- required-level buckets that are combined when the item level is fixed.
+Keep `required_level` in the session arrays for mechanics that need it after eligibility, such as Sanctified Fossil weighting, and for parity/debugging.
 
-Since a session usually has a fixed item level, build one `ilvl_allowed` bitset at session creation.
+If item level changes, rebuild the session/base pool rather than carrying an all-level pool through every engine operation.
 
 ## Effective Tag Signatures
 
@@ -606,7 +605,6 @@ Suggested key:
 ```text
 action_kind
 affix_type
-item_level
 tag_signature_id
 current_group_signature
 prefix_count
@@ -641,7 +639,6 @@ The common random-roll pool can be expressed mostly as bitset algebra:
 pool =
     affix_mask
   & normal_random_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask_for_tag_signature
   & ~current_group_block_mask
   & influence_allowed_mask
@@ -673,7 +670,6 @@ guaranteed_tag_pool =
     (prefix_mask | suffix_mask)
   & implicit_tag_mask[tag]
   & normal_random_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask_for_tag_signature
   & ~current_group_block_mask
 ```
@@ -685,7 +681,7 @@ Essences should resolve the guaranteed mod by `essence_id + item_class_key`, add
 Unveil options should use the unveiled pool:
 
 - affix type must match the veiled placeholder
-- item level allowed
+- item level already allowed by the session/base pool
 - spawn weight positive for base tags
 - implicit tags include `unveiled_mod`
 - exclude named syndicate veiled tags unless explicitly supported
@@ -825,8 +821,8 @@ Start small and prove the shape:
    - implicit tags
    - adds tags
 2. Generate a simple engine data blob for one base.
-3. Build a session-local dense mod universe for that base.
-4. Build prefix/suffix, group, implicit-tag, and item-level bitsets.
+3. Build a session-local dense mod universe for that base and item level.
+4. Build prefix/suffix, group, and implicit-tag bitsets.
 5. Build an action pool for chaos/alchemy-style random rolling.
 6. Compare the resulting pool and weights against the old Python `ModRegistry` and `CraftingEngine`.
 7. Add fossils, essences, harvest, influence, cluster, veiled, bench, and eldritch systems one at a time.

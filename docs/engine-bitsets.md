@@ -54,6 +54,28 @@ For base-specific mechanics, it is fine if a helmet session has empty cluster-je
 
 For recombinators, it is also fine to include a slightly larger session universe. Bitsets are small compared with object-heavy structures. If a session has 2,000 mods, one bitset is 250 bytes. If it has 10,000 mods, one bitset is 1,250 bytes. Correctness and simple uniform representation matter more than shaving a few no-op bits.
 
+## What A Bitset Means
+
+A bitset is conceptually a string of `1` and `0` values, with one bit per session mod ID.
+
+Example with eight session mods:
+
+```text
+session mod IDs:  0 1 2 3 4 5 6 7
+life tag mask:    0 1 0 0 1 1 0 0
+prefix mask:      1 1 0 1 0 1 0 0
+```
+
+The `life tag mask` means mods `1`, `4`, and `5` have the life tag for whatever tag dimension that mask represents. A different tag gets a different mask.
+
+In C this should not be stored as a text string. Store it as fixed-width words, usually `uint64_t[]`, and operate on 64 mods at a time:
+
+```text
+candidate_words[i] = prefix_words[i] & life_tag_words[i] & normal_roll_words[i]
+```
+
+The important thing is that bit position `k` always refers to `session_mod_id == k`.
+
 ## Dense Session Mod IDs
 
 Every session should build a local mod universe:
@@ -72,7 +94,7 @@ All engine masks are bitsets over `session_mod_id`, not global RePoE IDs.
 
 The normal session universe should include:
 
-- mods that can spawn on the selected base
+- mods that can spawn on the selected base at the selected item level
 - crafted mods available to that item class
 - base implicits
 - essence-only mods reachable by essences
@@ -129,6 +151,8 @@ stat_count[N]
 - delve
 
 Prefix/suffix should be masks, not only flags, because action filtering constantly intersects on affix side.
+
+`required_level[N]` is retained for mechanics that care about the tier level after eligibility is already decided, such as Sanctified Fossil weighting, and for debugging/parity checks. Normal action-pool filtering should not re-check item level if the session universe was built from a base pool already filtered by item level.
 
 ## Base Pool Masks
 
@@ -227,30 +251,23 @@ This distinction matters:
 
 It is not necessary to allocate a physical mask for every global tag in every session. The session can keep a `tag_id -> mask_index` table and materialize only tags that exist in the session or are referenced by supported actions. But allocating a few empty masks is fine if it keeps the first implementation simpler.
 
-## Item-Level Masks
+## Item-Level Filtering
 
-The old engine checked:
+The old Python engine checked item level during action-pool construction:
 
 ```text
 mod.required_level <= item.ilvl
 ```
 
-For a fixed item-level session, build:
+The new engine should move that check earlier. A session is built for a selected base and item level, so the base/session mod universe should already exclude tiers above that item level.
 
 ```text
-ilvl_allowed_mask
+session_universe = mods_for_base_and_ilvl(base, ilvl) + special reachable mods
 ```
 
-If the UI lets users repeatedly change item level inside one session, either rebuild the session or store level bucket masks:
+That means no `ilvl_allowed_mask` is needed in normal hot-loop action formulas. If the user changes item level, rebuild the session or rebuild the base pool. Do not keep one broad all-level session and ask every action to filter item level again.
 
-```text
-required_level_le_1_mask
-required_level_le_2_mask
-...
-required_level_le_100_mask
-```
-
-The fixed `ilvl_allowed_mask` is the better first implementation.
+Keep `required_level` in the per-mod arrays because some mechanics still use it after eligibility, especially Sanctified Fossil level weighting.
 
 ## Group Masks
 
@@ -281,6 +298,8 @@ family_id = group_id + stat_signature_id
 ```
 
 Family grouping is useful for display and target conditions. It is not the same as the exclusivity group used for blocking.
+
+RePoE tiers are separate mods. A life tier, for example, is a different mod row from another life tier. Those tiers should occupy the same exclusivity group/bucket, so once one tier is present, `current_group_block_mask` prevents every other tier in that bucket from rolling on the same item.
 
 ## Influence Masks
 
@@ -425,7 +444,6 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & harvest_target_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
@@ -458,7 +476,6 @@ Unveil option pool:
 pool =
     unveiled_affix_mask
   & unveiled_generic_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[base_tag_signature_id]
   & ~current_group_block_mask
 ```
@@ -549,7 +566,6 @@ Normal prefix/suffix add:
 pool =
     affix_mask
   & normal_random_roll_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & cluster_notable_allowed_mask
@@ -563,7 +579,6 @@ Conqueror exalt:
 pool =
     affix_mask
   & normal_random_roll_mask
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[tag_signature_id]
   & requested_influence_mask
   & ~current_group_block_mask
@@ -576,7 +591,6 @@ Fossil roll:
 pool =
     affix_mask
   & (normal_random_roll_mask | fossil_added_mask)
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
@@ -590,7 +604,6 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & implicit_tag_mask[harvest_tag]
-  & ilvl_allowed_mask
   & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
@@ -604,7 +617,6 @@ candidate = bit_for_mod[bench_mod_id]
 legal =
     candidate
   & bench_craftable_mask
-  & ilvl_allowed_mask
   & ~current_group_block_mask
 ```
 
@@ -629,7 +641,6 @@ Good fixed masks:
 - normal random roll
 - crafted
 - essence-only
-- ilvl allowed
 - domain masks
 - influence masks
 - metamod attack/caster masks
