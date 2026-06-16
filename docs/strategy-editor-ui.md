@@ -21,10 +21,10 @@ Visual feel:
   Unreal Blueprints-style node graph
 
 Execution model:
-  old poeCraft simulator Step runner semantics
+  deterministic strategy graph runner
 ```
 
-The graph is for authoring and debugging strategy flow. The simulator should still execute a deterministic strategy model that can be tested without the UI.
+The graph is for authoring and debugging strategy flow. The simulator should still execute a deterministic strategy model that can be tested without the UI. The prior app's simulator is a useful design reference, but new strategies do not need to be backward-compatible with old strategy files.
 
 ## Old Simulator Model
 
@@ -255,7 +255,7 @@ while attempts < node.max_attempts:
 fail max attempts
 ```
 
-This matches the old simulator shape where a step could repeat until conditions passed or max attempts was reached.
+This preserves the useful control-loop shape where a state can repeat until conditions pass or max attempts are reached.
 
 For a no-op/router node:
 
@@ -675,7 +675,7 @@ First useful strategy editor slice:
 7. Run one strategy once and show trace.
 8. Run N simulations and show aggregate success/cost.
 
-Do not build a full visual scripting language first. Prove that the graph can express old simulator strategies, then expand condition types and editor comfort.
+Do not build a full visual scripting language first. Prove that the graph can express common crafting strategies, then expand condition types and editor comfort.
 
 ## Invariants
 

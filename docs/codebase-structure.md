@@ -140,11 +140,11 @@ Use three test layers:
 
 ```text
 ingest tests
-engine parity/unit tests
+engine unit/regression tests
 frontend widget tests
 ```
 
-Engine tests are the most important. They should compare session masks, candidate pools, and weights against golden fixtures from the old implementation.
+Engine tests are the most important. They should compare session masks, candidate pools, and weights against spec fixtures owned by the new project.
 
 ## Repository Layout
 
@@ -266,9 +266,10 @@ poecraft2/
           focus.ts
 
   fixtures/
-    old-poecraft/
+    spec/
       session-pools/
       action-results/
+      strategy-runs/
 
   scripts/
     build.ps1
@@ -287,7 +288,7 @@ Responsibilities:
 - normalize domains, tags, item classes, influence names, groups, stats, and weights
 - write SQLite tables
 - compile SQLite rows into engine-loadable artifacts
-- generate validation reports and golden fixture data
+- generate validation reports and spec fixture data
 
 It may use rich Python objects because it is not performance-sensitive.
 
@@ -312,7 +313,7 @@ Responsibilities:
 - expose the engine to WebAssembly for browser UI
 - keep wrapper-specific memory management out of core engine logic
 
-Python binding can come first for parity tests and ML experiments. WebAssembly can come once the first simulator UI exists.
+Python binding can come first for validation tooling, batch simulation, and ML experiments. WebAssembly can come once the first simulator UI exists.
 
 ### `apps/web`
 

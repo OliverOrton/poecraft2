@@ -17,7 +17,7 @@ browser runtime: WebAssembly later
 The first objective is not to support every crafting mechanic. The first objective is to prove the full vertical slice:
 
 ```text
-source data -> SQLite -> compiled data -> native engine -> action simulation -> parity tests -> simple web emulator
+source data -> SQLite -> compiled data -> native engine -> action simulation -> regression tests -> simple web emulator
 ```
 
 Once that slice is correct, mechanics and UI surfaces can expand safely.
@@ -31,6 +31,7 @@ Once that slice is correct, mechanics and UI surfaces can expand safely.
 - Every random action uses caller-owned deterministic RNG state.
 - The frontend asks the engine for rule answers; it does not reimplement crafting rules.
 - Strategy graph editing is UI-authoring; compiled strategies must run without the UI.
+- The old app is a design reference, not a compatibility target. Do not require byte-for-byte behavior, saved-strategy compatibility, or old-engine parity.
 
 ## Phase 0: Scaffolding And Tooling
 
@@ -71,7 +72,7 @@ Acceptance gate:
 
 ## Phase 1: SQLite Schema And Seed Ingest
 
-Goal: produce a canonical SQLite database from a small but real subset of old/RePoE-shaped data.
+Goal: produce a canonical SQLite database from a small but real subset of source/RePoE-shaped data.
 
 Implement schema:
 
@@ -126,16 +127,16 @@ Acceptance gate:
 - A validation command prints row counts and top-level warnings.
 - A query can return all normal rollable prefix/suffix mods for the chosen base.
 
-## Phase 2: Golden Fixture Extraction
+## Phase 2: Spec And Regression Fixtures
 
-Goal: create parity fixtures from the old implementation before writing too much new behavior.
+Goal: create small, inspectable fixtures that define the new engine's intended behavior before writing too much action logic.
 
-Create fixture tools:
+Create fixture folders:
 
 ```text
-fixtures/old-poecraft/session-pools/
-fixtures/old-poecraft/action-results/
-tools/ingest/poecraft_ingest/old_fixture_export.py
+fixtures/spec/session-pools/
+fixtures/spec/action-results/
+fixtures/spec/strategy-runs/
 ```
 
 Initial fixtures:
@@ -149,6 +150,8 @@ weights for selected pools
 one fractured reforge case
 one prefix-lock or suffix-lock reforge case
 ```
+
+Fixtures should be authored from the canonical schema, explicit rule expectations, and hand-inspected examples. The old app can help explain mechanics, but it should not generate the expected results.
 
 Fixture shape:
 
@@ -173,9 +176,10 @@ Fixture shape:
 
 Acceptance gate:
 
-- Fixture generation is scriptable.
+- Fixture loading and validation is scriptable.
 - Fixtures are small enough to inspect in review.
-- The old implementation can be used to regenerate them if needed.
+- Each fixture explains the rule being tested.
+- No fixture depends on old-app serialized data or old-app RNG behavior.
 
 ## Phase 3: Compiled Data Format
 
@@ -254,7 +258,7 @@ Acceptance gate:
 
 ## Phase 5: Session Builder, Masks, And Weights
 
-Goal: build a session for one base/item level and match old candidate pools.
+Goal: build a session for one base/item level and match the new engine's spec fixtures.
 
 Implement:
 
@@ -285,9 +289,9 @@ compare fixture pool
 
 Acceptance gate:
 
-- Session pool matches old fixture for selected base/item level.
-- Normal prefix/suffix pools match old fixture after group blocking and item state filters.
-- Final weights match old truncation behavior.
+- Session pool matches spec fixture for selected base/item level.
+- Normal prefix/suffix pools match spec fixture after group blocking and item state filters.
+- Final weights match documented truncation behavior.
 
 ## Phase 6: Core Action Engine
 
@@ -325,13 +329,13 @@ Core action rules:
 Acceptance gate:
 
 - Seeded basic action tests are deterministic.
-- Golden pool tests pass before and after action mutation.
-- Reforge tests prove removed old groups do not block new rolls.
+- Spec pool tests pass before and after action mutation.
+- Reforge tests prove removed groups do not block new rolls.
 - Annul/remove tests respect fractured and locked-side behavior.
 
 ## Phase 7: Python Binding And Batch Runner
 
-Goal: expose the native engine to Python for parity, tooling, and future ML work.
+Goal: expose the native engine to Python for validation tooling, batch simulation, and future ML work.
 
 Implement:
 
@@ -354,7 +358,7 @@ pool = session.debug_pool(item, {"type": "chaos"})
 Acceptance gate:
 
 - Python can run the same seeded action tests as native.
-- Python can load fixtures and compare pools/weights.
+- Python can load spec fixtures and compare pools/weights.
 - Batch simulation can run many chaos/alchemy/exalt attempts without leaking memory.
 
 ## Phase 8: Web Emulator Slice
@@ -471,7 +475,7 @@ Acceptance gate:
 - Strategy JSON can run without the UI.
 - A simple chaos-repeat-until-condition strategy works.
 - Trace output explains which edge matched at every step.
-- Old step-style strategies can be represented by graph JSON.
+- Linear step-style strategies can be represented by graph JSON.
 
 ## Phase 11: Strategy Editor UI
 
@@ -529,7 +533,7 @@ ingest/schema support
 session masks/tables
 action implementation
 debug pool output
-old parity fixture
+spec fixture
 native and Python tests
 web UI affordance
 ```
@@ -565,7 +569,7 @@ worker pool for browser simulations
 
 Acceptance gate:
 
-- Benchmarks show the new engine is meaningfully faster than the old Python baseline.
+- Benchmarks show the new engine is meaningfully faster than an object-heavy Python baseline.
 - Optimizations do not change seeded replay results.
 
 ## Phase 14: ML And Private Training
@@ -600,7 +604,7 @@ The first meaningful milestone is:
 
 ```text
 Given one selected base and item level,
-the new pipeline can list the same normal rollable prefix/suffix mods as old poeCraft.
+the new pipeline can list the expected normal rollable prefix/suffix mods from canonical data.
 ```
 
 That milestone proves the data path before the engine gets complicated.
@@ -613,7 +617,7 @@ The first MVP is complete when:
 - Compiled data can be loaded by the native engine.
 - A session can be created for a selected base/item level.
 - Core actions can mutate `ItemState`.
-- Candidate pools and weights match old fixtures.
+- Candidate pools and weights match spec fixtures.
 - The web emulator can apply supported actions one by one.
 - A simple strategy graph can run repeated simulations.
 - Native, Python, and WASM seeded runs agree for the covered action set.

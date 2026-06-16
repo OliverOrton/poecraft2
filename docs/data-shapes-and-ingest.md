@@ -566,7 +566,7 @@ Session bitsets:
 
 Item-level eligibility should be resolved before the engine enters normal action-pool filtering. The session/base pool is created for a selected item level, so tiers above that item level should not appear in `normal_random_roll_mask` at all.
 
-Keep `required_level` in the session arrays for mechanics that need it after eligibility, such as Sanctified Fossil weighting, and for parity/debugging.
+Keep `required_level` in the session arrays for mechanics that need it after eligibility, such as Sanctified Fossil weighting, and for debugging/diagnostics.
 
 If item level changes, rebuild the session/base pool rather than carrying an all-level pool through every engine operation.
 
@@ -760,7 +760,7 @@ Do not mix market prices into the compiled engine rules blob. Strategy/economy l
 
 ## Validation And Migration Checks
 
-The old project is useful as a validation oracle. Build parity checks before replacing behavior.
+The old project is useful as a design reference, but it is not a validation oracle or compatibility target. Validation should check the new canonical schema, documented engine rules, deterministic regression fixtures, and known in-game examples.
 
 Recommended checks:
 
@@ -776,20 +776,20 @@ Recommended checks:
    - base item metadata paths are stable
    - no display-name-only primary keys
 
-3. Old registry parity:
-   - for selected bases, compare old `get_mods_for_base` to new SQLite-derived base pools
-   - compare prefix/suffix mod IDs
+3. Canonical pool checks:
+   - for selected bases, build SQLite-derived base pools from the documented rules
+   - compare prefix/suffix mod IDs against spec fixtures
    - compare family keys
    - compare required-level ordering
    - compare base spawn weights for base tags
 
-4. Engine pool parity:
-   - compare action pool IDs and weights for fixed item states
+4. Engine pool regression:
+   - compare action pool IDs and weights for fixed item states against spec fixtures
    - include influence, metamod, fossil, essence, harvest, cluster, veiled, and eldritch cases
 
-5. Seeded simulation parity:
-   - run old and new engines on fixed seeds/action sequences
-   - compare final item mod IDs, groups, affix counts, and rolled values where RNG semantics are intended to match
+5. Seeded simulation replay:
+   - run native, Python binding, and WASM engines on fixed seeds/action sequences
+   - compare final item mod IDs, groups, affix counts, and rolled values for the new engine's documented RNG semantics
 
 ## Important Migration Notes
 
@@ -824,5 +824,5 @@ Start small and prove the shape:
 3. Build a session-local dense mod universe for that base and item level.
 4. Build prefix/suffix, group, and implicit-tag bitsets.
 5. Build an action pool for chaos/alchemy-style random rolling.
-6. Compare the resulting pool and weights against the old Python `ModRegistry` and `CraftingEngine`.
+6. Compare the resulting pool and weights against spec fixtures owned by the new project.
 7. Add fossils, essences, harvest, influence, cluster, veiled, bench, and eldritch systems one at a time.

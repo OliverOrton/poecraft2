@@ -164,12 +164,12 @@ The first implementation should favor correctness with conservative invalidation
 
 ## Validation Strategy
 
-The old implementation should be used as a validation source during the port.
+The old implementation can be used as a design reference while reading mechanics, but it is not a compatibility target. Validation should be based on the new engine's documented rules, hand-inspected examples, invariants, and deterministic regression fixtures.
 
 Validation layers:
 
-- Golden fixtures for specific crafting interactions.
-- Seeded old-engine versus new-engine comparisons for action sequences.
+- Spec fixtures for specific crafting interactions.
+- Seeded native/Python/WASM comparisons for action sequences.
 - Native versus WASM deterministic replay tests.
 - Statistical distribution tests for weighted outcomes.
 - League data diff reports after each data refresh.
@@ -217,7 +217,7 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 4. Native engine port with deterministic tests.
 5. WASM build and TypeScript integration.
 6. Public emulator UI for one-action crafting flows.
-7. Validation expansion against old implementation and known examples.
+7. Validation expansion against documented rules and known examples.
 8. Strategy graph editor and simulator trace UI.
 9. Baseline strategy search / Monte Carlo evaluator.
 10. Private training coordinator and worker loop.
@@ -228,6 +228,6 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 - Exact generated binary format for engine-hot data.
 - First supported crafting mechanics and item classes.
 - First strategy graph condition/operator subset.
-- How much of the old implementation can be ported directly versus redesigned.
+- Which mechanics should be redesigned rather than inherited from the previous app.
 - Static economy baseline format for future strategy evaluation.
 - Release process for league data updates.

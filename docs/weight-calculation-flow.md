@@ -42,7 +42,7 @@ weight = max(1, int(weight * level_adjust))
 
 This happens after spawn, generation, and fossil multipliers have already produced a positive weight.
 
-Item level should not be part of normal hot weight calculation in the new engine. The session/base pool should already exclude mods above the selected item level. Keep `required_level` for Sanctified weighting, Harvest resistance conversion, debug output, and parity checks.
+Item level should not be part of normal hot weight calculation in the new engine. The session/base pool should already exclude mods above the selected item level. Keep `required_level` for Sanctified weighting, Harvest resistance conversion, debug output, and diagnostics.
 
 ## Effective Tag Signatures
 
@@ -108,7 +108,7 @@ set positive_base_weight bit
 
 Use integer math. RePoE generation and fossil multipliers are naturally percent-like values where `100` means unchanged. This avoids floating-point differences across platforms.
 
-For old-code parity, truncate after the generation multiplier before applying fossil or Sanctified modifiers.
+For deterministic engine semantics, truncate after the generation multiplier before applying fossil or Sanctified modifiers.
 
 ## Normal Explicit Roll Flow
 

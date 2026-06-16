@@ -154,7 +154,7 @@ stat_count[N]
 
 Prefix/suffix should be masks, not only flags, because action filtering constantly intersects on affix side.
 
-`required_level[N]` is retained for mechanics that care about the tier level after eligibility is already decided, such as Sanctified Fossil weighting, and for debugging/parity checks. Normal action-pool filtering should not re-check item level if the session universe was built from a base pool already filtered by item level.
+`required_level[N]` is retained for mechanics that care about the tier level after eligibility is already decided, such as Sanctified Fossil weighting, and for debugging/diagnostics. Normal action-pool filtering should not re-check item level if the session universe was built from a base pool already filtered by item level.
 
 ## Base Pool Masks
 
@@ -178,7 +178,7 @@ corrupted_implicit_mask
 eldritch_implicit_mask
 ```
 
-`normal_random_roll_mask` should exclude things the old engine excluded from random rolling:
+`normal_random_roll_mask` should exclude things that are not valid ordinary random rolls:
 
 ```text
 normal_random_roll_mask =
