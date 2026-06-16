@@ -14,7 +14,7 @@ new project:
 RePoE JSON -> canonical SQLite -> compiled engine data blob -> session-local indexes
 ```
 
-SQLite is the inspectable source artifact. The C engine should not query SQLite in the hot loop.
+SQLite is the inspectable source artifact. The native engine should not query SQLite in the hot loop.
 
 ## Old Project Observations
 

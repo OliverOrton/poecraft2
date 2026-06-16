@@ -12,8 +12,8 @@ The project should prioritize the simulator core first. ML strategy suggestion i
 
 The project is split into two systems that share one engine and one data pipeline:
 
-- Public web app: static-hosted, no accounts, runs the C engine compiled to WebAssembly.
-- Private training infrastructure: local/private coordinator plus workers, runs the same C engine compiled natively.
+- Public web app: static-hosted, no accounts, runs the native engine compiled to WebAssembly.
+- Private training infrastructure: local/private coordinator plus workers, runs the same native engine compiled for local machines.
 
 Both systems consume the same generated engine data artifacts so simulation behavior stays aligned between browser use, native testing, and later ML training.
 
@@ -22,7 +22,7 @@ Both systems consume the same generated engine data artifacts so simulation beha
 The public app should be a static TypeScript frontend with a WebAssembly engine module.
 
 - UI: Vite + TypeScript with native Web Components/custom elements.
-- Engine: C compiled to WebAssembly.
+- Engine: native engine compiled to WebAssembly.
 - Hosting: Cloudflare Pages, GitHub Pages, Netlify, or similar static hosting.
 - User storage: IndexedDB for saved items, crafting history, settings, and optional export/import.
 - Public backend: none for the initial simulator.
@@ -40,7 +40,7 @@ The strategy editor should use a Blueprint-style visual graph. Operation nodes m
 
 ## Engine
 
-The engine is a single C codebase with two build targets:
+The engine is a single native codebase with C++20 internals and a C ABI boundary. It has two build targets:
 
 - Native build for local development, tests, tools, and private workers.
 - WASM build for the public browser app.
@@ -69,7 +69,7 @@ canonical SQLite database
         ↓
 compiled engine data blob
         ↓
-C engine structures
+native engine structures
         ↓
 native and WASM simulation
 ```
@@ -201,7 +201,7 @@ Suggested shape:
 - Coordinator on a household machine.
 - Postgres for job metadata, summaries, and model registry.
 - File storage for large trajectory/model artifacts.
-- Native C engine workers.
+- Native engine workers.
 - Thin Python wrapper or standalone worker binary.
 - Tailscale for private networking if machines need to coordinate across the network.
 
@@ -214,7 +214,7 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 1. Repo and project scaffolding.
 2. Data pipeline prototype from old project data into canonical SQLite.
 3. Generated engine data blob format.
-4. Native C engine port with deterministic tests.
+4. Native engine port with deterministic tests.
 5. WASM build and TypeScript integration.
 6. Public emulator UI for one-action crafting flows.
 7. Validation expansion against old implementation and known examples.

@@ -158,6 +158,7 @@ poecraft2/
     codebase-structure.md
     data-shapes-and-ingest.md
     engine-bitsets.md
+    implementation-plan.md
     item-state-flow.md
     strategy-editor-ui.md
     weight-calculation-flow.md

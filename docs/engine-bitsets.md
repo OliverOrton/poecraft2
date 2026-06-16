@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The C engine should not carry rich mod objects through hot crafting loops. It should operate on dense session-local mod IDs, compact arrays, and bitsets.
+The native engine should not carry rich mod objects through hot crafting loops. It should operate on dense session-local mod IDs, compact arrays, and bitsets.
 
 This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use.
 
