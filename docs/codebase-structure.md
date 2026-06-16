@@ -136,15 +136,15 @@ If a control can be native without hurting the UX, use native. Use custom widget
 
 ### Tests
 
-Use three test layers:
+Use a lean test set:
 
 ```text
-ingest tests
-engine unit/regression tests
-frontend widget tests
+ingest smoke tests
+engine unit/regression tests for core rules
+frontend smoke tests for important custom widgets
 ```
 
-Engine tests are the most important. They should compare session masks, candidate pools, and weights against spec fixtures owned by the new project.
+Engine tests are the most important, but they should stay focused. Cover the few rules that can silently break the simulator: session masks, candidate pools, weights, item-state mutation, and seeded replay. Avoid broad coverage targets or a large fixture matrix.
 
 ## Repository Layout
 
@@ -217,7 +217,6 @@ poecraft2/
       actions_harvest.cpp
       rng.cpp
     tests/
-      fixtures/
       test_session_builder.cpp
       test_basic_actions.cpp
       test_weights.cpp
@@ -309,7 +308,7 @@ It should not parse RePoE directly and should not know about frontend DOM concep
 
 Responsibilities:
 
-- expose the engine to Python for testing/ML
+- expose the engine to Python for validation tooling and ML
 - expose the engine to WebAssembly for browser UI
 - keep wrapper-specific memory management out of core engine logic
 
@@ -375,7 +374,7 @@ Build the first vertical slice in this order:
 6. `ItemState` fixed-slot implementation.
 7. Normal explicit candidate mask and weight pool.
 8. Chaos/alchemy/exalt actions.
-9. Golden tests against old `poeCraft`.
+9. Lean regression tests against spec fixtures.
 10. Minimal web UI with base selector, item panel, craft buttons, and debug pool.
 
 This proves the entire architecture before adding every special mechanic.

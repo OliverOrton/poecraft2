@@ -52,7 +52,7 @@ Important engine properties:
 - Stable behavior across native and WASM builds.
 - Coarse batch-oriented API.
 - Data structures designed for hot simulation loops.
-- Golden tests comparing known crafting interactions and seeded action sequences.
+- Small regression tests for core crafting interactions and seeded action sequences.
 
 The initial engine work should emphasize correctness and inspectability over ML-readiness.
 
@@ -164,18 +164,17 @@ The first implementation should favor correctness with conservative invalidation
 
 ## Validation Strategy
 
-The old implementation can be used as a design reference while reading mechanics, but it is not a compatibility target. Validation should be based on the new engine's documented rules, hand-inspected examples, invariants, and deterministic regression fixtures.
+The old implementation can be used as a design reference while reading mechanics, but it is not a compatibility target. Validation should be lean and based on the new engine's documented rules, hand-inspected examples, invariants, and a small set of deterministic regression fixtures.
 
 Validation layers:
 
-- Spec fixtures for specific crafting interactions.
-- Seeded native/Python/WASM comparisons for action sequences.
-- Native versus WASM deterministic replay tests.
-- Statistical distribution tests for weighted outcomes.
-- League data diff reports after each data refresh.
-- Edge-case tests for known complicated mechanics.
+- Smoke tests for ingest, session creation, and core actions.
+- A small number of spec fixtures for important crafting interactions.
+- Seeded native/Python/WASM replay checks for covered action sequences.
+- Lightweight data diff reports after source data refreshes.
+- Targeted edge-case tests only when implementing a tricky mechanic or fixing a bug.
 
-The simulator's credibility depends on users trusting the crafting rules, so validation should be part of the first implementation phase rather than a cleanup task.
+The simulator's credibility depends on users trusting the crafting rules, but the test suite should stay practical. Avoid exhaustive compatibility matrices and broad coverage goals unless a specific mechanic needs them.
 
 ## ML Strategy Suggestion
 
@@ -214,7 +213,7 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 1. Repo and project scaffolding.
 2. Data pipeline prototype from old project data into canonical SQLite.
 3. Generated engine data blob format.
-4. Native engine port with deterministic tests.
+4. Native engine port with lean deterministic tests.
 5. WASM build and TypeScript integration.
 6. Public emulator UI for one-action crafting flows.
 7. Validation expansion against documented rules and known examples.

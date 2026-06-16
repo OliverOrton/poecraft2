@@ -17,7 +17,7 @@ browser runtime: WebAssembly later
 The first objective is not to support every crafting mechanic. The first objective is to prove the full vertical slice:
 
 ```text
-source data -> SQLite -> compiled data -> native engine -> action simulation -> regression tests -> simple web emulator
+source data -> SQLite -> compiled data -> native engine -> action simulation -> lean regression checks -> simple web emulator
 ```
 
 Once that slice is correct, mechanics and UI surfaces can expand safely.
@@ -32,6 +32,7 @@ Once that slice is correct, mechanics and UI surfaces can expand safely.
 - The frontend asks the engine for rule answers; it does not reimplement crafting rules.
 - Strategy graph editing is UI-authoring; compiled strategies must run without the UI.
 - The old app is a design reference, not a compatibility target. Do not require byte-for-byte behavior, saved-strategy compatibility, or old-engine parity.
+- Keep testing practical. Prefer smoke tests, a few rule fixtures, seeded replay checks, and bug regressions over broad coverage goals.
 
 ## Phase 0: Scaffolding And Tooling
 
@@ -67,7 +68,7 @@ engine/include/poecraft/result.h
 Acceptance gate:
 
 - `scripts/build.ps1` runs without doing much yet.
-- `scripts/test.ps1` runs ingest tests and engine tests, even if there are only smoke tests.
+- `scripts/test.ps1` runs smoke tests for the pieces that exist.
 - CI is optional at this point, but local commands must be the source of truth.
 
 ## Phase 1: SQLite Schema And Seed Ingest
@@ -127,28 +128,26 @@ Acceptance gate:
 - A validation command prints row counts and top-level warnings.
 - A query can return all normal rollable prefix/suffix mods for the chosen base.
 
-## Phase 2: Spec And Regression Fixtures
+## Phase 2: Lean Spec Fixtures
 
-Goal: create small, inspectable fixtures that define the new engine's intended behavior before writing too much action logic.
+Goal: create a few small, inspectable fixtures that define the new engine's intended behavior before writing too much action logic.
 
 Create fixture folders:
 
 ```text
 fixtures/spec/session-pools/
 fixtures/spec/action-results/
-fixtures/spec/strategy-runs/
 ```
 
 Initial fixtures:
 
 ```text
 base mod pool for one base/item level
-normal prefix candidate pool
-normal suffix candidate pool
-chaos/alchemy/exalt candidate pools
+one normal prefix candidate pool
+one normal suffix candidate pool
+one chaos or alchemy candidate pool
 weights for selected pools
 one fractured reforge case
-one prefix-lock or suffix-lock reforge case
 ```
 
 Fixtures should be authored from the canonical schema, explicit rule expectations, and hand-inspected examples. The old app can help explain mechanics, but it should not generate the expected results.
@@ -180,6 +179,7 @@ Acceptance gate:
 - Fixtures are small enough to inspect in review.
 - Each fixture explains the rule being tested.
 - No fixture depends on old-app serialized data or old-app RNG behavior.
+- Do not add fixtures just to increase coverage; add them for core rules, tricky mechanics, or bugs.
 
 ## Phase 3: Compiled Data Format
 
@@ -234,7 +234,7 @@ deterministic RNG
 bitset word helpers
 ItemState and ModSlot
 CraftScratch
-basic debug printing helpers for tests
+basic debug printing helpers
 ```
 
 Engine files:
@@ -251,14 +251,14 @@ engine/src/item_state.cpp
 
 Acceptance gate:
 
-- Engine tests compile and run.
+- Engine smoke tests compile and run.
 - RNG gives identical sequences across test runs.
 - `ItemState` copy is a plain cheap value copy.
-- Basic add/remove/compact side helpers pass unit tests.
+- Basic add/remove/compact side helpers have focused unit tests.
 
 ## Phase 5: Session Builder, Masks, And Weights
 
-Goal: build a session for one base/item level and match the new engine's spec fixtures.
+Goal: build a session for one base/item level and match one or two small spec fixtures.
 
 Implement:
 
@@ -284,13 +284,13 @@ Implement debug APIs:
 get session mod count
 dump mask as mod ids
 dump weighted pool
-compare fixture pool
+compare a spec fixture pool
 ```
 
 Acceptance gate:
 
-- Session pool matches spec fixture for selected base/item level.
-- Normal prefix/suffix pools match spec fixture after group blocking and item state filters.
+- Session pool matches a spec fixture for selected base/item level.
+- Normal prefix/suffix pools match a spec fixture after group blocking and item state filters.
 - Final weights match documented truncation behavior.
 
 ## Phase 6: Core Action Engine
@@ -329,9 +329,10 @@ Core action rules:
 Acceptance gate:
 
 - Seeded basic action tests are deterministic.
-- Spec pool tests pass before and after action mutation.
+- Spec pool checks pass before and after action mutation.
 - Reforge tests prove removed groups do not block new rolls.
 - Annul/remove tests respect fractured and locked-side behavior.
+- Keep this set small; expand only when a new mechanic or bug needs it.
 
 ## Phase 7: Python Binding And Batch Runner
 
@@ -357,7 +358,7 @@ pool = session.debug_pool(item, {"type": "chaos"})
 
 Acceptance gate:
 
-- Python can run the same seeded action tests as native.
+- Python can run the same core seeded action checks as native.
 - Python can load spec fixtures and compare pools/weights.
 - Batch simulation can run many chaos/alchemy/exalt attempts without leaking memory.
 
@@ -404,7 +405,7 @@ Acceptance gate:
 
 - User can run the first supported actions one by one.
 - UI displays the same item state as engine debug output.
-- Debug pool view matches native/Python test expectations.
+- Debug pool view matches engine debug output for the first supported actions.
 - No React dependency.
 
 ## Phase 9: WebAssembly And Worker Runtime
@@ -428,7 +429,7 @@ Rules:
 
 Acceptance gate:
 
-- Native and WASM replay the same seeded action sequence.
+- Native and WASM replay one small seeded smoke sequence.
 - Browser emulator can use real engine data.
 - Long runs do not block the UI.
 
@@ -533,8 +534,8 @@ ingest/schema support
 session masks/tables
 action implementation
 debug pool output
-spec fixture
-native and Python tests
+focused spec fixture when needed
+native and Python checks when needed
 web UI affordance
 ```
 
@@ -617,7 +618,7 @@ The first MVP is complete when:
 - Compiled data can be loaded by the native engine.
 - A session can be created for a selected base/item level.
 - Core actions can mutate `ItemState`.
-- Candidate pools and weights match spec fixtures.
+- Candidate pools and weights match the small spec fixture set.
 - The web emulator can apply supported actions one by one.
 - A simple strategy graph can run repeated simulations.
 - Native, Python, and WASM seeded runs agree for the covered action set.

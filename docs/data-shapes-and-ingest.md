@@ -760,7 +760,7 @@ Do not mix market prices into the compiled engine rules blob. Strategy/economy l
 
 ## Validation And Migration Checks
 
-The old project is useful as a design reference, but it is not a validation oracle or compatibility target. Validation should check the new canonical schema, documented engine rules, deterministic regression fixtures, and known in-game examples.
+The old project is useful as a design reference, but it is not a validation oracle or compatibility target. Validation should check the new canonical schema, documented engine rules, a small set of deterministic regression fixtures, and known in-game examples. Keep this practical; do not build a large test matrix just to chase coverage.
 
 Recommended checks:
 
@@ -776,19 +776,19 @@ Recommended checks:
    - base item metadata paths are stable
    - no display-name-only primary keys
 
-3. Canonical pool checks:
+3. Canonical pool smoke checks:
    - for selected bases, build SQLite-derived base pools from the documented rules
-   - compare prefix/suffix mod IDs against spec fixtures
+   - compare prefix/suffix mod IDs against a small number of spec fixtures
    - compare family keys
    - compare required-level ordering
    - compare base spawn weights for base tags
 
 4. Engine pool regression:
-   - compare action pool IDs and weights for fixed item states against spec fixtures
-   - include influence, metamod, fossil, essence, harvest, cluster, veiled, and eldritch cases
+   - compare action pool IDs and weights for a few fixed item states against spec fixtures
+   - add extra cases only when implementing a mechanic or fixing a bug
 
 5. Seeded simulation replay:
-   - run native, Python binding, and WASM engines on fixed seeds/action sequences
+   - run native, Python binding, and WASM engines on a small fixed seed/action sequence
    - compare final item mod IDs, groups, affix counts, and rolled values for the new engine's documented RNG semantics
 
 ## Important Migration Notes
@@ -824,5 +824,5 @@ Start small and prove the shape:
 3. Build a session-local dense mod universe for that base and item level.
 4. Build prefix/suffix, group, and implicit-tag bitsets.
 5. Build an action pool for chaos/alchemy-style random rolling.
-6. Compare the resulting pool and weights against spec fixtures owned by the new project.
+6. Compare the resulting pool and weights against a small spec fixture owned by the new project.
 7. Add fossils, essences, harvest, influence, cluster, veiled, bench, and eldritch systems one at a time.
