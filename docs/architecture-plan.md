@@ -21,7 +21,7 @@ Both systems consume the same generated engine data artifacts so simulation beha
 
 The public app should be a static TypeScript frontend with a WebAssembly engine module.
 
-- UI: TypeScript with a maintainable frontend framework.
+- UI: Vite + TypeScript with native Web Components/custom elements.
 - Engine: C compiled to WebAssembly.
 - Hosting: Cloudflare Pages, GitHub Pages, Netlify, or similar static hosting.
 - User storage: IndexedDB for saved items, crafting history, settings, and optional export/import.
@@ -30,6 +30,13 @@ The public app should be a static TypeScript frontend with a WebAssembly engine 
 The WASM API should be coarse-grained. JavaScript should request batches such as "run this strategy N times" or "evaluate these actions from this state" rather than calling into WASM for every individual crafting step.
 
 Long simulations should run in Web Workers with cancellation and progress reporting so the UI stays responsive.
+
+The public app should expose two main crafting workflows:
+
+- Emulator: user performs crafting operations one by one against a live item.
+- Strategy simulator: user builds or loads a strategy graph and runs one or many attempts.
+
+The strategy editor should use a Blueprint-style visual graph. Operation nodes mutate the item, and guarded edges decide the next state based on item/simulation conditions. The graph should compile down to deterministic simulator semantics similar to the old `Step` runner rather than becoming a general-purpose visual programming language. See [strategy-editor-ui.md](strategy-editor-ui.md).
 
 ## Engine
 
@@ -209,17 +216,18 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 3. Generated engine data blob format.
 4. Native C engine port with deterministic tests.
 5. WASM build and TypeScript integration.
-6. Public simulator UI for core crafting flows.
+6. Public emulator UI for one-action crafting flows.
 7. Validation expansion against old implementation and known examples.
-8. Baseline strategy search / Monte Carlo evaluator.
-9. Private training coordinator and worker loop.
-10. Client-side ML or strategy suggestion prototype.
+8. Strategy graph editor and simulator trace UI.
+9. Baseline strategy search / Monte Carlo evaluator.
+10. Private training coordinator and worker loop.
+11. Client-side ML or strategy suggestion prototype.
 
 ## Open Questions
 
 - Exact generated binary format for engine-hot data.
-- Frontend framework choice.
 - First supported crafting mechanics and item classes.
+- First strategy graph condition/operator subset.
 - How much of the old implementation can be ported directly versus redesigned.
 - Static economy baseline format for future strategy evaluation.
 - Release process for league data updates.

@@ -67,6 +67,9 @@ Use native custom elements for reusable widgets:
 <pc-item-panel>
 <pc-craft-bar>
 <pc-weight-table>
+<pc-strategy-board>
+<pc-condition-editor>
+<pc-run-trace>
 ```
 
 Use Shadow DOM selectively:
@@ -156,6 +159,7 @@ poecraft2/
     data-shapes-and-ingest.md
     engine-bitsets.md
     item-state-flow.md
+    strategy-editor-ui.md
     weight-calculation-flow.md
 
   data/
@@ -245,6 +249,12 @@ poecraft2/
           pc-select.ts
           pc-combobox.ts
           pc-weight-table.ts
+          pc-strategy-editor.ts
+          pc-strategy-board.ts
+          pc-strategy-node.ts
+          pc-edge-layer.ts
+          pc-condition-editor.ts
+          pc-run-trace.ts
         styles/
           tokens.css
           base.css
@@ -308,11 +318,15 @@ Python binding can come first for parity tests and ML experiments. WebAssembly c
 Responsibilities:
 
 - render the simulator
+- render the one-action emulator
+- render the visual strategy editor
 - provide custom widgets
 - call a browser-safe engine client
 - display item state, mod pools, weights, and action results
 
 The web app should not reimplement mod pool rules. If it needs pool details, it asks the engine for debug data.
+
+The strategy editor should be a Blueprint-style graph UI backed by deterministic simulator semantics. See [strategy-editor-ui.md](strategy-editor-ui.md).
 
 ## Engine Public API Shape
 
@@ -364,6 +378,8 @@ Build the first vertical slice in this order:
 
 This proves the entire architecture before adding every special mechanic.
 
+The strategy editor can come after the emulator slice. Its first slice should load/save a graph, run a simple strategy, and display a trace. It should not block the first core engine validation work.
+
 ## Frontend Recommendation
 
 The best frontend for this project is:
@@ -382,6 +398,10 @@ pc-modal
 pc-tooltip
 pc-mod-row
 pc-mod-table
+pc-strategy-board
+pc-strategy-node
+pc-condition-editor
+pc-run-trace
 ```
 
 Add Lit only if component boilerplate slows development. If added, keep it as a rendering helper for custom elements, not as an app framework.
@@ -403,6 +423,7 @@ Before implementation starts, decide:
 2. Whether Python binding comes before WebAssembly.
 3. Whether compiled engine data is binary-first or JSON-first for the first slice.
 4. Whether UI debug views are required in the first web slice.
+5. Which strategy graph condition types ship in the first editor slice.
 
 Recommended answers:
 
@@ -411,6 +432,7 @@ engine internals: C++20 with C ABI
 first binding: Python
 first compiled data: JSON manifest + simple binary arrays, or JSON-only for the first tiny slice
 first UI debug views: yes, at least candidate pool and chosen mod details
+first strategy conditions: always, has mod group, rarity, open prefix/suffix
 ```
 
 ## Invariants
