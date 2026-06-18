@@ -5,7 +5,7 @@
 This document defines the implementation shape before code begins. The goal is to keep the project split into clear layers:
 
 ```text
-data ingest -> compiled data/session build -> deterministic engine -> bindings -> UI/tools
+data ingest -> compiled data/session build -> native engine -> bindings -> UI/tools
 ```
 
 The engine should not depend on the frontend, ML tooling, or Python ingest code. The frontend should consume a small simulator API instead of knowing the engine's internal masks.
@@ -59,7 +59,7 @@ no React
 
 This fits the app well. The simulator is a dense tool UI, not a media-heavy website. It needs good controls, tables, search, mod lists, item panels, and debug views. It does not need a component framework with a virtual DOM.
 
-`dockview-core` should own the IDE-style workspace shell: document tabs, dock groups, splits, resizing, floating panels, edge groups, and layout serialization. It supports vanilla TypeScript, so it does not change the no-React decision. Domain panels remain custom Web Components.
+`dockview-core` should own the desktop-style workspace shell: tabs, dock groups, splits, resizing, and layout serialization. It supports vanilla TypeScript, so it does not change the no-React decision. Domain panels remain custom Web Components.
 
 Use native custom elements for reusable widgets:
 
@@ -74,8 +74,8 @@ Use native custom elements for reusable widgets:
 <pc-condition-editor>
 <pc-run-trace>
 <pc-workspace>
-<pc-saved-items>
-<pc-saved-strategies>
+<pc-stash>
+<pc-simulator>
 ```
 
 Use Shadow DOM selectively:
@@ -84,6 +84,23 @@ Use Shadow DOM selectively:
 - no for large app panels where global layout/theming is easier
 
 Keep Lit optional. Do not start with it. If native custom elements become too verbose, add Lit later for component rendering only. Lit components are still standard custom elements, so that would not force a React-style app rewrite.
+
+### Community Backend
+
+Add the account backend after the local app is usable.
+
+Recommended later stack:
+
+```text
+Node.js + TypeScript
+Fastify or similarly small HTTP framework
+PostgreSQL
+Path of Exile OAuth 2.1
+```
+
+Use shared TypeScript contracts for resource schemas and API payloads. Path of Exile authentication, account sync, publishing, discovery, and social features belong in the backend; crafting simulation remains in the browser/native engine initially.
+
+See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
 
 ### Frontend State
 
@@ -96,8 +113,14 @@ WorkspaceService:
 DocumentService:
   document descriptors, dirty state, local view state
 
-ItemRepository / StrategyRepository / ResultsRepository:
-  saved resources and drafts in IndexedDB
+ItemRepository / StrategyRepository:
+  manually saved guest resources in IndexedDB
+
+RecoveryRepository:
+  local crash-recovery snapshots that are not Stash resources
+
+AccountClient:
+  later account sync, publishing, and social API
 
 EngineClient:
   session handles and action calls
@@ -159,7 +182,7 @@ engine unit/regression tests for core rules
 frontend smoke tests for important custom widgets
 ```
 
-Engine tests are the most important, but they should stay focused. Cover the few rules that can silently break the simulator: session masks, candidate pools, weights, item-state mutation, and seeded replay. Avoid broad coverage targets or a large fixture matrix.
+Engine tests are the most important, but they should stay focused. Cover the few rules that can silently break the simulator: session masks, candidate pools, weights, item-state mutation, and simulator control flow. Avoid broad coverage targets or a large fixture matrix.
 
 ## Repository Layout
 
@@ -169,6 +192,7 @@ Target layout:
 poecraft2/
   README.md
   docs/
+    accounts-publishing-and-discovery.md
     architecture-plan.md
     codebase-structure.md
     data-shapes-and-ingest.md
@@ -197,6 +221,9 @@ poecraft2/
       001_initial.sql
     compiled/
       compiled-data-format.md
+    postgres/
+      001_accounts.sql
+      002_publications.sql
 
   tools/
     ingest/
@@ -254,6 +281,7 @@ poecraft2/
       src/
         main.ts
         app/
+          account-client.ts
           app-controller.ts
           command-service.ts
           document-service.ts
@@ -263,12 +291,14 @@ poecraft2/
         persistence/
           database.ts
           item-repository.ts
+          recovery-repository.ts
           strategy-repository.ts
-          results-repository.ts
           workspace-repository.ts
         components/
           pc-app.ts
           pc-workspace.ts
+          pc-stash.ts
+          pc-simulator.ts
           pc-item-panel.ts
           pc-craft-bar.ts
           pc-mod-list.ts
@@ -281,8 +311,6 @@ poecraft2/
           pc-edge-layer.ts
           pc-condition-editor.ts
           pc-run-trace.ts
-          pc-saved-items.ts
-          pc-saved-strategies.ts
         styles/
           tokens.css
           base.css
@@ -291,6 +319,19 @@ poecraft2/
           listbox.ts
           popup.ts
           focus.ts
+
+    api/
+      package.json
+      src/
+        auth/
+        resources/
+        publications/
+        social/
+
+  packages/
+    contracts/
+      package.json
+      src/
 
   fixtures/
     spec/
@@ -325,9 +366,11 @@ Responsibilities:
 
 - load compiled data
 - build sessions for selected base/item level/mechanic set
-- own static masks, dense mod IDs, and weight arrays
+- own immutable static masks, dense mod IDs, and source weight rows
+- create per-worker action contexts that own random state, scratch space, lazy tag-signature weights, and action-pool caches
 - own compact `ItemState`
-- apply deterministic craft actions
+- apply craft actions
+- compile and execute strategy graphs as the simulator core
 - return debug information for validation and UI
 
 It should not parse RePoE directly and should not know about frontend DOM concepts.
@@ -340,7 +383,7 @@ Responsibilities:
 - expose the engine to WebAssembly for browser UI
 - keep wrapper-specific memory management out of core engine logic
 
-Python binding can come first for validation tooling, batch simulation, and ML experiments. WebAssembly can come once the first simulator UI exists.
+Python binding comes first for validation tooling, batch simulation, and ML experiments. WebAssembly comes next, before the real simulator UI is built, so the UI integrates with the production engine boundary instead of a disposable mock implementation.
 
 ### `apps/web`
 
@@ -350,6 +393,7 @@ Responsibilities:
 - render the simulator
 - render the one-action emulator
 - render the visual strategy editor
+- render the Stash
 - provide custom widgets
 - call a browser-safe engine client
 - display item state, mod pools, weights, and action results
@@ -358,21 +402,180 @@ The web app should not reimplement mod pool rules. If it needs pool details, it 
 
 The strategy editor should be a Blueprint-style graph UI backed by deterministic simulator semantics. See [strategy-editor-ui.md](strategy-editor-ui.md).
 
-The workspace should support multiple open documents, resizable tab groups, saved items/strategies, draft autosave, and layout restoration. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+The workspace should support multiple Emulator/Simulator/Strategy Builder tabs, resizable splits, a Stash tab, manual resource saves, and layout restoration. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+
+### `apps/api` (Later Phase)
+
+Responsibilities:
+
+- authenticate Path of Exile users and the admin fallback
+- sync manually saved items and strategies
+- create immutable published strategy versions
+- store 100,000-run publication summaries
+- register/archive checksum-verified engine, data, and economy artifact bundles used by publications
+- serve public/private/unlisted resources
+- support profiles, favorites, forks, follows, and ratings
+
+Reports, moderation, and comments are later API capabilities, not requirements for the initial publishing release. The API should not implement crafting rules or run the engine in the initial account phase.
 
 ## Engine Public API Shape
 
 Keep the first API small.
 
 ```c
-pc_result pc_load_compiled_data(const char* manifest_path, pc_data_handle* out_data);
-pc_result pc_create_session(pc_data_handle data, const pc_session_options* options, pc_session_handle* out_session);
-pc_result pc_destroy_session(pc_session_handle session);
+uint32_t pc_abi_version(void);
 
-pc_result pc_item_init(pc_session_handle session, const pc_item_init_options* options, pc_item_state* out_item);
-pc_result pc_apply_action(pc_session_handle session, pc_item_state* item, const pc_action_request* request, pc_action_result* out_result);
-pc_result pc_get_debug_pool(pc_session_handle session, const pc_item_state* item, const pc_action_request* request, pc_debug_pool* out_pool);
+pc_result pc_data_load_file(
+    const char* manifest_path,
+    pc_data_handle* out_data,
+    pc_error_info* out_error);
+
+pc_result pc_data_load_memory(
+    const void* bytes,
+    size_t byte_count,
+    pc_data_handle* out_data,
+    pc_error_info* out_error);
+
+void pc_data_destroy(pc_data_handle data);
+
+pc_result pc_session_create(
+    pc_data_handle data,
+    const pc_session_options* options,
+    pc_session_handle* out_session,
+    pc_error_info* out_error);
+
+void pc_session_destroy(pc_session_handle session);
+
+pc_result pc_action_context_create(
+    pc_session_handle session,
+    const pc_action_context_options* options,
+    pc_action_context_handle* out_context,
+    pc_error_info* out_error);
+
+void pc_action_context_destroy(pc_action_context_handle context);
+
+pc_result pc_item_init(
+    pc_session_handle session,
+    const pc_item_init_options* options,
+    pc_item_state* out_item,
+    pc_error_info* out_error);
+
+pc_result pc_apply_action(
+    pc_action_context_handle context,
+    pc_item_state* item,
+    const pc_action_request* request,
+    pc_action_result* out_result,
+    pc_error_info* out_error);
+
+pc_result pc_debug_pool_query(
+    pc_action_context_handle context,
+    const pc_item_state* item,
+    const pc_action_request* request,
+    pc_debug_pool_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+pc_result pc_strategy_compile_json(
+    pc_session_handle session,
+    const char* strategy_json,
+    size_t strategy_json_size,
+    pc_strategy_handle* out_strategy,
+    pc_error_info* out_error);
+
+void pc_strategy_destroy(pc_strategy_handle strategy);
+
+pc_result pc_economy_load_json(
+    const char* economy_json,
+    size_t economy_json_size,
+    pc_economy_handle* out_economy,
+    pc_error_info* out_error);
+
+void pc_economy_destroy(pc_economy_handle economy);
+
+pc_result pc_simulator_create(
+    pc_session_handle session,
+    pc_strategy_handle strategy,
+    pc_economy_handle economy,
+    pc_simulator_handle* out_simulator,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_run_chunk(
+    pc_simulator_handle simulator,
+    const pc_simulation_options* options,
+    uint32_t max_completed_runs,
+    pc_simulation_progress* out_progress,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_get_summary(
+    pc_simulator_handle simulator,
+    pc_simulation_summary* out_summary,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_missing_price_query(
+    pc_simulator_handle simulator,
+    pc_price_key_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_get_trace_count(
+    pc_simulator_handle simulator,
+    uint32_t* out_trace_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_trace_query(
+    pc_simulator_handle simulator,
+    uint32_t trace_index,
+    pc_trace_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_get_example_count(
+    pc_simulator_handle simulator,
+    pc_terminal_kind terminal_kind,
+    uint32_t* out_example_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_example_query(
+    pc_simulator_handle simulator,
+    pc_terminal_kind terminal_kind,
+    uint32_t example_index,
+    pc_simulation_example* out_example,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_failure_summary_query(
+    pc_simulator_handle simulator,
+    pc_failure_summary_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+void pc_simulator_destroy(pc_simulator_handle simulator);
 ```
+
+Public structs should begin with `struct_size` and `abi_version` fields so newer callers and libraries can reject incompatible layouts cleanly.
+
+`pc_error_info` should be caller-owned and contain fixed-size code/message storage rather than engine-owned string pointers.
+
+Ownership and threading rules:
+
+- data and session handles are immutable after construction and may be shared across threads
+- action-context handles own random state, scratch masks, lazy tag-signature weights, and action-pool caches; one context belongs to one worker/thread at a time
+- item state is caller-owned and must not be mutated concurrently
+- simulator handles own an equivalent private action context and belong to one worker/thread at a time
+- every created opaque handle has one matching null-safe destroy function
+- child handles retain internal references to required parent data, so destroying the caller's data/session/strategy handle does not leave a live child dangling
+- variable-length debug output uses a caller-provided buffer and a query-required-count pattern
+- if a later API returns engine-allocated memory, it must provide a matching `pc_buffer_free`; do not free across runtimes with the caller's allocator
+- failed mutating calls leave the input item unchanged; apply to a temporary copy and commit only on success
+- file loading is a native convenience; WASM normally uses the memory-loading API
+- strategy compilation is a cold-path engine operation so every binding uses the same validation and execution semantics
+- economy handles contain immutable canonical operation costs and remain separate from crafting-rule data; a null economy handle disables market-cost statistics
+- browser workers call bounded simulator chunks and yield between them for progress messages and cancellation
+- simulation options set bounded retention counts for debug traces and representative success/failure items; the simulator never retains every trace from a large batch
+- summaries expose cost status, while `pc_simulator_missing_price_query` returns the canonical missing-price keys so incomplete costs cannot be presented as complete
 
 First action request shape:
 
@@ -391,26 +594,28 @@ typedef enum {
 } pc_action_type;
 ```
 
-Every action should accept a seed/RNG state or use the caller-owned RNG state in `pc_action_request`. Do not use global random state.
+Random state belongs to `pc_action_context_handle` or the simulator's private action context. Do not use process-global random state or hide mutable random state in a shared session. Context options may accept an initial seed for tests/debugging, but exact seeded replay across platforms or engine versions is not a compatibility requirement.
 
 ## First Implementation Slice
 
 Build the first vertical slice in this order:
 
-1. SQLite schema for bases, mods, weights, tags, stats, essences, fossils.
-2. Python ingest for a small source subset.
-3. Compiled data artifact for that subset.
+1. SQLite schema for bases, mods, weights, tags, stats, bench options, essences, fossils, and cluster-jewel records.
+2. Python ingest for the complete crafting-relevant RePoE dataset, including preserved cluster-jewel records.
+3. Explicitly filtered compiled data artifact for one ordinary non-cluster base.
 4. Native engine data loader.
 5. Session builder for one base/item level.
 6. `ItemState` fixed-slot implementation.
 7. Normal explicit candidate mask and weight pool.
 8. Chaos/alchemy/exalt actions.
 9. Lean regression tests against spec fixtures.
-10. Minimal workspace shell with multiple item documents, saved drafts, and the first item emulator panel.
+10. Minimal workspace shell with real Emulator and Stash tabs, manual local saves, recovery, and the first item emulator panel.
 
 This proves the entire architecture before adding every special mechanic.
 
-The strategy editor can come after the emulator slice. Its first slice should load/save a graph, run a simple strategy, and display a trace. It should not block the first core engine validation work.
+Canonical SQLite is full-dataset even though the first compiled-engine fixture is narrow. Cluster source records are retained during ingest, while cluster-jewel session creation returns an explicit unsupported-feature result until its passive-tag, notable-cap, and socket rules are implemented.
+
+The native strategy simulator and editor can come after the emulator slice. Add real Simulator and Strategy Builder tabs with those implementations rather than building placeholder application surfaces that will be discarded.
 
 ## Frontend Recommendation
 
@@ -436,8 +641,8 @@ pc-strategy-node
 pc-condition-editor
 pc-run-trace
 pc-workspace
-pc-saved-items
-pc-saved-strategies
+pc-stash
+pc-simulator
 ```
 
 Add Lit only if component boilerplate slows development. If added, keep it as a rendering helper for custom elements, not as an app framework.
@@ -451,34 +656,30 @@ Avoid React because:
 
 Avoid a large CSS/UI framework because the app needs domain-specific controls and dense layouts. Small helper packages are okay if they solve focused problems, but the core UI should stay ours.
 
-Dockview is the focused exception: use it for docking/layout behavior rather than reimplementing tabs, split resizing, floating groups, and layout persistence. Keep all domain controls and document contents custom.
+Dockview is the focused exception: use it for tabs, split resizing, and layout persistence. Keep all domain controls and document contents custom.
 
-## Open Decisions
+## Resolved Decisions
 
-Before implementation starts, decide:
-
-1. Whether engine internals are definitely C++20 or plain C.
-2. Whether Python binding comes before WebAssembly.
-3. Whether compiled engine data is binary-first or JSON-first for the first slice.
-4. Whether UI debug views are required in the first web slice.
-5. Which strategy graph condition types ship in the first editor slice.
-
-Recommended answers:
+Use:
 
 ```text
 engine internals: C++20 with C ABI
 first binding: Python
-first compiled data: JSON manifest + simple binary arrays, or JSON-only for the first tiny slice
+second binding: WebAssembly before the real web UI
+first compiled data: JSON-only for the tiny validation slice, then JSON manifest + binary arrays
 first UI debug views: yes, at least candidate pool and chosen mod details
 first strategy conditions: always, has mod group, rarity, open prefix/suffix
 ```
 
 ## Invariants
 
-- Ingest can be rich and slow; engine runtime must be compact and deterministic.
+- Ingest can be rich and slow; engine runtime must be compact and consistent across bindings.
 - SQLite is canonical source data, not the hot runtime structure.
 - Engine has no frontend dependency.
 - Frontend has no crafting-rule authority; it asks the engine.
 - Item state is small and copyable.
-- Scratch masks and candidate pools are reusable per worker/thread.
+- Random state, scratch masks, lazy signature weights, and candidate pools are reusable per worker/thread through an action context.
+- Item and strategy resources use stable IDs/schema versions from the first local implementation.
+- Item and strategy content saves manually; layout persistence never saves domain content.
+- The account backend is a later layer and does not block the local app.
 - The first implementation should prove one vertical slice before broad mechanic coverage.

@@ -9,9 +9,9 @@ The engine should treat mod selection as two separate phases:
 
 Bitsets answer "which mods are legal?" Weight arrays answer "how likely is each legal mod?"
 
-The old `poeCraft` implementation recalculated both phases by scanning Python `Mod` objects. The new engine should preserve the same probability rules while moving repeated work into session-local arrays and caches.
+The old `poeCraft` implementation recalculated both phases by scanning Python `Mod` objects. The new engine should preserve verified source semantics while applying the intentional corrections in [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md), which is authoritative for tag channels, candidate-set meaning, and action-specific weight formulas.
 
-## Old Behavior To Preserve
+## Old Normal Explicit Behavior To Preserve
 
 The old explicit-affix formula was:
 
@@ -22,7 +22,7 @@ generation_multiplier = first matching generation_weights row / 100, or 1.0
 weight = int(spawn_weight * generation_multiplier)
 ```
 
-If `weight <= 0`, the mod is not eligible for that weighted pool.
+If `weight <= 0`, the mod is not positively weighted for that normal explicit candidate set.
 
 For fossil crafts:
 
@@ -42,11 +42,11 @@ weight = max(1, int(weight * level_adjust))
 
 This happens after spawn, generation, and fossil multipliers have already produced a positive weight.
 
-Item level should not be part of normal hot weight calculation in the new engine. The session/base pool should already exclude mods above the selected item level. Keep `required_level` for Sanctified weighting, Harvest resistance conversion, debug output, and diagnostics.
+Item level should not be part of normal hot weight calculation in the new engine. The session mod universe should already exclude mods above the selected item level. Keep `required_level` for Sanctified weighting, Harvest resistance conversion, debug output, and diagnostics.
 
 ## Effective Tag Signatures
 
-Spawn and generation weights depend on the item's effective tag set.
+Spawn and generation weights depend on the selection context's effective tag signature.
 
 The old engine built this from:
 
@@ -55,8 +55,9 @@ base item tags
 + "default"
 + cluster enchant/effect tag, when present
 + influence tags, when present
-+ action-specific tags for some implicit systems
 ```
+
+Implicit systems that need action-specific selector tags use a separate action-specific signature. Classification tags and `adds_tags` are not inserted into the normal explicit effective tag signature.
 
 The new engine should intern each effective tag set as a `tag_signature_id`.
 
@@ -70,7 +71,7 @@ tag_signature_id 17 =
     body_armour_shaper
 ```
 
-Once a tag signature exists, cache the normal explicit weights for it.
+Once a tag signature exists, cache the normal explicit weights for it in the worker-local action context. `SessionData` remains immutable and shareable.
 
 ## Cached Base Weight Arrays
 
@@ -80,6 +81,7 @@ For each `tag_signature_id`, build these arrays over dense session mod IDs:
 active_spawn_weight[tag_signature_id][mod_id]      // uint32, 0 means cannot spawn
 active_generation_pct[tag_signature_id][mod_id]    // uint16 or uint32, 100 means 1.0x
 base_roll_weight[tag_signature_id][mod_id]         // uint32
+positive_spawn_weight_mask[tag_signature_id]       // bitset
 positive_base_weight_mask[tag_signature_id]        // bitset
 ```
 
@@ -89,8 +91,11 @@ Build them like this:
 spawn = first_matching_spawn_weight(mod.spawn_weights, tag_signature)
 if spawn <= 0:
     base_roll_weight = 0
+    clear positive_spawn_weight bit
     clear positive_base_weight bit
     continue
+
+set positive_spawn_weight bit
 
 gen_pct = first_matching_generation_weight(mod.generation_weights, tag_signature)
 if no generation row matches:
@@ -207,7 +212,7 @@ Gilded/Bloodstained-style implicit or sell-price behavior should remain outside 
 
 ## Harvest Weight Flow
 
-Harvest reforge and augment use the same base explicit weight formula as normal rolling. The difference is the candidate mask.
+Harvest-targeted selection uses classification-tag membership and active spawn weight only. It does not use the normal spawn × generation formula.
 
 For a guaranteed tag:
 
@@ -216,15 +221,16 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & implicit_tag_mask[harvest_tag]
-  & positive_base_weight_mask[tag_signature_id]
+  & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
+  & cluster_allowed_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
 ```
 
-Sample from `base_roll_weight[tag_signature_id]`.
+Sample from `active_spawn_weight[tag_signature_id]`. If both affix sides are open, prefix and suffix candidates compete in one combined spawn-weighted distribution.
 
-After the guaranteed mod is added, update group blocking and continue normal random rolling if the action requires more mods.
+After the guaranteed mod is added, update group blocking and continue with the normal explicit spawn × generation formula for any filler mods.
 
 Harvest resistance conversion is a special weighted replacement:
 
@@ -236,12 +242,13 @@ pool =
   & implicit_tag_mask[to_resistance_tag]
   & ~implicit_tag_mask[from_resistance_tag]
   & required_level_eq_mask[source.required_level]
-  & positive_base_weight_mask[tag_signature_id]
+  & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
+  & ~metamod_block_mask
 ```
 
-Sample with the same `base_roll_weight[tag_signature_id]`.
+Sample with `active_spawn_weight[tag_signature_id]`; generation multipliers do not apply.
 
 ## Essence Weight Flow
 
@@ -356,6 +363,7 @@ Where `weight_context_id` captures:
 normal
 fossil_set_id
 sanctified enabled
+harvest_spawn_only
 unveil context
 eldritch implicit context
 ```
@@ -391,7 +399,7 @@ But correctness should not depend on prewarming. A cache miss should just build 
 3. Implement normal explicit weighted pool building from a candidate mask.
 4. Add weighted pool caching with prefix sums.
 5. Add fossil multiplier tables and block masks.
-6. Add Harvest target/resistance derived masks using the same base weights.
+6. Add Harvest target/resistance derived masks using active spawn weights only.
 7. Add separate unveil and eldritch implicit weight tables.
 8. Add optional alias tables only after profiling.
 
@@ -400,6 +408,7 @@ But correctness should not depend on prewarming. A cache miss should just build 
 - Eligibility masks decide membership before weights are read.
 - A mod with zero final weight must not be sampled.
 - Normal explicit actions use `base_roll_weight`.
+- Harvest-targeted selection uses `active_spawn_weight` and respects metamod blocking; generation multipliers do not apply.
 - Essence guaranteed mods and bench crafts bypass weighted sampling.
 - Fossils modify action weights, not cached base weights.
 - Prefix/suffix locks preserve or remove existing mods; they do not change add-pool weights.

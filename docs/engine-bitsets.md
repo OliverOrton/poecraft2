@@ -4,7 +4,7 @@
 
 The native engine should not carry rich mod objects through hot crafting loops. It should operate on dense session-local mod IDs, compact arrays, and bitsets.
 
-This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use.
+This document maps the old `poeCraft` Python mod-pool behavior to the bitsets the new engine should use. [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md) is authoritative for vocabulary, source-field meaning, and action-specific filtering/weight rules.
 
 See [item-state-flow.md](item-state-flow.md) for the compact item state that action masks are derived from, and [weight-calculation-flow.md](weight-calculation-flow.md) for how candidate masks become weighted roll tables.
 
@@ -17,7 +17,7 @@ ModRegistry.get_mods_for_base(base)
 
 CraftingEngine._create_mod_pool(item, action)
   -> scan the base lists again
-  -> filter by item state, tags, fossils, influence, metamods
+  -> filter by item state, effective tag signature, fossils, influence, metamods
   -> build weighted ModPool
 ```
 
@@ -28,7 +28,7 @@ build session mod universe
   -> assign dense mod IDs 0..N-1
   -> precompute masks and hot arrays
 
-build action pool
+build weighted action candidate pool
   -> combine masks
   -> compute or reuse weights
   -> sample from compact weighted table
@@ -64,11 +64,11 @@ Example with eight session mods:
 
 ```text
 session mod IDs:  0 1 2 3 4 5 6 7
-life tag mask:    0 1 0 0 1 1 0 0
+life classification-tag mask: 0 1 0 0 1 1 0 0
 prefix mask:      1 1 0 1 0 1 0 0
 ```
 
-The `life tag mask` means mods `1`, `4`, and `5` have the life tag for whatever tag dimension that mask represents. A different tag gets a different mask.
+The `life classification-tag mask` means mods `1`, `4`, and `5` have the `life` classification tag. Spawn-weight selector, generation-weight selector, classification, and added tags remain separate dimensions.
 
 In C this should not be stored as a text string. Store it as fixed-width words, usually `uint64_t[]`, and operate on 64 mods at a time:
 
@@ -77,6 +77,8 @@ candidate_words[i] = prefix_words[i] & life_tag_words[i] & normal_roll_words[i]
 ```
 
 The important thing is that bit position `k` always refers to `session_mod_id == k`.
+
+Use one dense mod-ID universe with many independent masks. Prefixes, suffixes, crafted mods, influences, each required tag channel, and special mechanics get independent bitsets over the same IDs. Do not create separate prefix and suffix ID spaces: that would complicate group blocking, item slots, global-key lookup, and actions that sample across both sides.
 
 ## Dense Session Mod IDs
 
@@ -97,6 +99,7 @@ All engine masks are bitsets over `session_mod_id`, not global RePoE IDs.
 The normal session universe should include:
 
 - mods that can spawn on the selected base at the selected item level
+- all influence-specific mods for that base/item level that supported actions can make reachable
 - crafted mods available to that item class
 - base implicits
 - essence-only mods reachable by essences
@@ -113,6 +116,8 @@ When recombinators are enabled, the session universe may also include:
 - special recombinator-only state mods, if needed
 
 Do not create a separate rich-object path for recombinators unless profiling or correctness proves it necessary.
+
+Prefer a dedicated recombination session built from both input items over including recombination-only transfer mods in every normal crafting session.
 
 ## Core Per-Mod Arrays
 
@@ -156,13 +161,13 @@ Prefix/suffix should be masks, not only flags, because action filtering constant
 
 `required_level[N]` is retained for mechanics that care about the tier level after eligibility is already decided, such as Sanctified Fossil weighting, and for debugging/diagnostics. Normal action-pool filtering should not re-check item level if the session universe was built from a base pool already filtered by item level.
 
-## Base Pool Masks
+## Base/Session Universe Masks
 
-These masks replace the old `Mods.prefixes` and `Mods.suffixes` lists.
+These masks replace the old `Mods.prefixes` and `Mods.suffixes` lists without claiming that every session-reachable row is currently rollable.
 
 ```text
 session_universe_mask
-base_spawnable_mask
+base_explicit_universe_mask
 prefix_mask
 suffix_mask
 implicit_mask
@@ -182,7 +187,7 @@ eldritch_implicit_mask
 
 ```text
 normal_random_roll_mask =
-    base_spawnable_mask
+    base_explicit_universe_mask
   & ~(crafted_mask | essence_only_mask | implicit_mask)
   & ~(veiled_template_mask | unveiled_mask)
   & ~(delve_added_mask | delve_forced_mask)
@@ -191,7 +196,9 @@ normal_random_roll_mask =
 
 Some mechanics add back special mods explicitly, such as fossil added mods or essence guaranteed mods.
 
-`base_spawnable_mask` should be the direct replacement for the old normal base pool after base, item class, item level, domain, spawn-weight, cluster, and influence eligibility have been considered. It should not include crafted bench mods, essence-only mods, implicits, veiled outcome mods, corrupted implicits, eldritch implicits, or recombination-only transfer mods.
+`base_explicit_universe_mask` contains prefix/suffix rows associated with the selected base and item level, including influence-specific rows reachable after supported influence changes even when their spawn weight is zero for the current effective tag signature. It should not include crafted bench mods, essence-only mods, implicits, veiled outcome mods, corrupted implicits, eldritch implicits, or recombination-only transfer mods.
+
+Current positive weight is represented by `positive_spawn_weight_mask[tag_signature_id]` or `positive_base_weight_mask[tag_signature_id]`, not by membership in `base_explicit_universe_mask`.
 
 ## Domain And Mechanic Masks
 
@@ -221,11 +228,11 @@ cluster_enchant_allowed_mask[tag_signature_id]
 
 For non-cluster bases, these can be empty.
 
-## Tag Masks
+## Tag-Channel Masks
 
-The old code used tags in three different ways. Keep them distinct.
+The old code used several distinct tag channels. Keep them separate.
 
-Spawn-weight tags:
+Spawn-weight selector tags:
 
 ```text
 spawn_tag_mask[tag_id]
@@ -233,7 +240,7 @@ spawn_tag_mask[tag_id]
 
 A mod is in this mask if its ordered `spawn_weights` contain `tag_id`.
 
-Generation-weight tags:
+Generation-weight selector tags:
 
 ```text
 generation_tag_mask[tag_id]
@@ -241,7 +248,7 @@ generation_tag_mask[tag_id]
 
 A mod is in this mask if its ordered `generation_weights` contain `tag_id`.
 
-Implicit tags:
+Classification tags (source field `implicit_tags`):
 
 ```text
 implicit_tag_mask[tag_id]
@@ -304,7 +311,7 @@ For UI family grouping, keep the old family concept separately:
 family_id = group_id + stat_signature_id
 ```
 
-Family grouping is useful for display and target conditions. It is not the same as the exclusivity group used for blocking.
+Family grouping is useful for display and tier grouping. It is not the same as the exclusivity group used for blocking. Strategy predicates continue to target groups unless an explicitly named family predicate is added.
 
 RePoE tiers are separate mods. A life tier, for example, is a different mod row from another life tier. Those tiers should occupy the same exclusivity group/bucket, so once one tier is present, `current_group_block_mask` prevents every other tier in that bucket from rolling on the same item.
 
@@ -339,13 +346,15 @@ influence_allowed_mask =
   | masks_for_influences_currently_on_item
 ```
 
+All reachable influence masks exist in the session even when the starting item has no influence. Adding influence changes the active masks and effective tag signature; it does not rebuild the mod-ID universe. Weight arrays for newly encountered tag signatures may be created lazily in the worker-local action context. Immutable `SessionData` is never mutated by this cache fill.
+
 For conqueror exalt style actions:
 
 ```text
 influence_allowed_mask = mask_for_requested_influence
 ```
 
-Effective tags still matter for final weight calculation because influence changes the item's tag set.
+The effective tag signature still matters for final weight calculation because influence changes the selector tags active on the item.
 
 ## Metamod Masks
 
@@ -451,13 +460,14 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & harvest_target_mask
-  & positive_base_weight_mask[tag_signature_id]
+  & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
+  & cluster_notable_allowed_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
 ```
 
-After the guaranteed mod is added, normal random rolls proceed with its group blocked.
+Sample this guaranteed candidate set with `active_spawn_weight[tag_signature_id]`; generation multipliers do not apply. Prefix and suffix rows compete in one combined spawn-weighted distribution. After the guaranteed mod is added, normal random rolls proceed with its group blocked.
 
 ## Veiled Masks
 
@@ -555,7 +565,7 @@ The new engine should intern that set as:
 tag_signature_id
 ```
 
-For each tag signature, cache:
+For each tag signature, cache in the worker-local action context:
 
 ```text
 positive_spawn_weight_mask[tag_signature_id]
@@ -589,10 +599,10 @@ session_universe_mask
 Contains every dense session mod ID. This is the outer bound for all masks. It may include recombination input mods and special transfer-only mods that no normal action can roll.
 
 ```text
-base_spawnable_mask
+base_explicit_universe_mask
 ```
 
-Contains normal explicit prefix/suffix mods that replace old `Mods.prefixes` and `Mods.suffixes`. This mask should already be filtered for base type, item class, item level, normal domain rules, cluster jewel rules, and base spawn-weight eligibility. It should exclude essence-only, crafted, implicit, veiled outcome, corrupted implicit, eldritch implicit, and recombination-only mods.
+Contains the prefix/suffix explicit universe associated with the selected base and item level. It includes reachable influence rows even when they have zero current spawn weight. It is filtered for source domain, base/item-class compatibility, item level, and stable cluster/base constraints, but current effective-tag, influence-state, metamod, group, and action legality are applied by separate masks. It excludes essence-only, crafted, implicit, veiled outcome, corrupted implicit, eldritch implicit, and recombination-only mods.
 
 ```text
 normal_random_roll_mask
@@ -689,14 +699,14 @@ generation_tag_mask[tag_id]
 implicit_tag_mask[tag_id]
 ```
 
-Keep the three tag dimensions separate. Spawn tags answer "can this mod spawn on this tag signature?" Generation tags answer "how is this mod weighted by generation modifiers?" Implicit tags answer "does this mod count as attack, caster, life, fire, resistance, etc. for fossil, harvest, and metamod targeting?"
+Keep the three tag dimensions separate. Spawn-weight selector tags answer "what is this mod's active spawn weight for this effective tag signature?" Generation-weight selector tags answer "what generation multiplier applies?" Classification tags answer "does this mod count as attack, caster, life, fire, resistance, etc. for fossil, Harvest, and metamod targeting?"
 
 ```text
 group_mask[group_id]
 family_mask[family_id]
 ```
 
-Groups enforce cannot-roll-together behavior. Families are for UI and target grouping. RePoE tiers are separate mods but should usually share the same `group_id`, so the group mask blocks sibling tiers once one tier exists on the item.
+Groups enforce cannot-roll-together behavior. Families are for UI tier grouping. RePoE tiers are separate mods but should usually share the same `group_id`, so the group mask blocks sibling tiers once one tier exists on the item.
 
 ```text
 required_level_eq_mask[level]
@@ -777,12 +787,13 @@ resistance_conversion_replacement_mask =
   & same_affix_side_as_source
   & required_level_eq_mask[source.required_level]
   & normal_random_roll_mask
-  & positive_base_weight_mask[tag_signature_id]
+  & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
   & ~current_group_block_mask
+  & ~metamod_block_mask
 ```
 
-The old Harvest resistance conversion has stricter requirements than generic Harvest targeting, so it deserves its own derived mask.
+Harvest resistance conversion samples this derived candidate set with `active_spawn_weight[tag_signature_id]`; generation multipliers do not apply. It has stricter requirements than generic Harvest targeting, so it deserves its own derived mask.
 
 ```text
 fossil_block_mask
@@ -946,11 +957,14 @@ pool =
     (prefix_mask | suffix_mask)
   & normal_random_roll_mask
   & implicit_tag_mask[harvest_tag]
-  & positive_base_weight_mask[tag_signature_id]
+  & positive_spawn_weight_mask[tag_signature_id]
   & influence_allowed_mask
+  & cluster_notable_allowed_mask
   & ~current_group_block_mask
   & ~metamod_block_mask
 ```
+
+Harvest samples this set using `active_spawn_weight[tag_signature_id]`, not `base_roll_weight`. Generation multipliers are not part of Harvest-targeted selection.
 
 Bench craft:
 
@@ -976,6 +990,8 @@ pool =
 ## Allocation Guidance
 
 Start with a simple mask set, even if a few masks are empty for many bases.
+
+Memory impact is modest: each mask costs `ceil(N / 64) * 8` bytes. At 10,000 session mods, a prefix or suffix mask is only about 1.25 KB. Per-tag-signature weight arrays are larger than masks, so create uncommon influence/signature weight arrays lazily in each worker context rather than splitting the ID universe or mutating shared sessions.
 
 Good fixed masks:
 
@@ -1004,6 +1020,7 @@ This keeps the common engine code simple while avoiding huge tables for tags or 
 The engine should enforce these invariants:
 
 - Every bitset has the same word length for a session.
+- Prefix, suffix, and mechanic masks share one session mod-ID universe.
 - Padding bits outside `0..N-1` are zeroed or ignored.
 - Public iteration over a bitset must never return IDs outside `0..N-1`.
 - Action pools are always intersected with `session_universe_mask`.
@@ -1012,5 +1029,6 @@ The engine should enforce these invariants:
 - Weight arrays are valid only for a specific `tag_signature_id` and action context.
 - Group blocking uses `group_id`, not UI family ID.
 - UI family grouping uses `group_id + stat_signature_id`.
+- Harvest-targeted candidate sets use `positive_spawn_weight_mask` and `active_spawn_weight`, never generation multipliers.
 
-The guiding principle: a bit being present should mean "this mod is eligible for this specific rule dimension," not "this mod is globally craftable."
+The guiding principle: a bit being present should mean "this mod satisfies this specific rule dimension," not "this mod is globally craftable."

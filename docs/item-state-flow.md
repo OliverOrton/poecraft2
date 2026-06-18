@@ -1,5 +1,7 @@
 # Item State Flow
 
+Modifier vocabulary and weighted-selection rules in this document defer to [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md).
+
 ## Purpose
 
 The old `poeCraft` implementation stored item state as Python objects:
@@ -87,6 +89,8 @@ The new state should preserve these concepts but replace object references and l
 
 Use session-local mod IDs in hot state. A `session_mod_id` maps back to global compiled mod data through `SessionData`.
 
+Session-local IDs are never persistent identities. The canonical `mod.key` from the global compiled data is the stable identity used by saved items, strategy start states, imports/exports, traces that outlive a session, and published representative items. Loading a persistent resource resolves each global mod key into the current session's dense ID.
+
 ```c
 #define MAX_PREFIXES 3
 #define MAX_SUFFIXES 3
@@ -98,6 +102,8 @@ Use session-local mod IDs in hot state. A `session_mod_id` maps back to global c
 #define MAX_SOCKETS 6
 #define MOD_NONE UINT32_MAX
 ```
+
+These fixed limits are provisional implementation capacities, not assumed game rules. Validate them against the current RePoE dataset before locking the ABI. Load/import must return an explicit unsupported-capacity error rather than truncating extra rolls, implicits, enchantments, sockets, or options.
 
 ```c
 typedef enum {
@@ -155,21 +161,23 @@ typedef struct {
 } ItemState;
 ```
 
-`ilvl`, `base_id`, `item_class_id`, `base_tags`, `base_properties`, and `enchant_effect` can live in `SessionData` or in a small immutable item header. They do not need to be copied during simulation branches unless the engine supports changing base/item level mid-session.
+`ilvl`, internal `base_id`, `item_class_id`, `base_tags`, `base_properties`, and `enchant_effect` can live in `SessionData` or in a small immutable item header. They do not need to be copied during simulation branches unless the engine supports changing base/item level mid-session.
 
 For standalone saved items, store both:
 
 ```text
 ItemIdentity:
-  base_id
+  base_key (stable RePoE metadata path)
   ilvl
-  session/schema/data version
+  schema/data version
 
 ItemState:
-  mutable state above
+  mutable state serialized with global mod keys
 ```
 
 For hot simulation, pass `SessionData` separately and copy only `ItemState`.
+
+Runtime loaders resolve persistent `base_key` to the compiled global/internal `base_id`. Integer base IDs are artifact-local implementation details and must not appear in IndexedDB, JSON exports, account resources, or publications.
 
 ## Why Slots Instead Of Item Bitsets
 
@@ -301,8 +309,10 @@ When adding a mod:
 slot.mod_id = mod_id
 slot.group_id = SessionData.group_id[mod_id]
 slot.flags = flags derived from mod + action
-slot.rolls = roll stat values, unless pure sim skips values
+slot.rolls = roll stat values when full-roll detail is enabled
 ```
+
+Structural simulation may skip numeric roll values for throughput. In that mode, conditions requiring rolled stat totals are unavailable. A later full-roll toggle retains numeric values for stat-total conditions and representative result items.
 
 When removing a mod, move the last slot on that side into the removed slot position and decrement the count. Affix order is not important for simulation correctness. If UI wants stable display order, the UI layer can sort or preserve order separately.
 
@@ -415,8 +425,8 @@ These actions do not clear existing slots. Existing groups block new rolls.
 
 ```text
 rebuild group block mask from all current explicit slots
-choose legal affix side
-build candidate pool
+derive the legal open affix sides
+build one combined weighted candidate pool when either side is allowed
 sample weighted mod
 append slot
 ```
@@ -604,7 +614,7 @@ For UI undo/redo or saved items, serialize:
 ```text
 base/item identity
 rarity
-slot arrays with mod ids, rolls, and flags
+slot arrays with stable global mod keys, rolls, and flags
 implicits/enchantments
 item flags
 quality
@@ -613,6 +623,8 @@ influence bits/tiers
 ```
 
 Do not serialize derived scratch masks.
+
+Undo/redo snapshots that live only inside one open document may use session-local IDs internally, but any snapshot written to IndexedDB, JSON, an account, or a publication must use global keys.
 
 ## Relationship To Masks And Weights
 

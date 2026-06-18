@@ -2,20 +2,23 @@
 
 ## Goals
 
-1. Build a fast, deterministic Path of Exile crafting simulator suitable for public use.
+1. Build a fast Path of Exile 1 crafting simulator suitable for public use.
 2. Run public simulations entirely client-side to avoid per-user hosting cost.
 3. Preserve a shared simulation substrate that can later support ML strategy search and training.
 
 The project should prioritize the simulator core first. ML strategy suggestion is a downstream consumer of the engine, not a dependency for the first usable version.
 
+This project targets Path of Exile 1. Path of Exile 2 mechanics and data are out of scope unless a separate design is added later.
+
 ## System Shape
 
-The project is split into two systems that share one engine and one data pipeline:
+The project is split into three systems that share one engine/data model where applicable:
 
-- Public web app: static-hosted, no accounts, runs the native engine compiled to WebAssembly.
+- Public web app: local-first, runs the native engine compiled to WebAssembly, and supports guests without accounts.
+- Community backend: added later for accounts, sync, publishing, discovery, and social features.
 - Private training infrastructure: local/private coordinator plus workers, runs the same native engine compiled for local machines.
 
-Both systems consume the same generated engine data artifacts so simulation behavior stays aligned between browser use, native testing, and later ML training.
+Simulation systems consume the same generated engine data artifacts so behavior stays aligned between browser use, native testing, and later ML training.
 
 ## Public Web App
 
@@ -25,8 +28,9 @@ The public app should be a static TypeScript frontend with a WebAssembly engine 
 - Workspace shell: `dockview-core` for IDE-style tabs, docking, splits, resizing, and layout restoration.
 - Engine: native engine compiled to WebAssembly.
 - Hosting: Cloudflare Pages, GitHub Pages, Netlify, or similar static hosting.
-- User storage: IndexedDB for saved items, crafting history, settings, and optional export/import.
-- Public backend: none for the initial simulator.
+- Guest storage: IndexedDB for manually saved items/strategies, settings, and export/import.
+- Account storage: later backend sync; login remains optional.
+- Initial public backend: none for the first local simulator milestone.
 
 The WASM API should be coarse-grained. JavaScript should request batches such as "run this strategy N times" or "evaluate these actions from this state" rather than calling into WASM for every individual crafting step.
 
@@ -35,11 +39,13 @@ Long simulations should run in Web Workers with cancellation and progress report
 The public app should expose two main crafting workflows:
 
 - Emulator: user performs crafting operations one by one against a live item.
-- Strategy simulator: user builds or loads a strategy graph and runs one or many attempts.
+- Strategy simulator: user builds or loads a strategy graph and runs one or many simulations.
 
 The strategy editor should use a Blueprint-style visual graph. Operation nodes mutate the item, and guarded edges decide the next state based on item/simulation conditions. The graph should compile down to deterministic simulator semantics similar to the old `Step` runner rather than becoming a general-purpose visual programming language. See [strategy-editor-ui.md](strategy-editor-ui.md).
 
-Both workflows should live inside a desktop-like workspace. Users can open multiple item, strategy, result, and trace documents; arrange them in tab groups and resizable splits; and restore their workspace later. Saved resources and workspace layouts should use IndexedDB. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+Emulator, Simulator, Strategy Builder, and Stash should live inside a desktop-like workspace. Users can open multiple items/strategies in tab groups and resizable splits. Item and strategy content saves manually; layout restoration is only a UI preference. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+
+Saved resources should use stable IDs/schema versions from the beginning. Account login and Stash sync may be added after the local app is stable. Public publishing waits until the intended launch mechanics are implemented, native/Python/WASM behavior is validated, and representative browser simulation workloads pass the performance/readiness gate. See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
 
 ## Engine
 
@@ -50,12 +56,14 @@ The engine is a single native codebase with C++20 internals and a C ABI boundary
 
 Important engine properties:
 
-- Deterministic seeded RNG.
+- Engine-owned random state with no global process RNG.
 - No undefined behavior reliance.
-- Stable behavior across native and WASM builds.
+- Shared crafting rules across native and WASM builds.
 - Coarse batch-oriented API.
 - Data structures designed for hot simulation loops.
-- Small regression tests for core crafting interactions and seeded action sequences.
+- Small regression tests for core crafting interactions.
+
+The strategy simulator is part of the native engine, not a second TypeScript or Python interpreter. The visual editor produces a compiled strategy graph, and native, Python, and WASM callers all invoke the same simulator implementation.
 
 The initial engine work should emphasize correctness and inspectability over ML-readiness.
 
@@ -85,23 +93,26 @@ Each generated artifact should carry version metadata:
 - source data version
 - schema version
 - generated data hash
-- RNG version
 - model version, once ML exists
 
 ## Runtime Data Loading
 
+The authoritative definitions of mod rows, tag channels, groups, families, session universes, and action candidate sets are in [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). This architecture document uses those terms without redefining them.
+
 For a crafting session, load the relevant item data into engine memory:
 
-- applicable mods for the item
-- mod groups
-- tags
-- weights
-- tiers
+- session-reachable mod rows
+- exclusivity groups and UI-family metadata
+- base tags, ordered weight-selector tags, classification tags, and added tags as separate channels
+- ordered spawn/generation-weight rows and action-specific weight tables
+- tier/stat metadata
 - item-level restrictions
 - domain/generation metadata
 - influence, fractured, synthesized, eldritch, essence, fossil, harvest, bench, metamod, and cannot-roll rule context as needed
 
-The engine should generate action-specific mod pools from this item-local universe and cache them for repeated use. Cache keys should include every state component that can affect legality or weighting, such as item level, tags, influence state, metamods, fossil constraints, and blocked prefix/suffix rules.
+For a selected base and item level, include all normal and influence-specific mods that the supported actions can reach. Influence changes then select another tag signature and mask instead of rebuilding the session. Sessions remain immutable after construction. Per-worker action contexts build uncommon tag-signature weight arrays and action-pool caches lazily, so shared sessions require no cache mutation or synchronization. Recombinators may use a dedicated two-item session because their universe depends on both input items and possible output bases.
+
+The engine should generate action-specific weighted candidate pools from this item-local universe and cache them in the worker-local action context for repeated use. The session identity already fixes base and item level. Within a session, cache keys should include every mutable/contextual component that can affect legality or weighting, such as effective tag signature, influence state, metamods, fossil constraints, open affix sides, and blocked exclusivity groups.
 
 UI-only data such as display names, icons, descriptions, localization, and change history can stay outside the engine and be lazy-loaded by the frontend.
 
@@ -115,8 +126,9 @@ The session mod store should use structure-of-arrays layout for hot fields:
 - generation type
 - domain
 - required item level
-- tags
-- mod group
+- ordered spawn/generation-weight rows
+- classification tags and added tags as separate channels
+- exclusivity group
 - spawn weights
 - tier/range data
 - influence and special-mechanic flags
@@ -126,37 +138,39 @@ The engine should precompute bitset indexes over the dense session IDs:
 
 - all prefix mods
 - all suffix mods
-- mods by tag
+- mods by classification tag
+- mods referenced by spawn-weight selector tag
+- mods referenced by generation-weight selector tag
 - mods by generation type
 - mods by domain
 - mods by influence or special mechanic
-- mods by item-level threshold
-- mods by mod group
+- mods by exclusivity group
 - mods affected by fossil, essence, harvest, bench, metamod, or cannot-roll constraints
 
-Action pool filtering should mostly be bitset algebra:
+Item level is baked into session construction. Action filtering should mostly be bitset algebra using the action-specific formula:
 
 ```text
 candidate_pool =
-    action_base_mask
-    & affix_availability_mask
-    & item_level_mask
-    & required_tag_mask
+    action_universe_mask
+    & open_affix_side_mask
+    & positive_weight_mask_for_this_action
+    & influence_allowed_mask
     & mechanic_allowed_mask
     & ~blocked_group_mask
-    & ~cannot_roll_mask
+    & ~metamod_block_mask
 ```
+
+The exact masks and weight rule differ by action. Normal explicit rolls use spawn × generation. Harvest-targeted draws use classification-tag membership and spawn weight only while still respecting metamods. If both prefix and suffix are legal, sample one combined weighted distribution rather than choosing a side 50/50.
 
 After legality filtering, the engine can build or reuse a weighted selection table for that pool. For small pools a simple cumulative weight array may be enough. For hot repeated pools, an alias table or cached prefix-sum table can avoid rebuilding selection data during large simulation batches.
 
-Action pool cache keys should be explicit and conservative. A key should include the action type plus every item/session feature that can change either legality or weights:
+Action-pool cache keys should be explicit and conservative. A key should include the action type plus every item/context feature that can change either legality or weights:
 
-- item level
-- base tags
+- effective tag signature
 - influence state
 - eldritch state
 - fractured/synthesized state
-- existing mod groups
+- existing exclusivity groups
 - prefix/suffix occupancy
 - metamod state
 - fossil and resonator state
@@ -173,7 +187,7 @@ Validation layers:
 
 - Smoke tests for ingest, session creation, and core actions.
 - A small number of spec fixtures for important crafting interactions.
-- Seeded native/Python/WASM replay checks for covered action sequences.
+- Native/Python/WASM smoke checks against the same rule fixtures and result shapes.
 - Lightweight data diff reports after source data refreshes.
 - Targeted edge-case tests only when implementing a tricky mechanic or fixing a bug.
 
@@ -193,6 +207,25 @@ Likely approaches:
 Initial ML work can use a static economy baseline. League economy inputs can be added later if strategy recommendations need to become price-sensitive per league.
 
 The public app should eventually ship a bundled model or lightweight strategy data so inference remains client-side.
+
+## Community Backend
+
+The community backend is a later phase and should not block the local simulator.
+
+Suggested shape:
+
+- TypeScript/Node HTTP API.
+- PostgreSQL for users, saved resources, immutable strategy versions, publications, statistics, and social relationships.
+- Path of Exile OAuth 2.1 login with a separate admin-only fallback.
+- Optional account sync; guests remain fully supported locally.
+- Browser-generated 100,000-run statistics for initial publishing.
+- Public/private/unlisted visibility.
+- Profiles, favorites, forks, follows, and ratings first.
+- Comments, reports, and moderation later.
+
+Publishing freezes a strategy version. Published costs remain tied to the economy snapshot used for the run. Unpublishing removes public access without breaking fork attribution/version history.
+
+Publishing is not an early engine milestone. It begins only after the complete intended public mechanic set, cross-target validation, public data packaging, and browser throughput/cancellation work are release-ready.
 
 ## Private Training Infrastructure
 
@@ -216,20 +249,21 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 1. Repo and project scaffolding.
 2. Data pipeline prototype from old project data into canonical SQLite.
 3. Generated engine data blob format.
-4. Native engine port with lean deterministic tests.
+4. Native engine port with lean rule and invariant tests.
 5. WASM build and TypeScript integration.
 6. Public emulator UI for one-action crafting flows.
-7. Validation expansion against documented rules and known examples.
-8. Strategy graph editor and simulator trace UI.
-9. Baseline strategy search / Monte Carlo evaluator.
-10. Private training coordinator and worker loop.
-11. Client-side ML or strategy suggestion prototype.
+7. Strategy graph editor and simulator trace UI.
+8. Account backend, Path of Exile OAuth login, and account Stash sync.
+9. Complete the intended public crafting mechanics and validation coverage.
+10. Performance, browser-worker, packaging, and public-engine readiness pass.
+11. Strategy publishing, discovery, and initial social features.
+12. Reports, moderation, and comments.
+13. Baseline strategy search / Monte Carlo evaluator.
+14. Private training coordinator and worker loop.
+15. Client-side ML or strategy suggestion prototype.
 
 ## Open Questions
 
 - Exact generated binary format for engine-hot data.
-- First supported crafting mechanics and item classes.
-- First strategy graph condition/operator subset.
 - Which mechanics should be redesigned rather than inherited from the previous app.
-- Static economy baseline format for future strategy evaluation.
 - Release process for league data updates.

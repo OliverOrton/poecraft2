@@ -9,10 +9,12 @@ Emulator:
   user performs crafting operations one by one
 
 Simulator:
-  user loads or builds a strategy, then runs many attempts
+  user loads or builds a strategy, then runs many simulations
 ```
 
 The old project already had this split. The new project should keep it, but the strategy editor should become a visual graph editor instead of a mostly linear list of steps.
+
+Strategy Builder is one of the four core workspace areas alongside Emulator, Simulator, and Stash.
 
 The direction is:
 
@@ -21,10 +23,10 @@ Visual feel:
   Unreal Blueprints-style node graph
 
 Execution model:
-  deterministic strategy graph runner
+  native strategy simulator
 ```
 
-The graph is for authoring and debugging strategy flow. The simulator should still execute a deterministic strategy model that can be tested without the UI. The prior app's simulator is a useful design reference, but new strategies do not need to be backward-compatible with old strategy files.
+The graph is for authoring and debugging strategy flow. The simulator is the native engine subsystem that executes the compiled graph. Python and WebAssembly bindings call the same simulator; they do not implement separate graph interpreters. The prior app's simulator is a useful design reference, but new strategies do not need to be backward-compatible with old strategy files.
 
 ## Old Simulator Model
 
@@ -48,17 +50,19 @@ Each step could:
 3. Follow a success or failure outcome.
 4. Repeat until success, failure routing, or max attempts.
 
-The simulator tracked:
+`max_attempts` is documented here only as old behavior. The new graph does not carry per-node attempt limits; repetition is explicit graph flow and safety limits belong to the simulator run configuration.
+
+The old simulator tracked:
 
 ```text
 current step
-attempt count
+step attempt count
 currency used
 step logs
 final item
 ```
 
-The new editor should not throw this away. It should expose the same control flow visually.
+The new editor should preserve the useful routing model visually, but it does not need per-node attempt loops.
 
 ## New Strategy Model
 
@@ -130,7 +134,6 @@ id
 name
 operation type
 operation params
-max attempts
 position
 notes
 ```
@@ -140,21 +143,18 @@ Examples:
 ```text
 operation: chaos
 params: {}
-max_attempts: 1000
 ```
 
 ```text
 operation: essence
 params:
   essence_id: essence_of_horror
-max_attempts: 500
 ```
 
 ```text
 operation: fossil
 params:
   fossils: [dense_fossil, pristine_fossil]
-max_attempts: 300
 ```
 
 ### Terminal Node
@@ -177,6 +177,8 @@ budget exceeded
 cannot continue
 manual stop
 ```
+
+Reaching a success terminal defines the strategy goal. There is no separate global end-condition object. Restart edges only direct execution back through the graph and never define the goal.
 
 ### No-op / Router Node
 
@@ -224,6 +226,8 @@ go to repair state
 stop
 ```
 
+A restart is represented as an ordinary transition back to the chosen restart state, optionally after applying a reset/scour operation. It is flow control, not a terminal result.
+
 Only one default edge should be allowed per node.
 
 ## Execution Semantics
@@ -231,31 +235,25 @@ Only one default edge should be allowed per node.
 For an operation node:
 
 ```text
-attempts = 0
-
-while attempts < node.max_attempts:
-  apply node.operation
-  attempts += 1
-  evaluate outgoing edges in priority order
-
-  if matching edge exists:
-    move to edge.target
-    record trace entry
-    return
-
-  if default edge exists:
-    if default target is this node:
-      continue
-    move to default target
-    record trace entry
-    return
-
-  continue
-
-fail max attempts
+apply node.operation once
+increment run-wide action/currency counters
+evaluate outgoing edges in priority order
+take first matching edge, otherwise the default edge
+record trace entry
 ```
 
-This preserves the useful control-loop shape where a state can repeat until conditions pass or max attempts are reached.
+Repeating an operation is represented by a self-edge or another cycle in the graph.
+
+The simulator run configuration, not individual nodes, owns safety limits:
+
+```text
+maximum total craft actions
+optional maximum total cost
+cancellation flag
+optional wall-clock budget in interactive/browser jobs
+```
+
+Reaching a configured limit terminates the run with a non-success limit result. These guards prevent malformed or intentionally cyclic graphs from running forever without adding per-node attempt semantics.
 
 For a no-op/router node:
 
@@ -299,7 +297,7 @@ has empty affix side
 item is craftable
 item is corrupted/mirrored/split/synthesised
 cost spent <= amount
-attempts at node <= amount
+total craft actions <= amount
 ```
 
 Later condition types:
@@ -398,17 +396,16 @@ bottom panel:
   run trace
   currency/stats
   item snapshots
-  selected attempt details
+  selected simulation details
 ```
 
 Do not use a landing page for the strategy editor. The first screen should be the working board.
 
-The strategy editor itself should be a document inside the desktop workspace described in [desktop-workspace-ui.md](desktop-workspace-ui.md). Its inspector, run trace, and statistics can live in docked tool panels, while result sets and saved traces may open as separate documents. This allows layouts such as:
+The Strategy Builder itself should be a tab inside the desktop workspace described in [desktop-workspace-ui.md](desktop-workspace-ui.md). It can be split beside Emulator, Simulator, or Stash. Its inspector and condition editor remain part of the Strategy Builder area rather than becoming unrelated top-level applications.
 
 ```text
 strategy editor on the left
-simulation results on the right
-run trace on the bottom
+simulator on the right
 ```
 
 ## Node Visual Design
@@ -420,7 +417,6 @@ Operation node contents:
 ```text
 operation name
 important params
-max attempts
 current validation status
 optional run stats from last simulation
 ```
@@ -429,13 +425,11 @@ Example:
 
 ```text
 Chaos Orb
-max 1000
 ```
 
 ```text
 Essence
 Horror
-max 500
 ```
 
 Terminal nodes should be visually distinct:
@@ -491,7 +485,7 @@ warn when a node has no outgoing edge
 warn when multiple default edges exist
 warn when a node cannot reach a terminal
 warn when an edge condition references unavailable data
-warn when max attempts is missing or too high
+warn when a graph has no reachable success or non-success terminal
 ```
 
 ## Web Implementation Approach
@@ -541,9 +535,63 @@ Sequential Workflow Designer:
 
 Default recommendation: build the first board custom. The graph model is domain-specific enough that a generic node editor may create more friction than it removes.
 
+## Saving And Stash
+
+Strategy content saves manually.
+
+```text
+Save:
+  write to the current owned strategy resource
+
+Save As:
+  create a new strategy resource
+
+Import/Fork:
+  create a new unsaved copy
+```
+
+Closing a dirty Strategy Builder tab prompts Save, Discard, or Cancel.
+
+Stash strategy cards show:
+
+```text
+title
+description
+compact success-route summary
+publication state
+success/cost statistics when available
+author and fork attribution
+```
+
+Complex success routes should not be rendered as a fabricated exact goal item.
+
+## Publishing
+
+Publishing freezes an immutable strategy version and runs 100,000 browser simulations.
+
+Store the resulting:
+
+```text
+success rate
+average/median/percentile cost when complete
+cost status and missing price keys
+average craft actions per run
+sample count
+engine/data versions
+economy snapshot
+```
+
+Reaching a success terminal determines success. Restart transitions affect the run but do not count as the goal.
+
+Publishing is unavailable until the full public engine mechanic, validation, packaging, and performance/readiness gates pass.
+
+See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
+
 ## Strategy JSON Shape
 
 The saved strategy should separate graph authoring data from execution semantics.
+
+Persistent strategy JSON uses stable global base/mod keys. A base key is the RePoE metadata path, not a display name, slug, or runtime integer ID. Session-local dense IDs exist only after the native simulator compiles the strategy for a specific data/session version.
 
 ```json
 {
@@ -552,7 +600,7 @@ The saved strategy should separate graph authoring data from execution semantics
   "description": "",
   "start_node_id": "start",
   "base_state": {
-    "base_id": "spine_bow",
+    "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/SpineBow",
     "item_level": 86
   },
   "nodes": [
@@ -569,7 +617,6 @@ The saved strategy should separate graph authoring data from execution semantics
         "type": "chaos",
         "params": {}
       },
-      "max_attempts": 1000,
       "position": { "x": 320, "y": 0 }
     },
     {
@@ -620,12 +667,13 @@ nodes
 edges
 conditions
 operation params
-max attempts
 ```
 
-## Compilation To Runner
+Run-wide limits come from the simulation options, not the saved graph.
 
-The graph should compile into a runner-friendly representation:
+## Compilation To Simulator
+
+The graph should compile into a simulator-friendly representation:
 
 ```text
 node_id -> operation
@@ -634,9 +682,9 @@ edge -> compiled condition
 terminal node ids
 ```
 
-The compiled runner should not care how the graph looked on the board.
+The compiled simulator should not care how the graph looked on the board.
 
-This also lets Python/native/ML tools run strategies without the web UI.
+The simulator implementation lives in the native engine. This lets Python, WebAssembly, and later ML tools run strategies without the web UI while preserving one execution implementation.
 
 ## Relationship To Emulator
 
@@ -649,6 +697,20 @@ mod display helpers
 debug pool views
 currency/cost model
 ```
+
+The simulator supports two item-detail modes:
+
+```text
+structural:
+  skip numeric stat rolls for maximum throughput
+  conditions that require rolled numeric values are unavailable
+
+full_rolls:
+  roll and retain numeric stat values
+  required for stat-total conditions and representative result items
+```
+
+Structural mode is the initial default. Full-roll simulation can be added as an explicit toggle without changing graph structure.
 
 But they have different interaction models:
 
@@ -664,7 +726,20 @@ Strategy editor:
   trace/stat inspection matters
 ```
 
-The strategy editor should be able to open an item snapshot from a trace in emulator mode. That will make debugging strategies much easier.
+Cross-area imports:
+
+```text
+Emulator -> Strategy Builder:
+  create a new unsaved strategy
+  current Emulator item becomes the start state
+
+Strategy Builder -> Emulator:
+  create a new unsaved item from a selected concrete successful result
+```
+
+For strategies with multiple success routes, do not synthesize a fake item. If no successful result has been selected, the user must run the strategy or choose a saved representative example before importing the goal into Emulator.
+
+The Strategy Builder should also be able to open any item snapshot from a trace in Emulator as a new unsaved item.
 
 ## First UI Slice
 
@@ -679,7 +754,7 @@ First useful strategy editor slice:
    - has mod group
    - open prefix/suffix
    - rarity
-6. Save/load strategy JSON.
+6. Manually save/load strategies through Stash.
 7. Run one strategy once and show trace.
 8. Run N simulations and show aggregate success/cost.
 
@@ -689,8 +764,11 @@ Do not build a full visual scripting language first. Prove that the graph can ex
 
 - Strategy graph authoring is a UI concern; execution must be testable without the UI.
 - Operation nodes mutate item state; edge conditions inspect item state.
+- Reaching a success terminal defines success; restart transitions only control flow.
 - Conditions are pure and deterministic.
 - Outgoing edges are evaluated in priority order.
 - A node may have at most one default edge.
-- Simulator traces should record node id, operation, attempts, matched edge, item snapshot, and currency used.
+- Simulator traces should record node id, operation, cumulative craft-action count, matched edge, item snapshot, and currency used.
+- Per-node attempt limits are not part of the graph; run-wide simulation options provide safety limits.
+- Strategy content is manually saved; Import/Fork creates a new unsaved copy.
 - The UI should feel Blueprint-like, but the logic should stay strategy-oriented rather than becoming arbitrary visual code.

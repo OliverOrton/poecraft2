@@ -1,5 +1,7 @@
 # Implementation Plan
 
+Modifier vocabulary and action-selection semantics in this plan defer to [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md).
+
 ## Purpose
 
 This is the build plan for turning the planning docs into code. It assumes the current decisions:
@@ -10,14 +12,17 @@ public boundary: C ABI
 ingest: Python
 source database: SQLite
 frontend: Vite + TypeScript + native Web Components
+workspace: dockview-core tabs/splits
 first binding: Python
 browser runtime: WebAssembly later
+accounts/community backend: later phase
+game: Path of Exile 1
 ```
 
 The first objective is not to support every crafting mechanic. The first objective is to prove the full vertical slice:
 
 ```text
-source data -> SQLite -> compiled data -> native engine -> action simulation -> lean regression checks -> simple web emulator
+source data -> SQLite -> compiled data -> native engine -> action simulation -> lean regression checks -> local workspace/Stash
 ```
 
 Once that slice is correct, mechanics and UI surfaces can expand safely.
@@ -25,14 +30,16 @@ Once that slice is correct, mechanics and UI surfaces can expand safely.
 ## Build Principles
 
 - Keep SQLite canonical, but never use SQLite in hot simulation loops.
-- Keep engine runtime data compact, dense, and deterministic.
-- Add mechanics only after the base pool, item state, masks, weights, and action loop are proven.
+- Keep engine runtime data compact, dense, and consistent across bindings.
+- Add mechanics only after the session mod universe, item state, masks, weights, and action loop are proven.
 - Every public engine API returns explicit result codes.
-- Every random action uses caller-owned deterministic RNG state.
+- Random state is owned by the action/simulator context; never use process-global random state.
 - The frontend asks the engine for rule answers; it does not reimplement crafting rules.
-- Strategy graph editing is UI-authoring; compiled strategies must run without the UI.
+- Strategy graph editing is UI-authoring; the native engine simulator executes compiled strategies for Python and WASM callers.
+- Item and strategy resources use stable IDs/schema versions from the first local save implementation.
+- Item and strategy content saves manually; workspace layout persistence is separate.
 - The old app is a design reference, not a compatibility target. Do not require byte-for-byte behavior, saved-strategy compatibility, or old-engine parity.
-- Keep testing practical. Prefer smoke tests, a few rule fixtures, seeded replay checks, and bug regressions over broad coverage goals.
+- Keep testing practical. Prefer smoke tests, a few rule fixtures, action invariants, and bug regressions over broad coverage goals.
 
 ## Phase 0: Scaffolding And Tooling
 
@@ -69,31 +76,42 @@ Acceptance gate:
 
 - `scripts/build.ps1` runs without doing much yet.
 - `scripts/test.ps1` runs smoke tests for the pieces that exist.
-- CI is optional at this point, but local commands must be the source of truth.
+- A small GitHub Actions workflow runs the same build/test entry points on Windows.
+- Add Linux and WASM jobs when those targets exist; do not create a broad CI matrix before there is code to exercise.
 
-## Phase 1: SQLite Schema And Seed Ingest
+## Phase 1: SQLite Schema And Full Dataset Ingest
 
-Goal: produce a canonical SQLite database from a small but real subset of source/RePoE-shaped data.
+Goal: produce a canonical SQLite database from the complete current crafting-relevant RePoE dataset.
+
+Canonical ingest is broad from the beginning. It must not discard rows merely because the first engine fixture or currently implemented mechanics do not use them. Runtime support can remain narrow while canonical source preservation is complete.
 
 Implement schema:
 
 ```text
-mods
-mod_stats
-mod_spawn_weights
-mod_generation_weights
-mod_implicit_tags
-mod_adds_tags
-mod_flags
-mod_groups
-base_items
-base_tags
-essence_guarantees
-fossils
-fossil_weight_modifiers
-fossil_added_mods
-fossil_forced_mods
-bench_options
+data_manifest
+source_file
+tag
+item_class
+base_item
+base_item_tag
+base_item_implicit
+mod
+mod_stat
+mod_spawn_weight
+mod_generation_weight
+mod_implicit_tag
+mod_adds_tag
+bench_option
+bench_option_item_class
+bench_option_cost
+fossil
+fossil_weight
+fossil_mod_link
+essence
+essence_mod
+cluster_jewel
+cluster_jewel_passive
+cluster_notable
 ```
 
 Implement ingest modules:
@@ -108,24 +126,30 @@ write_sqlite.py
 cli.py
 ```
 
-Start with a narrow data subset:
+Ingest all available rows for the implemented canonical source tables:
 
 ```text
-one normal non-cluster base
-normal explicit prefix/suffix mods for that base
-mod stats and display text
-spawn weights
-generation weights
-implicit tags
-groups
-basic essences/fossils only if needed for early tests
+all released base items and their tags/implicits
+all mod rows in the relevant source domains
+all mod stats and display text
+all ordered spawn and generation weights
+all classification and added tags
+all exclusivity groups and source metadata
+all bench options and costs
+all fossil definitions, weights, and mod links
+all essence definitions and guaranteed-mod links
+all cluster-jewel definitions, passives, and notable records
 ```
+
+Cluster-jewel records are normalized and retained now, but cluster-specific session construction is deferred. Until cluster enchant/passive-tag selection, notable caps, and socket rules are implemented, attempting to create a cluster-jewel session must return an explicit unsupported-feature result. It must not silently use normal jewel rules.
 
 Acceptance gate:
 
 - Ingest builds `data/sqlite/poecraft.db` deterministically.
 - Running ingest twice produces the same schema version and data hash.
 - A validation command prints row counts and top-level warnings.
+- Source-to-SQLite validation accounts for every row in the crafting-relevant source files; skipped rows require an explicit reason code.
+- Cluster-jewel source records are present and internally referentially valid even though cluster session construction is not yet supported.
 - A query can return all normal rollable prefix/suffix mods for the chosen base.
 
 ## Phase 2: Lean Spec Fixtures
@@ -142,7 +166,7 @@ fixtures/spec/action-results/
 Initial fixtures:
 
 ```text
-base mod pool for one base/item level
+session mod universe for one base/item level
 one normal prefix candidate pool
 one normal suffix candidate pool
 one chaos or alchemy candidate pool
@@ -178,7 +202,7 @@ Acceptance gate:
 - Fixture loading and validation is scriptable.
 - Fixtures are small enough to inspect in review.
 - Each fixture explains the rule being tested.
-- No fixture depends on old-app serialized data or old-app RNG behavior.
+- No fixture depends on old-app serialized data or exact old-app RNG sequences.
 - Do not add fixtures just to increase coverage; add them for core rules, tricky mechanics, or bugs.
 
 ## Phase 3: Compiled Data Format
@@ -193,7 +217,7 @@ mods.json or mods.bin
 strings.json or strings.bin
 ```
 
-Use JSON for the first tiny slice if that makes debugging faster. Move to binary arrays once the data shape stabilizes.
+Use JSON for the first selected-base engine fixture if that makes debugging faster. Canonical SQLite still contains the full dataset. Move to full-dataset binary arrays once the runtime data shape stabilizes.
 
 Compiled data should include:
 
@@ -217,24 +241,29 @@ Acceptance gate:
 
 - `compile_engine_data.py` reads SQLite and writes compiled artifacts.
 - Artifacts have schema version, source hash, generated timestamp, and row counts.
-- A validation command can diff SQLite counts against compiled counts.
+- A validation command can diff the artifact's declared SQLite selection against compiled counts.
+- Any selected-base debug artifact records its filter explicitly and never masquerades as a complete compiled-data artifact.
 
 ## Phase 4: Native Engine Foundation
 
-Goal: build the native engine shell with deterministic primitives.
+Goal: build the native engine shell with fixed-width, testable primitives.
 
 Implement:
 
 ```text
 result codes
 fixed-width public types
+ABI version and struct-size fields
 data loader
+file and memory data-loading entry points
 string/id lookup tables
-deterministic RNG
+engine-owned RNG state
 bitset word helpers
 ItemState and ModSlot
 CraftScratch
+per-worker action-context handle
 basic debug printing helpers
+opaque-handle create/destroy rules
 ```
 
 Engine files:
@@ -252,9 +281,12 @@ engine/src/item_state.cpp
 Acceptance gate:
 
 - Engine smoke tests compile and run.
-- RNG gives identical sequences across test runs.
 - `ItemState` copy is a plain cheap value copy.
 - Basic add/remove/compact side helpers have focused unit tests.
+- Failed mutating API calls leave item state unchanged.
+- Data/session/action-context handles and caller-provided output buffers pass basic lifetime/leak checks.
+- Two action contexts can safely share one immutable session while owning independent random state, scratch space, and caches.
+- Provisional fixed capacities are checked against the current ingested dataset before the ABI is frozen.
 
 ## Phase 5: Session Builder, Masks, And Weights
 
@@ -267,7 +299,7 @@ dense session mod ids
 session_global_mod_id[]
 prefix_mask
 suffix_mask
-base_spawnable_mask
+base_explicit_universe_mask
 normal_random_roll_mask
 crafted/essence/implicit exclusion masks
 group_mask[group_id]
@@ -276,7 +308,12 @@ influence masks
 tag_signature interning
 base_roll_weight[tag_signature_id][mod_id]
 positive_base_weight_mask[tag_signature_id]
+positive_spawn_weight_mask[tag_signature_id]
 ```
+
+Include every influence-specific mod reachable for the selected base/item level in the same dense session universe. Keep prefix, suffix, influence, and mechanic masks as separate bitsets over those shared IDs. Sessions are immutable after construction. Build uncommon influence/tag-signature weight arrays lazily in the worker-local action context.
+
+The first fixture uses an ordinary non-cluster base. Session creation for other ordinary bases should use the same generic path as soon as their compiled rows are available. Cluster-jewel session creation remains explicitly unsupported in this phase; cluster records being present in SQLite does not imply that cluster runtime rules are implemented.
 
 Implement debug APIs:
 
@@ -289,9 +326,11 @@ compare a spec fixture pool
 
 Acceptance gate:
 
-- Session pool matches a spec fixture for selected base/item level.
-- Normal prefix/suffix pools match a spec fixture after group blocking and item state filters.
+- Session mod universe matches a spec fixture for selected base/item level.
+- Normal prefix/suffix weighted candidate pools match a spec fixture after exclusivity-group blocking and item-state filters.
 - Final weights match documented truncation behavior.
+- Combined prefix/suffix draws and Harvest spawn-only targeting match their focused fixtures.
+- Cluster-jewel session creation returns the explicit unsupported-feature result until cluster runtime support is implemented.
 
 ## Phase 6: Core Action Engine
 
@@ -328,13 +367,13 @@ Core action rules:
 
 Acceptance gate:
 
-- Seeded basic action tests are deterministic.
+- Basic action tests validate legal outcomes and item-state invariants.
 - Spec pool checks pass before and after action mutation.
 - Reforge tests prove removed groups do not block new rolls.
 - Annul/remove tests respect fractured and locked-side behavior.
 - Keep this set small; expand only when a new mechanic or bug needs it.
 
-## Phase 7: Python Binding And Batch Runner
+## Phase 7: Python Binding And Batch API
 
 Goal: expose the native engine to Python for validation tooling, batch simulation, and future ML work.
 
@@ -350,21 +389,48 @@ Minimum Python API:
 
 ```python
 data = load_data(path)
-session = data.create_session(base_id, item_level)
+session = data.create_session(base_key, item_level)
+context = session.create_action_context()
 item = session.create_item(rarity="rare")
-result = session.apply(item, {"type": "chaos"}, seed=123)
-pool = session.debug_pool(item, {"type": "chaos"})
+result = context.apply(item, {"type": "chaos"})
+pool = context.debug_pool(item, {"type": "chaos"})
 ```
 
 Acceptance gate:
 
-- Python can run the same core seeded action checks as native.
+- Python can run the same core action/rule checks as native.
 - Python can load spec fixtures and compare pools/weights.
-- Batch simulation can run many chaos/alchemy/exalt attempts without leaking memory.
+- Batch simulation can run many chaos/alchemy/exalt craft operations without leaking memory.
 
-## Phase 8: Web Workspace And Emulator Slice
+## Phase 8: WebAssembly And Worker Runtime
 
-Goal: build the desktop-like browser workspace and the first item emulator document around the engine API.
+Goal: expose the production engine boundary to the browser before building the real application UI.
+
+Implement:
+
+```text
+bindings/wasm/
+apps/web/src/app/engine-client.ts
+apps/web/src/app/engine-worker.ts
+```
+
+Rules:
+
+- Use Web Workers for long-running simulations.
+- Keep API coarse-grained for batch strategy runs.
+- Support cancellation and progress messages.
+- Load compiled data through the C ABI memory-loading path.
+- Keep the TypeScript `EngineClient` small and stable so UI components do not depend on WASM memory details.
+
+Acceptance gate:
+
+- Native and WASM pass the same rule-fixture and API-shape smoke checks.
+- A headless browser/worker test can load data, create a session, create an item, apply an action, and query a debug pool.
+- Long runs do not block the UI.
+
+## Phase 9: Web Workspace And Emulator Slice
+
+Goal: build the desktop-like browser workspace and the first item emulator document against the real `EngineClient`.
 
 Use:
 
@@ -388,7 +454,7 @@ pc-mod-list
 pc-select
 pc-combobox
 pc-weight-table
-pc-saved-items
+pc-stash
 ```
 
 First UI features:
@@ -397,6 +463,8 @@ First UI features:
 open multiple item documents
 rearrange tabs and create resizable splits
 restore the previous workspace layout
+open Emulator and Stash
+keep document registration extensible for later real Simulator and Strategy Builder tabs
 select base
 select item level
 create item
@@ -404,50 +472,29 @@ apply one craft operation at a time
 show item mods
 show craft history
 show debug candidate pool for selected action
-autosave drafts
-save, save as, duplicate, and reopen items
+manually save, save as, duplicate, and reopen items
+close dirty tabs with Save/Discard/Cancel
+recover dirty/unsaved work after a crash or reload
+Edit saved resources or Import as a new unsaved copy
 ```
 
-Start with a mock engine client if WASM is not ready, but keep the interface shaped like the final engine client.
+Do not build a disposable mock application. Small fake `EngineClient` implementations are allowed only in isolated component tests; the real emulator slice integrates with WASM.
 
 Acceptance gate:
 
 - User can open two item documents and arrange them in tabs or a split.
-- Workspace layout and open drafts survive reload.
+- Workspace layout survives reload independently from domain content.
+- Dirty or unsaved work can be recovered without appearing in Stash.
 - User can run the first supported actions one by one.
+- User can manually save items to Stash and reopen them.
 - Saved items can be reopened without depending on the current panel layout.
 - UI displays the same item state as engine debug output.
 - Debug pool view matches engine debug output for the first supported actions.
 - No React dependency.
 
-## Phase 9: WebAssembly And Worker Runtime
+## Phase 10: Native Strategy Simulator
 
-Goal: run the real engine in the browser.
-
-Implement:
-
-```text
-bindings/wasm/
-apps/web/src/app/engine-client.ts
-apps/web/src/app/engine-worker.ts
-```
-
-Rules:
-
-- Use Web Workers for long-running simulations.
-- Keep API coarse-grained for batch strategy runs.
-- Support cancellation and progress messages.
-- Keep deterministic seeds visible in debug output.
-
-Acceptance gate:
-
-- Native and WASM replay one small seeded smoke sequence.
-- Browser emulator can use real engine data.
-- Long runs do not block the UI.
-
-## Phase 10: Strategy Graph Runner
-
-Goal: implement strategy execution independent of the visual editor.
+Goal: implement the simulator in the native engine, independent of the visual editor, and expose it through Python and WASM.
 
 Implement strategy model:
 
@@ -459,6 +506,8 @@ TerminalNode
 GuardedEdge
 ConditionExpression
 StrategyTrace
+SimulationOptions
+EconomySnapshot
 ```
 
 Initial conditions:
@@ -480,19 +529,26 @@ operation node applies action
 outgoing edges evaluate in priority order
 first matching edge wins
 default edge handles fallback
-trace records node, action, attempts, matched edge, item snapshot, cost
+reaching a success terminal defines success
+run-wide action/cost/cancellation limits prevent infinite execution
+economy snapshot maps each operation/input combination to chaos-equivalent cost
+trace records node, action, matched edge, item snapshot, cumulative actions, cost
+bounded retained traces and representative success/failure items
+aggregated failure summaries
 ```
 
 Acceptance gate:
 
-- Strategy JSON can run without the UI.
+- Strategy JSON can compile and run in the native engine without the UI.
 - A simple chaos-repeat-until-condition strategy works.
 - Trace output explains which edge matched at every step.
+- C/Python/WASM callers can query retained traces, representative terminal items, and aggregated failure summaries without retaining every run.
 - Linear step-style strategies can be represented by graph JSON.
+- Python and WASM call the same native simulator implementation.
 
 ## Phase 11: Strategy Editor UI
 
-Goal: build the Blueprint-style graph editor.
+Goal: build the Blueprint-style graph editor and connect the real Simulator workspace tab.
 
 Components:
 
@@ -503,6 +559,7 @@ pc-strategy-node
 pc-edge-layer
 pc-condition-editor
 pc-run-trace
+pc-simulator
 ```
 
 First editor features:
@@ -510,9 +567,10 @@ First editor features:
 ```text
 drag operation/start/terminal nodes
 connect nodes with edges
-edit node operation and max attempts
+edit node operation
 edit edge conditions
-save/load graph JSON
+manual save/load through Stash
+import Emulator item as start state
 run once
 run N simulations
 inspect trace and aggregate stats
@@ -521,13 +579,50 @@ inspect trace and aggregate stats
 Acceptance gate:
 
 - The editor can create the same simple strategy used in Phase 10.
-- Saved JSON round-trips without losing layout or semantics.
+- Manually saved strategies round-trip without losing layout or semantics.
+- Emulator import creates a new strategy with the current item as its start state.
 - Invalid graphs show warnings.
 - Trace highlights taken nodes and edges.
 
-## Phase 12: Mechanic Expansion
+## Phase 12: Account And Sync Foundation
 
-Goal: expand coverage after the core loop is proven.
+Goal: add optional accounts after the local app, Stash, and Strategy Builder are usable.
+
+Implement:
+
+```text
+TypeScript/Node API
+PostgreSQL schema
+Path of Exile OAuth 2.1 login
+admin-only fallback login
+account Stash
+manual item/strategy sync
+prompted guest-data merge
+account export/deletion
+minimal Terms/Privacy pages and GGG/RePoE attribution
+```
+
+Rules:
+
+- Guests keep full local functionality.
+- Existing guest data is merged only after confirmation.
+- Manual Save writes account resources; unsaved changes are not uploaded.
+- Stable local resource IDs/schema versions map cleanly to server resources.
+- Cached account resources may be opened offline, but offline account writes are not queued; offer Save Local Copy/export.
+- OAuth credentials are encrypted at rest; browser sessions use secure, HTTP-only, same-site cookies.
+
+Acceptance gate:
+
+- Guest use still works without the API.
+- Path of Exile user can sign in and access saved resources on another browser.
+- First sign-in asks whether to merge local resources.
+- Admin fallback is not exposed as normal public signup.
+- User can export owned resources and delete the account.
+- The public app displays the required GGG non-affiliation notice and links its privacy/terms pages.
+
+## Phase 13: Mechanic Expansion
+
+Goal: complete the engine mechanics intended for the first fully functional public release.
 
 Suggested order:
 
@@ -551,9 +646,16 @@ native and Python checks when needed
 web UI affordance
 ```
 
-## Phase 13: Performance Pass
+Acceptance gate:
 
-Goal: optimize only after correctness is measured.
+- Every crafting mechanic in the public v1 scope has ingest/schema support, native implementation, debug output, focused checks, and a usable web affordance.
+- Native, Python, and WASM agree on the shared rule/strategy fixtures for the complete v1 mechanic set.
+- Remaining unsupported mechanics are explicitly excluded from v1 rather than silently producing approximate results.
+- Publishing remains disabled until this gate and Phase 14 both pass.
+
+## Phase 14: Performance And Public-Engine Readiness
+
+Goal: optimize only after correctness is measured, then package the complete engine for public workloads.
 
 Measure:
 
@@ -578,14 +680,91 @@ faster group-block construction
 SIMD bitset operations
 binary compiled data format
 worker pool for browser simulations
+versioned engine/data artifact packaging
 ```
 
 Acceptance gate:
 
 - Benchmarks show the new engine is meaningfully faster than an object-heavy Python baseline.
-- Optimizations do not change seeded replay results.
+- Optimizations do not change rule fixtures, legality, or weight calculations.
+- A representative 100,000-run WASM job has bounded memory, visible progress, cancellation, and an acceptable completion time.
+- Engine, compiled game data, UI/cold data, and economy artifacts have immutable version/hash manifests suitable for publication retention.
+- Public publishing remains disabled until this gate passes.
 
-## Phase 14: ML And Private Training
+## Phase 15: Publishing And Discovery
+
+Goal: add strategy sharing only after the complete public engine and readiness gates have passed.
+
+Implement:
+
+```text
+private/unlisted/public visibility
+immutable strategy versions
+100,000 browser simulations on publish
+publication statistics and economy snapshot metadata
+versioned historical artifact bundles
+profiles
+favorites
+forks with attribution
+follows
+ratings
+basic public publication listing
+unpublish
+```
+
+Published summary:
+
+```text
+success rate
+average/median/percentile cost when complete
+cost status and missing price keys
+average craft actions per run
+sample count
+engine/data versions
+economy snapshot
+```
+
+Rules:
+
+- Reaching a success terminal defines publication success.
+- Restart transitions only control flow.
+- Strategy cards show title, description, and a compact success-route summary.
+- Complex goals are not converted into invented item previews.
+- Unknown prices mark cost statistics incomplete; they are never silently treated as free.
+- A strategy using cost-based control flow cannot publish against an economy snapshot missing a required price.
+- Unpublishing preserves immutable version/fork attribution records.
+- Historical publications use their archived checksum-verified artifact bundle when rerunnable and fall back to view-only when an old runtime is no longer safe/compatible.
+- Initial publishing uses safe text rendering, length limits, and rate limits. Reports and admin moderation are a later phase.
+
+Acceptance gate:
+
+- User can publish an immutable strategy version with 100,000-run statistics.
+- Another user can favorite, rate, follow the author, and fork the version.
+- Public/unlisted/private visibility behaves correctly.
+- Published costs remain tied to their economy snapshot and clearly show incomplete status when applicable.
+- An old publication never silently runs on replacement engine/data.
+
+## Phase 16: Reports, Moderation, And Comments
+
+Goal: add community governance after initial publishing is operating.
+
+Implement:
+
+```text
+report publication/profile
+admin hide/unpublish
+moderation action audit records
+comments after reporting/moderation
+activity features later
+```
+
+Acceptance gate:
+
+- Users can report public content and administrators can review and hide it.
+- Moderation actions are rate-limited and auditable.
+- Comments do not launch before reporting and moderation.
+
+## Phase 17: ML And Private Training
 
 Goal: add ML tooling after simulator correctness and throughput are stable.
 
@@ -593,14 +772,14 @@ Initial ML path:
 
 ```text
 Python binding
-strategy graph runner
+native strategy simulator
 batch simulation
 static economy baseline
 trajectory export
 baseline Monte Carlo strategy evaluation
 ```
 
-Do not start here. ML depends on a trustworthy engine and strategy runner.
+Do not start here. ML depends on a trustworthy engine and native strategy simulator.
 
 ## Immediate Next Task
 
@@ -610,14 +789,16 @@ Start with Phase 0 and Phase 1 together:
 2. Add local build/test scripts.
 3. Add SQLite schema draft.
 4. Add Python ingest package skeleton.
-5. Ingest one small real base/mod subset.
-6. Write the first validation report.
+5. Ingest the complete current crafting-relevant RePoE dataset.
+6. Write the first full-ingest validation report, including accounted/skipped row counts.
+7. Select one ordinary non-cluster base/item-level fixture for the first compiled-engine slice.
 
 The first meaningful milestone is:
 
 ```text
 Given one selected base and item level,
-the new pipeline can list the expected normal rollable prefix/suffix mods from canonical data.
+the new pipeline can list the expected normal rollable prefix/suffix mods
+from a canonical database that contains the full crafting-relevant dataset.
 ```
 
 That milestone proves the data path before the engine gets complicated.
@@ -631,7 +812,7 @@ The first MVP is complete when:
 - A session can be created for a selected base/item level.
 - Core actions can mutate `ItemState`.
 - Candidate pools and weights match the small spec fixture set.
-- The web workspace can open, save, and restore multiple item documents.
+- The web workspace can open multiple item documents and manually save/reopen them through Stash.
 - Item emulator documents can apply supported actions one by one.
 - A simple strategy graph can run repeated simulations.
-- Native, Python, and WASM seeded runs agree for the covered action set.
+- Native, Python, and WASM expose the same covered rules and simulator behavior.
