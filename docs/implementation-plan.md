@@ -313,6 +313,19 @@ positive_spawn_weight_mask[tag_signature_id]
 
 Include every influence-specific mod reachable for the selected base/item level in the same dense session universe. Keep prefix, suffix, influence, and mechanic masks as separate bitsets over those shared IDs. Sessions are immutable after construction. Build uncommon influence/tag-signature weight arrays lazily in the worker-local action context.
 
+Implemented baseline: the session universe also includes crafted mods available
+to the item class, essence direct mods, base implicits, and base-compatible
+fossil added/forced mods. Group, classification-tag, mechanic, and influence
+masks are materialized over the shared dense IDs. The worker-local context
+interns influence signatures and caches exact candidate-mask keys with compact
+prefix-sum weighted pools.
+
+The request-shaped pool debug API can return either accepted candidates or all
+session rows with the first failing filter, active ordered weight rows,
+multipliers, and final weight. The action context also retains a bounded
+last-action stage trace with per-side totals, random roll, chosen mod, and
+chosen side.
+
 The complete artifact already contains all bases and the global mod catalog. Session construction filters that shared catalog by the requested base, item level, domain/item class, ordered selector weights, influence reachability, and enabled mechanics. The first detailed fixture uses Vaal Regalia, but ordinary armour, weapon, jewel, and abyss-jewel smoke cases must pass through the same generic path. Cluster-jewel session creation remains explicitly unsupported in this phase; cluster records being present in the artifact does not imply that cluster runtime rules are implemented.
 
 Implement debug APIs:
@@ -358,6 +371,14 @@ essence craft
 basic fossil craft
 ```
 
+Implemented baseline: essence actions resolve their guaranteed item-class mod,
+respect the essence item-level restriction, add it directly, then use the normal
+filler pool. Basic fossil actions apply added/forced mod links and
+classification-tag weight multipliers before sampling from the shared
+prefix-sum pool. Fossil-specific side effects such as quality, white sockets,
+lucky rolls, and corrupted-essence behavior remain with the later mechanic
+expansion.
+
 Core action rules:
 
 - Add-one actions use current groups from the live item.
@@ -397,11 +418,34 @@ result = context.apply(item, {"type": "chaos"})
 pool = context.debug_pool(item, {"type": "chaos"})
 ```
 
+Implemented baseline: `bindings/python` provides an owning Python wrapper
+over the shared C ABI library, including deterministic handle cleanup, item
+value copies, rich request-shaped pool debugging, and native batch application.
+`pc_apply_action_batch` parses one action request, reuses one worker context and
+its weighted-pool cache, and applies the action independently to a contiguous
+item array with per-item results plus an aggregate summary.
+
+Standard fossil multipliers now stack in million-scale fixed point and truncate
+only after the stacked multiplier is applied to the base roll weight. Sanctified
+Fossil level/lucky weighting remains deferred; requests containing Sanctified
+return `PC_RESULT_UNSUPPORTED_FEATURE` instead of silently running without its
+defining behavior.
+
+The binding can enumerate/resolve session mods and construct explicit test
+items, allowing Python to validate the same fractured-reforge and exact
+weighted-pool fixtures as native code. The package script builds a wheel with
+the shared engine library and any required local runtime DLLs.
+
 Acceptance gate:
 
-- Python can run the same core action/rule checks as native.
-- Python can load spec fixtures and compare pools/weights.
-- Batch simulation can run many chaos/alchemy/exalt craft operations without leaking memory.
+- Python runs the same core action/rule checks as native, including failed
+  preconditions and fractured reforge preservation.
+- Python loads the canonical spec fixtures and compares exact candidate keys,
+  weights, side totals, and combined totals.
+- Repeated 1,000-item alchemy/chaos/exalt batches and context lifetime churn
+  stay within a bounded private-memory envelope.
+- An isolated install of the platform wheel loads its bundled native library
+  and completes a 1,000-item batch.
 
 ## Phase 8: WebAssembly And Worker Runtime
 
@@ -428,6 +472,32 @@ Acceptance gate:
 - Native and WASM pass the same rule-fixture and API-shape smoke checks.
 - A headless browser/worker test can load data, create a session, create an item, apply an action, and query a debug pool.
 - Long runs do not block the UI.
+
+Implemented baseline: `bindings/wasm/wasm_api.cpp` is a coarse-grained,
+JSON-in/JSON-out facade over the existing C ABI. Engine objects (data, session,
+context, item) live inside the WASM module behind small integer handles, so the
+TypeScript layer never marshals the `pc_item_state` struct or touches linear
+memory. Data loads through the `pc_data_load_memory` bundle path (the multi-MB
+bundle is copied onto the heap rather than passed as a stack-allocated string).
+`scripts/build-wasm.ps1` compiles the engine sources plus the facade with
+Emscripten to an ES module + `.wasm` under `bindings/wasm/dist`.
+
+`apps/web/src/app/engine-client.ts` is the small, stable main-thread handle:
+promise-returning, handle-based, with a coarse `runStrategy` that reports
+progress and cancels via `AbortSignal`. `engine-worker.ts` owns the module and
+runs in both a browser Web Worker and Node `worker_threads`; strategy runs are
+chunked, yielding to the event loop between chunks so cancel/progress messages
+flush and the UI stays responsive. `engine-protocol.ts` defines the shared
+message envelopes and domain types; `engine-wasm.ts` is the worker-side ccall
+marshalling layer (the WASM analogue of the Python `_binding.py`).
+
+The headless acceptance test (`apps/web/test/engine-smoke.test.ts`, run with
+`npm test` via `tsx`) drives the WASM engine inside a real Node worker through
+`EngineClient`: it loads the memory bundle, creates a session/item, applies an
+action, queries debug pools, and asserts the WASM pool summaries match the same
+canonical `fixtures/spec` pools the native and Python suites validate against.
+It also asserts a 2,000-item strategy run reports progress and that a long run
+cancels promptly via `AbortSignal`.
 
 ## Phase 9: Web Workspace And Emulator Slice
 
@@ -674,7 +744,6 @@ cache hit rates
 Possible optimizations:
 
 ```text
-weighted pool cache
 alias tables for hot pools
 prewarmed common tag signatures
 faster group-block construction
@@ -683,6 +752,11 @@ binary compiled data format
 worker pool for browser simulations
 versioned engine/data artifact packaging
 ```
+
+Prefix-sum sampling and the exact-key worker-local weighted-pool cache are
+baseline engine behavior rather than deferred Phase 14 work. Phase 14 measures
+their hit rate and decides whether alias tables, prewarming, or cache policy
+tuning are justified.
 
 Acceptance gate:
 

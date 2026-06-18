@@ -1,0 +1,704 @@
+/*
+ * WebAssembly facade for the poecraft engine.
+ *
+ * This is the browser-facing boundary (Phase 8). It is deliberately
+ * coarse-grained and string-shaped: every entry point takes and returns a
+ * UTF-8 JSON document and operates on small integer handles managed here, so
+ * the TypeScript `EngineClient`/worker never have to reach into WASM linear
+ * memory or marshal the large `pc_item_state` struct. Data is loaded through
+ * the C ABI memory path (`pc_data_load_memory`), the only option a browser has.
+ *
+ * The module is single-threaded inside a Web Worker, and Emscripten's `ccall`
+ * copies a returned string out via `UTF8ToString` synchronously before the next
+ * call runs, so reusing one static response buffer per call is safe.
+ */
+
+#include <cstdint>
+#include <cstring>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include <emscripten.h>
+
+#include "poecraft/api.h"
+#include "poecraft/item_state.h"
+#include "poecraft/session.h"
+
+#include "json.hpp"
+
+namespace {
+
+using poecraft::json::Parser;
+using poecraft::json::Type;
+using poecraft::json::Value;
+
+// --- tiny JSON output builder ----------------------------------------------
+
+void append_escaped(std::string& out, const char* s) {
+    out.push_back('"');
+    if (s != nullptr) {
+        for (const char* p = s; *p != '\0'; ++p) {
+            unsigned char c = static_cast<unsigned char>(*p);
+            switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    static const char* hex = "0123456789abcdef";
+                    out += "\\u00";
+                    out.push_back(hex[(c >> 4) & 0xF]);
+                    out.push_back(hex[c & 0xF]);
+                } else {
+                    out.push_back(static_cast<char>(c));
+                }
+            }
+        }
+    }
+    out.push_back('"');
+}
+
+void append_u64(std::string& out, std::uint64_t value) {
+    out += std::to_string(value);
+}
+
+// --- handle registries ------------------------------------------------------
+
+std::unordered_map<std::uint32_t, pc_data_handle> g_data;
+std::unordered_map<std::uint32_t, pc_session_handle> g_sessions;
+std::unordered_map<std::uint32_t, pc_action_context_handle> g_contexts;
+std::unordered_map<std::uint32_t, pc_item_state> g_items;
+std::uint32_t g_next_id = 1;
+
+std::string g_response;
+
+const char* respond(std::string&& body) {
+    g_response = std::move(body);
+    return g_response.c_str();
+}
+
+const char* fail(pc_result code, const char* message) {
+    std::string out = "{\"ok\":false,\"code\":";
+    out += std::to_string(static_cast<int>(code));
+    out += ",\"message\":";
+    append_escaped(out, message);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+const char* fail(const pc_error_info& error) {
+    return fail(static_cast<pc_result>(error.code), error.message);
+}
+
+pc_error_info make_error() {
+    pc_error_info error;
+    pc_error_info_init(&error);
+    return error;
+}
+
+template <typename Map>
+auto find(Map& map, std::uint32_t id) -> typename Map::mapped_type* {
+    auto it = map.find(id);
+    return it == map.end() ? nullptr : &it->second;
+}
+
+// --- action / option parsing ------------------------------------------------
+
+bool action_type_from_name(const std::string& name, int32_t& out) {
+    static const std::pair<const char*, int32_t> table[] = {
+        {"transmute", PC_ACTION_TRANSMUTE}, {"augment", PC_ACTION_AUGMENT},
+        {"alteration", PC_ACTION_ALTERATION}, {"regal", PC_ACTION_REGAL},
+        {"alchemy", PC_ACTION_ALCHEMY}, {"chaos", PC_ACTION_CHAOS},
+        {"exalt", PC_ACTION_EXALT}, {"annul", PC_ACTION_ANNUL},
+        {"scour", PC_ACTION_SCOUR}, {"essence", PC_ACTION_ESSENCE},
+        {"fossil", PC_ACTION_FOSSIL},
+    };
+    for (const auto& entry : table) {
+        if (name == entry.first) {
+            out = entry.second;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Build a pc_action_request from a JSON action object. String key bytes are
+// kept alive in `storage` for the duration of the engine call.
+bool parse_action(const Value& spec, pc_action_request& request,
+                  std::vector<std::string>& storage, std::string& error) {
+    std::memset(&request, 0, sizeof(request));
+    request.struct_size = sizeof(request);
+    request.abi_version = PC_ABI_VERSION;
+    const Value* type = spec.find("type");
+    if (type == nullptr || type->type != Type::String) {
+        error = "action requires a string \"type\"";
+        return false;
+    }
+    if (!action_type_from_name(type->string, request.action_type)) {
+        error = "unknown action type: " + type->string;
+        return false;
+    }
+    if (request.action_type == PC_ACTION_ESSENCE) {
+        const Value* key = spec.find("essence");
+        if (key == nullptr || key->type != Type::String || key->string.empty()) {
+            error = "essence action requires a string \"essence\" key";
+            return false;
+        }
+        storage.push_back(key->string);
+        request.essence_key = storage.back().c_str();
+    }
+    if (request.action_type == PC_ACTION_FOSSIL) {
+        const Value* fossils = spec.find("fossils");
+        if (fossils == nullptr || fossils->type != Type::Array ||
+            fossils->array.empty() ||
+            fossils->array.size() > PC_MAX_FOSSILS_PER_ACTION) {
+            error = "fossil action requires 1-4 \"fossils\" keys";
+            return false;
+        }
+        request.fossil_count = static_cast<uint32_t>(fossils->array.size());
+        storage.reserve(storage.size() + fossils->array.size());
+        for (const auto& entry : fossils->array) {
+            if (entry.type != Type::String) {
+                error = "fossil keys must be strings";
+                return false;
+            }
+            storage.push_back(entry.string);
+        }
+        // Pointers must be taken after all reservations to stay stable.
+        std::size_t base = storage.size() - fossils->array.size();
+        for (std::size_t i = 0; i < fossils->array.size(); ++i) {
+            request.fossil_keys[i] = storage[base + i].c_str();
+        }
+    }
+    return true;
+}
+
+void append_item_info(std::string& out, const pc_item_state& item) {
+    static const char* rarities[] = {"normal", "magic", "rare"};
+    out += "\"rarity\":";
+    append_escaped(out, item.rarity < 3 ? rarities[item.rarity] : "normal");
+    auto append_ids = [&out](const char* name, const pc_mod_slot* slots,
+                             uint8_t count, bool fractured_only) {
+        out += ",\"";
+        out += name;
+        out += "\":[";
+        bool first = true;
+        for (uint8_t i = 0; i < count; ++i) {
+            if (fractured_only && (slots[i].flags & PC_MOD_SLOT_FRACTURED) == 0) {
+                continue;
+            }
+            if (!first) out.push_back(',');
+            first = false;
+            out += std::to_string(slots[i].mod_id);
+        }
+        out.push_back(']');
+    };
+    append_ids("prefix_mod_ids", item.prefixes, item.prefix_count, false);
+    append_ids("suffix_mod_ids", item.suffixes, item.suffix_count, false);
+    append_ids("implicit_mod_ids", item.implicits, item.implicit_count, false);
+    out += ",\"fractured_prefix_mod_ids\":[";
+    {
+        bool first = true;
+        for (uint8_t i = 0; i < item.prefix_count; ++i) {
+            if ((item.prefixes[i].flags & PC_MOD_SLOT_FRACTURED) == 0) continue;
+            if (!first) out.push_back(',');
+            first = false;
+            out += std::to_string(item.prefixes[i].mod_id);
+        }
+    }
+    out += "],\"fractured_suffix_mod_ids\":[";
+    {
+        bool first = true;
+        for (uint8_t i = 0; i < item.suffix_count; ++i) {
+            if ((item.suffixes[i].flags & PC_MOD_SLOT_FRACTURED) == 0) continue;
+            if (!first) out.push_back(',');
+            first = false;
+            out += std::to_string(item.suffixes[i].mod_id);
+        }
+    }
+    out += "],\"prefix_count\":";
+    out += std::to_string(item.prefix_count);
+    out += ",\"suffix_count\":";
+    out += std::to_string(item.suffix_count);
+}
+
+} // namespace
+
+extern "C" {
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t pcw_abi_version(void) { return pc_abi_version(); }
+
+// `bundle_json` points at a heap buffer the caller (worker) allocated with
+// _malloc and frees afterwards; the compiled data bundle is multi-megabyte, so
+// it is copied to the heap rather than passed as a stack-allocated ccall string.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_data_open(const char* bundle_json, uint32_t byte_count) {
+    if (bundle_json == nullptr) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "null bundle");
+    }
+    pc_data_handle data = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_data_load_memory(bundle_json, byte_count, &data, &error);
+    if (rc != PC_RESULT_OK) {
+        return fail(error);
+    }
+    std::uint32_t id = g_next_id++;
+    g_data[id] = data;
+    std::string out = "{\"ok\":true,\"data\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_data_summary(uint32_t data_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    pc_data_summary summary;
+    summary.struct_size = sizeof(summary);
+    pc_error_info error = make_error();
+    pc_result rc = pc_data_get_summary(*data, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true";
+    out += ",\"artifact_schema_version\":" + std::to_string(summary.artifact_schema_version);
+    out += ",\"complete_dataset\":";
+    out += summary.complete_dataset ? "true" : "false";
+    out += ",\"base_item_count\":" + std::to_string(summary.base_item_count);
+    out += ",\"ordinary_session_base_count\":" + std::to_string(summary.ordinary_session_base_count);
+    out += ",\"mod_count\":" + std::to_string(summary.mod_count);
+    out += ",\"group_count\":" + std::to_string(summary.group_count);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_data_close(uint32_t data_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data != nullptr) {
+        pc_data_destroy(*data);
+        g_data.erase(data_id);
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_session_open(uint32_t data_id, const char* options_json) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    Value opts;
+    try {
+        opts = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* base = opts.find("base");
+    if (base == nullptr || base->type != Type::String) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "session requires a string \"base\"");
+    }
+    const Value* level = opts.find("item_level");
+    pc_session_options session_options;
+    session_options.struct_size = sizeof(session_options);
+    session_options.abi_version = PC_ABI_VERSION;
+    session_options.base_metadata_path = base->string.c_str();
+    session_options.item_level =
+        level != nullptr && level->type == Type::Number
+            ? static_cast<uint32_t>(level->number)
+            : 0;
+    pc_session_handle session = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_session_create(*data, &session_options, &session, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::uint32_t id = g_next_id++;
+    g_sessions[id] = session;
+    std::string out = "{\"ok\":true,\"session\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_session_close(uint32_t session_id) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session != nullptr) {
+        pc_session_destroy(*session);
+        g_sessions.erase(session_id);
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_session_mod_count(uint32_t session_id) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    uint32_t count = 0;
+    pc_error_info error = make_error();
+    pc_result rc = pc_session_get_mod_count(*session, &count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"count\":";
+    out += std::to_string(count);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_session_mod_info(uint32_t session_id, uint32_t mod_id) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    pc_mod_info info;
+    info.struct_size = sizeof(info);
+    pc_error_info error = make_error();
+    pc_result rc = pc_session_get_mod_info(*session, mod_id, &info, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"session_mod_id\":";
+    out += std::to_string(info.session_mod_id);
+    out += ",\"global_mod_id\":" + std::to_string(info.global_mod_id);
+    out += ",\"key\":";
+    append_escaped(out, info.key);
+    out += ",\"generation_type\":" + std::to_string(info.generation_type);
+    out += ",\"reach_kind\":" + std::to_string(info.reach_kind);
+    out += ",\"reach_influence\":" + std::to_string(info.reach_influence);
+    out += ",\"reach_via\":";
+    append_escaped(out, info.reach_via);
+    out += ",\"primary_group_id\":" + std::to_string(info.primary_group_id);
+    out += ",\"required_level\":" + std::to_string(info.required_level);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_context_open(uint32_t session_id, const char* options_json) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    Value opts;
+    try {
+        opts = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* seed = opts.find("seed");
+    pc_action_context_options context_options;
+    context_options.struct_size = sizeof(context_options);
+    context_options.abi_version = PC_ABI_VERSION;
+    context_options.seed = seed != nullptr && seed->type == Type::Number
+                               ? static_cast<uint64_t>(seed->number)
+                               : 0;
+    pc_action_context_handle context = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc =
+        pc_action_context_create(*session, &context_options, &context, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::uint32_t id = g_next_id++;
+    g_contexts[id] = context;
+    std::string out = "{\"ok\":true,\"context\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_context_close(uint32_t context_id) {
+    pc_action_context_handle* context = find(g_contexts, context_id);
+    if (context != nullptr) {
+        pc_action_context_destroy(*context);
+        g_contexts.erase(context_id);
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_create(uint32_t session_id, const char* options_json) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    Value opts;
+    try {
+        opts = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    static const std::pair<const char*, uint8_t> rarities[] = {
+        {"normal", PC_RARITY_NORMAL}, {"magic", PC_RARITY_MAGIC},
+        {"rare", PC_RARITY_RARE}};
+    uint8_t rarity = PC_RARITY_NORMAL;
+    const Value* rarity_value = opts.find("rarity");
+    if (rarity_value != nullptr && rarity_value->type == Type::String) {
+        bool matched = false;
+        for (const auto& entry : rarities) {
+            if (rarity_value->string == entry.first) {
+                rarity = entry.second;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) return fail(PC_RESULT_INVALID_ARGUMENT, "unknown rarity");
+    }
+    const Value* with_implicits = opts.find("with_implicits");
+    pc_item_init_options init_options;
+    init_options.struct_size = sizeof(init_options);
+    init_options.abi_version = PC_ABI_VERSION;
+    init_options.rarity = rarity;
+    init_options.with_implicits =
+        with_implicits != nullptr && with_implicits->type == Type::Bool
+            ? (with_implicits->boolean ? 1 : 0)
+            : 1;
+    pc_item_state state;
+    pc_error_info error = make_error();
+    pc_result rc = pc_item_init(*session, &init_options, &state, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::uint32_t id = g_next_id++;
+    g_items[id] = state;
+    std::string out = "{\"ok\":true,\"item\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_clone(uint32_t item_id) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    std::uint32_t id = g_next_id++;
+    g_items[id] = *item;
+    std::string out = "{\"ok\":true,\"item\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_item_close(uint32_t item_id) { g_items.erase(item_id); }
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_info(uint32_t item_id) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    std::string out = "{\"ok\":true,";
+    append_item_info(out, *item);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+// Add an explicit mod to an item, resolving it by session mod key. Used to
+// build the exact fixtures the native tests use (e.g. fractured reforge).
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_add_mod(uint32_t item_id, uint32_t session_id,
+                             const char* spec_json) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    Value spec;
+    try {
+        spec = Parser(spec_json, std::strlen(spec_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* key = spec.find("key");
+    if (key == nullptr || key->type != Type::String) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "add_mod requires a string \"key\"");
+    }
+    uint32_t count = 0;
+    pc_error_info error = make_error();
+    if (pc_session_get_mod_count(*session, &count, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    pc_mod_info match;
+    bool found = false;
+    for (uint32_t i = 0; i < count; ++i) {
+        pc_mod_info info;
+        info.struct_size = sizeof(info);
+        error = make_error();
+        if (pc_session_get_mod_info(*session, i, &info, &error) != PC_RESULT_OK) {
+            return fail(error);
+        }
+        if (info.key != nullptr && key->string == info.key) {
+            match = info;
+            found = true;
+            break;
+        }
+    }
+    if (!found) return fail(PC_RESULT_NOT_FOUND, "mod key is not in this session");
+    int side = match.generation_type; // 0 prefix, 1 suffix
+    const Value* side_value = spec.find("side");
+    if (side_value != nullptr && side_value->type == Type::String) {
+        if (side_value->string == "prefix") side = PC_SIDE_PREFIX;
+        else if (side_value->string == "suffix") side = PC_SIDE_SUFFIX;
+        else return fail(PC_RESULT_INVALID_ARGUMENT, "side must be prefix or suffix");
+    }
+    const Value* fractured = spec.find("fractured");
+    uint8_t flags = fractured != nullptr && fractured->type == Type::Bool &&
+                            fractured->boolean
+                        ? PC_MOD_SLOT_FRACTURED
+                        : 0;
+    pc_result rc = pc_item_add_mod(item, side, match.session_mod_id,
+                                   static_cast<uint16_t>(match.primary_group_id),
+                                   flags, nullptr);
+    if (rc != PC_RESULT_OK) return fail(rc, "could not add mod to item");
+    return respond("{\"ok\":true}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_apply(uint32_t context_id, uint32_t item_id,
+                      const char* action_json) {
+    pc_action_context_handle* context = find(g_contexts, context_id);
+    if (context == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown context");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    Value spec;
+    try {
+        spec = Parser(action_json, std::strlen(action_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    pc_action_request request;
+    std::vector<std::string> storage;
+    std::string error_message;
+    if (!parse_action(spec, request, storage, error_message)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, error_message.c_str());
+    }
+    pc_action_result result;
+    result.struct_size = sizeof(result);
+    pc_error_info error = make_error();
+    pc_result rc = pc_apply_action(*context, item, &request, &result, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"result\":{\"applied\":";
+    out += result.applied ? "true" : "false";
+    out += ",\"added\":" + std::to_string(result.added);
+    out += ",\"removed\":" + std::to_string(result.removed);
+    out += "}}";
+    return respond(std::move(out));
+}
+
+// Coarse-grained batch primitive for strategy runs: apply the action to `count`
+// independent copies of the item and return only the aggregate summary. The
+// source item is not mutated. The worker calls this in chunks so it can post
+// progress and honour cancellation between chunks.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_run_batch(uint32_t context_id, uint32_t item_id,
+                          const char* action_json, uint32_t count) {
+    pc_action_context_handle* context = find(g_contexts, context_id);
+    if (context == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown context");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    Value spec;
+    try {
+        spec = Parser(action_json, std::strlen(action_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    pc_action_request request;
+    std::vector<std::string> storage;
+    std::string error_message;
+    if (!parse_action(spec, request, storage, error_message)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, error_message.c_str());
+    }
+    std::vector<pc_item_state> items(count ? count : 1, *item);
+    pc_batch_summary summary;
+    summary.struct_size = sizeof(summary);
+    pc_error_info error = make_error();
+    pc_result rc = pc_apply_action_batch(*context, items.data(), count, &request,
+                                         nullptr, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"summary\":{\"item_count\":";
+    out += std::to_string(summary.item_count);
+    out += ",\"applied_count\":" + std::to_string(summary.applied_count);
+    out += ",\"total_added\":";
+    append_u64(out, summary.total_added);
+    out += ",\"total_removed\":";
+    append_u64(out, summary.total_removed);
+    out += "}}";
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_debug_pool(uint32_t context_id, uint32_t item_id,
+                           const char* query_json) {
+    pc_action_context_handle* context = find(g_contexts, context_id);
+    if (context == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown context");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    Value query;
+    try {
+        query = Parser(query_json, std::strlen(query_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* action = query.find("action");
+    if (action == nullptr || action->type != Type::Object) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "pool query requires an \"action\" object");
+    }
+    pc_action_request request;
+    std::vector<std::string> storage;
+    std::string error_message;
+    if (!parse_action(*action, request, storage, error_message)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, error_message.c_str());
+    }
+    int32_t side_filter = -1;
+    const Value* side = query.find("side");
+    if (side != nullptr && side->type == Type::String) {
+        if (side->string == "prefix") side_filter = 0;
+        else if (side->string == "suffix") side_filter = 1;
+        else if (side->string != "both")
+            return fail(PC_RESULT_INVALID_ARGUMENT, "side must be both, prefix, or suffix");
+    }
+    const Value* include_rejected = query.find("include_rejected");
+    pc_pool_query_request pool_request;
+    pool_request.struct_size = sizeof(pool_request);
+    pool_request.abi_version = PC_ABI_VERSION;
+    pool_request.action = request;
+    pool_request.side_filter = side_filter;
+    pool_request.include_rejected =
+        include_rejected != nullptr && include_rejected->type == Type::Bool &&
+                include_rejected->boolean
+            ? 1
+            : 0;
+
+    uint32_t needed = 0;
+    pc_pool_debug_summary summary;
+    summary.struct_size = sizeof(summary);
+    pc_error_info error = make_error();
+    pc_result rc = pc_debug_pool_query(*context, item, &pool_request, nullptr, 0,
+                                       &needed, &summary, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL) {
+        return fail(error);
+    }
+    std::vector<pc_pool_debug_entry> entries(needed ? needed : 1);
+    for (auto& entry : entries) entry.struct_size = sizeof(entry);
+    error = make_error();
+    rc = pc_debug_pool_query(*context, item, &pool_request, entries.data(),
+                             needed, &needed, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+
+    std::string out = "{\"ok\":true,\"entries\":[";
+    for (uint32_t i = 0; i < needed; ++i) {
+        const pc_pool_debug_entry& entry = entries[i];
+        if (i != 0) out.push_back(',');
+        out += "{\"session_mod_id\":" + std::to_string(entry.session_mod_id);
+        out += ",\"global_mod_id\":" + std::to_string(entry.global_mod_id);
+        out += ",\"key\":";
+        append_escaped(out, entry.key);
+        out += ",\"generation_type\":" + std::to_string(entry.generation_type);
+        out += ",\"accepted\":";
+        out += entry.first_failure == 0 ? "true" : "false";
+        out += ",\"first_failure\":" + std::to_string(entry.first_failure);
+        out += ",\"spawn_weight\":" + std::to_string(entry.active_spawn_weight);
+        out += ",\"generation_multiplier_pct\":" + std::to_string(entry.active_generation_pct);
+        out += ",\"special_multiplier_pct\":" + std::to_string(entry.special_multiplier_pct);
+        out += ",\"final_weight\":" + std::to_string(entry.final_weight);
+        out.push_back('}');
+    }
+    out += "],\"summary\":{\"tag_signature_id\":" + std::to_string(summary.tag_signature_id);
+    out += ",\"cache_hit\":";
+    out += summary.cache_hit ? "true" : "false";
+    out += ",\"candidate_count\":" + std::to_string(summary.candidate_count);
+    out += ",\"prefix_total_weight\":";
+    append_u64(out, summary.prefix_total_weight);
+    out += ",\"suffix_total_weight\":";
+    append_u64(out, summary.suffix_total_weight);
+    out += ",\"combined_total_weight\":";
+    append_u64(out, summary.combined_total_weight);
+    out += "}}";
+    return respond(std::move(out));
+}
+
+} // extern "C"
