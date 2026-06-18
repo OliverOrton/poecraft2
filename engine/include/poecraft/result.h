@@ -13,7 +13,10 @@ typedef enum pc_result {
     PC_RESULT_IO_ERROR = 2,
     PC_RESULT_DATA_ERROR = 3,
     PC_RESULT_UNSUPPORTED_FEATURE = 4,
-    PC_RESULT_INTERNAL_ERROR = 5
+    PC_RESULT_INTERNAL_ERROR = 5,
+    PC_RESULT_NOT_FOUND = 6,
+    PC_RESULT_BUFFER_TOO_SMALL = 7,
+    PC_RESULT_CAPACITY_EXCEEDED = 8
 } pc_result;
 
 typedef struct pc_error_info {

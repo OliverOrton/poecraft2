@@ -59,9 +59,36 @@ else {
         if ($LASTEXITCODE -ne 0) {
             throw "C++ header smoke build failed with exit code $LASTEXITCODE."
         }
+
+        $EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
+            ForEach-Object { $_.FullName }
+        $TestSources = @(
+            "$Root/engine/tests/test_main.cpp",
+            "$Root/engine/tests/test_bitset.cpp",
+            "$Root/engine/tests/test_rng.cpp",
+            "$Root/engine/tests/test_item_state.cpp",
+            "$Root/engine/tests/test_blocking.cpp",
+            "$Root/engine/tests/test_data_loader.cpp",
+            "$Root/engine/tests/test_session_builder.cpp",
+            "$Root/engine/tests/test_actions.cpp"
+        )
+        # -static-libstdc++/-static-libgcc avoid a ld.bfd crash (exit 116) seen
+        # in MSYS2 ucrt64 binutils when linking the shared C++ runtime against
+        # exception-bearing COMDAT sections. They also make the test binary
+        # self-contained. CMake/MSVC builds do not need this.
+        & $Compiler.Source `
+            -std=c++20 -O2 `
+            -static-libstdc++ -static-libgcc `
+            "-I$Root/engine/include" `
+            @EngineSources `
+            @TestSources `
+            -o "$BuildDirectory/poecraft_engine_tests.exe"
+        if ($LASTEXITCODE -ne 0) {
+            throw "C++ engine test build failed with exit code $LASTEXITCODE."
+        }
     }
     else {
-        Write-Warning "CMake and a C++20 compiler were not found; C++ header smoke build was skipped."
+        Write-Warning "CMake and a C++20 compiler were not found; C++ engine build was skipped."
     }
 }
 

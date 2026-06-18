@@ -1,0 +1,28 @@
+{
+  "files": [
+    "session-pools/vaal-regalia-ilvl-86-session-universe.json",
+    "session-pools/vaal-regalia-ilvl-86-normal-prefix.json",
+    "session-pools/vaal-regalia-ilvl-86-normal-suffix.json",
+    "session-pools/vaal-regalia-ilvl-86-alchemy-combined.json",
+    "action-results/vaal-regalia-ilvl-86-fractured-reforge.json"
+  ],
+  "fixture_version": 1,
+  "oracle": "poecraft2_docs_and_canonical_sqlite",
+  "review_notes": [
+    "Expected membership comes from the canonical SQLite schema and poecraft2 rule specifications.",
+    "Weights use ordered first-match spawn and generation rows with integer truncation.",
+    "The old poeCraft application was consulted only for source-format and prior-behavior context.",
+    "No fixture asserts old serialized data or an old RNG sequence."
+  ],
+  "selection": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86,
+    "ordinary_non_cluster_base": true
+  },
+  "source": {
+    "data_hash": "c459d0b9b774973ee165b8390dde226b5422b09b3250dda0b38feed16bdc0eba",
+    "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+    "source_version": "repoe-e4eaf06c20e1ddb4"
+  }
+}

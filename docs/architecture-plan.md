@@ -99,7 +99,7 @@ Each generated artifact should carry version metadata:
 
 The authoritative definitions of mod rows, tag channels, groups, families, session universes, and action candidate sets are in [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). This architecture document uses those terms without redefining them.
 
-For a crafting session, load the relevant item data into engine memory:
+At startup, load the complete compiled runtime artifact into engine memory. It contains all released bases, the normalized global mod catalog, ordered weight/tag/stat rows, and special-mechanic lookup tables. For a crafting session, select the relevant subset:
 
 - session-reachable mod rows
 - exclusivity groups and UI-family metadata
@@ -110,7 +110,7 @@ For a crafting session, load the relevant item data into engine memory:
 - domain/generation metadata
 - influence, fractured, synthesized, eldritch, essence, fossil, harvest, bench, metamod, and cannot-roll rule context as needed
 
-For a selected base and item level, include all normal and influence-specific mods that the supported actions can reach. Influence changes then select another tag signature and mask instead of rebuilding the session. Sessions remain immutable after construction. Per-worker action contexts build uncommon tag-signature weight arrays and action-pool caches lazily, so shared sessions require no cache mutation or synchronization. Recombinators may use a dedicated two-item session because their universe depends on both input items and possible output bases.
+For any supported ordinary non-cluster base and selected item level, include all normal and influence-specific mods that the supported actions can reach. Influence changes then select another tag signature and mask instead of rebuilding the session. Sessions remain immutable after construction. Per-worker action contexts build uncommon tag-signature weight arrays and action-pool caches lazily, so shared sessions require no cache mutation or synchronization. Recombinators may use a dedicated two-item session because their universe depends on both input items and possible output bases.
 
 The engine should generate action-specific weighted candidate pools from this item-local universe and cache them in the worker-local action context for repeated use. The session identity already fixes base and item level. Within a session, cache keys should include every mutable/contextual component that can affect legality or weighting, such as effective tag signature, influence state, metamods, fossil constraints, open affix sides, and blocked exclusivity groups.
 

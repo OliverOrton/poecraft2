@@ -11,6 +11,8 @@ dependencies = []
 
 [project.scripts]
 poecraft-ingest = "poecraft_ingest.cli:main"
+poecraft-compile-data = "poecraft_ingest.compiled_data:main"
+poecraft-validate-fixtures = "poecraft_ingest.spec_fixtures:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -1,0 +1,111 @@
+{
+  "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+  "base_name": "Vaal Regalia",
+  "effective_tags": [
+    "armour",
+    "body_armour",
+    "default",
+    "int_armour",
+    "top_tier_base_item_type"
+  ],
+  "fixture_id": "vaal-regalia-ilvl-86-normal-suffix",
+  "fixture_type": "weighted_pool",
+  "fixture_version": 1,
+  "generation_type": "suffix",
+  "item_level": 86,
+  "pool": [
+    {
+      "final_weight": 250,
+      "generation_multiplier_pct": 100,
+      "mod_ids": [
+        "ChaosResist1",
+        "ChaosResist2",
+        "ChaosResist3",
+        "ChaosResist4",
+        "ChaosResist5",
+        "ChaosResist6"
+      ],
+      "spawn_weight": 250
+    },
+    {
+      "final_weight": 850,
+      "generation_multiplier_pct": 100,
+      "mod_ids": [
+        "ReducedLocalAttributeRequirements1",
+        "ReducedLocalAttributeRequirements2"
+      ],
+      "spawn_weight": 850
+    },
+    {
+      "final_weight": 1000,
+      "generation_multiplier_pct": 100,
+      "mod_ids": [
+        "ColdResist1",
+        "ColdResist2",
+        "ColdResist3",
+        "ColdResist4",
+        "ColdResist5",
+        "ColdResist6",
+        "ColdResist7",
+        "ColdResist8",
+        "FasterStartEnergyShieldRecharge1",
+        "FasterStartEnergyShieldRecharge2",
+        "FasterStartEnergyShieldRecharge3__",
+        "FasterStartEnergyShieldRecharge4",
+        "FasterStartEnergyShieldRecharge5_",
+        "FireResist1",
+        "FireResist2",
+        "FireResist3",
+        "FireResist4",
+        "FireResist5",
+        "FireResist6",
+        "FireResist7",
+        "FireResist8",
+        "Intelligence1",
+        "Intelligence2",
+        "Intelligence3",
+        "Intelligence4",
+        "Intelligence5",
+        "Intelligence6",
+        "Intelligence7",
+        "Intelligence8",
+        "Intelligence9",
+        "LifeRegeneration1",
+        "LifeRegeneration10__",
+        "LifeRegeneration11____",
+        "LifeRegeneration2",
+        "LifeRegeneration3",
+        "LifeRegeneration4",
+        "LifeRegeneration5",
+        "LifeRegeneration6",
+        "LifeRegeneration7",
+        "LifeRegeneration8_",
+        "LifeRegeneration9",
+        "LightningResist1",
+        "LightningResist2",
+        "LightningResist3",
+        "LightningResist4",
+        "LightningResist5",
+        "LightningResist6",
+        "LightningResist7",
+        "LightningResist8",
+        "StunRecovery1",
+        "StunRecovery2",
+        "StunRecovery3",
+        "StunRecovery4",
+        "StunRecovery5",
+        "StunRecovery6"
+      ],
+      "spawn_weight": 1000
+    }
+  ],
+  "rule": "An empty uninfluenced Vaal Regalia uses first-matching spawn weight times first-matching generation percentage for normal suffix candidates.",
+  "summary": {
+    "combined_total_weight": 58200,
+    "prefix_count": 0,
+    "prefix_total_weight": 0,
+    "suffix_count": 63,
+    "suffix_total_weight": 58200,
+    "total_count": 63
+  }
+}

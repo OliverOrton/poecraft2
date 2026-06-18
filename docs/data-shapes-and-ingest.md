@@ -453,7 +453,7 @@ Display-only data, such as stat translations, can live in SQLite but should comp
 
 ## Compiled Engine Data Blob
 
-The compiled blob should be optimized for C and WASM loading.
+The compiled blob should be optimized for C and WASM loading and must contain the complete runtime dataset. Canonical SQLite is not available to native or browser session construction.
 
 Recommended layout:
 
@@ -466,6 +466,21 @@ Recommended layout:
 - variable-length child arrays with offset/count pairs
 - special-crafting tables
 - optional UI/cold display sections separated from engine-hot sections
+
+The first JSON encoding follows the same completeness rule as the later binary blob. It must include every released base, the complete normalized mod catalog, all ordered weight/tag/stat relationships, and the special-crafting lookup tables needed by supported or planned mechanics. A selected-base artifact is useful as a debug export but cannot be the artifact consumed by the native loader.
+
+Each base should carry a runtime-support classification:
+
+```text
+ordinary:
+  generic normal-item/jewel session path is supported
+
+cluster_unsupported:
+  cluster data is present, but cluster session rules are not implemented
+
+unsupported_domain:
+  source data is preserved, but no crafting session path exists yet
+```
 
 Global mod table hot fields:
 
@@ -867,7 +882,7 @@ Recommended checks:
 
 ## First Implementation Slice
 
-Ingest broadly, then prove the engine shape narrowly:
+Ingest and compile broadly, then validate rule behavior narrowly:
 
 1. Write a loader that ingests RePoE JSON into SQLite for:
    - tags
@@ -885,10 +900,10 @@ Ingest broadly, then prove the engine shape narrowly:
    - cluster-jewel definitions, passives, and notables
    - every applicable source row, without filtering to one base
 2. Validate source-to-SQLite counts and explicit skip reasons across the full crafting-relevant dataset.
-3. Generate a simple, explicitly filtered engine data artifact for one ordinary non-cluster base.
-4. Build a session-local dense mod universe for that base and item level.
-5. Build prefix/suffix, group, and classification-tag bitsets.
-6. Build a weighted candidate pool for chaos/alchemy-style random rolling.
-7. Compare the resulting candidate set and weights against a small spec fixture owned by the new project.
-8. Expand compiled artifacts and ordinary-base session coverage without changing canonical ingest.
-9. Add fossils, essences, Harvest, influence, cluster, veiled, bench, and eldritch runtime systems one at a time. Until cluster support lands, cluster session creation fails explicitly as unsupported.
+3. Generate one complete runtime artifact containing all released bases, all normalized mods/relationships, and all special-crafting tables.
+4. Validate the artifact against SQLite counts, IDs, offsets, hashes, and representative cross-base lookups.
+5. Build a generic session-local dense mod universe from that artifact for any ordinary non-cluster base and item level.
+6. Build prefix/suffix, group, and classification-tag bitsets.
+7. Build a weighted candidate pool for chaos/alchemy-style random rolling.
+8. Compare Vaal Regalia and a small cross-base smoke matrix against spec expectations.
+9. Add fossils, essences, Harvest, influence, cluster, veiled, bench, and eldritch runtime rules one at a time. Their source/runtime tables are already present in the complete artifact. Until cluster support lands, cluster session creation fails explicitly as unsupported.

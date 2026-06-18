@@ -1,0 +1,28 @@
+{
+  "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+  "base_name": "Vaal Regalia",
+  "effective_tags": [
+    "armour",
+    "body_armour",
+    "default",
+    "int_armour",
+    "top_tier_base_item_type"
+  ],
+  "fixture_id": "vaal-regalia-ilvl-86-alchemy-combined",
+  "fixture_type": "composed_weighted_pool",
+  "fixture_version": 1,
+  "item_level": 86,
+  "members": [
+    "vaal-regalia-ilvl-86-normal-prefix",
+    "vaal-regalia-ilvl-86-normal-suffix"
+  ],
+  "rule": "Alchemy/chaos-style unforced affix selection draws from one combined prefix and suffix distribution, never a 50/50 side choice.",
+  "summary": {
+    "combined_total_weight": 119200,
+    "prefix_count": 62,
+    "prefix_total_weight": 61000,
+    "suffix_count": 63,
+    "suffix_total_weight": 58200,
+    "total_count": 125
+  }
+}

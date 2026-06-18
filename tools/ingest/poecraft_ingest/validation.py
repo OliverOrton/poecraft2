@@ -290,7 +290,7 @@ def query_normal_rollable_mods(
             or any(tag.startswith("expansion_jewel_") for tag in base_tags)
         ):
             raise UnsupportedFeatureError(
-                "cluster_jewel_session is not supported in Phase 1"
+                "cluster_jewel_session is not supported before cluster runtime rules"
             )
 
         item_class_key = base["item_class_key"]

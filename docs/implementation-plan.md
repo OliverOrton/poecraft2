@@ -166,7 +166,7 @@ fixtures/spec/action-results/
 Initial fixtures:
 
 ```text
-session mod universe for one base/item level
+session mod universe for one representative base/item level
 one normal prefix candidate pool
 one normal suffix candidate pool
 one chaos or alchemy candidate pool
@@ -207,7 +207,7 @@ Acceptance gate:
 
 ## Phase 3: Compiled Data Format
 
-Goal: turn SQLite rows into engine-loadable arrays.
+Goal: turn the complete canonical SQLite dataset into one engine-loadable runtime artifact.
 
 Start simple:
 
@@ -217,32 +217,31 @@ mods.json or mods.bin
 strings.json or strings.bin
 ```
 
-Use JSON for the first selected-base engine fixture if that makes debugging faster. Canonical SQLite still contains the full dataset. Move to full-dataset binary arrays once the runtime data shape stabilizes.
+Use JSON arrays first if that makes debugging faster. The artifact must still contain the complete runtime dataset; the later binary format is an encoding optimization, not the point where multi-base support appears.
 
 Compiled data should include:
 
 ```text
-global mod ids
-group ids
-generation type
-domain
-required level
-flags
-spawn weight rows
-generation weight rows
-implicit tag ids
-stat rows
-base item ids
-base tag signatures
+all released base items, item classes, tags, and base implicits
+the complete normalized global mod catalog
+all exclusivity groups and ordered spawn/generation-weight rows
+classification tags, added tags, and stat rows
+stable serialized mappings for domains, generation types, influences, and flags
+bench options/costs/item-class restrictions
+fossil definitions, weights, tags, and linked mods
+essence definitions and guaranteed-mod links
+cluster definitions/passives/notables, marked runtime-unsupported
 string table
 ```
 
 Acceptance gate:
 
-- `compile_engine_data.py` reads SQLite and writes compiled artifacts.
-- Artifacts have schema version, source hash, generated timestamp, and row counts.
-- A validation command can diff the artifact's declared SQLite selection against compiled counts.
-- Any selected-base debug artifact records its filter explicitly and never masquerades as a complete compiled-data artifact.
+- `compile_engine_data.py` reads SQLite and writes one complete runtime artifact.
+- The manifest declares `complete_dataset: true` and records schema/source hashes, generated timestamp, enum mappings, and row counts.
+- A validation command compares every compiled section and relationship count against canonical SQLite and validates parallel-array offsets/IDs.
+- Every released base is present. Cluster and other unsupported runtime families remain represented and carry explicit support classification rather than being omitted.
+- The full artifact can supply the data needed to build a session for any ordinary non-cluster base without returning to SQLite.
+- Vaal Regalia remains a detailed fixture only; it is not a filter on the compiled artifact.
 
 ## Phase 4: Native Engine Foundation
 
@@ -287,10 +286,11 @@ Acceptance gate:
 - Data/session/action-context handles and caller-provided output buffers pass basic lifetime/leak checks.
 - Two action contexts can safely share one immutable session while owning independent random state, scratch space, and caches.
 - Provisional fixed capacities are checked against the current ingested dataset before the ABI is frozen.
+- The native loader loads the complete runtime artifact and can resolve multiple ordinary bases by stable metadata path.
 
 ## Phase 5: Session Builder, Masks, And Weights
 
-Goal: build a session for one base/item level and match one or two small spec fixtures.
+Goal: build the generic session path for every ordinary non-cluster base represented in the complete artifact, with detailed correctness checks against a few small fixtures.
 
 Implement:
 
@@ -313,7 +313,7 @@ positive_spawn_weight_mask[tag_signature_id]
 
 Include every influence-specific mod reachable for the selected base/item level in the same dense session universe. Keep prefix, suffix, influence, and mechanic masks as separate bitsets over those shared IDs. Sessions are immutable after construction. Build uncommon influence/tag-signature weight arrays lazily in the worker-local action context.
 
-The first fixture uses an ordinary non-cluster base. Session creation for other ordinary bases should use the same generic path as soon as their compiled rows are available. Cluster-jewel session creation remains explicitly unsupported in this phase; cluster records being present in SQLite does not imply that cluster runtime rules are implemented.
+The complete artifact already contains all bases and the global mod catalog. Session construction filters that shared catalog by the requested base, item level, domain/item class, ordered selector weights, influence reachability, and enabled mechanics. The first detailed fixture uses Vaal Regalia, but ordinary armour, weapon, jewel, and abyss-jewel smoke cases must pass through the same generic path. Cluster-jewel session creation remains explicitly unsupported in this phase; cluster records being present in the artifact does not imply that cluster runtime rules are implemented.
 
 Implement debug APIs:
 
@@ -330,6 +330,7 @@ Acceptance gate:
 - Normal prefix/suffix weighted candidate pools match a spec fixture after exclusivity-group blocking and item-state filters.
 - Final weights match documented truncation behavior.
 - Combined prefix/suffix draws and Harvest spawn-only targeting match their focused fixtures.
+- Session creation succeeds through the generic path for representative armour, weapon, jewel, and abyss-jewel bases from the same loaded artifact.
 - Cluster-jewel session creation returns the explicit unsupported-feature result until cluster runtime support is implemented.
 
 ## Phase 6: Core Action Engine
@@ -791,7 +792,7 @@ Start with Phase 0 and Phase 1 together:
 4. Add Python ingest package skeleton.
 5. Ingest the complete current crafting-relevant RePoE dataset.
 6. Write the first full-ingest validation report, including accounted/skipped row counts.
-7. Select one ordinary non-cluster base/item-level fixture for the first compiled-engine slice.
+7. Select one ordinary non-cluster base/item-level fixture for detailed pool review while compiling the full runtime dataset.
 
 The first meaningful milestone is:
 
@@ -801,15 +802,15 @@ the new pipeline can list the expected normal rollable prefix/suffix mods
 from a canonical database that contains the full crafting-relevant dataset.
 ```
 
-That milestone proves the data path before the engine gets complicated.
+That milestone proves one rule fixture. Phase 3 is not complete until the generated runtime artifact contains every released base and the full normalized mod/mechanic catalog.
 
 ## Definition Of Done For MVP
 
 The first MVP is complete when:
 
 - Ingest can build the SQLite database from source data.
-- Compiled data can be loaded by the native engine.
-- A session can be created for a selected base/item level.
+- Complete compiled data can be loaded by the native engine.
+- Sessions can be created generically for ordinary non-cluster bases at selected item levels.
 - Core actions can mutate `ItemState`.
 - Candidate pools and weights match the small spec fixture set.
 - The web workspace can open multiple item documents and manually save/reopen them through Stash.

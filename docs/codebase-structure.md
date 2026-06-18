@@ -602,9 +602,9 @@ Build the first vertical slice in this order:
 
 1. SQLite schema for bases, mods, weights, tags, stats, bench options, essences, fossils, and cluster-jewel records.
 2. Python ingest for the complete crafting-relevant RePoE dataset, including preserved cluster-jewel records.
-3. Explicitly filtered compiled data artifact for one ordinary non-cluster base.
+3. Complete compiled runtime artifact for every released base, the global mod catalog, and all normalized mechanic tables.
 4. Native engine data loader.
-5. Session builder for one base/item level.
+5. Generic session builder for ordinary non-cluster bases at selected item levels.
 6. `ItemState` fixed-slot implementation.
 7. Normal explicit candidate mask and weight pool.
 8. Chaos/alchemy/exalt actions.
@@ -613,7 +613,7 @@ Build the first vertical slice in this order:
 
 This proves the entire architecture before adding every special mechanic.
 
-Canonical SQLite is full-dataset even though the first compiled-engine fixture is narrow. Cluster source records are retained during ingest, while cluster-jewel session creation returns an explicit unsupported-feature result until its passive-tag, notable-cap, and socket rules are implemented.
+Canonical SQLite and the compiled runtime artifact are both full-dataset. Vaal Regalia is only the detailed rule fixture. Cluster records are retained in the artifact, while cluster-jewel session creation returns an explicit unsupported-feature result until its passive-tag, notable-cap, and socket rules are implemented.
 
 The native strategy simulator and editor can come after the emulator slice. Add real Simulator and Strategy Builder tabs with those implementations rather than building placeholder application surfaces that will be discarded.
 
@@ -666,7 +666,7 @@ Use:
 engine internals: C++20 with C ABI
 first binding: Python
 second binding: WebAssembly before the real web UI
-first compiled data: JSON-only for the tiny validation slice, then JSON manifest + binary arrays
+first compiled data: complete JSON manifest + parallel arrays, then the same complete schema encoded as binary arrays
 first UI debug views: yes, at least candidate pool and chosen mod details
 first strategy conditions: always, has mod group, rarity, open prefix/suffix
 ```

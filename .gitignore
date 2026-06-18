@@ -35,10 +35,12 @@ __pycache__/
 *.blob
 /data/raw/repoe/*.json
 /data/sqlite/*.json
+/data/compiled/**/*.json
 
 # Preserve generated-data directory structure
 !/data/raw/repoe/.gitkeep
 !/data/sqlite/.gitkeep
+!/data/compiled/.gitkeep
 
 # OS cruft
 Thumbs.db

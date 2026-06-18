@@ -65,6 +65,46 @@ def _fixture_sources() -> dict[str, object]:
                 "text": "+(3-9) to maximum Life",
                 "type": "MaximumLife",
             },
+            "FireSuffix1": {
+                "adds_tags": [],
+                "domain": "item",
+                "generation_type": "suffix",
+                "generation_weights": [
+                    {"tag": "body_armour", "weight": 50}
+                ],
+                "groups": ["FireResistance"],
+                "implicit_tags": ["fire", "resistance"],
+                "is_essence_only": False,
+                "name": "of the Hearth",
+                "required_level": 1,
+                "spawn_weights": [
+                    {"tag": "body_armour", "weight": 500},
+                    {"tag": "default", "weight": 0},
+                ],
+                "stats": [
+                    {"id": "base_fire_damage_resistance_%", "min": 5, "max": 10}
+                ],
+                "text": "+(5-10)% to Fire Resistance",
+                "type": "FireResistance",
+            },
+            "InfluencePrefix1": {
+                "adds_tags": [],
+                "domain": "item",
+                "generation_type": "prefix",
+                "generation_weights": [],
+                "groups": ["InfluenceExample"],
+                "implicit_tags": ["caster"],
+                "is_essence_only": False,
+                "name": "Shaped",
+                "required_level": 68,
+                "spawn_weights": [
+                    {"tag": "bodyarmour_shaper", "weight": 400},
+                    {"tag": "default", "weight": 0},
+                ],
+                "stats": [{"id": "influence_example", "min": 1, "max": 1}],
+                "text": "Shaper example",
+                "type": "InfluenceExample",
+            },
             "CraftedLife": {
                 "adds_tags": [],
                 "domain": "crafted",
@@ -168,10 +208,14 @@ def _fixture_sources() -> dict[str, object]:
         "stat_translations.json": [{"ids": ["base_maximum_life"]}],
         "stats.json": {
             "base_armour": {"is_local": True},
+            "base_fire_damage_resistance_%": {"is_local": False},
             "base_maximum_life": {"is_local": False},
+            "influence_example": {"is_local": False},
         },
         "mod_types.json": {
             "ArmourImplicit": {},
+            "FireResistance": {},
+            "InfluenceExample": {},
             "MaximumLife": {},
         },
         "cluster_jewels.json": {
@@ -236,7 +280,7 @@ class IngestTests(unittest.TestCase):
 
             report = validate_database(first)
             self.assertTrue(report["ok"], report["errors"])
-            self.assertEqual(report["table_counts"]["mod"], 3)
+            self.assertEqual(report["table_counts"]["mod"], 5)
             self.assertEqual(report["table_counts"]["base_item"], 2)
             self.assertEqual(
                 report["skip_reasons"]["base_release_state_unreleased"],
@@ -245,8 +289,13 @@ class IngestTests(unittest.TestCase):
             self.assertEqual(report["cluster"]["runtime_support"], "unsupported")
 
             pool = query_normal_rollable_mods(first, "Test Armour", 86)
-            self.assertEqual(pool["counts"], {"prefix": 1, "suffix": 0, "total": 1})
+            self.assertEqual(
+                pool["counts"],
+                {"prefix": 1, "suffix": 1, "total": 2},
+            )
             self.assertEqual(pool["mods"][0]["mod_key"], "LifePrefix1")
+            self.assertEqual(pool["mods"][1]["mod_key"], "FireSuffix1")
+            self.assertEqual(pool["mods"][1]["final_weight"], 250)
 
             with self.assertRaises(UnsupportedFeatureError):
                 query_normal_rollable_mods(

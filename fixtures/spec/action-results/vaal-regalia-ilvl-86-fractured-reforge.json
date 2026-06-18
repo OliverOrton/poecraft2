@@ -1,0 +1,71 @@
+{
+  "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+  "base_name": "Vaal Regalia",
+  "effective_tags": [
+    "armour",
+    "body_armour",
+    "default",
+    "int_armour",
+    "top_tier_base_item_type"
+  ],
+  "expected": {
+    "blocked_groups": [
+      "BaseLocalDefences"
+    ],
+    "blocked_mod_ids": [
+      "LocalIncreasedEnergyShield11",
+      "LocalIncreasedEnergyShield10",
+      "LocalIncreasedEnergyShield9",
+      "LocalIncreasedEnergyShield8",
+      "LocalIncreasedEnergyShield7",
+      "LocalIncreasedEnergyShield6",
+      "LocalIncreasedEnergyShield5",
+      "LocalIncreasedEnergyShield4",
+      "LocalIncreasedEnergyShield3",
+      "LocalIncreasedEnergyShield2",
+      "LocalIncreasedEnergyShield1"
+    ],
+    "candidate_pool_summary_before_refill": {
+      "combined_total_weight": 108200,
+      "prefix_count": 51,
+      "prefix_total_weight": 50000,
+      "suffix_count": 63,
+      "suffix_total_weight": 58200,
+      "total_count": 114
+    },
+    "open_prefix_slots_before_refill": 2,
+    "open_suffix_slots_before_refill": 3,
+    "preserved_mod_ids": [
+      "LocalIncreasedEnergyShield11"
+    ],
+    "removed_mod_ids": [
+      "AttackerTakesDamage4",
+      "FireResist8"
+    ],
+    "rng_sequence_asserted": false
+  },
+  "fixture_id": "vaal-regalia-ilvl-86-fractured-reforge",
+  "fixture_type": "fractured_reforge",
+  "fixture_version": 1,
+  "input_item": {
+    "prefixes": [
+      {
+        "fractured": true,
+        "mod_id": "LocalIncreasedEnergyShield11"
+      },
+      {
+        "fractured": false,
+        "mod_id": "AttackerTakesDamage4"
+      }
+    ],
+    "rarity": "rare",
+    "suffixes": [
+      {
+        "fractured": false,
+        "mod_id": "FireResist8"
+      }
+    ]
+  },
+  "item_level": 86,
+  "rule": "A reforge preserves the fractured prefix, removes ordinary explicit mods, rebuilds group blocking from preserved state, and excludes every tier in the fractured mod's group."
+}
