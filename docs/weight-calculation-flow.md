@@ -181,6 +181,11 @@ fossil_multiplier_fixed[fossil_set_id][mod_id]
 FIXED_ONE = 1_000_000
 ```
 
+The native baseline uses this million-scale representation. Do not reduce the
+running product back to an integer percentage after each matching row; that
+loses stacking precision. Apply the complete fixed-point product to the base
+weight once, then truncate.
+
 Then:
 
 ```text
@@ -201,7 +206,7 @@ weight = (weight * fossil_multiplier_fixed[fossil_set_id][mod_id]) / FIXED_ONE
 if weight <= 0:
     skip
 
-if sanctified:
+if sanctified:  # deferred; currently rejected as unsupported
     sanctified_pct = 100 + (required_level[mod_id] - 40)
     weight = max(1, (weight * sanctified_pct) / 100)
 ```
@@ -319,6 +324,10 @@ Sample from the eldritch implicit weight table. Do not mix this with explicit pr
 ## Sampling Strategy
 
 Start with compact weighted arrays and prefix sums.
+
+This is now the baseline native implementation. Worker-local action contexts
+cache these tables by the exact candidate mask, tag signature, and weight
+context; Phase 14 may tune policy or add alias tables after measurement.
 
 ```text
 candidate_mod_ids[]

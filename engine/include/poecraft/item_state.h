@@ -83,6 +83,7 @@ typedef struct pc_item_state {
     pc_mod_slot implicits[PC_MAX_IMPLICITS];
     pc_mod_slot enchantments[PC_MAX_ENCHANTS];
 
+    /* Bit (artifact influence_code - 1). The session debug API exposes codes. */
     uint8_t generic_influence_bits;
     uint8_t searing_exarch_tier;
     uint8_t eater_of_worlds_tier;
@@ -123,7 +124,11 @@ pc_result pc_item_compact_side(
     int side,
     uint8_t* out_count);
 
-/* Derived helpers; return 0 on a null pointer. */
+/* Derived helpers; return 0 on a null pointer.
+ * NOTE: these assume the ordinary rare cap of 3 affixes/side. The jewel/abyss
+ * rare cap of 2 is base-dependent and lives in the session, so the engine's
+ * crafting path uses the session cap; these item-only helpers are the generic
+ * default for callers without a session. */
 uint8_t pc_item_max_prefix(const pc_item_state* item);
 uint8_t pc_item_max_suffix(const pc_item_state* item);
 int pc_item_can_add_prefix(const pc_item_state* item);

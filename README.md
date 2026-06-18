@@ -2,7 +2,7 @@
 
 Path of Exile 1 crafting simulator and strategy research project.
 
-## Phase 0-3 commands
+## Build and test
 
 The canonical data pipeline uses Python 3.11+ and the current RePoE fork
 snapshot:
@@ -43,6 +43,31 @@ Phase 3 produces `data/compiled/current/{manifest,game-data,strings}.json`.
 It is a complete parallel-array runtime artifact containing every released
 base, the global normalized mod catalog, ordered relationships, and mechanic
 lookup tables. Vaal Regalia remains only the detailed Phase 2 rule fixture.
+
+Phases 4-6 now provide the native C ABI, compact item state, generic ordinary
+session construction, the full crafted/essence/base-implicit/fossil-direct
+session universe, materialized group/classification/influence masks, lazy
+influence tag-signature weights, cached prefix-sum weighted pools, rich
+request-shaped pool debugging, and the initial normal/essence/fossil actions.
+Phase 7 provides a shared native library, owning Python wrappers, exact spec
+fixture parity checks, explicit test-item construction, a coarse native
+batch-action API, bounded batch/handle stress coverage, and a platform wheel
+build. Standard fossil multipliers stack in fixed point; Sanctified Fossil
+remains explicitly unsupported until its special level/lucky behavior is
+implemented.
+
+Python binding smoke example:
+
+```powershell
+$env:PYTHONPATH = "$PWD/bindings/python"
+py -3 -c "from poecraft_engine import load_data; d=load_data('data/compiled/current'); s=d.create_session('Metadata/Items/Armours/BodyArmours/BodyInt17', 86); c=s.create_action_context(); print(c.run_batch(s.create_item(), {'type':'alchemy'}, 1000).summary)"
+```
+
+Build a self-contained Python wheel containing the native library:
+
+```powershell
+.\scripts\package-python.ps1
+```
 
 This repo is intended to house a native crafting simulation engine, a browser-based public simulator, and later ML tooling for crafting strategy suggestions.
 

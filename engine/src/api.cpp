@@ -41,6 +41,31 @@ void clear_error(pc_error_info* error) {
     set_error(error, PC_RESULT_OK, "");
 }
 
+// Reject input option/request structs that declare an incompatible ABI so a
+// newer caller against an older engine fails cleanly rather than reading a
+// mismatched layout.
+bool abi_ok(uint32_t abi_version, pc_error_info* error) {
+    if (abi_version != PC_ABI_VERSION) {
+        set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                  "incompatible struct abi_version");
+        return false;
+    }
+    return true;
+}
+
+bool abi_struct_ok(
+    uint32_t struct_size,
+    uint32_t abi_version,
+    std::size_t minimum_size,
+    pc_error_info* error) {
+    if (!abi_ok(abi_version, error)) return false;
+    if (struct_size < minimum_size) {
+        set_error(error, PC_RESULT_INVALID_ARGUMENT, "input struct too small");
+        return false;
+    }
+    return true;
+}
+
 bool read_file(const std::string& path, std::string& out, std::string& why) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) {
@@ -83,6 +108,80 @@ pc_result emit_text(
     std::memcpy(buffer, text.data(), text.size());
     buffer[text.size()] = '\0';
     clear_error(error);
+    return PC_RESULT_OK;
+}
+
+pc_result parse_action_request(
+    const poecraft::ActionContextImpl& context,
+    const pc_action_request& request,
+    poecraft::ActionParameters& out_action,
+    poecraft::PoolBuildRequest* out_pool,
+    pc_error_info* error) {
+    if (!abi_struct_ok(request.struct_size, request.abi_version,
+                       sizeof(pc_action_request), error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (request.action_type < PC_ACTION_TRANSMUTE ||
+        request.action_type > PC_ACTION_FOSSIL) {
+        set_error(error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    out_action = {};
+    out_action.type =
+        static_cast<poecraft::ActionType>(request.action_type);
+    if (out_pool != nullptr) *out_pool = {};
+
+    const poecraft::DataImpl& d = *context.session->data;
+    if (request.action_type == PC_ACTION_ESSENCE) {
+        if (request.essence_key == nullptr) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "essence action requires essence_key");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        const auto it = d.essence_by_key.find(request.essence_key);
+        if (it == d.essence_by_key.end()) {
+            set_error(error, PC_RESULT_NOT_FOUND, "essence key not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        out_action.essence_index = it->second;
+    } else if (request.action_type == PC_ACTION_FOSSIL) {
+        if (request.fossil_count == 0 ||
+            request.fossil_count > PC_MAX_FOSSILS_PER_ACTION) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "fossil action requires 1-4 fossils");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        for (std::uint32_t i = 0; i < request.fossil_count; ++i) {
+            if (request.fossil_keys[i] == nullptr) {
+                set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                          "null fossil key");
+                return PC_RESULT_INVALID_ARGUMENT;
+            }
+            const auto it = d.fossil_by_key.find(request.fossil_keys[i]);
+            if (it == d.fossil_by_key.end()) {
+                set_error(error, PC_RESULT_NOT_FOUND, "fossil key not found");
+                return PC_RESULT_NOT_FOUND;
+            }
+            if (it->second < d.fossil_rolls_lucky.size() &&
+                d.fossil_rolls_lucky[it->second] != 0) {
+                set_error(
+                    error, PC_RESULT_UNSUPPORTED_FEATURE,
+                    "Sanctified Fossil special weighting is not supported yet");
+                return PC_RESULT_UNSUPPORTED_FEATURE;
+            }
+            out_action.fossil_indices.push_back(it->second);
+        }
+        std::sort(out_action.fossil_indices.begin(),
+                  out_action.fossil_indices.end());
+        out_action.fossil_indices.erase(
+            std::unique(out_action.fossil_indices.begin(),
+                        out_action.fossil_indices.end()),
+            out_action.fossil_indices.end());
+        if (out_pool != nullptr) {
+            out_pool->weight_kind = poecraft::PoolWeightKind::Fossil;
+            out_pool->fossil_indices = out_action.fossil_indices;
+        }
+    }
     return PC_RESULT_OK;
 }
 
@@ -288,6 +387,10 @@ pc_result pc_session_create(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_session = nullptr;
+    if (!abi_struct_ok(options->struct_size, options->abi_version,
+                       sizeof(pc_session_options), out_error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
     if (options->item_level < 1) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
                   "item level must be at least 1");
@@ -487,6 +590,13 @@ pc_result pc_session_dump_mask(
     case PC_MASK_NORMAL_RANDOM_ROLL: mask = &s.normal_random_roll_mask; break;
     case PC_MASK_POSITIVE_SPAWN: mask = &s.positive_spawn_weight_mask; break;
     case PC_MASK_POSITIVE_BASE: mask = &s.positive_base_weight_mask; break;
+    case PC_MASK_BASE_EXPLICIT_UNIVERSE:
+        mask = &s.base_explicit_universe_mask;
+        break;
+    case PC_MASK_CRAFTED: mask = &s.crafted_mask; break;
+    case PC_MASK_ESSENCE_ONLY: mask = &s.essence_only_mask; break;
+    case PC_MASK_IMPLICIT: mask = &s.implicit_mask; break;
+    case PC_MASK_DELVE: mask = &s.delve_mask; break;
     default:
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "unknown mask kind");
         return PC_RESULT_INVALID_ARGUMENT;
@@ -519,6 +629,11 @@ pc_result pc_action_context_create(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     *out_context = nullptr;
+    if (options != nullptr &&
+        !abi_struct_ok(options->struct_size, options->abi_version,
+                       sizeof(pc_action_context_options), out_error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
     const std::uint64_t seed = options != nullptr ? options->seed : 0;
     auto context = std::make_unique<poecraft::ActionContextImpl>(seed);
     context->session = session->impl;
@@ -575,16 +690,17 @@ pc_result pc_action_context_debug_pool(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "bad side filter");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    const poecraft::SessionImpl& s = *context->impl->session;
-    const std::vector<poecraft::PoolEntry> pool =
-        poecraft::build_normal_pool(s, item, side_filter);
-    *out_count = static_cast<uint32_t>(pool.size());
-    if (entries == nullptr || capacity < pool.size()) {
+    poecraft::PoolBuildRequest request;
+    request.side_filter = side_filter;
+    const poecraft::WeightedPool& pool =
+        poecraft::get_weighted_pool(*context->impl, item, request);
+    *out_count = static_cast<uint32_t>(pool.entries.size());
+    if (entries == nullptr || capacity < pool.entries.size()) {
         set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
         return PC_RESULT_BUFFER_TOO_SMALL;
     }
-    for (std::size_t i = 0; i < pool.size(); ++i) {
-        const poecraft::PoolEntry& src = pool[i];
+    for (std::size_t i = 0; i < pool.entries.size(); ++i) {
+        const poecraft::PoolEntry& src = pool.entries[i];
         pc_pool_entry& dst = entries[i];
         dst.session_mod_id = src.session_mod_id;
         dst.global_mod_id = src.global_mod_id;
@@ -600,18 +716,18 @@ pc_result pc_action_context_debug_pool(
 }
 
 static pc_result emit_pool(
-    const std::vector<poecraft::PoolEntry>& pool,
+    const poecraft::WeightedPool& pool,
     pc_pool_entry* entries,
     uint32_t capacity,
     uint32_t* out_count,
     pc_error_info* out_error) {
-    *out_count = static_cast<uint32_t>(pool.size());
-    if (entries == nullptr || capacity < pool.size()) {
+    *out_count = static_cast<uint32_t>(pool.entries.size());
+    if (entries == nullptr || capacity < pool.entries.size()) {
         set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
         return PC_RESULT_BUFFER_TOO_SMALL;
     }
-    for (std::size_t i = 0; i < pool.size(); ++i) {
-        const poecraft::PoolEntry& src = pool[i];
+    for (std::size_t i = 0; i < pool.entries.size(); ++i) {
+        const poecraft::PoolEntry& src = pool.entries[i];
         pc_pool_entry& dst = entries[i];
         dst.session_mod_id = src.session_mod_id;
         dst.global_mod_id = src.global_mod_id;
@@ -650,8 +766,12 @@ pc_result pc_action_context_debug_harvest_pool(
         set_error(out_error, PC_RESULT_NOT_FOUND, "unknown classification tag");
         return PC_RESULT_NOT_FOUND;
     }
-    const std::vector<poecraft::PoolEntry> pool =
-        poecraft::build_harvest_pool(s, item, it->second, side_filter);
+    poecraft::PoolBuildRequest request;
+    request.weight_kind = poecraft::PoolWeightKind::HarvestSpawnOnly;
+    request.target_tag_id = it->second;
+    request.side_filter = side_filter;
+    const poecraft::WeightedPool& pool =
+        poecraft::get_weighted_pool(*context->impl, item, request);
     return emit_pool(pool, entries, capacity, out_count, out_error);
 }
 
@@ -673,24 +793,207 @@ pc_result pc_session_dump_implicit_tag(
         set_error(out_error, PC_RESULT_NOT_FOUND, "unknown classification tag");
         return PC_RESULT_NOT_FOUND;
     }
-    const std::uint32_t target = it->second;
-    std::vector<std::uint32_t> ids;
-    for (std::uint32_t m = 0; m < s.mod_count; ++m) {
-        for (std::uint32_t i = s.class_offsets[m]; i < s.class_offsets[m + 1];
-             ++i) {
-            if (s.class_tag_ids[i] == target) {
-                ids.push_back(m);
-                break;
-            }
-        }
-    }
-    *out_count = static_cast<uint32_t>(ids.size());
-    if (out_ids == nullptr || capacity < ids.size()) {
+    const auto mask_it = s.implicit_tag_masks.find(it->second);
+    const std::size_t total =
+        mask_it == s.implicit_tag_masks.end()
+            ? 0
+            : poecraft::pc_bitset_count(mask_it->second.data(), s.words);
+    *out_count = static_cast<std::uint32_t>(total);
+    if (out_ids == nullptr || capacity < total) {
         set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
         return PC_RESULT_BUFFER_TOO_SMALL;
     }
-    for (std::size_t i = 0; i < ids.size(); ++i) {
-        out_ids[i] = ids[i];
+    std::uint32_t write = 0;
+    if (mask_it != s.implicit_tag_masks.end()) {
+        poecraft::pc_bitset_for_each(
+            mask_it->second.data(), s.words,
+            [&](std::size_t id) {
+                if (id < s.mod_count) {
+                    out_ids[write++] = static_cast<std::uint32_t>(id);
+                }
+            });
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_session_dump_influence_mask(
+    pc_session_handle session,
+    int32_t influence_code,
+    uint32_t* out_ids,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_error_info* out_error) {
+    if (session == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const poecraft::SessionImpl& s = *session->impl;
+    if (influence_code < 0 ||
+        static_cast<std::size_t>(influence_code) >=
+            s.influence_masks.size()) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "influence code out of range");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& mask = s.influence_masks[static_cast<std::size_t>(influence_code)];
+    const std::size_t total =
+        poecraft::pc_bitset_count(mask.data(), s.words);
+    *out_count = static_cast<std::uint32_t>(total);
+    if (out_ids == nullptr || capacity < total) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    std::uint32_t write = 0;
+    poecraft::pc_bitset_for_each(mask.data(), s.words, [&](std::size_t id) {
+        if (id < s.mod_count) out_ids[write++] = static_cast<std::uint32_t>(id);
+    });
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_debug_pool_query(
+    pc_action_context_handle context,
+    const pc_item_state* item,
+    const pc_pool_query_request* request,
+    pc_pool_debug_entry* entries,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_pool_debug_summary* out_summary,
+    pc_error_info* out_error) {
+    if (context == nullptr || request == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!abi_struct_ok(request->struct_size, request->abi_version,
+                       sizeof(pc_pool_query_request), out_error) ||
+        !abi_struct_ok(request->action.struct_size,
+                       request->action.abi_version,
+                       sizeof(pc_action_request), out_error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (request->side_filter < -1 || request->side_filter > 1) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "bad side filter");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (request->action.action_type == PC_ACTION_ANNUL ||
+        request->action.action_type == PC_ACTION_SCOUR) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+                  "action has no weighted add pool");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+
+    poecraft::ActionParameters action;
+    poecraft::PoolBuildRequest pool_request;
+    const pc_result parse_result = parse_action_request(
+        *context->impl, request->action, action, &pool_request, out_error);
+    if (parse_result != PC_RESULT_OK) {
+        return parse_result;
+    }
+    pool_request.side_filter = request->side_filter;
+
+    std::vector<poecraft::PoolDebugRow> rows;
+    poecraft::WeightedPool summary;
+    bool cache_hit = false;
+    poecraft::build_pool_debug_rows(
+        *context->impl, item, pool_request, request->include_rejected != 0,
+        rows, &summary, &cache_hit);
+    *out_count = static_cast<std::uint32_t>(rows.size());
+
+    if (out_summary != nullptr) {
+        out_summary->struct_size =
+            static_cast<std::uint32_t>(sizeof(pc_pool_debug_summary));
+        out_summary->abi_version = PC_ABI_VERSION;
+        out_summary->tag_signature_id =
+            poecraft::intern_item_tag_signature(*context->impl, item);
+        out_summary->cache_hit = cache_hit ? 1 : 0;
+        out_summary->candidate_count =
+            static_cast<std::uint32_t>(summary.entries.size());
+        out_summary->prefix_total_weight = summary.prefix_total_weight;
+        out_summary->suffix_total_weight = summary.suffix_total_weight;
+        out_summary->combined_total_weight = summary.total_weight;
+        out_summary->cache_hits = context->impl->pool_cache_hits;
+        out_summary->cache_misses = context->impl->pool_cache_misses;
+    }
+
+    if (entries == nullptr || capacity < rows.size()) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    const poecraft::SessionImpl& s = *context->impl->session;
+    const poecraft::DataImpl& d = *s.data;
+    auto tag_name = [&](std::uint32_t tag_id) -> const char* {
+        const auto it = d.tag_name_by_id.find(tag_id);
+        return it == d.tag_name_by_id.end() ? "" : it->second.c_str();
+    };
+    for (std::size_t i = 0; i < rows.size(); ++i) {
+        const poecraft::PoolDebugRow& src = rows[i];
+        pc_pool_debug_entry& dst = entries[i];
+        dst.struct_size = static_cast<std::uint32_t>(sizeof(dst));
+        dst.abi_version = PC_ABI_VERSION;
+        dst.session_mod_id = src.entry.session_mod_id;
+        dst.global_mod_id = src.entry.global_mod_id;
+        const std::uint32_t p = s.global_index[src.entry.session_mod_id];
+        dst.key = d.string_at(d.mod_key_sid[p]).c_str();
+        dst.generation_type = src.entry.gen_type;
+        dst.reach_kind = s.reach_kind[src.entry.session_mod_id];
+        dst.reach_via = s.reach_via[src.entry.session_mod_id].c_str();
+        dst.tag_signature_id = src.tag_signature_id;
+        dst.normal_random_member = src.normal_random_member ? 1 : 0;
+        dst.side_allowed = src.side_allowed ? 1 : 0;
+        dst.mechanic_allowed = src.mechanic_allowed ? 1 : 0;
+        dst.influence_allowed = src.influence_allowed ? 1 : 0;
+        dst.group_allowed = src.group_allowed ? 1 : 0;
+        dst.positively_weighted = src.positively_weighted ? 1 : 0;
+        dst.first_failure = src.first_failure;
+        dst.blocking_group_id = src.blocking_group_id;
+        dst.active_spawn_row = src.active_spawn_row;
+        dst.active_spawn_tag = tag_name(src.active_spawn_tag_id);
+        dst.active_spawn_weight = src.entry.spawn_weight;
+        dst.active_generation_row = src.active_generation_row;
+        dst.active_generation_tag = tag_name(src.active_generation_tag_id);
+        dst.active_generation_pct = src.entry.generation_pct;
+        dst.generation_applied = src.generation_applied ? 1 : 0;
+        dst.special_multiplier_pct = src.special_multiplier_pct;
+        dst.final_weight = src.entry.final_weight;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_action_context_debug_last_trace(
+    pc_action_context_handle context,
+    pc_action_trace_stage* stages,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_error_info* out_error) {
+    if (context == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& trace = context->impl->last_action_trace;
+    *out_count = static_cast<std::uint32_t>(trace.size());
+    if (stages == nullptr || capacity < trace.size()) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < trace.size(); ++i) {
+        const poecraft::ActionTraceStage& src = trace[i];
+        pc_action_trace_stage& dst = stages[i];
+        dst.struct_size = static_cast<std::uint32_t>(sizeof(dst));
+        dst.abi_version = PC_ABI_VERSION;
+        dst.stage_index = src.stage_index;
+        dst.direct = src.direct ? 1 : 0;
+        dst.cache_hit = src.cache_hit ? 1 : 0;
+        dst.tag_signature_id = src.tag_signature_id;
+        dst.weight_kind = static_cast<std::int32_t>(src.weight_kind);
+        dst.side_filter = src.side_filter;
+        dst.prefix_total_weight = src.prefix_total_weight;
+        dst.suffix_total_weight = src.suffix_total_weight;
+        dst.combined_total_weight = src.combined_total_weight;
+        dst.roll = src.roll;
+        dst.chosen_session_mod_id = src.chosen_mod_id;
+        dst.chosen_side = src.chosen_side;
     }
     clear_error(out_error);
     return PC_RESULT_OK;
@@ -707,25 +1010,72 @@ pc_result pc_apply_action(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (request->action_type < 0 ||
-        request->action_type > static_cast<int32_t>(poecraft::ActionType::Scour)) {
-        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
-        return PC_RESULT_INVALID_ARGUMENT;
+    poecraft::ActionParameters action;
+    const pc_result parse_result = parse_action_request(
+        *context->impl, *request, action, nullptr, out_error);
+    if (parse_result != PC_RESULT_OK) {
+        return parse_result;
     }
-    const poecraft::SessionImpl& s = *context->impl->session;
     // Apply to a private copy so a failed action leaves the caller's item intact.
-    pc_item_state scratch = *item;
+    pc_item_state working = *item;
     const poecraft::ActionOutcome outcome = poecraft::apply_action(
-        s, context->impl->rng, &scratch,
-        static_cast<poecraft::ActionType>(request->action_type));
+        *context->impl, &working, action);
     if (outcome.applied) {
-        *item = scratch;
+        *item = working;
     }
     out_result->struct_size = static_cast<uint32_t>(sizeof(pc_action_result));
     out_result->abi_version = PC_ABI_VERSION;
     out_result->applied = outcome.applied ? 1 : 0;
     out_result->added = outcome.added;
     out_result->removed = outcome.removed;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_apply_action_batch(
+    pc_action_context_handle context,
+    pc_item_state* items,
+    uint32_t item_count,
+    const pc_action_request* request,
+    pc_action_result* results,
+    pc_batch_summary* out_summary,
+    pc_error_info* out_error) {
+    if (context == nullptr || request == nullptr || out_summary == nullptr ||
+        (item_count > 0 && items == nullptr)) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    poecraft::ActionParameters action;
+    const pc_result parse_result = parse_action_request(
+        *context->impl, *request, action, nullptr, out_error);
+    if (parse_result != PC_RESULT_OK) {
+        return parse_result;
+    }
+
+    pc_batch_summary summary{};
+    summary.struct_size = static_cast<uint32_t>(sizeof(summary));
+    summary.abi_version = PC_ABI_VERSION;
+    summary.item_count = item_count;
+    for (uint32_t i = 0; i < item_count; ++i) {
+        pc_item_state working = items[i];
+        const poecraft::ActionOutcome outcome = poecraft::apply_action(
+            *context->impl, &working, action);
+        if (outcome.applied) {
+            items[i] = working;
+            ++summary.applied_count;
+        }
+        summary.total_added += static_cast<uint64_t>(outcome.added);
+        summary.total_removed += static_cast<uint64_t>(outcome.removed);
+        if (results != nullptr) {
+            results[i].struct_size =
+                static_cast<uint32_t>(sizeof(pc_action_result));
+            results[i].abi_version = PC_ABI_VERSION;
+            results[i].applied = outcome.applied ? 1 : 0;
+            results[i].added = outcome.added;
+            results[i].removed = outcome.removed;
+        }
+    }
+    *out_summary = summary;
     clear_error(out_error);
     return PC_RESULT_OK;
 }
@@ -741,19 +1091,31 @@ pc_result pc_item_init(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    const bool want_implicits = options != nullptr && options->with_implicits;
-    if (want_implicits) {
-        /* Base implicits resolve to dense session mod ids, which are built in
-         * Phase 5. Until then, refuse rather than emit unresolved ids. */
-        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
-                  "base implicits require the Phase 5 session mod universe");
-        return PC_RESULT_UNSUPPORTED_FEATURE;
+    if (options != nullptr &&
+        !abi_struct_ok(options->struct_size, options->abi_version,
+                       sizeof(pc_item_init_options), out_error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
     }
+    const bool want_implicits = options != nullptr && options->with_implicits;
     pc_item_state scratch;
     pc_item_clear(&scratch);
     scratch.rarity = options != nullptr
                          ? options->rarity
                          : static_cast<uint8_t>(PC_RARITY_NORMAL);
+    if (want_implicits) {
+        const poecraft::SessionImpl& s = *session->impl;
+        if (s.base_implicit_mod_ids.size() > PC_MAX_IMPLICITS) {
+            set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED,
+                      "base implicit count exceeds item capacity");
+            return PC_RESULT_CAPACITY_EXCEEDED;
+        }
+        for (std::uint32_t mod_id : s.base_implicit_mod_ids) {
+            pc_mod_slot* slot = &scratch.implicits[scratch.implicit_count++];
+            slot->mod_id = mod_id;
+            slot->group_id =
+                static_cast<std::uint16_t>(s.primary_group[mod_id]);
+        }
+    }
     *out_item = scratch; /* commit only on success */
     clear_error(out_error);
     return PC_RESULT_OK;
@@ -778,15 +1140,24 @@ pc_result pc_item_debug_format(
     const char* rarity =
         item->rarity < 3 ? rarity_names[item->rarity] : "unknown";
 
+    // Use the session's jewel-aware cap (2 affixes/side for rare jewels) rather
+    // than the item-only pc_item_max_prefix helper, which assumes 3.
+    unsigned cap = 0;
+    if (item->rarity == PC_RARITY_MAGIC) {
+        cap = 1;
+    } else if (item->rarity == PC_RARITY_RARE) {
+        cap = s.rare_affix_cap;
+    }
+
     std::ostringstream out;
     out << "item: " << d.string_at(d.base_name_sid[i]) << " (ilvl "
         << s.item_level << ")\n";
     out << "  rarity: " << rarity << ", quality: "
         << static_cast<unsigned>(item->quality) << "\n";
     out << "  prefixes: " << static_cast<unsigned>(item->prefix_count) << "/"
-        << static_cast<unsigned>(pc_item_max_prefix(item)) << "\n";
+        << cap << "\n";
     out << "  suffixes: " << static_cast<unsigned>(item->suffix_count) << "/"
-        << static_cast<unsigned>(pc_item_max_suffix(item)) << "\n";
+        << cap << "\n";
     out << "  implicits: " << static_cast<unsigned>(item->implicit_count)
         << ", enchantments: "
         << static_cast<unsigned>(item->enchantment_count) << "\n";

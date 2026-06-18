@@ -98,6 +98,26 @@ static std::shared_ptr<DataImpl> build_data_impl(
         data->influence_name_by_code[static_cast<std::size_t>(
             member.second.as_int())] = member.first;
     }
+    const Value& fossil_weight_kind = enums.at("fossil_weight_kind");
+    for (const auto& member : fossil_weight_kind.object) {
+        if (member.first == "negative") {
+            data->fossil_weight_negative_code =
+                static_cast<int>(member.second.as_int());
+        } else if (member.first == "positive") {
+            data->fossil_weight_positive_code =
+                static_cast<int>(member.second.as_int());
+        }
+    }
+    const Value& fossil_mod_kind = enums.at("fossil_mod_kind");
+    for (const auto& member : fossil_mod_kind.object) {
+        if (member.first == "added") {
+            data->fossil_mod_added_code =
+                static_cast<int>(member.second.as_int());
+        } else if (member.first == "forced") {
+            data->fossil_mod_forced_code =
+                static_cast<int>(member.second.as_int());
+        }
+    }
 
     // --- strings ------------------------------------------------------------
     const json::Array& string_array = strings.at("strings").as_array();
@@ -150,6 +170,8 @@ static std::shared_ptr<DataImpl> build_data_impl(
     read_u32(bases, "tag_offsets", data->base_tag_offsets);
     read_u32(bases, "tag_ids", data->base_tag_ids);
     read_u32(bases, "implicit_offsets", data->base_implicit_offsets);
+    read_i32(bases, "implicit_global_mod_ids",
+             data->base_implicit_global_mod_ids);
     require(data->base_global_ids.size() == data->base_count &&
                 data->base_metadata_path_sid.size() == data->base_count &&
                 data->base_session_support.size() == data->base_count,
@@ -158,6 +180,9 @@ static std::shared_ptr<DataImpl> build_data_impl(
             "base tag_offsets must be base_count + 1");
     require(data->base_implicit_offsets.size() == data->base_count + 1,
             "base implicit_offsets must be base_count + 1");
+    require(data->base_implicit_global_mod_ids.size() ==
+                data->base_implicit_offsets.back(),
+            "base implicit ids length must match implicit_offsets");
     data->base_by_path.reserve(data->base_count);
     for (std::uint32_t i = 0; i < data->base_count; ++i) {
         data->base_by_path.emplace(
@@ -188,6 +213,10 @@ static std::shared_ptr<DataImpl> build_data_impl(
                 data->mod_primary_group.size() == data->mod_count &&
                 data->mod_influence_code.size() == data->mod_count,
             "mod parallel arrays inconsistent");
+    data->mod_pos_by_global_id.reserve(data->mod_count);
+    for (std::uint32_t i = 0; i < data->mod_count; ++i) {
+        data->mod_pos_by_global_id.emplace(data->mod_global_ids[i], i);
+    }
 
     // ordered spawn/generation weight rows
     const Value& spawn = game.at("spawn_weights");
@@ -212,10 +241,54 @@ static std::shared_ptr<DataImpl> build_data_impl(
     require(data->stat_offsets.size() == data->mod_count + 1,
             "stats offsets must be mod_count + 1");
 
-    // --- essences (capacity informational) ---------------------------------
+    // --- bench options ------------------------------------------------------
+    const Value* bench = game.find("bench_options");
+    if (bench != nullptr) {
+        read_i32(*bench, "global_mod_ids", data->bench_global_mod_ids);
+        read_u32(*bench, "item_class_offsets", data->bench_class_offsets);
+        read_i32(*bench, "item_class_global_ids",
+                 data->bench_class_global_ids);
+    }
+
+    // --- essences -----------------------------------------------------------
     const Value* essences = game.find("essences");
     if (essences != nullptr) {
+        data->essence_count = read_count(*essences);
+        read_u32(*essences, "key_string_ids", data->essence_key_sids);
+        read_i32(*essences, "item_level_restrictions",
+                 data->essence_item_level_restrictions);
         read_u32(*essences, "mod_offsets", data->essence_mod_offsets);
+        read_u32(*essences, "item_class_key_string_ids",
+                 data->essence_class_key_sids);
+        read_i32(*essences, "linked_global_mod_ids",
+                 data->essence_linked_global_mod_ids);
+        for (std::uint32_t i = 0; i < data->essence_count; ++i) {
+            data->essence_by_key.emplace(
+                data->string_at(data->essence_key_sids[i]), i);
+        }
+    }
+
+    // --- fossils ------------------------------------------------------------
+    const Value* fossils = game.find("fossils");
+    if (fossils != nullptr) {
+        data->fossil_count = read_count(*fossils);
+        read_u32(*fossils, "key_string_ids", data->fossil_key_sids);
+        read_i32(*fossils, "rolls_lucky", data->fossil_rolls_lucky);
+        read_u32(*fossils, "weight_offsets", data->fossil_weight_offsets);
+        read_i32(*fossils, "weight_kind_codes",
+                 data->fossil_weight_kind_codes);
+        read_u32(*fossils, "weight_tag_ids", data->fossil_weight_tag_ids);
+        read_i32(*fossils, "weight_values", data->fossil_weight_values);
+        read_u32(*fossils, "mod_offsets", data->fossil_mod_offsets);
+        read_i32(*fossils, "mod_kind_codes", data->fossil_mod_kind_codes);
+        read_i32(*fossils, "linked_global_mod_ids",
+                 data->fossil_linked_global_mod_ids);
+        require(data->fossil_rolls_lucky.size() == data->fossil_count,
+                "fossil rolls_lucky length must match fossil count");
+        for (std::uint32_t i = 0; i < data->fossil_count; ++i) {
+            data->fossil_by_key.emplace(
+                data->string_at(data->fossil_key_sids[i]), i);
+        }
     }
 
     // sanity: manifest counts agree with game-data section counts

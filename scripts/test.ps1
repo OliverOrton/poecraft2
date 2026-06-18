@@ -29,7 +29,7 @@ function Get-PoeCraftPython {
 }
 
 $Python = Get-PoeCraftPython
-$env:PYTHONPATH = "$Root/tools/ingest"
+$env:PYTHONPATH = "$Root/tools/ingest;$Root/bindings/python"
 & $Python.Command @($Python.Prefix) -m unittest discover -s "$Root/tools/ingest/tests" -t "$Root/tools/ingest"
 if ($LASTEXITCODE -ne 0) {
     throw "Python tests failed with exit code $LASTEXITCODE."
@@ -69,6 +69,14 @@ if (Test-Path $Database) {
     if ($LASTEXITCODE -ne 0) {
         throw "Compiled data validation failed with exit code $LASTEXITCODE."
     }
+}
+
+# Binding tests run after artifact compilation so fixture parity cannot
+# accidentally exercise a stale generated dataset.
+& $Python.Command @($Python.Prefix) -m unittest discover `
+    -s "$Root/bindings/python/tests"
+if ($LASTEXITCODE -ne 0) {
+    throw "Python binding tests failed with exit code $LASTEXITCODE."
 }
 
 # Engine tests. Prefer CTest (CMake build); fall back to the g++ test binary,

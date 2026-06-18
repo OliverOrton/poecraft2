@@ -338,7 +338,8 @@ The old `_create_mod_pool(item, side, ...)`:
 10. Applied cannot-roll attack/caster using classification tags.
 11. Evaluated spawn weight.
 12. Evaluated generation multiplier.
-13. Applied fossil and Sanctified transforms when requested.
+13. Applied standard fossil transforms when requested. Sanctified's special
+    level/lucky transform remains deferred and is rejected as unsupported.
 14. Removed rows with final weight `<= 0`.
 15. Sampled from the resulting weighted list.
 
@@ -459,7 +460,7 @@ Weight:
 ```text
 normal base weight
 * fossil classification-tag multiplier
-* optional Sanctified level multiplier
+* optional Sanctified level multiplier (deferred; currently unsupported)
 ```
 
 Forced fossil mods are direct additions, not weighted candidates.

@@ -35,14 +35,35 @@ void run_blocking_tests() {
     s.group_offsets = {0, 2, 3, 4};
     s.group_ids = {10, 11, 11, 12};
     s.positive_base_weight_mask.assign(s.words, 0);
+    s.positive_spawn_weight_mask.assign(s.words, 0);
+    s.normal_random_roll_mask.assign(s.words, 0);
+    s.prefix_mask.assign(s.words, 0);
+    s.suffix_mask.assign(s.words, 0);
+    s.influence_masks.assign(1, std::vector<uint64_t>(s.words, 0));
     for (uint32_t i = 0; i < 3; ++i) {
         pc_bitset_set(s.positive_base_weight_mask.data(), i);
+        pc_bitset_set(s.positive_spawn_weight_mask.data(), i);
+        pc_bitset_set(s.normal_random_roll_mask.data(), i);
+        pc_bitset_set(s.prefix_mask.data(), i);
+        pc_bitset_set(s.influence_masks[0].data(), i);
+        auto& group_mask = s.group_masks[s.primary_group[i]];
+        if (group_mask.empty()) group_mask.assign(s.words, 0);
+        pc_bitset_set(group_mask.data(), i);
     }
+    auto& secondary = s.group_masks[11];
+    if (secondary.empty()) secondary.assign(s.words, 0);
+    pc_bitset_set(secondary.data(), 0);
+    pc_bitset_set(secondary.data(), 1);
+
+    auto shared = std::make_shared<SessionImpl>(s);
+    ActionContextImpl context(1);
+    context.session = shared;
 
     // Empty item: all three candidates are eligible.
     pc_item_state empty;
     pc_item_clear(&empty);
-    PC_CHECK(build_normal_pool(s, &empty, -1).size() == 3);
+    PoolBuildRequest request;
+    PC_CHECK(get_weighted_pool(context, &empty, request).entries.size() == 3);
 
     // Place mod0 (groups {10, 11}). It must block mod1 via the shared SECONDARY
     // group 11 — primary-only blocking (group 10 only) would leave mod1 in.
@@ -53,9 +74,10 @@ void run_blocking_tests() {
     item.prefixes[0].group_id = 10; // cached primary; full set comes from session
     item.prefix_count = 1;
 
-    const std::vector<PoolEntry> pool = build_normal_pool(s, &item, -1);
-    PC_CHECK(pool.size() == 1);
-    PC_CHECK(pool.size() == 1 && pool[0].session_mod_id == 2);
+    const WeightedPool& pool = get_weighted_pool(context, &item, request);
+    PC_CHECK(pool.entries.size() == 1);
+    PC_CHECK(pool.entries.size() == 1 &&
+             pool.entries[0].session_mod_id == 2);
 
     // Placing a disjoint-group mod blocks nothing extra.
     pc_item_state other;
@@ -64,5 +86,5 @@ void run_blocking_tests() {
     other.prefixes[0].mod_id = 2; // groups {12}
     other.prefixes[0].group_id = 12;
     other.prefix_count = 1;
-    PC_CHECK(build_normal_pool(s, &other, -1).size() == 2); // mod0, mod1 remain
+    PC_CHECK(get_weighted_pool(context, &other, request).entries.size() == 2);
 }

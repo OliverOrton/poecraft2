@@ -216,12 +216,11 @@ void run_data_loader_tests(const char* artifact_dir) {
              PC_RESULT_OK);
     PC_CHECK(item.rarity == PC_RARITY_RARE);
 
-    /* implicits are deferred to Phase 5 -> unsupported, item untouched */
+    /* Base implicits resolve through the full dense session universe. */
     item_options.with_implicits = 1;
-    pc_item_state before_unsupported = item;
     PC_CHECK(pc_item_init(first_session, &item_options, &item, &error) ==
-             PC_RESULT_UNSUPPORTED_FEATURE);
-    PC_CHECK(item.rarity == before_unsupported.rarity);
+             PC_RESULT_OK);
+    PC_CHECK(item.implicit_count == info_after_destroy.implicit_count);
 
     size_t needed = 0;
     pc_result small_rc =

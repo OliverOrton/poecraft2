@@ -9,8 +9,9 @@ add_library(poecraft_headers INTERFACE)
 target_include_directories(poecraft_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(poecraft_headers INTERFACE cxx_std_20)
 
-# The engine static library: the C ABI plus internal primitives.
-add_library(poecraft_engine STATIC
+# Build the core once, then expose both a static library for native tests and a
+# shared C ABI library for Python/WASM-facing bindings.
+add_library(poecraft_engine_objects OBJECT
     src/api.cpp
     src/bitset.cpp
     src/data_loader.cpp
@@ -19,9 +20,25 @@ add_library(poecraft_engine STATIC
     src/session_builder.cpp
     src/actions_basic.cpp
 )
+set_target_properties(poecraft_engine_objects PROPERTIES
+    POSITION_INDEPENDENT_CODE ON)
+target_include_directories(poecraft_engine_objects
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_compile_features(poecraft_engine_objects PUBLIC cxx_std_20)
+
+add_library(poecraft_engine STATIC
+    $<TARGET_OBJECTS:poecraft_engine_objects>)
 target_include_directories(poecraft_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_include_directories(poecraft_engine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_compile_features(poecraft_engine PUBLIC cxx_std_20)
+
+add_library(poecraft_engine_shared SHARED
+    $<TARGET_OBJECTS:poecraft_engine_objects>)
+set_target_properties(poecraft_engine_shared PROPERTIES
+    OUTPUT_NAME poecraft_engine
+    WINDOWS_EXPORT_ALL_SYMBOLS ON)
+target_include_directories(poecraft_engine_shared PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(poecraft_engine_shared PUBLIC cxx_std_20)
 
 include(CTest)
 if(BUILD_TESTING)

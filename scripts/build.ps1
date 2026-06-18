@@ -86,6 +86,22 @@ else {
         if ($LASTEXITCODE -ne 0) {
             throw "C++ engine test build failed with exit code $LASTEXITCODE."
         }
+
+        & $Compiler.Source `
+            -std=c++20 -O2 -shared `
+            -static-libstdc++ -static-libgcc `
+            "-Wl,--export-all-symbols" `
+            "-I$Root/engine/include" `
+            @EngineSources `
+            -o "$BuildDirectory/poecraft_engine.dll"
+        if ($LASTEXITCODE -ne 0) {
+            throw "C++ shared engine build failed with exit code $LASTEXITCODE."
+        }
+        $CompilerDirectory = Split-Path -Parent $Compiler.Source
+        $WinPthread = Join-Path $CompilerDirectory "libwinpthread-1.dll"
+        if (Test-Path $WinPthread) {
+            Copy-Item -Force $WinPthread $BuildDirectory
+        }
     }
     else {
         Write-Warning "CMake and a C++20 compiler were not found; C++ engine build was skipped."

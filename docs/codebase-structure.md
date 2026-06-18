@@ -467,10 +467,19 @@ pc_result pc_apply_action(
     pc_action_result* out_result,
     pc_error_info* out_error);
 
+pc_result pc_apply_action_batch(
+    pc_action_context_handle context,
+    pc_item_state* items,
+    uint32_t item_count,
+    const pc_action_request* request,
+    pc_action_result* results,
+    pc_batch_summary* out_summary,
+    pc_error_info* out_error);
+
 pc_result pc_debug_pool_query(
     pc_action_context_handle context,
     const pc_item_state* item,
-    const pc_action_request* request,
+    const pc_pool_query_request* request,
     pc_debug_pool_entry* entries,
     uint32_t entry_capacity,
     uint32_t* out_entry_count,
@@ -589,12 +598,35 @@ typedef enum {
     PC_ACTION_CHAOS,
     PC_ACTION_EXALT,
     PC_ACTION_ANNUL,
+    PC_ACTION_SCOUR,
     PC_ACTION_ESSENCE,
     PC_ACTION_FOSSIL
 } pc_action_type;
+
+typedef struct {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    pc_action_type action_type;
+    const char* essence_key;
+    uint32_t fossil_count;
+    const char* fossil_keys[4];
+} pc_action_request;
 ```
 
+Pool debugging wraps the same action request in `pc_pool_query_request`, adding
+the side filter and whether rejected session rows should be returned. This keeps
+Python, WASM, UI diagnostics, and native execution on one action-parameter
+shape.
+
 Random state belongs to `pc_action_context_handle` or the simulator's private action context. Do not use process-global random state or hide mutable random state in a shared session. Context options may accept an initial seed for tests/debugging, but exact seeded replay across platforms or engine versions is not a compatibility requirement.
+
+The first Python binding uses the shared C ABI directly and keeps data, session,
+and action-context ownership explicit. Its batch call maps to
+`pc_apply_action_batch`, so Python does not cross the native boundary once per
+item for validation or ML batches. It also exposes session mod resolution and
+explicit test-item construction for fixture parity without duplicating pool
+rules in Python. `scripts/package-python.ps1` produces a platform-tagged wheel
+containing the shared library and required local runtime DLLs.
 
 ## First Implementation Slice
 

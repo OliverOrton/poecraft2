@@ -36,8 +36,20 @@ SessionImpl make_synth_session() {
     s.group_ids = {10, 10, 20};
     s.rare_affix_cap = 3;
     s.positive_base_weight_mask.assign(s.words, 0);
+    s.positive_spawn_weight_mask.assign(s.words, 0);
+    s.normal_random_roll_mask.assign(s.words, 0);
+    s.prefix_mask.assign(s.words, 0);
+    s.suffix_mask.assign(s.words, 0);
+    s.influence_masks.assign(1, std::vector<uint64_t>(s.words, 0));
     for (uint32_t i = 0; i < 3; ++i) {
         pc_bitset_set(s.positive_base_weight_mask.data(), i);
+        pc_bitset_set(s.positive_spawn_weight_mask.data(), i);
+        pc_bitset_set(s.normal_random_roll_mask.data(), i);
+        pc_bitset_set((i < 2 ? s.prefix_mask : s.suffix_mask).data(), i);
+        pc_bitset_set(s.influence_masks[0].data(), i);
+        auto& group_mask = s.group_masks[s.primary_group[i]];
+        if (group_mask.empty()) group_mask.assign(s.words, 0);
+        pc_bitset_set(group_mask.data(), i);
     }
     return s;
 }
@@ -48,8 +60,14 @@ void place(pc_item_state* item, int side, uint32_t mod_id, uint16_t group,
 }
 
 void run_reforge_unit_tests() {
-    const SessionImpl s = make_synth_session();
-    Rng rng(7);
+    auto session = std::make_shared<SessionImpl>(make_synth_session());
+    ActionContextImpl context(7);
+    context.session = session;
+    auto run = [&](pc_item_state* item, ActionType type) {
+        ActionParameters action;
+        action.type = type;
+        return apply_action(context, item, action);
+    };
 
     // A) A removed (non-fractured) mod's group is freed: chaos rerolls a fresh
     //    group-10 prefix and a group-20 suffix. If the block were not cleared,
@@ -59,7 +77,7 @@ void run_reforge_unit_tests() {
         pc_item_clear(&item);
         item.rarity = PC_RARITY_RARE;
         place(&item, PC_SIDE_PREFIX, 0, 10, 0);
-        ActionOutcome out = apply_action(s, rng, &item, ActionType::Chaos);
+        ActionOutcome out = run(&item, ActionType::Chaos);
         PC_CHECK(out.applied);
         PC_CHECK(item.rarity == PC_RARITY_RARE);
         PC_CHECK(item.prefix_count == 1); // group 10 re-rolled
@@ -73,7 +91,7 @@ void run_reforge_unit_tests() {
         pc_item_clear(&item);
         item.rarity = PC_RARITY_RARE;
         place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_FRACTURED);
-        ActionOutcome out = apply_action(s, rng, &item, ActionType::Chaos);
+        ActionOutcome out = run(&item, ActionType::Chaos);
         PC_CHECK(out.applied);
         PC_CHECK(item.prefix_count == 1);
         PC_CHECK(item.prefixes[0].mod_id == 0);
@@ -88,7 +106,7 @@ void run_reforge_unit_tests() {
         item.rarity = PC_RARITY_RARE;
         place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_FRACTURED);
         place(&item, PC_SIDE_SUFFIX, 2, 20, 0);
-        ActionOutcome out = apply_action(s, rng, &item, ActionType::Scour);
+        ActionOutcome out = run(&item, ActionType::Scour);
         PC_CHECK(out.applied);
         PC_CHECK(item.rarity == PC_RARITY_MAGIC);
         PC_CHECK(item.prefix_count == 1 && item.suffix_count == 0);
@@ -102,7 +120,7 @@ void run_reforge_unit_tests() {
         item.rarity = PC_RARITY_RARE;
         place(&item, PC_SIDE_PREFIX, 0, 10, 0);
         place(&item, PC_SIDE_SUFFIX, 2, 20, 0);
-        ActionOutcome out = apply_action(s, rng, &item, ActionType::Scour);
+        ActionOutcome out = run(&item, ActionType::Scour);
         PC_CHECK(out.applied);
         PC_CHECK(item.rarity == PC_RARITY_NORMAL);
         PC_CHECK(item.prefix_count == 0 && item.suffix_count == 0);
@@ -115,17 +133,72 @@ void run_reforge_unit_tests() {
         item.rarity = PC_RARITY_RARE;
         place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_FRACTURED);
         place(&item, PC_SIDE_SUFFIX, 2, 20, 0);
-        ActionOutcome out = apply_action(s, rng, &item, ActionType::Annul);
+        ActionOutcome out = run(&item, ActionType::Annul);
         PC_CHECK(out.applied && out.removed == 1);
         // only the non-fractured suffix can go
         PC_CHECK(item.prefix_count == 1 && item.suffix_count == 0);
         PC_CHECK(item.prefixes[0].flags & PC_MOD_SLOT_FRACTURED);
 
         // annul again: only the fractured mod remains -> nothing removable
-        ActionOutcome out2 = apply_action(s, rng, &item, ActionType::Annul);
+        ActionOutcome out2 = run(&item, ActionType::Annul);
         PC_CHECK(!out2.applied);
         PC_CHECK(item.prefix_count == 1);
     }
+}
+
+void run_fossil_precision_unit_test() {
+    auto data = std::make_shared<DataImpl>();
+    data->mod_global_ids = {0};
+    data->fossil_weight_offsets = {0, 1, 2};
+    data->fossil_weight_kind_codes = {1, 1};
+    data->fossil_weight_tag_ids = {7, 7};
+    data->fossil_weight_values = {33, 33};
+    data->fossil_weight_positive_code = 1;
+    data->fossil_weight_negative_code = 0;
+
+    auto session = std::make_shared<SessionImpl>();
+    session->data = data;
+    session->mod_count = 1;
+    session->words = pc_bitset_words(1);
+    session->global_index = {0};
+    session->gen_type = {0};
+    session->primary_group = {10};
+    session->required_level = {1};
+    session->base_spawn_weight = {10'000};
+    session->base_gen_pct = {100};
+    session->base_roll_weight = {10'000};
+    session->group_offsets = {0, 1};
+    session->group_ids = {10};
+    session->class_offsets = {0, 1};
+    session->class_tag_ids = {7};
+    session->fossil_added_mod_ids.resize(2);
+    session->fossil_forced_mod_ids.resize(2);
+    session->normal_random_roll_mask.assign(session->words, 0);
+    session->positive_base_weight_mask.assign(session->words, 0);
+    session->prefix_mask.assign(session->words, 0);
+    session->suffix_mask.assign(session->words, 0);
+    session->influence_masks.assign(
+        1, std::vector<uint64_t>(session->words, 0));
+    pc_bitset_set(session->normal_random_roll_mask.data(), 0);
+    pc_bitset_set(session->positive_base_weight_mask.data(), 0);
+    pc_bitset_set(session->prefix_mask.data(), 0);
+    pc_bitset_set(session->influence_masks[0].data(), 0);
+
+    ActionContextImpl context(1);
+    context.session = session;
+    pc_item_state item;
+    pc_item_clear(&item);
+    item.rarity = PC_RARITY_RARE;
+
+    PoolBuildRequest request;
+    request.weight_kind = PoolWeightKind::Fossil;
+    request.fossil_indices = {0, 1};
+    const WeightedPool& pool =
+        get_weighted_pool(context, &item, request);
+    PC_CHECK(pool.entries.size() == 1);
+    // 10,000 * 0.33 * 0.33 = 1,089. The old percent accumulator
+    // truncated 33% * 33% to 10% first and incorrectly returned 1,000.
+    PC_CHECK(pool.entries[0].final_weight == 1089);
 }
 
 // --- integration against the real artifact ----------------------------------
@@ -171,10 +244,31 @@ pc_item_state make_item(pc_session_handle session, uint8_t rarity) {
 pc_action_result apply(pc_action_context_handle ctx, pc_item_state* item,
                        int action) {
     pc_error_info error;
-    pc_action_request req;
+    pc_action_request req{};
     req.struct_size = sizeof(req);
     req.abi_version = PC_ABI_VERSION;
     req.action_type = action;
+    pc_action_result result;
+    pc_apply_action(ctx, item, &req, &result, &error);
+    return result;
+}
+
+pc_action_result apply_special(
+    pc_action_context_handle ctx,
+    pc_item_state* item,
+    int action,
+    const char* key) {
+    pc_error_info error;
+    pc_action_request req{};
+    req.struct_size = sizeof(req);
+    req.abi_version = PC_ABI_VERSION;
+    req.action_type = action;
+    if (action == PC_ACTION_ESSENCE) {
+        req.essence_key = key;
+    } else {
+        req.fossil_count = 1;
+        req.fossil_keys[0] = key;
+    }
     pc_action_result result;
     pc_apply_action(ctx, item, &req, &result, &error);
     return result;
@@ -196,6 +290,16 @@ void run_integration_tests(const char* artifact_dir) {
     sopt.item_level = 86;
     pc_session_handle session = nullptr;
     PC_CHECK(pc_session_create(data, &sopt, &session, &error) == PC_RESULT_OK);
+
+    // ABI guard: a struct declaring an incompatible abi_version is rejected.
+    {
+        pc_session_options bad = sopt;
+        bad.abi_version = PC_ABI_VERSION + 1;
+        pc_session_handle rejected = nullptr;
+        PC_CHECK(pc_session_create(data, &bad, &rejected, &error) ==
+                 PC_RESULT_INVALID_ARGUMENT);
+        PC_CHECK(rejected == nullptr);
+    }
 
     pc_action_context_options copt;
     copt.struct_size = sizeof(copt);
@@ -299,6 +403,99 @@ void run_integration_tests(const char* artifact_dir) {
         PC_CHECK(item.prefix_count == 0 && item.suffix_count == 0);
     }
 
+    // Essence guarantees its direct mod, then fills the remaining rare slots.
+    {
+        pc_item_state item = make_item(session, PC_RARITY_NORMAL);
+        pc_action_result r = apply_special(
+            ctx, &item, PC_ACTION_ESSENCE,
+            "Metadata/Items/Currency/CurrencyEssenceAnguish2");
+        PC_CHECK(r.applied == 1);
+        PC_CHECK(item.rarity == PC_RARITY_RARE);
+        PC_CHECK(item.prefix_count + item.suffix_count >= 4);
+        bool saw_essence_reach = false;
+        for (uint32_t id : live_mod_ids(&item)) {
+            pc_mod_info info;
+            pc_session_get_mod_info(session, id, &info, &error);
+            if (info.reach_kind == PC_MOD_REACH_ESSENCE) {
+                saw_essence_reach = true;
+            }
+        }
+        PC_CHECK(saw_essence_reach);
+
+        uint32_t trace_count = 0;
+        pc_action_context_debug_last_trace(ctx, nullptr, 0, &trace_count,
+                                           &error);
+        PC_CHECK(trace_count >= 2);
+        std::vector<pc_action_trace_stage> trace(trace_count);
+        pc_action_context_debug_last_trace(ctx, trace.data(), trace_count,
+                                           &trace_count, &error);
+        PC_CHECK(trace[0].direct == 1);
+        bool saw_weighted_stage = false;
+        for (const auto& stage : trace) {
+            if (!stage.direct) {
+                PC_CHECK(stage.combined_total_weight ==
+                         stage.prefix_total_weight +
+                             stage.suffix_total_weight);
+                PC_CHECK(stage.chosen_side == PC_SIDE_PREFIX ||
+                         stage.chosen_side == PC_SIDE_SUFFIX);
+                saw_weighted_stage = true;
+            }
+        }
+        PC_CHECK(saw_weighted_stage);
+    }
+
+    // A basic fossil craft uses the fossil-weighted pool and returns a rare.
+    {
+        pc_item_state item = make_item(session, PC_RARITY_NORMAL);
+        pc_action_result r = apply_special(
+            ctx, &item, PC_ACTION_FOSSIL,
+            "Metadata/Items/Currency/CurrencyDelveCraftingRandom");
+        PC_CHECK(r.applied == 1);
+        PC_CHECK(item.rarity == PC_RARITY_RARE);
+        PC_CHECK(item.prefix_count + item.suffix_count >= 4);
+        check_groups_distinct(session, &item);
+    }
+
+    // Sanctified's level/lucky weighting is deliberately deferred. Reject it
+    // instead of silently treating it as an ordinary no-effect fossil.
+    {
+        pc_item_state item = make_item(session, PC_RARITY_NORMAL);
+        pc_action_request req{};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_FOSSIL;
+        req.fossil_count = 1;
+        req.fossil_keys[0] =
+            "Metadata/Items/Currency/CurrencyDelveCraftingLuckyModRolls";
+        pc_action_result result{};
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_UNSUPPORTED_FEATURE);
+        PC_CHECK(item.rarity == PC_RARITY_NORMAL);
+    }
+
+    // Native batch application parses once and reuses one context/cache.
+    {
+        std::vector<pc_item_state> items(256);
+        for (auto& item : items) {
+            item = make_item(session, PC_RARITY_NORMAL);
+        }
+        pc_action_request req{};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_ALCHEMY;
+        std::vector<pc_action_result> results(items.size());
+        pc_batch_summary summary{};
+        PC_CHECK(pc_apply_action_batch(
+                     ctx, items.data(), static_cast<uint32_t>(items.size()),
+                     &req, results.data(), &summary, &error) == PC_RESULT_OK);
+        PC_CHECK(summary.item_count == items.size());
+        PC_CHECK(summary.applied_count == items.size());
+        for (std::size_t i = 0; i < items.size(); ++i) {
+            PC_CHECK(results[i].applied == 1);
+            PC_CHECK(items[i].rarity == PC_RARITY_RARE);
+        }
+    }
+
     pc_action_context_destroy(ctx);
     pc_session_destroy(session);
     pc_data_destroy(data);
@@ -308,6 +505,7 @@ void run_integration_tests(const char* artifact_dir) {
 
 void run_action_tests(const char* artifact_dir) {
     run_reforge_unit_tests(); // always runs (synthetic, no data needed)
+    run_fossil_precision_unit_test();
     if (artifact_dir == nullptr) {
         std::printf("action integration suite skipped (no artifact dir)\n");
         return;

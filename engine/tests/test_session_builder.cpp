@@ -34,6 +34,8 @@ struct ModRow {
     std::string key;
     std::string reach_via;
     int gen_type = 0;
+    int reach_kind = 0;
+    int reach_influence = -1;
 };
 
 std::vector<ModRow> read_session_mods(pc_session_handle session) {
@@ -47,6 +49,8 @@ std::vector<ModRow> read_session_mods(pc_session_handle session) {
         rows[i].key = info.key;
         rows[i].reach_via = info.reach_via;
         rows[i].gen_type = info.generation_type;
+        rows[i].reach_kind = info.reach_kind;
+        rows[i].reach_influence = info.reach_influence;
     }
     return rows;
 }
@@ -59,25 +63,45 @@ void check_universe(pc_session_handle session, const std::string& fixture_dir) {
     json::Value fx = load_fixture(
         fixture_dir + "/session-pools/vaal-regalia-ilvl-86-session-universe.json");
     const std::vector<ModRow> rows = read_session_mods(session);
+    pc_error_info error;
+    uint32_t base_count = 0;
+    pc_session_dump_mask(session, PC_MASK_BASE_EXPLICIT_UNIVERSE, nullptr, 0,
+                         &base_count, &error);
+    std::vector<uint32_t> base_ids(base_count);
+    pc_session_dump_mask(session, PC_MASK_BASE_EXPLICIT_UNIVERSE,
+                         base_ids.data(), base_count, &base_count, &error);
 
-    // counts
+    // The historical fixture pins the base explicit universe. The full session
+    // universe now also includes crafted/essence/implicit/delve direct rows.
     const auto& counts = fx.at("counts");
     int ordinary = 0;
     int influence = 0;
-    for (const auto& r : rows) {
+    for (uint32_t id : base_ids) {
+        const auto& r = rows[id];
         if (r.reach_via == "base") {
             ++ordinary;
         } else {
             ++influence;
         }
     }
-    PC_CHECK(static_cast<int>(rows.size()) == counts.at("total").as_int());
+    PC_CHECK(static_cast<int>(base_ids.size()) == counts.at("total").as_int());
     PC_CHECK(ordinary == counts.at("ordinary").as_int());
     PC_CHECK(influence == counts.at("influence").as_int());
+    PC_CHECK(rows.size() > base_ids.size());
+
+    auto mask_count = [&](int kind) {
+        uint32_t count = 0;
+        pc_session_dump_mask(session, kind, nullptr, 0, &count, &error);
+        return count;
+    };
+    PC_CHECK(mask_count(PC_MASK_CRAFTED) > 0);
+    PC_CHECK(mask_count(PC_MASK_ESSENCE_ONLY) > 0);
+    PC_CHECK(mask_count(PC_MASK_DELVE) > 0);
 
     // membership: (reach_via | gen | key)
     std::set<std::tuple<std::string, std::string, std::string>> actual;
-    for (const auto& r : rows) {
+    for (uint32_t id : base_ids) {
+        const auto& r = rows[id];
         actual.emplace(r.reach_via, gen_name(r.gen_type), r.key);
     }
     std::set<std::tuple<std::string, std::string, std::string>> expected;
@@ -94,7 +118,6 @@ void check_universe(pc_session_handle session, const std::string& fixture_dir) {
     PC_CHECK(actual == expected);
 
     // effective tags
-    pc_error_info error;
     uint32_t tag_count = 0;
     pc_session_dump_effective_tags(session, nullptr, 0, &tag_count, &error);
     std::vector<const char*> names(tag_count);
@@ -107,6 +130,113 @@ void check_universe(pc_session_handle session, const std::string& fixture_dir) {
         expected_tags.insert(t.as_string());
     }
     PC_CHECK(actual_tags == expected_tags);
+}
+
+void check_influenced_signature_and_cache(
+    pc_session_handle session,
+    pc_action_context_handle context,
+    const pc_item_state& base_item) {
+    const std::vector<ModRow> rows = read_session_mods(session);
+    int influence_code = -1;
+    for (const ModRow& row : rows) {
+        if (row.reach_kind == PC_MOD_REACH_INFLUENCE) {
+            influence_code = row.reach_influence;
+            break;
+        }
+    }
+    PC_CHECK(influence_code > 0 && influence_code <= 8);
+    if (influence_code <= 0 || influence_code > 8) return;
+
+    pc_item_state influenced = base_item;
+    influenced.generic_influence_bits =
+        static_cast<uint8_t>(1u << (influence_code - 1));
+
+    pc_pool_query_request query{};
+    query.struct_size = sizeof(query);
+    query.abi_version = PC_ABI_VERSION;
+    query.action.struct_size = sizeof(query.action);
+    query.action.abi_version = PC_ABI_VERSION;
+    query.action.action_type = PC_ACTION_EXALT;
+    query.side_filter = -1;
+    query.include_rejected = 0;
+
+    pc_error_info error;
+    uint32_t count = 0;
+    pc_pool_debug_summary first{};
+    pc_result rc = pc_debug_pool_query(
+        context, &influenced, &query, nullptr, 0, &count, &first, &error);
+    PC_CHECK(rc == PC_RESULT_BUFFER_TOO_SMALL);
+    PC_CHECK(first.tag_signature_id != 0);
+    std::vector<pc_pool_debug_entry> entries(count);
+    pc_pool_debug_summary second{};
+    PC_CHECK(pc_debug_pool_query(context, &influenced, &query, entries.data(),
+                                 count, &count, &second,
+                                 &error) == PC_RESULT_OK);
+    PC_CHECK(second.cache_hit == 1);
+    PC_CHECK(second.combined_total_weight ==
+             second.prefix_total_weight + second.suffix_total_weight);
+    bool saw_influence = false;
+    for (const auto& entry : entries) {
+        if (entry.reach_kind == PC_MOD_REACH_INFLUENCE) {
+            saw_influence = true;
+            PC_CHECK(entry.active_spawn_weight > 0);
+        }
+    }
+    PC_CHECK(saw_influence);
+
+    // Rich mode returns every session row and explains direct/special rows as
+    // excluded from the normal-random pool.
+    query.include_rejected = 1;
+    uint32_t all_count = 0;
+    pc_debug_pool_query(context, &influenced, &query, nullptr, 0, &all_count,
+                        nullptr, &error);
+    uint32_t session_count = 0;
+    pc_session_get_mod_count(session, &session_count, &error);
+    PC_CHECK(all_count == session_count);
+    std::vector<pc_pool_debug_entry> all(all_count);
+    pc_debug_pool_query(context, &influenced, &query, all.data(), all_count,
+                        &all_count, nullptr, &error);
+    bool explained_direct = false;
+    for (const auto& entry : all) {
+        if (entry.reach_kind == PC_MOD_REACH_ESSENCE) {
+            PC_CHECK(entry.first_failure ==
+                     PC_POOL_DEBUG_NOT_NORMAL_RANDOM);
+            explained_direct = true;
+            break;
+        }
+    }
+    PC_CHECK(explained_direct);
+
+    uint32_t influence_count = 0;
+    pc_session_dump_influence_mask(session, influence_code, nullptr, 0,
+                                   &influence_count, &error);
+    PC_CHECK(influence_count > 0);
+
+    pc_pool_query_request fossil_query{};
+    fossil_query.struct_size = sizeof(fossil_query);
+    fossil_query.abi_version = PC_ABI_VERSION;
+    fossil_query.action.struct_size = sizeof(fossil_query.action);
+    fossil_query.action.abi_version = PC_ABI_VERSION;
+    fossil_query.action.action_type = PC_ACTION_FOSSIL;
+    fossil_query.action.fossil_count = 1;
+    fossil_query.action.fossil_keys[0] =
+        "Metadata/Items/Currency/CurrencyDelveCraftingRandom";
+    fossil_query.side_filter = -1;
+    uint32_t fossil_count = 0;
+    pc_debug_pool_query(context, &base_item, &fossil_query, nullptr, 0,
+                        &fossil_count, nullptr, &error);
+    std::vector<pc_pool_debug_entry> fossil_entries(fossil_count);
+    pc_debug_pool_query(context, &base_item, &fossil_query,
+                        fossil_entries.data(), fossil_count, &fossil_count,
+                        nullptr, &error);
+    bool saw_fossil_direct = false;
+    for (const auto& entry : fossil_entries) {
+        if (entry.reach_kind == PC_MOD_REACH_FOSSIL) {
+            saw_fossil_direct = true;
+            PC_CHECK(entry.final_weight > 0);
+        }
+    }
+    PC_CHECK(saw_fossil_direct);
 }
 
 // Build the engine pool for a side and compare to a weighted-pool fixture.
@@ -298,6 +428,7 @@ void run_session_builder_tests(const char* artifact_dir,
                        "/session-pools/vaal-regalia-ilvl-86-normal-suffix.json");
         check_combined(session, context, &item, fixtures);
         check_harvest(session, context, &item);
+        check_influenced_signature_and_cache(session, context, item);
 
         pc_action_context_destroy(context);
         pc_session_destroy(session);
@@ -310,7 +441,7 @@ void run_session_builder_tests(const char* artifact_dir,
     base_count = summary.base_item_count;
 
     bool found_armour = false, found_weapon = false, found_jewel = false,
-         found_abyss = false;
+         found_abyss = false, found_implicit = false;
     int built = 0;
     int with_mods = 0;
     for (uint32_t i = 0; i < base_count; ++i) {
@@ -339,6 +470,22 @@ void run_session_builder_tests(const char* artifact_dir,
         if (mc > 0) ++with_mods;
         pc_base_info info;
         pc_session_get_base_info(s, &info, &error);
+        if (!found_implicit && info.implicit_count > 0) {
+            pc_item_init_options init{};
+            init.struct_size = sizeof(init);
+            init.abi_version = PC_ABI_VERSION;
+            init.rarity = PC_RARITY_NORMAL;
+            init.with_implicits = 1;
+            pc_item_state implicit_item;
+            PC_CHECK(pc_item_init(s, &init, &implicit_item, &error) ==
+                     PC_RESULT_OK);
+            PC_CHECK(implicit_item.implicit_count == info.implicit_count);
+            uint32_t implicit_mask_count = 0;
+            pc_session_dump_mask(s, PC_MASK_IMPLICIT, nullptr, 0,
+                                 &implicit_mask_count, &error);
+            PC_CHECK(implicit_mask_count >= info.implicit_count);
+            found_implicit = true;
+        }
         const std::string cls = info.item_class_key;
         if (mc > 0) {
             if (cls == "Body Armour") found_armour = true;
@@ -357,6 +504,7 @@ void run_session_builder_tests(const char* artifact_dir,
     PC_CHECK(found_weapon);
     PC_CHECK(found_jewel);
     PC_CHECK(found_abyss);
+    PC_CHECK(found_implicit);
 
     pc_data_destroy(data);
 }

@@ -20,10 +20,9 @@ typedef enum pc_session_support {
 } pc_session_support;
 
 /*
- * A session pins one base + item level out of the immutable data set. In this
- * phase it resolves the base and exposes its identity; dense session mod
- * universe and masks are built in Phase 5. Creating a session for a cluster
- * base returns PC_RESULT_UNSUPPORTED_FEATURE.
+ * A session pins one base + item level out of the immutable data set and builds
+ * its dense full mod universe, static masks, and base-signature weights.
+ * Creating a session for a cluster base returns PC_RESULT_UNSUPPORTED_FEATURE.
  */
 typedef struct pc_session_options {
     uint32_t struct_size;
@@ -138,12 +137,21 @@ typedef struct pc_mod_info {
     uint32_t global_mod_id;
     const char* key;
     int32_t generation_type; /* 0 prefix, 1 suffix */
-    int32_t reach_kind;      /* 0 base, 1 influence */
+    int32_t reach_kind;      /* pc_mod_reach_kind */
     int32_t reach_influence; /* influence enum code, or -1 */
     const char* reach_via;   /* "base" or "influence:<name>" */
     uint32_t primary_group_id;
     uint32_t required_level;
 } pc_mod_info;
+
+typedef enum pc_mod_reach_kind {
+    PC_MOD_REACH_BASE = 0,
+    PC_MOD_REACH_INFLUENCE = 1,
+    PC_MOD_REACH_CRAFTED = 2,
+    PC_MOD_REACH_ESSENCE = 3,
+    PC_MOD_REACH_BASE_IMPLICIT = 4,
+    PC_MOD_REACH_FOSSIL = 5
+} pc_mod_reach_kind;
 
 pc_result pc_session_get_mod_info(
     pc_session_handle session,
@@ -158,7 +166,12 @@ typedef enum pc_session_mask_kind {
     PC_MASK_SUFFIX = 2,
     PC_MASK_NORMAL_RANDOM_ROLL = 3,
     PC_MASK_POSITIVE_SPAWN = 4,
-    PC_MASK_POSITIVE_BASE = 5
+    PC_MASK_POSITIVE_BASE = 5,
+    PC_MASK_BASE_EXPLICIT_UNIVERSE = 6,
+    PC_MASK_CRAFTED = 7,
+    PC_MASK_ESSENCE_ONLY = 8,
+    PC_MASK_IMPLICIT = 9,
+    PC_MASK_DELVE = 10
 } pc_session_mask_kind;
 
 /* Dump the session's effective base tag names (query-required-count). String
@@ -242,6 +255,16 @@ pc_result pc_session_dump_implicit_tag(
     uint32_t* out_count,
     pc_error_info* out_error);
 
+/* Dump one materialized influence mask by artifact influence code. Code 0 is
+ * the non-influence mask. generic_influence_bits uses bit (code - 1). */
+pc_result pc_session_dump_influence_mask(
+    pc_session_handle session,
+    int32_t influence_code,
+    uint32_t* out_ids,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_error_info* out_error);
+
 // --- crafting actions -------------------------------------------------------
 
 typedef enum pc_action_type {
@@ -253,13 +276,20 @@ typedef enum pc_action_type {
     PC_ACTION_CHAOS = 5,
     PC_ACTION_EXALT = 6,
     PC_ACTION_ANNUL = 7,
-    PC_ACTION_SCOUR = 8
+    PC_ACTION_SCOUR = 8,
+    PC_ACTION_ESSENCE = 9,
+    PC_ACTION_FOSSIL = 10
 } pc_action_type;
+
+#define PC_MAX_FOSSILS_PER_ACTION 4
 
 typedef struct pc_action_request {
     uint32_t struct_size;
     uint32_t abi_version;
     int32_t action_type; /* pc_action_type */
+    const char* essence_key; /* stable metadata key for PC_ACTION_ESSENCE */
+    uint32_t fossil_count;
+    const char* fossil_keys[PC_MAX_FOSSILS_PER_ACTION];
 } pc_action_request;
 
 typedef struct pc_action_result {
@@ -282,6 +312,137 @@ pc_result pc_apply_action(
     pc_item_state* item,
     const pc_action_request* request,
     pc_action_result* out_result,
+    pc_error_info* out_error);
+
+typedef struct pc_batch_summary {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint32_t item_count;
+    uint32_t applied_count;
+    uint64_t total_added;
+    uint64_t total_removed;
+} pc_batch_summary;
+
+/*
+ * Apply one parsed action request to a contiguous array of caller-owned items.
+ * Each item has the same per-item commit semantics as pc_apply_action. results
+ * may be null when only the aggregate summary is needed. The context RNG and
+ * caches are reused across the whole batch; the last-action trace describes
+ * the final item processed.
+ */
+pc_result pc_apply_action_batch(
+    pc_action_context_handle context,
+    pc_item_state* items,
+    uint32_t item_count,
+    const pc_action_request* request,
+    pc_action_result* results,
+    pc_batch_summary* out_summary,
+    pc_error_info* out_error);
+
+// --- request-shaped rich pool debugging ------------------------------------
+
+typedef enum pc_pool_debug_failure {
+    PC_POOL_DEBUG_ACCEPTED = 0,
+    PC_POOL_DEBUG_NOT_NORMAL_RANDOM = 1,
+    PC_POOL_DEBUG_SIDE_CLOSED = 2,
+    PC_POOL_DEBUG_MECHANIC_FILTER = 3,
+    PC_POOL_DEBUG_INFLUENCE_FILTER = 4,
+    PC_POOL_DEBUG_GROUP_BLOCK = 5,
+    PC_POOL_DEBUG_ZERO_WEIGHT = 6
+} pc_pool_debug_failure;
+
+typedef struct pc_pool_query_request {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    pc_action_request action;
+    int32_t side_filter;     /* -1 both, 0 prefix, 1 suffix */
+    int32_t include_rejected; /* non-zero returns every session row */
+} pc_pool_query_request;
+
+typedef struct pc_pool_debug_entry {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint32_t session_mod_id;
+    uint32_t global_mod_id;
+    const char* key;
+    int32_t generation_type;
+    int32_t reach_kind;
+    const char* reach_via;
+    uint32_t tag_signature_id;
+    int32_t normal_random_member;
+    int32_t side_allowed;
+    int32_t mechanic_allowed;
+    int32_t influence_allowed;
+    int32_t group_allowed;
+    int32_t positively_weighted;
+    int32_t first_failure; /* pc_pool_debug_failure */
+    uint32_t blocking_group_id; /* UINT32_MAX when not blocked */
+    int32_t active_spawn_row;
+    const char* active_spawn_tag;
+    uint32_t active_spawn_weight;
+    int32_t active_generation_row;
+    const char* active_generation_tag;
+    uint32_t active_generation_pct;
+    int32_t generation_applied;
+    uint32_t special_multiplier_pct;
+    uint32_t final_weight;
+} pc_pool_debug_entry;
+
+typedef struct pc_pool_debug_summary {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint32_t tag_signature_id;
+    int32_t cache_hit;
+    uint32_t candidate_count;
+    uint64_t prefix_total_weight;
+    uint64_t suffix_total_weight;
+    uint64_t combined_total_weight;
+    uint64_t cache_hits;
+    uint64_t cache_misses;
+} pc_pool_debug_summary;
+
+/*
+ * Inspect the exact pool used by an action request. With include_rejected=0,
+ * entries contains only the weighted candidate pool. With include_rejected=1,
+ * every session row is returned with its first failing stage and active ordered
+ * spawn/generation rows. Query-required-count semantics apply.
+ */
+pc_result pc_debug_pool_query(
+    pc_action_context_handle context,
+    const pc_item_state* item,
+    const pc_pool_query_request* request,
+    pc_pool_debug_entry* entries,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_pool_debug_summary* out_summary,
+    pc_error_info* out_error);
+
+/* One selection stage from the most recent pc_apply_action call. Direct
+ * essence/fossil additions have direct=1 and no random roll totals. */
+typedef struct pc_action_trace_stage {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint32_t stage_index;
+    int32_t direct;
+    int32_t cache_hit;
+    uint32_t tag_signature_id;
+    int32_t weight_kind; /* internal normal/Harvest/fossil weight context */
+    int32_t side_filter;
+    uint64_t prefix_total_weight;
+    uint64_t suffix_total_weight;
+    uint64_t combined_total_weight;
+    uint64_t roll;
+    uint32_t chosen_session_mod_id;
+    int32_t chosen_side;
+} pc_action_trace_stage;
+
+/* Query the chosen mod/side and pool totals for every selection stage in the
+ * most recent action. A failed/no-op action produces an empty trace. */
+pc_result pc_action_context_debug_last_trace(
+    pc_action_context_handle context,
+    pc_action_trace_stage* stages,
+    uint32_t capacity,
+    uint32_t* out_count,
     pc_error_info* out_error);
 
 #ifdef __cplusplus
