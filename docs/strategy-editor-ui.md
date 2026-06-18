@@ -403,6 +403,14 @@ bottom panel:
 
 Do not use a landing page for the strategy editor. The first screen should be the working board.
 
+The strategy editor itself should be a document inside the desktop workspace described in [desktop-workspace-ui.md](desktop-workspace-ui.md). Its inspector, run trace, and statistics can live in docked tool panels, while result sets and saved traces may open as separate documents. This allows layouts such as:
+
+```text
+strategy editor on the left
+simulation results on the right
+run trace on the bottom
+```
+
 ## Node Visual Design
 
 Nodes should be compact and information-dense.

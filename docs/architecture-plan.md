@@ -22,6 +22,7 @@ Both systems consume the same generated engine data artifacts so simulation beha
 The public app should be a static TypeScript frontend with a WebAssembly engine module.
 
 - UI: Vite + TypeScript with native Web Components/custom elements.
+- Workspace shell: `dockview-core` for IDE-style tabs, docking, splits, resizing, and layout restoration.
 - Engine: native engine compiled to WebAssembly.
 - Hosting: Cloudflare Pages, GitHub Pages, Netlify, or similar static hosting.
 - User storage: IndexedDB for saved items, crafting history, settings, and optional export/import.
@@ -37,6 +38,8 @@ The public app should expose two main crafting workflows:
 - Strategy simulator: user builds or loads a strategy graph and runs one or many attempts.
 
 The strategy editor should use a Blueprint-style visual graph. Operation nodes mutate the item, and guarded edges decide the next state based on item/simulation conditions. The graph should compile down to deterministic simulator semantics similar to the old `Step` runner rather than becoming a general-purpose visual programming language. See [strategy-editor-ui.md](strategy-editor-ui.md).
+
+Both workflows should live inside a desktop-like workspace. Users can open multiple item, strategy, result, and trace documents; arrange them in tab groups and resizable splits; and restore their workspace later. Saved resources and workspace layouts should use IndexedDB. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
 
 ## Engine
 

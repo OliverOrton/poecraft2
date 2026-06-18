@@ -362,9 +362,9 @@ Acceptance gate:
 - Python can load spec fixtures and compare pools/weights.
 - Batch simulation can run many chaos/alchemy/exalt attempts without leaking memory.
 
-## Phase 8: Web Emulator Slice
+## Phase 8: Web Workspace And Emulator Slice
 
-Goal: build the first browser-facing UI around the engine API.
+Goal: build the desktop-like browser workspace and the first item emulator document around the engine API.
 
 Use:
 
@@ -373,23 +373,30 @@ Vite
 TypeScript
 native Web Components
 plain CSS
+dockview-core
+IndexedDB
 ```
 
 First components:
 
 ```text
 pc-app
+pc-workspace
 pc-item-panel
 pc-craft-bar
 pc-mod-list
 pc-select
 pc-combobox
 pc-weight-table
+pc-saved-items
 ```
 
 First UI features:
 
 ```text
+open multiple item documents
+rearrange tabs and create resizable splits
+restore the previous workspace layout
 select base
 select item level
 create item
@@ -397,13 +404,18 @@ apply one craft operation at a time
 show item mods
 show craft history
 show debug candidate pool for selected action
+autosave drafts
+save, save as, duplicate, and reopen items
 ```
 
 Start with a mock engine client if WASM is not ready, but keep the interface shaped like the final engine client.
 
 Acceptance gate:
 
+- User can open two item documents and arrange them in tabs or a split.
+- Workspace layout and open drafts survive reload.
 - User can run the first supported actions one by one.
+- Saved items can be reopened without depending on the current panel layout.
 - UI displays the same item state as engine debug output.
 - Debug pool view matches engine debug output for the first supported actions.
 - No React dependency.
@@ -619,6 +631,7 @@ The first MVP is complete when:
 - A session can be created for a selected base/item level.
 - Core actions can mutate `ItemState`.
 - Candidate pools and weights match the small spec fixture set.
-- The web emulator can apply supported actions one by one.
+- The web workspace can open, save, and restore multiple item documents.
+- Item emulator documents can apply supported actions one by one.
 - A simple strategy graph can run repeated simulations.
 - Native, Python, and WASM seeded runs agree for the covered action set.

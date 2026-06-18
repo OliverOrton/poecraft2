@@ -53,10 +53,13 @@ Vite
 TypeScript
 native Web Components / custom elements
 plain CSS
+dockview-core for workspace layout
 no React
 ```
 
 This fits the app well. The simulator is a dense tool UI, not a media-heavy website. It needs good controls, tables, search, mod lists, item panels, and debug views. It does not need a component framework with a virtual DOM.
+
+`dockview-core` should own the IDE-style workspace shell: document tabs, dock groups, splits, resizing, floating panels, edge groups, and layout serialization. It supports vanilla TypeScript, so it does not change the no-React decision. Domain panels remain custom Web Components.
 
 Use native custom elements for reusable widgets:
 
@@ -70,6 +73,9 @@ Use native custom elements for reusable widgets:
 <pc-strategy-board>
 <pc-condition-editor>
 <pc-run-trace>
+<pc-workspace>
+<pc-saved-items>
+<pc-saved-strategies>
 ```
 
 Use Shadow DOM selectively:
@@ -81,28 +87,37 @@ Keep Lit optional. Do not start with it. If native custom elements become too ve
 
 ### Frontend State
 
-Use a tiny explicit store instead of a framework store.
+Use small explicit services instead of a frontend state framework or one oversized global store.
 
 ```text
-AppState
-  selectedBase
-  selectedItemLevel
-  currentItem
-  selectedCraft
-  lastActionResult
-  debugPanels
+WorkspaceService:
+  open documents, active document, Dockview layout
+
+DocumentService:
+  document descriptors, dirty state, local view state
+
+ItemRepository / StrategyRepository / ResultsRepository:
+  saved resources and drafts in IndexedDB
+
+EngineClient:
+  session handles and action calls
+
+SimulationJobService:
+  worker jobs, progress, cancellation
+
+CommandService:
+  commands, menus, shortcuts, enablement
 ```
 
-Updates should be event-driven:
+Updates should remain event-driven:
 
 ```text
 component dispatches command event
-app controller applies command
-store updates
-subscribed components render
+service applies command
+affected documents/components receive explicit updates
 ```
 
-Avoid hidden two-way binding. Custom widgets should dispatch events and receive state through properties.
+Avoid hidden two-way binding. Custom widgets should dispatch events and receive state through properties. Keep workspace layout state separate from item/strategy domain data.
 
 ### Styling
 
@@ -157,6 +172,7 @@ poecraft2/
     architecture-plan.md
     codebase-structure.md
     data-shapes-and-ingest.md
+    desktop-workspace-ui.md
     engine-bitsets.md
     implementation-plan.md
     item-state-flow.md
@@ -238,11 +254,21 @@ poecraft2/
       src/
         main.ts
         app/
-          app-state.ts
           app-controller.ts
+          command-service.ts
+          document-service.ts
           engine-client.ts
+          simulation-job-service.ts
+          workspace-service.ts
+        persistence/
+          database.ts
+          item-repository.ts
+          strategy-repository.ts
+          results-repository.ts
+          workspace-repository.ts
         components/
           pc-app.ts
+          pc-workspace.ts
           pc-item-panel.ts
           pc-craft-bar.ts
           pc-mod-list.ts
@@ -255,6 +281,8 @@ poecraft2/
           pc-edge-layer.ts
           pc-condition-editor.ts
           pc-run-trace.ts
+          pc-saved-items.ts
+          pc-saved-strategies.ts
         styles/
           tokens.css
           base.css
@@ -318,6 +346,7 @@ Python binding can come first for validation tooling, batch simulation, and ML e
 
 Responsibilities:
 
+- provide the desktop-like workspace shell
 - render the simulator
 - render the one-action emulator
 - render the visual strategy editor
@@ -328,6 +357,8 @@ Responsibilities:
 The web app should not reimplement mod pool rules. If it needs pool details, it asks the engine for debug data.
 
 The strategy editor should be a Blueprint-style graph UI backed by deterministic simulator semantics. See [strategy-editor-ui.md](strategy-editor-ui.md).
+
+The workspace should support multiple open documents, resizable tab groups, saved items/strategies, draft autosave, and layout restoration. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
 
 ## Engine Public API Shape
 
@@ -375,7 +406,7 @@ Build the first vertical slice in this order:
 7. Normal explicit candidate mask and weight pool.
 8. Chaos/alchemy/exalt actions.
 9. Lean regression tests against spec fixtures.
-10. Minimal web UI with base selector, item panel, craft buttons, and debug pool.
+10. Minimal workspace shell with multiple item documents, saved drafts, and the first item emulator panel.
 
 This proves the entire architecture before adding every special mechanic.
 
@@ -387,6 +418,7 @@ The best frontend for this project is:
 
 ```text
 Vite + TypeScript + native Web Components
+dockview-core for the workspace shell
 ```
 
 Start without Lit. Build a small internal widget toolkit:
@@ -403,6 +435,9 @@ pc-strategy-board
 pc-strategy-node
 pc-condition-editor
 pc-run-trace
+pc-workspace
+pc-saved-items
+pc-saved-strategies
 ```
 
 Add Lit only if component boilerplate slows development. If added, keep it as a rendering helper for custom elements, not as an app framework.
@@ -415,6 +450,8 @@ Avoid React because:
 - Web Components keep widgets portable and framework-independent
 
 Avoid a large CSS/UI framework because the app needs domain-specific controls and dense layouts. Small helper packages are okay if they solve focused problems, but the core UI should stay ours.
+
+Dockview is the focused exception: use it for docking/layout behavior rather than reimplementing tabs, split resizing, floating groups, and layout persistence. Keep all domain controls and document contents custom.
 
 ## Open Decisions
 
