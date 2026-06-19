@@ -356,6 +356,128 @@ select {
     text-align: right;
 }
 
+/* --- workspace + dockview --- */
+
+pc-workspace {
+    display: block;
+    height: 100%;
+    position: relative;
+}
+
+pc-emulator,
+pc-stash {
+    display: block;
+    height: 100%;
+    overflow: hidden;
+}
+
+.pc-titlebar button {
+    padding: 3px 10px;
+}
+
+.pc-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    height: 100%;
+}
+
+.pc-tab-dirty {
+    color: var(--pc-accent);
+    font-size: 10px;
+}
+
+.pc-tab-close {
+    color: var(--pc-text-dim);
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.pc-tab-close:hover {
+    color: var(--pc-text-strong);
+}
+
+/* --- save group --- */
+
+.pc-emu-save {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.pc-emu-name {
+    color: var(--pc-text-dim);
+    font-size: 11px;
+}
+
+/* --- modal --- */
+
+.pc-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.pc-modal {
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 4px;
+    padding: 20px 24px;
+    max-width: 360px;
+}
+
+.pc-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* --- stash --- */
+
+.pc-stash {
+    padding: 14px 16px;
+    height: 100%;
+    overflow: auto;
+}
+
+.pc-stash-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    margin-bottom: 6px;
+    background: var(--pc-bg-panel);
+}
+
+.pc-stash-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.pc-stash-name {
+    color: var(--pc-text-strong);
+}
+
+.pc-stash-base {
+    color: var(--pc-text-dim);
+    font-size: 11px;
+}
+
+.pc-stash-actions {
+    display: flex;
+    gap: 4px;
+}
+
 .pc-boot {
     padding: 32px;
 }

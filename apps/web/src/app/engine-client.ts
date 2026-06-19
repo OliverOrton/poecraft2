@@ -236,6 +236,20 @@ export class EngineClient {
         return this.call("itemInfo", { item });
     }
 
+    async exportItem(item: number): Promise<unknown> {
+        const { state } = await this.call<{ state: unknown }>("exportItem", {
+            item,
+        });
+        return state;
+    }
+
+    async importItem(state: unknown): Promise<number> {
+        const { item } = await this.call<{ item: number }>("importItem", {
+            state,
+        });
+        return item;
+    }
+
     addMod(
         item: number,
         session: number,

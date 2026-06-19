@@ -1,21 +1,30 @@
 /*
- * Root application shell. Hosts the emulator document. The dockview workspace
- * (multiple documents, tabs/splits, layout persistence, Stash) grows from here
- * in the next milestone.
+ * Root application shell. Hosts the dockview workspace and a thin toolbar to
+ * open new Emulator documents and the Stash.
  */
 
-import "./pc-emulator";
+import { PcWorkspace } from "./pc-workspace";
+import "./pc-workspace";
 
 export class PcApp extends HTMLElement {
     connectedCallback(): void {
         this.innerHTML = `
             <header class="pc-titlebar">
                 <span class="pc-brand">poecraft</span>
-                <span class="pc-titlebar-doc">Emulator</span>
+                <button data-cmd="new-emulator">+ Emulator</button>
+                <button data-cmd="open-stash">Stash</button>
             </header>
             <main class="pc-main">
-                <pc-emulator></pc-emulator>
+                <pc-workspace></pc-workspace>
             </main>`;
+
+        const workspace = this.querySelector<PcWorkspace>("pc-workspace")!;
+        this.querySelector('[data-cmd="new-emulator"]')!.addEventListener("click", () => {
+            void workspace.openEmulator();
+        });
+        this.querySelector('[data-cmd="open-stash"]')!.addEventListener("click", () => {
+            workspace.openStash();
+        });
     }
 }
 

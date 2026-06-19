@@ -164,6 +164,16 @@ export class EngineBindings {
         return rest;
     }
 
+    exportItem(item: number): unknown {
+        return this.callJson("pcw_item_export", ["number"], [item]).state;
+    }
+
+    importItem(state: unknown): number {
+        return this.callJson("pcw_item_import", ["string"], [
+            JSON.stringify(state),
+        ]).item as number;
+    }
+
     addMod(
         item: number,
         session: number,

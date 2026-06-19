@@ -1,15 +1,27 @@
 /*
- * pc-emulator — the first emulator document. Owns one engine session, action
- * context, and live item, and drives the craft bar, mod list, and debug weight
- * table. Crafts are applied one operation at a time and recorded in history.
+ * pc-emulator — an emulator document. Owns one engine session, action context,
+ * and live item, and drives the craft bar, mod list, and debug weight table.
  *
- * This is the real WASM-backed slice (no mock engine): every control maps to an
- * EngineClient call against the shared worker.
+ * Document lifecycle:
+ *   - identified by a docId (the dockview panel id);
+ *   - content auto-saved as an IndexedDB draft on every change (crash recovery);
+ *   - dirty until saved to the Stash; reports dirty/title to the workspace;
+ *   - can be saved, saved-as, or duplicated.
+ *
+ * Real WASM-backed slice: every control maps to an EngineClient call.
  */
 
 import { getEngine } from "../engine-service";
 import { EngineClient } from "../engine-client";
 import { BaseInfo, CraftAction, ModInfo } from "../engine-protocol";
+import {
+    DraftRecord,
+    ItemSnapshot,
+    StashRecord,
+    getDraft,
+    putDraft,
+} from "../workspace/persistence";
+import { workspace } from "../workspace/registry";
 import { PcCombobox } from "./pc-combobox";
 import { PcModList, ModRow } from "./pc-mod-list";
 import { PcWeightTable } from "./pc-weight-table";
@@ -47,6 +59,7 @@ export class PcEmulator extends HTMLElement {
     private dataId = 0;
     private bases: BaseInfo[] = [];
 
+    private docId = "";
     private base = DEFAULT_BASE;
     private itemLevel = 86;
     private rarity = "rare";
@@ -59,7 +72,14 @@ export class PcEmulator extends HTMLElement {
     private modCache = new Map<number, ModInfo>();
     private busy = false;
 
+    private dirty = false;
+    private savedRef: string | null = null;
+    private savedName: string | null = null;
+    private savedCreatedAt = 0;
+    private initializing = true;
+
     async connectedCallback(): Promise<void> {
+        this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
         this.renderShell();
         this.setStatus("Loading engine…");
         const engine = await getEngine();
@@ -68,17 +88,53 @@ export class PcEmulator extends HTMLElement {
         this.bases = (await this.client.listBases(this.dataId)).filter(
             (base) => base.support === 0,
         );
+
+        const draft = await getDraft(this.docId);
+        if (draft) {
+            this.base = draft.base;
+            this.itemLevel = draft.itemLevel;
+            this.rarity = draft.rarity;
+            this.history = draft.history;
+            this.savedRef = draft.savedRef;
+            this.savedName = draft.savedName;
+            this.dirty = draft.dirty;
+        }
         if (!this.bases.some((b) => b.path === this.base)) {
             this.base = this.bases[0]?.path ?? this.base;
         }
+        this.syncControls();
         this.populateBaseList();
-        await this.rebuildSession();
+
+        await this.openSession();
+        if (draft?.state) {
+            this.item = await this.client.importItem(draft.state);
+        } else {
+            this.item = await this.client.createItem(this.session, {
+                rarity: this.rarity,
+                withImplicits: true,
+            });
+        }
+        this.initializing = false;
+        await this.refresh();
+        await this.persist();
+
+        workspace().registerDocument(this.docId, { save: () => this.save() });
+        workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
         this.setStatus("");
+    }
+
+    disconnectedCallback(): void {
+        // Note: dockview also fires this during drag-between-groups, so we must
+        // not destroy persistent state here — the draft already holds it.
+    }
+
+    private get docTitle(): string {
+        return this.savedName ?? "Untitled";
     }
 
     // --- engine lifecycle ---------------------------------------------------
 
-    private async rebuildSession(): Promise<void> {
+    private async openSession(): Promise<void> {
         if (this.session) {
             await this.client.closeContext(this.context);
             await this.client.closeSession(this.session);
@@ -90,9 +146,19 @@ export class PcEmulator extends HTMLElement {
             this.itemLevel,
         );
         this.context = await this.client.createContext(this.session, 0);
-        this.item = 0;
+    }
+
+    private async rebuildSession(): Promise<void> {
+        await this.openSession();
         this.history = [];
-        await this.createItem();
+        if (this.item) {
+            await this.client.closeItem(this.item);
+        }
+        this.item = await this.client.createItem(this.session, {
+            rarity: this.rarity,
+            withImplicits: true,
+        });
+        await this.markChanged();
     }
 
     private async createItem(): Promise<void> {
@@ -104,7 +170,7 @@ export class PcEmulator extends HTMLElement {
             withImplicits: true,
         });
         this.history = [];
-        await this.refresh();
+        await this.markChanged();
     }
 
     private async applyAction(type: CraftAction["type"]): Promise<void> {
@@ -115,8 +181,96 @@ export class PcEmulator extends HTMLElement {
             added: outcome.added,
             removed: outcome.removed,
         });
-        await this.refresh();
+        await this.markChanged();
     }
+
+    private async markChanged(): Promise<void> {
+        if (!this.initializing) {
+            this.dirty = true;
+        }
+        await this.refresh();
+        await this.persist();
+        if (!this.initializing) {
+            workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+        }
+    }
+
+    private async snapshot(): Promise<ItemSnapshot> {
+        return {
+            base: this.base,
+            itemLevel: this.itemLevel,
+            state: await this.client.exportItem(this.item),
+        };
+    }
+
+    private async persist(): Promise<void> {
+        const draft: DraftRecord = {
+            docId: this.docId,
+            base: this.base,
+            itemLevel: this.itemLevel,
+            rarity: this.rarity,
+            state: await this.client.exportItem(this.item),
+            history: this.history,
+            savedRef: this.savedRef,
+            savedName: this.savedName,
+            dirty: this.dirty,
+            updatedAt: Date.now(),
+        };
+        await putDraft(draft);
+    }
+
+    // --- save / save-as / duplicate ----------------------------------------
+
+    private async save(): Promise<boolean> {
+        if (!this.savedRef) {
+            return this.saveAs();
+        }
+        const record: StashRecord = {
+            id: this.savedRef,
+            name: this.savedName ?? "Untitled",
+            base: this.base,
+            itemLevel: this.itemLevel,
+            state: await this.client.exportItem(this.item),
+            createdAt: this.savedCreatedAt || Date.now(),
+        };
+        await workspace().saveToStash(record);
+        this.markSaved(record);
+        return true;
+    }
+
+    private async saveAs(): Promise<boolean> {
+        const name = prompt("Save item to Stash as:", this.savedName ?? "New item");
+        if (!name) {
+            return false;
+        }
+        const record: StashRecord = {
+            id: `stash-${crypto.randomUUID()}`,
+            name,
+            base: this.base,
+            itemLevel: this.itemLevel,
+            state: await this.client.exportItem(this.item),
+            createdAt: Date.now(),
+        };
+        await workspace().saveToStash(record);
+        this.markSaved(record);
+        return true;
+    }
+
+    private markSaved(record: StashRecord): void {
+        this.savedRef = record.id;
+        this.savedName = record.name;
+        this.savedCreatedAt = record.createdAt;
+        this.dirty = false;
+        void this.persist();
+        workspace().notifyDirty(this.docId, false, this.docTitle);
+        this.renderSavedName();
+    }
+
+    private async duplicate(): Promise<void> {
+        await workspace().openEmulator(await this.snapshot(), "copy");
+    }
+
+    // --- mod resolution -----------------------------------------------------
 
     private async resolveMod(id: number): Promise<ModInfo> {
         const cached = this.modCache.get(id);
@@ -154,7 +308,6 @@ export class PcEmulator extends HTMLElement {
             suffixes,
             implicits,
         });
-
         const pool = await this.client.debugPool(this.context, this.item, {
             action: { type: this.poolAction },
         });
@@ -180,7 +333,7 @@ export class PcEmulator extends HTMLElement {
 
     private setBusy(busy: boolean): void {
         this.busy = busy;
-        this.querySelectorAll<HTMLButtonElement>("button[data-action], button[data-create]").forEach(
+        this.querySelectorAll<HTMLButtonElement>("button[data-action], button[data-cmd]").forEach(
             (button) => {
                 button.disabled = busy;
             },
@@ -201,12 +354,26 @@ export class PcEmulator extends HTMLElement {
         }
     }
 
+    private syncControls(): void {
+        this.querySelector<HTMLInputElement>(".pc-ilvl")!.value = String(this.itemLevel);
+        this.querySelector<HTMLSelectElement>(".pc-rarity")!.value = this.rarity;
+        this.querySelector<HTMLSelectElement>(".pc-pool-action")!.value = this.poolAction;
+        this.renderSavedName();
+    }
+
     private populateBaseList(): void {
         const combobox = this.querySelector<PcCombobox>("pc-combobox")!;
         combobox.setOptions(
             this.bases.map((base) => ({ value: base.path, label: baseLabel(base.path) })),
         );
         combobox.setValue(this.base);
+    }
+
+    private renderSavedName(): void {
+        const el = this.querySelector(".pc-emu-name");
+        if (el) {
+            el.textContent = this.savedName ? `Saved: ${this.savedName}` : "Unsaved";
+        }
     }
 
     private renderHistory(): void {
@@ -243,12 +410,18 @@ export class PcEmulator extends HTMLElement {
                         <select class="pc-rarity">
                             <option value="normal">normal</option>
                             <option value="magic">magic</option>
-                            <option value="rare" selected>rare</option>
+                            <option value="rare">rare</option>
                         </select>
                     </label>
-                    <button data-create>Create item</button>
+                    <button data-cmd="create">Create item</button>
                     <span class="pc-craft-actions">
                         ${ACTIONS.map((a) => `<button data-action="${a}">${a}</button>`).join("")}
+                    </span>
+                    <span class="pc-emu-save">
+                        <span class="pc-emu-name">Unsaved</span>
+                        <button data-cmd="save">Save</button>
+                        <button data-cmd="save-as">Save As</button>
+                        <button data-cmd="duplicate">Duplicate</button>
                     </span>
                     <span class="pc-emu-status" hidden></span>
                 </div>
@@ -296,8 +469,16 @@ export class PcEmulator extends HTMLElement {
             this.poolAction = (event.target as HTMLSelectElement).value as CraftAction["type"];
             void this.guard(() => this.refresh());
         });
-        this.querySelector("[data-create]")!.addEventListener("click", () => {
-            void this.guard(() => this.createItem());
+        this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const cmd = button.dataset.cmd;
+                void this.guard(async () => {
+                    if (cmd === "create") await this.createItem();
+                    else if (cmd === "save") await this.save();
+                    else if (cmd === "save-as") await this.saveAs();
+                    else if (cmd === "duplicate") await this.duplicate();
+                });
+            });
         });
         this.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
             button.addEventListener("click", () => {

@@ -225,6 +225,90 @@ void append_item_info(std::string& out, const pc_item_state& item) {
     out += std::to_string(item.suffix_count);
 }
 
+// --- full item state serialization (for Stash save/restore) ----------------
+
+void append_slot(std::string& out, const pc_mod_slot& slot) {
+    out += "{\"mod_id\":" + std::to_string(slot.mod_id);
+    out += ",\"group_id\":" + std::to_string(slot.group_id);
+    out += ",\"flags\":" + std::to_string(slot.flags);
+    out += ",\"rolls\":[";
+    for (uint8_t i = 0; i < slot.roll_count && i < PC_MAX_ROLL_VALUES; ++i) {
+        if (i != 0) out.push_back(',');
+        out += std::to_string(slot.rolls[i]);
+    }
+    out += "],\"veiled_option_mod_ids\":[";
+    for (uint8_t i = 0;
+         i < slot.veiled_option_count && i < PC_MAX_VEILED_OPTIONS; ++i) {
+        if (i != 0) out.push_back(',');
+        out += std::to_string(slot.veiled_option_mod_ids[i]);
+    }
+    out += "],\"veiled_chosen_mod_id\":" +
+           std::to_string(slot.veiled_chosen_mod_id) + "}";
+}
+
+void append_slot_array(std::string& out, const char* name,
+                       const pc_mod_slot* slots, uint8_t count) {
+    out += "\"";
+    out += name;
+    out += "\":[";
+    for (uint8_t i = 0; i < count; ++i) {
+        if (i != 0) out.push_back(',');
+        append_slot(out, slots[i]);
+    }
+    out.push_back(']');
+}
+
+uint32_t obj_u32(const Value& object, const char* key, uint32_t fallback = 0) {
+    const Value* value = object.find(key);
+    return value != nullptr && value->type == Type::Number
+               ? static_cast<uint32_t>(value->number)
+               : fallback;
+}
+
+pc_mod_slot parse_slot(const Value& object) {
+    pc_mod_slot slot;
+    std::memset(&slot, 0, sizeof(slot));
+    slot.mod_id = obj_u32(object, "mod_id", PC_MOD_NONE);
+    slot.group_id = static_cast<uint16_t>(obj_u32(object, "group_id"));
+    slot.flags = static_cast<uint8_t>(obj_u32(object, "flags"));
+    slot.veiled_chosen_mod_id =
+        obj_u32(object, "veiled_chosen_mod_id", PC_MOD_NONE);
+    const Value* rolls = object.find("rolls");
+    if (rolls != nullptr && rolls->type == Type::Array) {
+        for (std::size_t i = 0;
+             i < rolls->array.size() && i < PC_MAX_ROLL_VALUES; ++i) {
+            slot.rolls[i] = static_cast<int32_t>(rolls->array[i].number);
+            slot.roll_count = static_cast<uint8_t>(i + 1);
+        }
+    }
+    const Value* veiled = object.find("veiled_option_mod_ids");
+    if (veiled != nullptr && veiled->type == Type::Array) {
+        for (std::size_t i = 0;
+             i < veiled->array.size() && i < PC_MAX_VEILED_OPTIONS; ++i) {
+            slot.veiled_option_mod_ids[i] =
+                static_cast<uint32_t>(veiled->array[i].number);
+            slot.veiled_option_count = static_cast<uint8_t>(i + 1);
+        }
+    }
+    return slot;
+}
+
+uint8_t parse_slot_array(const Value& state, const char* name,
+                         pc_mod_slot* slots, uint8_t capacity) {
+    const Value* array = state.find(name);
+    if (array == nullptr || array->type != Type::Array) {
+        return 0;
+    }
+    uint8_t count = 0;
+    for (const auto& entry : array->array) {
+        if (count >= capacity || entry.type != Type::Object) {
+            break;
+        }
+        slots[count++] = parse_slot(entry);
+    }
+    return count;
+}
+
 } // namespace
 
 extern "C" {
@@ -566,6 +650,97 @@ const char* pcw_item_add_mod(uint32_t item_id, uint32_t session_id,
                                    flags, nullptr);
     if (rc != PC_RESULT_OK) return fail(rc, "could not add mod to item");
     return respond("{\"ok\":true}");
+}
+
+// Serialize the complete item state so the UI can persist it to the Stash /
+// crash-recovery store and reconstruct it exactly later.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_export(uint32_t item_id) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    std::string out = "{\"ok\":true,\"state\":{";
+    out += "\"rarity\":" + std::to_string(item->rarity);
+    out += ",\"quality\":" + std::to_string(item->quality);
+    out += ",\"item_flags\":" + std::to_string(item->item_flags);
+    out += ",\"generic_influence_bits\":" +
+           std::to_string(item->generic_influence_bits);
+    out += ",\"searing_exarch_tier\":" +
+           std::to_string(item->searing_exarch_tier);
+    out += ",\"eater_of_worlds_tier\":" +
+           std::to_string(item->eater_of_worlds_tier);
+    out += ",\"link_mask\":" + std::to_string(item->link_mask);
+    out += ",\"socket_count\":" + std::to_string(item->socket_count);
+    out += ",\"socket_colors\":[";
+    for (uint8_t i = 0; i < item->socket_count && i < PC_MAX_SOCKETS; ++i) {
+        if (i != 0) out.push_back(',');
+        out += std::to_string(item->socket_colors[i]);
+    }
+    out += "],";
+    append_slot_array(out, "prefixes", item->prefixes, item->prefix_count);
+    out.push_back(',');
+    append_slot_array(out, "suffixes", item->suffixes, item->suffix_count);
+    out.push_back(',');
+    append_slot_array(out, "implicits", item->implicits, item->implicit_count);
+    out.push_back(',');
+    append_slot_array(out, "enchantments", item->enchantments,
+                      item->enchantment_count);
+    out += "}}";
+    return respond(std::move(out));
+}
+
+// Reconstruct an item from a previously exported state document and register it
+// as a fresh handle. The input is the {"state":{...}} document or the bare
+// state object.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_import(const char* state_json) {
+    Value document;
+    try {
+        document = Parser(state_json, std::strlen(state_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* state = document.find("state");
+    if (state == nullptr) {
+        state = &document;
+    }
+    if (state->type != Type::Object) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "item state must be an object");
+    }
+    pc_item_state item;
+    std::memset(&item, 0, sizeof(item));
+    item.rarity = static_cast<uint8_t>(obj_u32(*state, "rarity"));
+    item.quality = static_cast<uint8_t>(obj_u32(*state, "quality"));
+    item.item_flags = static_cast<uint8_t>(obj_u32(*state, "item_flags"));
+    item.generic_influence_bits =
+        static_cast<uint8_t>(obj_u32(*state, "generic_influence_bits"));
+    item.searing_exarch_tier =
+        static_cast<uint8_t>(obj_u32(*state, "searing_exarch_tier"));
+    item.eater_of_worlds_tier =
+        static_cast<uint8_t>(obj_u32(*state, "eater_of_worlds_tier"));
+    item.link_mask = static_cast<uint8_t>(obj_u32(*state, "link_mask"));
+    const Value* sockets = state->find("socket_colors");
+    if (sockets != nullptr && sockets->type == Type::Array) {
+        for (std::size_t i = 0;
+             i < sockets->array.size() && i < PC_MAX_SOCKETS; ++i) {
+            item.socket_colors[i] =
+                static_cast<uint8_t>(sockets->array[i].number);
+            item.socket_count = static_cast<uint8_t>(i + 1);
+        }
+    }
+    item.prefix_count =
+        parse_slot_array(*state, "prefixes", item.prefixes, PC_MAX_PREFIXES);
+    item.suffix_count =
+        parse_slot_array(*state, "suffixes", item.suffixes, PC_MAX_SUFFIXES);
+    item.implicit_count =
+        parse_slot_array(*state, "implicits", item.implicits, PC_MAX_IMPLICITS);
+    item.enchantment_count = parse_slot_array(*state, "enchantments",
+                                              item.enchantments, PC_MAX_ENCHANTS);
+    std::uint32_t id = g_next_id++;
+    g_items[id] = item;
+    std::string out = "{\"ok\":true,\"item\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
 }
 
 EMSCRIPTEN_KEEPALIVE

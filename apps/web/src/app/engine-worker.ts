@@ -119,6 +119,10 @@ async function dispatch(
             return {};
         case "itemInfo":
             return bindings.itemInfo(params.item as number);
+        case "exportItem":
+            return { state: bindings.exportItem(params.item as number) };
+        case "importItem":
+            return { item: bindings.importItem(params.state) };
         case "addMod":
             bindings.addMod(params.item as number, params.session as number, {
                 key: params.key as string,
