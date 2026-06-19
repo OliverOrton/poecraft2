@@ -1,0 +1,378 @@
+:root {
+    --pc-bg: #14110d;
+    --pc-bg-raised: #1d1a14;
+    --pc-bg-panel: #211d16;
+    --pc-border: #3a3327;
+    --pc-text: #c8b88f;
+    --pc-text-dim: #8a7d5e;
+    --pc-text-strong: #e8dcae;
+    --pc-accent: #af6025;
+    --pc-prefix: #8888ff;
+    --pc-suffix: #ffd57a;
+    --pc-magic: #8888ff;
+    --pc-rare: #ffff77;
+    --pc-font: "Segoe UI", system-ui, sans-serif;
+    --pc-mono: "Cascadia Mono", "Consolas", monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    background: var(--pc-bg);
+    color: var(--pc-text);
+    font-family: var(--pc-font);
+    font-size: 13px;
+}
+
+pc-app {
+    display: block;
+    height: 100vh;
+}
+
+button {
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--pc-text-strong);
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+    border-color: var(--pc-accent);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+pc-app {
+    display: flex;
+    flex-direction: column;
+}
+
+.pc-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 16px;
+    background: var(--pc-bg-raised);
+    border-bottom: 1px solid var(--pc-border);
+}
+
+.pc-brand {
+    color: var(--pc-accent);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.pc-titlebar-doc {
+    color: var(--pc-text-dim);
+}
+
+.pc-main {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* --- emulator document --- */
+
+.pc-emulator {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.pc-craft-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--pc-bg-panel);
+    border-bottom: 1px solid var(--pc-border);
+}
+
+.pc-craft-bar label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 11px;
+    color: var(--pc-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pc-craft-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.pc-craft-actions button {
+    text-transform: capitalize;
+}
+
+.pc-emu-status {
+    color: var(--pc-accent);
+    align-self: center;
+}
+
+.pc-emu-body {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--pc-border);
+}
+
+.pc-emu-item,
+.pc-emu-side {
+    background: var(--pc-bg);
+    padding: 14px 16px;
+    overflow: auto;
+}
+
+.pc-emu-body h3 {
+    margin: 0 0 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pc-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input,
+select {
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--pc-text-strong);
+    background: var(--pc-bg);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    padding: 4px 6px;
+}
+
+.pc-ilvl {
+    width: 64px;
+}
+
+/* --- combobox --- */
+
+.pc-combobox {
+    position: relative;
+    min-width: 220px;
+}
+
+.pc-combobox-input {
+    width: 100%;
+}
+
+.pc-combobox-list {
+    position: absolute;
+    z-index: 20;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 280px;
+    overflow: auto;
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+}
+
+.pc-combobox-list li {
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.pc-combobox-list li:hover,
+.pc-combobox-list li.selected {
+    background: var(--pc-bg-panel);
+    color: var(--pc-text-strong);
+}
+
+.pc-combobox-more {
+    color: var(--pc-text-dim);
+    font-style: italic;
+    cursor: default !important;
+}
+
+/* --- mod list --- */
+
+.pc-mod-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--pc-border);
+}
+
+.pc-mod-count {
+    color: var(--pc-text-dim);
+}
+
+.pc-mod-group {
+    margin-bottom: 12px;
+}
+
+.pc-mod-group h4 {
+    margin: 0 0 4px;
+    font-size: 11px;
+    color: var(--pc-text-dim);
+    text-transform: uppercase;
+}
+
+.pc-mod-group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-mod {
+    font-family: var(--pc-mono);
+    padding: 2px 0;
+}
+
+.pc-mod-prefix {
+    color: var(--pc-prefix);
+}
+
+.pc-mod-suffix {
+    color: var(--pc-suffix);
+}
+
+.pc-mod-implicit {
+    color: var(--pc-text-dim);
+}
+
+.pc-mod-tag {
+    color: var(--pc-accent);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.pc-rarity-normal {
+    color: var(--pc-text);
+}
+.pc-rarity-magic {
+    color: var(--pc-magic);
+}
+.pc-rarity-rare {
+    color: var(--pc-rare);
+}
+
+.pc-empty {
+    color: var(--pc-text-dim);
+    font-style: italic;
+}
+
+/* --- history --- */
+
+.pc-emu-history {
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-emu-history li {
+    display: flex;
+    gap: 10px;
+    padding: 2px 0;
+    font-family: var(--pc-mono);
+}
+
+.pc-history-n {
+    color: var(--pc-text-dim);
+    width: 20px;
+    text-align: right;
+}
+
+.pc-history-action {
+    color: var(--pc-text-strong);
+    text-transform: capitalize;
+    flex: 1;
+}
+
+.pc-history-detail {
+    color: var(--pc-text-dim);
+}
+
+.pc-history-noop .pc-history-action {
+    color: var(--pc-text-dim);
+}
+
+/* --- weight table --- */
+
+.pc-weight-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 8px;
+    color: var(--pc-text-dim);
+}
+
+.pc-weight-summary b {
+    color: var(--pc-text-strong);
+}
+
+.pc-weight-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--pc-mono);
+}
+
+.pc-weight-table th,
+.pc-weight-table td {
+    text-align: left;
+    padding: 2px 8px 2px 0;
+    border-bottom: 1px solid var(--pc-bg-panel);
+}
+
+.pc-weight-table th {
+    color: var(--pc-text-dim);
+    font-weight: normal;
+}
+
+.pc-weight-table .num {
+    text-align: right;
+}
+
+.pc-boot {
+    padding: 32px;
+}
+
+.pc-boot h1 {
+    color: var(--pc-accent);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: lowercase;
+}
+
+.pc-boot-status {
+    color: var(--pc-text-strong);
+}
+
+.pc-boot-detail {
+    font-family: var(--pc-mono);
+    color: var(--pc-text-dim);
+    white-space: pre-wrap;
+}

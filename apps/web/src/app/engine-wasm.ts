@@ -10,6 +10,7 @@ import createPoecraftEngine from "../../../../bindings/wasm/dist/poecraft_engine
 
 import {
     ActionOutcome,
+    BaseInfo,
     BatchSummary,
     CraftAction,
     EngineError,
@@ -87,6 +88,11 @@ export class EngineBindings {
         const { ok, ...rest } = this.callJson("pcw_data_summary", ["number"], [data]);
         void ok;
         return rest;
+    }
+
+    listBases(data: number): BaseInfo[] {
+        return this.callJson("pcw_data_bases", ["number"], [data])
+            .bases as unknown as BaseInfo[];
     }
 
     closeData(data: number): void {

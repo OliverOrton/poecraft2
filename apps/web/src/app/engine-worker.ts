@@ -71,6 +71,8 @@ async function dispatch(
             return { data: bindings.loadData(params.bundle as Uint8Array) };
         case "dataSummary":
             return bindings.dataSummary(params.data as number);
+        case "listBases":
+            return { bases: bindings.listBases(params.data as number) };
         case "closeData":
             bindings.closeData(params.data as number);
             return {};

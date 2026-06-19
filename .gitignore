@@ -43,6 +43,9 @@ __pycache__/
 !/data/sqlite/.gitkeep
 !/data/compiled/.gitkeep
 
+# Generated web data bundle (rebuilt by apps/web predev/prebuild)
+/apps/web/public/poecraft-data.json
+
 # OS cruft
 Thumbs.db
 .DS_Store

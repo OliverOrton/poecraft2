@@ -37,7 +37,8 @@ $EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
 $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
 $Exported = @(
-    "_pcw_abi_version", "_pcw_data_open", "_pcw_data_summary", "_pcw_data_close",
+    "_pcw_abi_version", "_pcw_data_open", "_pcw_data_summary", "_pcw_data_bases",
+    "_pcw_data_close",
     "_pcw_session_open", "_pcw_session_close", "_pcw_session_mod_count",
     "_pcw_session_mod_info", "_pcw_context_open", "_pcw_context_close",
     "_pcw_item_create", "_pcw_item_clone", "_pcw_item_close", "_pcw_item_info",

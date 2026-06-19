@@ -11,6 +11,7 @@
 import {
     ActionOutcome,
     AffixSide,
+    BaseInfo,
     ClientMessage,
     CraftAction,
     EngineError,
@@ -161,6 +162,13 @@ export class EngineClient {
 
     closeData(data: number): Promise<void> {
         return this.call<void>("closeData", { data });
+    }
+
+    async listBases(data: number): Promise<BaseInfo[]> {
+        const { bases } = await this.call<{ bases: BaseInfo[] }>("listBases", {
+            data,
+        });
+        return bases;
     }
 
     async createSession(

@@ -88,6 +88,12 @@ export interface PoolDebug {
     summary: PoolSummary;
 }
 
+export interface BaseInfo {
+    path: string;
+    /** pc_session_support: 0 ordinary, 1 cluster, 2 unsupported domain. */
+    support: number;
+}
+
 export interface ModInfo {
     session_mod_id: number;
     global_mod_id: number;

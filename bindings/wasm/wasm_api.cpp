@@ -275,6 +275,37 @@ const char* pcw_data_summary(uint32_t data_id) {
     return respond(std::move(out));
 }
 
+// Enumerate every base by dense index, with its metadata path and session
+// support classification. Drives the base picker. Returns one JSON document so
+// the UI fetches the list in a single worker round-trip.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_data_bases(uint32_t data_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    pc_data_summary summary;
+    summary.struct_size = sizeof(summary);
+    pc_error_info error = make_error();
+    if (pc_data_get_summary(*data, &summary, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    std::string out = "{\"ok\":true,\"bases\":[";
+    for (uint32_t i = 0; i < summary.base_item_count; ++i) {
+        const char* path = nullptr;
+        int32_t support = 0;
+        error = make_error();
+        pc_result rc =
+            pc_data_get_base_path(*data, i, &path, &support, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        if (i != 0) out.push_back(',');
+        out += "{\"path\":";
+        append_escaped(out, path);
+        out += ",\"support\":" + std::to_string(support);
+        out.push_back('}');
+    }
+    out += "]}";
+    return respond(std::move(out));
+}
+
 EMSCRIPTEN_KEEPALIVE
 void pcw_data_close(uint32_t data_id) {
     pc_data_handle* data = find(g_data, data_id);
