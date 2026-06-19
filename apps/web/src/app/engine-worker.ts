@@ -3,21 +3,22 @@
  * thread. It speaks the message protocol in engine-protocol.ts and runs in both
  * a browser Web Worker and Node's worker_threads (used by the headless test).
  *
- * Long batch strategy runs are chunked: between chunks the worker yields to the
- * event loop so queued cancel/progress messages are delivered, keeping the UI
- * responsive and cancellation prompt.
+ * Native graph simulations are run in bounded chunks. Between chunks the
+ * worker yields to the event loop so queued cancel/progress messages are
+ * delivered, keeping the UI responsive and cancellation prompt.
  */
 
 import { createEngineBindings, EngineBindings } from "./engine-wasm";
 import {
-    BatchSummary,
     ClientMessage,
     CraftAction,
     EngineError,
+    SimulationOptions,
+    StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
 
-const DEFAULT_CHUNK_SIZE = 2000;
+const DEFAULT_CHUNK_SIZE = 1000;
 
 let bindings: EngineBindings;
 let post: (message: WorkerMessage) => void = () => {};
@@ -29,36 +30,49 @@ const yieldToEventLoop = (): Promise<void> =>
 async function runStrategy(
     id: number,
     params: Record<string, unknown>,
-): Promise<{ cancelled: boolean; done: number; summary: BatchSummary }> {
-    const context = params.context as number;
-    const item = params.item as number;
-    const action = params.action as CraftAction;
-    const count = params.count as number;
+): Promise<StrategyResult> {
+    const simulator = params.simulator as number;
+    const options = params.options as SimulationOptions;
     const chunkSize = (params.chunkSize as number) || DEFAULT_CHUNK_SIZE;
 
-    const summary: BatchSummary = {
-        item_count: 0,
-        applied_count: 0,
-        total_added: 0,
-        total_removed: 0,
-    };
-    let done = 0;
-    while (done < count) {
-        const n = Math.min(chunkSize, count - done);
-        const chunk = bindings.runBatch(context, item, action, n);
-        summary.item_count += chunk.item_count;
-        summary.applied_count += chunk.applied_count;
-        summary.total_added += chunk.total_added;
-        summary.total_removed += chunk.total_removed;
-        done += n;
-        post({ kind: "progress", id, done, total: count });
+    if (cancelled.has(id)) {
+        const progress = bindings.runSimulatorChunk(simulator, options, 0);
+        return {
+            cancelled: true,
+            progress,
+            ...bindings.simulatorResult(simulator),
+        };
+    }
+    let progress = bindings.runSimulatorChunk(simulator, options, chunkSize);
+    post({
+        kind: "progress",
+        id,
+        done: progress.completed_runs,
+        total: progress.target_runs,
+    });
+    while (!progress.finished) {
         // Yield so queued cancel messages are processed before the next chunk.
         await yieldToEventLoop();
         if (cancelled.has(id)) {
-            return { cancelled: true, done, summary };
+            return {
+                cancelled: true,
+                progress,
+                ...bindings.simulatorResult(simulator),
+            };
         }
+        progress = bindings.runSimulatorChunk(simulator, options, chunkSize);
+        post({
+            kind: "progress",
+            id,
+            done: progress.completed_runs,
+            total: progress.target_runs,
+        });
     }
-    return { cancelled: false, done, summary };
+    return {
+        cancelled: false,
+        progress,
+        ...bindings.simulatorResult(simulator),
+    };
 }
 
 async function dispatch(
@@ -148,6 +162,32 @@ async function dispatch(
                     include_rejected: params.includeRejected as boolean | undefined,
                 },
             );
+        case "compileStrategy":
+            return {
+                strategy: bindings.compileStrategy(
+                    params.session as number,
+                    params.strategy,
+                ),
+            };
+        case "closeStrategy":
+            bindings.closeStrategy(params.strategy as number);
+            return {};
+        case "loadEconomy":
+            return { economy: bindings.loadEconomy(params.economy) };
+        case "closeEconomy":
+            bindings.closeEconomy(params.economy as number);
+            return {};
+        case "createSimulator":
+            return {
+                simulator: bindings.createSimulator(
+                    params.session as number,
+                    params.strategy as number,
+                    params.economy as number | undefined,
+                ),
+            };
+        case "closeSimulator":
+            bindings.closeSimulator(params.simulator as number);
+            return {};
         case "runStrategy":
             return runStrategy(id, params);
         default:

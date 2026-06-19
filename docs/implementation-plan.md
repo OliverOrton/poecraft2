@@ -483,21 +483,23 @@ bundle is copied onto the heap rather than passed as a stack-allocated string).
 Emscripten to an ES module + `.wasm` under `bindings/wasm/dist`.
 
 `apps/web/src/app/engine-client.ts` is the small, stable main-thread handle:
-promise-returning, handle-based, with a coarse `runStrategy` that reports
-progress and cancels via `AbortSignal`. `engine-worker.ts` owns the module and
-runs in both a browser Web Worker and Node `worker_threads`; strategy runs are
+promise-returning and handle-based. `engine-worker.ts` owns the module and runs
+in both a browser Web Worker and Node `worker_threads`; long operations are
 chunked, yielding to the event loop between chunks so cancel/progress messages
-flush and the UI stays responsive. `engine-protocol.ts` defines the shared
-message envelopes and domain types; `engine-wasm.ts` is the worker-side ccall
-marshalling layer (the WASM analogue of the Python `_binding.py`).
+flush and the UI stays responsive. Phase 10 now uses this same boundary for
+compiled native strategy handles and bounded simulator chunks.
+`engine-protocol.ts` defines the shared message envelopes and domain types;
+`engine-wasm.ts` is the worker-side ccall marshalling layer (the WASM analogue
+of the Python `_binding.py`).
 
 The headless acceptance test (`apps/web/test/engine-smoke.test.ts`, run with
 `npm test` via `tsx`) drives the WASM engine inside a real Node worker through
 `EngineClient`: it loads the memory bundle, creates a session/item, applies an
 action, queries debug pools, and asserts the WASM pool summaries match the same
 canonical `fixtures/spec` pools the native and Python suites validate against.
-It also asserts a 2,000-item strategy run reports progress and that a long run
-cancels promptly via `AbortSignal`.
+Phase 10 extends the same test to compile and run a real graph strategy, inspect
+native traces/examples/cost output, report progress, and cancel a long run
+promptly via `AbortSignal`.
 
 ## Phase 9: Web Workspace And Emulator Slice
 
@@ -616,6 +618,32 @@ Acceptance gate:
 - C/Python/WASM callers can query retained traces, representative terminal items, and aggregated failure summaries without retaining every run.
 - Linear step-style strategies can be represented by graph JSON.
 - Python and WASM call the same native simulator implementation.
+
+Implemented baseline:
+
+- `engine/src/simulator.cpp` compiles `v1` graph JSON into dense native nodes,
+  ordered guarded/default edges, resolved operation inputs, and pure compiled
+  conditions.
+- The start state is resolved against the compile session using stable base,
+  mod, and group keys. Initial conditions cover `always`, mod-group presence,
+  rarity, open prefix/suffix ranges, prefix/suffix count ranges, and nested
+  `all`/`any`/`not`/`at_least` expressions.
+- Run-wide action, graph-step, and optional cost limits terminate cyclic or
+  unaffordable runs without adding per-node attempt semantics.
+- Immutable economy snapshots use chaos-equivalent canonical keys. Basic
+  actions use their operation name; essences use `essence:<metadata-key>`;
+  fossils sum `fossil:<metadata-key>` entries plus
+  `resonator:<socket-count>`.
+- Simulator handles retain bounded traces and representative terminal items,
+  aggregate non-success outcomes, and expose sorted missing-price keys. They
+  never retain every run.
+- `engine/include/poecraft/simulator.h` exposes the additive C ABI.
+  `bindings/python` and `bindings/wasm` wrap those same handles; the browser
+  worker calls `pc_simulator_run_chunk` and yields between chunks for progress
+  and cancellation.
+- Native, Python, and WASM tests run the same chaos-repeat graph shape and
+  verify routing, success summaries, retained traces/examples, economy cost,
+  missing-price reporting, and bounded cancellation.
 
 ## Phase 11: Strategy Editor UI
 

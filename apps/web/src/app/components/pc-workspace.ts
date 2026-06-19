@@ -25,6 +25,7 @@ import {
     StashRecord,
     DraftRecord,
     deleteDraft,
+    itemSnapshotRarity,
     putDraft,
     putStash,
     saveLayout,
@@ -131,7 +132,7 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                 docId,
                 base: seed.base,
                 itemLevel: seed.itemLevel,
-                rarity: "rare",
+                rarity: itemSnapshotRarity(seed),
                 state: seed.state,
                 history: [],
                 savedRef: mode === "edit" ? (savedRef ?? null) : null,
@@ -210,8 +211,12 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                 }
             }
         }
+        const handler = this.handlers.get(docId);
+        await handler?.dispose();
         await deleteDraft(docId);
         this.handlers.delete(docId);
+        this.dirty.delete(docId);
+        this.titles.delete(docId);
         this.api.getPanel(docId)?.api.close();
     }
 }

@@ -601,7 +601,8 @@ Persistent strategy JSON uses stable global base/mod keys. A base key is the ReP
   "start_node_id": "start",
   "base_state": {
     "base_key": "Metadata/Items/Weapons/TwoHandWeapons/Bows/SpineBow",
-    "item_level": 86
+    "item_level": 86,
+    "rarity": "rare"
   },
   "nodes": [
     {
@@ -642,7 +643,7 @@ Persistent strategy JSON uses stable global base/mod keys. A base key is the ReP
       "priority": 0,
       "condition": {
         "type": "has_mod_group",
-        "group": "AdditionalArrow"
+        "group": "AdditionalArrows"
       },
       "label": "has arrows"
     },
@@ -670,6 +671,44 @@ operation params
 ```
 
 Run-wide limits come from the simulation options, not the saved graph.
+
+The Phase 10 compiler also accepts nested condition expressions:
+
+```json
+{
+  "type": "all",
+  "conditions": [
+    { "type": "rarity_is", "rarity": "rare" },
+    { "type": "open_suffix_count", "min": 1 }
+  ]
+}
+```
+
+`all`, `any`, and `not` compose conditions directly. `at_least` adds a
+`count` field. Count ranges are inclusive.
+
+## Economy Snapshot JSON
+
+The native simulator consumes an optional immutable snapshot:
+
+```json
+{
+  "version": "v1",
+  "id": "settlers-example",
+  "prices": {
+    "chaos": 1.0,
+    "essence:Metadata/Items/Currency/Essence/SomeEssence": 8.5,
+    "fossil:Metadata/Items/Currency/CurrencyDelveCraftingSomeFossil": 3.0,
+    "resonator:1": 0.5
+  }
+}
+```
+
+Basic operations use the operation name. Essence costs use the stable essence
+metadata key. Fossil costs are the sum of each selected fossil key and the
+matching `resonator:<socket-count>` key. Missing keys remain explicit and make
+cost output incomplete; a configured cost limit cannot continue through a
+missing required price.
 
 ## Compilation To Simulator
 

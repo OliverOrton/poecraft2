@@ -10,6 +10,8 @@ export type OpenMode = "edit" | "copy";
 export interface DocumentHandlers {
     /** Persist the document to the Stash. Returns false if the user cancelled. */
     save(): Promise<boolean>;
+    /** Release worker/WASM resources before the panel is permanently removed. */
+    dispose(): Promise<void>;
 }
 
 export interface WorkspaceApi {

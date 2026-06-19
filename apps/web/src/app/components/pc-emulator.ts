@@ -77,17 +77,34 @@ export class PcEmulator extends HTMLElement {
     private savedName: string | null = null;
     private savedCreatedAt = 0;
     private initializing = true;
+    private disposed = false;
+    private connectedOnce = false;
+    private currentWork: Promise<void> | null = null;
 
     async connectedCallback(): Promise<void> {
+        if (this.connectedOnce) {
+            return;
+        }
+        this.connectedOnce = true;
         this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
         this.renderShell();
+        workspace().registerDocument(this.docId, {
+            save: () => this.save(),
+            dispose: () => this.disposeEngine(),
+        });
         this.setStatus("Loading engine…");
         const engine = await getEngine();
+        if (this.disposed) {
+            return;
+        }
         this.client = engine.client;
         this.dataId = engine.dataId;
         this.bases = (await this.client.listBases(this.dataId)).filter(
             (base) => base.support === 0,
         );
+        if (this.disposed) {
+            return;
+        }
 
         const draft = await getDraft(this.docId);
         if (draft) {
@@ -106,19 +123,34 @@ export class PcEmulator extends HTMLElement {
         this.populateBaseList();
 
         await this.openSession();
-        if (draft?.state) {
-            this.item = await this.client.importItem(draft.state);
-        } else {
-            this.item = await this.client.createItem(this.session, {
+        if (this.disposed) {
+            return;
+        }
+        const item = draft?.state
+            ? await this.client.importItem(draft.state)
+            : await this.client.createItem(this.session, {
                 rarity: this.rarity,
                 withImplicits: true,
             });
+        if (this.disposed) {
+            await this.client.closeItem(item);
+            return;
         }
+        this.item = item;
         this.initializing = false;
-        await this.refresh();
-        await this.persist();
+        try {
+            await this.refresh();
+            if (this.disposed) {
+                return;
+            }
+            await this.persist();
+        } catch (error) {
+            if (this.disposed) {
+                return;
+            }
+            throw error;
+        }
 
-        workspace().registerDocument(this.docId, { save: () => this.save() });
         workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
         this.setStatus("");
     }
@@ -135,17 +167,33 @@ export class PcEmulator extends HTMLElement {
     // --- engine lifecycle ---------------------------------------------------
 
     private async openSession(): Promise<void> {
+        if (this.disposed) {
+            return;
+        }
         if (this.session) {
             await this.client.closeContext(this.context);
             await this.client.closeSession(this.session);
+            this.context = 0;
+            this.session = 0;
         }
         this.modCache.clear();
-        this.session = await this.client.createSession(
+        const session = await this.client.createSession(
             this.dataId,
             this.base,
             this.itemLevel,
         );
-        this.context = await this.client.createContext(this.session, 0);
+        if (this.disposed) {
+            await this.client.closeSession(session);
+            return;
+        }
+        const context = await this.client.createContext(session, 0);
+        if (this.disposed) {
+            await this.client.closeContext(context);
+            await this.client.closeSession(session);
+            return;
+        }
+        this.session = session;
+        this.context = context;
     }
 
     private async rebuildSession(): Promise<void> {
@@ -196,9 +244,11 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async snapshot(): Promise<ItemSnapshot> {
+        const info = await this.client.itemInfo(this.item);
         return {
             base: this.base,
             itemLevel: this.itemLevel,
+            rarity: info.rarity as string,
             state: await this.client.exportItem(this.item),
         };
     }
@@ -225,16 +275,15 @@ export class PcEmulator extends HTMLElement {
         if (!this.savedRef) {
             return this.saveAs();
         }
+        const snapshot = await this.snapshot();
         const record: StashRecord = {
             id: this.savedRef,
             name: this.savedName ?? "Untitled",
-            base: this.base,
-            itemLevel: this.itemLevel,
-            state: await this.client.exportItem(this.item),
+            ...snapshot,
             createdAt: this.savedCreatedAt || Date.now(),
         };
         await workspace().saveToStash(record);
-        this.markSaved(record);
+        await this.markSaved(record);
         return true;
     }
 
@@ -246,28 +295,57 @@ export class PcEmulator extends HTMLElement {
         const record: StashRecord = {
             id: `stash-${crypto.randomUUID()}`,
             name,
-            base: this.base,
-            itemLevel: this.itemLevel,
-            state: await this.client.exportItem(this.item),
+            ...(await this.snapshot()),
             createdAt: Date.now(),
         };
         await workspace().saveToStash(record);
-        this.markSaved(record);
+        await this.markSaved(record);
         return true;
     }
 
-    private markSaved(record: StashRecord): void {
+    private async markSaved(record: StashRecord): Promise<void> {
         this.savedRef = record.id;
         this.savedName = record.name;
         this.savedCreatedAt = record.createdAt;
         this.dirty = false;
-        void this.persist();
+        await this.persist();
         workspace().notifyDirty(this.docId, false, this.docTitle);
         this.renderSavedName();
     }
 
     private async duplicate(): Promise<void> {
         await workspace().openEmulator(await this.snapshot(), "copy");
+    }
+
+    private async disposeEngine(): Promise<void> {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        workspace().unregisterDocument(this.docId);
+        if (this.currentWork) {
+            try {
+                await this.currentWork;
+            } catch {
+                // The operation's guard already surfaced the error. Continue
+                // releasing every native handle.
+            }
+        }
+        const item = this.item;
+        const context = this.context;
+        const session = this.session;
+        this.item = 0;
+        this.context = 0;
+        this.session = 0;
+        if (item && this.client) {
+            await this.client.closeItem(item);
+        }
+        if (context && this.client) {
+            await this.client.closeContext(context);
+        }
+        if (session && this.client) {
+            await this.client.closeSession(session);
+        }
     }
 
     // --- mod resolution -----------------------------------------------------
@@ -341,15 +419,20 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async guard(work: () => Promise<void>): Promise<void> {
-        if (this.busy) {
+        if (this.busy || this.disposed) {
             return;
         }
         this.setBusy(true);
+        const pending = work();
+        this.currentWork = pending;
         try {
-            await work();
+            await pending;
         } catch (error) {
             this.setStatus(error instanceof Error ? error.message : String(error));
         } finally {
+            if (this.currentWork === pending) {
+                this.currentWork = null;
+            }
             this.setBusy(false);
         }
     }

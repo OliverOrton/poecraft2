@@ -803,6 +803,12 @@ Reuse that design in the new project:
 
 The strategy simulator consumes an immutable economy snapshot and adds the selected operation's cost after each craft action. Crafting legality remains in the engine rules; market valuation remains in the economy layer.
 
+The Phase 10 runtime boundary uses stable canonical keys: basic operation names,
+`essence:<metadata-key>`, `fossil:<metadata-key>`, and
+`resonator:<socket-count>`. Ingest/override tooling may accept friendlier source
+names, but it must normalize them to these keys before loading the native
+economy snapshot.
+
 Simulation cost output has an explicit status:
 
 ```text

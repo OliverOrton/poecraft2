@@ -44,6 +44,10 @@ $Exported = @(
     "_pcw_item_create", "_pcw_item_clone", "_pcw_item_close", "_pcw_item_info",
     "_pcw_item_add_mod", "_pcw_item_export", "_pcw_item_import",
     "_pcw_apply", "_pcw_run_batch", "_pcw_debug_pool",
+    "_pcw_strategy_compile", "_pcw_strategy_close",
+    "_pcw_economy_open", "_pcw_economy_close",
+    "_pcw_simulator_open", "_pcw_simulator_close",
+    "_pcw_simulator_run_chunk", "_pcw_simulator_result",
     "_malloc", "_free"
 ) -join ","
 

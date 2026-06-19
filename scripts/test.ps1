@@ -109,4 +109,28 @@ elseif (Test-Path $HeaderSmoke) {
     }
 }
 
+# Web/WASM acceptance checks use the generated Emscripten module and the same
+# EngineClient/worker path as the browser application.
+$Npm = Get-Command npm -ErrorAction SilentlyContinue
+$WebPackage = "$Root/apps/web/package.json"
+$WasmModule = "$Root/bindings/wasm/dist/poecraft_engine.mjs"
+if ($Npm -and (Test-Path $WebPackage) -and (Test-Path $WasmModule)) {
+    Push-Location "$Root/apps/web"
+    try {
+        & $Npm.Source test
+        if ($LASTEXITCODE -ne 0) {
+            throw "Web/WASM tests failed with exit code $LASTEXITCODE."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+elseif (-not $Npm) {
+    Write-Warning "npm was not found; web/WASM tests were skipped."
+}
+elseif (-not (Test-Path $WasmModule)) {
+    Write-Warning "WASM module is absent; run scripts/build-wasm.ps1 before web tests."
+}
+
 Write-Host "Tests completed."

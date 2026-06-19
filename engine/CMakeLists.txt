@@ -19,6 +19,7 @@ add_library(poecraft_engine_objects OBJECT
     src/rng.cpp
     src/session_builder.cpp
     src/actions_basic.cpp
+    src/simulator.cpp
 )
 set_target_properties(poecraft_engine_objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
@@ -55,6 +56,7 @@ if(BUILD_TESTING)
         tests/test_data_loader.cpp
         tests/test_session_builder.cpp
         tests/test_actions.cpp
+        tests/test_simulator.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

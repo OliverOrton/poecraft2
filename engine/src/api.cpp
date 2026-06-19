@@ -1,10 +1,12 @@
 #include "poecraft/api.h"
 #include "poecraft/bitset.h"
 #include "poecraft/session.h"
+#include "poecraft/simulator.h"
 
 #include "engine_internal.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -22,6 +24,15 @@ struct pc_session {
 };
 struct pc_action_context {
     std::unique_ptr<poecraft::ActionContextImpl> impl;
+};
+struct pc_strategy {
+    std::shared_ptr<poecraft::StrategyImpl> impl;
+};
+struct pc_economy {
+    std::shared_ptr<poecraft::EconomyImpl> impl;
+};
+struct pc_simulator {
+    std::unique_ptr<poecraft::SimulatorImpl> impl;
 };
 
 namespace {
@@ -1162,4 +1173,407 @@ pc_result pc_item_debug_format(
         << ", enchantments: "
         << static_cast<unsigned>(item->enchantment_count) << "\n";
     return emit_text(out.str(), buffer, buffer_size, out_length, out_error);
+}
+
+// --- native strategy simulator ---------------------------------------------
+
+pc_result pc_strategy_compile_json(
+    pc_session_handle session,
+    const char* strategy_json,
+    size_t strategy_json_size,
+    pc_strategy_handle* out_strategy,
+    pc_error_info* out_error) {
+    if (session == nullptr || strategy_json == nullptr ||
+        out_strategy == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_strategy = nullptr;
+    try {
+        auto holder = std::make_unique<pc_strategy>();
+        holder->impl = poecraft::compile_strategy_json(
+            session->impl, strategy_json, strategy_json_size);
+        *out_strategy = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_DATA_ERROR, ex.what());
+        return PC_RESULT_DATA_ERROR;
+    }
+}
+
+void pc_strategy_destroy(pc_strategy_handle strategy) {
+    delete strategy;
+}
+
+pc_result pc_economy_load_json(
+    const char* economy_json,
+    size_t economy_json_size,
+    pc_economy_handle* out_economy,
+    pc_error_info* out_error) {
+    if (economy_json == nullptr || out_economy == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_economy = nullptr;
+    try {
+        auto holder = std::make_unique<pc_economy>();
+        holder->impl =
+            poecraft::load_economy_json(economy_json, economy_json_size);
+        *out_economy = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_DATA_ERROR, ex.what());
+        return PC_RESULT_DATA_ERROR;
+    }
+}
+
+void pc_economy_destroy(pc_economy_handle economy) {
+    delete economy;
+}
+
+pc_result pc_simulator_create(
+    pc_session_handle session,
+    pc_strategy_handle strategy,
+    pc_economy_handle economy,
+    pc_simulator_handle* out_simulator,
+    pc_error_info* out_error) {
+    if (session == nullptr || strategy == nullptr || out_simulator == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_simulator = nullptr;
+    if (strategy->impl->session.get() != session->impl.get()) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "strategy belongs to a different session");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    auto holder = std::make_unique<pc_simulator>();
+    holder->impl = std::make_unique<poecraft::SimulatorImpl>();
+    holder->impl->session = session->impl;
+    holder->impl->strategy = strategy->impl;
+    if (economy != nullptr) holder->impl->economy = economy->impl;
+    *out_simulator = holder.release();
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_run_chunk(
+    pc_simulator_handle simulator,
+    const pc_simulation_options* options,
+    uint32_t max_completed_runs,
+    pc_simulation_progress* out_progress,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || options == nullptr || out_progress == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!abi_struct_ok(options->struct_size, options->abi_version,
+                       sizeof(pc_simulation_options), out_error)) {
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (options->target_runs == 0 || options->max_actions_per_run == 0) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "target_runs and max_actions_per_run must be positive");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (options->max_actions_per_run > 1000000 ||
+        options->max_graph_steps_per_run > 4000000) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "per-run safety limit exceeds engine maximum");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!std::isfinite(options->max_cost_per_run) ||
+        options->max_cost_per_run < 0.0) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "max_cost_per_run must be finite and non-negative");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (options->max_cost_per_run > 0.0 &&
+        simulator->impl->economy == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "a cost limit requires an economy snapshot");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (options->retained_trace_count > 0 &&
+        options->max_trace_entries == 0) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "retained traces require max_trace_entries");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const std::uint64_t retained_trace_entries =
+        static_cast<std::uint64_t>(options->retained_trace_count) *
+        options->max_trace_entries;
+    const std::uint64_t retained_examples =
+        static_cast<std::uint64_t>(options->retained_success_count) +
+        options->retained_failure_count;
+    if (options->retained_trace_count > 1000 ||
+        options->max_trace_entries > 10000 ||
+        retained_trace_entries > 50000 ||
+        retained_examples > 10000) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "retention option exceeds safety limit");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+
+    poecraft::SimulationOptionsInternal parsed;
+    parsed.target_runs = options->target_runs;
+    parsed.seed = options->seed;
+    parsed.max_actions_per_run = options->max_actions_per_run;
+    parsed.max_graph_steps_per_run = options->max_graph_steps_per_run;
+    parsed.max_cost_per_run = options->max_cost_per_run;
+    parsed.retained_trace_count = options->retained_trace_count;
+    parsed.max_trace_entries = options->max_trace_entries;
+    parsed.retained_success_count = options->retained_success_count;
+    parsed.retained_failure_count = options->retained_failure_count;
+    try {
+        poecraft::run_simulator_chunk(
+            *simulator->impl, parsed, max_completed_runs);
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    out_progress->struct_size =
+        static_cast<std::uint32_t>(sizeof(pc_simulation_progress));
+    out_progress->abi_version = PC_ABI_VERSION;
+    out_progress->completed_runs = simulator->impl->summary.completed_runs;
+    out_progress->target_runs = parsed.target_runs;
+    out_progress->finished =
+        out_progress->completed_runs >= out_progress->target_runs ? 1 : 0;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_get_summary(
+    pc_simulator_handle simulator,
+    pc_simulation_summary* out_summary,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_summary == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& src = simulator->impl->summary;
+    out_summary->struct_size =
+        static_cast<std::uint32_t>(sizeof(pc_simulation_summary));
+    out_summary->abi_version = PC_ABI_VERSION;
+    out_summary->completed_runs = src.completed_runs;
+    out_summary->success_count = src.success_count;
+    out_summary->failure_count = src.failure_count;
+    out_summary->stop_count = src.stop_count;
+    out_summary->total_actions = src.total_actions;
+    out_summary->action_limit_count = src.action_limit_count;
+    out_summary->cost_limit_count = src.cost_limit_count;
+    out_summary->step_limit_count = src.step_limit_count;
+    out_summary->no_matching_edge_count = src.no_matching_edge_count;
+    out_summary->action_not_applied_count = src.action_not_applied_count;
+    out_summary->missing_price_run_count = src.missing_price_run_count;
+    out_summary->costed_action_count = src.costed_action_count;
+    out_summary->missing_price_action_count = src.missing_price_action_count;
+    out_summary->known_total_cost = src.known_total_cost;
+    out_summary->cost_status =
+        simulator->impl->economy == nullptr
+            ? PC_COST_DISABLED
+            : (src.missing_price_action_count == 0 ? PC_COST_COMPLETE
+                                                    : PC_COST_INCOMPLETE);
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_missing_price_query(
+    pc_simulator_handle simulator,
+    pc_price_key_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::vector<std::string> keys;
+    keys.reserve(simulator->impl->missing_prices.size());
+    for (const auto& entry : simulator->impl->missing_prices) {
+        keys.push_back(entry.first);
+    }
+    std::sort(keys.begin(), keys.end());
+    *out_entry_count = static_cast<std::uint32_t>(keys.size());
+    if (entry_capacity < keys.size() || (entries == nullptr && !keys.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        entries[i].struct_size = static_cast<std::uint32_t>(sizeof(entries[i]));
+        entries[i].abi_version = PC_ABI_VERSION;
+        const auto found = simulator->impl->missing_prices.find(keys[i]);
+        entries[i].key = found->first.c_str();
+        entries[i].missing_count = found->second;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_get_trace_count(
+    pc_simulator_handle simulator,
+    uint32_t* out_trace_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_trace_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_trace_count =
+        static_cast<std::uint32_t>(simulator->impl->traces.size());
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_trace_query(
+    pc_simulator_handle simulator,
+    uint32_t trace_index,
+    pc_trace_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (trace_index >= simulator->impl->traces.size()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "trace index out of range");
+        return PC_RESULT_NOT_FOUND;
+    }
+    const auto& trace = simulator->impl->traces[trace_index].entries;
+    *out_entry_count = static_cast<std::uint32_t>(trace.size());
+    if (entry_capacity < trace.size() || (entries == nullptr && !trace.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < trace.size(); ++i) {
+        const auto& src = trace[i];
+        auto& dst = entries[i];
+        dst.struct_size = static_cast<std::uint32_t>(sizeof(dst));
+        dst.abi_version = PC_ABI_VERSION;
+        dst.step_index = src.step_index;
+        dst.node_id = src.node_id.c_str();
+        dst.node_kind = src.node_kind;
+        dst.action_type = src.action_type;
+        dst.action_applied = src.action_applied ? 1 : 0;
+        dst.matched_edge_id = src.matched_edge_id.c_str();
+        dst.cumulative_actions = src.cumulative_actions;
+        dst.known_cumulative_cost = src.known_cumulative_cost;
+        dst.cost_complete = src.cost_complete ? 1 : 0;
+        dst.terminal_kind = src.terminal_kind;
+        dst.failure_reason = src.failure_reason;
+        dst.item = src.item;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_get_example_count(
+    pc_simulator_handle simulator,
+    int32_t terminal_kind,
+    uint32_t* out_example_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_example_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (terminal_kind < PC_TERMINAL_SUCCESS ||
+        terminal_kind > PC_TERMINAL_STOP) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "unknown terminal kind");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& examples =
+        terminal_kind == PC_TERMINAL_SUCCESS
+            ? simulator->impl->success_examples
+            : simulator->impl->failure_examples;
+    std::uint32_t count = 0;
+    for (const auto& example : examples) {
+        if (example.terminal_kind == terminal_kind) ++count;
+    }
+    *out_example_count = count;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_example_query(
+    pc_simulator_handle simulator,
+    int32_t terminal_kind,
+    uint32_t example_index,
+    pc_simulation_example* out_example,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_example == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (terminal_kind < PC_TERMINAL_SUCCESS ||
+        terminal_kind > PC_TERMINAL_STOP) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "unknown terminal kind");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& examples =
+        terminal_kind == PC_TERMINAL_SUCCESS
+            ? simulator->impl->success_examples
+            : simulator->impl->failure_examples;
+    const poecraft::SimulationExampleInternal* selected = nullptr;
+    std::uint32_t seen = 0;
+    for (const auto& example : examples) {
+        if (example.terminal_kind != terminal_kind) continue;
+        if (seen++ == example_index) {
+            selected = &example;
+            break;
+        }
+    }
+    if (selected == nullptr) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "example index out of range");
+        return PC_RESULT_NOT_FOUND;
+    }
+    out_example->struct_size =
+        static_cast<std::uint32_t>(sizeof(pc_simulation_example));
+    out_example->abi_version = PC_ABI_VERSION;
+    out_example->terminal_kind = selected->terminal_kind;
+    out_example->failure_reason = selected->failure_reason;
+    out_example->terminal_node_id = selected->terminal_node_id.c_str();
+    out_example->action_count = selected->action_count;
+    out_example->known_total_cost = selected->known_total_cost;
+    out_example->cost_complete = selected->cost_complete ? 1 : 0;
+    out_example->item = selected->item;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_failure_summary_query(
+    pc_simulator_handle simulator,
+    pc_failure_summary_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& summaries = simulator->impl->failure_summaries;
+    *out_entry_count = static_cast<std::uint32_t>(summaries.size());
+    if (entry_capacity < summaries.size() ||
+        (entries == nullptr && !summaries.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < summaries.size(); ++i) {
+        entries[i].struct_size = static_cast<std::uint32_t>(sizeof(entries[i]));
+        entries[i].abi_version = PC_ABI_VERSION;
+        entries[i].failure_reason = summaries[i].failure_reason;
+        entries[i].node_id = summaries[i].node_id.c_str();
+        entries[i].detail = summaries[i].detail.c_str();
+        entries[i].count = summaries[i].count;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+void pc_simulator_destroy(pc_simulator_handle simulator) {
+    delete simulator;
 }

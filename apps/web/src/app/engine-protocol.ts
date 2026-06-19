@@ -55,10 +55,90 @@ export interface BatchSummary {
     total_removed: number;
 }
 
+export interface SimulationOptions {
+    target_runs: number;
+    seed?: number;
+    max_actions_per_run?: number;
+    max_graph_steps_per_run?: number;
+    max_cost_per_run?: number;
+    retained_trace_count?: number;
+    max_trace_entries?: number;
+    retained_success_count?: number;
+    retained_failure_count?: number;
+}
+
+export interface SimulationProgress {
+    completed_runs: number;
+    target_runs: number;
+    finished: boolean;
+}
+
+export interface SimulationSummary {
+    completed_runs: number;
+    success_count: number;
+    failure_count: number;
+    stop_count: number;
+    total_actions: number;
+    action_limit_count: number;
+    cost_limit_count: number;
+    step_limit_count: number;
+    no_matching_edge_count: number;
+    action_not_applied_count: number;
+    missing_price_run_count: number;
+    costed_action_count: number;
+    missing_price_action_count: number;
+    known_total_cost: number;
+    cost_status: "disabled" | "complete" | "incomplete";
+}
+
+export interface StrategyTraceEntry {
+    step_index: number;
+    node_id: string;
+    node_kind: number;
+    action_type: number;
+    action_applied: boolean;
+    matched_edge_id: string;
+    cumulative_actions: number;
+    known_cumulative_cost: number;
+    cost_complete: boolean;
+    terminal_kind: "success" | "failure" | "stop" | null;
+    failure_reason: number;
+    item: unknown;
+}
+
+export interface StrategyTrace {
+    entries: StrategyTraceEntry[];
+}
+
+export interface SimulationExample {
+    terminal_kind: "success" | "failure" | "stop";
+    failure_reason: number;
+    terminal_node_id: string;
+    action_count: number;
+    known_total_cost: number;
+    cost_complete: boolean;
+    item: unknown;
+}
+
+export interface FailureSummary {
+    failure_reason: number;
+    node_id: string;
+    detail: string;
+    count: number;
+}
+
 export interface StrategyResult {
     cancelled: boolean;
-    done: number;
-    summary: BatchSummary;
+    progress: SimulationProgress;
+    summary: SimulationSummary;
+    traces: StrategyTrace[];
+    examples: {
+        success: SimulationExample[];
+        failure: SimulationExample[];
+        stop: SimulationExample[];
+    };
+    failure_summaries: FailureSummary[];
+    missing_prices: Array<{ key: string; missing_count: number }>;
 }
 
 export interface PoolEntry {

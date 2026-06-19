@@ -10,6 +10,7 @@
 
 #include "poecraft/item_state.h"
 #include "poecraft/rng.h"
+#include "poecraft/simulator.h"
 
 /*
  * Internal engine representation. Public opaque handles (pc_data, pc_session,
@@ -75,6 +76,11 @@ struct DataImpl {
     std::vector<std::uint32_t> mod_group_offsets;  // mod_count + 1
     std::vector<std::uint32_t> mod_group_ids_flat; // all groups per mod
     std::unordered_map<std::uint32_t, std::uint32_t> mod_pos_by_global_id;
+    std::unordered_map<std::string, std::uint32_t> mod_pos_by_key;
+
+    // exclusivity-group stable keys
+    std::vector<std::uint32_t> group_key_sids;
+    std::unordered_map<std::string, std::uint32_t> group_id_by_key;
 
     // ordered weight rows (first-match semantics, indexed by offsets)
     std::vector<std::uint32_t> spawn_offsets; // mod_count + 1
@@ -425,6 +431,165 @@ ActionOutcome apply_action(
     ActionContextImpl& context,
     pc_item_state* item,
     const ActionParameters& action);
+
+// --- compiled strategy simulator -------------------------------------------
+
+enum class ConditionKind : std::uint8_t {
+    Always = 0,
+    HasModGroup = 1,
+    RarityIs = 2,
+    OpenPrefixCount = 3,
+    OpenSuffixCount = 4,
+    PrefixCountRange = 5,
+    SuffixCountRange = 6,
+    All = 7,
+    Any = 8,
+    Not = 9,
+    AtLeast = 10
+};
+
+struct CompiledCondition {
+    ConditionKind kind = ConditionKind::Always;
+    std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
+    int min_value = 0;
+    int max_value = 0;
+    std::vector<CompiledCondition> children;
+};
+
+enum class StrategyNodeKind : std::uint8_t {
+    Start = PC_STRATEGY_NODE_START,
+    Operation = PC_STRATEGY_NODE_OPERATION,
+    Router = PC_STRATEGY_NODE_ROUTER,
+    Terminal = PC_STRATEGY_NODE_TERMINAL
+};
+
+struct StrategyEdge {
+    std::string id;
+    std::uint32_t target = 0;
+    int priority = 0;
+    bool is_default = false;
+    std::uint32_t source_order = 0;
+    CompiledCondition condition;
+};
+
+struct StrategyNode {
+    std::string id;
+    StrategyNodeKind kind = StrategyNodeKind::Start;
+    ActionParameters action;
+    int action_type = -1;
+    std::vector<std::string> price_keys;
+    int terminal_kind = -1;
+    std::string reason;
+    std::vector<StrategyEdge> edges;
+};
+
+struct StrategyImpl {
+    std::shared_ptr<const SessionImpl> session;
+    std::string name;
+    pc_item_state start_item{};
+    std::uint32_t start_node = 0;
+    std::vector<StrategyNode> nodes;
+    std::unordered_map<std::string, std::uint32_t> node_by_id;
+};
+
+struct EconomyImpl {
+    std::string id;
+    std::unordered_map<std::string, double> prices;
+};
+
+struct TraceEntryInternal {
+    std::uint32_t step_index = 0;
+    std::string node_id;
+    int node_kind = PC_STRATEGY_NODE_START;
+    int action_type = -1;
+    bool action_applied = false;
+    std::string matched_edge_id;
+    std::uint64_t cumulative_actions = 0;
+    double known_cumulative_cost = 0.0;
+    bool cost_complete = true;
+    int terminal_kind = -1;
+    int failure_reason = PC_SIM_FAILURE_NONE;
+    pc_item_state item{};
+};
+
+struct RetainedTrace {
+    std::vector<TraceEntryInternal> entries;
+};
+
+struct SimulationExampleInternal {
+    int terminal_kind = PC_TERMINAL_FAILURE;
+    int failure_reason = PC_SIM_FAILURE_NONE;
+    std::string terminal_node_id;
+    std::uint64_t action_count = 0;
+    double known_total_cost = 0.0;
+    bool cost_complete = true;
+    pc_item_state item{};
+};
+
+struct FailureSummaryInternal {
+    int failure_reason = PC_SIM_FAILURE_NONE;
+    std::string node_id;
+    std::string detail;
+    std::uint64_t count = 0;
+};
+
+struct SimulationSummaryInternal {
+    std::uint64_t completed_runs = 0;
+    std::uint64_t success_count = 0;
+    std::uint64_t failure_count = 0;
+    std::uint64_t stop_count = 0;
+    std::uint64_t total_actions = 0;
+    std::uint64_t action_limit_count = 0;
+    std::uint64_t cost_limit_count = 0;
+    std::uint64_t step_limit_count = 0;
+    std::uint64_t no_matching_edge_count = 0;
+    std::uint64_t action_not_applied_count = 0;
+    std::uint64_t missing_price_run_count = 0;
+    std::uint64_t costed_action_count = 0;
+    std::uint64_t missing_price_action_count = 0;
+    double known_total_cost = 0.0;
+};
+
+struct SimulationOptionsInternal {
+    std::uint64_t target_runs = 0;
+    std::uint64_t seed = 0;
+    std::uint32_t max_actions_per_run = 0;
+    std::uint32_t max_graph_steps_per_run = 0;
+    double max_cost_per_run = 0.0;
+    std::uint32_t retained_trace_count = 0;
+    std::uint32_t max_trace_entries = 0;
+    std::uint32_t retained_success_count = 0;
+    std::uint32_t retained_failure_count = 0;
+};
+
+struct SimulatorImpl {
+    std::shared_ptr<const SessionImpl> session;
+    std::shared_ptr<const StrategyImpl> strategy;
+    std::shared_ptr<const EconomyImpl> economy;
+    std::unique_ptr<ActionContextImpl> context;
+    bool options_set = false;
+    SimulationOptionsInternal options;
+    SimulationSummaryInternal summary;
+    std::vector<RetainedTrace> traces;
+    std::vector<SimulationExampleInternal> success_examples;
+    std::vector<SimulationExampleInternal> failure_examples;
+    std::vector<FailureSummaryInternal> failure_summaries;
+    std::unordered_map<std::string, std::uint64_t> missing_prices;
+};
+
+std::shared_ptr<StrategyImpl> compile_strategy_json(
+    std::shared_ptr<const SessionImpl> session,
+    const char* strategy_json,
+    std::size_t strategy_json_size);
+
+std::shared_ptr<EconomyImpl> load_economy_json(
+    const char* economy_json,
+    std::size_t economy_json_size);
+
+void run_simulator_chunk(
+    SimulatorImpl& simulator,
+    const SimulationOptionsInternal& options,
+    std::uint32_t max_completed_runs);
 
 } // namespace poecraft
 

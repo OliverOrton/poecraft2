@@ -24,6 +24,7 @@
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
+#include "poecraft/simulator.h"
 
 #include "json.hpp"
 
@@ -71,6 +72,9 @@ std::unordered_map<std::uint32_t, pc_data_handle> g_data;
 std::unordered_map<std::uint32_t, pc_session_handle> g_sessions;
 std::unordered_map<std::uint32_t, pc_action_context_handle> g_contexts;
 std::unordered_map<std::uint32_t, pc_item_state> g_items;
+std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
+std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
+std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
 std::uint32_t g_next_id = 1;
 
 std::string g_response;
@@ -258,11 +262,61 @@ void append_slot_array(std::string& out, const char* name,
     out.push_back(']');
 }
 
+void append_item_state(std::string& out, const pc_item_state& item) {
+    out += "{\"rarity\":" + std::to_string(item.rarity);
+    out += ",\"quality\":" + std::to_string(item.quality);
+    out += ",\"item_flags\":" + std::to_string(item.item_flags);
+    out += ",\"generic_influence_bits\":" +
+           std::to_string(item.generic_influence_bits);
+    out += ",\"searing_exarch_tier\":" +
+           std::to_string(item.searing_exarch_tier);
+    out += ",\"eater_of_worlds_tier\":" +
+           std::to_string(item.eater_of_worlds_tier);
+    out += ",\"link_mask\":" + std::to_string(item.link_mask);
+    out += ",\"socket_count\":" + std::to_string(item.socket_count);
+    out += ",\"socket_colors\":[";
+    for (uint8_t i = 0; i < item.socket_count && i < PC_MAX_SOCKETS; ++i) {
+        if (i != 0) out.push_back(',');
+        out += std::to_string(item.socket_colors[i]);
+    }
+    out += "],";
+    append_slot_array(out, "prefixes", item.prefixes, item.prefix_count);
+    out.push_back(',');
+    append_slot_array(out, "suffixes", item.suffixes, item.suffix_count);
+    out.push_back(',');
+    append_slot_array(out, "implicits", item.implicits, item.implicit_count);
+    out.push_back(',');
+    append_slot_array(
+        out, "enchantments", item.enchantments, item.enchantment_count);
+    out.push_back('}');
+}
+
 uint32_t obj_u32(const Value& object, const char* key, uint32_t fallback = 0) {
     const Value* value = object.find(key);
     return value != nullptr && value->type == Type::Number
                ? static_cast<uint32_t>(value->number)
                : fallback;
+}
+
+uint64_t obj_u64(const Value& object, const char* key, uint64_t fallback = 0) {
+    const Value* value = object.find(key);
+    return value != nullptr && value->type == Type::Number
+               ? static_cast<uint64_t>(value->number)
+               : fallback;
+}
+
+double obj_double(const Value& object, const char* key, double fallback = 0.0) {
+    const Value* value = object.find(key);
+    return value != nullptr && value->type == Type::Number
+               ? value->number
+               : fallback;
+}
+
+const char* terminal_name(int32_t kind) {
+    if (kind == PC_TERMINAL_SUCCESS) return "success";
+    if (kind == PC_TERMINAL_FAILURE) return "failure";
+    if (kind == PC_TERMINAL_STOP) return "stop";
+    return "";
 }
 
 pc_mod_slot parse_slot(const Value& object) {
@@ -658,33 +712,9 @@ EMSCRIPTEN_KEEPALIVE
 const char* pcw_item_export(uint32_t item_id) {
     pc_item_state* item = find(g_items, item_id);
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
-    std::string out = "{\"ok\":true,\"state\":{";
-    out += "\"rarity\":" + std::to_string(item->rarity);
-    out += ",\"quality\":" + std::to_string(item->quality);
-    out += ",\"item_flags\":" + std::to_string(item->item_flags);
-    out += ",\"generic_influence_bits\":" +
-           std::to_string(item->generic_influence_bits);
-    out += ",\"searing_exarch_tier\":" +
-           std::to_string(item->searing_exarch_tier);
-    out += ",\"eater_of_worlds_tier\":" +
-           std::to_string(item->eater_of_worlds_tier);
-    out += ",\"link_mask\":" + std::to_string(item->link_mask);
-    out += ",\"socket_count\":" + std::to_string(item->socket_count);
-    out += ",\"socket_colors\":[";
-    for (uint8_t i = 0; i < item->socket_count && i < PC_MAX_SOCKETS; ++i) {
-        if (i != 0) out.push_back(',');
-        out += std::to_string(item->socket_colors[i]);
-    }
-    out += "],";
-    append_slot_array(out, "prefixes", item->prefixes, item->prefix_count);
-    out.push_back(',');
-    append_slot_array(out, "suffixes", item->suffixes, item->suffix_count);
-    out.push_back(',');
-    append_slot_array(out, "implicits", item->implicits, item->implicit_count);
-    out.push_back(',');
-    append_slot_array(out, "enchantments", item->enchantments,
-                      item->enchantment_count);
-    out += "}}";
+    std::string out = "{\"ok\":true,\"state\":";
+    append_item_state(out, *item);
+    out.push_back('}');
     return respond(std::move(out));
 }
 
@@ -904,6 +934,308 @@ const char* pcw_debug_pool(uint32_t context_id, uint32_t item_id,
     out += ",\"combined_total_weight\":";
     append_u64(out, summary.combined_total_weight);
     out += "}}";
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_strategy_compile(uint32_t session_id,
+                                 const char* strategy_json) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    pc_strategy_handle strategy = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_strategy_compile_json(
+        *session, strategy_json, std::strlen(strategy_json), &strategy, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    const uint32_t id = g_next_id++;
+    g_strategies[id] = strategy;
+    return respond(
+        "{\"ok\":true,\"strategy\":" + std::to_string(id) + "}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_strategy_close(uint32_t strategy_id) {
+    auto it = g_strategies.find(strategy_id);
+    if (it == g_strategies.end()) return;
+    pc_strategy_destroy(it->second);
+    g_strategies.erase(it);
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_economy_open(const char* economy_json) {
+    pc_economy_handle economy = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_economy_load_json(
+        economy_json, std::strlen(economy_json), &economy, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    const uint32_t id = g_next_id++;
+    g_economies[id] = economy;
+    return respond(
+        "{\"ok\":true,\"economy\":" + std::to_string(id) + "}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_economy_close(uint32_t economy_id) {
+    auto it = g_economies.find(economy_id);
+    if (it == g_economies.end()) return;
+    pc_economy_destroy(it->second);
+    g_economies.erase(it);
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_simulator_open(uint32_t session_id, uint32_t strategy_id,
+                               uint32_t economy_id) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    pc_strategy_handle* strategy = find(g_strategies, strategy_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    if (strategy == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown strategy");
+    pc_economy_handle economy = nullptr;
+    if (economy_id != 0) {
+        pc_economy_handle* found = find(g_economies, economy_id);
+        if (found == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown economy");
+        economy = *found;
+    }
+    pc_simulator_handle simulator = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_simulator_create(
+        *session, *strategy, economy, &simulator, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    const uint32_t id = g_next_id++;
+    g_simulators[id] = simulator;
+    return respond(
+        "{\"ok\":true,\"simulator\":" + std::to_string(id) + "}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_simulator_close(uint32_t simulator_id) {
+    auto it = g_simulators.find(simulator_id);
+    if (it == g_simulators.end()) return;
+    pc_simulator_destroy(it->second);
+    g_simulators.erase(it);
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_simulator_run_chunk(uint32_t simulator_id,
+                                    const char* options_json,
+                                    uint32_t max_completed_runs) {
+    pc_simulator_handle* simulator = find(g_simulators, simulator_id);
+    if (simulator == nullptr)
+        return fail(PC_RESULT_NOT_FOUND, "unknown simulator");
+    Value spec;
+    try {
+        spec = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    if (spec.type != Type::Object) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "options must be an object");
+    }
+    pc_simulation_options options{};
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    options.target_runs = obj_u64(spec, "target_runs");
+    options.seed = obj_u64(spec, "seed");
+    options.max_actions_per_run =
+        obj_u32(spec, "max_actions_per_run", 100000);
+    options.max_graph_steps_per_run =
+        obj_u32(spec, "max_graph_steps_per_run");
+    options.max_cost_per_run = obj_double(spec, "max_cost_per_run");
+    options.retained_trace_count =
+        obj_u32(spec, "retained_trace_count", 10);
+    options.max_trace_entries = obj_u32(spec, "max_trace_entries", 512);
+    options.retained_success_count =
+        obj_u32(spec, "retained_success_count", 5);
+    options.retained_failure_count =
+        obj_u32(spec, "retained_failure_count", 5);
+    pc_simulation_progress progress{};
+    pc_error_info error = make_error();
+    pc_result rc = pc_simulator_run_chunk(
+        *simulator, &options, max_completed_runs, &progress, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"progress\":{\"completed_runs\":";
+    append_u64(out, progress.completed_runs);
+    out += ",\"target_runs\":";
+    append_u64(out, progress.target_runs);
+    out += ",\"finished\":";
+    out += progress.finished ? "true" : "false";
+    out += "}}";
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_simulator_result(uint32_t simulator_id) {
+    pc_simulator_handle* simulator = find(g_simulators, simulator_id);
+    if (simulator == nullptr)
+        return fail(PC_RESULT_NOT_FOUND, "unknown simulator");
+    pc_error_info error = make_error();
+    pc_simulation_summary summary{};
+    pc_result rc = pc_simulator_get_summary(*simulator, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+
+    std::string out = "{\"ok\":true,\"summary\":{\"completed_runs\":";
+    append_u64(out, summary.completed_runs);
+    out += ",\"success_count\":";
+    append_u64(out, summary.success_count);
+    out += ",\"failure_count\":";
+    append_u64(out, summary.failure_count);
+    out += ",\"stop_count\":";
+    append_u64(out, summary.stop_count);
+    out += ",\"total_actions\":";
+    append_u64(out, summary.total_actions);
+    out += ",\"action_limit_count\":";
+    append_u64(out, summary.action_limit_count);
+    out += ",\"cost_limit_count\":";
+    append_u64(out, summary.cost_limit_count);
+    out += ",\"step_limit_count\":";
+    append_u64(out, summary.step_limit_count);
+    out += ",\"no_matching_edge_count\":";
+    append_u64(out, summary.no_matching_edge_count);
+    out += ",\"action_not_applied_count\":";
+    append_u64(out, summary.action_not_applied_count);
+    out += ",\"missing_price_run_count\":";
+    append_u64(out, summary.missing_price_run_count);
+    out += ",\"costed_action_count\":";
+    append_u64(out, summary.costed_action_count);
+    out += ",\"missing_price_action_count\":";
+    append_u64(out, summary.missing_price_action_count);
+    out += ",\"known_total_cost\":" + std::to_string(summary.known_total_cost);
+    out += ",\"cost_status\":";
+    append_escaped(
+        out,
+        summary.cost_status == PC_COST_DISABLED
+            ? "disabled"
+            : (summary.cost_status == PC_COST_COMPLETE ? "complete"
+                                                       : "incomplete"));
+    out += "},\"traces\":[";
+
+    uint32_t trace_count = 0;
+    rc = pc_simulator_get_trace_count(*simulator, &trace_count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t trace_index = 0; trace_index < trace_count; ++trace_index) {
+        uint32_t count = 0;
+        rc = pc_simulator_trace_query(
+            *simulator, trace_index, nullptr, 0, &count, &error);
+        if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+            return fail(error);
+        std::vector<pc_trace_entry> entries(count ? count : 1);
+        rc = pc_simulator_trace_query(
+            *simulator, trace_index, entries.data(), count, &count, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        if (trace_index != 0) out.push_back(',');
+        out += "{\"entries\":[";
+        for (uint32_t i = 0; i < count; ++i) {
+            if (i != 0) out.push_back(',');
+            const auto& entry = entries[i];
+            out += "{\"step_index\":" + std::to_string(entry.step_index);
+            out += ",\"node_id\":";
+            append_escaped(out, entry.node_id);
+            out += ",\"node_kind\":" + std::to_string(entry.node_kind);
+            out += ",\"action_type\":" + std::to_string(entry.action_type);
+            out += ",\"action_applied\":";
+            out += entry.action_applied ? "true" : "false";
+            out += ",\"matched_edge_id\":";
+            append_escaped(out, entry.matched_edge_id);
+            out += ",\"cumulative_actions\":";
+            append_u64(out, entry.cumulative_actions);
+            out += ",\"known_cumulative_cost\":" +
+                   std::to_string(entry.known_cumulative_cost);
+            out += ",\"cost_complete\":";
+            out += entry.cost_complete ? "true" : "false";
+            out += ",\"terminal_kind\":";
+            if (entry.terminal_kind < 0) {
+                out += "null";
+            } else {
+                append_escaped(out, terminal_name(entry.terminal_kind));
+            }
+            out += ",\"failure_reason\":" +
+                   std::to_string(entry.failure_reason);
+            out += ",\"item\":";
+            append_item_state(out, entry.item);
+            out.push_back('}');
+        }
+        out += "]}";
+    }
+    out += "],\"examples\":{";
+
+    const int terminal_kinds[] = {
+        PC_TERMINAL_SUCCESS, PC_TERMINAL_FAILURE, PC_TERMINAL_STOP};
+    for (std::size_t kind_index = 0; kind_index < 3; ++kind_index) {
+        const int kind = terminal_kinds[kind_index];
+        if (kind_index != 0) out.push_back(',');
+        append_escaped(out, terminal_name(kind));
+        out += ":[";
+        uint32_t count = 0;
+        rc = pc_simulator_get_example_count(
+            *simulator, kind, &count, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        for (uint32_t i = 0; i < count; ++i) {
+            pc_simulation_example example{};
+            rc = pc_simulator_example_query(
+                *simulator, kind, i, &example, &error);
+            if (rc != PC_RESULT_OK) return fail(error);
+            if (i != 0) out.push_back(',');
+            out += "{\"terminal_kind\":";
+            append_escaped(out, terminal_name(example.terminal_kind));
+            out += ",\"failure_reason\":" +
+                   std::to_string(example.failure_reason);
+            out += ",\"terminal_node_id\":";
+            append_escaped(out, example.terminal_node_id);
+            out += ",\"action_count\":";
+            append_u64(out, example.action_count);
+            out += ",\"known_total_cost\":" +
+                   std::to_string(example.known_total_cost);
+            out += ",\"cost_complete\":";
+            out += example.cost_complete ? "true" : "false";
+            out += ",\"item\":";
+            append_item_state(out, example.item);
+            out.push_back('}');
+        }
+        out.push_back(']');
+    }
+    out += "},\"failure_summaries\":[";
+
+    uint32_t failure_count = 0;
+    rc = pc_simulator_failure_summary_query(
+        *simulator, nullptr, 0, &failure_count, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+        return fail(error);
+    std::vector<pc_failure_summary_entry> failures(
+        failure_count ? failure_count : 1);
+    rc = pc_simulator_failure_summary_query(
+        *simulator, failures.data(), failure_count, &failure_count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t i = 0; i < failure_count; ++i) {
+        if (i != 0) out.push_back(',');
+        out += "{\"failure_reason\":" +
+               std::to_string(failures[i].failure_reason);
+        out += ",\"node_id\":";
+        append_escaped(out, failures[i].node_id);
+        out += ",\"detail\":";
+        append_escaped(out, failures[i].detail);
+        out += ",\"count\":";
+        append_u64(out, failures[i].count);
+        out.push_back('}');
+    }
+    out += "],\"missing_prices\":[";
+
+    uint32_t missing_count = 0;
+    rc = pc_simulator_missing_price_query(
+        *simulator, nullptr, 0, &missing_count, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+        return fail(error);
+    std::vector<pc_price_key_entry> missing(missing_count ? missing_count : 1);
+    rc = pc_simulator_missing_price_query(
+        *simulator, missing.data(), missing_count, &missing_count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t i = 0; i < missing_count; ++i) {
+        if (i != 0) out.push_back(',');
+        out += "{\"key\":";
+        append_escaped(out, missing[i].key);
+        out += ",\"missing_count\":";
+        append_u64(out, missing[i].missing_count);
+        out.push_back('}');
+    }
+    out += "]}";
     return respond(std::move(out));
 }
 

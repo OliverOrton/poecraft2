@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes as ct
 import ctypes.util
+import json
 import os
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -29,6 +30,9 @@ _ACTION_TYPES = {
     "fossil": 10,
 }
 _RARITIES = {"normal": 0, "magic": 1, "rare": 2}
+_TERMINAL_KINDS = {"success": 0, "failure": 1, "stop": 2}
+_TERMINAL_NAMES = {value: key for key, value in _TERMINAL_KINDS.items()}
+_COST_STATUS = {0: "disabled", 1: "complete", 2: "incomplete"}
 
 
 class _ErrorInfo(ct.Structure):
@@ -223,6 +227,107 @@ class _ModInfo(ct.Structure):
     ]
 
 
+class _SimulationOptions(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("target_runs", ct.c_uint64),
+        ("seed", ct.c_uint64),
+        ("max_actions_per_run", ct.c_uint32),
+        ("max_graph_steps_per_run", ct.c_uint32),
+        ("max_cost_per_run", ct.c_double),
+        ("retained_trace_count", ct.c_uint32),
+        ("max_trace_entries", ct.c_uint32),
+        ("retained_success_count", ct.c_uint32),
+        ("retained_failure_count", ct.c_uint32),
+    ]
+
+
+class _SimulationProgress(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("completed_runs", ct.c_uint64),
+        ("target_runs", ct.c_uint64),
+        ("finished", ct.c_int32),
+    ]
+
+
+class _SimulationSummary(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("completed_runs", ct.c_uint64),
+        ("success_count", ct.c_uint64),
+        ("failure_count", ct.c_uint64),
+        ("stop_count", ct.c_uint64),
+        ("total_actions", ct.c_uint64),
+        ("action_limit_count", ct.c_uint64),
+        ("cost_limit_count", ct.c_uint64),
+        ("step_limit_count", ct.c_uint64),
+        ("no_matching_edge_count", ct.c_uint64),
+        ("action_not_applied_count", ct.c_uint64),
+        ("missing_price_run_count", ct.c_uint64),
+        ("costed_action_count", ct.c_uint64),
+        ("missing_price_action_count", ct.c_uint64),
+        ("known_total_cost", ct.c_double),
+        ("cost_status", ct.c_int32),
+    ]
+
+
+class _TraceEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("step_index", ct.c_uint32),
+        ("node_id", ct.c_char_p),
+        ("node_kind", ct.c_int32),
+        ("action_type", ct.c_int32),
+        ("action_applied", ct.c_int32),
+        ("matched_edge_id", ct.c_char_p),
+        ("cumulative_actions", ct.c_uint64),
+        ("known_cumulative_cost", ct.c_double),
+        ("cost_complete", ct.c_int32),
+        ("terminal_kind", ct.c_int32),
+        ("failure_reason", ct.c_int32),
+        ("item", _ItemState),
+    ]
+
+
+class _SimulationExample(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("terminal_kind", ct.c_int32),
+        ("failure_reason", ct.c_int32),
+        ("terminal_node_id", ct.c_char_p),
+        ("action_count", ct.c_uint64),
+        ("known_total_cost", ct.c_double),
+        ("cost_complete", ct.c_int32),
+        ("item", _ItemState),
+    ]
+
+
+class _FailureSummaryEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("failure_reason", ct.c_int32),
+        ("node_id", ct.c_char_p),
+        ("detail", ct.c_char_p),
+        ("count", ct.c_uint64),
+    ]
+
+
+class _PriceKeyEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("key", ct.c_char_p),
+        ("missing_count", ct.c_uint64),
+    ]
+
+
 class EngineError(RuntimeError):
     def __init__(self, code: int, message: str):
         self.code = code
@@ -383,6 +488,92 @@ _lib.pc_debug_pool_query.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_debug_pool_query.restype = ct.c_int32
+_lib.pc_strategy_compile_json.argtypes = [
+    _handle,
+    ct.c_char_p,
+    ct.c_size_t,
+    ct.POINTER(_handle),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_strategy_compile_json.restype = ct.c_int32
+_lib.pc_strategy_destroy.argtypes = [_handle]
+_lib.pc_economy_load_json.argtypes = [
+    ct.c_char_p,
+    ct.c_size_t,
+    ct.POINTER(_handle),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_economy_load_json.restype = ct.c_int32
+_lib.pc_economy_destroy.argtypes = [_handle]
+_lib.pc_simulator_create.argtypes = [
+    _handle,
+    _handle,
+    _handle,
+    ct.POINTER(_handle),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_create.restype = ct.c_int32
+_lib.pc_simulator_run_chunk.argtypes = [
+    _handle,
+    ct.POINTER(_SimulationOptions),
+    ct.c_uint32,
+    ct.POINTER(_SimulationProgress),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_run_chunk.restype = ct.c_int32
+_lib.pc_simulator_get_summary.argtypes = [
+    _handle,
+    ct.POINTER(_SimulationSummary),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_get_summary.restype = ct.c_int32
+_lib.pc_simulator_missing_price_query.argtypes = [
+    _handle,
+    ct.POINTER(_PriceKeyEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_missing_price_query.restype = ct.c_int32
+_lib.pc_simulator_get_trace_count.argtypes = [
+    _handle,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_get_trace_count.restype = ct.c_int32
+_lib.pc_simulator_trace_query.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(_TraceEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_trace_query.restype = ct.c_int32
+_lib.pc_simulator_get_example_count.argtypes = [
+    _handle,
+    ct.c_int32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_get_example_count.restype = ct.c_int32
+_lib.pc_simulator_example_query.argtypes = [
+    _handle,
+    ct.c_int32,
+    ct.c_uint32,
+    ct.POINTER(_SimulationExample),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_example_query.restype = ct.c_int32
+_lib.pc_simulator_failure_summary_query.argtypes = [
+    _handle,
+    ct.POINTER(_FailureSummaryEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_failure_summary_query.restype = ct.c_int32
+_lib.pc_simulator_destroy.argtypes = [_handle]
 
 if _lib.pc_abi_version() != ABI_VERSION:
     raise RuntimeError("poecraft native library has an incompatible ABI version")
@@ -429,6 +620,12 @@ def _action_request(action: str | Mapping[str, Any]) -> tuple[_ActionRequest, li
             keepalive.append(encoded)
             request.fossil_keys[index] = encoded
     return request, keepalive
+
+
+def _json_bytes(value: str | Mapping[str, Any]) -> bytes:
+    if isinstance(value, str):
+        return value.encode()
+    return json.dumps(value, separators=(",", ":")).encode()
 
 
 @dataclass(frozen=True)
@@ -480,6 +677,88 @@ class ModInfo:
     @property
     def side(self) -> str | None:
         return {0: "prefix", 1: "suffix"}.get(self.generation_type)
+
+
+@dataclass(frozen=True)
+class SimulationOptions:
+    target_runs: int
+    seed: int = 0
+    max_actions_per_run: int = 100_000
+    max_graph_steps_per_run: int = 0
+    max_cost_per_run: float = 0.0
+    retained_trace_count: int = 10
+    max_trace_entries: int = 512
+    retained_success_count: int = 5
+    retained_failure_count: int = 5
+
+    def _native(self) -> _SimulationOptions:
+        if self.target_runs <= 0:
+            raise ValueError("target_runs must be positive")
+        if self.max_actions_per_run <= 0:
+            raise ValueError("max_actions_per_run must be positive")
+        return _SimulationOptions(
+            ct.sizeof(_SimulationOptions),
+            ABI_VERSION,
+            self.target_runs,
+            self.seed,
+            self.max_actions_per_run,
+            self.max_graph_steps_per_run,
+            self.max_cost_per_run,
+            self.retained_trace_count,
+            self.max_trace_entries,
+            self.retained_success_count,
+            self.retained_failure_count,
+        )
+
+
+@dataclass(frozen=True)
+class SimulationProgress:
+    completed_runs: int
+    target_runs: int
+    finished: bool
+
+
+@dataclass(frozen=True)
+class TraceEntry:
+    step_index: int
+    node_id: str
+    node_kind: int
+    action_type: int
+    action_applied: bool
+    matched_edge_id: str
+    cumulative_actions: int
+    known_cumulative_cost: float
+    cost_complete: bool
+    terminal_kind: str | None
+    failure_reason: int
+    item: "Item"
+
+
+@dataclass(frozen=True)
+class StrategyTrace:
+    entries: tuple[TraceEntry, ...]
+
+
+@dataclass(frozen=True)
+class SimulationExample:
+    terminal_kind: str
+    failure_reason: int
+    terminal_node_id: str
+    action_count: int
+    known_total_cost: float
+    cost_complete: bool
+    item: "Item"
+
+
+@dataclass(frozen=True)
+class SimulationResult:
+    summary: dict[str, int | float | str]
+    traces: tuple[StrategyTrace, ...]
+    success_examples: tuple[SimulationExample, ...]
+    failure_examples: tuple[SimulationExample, ...]
+    stop_examples: tuple[SimulationExample, ...]
+    failure_summaries: tuple[dict[str, int | str], ...]
+    missing_prices: dict[str, int]
 
 
 class _OwnedHandle:
@@ -568,6 +847,24 @@ class Session(_OwnedHandle):
             error,
         )
         return ActionContext(handle, self)
+
+    def compile_strategy(
+        self, strategy: str | Mapping[str, Any]
+    ) -> "Strategy":
+        encoded = _json_bytes(strategy)
+        handle = _handle()
+        error = _error()
+        _check(
+            _lib.pc_strategy_compile_json(
+                self._handle,
+                encoded,
+                len(encoded),
+                ct.byref(handle),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return Strategy(handle, self)
 
     def create_item(
         self, rarity: str = "normal", *, with_implicits: bool = True
@@ -707,6 +1004,288 @@ class Item:
                 if slots[index].flags & MOD_SLOT_FRACTURED
             )
         return tuple(ids)
+
+
+def _copy_item_state(source: _ItemState) -> _ItemState:
+    state = _ItemState()
+    ct.memmove(ct.byref(state), ct.byref(source), ct.sizeof(state))
+    return state
+
+
+class Strategy(_OwnedHandle):
+    _destroy = _lib.pc_strategy_destroy
+
+    def __init__(self, handle: _handle, session: Session):
+        super().__init__(handle)
+        self._session = session
+
+    def create_simulator(self, economy: "Economy | None" = None) -> "Simulator":
+        handle = _handle()
+        error = _error()
+        economy_handle = economy._handle if economy is not None else _handle()
+        _check(
+            _lib.pc_simulator_create(
+                self._session._handle,
+                self._handle,
+                economy_handle,
+                ct.byref(handle),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return Simulator(handle, self._session, self, economy)
+
+
+class Economy(_OwnedHandle):
+    _destroy = _lib.pc_economy_destroy
+
+
+class Simulator(_OwnedHandle):
+    _destroy = _lib.pc_simulator_destroy
+
+    def __init__(
+        self,
+        handle: _handle,
+        session: Session,
+        strategy: Strategy,
+        economy: Economy | None,
+    ):
+        super().__init__(handle)
+        self._session = session
+        self._strategy = strategy
+        self._economy = economy
+
+    def run_chunk(
+        self,
+        options: SimulationOptions,
+        max_completed_runs: int,
+    ) -> SimulationProgress:
+        if max_completed_runs < 0:
+            raise ValueError("max_completed_runs must be non-negative")
+        native_options = options._native()
+        progress = _SimulationProgress()
+        error = _error()
+        _check(
+            _lib.pc_simulator_run_chunk(
+                self._handle,
+                ct.byref(native_options),
+                max_completed_runs,
+                ct.byref(progress),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return SimulationProgress(
+            progress.completed_runs,
+            progress.target_runs,
+            bool(progress.finished),
+        )
+
+    @property
+    def summary(self) -> dict[str, int | float | str]:
+        native = _SimulationSummary()
+        error = _error()
+        _check(
+            _lib.pc_simulator_get_summary(
+                self._handle, ct.byref(native), ct.byref(error)
+            ),
+            error,
+        )
+        return {
+            "completed_runs": native.completed_runs,
+            "success_count": native.success_count,
+            "failure_count": native.failure_count,
+            "stop_count": native.stop_count,
+            "total_actions": native.total_actions,
+            "action_limit_count": native.action_limit_count,
+            "cost_limit_count": native.cost_limit_count,
+            "step_limit_count": native.step_limit_count,
+            "no_matching_edge_count": native.no_matching_edge_count,
+            "action_not_applied_count": native.action_not_applied_count,
+            "missing_price_run_count": native.missing_price_run_count,
+            "costed_action_count": native.costed_action_count,
+            "missing_price_action_count": native.missing_price_action_count,
+            "known_total_cost": native.known_total_cost,
+            "cost_status": _COST_STATUS.get(native.cost_status, "unknown"),
+        }
+
+    @property
+    def traces(self) -> tuple[StrategyTrace, ...]:
+        count = ct.c_uint32()
+        error = _error()
+        _check(
+            _lib.pc_simulator_get_trace_count(
+                self._handle, ct.byref(count), ct.byref(error)
+            ),
+            error,
+        )
+        traces: list[StrategyTrace] = []
+        for trace_index in range(count.value):
+            entry_count = ct.c_uint32()
+            error = _error()
+            first = _lib.pc_simulator_trace_query(
+                self._handle,
+                trace_index,
+                None,
+                0,
+                ct.byref(entry_count),
+                ct.byref(error),
+            )
+            if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+                _check(first, error)
+            entries = (_TraceEntry * max(1, entry_count.value))()
+            error = _error()
+            _check(
+                _lib.pc_simulator_trace_query(
+                    self._handle,
+                    trace_index,
+                    entries,
+                    entry_count.value,
+                    ct.byref(entry_count),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            traces.append(
+                StrategyTrace(
+                    tuple(
+                        TraceEntry(
+                            row.step_index,
+                            _decode(row.node_id),
+                            row.node_kind,
+                            row.action_type,
+                            bool(row.action_applied),
+                            _decode(row.matched_edge_id),
+                            row.cumulative_actions,
+                            row.known_cumulative_cost,
+                            bool(row.cost_complete),
+                            _TERMINAL_NAMES.get(row.terminal_kind),
+                            row.failure_reason,
+                            Item(self._session, _copy_item_state(row.item)),
+                        )
+                        for row in entries[: entry_count.value]
+                    )
+                )
+            )
+        return tuple(traces)
+
+    def examples(self, terminal_kind: str) -> tuple[SimulationExample, ...]:
+        try:
+            kind = _TERMINAL_KINDS[terminal_kind]
+        except KeyError as exc:
+            raise ValueError(f"unknown terminal kind: {terminal_kind!r}") from exc
+        count = ct.c_uint32()
+        error = _error()
+        _check(
+            _lib.pc_simulator_get_example_count(
+                self._handle, kind, ct.byref(count), ct.byref(error)
+            ),
+            error,
+        )
+        examples: list[SimulationExample] = []
+        for index in range(count.value):
+            native = _SimulationExample()
+            error = _error()
+            _check(
+                _lib.pc_simulator_example_query(
+                    self._handle,
+                    kind,
+                    index,
+                    ct.byref(native),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            examples.append(
+                SimulationExample(
+                    _TERMINAL_NAMES[native.terminal_kind],
+                    native.failure_reason,
+                    _decode(native.terminal_node_id),
+                    native.action_count,
+                    native.known_total_cost,
+                    bool(native.cost_complete),
+                    Item(self._session, _copy_item_state(native.item)),
+                )
+            )
+        return tuple(examples)
+
+    @property
+    def failure_summaries(self) -> tuple[dict[str, int | str], ...]:
+        count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_simulator_failure_summary_query(
+            self._handle, None, 0, ct.byref(count), ct.byref(error)
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        rows = (_FailureSummaryEntry * max(1, count.value))()
+        error = _error()
+        _check(
+            _lib.pc_simulator_failure_summary_query(
+                self._handle,
+                rows,
+                count.value,
+                ct.byref(count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return tuple(
+            {
+                "failure_reason": row.failure_reason,
+                "node_id": _decode(row.node_id),
+                "detail": _decode(row.detail),
+                "count": row.count,
+            }
+            for row in rows[: count.value]
+        )
+
+    @property
+    def missing_prices(self) -> dict[str, int]:
+        count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_simulator_missing_price_query(
+            self._handle, None, 0, ct.byref(count), ct.byref(error)
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        rows = (_PriceKeyEntry * max(1, count.value))()
+        error = _error()
+        _check(
+            _lib.pc_simulator_missing_price_query(
+                self._handle,
+                rows,
+                count.value,
+                ct.byref(count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return {
+            _decode(row.key): row.missing_count for row in rows[: count.value]
+        }
+
+    def run(
+        self,
+        options: SimulationOptions,
+        *,
+        chunk_size: int = 10_000,
+    ) -> SimulationResult:
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        while True:
+            progress = self.run_chunk(options, chunk_size)
+            if progress.finished:
+                break
+        return SimulationResult(
+            self.summary,
+            self.traces,
+            self.examples("success"),
+            self.examples("failure"),
+            self.examples("stop"),
+            self.failure_summaries,
+            self.missing_prices,
+        )
 
 
 class ActionContext(_OwnedHandle):
@@ -910,3 +1489,16 @@ def load_data(path: str | os.PathLike[str]) -> Data:
         error,
     )
     return Data(handle)
+
+
+def load_economy(economy: str | Mapping[str, Any]) -> Economy:
+    encoded = _json_bytes(economy)
+    handle = _handle()
+    error = _error()
+    _check(
+        _lib.pc_economy_load_json(
+            encoded, len(encoded), ct.byref(handle), ct.byref(error)
+        ),
+        error,
+    )
+    return Economy(handle)

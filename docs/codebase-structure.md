@@ -564,6 +564,11 @@ pc_result pc_simulator_failure_summary_query(
 void pc_simulator_destroy(pc_simulator_handle simulator);
 ```
 
+The implemented declarations and result structs live in
+`engine/include/poecraft/simulator.h`. Economy v1 uses chaos-equivalent prices
+with basic operation keys, `essence:<metadata-key>`,
+`fossil:<metadata-key>`, and `resonator:<socket-count>`.
+
 Public structs should begin with `struct_size` and `abi_version` fields so newer callers and libraries can reject incompatible layouts cleanly.
 
 `pc_error_info` should be caller-owned and contain fixed-size code/message storage rather than engine-owned string pointers.

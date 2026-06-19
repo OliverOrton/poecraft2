@@ -32,37 +32,46 @@ export class PcStash extends HTMLElement {
             list.innerHTML = '<p class="pc-empty">No saved items yet. Save one from an emulator.</p>';
             return;
         }
-        list.innerHTML = records
-            .map(
-                (record) => `
-                <div class="pc-stash-item" data-id="${record.id}">
-                    <div class="pc-stash-meta">
-                        <span class="pc-stash-name">${record.name}</span>
-                        <span class="pc-stash-base">${baseLabel(record.base)} · iLvl ${record.itemLevel}</span>
-                    </div>
-                    <div class="pc-stash-actions">
-                        <button data-act="open">Edit</button>
-                        <button data-act="copy">Import copy</button>
-                        <button data-act="delete">Delete</button>
-                    </div>
-                </div>`,
-            )
-            .join("");
+        list.replaceChildren(
+            ...records.map((record) => {
+                const item = document.createElement("div");
+                item.className = "pc-stash-item";
 
-        const byId = new Map(records.map((record) => [record.id, record]));
-        list.querySelectorAll<HTMLButtonElement>("button[data-act]").forEach((button) => {
-            button.addEventListener("click", () => {
-                const id = button.closest<HTMLElement>(".pc-stash-item")!.dataset.id!;
-                const record = byId.get(id)!;
-                void this.handle(button.dataset.act!, record);
-            });
-        });
+                const meta = document.createElement("div");
+                meta.className = "pc-stash-meta";
+                const name = document.createElement("span");
+                name.className = "pc-stash-name";
+                name.textContent = record.name;
+                const base = document.createElement("span");
+                base.className = "pc-stash-base";
+                base.textContent = `${baseLabel(record.base)} · iLvl ${record.itemLevel}`;
+                meta.append(name, base);
+
+                const actions = document.createElement("div");
+                actions.className = "pc-stash-actions";
+                for (const [action, label] of [
+                    ["open", "Edit"],
+                    ["copy", "Import copy"],
+                    ["delete", "Delete"],
+                ] as const) {
+                    const button = document.createElement("button");
+                    button.textContent = label;
+                    button.addEventListener("click", () => {
+                        void this.handle(action, record);
+                    });
+                    actions.appendChild(button);
+                }
+                item.append(meta, actions);
+                return item;
+            }),
+        );
     }
 
     private async handle(action: string, record: StashRecord): Promise<void> {
         const snapshot = {
             base: record.base,
             itemLevel: record.itemLevel,
+            rarity: record.rarity,
             state: record.state,
         };
         if (action === "open") {

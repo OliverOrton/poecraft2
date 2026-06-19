@@ -56,12 +56,23 @@ build. Standard fossil multipliers stack in fixed point; Sanctified Fossil
 remains explicitly unsupported until its special level/lucky behavior is
 implemented.
 
+Phase 8 provides the WebAssembly facade, worker runtime, progress/cancellation
+protocol, and headless cross-target checks. Phase 9 provides the Dockview
+workspace, real WASM-backed Emulator slice, Stash/manual-save model, and
+recovery persistence. Phase 10 provides the native compiled strategy graph
+simulator, immutable economy snapshots, run-wide limits, retained traces and
+representative items, aggregated failures, and matching C/Python/WASM access.
+
 Python binding smoke example:
 
 ```powershell
 $env:PYTHONPATH = "$PWD/bindings/python"
 py -3 -c "from poecraft_engine import load_data; d=load_data('data/compiled/current'); s=d.create_session('Metadata/Items/Armours/BodyArmours/BodyInt17', 86); c=s.create_action_context(); print(c.run_batch(s.create_item(), {'type':'alchemy'}, 1000).summary)"
 ```
+
+The Python binding also exposes `Session.compile_strategy`,
+`load_economy`, and `Strategy.create_simulator`; all graph execution remains in
+the native engine.
 
 Build a self-contained Python wheel containing the native library:
 

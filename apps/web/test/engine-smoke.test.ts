@@ -80,6 +80,55 @@ let dataId: number;
 let sessionId: number;
 let contextId: number;
 
+function repeatStrategy(): Record<string, unknown> {
+    return {
+        version: "v1",
+        name: "Chaos until three prefixes",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "rare",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "chaos",
+                kind: "operation",
+                operation: { type: "chaos", params: {} },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "chaos",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "done",
+                from: "chaos",
+                to: "success",
+                priority: 0,
+                condition: {
+                    type: "prefix_count_range",
+                    min: 3,
+                    max: 3,
+                },
+            },
+            {
+                id: "repeat",
+                from: "chaos",
+                to: "chaos",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
 test("API shape: ABI version is current", async () => {
     assert.equal(client.getAbiVersion(), 1);
 });
@@ -155,33 +204,56 @@ test("WASM debug pool matches the native spec fixtures", async () => {
     await client.closeItem(item);
 });
 
-test("strategy run reports progress and aggregates a batch", async () => {
-    const template = await client.createItem(sessionId, { rarity: "normal" });
+test("native strategy run reports progress, traces, and economy cost", async () => {
+    const strategy = await client.compileStrategy(sessionId, repeatStrategy());
+    const economy = await client.loadEconomy({
+        version: "v1",
+        prices: { chaos: 2 },
+    });
+    const simulator = await client.createSimulator(
+        sessionId,
+        strategy,
+        economy,
+    );
     const progress: number[] = [];
     const result = await client.runStrategy(
-        contextId,
-        template,
-        { type: "alchemy" },
-        2000,
+        simulator,
+        {
+            target_runs: 2000,
+            seed: 42,
+            max_actions_per_run: 100,
+            retained_trace_count: 3,
+            retained_success_count: 2,
+        },
         { chunkSize: 500, onProgress: (p) => progress.push(p.done) },
     );
     assert.equal(result.cancelled, false);
-    assert.equal(result.done, 2000);
-    assert.equal(result.summary.item_count, 2000);
-    assert.equal(result.summary.applied_count, 2000);
+    assert.equal(result.progress.completed_runs, 2000);
+    assert.equal(result.summary.success_count, 2000);
+    assert.ok(result.summary.total_actions > 2000);
+    assert.equal(result.summary.cost_status, "complete");
+    assert.equal(result.traces.length, 3);
+    assert.equal(result.traces[0].entries[0].matched_edge_id, "begin");
+    assert.equal(result.examples.success.length, 2);
     assert.ok(progress.length >= 2, "expected multiple progress callbacks");
     assert.equal(progress.at(-1), 2000);
-    await client.closeItem(template);
+    await client.closeSimulator(simulator);
+    await client.closeEconomy(economy);
+    await client.closeStrategy(strategy);
 });
 
 test("long strategy run cancels promptly via AbortSignal", async () => {
-    const template = await client.createItem(sessionId, { rarity: "normal" });
+    const strategy = await client.compileStrategy(sessionId, repeatStrategy());
+    const simulator = await client.createSimulator(sessionId, strategy);
     const controller = new AbortController();
     const result = await client.runStrategy(
-        contextId,
-        template,
-        { type: "alchemy" },
-        5_000_000,
+        simulator,
+        {
+            target_runs: 5_000_000,
+            seed: 7,
+            max_actions_per_run: 100,
+            retained_trace_count: 1,
+        },
         {
             chunkSize: 250,
             signal: controller.signal,
@@ -189,9 +261,36 @@ test("long strategy run cancels promptly via AbortSignal", async () => {
         },
     );
     assert.equal(result.cancelled, true);
-    assert.ok(result.done < 5_000_000, "cancelled run should stop early");
-    assert.ok(result.done > 0, "at least one chunk should have run");
-    await client.closeItem(template);
+    assert.ok(
+        result.progress.completed_runs < 5_000_000,
+        "cancelled run should stop early",
+    );
+    assert.ok(
+        result.progress.completed_runs > 0,
+        "at least one chunk should have run",
+    );
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
+});
+
+test("an already-aborted strategy run performs no simulations", async () => {
+    const strategy = await client.compileStrategy(sessionId, repeatStrategy());
+    const simulator = await client.createSimulator(sessionId, strategy);
+    const controller = new AbortController();
+    controller.abort();
+    const result = await client.runStrategy(
+        simulator,
+        {
+            target_runs: 1000,
+            max_actions_per_run: 100,
+        },
+        { signal: controller.signal },
+    );
+    assert.equal(result.cancelled, true);
+    assert.equal(result.progress.completed_runs, 0);
+    assert.equal(result.summary.completed_runs, 0);
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
 });
 
 // Wire the shared client into the runner before executing.

@@ -157,6 +157,16 @@ static std::shared_ptr<DataImpl> build_data_impl(
         data->item_class_index_by_id[data->item_class_global_ids[i]] = i;
     }
 
+    // --- exclusivity groups -------------------------------------------------
+    const Value& groups = game.at("groups");
+    read_u32(groups, "key_string_ids", data->group_key_sids);
+    require(data->group_key_sids.size() == data->count_groups,
+            "groups arrays inconsistent");
+    data->group_id_by_key.reserve(data->group_key_sids.size());
+    for (std::uint32_t i = 0; i < data->group_key_sids.size(); ++i) {
+        data->group_id_by_key.emplace(data->string_at(data->group_key_sids[i]), i);
+    }
+
     // --- base items ---------------------------------------------------------
     const Value& bases = game.at("base_items");
     data->base_count = read_count(bases);
@@ -214,8 +224,10 @@ static std::shared_ptr<DataImpl> build_data_impl(
                 data->mod_influence_code.size() == data->mod_count,
             "mod parallel arrays inconsistent");
     data->mod_pos_by_global_id.reserve(data->mod_count);
+    data->mod_pos_by_key.reserve(data->mod_count);
     for (std::uint32_t i = 0; i < data->mod_count; ++i) {
         data->mod_pos_by_global_id.emplace(data->mod_global_ids[i], i);
+        data->mod_pos_by_key.emplace(data->string_at(data->mod_key_sid[i]), i);
     }
 
     // ordered spawn/generation weight rows

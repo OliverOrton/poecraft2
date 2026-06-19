@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     run_data_loader_tests(artifact_dir);
     run_session_builder_tests(artifact_dir, fixtures_dir);
     run_action_tests(artifact_dir);
+    run_simulator_tests(artifact_dir);
 
     std::printf("engine tests: %d checks, %d failures\n", pctest::g_checks,
                 pctest::g_failures);

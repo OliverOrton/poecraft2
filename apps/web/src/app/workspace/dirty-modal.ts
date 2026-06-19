@@ -11,13 +11,15 @@ export function openDirtyModal(name: string): Promise<DirtyChoice> {
         overlay.className = "pc-modal-overlay";
         overlay.innerHTML = `
             <div class="pc-modal" role="dialog" aria-modal="true">
-                <p>“${name}” has unsaved changes.</p>
+                <p class="pc-modal-message"></p>
                 <div class="pc-modal-actions">
                     <button data-choice="save">Save</button>
                     <button data-choice="discard">Discard</button>
                     <button data-choice="cancel">Cancel</button>
                 </div>
             </div>`;
+        overlay.querySelector(".pc-modal-message")!.textContent =
+            `“${name}” has unsaved changes.`;
 
         const finish = (choice: DirtyChoice): void => {
             overlay.remove();

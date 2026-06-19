@@ -17,6 +17,7 @@ import {
     EngineError,
     ModInfo,
     PoolDebug,
+    SimulationOptions,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -33,9 +34,10 @@ interface Pending {
     resolve: (value: unknown) => void;
     reject: (reason: unknown) => void;
     onProgress?: (progress: { done: number; total: number }) => void;
+    abortCleanup?: () => void;
 }
 
-export interface StrategyOptions {
+export interface StrategyRunOptions {
     chunkSize?: number;
     onProgress?: (progress: { done: number; total: number }) => void;
     signal?: AbortSignal;
@@ -97,6 +99,7 @@ export class EngineClient {
             return;
         }
         this.pending.delete(message.id);
+        pending.abortCleanup?.();
         if (message.ok) {
             pending.resolve(message.result);
         } else {
@@ -121,19 +124,22 @@ export class EngineClient {
         await this.ready;
         const id = this.nextId++;
         return new Promise<T>((resolve, reject) => {
-            this.pending.set(id, {
+            const pending: Pending = {
                 resolve: resolve as (value: unknown) => void,
                 reject,
                 onProgress: options?.onProgress,
-            });
+            };
+            this.pending.set(id, pending);
             const signal = options?.signal;
             if (signal) {
                 if (signal.aborted) {
                     this.transport.postMessage({ kind: "cancel", id });
                 } else {
-                    signal.addEventListener("abort", () =>
-                        this.transport.postMessage({ kind: "cancel", id }),
-                    );
+                    const onAbort = () =>
+                        this.transport.postMessage({ kind: "cancel", id });
+                    signal.addEventListener("abort", onAbort, { once: true });
+                    pending.abortCleanup = () =>
+                        signal.removeEventListener("abort", onAbort);
                 }
             }
             this.transport.postMessage(
@@ -285,18 +291,55 @@ export class EngineClient {
         });
     }
 
-    /** Apply an action to `count` independent copies of the item, returning the
-     * aggregate summary. Reports progress and can be cancelled via signal. */
+    async compileStrategy(session: number, strategy: unknown): Promise<number> {
+        const result = await this.call<{ strategy: number }>("compileStrategy", {
+            session,
+            strategy,
+        });
+        return result.strategy;
+    }
+
+    closeStrategy(strategy: number): Promise<void> {
+        return this.call<void>("closeStrategy", { strategy });
+    }
+
+    async loadEconomy(economy: unknown): Promise<number> {
+        const result = await this.call<{ economy: number }>("loadEconomy", {
+            economy,
+        });
+        return result.economy;
+    }
+
+    closeEconomy(economy: number): Promise<void> {
+        return this.call<void>("closeEconomy", { economy });
+    }
+
+    async createSimulator(
+        session: number,
+        strategy: number,
+        economy?: number,
+    ): Promise<number> {
+        const result = await this.call<{ simulator: number }>(
+            "createSimulator",
+            { session, strategy, economy },
+        );
+        return result.simulator;
+    }
+
+    closeSimulator(simulator: number): Promise<void> {
+        return this.call<void>("closeSimulator", { simulator });
+    }
+
+    /** Run the native compiled strategy in bounded chunks. The worker yields
+     * between chunks for progress and AbortSignal cancellation. */
     runStrategy(
-        context: number,
-        item: number,
-        action: CraftAction,
-        count: number,
-        options?: StrategyOptions,
+        simulator: number,
+        simulation: SimulationOptions,
+        options?: StrategyRunOptions,
     ): Promise<StrategyResult> {
         return this.call<StrategyResult>(
             "runStrategy",
-            { context, item, action, count, chunkSize: options?.chunkSize },
+            { simulator, options: simulation, chunkSize: options?.chunkSize },
             { onProgress: options?.onProgress, signal: options?.signal },
         );
     }

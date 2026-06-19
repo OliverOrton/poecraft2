@@ -25,6 +25,9 @@ extern "C" {
 typedef struct pc_data* pc_data_handle;
 typedef struct pc_session* pc_session_handle;
 typedef struct pc_action_context* pc_action_context_handle;
+typedef struct pc_strategy* pc_strategy_handle;
+typedef struct pc_economy* pc_economy_handle;
+typedef struct pc_simulator* pc_simulator_handle;
 
 uint32_t pc_abi_version(void);
 

@@ -16,7 +16,18 @@ const LAYOUT_KEY = "poecraft.layout";
 export interface ItemSnapshot {
     base: string;
     itemLevel: number;
+    /** Current engine rarity, used when reopening or rebuilding the item. */
+    rarity?: string;
     state: unknown;
+}
+
+/** Resolve current rarity from new snapshots or legacy state-only records. */
+export function itemSnapshotRarity(snapshot: ItemSnapshot): string {
+    if (snapshot.rarity) {
+        return snapshot.rarity;
+    }
+    const code = (snapshot.state as { rarity?: unknown } | null)?.rarity;
+    return code === 0 ? "normal" : code === 1 ? "magic" : "rare";
 }
 
 export interface StashRecord extends ItemSnapshot {

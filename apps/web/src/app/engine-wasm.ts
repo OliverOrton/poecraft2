@@ -16,6 +16,9 @@ import {
     EngineError,
     ModInfo,
     PoolDebug,
+    SimulationOptions,
+    SimulationProgress,
+    StrategyResult,
 } from "./engine-protocol";
 
 interface EngineModule {
@@ -205,6 +208,69 @@ export class EngineBindings {
             ["number", "number", "string", "number"],
             [context, item, JSON.stringify(action), count],
         ).summary as unknown as BatchSummary;
+    }
+
+    compileStrategy(session: number, strategy: unknown): number {
+        return this.callJson(
+            "pcw_strategy_compile",
+            ["number", "string"],
+            [session, JSON.stringify(strategy)],
+        ).strategy as number;
+    }
+
+    closeStrategy(strategy: number): void {
+        this.module.ccall("pcw_strategy_close", null, ["number"], [strategy]);
+    }
+
+    loadEconomy(economy: unknown): number {
+        return this.callJson("pcw_economy_open", ["string"], [
+            JSON.stringify(economy),
+        ]).economy as number;
+    }
+
+    closeEconomy(economy: number): void {
+        this.module.ccall("pcw_economy_close", null, ["number"], [economy]);
+    }
+
+    createSimulator(
+        session: number,
+        strategy: number,
+        economy?: number,
+    ): number {
+        return this.callJson(
+            "pcw_simulator_open",
+            ["number", "number", "number"],
+            [session, strategy, economy ?? 0],
+        ).simulator as number;
+    }
+
+    closeSimulator(simulator: number): void {
+        this.module.ccall("pcw_simulator_close", null, ["number"], [simulator]);
+    }
+
+    runSimulatorChunk(
+        simulator: number,
+        options: SimulationOptions,
+        maxCompletedRuns: number,
+    ): SimulationProgress {
+        return this.callJson(
+            "pcw_simulator_run_chunk",
+            ["number", "string", "number"],
+            [simulator, JSON.stringify(options), maxCompletedRuns],
+        ).progress as unknown as SimulationProgress;
+    }
+
+    simulatorResult(simulator: number): Omit<StrategyResult, "cancelled" | "progress"> {
+        const { ok, ...result } = this.callJson(
+            "pcw_simulator_result",
+            ["number"],
+            [simulator],
+        );
+        void ok;
+        return result as unknown as Omit<
+            StrategyResult,
+            "cancelled" | "progress"
+        >;
     }
 
     debugPool(

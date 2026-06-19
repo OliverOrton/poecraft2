@@ -5,7 +5,12 @@ import json
 import unittest
 from pathlib import Path
 
-from poecraft_engine import EngineError, load_data
+from poecraft_engine import (
+    EngineError,
+    SimulationOptions,
+    load_data,
+    load_economy,
+)
 
 
 ARTIFACT = Path(
@@ -190,6 +195,84 @@ class BindingTests(unittest.TestCase):
             exalt = context.apply_batch(chaos.items, {"type": "exalt"})
             self.assertGreater(exalt.summary.applied_count, 0)
             self.assertTrue(all(item.explicit_count <= 6 for item in exalt.items))
+
+    def test_native_strategy_simulator(self):
+        strategy_json = {
+            "version": "v1",
+            "name": "Chaos until three prefixes",
+            "start_node_id": "start",
+            "base_state": {
+                "base_key": BASE,
+                "item_level": 86,
+                "rarity": "rare",
+            },
+            "nodes": [
+                {"id": "start", "kind": "start"},
+                {
+                    "id": "chaos",
+                    "kind": "operation",
+                    "operation": {"type": "chaos", "params": {}},
+                },
+                {"id": "success", "kind": "terminal", "terminal": "success"},
+            ],
+            "edges": [
+                {
+                    "id": "begin",
+                    "from": "start",
+                    "to": "chaos",
+                    "priority": 0,
+                    "condition": {"type": "always"},
+                },
+                {
+                    "id": "done",
+                    "from": "chaos",
+                    "to": "success",
+                    "priority": 0,
+                    "condition": {
+                        "type": "prefix_count_range",
+                        "min": 3,
+                        "max": 3,
+                    },
+                },
+                {
+                    "id": "repeat",
+                    "from": "chaos",
+                    "to": "chaos",
+                    "priority": 999,
+                    "is_default": True,
+                },
+            ],
+        }
+        with self.session.compile_strategy(strategy_json) as strategy:
+            with load_economy(
+                {"version": "v1", "prices": {"chaos": 2.0}}
+            ) as economy:
+                with strategy.create_simulator(economy) as simulator:
+                    result = simulator.run(
+                        SimulationOptions(
+                            target_runs=20,
+                            seed=42,
+                            max_actions_per_run=100,
+                            retained_trace_count=3,
+                            retained_success_count=2,
+                        ),
+                        chunk_size=7,
+                    )
+                    self.assertEqual(result.summary["success_count"], 20)
+                    self.assertGreater(result.summary["total_actions"], 20)
+                    self.assertEqual(result.summary["cost_status"], "complete")
+                    self.assertEqual(len(result.traces), 3)
+                    self.assertEqual(
+                        result.traces[0].entries[0].matched_edge_id, "begin"
+                    )
+                    self.assertEqual(
+                        result.traces[0].entries[-1].terminal_kind, "success"
+                    )
+                    self.assertEqual(len(result.success_examples), 2)
+                    self.assertEqual(
+                        result.success_examples[0].item._state.prefix_count, 3
+                    )
+                    self.assertEqual(result.missing_prices, {})
 
     def test_sanctified_is_explicitly_deferred(self):
         with self.session.create_action_context() as context:
