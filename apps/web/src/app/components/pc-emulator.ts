@@ -1,14 +1,13 @@
 /*
  * pc-emulator — an emulator document. Owns one engine session, action context,
- * and live item, and drives the craft bar, mod list, and debug weight table.
+ * and live item, and drives the craft bar, the item view, and the modifier-pool
+ * browser.
  *
  * Document lifecycle:
  *   - identified by a docId (the dockview panel id);
  *   - content auto-saved as an IndexedDB draft on every change (crash recovery);
  *   - dirty until saved to the Stash; reports dirty/title to the workspace;
  *   - can be saved, saved-as, or duplicated.
- *
- * Real WASM-backed slice: every control maps to an EngineClient call.
  */
 
 import { getEngine } from "../engine-service";
@@ -22,12 +21,12 @@ import {
     putDraft,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
-import { PcCombobox } from "./pc-combobox";
-import { PcModList, ModRow } from "./pc-mod-list";
-import { PcWeightTable } from "./pc-weight-table";
-import "./pc-combobox";
+import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
+import { PcModList, SlotMod } from "./pc-mod-list";
+import { PcModPool } from "./pc-mod-pool";
+import "./pc-base-picker";
 import "./pc-mod-list";
-import "./pc-weight-table";
+import "./pc-mod-pool";
 
 const ACTIONS: CraftAction["type"][] = [
     "transmute",
@@ -50,9 +49,7 @@ interface HistoryEntry {
     removed: number;
 }
 
-function baseLabel(path: string): string {
-    return path.split("/").pop() ?? path;
-}
+const REACH_KIND_CRAFTED = 2;
 
 export class PcEmulator extends HTMLElement {
     private client!: EngineClient;
@@ -62,15 +59,17 @@ export class PcEmulator extends HTMLElement {
     private docId = "";
     private base = DEFAULT_BASE;
     private itemLevel = 86;
-    private rarity = "rare";
-    private poolAction: CraftAction["type"] = "chaos";
+    private rarity = "normal";
 
     private session = 0;
     private context = 0;
     private item = 0;
     private history: HistoryEntry[] = [];
-    private modCache = new Map<number, ModInfo>();
+    private modCache: ModInfo[] = [];
+    private familyLabels = new Map<number, string>();
     private busy = false;
+    private pickerOpen = false;
+    private hasBase = false;
 
     private dirty = false;
     private savedRef: string | null = null;
@@ -119,8 +118,15 @@ export class PcEmulator extends HTMLElement {
         if (!this.bases.some((b) => b.path === this.base)) {
             this.base = this.bases[0]?.path ?? this.base;
         }
-        this.syncControls();
-        this.populateBaseList();
+        this.hasBase = Boolean(draft?.state);
+
+        if (!this.hasBase) {
+            this.pickerOpen = true;
+            this.renderShell();
+            this.setStatus("");
+            workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+            return;
+        }
 
         await this.openSession();
         if (this.disposed) {
@@ -156,8 +162,8 @@ export class PcEmulator extends HTMLElement {
     }
 
     disconnectedCallback(): void {
-        // Note: dockview also fires this during drag-between-groups, so we must
-        // not destroy persistent state here — the draft already holds it.
+        // Dockview also fires this during drag-between-groups; persistent state
+        // is in the draft already, so nothing to tear down here.
     }
 
     private get docTitle(): string {
@@ -176,7 +182,8 @@ export class PcEmulator extends HTMLElement {
             this.context = 0;
             this.session = 0;
         }
-        this.modCache.clear();
+        this.modCache = [];
+        this.familyLabels.clear();
         const session = await this.client.createSession(
             this.dataId,
             this.base,
@@ -194,6 +201,35 @@ export class PcEmulator extends HTMLElement {
         }
         this.session = session;
         this.context = context;
+        await this.cacheAllMods();
+    }
+
+    private async cacheAllMods(): Promise<void> {
+        const count = await this.client.modCount(this.session);
+        const cache: ModInfo[] = new Array(count);
+        // Resolve in parallel; the worker is single-threaded so the requests
+        // are serialised there, but this avoids a chain of awaits on the main
+        // thread and lets the worker dispatch them back-to-back.
+        await Promise.all(
+            Array.from({ length: count }, async (_, id) => {
+                cache[id] = await this.client.modInfo(this.session, id);
+            }),
+        );
+        if (this.disposed) {
+            return;
+        }
+        this.modCache = cache;
+        const labels = new Map<number, string>();
+        for (const info of cache
+            .slice()
+            .sort((a, b) => b.required_level - a.required_level)) {
+            if (labels.has(info.family_id)) continue;
+            labels.set(
+                info.family_id,
+                info.text_lines.join(" / ") || info.key,
+            );
+        }
+        this.familyLabels = labels;
     }
 
     private async rebuildSession(): Promise<void> {
@@ -202,6 +238,7 @@ export class PcEmulator extends HTMLElement {
         if (this.item) {
             await this.client.closeItem(this.item);
         }
+        this.rarity = "normal";
         this.item = await this.client.createItem(this.session, {
             rarity: this.rarity,
             withImplicits: true,
@@ -213,6 +250,7 @@ export class PcEmulator extends HTMLElement {
         if (this.item) {
             await this.client.closeItem(this.item);
         }
+        this.rarity = "normal";
         this.item = await this.client.createItem(this.session, {
             rarity: this.rarity,
             withImplicits: true,
@@ -232,6 +270,17 @@ export class PcEmulator extends HTMLElement {
         await this.markChanged();
     }
 
+    private async craftMod(key: string, side: "prefix" | "suffix"): Promise<void> {
+        await this.client.addMod(this.item, this.session, { key, side });
+        this.history.push({
+            action: `add ${side} ${key}`,
+            applied: true,
+            added: 1,
+            removed: 0,
+        });
+        await this.markChanged();
+    }
+
     private async markChanged(): Promise<void> {
         if (!this.initializing) {
             this.dirty = true;
@@ -244,7 +293,7 @@ export class PcEmulator extends HTMLElement {
     }
 
     private async snapshot(): Promise<ItemSnapshot> {
-        const info = await this.client.itemInfo(this.item);
+        const info = await this.client.itemInfo(this.item, this.session);
         return {
             base: this.base,
             itemLevel: this.itemLevel,
@@ -259,7 +308,7 @@ export class PcEmulator extends HTMLElement {
             base: this.base,
             itemLevel: this.itemLevel,
             rarity: this.rarity,
-            state: await this.client.exportItem(this.item),
+            state: this.item ? await this.client.exportItem(this.item) : null,
             history: this.history,
             savedRef: this.savedRef,
             savedName: this.savedName,
@@ -348,57 +397,107 @@ export class PcEmulator extends HTMLElement {
         }
     }
 
-    // --- mod resolution -----------------------------------------------------
-
-    private async resolveMod(id: number): Promise<ModInfo> {
-        const cached = this.modCache.get(id);
-        if (cached) {
-            return cached;
-        }
-        const info = await this.client.modInfo(this.session, id);
-        this.modCache.set(id, info);
-        return info;
-    }
-
-    private async toRows(ids: number[], fractured: Set<number>): Promise<ModRow[]> {
-        return Promise.all(
-            ids.map(async (id) => ({
-                key: (await this.resolveMod(id)).key,
-                fractured: fractured.has(id),
-            })),
-        );
-    }
-
     // --- refresh / render ---------------------------------------------------
 
     private async refresh(): Promise<void> {
-        const info = await this.client.itemInfo(this.item);
+        const info = await this.client.itemInfo(this.item, this.session);
+        this.rarity = info.rarity as string;
         const fracturedP = new Set(info.fractured_prefix_mod_ids as number[]);
         const fracturedS = new Set(info.fractured_suffix_mod_ids as number[]);
-        const [prefixes, suffixes, implicits] = await Promise.all([
-            this.toRows(info.prefix_mod_ids as number[], fracturedP),
-            this.toRows(info.suffix_mod_ids as number[], fracturedS),
-            this.toRows(info.implicit_mod_ids as number[], new Set()),
-        ]);
+        const prefixIds = info.prefix_mod_ids as number[];
+        const suffixIds = info.suffix_mod_ids as number[];
+        const implicitIds = info.implicit_mod_ids as number[];
+
+        const prefixes = prefixIds.map((id) => this.toSlot(id, fracturedP));
+        const suffixes = suffixIds.map((id) => this.toSlot(id, fracturedS));
+        const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
+
         this.modList.setModel({
             rarity: info.rarity as string,
             prefixes,
             suffixes,
             implicits,
+            maxPrefix: (info.max_prefix as number) ?? prefixes.length,
+            maxSuffix: (info.max_suffix as number) ?? suffixes.length,
         });
-        const pool = await this.client.debugPool(this.context, this.item, {
-            action: { type: this.poolAction },
+
+        const tab = this.modPool.getActiveTab();
+        const poolAction: CraftAction["type"] =
+            tab === "implicit" ? "chaos" : tab === "prefix" ? "chaos" : "chaos";
+        const pool =
+            tab === "implicit"
+                ? null
+                : await this.client.debugPool(this.context, this.item, {
+                      action: { type: poolAction },
+                  });
+        const poolWeights = new Map<number, number>();
+        if (pool) {
+            for (const entry of pool.entries) {
+                if (!entry.accepted) continue;
+                poolWeights.set(entry.session_mod_id, entry.final_weight);
+            }
+        }
+        const prefixOnItem = new Set(prefixIds);
+        const suffixOnItem = new Set(suffixIds);
+        const implicitOnItem = new Set(implicitIds);
+        const groupOnItem = new Set<number>();
+        for (const id of [...prefixIds, ...suffixIds]) {
+            const cached = this.modCache[id];
+            if (cached) groupOnItem.add(cached.primary_group_id);
+        }
+
+        this.modPool.setModel({
+            mods: this.modCache,
+            item: {
+                rarity: info.rarity as string,
+                prefixOnItem,
+                suffixOnItem,
+                implicitOnItem,
+                groupOnItem,
+                maxPrefix: (info.max_prefix as number) ?? prefixes.length,
+                maxSuffix: (info.max_suffix as number) ?? suffixes.length,
+            },
+            pool,
+            poolWeights,
         });
-        this.weightTable.setData(pool);
         this.renderHistory();
+    }
+
+    private toSlot(id: number, fractured: Set<number>): SlotMod {
+        const info = this.modCache[id];
+        if (!info) {
+            return {
+                sessionModId: id,
+                key: String(id),
+                displayName: "",
+                tierIndex: 0,
+                textLines: [],
+                classificationTags: [],
+                fractured: fractured.has(id),
+                crafted: false,
+            };
+        }
+        return {
+            sessionModId: id,
+            key: info.key,
+            displayName:
+                this.familyLabels.get(info.family_id) ||
+                info.text_lines.join(" / ") ||
+                info.key,
+            tierIndex: info.family_tier_index,
+            textLines: info.text_lines,
+            classificationTags: info.classification_tags,
+            fractured: fractured.has(id),
+            crafted: info.reach_kind === REACH_KIND_CRAFTED,
+        };
     }
 
     private get modList(): PcModList {
         return this.querySelector("pc-mod-list")!;
     }
 
-    private get weightTable(): PcWeightTable {
-        return this.querySelector("pc-weight-table")!;
+    private get modPool(): PcModPool {
+        return this.querySelector("pc-mod-pool")!;
     }
 
     private setStatus(text: string): void {
@@ -438,18 +537,7 @@ export class PcEmulator extends HTMLElement {
     }
 
     private syncControls(): void {
-        this.querySelector<HTMLInputElement>(".pc-ilvl")!.value = String(this.itemLevel);
-        this.querySelector<HTMLSelectElement>(".pc-rarity")!.value = this.rarity;
-        this.querySelector<HTMLSelectElement>(".pc-pool-action")!.value = this.poolAction;
         this.renderSavedName();
-    }
-
-    private populateBaseList(): void {
-        const combobox = this.querySelector<PcCombobox>("pc-combobox")!;
-        combobox.setOptions(
-            this.bases.map((base) => ({ value: base.path, label: baseLabel(base.path) })),
-        );
-        combobox.setValue(this.base);
     }
 
     private renderSavedName(): void {
@@ -460,19 +548,22 @@ export class PcEmulator extends HTMLElement {
     }
 
     private renderHistory(): void {
-        const el = this.querySelector(".pc-emu-history")!;
+        const el = this.querySelector(".pc-emu-history");
+        if (!el) return;
         if (this.history.length === 0) {
-            el.innerHTML = '<p class="pc-empty">No crafts yet.</p>';
+            el.innerHTML = '<li class="pc-empty">No crafts yet.</li>';
             return;
         }
         el.innerHTML = this.history
-            .map((entry, index) => {
+            .map((entry, index) => ({ entry, number: index + 1 }))
+            .reverse()
+            .map(({ entry, number }) => {
                 const detail = entry.applied
                     ? `+${entry.added} / -${entry.removed}`
                     : "no-op";
                 return `<li class="${entry.applied ? "" : "pc-history-noop"}">
-                    <span class="pc-history-n">${index + 1}</span>
-                    <span class="pc-history-action">${entry.action}</span>
+                    <span class="pc-history-n">${number}</span>
+                    <span class="pc-history-action">${escapeHtml(entry.action)}</span>
                     <span class="pc-history-detail">${detail}</span>
                 </li>`;
             })
@@ -480,22 +571,32 @@ export class PcEmulator extends HTMLElement {
     }
 
     private renderShell(): void {
+        if (this.pickerOpen) {
+            this.innerHTML = `
+                <div class="pc-emulator pc-emulator-picking">
+                    <pc-base-picker></pc-base-picker>
+                </div>`;
+            const picker = this.querySelector<PcBasePicker>("pc-base-picker")!;
+            picker.setBases(this.bases);
+            picker.setSelection(this.base, this.itemLevel);
+            picker.addEventListener("confirm", (event) => {
+                const detail = (event as CustomEvent<BasePickerSelection>).detail;
+                void this.guard(() => this.applyPickerSelection(detail));
+            });
+            picker.addEventListener("cancel", () => {
+                if (this.hasBase) {
+                    this.pickerOpen = false;
+                    this.renderShell();
+                    this.afterPickerClose();
+                }
+            });
+            return;
+        }
         this.innerHTML = `
             <div class="pc-emulator">
                 <div class="pc-craft-bar">
-                    <label>Base
-                        <pc-combobox placeholder="Search bases…"></pc-combobox>
-                    </label>
-                    <label>iLvl
-                        <input class="pc-ilvl" type="number" min="1" max="100" value="${this.itemLevel}" />
-                    </label>
-                    <label>Rarity
-                        <select class="pc-rarity">
-                            <option value="normal">normal</option>
-                            <option value="magic">magic</option>
-                            <option value="rare">rare</option>
-                        </select>
-                    </label>
+                    <button data-cmd="change-base">Change base…</button>
+                    <span class="pc-emu-base">${escapeHtml(baseLabel(this.base))} · iLvl ${this.itemLevel}</span>
                     <button data-cmd="create">Create item</button>
                     <span class="pc-craft-actions">
                         ${ACTIONS.map((a) => `<button data-action="${a}">${a}</button>`).join("")}
@@ -513,48 +614,25 @@ export class PcEmulator extends HTMLElement {
                         <h3>Item</h3>
                         <pc-mod-list></pc-mod-list>
                     </section>
+                    <section class="pc-emu-pool">
+                        <pc-mod-pool allow-direct-craft></pc-mod-pool>
+                    </section>
                     <section class="pc-emu-side">
                         <h3>Craft history</h3>
                         <ul class="pc-emu-history"></ul>
-                        <h3>Candidate pool
-                            <select class="pc-pool-action">
-                                ${ACTIONS.map(
-                                    (a) =>
-                                        `<option value="${a}" ${a === this.poolAction ? "selected" : ""}>${a}</option>`,
-                                ).join("")}
-                            </select>
-                        </h3>
-                        <pc-weight-table></pc-weight-table>
                     </section>
                 </div>
             </div>`;
+        this.syncControls();
 
-        this.querySelector("pc-combobox")!.addEventListener("change", (event) => {
-            const value = (event as CustomEvent<{ value: string }>).detail.value;
-            void this.guard(async () => {
-                this.base = value;
-                await this.rebuildSession();
-            });
-        });
-        this.querySelector<HTMLInputElement>(".pc-ilvl")!.addEventListener("change", (event) => {
-            const value = Number((event.target as HTMLInputElement).value);
-            if (Number.isFinite(value) && value > 0) {
-                void this.guard(async () => {
-                    this.itemLevel = value;
-                    await this.rebuildSession();
-                });
-            }
-        });
-        this.querySelector<HTMLSelectElement>(".pc-rarity")!.addEventListener("change", (event) => {
-            this.rarity = (event.target as HTMLSelectElement).value;
-        });
-        this.querySelector<HTMLSelectElement>(".pc-pool-action")!.addEventListener("change", (event) => {
-            this.poolAction = (event.target as HTMLSelectElement).value as CraftAction["type"];
-            void this.guard(() => this.refresh());
-        });
         this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach((button) => {
             button.addEventListener("click", () => {
                 const cmd = button.dataset.cmd;
+                if (cmd === "change-base") {
+                    this.pickerOpen = true;
+                    this.renderShell();
+                    return;
+                }
                 void this.guard(async () => {
                     if (cmd === "create") await this.createItem();
                     else if (cmd === "save") await this.save();
@@ -568,7 +646,44 @@ export class PcEmulator extends HTMLElement {
                 void this.guard(() => this.applyAction(button.dataset.action as CraftAction["type"]));
             });
         });
+        this.modPool.addEventListener("craft-mod", (event) => {
+            const detail = (event as CustomEvent<{ key: string; side: "prefix" | "suffix" }>).detail;
+            void this.guard(() => this.craftMod(detail.key, detail.side));
+        });
+        this.modPool.addEventListener("tab-change", () => {
+            void this.guard(() => this.refresh());
+        });
     }
+
+    private async applyPickerSelection(sel: BasePickerSelection): Promise<void> {
+        this.base = sel.base;
+        this.itemLevel = sel.itemLevel;
+        const firstTime = !this.hasBase;
+        this.hasBase = true;
+        this.pickerOpen = false;
+        this.renderShell();
+        await this.rebuildSession();
+        if (firstTime) {
+            this.initializing = false;
+        }
+        this.afterPickerClose();
+    }
+
+    private afterPickerClose(): void {
+        // Re-attach mod-pool listeners are already set up in renderShell().
+    }
+}
+
+function baseLabel(path: string): string {
+    return path.split("/").pop() ?? path;
+}
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 }
 
 customElements.define("pc-emulator", PcEmulator);

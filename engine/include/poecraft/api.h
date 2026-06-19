@@ -92,6 +92,15 @@ pc_result pc_data_get_base_path(
     int32_t* out_session_support,
     pc_error_info* out_error);
 
+/* Display name and item-class key for a base, both owned by data. Useful for
+ * picker UIs. Either out pointer may be null. */
+pc_result pc_data_get_base_display(
+    pc_data_handle data,
+    uint32_t base_index,
+    const char** out_name,
+    const char** out_item_class_key,
+    pc_error_info* out_error);
+
 /*
  * Validate provisional fixed capacities against the loaded dataset. The report
  * records the maximum observed value for each capacity so the ABI can be

@@ -321,6 +321,38 @@ pc_result pc_data_get_base_path(
     return PC_RESULT_OK;
 }
 
+pc_result pc_data_get_base_display(
+    pc_data_handle data,
+    uint32_t base_index,
+    const char** out_name,
+    const char** out_item_class_key,
+    pc_error_info* out_error) {
+    if (data == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const poecraft::DataImpl& d = *data->impl;
+    if (base_index >= d.base_count) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "base index out of range");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (out_name != nullptr) {
+        *out_name = d.string_at(d.base_name_sid[base_index]).c_str();
+    }
+    if (out_item_class_key != nullptr) {
+        const auto it = d.item_class_index_by_id.find(
+            d.base_item_class_id[base_index]);
+        if (it != d.item_class_index_by_id.end()) {
+            *out_item_class_key =
+                d.string_at(d.item_class_key_sid[it->second]).c_str();
+        } else {
+            *out_item_class_key = "";
+        }
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result pc_data_check_capacities(
     pc_data_handle data,
     pc_capacity_report* out_report,
@@ -519,9 +551,56 @@ pc_result pc_session_get_mod_info(
     out_info->reach_influence = s.reach_influence[session_mod_id];
     out_info->reach_via = s.reach_via[session_mod_id].c_str();
     out_info->primary_group_id = s.primary_group[session_mod_id];
+    out_info->family_id =
+        session_mod_id < s.family_id.size() ? s.family_id[session_mod_id] : 0;
     out_info->required_level = s.required_level[session_mod_id];
+    const std::uint32_t group = s.primary_group[session_mod_id];
+    out_info->group_display_name =
+        group < d.group_display_name_sids.size()
+            ? d.string_at(d.group_display_name_sids[group]).c_str()
+            : "";
+    out_info->family_tier_index =
+        session_mod_id < s.family_tier_index.size()
+            ? s.family_tier_index[session_mod_id]
+            : 0;
+    const auto& lines = d.mod_text_line_ptrs[p];
+    out_info->text_line_count = static_cast<std::uint32_t>(lines.size());
+    out_info->text_lines = lines.empty() ? nullptr : lines.data();
+    const auto& tags = s.classification_tag_name_ptrs[session_mod_id];
+    out_info->classification_tag_count =
+        static_cast<std::uint32_t>(tags.size());
+    out_info->classification_tags = tags.empty() ? nullptr : tags.data();
     clear_error(out_error);
     return PC_RESULT_OK;
+}
+
+pc_result pc_session_item_max_prefix(
+    pc_session_handle session,
+    const pc_item_state* item,
+    uint32_t* out_max,
+    pc_error_info* out_error) {
+    if (session == nullptr || item == nullptr || out_max == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const poecraft::SessionImpl& s = *session->impl;
+    if (item->rarity == PC_RARITY_NORMAL) {
+        *out_max = 0;
+    } else if (item->rarity == PC_RARITY_MAGIC) {
+        *out_max = 1;
+    } else {
+        *out_max = s.rare_affix_cap;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_session_item_max_suffix(
+    pc_session_handle session,
+    const pc_item_state* item,
+    uint32_t* out_max,
+    pc_error_info* out_error) {
+    return pc_session_item_max_prefix(session, item, out_max, out_error);
 }
 
 pc_result pc_session_dump_effective_tags(

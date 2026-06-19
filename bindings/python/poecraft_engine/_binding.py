@@ -223,7 +223,14 @@ class _ModInfo(ct.Structure):
         ("reach_influence", ct.c_int32),
         ("reach_via", ct.c_char_p),
         ("primary_group_id", ct.c_uint32),
+        ("family_id", ct.c_uint32),
         ("required_level", ct.c_uint32),
+        ("group_display_name", ct.c_char_p),
+        ("family_tier_index", ct.c_uint32),
+        ("text_line_count", ct.c_uint32),
+        ("text_lines", ct.POINTER(ct.c_char_p)),
+        ("classification_tag_count", ct.c_uint32),
+        ("classification_tags", ct.POINTER(ct.c_char_p)),
     ]
 
 
@@ -672,7 +679,12 @@ class ModInfo:
     reach_influence: int
     reach_via: str
     primary_group_id: int
+    family_id: int
     required_level: int
+    group_display_name: str
+    family_tier_index: int
+    text_lines: tuple[str, ...]
+    classification_tags: tuple[str, ...]
 
     @property
     def side(self) -> str | None:
@@ -910,6 +922,22 @@ class Session(_OwnedHandle):
             ),
             error,
         )
+        lines: list[str] = []
+        for index in range(native.text_line_count):
+            ptr = native.text_lines[index] if native.text_lines else None
+            if ptr is None:
+                continue
+            lines.append(_decode(ptr))
+        tags: list[str] = []
+        for index in range(native.classification_tag_count):
+            ptr = (
+                native.classification_tags[index]
+                if native.classification_tags
+                else None
+            )
+            if ptr is None:
+                continue
+            tags.append(_decode(ptr))
         return ModInfo(
             native.session_mod_id,
             native.global_mod_id,
@@ -919,7 +947,12 @@ class Session(_OwnedHandle):
             native.reach_influence,
             _decode(native.reach_via),
             native.primary_group_id,
+            native.family_id,
             native.required_level,
+            _decode(native.group_display_name),
+            native.family_tier_index,
+            tuple(lines),
+            tuple(tags),
         )
 
     def find_mod(self, key: str) -> ModInfo:

@@ -238,8 +238,8 @@ export class EngineClient {
         return this.call<void>("closeItem", { item });
     }
 
-    itemInfo(item: number): Promise<Record<string, unknown>> {
-        return this.call("itemInfo", { item });
+    itemInfo(item: number, session = 0): Promise<Record<string, unknown>> {
+        return this.call("itemInfo", { item, session });
     }
 
     async exportItem(item: number): Promise<unknown> {

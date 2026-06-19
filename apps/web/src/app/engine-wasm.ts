@@ -161,8 +161,12 @@ export class EngineBindings {
         this.module.ccall("pcw_item_close", null, ["number"], [item]);
     }
 
-    itemInfo(item: number): Record<string, unknown> {
-        const { ok, ...rest } = this.callJson("pcw_item_info", ["number"], [item]);
+    itemInfo(item: number, session = 0): Record<string, unknown> {
+        const { ok, ...rest } = this.callJson(
+            "pcw_item_info",
+            ["number", "number"],
+            [item, session],
+        );
         void ok;
         return rest;
     }

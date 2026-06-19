@@ -162,6 +162,10 @@ static std::shared_ptr<DataImpl> build_data_impl(
     read_u32(groups, "key_string_ids", data->group_key_sids);
     require(data->group_key_sids.size() == data->count_groups,
             "groups arrays inconsistent");
+    read_u32(groups, "display_name_string_ids", data->group_display_name_sids);
+    require(
+        data->group_display_name_sids.size() == data->count_groups,
+        "groups display_name_string_ids length mismatch");
     data->group_id_by_key.reserve(data->group_key_sids.size());
     for (std::uint32_t i = 0; i < data->group_key_sids.size(); ++i) {
         data->group_id_by_key.emplace(data->string_at(data->group_key_sids[i]), i);
@@ -216,6 +220,13 @@ static std::shared_ptr<DataImpl> build_data_impl(
             "mod group_offsets must be mod_count + 1");
     require(data->mod_group_ids_flat.size() == data->mod_group_offsets.back(),
             "mod group_ids length must match group_offsets");
+    read_u32(mods, "text_line_offsets", data->mod_text_line_offsets);
+    read_u32(mods, "text_line_string_ids", data->mod_text_line_sids);
+    require(data->mod_text_line_offsets.size() == data->mod_count + 1,
+            "mod text_line_offsets must be mod_count + 1");
+    require(
+        data->mod_text_line_sids.size() == data->mod_text_line_offsets.back(),
+        "mod text_line_string_ids length must match offsets");
     require(data->mod_key_sid.size() == data->mod_count &&
                 data->mod_gen_type_code.size() == data->mod_count &&
                 data->mod_domain_code.size() == data->mod_count &&
@@ -249,9 +260,13 @@ static std::shared_ptr<DataImpl> build_data_impl(
     require(data->class_offsets.size() == data->mod_count + 1,
             "classification_tags offsets must be mod_count + 1");
 
-    read_u32(game.at("stats"), "offsets", data->stat_offsets);
+    const Value& stats = game.at("stats");
+    read_u32(stats, "offsets", data->stat_offsets);
+    read_u32(stats, "stat_key_string_ids", data->stat_key_sids);
     require(data->stat_offsets.size() == data->mod_count + 1,
             "stats offsets must be mod_count + 1");
+    require(data->stat_key_sids.size() == data->stat_offsets.back(),
+            "stats stat_key_string_ids length must match offsets");
 
     // --- bench options ------------------------------------------------------
     const Value* bench = game.find("bench_options");
@@ -308,6 +323,20 @@ static std::shared_ptr<DataImpl> build_data_impl(
             "base_items count disagrees with manifest");
     require(data->mod_count == data->count_mods,
             "mods count disagrees with manifest");
+
+    // Build stable c_str() pointer arrays for mod text lines. Strings are
+    // never reassigned after this point so the pointers stay valid for the
+    // lifetime of the shared DataImpl.
+    data->mod_text_line_ptrs.resize(data->mod_count);
+    for (std::uint32_t i = 0; i < data->mod_count; ++i) {
+        const std::uint32_t begin = data->mod_text_line_offsets[i];
+        const std::uint32_t end = data->mod_text_line_offsets[i + 1];
+        auto& slot = data->mod_text_line_ptrs[i];
+        slot.reserve(end - begin);
+        for (std::uint32_t j = begin; j < end; ++j) {
+            slot.push_back(data->string_at(data->mod_text_line_sids[j]).c_str());
+        }
+    }
 
     return data;
 }

@@ -556,6 +556,7 @@ void build_session(SessionImpl& session) {
     alloc_mask(session.delve_mask, session.words);
 
     session.class_offsets.assign(session.mod_count + 1, 0);
+    session.classification_tag_name_ptrs.resize(session.mod_count);
     session.group_offsets.assign(session.mod_count + 1, 0);
     for (std::uint32_t s = 0; s < session.mod_count; ++s) {
         const std::uint32_t p = session.global_index[s];
@@ -563,6 +564,11 @@ void build_session(SessionImpl& session) {
              ++i) {
             const std::uint32_t tag = d.class_tag_ids[i];
             session.class_tag_ids.push_back(tag);
+            const auto name = d.tag_name_by_id.find(tag);
+            if (name != d.tag_name_by_id.end()) {
+                session.classification_tag_name_ptrs[s].push_back(
+                    name->second.c_str());
+            }
             auto& mask = session.implicit_tag_masks[tag];
             if (mask.empty()) alloc_mask(mask, session.words);
             pc_bitset_set(mask.data(), s);
@@ -643,6 +649,63 @@ void build_session(SessionImpl& session) {
         for (std::uint32_t global : fossil_forced_globals[f]) {
             session.fossil_forced_mod_ids[f].push_back(
                 session.session_id_by_global_id.at(global));
+        }
+    }
+
+    // Build display families using the same identity as the old UI:
+    // exclusion group + ordered stat signature, separated by generation side
+    // and acquisition source. This must not replace primary_group for
+    // exclusivity checks.
+    session.family_id.assign(session.mod_count, 0);
+    std::unordered_map<std::string, std::uint32_t> family_by_signature;
+    for (std::uint32_t s = 0; s < session.mod_count; ++s) {
+        const std::uint32_t p = session.global_index[s];
+        std::vector<std::uint32_t> signature;
+        signature.reserve(
+            4 + (d.stat_offsets[p + 1] - d.stat_offsets[p]));
+        signature.push_back(session.primary_group[s]);
+        signature.push_back(
+            static_cast<std::uint32_t>(session.gen_type[s] + 2));
+        signature.push_back(
+            static_cast<std::uint32_t>(session.reach_kind[s] + 1));
+        signature.push_back(
+            static_cast<std::uint32_t>(session.reach_influence[s] + 2));
+        for (std::uint32_t i = d.stat_offsets[p]; i < d.stat_offsets[p + 1];
+             ++i) {
+            signature.push_back(d.stat_key_sids[i]);
+        }
+        const std::string key = signature_key(signature);
+        const auto [it, inserted] = family_by_signature.emplace(
+            key, static_cast<std::uint32_t>(family_by_signature.size()));
+        session.family_id[s] = it->second;
+        (void)inserted;
+    }
+
+    // Compute 1-based rank within each display family, ordered by required
+    // level descending. Ties get the same rank.
+    session.family_tier_index.assign(session.mod_count, 0);
+    {
+        std::unordered_map<std::uint32_t, std::vector<std::uint32_t>>
+            by_family;
+        for (std::uint32_t s = 0; s < session.mod_count; ++s) {
+            by_family[session.family_id[s]].push_back(s);
+        }
+        for (auto& [_, members] : by_family) {
+            std::sort(members.begin(), members.end(),
+                      [&](std::uint32_t a, std::uint32_t b) {
+                          return session.required_level[a] >
+                                 session.required_level[b];
+                      });
+            std::uint32_t rank = 0;
+            std::uint32_t last_level =
+                std::numeric_limits<std::uint32_t>::max();
+            for (std::uint32_t s : members) {
+                if (session.required_level[s] != last_level) {
+                    rank += 1;
+                    last_level = session.required_level[s];
+                }
+                session.family_tier_index[s] = rank;
+            }
         }
     }
 

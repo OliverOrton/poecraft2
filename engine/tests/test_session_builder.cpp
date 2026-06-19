@@ -36,6 +36,10 @@ struct ModRow {
     int gen_type = 0;
     int reach_kind = 0;
     int reach_influence = -1;
+    uint32_t primary_group = 0;
+    uint32_t family_id = 0;
+    uint32_t family_tier = 0;
+    uint32_t classification_tag_count = 0;
 };
 
 std::vector<ModRow> read_session_mods(pc_session_handle session) {
@@ -51,6 +55,18 @@ std::vector<ModRow> read_session_mods(pc_session_handle session) {
         rows[i].gen_type = info.generation_type;
         rows[i].reach_kind = info.reach_kind;
         rows[i].reach_influence = info.reach_influence;
+        rows[i].primary_group = info.primary_group_id;
+        rows[i].family_id = info.family_id;
+        rows[i].family_tier = info.family_tier_index;
+        rows[i].classification_tag_count = info.classification_tag_count;
+        PC_CHECK(info.family_tier_index > 0);
+        if (info.classification_tag_count > 0) {
+            PC_CHECK(info.classification_tags != nullptr);
+            for (uint32_t tag = 0; tag < info.classification_tag_count; ++tag) {
+                PC_CHECK(info.classification_tags[tag] != nullptr);
+                PC_CHECK(info.classification_tags[tag][0] != '\0');
+            }
+        }
     }
     return rows;
 }
@@ -97,6 +113,22 @@ void check_universe(pc_session_handle session, const std::string& fixture_dir) {
     PC_CHECK(mask_count(PC_MASK_CRAFTED) > 0);
     PC_CHECK(mask_count(PC_MASK_ESSENCE_ONLY) > 0);
     PC_CHECK(mask_count(PC_MASK_DELVE) > 0);
+
+    bool saw_classification_tags = false;
+    bool saw_multiple_families_in_one_exclusion_group = false;
+    for (std::size_t i = 0; i < rows.size(); ++i) {
+        saw_classification_tags =
+            saw_classification_tags || rows[i].classification_tag_count > 0;
+        for (std::size_t j = i + 1; j < rows.size(); ++j) {
+            if (rows[i].primary_group == rows[j].primary_group &&
+                rows[i].family_id != rows[j].family_id) {
+                saw_multiple_families_in_one_exclusion_group = true;
+                break;
+            }
+        }
+    }
+    PC_CHECK(saw_classification_tags);
+    PC_CHECK(saw_multiple_families_in_one_exclusion_group);
 
     // membership: (reach_via | gen | key)
     std::set<std::tuple<std::string, std::string, std::string>> actual;

@@ -145,6 +145,11 @@ test("create a session and an item", async () => {
     sessionId = await client.createSession(dataId, BASE, ITEM_LEVEL);
     contextId = await client.createContext(sessionId, 1);
     assert.ok((await client.modCount(sessionId)) > 0);
+    const firstMod = await client.modInfo(sessionId, 0);
+    assert.equal(typeof firstMod.family_id, "number");
+    assert.ok(firstMod.family_tier_index > 0);
+    assert.ok(Array.isArray(firstMod.text_lines));
+    assert.ok(Array.isArray(firstMod.classification_tags));
     const item = await client.createItem(sessionId, { rarity: "rare" });
     const info = await client.itemInfo(item);
     assert.equal(info.rarity, "rare");

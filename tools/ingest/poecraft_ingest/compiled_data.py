@@ -9,9 +9,10 @@ import sqlite3
 from typing import Any, Iterable
 
 from .engine_selection import database_manifest
+from .stat_translator import StatTranslator
 
 
-ARTIFACT_SCHEMA_VERSION = 2
+ARTIFACT_SCHEMA_VERSION = 3
 
 FLAG_ESSENCE_ONLY = 1 << 0
 FLAG_CRAFTED = 1 << 1
@@ -120,6 +121,48 @@ def _base_support(
     return "unsupported_domain", 0
 
 
+def _text_line_offsets(mod_text_lines: list[list[str]]) -> list[int]:
+    offsets = [0]
+    total = 0
+    for lines in mod_text_lines:
+        total += len(lines)
+        offsets.append(total)
+    return offsets
+
+
+def _load_translation_entries(
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for row in rows:
+        payload = row.get("source_json")
+        if not payload:
+            continue
+        try:
+            entries.append(json.loads(payload))
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
+def _resolve_group_display_names(
+    mods: list[dict[str, Any]],
+) -> dict[str, str]:
+    counts: dict[str, dict[str, int]] = {}
+    for row in mods:
+        group_key = str(row["group_key"])
+        name = row["name"]
+        if not name:
+            continue
+        counts.setdefault(group_key, {})
+        counts[group_key][name] = counts[group_key].get(name, 0) + 1
+    resolved: dict[str, str] = {}
+    for group_key, name_counts in counts.items():
+        best_name = max(name_counts.items(), key=lambda item: (item[1], item[0]))[0]
+        resolved[group_key] = best_name
+    return resolved
+
+
 def _build_full_payloads(
     connection: sqlite3.Connection,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, int], dict[str, Any]]:
@@ -178,6 +221,13 @@ def _build_full_payloads(
         """
         SELECT mod_id, ordinal, stat_key, min_value, max_value
         FROM mod_stat ORDER BY mod_id, ordinal
+        """,
+    )
+    stat_translation_rows = _query(
+        connection,
+        """
+        SELECT source_json FROM stat_translation
+        ORDER BY source_ordinal
         """,
     )
     spawn_weights = _query(
@@ -391,6 +441,33 @@ def _build_full_payloads(
     for row in cluster_notables:
         add_strings(row["key"], row["name"], row["jewel_stat_key"])
 
+    translator = StatTranslator()
+    translator.load(_load_translation_entries(stat_translation_rows))
+
+    stats_by_mod: dict[int, list[dict[str, Any]]] = {}
+    for row in mod_stats:
+        stats_by_mod.setdefault(int(row["mod_id"]), []).append(
+            {
+                "id": str(row["stat_key"]),
+                "min": row["min_value"],
+                "max": row["max_value"],
+            }
+        )
+    mod_text_lines: list[list[str]] = []
+    for row in mods:
+        lines = translator.translate_range(
+            stats_by_mod.get(int(row["mod_id"]), [])
+        )
+        if not lines and row["text"]:
+            lines = [str(row["text"])]
+        mod_text_lines.append(lines)
+        for line in lines:
+            add_strings(line)
+
+    group_display_names = _resolve_group_display_names(mods)
+    for value in group_display_names.values():
+        add_strings(value)
+
     string_values = sorted(strings)
     string_ids = {value: index for index, value in enumerate(string_values)}
 
@@ -599,6 +676,10 @@ def _build_full_payloads(
             "count": len(group_values),
             "group_ids": list(range(len(group_values))),
             "key_string_ids": [sid(value) for value in group_values],
+            "display_name_string_ids": [
+                sid(group_display_names.get(value, value))
+                for value in group_values
+            ],
         },
         "mods": {
             "count": len(mods),
@@ -642,6 +723,10 @@ def _build_full_payloads(
                 if row["special_kind"]
                 else -1
                 for row in mods
+            ],
+            "text_line_offsets": _text_line_offsets(mod_text_lines),
+            "text_line_string_ids": [
+                sid(line) for lines in mod_text_lines for line in lines
             ],
         },
         "spawn_weights": {
@@ -1048,7 +1133,7 @@ def _validate_parallel_arrays(
             "session_support_codes",
             "flags",
         ),
-        "groups": ("group_ids", "key_string_ids"),
+        "groups": ("group_ids", "key_string_ids", "display_name_string_ids"),
         "mods": (
             "global_mod_ids",
             "key_string_ids",
@@ -1148,6 +1233,15 @@ def _validate_parallel_arrays(
             mod_count,
             "group_offsets",
             ("group_ids",),
+        )
+    )
+    errors.extend(
+        _validate_offsets(
+            game_data,
+            "mods",
+            mod_count,
+            "text_line_offsets",
+            ("text_line_string_ids",),
         )
     )
     for section, fields in (

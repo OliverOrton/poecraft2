@@ -78,9 +78,16 @@ struct DataImpl {
     std::unordered_map<std::uint32_t, std::uint32_t> mod_pos_by_global_id;
     std::unordered_map<std::string, std::uint32_t> mod_pos_by_key;
 
-    // exclusivity-group stable keys
+    // exclusivity-group stable keys + human display labels
     std::vector<std::uint32_t> group_key_sids;
+    std::vector<std::uint32_t> group_display_name_sids;
     std::unordered_map<std::string, std::uint32_t> group_id_by_key;
+
+    // mod display text lines (one mod -> N pre-translated lines)
+    std::vector<std::uint32_t> mod_text_line_offsets;   // mod_count + 1
+    std::vector<std::uint32_t> mod_text_line_sids;      // flat
+    // stable c_str() pointers into `strings`, indexed by global mod position
+    std::vector<std::vector<const char*>> mod_text_line_ptrs;
 
     // ordered weight rows (first-match semantics, indexed by offsets)
     std::vector<std::uint32_t> spawn_offsets; // mod_count + 1
@@ -92,8 +99,9 @@ struct DataImpl {
     std::vector<std::uint32_t> class_offsets; // mod_count + 1
     std::vector<std::uint32_t> class_tag_ids;
 
-    // stats (capacity informational)
+    // stats (used for capacity checks and display-family identity)
     std::vector<std::uint32_t> stat_offsets; // mod_count + 1
+    std::vector<std::uint32_t> stat_key_sids; // flat
 
     // bench options needed to collect crafted mods for an item class
     std::vector<std::int32_t> bench_global_mod_ids;
@@ -199,6 +207,8 @@ struct SessionImpl {
     // targeting, fossil multipliers, and metamod blocking.
     std::vector<std::uint32_t> class_offsets; // mod_count + 1
     std::vector<std::uint32_t> class_tag_ids; // flat
+    // Stable c_str() pointers into DataImpl tag names, indexed by session mod.
+    std::vector<std::vector<const char*>> classification_tag_name_ptrs;
 
     // masks over dense session mod ids
     std::vector<std::uint64_t> universe_mask;
@@ -228,6 +238,13 @@ struct SessionImpl {
 
     // max affixes per side for a rare item: 2 for (abyss) jewels, else 3.
     std::uint8_t rare_affix_cap = 3;
+
+    // Display-family identity is primary exclusion group + ordered stat
+    // signature + generation side + acquisition source. It is deliberately
+    // distinct from the exclusion group used by crafting legality.
+    std::vector<std::uint32_t> family_id;
+    // Family tier ranks: 1 = highest required_level mod in the family.
+    std::vector<std::uint32_t> family_tier_index;
 };
 
 /* One weighted candidate. */

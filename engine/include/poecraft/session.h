@@ -110,6 +110,22 @@ pc_result pc_item_init(
     pc_item_state* out_item,
     pc_error_info* out_error);
 
+/* Session-aware affix caps. Honours jewel / abyss-jewel limits (rare = 2/2)
+ * unlike the static pc_item_max_prefix/pc_item_max_suffix helpers that always
+ * use 3 for rare. Returns 0 for normal, 1 for magic, and the session's rare
+ * cap for rare. */
+pc_result pc_session_item_max_prefix(
+    pc_session_handle session,
+    const pc_item_state* item,
+    uint32_t* out_max,
+    pc_error_info* out_error);
+
+pc_result pc_session_item_max_suffix(
+    pc_session_handle session,
+    const pc_item_state* item,
+    uint32_t* out_max,
+    pc_error_info* out_error);
+
 /* Human-readable item dump. Query-required-count buffer pattern (see
  * pc_data_debug_format). */
 pc_result pc_item_debug_format(
@@ -141,7 +157,25 @@ typedef struct pc_mod_info {
     int32_t reach_influence; /* influence enum code, or -1 */
     const char* reach_via;   /* "base" or "influence:<name>" */
     uint32_t primary_group_id;
+    /* Session-local display family. Unlike primary_group_id, this also
+     * includes the ordered stat signature, generation side, and acquisition
+     * source (base/influence/bench/essence/fossil). */
+    uint32_t family_id;
     uint32_t required_level;
+    /* Human display label for the primary group. Same lifetime as `key`. */
+    const char* group_display_name;
+    /* 1-based rank within the session-visible display family, ordered by
+     * required_level descending. 0 means unknown. */
+    uint32_t family_tier_index;
+    /* Pre-translated stat-text lines (e.g. "+(86-96) to maximum Life"). The
+     * array of C strings and each string are owned by the session and valid
+     * until it is destroyed. */
+    uint32_t text_line_count;
+    const char* const* text_lines;
+    /* Classification tags (RePoE implicit_tags), for UI/debug display and
+     * mechanic targeting. Owned by the session. */
+    uint32_t classification_tag_count;
+    const char* const* classification_tags;
 } pc_mod_info;
 
 typedef enum pc_mod_reach_kind {

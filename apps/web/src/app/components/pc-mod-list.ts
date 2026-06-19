@@ -1,55 +1,135 @@
 /*
- * pc-mod-list — presentational view of an item's mods, grouped into implicits,
- * prefixes, and suffixes. Fed a resolved view model by the document; does no
- * engine work itself.
+ * pc-mod-list — presentational view of an item: fixed prefix / suffix slot grid
+ * with in-game-style text. Empty slots stay in place as the item fills so the
+ * stepper-style emulator flow doesn't reflow on every craft.
+ *
+ * Implicits render above explicits as a free-form list (their count is fixed
+ * per base; we just show whatever the engine returned).
  */
 
-export interface ModRow {
+export interface SlotMod {
+    sessionModId: number;
     key: string;
-    fractured?: boolean;
+    displayName: string;
+    tierIndex: number;
+    textLines: string[];
+    classificationTags: string[];
+    fractured: boolean;
+    crafted: boolean;
 }
 
 export interface ModListModel {
     rarity: string;
-    implicits: ModRow[];
-    prefixes: ModRow[];
-    suffixes: ModRow[];
-}
-
-function rows(label: string, side: string, list: ModRow[]): string {
-    if (list.length === 0) {
-        return "";
-    }
-    const items = list
-        .map(
-            (row) =>
-                `<li class="pc-mod pc-mod-${side}">${row.key}${
-                    row.fractured ? ' <span class="pc-mod-tag">fractured</span>' : ""
-                }</li>`,
-        )
-        .join("");
-    return `<div class="pc-mod-group"><h4>${label}</h4><ul>${items}</ul></div>`;
+    implicits: SlotMod[];
+    prefixes: SlotMod[];
+    suffixes: SlotMod[];
+    maxPrefix: number;
+    maxSuffix: number;
 }
 
 export class PcModList extends HTMLElement {
     setModel(model: ModListModel): void {
         const explicitCount = model.prefixes.length + model.suffixes.length;
-        const empty =
-            explicitCount === 0 && model.implicits.length === 0
-                ? '<p class="pc-empty">No mods.</p>'
-                : "";
         this.innerHTML = `
             <div class="pc-mod-list">
-                <div class="pc-mod-header">
-                    <span class="pc-rarity-${model.rarity}">${model.rarity}</span>
+                <div class="pc-mod-list-header">
+                    <span class="pc-rarity pc-rarity-${model.rarity}">${model.rarity}</span>
                     <span class="pc-mod-count">${explicitCount} explicit · ${model.prefixes.length}P / ${model.suffixes.length}S</span>
                 </div>
-                ${rows("Implicits", "implicit", model.implicits)}
-                ${rows("Prefixes", "prefix", model.prefixes)}
-                ${rows("Suffixes", "suffix", model.suffixes)}
-                ${empty}
+                ${renderImplicits(model.implicits)}
+                ${renderSlotGroup("Prefixes", "prefix", model.prefixes, model.maxPrefix)}
+                ${renderSlotGroup("Suffixes", "suffix", model.suffixes, model.maxSuffix)}
             </div>`;
     }
+}
+
+function renderImplicits(mods: SlotMod[]): string {
+    if (mods.length === 0) return "";
+    return `
+        <div class="pc-mod-group">
+            <h4>Implicits</h4>
+            <ul class="pc-mod-slots">
+                ${mods.map((mod) => renderFilledSlot(mod, "implicit")).join("")}
+            </ul>
+        </div>`;
+}
+
+function renderSlotGroup(
+    title: string,
+    side: "prefix" | "suffix",
+    mods: SlotMod[],
+    capacity: number,
+): string {
+    if (capacity === 0) {
+        // Normal items have 0 slots — render nothing.
+        return "";
+    }
+    const slots: string[] = [];
+    for (let i = 0; i < capacity; i += 1) {
+        const mod = mods[i];
+        slots.push(mod ? renderFilledSlot(mod, side) : renderEmptySlot(side));
+    }
+    return `
+        <div class="pc-mod-group">
+            <h4>${title}</h4>
+            <ul class="pc-mod-slots">${slots.join("")}</ul>
+        </div>`;
+}
+
+function renderFilledSlot(mod: SlotMod, side: "prefix" | "suffix" | "implicit"): string {
+    const lines = mod.textLines.length > 0 ? mod.textLines : [mod.key];
+    const tagBits = mod.classificationTags.map(formatTag);
+    if (mod.crafted) tagBits.push("Crafted");
+    if (mod.fractured) tagBits.push("Fractured");
+    const sideTitle =
+        side === "implicit" ? "Implicit" : side === "prefix" ? "Prefix" : "Suffix";
+    const helper =
+        side === "implicit"
+            ? `${sideTitle} Modifier`
+            : `${sideTitle} Modifier "${escapeHtml(mod.displayName || mod.key)}" ${
+                  mod.tierIndex ? `(Tier: ${mod.tierIndex})` : ""
+              }`;
+    return `
+        <li class="pc-mod-slot pc-mod-${side} is-filled ${mod.crafted ? "is-crafted" : ""} ${
+        mod.fractured ? "is-fractured" : ""
+    }">
+            <div class="pc-mod-slot-helper">${helper}</div>
+            ${lines
+                .map(
+                    (line) =>
+                        `<div class="pc-mod-slot-line">${escapeHtml(line)}</div>`,
+                )
+                .join("")}
+            ${
+                tagBits.length > 0
+                    ? `<div class="pc-mod-slot-tags">${tagBits
+                          .map((tag) => `<span>${escapeHtml(tag)}</span>`)
+                          .join("")}</div>`
+                    : ""
+            }
+        </li>`;
+}
+
+function renderEmptySlot(side: "prefix" | "suffix"): string {
+    const label = side === "prefix" ? "Empty Prefix" : "Empty Suffix";
+    return `
+        <li class="pc-mod-slot pc-mod-${side} is-empty">
+            <div class="pc-mod-slot-line pc-mod-slot-empty">${label}</div>
+        </li>`;
+}
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function formatTag(tag: string): string {
+    return tag
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 customElements.define("pc-mod-list", PcModList);

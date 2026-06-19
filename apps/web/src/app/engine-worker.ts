@@ -132,7 +132,10 @@ async function dispatch(
             bindings.closeItem(params.item as number);
             return {};
         case "itemInfo":
-            return bindings.itemInfo(params.item as number);
+            return bindings.itemInfo(
+                params.item as number,
+                (params.session as number) ?? 0,
+            );
         case "exportItem":
             return { state: bindings.exportItem(params.item as number) };
         case "importItem":

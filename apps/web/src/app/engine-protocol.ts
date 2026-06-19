@@ -170,6 +170,8 @@ export interface PoolDebug {
 
 export interface BaseInfo {
     path: string;
+    name: string;
+    item_class_key: string;
     /** pc_session_support: 0 ordinary, 1 cluster, 2 unsupported domain. */
     support: number;
 }
@@ -183,7 +185,28 @@ export interface ModInfo {
     reach_influence: number;
     reach_via: string;
     primary_group_id: number;
+    /** Display family: exclusion group + stat signature + side + source. */
+    family_id: number;
     required_level: number;
+    group_display_name: string;
+    family_tier_index: number;
+    text_lines: string[];
+    classification_tags: string[];
+}
+
+export interface ItemInfo {
+    rarity: string;
+    prefix_mod_ids: number[];
+    suffix_mod_ids: number[];
+    implicit_mod_ids: number[];
+    fractured_prefix_mod_ids: number[];
+    fractured_suffix_mod_ids: number[];
+    prefix_count: number;
+    suffix_count: number;
+    /** Session-aware max prefix slots; absent if the call omitted the session. */
+    max_prefix?: number;
+    /** Session-aware max suffix slots; absent if the call omitted the session. */
+    max_suffix?: number;
 }
 
 // --- worker message envelopes ----------------------------------------------

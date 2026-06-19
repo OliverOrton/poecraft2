@@ -180,6 +180,18 @@ bool parse_action(const Value& spec, pc_action_request& request,
     return true;
 }
 
+void append_item_max(std::string& out, pc_session_handle session,
+                     const pc_item_state* item) {
+    uint32_t max_prefix = 0;
+    uint32_t max_suffix = 0;
+    pc_error_info error = make_error();
+    pc_session_item_max_prefix(session, item, &max_prefix, &error);
+    error = make_error();
+    pc_session_item_max_suffix(session, item, &max_suffix, &error);
+    out += ",\"max_prefix\":" + std::to_string(max_prefix);
+    out += ",\"max_suffix\":" + std::to_string(max_suffix);
+}
+
 void append_item_info(std::string& out, const pc_item_state& item) {
     static const char* rarities[] = {"normal", "magic", "rare"};
     out += "\"rarity\":";
@@ -434,9 +446,18 @@ const char* pcw_data_bases(uint32_t data_id) {
         pc_result rc =
             pc_data_get_base_path(*data, i, &path, &support, &error);
         if (rc != PC_RESULT_OK) return fail(error);
+        const char* name = nullptr;
+        const char* item_class_key = nullptr;
+        error = make_error();
+        rc = pc_data_get_base_display(*data, i, &name, &item_class_key, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
         if (i != 0) out.push_back(',');
         out += "{\"path\":";
         append_escaped(out, path);
+        out += ",\"name\":";
+        append_escaped(out, name ? name : "");
+        out += ",\"item_class_key\":";
+        append_escaped(out, item_class_key ? item_class_key : "");
         out += ",\"support\":" + std::to_string(support);
         out.push_back('}');
     }
@@ -531,7 +552,25 @@ const char* pcw_session_mod_info(uint32_t session_id, uint32_t mod_id) {
     out += ",\"reach_via\":";
     append_escaped(out, info.reach_via);
     out += ",\"primary_group_id\":" + std::to_string(info.primary_group_id);
+    out += ",\"family_id\":" + std::to_string(info.family_id);
     out += ",\"required_level\":" + std::to_string(info.required_level);
+    out += ",\"group_display_name\":";
+    append_escaped(out, info.group_display_name ? info.group_display_name : "");
+    out += ",\"family_tier_index\":" + std::to_string(info.family_tier_index);
+    out += ",\"text_lines\":[";
+    for (uint32_t i = 0; i < info.text_line_count; ++i) {
+        if (i != 0) out.push_back(',');
+        append_escaped(out, info.text_lines[i] ? info.text_lines[i] : "");
+    }
+    out += "]";
+    out += ",\"classification_tags\":[";
+    for (uint32_t i = 0; i < info.classification_tag_count; ++i) {
+        if (i != 0) out.push_back(',');
+        append_escaped(
+            out,
+            info.classification_tags[i] ? info.classification_tags[i] : "");
+    }
+    out += "]";
     out.push_back('}');
     return respond(std::move(out));
 }
@@ -638,11 +677,17 @@ EMSCRIPTEN_KEEPALIVE
 void pcw_item_close(uint32_t item_id) { g_items.erase(item_id); }
 
 EMSCRIPTEN_KEEPALIVE
-const char* pcw_item_info(uint32_t item_id) {
+const char* pcw_item_info(uint32_t item_id, uint32_t session_id) {
     pc_item_state* item = find(g_items, item_id);
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::string out = "{\"ok\":true,";
     append_item_info(out, *item);
+    if (session_id != 0) {
+        pc_session_handle* session = find(g_sessions, session_id);
+        if (session != nullptr) {
+            append_item_max(out, *session, item);
+        }
+    }
     out.push_back('}');
     return respond(std::move(out));
 }
