@@ -129,6 +129,52 @@ function repeatStrategy(): Record<string, unknown> {
     };
 }
 
+function familyTierStrategy(
+    familyKey: string,
+    itemModKey: string,
+    generationType: number,
+    minTier: number,
+): Record<string, unknown> {
+    return {
+        version: "v1",
+        name: "Family tier condition",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "rare",
+            [generationType === 0 ? "prefixes" : "suffixes"]: [
+                { mod_key: itemModKey },
+            ],
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            { id: "success", kind: "terminal", terminal: "success" },
+            { id: "failure", kind: "terminal", terminal: "failure" },
+        ],
+        edges: [
+            {
+                id: "match",
+                from: "start",
+                to: "success",
+                priority: 0,
+                condition: {
+                    type: "has_mod_family",
+                    family_mod_key: familyKey,
+                    min_tier: minTier,
+                },
+            },
+            {
+                id: "fallback",
+                from: "start",
+                to: "failure",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
 test("API shape: ABI version is current", async () => {
     assert.equal(client.getAbiVersion(), 1);
 });
@@ -139,6 +185,8 @@ test("load data through the memory bundle path", async () => {
     assert.equal(summary.complete_dataset, true);
     assert.ok((summary.base_item_count as number) > 0);
     assert.ok((summary.mod_count as number) > 0);
+    const bases = await client.listBases(dataId);
+    assert.ok(bases.some((base) => base.path === BASE && base.support === 0));
 });
 
 test("create a session and an item", async () => {
@@ -154,6 +202,31 @@ test("create a session and an item", async () => {
     const info = await client.itemInfo(item);
     assert.equal(info.rarity, "rare");
     await client.closeItem(item);
+});
+
+test("catalog exposes mod groups, essences, and fossils as usable keys", async () => {
+    const catalog = await client.catalog(dataId);
+    assert.ok(catalog.groupKeyById.length > 0);
+    assert.ok(catalog.essences.length > 0);
+    assert.ok(catalog.fossils.length > 0);
+    assert.ok(catalog.essences.every((entry) => entry.key && entry.name));
+    assert.ok(catalog.fossils.every((entry) => entry.key && entry.name));
+
+    // The mod-group dropdown stores groupKeyById[mod.primary_group_id] into a
+    // has_mod_group condition. Prove that key actually resolves in the native
+    // condition compiler — the round trip the UI depends on.
+    const mod = await client.modInfo(sessionId, 0);
+    const groupKey = catalog.groupKeyById[mod.primary_group_id];
+    assert.ok(groupKey, "session mod maps to a catalog group key");
+
+    const strategy = repeatStrategy();
+    (strategy.edges as Array<Record<string, unknown>>)[1].condition = {
+        type: "has_mod_group",
+        group: groupKey,
+    };
+    const compiled = await client.compileStrategy(sessionId, strategy);
+    assert.ok(compiled > 0);
+    await client.closeStrategy(compiled);
 });
 
 test("apply an action mutates the item per the rules", async () => {
@@ -237,6 +310,11 @@ test("native strategy run reports progress, traces, and economy cost", async () 
     assert.equal(result.summary.success_count, 2000);
     assert.ok(result.summary.total_actions > 2000);
     assert.equal(result.summary.cost_status, "complete");
+    assert.equal(result.action_distribution.length, 1);
+    assert.equal(
+        result.action_distribution[0].count,
+        result.summary.total_actions,
+    );
     assert.equal(result.traces.length, 3);
     assert.equal(result.traces[0].entries[0].matched_edge_id, "begin");
     assert.equal(result.examples.success.length, 2);
@@ -245,6 +323,48 @@ test("native strategy run reports progress, traces, and economy cost", async () 
     await client.closeSimulator(simulator);
     await client.closeEconomy(economy);
     await client.closeStrategy(strategy);
+});
+
+test("modifier family minimum tier executes in the native WASM simulator", async () => {
+    const count = await client.modCount(sessionId);
+    const mods = await Promise.all(
+        Array.from({ length: count }, (_, id) => client.modInfo(sessionId, id)),
+    );
+    const tierTwo = mods.find(
+        (mod) =>
+            (mod.generation_type === 0 || mod.generation_type === 1) &&
+            mod.family_tier_index === 2,
+    );
+    assert.ok(tierTwo, "expected a display family with a second tier");
+    const tierOne = mods.find(
+        (mod) =>
+            mod.family_id === tierTwo.family_id &&
+            mod.family_tier_index === 1,
+    );
+    assert.ok(tierOne, "expected the selected family's first tier");
+
+    for (const [threshold, expectedSuccess] of [
+        [2, 1],
+        [1, 0],
+    ] as const) {
+        const strategy = await client.compileStrategy(
+            sessionId,
+            familyTierStrategy(
+                tierOne.key,
+                tierTwo.key,
+                tierTwo.generation_type,
+                threshold,
+            ),
+        );
+        const simulator = await client.createSimulator(sessionId, strategy);
+        const result = await client.runStrategy(simulator, {
+            target_runs: 1,
+            retained_trace_count: 1,
+        });
+        assert.equal(result.summary.success_count, expectedSuccess);
+        await client.closeSimulator(simulator);
+        await client.closeStrategy(strategy);
+    }
 });
 
 test("long strategy run cancels promptly via AbortSignal", async () => {

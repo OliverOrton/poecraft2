@@ -10,6 +10,8 @@
 
 import { createEngineBindings, EngineBindings } from "./engine-wasm";
 import {
+    Catalog,
+    CatalogEntry,
     ClientMessage,
     CraftAction,
     EngineError,
@@ -23,6 +25,72 @@ const DEFAULT_CHUNK_SIZE = 1000;
 let bindings: EngineBindings;
 let post: (message: WorkerMessage) => void = () => {};
 const cancelled = new Set<number>();
+
+// Raw bundle bytes retained until a catalog is distilled from them, then the
+// compact catalog is cached and the bytes are dropped to reclaim memory.
+const dataBundles = new Map<number, Uint8Array>();
+const catalogCache = new Map<number, Catalog>();
+
+interface BundleShape {
+    strings: { strings: string[]; string_id_base?: number };
+    game_data: {
+        groups: { key_string_ids: number[]; display_name_string_ids: number[] };
+        essences: {
+            key_string_ids: number[];
+            name_string_ids: number[];
+            is_corruption_only?: number[];
+        };
+        fossils: { key_string_ids: number[]; name_string_ids: number[] };
+    };
+}
+
+/**
+ * Distil the UI-authoring catalog from the compiled data bundle. Pure JS over
+ * the same JSON the engine loaded — no WASM call, so it works without rebuilding
+ * the engine. Mod groups are returned indexed by group id (matching the
+ * `primary_group_id` mods report); essences and fossils are filtered to named,
+ * craftable rows and sorted for display.
+ */
+function buildCatalog(bundle: Uint8Array): Catalog {
+    const json = JSON.parse(new TextDecoder().decode(bundle)) as BundleShape;
+    const strings = json.strings.strings;
+    const base = json.strings.string_id_base ?? 0;
+    const s = (id: number): string => strings[id - base] ?? "";
+    const g = json.game_data;
+
+    const groupKeyById = g.groups.key_string_ids.map(s);
+    const groupNameById = g.groups.display_name_string_ids.map(s);
+
+    const essences: CatalogEntry[] = [];
+    for (let i = 0; i < g.essences.key_string_ids.length; i += 1) {
+        if (g.essences.is_corruption_only?.[i]) continue;
+        const name = s(g.essences.name_string_ids[i]);
+        if (!name) continue;
+        essences.push({ key: s(g.essences.key_string_ids[i]), name });
+    }
+    const fossils: CatalogEntry[] = [];
+    for (let i = 0; i < g.fossils.key_string_ids.length; i += 1) {
+        const name = s(g.fossils.name_string_ids[i]);
+        if (!name) continue;
+        fossils.push({ key: s(g.fossils.key_string_ids[i]), name });
+    }
+    essences.sort((a, b) => a.name.localeCompare(b.name));
+    fossils.sort((a, b) => a.name.localeCompare(b.name));
+    return { groupKeyById, groupNameById, essences, fossils };
+}
+
+function catalogFor(data: number): Catalog {
+    const cached = catalogCache.get(data);
+    if (cached) return cached;
+    const bundle = dataBundles.get(data);
+    if (!bundle) {
+        throw new EngineError(1, "catalog unavailable: data not loaded");
+    }
+    const catalog = buildCatalog(bundle);
+    catalogCache.set(data, catalog);
+    dataBundles.delete(data);
+    return catalog;
+}
 
 const yieldToEventLoop = (): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, 0));
@@ -81,14 +149,22 @@ async function dispatch(
     params: Record<string, unknown>,
 ): Promise<unknown> {
     switch (method) {
-        case "loadData":
-            return { data: bindings.loadData(params.bundle as Uint8Array) };
+        case "loadData": {
+            const bundle = params.bundle as Uint8Array;
+            const data = bindings.loadData(bundle);
+            dataBundles.set(data, bundle);
+            return { data };
+        }
+        case "catalog":
+            return { catalog: catalogFor(params.data as number) };
         case "dataSummary":
             return bindings.dataSummary(params.data as number);
         case "listBases":
             return { bases: bindings.listBases(params.data as number) };
         case "closeData":
             bindings.closeData(params.data as number);
+            dataBundles.delete(params.data as number);
+            catalogCache.delete(params.data as number);
             return {};
         case "createSession":
             return {

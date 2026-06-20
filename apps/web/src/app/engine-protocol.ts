@@ -127,10 +127,17 @@ export interface FailureSummary {
     count: number;
 }
 
+export interface ActionDistributionEntry {
+    node_id: string;
+    action_type: number;
+    count: number;
+}
+
 export interface StrategyResult {
     cancelled: boolean;
     progress: SimulationProgress;
     summary: SimulationSummary;
+    action_distribution: ActionDistributionEntry[];
     traces: StrategyTrace[];
     examples: {
         success: SimulationExample[];
@@ -192,6 +199,25 @@ export interface ModInfo {
     family_tier_index: number;
     text_lines: string[];
     classification_tags: string[];
+}
+
+/** A catalog entry that pairs a stable engine key with a human-readable name. */
+export interface CatalogEntry {
+    key: string;
+    name: string;
+}
+
+/**
+ * UI-authoring catalog derived from the compiled data bundle (not engine state).
+ * Lets the editor offer dropdowns for mod groups, essences and fossils instead
+ * of requiring raw keys/JSON. `groupKeyById` is indexed by the same group id
+ * mods report as `primary_group_id`.
+ */
+export interface Catalog {
+    groupKeyById: string[];
+    groupNameById: string[];
+    essences: CatalogEntry[];
+    fossils: CatalogEntry[];
 }
 
 export interface ItemInfo {

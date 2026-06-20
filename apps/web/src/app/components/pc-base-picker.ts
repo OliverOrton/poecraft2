@@ -127,8 +127,13 @@ export class PcBasePicker extends HTMLElement {
 
         this.innerHTML = `
             <div class="pc-base-picker">
-                <h2 class="pc-base-picker-title">Choose a base</h2>
-                <p class="pc-base-picker-sub">Pick an item class, then a base item and item level.</p>
+                <h2 class="pc-base-picker-title">${escapeHtml(
+                    this.getAttribute("picker-title") ?? "Choose a base",
+                )}</h2>
+                <p class="pc-base-picker-sub">${escapeHtml(
+                    this.getAttribute("picker-subtitle") ??
+                        "Pick an item class, then a base item and item level.",
+                )}</p>
                 <div class="pc-base-picker-grid">
                     <label class="pc-field">
                         <span>Item Class</span>
@@ -169,7 +174,9 @@ export class PcBasePicker extends HTMLElement {
                 <div class="pc-base-picker-actions">
                     <button type="button" class="pc-bp-cancel">Cancel</button>
                     <button type="button" class="pc-bp-confirm" ${canStart ? "" : "disabled"}>
-                        Start crafting
+                        ${escapeHtml(
+                            this.getAttribute("confirm-label") ?? "Start crafting",
+                        )}
                     </button>
                 </div>
             </div>`;

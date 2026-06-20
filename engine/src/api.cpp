@@ -1332,6 +1332,7 @@ pc_result pc_simulator_create(
     holder->impl = std::make_unique<poecraft::SimulatorImpl>();
     holder->impl->session = session->impl;
     holder->impl->strategy = strategy->impl;
+    holder->impl->action_counts.assign(strategy->impl->nodes.size(), 0);
     if (economy != nullptr) holder->impl->economy = economy->impl;
     *out_simulator = holder.release();
     clear_error(out_error);
@@ -1648,6 +1649,52 @@ pc_result pc_simulator_failure_summary_query(
         entries[i].node_id = summaries[i].node_id.c_str();
         entries[i].detail = summaries[i].detail.c_str();
         entries[i].count = summaries[i].count;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_action_distribution_query(
+    pc_simulator_handle simulator,
+    pc_action_distribution_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::vector<std::size_t> node_indices;
+    for (std::size_t i = 0; i < simulator->impl->action_counts.size(); ++i) {
+        if (simulator->impl->action_counts[i] != 0) {
+            node_indices.push_back(i);
+        }
+    }
+    std::sort(
+        node_indices.begin(),
+        node_indices.end(),
+        [&](std::size_t left, std::size_t right) {
+            const auto left_count = simulator->impl->action_counts[left];
+            const auto right_count = simulator->impl->action_counts[right];
+            if (left_count != right_count) return left_count > right_count;
+            return simulator->impl->strategy->nodes[left].id <
+                   simulator->impl->strategy->nodes[right].id;
+        });
+    *out_entry_count = static_cast<std::uint32_t>(node_indices.size());
+    if (entry_capacity < node_indices.size() ||
+        (entries == nullptr && !node_indices.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < node_indices.size(); ++i) {
+        const std::size_t node_index = node_indices[i];
+        const auto& node = simulator->impl->strategy->nodes[node_index];
+        entries[i].struct_size =
+            static_cast<std::uint32_t>(sizeof(entries[i]));
+        entries[i].abi_version = PC_ABI_VERSION;
+        entries[i].node_id = node.id.c_str();
+        entries[i].action_type = node.action_type;
+        entries[i].count = simulator->impl->action_counts[node_index];
     }
     clear_error(out_error);
     return PC_RESULT_OK;

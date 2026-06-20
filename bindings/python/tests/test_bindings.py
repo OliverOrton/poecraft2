@@ -261,6 +261,11 @@ class BindingTests(unittest.TestCase):
                     self.assertEqual(result.summary["success_count"], 20)
                     self.assertGreater(result.summary["total_actions"], 20)
                     self.assertEqual(result.summary["cost_status"], "complete")
+                    self.assertEqual(len(result.action_distribution), 1)
+                    self.assertEqual(
+                        result.action_distribution[0]["count"],
+                        result.summary["total_actions"],
+                    )
                     self.assertEqual(len(result.traces), 3)
                     self.assertEqual(
                         result.traces[0].entries[0].matched_edge_id, "begin"

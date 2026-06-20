@@ -81,6 +81,40 @@ const char* condition_strategy() {
 })JSON";
 }
 
+std::string family_tier_strategy(
+    const std::string& family_key,
+    const std::string& item_mod_key,
+    int generation_type,
+    int min_tier) {
+    const char* side = generation_type == PC_SIDE_PREFIX ? "prefixes" : "suffixes";
+    return std::string(R"JSON({
+  "version":"v1",
+  "name":"Modifier family tier",
+  "start_node_id":"start",
+  "base_state":{
+    "base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "item_level":86,
+    "rarity":"rare",
+    ")JSON") +
+           side + R"JSON(": [{"mod_key":")JSON" + item_mod_key +
+           R"JSON("}]
+  },
+  "nodes":[
+    {"id":"start","kind":"start"},
+    {"id":"success","kind":"terminal","terminal":"success"},
+    {"id":"failure","kind":"terminal","terminal":"failure"}
+  ],
+  "edges":[
+    {"id":"match","from":"start","to":"success","priority":0,
+     "condition":{"type":"has_mod_family","family_mod_key":")JSON" +
+           family_key + R"JSON(","min_tier":)JSON" +
+           std::to_string(min_tier) + R"JSON(}},
+    {"id":"fallback","from":"start","to":"failure","priority":999,
+     "is_default":true}
+  ]
+})JSON";
+}
+
 pc_simulation_options options(std::uint64_t runs) {
     pc_simulation_options value{};
     value.struct_size = sizeof(value);
@@ -161,6 +195,18 @@ void run_simulator_tests(const char* artifact_dir) {
                  summary.known_total_cost -
                  static_cast<double>(summary.total_actions) * 2.0) <
              0.0001);
+    std::uint32_t distribution_count = 0;
+    PC_CHECK(pc_simulator_action_distribution_query(
+                 simulator, nullptr, 0, &distribution_count, &error) ==
+             PC_RESULT_BUFFER_TOO_SMALL);
+    PC_CHECK(distribution_count == 1);
+    pc_action_distribution_entry distribution{};
+    PC_CHECK(pc_simulator_action_distribution_query(
+                 simulator, &distribution, 1, &distribution_count, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(std::string(distribution.node_id) == "chaos");
+    PC_CHECK(distribution.action_type == PC_ACTION_CHAOS);
+    PC_CHECK(distribution.count == summary.total_actions);
 
     std::uint32_t trace_count = 0;
     PC_CHECK(pc_simulator_get_trace_count(
@@ -311,6 +357,72 @@ void run_simulator_tests(const char* artifact_dir) {
     PC_CHECK(summary.cost_status == PC_COST_DISABLED);
     pc_simulator_destroy(condition_simulator);
     pc_strategy_destroy(condition_graph);
+
+    // A selected display family can require Tn or better. T2 satisfies T2+
+    // but not T1+, matching the old editor's minimum-tier behavior without
+    // relying on required-level heuristics.
+    std::uint32_t mod_count = 0;
+    PC_CHECK(pc_session_get_mod_count(session, &mod_count, &error) ==
+             PC_RESULT_OK);
+    std::uint32_t selected_family = UINT32_MAX;
+    int selected_side = -1;
+    std::string tier_one_key;
+    std::string tier_two_key;
+    for (std::uint32_t i = 0; i < mod_count && tier_two_key.empty(); ++i) {
+        pc_mod_info info{};
+        info.struct_size = sizeof(info);
+        info.abi_version = PC_ABI_VERSION;
+        PC_CHECK(pc_session_get_mod_info(session, i, &info, &error) ==
+                 PC_RESULT_OK);
+        if ((info.generation_type == PC_SIDE_PREFIX ||
+             info.generation_type == PC_SIDE_SUFFIX) &&
+            info.family_tier_index == 2) {
+            selected_family = info.family_id;
+            selected_side = info.generation_type;
+            tier_two_key = info.key;
+        }
+    }
+    for (std::uint32_t i = 0;
+         i < mod_count && selected_family != UINT32_MAX &&
+         tier_one_key.empty();
+         ++i) {
+        pc_mod_info info{};
+        info.struct_size = sizeof(info);
+        info.abi_version = PC_ABI_VERSION;
+        PC_CHECK(pc_session_get_mod_info(session, i, &info, &error) ==
+                 PC_RESULT_OK);
+        if (info.family_id == selected_family &&
+            info.family_tier_index == 1) {
+            tier_one_key = info.key;
+        }
+    }
+    PC_CHECK(!tier_one_key.empty());
+    PC_CHECK(!tier_two_key.empty());
+    if (!tier_one_key.empty() && !tier_two_key.empty()) {
+        for (int threshold : {2, 1}) {
+            const std::string tier_json = family_tier_strategy(
+                tier_one_key, tier_two_key, selected_side, threshold);
+            pc_strategy_handle tier_strategy = nullptr;
+            PC_CHECK(pc_strategy_compile_json(
+                         session, tier_json.data(), tier_json.size(),
+                         &tier_strategy, &error) == PC_RESULT_OK);
+            pc_simulator_handle tier_simulator = nullptr;
+            PC_CHECK(pc_simulator_create(
+                         session, tier_strategy, nullptr, &tier_simulator,
+                         &error) == PC_RESULT_OK);
+            auto tier_options = options(1);
+            PC_CHECK(pc_simulator_run_chunk(
+                         tier_simulator, &tier_options, 1, &progress,
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(pc_simulator_get_summary(
+                         tier_simulator, &summary, &error) == PC_RESULT_OK);
+            PC_CHECK(
+                threshold == 2 ? summary.success_count == 1
+                               : summary.failure_count == 1);
+            pc_simulator_destroy(tier_simulator);
+            pc_strategy_destroy(tier_strategy);
+        }
+    }
 
     pc_economy_destroy(economy);
     pc_strategy_destroy(strategy);

@@ -48,3 +48,55 @@ export function openDirtyModal(name: string): Promise<DirtyChoice> {
         document.body.appendChild(overlay);
     });
 }
+
+/** Small app-native text prompt. Browser/Electron shells do not consistently
+ * support window.prompt, and saves should remain testable and keyboard-safe. */
+export function openTextModal(
+    title: string,
+    initialValue: string,
+    actionLabel = "Save",
+): Promise<string | null> {
+    return new Promise((resolve) => {
+        const overlay = document.createElement("div");
+        overlay.className = "pc-modal-overlay";
+        overlay.innerHTML = `
+            <form class="pc-modal pc-text-modal" role="dialog" aria-modal="true">
+                <label class="pc-field">
+                    <span></span>
+                    <input name="value" autocomplete="off">
+                </label>
+                <div class="pc-modal-actions">
+                    <button type="submit" data-action="accept"></button>
+                    <button type="button" data-action="cancel">Cancel</button>
+                </div>
+            </form>`;
+        const form = overlay.querySelector<HTMLFormElement>("form")!;
+        const label = overlay.querySelector<HTMLElement>(".pc-field span")!;
+        const input = overlay.querySelector<HTMLInputElement>('input[name="value"]')!;
+        const accept = overlay.querySelector<HTMLButtonElement>(
+            '[data-action="accept"]',
+        )!;
+        label.textContent = title;
+        accept.textContent = actionLabel;
+        input.value = initialValue;
+
+        const finish = (value: string | null): void => {
+            overlay.remove();
+            resolve(value);
+        };
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const value = input.value.trim();
+            if (value) finish(value);
+        });
+        overlay
+            .querySelector('[data-action="cancel"]')!
+            .addEventListener("click", () => finish(null));
+        overlay.addEventListener("mousedown", (event) => {
+            if (event.target === overlay) finish(null);
+        });
+        document.body.appendChild(overlay);
+        input.focus();
+        input.select();
+    });
+}

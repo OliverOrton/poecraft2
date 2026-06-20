@@ -159,6 +159,14 @@ typedef struct pc_failure_summary_entry {
     uint64_t count;
 } pc_failure_summary_entry;
 
+typedef struct pc_action_distribution_entry {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    const char* node_id;
+    int32_t action_type; /* pc_action_type */
+    uint64_t count;
+} pc_action_distribution_entry;
+
 typedef struct pc_price_key_entry {
     uint32_t struct_size;
     uint32_t abi_version;
@@ -231,6 +239,13 @@ pc_result pc_simulator_example_query(
 pc_result pc_simulator_failure_summary_query(
     pc_simulator_handle simulator,
     pc_failure_summary_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_action_distribution_query(
+    pc_simulator_handle simulator,
+    pc_action_distribution_entry* entries,
     uint32_t entry_capacity,
     uint32_t* out_entry_count,
     pc_error_info* out_error);

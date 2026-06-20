@@ -10,6 +10,8 @@ export default defineConfig({
     // bindings/wasm/dist, which sits outside the app root; allow the dev server
     // to read from the repo root so that import resolves.
     server: {
+        // Honour PORT (set by the preview tooling); default to Vite's usual 5173.
+        port: process.env.PORT ? Number(process.env.PORT) : 5173,
         fs: { allow: [repoRoot] },
     },
     worker: {

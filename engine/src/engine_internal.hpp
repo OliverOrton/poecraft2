@@ -460,14 +460,16 @@ enum class ConditionKind : std::uint8_t {
     PrefixCountRange = 5,
     SuffixCountRange = 6,
     All = 7,
-    Any = 8,
-    Not = 9,
-    AtLeast = 10
-};
+      Any = 8,
+      Not = 9,
+      AtLeast = 10,
+      HasModFamily = 11
+  };
 
 struct CompiledCondition {
     ConditionKind kind = ConditionKind::Always;
-    std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
+      std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
+      std::uint32_t family_id = std::numeric_limits<std::uint32_t>::max();
     int min_value = 0;
     int max_value = 0;
     std::vector<CompiledCondition> children;
@@ -591,6 +593,7 @@ struct SimulatorImpl {
     std::vector<SimulationExampleInternal> success_examples;
     std::vector<SimulationExampleInternal> failure_examples;
     std::vector<FailureSummaryInternal> failure_summaries;
+    std::vector<std::uint64_t> action_counts;
     std::unordered_map<std::string, std::uint64_t> missing_prices;
 };
 

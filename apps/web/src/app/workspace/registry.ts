@@ -3,6 +3,7 @@
  * the workspace host without a circular import on the pc-workspace module.
  */
 
+import { StrategyDocument } from "../strategy-model";
 import { ItemSnapshot, StashRecord } from "./persistence";
 
 export type OpenMode = "edit" | "copy";
@@ -21,6 +22,13 @@ export interface WorkspaceApi {
     /** Open a new emulator document, optionally seeded from a stash item. */
     openEmulator(
         seed?: ItemSnapshot,
+        mode?: OpenMode,
+        savedRef?: string,
+        savedName?: string,
+    ): Promise<void>;
+    /** Open a Strategy Builder document, optionally from a graph or item. */
+    openStrategy(
+        seed?: StrategyDocument | ItemSnapshot,
         mode?: OpenMode,
         savedRef?: string,
         savedName?: string,

@@ -588,6 +588,7 @@ Initial conditions:
 ```text
 always
 has mod group
+has modifier family at minimum tier
 rarity is
 open prefix count
 open suffix count
@@ -626,8 +627,9 @@ Implemented baseline:
   conditions.
 - The start state is resolved against the compile session using stable base,
   mod, and group keys. Initial conditions cover `always`, mod-group presence,
-  rarity, open prefix/suffix ranges, prefix/suffix count ranges, and nested
-  `all`/`any`/`not`/`at_least` expressions.
+  display-family minimum tiers, rarity, open prefix/suffix ranges,
+  prefix/suffix count ranges, and nested `all`/`any`/`not`/`at_least`
+  expressions.
 - Run-wide action, graph-step, and optional cost limits terminate cyclic or
   unaffordable runs without adding per-node attempt semantics.
 - Immutable economy snapshots use chaos-equivalent canonical keys. Basic
@@ -682,6 +684,39 @@ Acceptance gate:
 - Emulator import creates a new strategy with the current item as its start state.
 - Invalid graphs show warnings.
 - Trace highlights taken nodes and edges.
+
+Implemented baseline:
+
+- `pc-strategy-editor` is a dockview document with a draggable operation/start/
+  terminal palette, custom HTML nodes, SVG guarded edges, pan/zoom, node
+  movement, connection dragging, selection, deletion, and automatic layout.
+- The inspector edits start state, operations and parameters, terminal results,
+  edge priority/default routing, ANDed edge conditions, multi-select
+  modifier-family ALL/N-of checks, minimum tiers, and advanced nested condition
+  JSON. Client
+  validation marks unreachable/dead-end nodes, invalid endpoints/defaults,
+  missing terminals, and unsupported conditions.
+- Strategies use the existing manual Stash policy. Saved graph JSON retains
+  stable execution semantics plus node positions and viewport state; Edit
+  rebinds the document and Import creates an unsaved copy.
+- Emulator documents can open the current item as a new strategy containing
+  only that start node; no sample route is inserted. Session-local mod ids are
+  resolved back to stable mod keys before the imported start state is persisted.
+- `pc-simulator` compiles through the Phase 10 WASM worker boundary for Run
+  once/Run N, progress and cancellation. Aggregate results, retained native
+  traces, item snapshots, total action counts, and per-operation action
+  distribution are shown in the bottom panel. Action distribution is the
+  default result view; the trace tab highlights taken nodes/edges and the active
+  trace node on the board. The per-run action limit is user-editable and
+  defaults to 100,000.
+- New strategies use the shared Emulator-style class/base/item-level picker and
+  open on a blank board. Modifier conditions use an Emulator-style
+  prefix/suffix family browser rather than a single-line selector. Parallel and
+  reciprocal edges receive separate visual lanes.
+- Web model tests cover the Phase 10 chaos-repeat graph, layout/condition
+  round-trip, invalid graph warnings, and Emulator start-state import. The
+  worker smoke test continues to exercise the real native simulator and now
+  also verifies the editor catalog and modifier-family minimum-tier routing.
 
 ## Phase 12: Account And Sync Foundation
 

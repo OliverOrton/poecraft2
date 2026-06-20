@@ -191,7 +191,7 @@ pc_item_state parse_start_item(
 }
 
 CompiledCondition compile_condition(
-    const DataImpl& data,
+    const SessionImpl& session,
     const Value& value,
     int depth = 0) {
     if (depth > 32) invalid("condition nesting is too deep");
@@ -199,6 +199,7 @@ CompiledCondition compile_condition(
     const std::string type = string_member(value, "type");
     if (type.empty()) invalid("condition requires type");
 
+    const DataImpl& data = *session.data;
     CompiledCondition out;
     if (type == "always") {
         out.kind = ConditionKind::Always;
@@ -212,6 +213,31 @@ CompiledCondition compile_condition(
         }
         out.kind = ConditionKind::HasModGroup;
         out.group_id = it->second;
+        return out;
+    }
+    if (type == "has_mod_family") {
+        std::string key = string_member(value, "family_mod_key");
+        if (key.empty()) key = string_member(value, "mod_key");
+        if (key.empty()) {
+            invalid("has_mod_family requires family_mod_key");
+        }
+        const auto pos_it = data.mod_pos_by_key.find(key);
+        if (pos_it == data.mod_pos_by_key.end()) {
+            invalid("unknown modifier family key: " + key);
+        }
+        const std::uint32_t global_id = data.mod_global_ids[pos_it->second];
+        const auto session_it =
+            session.session_id_by_global_id.find(global_id);
+        if (session_it == session.session_id_by_global_id.end()) {
+            invalid("modifier family is not in the session: " + key);
+        }
+        const std::uint32_t mod_id = session_it->second;
+        out.kind = ConditionKind::HasModFamily;
+        out.family_id = session.family_id[mod_id];
+        out.min_value = int_member(value, "min_tier", 0);
+        if (out.min_value < 0) {
+            invalid("has_mod_family min_tier must be non-negative");
+        }
         return out;
     }
     if (type == "rarity_is") {
@@ -269,7 +295,8 @@ CompiledCondition compile_condition(
             out.min_value = int_member(value, "count", 1);
         }
         for (const auto& child : children->array) {
-            out.children.push_back(compile_condition(data, child, depth + 1));
+            out.children.push_back(
+                compile_condition(session, child, depth + 1));
         }
         if (out.kind == ConditionKind::Not && out.children.size() != 1) {
             invalid("not condition requires exactly one child");
@@ -399,6 +426,30 @@ bool has_group(
            side_has(item.suffixes, item.suffix_count);
 }
 
+bool has_family(
+    const SessionImpl& session,
+    const pc_item_state& item,
+    std::uint32_t family_id,
+    int min_tier) {
+    auto side_has = [&](const pc_mod_slot* slots, std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const std::uint32_t mod_id = slots[i].mod_id;
+            if (mod_id >= session.mod_count ||
+                session.family_id[mod_id] != family_id) {
+                continue;
+            }
+            const std::uint32_t tier = session.family_tier_index[mod_id];
+            if (min_tier == 0 ||
+                (tier != 0 && tier <= static_cast<std::uint32_t>(min_tier))) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return side_has(item.prefixes, item.prefix_count) ||
+           side_has(item.suffixes, item.suffix_count);
+}
+
 bool evaluate_condition(
     const CompiledCondition& condition,
     const SessionImpl& session,
@@ -408,6 +459,9 @@ bool evaluate_condition(
         return true;
     case ConditionKind::HasModGroup:
         return has_group(session, item, condition.group_id);
+    case ConditionKind::HasModFamily:
+        return has_family(
+            session, item, condition.family_id, condition.min_value);
     case ConditionKind::RarityIs:
         return item.rarity == condition.min_value;
     case ConditionKind::OpenPrefixCount: {
@@ -655,6 +709,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             const ActionOutcome outcome =
                 apply_action(*simulator.context, &working, node.action);
             ++result.actions;
+            ++simulator.action_counts[node_index];
             if (!outcome.applied) {
                 finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
                 break;
@@ -819,7 +874,7 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
             const Value* condition = edge_value.find("condition");
             edge.condition =
                 condition != nullptr
-                    ? compile_condition(*strategy->session->data, *condition)
+                    ? compile_condition(*strategy->session, *condition)
                     : CompiledCondition{};
         }
         strategy->nodes[from_it->second].edges.push_back(std::move(edge));

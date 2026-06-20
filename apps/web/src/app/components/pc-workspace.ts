@@ -25,12 +25,18 @@ import {
     StashRecord,
     DraftRecord,
     deleteDraft,
+    deleteStrategyDraft,
     itemSnapshotRarity,
     putDraft,
+    putStrategyDraft,
     putStash,
     saveLayout,
     loadLayout,
 } from "../workspace/persistence";
+import {
+    StrategyDocument,
+    isStrategyDocument,
+} from "../strategy-model";
 import {
     DocumentHandlers,
     OpenMode,
@@ -40,6 +46,7 @@ import {
 import { openDirtyModal } from "../workspace/dirty-modal";
 
 import "./pc-emulator";
+import "./pc-strategy-editor";
 import "./pc-stash";
 
 const STASH_PANEL_ID = "stash";
@@ -79,6 +86,8 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                 switch (options.name) {
                     case "stash":
                         return new ElementRenderer("pc-stash");
+                    case "strategy":
+                        return new ElementRenderer("pc-strategy-editor");
                     case "emulator":
                     default:
                         return new ElementRenderer("pc-emulator");
@@ -152,6 +161,35 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
         });
     }
 
+    async openStrategy(
+        seed?: StrategyDocument | ItemSnapshot,
+        mode: OpenMode = "copy",
+        savedRef?: string,
+        savedName?: string,
+    ): Promise<void> {
+        const docId = newDocId();
+        if (seed) {
+            const strategySeed = isStrategyDocument(seed);
+            await putStrategyDraft({
+                docId,
+                strategy: strategySeed ? seed : null,
+                sourceItem: strategySeed ? null : seed,
+                savedRef: mode === "edit" ? (savedRef ?? null) : null,
+                savedName: mode === "edit" ? (savedName ?? null) : null,
+                dirty: mode === "copy",
+                updatedAt: Date.now(),
+            });
+        }
+        const title = savedName ?? "Untitled strategy";
+        this.titles.set(docId, title);
+        this.api.addPanel({
+            id: docId,
+            component: "strategy",
+            title,
+            params: { docId },
+        });
+    }
+
     openStash(): void {
         const existing = this.api.getPanel(STASH_PANEL_ID);
         if (existing) {
@@ -214,6 +252,7 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
         const handler = this.handlers.get(docId);
         await handler?.dispose();
         await deleteDraft(docId);
+        await deleteStrategyDraft(docId);
         this.handlers.delete(docId);
         this.dirty.delete(docId);
         this.titles.delete(docId);

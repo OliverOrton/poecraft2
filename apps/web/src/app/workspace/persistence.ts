@@ -9,7 +9,11 @@
  */
 
 const DB_NAME = "poecraft";
-const DB_VERSION = 1;
+// Bump this whenever the schema changes (new/removed object stores). It must
+// never be lower than a version already created in a browser, or opening the
+// DB fails with VersionError. Strategy records reuse the existing stash/drafts
+// stores via a resourceType discriminator, so no new store is needed here.
+const DB_VERSION = 2;
 const LAYOUT_KEY = "poecraft.layout";
 
 /** Exported item state plus the session identity needed to reopen it. */
@@ -30,11 +34,23 @@ export function itemSnapshotRarity(snapshot: ItemSnapshot): string {
     return code === 0 ? "normal" : code === 1 ? "magic" : "rare";
 }
 
-export interface StashRecord extends ItemSnapshot {
+export interface ItemStashRecord extends ItemSnapshot {
     id: string;
     name: string;
     createdAt: number;
+    resourceType?: "item";
 }
+
+export interface StrategyStashRecord {
+    id: string;
+    name: string;
+    description: string;
+    resourceType: "strategy";
+    strategy: unknown;
+    createdAt: number;
+}
+
+export type StashRecord = ItemStashRecord | StrategyStashRecord;
 
 export interface DraftRecord {
     docId: string;
@@ -47,6 +63,17 @@ export interface DraftRecord {
     /** Stash id this draft was last saved as, if any. */
     savedRef: string | null;
     /** Stash name this draft was last saved as, if any. */
+    savedName: string | null;
+    dirty: boolean;
+    updatedAt: number;
+}
+
+export interface StrategyDraftRecord {
+    docId: string;
+    strategy: unknown | null;
+    /** Present only until pc-strategy-editor converts an Emulator snapshot. */
+    sourceItem: ItemSnapshot | null;
+    savedRef: string | null;
     savedName: string | null;
     dirty: boolean;
     updatedAt: number;
@@ -121,6 +148,28 @@ export function getDraft(docId: string): Promise<DraftRecord | undefined> {
 
 export function deleteDraft(docId: string): Promise<unknown> {
     return tx("drafts", "readwrite", (store) => store.delete(docId));
+}
+
+// --- strategy drafts -------------------------------------------------------
+
+export function putStrategyDraft(record: StrategyDraftRecord): Promise<unknown> {
+    return tx("drafts", "readwrite", (store) => store.put(record));
+}
+
+export function getStrategyDraft(
+    docId: string,
+): Promise<StrategyDraftRecord | undefined> {
+    return tx("drafts", "readonly", (store) => store.get(docId));
+}
+
+export function deleteStrategyDraft(docId: string): Promise<unknown> {
+    return tx("drafts", "readwrite", (store) => store.delete(docId));
+}
+
+export function isStrategyStashRecord(
+    record: StashRecord,
+): record is StrategyStashRecord {
+    return record.resourceType === "strategy";
 }
 
 // --- layout -----------------------------------------------------------------

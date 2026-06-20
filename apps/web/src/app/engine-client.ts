@@ -12,6 +12,7 @@ import {
     ActionOutcome,
     AffixSide,
     BaseInfo,
+    Catalog,
     ClientMessage,
     CraftAction,
     EngineError,
@@ -175,6 +176,15 @@ export class EngineClient {
             data,
         });
         return bases;
+    }
+
+    /** UI-authoring catalog (mod groups, essences, fossils) distilled from the
+     * loaded data bundle. Cached in the worker after the first call. */
+    async catalog(data: number): Promise<Catalog> {
+        const { catalog } = await this.call<{ catalog: Catalog }>("catalog", {
+            data,
+        });
+        return catalog;
     }
 
     async createSession(

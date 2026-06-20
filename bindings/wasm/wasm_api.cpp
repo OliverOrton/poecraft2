@@ -1151,7 +1151,30 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
             ? "disabled"
             : (summary.cost_status == PC_COST_COMPLETE ? "complete"
                                                        : "incomplete"));
-    out += "},\"traces\":[";
+    out += "},\"action_distribution\":[";
+
+    uint32_t distribution_count = 0;
+    rc = pc_simulator_action_distribution_query(
+        *simulator, nullptr, 0, &distribution_count, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+        return fail(error);
+    std::vector<pc_action_distribution_entry> distribution(
+        distribution_count ? distribution_count : 1);
+    rc = pc_simulator_action_distribution_query(
+        *simulator, distribution.data(), distribution_count,
+        &distribution_count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t i = 0; i < distribution_count; ++i) {
+        if (i != 0) out.push_back(',');
+        out += "{\"node_id\":";
+        append_escaped(out, distribution[i].node_id);
+        out += ",\"action_type\":" +
+               std::to_string(distribution[i].action_type);
+        out += ",\"count\":";
+        append_u64(out, distribution[i].count);
+        out.push_back('}');
+    }
+    out += "],\"traces\":[";
 
     uint32_t trace_count = 0;
     rc = pc_simulator_get_trace_count(*simulator, &trace_count, &error);

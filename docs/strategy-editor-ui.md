@@ -255,6 +255,12 @@ optional wall-clock budget in interactive/browser jobs
 
 Reaching a configured limit terminates the run with a non-success limit result. These guards prevent malformed or intentionally cyclic graphs from running forever without adding per-node attempt semantics.
 
+The web simulator exposes the maximum actions per run, defaulting to 100,000
+and bounded by the engine maximum. Aggregate results show total actions across
+all completed runs. The result inspector defaults to action distribution,
+aggregated by operation node across every run, with retained traces available
+in a separate tab.
+
 For a no-op/router node:
 
 ```text
@@ -276,6 +282,7 @@ The first condition system should preserve the old condition vocabulary:
 
 ```text
 has mod group
+has modifier family at minimum tier
 has exact mod id
 has metamod
 rarity is
@@ -304,7 +311,6 @@ Later condition types:
 
 ```text
 stat total >= value
-explicit mod tier at least N
 open/closed prefix/suffix combinations
 influence dominance
 eldritch implicit tier
@@ -322,40 +328,53 @@ at least N of group
 
 Keep condition evaluation pure. A condition should inspect item/simulation state and return true or false. It should not mutate the item.
 
+In the first visual editor, conditions listed on one edge are ANDed. OR is
+authored as another outgoing edge. The native format retains nested `any`
+support for imported or advanced JSON, but the ordinary builder does not expose
+a separate OR-group control.
+
 ## Condition Editor UI
 
 The condition editor should borrow from Scratch/Blockly only for the condition-building experience.
 
 Do not make the whole strategy editor a block language.
 
-Use rows/chips like:
+Use rows/cards like:
 
 ```text
-ALL of
-  has mod group [IncreasedLife]
-  open suffixes [>=] [1]
-  NOT has tag [caster]
+has modifier
+  require [ALL | N OF]
+  [maximum Life] [T1+]
+  [fire resistance] [T2+]
+
+open suffixes [>=] [1]
 ```
 
-Or:
+`Has modifier` remains one condition when several modifier families are
+selected. It defaults to requiring all selected modifiers. Selecting `N OF`
+reveals the required count. Tier thresholds default to T1.
 
 ```text
-AT LEAST [2] of
-  has fire resistance
-  has cold resistance
-  has lightning resistance
+has modifier
+  require [2] of [3]
+  fire resistance
+  cold resistance
+  lightning resistance
 ```
 
 The right inspector should let the user edit an edge's condition without opening a separate page.
 
+The modifier-family picker uses the same prefix/suffix tabs, source labels,
+classification tags, family text, and tier grouping as the Emulator modifier
+pool rather than a dense single-line combobox.
+
 Useful controls:
 
 ```text
-condition type combobox
-mod/group/tag searchable combobox
+condition type select
+emulator-style searchable modifier-family list
 operator select
 number stepper
-AND/OR segmented control
 negate toggle
 ```
 
@@ -393,13 +412,15 @@ right inspector:
   validation warnings
 
 bottom panel:
-  run trace
+  action distribution (default)
+  retained run trace (optional tab)
   currency/stats
   item snapshots
   selected simulation details
 ```
 
-Do not use a landing page for the strategy editor. The first screen should be the working board.
+Do not use a landing page for the strategy editor. A new strategy may show the
+base picker first; confirming it opens the working board directly.
 
 The Strategy Builder itself should be a tab inside the desktop workspace described in [desktop-workspace-ui.md](desktop-workspace-ui.md). It can be split beside Emulator, Simulator, or Stash. Its inspector and condition editor remain part of the Strategy Builder area rather than becoming unrelated top-level applications.
 
@@ -465,6 +486,9 @@ delete selected node/edge
 duplicate selected node
 auto-layout selected region
 ```
+
+Creating a new strategy first uses the shared Emulator-style base picker, then
+opens a blank board. No sample graph or automatic node layout is inserted.
 
 Execution/debug interactions:
 

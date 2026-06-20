@@ -326,6 +326,16 @@ class _FailureSummaryEntry(ct.Structure):
     ]
 
 
+class _ActionDistributionEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("node_id", ct.c_char_p),
+        ("action_type", ct.c_int32),
+        ("count", ct.c_uint64),
+    ]
+
+
 class _PriceKeyEntry(ct.Structure):
     _fields_ = [
         ("struct_size", ct.c_uint32),
@@ -580,6 +590,14 @@ _lib.pc_simulator_failure_summary_query.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_simulator_failure_summary_query.restype = ct.c_int32
+_lib.pc_simulator_action_distribution_query.argtypes = [
+    _handle,
+    ct.POINTER(_ActionDistributionEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_action_distribution_query.restype = ct.c_int32
 _lib.pc_simulator_destroy.argtypes = [_handle]
 
 if _lib.pc_abi_version() != ABI_VERSION:
@@ -765,6 +783,7 @@ class SimulationExample:
 @dataclass(frozen=True)
 class SimulationResult:
     summary: dict[str, int | float | str]
+    action_distribution: tuple[dict[str, int | str], ...]
     traces: tuple[StrategyTrace, ...]
     success_examples: tuple[SimulationExample, ...]
     failure_examples: tuple[SimulationExample, ...]
@@ -1274,6 +1293,36 @@ class Simulator(_OwnedHandle):
         )
 
     @property
+    def action_distribution(self) -> tuple[dict[str, int | str], ...]:
+        count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_simulator_action_distribution_query(
+            self._handle, None, 0, ct.byref(count), ct.byref(error)
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        rows = (_ActionDistributionEntry * max(1, count.value))()
+        error = _error()
+        _check(
+            _lib.pc_simulator_action_distribution_query(
+                self._handle,
+                rows,
+                count.value,
+                ct.byref(count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return tuple(
+            {
+                "node_id": _decode(row.node_id),
+                "action_type": row.action_type,
+                "count": row.count,
+            }
+            for row in rows[: count.value]
+        )
+
+    @property
     def missing_prices(self) -> dict[str, int]:
         count = ct.c_uint32()
         error = _error()
@@ -1312,6 +1361,7 @@ class Simulator(_OwnedHandle):
                 break
         return SimulationResult(
             self.summary,
+            self.action_distribution,
             self.traces,
             self.examples("success"),
             self.examples("failure"),

@@ -15,8 +15,8 @@ import { EngineClient } from "../engine-client";
 import { BaseInfo, CraftAction, ModInfo } from "../engine-protocol";
 import {
     DraftRecord,
+    ItemStashRecord,
     ItemSnapshot,
-    StashRecord,
     getDraft,
     putDraft,
 } from "../workspace/persistence";
@@ -325,7 +325,7 @@ export class PcEmulator extends HTMLElement {
             return this.saveAs();
         }
         const snapshot = await this.snapshot();
-        const record: StashRecord = {
+        const record: ItemStashRecord = {
             id: this.savedRef,
             name: this.savedName ?? "Untitled",
             ...snapshot,
@@ -341,7 +341,7 @@ export class PcEmulator extends HTMLElement {
         if (!name) {
             return false;
         }
-        const record: StashRecord = {
+        const record: ItemStashRecord = {
             id: `stash-${crypto.randomUUID()}`,
             name,
             ...(await this.snapshot()),
@@ -352,7 +352,7 @@ export class PcEmulator extends HTMLElement {
         return true;
     }
 
-    private async markSaved(record: StashRecord): Promise<void> {
+    private async markSaved(record: ItemStashRecord): Promise<void> {
         this.savedRef = record.id;
         this.savedName = record.name;
         this.savedCreatedAt = record.createdAt;
@@ -364,6 +364,10 @@ export class PcEmulator extends HTMLElement {
 
     private async duplicate(): Promise<void> {
         await workspace().openEmulator(await this.snapshot(), "copy");
+    }
+
+    private async useInStrategy(): Promise<void> {
+        await workspace().openStrategy(await this.snapshot(), "copy");
     }
 
     private async disposeEngine(): Promise<void> {
@@ -606,6 +610,7 @@ export class PcEmulator extends HTMLElement {
                         <button data-cmd="save">Save</button>
                         <button data-cmd="save-as">Save As</button>
                         <button data-cmd="duplicate">Duplicate</button>
+                        <button data-cmd="strategy">Use in Strategy</button>
                     </span>
                     <span class="pc-emu-status" hidden></span>
                 </div>
@@ -638,6 +643,7 @@ export class PcEmulator extends HTMLElement {
                     else if (cmd === "save") await this.save();
                     else if (cmd === "save-as") await this.saveAs();
                     else if (cmd === "duplicate") await this.duplicate();
+                    else if (cmd === "strategy") await this.useInStrategy();
                 });
             });
         });

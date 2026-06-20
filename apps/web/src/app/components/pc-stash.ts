@@ -1,10 +1,18 @@
 /*
- * pc-stash — lists saved items. Each entry can be opened for editing (rebinds
- * to the saved record) or imported as a new unsaved copy. Reflects only the
- * Stash store, never unsaved drafts.
+ * pc-stash — lists manually saved items and strategies. Edit rebinds a
+ * document to its saved record; Import creates a new unsaved copy.
  */
 
-import { StashRecord, deleteStash, listStash } from "../workspace/persistence";
+import {
+    StashRecord,
+    deleteStash,
+    isStrategyStashRecord,
+    listStash,
+} from "../workspace/persistence";
+import {
+    StrategyDocument,
+    isStrategyDocument,
+} from "../strategy-model";
 import { workspace } from "../workspace/registry";
 
 function baseLabel(path: string): string {
@@ -15,7 +23,26 @@ export class PcStash extends HTMLElement {
     private unsubscribe: (() => void) | null = null;
 
     connectedCallback(): void {
-        this.innerHTML = `<div class="pc-stash"><h3>Stash</h3><div class="pc-stash-list"></div></div>`;
+        this.innerHTML = `
+            <div class="pc-stash">
+                <h3>Stash</h3>
+                <div class="pc-stash-filters">
+                    <button data-filter="all" class="is-active">All</button>
+                    <button data-filter="item">Items</button>
+                    <button data-filter="strategy">Strategies</button>
+                </div>
+                <div class="pc-stash-list"></div>
+            </div>`;
+        this.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    this.querySelectorAll("[data-filter]").forEach((entry) =>
+                        entry.classList.toggle("is-active", entry === button),
+                    );
+                    void this.refresh(button.dataset.filter ?? "all");
+                });
+            },
+        );
         this.unsubscribe = workspace().onStashChange(() => void this.refresh());
         void this.refresh();
     }
@@ -25,49 +52,95 @@ export class PcStash extends HTMLElement {
         this.unsubscribe = null;
     }
 
-    private async refresh(): Promise<void> {
-        const records = (await listStash()).sort((a, b) => b.createdAt - a.createdAt);
+    private async refresh(filter?: string): Promise<void> {
+        const selected =
+            filter ??
+            this.querySelector<HTMLButtonElement>("[data-filter].is-active")
+                ?.dataset.filter ??
+            "all";
+        const records = (await listStash())
+            .filter((record) => {
+                if (selected === "all") return true;
+                if (selected === "strategy") return isStrategyStashRecord(record);
+                return !isStrategyStashRecord(record);
+            })
+            .sort((a, b) => b.createdAt - a.createdAt);
         const list = this.querySelector(".pc-stash-list")!;
         if (records.length === 0) {
-            list.innerHTML = '<p class="pc-empty">No saved items yet. Save one from an emulator.</p>';
+            list.innerHTML =
+                '<p class="pc-empty">No saved resources in this view.</p>';
             return;
         }
-        list.replaceChildren(
-            ...records.map((record) => {
-                const item = document.createElement("div");
-                item.className = "pc-stash-item";
+        list.replaceChildren(...records.map((record) => this.renderRecord(record)));
+    }
 
-                const meta = document.createElement("div");
-                meta.className = "pc-stash-meta";
-                const name = document.createElement("span");
-                name.className = "pc-stash-name";
-                name.textContent = record.name;
-                const base = document.createElement("span");
-                base.className = "pc-stash-base";
-                base.textContent = `${baseLabel(record.base)} · iLvl ${record.itemLevel}`;
-                meta.append(name, base);
+    private renderRecord(record: StashRecord): HTMLElement {
+        const item = document.createElement("div");
+        item.className = "pc-stash-item";
 
-                const actions = document.createElement("div");
-                actions.className = "pc-stash-actions";
-                for (const [action, label] of [
-                    ["open", "Edit"],
-                    ["copy", "Import copy"],
-                    ["delete", "Delete"],
-                ] as const) {
-                    const button = document.createElement("button");
-                    button.textContent = label;
-                    button.addEventListener("click", () => {
-                        void this.handle(action, record);
-                    });
-                    actions.appendChild(button);
-                }
-                item.append(meta, actions);
-                return item;
-            }),
-        );
+        const meta = document.createElement("div");
+        meta.className = "pc-stash-meta";
+        const name = document.createElement("span");
+        name.className = "pc-stash-name";
+        name.textContent = record.name;
+        const detail = document.createElement("span");
+        detail.className = "pc-stash-base";
+        if (isStrategyStashRecord(record)) {
+            if (isStrategyDocument(record.strategy)) {
+                const strategy = record.strategy as StrategyDocument;
+                const successRoutes = strategy.edges.filter(
+                    (edge) =>
+                        strategy.nodes.find((node) => node.id === edge.to)
+                            ?.terminal === "success",
+                ).length;
+                detail.textContent = `${strategy.nodes.length} nodes · ${successRoutes} success route${successRoutes === 1 ? "" : "s"}`;
+            } else {
+                detail.textContent = "Invalid saved strategy";
+            }
+        } else {
+            detail.textContent = `${baseLabel(record.base)} · iLvl ${record.itemLevel}`;
+        }
+        meta.append(name, detail);
+
+        const actions = document.createElement("div");
+        actions.className = "pc-stash-actions";
+        for (const [action, label] of [
+            ["open", "Edit"],
+            ["copy", "Import copy"],
+            ["delete", "Delete"],
+        ] as const) {
+            const button = document.createElement("button");
+            button.textContent = label;
+            button.addEventListener("click", () => {
+                void this.handle(action, record);
+            });
+            actions.appendChild(button);
+        }
+        item.append(meta, actions);
+        return item;
     }
 
     private async handle(action: string, record: StashRecord): Promise<void> {
+        if (isStrategyStashRecord(record)) {
+            if (!isStrategyDocument(record.strategy)) {
+                return;
+            }
+            if (action === "open") {
+                await workspace().openStrategy(
+                    record.strategy,
+                    "edit",
+                    record.id,
+                    record.name,
+                );
+            } else if (action === "copy") {
+                await workspace().openStrategy(record.strategy, "copy");
+            } else if (action === "delete") {
+                await deleteStash(record.id);
+                await this.refresh();
+            }
+            return;
+        }
+
         const snapshot = {
             base: record.base,
             itemLevel: record.itemLevel,
@@ -75,7 +148,12 @@ export class PcStash extends HTMLElement {
             state: record.state,
         };
         if (action === "open") {
-            await workspace().openEmulator(snapshot, "edit", record.id, record.name);
+            await workspace().openEmulator(
+                snapshot,
+                "edit",
+                record.id,
+                record.name,
+            );
         } else if (action === "copy") {
             await workspace().openEmulator(snapshot, "copy");
         } else if (action === "delete") {
