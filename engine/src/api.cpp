@@ -133,7 +133,7 @@ pc_result parse_action_request(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     if (request.action_type < PC_ACTION_TRANSMUTE ||
-        request.action_type > PC_ACTION_FOSSIL) {
+        request.action_type > PC_ACTION_INFLUENCE_EXALT) {
         set_error(error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
         return PC_RESULT_INVALID_ARGUMENT;
     }
@@ -173,13 +173,6 @@ pc_result parse_action_request(
                 set_error(error, PC_RESULT_NOT_FOUND, "fossil key not found");
                 return PC_RESULT_NOT_FOUND;
             }
-            if (it->second < d.fossil_rolls_lucky.size() &&
-                d.fossil_rolls_lucky[it->second] != 0) {
-                set_error(
-                    error, PC_RESULT_UNSUPPORTED_FEATURE,
-                    "Sanctified Fossil special weighting is not supported yet");
-                return PC_RESULT_UNSUPPORTED_FEATURE;
-            }
             out_action.fossil_indices.push_back(it->second);
         }
         std::sort(out_action.fossil_indices.begin(),
@@ -192,6 +185,86 @@ pc_result parse_action_request(
             out_pool->weight_kind = poecraft::PoolWeightKind::Fossil;
             out_pool->fossil_indices = out_action.fossil_indices;
         }
+    } else if (request.action_type == PC_ACTION_BENCH ||
+               request.action_type == PC_ACTION_UNVEIL) {
+        if (request.mod_key == nullptr || request.mod_key[0] == '\0') {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "action requires mod_key");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        const auto global = d.mod_pos_by_key.find(request.mod_key);
+        if (global == d.mod_pos_by_key.end()) {
+            set_error(error, PC_RESULT_NOT_FOUND, "mod key not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        const std::uint32_t global_id = d.mod_global_ids[global->second];
+        const auto session_mod =
+            context.session->session_id_by_global_id.find(global_id);
+        if (session_mod ==
+            context.session->session_id_by_global_id.end()) {
+            set_error(error, PC_RESULT_NOT_FOUND,
+                      "mod is not available in this session");
+            return PC_RESULT_NOT_FOUND;
+        }
+        out_action.mod_id = session_mod->second;
+    } else if (request.action_type == PC_ACTION_HARVEST_REFORGE ||
+               request.action_type == PC_ACTION_HARVEST_AUGMENT) {
+        if (request.target_tag == nullptr) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "Harvest action requires target_tag");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        const auto tag = d.tag_id_by_name.find(request.target_tag);
+        if (tag == d.tag_id_by_name.end()) {
+            set_error(error, PC_RESULT_NOT_FOUND, "target tag not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        out_action.target_tag_id = tag->second;
+        if (out_pool != nullptr) {
+            out_pool->weight_kind =
+                poecraft::PoolWeightKind::HarvestSpawnOnly;
+            out_pool->target_tag_id = tag->second;
+        }
+    } else if (request.action_type == PC_ACTION_HARVEST_RESIST) {
+        if (request.source_tag == nullptr || request.target_tag == nullptr) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "Harvest resistance action requires source_tag and target_tag");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        const auto source = d.tag_id_by_name.find(request.source_tag);
+        const auto target = d.tag_id_by_name.find(request.target_tag);
+        if (source == d.tag_id_by_name.end() ||
+            target == d.tag_id_by_name.end()) {
+            set_error(error, PC_RESULT_NOT_FOUND,
+                      "Harvest resistance tag not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        out_action.source_tag_id = source->second;
+        out_action.target_tag_id = target->second;
+    } else if (request.action_type == PC_ACTION_ELDRITCH_EMBER ||
+               request.action_type == PC_ACTION_ELDRITCH_ICHOR) {
+        if (request.tier < 1 || request.tier > 4) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "Eldritch tier must be 1-4");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        out_action.tier = request.tier;
+    } else if (request.action_type == PC_ACTION_INFLUENCE_EXALT) {
+        if (request.influence == nullptr) {
+            set_error(error, PC_RESULT_INVALID_ARGUMENT,
+                      "influence exalt requires influence");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        const auto influence =
+            d.influence_code_by_name.find(request.influence);
+        if (influence == d.influence_code_by_name.end() ||
+            influence->second <= 0) {
+            set_error(error, PC_RESULT_NOT_FOUND, "influence not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        out_action.influence_code = influence->second;
+        if (out_pool != nullptr)
+            out_pool->influence_only_code = influence->second;
     }
     return PC_RESULT_OK;
 }
@@ -687,6 +760,14 @@ pc_result pc_session_dump_mask(
     case PC_MASK_ESSENCE_ONLY: mask = &s.essence_only_mask; break;
     case PC_MASK_IMPLICIT: mask = &s.implicit_mask; break;
     case PC_MASK_DELVE: mask = &s.delve_mask; break;
+    case PC_MASK_VEILED_TEMPLATE: mask = &s.veiled_template_mask; break;
+    case PC_MASK_UNVEILED: mask = &s.unveiled_mask; break;
+    case PC_MASK_CORRUPTED_IMPLICIT:
+        mask = &s.corrupted_implicit_mask;
+        break;
+    case PC_MASK_ELDRITCH_IMPLICIT:
+        mask = &s.eldritch_implicit_mask;
+        break;
     default:
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "unknown mask kind");
         return PC_RESULT_INVALID_ARGUMENT;
@@ -966,8 +1047,16 @@ pc_result pc_debug_pool_query(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "bad side filter");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    if (request->action.action_type == PC_ACTION_ANNUL ||
-        request->action.action_type == PC_ACTION_SCOUR) {
+    const int action_type = request->action.action_type;
+    if (action_type == PC_ACTION_ANNUL ||
+        action_type == PC_ACTION_SCOUR ||
+        action_type == PC_ACTION_BENCH ||
+        action_type == PC_ACTION_VEILED_EXALT ||
+        action_type == PC_ACTION_UNVEIL ||
+        action_type == PC_ACTION_HARVEST_RESIST ||
+        action_type == PC_ACTION_ELDRITCH_EMBER ||
+        action_type == PC_ACTION_ELDRITCH_ICHOR ||
+        action_type == PC_ACTION_ELDRITCH_ANNUL) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
                   "action has no weighted add pool");
         return PC_RESULT_UNSUPPORTED_FEATURE;

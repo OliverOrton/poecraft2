@@ -23,6 +23,7 @@ export interface ModifierFamilyOption {
     value: string;
     label: string;
     side: "prefix" | "suffix";
+    sourceKind: "base" | "influence" | "crafted" | "essence" | "fossil";
     sourceLabel: string;
     tags: string[];
     tiers: ModifierTierOption[];
@@ -32,6 +33,7 @@ interface ModifierSelection {
     key: string;
     label: string;
     minTier: number;
+    fractured: boolean;
 }
 
 interface ModifierEntry {
@@ -245,12 +247,15 @@ export class PcConditionEditor extends HTMLElement {
         const tiers = family?.tiers ?? [];
         const selectedTier = Math.max(1, modifier.minTier || 1);
         return `
-            <div class="pc-cond-selected-modifier" data-modifier-index="${index}">
+            <div class="pc-cond-selected-modifier ${modifier.fractured ? "is-fractured" : ""}"
+                data-modifier-index="${index}"
+                title="Right-click to require this modifier to be fractured">
                 <div class="pc-cond-selected-modifier-copy">
                     <strong>${escapeHtml(label)}</strong>
                     <span>
                         ${family?.side === "prefix" ? "Prefix" : family?.side === "suffix" ? "Suffix" : ""}
                         ${family?.sourceLabel ? ` · ${escapeHtml(family.sourceLabel)}` : ""}
+                        ${modifier.fractured ? " · Fractured" : ""}
                     </span>
                 </div>
                 <label>
@@ -400,6 +405,11 @@ export class PcConditionEditor extends HTMLElement {
         host.querySelectorAll<HTMLElement>("[data-modifier-index]").forEach(
             (row) => {
                 const index = Number(row.dataset.modifierIndex);
+                row.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+                    entry.modifiers[index].fractured = true;
+                    this.commit();
+                });
                 row.querySelector<HTMLSelectElement>(
                     '[data-action="modifier-tier"]',
                 )?.addEventListener("change", (event) => {
@@ -429,7 +439,10 @@ export class PcConditionEditor extends HTMLElement {
             entry.modifiers.map((modifier) => modifier.key),
         );
         picker?.addEventListener("modifier-select", (event) => {
-            const key = (event as CustomEvent<{ value: string }>).detail.value;
+            const detail = (
+                event as CustomEvent<{ value: string; fractured?: boolean }>
+            ).detail;
+            const key = detail.value;
             const family = this.modifierFamilies.find(
                 (option) => option.value === key,
             );
@@ -440,6 +453,7 @@ export class PcConditionEditor extends HTMLElement {
                 key,
                 label: family.label,
                 minTier: 1,
+                fractured: Boolean(detail.fractured),
             });
             if (entry.mode === "all") entry.count = entry.modifiers.length;
             this.commit();
@@ -542,6 +556,7 @@ function modifierSelection(condition: StrategyCondition): ModifierSelection {
         key: condition.family_mod_key ?? "",
         label: condition.family_label ?? "",
         minTier: Math.max(1, Number(condition.min_tier) || 1),
+        fractured: Boolean(condition.fractured),
     };
 }
 
@@ -635,6 +650,7 @@ function compileEditorEntry(entry: EditorEntry): StrategyCondition {
                   family_mod_key: modifier.key,
                   family_label: modifier.label,
                   min_tier: Math.max(1, modifier.minTier),
+                  ...(modifier.fractured ? { fractured: true } : {}),
               }))
             : [
                   {

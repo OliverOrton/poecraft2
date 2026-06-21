@@ -1,10 +1,13 @@
 #include "engine_internal.hpp"
 
+#include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <limits>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 /*
@@ -13,12 +16,147 @@
  * standard Path of Exile behaviour (magic 1-2 mods, rare 4-6); the old app is a
  * reference, not a compatibility target, and no fixture pins exact RNG.
  *
- * Metamod prefix/suffix locks are honoured structurally but cannot occur yet
- * (bench metamods arrive with Phase 13); until then both locks are false.
+ * Phase 13 direct mechanics share this same mutation path so native, Python,
+ * WASM, and compiled strategies cannot drift.
  */
 namespace poecraft {
 
 namespace {
+
+constexpr std::uint32_t kNoMod = std::numeric_limits<std::uint32_t>::max();
+constexpr std::uint32_t kNoTag = std::numeric_limits<std::uint32_t>::max();
+
+bool item_craftable(const pc_item_state* item) {
+    return item != nullptr &&
+           !(item->item_flags & (PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED));
+}
+
+bool item_has_metamod(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    int code) {
+    if (code < 0) return false;
+    auto scan = [&](const pc_mod_slot* slots, std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const std::uint32_t id = slots[i].mod_id;
+            if (id < session.metamod_type.size() &&
+                session.metamod_type[id] == code) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return scan(item->prefixes, item->prefix_count) ||
+           scan(item->suffixes, item->suffix_count);
+}
+
+bool side_locked(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    int side) {
+    return item_has_metamod(
+        session, item,
+        side == PC_SIDE_PREFIX
+            ? session.data->metamod_prefixes_locked_code
+            : session.data->metamod_suffixes_locked_code);
+}
+
+bool has_class_tag(
+    const SessionImpl& session,
+    std::uint32_t mod_id,
+    std::uint32_t tag_id) {
+    if (mod_id >= session.mod_count) return false;
+    for (std::uint32_t i = session.class_offsets[mod_id];
+         i < session.class_offsets[mod_id + 1]; ++i) {
+        if (session.class_tag_ids[i] == tag_id) return true;
+    }
+    return false;
+}
+
+bool groups_conflict(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    std::uint32_t mod_id,
+    int skip_side = -1,
+    std::uint32_t skip_index = kNoMod) {
+    if (mod_id >= session.mod_count) return true;
+    auto conflicts = [&](const pc_mod_slot& slot) {
+        if (slot.mod_id >= session.mod_count) return false;
+        for (std::uint32_t a = session.group_offsets[slot.mod_id];
+             a < session.group_offsets[slot.mod_id + 1]; ++a) {
+            for (std::uint32_t b = session.group_offsets[mod_id];
+                 b < session.group_offsets[mod_id + 1]; ++b) {
+                if (session.group_ids[a] == session.group_ids[b]) return true;
+            }
+        }
+        return false;
+    };
+    for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
+        if (skip_side == PC_SIDE_PREFIX && skip_index == i) continue;
+        if (conflicts(item->prefixes[i])) return true;
+    }
+    for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
+        if (skip_side == PC_SIDE_SUFFIX && skip_index == i) continue;
+        if (conflicts(item->suffixes[i])) return true;
+    }
+    return false;
+}
+
+std::uint32_t active_spawn_weight(
+    const SessionImpl& session,
+    std::uint32_t mod_id,
+    std::uint32_t extra_tag = kNoTag) {
+    if (mod_id >= session.mod_count) return 0;
+    std::unordered_set<std::uint32_t> tags(
+        session.effective_base_tag_ids.begin(),
+        session.effective_base_tag_ids.end());
+    if (extra_tag != kNoTag) tags.insert(extra_tag);
+    const DataImpl& d = *session.data;
+    const std::uint32_t p = session.global_index[mod_id];
+    for (std::uint32_t i = d.spawn_offsets[p];
+         i < d.spawn_offsets[p + 1]; ++i) {
+        if (tags.count(d.spawn_tag_ids[i])) {
+            return d.spawn_weights[i] > 0
+                       ? static_cast<std::uint32_t>(d.spawn_weights[i])
+                       : 0;
+        }
+    }
+    return 0;
+}
+
+std::uint32_t pick_weighted_id(
+    ActionContextImpl& context,
+    const pc_item_state* item,
+    const std::vector<std::uint32_t>& ids,
+    int side = -1,
+    std::uint32_t extra_tag = kNoTag,
+    int skip_side = -1,
+    std::uint32_t skip_index = kNoMod) {
+    const SessionImpl& session = *context.session;
+    std::vector<std::pair<std::uint32_t, std::uint64_t>> candidates;
+    std::uint64_t total = 0;
+    for (std::uint32_t id : ids) {
+        if (id >= session.mod_count) continue;
+        if (side >= 0 && session.gen_type[id] != side) continue;
+        if (item != nullptr &&
+            groups_conflict(session, item, id, skip_side, skip_index)) {
+            continue;
+        }
+        const std::uint32_t weight =
+            active_spawn_weight(session, id, extra_tag);
+        if (weight == 0) continue;
+        total += weight;
+        candidates.push_back({id, total});
+    }
+    if (total == 0) return kNoMod;
+    const std::uint64_t roll = context.rng.next_below(total);
+    const auto it = std::lower_bound(
+        candidates.begin(), candidates.end(), roll + 1,
+        [](const auto& entry, std::uint64_t value) {
+            return entry.second < value;
+        });
+    return it == candidates.end() ? kNoMod : it->first;
+}
 
 std::uint8_t max_affix(const SessionImpl& session, const pc_item_state* item) {
     switch (item->rarity) {
@@ -40,8 +178,10 @@ bool add_random_mod(
     pc_item_state* item) {
     const SessionImpl& session = *context.session;
     const std::uint8_t cap = max_affix(session, item);
-    const bool prefix_open = item->prefix_count < cap;
-    const bool suffix_open = item->suffix_count < cap;
+    const bool prefix_open =
+        item->prefix_count < cap && base_request.side_filter != 1;
+    const bool suffix_open =
+        item->suffix_count < cap && base_request.side_filter != 0;
     int side_filter;
     if (prefix_open && suffix_open) {
         side_filter = -1;
@@ -96,7 +236,8 @@ bool add_random_mod(
 bool add_direct_mod(
     const SessionImpl& session,
     pc_item_state* item,
-    std::uint32_t mod_id) {
+    std::uint32_t mod_id,
+    std::uint8_t flags = 0) {
     if (mod_id >= session.mod_count) return false;
     const int side = session.gen_type[mod_id];
     if (side != 0 && side != 1) return false;
@@ -105,32 +246,42 @@ bool add_direct_mod(
         (side == 1 && item->suffix_count >= cap)) {
         return false;
     }
-    for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
-        const std::uint32_t current = item->prefixes[i].mod_id;
-        if (current >= session.mod_count) continue;
-        for (std::uint32_t a = session.group_offsets[current];
-             a < session.group_offsets[current + 1]; ++a) {
-            for (std::uint32_t b = session.group_offsets[mod_id];
-                 b < session.group_offsets[mod_id + 1]; ++b) {
-                if (session.group_ids[a] == session.group_ids[b]) return false;
-            }
-        }
-    }
-    for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
-        const std::uint32_t current = item->suffixes[i].mod_id;
-        if (current >= session.mod_count) continue;
-        for (std::uint32_t a = session.group_offsets[current];
-             a < session.group_offsets[current + 1]; ++a) {
-            for (std::uint32_t b = session.group_offsets[mod_id];
-                 b < session.group_offsets[mod_id + 1]; ++b) {
-                if (session.group_ids[a] == session.group_ids[b]) return false;
-            }
-        }
-    }
+    if (groups_conflict(session, item, mod_id)) return false;
     return pc_item_add_mod(
                item, side == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX, mod_id,
-               static_cast<std::uint16_t>(session.primary_group[mod_id]), 0,
+               static_cast<std::uint16_t>(session.primary_group[mod_id]), flags,
                nullptr) == PC_RESULT_OK;
+}
+
+bool add_implicit(
+    const SessionImpl& session,
+    pc_item_state* item,
+    std::uint32_t mod_id,
+    std::uint8_t flags = 0) {
+    if (mod_id >= session.mod_count ||
+        item->implicit_count >= PC_MAX_IMPLICITS) {
+        return false;
+    }
+    pc_mod_slot& slot = item->implicits[item->implicit_count++];
+    slot = {};
+    slot.mod_id = mod_id;
+    slot.group_id =
+        static_cast<std::uint16_t>(session.primary_group[mod_id]);
+    slot.flags = flags;
+    slot.veiled_chosen_mod_id = PC_MOD_NONE;
+    for (std::uint32_t i = 0; i < PC_MAX_VEILED_OPTIONS; ++i)
+        slot.veiled_option_mod_ids[i] = PC_MOD_NONE;
+    return true;
+}
+
+void remove_implicit_at(pc_item_state* item, std::uint32_t index) {
+    if (index >= item->implicit_count) return;
+    const std::uint8_t last = static_cast<std::uint8_t>(
+        item->implicit_count - 1);
+    if (index != last) item->implicits[index] = item->implicits[last];
+    item->implicits[last] = {};
+    item->implicits[last].mod_id = PC_MOD_NONE;
+    item->implicit_count = last;
 }
 
 struct KeptSlot {
@@ -140,17 +291,14 @@ struct KeptSlot {
     std::uint8_t flags;
 };
 
-bool side_locked(const pc_item_state*, int /*side*/) {
-    // No bench metamods yet; neither side can be locked.
-    return false;
-}
-
 // Collect the slots a reforge must keep: fractured slots, and every slot on a
 // locked side.
-std::vector<KeptSlot> collect_preserved(const pc_item_state* item) {
+std::vector<KeptSlot> collect_preserved(
+    const SessionImpl& session,
+    const pc_item_state* item) {
     std::vector<KeptSlot> kept;
     auto scan = [&](int side, const pc_mod_slot* slots, std::uint8_t count) {
-        const bool locked = side_locked(item, side);
+        const bool locked = side_locked(session, item, side);
         for (std::uint8_t i = 0; i < count; ++i) {
             const bool fractured = slots[i].flags & PC_MOD_SLOT_FRACTURED;
             if (fractured || locked) {
@@ -189,7 +337,7 @@ ActionOutcome reforge(
     const std::vector<std::uint32_t>& direct_mods = {}) {
     const SessionImpl& session = *context.session;
     const int before = item->prefix_count + item->suffix_count;
-    const std::vector<KeptSlot> kept = collect_preserved(item);
+    const std::vector<KeptSlot> kept = collect_preserved(session, item);
     restore_slots(item, kept);
     item->rarity = new_rarity;
 
@@ -241,10 +389,13 @@ ActionOutcome do_add_one(ActionContextImpl& context, pc_item_state* item) {
     return out;
 }
 
-ActionOutcome do_annul(Rng& rng, pc_item_state* item) {
+ActionOutcome do_annul(
+    const SessionImpl& session,
+    Rng& rng,
+    pc_item_state* item) {
     ActionOutcome out;
-    const bool prefix_locked = side_locked(item, PC_SIDE_PREFIX);
-    const bool suffix_locked = side_locked(item, PC_SIDE_SUFFIX);
+    const bool prefix_locked = side_locked(session, item, PC_SIDE_PREFIX);
+    const bool suffix_locked = side_locked(session, item, PC_SIDE_SUFFIX);
     if (prefix_locked && suffix_locked) {
         return out;
     }
@@ -253,14 +404,14 @@ ActionOutcome do_annul(Rng& rng, pc_item_state* item) {
         std::uint32_t index;
     };
     std::vector<Ref> removable;
-    if (!suffix_locked) {
+    if (!prefix_locked) {
         for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
             if (!(item->prefixes[i].flags & PC_MOD_SLOT_FRACTURED)) {
                 removable.push_back({PC_SIDE_PREFIX, i});
             }
         }
     }
-    if (!prefix_locked) {
+    if (!suffix_locked) {
         for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
             if (!(item->suffixes[i].flags & PC_MOD_SLOT_FRACTURED)) {
                 removable.push_back({PC_SIDE_SUFFIX, i});
@@ -278,14 +429,16 @@ ActionOutcome do_annul(Rng& rng, pc_item_state* item) {
     return out;
 }
 
-ActionOutcome do_scour(pc_item_state* item) {
+ActionOutcome do_scour(
+    const SessionImpl& session,
+    pc_item_state* item) {
     ActionOutcome out;
     if (item->rarity == PC_RARITY_NORMAL) {
         return out; // nothing to scour
     }
     const int before = item->prefix_count + item->suffix_count;
-    const bool prefix_locked = side_locked(item, PC_SIDE_PREFIX);
-    const bool suffix_locked = side_locked(item, PC_SIDE_SUFFIX);
+    const bool prefix_locked = side_locked(session, item, PC_SIDE_PREFIX);
+    const bool suffix_locked = side_locked(session, item, PC_SIDE_SUFFIX);
 
     std::vector<KeptSlot> kept;
     if (prefix_locked && !suffix_locked) {
@@ -326,6 +479,422 @@ ActionOutcome do_scour(pc_item_state* item) {
     return out;
 }
 
+void record_direct(
+    ActionContextImpl& context,
+    const pc_item_state* item,
+    std::uint32_t mod_id,
+    int side) {
+    ActionTraceStage stage;
+    stage.stage_index =
+        static_cast<std::uint32_t>(context.last_action_trace.size());
+    stage.direct = true;
+    stage.tag_signature_id = intern_item_tag_signature(context, item);
+    stage.chosen_mod_id = mod_id;
+    stage.chosen_side = static_cast<std::int8_t>(side);
+    context.last_action_trace.push_back(stage);
+}
+
+std::vector<std::uint32_t> ids_from_mask(
+    const SessionImpl& session,
+    const std::vector<std::uint64_t>& mask) {
+    std::vector<std::uint32_t> ids;
+    for (std::uint32_t id = 0; id < session.mod_count; ++id) {
+        if (pc_bitset_test(mask.data(), id)) ids.push_back(id);
+    }
+    return ids;
+}
+
+bool generate_unveil_options(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    int side,
+    std::uint32_t index) {
+    const SessionImpl& session = *context.session;
+    pc_mod_slot& slot =
+        side == PC_SIDE_PREFIX ? item->prefixes[index] : item->suffixes[index];
+    std::vector<std::uint32_t> available =
+        ids_from_mask(session, session.unveiled_generic_mask);
+    slot.veiled_option_count = 0;
+    for (std::uint32_t option = 0; option < PC_MAX_VEILED_OPTIONS; ++option) {
+        const std::uint32_t chosen = pick_weighted_id(
+            context, item, available, side, kNoTag, side, index);
+        if (chosen == kNoMod) break;
+        slot.veiled_option_mod_ids[slot.veiled_option_count++] = chosen;
+        available.erase(
+            std::remove(available.begin(), available.end(), chosen),
+            available.end());
+    }
+    return slot.veiled_option_count > 0;
+}
+
+bool add_veiled_mod(
+    ActionContextImpl& context,
+    pc_item_state* item) {
+    const SessionImpl& session = *context.session;
+    const std::uint8_t cap = max_affix(session, item);
+    const bool prefix_open = item->prefix_count < cap;
+    const bool suffix_open = item->suffix_count < cap;
+    if (!prefix_open && !suffix_open) return false;
+    int side = prefix_open && suffix_open
+                   ? static_cast<int>(context.rng.next_below(2))
+                   : prefix_open ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+    const std::uint32_t mod_id =
+        side == PC_SIDE_PREFIX ? session.veiled_prefix_mod_id
+                               : session.veiled_suffix_mod_id;
+    if (mod_id == kNoMod) return false;
+    pc_mod_slot* slot = nullptr;
+    if (pc_item_add_mod(
+            item, side, mod_id,
+            static_cast<std::uint16_t>(session.primary_group[mod_id]),
+            PC_MOD_SLOT_VEILED, &slot) != PC_RESULT_OK) {
+        return false;
+    }
+    const std::uint32_t index =
+        side == PC_SIDE_PREFIX ? item->prefix_count - 1
+                               : item->suffix_count - 1;
+    if (!generate_unveil_options(context, item, side, index)) {
+        pc_item_remove_at(item, side, index);
+        return false;
+    }
+    record_direct(context, item, mod_id, side);
+    return true;
+}
+
+ActionOutcome do_bench(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    std::uint32_t mod_id) {
+    const SessionImpl& session = *context.session;
+    if ((item->rarity != PC_RARITY_MAGIC &&
+         item->rarity != PC_RARITY_RARE) ||
+        mod_id >= session.mod_count ||
+        !(session.flags[mod_id] & (1 << 1)) ||
+        std::find(session.bench_mod_ids.begin(), session.bench_mod_ids.end(),
+                  mod_id) == session.bench_mod_ids.end()) {
+        return {};
+    }
+    int crafted_count = 0;
+    auto count_crafted = [&](const pc_mod_slot* slots, std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i)
+            if (slots[i].flags & PC_MOD_SLOT_CRAFTED) ++crafted_count;
+    };
+    count_crafted(item->prefixes, item->prefix_count);
+    count_crafted(item->suffixes, item->suffix_count);
+    const bool has_multimod = item_has_metamod(
+        session, item, session.data->metamod_multimod_code);
+    const bool target_multimod =
+        session.metamod_type[mod_id] == session.data->metamod_multimod_code;
+    if ((!target_multimod && crafted_count > 0 && !has_multimod) ||
+        crafted_count >= (has_multimod || target_multimod ? 3 : 1)) {
+        return {};
+    }
+    if (!add_direct_mod(session, item, mod_id, PC_MOD_SLOT_CRAFTED)) return {};
+    record_direct(context, item, mod_id, session.gen_type[mod_id]);
+    return {true, 1, 0};
+}
+
+ActionOutcome do_unveil(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    std::uint32_t chosen) {
+    const SessionImpl& session = *context.session;
+    int side = -1;
+    std::uint32_t index = 0;
+    if (pc_item_find_veiled(item, &side, &index) != PC_RESULT_OK ||
+        chosen >= session.mod_count) {
+        return {};
+    }
+    pc_mod_slot& slot =
+        side == PC_SIDE_PREFIX ? item->prefixes[index] : item->suffixes[index];
+    bool offered = false;
+    for (std::uint8_t i = 0; i < slot.veiled_option_count; ++i)
+        offered |= slot.veiled_option_mod_ids[i] == chosen;
+    if (!offered || session.gen_type[chosen] != side ||
+        groups_conflict(session, item, chosen, side, index)) {
+        return {};
+    }
+    slot.mod_id = chosen;
+    slot.group_id =
+        static_cast<std::uint16_t>(session.primary_group[chosen]);
+    slot.flags &= static_cast<std::uint8_t>(~PC_MOD_SLOT_VEILED);
+    slot.veiled_chosen_mod_id = chosen;
+    record_direct(context, item, chosen, side);
+    return {true, 1, 1};
+}
+
+ActionOutcome do_harvest_reforge(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    std::uint32_t tag_id) {
+    const SessionImpl& session = *context.session;
+    const int before = item->prefix_count + item->suffix_count;
+    const std::vector<KeptSlot> kept = collect_preserved(session, item);
+    restore_slots(item, kept);
+    item->rarity = PC_RARITY_RARE;
+    PoolBuildRequest guaranteed;
+    guaranteed.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+    guaranteed.target_tag_id = tag_id;
+    if (!add_random_mod(context, guaranteed, item)) return {};
+    int target = std::min<int>(rare_count(context), session.rare_affix_cap * 2);
+    while (item->prefix_count + item->suffix_count < target) {
+        if (!add_random_mod(context, PoolBuildRequest{}, item)) break;
+    }
+    const int after = item->prefix_count + item->suffix_count;
+    return {true, after - static_cast<int>(kept.size()),
+            before - static_cast<int>(kept.size())};
+}
+
+ActionOutcome do_harvest_augment(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    std::uint32_t tag_id) {
+    if (item->rarity != PC_RARITY_MAGIC && item->rarity != PC_RARITY_RARE)
+        return {};
+    if (item->generic_influence_bits || item->searing_exarch_tier ||
+        item->eater_of_worlds_tier) {
+        return {};
+    }
+    PoolBuildRequest request;
+    request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+    request.target_tag_id = tag_id;
+    if (!add_random_mod(context, request, item)) return {};
+    const std::uint32_t added_id =
+        context.last_action_trace.empty()
+            ? kNoMod
+            : context.last_action_trace.back().chosen_mod_id;
+    struct Ref { int side; std::uint32_t index; };
+    std::vector<Ref> removable;
+    auto collect = [&](int side, const pc_mod_slot* slots, std::uint8_t count) {
+        if (side_locked(*context.session, item, side)) return;
+        for (std::uint8_t i = 0; i < count; ++i) {
+            if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED) &&
+                slots[i].mod_id != added_id) {
+                removable.push_back({side, i});
+            }
+        }
+    };
+    collect(PC_SIDE_PREFIX, item->prefixes, item->prefix_count);
+    collect(PC_SIDE_SUFFIX, item->suffixes, item->suffix_count);
+    if (removable.empty()) return {true, 1, 0};
+    const Ref pick = removable[context.rng.next_below(removable.size())];
+    pc_item_remove_at(item, pick.side, pick.index);
+    return {true, 1, 1};
+}
+
+ActionOutcome do_harvest_resist(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    std::uint32_t source_tag,
+    std::uint32_t target_tag) {
+    const SessionImpl& session = *context.session;
+    if (item->rarity != PC_RARITY_MAGIC &&
+        item->rarity != PC_RARITY_RARE) {
+        return {};
+    }
+    const auto resistance = session.data->tag_id_by_name.find("resistance");
+    if (resistance == session.data->tag_id_by_name.end()) return {};
+    struct Ref { int side; std::uint32_t index; };
+    std::unordered_set<std::uint32_t> attempted;
+    while (true) {
+        std::vector<Ref> sources;
+        auto collect = [&](int side, const pc_mod_slot* slots,
+                           std::uint8_t count) {
+            if (side_locked(session, item, side)) return;
+            for (std::uint8_t i = 0; i < count; ++i) {
+                const std::uint32_t id = slots[i].mod_id;
+                if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED) &&
+                    !attempted.count(id) &&
+                    has_class_tag(session, id, resistance->second) &&
+                    has_class_tag(session, id, source_tag)) {
+                    sources.push_back({side, i});
+                }
+            }
+        };
+        collect(PC_SIDE_PREFIX, item->prefixes, item->prefix_count);
+        collect(PC_SIDE_SUFFIX, item->suffixes, item->suffix_count);
+        if (sources.empty()) return {};
+        const std::size_t pick_index =
+            static_cast<std::size_t>(context.rng.next_below(sources.size()));
+        const Ref ref = sources[pick_index];
+        pc_mod_slot original =
+            ref.side == PC_SIDE_PREFIX ? item->prefixes[ref.index]
+                                       : item->suffixes[ref.index];
+        pc_item_remove_at(item, ref.side, ref.index);
+        PoolBuildRequest request;
+        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.target_tag_id = target_tag;
+        request.side_filter = ref.side;
+        const WeightedPool& pool = get_weighted_pool(context, item, request);
+        std::vector<std::pair<std::uint32_t, std::uint64_t>> candidates;
+        std::uint64_t total = 0;
+        for (const PoolEntry& entry : pool.entries) {
+            if (entry.required_level != session.required_level[original.mod_id] ||
+                !has_class_tag(session, entry.session_mod_id,
+                               resistance->second) ||
+                has_class_tag(session, entry.session_mod_id, source_tag)) {
+                continue;
+            }
+            total += entry.final_weight;
+            candidates.push_back({entry.session_mod_id, total});
+        }
+        if (total > 0) {
+            const std::uint64_t roll = context.rng.next_below(total);
+            const auto chosen = std::lower_bound(
+                candidates.begin(), candidates.end(), roll + 1,
+                [](const auto& entry, std::uint64_t value) {
+                    return entry.second < value;
+                });
+            if (chosen != candidates.end() &&
+                add_direct_mod(session, item, chosen->first)) {
+                record_direct(context, item, chosen->first, ref.side);
+                return {true, 1, 1};
+            }
+        }
+        pc_mod_slot* restored = nullptr;
+        pc_item_add_mod(item, ref.side, original.mod_id, original.group_id,
+                        original.flags, &restored);
+        if (restored) *restored = original;
+        attempted.insert(original.mod_id);
+    }
+}
+
+bool add_eldritch_implicit(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    bool searing,
+    std::uint32_t tier) {
+    const SessionImpl& session = *context.session;
+    if (!session.eldritch_eligible || tier < 1 || tier > 4 ||
+        item->generic_influence_bits != 0) {
+        return false;
+    }
+    const auto& by_tier = searing ? session.eldritch_searing_tier_mod_ids
+                                  : session.eldritch_eater_tier_mod_ids;
+    if (tier >= by_tier.size()) return false;
+    const auto tag = session.data->tag_id_by_name.find(
+        "no_tier_" + std::to_string(tier) + "_eldritch_implicit");
+    const std::uint32_t chosen = pick_weighted_id(
+        context, nullptr, by_tier[tier], -1,
+        tag == session.data->tag_id_by_name.end() ? kNoTag : tag->second);
+    if (chosen == kNoMod) return false;
+    const int expected_gen = searing ? session.data->gen_searing_implicit_code
+                                     : session.data->gen_eater_implicit_code;
+    for (std::uint32_t i = 0; i < item->implicit_count;) {
+        const std::uint32_t id = item->implicits[i].mod_id;
+        if ((item->implicits[i].flags & PC_MOD_SLOT_ELDRITCH) &&
+            id < session.mod_count &&
+            session.data->mod_gen_type_code[session.global_index[id]] ==
+                expected_gen) {
+            remove_implicit_at(item, i);
+        } else {
+            ++i;
+        }
+    }
+    if (!add_implicit(session, item, chosen, PC_MOD_SLOT_ELDRITCH))
+        return false;
+    if (searing) item->searing_exarch_tier = static_cast<std::uint8_t>(tier);
+    else item->eater_of_worlds_tier = static_cast<std::uint8_t>(tier);
+    record_direct(context, item, chosen, -1);
+    return true;
+}
+
+int dominant_eldritch(const pc_item_state* item) {
+    if (item->searing_exarch_tier > item->eater_of_worlds_tier) return 0;
+    if (item->eater_of_worlds_tier > item->searing_exarch_tier) return 1;
+    return -1;
+}
+
+ActionOutcome do_eldritch_chaos(
+    ActionContextImpl& context,
+    pc_item_state* item) {
+    const int side = dominant_eldritch(item);
+    if (side < 0)
+        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
+                       PoolBuildRequest{});
+    pc_mod_slot fractured{};
+    bool has_fractured = false;
+    pc_mod_slot* slots =
+        side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
+    const std::uint8_t count =
+        side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+    for (std::uint8_t i = 0; i < count; ++i) {
+        if (slots[i].flags & PC_MOD_SLOT_FRACTURED) {
+            fractured = slots[i];
+            has_fractured = true;
+            break;
+        }
+    }
+    pc_item_clear_side(item, side);
+    if (has_fractured) {
+        pc_mod_slot* restored = nullptr;
+        pc_item_add_mod(item, side, fractured.mod_id, fractured.group_id,
+                        fractured.flags, &restored);
+        if (restored) *restored = fractured;
+    }
+    const int target = 2 + static_cast<int>(context.rng.next_below(2));
+    PoolBuildRequest request;
+    request.side_filter = side;
+    while ((side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count) <
+           target) {
+        if (!add_random_mod(context, request, item)) break;
+    }
+    return {true, target - (has_fractured ? 1 : 0),
+            static_cast<int>(count) - (has_fractured ? 1 : 0)};
+}
+
+ActionOutcome do_eldritch_annul(
+    ActionContextImpl& context,
+    pc_item_state* item) {
+    const int side = dominant_eldritch(item);
+    if (side < 0) return do_annul(*context.session, context.rng, item);
+    const pc_mod_slot* slots =
+        side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
+    const std::uint8_t count =
+        side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+    std::vector<std::uint32_t> removable;
+    for (std::uint8_t i = 0; i < count; ++i)
+        if (!(slots[i].flags & PC_MOD_SLOT_FRACTURED))
+            removable.push_back(i);
+    if (removable.empty()) return {};
+    pc_item_remove_at(
+        item, side, removable[context.rng.next_below(removable.size())]);
+    return {true, 0, 1};
+}
+
+void apply_fossil_specials(
+    ActionContextImpl& context,
+    pc_item_state* item,
+    const std::vector<std::uint32_t>& fossils) {
+    const SessionImpl& session = *context.session;
+    for (std::uint32_t fossil : fossils) {
+        const std::string& name =
+            session.data->string_at(session.data->fossil_name_sids[fossil]);
+        if (name == "Bloodstained Fossil") {
+            const std::vector<std::uint32_t> ids =
+                ids_from_mask(session, session.corrupted_implicit_mask);
+            const std::uint32_t chosen =
+                pick_weighted_id(context, nullptr, ids);
+            if (chosen != kNoMod &&
+                add_implicit(session, item, chosen)) {
+                item->item_flags |= PC_ITEM_CORRUPTED;
+                record_direct(context, item, chosen, -1);
+            }
+        }
+        if (fossil < session.fossil_sell_price_mod_ids.size() &&
+            !session.fossil_sell_price_mod_ids[fossil].empty()) {
+            const auto& ids = session.fossil_sell_price_mod_ids[fossil];
+            const std::uint32_t chosen =
+                ids[context.rng.next_below(ids.size())];
+            if (add_implicit(session, item, chosen))
+                record_direct(context, item, chosen, -1);
+        }
+        if (fossil < session.data->fossil_mirrors.size() &&
+            session.data->fossil_mirrors[fossil]) {
+            item->item_flags |= PC_ITEM_MIRRORED;
+        }
+    }
+}
+
 } // namespace
 
 ActionOutcome apply_action(
@@ -334,6 +903,7 @@ ActionOutcome apply_action(
     const ActionParameters& action) {
     const SessionImpl& session = *context.session;
     context.last_action_trace.clear();
+    if (!item_craftable(item)) return {};
     switch (action.type) {
     case ActionType::Transmute:
         if (item->rarity != PC_RARITY_NORMAL) {
@@ -379,9 +949,9 @@ ActionOutcome apply_action(
         }
         return do_add_one(context, item);
     case ActionType::Annul:
-        return do_annul(context.rng, item);
+        return do_annul(session, context.rng, item);
     case ActionType::Scour:
-        return do_scour(item);
+        return do_scour(session, item);
     case ActionType::Essence: {
         if (action.essence_index >=
             session.essence_guaranteed_mod_ids.size()) {
@@ -398,7 +968,8 @@ ActionOutcome apply_action(
             session.essence_guaranteed_mod_ids[action.essence_index];
         if (guaranteed == std::numeric_limits<std::uint32_t>::max()) return {};
         const int target = rare_count(context);
-        return reforge(context, item, PC_RARITY_RARE, target,
+        return reforge(context, item, PC_RARITY_RARE,
+                       std::min<int>(target, session.rare_affix_cap * 2),
                        PoolBuildRequest{}, {guaranteed});
     }
     case ActionType::Fossil: {
@@ -415,8 +986,109 @@ ActionOutcome apply_action(
         PoolBuildRequest pool_request;
         pool_request.weight_kind = PoolWeightKind::Fossil;
         pool_request.fossil_indices = action.fossil_indices;
-        return reforge(context, item, PC_RARITY_RARE, rare_count(context),
-                       pool_request, forced);
+        ActionOutcome out = reforge(
+            context, item, PC_RARITY_RARE,
+            std::min<int>(rare_count(context), session.rare_affix_cap * 2),
+            pool_request, forced);
+        if (out.applied)
+            apply_fossil_specials(context, item, action.fossil_indices);
+        return out;
+    }
+    case ActionType::Bench:
+        return do_bench(context, item, action.mod_id);
+    case ActionType::VeiledChaos: {
+        if (item->rarity != PC_RARITY_RARE ||
+            pc_item_find_veiled(item, nullptr, nullptr) == PC_RESULT_OK) {
+            return {};
+        }
+        const int before = item->prefix_count + item->suffix_count;
+        const std::vector<KeptSlot> kept = collect_preserved(session, item);
+        restore_slots(item, kept);
+        const int target = std::min<int>(
+            rare_count(context), session.rare_affix_cap * 2);
+        while (item->prefix_count + item->suffix_count < target - 1) {
+            if (!add_random_mod(context, PoolBuildRequest{}, item)) break;
+        }
+        if (!add_veiled_mod(context, item)) return {};
+        const int after = item->prefix_count + item->suffix_count;
+        return {true, after - static_cast<int>(kept.size()),
+                before - static_cast<int>(kept.size())};
+    }
+    case ActionType::VeiledExalt:
+        if (item->rarity != PC_RARITY_RARE ||
+            pc_item_find_veiled(item, nullptr, nullptr) == PC_RESULT_OK ||
+            !add_veiled_mod(context, item)) {
+            return {};
+        }
+        return {true, 1, 0};
+    case ActionType::Unveil:
+        return do_unveil(context, item, action.mod_id);
+    case ActionType::HarvestReforge:
+        if (item->rarity != PC_RARITY_RARE ||
+            action.target_tag_id == kNoTag) {
+            return {};
+        }
+        return do_harvest_reforge(context, item, action.target_tag_id);
+    case ActionType::HarvestAugment:
+        if (action.target_tag_id == kNoTag) return {};
+        return do_harvest_augment(context, item, action.target_tag_id);
+    case ActionType::HarvestResist:
+        if (action.source_tag_id == kNoTag ||
+            action.target_tag_id == kNoTag ||
+            action.source_tag_id == action.target_tag_id) {
+            return {};
+        }
+        return do_harvest_resist(
+            context, item, action.source_tag_id, action.target_tag_id);
+    case ActionType::EldritchEmber:
+        return add_eldritch_implicit(
+                   context, item, true, action.tier)
+                   ? ActionOutcome{true, 1, 0}
+                   : ActionOutcome{};
+    case ActionType::EldritchIchor:
+        return add_eldritch_implicit(
+                   context, item, false, action.tier)
+                   ? ActionOutcome{true, 1, 0}
+                   : ActionOutcome{};
+    case ActionType::EldritchExalt: {
+        if (!session.eldritch_eligible ||
+            item->rarity != PC_RARITY_RARE) {
+            return {};
+        }
+        PoolBuildRequest request;
+        request.side_filter = dominant_eldritch(item);
+        ActionOutcome out;
+        if (add_random_mod(context, request, item)) {
+            out = {true, 1, 0};
+        }
+        return out;
+    }
+    case ActionType::EldritchChaos:
+        if (!session.eldritch_eligible ||
+            item->rarity != PC_RARITY_RARE) {
+            return {};
+        }
+        return do_eldritch_chaos(context, item);
+    case ActionType::EldritchAnnul:
+        if (!session.eldritch_eligible) return {};
+        return do_eldritch_annul(context, item);
+    case ActionType::InfluenceExalt: {
+        if (item->rarity != PC_RARITY_RARE ||
+            action.influence_code <= 0 || action.influence_code > 8 ||
+            item->generic_influence_bits || item->searing_exarch_tier ||
+            item->eater_of_worlds_tier) {
+            return {};
+        }
+        const std::uint8_t bit =
+            static_cast<std::uint8_t>(1u << (action.influence_code - 1));
+        item->generic_influence_bits |= bit;
+        PoolBuildRequest request;
+        request.influence_only_code = action.influence_code;
+        if (!add_random_mod(context, request, item)) {
+            item->generic_influence_bits &= static_cast<std::uint8_t>(~bit);
+            return {};
+        }
+        return {true, 1, 0};
     }
     }
     return {};

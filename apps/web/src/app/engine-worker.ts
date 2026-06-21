@@ -41,6 +41,14 @@ interface BundleShape {
             is_corruption_only?: number[];
         };
         fossils: { key_string_ids: number[]; name_string_ids: number[] };
+        mods: {
+            global_mod_ids: number[];
+            key_string_ids: number[];
+            text_line_offsets: number[];
+            text_line_string_ids: number[];
+        };
+        bench_options: { global_mod_ids: number[] };
+        tags: { global_tag_ids: number[]; name_string_ids: number[] };
     };
 }
 
@@ -76,7 +84,78 @@ function buildCatalog(bundle: Uint8Array): Catalog {
     }
     essences.sort((a, b) => a.name.localeCompare(b.name));
     fossils.sort((a, b) => a.name.localeCompare(b.name));
-    return { groupKeyById, groupNameById, essences, fossils };
+    const modIndex = new Map(
+        g.mods.global_mod_ids.map((id, index) => [id, index]),
+    );
+    const bench: CatalogEntry[] = [];
+    const seenBench = new Set<string>();
+    for (const globalId of g.bench_options.global_mod_ids) {
+        if (globalId < 0) continue;
+        const index = modIndex.get(globalId);
+        if (index === undefined) continue;
+        const key = s(g.mods.key_string_ids[index]);
+        if (!key || seenBench.has(key)) continue;
+        seenBench.add(key);
+        const lineOffset = g.mods.text_line_offsets[index];
+        const lineEnd = g.mods.text_line_offsets[index + 1];
+        const name =
+            lineEnd > lineOffset
+                ? s(g.mods.text_line_string_ids[lineOffset])
+                : key;
+        bench.push({ key, name: name || key });
+    }
+    bench.sort((a, b) => a.name.localeCompare(b.name));
+    const tagNames = new Set(g.tags.name_string_ids.map(s));
+    const harvestTags = [
+        "attack",
+        "caster",
+        "life",
+        "defences",
+        "physical",
+        "fire",
+        "cold",
+        "lightning",
+        "chaos",
+        "speed",
+        "critical",
+    ]
+        .filter((key) => tagNames.has(key))
+        .map((key) => ({
+            key,
+            name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        }));
+    const influences = [
+        "shaper",
+        "elder",
+        "crusader",
+        "adjudicator",
+        "basilisk",
+        "eyrie",
+    ].map((key) => ({
+        key,
+        code: {
+            adjudicator: 1,
+            basilisk: 2,
+            crusader: 3,
+            elder: 4,
+            eyrie: 5,
+            shaper: 6,
+        }[key],
+        name: {
+            adjudicator: "Warlord",
+            basilisk: "Redeemer",
+            eyrie: "Hunter",
+        }[key] ?? key.replace(/\b\w/g, (c) => c.toUpperCase()),
+    }));
+    return {
+        groupKeyById,
+        groupNameById,
+        essences,
+        fossils,
+        bench,
+        harvestTags,
+        influences,
+    };
 }
 
 function catalogFor(data: number): Catalog {
@@ -221,6 +300,18 @@ async function dispatch(
                 key: params.key as string,
                 side: params.side as string | undefined,
                 fractured: params.fractured as boolean | undefined,
+            });
+            return {};
+        case "removeMod":
+            bindings.removeMod(params.item as number, {
+                modId: params.modId as number,
+                side: params.side as "prefix" | "suffix",
+            });
+            return {};
+        case "setModFractured":
+            bindings.setModFractured(params.item as number, {
+                modId: params.modId as number,
+                side: params.side as "prefix" | "suffix",
             });
             return {};
         case "apply":

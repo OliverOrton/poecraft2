@@ -16,8 +16,13 @@ namespace {
 
 constexpr std::int32_t kFlagEssenceOnly = 1 << 0;
 constexpr std::int32_t kFlagCrafted = 1 << 1;
+constexpr std::int32_t kFlagMetamod = 1 << 2;
 constexpr std::int32_t kFlagDelve = 1 << 4;
 constexpr std::int32_t kFlagImplicit = 1 << 5;
+constexpr std::int32_t kFlagCorruptedImplicit = 1 << 6;
+constexpr std::int32_t kFlagEldritchImplicit = 1 << 7;
+constexpr std::int32_t kFlagVeiledTemplate = 1 << 8;
+constexpr std::int32_t kFlagUnveiled = 1 << 9;
 constexpr std::uint32_t kNoMod = std::numeric_limits<std::uint32_t>::max();
 constexpr std::uint32_t kNoTag = std::numeric_limits<std::uint32_t>::max();
 constexpr std::size_t kMaxPoolCacheEntries = 4096;
@@ -336,6 +341,44 @@ bool mask_test(const std::vector<std::uint64_t>& mask, std::uint32_t id) {
     return !mask.empty() && pc_bitset_test(mask.data(), id);
 }
 
+bool item_has_metamod(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    int metamod_code) {
+    if (item == nullptr || metamod_code < 0) return false;
+    auto scan = [&](const pc_mod_slot* slots, std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const std::uint32_t id = slots[i].mod_id;
+            if (id < session.metamod_type.size() &&
+                session.metamod_type[id] == metamod_code) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return scan(item->prefixes, item->prefix_count) ||
+           scan(item->suffixes, item->suffix_count);
+}
+
+void apply_metamod_pool_blocks(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    std::vector<std::uint64_t>& candidate) {
+    const DataImpl& d = *session.data;
+    auto block_tag = [&](const char* name) {
+        const auto tag = d.tag_id_by_name.find(name);
+        if (tag == d.tag_id_by_name.end()) return;
+        const auto mask = session.implicit_tag_masks.find(tag->second);
+        if (mask == session.implicit_tag_masks.end()) return;
+        pc_bitset_andnot(candidate.data(), candidate.data(),
+                         mask->second.data(), session.words);
+    };
+    if (item_has_metamod(session, item, d.metamod_no_attack_code))
+        block_tag("attack");
+    if (item_has_metamod(session, item, d.metamod_no_caster_code))
+        block_tag("caster");
+}
+
 } // namespace
 
 std::size_t PoolCacheKeyHash::operator()(const PoolCacheKey& key) const {
@@ -366,6 +409,9 @@ void build_session(SessionImpl& session) {
     session.effective_base_tag_ids.assign(base_set.begin(), base_set.end());
     std::sort(session.effective_base_tag_ids.begin(),
               session.effective_base_tag_ids.end());
+    const auto default_tag = d.tag_id_by_name.find("default");
+    const std::uint32_t default_tag_id =
+        default_tag == d.tag_id_by_name.end() ? kNoTag : default_tag->second;
 
     std::string item_class_key;
     const auto class_it = d.item_class_index_by_id.find(item_class_id);
@@ -374,6 +420,9 @@ void build_session(SessionImpl& session) {
     }
     session.rare_affix_cap =
         (item_class_key == "Jewel" || item_class_key == "AbyssJewel") ? 2 : 3;
+    session.eldritch_eligible =
+        item_class_key == "Helmet" || item_class_key == "Body Armour" ||
+        item_class_key == "Gloves" || item_class_key == "Boots";
 
     const std::string class_selector = normalize_key(item_class_key);
     session.selector_tag_by_influence.assign(
@@ -400,7 +449,10 @@ void build_session(SessionImpl& session) {
     std::vector<std::uint32_t> essence_global_ids(d.essence_count, kNoMod);
     std::vector<std::vector<std::uint32_t>> fossil_added_globals(d.fossil_count);
     std::vector<std::vector<std::uint32_t>> fossil_forced_globals(d.fossil_count);
+    std::vector<std::vector<std::uint32_t>> fossil_sell_globals(d.fossil_count);
     std::vector<std::uint32_t> base_implicit_globals;
+    std::vector<std::vector<std::uint32_t>> searing_globals(5);
+    std::vector<std::vector<std::uint32_t>> eater_globals(5);
 
     auto add_mod = [&](std::uint32_t p, ReachKind kind,
                        const std::string& via) {
@@ -415,6 +467,8 @@ void build_session(SessionImpl& session) {
             gen == d.gen_prefix_code ? 0 : gen == d.gen_suffix_code ? 1 : -1);
         session.primary_group.push_back(d.mod_primary_group[p]);
         session.flags.push_back(d.mod_flags[p]);
+        session.metamod_type.push_back(d.mod_metamod_type_code[p]);
+        session.special_kind.push_back(d.mod_special_kind_code[p]);
         session.required_level.push_back(d.mod_required_level[p]);
         session.influence_code.push_back(d.mod_influence_code[p]);
         session.reach_kind.push_back(static_cast<std::uint8_t>(kind));
@@ -478,6 +532,66 @@ void build_session(SessionImpl& session) {
         }
     }
 
+    // Direct mechanic registries. They remain outside normal random rolling,
+    // but are part of the session universe so every runtime uses dense ids.
+    for (std::uint32_t p = 0; p < d.mod_count; ++p) {
+        if (d.mod_required_level[p] > session.item_level) continue;
+        const int special = d.mod_special_kind_code[p];
+        const std::string& key = d.string_at(d.mod_key_sid[p]);
+        if (special == d.special_veiled_template_code) {
+            if (key == "VeiledPrefix" || key == "VeiledSuffix") {
+                add_mod(p, ReachKind::Veiled, "veiled:template");
+            }
+            continue;
+        }
+        if (special == d.special_unveiled_code) {
+            const Match spawn = first_matching(
+                d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, base_set,
+                0);
+            if (spawn.weight > 0 && spawn.tag_id != default_tag_id) {
+                add_mod(p, ReachKind::Unveiled, "veiled:unveil");
+            }
+            continue;
+        }
+        if (special == d.special_corrupted_implicit_code) {
+            const Match spawn = first_matching(
+                d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, base_set,
+                0);
+            if (spawn.weight > 0 && spawn.tag_id != default_tag_id) {
+                add_mod(p, ReachKind::CorruptedImplicit,
+                        "implicit:corrupted");
+            }
+            continue;
+        }
+        if (special == d.special_eldritch_implicit_code &&
+            session.eldritch_eligible) {
+            const bool searing =
+                d.mod_gen_type_code[p] == d.gen_searing_implicit_code;
+            const bool eater =
+                d.mod_gen_type_code[p] == d.gen_eater_implicit_code;
+            if (!searing && !eater) continue;
+            for (std::uint32_t tier = 1; tier <= 4; ++tier) {
+                std::unordered_set<std::uint32_t> tags = base_set;
+                const auto tier_tag = d.tag_id_by_name.find(
+                    "no_tier_" + std::to_string(tier) +
+                    "_eldritch_implicit");
+                if (tier_tag != d.tag_id_by_name.end()) {
+                    tags.insert(tier_tag->second);
+                }
+                const Match spawn = first_matching(
+                    d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, tags,
+                    0);
+                if (spawn.weight <= 0 || spawn.tag_id == default_tag_id)
+                    continue;
+                add_mod(p, ReachKind::EldritchImplicit,
+                        searing ? "implicit:searing_exarch"
+                                : "implicit:eater_of_worlds");
+                (searing ? searing_globals[tier] : eater_globals[tier])
+                    .push_back(d.mod_global_ids[p]);
+            }
+        }
+    }
+
     // Essence guaranteed mods for this item class.
     const std::string normalized_class = normalize_key(item_class_key);
     for (std::uint32_t essence = 0; essence < d.essence_count; ++essence) {
@@ -518,7 +632,8 @@ void build_session(SessionImpl& session) {
              i < d.fossil_mod_offsets[fossil + 1]; ++i) {
             const int kind = d.fossil_mod_kind_codes[i];
             if (kind != d.fossil_mod_added_code &&
-                kind != d.fossil_mod_forced_code) {
+                kind != d.fossil_mod_forced_code &&
+                kind != d.fossil_mod_sell_price_code) {
                 continue;
             }
             if (d.fossil_linked_global_mod_ids[i] < 0) continue;
@@ -528,6 +643,11 @@ void build_session(SessionImpl& session) {
             if (it == d.mod_pos_by_global_id.end()) continue;
             const std::uint32_t p = it->second;
             if (d.mod_required_level[p] > session.item_level) continue;
+            if (kind == d.fossil_mod_sell_price_code) {
+                add_mod(p, ReachKind::Fossil, "fossil:sell_price");
+                fossil_sell_globals[fossil].push_back(global);
+                continue;
+            }
             const Match spawn = first_matching(
                 d.spawn_offsets, d.spawn_tag_ids, d.spawn_weights, p, base_set,
                 0);
@@ -554,6 +674,13 @@ void build_session(SessionImpl& session) {
     alloc_mask(session.essence_only_mask, session.words);
     alloc_mask(session.implicit_mask, session.words);
     alloc_mask(session.delve_mask, session.words);
+    alloc_mask(session.veiled_template_mask, session.words);
+    alloc_mask(session.unveiled_mask, session.words);
+    alloc_mask(session.unveiled_generic_mask, session.words);
+    alloc_mask(session.corrupted_implicit_mask, session.words);
+    alloc_mask(session.eldritch_implicit_mask, session.words);
+    alloc_mask(session.eldritch_searing_mask, session.words);
+    alloc_mask(session.eldritch_eater_mask, session.words);
 
     session.class_offsets.assign(session.mod_count + 1, 0);
     session.classification_tag_name_ptrs.resize(session.mod_count);
@@ -607,6 +734,36 @@ void build_session(SessionImpl& session) {
             pc_bitset_set(session.implicit_mask.data(), s);
         if (session.flags[s] & kFlagDelve)
             pc_bitset_set(session.delve_mask.data(), s);
+        if (session.flags[s] & kFlagVeiledTemplate)
+            pc_bitset_set(session.veiled_template_mask.data(), s);
+        if (session.flags[s] & kFlagUnveiled) {
+            pc_bitset_set(session.unveiled_mask.data(), s);
+            bool named = false;
+            for (std::uint32_t i = session.class_offsets[s];
+                 i < session.class_offsets[s + 1]; ++i) {
+                const auto it = d.tag_name_by_id.find(session.class_tag_ids[i]);
+                if (it == d.tag_name_by_id.end()) continue;
+                const std::string& tag = it->second;
+                if (tag != "unveiled_mod" &&
+                    (tag.find("_veiled_prefix") != std::string::npos ||
+                     tag.find("_veiled_suffix") != std::string::npos)) {
+                    named = true;
+                    break;
+                }
+            }
+            if (!named)
+                pc_bitset_set(session.unveiled_generic_mask.data(), s);
+        }
+        if (session.flags[s] & kFlagCorruptedImplicit)
+            pc_bitset_set(session.corrupted_implicit_mask.data(), s);
+        if (session.flags[s] & kFlagEldritchImplicit) {
+            pc_bitset_set(session.eldritch_implicit_mask.data(), s);
+            const std::uint32_t p = session.global_index[s];
+            if (d.mod_gen_type_code[p] == d.gen_searing_implicit_code)
+                pc_bitset_set(session.eldritch_searing_mask.data(), s);
+            if (d.mod_gen_type_code[p] == d.gen_eater_implicit_code)
+                pc_bitset_set(session.eldritch_eater_mask.data(), s);
+        }
 
         int influence = session.influence_code[s];
         if (influence < 0 ||
@@ -632,6 +789,29 @@ void build_session(SessionImpl& session) {
         session.base_implicit_mod_ids.push_back(
             session.session_id_by_global_id.at(global));
     }
+    for (std::uint32_t s = 0; s < session.mod_count; ++s) {
+        if (session.flags[s] & kFlagCrafted) {
+            session.bench_mod_ids.push_back(s);
+        }
+        const std::string& key =
+            d.string_at(d.mod_key_sid[session.global_index[s]]);
+        if (key == "VeiledPrefix") session.veiled_prefix_mod_id = s;
+        if (key == "VeiledSuffix") session.veiled_suffix_mod_id = s;
+    }
+    auto map_globals = [&](const std::vector<std::vector<std::uint32_t>>& src,
+                           std::vector<std::vector<std::uint32_t>>& dst) {
+        dst.resize(src.size());
+        for (std::size_t i = 0; i < src.size(); ++i) {
+            for (std::uint32_t global : src[i]) {
+                const auto it = session.session_id_by_global_id.find(global);
+                if (it != session.session_id_by_global_id.end())
+                    dst[i].push_back(it->second);
+            }
+        }
+    };
+    map_globals(searing_globals, session.eldritch_searing_tier_mod_ids);
+    map_globals(eater_globals, session.eldritch_eater_tier_mod_ids);
+    map_globals(fossil_sell_globals, session.fossil_sell_price_mod_ids);
     session.essence_guaranteed_mod_ids.assign(d.essence_count, kNoMod);
     for (std::uint32_t i = 0; i < d.essence_count; ++i) {
         const auto it = session.session_id_by_global_id.find(essence_global_ids[i]);
@@ -721,6 +901,13 @@ void build_session(SessionImpl& session) {
     zero_padding(session.essence_only_mask);
     zero_padding(session.implicit_mask);
     zero_padding(session.delve_mask);
+    zero_padding(session.veiled_template_mask);
+    zero_padding(session.unveiled_mask);
+    zero_padding(session.unveiled_generic_mask);
+    zero_padding(session.corrupted_implicit_mask);
+    zero_padding(session.eldritch_implicit_mask);
+    zero_padding(session.eldritch_searing_mask);
+    zero_padding(session.eldritch_eater_mask);
     for (auto& [_, mask] : session.group_masks) zero_padding(mask);
     for (auto& [_, mask] : session.implicit_tag_masks) zero_padding(mask);
     for (auto& mask : session.influence_masks) zero_padding(mask);
@@ -813,10 +1000,17 @@ const WeightedPool& get_weighted_pool(
         }
     }
 
-    const std::vector<std::uint64_t> influence =
-        influence_allowed_mask(session, item);
+    std::vector<std::uint64_t> influence;
+    if (request.influence_only_code >= 0 &&
+        static_cast<std::size_t>(request.influence_only_code) <
+            session.influence_masks.size()) {
+        influence = session.influence_masks[request.influence_only_code];
+    } else {
+        influence = influence_allowed_mask(session, item);
+    }
     pc_bitset_and(candidate.data(), candidate.data(), influence.data(),
                   session.words);
+    apply_metamod_pool_blocks(session, item, candidate);
     build_current_group_block_mask(context, item);
     pc_bitset_andnot(candidate.data(), candidate.data(),
                      context.block_mask_scratch.data(), session.words);
@@ -848,6 +1042,16 @@ const WeightedPool& get_weighted_pool(
                 final_weight,
                 fossil_multiplier_fixed(
                     session, s, request.fossil_indices));
+            for (std::uint32_t fossil : request.fossil_indices) {
+                if (fossil < session.data->fossil_rolls_lucky.size() &&
+                    session.data->fossil_rolls_lucky[fossil] != 0) {
+                    const std::uint64_t level_pct =
+                        100 + (session.required_level[s] > 40
+                                   ? session.required_level[s] - 40
+                                   : 0);
+                    final_weight = (final_weight * level_pct) / 100;
+                }
+            }
         }
         if (final_weight == 0) return;
 
@@ -902,8 +1106,17 @@ void build_pool_debug_rows(
     const std::uint32_t signature_id =
         intern_item_tag_signature(context, item);
     const WeightView weights = weight_view(context, signature_id);
-    const std::vector<std::uint64_t> influence =
-        influence_allowed_mask(session, item);
+    std::vector<std::uint64_t> influence;
+    if (request.influence_only_code >= 0 &&
+        static_cast<std::size_t>(request.influence_only_code) <
+            session.influence_masks.size()) {
+        influence = session.influence_masks[request.influence_only_code];
+    } else {
+        influence = influence_allowed_mask(session, item);
+    }
+    std::vector<std::uint64_t> metamod_allowed(session.words, ~std::uint64_t{0});
+    pc_bitset_zero_padding(metamod_allowed.data(), session.mod_count);
+    apply_metamod_pool_blocks(session, item, metamod_allowed);
     build_current_group_block_mask(context, item);
     std::unordered_map<std::uint32_t, const PoolEntry*> accepted;
     for (const PoolEntry& entry : pool.entries) {
@@ -938,7 +1151,8 @@ void build_pool_debug_rows(
         row.blocking_group_id = row.group_allowed
                                     ? kNoMod
                                     : first_blocking_group(session, s, item);
-        row.mechanic_allowed = row.normal_random_member;
+        row.mechanic_allowed =
+            row.normal_random_member && mask_test(metamod_allowed, s);
         std::uint64_t fossil_multiplier = kFossilMultiplierScale;
         if (request.weight_kind == PoolWeightKind::Fossil) {
             for (std::uint32_t fossil : request.fossil_indices) {
@@ -946,19 +1160,32 @@ void build_pool_debug_rows(
                               session.fossil_added_mod_ids[fossil].end(),
                               s) !=
                     session.fossil_added_mod_ids[fossil].end()) {
-                    row.mechanic_allowed = true;
+                    row.mechanic_allowed =
+                        mask_test(metamod_allowed, s);
                 }
             }
             fossil_multiplier =
                 fossil_multiplier_fixed(
                     session, s, request.fossil_indices);
+            for (std::uint32_t fossil : request.fossil_indices) {
+                if (fossil < session.data->fossil_rolls_lucky.size() &&
+                    session.data->fossil_rolls_lucky[fossil] != 0) {
+                    const std::uint64_t level_pct =
+                        100 + (session.required_level[s] > 40
+                                   ? session.required_level[s] - 40
+                                   : 0);
+                    fossil_multiplier =
+                        (fossil_multiplier * level_pct) / 100;
+                }
+            }
             row.special_multiplier_pct =
                 fossil_multiplier_debug_pct(fossil_multiplier);
         } else if (request.weight_kind ==
                    PoolWeightKind::HarvestSpawnOnly) {
             row.mechanic_allowed =
                 row.normal_random_member &&
-                has_class_tag(session, s, request.target_tag_id);
+                has_class_tag(session, s, request.target_tag_id) &&
+                mask_test(metamod_allowed, s);
             row.generation_applied = false;
         }
         row.positively_weighted =

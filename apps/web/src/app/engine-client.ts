@@ -274,6 +274,20 @@ export class EngineClient {
         return this.call<void>("addMod", { item, session, ...spec });
     }
 
+    removeMod(
+        item: number,
+        spec: { modId: number; side: "prefix" | "suffix" },
+    ): Promise<void> {
+        return this.call<void>("removeMod", { item, ...spec });
+    }
+
+    setModFractured(
+        item: number,
+        spec: { modId: number; side: "prefix" | "suffix" },
+    ): Promise<void> {
+        return this.call<void>("setModFractured", { item, ...spec });
+    }
+
     async apply(
         context: number,
         item: number,

@@ -605,7 +605,20 @@ typedef enum {
     PC_ACTION_ANNUL,
     PC_ACTION_SCOUR,
     PC_ACTION_ESSENCE,
-    PC_ACTION_FOSSIL
+    PC_ACTION_FOSSIL,
+    PC_ACTION_BENCH,
+    PC_ACTION_VEILED_CHAOS,
+    PC_ACTION_VEILED_EXALT,
+    PC_ACTION_UNVEIL,
+    PC_ACTION_HARVEST_REFORGE,
+    PC_ACTION_HARVEST_AUGMENT,
+    PC_ACTION_HARVEST_RESIST,
+    PC_ACTION_ELDRITCH_EMBER,
+    PC_ACTION_ELDRITCH_ICHOR,
+    PC_ACTION_ELDRITCH_EXALT,
+    PC_ACTION_ELDRITCH_CHAOS,
+    PC_ACTION_ELDRITCH_ANNUL,
+    PC_ACTION_INFLUENCE_EXALT
 } pc_action_type;
 
 typedef struct {
@@ -615,13 +628,20 @@ typedef struct {
     const char* essence_key;
     uint32_t fossil_count;
     const char* fossil_keys[4];
+    const char* mod_key;
+    const char* target_tag;
+    const char* source_tag;
+    const char* influence;
+    uint32_t tier;
 } pc_action_request;
 ```
 
 Pool debugging wraps the same action request in `pc_pool_query_request`, adding
 the side filter and whether rejected session rows should be returned. This keeps
 Python, WASM, UI diagnostics, and native execution on one action-parameter
-shape.
+shape. Direct actions such as bench, unveil, and implicit application expose
+their selected rows through the last-action trace rather than pretending they
+have a normal weighted explicit pool.
 
 Random state belongs to `pc_action_context_handle` or the simulator's private action context. Do not use process-global random state or hide mutable random state in a shared session. Context options may accept an initial seed for tests/debugging, but exact seeded replay across platforms or engine versions is not a compatibility requirement.
 

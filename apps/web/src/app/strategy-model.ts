@@ -53,6 +53,7 @@ export type StrategyCondition = {
     family_mod_key?: string;
     family_label?: string;
     min_tier?: number;
+    fractured?: boolean;
     rarity?: string;
     value?: number;
     count?: number;
@@ -464,10 +465,11 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
                 typeof condition.min_tier === "number" && condition.min_tier > 0
                     ? ` T${condition.min_tier}+`
                     : "";
+            const fractured = condition.fractured ? " fractured" : "";
             return condition.family_label
-                ? `${condition.family_label}${tier}`
+                ? `${condition.family_label}${tier}${fractured}`
                 : condition.family_mod_key
-                  ? `has modifier${tier}`
+                  ? `has${fractured} modifier${tier}`
                   : "has modifier";
         }
         case "rarity_is":

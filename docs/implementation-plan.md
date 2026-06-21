@@ -718,9 +718,13 @@ Implemented baseline:
   worker smoke test continues to exercise the real native simulator and now
   also verifies the editor catalog and modifier-family minimum-tier routing.
 
-## Phase 12: Account And Sync Foundation
+## Phase 12: Account And Sync Foundation (Deferred)
 
 Goal: add optional accounts after the local app, Stash, and Strategy Builder are usable.
+
+Status: intentionally skipped for now. Do not implement this phase until it is
+explicitly resumed. Phase 13 is the next active phase. Any later phase that
+requires accounts or server-backed resources still depends on this phase.
 
 Implement:
 
@@ -754,9 +758,10 @@ Acceptance gate:
 - User can export owned resources and delete the account.
 - The public app displays the required GGG non-affiliation notice and links its privacy/terms pages.
 
-## Phase 13: Mechanic Expansion
+## Phase 13: Mechanic Expansion (Complete)
 
-Goal: complete the engine mechanics intended for the first fully functional public release.
+Goal: expand the currently functional engine with the remaining ordinary
+one-item crafting mechanics in this phase's scope.
 
 Suggested order:
 
@@ -766,7 +771,18 @@ Suggested order:
 4. Eldritch implicits and eldritch currency.
 5. Influenced exalts.
 6. Corrupted implicits and special fossil effects.
-7. Recombinators.
+
+Recombinators are not part of Phase 13. They are deferred to their own
+standalone Phase 18 because they require two-item state, transfer rules, and a
+broader session universe.
+
+The old `poeCraft` project at `C:\Users\Oliver\poeCraft\poeCraft` should be
+consulted while implementing these crafting options. Its crafting engine,
+method definitions, item model, registries, and data-loading code are useful
+behavioral and data-flow references. The current `poecraft2` semantics docs,
+current source data, and focused fixtures remain authoritative when the old
+implementation is incomplete, approximate, or conflicts with the new engine
+contracts.
 
 Each mechanic needs:
 
@@ -782,10 +798,50 @@ web UI affordance
 
 Acceptance gate:
 
-- Every crafting mechanic in the public v1 scope has ingest/schema support, native implementation, debug output, focused checks, and a usable web affordance.
-- Native, Python, and WASM agree on the shared rule/strategy fixtures for the complete v1 mechanic set.
-- Remaining unsupported mechanics are explicitly excluded from v1 rather than silently producing approximate results.
-- Publishing remains disabled until this gate and Phase 14 both pass.
+- Every Phase 13 mechanic has ingest/schema support, native implementation, debug output, focused checks, and a usable web affordance.
+- Native, Python, and WASM agree on the shared rule/strategy fixtures for the complete Phase 13 mechanic set.
+- Recombinators and any other unsupported mechanics are explicitly reported as unsupported rather than silently producing approximate results.
+- Publishing remains disabled until the deferred Phase 12 account foundation and the Phase 13 and Phase 14 gates pass.
+
+Implemented baseline:
+
+- Runtime sessions load class-legal bench mods, generic veiled templates and
+  unveil outcomes, corrupted implicits, Eldritch implicits by side/tier, and
+  fossil sell-price rows as dense session mods with dedicated masks.
+- Bench actions enforce crafted-mod limits and metamod state. Prefix/suffix
+  locks preserve the correct side during rerolls/removal; cannot-roll attack
+  and caster crafts filter classification-tag pools.
+- Veiled exalt and veiled chaos add one placeholder with three persisted,
+  weighted generic unveil choices. Unveil validates the offered choice, side,
+  and live group conflicts before replacing the placeholder.
+- Harvest reforge and augment use classification-tag targeting with spawn
+  weight only, respect metamod blocking, and share one combined affix
+  distribution. Resistance conversion preserves side and required level while
+  replacing a removable source resistance.
+- Ember/Ichor application maintains independent Exarch/Eater tiers and
+  implicits. Eldritch exalt/chaos/annul use the documented dominant-influence
+  side, while generic influenced exalts add and roll only the requested
+  influence.
+- Fossils retain fixed-point weight stacking and forced/added rows. Sanctified
+  applies its required-level weighting; Bloodstained and Gilded add their
+  implicit effects; Fractured Fossil returns a mirrored result item.
+- The C ABI, Python binding, WASM worker, native strategy compiler, Emulator,
+  and Strategy Builder use the same action vocabulary and parameter contract.
+  Direct mechanics report selected mods through the last-action trace; weighted
+  mechanics remain available through request-shaped pool debugging.
+- Native engine checks, Python binding/strategy checks, and WASM worker/strategy
+  checks cover the Phase 13 mechanics. The Emulator and Strategy Builder expose
+  parameter controls for bench, Harvest, Eldritch, influence, veiled, and
+  unveil actions.
+- The post-Phase-13 UI pass groups Emulator actions into Basic Currency,
+  Essences, Harvest, Fossil, Eldritch, Influenced, and Veiled panels. Essence
+  selection is type-first with the highest available tier selected by default,
+  and mechanic selections persist while crafting.
+- Modifier-pool right-clicking can add or mark an explicit modifier as
+  fractured. Strategy family conditions use the same gesture to require the
+  matched modifier to be fractured.
+- Item displays show influence badges, reserve stable modifier-row space, use
+  modifier-specific text colors, and frame the item using its rarity color.
 
 ## Phase 14: Performance And Public-Engine Readiness
 
@@ -832,6 +888,9 @@ Acceptance gate:
 ## Phase 15: Publishing And Discovery
 
 Goal: add strategy sharing only after the complete public engine and readiness gates have passed.
+
+Prerequisite: the deferred Phase 12 account and sync foundation must be resumed
+and completed before this phase begins.
 
 Implement:
 
@@ -919,27 +978,50 @@ baseline Monte Carlo strategy evaluation
 
 Do not start here. ML depends on a trustworthy engine and native strategy simulator.
 
-## Immediate Next Task
+## Phase 18: Recombinators (Deferred)
 
-Start with Phase 0 and Phase 1 together:
+Goal: implement recombinators as a dedicated two-item crafting system after the
+ordinary one-item mechanic expansion is stable.
 
-1. Create minimal repo scaffolding.
-2. Add local build/test scripts.
-3. Add SQLite schema draft.
-4. Add Python ingest package skeleton.
-5. Ingest the complete current crafting-relevant RePoE dataset.
-6. Write the first full-ingest validation report, including accounted/skipped row counts.
-7. Select one ordinary non-cluster base/item-level fixture for detailed pool review while compiling the full runtime dataset.
-
-The first meaningful milestone is:
+Implement:
 
 ```text
-Given one selected base and item level,
-the new pipeline can list the expected normal rollable prefix/suffix mods
-from a canonical database that contains the full crafting-relevant dataset.
+two-item recombination session
+input-side and output-base state
+transfer eligibility and exclusion masks
+prefix/suffix selection and retention rules
+special modifier and item-state handling
+debug transfer-candidate output
+native, Python, and WASM actions
+strategy and Emulator UI support
+focused recombination fixtures
 ```
 
-That milestone proves one rule fixture. Phase 3 is not complete until the generated runtime artifact contains every released base and the full normalized mod/mechanic catalog.
+Use the existing recombinator architecture notes in
+`architecture-plan.md`, `data-shapes-and-ingest.md`, and `engine-bitsets.md` as
+the starting contract. Re-check the live Path of Exile 1 rules and current
+source data when this phase begins; do not infer recombination behavior from
+ordinary one-item rolling.
+
+Acceptance gate:
+
+- Recombination uses an explicit two-item session and does not broaden every ordinary crafting session.
+- Transfer candidates, exclusions, item-state changes, and output-base behavior are inspectable through debug output.
+- Native, Python, and WASM agree on focused recombination fixtures.
+- Unsupported recombinator variants fail explicitly rather than using approximate transfer rules.
+
+## Immediate Next Task
+
+Phase 13 is complete. Phase 14 is the next planned phase, but do not begin it
+without an explicit request.
+
+```text
+measure current native and WASM performance
+capture session/pool/cache/action throughput baselines
+optimize only where the measurements justify it
+```
+
+Phase 12 remains deferred. Recombinators remain deferred to Phase 18.
 
 ## Definition Of Done For MVP
 

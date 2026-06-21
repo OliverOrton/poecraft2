@@ -63,6 +63,19 @@ const OPERATIONS = [
     "scour",
     "essence",
     "fossil",
+    "bench",
+    "veiled_chaos",
+    "veiled_exalt",
+    "unveil",
+    "harvest_reforge",
+    "harvest_augment",
+    "harvest_resist",
+    "eldritch_ember",
+    "eldritch_ichor",
+    "eldritch_exalt",
+    "eldritch_chaos",
+    "eldritch_annul",
+    "influence_exalt",
     "condition_check_only",
 ];
 
@@ -78,6 +91,11 @@ const PALETTE: Array<[string, string]> = [
     ["operation:scour", "Orb of Scouring"],
     ["operation:essence", "Essence"],
     ["operation:fossil", "Fossils"],
+    ["operation:bench", "Bench craft"],
+    ["operation:harvest_reforge", "Harvest reforge"],
+    ["operation:veiled_exalt", "Veiled exalt"],
+    ["operation:eldritch_exalt", "Eldritch exalt"],
+    ["operation:influence_exalt", "Influenced exalt"],
     ["router", "Condition router"],
     ["terminal:success", "Success terminal"],
     ["terminal:failure", "Failure terminal"],
@@ -91,8 +109,13 @@ export class PcStrategyEditor extends HTMLElement {
     private catalog: Catalog | null = null;
     private essenceOptions: ComboOption[] = [];
     private fossilOptions: ComboOption[] = [];
+    private benchOptions: ComboOption[] = [];
+    private sessionBenchOptions: ComboOption[] = [];
+    private harvestOptions: ComboOption[] = [];
+    private influenceOptions: ComboOption[] = [];
     private fossilNames = new Map<string, string>();
     private modifierOptions: ModifierFamilyOption[] = [];
+    private unveilOptions: ComboOption[] = [];
     private modifierBaseKey = "";
     private modifierLoading = false;
     private docId = "";
@@ -117,7 +140,6 @@ export class PcStrategyEditor extends HTMLElement {
     private persistTimer = 0;
     private disposed = false;
     private connectedOnce = false;
-    private pickerOpen = true;
     private hasChosenBase = false;
 
     async connectedCallback(): Promise<void> {
@@ -150,6 +172,18 @@ export class PcStrategyEditor extends HTMLElement {
                 value: entry.key,
                 label: entry.name,
             }));
+            this.benchOptions = this.catalog.bench.map((entry) => ({
+                value: entry.key,
+                label: entry.name,
+            }));
+            this.harvestOptions = this.catalog.harvestTags.map((entry) => ({
+                value: entry.key,
+                label: entry.name,
+            }));
+            this.influenceOptions = this.catalog.influences.map((entry) => ({
+                value: entry.key,
+                label: entry.name,
+            }));
             this.fossilNames = new Map(
                 this.catalog.fossils.map((entry) => [entry.key, entry.name]),
             );
@@ -179,7 +213,6 @@ export class PcStrategyEditor extends HTMLElement {
         if (draft?.strategy && isStrategyDocument(draft.strategy)) {
             this.strategy = cloneStrategy(draft.strategy);
             this.hasChosenBase = true;
-            this.pickerOpen = false;
             return;
         }
         if (draft?.sourceItem) {
@@ -204,7 +237,6 @@ export class PcStrategyEditor extends HTMLElement {
             }
             this.dirty = true;
             this.hasChosenBase = true;
-            this.pickerOpen = false;
             return;
         }
         const preferred =
@@ -214,13 +246,20 @@ export class PcStrategyEditor extends HTMLElement {
             this.strategy.base_state.base_key;
         this.strategy = createBlankStrategy(preferred, 86);
         this.hasChosenBase = false;
-        this.pickerOpen = true;
     }
 
     private openBasePicker(): void {
-        this.pickerOpen = true;
-        this.renderShell();
+        const start =
+            this.strategy.nodes.find(
+                (node) => node.id === this.strategy.start_node_id,
+            ) ?? this.strategy.nodes.find((node) => node.kind === "start");
+        if (!start) {
+            this.addNode("start", this.nextOpenPosition());
+            return;
+        }
+        this.selection = { kind: "node", id: start.id };
         this.setStatus("");
+        this.updateView();
     }
 
     private applyBaseSelection(selection: BasePickerSelection): void {
@@ -235,10 +274,10 @@ export class PcStrategyEditor extends HTMLElement {
             this.strategy.base_state.suffixes = [];
         }
         this.hasChosenBase = true;
-        this.pickerOpen = false;
         this.modifierBaseKey = "";
         this.modifierOptions = [];
-        this.renderShell();
+        this.unveilOptions = [];
+        this.sessionBenchOptions = [];
         this.markChanged();
         void this.ensureModifiers();
     }
@@ -274,6 +313,20 @@ export class PcStrategyEditor extends HTMLElement {
                 );
                 if (this.disposed) return;
                 this.modifierOptions = buildModifierOptions(mods, this.catalog);
+                this.unveilOptions = mods
+                    .filter((mod) => mod.reach_kind === 7)
+                    .map((mod) => ({
+                        value: mod.key,
+                        label: mod.text_lines.join(" / ") || mod.key,
+                    }))
+                    .sort((a, b) => a.label.localeCompare(b.label));
+                this.sessionBenchOptions = mods
+                    .filter((mod) => mod.reach_kind === 2)
+                    .map((mod) => ({
+                        value: mod.key,
+                        label: mod.text_lines.join(" / ") || mod.key,
+                    }))
+                    .sort((a, b) => a.label.localeCompare(b.label));
                 this.modifierBaseKey = key;
             } finally {
                 await this.client.closeSession(session);
@@ -291,34 +344,6 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private renderShell(): void {
-        if (this.pickerOpen) {
-            this.innerHTML = `
-                <div class="pc-strategy-editor pc-strategy-picking">
-                    <pc-base-picker
-                        picker-title="${this.hasChosenBase ? "Change strategy base" : "Choose a strategy base"}"
-                        picker-subtitle="Pick the base item and item level the strategy will start from."
-                        confirm-label="${this.hasChosenBase ? "Apply base" : "Create strategy"}">
-                    </pc-base-picker>
-                    <span class="pc-strategy-status"></span>
-                </div>`;
-            const picker = this.querySelector<PcBasePicker>("pc-base-picker")!;
-            picker.setBases(this.bases);
-            picker.setSelection(
-                this.strategy.base_state.base_key,
-                this.strategy.base_state.item_level,
-            );
-            picker.addEventListener("confirm", (event) => {
-                const detail = (event as CustomEvent<BasePickerSelection>).detail;
-                this.applyBaseSelection(detail);
-            });
-            picker.addEventListener("cancel", () => {
-                if (!this.hasChosenBase) return;
-                this.pickerOpen = false;
-                this.renderShell();
-                this.updateView();
-            });
-            return;
-        }
         this.innerHTML = `
             <div class="pc-strategy-editor">
                 <div class="pc-strategy-toolbar">
@@ -465,7 +490,7 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private updateView(): void {
-        if (!this.isConnected || this.pickerOpen) return;
+        if (!this.isConnected) return;
         this.issues = validateStrategy(this.strategy);
         this.board.setView(
             this.strategy,
@@ -645,24 +670,7 @@ export class PcStrategyEditor extends HTMLElement {
             </label>`;
         if (node.kind === "start") {
             return `${common}
-                <div class="pc-field">
-                    <span>Base</span>
-                    <div class="pc-start-base">
-                        <strong>${escapeHtml(
-                            this.bases.find(
-                                (base) =>
-                                    base.path ===
-                                    this.strategy.base_state.base_key,
-                            )?.name ??
-                                baseLabel(this.strategy.base_state.base_key),
-                        )}</strong>
-                        <button data-cmd="change-node-base">Change…</button>
-                    </div>
-                </div>
-                <label class="pc-field">
-                    <span>Item level</span>
-                    <input type="number" min="1" max="100" data-field="item-level" value="${this.strategy.base_state.item_level}">
-                </label>
+                <pc-base-picker compact confirm-label="Apply base"></pc-base-picker>
                 <label class="pc-field">
                     <span>Rarity</span>
                     <select data-field="start-rarity">
@@ -710,6 +718,65 @@ export class PcStrategyEditor extends HTMLElement {
                             <pc-combobox data-field="fossil-combo" placeholder="Add fossil…"></pc-combobox>
                         </div>`
                         : ""
+                }
+                ${
+                    type === "bench" || type === "unveil"
+                        ? `<label class="pc-field">
+                            <span>${type === "bench" ? "Bench modifier" : "Unveil choice"}</span>
+                            <pc-combobox data-field="mod-key-combo" placeholder="Search modifiersâ€¦"></pc-combobox>
+                        </label>`
+                        : ""
+                }
+                ${
+                    type === "harvest_reforge" || type === "harvest_augment"
+                        ? `<label class="pc-field">
+                            <span>Harvest tag</span>
+                            <select data-field="target-tag">
+                                ${this.harvestOptions
+                                    .map(
+                                        (option) =>
+                                            `<option value="${escapeAttribute(option.value)}" ${option.value === params.target_tag ? "selected" : ""}>${escapeHtml(option.label)}</option>`,
+                                    )
+                                    .join("")}
+                            </select>
+                        </label>`
+                        : ""
+                }
+                ${
+                    type === "harvest_resist"
+                        ? `${this.renderResistanceSelect("source-tag", "From", String(params.source_tag ?? "fire"))}
+                           ${this.renderResistanceSelect("target-tag", "To", String(params.target_tag ?? "cold"))}`
+                        : ""
+                }
+                ${
+                    type === "eldritch_ember" || type === "eldritch_ichor"
+                        ? `<label class="pc-field">
+                            <span>Tier</span>
+                            <select data-field="eldritch-tier">
+                                ${[1, 2, 3, 4]
+                                    .map(
+                                        (tier) =>
+                                            `<option value="${tier}" ${tier === Number(params.tier ?? 1) ? "selected" : ""}>${tier}</option>`,
+                                    )
+                                    .join("")}
+                            </select>
+                        </label>`
+                        : ""
+                }
+                ${
+                    type === "influence_exalt"
+                        ? `<label class="pc-field">
+                            <span>Influence</span>
+                            <select data-field="influence">
+                                ${this.influenceOptions
+                                    .map(
+                                        (option) =>
+                                            `<option value="${escapeAttribute(option.value)}" ${option.value === params.influence ? "selected" : ""}>${escapeHtml(option.label)}</option>`,
+                                    )
+                                    .join("")}
+                            </select>
+                        </label>`
+                        : ""
                 }`;
         }
         if (node.kind === "terminal") {
@@ -748,24 +815,43 @@ export class PcStrategyEditor extends HTMLElement {
             .join("");
     }
 
+    private renderResistanceSelect(
+        field: string,
+        label: string,
+        selected: string,
+    ): string {
+        return `<label class="pc-field">
+            <span>${label}</span>
+            <select data-field="${field}">
+                ${["fire", "cold", "lightning"]
+                    .map(
+                        (tag) =>
+                            `<option value="${tag}" ${tag === selected ? "selected" : ""}>${tag}</option>`,
+                    )
+                    .join("")}
+            </select>
+        </label>`;
+    }
+
     private bindNodeInspector(node: StrategyNode, host: HTMLElement): void {
         host.querySelector<HTMLInputElement>('[data-field="node-name"]')
             ?.addEventListener("change", (event) => {
                 node.name = (event.currentTarget as HTMLInputElement).value;
                 this.markChanged();
             });
-        host.querySelector('[data-cmd="change-node-base"]')?.addEventListener(
-            "click",
-            () => this.openBasePicker(),
-        );
-        host.querySelector<HTMLInputElement>('[data-field="item-level"]')
-            ?.addEventListener("change", (event) => {
-                this.strategy.base_state.item_level = Number(
-                    (event.currentTarget as HTMLInputElement).value,
+        const basePicker = host.querySelector<PcBasePicker>("pc-base-picker");
+        if (basePicker) {
+            basePicker.setBases(this.bases);
+            basePicker.setSelection(
+                this.strategy.base_state.base_key,
+                this.strategy.base_state.item_level,
+            );
+            basePicker.addEventListener("confirm", (event) => {
+                this.applyBaseSelection(
+                    (event as CustomEvent<BasePickerSelection>).detail,
                 );
-                this.markChanged();
-                void this.ensureModifiers();
             });
+        }
         host.querySelector<HTMLSelectElement>('[data-field="start-rarity"]')
             ?.addEventListener("change", (event) => {
                 this.strategy.base_state.rarity = (
@@ -783,6 +869,28 @@ export class PcStrategyEditor extends HTMLElement {
                             ? { fossils: [] }
                             : type === "essence"
                               ? { essence_key: "" }
+                              : type === "bench" || type === "unveil"
+                                ? { mod_key: "" }
+                                : type === "harvest_reforge" ||
+                                    type === "harvest_augment"
+                                  ? {
+                                        target_tag:
+                                            this.harvestOptions[0]?.value ?? "life",
+                                    }
+                                  : type === "harvest_resist"
+                                    ? {
+                                          source_tag: "fire",
+                                          target_tag: "cold",
+                                      }
+                                    : type === "eldritch_ember" ||
+                                        type === "eldritch_ichor"
+                                      ? { tier: 1 }
+                                      : type === "influence_exalt"
+                                        ? {
+                                              influence:
+                                                  this.influenceOptions[0]
+                                                      ?.value ?? "crusader",
+                                          }
                               : {},
                 };
                 node.name = operationLabel(node.operation);
@@ -819,6 +927,50 @@ export class PcStrategyEditor extends HTMLElement {
                 }
             });
         }
+        const modKeyCombo = host.querySelector<PcCombobox>(
+            'pc-combobox[data-field="mod-key-combo"]',
+        );
+        if (modKeyCombo) {
+            modKeyCombo.setOptions(
+                node.operation?.type === "bench"
+                    ? this.sessionBenchOptions
+                    : this.unveilOptions,
+            );
+            modKeyCombo.setValue(String(node.operation?.params.mod_key ?? ""));
+            modKeyCombo.addEventListener("change", (event) => {
+                if (!node.operation) return;
+                node.operation.params.mod_key = (
+                    event as CustomEvent<{ value: string }>
+                ).detail.value;
+                this.markChanged();
+            });
+        }
+        for (const field of ["target-tag", "source-tag"] as const) {
+            host.querySelector<HTMLSelectElement>(`[data-field="${field}"]`)
+                ?.addEventListener("change", (event) => {
+                    if (!node.operation) return;
+                    node.operation.params[field.replace("-", "_")] = (
+                        event.currentTarget as HTMLSelectElement
+                    ).value;
+                    this.markChanged();
+                });
+        }
+        host.querySelector<HTMLSelectElement>('[data-field="eldritch-tier"]')
+            ?.addEventListener("change", (event) => {
+                if (!node.operation) return;
+                node.operation.params.tier = Number(
+                    (event.currentTarget as HTMLSelectElement).value,
+                );
+                this.markChanged();
+            });
+        host.querySelector<HTMLSelectElement>('[data-field="influence"]')
+            ?.addEventListener("change", (event) => {
+                if (!node.operation) return;
+                node.operation.params.influence = (
+                    event.currentTarget as HTMLSelectElement
+                ).value;
+                this.markChanged();
+            });
         host.querySelectorAll<HTMLButtonElement>("[data-fossil-remove]").forEach(
             (button) => {
                 button.addEventListener("click", () => {
@@ -1211,7 +1363,11 @@ function modSourceLabel(mod: ModInfo): string {
     switch (mod.reach_kind) {
         case REACH_INFLUENCE: {
             const parts = mod.reach_via.split(":");
-            return titleCase(parts[parts.length - 1] || "influenced");
+            const key = (parts[parts.length - 1] || "influenced").toLowerCase();
+            if (key === "adjudicator") return "Warlord";
+            if (key === "basilisk") return "Redeemer";
+            if (key === "eyrie") return "Hunter";
+            return titleCase(key);
         }
         case REACH_CRAFTED:
             return "Bench";
@@ -1221,6 +1377,23 @@ function modSourceLabel(mod: ModInfo): string {
             return "Fossil";
         default:
             return "";
+    }
+}
+
+function modSourceKind(
+    mod: ModInfo,
+): ModifierFamilyOption["sourceKind"] {
+    switch (mod.reach_kind) {
+        case REACH_INFLUENCE:
+            return "influence";
+        case REACH_CRAFTED:
+            return "crafted";
+        case REACH_ESSENCE:
+            return "essence";
+        case REACH_FOSSIL:
+            return "fossil";
+        default:
+            return "base";
     }
 }
 
@@ -1267,6 +1440,7 @@ function buildModifierOptions(
             value: rep.key,
             label: text,
             side: side === "P" ? "prefix" : "suffix",
+            sourceKind: modSourceKind(rep),
             sourceLabel: source,
             tags: Array.from(
                 new Set(tiers.flatMap((tier) => tier.classification_tags)),
@@ -1278,8 +1452,26 @@ function buildModifierOptions(
             })),
         });
     }
-    options.sort((a, b) => a.label.localeCompare(b.label));
+    options.sort(
+        (a, b) =>
+            sourceOrder(a) - sourceOrder(b) ||
+            influenceOptionOrder(a) - influenceOptionOrder(b) ||
+            a.label.localeCompare(b.label),
+    );
     return options;
+}
+
+function sourceOrder(option: ModifierFamilyOption): number {
+    return ["base", "influence", "crafted", "essence", "fossil"].indexOf(
+        option.sourceKind,
+    );
+}
+
+function influenceOptionOrder(option: ModifierFamilyOption): number {
+    if (option.sourceKind !== "influence") return 0;
+    const order = ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"];
+    const index = order.indexOf(option.sourceLabel);
+    return index < 0 ? order.length : index;
 }
 
 function escapeHtml(value: string): string {

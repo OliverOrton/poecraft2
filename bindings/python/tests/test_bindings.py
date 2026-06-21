@@ -5,12 +5,7 @@ import json
 import unittest
 from pathlib import Path
 
-from poecraft_engine import (
-    EngineError,
-    SimulationOptions,
-    load_data,
-    load_economy,
-)
+from poecraft_engine import SimulationOptions, load_data, load_economy
 
 
 ARTIFACT = Path(
@@ -279,22 +274,130 @@ class BindingTests(unittest.TestCase):
                     )
                     self.assertEqual(result.missing_prices, {})
 
-    def test_sanctified_is_explicitly_deferred(self):
-        with self.session.create_action_context() as context:
-            item = self.session.create_item()
-            with self.assertRaises(EngineError) as raised:
+    def test_phase13_mechanics(self):
+        with self.session.create_action_context(seed=42) as context:
+            # Bench metamods are real crafted slots and preserve their side.
+            item = self.session.create_item(rarity="normal")
+            context.apply(item, {"type": "alchemy"})
+            prefix_lock = self.session.find_mod(
+                "StrMasterItemGenerationCannotChangePrefixes"
+            )
+            self.assertTrue(
                 context.apply(
+                    item, {"type": "bench", "mod_key": prefix_lock.key}
+                ).applied
+            )
+            prefixes = item.prefix_mod_ids
+            self.assertTrue(context.apply(item, {"type": "chaos"}).applied)
+            self.assertEqual(prefixes, item.prefix_mod_ids)
+
+            # Veiled crafts produce three persisted options and unveil in place.
+            item = self.session.create_item(rarity="rare")
+            self.assertTrue(context.apply(item, {"type": "veiled_exalt"}).applied)
+            self.assertEqual(len(item.veiled_option_mod_ids), 3)
+            choice = self.session.mod_info(item.veiled_option_mod_ids[0])
+            self.assertTrue(
+                context.apply(
+                    item, {"type": "unveil", "mod_key": choice.key}
+                ).applied
+            )
+            self.assertEqual(item.veiled_option_mod_ids, ())
+
+            # Harvest, Eldritch, and influenced exalts share the native API.
+            item = self.session.create_item(rarity="rare")
+            self.assertTrue(
+                context.apply(
+                    item, {"type": "harvest_reforge", "target_tag": "life"}
+                ).applied
+            )
+            item = self.session.create_item(rarity="rare")
+            self.assertTrue(
+                context.apply(
+                    item, {"type": "eldritch_ember", "tier": 1}
+                ).applied
+            )
+            self.assertEqual(item.searing_exarch_tier, 1)
+            self.assertTrue(item.implicit_mod_ids)
+            self.assertTrue(
+                context.apply(
+                    item, {"type": "eldritch_ichor", "tier": 2}
+                ).applied
+            )
+            self.assertEqual(item.eater_of_worlds_tier, 2)
+            self.assertTrue(context.apply(item, {"type": "eldritch_exalt"}).applied)
+
+            item = self.session.create_item(rarity="rare")
+            self.assertTrue(
+                context.apply(
+                    item,
+                    {"type": "influence_exalt", "influence": "crusader"},
+                ).applied
+            )
+            self.assertNotEqual(item.generic_influence_bits, 0)
+
+    def test_phase13_special_fossils(self):
+        fossils = {
+            "sanctified": "CurrencyDelveCraftingLuckyModRolls",
+            "gilded": "CurrencyDelveCraftingSellPrice",
+            "bloodstained": "CurrencyDelveCraftingVaal",
+            "fractured": "CurrencyDelveCraftingMirror",
+        }
+        with self.session.create_action_context(seed=99) as context:
+            for name, suffix in fossils.items():
+                item = self.session.create_item()
+                result = context.apply(
                     item,
                     {
                         "type": "fossil",
                         "fossils": [
-                            "Metadata/Items/Currency/"
-                            "CurrencyDelveCraftingLuckyModRolls"
+                            f"Metadata/Items/Currency/{suffix}"
                         ],
                     },
                 )
-            self.assertEqual(raised.exception.code, 4)
-            self.assertEqual(item.rarity, "normal")
+                self.assertTrue(result.applied, name)
+                if name == "gilded":
+                    self.assertTrue(item.implicit_mod_ids)
+                elif name == "bloodstained":
+                    self.assertTrue(item.item_flags & 1)
+                    self.assertTrue(item.implicit_mod_ids)
+                elif name == "fractured":
+                    self.assertTrue(item.item_flags & 2)
+
+    def test_phase13_strategy_operation(self):
+        strategy_json = {
+            "version": "v1",
+            "name": "Harvest once",
+            "start_node_id": "start",
+            "base_state": {
+                "base_key": BASE,
+                "item_level": 86,
+                "rarity": "rare",
+            },
+            "nodes": [
+                {"id": "start", "kind": "start"},
+                {
+                    "id": "harvest",
+                    "kind": "operation",
+                    "operation": {
+                        "type": "harvest_reforge",
+                        "params": {"target_tag": "life"},
+                    },
+                },
+                {"id": "success", "kind": "terminal", "terminal": "success"},
+            ],
+            "edges": [
+                {"id": "begin", "from": "start", "to": "harvest"},
+                {"id": "done", "from": "harvest", "to": "success"},
+            ],
+        }
+        with self.session.compile_strategy(strategy_json) as strategy:
+            with strategy.create_simulator() as simulator:
+                result = simulator.run(
+                    SimulationOptions(target_runs=5, seed=7),
+                    chunk_size=2,
+                )
+                self.assertEqual(result.summary["success_count"], 5)
+                self.assertEqual(result.summary["total_actions"], 5)
 
     def test_child_handles_retain_native_parents(self):
         data = load_data(ARTIFACT)

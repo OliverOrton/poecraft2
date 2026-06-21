@@ -60,11 +60,7 @@ export class PcModifierPicker extends HTMLElement {
                             <div class="pc-modifier-picker-list">
                                 ${
                                     visible.length
-                                        ? visible
-                                              .map((option) =>
-                                                  renderFamily(option),
-                                              )
-                                              .join("")
+                                        ? renderSections(visible)
                                         : '<p class="pc-empty">No matching modifiers.</p>'
                                 }
                             </div>
@@ -113,7 +109,20 @@ export class PcModifierPicker extends HTMLElement {
                     this.dispatchEvent(
                         new CustomEvent("modifier-select", {
                             bubbles: true,
-                            detail: { value },
+                            detail: { value, fractured: false },
+                        }),
+                    );
+                });
+                button.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+                    const value = button.dataset.modifierKey ?? "";
+                    if (!value) return;
+                    this.open = false;
+                    this.search = "";
+                    this.dispatchEvent(
+                        new CustomEvent("modifier-select", {
+                            bubbles: true,
+                            detail: { value, fractured: true },
                         }),
                     );
                 });
@@ -122,9 +131,40 @@ export class PcModifierPicker extends HTMLElement {
     }
 }
 
+function renderSections(options: ModifierFamilyOption[]): string {
+    const sections = new Map<string, ModifierFamilyOption[]>();
+    for (const option of options) {
+        const title =
+            option.sourceKind === "base"
+                ? "Base Mod Pool"
+                : option.sourceKind === "influence"
+                  ? `${option.sourceLabel || "Influenced"} Mods`
+                  : option.sourceKind === "crafted"
+                    ? "Crafted Mods"
+                    : option.sourceKind === "essence"
+                      ? "Essence Mods"
+                      : "Fossil Mods";
+        sections.set(title, [...(sections.get(title) ?? []), option]);
+    }
+    return Array.from(sections.entries())
+        .map(
+            ([title, entries]) => `
+                <section class="pc-modifier-picker-section">
+                    <h4>
+                        <span>${escapeHtml(title)}</span>
+                        <span>${entries.length}</span>
+                    </h4>
+                    ${entries.map((option) => renderFamily(option)).join("")}
+                </section>`,
+        )
+        .join("");
+}
+
 function renderFamily(option: ModifierFamilyOption): string {
     return `
-        <button type="button" class="pc-modifier-family" data-modifier-key="${escapeAttribute(option.value)}">
+        <button type="button" class="pc-modifier-family"
+            data-modifier-key="${escapeAttribute(option.value)}"
+            title="Click to add · right-click to require fractured">
             <span class="pc-mod-family-copy">
                 <span class="pc-mod-family-name">${escapeHtml(option.label)}</span>
                 ${

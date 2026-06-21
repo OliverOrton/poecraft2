@@ -184,7 +184,11 @@ typedef enum pc_mod_reach_kind {
     PC_MOD_REACH_CRAFTED = 2,
     PC_MOD_REACH_ESSENCE = 3,
     PC_MOD_REACH_BASE_IMPLICIT = 4,
-    PC_MOD_REACH_FOSSIL = 5
+    PC_MOD_REACH_FOSSIL = 5,
+    PC_MOD_REACH_VEILED = 6,
+    PC_MOD_REACH_UNVEILED = 7,
+    PC_MOD_REACH_CORRUPTED_IMPLICIT = 8,
+    PC_MOD_REACH_ELDRITCH_IMPLICIT = 9
 } pc_mod_reach_kind;
 
 pc_result pc_session_get_mod_info(
@@ -205,7 +209,11 @@ typedef enum pc_session_mask_kind {
     PC_MASK_CRAFTED = 7,
     PC_MASK_ESSENCE_ONLY = 8,
     PC_MASK_IMPLICIT = 9,
-    PC_MASK_DELVE = 10
+    PC_MASK_DELVE = 10,
+    PC_MASK_VEILED_TEMPLATE = 11,
+    PC_MASK_UNVEILED = 12,
+    PC_MASK_CORRUPTED_IMPLICIT = 13,
+    PC_MASK_ELDRITCH_IMPLICIT = 14
 } pc_session_mask_kind;
 
 /* Dump the session's effective base tag names (query-required-count). String
@@ -312,7 +320,20 @@ typedef enum pc_action_type {
     PC_ACTION_ANNUL = 7,
     PC_ACTION_SCOUR = 8,
     PC_ACTION_ESSENCE = 9,
-    PC_ACTION_FOSSIL = 10
+    PC_ACTION_FOSSIL = 10,
+    PC_ACTION_BENCH = 11,
+    PC_ACTION_VEILED_CHAOS = 12,
+    PC_ACTION_VEILED_EXALT = 13,
+    PC_ACTION_UNVEIL = 14,
+    PC_ACTION_HARVEST_REFORGE = 15,
+    PC_ACTION_HARVEST_AUGMENT = 16,
+    PC_ACTION_HARVEST_RESIST = 17,
+    PC_ACTION_ELDRITCH_EMBER = 18,
+    PC_ACTION_ELDRITCH_ICHOR = 19,
+    PC_ACTION_ELDRITCH_EXALT = 20,
+    PC_ACTION_ELDRITCH_CHAOS = 21,
+    PC_ACTION_ELDRITCH_ANNUL = 22,
+    PC_ACTION_INFLUENCE_EXALT = 23
 } pc_action_type;
 
 #define PC_MAX_FOSSILS_PER_ACTION 4
@@ -324,6 +345,11 @@ typedef struct pc_action_request {
     const char* essence_key; /* stable metadata key for PC_ACTION_ESSENCE */
     uint32_t fossil_count;
     const char* fossil_keys[PC_MAX_FOSSILS_PER_ACTION];
+    const char* mod_key;      /* bench target or unveil choice */
+    const char* target_tag;   /* Harvest target / resistance destination */
+    const char* source_tag;   /* Harvest resistance source */
+    const char* influence;    /* influence name for influence exalt */
+    uint32_t tier;            /* Eldritch implicit tier, 1..4 */
 } pc_action_request;
 
 typedef struct pc_action_result {
@@ -452,7 +478,8 @@ pc_result pc_debug_pool_query(
     pc_error_info* out_error);
 
 /* One selection stage from the most recent pc_apply_action call. Direct
- * essence/fossil additions have direct=1 and no random roll totals. */
+ * essence/fossil/bench/veiled/implicit additions have direct=1 and no random
+ * roll totals. */
 typedef struct pc_action_trace_stage {
     uint32_t struct_size;
     uint32_t abi_version;

@@ -294,6 +294,11 @@ prefix count in range
 suffix count in range
 ```
 
+`has modifier family at minimum tier` may also require that the matched modifier
+is fractured. In the condition builder, right-clicking a modifier in the picker
+adds it with that requirement; right-clicking an already selected modifier
+turns the requirement on.
+
 Add these soon after:
 
 ```text

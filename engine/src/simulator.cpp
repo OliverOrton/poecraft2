@@ -235,6 +235,9 @@ CompiledCondition compile_condition(
         out.kind = ConditionKind::HasModFamily;
         out.family_id = session.family_id[mod_id];
         out.min_value = int_member(value, "min_tier", 0);
+        if (bool_member(value, "fractured", false)) {
+            out.required_flags |= PC_MOD_SLOT_FRACTURED;
+        }
         if (out.min_value < 0) {
             invalid("has_mod_family min_tier must be non-negative");
         }
@@ -324,6 +327,19 @@ bool action_type_from_name(const std::string& name, ActionType& out) {
         {"scour", ActionType::Scour},
         {"essence", ActionType::Essence},
         {"fossil", ActionType::Fossil},
+        {"bench", ActionType::Bench},
+        {"veiled_chaos", ActionType::VeiledChaos},
+        {"veiled_exalt", ActionType::VeiledExalt},
+        {"unveil", ActionType::Unveil},
+        {"harvest_reforge", ActionType::HarvestReforge},
+        {"harvest_augment", ActionType::HarvestAugment},
+        {"harvest_resist", ActionType::HarvestResist},
+        {"eldritch_ember", ActionType::EldritchEmber},
+        {"eldritch_ichor", ActionType::EldritchIchor},
+        {"eldritch_exalt", ActionType::EldritchExalt},
+        {"eldritch_chaos", ActionType::EldritchChaos},
+        {"eldritch_annul", ActionType::EldritchAnnul},
+        {"influence_exalt", ActionType::InfluenceExalt},
     };
     for (const auto& entry : table) {
         if (name == entry.first) {
@@ -382,11 +398,6 @@ void compile_operation(
             if (it == data.fossil_by_key.end()) {
                 invalid("unknown fossil key: " + entry.string);
             }
-            if (it->second < data.fossil_rolls_lucky.size() &&
-                data.fossil_rolls_lucky[it->second] != 0) {
-                invalid(
-                    "Sanctified Fossil special weighting is not supported yet");
-            }
             node.action.fossil_indices.push_back(it->second);
             keys.push_back(entry.string);
         }
@@ -404,6 +415,55 @@ void compile_operation(
         }
         node.price_keys.push_back(
             "resonator:" + std::to_string(keys.size()));
+    } else if (action_type == ActionType::Bench ||
+               action_type == ActionType::Unveil) {
+        const std::string key = string_member(source, "mod_key");
+        if (key.empty()) invalid(type + " operation requires mod_key");
+        const auto pos = data.mod_pos_by_key.find(key);
+        if (pos == data.mod_pos_by_key.end())
+            invalid("unknown mod key: " + key);
+        const auto session_mod = session.session_id_by_global_id.find(
+            data.mod_global_ids[pos->second]);
+        if (session_mod == session.session_id_by_global_id.end())
+            invalid("mod is unavailable in this session: " + key);
+        node.action.mod_id = session_mod->second;
+        node.price_keys = action_type == ActionType::Bench
+                              ? std::vector<std::string>{"bench:" + key}
+                              : std::vector<std::string>{"unveil"};
+    } else if (action_type == ActionType::HarvestReforge ||
+               action_type == ActionType::HarvestAugment) {
+        std::string tag = string_member(source, "target_tag");
+        if (tag.empty()) tag = string_member(source, "tag");
+        const auto it = data.tag_id_by_name.find(tag);
+        if (it == data.tag_id_by_name.end())
+            invalid("unknown Harvest tag: " + tag);
+        node.action.target_tag_id = it->second;
+        node.price_keys = {type + ":" + tag};
+    } else if (action_type == ActionType::HarvestResist) {
+        const std::string source_tag = string_member(source, "source_tag");
+        const std::string target_tag = string_member(source, "target_tag");
+        const auto from = data.tag_id_by_name.find(source_tag);
+        const auto to = data.tag_id_by_name.find(target_tag);
+        if (from == data.tag_id_by_name.end() ||
+            to == data.tag_id_by_name.end())
+            invalid("unknown Harvest resistance tag");
+        node.action.source_tag_id = from->second;
+        node.action.target_tag_id = to->second;
+        node.price_keys = {"harvest_resist"};
+    } else if (action_type == ActionType::EldritchEmber ||
+               action_type == ActionType::EldritchIchor) {
+        node.action.tier =
+            static_cast<std::uint32_t>(int_member(source, "tier", 0));
+        if (node.action.tier < 1 || node.action.tier > 4)
+            invalid("Eldritch tier must be 1-4");
+        node.price_keys = {type + ":" + std::to_string(node.action.tier)};
+    } else if (action_type == ActionType::InfluenceExalt) {
+        const std::string influence = string_member(source, "influence");
+        const auto it = data.influence_code_by_name.find(influence);
+        if (it == data.influence_code_by_name.end() || it->second <= 0)
+            invalid("unknown influence: " + influence);
+        node.action.influence_code = it->second;
+        node.price_keys = {"influence_exalt:" + influence};
     }
 }
 
@@ -430,7 +490,8 @@ bool has_family(
     const SessionImpl& session,
     const pc_item_state& item,
     std::uint32_t family_id,
-    int min_tier) {
+    int min_tier,
+    std::uint8_t required_flags) {
     auto side_has = [&](const pc_mod_slot* slots, std::uint8_t count) {
         for (std::uint8_t i = 0; i < count; ++i) {
             const std::uint32_t mod_id = slots[i].mod_id;
@@ -438,6 +499,7 @@ bool has_family(
                 session.family_id[mod_id] != family_id) {
                 continue;
             }
+            if ((slots[i].flags & required_flags) != required_flags) continue;
             const std::uint32_t tier = session.family_tier_index[mod_id];
             if (min_tier == 0 ||
                 (tier != 0 && tier <= static_cast<std::uint32_t>(min_tier))) {
@@ -461,7 +523,11 @@ bool evaluate_condition(
         return has_group(session, item, condition.group_id);
     case ConditionKind::HasModFamily:
         return has_family(
-            session, item, condition.family_id, condition.min_value);
+            session,
+            item,
+            condition.family_id,
+            condition.min_value,
+            condition.required_flags);
     case ConditionKind::RarityIs:
         return item.rarity == condition.min_value;
     case ConditionKind::OpenPrefixCount: {

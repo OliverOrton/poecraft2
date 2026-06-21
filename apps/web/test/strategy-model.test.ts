@@ -178,6 +178,21 @@ import {
 }
 
 {
+    const fractured = {
+        type: "has_mod_family",
+        family_mod_key: "Metadata/Mods/TestFamilyTier1",
+        family_label: "Test family",
+        min_tier: 2,
+        fractured: true,
+    };
+    assert.deepEqual(
+        compileConditionTree(parseConditionTree(fractured)),
+        fractured,
+    );
+    console.log("  ok - fractured modifier condition round-trips");
+}
+
+{
     // NOT toggles the negate flag on the wrapped node and compiles back out.
     const negated = {
         type: "not",

@@ -35,9 +35,27 @@ export interface CraftAction {
         | "annul"
         | "scour"
         | "essence"
-        | "fossil";
+        | "fossil"
+        | "bench"
+        | "veiled_chaos"
+        | "veiled_exalt"
+        | "unveil"
+        | "harvest_reforge"
+        | "harvest_augment"
+        | "harvest_resist"
+        | "eldritch_ember"
+        | "eldritch_ichor"
+        | "eldritch_exalt"
+        | "eldritch_chaos"
+        | "eldritch_annul"
+        | "influence_exalt";
     essence?: string;
     fossils?: string[];
+    mod_key?: string;
+    target_tag?: string;
+    source_tag?: string;
+    influence?: string;
+    tier?: number;
 }
 
 export type AffixSide = "both" | "prefix" | "suffix";
@@ -205,6 +223,7 @@ export interface ModInfo {
 export interface CatalogEntry {
     key: string;
     name: string;
+    code?: number;
 }
 
 /**
@@ -218,6 +237,9 @@ export interface Catalog {
     groupNameById: string[];
     essences: CatalogEntry[];
     fossils: CatalogEntry[];
+    bench: CatalogEntry[];
+    harvestTags: CatalogEntry[];
+    influences: CatalogEntry[];
 }
 
 export interface ItemInfo {
@@ -233,6 +255,11 @@ export interface ItemInfo {
     max_prefix?: number;
     /** Session-aware max suffix slots; absent if the call omitted the session. */
     max_suffix?: number;
+    item_flags: number;
+    generic_influence_bits: number;
+    searing_exarch_tier: number;
+    eater_of_worlds_tier: number;
+    veiled_option_mod_ids: number[];
 }
 
 // --- worker message envelopes ----------------------------------------------

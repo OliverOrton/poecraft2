@@ -73,6 +73,8 @@ struct DataImpl {
     std::vector<std::uint32_t> mod_primary_group;
     std::vector<std::int32_t> mod_flags;
     std::vector<std::int32_t> mod_influence_code;
+    std::vector<std::int32_t> mod_metamod_type_code;
+    std::vector<std::int32_t> mod_special_kind_code;
     std::vector<std::uint32_t> mod_group_offsets;  // mod_count + 1
     std::vector<std::uint32_t> mod_group_ids_flat; // all groups per mod
     std::unordered_map<std::uint32_t, std::uint32_t> mod_pos_by_global_id;
@@ -103,8 +105,13 @@ struct DataImpl {
     std::vector<std::uint32_t> stat_offsets; // mod_count + 1
     std::vector<std::uint32_t> stat_key_sids; // flat
 
-    // bench options needed to collect crafted mods for an item class
+    // bench options
+    std::uint32_t bench_count = 0;
+    std::vector<std::uint32_t> bench_global_option_ids;
     std::vector<std::int32_t> bench_global_mod_ids;
+    std::vector<std::uint32_t> bench_action_kind_sids;
+    std::vector<std::uint32_t> bench_action_value_sids;
+    std::vector<std::int32_t> bench_tiers;
     std::vector<std::uint32_t> bench_class_offsets;
     std::vector<std::int32_t> bench_class_global_ids;
 
@@ -120,7 +127,9 @@ struct DataImpl {
     // fossil weights and direct added/forced mod links
     std::uint32_t fossil_count = 0;
     std::vector<std::uint32_t> fossil_key_sids;
+    std::vector<std::uint32_t> fossil_name_sids;
     std::vector<std::int32_t> fossil_rolls_lucky;
+    std::vector<std::int32_t> fossil_mirrors;
     std::vector<std::uint32_t> fossil_weight_offsets;
     std::vector<std::int32_t> fossil_weight_kind_codes;
     std::vector<std::uint32_t> fossil_weight_tag_ids;
@@ -133,13 +142,27 @@ struct DataImpl {
     int fossil_weight_positive_code = -1;
     int fossil_mod_added_code = -1;
     int fossil_mod_forced_code = -1;
+    int fossil_mod_sell_price_code = -1;
 
     // enum mappings
     std::vector<std::string> domain_name_by_code;     // reverse domain enum
     std::unordered_map<std::string, int> domain_code_by_name;
     std::vector<std::string> influence_name_by_code;  // reverse influence enum
+    std::unordered_map<std::string, int> influence_code_by_name;
     int gen_prefix_code = -1;
     int gen_suffix_code = -1;
+    int gen_corrupted_code = -1;
+    int gen_searing_implicit_code = -1;
+    int gen_eater_implicit_code = -1;
+    int metamod_multimod_code = -1;
+    int metamod_no_attack_code = -1;
+    int metamod_no_caster_code = -1;
+    int metamod_prefixes_locked_code = -1;
+    int metamod_suffixes_locked_code = -1;
+    int special_corrupted_implicit_code = -1;
+    int special_eldritch_implicit_code = -1;
+    int special_unveiled_code = -1;
+    int special_veiled_template_code = -1;
 
     const std::string& string_at(std::uint32_t sid) const {
         static const std::string empty;
@@ -166,7 +189,11 @@ enum class ReachKind : std::uint8_t {
     Crafted = 2,
     Essence = 3,
     BaseImplicit = 4,
-    Fossil = 5
+    Fossil = 5,
+    Veiled = 6,
+    Unveiled = 7,
+    CorruptedImplicit = 8,
+    EldritchImplicit = 9
 };
 
 /*
@@ -187,6 +214,8 @@ struct SessionImpl {
     std::vector<std::int8_t> gen_type;         // 0 prefix, 1 suffix, -1 special
     std::vector<std::uint32_t> primary_group;  // groups[0], for display
     std::vector<std::int32_t> flags;
+    std::vector<std::int32_t> metamod_type;
+    std::vector<std::int32_t> special_kind;
     // full exclusivity-group membership per session mod (multi-group blocking)
     std::vector<std::uint32_t> group_offsets;  // mod_count + 1
     std::vector<std::uint32_t> group_ids;      // flat
@@ -220,6 +249,13 @@ struct SessionImpl {
     std::vector<std::uint64_t> essence_only_mask;
     std::vector<std::uint64_t> implicit_mask;
     std::vector<std::uint64_t> delve_mask;
+    std::vector<std::uint64_t> veiled_template_mask;
+    std::vector<std::uint64_t> unveiled_mask;
+    std::vector<std::uint64_t> unveiled_generic_mask;
+    std::vector<std::uint64_t> corrupted_implicit_mask;
+    std::vector<std::uint64_t> eldritch_implicit_mask;
+    std::vector<std::uint64_t> eldritch_searing_mask;
+    std::vector<std::uint64_t> eldritch_eater_mask;
     std::vector<std::uint64_t> positive_spawn_weight_mask;
     std::vector<std::uint64_t> positive_base_weight_mask;
     std::unordered_map<std::uint32_t, std::vector<std::uint64_t>> group_masks;
@@ -232,12 +268,21 @@ struct SessionImpl {
 
     // Direct-mechanic lookup tables use dense session mod ids.
     std::vector<std::uint32_t> base_implicit_mod_ids;
+    std::vector<std::uint32_t> bench_mod_ids;
+    std::uint32_t veiled_prefix_mod_id =
+        std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t veiled_suffix_mod_id =
+        std::numeric_limits<std::uint32_t>::max();
+    std::vector<std::vector<std::uint32_t>> eldritch_searing_tier_mod_ids;
+    std::vector<std::vector<std::uint32_t>> eldritch_eater_tier_mod_ids;
+    std::vector<std::vector<std::uint32_t>> fossil_sell_price_mod_ids;
     std::vector<std::uint32_t> essence_guaranteed_mod_ids;
     std::vector<std::vector<std::uint32_t>> fossil_added_mod_ids;
     std::vector<std::vector<std::uint32_t>> fossil_forced_mod_ids;
 
     // max affixes per side for a rare item: 2 for (abyss) jewels, else 3.
     std::uint8_t rare_affix_cap = 3;
+    bool eldritch_eligible = false;
 
     // Display-family identity is primary exclusion group + ordered stat
     // signature + generation side + acquisition source. It is deliberately
@@ -290,6 +335,7 @@ struct PoolBuildRequest {
     PoolWeightKind weight_kind = PoolWeightKind::Normal;
     int side_filter = -1;
     std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
+    int influence_only_code = -1;
     std::vector<std::uint32_t> fossil_indices;
 };
 
@@ -423,13 +469,31 @@ enum class ActionType : int {
     Annul = 7,
     Scour = 8,
     Essence = 9,
-    Fossil = 10
+    Fossil = 10,
+    Bench = 11,
+    VeiledChaos = 12,
+    VeiledExalt = 13,
+    Unveil = 14,
+    HarvestReforge = 15,
+    HarvestAugment = 16,
+    HarvestResist = 17,
+    EldritchEmber = 18,
+    EldritchIchor = 19,
+    EldritchExalt = 20,
+    EldritchChaos = 21,
+    EldritchAnnul = 22,
+    InfluenceExalt = 23
 };
 
 struct ActionParameters {
     ActionType type = ActionType::Transmute;
     std::uint32_t essence_index = std::numeric_limits<std::uint32_t>::max();
     std::vector<std::uint32_t> fossil_indices;
+    std::uint32_t mod_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t source_tag_id = std::numeric_limits<std::uint32_t>::max();
+    int influence_code = -1;
+    std::uint32_t tier = 0;
 };
 
 struct ActionOutcome {
@@ -468,8 +532,9 @@ enum class ConditionKind : std::uint8_t {
 
 struct CompiledCondition {
     ConditionKind kind = ConditionKind::Always;
-      std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
-      std::uint32_t family_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t family_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint8_t required_flags = 0;
     int min_value = 0;
     int max_value = 0;
     std::vector<CompiledCondition> children;

@@ -19,7 +19,11 @@ import { fileURLToPath } from "node:url";
 import { Worker, type TransferListItem } from "node:worker_threads";
 
 import { EngineClient, EngineTransport } from "../src/app/engine-client";
-import type { ClientMessage, WorkerMessage } from "../src/app/engine-protocol";
+import type {
+    ClientMessage,
+    ModInfo,
+    WorkerMessage,
+} from "../src/app/engine-protocol";
 
 const REPO_ROOT = new URL("../../../", import.meta.url);
 const ARTIFACT_DIR = new URL("data/compiled/current/", REPO_ROOT);
@@ -134,6 +138,8 @@ function familyTierStrategy(
     itemModKey: string,
     generationType: number,
     minTier: number,
+    itemFractured = false,
+    requireFractured = false,
 ): Record<string, unknown> {
     return {
         version: "v1",
@@ -144,7 +150,10 @@ function familyTierStrategy(
             item_level: ITEM_LEVEL,
             rarity: "rare",
             [generationType === 0 ? "prefixes" : "suffixes"]: [
-                { mod_key: itemModKey },
+                {
+                    mod_key: itemModKey,
+                    ...(itemFractured ? { fractured: true } : {}),
+                },
             ],
         },
         nodes: [
@@ -162,6 +171,7 @@ function familyTierStrategy(
                     type: "has_mod_family",
                     family_mod_key: familyKey,
                     min_tier: minTier,
+                    ...(requireFractured ? { fractured: true } : {}),
                 },
             },
             {
@@ -171,6 +181,35 @@ function familyTierStrategy(
                 priority: 999,
                 is_default: true,
             },
+        ],
+    };
+}
+
+function phase13Strategy(): Record<string, unknown> {
+    return {
+        version: "v1",
+        name: "Harvest once",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "rare",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "harvest",
+                kind: "operation",
+                operation: {
+                    type: "harvest_reforge",
+                    params: { target_tag: "life" },
+                },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            { id: "begin", from: "start", to: "harvest" },
+            { id: "done", from: "harvest", to: "success" },
         ],
     };
 }
@@ -204,11 +243,64 @@ test("create a session and an item", async () => {
     await client.closeItem(item);
 });
 
+test("emulator editing can add and remove an exact explicit mod", async () => {
+    const count = await client.modCount(sessionId);
+    let explicit: ModInfo | null = null;
+    for (let id = 0; id < count; id += 1) {
+        const mod = await client.modInfo(sessionId, id);
+        if (mod.generation_type === 0 || mod.generation_type === 1) {
+            explicit = mod;
+            break;
+        }
+    }
+    assert.ok(explicit);
+    const side = explicit.generation_type === 0 ? "prefix" : "suffix";
+    const item = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    await client.addMod(item, sessionId, { key: explicit.key, side });
+    let info = await client.itemInfo(item);
+    assert.ok(
+        (info[`${side}_mod_ids`] as number[]).includes(explicit.session_mod_id),
+    );
+    await client.setModFractured(item, {
+        modId: explicit.session_mod_id,
+        side,
+    });
+    info = await client.itemInfo(item);
+    assert.ok(
+        (info[`fractured_${side}_mod_ids`] as number[]).includes(
+            explicit.session_mod_id,
+        ),
+    );
+    await client.removeMod(item, {
+        modId: explicit.session_mod_id,
+        side,
+    });
+    info = await client.itemInfo(item);
+    assert.ok(
+        !(info[`${side}_mod_ids`] as number[]).includes(explicit.session_mod_id),
+    );
+    await client.closeItem(item);
+});
+
 test("catalog exposes mod groups, essences, and fossils as usable keys", async () => {
     const catalog = await client.catalog(dataId);
     assert.ok(catalog.groupKeyById.length > 0);
     assert.ok(catalog.essences.length > 0);
     assert.ok(catalog.fossils.length > 0);
+    assert.ok(catalog.bench.length > 0);
+    assert.ok(catalog.harvestTags.some((entry) => entry.key === "life"));
+    assert.ok(catalog.influences.some((entry) => entry.key === "crusader"));
+    assert.equal(
+        catalog.influences.find((entry) => entry.key === "shaper")?.code,
+        6,
+    );
+    assert.equal(
+        catalog.influences.find((entry) => entry.key === "adjudicator")?.code,
+        1,
+    );
     assert.ok(catalog.essences.every((entry) => entry.key && entry.name));
     assert.ok(catalog.fossils.every((entry) => entry.key && entry.name));
 
@@ -227,6 +319,87 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
     const compiled = await client.compileStrategy(sessionId, strategy);
     assert.ok(compiled > 0);
     await client.closeStrategy(compiled);
+});
+
+test("Phase 13 mechanics run through the WASM worker boundary", async () => {
+    let item = await client.createItem(sessionId, { rarity: "rare" });
+    const bench = await client.apply(contextId, item, {
+        type: "bench",
+        mod_key: "StrMasterItemGenerationCannotChangePrefixes",
+    });
+    assert.equal(bench.applied, true);
+    const veiled = await client.apply(contextId, item, {
+        type: "veiled_exalt",
+    });
+    assert.equal(veiled.applied, true);
+    let info = await client.itemInfo(item, sessionId);
+    const options = info.veiled_option_mod_ids as number[];
+    assert.equal(options.length, 3);
+    const choice = await client.modInfo(sessionId, options[0]);
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "unveil",
+                mod_key: choice.key,
+            })
+        ).applied,
+        true,
+    );
+    await client.closeItem(item);
+
+    item = await client.createItem(sessionId, { rarity: "rare" });
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "harvest_reforge",
+                target_tag: "life",
+            })
+        ).applied,
+        true,
+    );
+    await client.closeItem(item);
+
+    item = await client.createItem(sessionId, { rarity: "rare" });
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "eldritch_ember",
+                tier: 1,
+            })
+        ).applied,
+        true,
+    );
+    info = await client.itemInfo(item, sessionId);
+    assert.equal(info.searing_exarch_tier, 1);
+    assert.ok((info.implicit_mod_ids as number[]).length > 0);
+    await client.closeItem(item);
+
+    item = await client.createItem(sessionId, { rarity: "rare" });
+    assert.equal(
+        (
+            await client.apply(contextId, item, {
+                type: "influence_exalt",
+                influence: "crusader",
+            })
+        ).applied,
+        true,
+    );
+    info = await client.itemInfo(item, sessionId);
+    assert.notEqual(info.generic_influence_bits, 0);
+    await client.closeItem(item);
+});
+
+test("Phase 13 strategy operations run natively through WASM", async () => {
+    const strategy = await client.compileStrategy(sessionId, phase13Strategy());
+    const simulator = await client.createSimulator(sessionId, strategy);
+    const result = await client.runStrategy(simulator, {
+        target_runs: 5,
+        seed: 7,
+    });
+    assert.equal(result.summary.success_count, 5);
+    assert.equal(result.summary.total_actions, 5);
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
 });
 
 test("apply an action mutates the item per the rules", async () => {
@@ -354,6 +527,31 @@ test("modifier family minimum tier executes in the native WASM simulator", async
                 tierTwo.key,
                 tierTwo.generation_type,
                 threshold,
+            ),
+        );
+        const simulator = await client.createSimulator(sessionId, strategy);
+        const result = await client.runStrategy(simulator, {
+            target_runs: 1,
+            retained_trace_count: 1,
+        });
+        assert.equal(result.summary.success_count, expectedSuccess);
+        await client.closeSimulator(simulator);
+        await client.closeStrategy(strategy);
+    }
+
+    for (const [itemFractured, expectedSuccess] of [
+        [false, 0],
+        [true, 1],
+    ] as const) {
+        const strategy = await client.compileStrategy(
+            sessionId,
+            familyTierStrategy(
+                tierOne.key,
+                tierTwo.key,
+                tierTwo.generation_type,
+                2,
+                itemFractured,
+                true,
             ),
         );
         const simulator = await client.createSimulator(sessionId, strategy);

@@ -193,6 +193,28 @@ export class EngineBindings {
         );
     }
 
+    removeMod(
+        item: number,
+        spec: { modId: number; side: "prefix" | "suffix" },
+    ): void {
+        this.callJson(
+            "pcw_item_remove_mod",
+            ["number", "string"],
+            [item, JSON.stringify({ mod_id: spec.modId, side: spec.side })],
+        );
+    }
+
+    setModFractured(
+        item: number,
+        spec: { modId: number; side: "prefix" | "suffix" },
+    ): void {
+        this.callJson(
+            "pcw_item_set_mod_fractured",
+            ["number", "string"],
+            [item, JSON.stringify({ mod_id: spec.modId, side: spec.side })],
+        );
+    }
+
     apply(context: number, item: number, action: CraftAction): ActionOutcome {
         return this.callJson(
             "pcw_apply",

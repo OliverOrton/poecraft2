@@ -45,16 +45,13 @@ base, the global normalized mod catalog, ordered relationships, and mechanic
 lookup tables. Vaal Regalia remains only the detailed Phase 2 rule fixture.
 
 Phases 4-6 now provide the native C ABI, compact item state, generic ordinary
-session construction, the full crafted/essence/base-implicit/fossil-direct
-session universe, materialized group/classification/influence masks, lazy
+session construction, materialized group/classification/influence masks, lazy
 influence tag-signature weights, cached prefix-sum weighted pools, rich
 request-shaped pool debugging, and the initial normal/essence/fossil actions.
 Phase 7 provides a shared native library, owning Python wrappers, exact spec
 fixture parity checks, explicit test-item construction, a coarse native
 batch-action API, bounded batch/handle stress coverage, and a platform wheel
-build. Standard fossil multipliers stack in fixed point; Sanctified Fossil
-remains explicitly unsupported until its special level/lucky behavior is
-implemented.
+build.
 
 Phase 8 provides the WebAssembly facade, worker runtime, progress/cancellation
 protocol, and headless cross-target checks. Phase 9 provides the Dockview
@@ -62,6 +59,16 @@ workspace, real WASM-backed Emulator slice, Stash/manual-save model, and
 recovery persistence. Phase 10 provides the native compiled strategy graph
 simulator, immutable economy snapshots, run-wide limits, retained traces and
 representative items, aggregated failures, and matching C/Python/WASM access.
+
+Phase 13 is complete. Ordinary sessions now include the direct mechanic
+registries needed for bench/metamods, veiled and unveiled modifiers, corrupted
+implicits, and Eldritch implicits. The shared action API implements bench
+crafting, metamod locks and cannot-roll filters, veiled exalt/chaos and unveil,
+Harvest reforge/augment/resistance conversion, Eldritch implicits and currency,
+generic influenced exalts, and current special fossil behavior. Sanctified
+required-level weighting, Bloodstained/Gilded implicits, and mirrored
+Fractured-Fossil output are covered across native, Python, and WASM. Phase 12
+accounts and standalone Phase 18 recombinators remain deferred.
 
 Python binding smoke example:
 

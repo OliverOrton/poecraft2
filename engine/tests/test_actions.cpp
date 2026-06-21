@@ -456,8 +456,8 @@ void run_integration_tests(const char* artifact_dir) {
         check_groups_distinct(session, &item);
     }
 
-    // Sanctified's level/lucky weighting is deliberately deferred. Reject it
-    // instead of silently treating it as an ordinary no-effect fossil.
+    // Sanctified applies its required-level weight multiplier. Numeric lucky
+    // rolls are inert in structural simulation, but the craft is supported.
     {
         pc_item_state item = make_item(session, PC_RARITY_NORMAL);
         pc_action_request req{};
@@ -469,8 +469,85 @@ void run_integration_tests(const char* artifact_dir) {
             "Metadata/Items/Currency/CurrencyDelveCraftingLuckyModRolls";
         pc_action_result result{};
         PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
-                 PC_RESULT_UNSUPPORTED_FEATURE);
-        PC_CHECK(item.rarity == PC_RARITY_NORMAL);
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+        PC_CHECK(item.rarity == PC_RARITY_RARE);
+    }
+
+    // Phase 13 direct mechanics are available through the same C ABI.
+    {
+        pc_item_state item = make_item(session, PC_RARITY_RARE);
+        pc_action_request req{};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        pc_action_result result{};
+
+        req.action_type = PC_ACTION_BENCH;
+        req.mod_key = "StrMasterItemGenerationCannotChangePrefixes";
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+
+        req = {};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_VEILED_EXALT;
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+        int veiled_side = -1;
+        uint32_t veiled_index = 0;
+        PC_CHECK(pc_item_find_veiled(
+                     &item, &veiled_side, &veiled_index) == PC_RESULT_OK);
+        const pc_mod_slot& veiled =
+            veiled_side == PC_SIDE_PREFIX ? item.prefixes[veiled_index]
+                                          : item.suffixes[veiled_index];
+        PC_CHECK(veiled.veiled_option_count == 3);
+        pc_mod_info choice{};
+        PC_CHECK(pc_session_get_mod_info(
+                     session, veiled.veiled_option_mod_ids[0], &choice,
+                     &error) == PC_RESULT_OK);
+        req = {};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_UNVEIL;
+        req.mod_key = choice.key;
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+
+        item = make_item(session, PC_RARITY_RARE);
+        req = {};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_HARVEST_REFORGE;
+        req.target_tag = "life";
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+
+        item = make_item(session, PC_RARITY_RARE);
+        req = {};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_ELDRITCH_EMBER;
+        req.tier = 1;
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+        PC_CHECK(item.searing_exarch_tier == 1);
+        PC_CHECK(item.implicit_count == 1);
+
+        item = make_item(session, PC_RARITY_RARE);
+        req = {};
+        req.struct_size = sizeof(req);
+        req.abi_version = PC_ABI_VERSION;
+        req.action_type = PC_ACTION_INFLUENCE_EXALT;
+        req.influence = "crusader";
+        PC_CHECK(pc_apply_action(ctx, &item, &req, &result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(result.applied == 1);
+        PC_CHECK(item.generic_influence_bits != 0);
     }
 
     // Native batch application parses once and reuses one context/cache.

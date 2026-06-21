@@ -85,8 +85,14 @@ std::string family_tier_strategy(
     const std::string& family_key,
     const std::string& item_mod_key,
     int generation_type,
-    int min_tier) {
+    int min_tier,
+    bool item_fractured = false,
+    bool require_fractured = false) {
     const char* side = generation_type == PC_SIDE_PREFIX ? "prefixes" : "suffixes";
+    const std::string item_flags =
+        item_fractured ? R"JSON(,"fractured":true)JSON" : "";
+    const std::string condition_flags =
+        require_fractured ? R"JSON(,"fractured":true)JSON" : "";
     return std::string(R"JSON({
   "version":"v1",
   "name":"Modifier family tier",
@@ -97,7 +103,7 @@ std::string family_tier_strategy(
     "rarity":"rare",
     ")JSON") +
            side + R"JSON(": [{"mod_key":")JSON" + item_mod_key +
-           R"JSON("}]
+           R"JSON(")JSON" + item_flags + R"JSON(}]
   },
   "nodes":[
     {"id":"start","kind":"start"},
@@ -108,7 +114,7 @@ std::string family_tier_strategy(
     {"id":"match","from":"start","to":"success","priority":0,
      "condition":{"type":"has_mod_family","family_mod_key":")JSON" +
            family_key + R"JSON(","min_tier":)JSON" +
-           std::to_string(min_tier) + R"JSON(}},
+           std::to_string(min_tier) + condition_flags + R"JSON(}},
     {"id":"fallback","from":"start","to":"failure","priority":999,
      "is_default":true}
   ]
@@ -421,6 +427,45 @@ void run_simulator_tests(const char* artifact_dir) {
                                : summary.failure_count == 1);
             pc_simulator_destroy(tier_simulator);
             pc_strategy_destroy(tier_strategy);
+        }
+        for (bool item_fractured : {false, true}) {
+            const std::string fractured_json = family_tier_strategy(
+                tier_one_key,
+                tier_two_key,
+                selected_side,
+                2,
+                item_fractured,
+                true);
+            pc_strategy_handle fractured_strategy = nullptr;
+            PC_CHECK(pc_strategy_compile_json(
+                         session,
+                         fractured_json.data(),
+                         fractured_json.size(),
+                         &fractured_strategy,
+                         &error) == PC_RESULT_OK);
+            pc_simulator_handle fractured_simulator = nullptr;
+            PC_CHECK(pc_simulator_create(
+                         session,
+                         fractured_strategy,
+                         nullptr,
+                         &fractured_simulator,
+                         &error) == PC_RESULT_OK);
+            auto fractured_options = options(1);
+            PC_CHECK(pc_simulator_run_chunk(
+                         fractured_simulator,
+                         &fractured_options,
+                         1,
+                         &progress,
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(pc_simulator_get_summary(
+                         fractured_simulator,
+                         &summary,
+                         &error) == PC_RESULT_OK);
+            PC_CHECK(
+                item_fractured ? summary.success_count == 1
+                               : summary.failure_count == 1);
+            pc_simulator_destroy(fractured_simulator);
+            pc_strategy_destroy(fractured_strategy);
         }
     }
 

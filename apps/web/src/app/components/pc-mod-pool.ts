@@ -21,6 +21,8 @@ interface PoolModel {
         prefixOnItem: Set<number>;
         suffixOnItem: Set<number>;
         implicitOnItem: Set<number>;
+        fracturedPrefixOnItem: Set<number>;
+        fracturedSuffixOnItem: Set<number>;
         groupOnItem: Set<number>;
         maxPrefix: number;
         maxSuffix: number;
@@ -51,9 +53,8 @@ export class PcModPool extends HTMLElement {
     private allowDirectCraft = false;
     private tab: Tab = "prefix";
     private search = "";
-    private sectionOpen: Record<Section, boolean> = {
+    private sectionOpen: Record<string, boolean> = {
         base: true,
-        influenced: false,
         crafted: false,
         essence: false,
         fossil: false,
@@ -93,9 +94,44 @@ export class PcModPool extends HTMLElement {
 
     private dispatchCraft(modKey: string, side: "prefix" | "suffix"): void {
         this.dispatchEvent(
-            new CustomEvent<{ key: string; side: "prefix" | "suffix" }>(
+            new CustomEvent<{
+                key: string;
+                side: "prefix" | "suffix";
+                fractured?: boolean;
+            }>(
                 "craft-mod",
                 { detail: { key: modKey, side }, bubbles: true },
+            ),
+        );
+    }
+
+    private dispatchFracture(
+        modKey: string,
+        modId: number,
+        side: "prefix" | "suffix",
+        onItem: boolean,
+    ): void {
+        this.dispatchEvent(
+            new CustomEvent<{
+                key: string;
+                modId: number;
+                side: "prefix" | "suffix";
+                onItem: boolean;
+            }>("fracture-mod", {
+                detail: { key: modKey, modId, side, onItem },
+                bubbles: true,
+            }),
+        );
+    }
+
+    private dispatchRemove(
+        modId: number,
+        side: "prefix" | "suffix",
+    ): void {
+        this.dispatchEvent(
+            new CustomEvent<{ modId: number; side: "prefix" | "suffix" }>(
+                "remove-mod",
+                { detail: { modId, side }, bubbles: true },
             ),
         );
     }
@@ -107,7 +143,7 @@ export class PcModPool extends HTMLElement {
                     <h3>Modifier Pool</h3>
                     ${
                         this.allowDirectCraft
-                            ? '<span class="pc-mod-pool-hint">click a tier to craft it directly</span>'
+                            ? '<span class="pc-mod-pool-hint">click to add · click the highlighted tier to remove</span>'
                             : ""
                     }
                 </div>
@@ -172,13 +208,31 @@ export class PcModPool extends HTMLElement {
         const inSection = (section: Section) =>
             filtered.filter((family) => family.category === section);
 
+        const influenceGroups = new Map<string, FamilyView[]>();
+        for (const family of inSection("influenced")) {
+            const label = family.sourceLabel || "Influenced";
+            influenceGroups.set(label, [
+                ...(influenceGroups.get(label) ?? []),
+                family,
+            ]);
+        }
+        const influenced = Array.from(influenceGroups.entries())
+            .sort(
+                ([a], [b]) =>
+                    influenceOrder(a) - influenceOrder(b) || a.localeCompare(b),
+            )
+            .map(([label, entries]) =>
+                this.renderSection(
+                    `influence:${label}`,
+                    `${label} Mods`,
+                    entries,
+                ),
+            )
+            .join("");
+
         root.innerHTML =
             this.renderSection("base", "Base Mod Pool", inSection("base")) +
-            this.renderSection(
-                "influenced",
-                "Influenced Mod Pool",
-                inSection("influenced"),
-            ) +
+            influenced +
             this.renderSection("crafted", "Crafted Mods", inSection("crafted")) +
             this.renderSection("essence", "Essence Mods", inSection("essence")) +
             this.renderSection("fossil", "Fossil Mods", inSection("fossil"));
@@ -240,8 +294,14 @@ export class PcModPool extends HTMLElement {
                     first?.text_lines.join(" / ") ||
                     first?.key ||
                     `Family ${family.familyId}`,
-                onItem: this.model.item.groupOnItem.has(
-                    first?.primary_group_id ?? 0,
+                onItem: sorted.some((tier) =>
+                    this.tab === "prefix"
+                        ? this.model?.item.prefixOnItem.has(tier.session_mod_id)
+                        : this.tab === "suffix"
+                          ? this.model?.item.suffixOnItem.has(tier.session_mod_id)
+                          : this.model?.item.implicitOnItem.has(
+                                tier.session_mod_id,
+                            ),
                 ),
                 category: family.category,
                 sourceLabel: sourceLabel(first),
@@ -249,19 +309,16 @@ export class PcModPool extends HTMLElement {
                 tiers: sorted,
             });
         }
-        out.sort((a, b) => {
-            if (a.onItem !== b.onItem) return a.onItem ? -1 : 1;
-            return a.label.localeCompare(b.label);
-        });
+        out.sort((a, b) => a.label.localeCompare(b.label));
         return out;
     }
 
     private renderSection(
-        key: Section,
+        key: string,
         title: string,
         families: FamilyView[],
     ): string {
-        const open = this.sectionOpen[key];
+        const open = this.sectionOpen[key] ?? false;
         return `
             <div class="pc-mod-pool-section">
                 <button class="pc-mod-pool-section-toggle" data-section="${key}">
@@ -325,20 +382,42 @@ export class PcModPool extends HTMLElement {
         const item = this.model.item;
         const weight = this.model.poolWeights.get(tier.session_mod_id);
         const text = tier.text_lines.join(" / ") || tier.key;
+        const tierOnItem =
+            this.tab === "prefix"
+                ? item.prefixOnItem.has(tier.session_mod_id)
+                : this.tab === "suffix"
+                  ? item.suffixOnItem.has(tier.session_mod_id)
+                  : item.implicitOnItem.has(tier.session_mod_id);
+        const conflictingGroupOnItem = item.groupOnItem.has(
+            tier.primary_group_id,
+        );
+        const tierFractured =
+            this.tab === "prefix"
+                ? item.fracturedPrefixOnItem.has(tier.session_mod_id)
+                : this.tab === "suffix"
+                  ? item.fracturedSuffixOnItem.has(tier.session_mod_id)
+                  : false;
         let blockedReason: string | null = null;
         if (this.tab !== "implicit") {
-            if (family.onItem) {
-                blockedReason = "Group already on item";
+            if (family.onItem && !tierOnItem) {
+                blockedReason = "Another tier from this family is on the item";
+            } else if (!family.onItem && conflictingGroupOnItem) {
+                blockedReason = "A conflicting modifier group is on the item";
             } else if (this.tab === "prefix") {
                 const open =
                     item.prefixOnItem.size < item.maxPrefix && item.maxPrefix > 0;
-                if (!open) blockedReason = "No open prefix slot";
+                if (!tierOnItem && !open) blockedReason = "No open prefix slot";
             } else {
                 const open =
                     item.suffixOnItem.size < item.maxSuffix && item.maxSuffix > 0;
-                if (!open) blockedReason = "No open suffix slot";
+                if (!tierOnItem && !open) blockedReason = "No open suffix slot";
             }
-            if (!blockedReason && weight === undefined) {
+            if (
+                !blockedReason &&
+                !tierOnItem &&
+                weight === undefined &&
+                family.category !== "crafted"
+            ) {
                 blockedReason = "Not currently rollable";
             }
         }
@@ -347,9 +426,13 @@ export class PcModPool extends HTMLElement {
             .map((tag) => `<span>${escapeHtml(formatTag(tag))}</span>`)
             .join("");
         return `
-            <li class="pc-mod-tier ${blockedReason ? "is-blocked" : ""}"
+            <li class="pc-mod-tier ${blockedReason ? "is-blocked" : ""} ${tierOnItem ? "is-on-item" : ""} ${tierFractured ? "is-fractured" : ""}"
                 data-mod-key="${escapeHtml(tier.key)}"
+                data-mod-id="${tier.session_mod_id}"
                 data-side="${this.tab}"
+                data-on-item="${tierOnItem ? "true" : "false"}"
+                data-fractured="${tierFractured ? "true" : "false"}"
+                data-can-fracture="${family.category !== "crafted" ? "true" : "false"}"
                 ${blockedReason ? `title="${escapeHtml(blockedReason)}"` : ""}>
                 <button class="pc-mod-tier-btn" ${clickable ? "" : "disabled"}>
                     <span class="pc-mod-tier-label">
@@ -362,8 +445,12 @@ export class PcModPool extends HTMLElement {
                     <span class="pc-mod-tier-meta">
                         <span>iLvl ${tier.required_level}</span>
                         ${
-                            weight !== undefined
-                                ? `<span class="pc-mod-tier-weight">${weight.toLocaleString()}</span>`
+                            tierOnItem
+                                ? tierFractured
+                                    ? '<span class="pc-mod-tier-fractured">FRACTURED</span>'
+                                    : '<span class="pc-mod-tier-remove">REMOVE</span>'
+                                : weight !== undefined
+                                  ? `<span class="pc-mod-tier-weight">${weight.toLocaleString()}</span>`
                                 : '<span class="pc-mod-tier-weight pc-mod-tier-zero">—</span>'
                         }
                     </span>
@@ -375,7 +462,7 @@ export class PcModPool extends HTMLElement {
         root.querySelectorAll<HTMLButtonElement>(".pc-mod-pool-section-toggle")
             .forEach((button) => {
                 button.addEventListener("click", () => {
-                    const key = button.dataset.section as Section;
+                    const key = button.dataset.section ?? "";
                     this.sectionOpen[key] = !this.sectionOpen[key];
                     this.renderBody();
                 });
@@ -396,16 +483,45 @@ export class PcModPool extends HTMLElement {
             });
         root.querySelectorAll<HTMLLIElement>(".pc-mod-tier").forEach((li) => {
             const btn = li.querySelector<HTMLButtonElement>(".pc-mod-tier-btn");
-            if (!btn || btn.disabled) return;
-            btn.addEventListener("click", () => {
+            if (!btn) return;
+            if (!btn.disabled) btn.addEventListener("click", () => {
                 const key = li.dataset.modKey ?? "";
                 const side = li.dataset.side ?? "prefix";
                 if (key && (side === "prefix" || side === "suffix")) {
-                    this.dispatchCraft(key, side);
+                    if (li.dataset.onItem === "true") {
+                        this.dispatchRemove(Number(li.dataset.modId), side);
+                    } else {
+                        this.dispatchCraft(key, side);
+                    }
                 }
+            });
+            li.addEventListener("contextmenu", (event) => {
+                if (
+                    li.dataset.canFracture !== "true" ||
+                    li.dataset.fractured === "true" ||
+                    btn.disabled
+                ) {
+                    return;
+                }
+                const key = li.dataset.modKey ?? "";
+                const side = li.dataset.side ?? "prefix";
+                if (!key || (side !== "prefix" && side !== "suffix")) return;
+                event.preventDefault();
+                this.dispatchFracture(
+                    key,
+                    Number(li.dataset.modId),
+                    side,
+                    li.dataset.onItem === "true",
+                );
             });
         });
     }
+}
+
+function influenceOrder(label: string): number {
+    const order = ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"];
+    const index = order.indexOf(label);
+    return index < 0 ? order.length : index;
 }
 
 function categoryFor(reachKind: number): Section | null {
@@ -421,12 +537,20 @@ function sourceLabel(info: ModInfo | undefined): string {
     if (!info) return "";
     if (info.reach_kind === REACH_KIND_INFLUENCE) {
         const parts = info.reach_via.split(":");
-        return formatTag(parts[parts.length - 1] || "Influenced");
+        return influenceLabel(parts[parts.length - 1] || "Influenced");
     }
     if (info.reach_kind === REACH_KIND_CRAFTED) return "Bench";
     if (info.reach_kind === REACH_KIND_ESSENCE) return "Essence";
     if (info.reach_kind === REACH_KIND_FOSSIL) return "Fossil";
     return "";
+}
+
+function influenceLabel(value: string): string {
+    const key = value.toLowerCase();
+    if (key === "adjudicator") return "Warlord";
+    if (key === "basilisk") return "Redeemer";
+    if (key === "eyrie") return "Hunter";
+    return formatTag(value);
 }
 
 function formatTag(tag: string): string {

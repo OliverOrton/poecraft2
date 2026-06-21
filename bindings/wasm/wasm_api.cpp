@@ -118,7 +118,19 @@ bool action_type_from_name(const std::string& name, int32_t& out) {
         {"alchemy", PC_ACTION_ALCHEMY}, {"chaos", PC_ACTION_CHAOS},
         {"exalt", PC_ACTION_EXALT}, {"annul", PC_ACTION_ANNUL},
         {"scour", PC_ACTION_SCOUR}, {"essence", PC_ACTION_ESSENCE},
-        {"fossil", PC_ACTION_FOSSIL},
+        {"fossil", PC_ACTION_FOSSIL}, {"bench", PC_ACTION_BENCH},
+        {"veiled_chaos", PC_ACTION_VEILED_CHAOS},
+        {"veiled_exalt", PC_ACTION_VEILED_EXALT},
+        {"unveil", PC_ACTION_UNVEIL},
+        {"harvest_reforge", PC_ACTION_HARVEST_REFORGE},
+        {"harvest_augment", PC_ACTION_HARVEST_AUGMENT},
+        {"harvest_resist", PC_ACTION_HARVEST_RESIST},
+        {"eldritch_ember", PC_ACTION_ELDRITCH_EMBER},
+        {"eldritch_ichor", PC_ACTION_ELDRITCH_ICHOR},
+        {"eldritch_exalt", PC_ACTION_ELDRITCH_EXALT},
+        {"eldritch_chaos", PC_ACTION_ELDRITCH_CHAOS},
+        {"eldritch_annul", PC_ACTION_ELDRITCH_ANNUL},
+        {"influence_exalt", PC_ACTION_INFLUENCE_EXALT},
     };
     for (const auto& entry : table) {
         if (name == entry.first) {
@@ -134,6 +146,7 @@ bool action_type_from_name(const std::string& name, int32_t& out) {
 bool parse_action(const Value& spec, pc_action_request& request,
                   std::vector<std::string>& storage, std::string& error) {
     std::memset(&request, 0, sizeof(request));
+    storage.reserve(16);
     request.struct_size = sizeof(request);
     request.abi_version = PC_ABI_VERSION;
     const Value* type = spec.find("type");
@@ -175,6 +188,51 @@ bool parse_action(const Value& spec, pc_action_request& request,
         std::size_t base = storage.size() - fossils->array.size();
         for (std::size_t i = 0; i < fossils->array.size(); ++i) {
             request.fossil_keys[i] = storage[base + i].c_str();
+        }
+    }
+    auto string_param = [&](const char* name, const char** out,
+                            bool required = true) {
+        const Value* value = spec.find(name);
+        if (value == nullptr || value->type != Type::String ||
+            value->string.empty()) {
+            if (required) {
+                error = std::string("action requires a string \"") + name +
+                        "\"";
+                return false;
+            }
+            return true;
+        }
+        storage.push_back(value->string);
+        *out = storage.back().c_str();
+        return true;
+    };
+    if (request.action_type == PC_ACTION_BENCH ||
+        request.action_type == PC_ACTION_UNVEIL) {
+        if (!string_param("mod_key", &request.mod_key)) return false;
+    }
+    if (request.action_type == PC_ACTION_HARVEST_REFORGE ||
+        request.action_type == PC_ACTION_HARVEST_AUGMENT) {
+        if (!string_param("target_tag", &request.target_tag)) return false;
+    }
+    if (request.action_type == PC_ACTION_HARVEST_RESIST) {
+        if (!string_param("source_tag", &request.source_tag) ||
+            !string_param("target_tag", &request.target_tag)) {
+            return false;
+        }
+    }
+    if (request.action_type == PC_ACTION_INFLUENCE_EXALT) {
+        if (!string_param("influence", &request.influence)) return false;
+    }
+    if (request.action_type == PC_ACTION_ELDRITCH_EMBER ||
+        request.action_type == PC_ACTION_ELDRITCH_ICHOR) {
+        const Value* tier = spec.find("tier");
+        request.tier =
+            tier != nullptr && tier->type == Type::Number
+                ? static_cast<uint32_t>(tier->number)
+                : 0;
+        if (request.tier < 1 || request.tier > 4) {
+            error = "Eldritch tier must be 1-4";
+            return false;
         }
     }
     return true;
@@ -239,6 +297,28 @@ void append_item_info(std::string& out, const pc_item_state& item) {
     out += std::to_string(item.prefix_count);
     out += ",\"suffix_count\":";
     out += std::to_string(item.suffix_count);
+    out += ",\"item_flags\":" + std::to_string(item.item_flags);
+    out += ",\"generic_influence_bits\":" +
+           std::to_string(item.generic_influence_bits);
+    out += ",\"searing_exarch_tier\":" +
+           std::to_string(item.searing_exarch_tier);
+    out += ",\"eater_of_worlds_tier\":" +
+           std::to_string(item.eater_of_worlds_tier);
+    out += ",\"veiled_option_mod_ids\":[";
+    bool first_option = true;
+    auto append_veiled = [&](const pc_mod_slot* slots, uint8_t count) {
+        for (uint8_t i = 0; i < count; ++i) {
+            if ((slots[i].flags & PC_MOD_SLOT_VEILED) == 0) continue;
+            for (uint8_t j = 0; j < slots[i].veiled_option_count; ++j) {
+                if (!first_option) out.push_back(',');
+                first_option = false;
+                out += std::to_string(slots[i].veiled_option_mod_ids[j]);
+            }
+        }
+    };
+    append_veiled(item.prefixes, item.prefix_count);
+    append_veiled(item.suffixes, item.suffix_count);
+    out.push_back(']');
 }
 
 // --- full item state serialization (for Stash save/restore) ----------------
@@ -749,6 +829,83 @@ const char* pcw_item_add_mod(uint32_t item_id, uint32_t session_id,
                                    flags, nullptr);
     if (rc != PC_RESULT_OK) return fail(rc, "could not add mod to item");
     return respond("{\"ok\":true}");
+}
+
+// Remove one explicit mod from an item by side and session mod id. This is an
+// emulator-only editing affordance, parallel to pcw_item_add_mod.
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_remove_mod(uint32_t item_id, const char* spec_json) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    Value spec;
+    try {
+        spec = Parser(spec_json, std::strlen(spec_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* side_value = spec.find("side");
+    const Value* mod_id_value = spec.find("mod_id");
+    if (side_value == nullptr || side_value->type != Type::String ||
+        mod_id_value == nullptr || mod_id_value->type != Type::Number) {
+        return fail(PC_RESULT_INVALID_ARGUMENT,
+                    "remove_mod requires string \"side\" and number \"mod_id\"");
+    }
+    int side = -1;
+    if (side_value->string == "prefix") side = PC_SIDE_PREFIX;
+    else if (side_value->string == "suffix") side = PC_SIDE_SUFFIX;
+    else {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "side must be prefix or suffix");
+    }
+    const uint32_t mod_id = static_cast<uint32_t>(mod_id_value->number);
+    const pc_mod_slot* slots =
+        side == PC_SIDE_PREFIX ? item->prefixes : item->suffixes;
+    const uint8_t count =
+        side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count;
+    for (uint8_t index = 0; index < count; ++index) {
+        if (slots[index].mod_id != mod_id) continue;
+        pc_result rc = pc_item_remove_at(item, side, index);
+        if (rc != PC_RESULT_OK) return fail(rc, "could not remove mod from item");
+        return respond("{\"ok\":true}");
+    }
+    return fail(PC_RESULT_NOT_FOUND, "mod is not on this item side");
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_item_set_mod_fractured(uint32_t item_id, const char* spec_json) {
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    Value spec;
+    try {
+        spec = Parser(spec_json, std::strlen(spec_json)).parse();
+    } catch (const std::exception& e) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+    }
+    const Value* side_value = spec.find("side");
+    const Value* mod_id_value = spec.find("mod_id");
+    if (side_value == nullptr || side_value->type != Type::String ||
+        mod_id_value == nullptr || mod_id_value->type != Type::Number) {
+        return fail(
+            PC_RESULT_INVALID_ARGUMENT,
+            "set_mod_fractured requires string \"side\" and number \"mod_id\"");
+    }
+    pc_mod_slot* slots = nullptr;
+    uint8_t count = 0;
+    if (side_value->string == "prefix") {
+        slots = item->prefixes;
+        count = item->prefix_count;
+    } else if (side_value->string == "suffix") {
+        slots = item->suffixes;
+        count = item->suffix_count;
+    } else {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "side must be prefix or suffix");
+    }
+    const uint32_t mod_id = static_cast<uint32_t>(mod_id_value->number);
+    for (uint8_t index = 0; index < count; ++index) {
+        if (slots[index].mod_id != mod_id) continue;
+        slots[index].flags |= PC_MOD_SLOT_FRACTURED;
+        return respond("{\"ok\":true}");
+    }
+    return fail(PC_RESULT_NOT_FOUND, "mod is not on this item side");
 }
 
 // Serialize the complete item state so the UI can persist it to the Stash /

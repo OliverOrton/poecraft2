@@ -124,16 +124,21 @@ export class PcBasePicker extends HTMLElement {
         const subs = this.subcategoriesForClass(this.selectedClass);
         const bases = this.filteredBases();
         const canStart = Boolean(this.selectedBase) && this.itemLevel > 0;
+        const compact = this.hasAttribute("compact");
 
         this.innerHTML = `
-            <div class="pc-base-picker">
-                <h2 class="pc-base-picker-title">${escapeHtml(
-                    this.getAttribute("picker-title") ?? "Choose a base",
-                )}</h2>
-                <p class="pc-base-picker-sub">${escapeHtml(
-                    this.getAttribute("picker-subtitle") ??
-                        "Pick an item class, then a base item and item level.",
-                )}</p>
+            <div class="pc-base-picker ${compact ? "is-compact" : ""}">
+                ${
+                    compact
+                        ? ""
+                        : `<h2 class="pc-base-picker-title">${escapeHtml(
+                              this.getAttribute("picker-title") ?? "Choose a base",
+                          )}</h2>
+                           <p class="pc-base-picker-sub">${escapeHtml(
+                               this.getAttribute("picker-subtitle") ??
+                                   "Pick an item class, then a base item and item level.",
+                           )}</p>`
+                }
                 <div class="pc-base-picker-grid">
                     <label class="pc-field">
                         <span>Item Class</span>
@@ -172,7 +177,7 @@ export class PcBasePicker extends HTMLElement {
                     </label>
                 </div>
                 <div class="pc-base-picker-actions">
-                    <button type="button" class="pc-bp-cancel">Cancel</button>
+                    ${compact ? "" : '<button type="button" class="pc-bp-cancel">Cancel</button>'}
                     <button type="button" class="pc-bp-confirm" ${canStart ? "" : "disabled"}>
                         ${escapeHtml(
                             this.getAttribute("confirm-label") ?? "Start crafting",
@@ -226,7 +231,7 @@ export class PcBasePicker extends HTMLElement {
                 );
             },
         );
-        this.querySelector<HTMLButtonElement>(".pc-bp-cancel")!.addEventListener(
+        this.querySelector<HTMLButtonElement>(".pc-bp-cancel")?.addEventListener(
             "click",
             () => {
                 this.dispatchEvent(new CustomEvent("cancel", { bubbles: true }));

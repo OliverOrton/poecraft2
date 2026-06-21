@@ -20,6 +20,7 @@ export interface SlotMod {
 
 export interface ModListModel {
     rarity: string;
+    influences: string[];
     implicits: SlotMod[];
     prefixes: SlotMod[];
     suffixes: SlotMod[];
@@ -31,9 +32,21 @@ export class PcModList extends HTMLElement {
     setModel(model: ModListModel): void {
         const explicitCount = model.prefixes.length + model.suffixes.length;
         this.innerHTML = `
-            <div class="pc-mod-list">
+            <div class="pc-mod-list pc-item-rarity-${model.rarity}">
                 <div class="pc-mod-list-header">
-                    <span class="pc-rarity pc-rarity-${model.rarity}">${model.rarity}</span>
+                    <span class="pc-item-heading">
+                        <span class="pc-rarity pc-rarity-${model.rarity}">${model.rarity}</span>
+                        ${
+                            model.influences.length
+                                ? `<span class="pc-item-influences">${model.influences
+                                      .map(
+                                          (influence) =>
+                                              `<span class="pc-item-influence">${escapeHtml(influence)}</span>`,
+                                      )
+                                      .join("")}</span>`
+                                : ""
+                        }
+                    </span>
                     <span class="pc-mod-count">${explicitCount} explicit · ${model.prefixes.length}P / ${model.suffixes.length}S</span>
                 </div>
                 ${renderImplicits(model.implicits)}
@@ -94,12 +107,14 @@ function renderFilledSlot(mod: SlotMod, side: "prefix" | "suffix" | "implicit"):
         mod.fractured ? "is-fractured" : ""
     }">
             <div class="pc-mod-slot-helper">${helper}</div>
-            ${lines
-                .map(
-                    (line) =>
-                        `<div class="pc-mod-slot-line">${escapeHtml(line)}</div>`,
-                )
-                .join("")}
+            <div class="pc-mod-slot-lines">
+                ${lines
+                    .map(
+                        (line) =>
+                            `<div class="pc-mod-slot-line">${escapeHtml(line)}</div>`,
+                    )
+                    .join("")}
+            </div>
             ${
                 tagBits.length > 0
                     ? `<div class="pc-mod-slot-tags">${tagBits

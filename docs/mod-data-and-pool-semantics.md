@@ -460,7 +460,7 @@ Weight:
 ```text
 normal base weight
 * fossil classification-tag multiplier
-* optional Sanctified level multiplier (deferred; currently unsupported)
+* Sanctified required-level multiplier when selected
 ```
 
 Forced fossil mods are direct additions, not weighted candidates.

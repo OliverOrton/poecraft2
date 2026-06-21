@@ -28,6 +28,19 @@ _ACTION_TYPES = {
     "scour": 8,
     "essence": 9,
     "fossil": 10,
+    "bench": 11,
+    "veiled_chaos": 12,
+    "veiled_exalt": 13,
+    "unveil": 14,
+    "harvest_reforge": 15,
+    "harvest_augment": 16,
+    "harvest_resist": 17,
+    "eldritch_ember": 18,
+    "eldritch_ichor": 19,
+    "eldritch_exalt": 20,
+    "eldritch_chaos": 21,
+    "eldritch_annul": 22,
+    "influence_exalt": 23,
 }
 _RARITIES = {"normal": 0, "magic": 1, "rare": 2}
 _TERMINAL_KINDS = {"success": 0, "failure": 1, "stop": 2}
@@ -113,6 +126,11 @@ class _ActionRequest(ct.Structure):
         ("essence_key", ct.c_char_p),
         ("fossil_count", ct.c_uint32),
         ("fossil_keys", ct.c_char_p * MAX_FOSSILS),
+        ("mod_key", ct.c_char_p),
+        ("target_tag", ct.c_char_p),
+        ("source_tag", ct.c_char_p),
+        ("influence", ct.c_char_p),
+        ("tier", ct.c_uint32),
     ]
 
 
@@ -644,6 +662,42 @@ def _action_request(action: str | Mapping[str, Any]) -> tuple[_ActionRequest, li
             encoded = str(key).encode()
             keepalive.append(encoded)
             request.fossil_keys[index] = encoded
+    if name in {"bench", "unveil"}:
+        key = str(spec.get("mod_key") or "")
+        if not key:
+            raise ValueError(f"{name} action requires mod_key")
+        encoded = key.encode()
+        keepalive.append(encoded)
+        request.mod_key = encoded
+    if name in {"harvest_reforge", "harvest_augment"}:
+        tag = str(spec.get("target_tag") or spec.get("tag") or "")
+        if not tag:
+            raise ValueError(f"{name} action requires target_tag")
+        encoded = tag.encode()
+        keepalive.append(encoded)
+        request.target_tag = encoded
+    if name == "harvest_resist":
+        source = str(spec.get("source_tag") or "")
+        target = str(spec.get("target_tag") or "")
+        if not source or not target:
+            raise ValueError("harvest_resist requires source_tag and target_tag")
+        source_bytes = source.encode()
+        target_bytes = target.encode()
+        keepalive.extend((source_bytes, target_bytes))
+        request.source_tag = source_bytes
+        request.target_tag = target_bytes
+    if name == "influence_exalt":
+        influence = str(spec.get("influence") or "")
+        if not influence:
+            raise ValueError("influence_exalt requires influence")
+        encoded = influence.encode()
+        keepalive.append(encoded)
+        request.influence = encoded
+    if name in {"eldritch_ember", "eldritch_ichor"}:
+        tier = int(spec.get("tier") or 0)
+        if not 1 <= tier <= 4:
+            raise ValueError(f"{name} requires tier 1-4")
+        request.tier = tier
     return request, keepalive
 
 
@@ -1006,6 +1060,37 @@ class Item:
     @property
     def implicit_mod_ids(self) -> tuple[int, ...]:
         return tuple(self._state.implicits[i].mod_id for i in range(self._state.implicit_count))
+
+    @property
+    def item_flags(self) -> int:
+        return int(self._state.item_flags)
+
+    @property
+    def generic_influence_bits(self) -> int:
+        return int(self._state.generic_influence_bits)
+
+    @property
+    def searing_exarch_tier(self) -> int:
+        return int(self._state.searing_exarch_tier)
+
+    @property
+    def eater_of_worlds_tier(self) -> int:
+        return int(self._state.eater_of_worlds_tier)
+
+    @property
+    def veiled_option_mod_ids(self) -> tuple[int, ...]:
+        for slots, count in (
+            (self._state.prefixes, self._state.prefix_count),
+            (self._state.suffixes, self._state.suffix_count),
+        ):
+            for index in range(count):
+                slot = slots[index]
+                if slot.flags & (1 << 2):
+                    return tuple(
+                        slot.veiled_option_mod_ids[i]
+                        for i in range(slot.veiled_option_count)
+                    )
+        return ()
 
     @property
     def explicit_count(self) -> int:

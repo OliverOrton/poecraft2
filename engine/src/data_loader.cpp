@@ -83,6 +83,14 @@ static std::shared_ptr<DataImpl> build_data_impl(
             data->gen_prefix_code = static_cast<int>(member.second.as_int());
         } else if (member.first == "suffix") {
             data->gen_suffix_code = static_cast<int>(member.second.as_int());
+        } else if (member.first == "corrupted") {
+            data->gen_corrupted_code = static_cast<int>(member.second.as_int());
+        } else if (member.first == "searing_exarch_implicit") {
+            data->gen_searing_implicit_code =
+                static_cast<int>(member.second.as_int());
+        } else if (member.first == "eater_of_worlds_implicit") {
+            data->gen_eater_implicit_code =
+                static_cast<int>(member.second.as_int());
         }
     }
 
@@ -97,6 +105,31 @@ static std::shared_ptr<DataImpl> build_data_impl(
     for (const auto& member : influence_enum.object) {
         data->influence_name_by_code[static_cast<std::size_t>(
             member.second.as_int())] = member.first;
+        data->influence_code_by_name[member.first] =
+            static_cast<int>(member.second.as_int());
+    }
+    const Value& metamod_enum = enums.at("metamod_type");
+    for (const auto& member : metamod_enum.object) {
+        const int code = static_cast<int>(member.second.as_int());
+        if (member.first == "multimod") data->metamod_multimod_code = code;
+        else if (member.first == "no_attack") data->metamod_no_attack_code = code;
+        else if (member.first == "no_caster") data->metamod_no_caster_code = code;
+        else if (member.first == "prefixes_locked")
+            data->metamod_prefixes_locked_code = code;
+        else if (member.first == "suffixes_locked")
+            data->metamod_suffixes_locked_code = code;
+    }
+    const Value& special_enum = enums.at("special_kind");
+    for (const auto& member : special_enum.object) {
+        const int code = static_cast<int>(member.second.as_int());
+        if (member.first == "corrupted_implicit")
+            data->special_corrupted_implicit_code = code;
+        else if (member.first == "eldritch_implicit")
+            data->special_eldritch_implicit_code = code;
+        else if (member.first == "unveiled")
+            data->special_unveiled_code = code;
+        else if (member.first == "veiled_template")
+            data->special_veiled_template_code = code;
     }
     const Value& fossil_weight_kind = enums.at("fossil_weight_kind");
     for (const auto& member : fossil_weight_kind.object) {
@@ -115,6 +148,9 @@ static std::shared_ptr<DataImpl> build_data_impl(
                 static_cast<int>(member.second.as_int());
         } else if (member.first == "forced") {
             data->fossil_mod_forced_code =
+                static_cast<int>(member.second.as_int());
+        } else if (member.first == "sell_price") {
+            data->fossil_mod_sell_price_code =
                 static_cast<int>(member.second.as_int());
         }
     }
@@ -214,6 +250,8 @@ static std::shared_ptr<DataImpl> build_data_impl(
     read_u32(mods, "primary_group_ids", data->mod_primary_group);
     read_i32(mods, "flags", data->mod_flags);
     read_i32(mods, "influence_codes", data->mod_influence_code);
+    read_i32(mods, "metamod_type_codes", data->mod_metamod_type_code);
+    read_i32(mods, "special_kind_codes", data->mod_special_kind_code);
     read_u32(mods, "group_offsets", data->mod_group_offsets);
     read_u32(mods, "group_ids", data->mod_group_ids_flat);
     require(data->mod_group_offsets.size() == data->mod_count + 1,
@@ -232,7 +270,9 @@ static std::shared_ptr<DataImpl> build_data_impl(
                 data->mod_domain_code.size() == data->mod_count &&
                 data->mod_required_level.size() == data->mod_count &&
                 data->mod_primary_group.size() == data->mod_count &&
-                data->mod_influence_code.size() == data->mod_count,
+                data->mod_influence_code.size() == data->mod_count &&
+                data->mod_metamod_type_code.size() == data->mod_count &&
+                data->mod_special_kind_code.size() == data->mod_count,
             "mod parallel arrays inconsistent");
     data->mod_pos_by_global_id.reserve(data->mod_count);
     data->mod_pos_by_key.reserve(data->mod_count);
@@ -271,7 +311,15 @@ static std::shared_ptr<DataImpl> build_data_impl(
     // --- bench options ------------------------------------------------------
     const Value* bench = game.find("bench_options");
     if (bench != nullptr) {
+        data->bench_count = read_count(*bench);
+        read_u32(*bench, "global_bench_option_ids",
+                 data->bench_global_option_ids);
         read_i32(*bench, "global_mod_ids", data->bench_global_mod_ids);
+        read_u32(*bench, "action_kind_string_ids",
+                 data->bench_action_kind_sids);
+        read_u32(*bench, "action_value_json_string_ids",
+                 data->bench_action_value_sids);
+        read_i32(*bench, "bench_tiers", data->bench_tiers);
         read_u32(*bench, "item_class_offsets", data->bench_class_offsets);
         read_i32(*bench, "item_class_global_ids",
                  data->bench_class_global_ids);
@@ -300,7 +348,9 @@ static std::shared_ptr<DataImpl> build_data_impl(
     if (fossils != nullptr) {
         data->fossil_count = read_count(*fossils);
         read_u32(*fossils, "key_string_ids", data->fossil_key_sids);
+        read_u32(*fossils, "name_string_ids", data->fossil_name_sids);
         read_i32(*fossils, "rolls_lucky", data->fossil_rolls_lucky);
+        read_i32(*fossils, "mirrors", data->fossil_mirrors);
         read_u32(*fossils, "weight_offsets", data->fossil_weight_offsets);
         read_i32(*fossils, "weight_kind_codes",
                  data->fossil_weight_kind_codes);
@@ -312,6 +362,8 @@ static std::shared_ptr<DataImpl> build_data_impl(
                  data->fossil_linked_global_mod_ids);
         require(data->fossil_rolls_lucky.size() == data->fossil_count,
                 "fossil rolls_lucky length must match fossil count");
+        require(data->fossil_mirrors.size() == data->fossil_count,
+                "fossil mirrors length must match fossil count");
         for (std::uint32_t i = 0; i < data->fossil_count; ++i) {
             data->fossil_by_key.emplace(
                 data->string_at(data->fossil_key_sids[i]), i);

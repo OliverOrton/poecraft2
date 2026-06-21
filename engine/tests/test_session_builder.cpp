@@ -379,7 +379,9 @@ void check_harvest(
         PC_CHECK(e.spawn_weight > 0);
     }
 
-    // expected = implicit_tag("life") AND positive_spawn
+    // expected = normal random AND implicit_tag("life") AND positive_spawn.
+    // Phase 13 adds unveiled/implicit registries to the same session universe,
+    // but Harvest never draws those direct-mechanic rows.
     uint32_t life_n = 0;
     pc_session_dump_implicit_tag(session, "life", nullptr, 0, &life_n, &error);
     std::vector<uint32_t> life_ids(life_n);
@@ -392,9 +394,17 @@ void check_harvest(
     pc_session_dump_mask(session, PC_MASK_POSITIVE_SPAWN, spawn_ids.data(),
                          spawn_n, &spawn_n, &error);
     std::set<uint32_t> spawn_set(spawn_ids.begin(), spawn_ids.end());
+    uint32_t normal_n = 0;
+    pc_session_dump_mask(session, PC_MASK_NORMAL_RANDOM_ROLL, nullptr, 0,
+                         &normal_n, &error);
+    std::vector<uint32_t> normal_ids(normal_n);
+    pc_session_dump_mask(session, PC_MASK_NORMAL_RANDOM_ROLL,
+                         normal_ids.data(), normal_n, &normal_n, &error);
+    std::set<uint32_t> normal_set(normal_ids.begin(), normal_ids.end());
     std::set<uint32_t> expected;
     for (uint32_t id : life_ids) {
-        if (spawn_set.count(id)) expected.insert(id);
+        if (spawn_set.count(id) && normal_set.count(id))
+            expected.insert(id);
     }
     PC_CHECK(actual == expected);
 

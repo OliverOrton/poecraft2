@@ -206,14 +206,15 @@ weight = (weight * fossil_multiplier_fixed[fossil_set_id][mod_id]) / FIXED_ONE
 if weight <= 0:
     skip
 
-if sanctified:  # deferred; currently rejected as unsupported
-    sanctified_pct = 100 + (required_level[mod_id] - 40)
-    weight = max(1, (weight * sanctified_pct) / 100)
+if sanctified:
+    sanctified_pct = 100 + max(0, required_level[mod_id] - 40)
+    weight = (weight * sanctified_pct) / 100
 ```
 
 Forced fossil mods are not sampled from the weighted pool. Add them first if their side and group are legal, then update `current_group_block_mask` before normal fossil rolling.
 
-Gilded/Bloodstained-style implicit or sell-price behavior should remain outside explicit-affix weighting.
+Gilded/Bloodstained implicit or sell-price behavior remains outside
+explicit-affix weighting and is applied after the explicit fossil roll.
 
 ## Harvest Weight Flow
 

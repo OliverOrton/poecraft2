@@ -12,7 +12,7 @@
 
 import { getEngine } from "../engine-service";
 import { EngineClient } from "../engine-client";
-import { BaseInfo, CraftAction, ModInfo } from "../engine-protocol";
+import { BaseInfo, Catalog, CraftAction, ModInfo } from "../engine-protocol";
 import {
     DraftRecord,
     ItemStashRecord,
@@ -28,7 +28,7 @@ import "./pc-base-picker";
 import "./pc-mod-list";
 import "./pc-mod-pool";
 
-const ACTIONS: CraftAction["type"][] = [
+const BASIC_ACTIONS: CraftAction["type"][] = [
     "transmute",
     "augment",
     "alteration",
@@ -38,6 +38,25 @@ const ACTIONS: CraftAction["type"][] = [
     "exalt",
     "annul",
     "scour",
+];
+
+type CraftPanel =
+    | "basic"
+    | "essence"
+    | "harvest"
+    | "fossil"
+    | "eldritch"
+    | "influenced"
+    | "veiled";
+
+const CRAFT_PANELS: Array<[CraftPanel, string]> = [
+    ["basic", "Basic currency"],
+    ["essence", "Essences"],
+    ["harvest", "Harvest"],
+    ["fossil", "Fossil"],
+    ["eldritch", "Eldritch"],
+    ["influenced", "Influenced"],
+    ["veiled", "Veiled"],
 ];
 
 const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -55,6 +74,7 @@ export class PcEmulator extends HTMLElement {
     private client!: EngineClient;
     private dataId = 0;
     private bases: BaseInfo[] = [];
+    private catalog: Catalog | null = null;
 
     private docId = "";
     private base = DEFAULT_BASE;
@@ -67,7 +87,11 @@ export class PcEmulator extends HTMLElement {
     private history: HistoryEntry[] = [];
     private modCache: ModInfo[] = [];
     private familyLabels = new Map<number, string>();
-    private busy = false;
+    private veiledOptions: number[] = [];
+    private activeCraftPanel: CraftPanel = "basic";
+    private selectedFossils: string[] = [];
+    private mechanicValues = new Map<string, string>();
+    private busy = true;
     private pickerOpen = false;
     private hasBase = false;
 
@@ -87,6 +111,7 @@ export class PcEmulator extends HTMLElement {
         this.connectedOnce = true;
         this.docId = this.getAttribute("doc-id") ?? `doc-${crypto.randomUUID()}`;
         this.renderShell();
+        this.setBusy(true);
         workspace().registerDocument(this.docId, {
             save: () => this.save(),
             dispose: () => this.disposeEngine(),
@@ -98,6 +123,7 @@ export class PcEmulator extends HTMLElement {
         }
         this.client = engine.client;
         this.dataId = engine.dataId;
+        this.catalog = await this.client.catalog(this.dataId);
         this.bases = (await this.client.listBases(this.dataId)).filter(
             (base) => base.support === 0,
         );
@@ -123,6 +149,7 @@ export class PcEmulator extends HTMLElement {
         if (!this.hasBase) {
             this.pickerOpen = true;
             this.renderShell();
+            this.setBusy(false);
             this.setStatus("");
             workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
             return;
@@ -158,6 +185,7 @@ export class PcEmulator extends HTMLElement {
         }
 
         workspace().notifyDirty(this.docId, this.dirty, this.docTitle);
+        this.setBusy(false);
         this.setStatus("");
     }
 
@@ -270,13 +298,77 @@ export class PcEmulator extends HTMLElement {
         await this.markChanged();
     }
 
-    private async craftMod(key: string, side: "prefix" | "suffix"): Promise<void> {
-        await this.client.addMod(this.item, this.session, { key, side });
+    private async applyConfiguredAction(action: CraftAction): Promise<void> {
+        const outcome = await this.client.apply(this.context, this.item, action);
         this.history.push({
-            action: `add ${side} ${key}`,
-            applied: true,
-            added: 1,
+            action: action.type,
+            applied: outcome.applied,
+            added: outcome.added,
+            removed: outcome.removed,
+        });
+        await this.markChanged();
+    }
+
+    private async craftMod(
+        key: string,
+        side: "prefix" | "suffix",
+        fractured = false,
+    ): Promise<void> {
+        const info = this.modCache.find((mod) => mod.key === key);
+        let applied = true;
+        if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
+            const outcome = await this.client.apply(this.context, this.item, {
+                type: "bench",
+                mod_key: key,
+            });
+            applied = outcome.applied;
+        } else {
+            await this.client.addMod(this.item, this.session, {
+                key,
+                side,
+                fractured,
+            });
+        }
+        this.history.push({
+            action: `${fractured ? "fracture" : "add"} ${side} ${key}`,
+            applied,
+            added: applied ? 1 : 0,
             removed: 0,
+        });
+        await this.markChanged();
+    }
+
+    private async fractureMod(
+        key: string,
+        modId: number,
+        side: "prefix" | "suffix",
+        onItem: boolean,
+    ): Promise<void> {
+        if (onItem) {
+            await this.client.setModFractured(this.item, { modId, side });
+            this.history.push({
+                action: `fracture ${side} ${key}`,
+                applied: true,
+                added: 0,
+                removed: 0,
+            });
+            await this.markChanged();
+            return;
+        }
+        await this.craftMod(key, side, true);
+    }
+
+    private async removeMod(
+        modId: number,
+        side: "prefix" | "suffix",
+    ): Promise<void> {
+        const info = this.modCache[modId];
+        await this.client.removeMod(this.item, { modId, side });
+        this.history.push({
+            action: `remove ${side} ${info?.key ?? modId}`,
+            applied: true,
+            added: 0,
+            removed: 1,
         });
         await this.markChanged();
     }
@@ -294,6 +386,8 @@ export class PcEmulator extends HTMLElement {
 
     private async snapshot(): Promise<ItemSnapshot> {
         const info = await this.client.itemInfo(this.item, this.session);
+        this.veiledOptions =
+            (info.veiled_option_mod_ids as number[] | undefined) ?? [];
         return {
             base: this.base,
             itemLevel: this.itemLevel,
@@ -406,6 +500,8 @@ export class PcEmulator extends HTMLElement {
     private async refresh(): Promise<void> {
         const info = await this.client.itemInfo(this.item, this.session);
         this.rarity = info.rarity as string;
+        this.veiledOptions =
+            (info.veiled_option_mod_ids as number[] | undefined) ?? [];
         const fracturedP = new Set(info.fractured_prefix_mod_ids as number[]);
         const fracturedS = new Set(info.fractured_suffix_mod_ids as number[]);
         const prefixIds = info.prefix_mod_ids as number[];
@@ -418,6 +514,12 @@ export class PcEmulator extends HTMLElement {
 
         this.modList.setModel({
             rarity: info.rarity as string,
+            influences: influenceLabels(
+                Number(info.generic_influence_bits ?? 0),
+                Number(info.searing_exarch_tier ?? 0),
+                Number(info.eater_of_worlds_tier ?? 0),
+                this.catalog,
+            ),
             prefixes,
             suffixes,
             implicits,
@@ -457,6 +559,8 @@ export class PcEmulator extends HTMLElement {
                 prefixOnItem,
                 suffixOnItem,
                 implicitOnItem,
+                fracturedPrefixOnItem: fracturedP,
+                fracturedSuffixOnItem: fracturedS,
                 groupOnItem,
                 maxPrefix: (info.max_prefix as number) ?? prefixes.length,
                 maxSuffix: (info.max_suffix as number) ?? suffixes.length,
@@ -465,6 +569,7 @@ export class PcEmulator extends HTMLElement {
             poolWeights,
         });
         this.renderHistory();
+        this.renderMechanicControls();
     }
 
     private toSlot(id: number, fractured: Set<number>): SlotMod {
@@ -514,11 +619,17 @@ export class PcEmulator extends HTMLElement {
 
     private setBusy(busy: boolean): void {
         this.busy = busy;
-        this.querySelectorAll<HTMLButtonElement>("button[data-action], button[data-cmd]").forEach(
-            (button) => {
-                button.disabled = busy;
-            },
-        );
+        this.querySelectorAll<HTMLButtonElement>(
+            "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-fossil-add], button[data-fossil-remove]",
+        ).forEach((button) => {
+            if (busy) {
+                button.dataset.disabledBeforeBusy ??= String(button.disabled);
+                button.disabled = true;
+            } else if (button.dataset.disabledBeforeBusy !== undefined) {
+                button.disabled = button.dataset.disabledBeforeBusy === "true";
+                delete button.dataset.disabledBeforeBusy;
+            }
+        });
     }
 
     private async guard(work: () => Promise<void>): Promise<void> {
@@ -574,6 +685,303 @@ export class PcEmulator extends HTMLElement {
             .join("");
     }
 
+    private renderMechanicControls(): void {
+        const host = this.querySelector(".pc-advanced-crafts");
+        if (!host || !this.catalog) return;
+        host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(
+            (select) => {
+                const name = select.dataset.mechanic;
+                if (name) this.mechanicValues.set(name, select.value);
+            },
+        );
+        const selected = (name: string, fallback = "") =>
+            this.mechanicValues.get(name) ?? fallback;
+        const options = (
+            entries: Array<{ key: string; name: string }>,
+            selected?: string,
+        ) =>
+            entries
+                .map(
+                    (entry) =>
+                        `<option value="${escapeHtml(entry.key)}" ${entry.key === selected ? "selected" : ""}>${escapeHtml(entry.name)}</option>`,
+                )
+                .join("");
+        const essenceGroups = groupEssences(this.catalog.essences);
+        const selectedEssenceType =
+            essenceGroups.some(
+                (group) => group.type === selected("essence-type"),
+            )
+                ? selected("essence-type")
+                : (essenceGroups[0]?.type ?? "");
+        const essenceTiers =
+            essenceGroups.find((group) => group.type === selectedEssenceType)
+                ?.tiers ?? [];
+        const selectedEssenceKey =
+            essenceTiers.some(
+                (entry) => entry.key === selected("essence-key"),
+            )
+                ? selected("essence-key")
+                : (essenceTiers[0]?.key ?? "");
+        const unveilEntries = this.veiledOptions
+            .map((id) => this.modCache[id])
+            .filter((mod): mod is ModInfo => Boolean(mod))
+            .map((mod) => ({
+                key: mod.key,
+                name: mod.text_lines.join(" / ") || mod.key,
+            }));
+        const panel = (() => {
+            switch (this.activeCraftPanel) {
+                case "basic":
+                    return `
+                        <div class="pc-craft-options">
+                            ${BASIC_ACTIONS.map(
+                                (type) =>
+                                    `<button data-simple-action="${type}">${craftActionLabel(type)}</button>`,
+                            ).join("")}
+                        </div>
+                        <div class="pc-fracture-hint">Right-click a modifier tier to add or mark it as fractured.</div>`;
+                case "essence":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <label>
+                                <span>Type</span>
+                                <select data-mechanic="essence-type">${options(
+                                    essenceGroups.map((group) => ({
+                                        key: group.type,
+                                        name: group.type,
+                                    })),
+                                    selectedEssenceType,
+                                )}</select>
+                            </label>
+                            <label>
+                                <span>Tier</span>
+                                <select data-mechanic="essence-key">${options(
+                                    essenceTiers.map((entry) => ({
+                                        key: entry.key,
+                                        name: entry.tier,
+                                    })),
+                                    selectedEssenceKey,
+                                )}</select>
+                            </label>
+                            <button data-config-action="essence">Apply essence</button>
+                        </div>`;
+                case "harvest":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="harvest-tag">${options(
+                                this.catalog.harvestTags,
+                                selected(
+                                    "harvest-tag",
+                                    this.catalog.harvestTags[0]?.key,
+                                ),
+                            )}</select>
+                            <button data-config-action="harvest_reforge">Reforge</button>
+                            <button data-config-action="harvest_augment">Augment</button>
+                        </div>
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="resist-from">${options(
+                                resistanceEntries(),
+                                selected("resist-from", "fire"),
+                            )}</select>
+                            <span>&rarr;</span>
+                            <select data-mechanic="resist-to">${options(
+                                resistanceEntries(),
+                                selected("resist-to", "cold"),
+                            )}</select>
+                            <button data-config-action="harvest_resist">Convert resistance</button>
+                        </div>`;
+                case "fossil":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="fossil">${options(
+                                this.catalog.fossils,
+                                selected("fossil", this.catalog.fossils[0]?.key),
+                            )}</select>
+                            <button data-fossil-add ${this.selectedFossils.length >= 4 ? "disabled" : ""}>Add fossil</button>
+                            <button data-config-action="fossil" ${this.selectedFossils.length ? "" : "disabled"}>Craft</button>
+                        </div>
+                        <div class="pc-selected-fossils">
+                            ${
+                                this.selectedFossils.length
+                                    ? this.selectedFossils
+                                          .map(
+                                              (key, index) =>
+                                                  `<span class="pc-chip">${escapeHtml(
+                                                      this.catalog?.fossils.find(
+                                                          (entry) => entry.key === key,
+                                                      )?.name ?? key,
+                                                  )}<button data-fossil-remove="${index}" title="Remove">&times;</button></span>`,
+                                          )
+                                          .join("")
+                                    : '<span class="pc-help">Choose up to four fossils.</span>'
+                            }
+                        </div>`;
+                case "eldritch":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="eldritch-tier">${[1, 2, 3, 4]
+                                .map(
+                                    (tier) =>
+                                        `<option value="${tier}" ${String(tier) === selected("eldritch-tier", "1") ? "selected" : ""}>Tier ${tier}</option>`,
+                                )
+                                .join("")}</select>
+                            <button data-config-action="eldritch_ember">Apply Ember</button>
+                            <button data-config-action="eldritch_ichor">Apply Ichor</button>
+                        </div>
+                        <div class="pc-craft-options">
+                            ${["eldritch_exalt", "eldritch_chaos", "eldritch_annul"]
+                                .map(
+                                    (type) =>
+                                        `<button data-simple-action="${type}">${craftActionLabel(type as CraftAction["type"])}</button>`,
+                                )
+                                .join("")}
+                        </div>`;
+                case "influenced":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="influence">${options(
+                                this.catalog.influences,
+                                selected(
+                                    "influence",
+                                    this.catalog.influences[0]?.key,
+                                ),
+                            )}</select>
+                            <button data-config-action="influence_exalt">Influenced exalt</button>
+                        </div>`;
+                case "veiled":
+                    return `
+                        <div class="pc-craft-options">
+                            <button data-simple-action="veiled_chaos">Veiled chaos</button>
+                            <button data-simple-action="veiled_exalt">Veiled exalt</button>
+                        </div>
+                        ${
+                            unveilEntries.length
+                                ? `<div class="pc-mechanic-row">
+                                    <select data-mechanic="unveil">${options(
+                                        unveilEntries,
+                                        selected(
+                                            "unveil",
+                                            unveilEntries[0]?.key,
+                                        ),
+                                    )}</select>
+                                    <button data-config-action="unveil">Unveil</button>
+                                </div>`
+                                : '<span class="pc-help">Apply a veiled modifier to choose an unveil.</span>'
+                        }`;
+            }
+        })();
+        host.innerHTML = `
+            <div class="pc-craft-panel-tabs">
+                ${CRAFT_PANELS.map(
+                    ([key, label]) =>
+                        `<button data-craft-panel="${key}" class="${key === this.activeCraftPanel ? "is-active" : ""}">${label}</button>`,
+                ).join("")}
+            </div>
+            <div class="pc-craft-panel-body">${panel}</div>`;
+        host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(
+            (select) => {
+                select.addEventListener("change", () => {
+                    const name = select.dataset.mechanic;
+                    if (!name) return;
+                    this.mechanicValues.set(name, select.value);
+                    if (name === "essence-type") {
+                        this.mechanicValues.delete("essence-key");
+                        this.renderMechanicControls();
+                    }
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-craft-panel]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    this.activeCraftPanel = button.dataset
+                        .craftPanel as CraftPanel;
+                    this.renderMechanicControls();
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-simple-action]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    void this.guard(() =>
+                        this.applyAction(
+                            button.dataset.simpleAction as CraftAction["type"],
+                        ),
+                    );
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-config-action]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    const type = button.dataset.configAction as CraftAction["type"];
+                    const value = (name: string) =>
+                        host.querySelector<HTMLSelectElement>(
+                            `[data-mechanic="${name}"]`,
+                        )?.value ?? "";
+                    let action: CraftAction = { type };
+                    if (type === "essence")
+                        action = { type, essence: value("essence-key") };
+                    else if (type === "fossil")
+                        action = { type, fossils: [...this.selectedFossils] };
+                    else if (
+                        type === "harvest_reforge" ||
+                        type === "harvest_augment"
+                    )
+                        action = { type, target_tag: value("harvest-tag") };
+                    else if (type === "harvest_resist")
+                        action = {
+                            type,
+                            source_tag: value("resist-from"),
+                            target_tag: value("resist-to"),
+                        };
+                    else if (
+                        type === "eldritch_ember" ||
+                        type === "eldritch_ichor"
+                    )
+                        action = {
+                            type,
+                            tier: Number(value("eldritch-tier")),
+                        };
+                    else if (type === "influence_exalt")
+                        action = { type, influence: value("influence") };
+                    else if (type === "unveil")
+                        action = { type, mod_key: value("unveil") };
+                    void this.guard(() => this.applyConfiguredAction(action));
+                });
+            },
+        );
+        host.querySelector<HTMLButtonElement>("[data-fossil-add]")?.addEventListener(
+            "click",
+            () => {
+                const key =
+                    host.querySelector<HTMLSelectElement>(
+                        '[data-mechanic="fossil"]',
+                    )?.value ?? "";
+                if (
+                    key &&
+                    this.selectedFossils.length < 4 &&
+                    !this.selectedFossils.includes(key)
+                ) {
+                    this.selectedFossils = [...this.selectedFossils, key];
+                    this.renderMechanicControls();
+                }
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-fossil-remove]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    const index = Number(button.dataset.fossilRemove);
+                    this.selectedFossils = this.selectedFossils.filter(
+                        (_, entryIndex) => entryIndex !== index,
+                    );
+                    this.renderMechanicControls();
+                });
+            },
+        );
+        this.setBusy(this.busy);
+    }
+
     private renderShell(): void {
         if (this.pickerOpen) {
             this.innerHTML = `
@@ -602,9 +1010,6 @@ export class PcEmulator extends HTMLElement {
                     <button data-cmd="change-base">Change base…</button>
                     <span class="pc-emu-base">${escapeHtml(baseLabel(this.base))} · iLvl ${this.itemLevel}</span>
                     <button data-cmd="create">Create item</button>
-                    <span class="pc-craft-actions">
-                        ${ACTIONS.map((a) => `<button data-action="${a}">${a}</button>`).join("")}
-                    </span>
                     <span class="pc-emu-save">
                         <span class="pc-emu-name">Unsaved</span>
                         <button data-cmd="save">Save</button>
@@ -614,6 +1019,7 @@ export class PcEmulator extends HTMLElement {
                     </span>
                     <span class="pc-emu-status" hidden></span>
                 </div>
+                <div class="pc-advanced-crafts"></div>
                 <div class="pc-emu-body">
                     <section class="pc-emu-item">
                         <h3>Item</h3>
@@ -629,6 +1035,8 @@ export class PcEmulator extends HTMLElement {
                 </div>
             </div>`;
         this.syncControls();
+        this.renderMechanicControls();
+        this.setBusy(this.busy);
 
         this.querySelectorAll<HTMLButtonElement>("button[data-cmd]").forEach((button) => {
             button.addEventListener("click", () => {
@@ -647,14 +1055,48 @@ export class PcEmulator extends HTMLElement {
                 });
             });
         });
-        this.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
-            button.addEventListener("click", () => {
-                void this.guard(() => this.applyAction(button.dataset.action as CraftAction["type"]));
-            });
-        });
         this.modPool.addEventListener("craft-mod", (event) => {
-            const detail = (event as CustomEvent<{ key: string; side: "prefix" | "suffix" }>).detail;
-            void this.guard(() => this.craftMod(detail.key, detail.side));
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    side: "prefix" | "suffix";
+                    fractured?: boolean;
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.craftMod(
+                    detail.key,
+                    detail.side,
+                    Boolean(detail.fractured),
+                ),
+            );
+        });
+        this.modPool.addEventListener("fracture-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                    onItem: boolean;
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    detail.onItem,
+                ),
+            );
+        });
+        this.modPool.addEventListener("remove-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() => this.removeMod(detail.modId, detail.side));
         });
         this.modPool.addEventListener("tab-change", () => {
             void this.guard(() => this.refresh());
@@ -678,6 +1120,90 @@ export class PcEmulator extends HTMLElement {
     private afterPickerClose(): void {
         // Re-attach mod-pool listeners are already set up in renderShell().
     }
+}
+
+function craftActionLabel(type: CraftAction["type"]): string {
+    return type
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function resistanceEntries(): Array<{ key: string; name: string }> {
+    return ["fire", "cold", "lightning"].map((key) => ({
+        key,
+        name: craftActionLabel(key as CraftAction["type"]),
+    }));
+}
+
+interface EssenceTierChoice {
+    key: string;
+    tier: string;
+    rank: number;
+}
+
+interface EssenceGroup {
+    type: string;
+    tiers: EssenceTierChoice[];
+}
+
+const ESSENCE_TIER_RANK: Record<string, number> = {
+    Whispering: 1,
+    Muttering: 2,
+    Weeping: 3,
+    Wailing: 4,
+    Screaming: 5,
+    Shrieking: 6,
+    Deafening: 7,
+};
+
+function groupEssences(
+    entries: Array<{ key: string; name: string }>,
+): EssenceGroup[] {
+    const groups = new Map<string, EssenceTierChoice[]>();
+    for (const entry of entries) {
+        const tiered = entry.name.match(
+            /^(Whispering|Muttering|Weeping|Wailing|Screaming|Shrieking|Deafening) Essence of (.+)$/,
+        );
+        const special = entry.name.match(/^Essence of (.+)$/);
+        if (!tiered && !special) continue;
+        const type = tiered?.[2] ?? special?.[1] ?? "";
+        if (!type) continue;
+        const tier = tiered?.[1] ?? "Special";
+        groups.set(type, [
+            ...(groups.get(type) ?? []),
+            {
+                key: entry.key,
+                tier,
+                rank: ESSENCE_TIER_RANK[tier] ?? 1,
+            },
+        ]);
+    }
+    return Array.from(groups, ([type, tiers]) => ({
+        type,
+        tiers: tiers.sort((a, b) => b.rank - a.rank),
+    })).sort((a, b) => a.type.localeCompare(b.type));
+}
+
+function influenceLabels(
+    genericBits: number,
+    searingExarchTier: number,
+    eaterOfWorldsTier: number,
+    catalog: Catalog | null,
+): string[] {
+    const labels: string[] = [];
+    for (const influence of catalog?.influences ?? []) {
+        const code = influence.code ?? 0;
+        if (code > 0 && (genericBits & (1 << (code - 1))) !== 0) {
+            labels.push(influence.name);
+        }
+    }
+    if (searingExarchTier > 0) {
+        labels.push(`Searing Exarch T${searingExarchTier}`);
+    }
+    if (eaterOfWorldsTier > 0) {
+        labels.push(`Eater of Worlds T${eaterOfWorldsTier}`);
+    }
+    return labels;
 }
 
 function baseLabel(path: string): string {
