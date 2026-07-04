@@ -507,6 +507,22 @@ show item snapshot at trace point
 show why an edge matched or failed
 ```
 
+### Aggregate Result Overlay
+
+After a multi-run simulation, the board replaces the plain visited-node
+marking with an aggregate overlay driven by the run's statistics:
+
+```text
+node visit counts        color intensity or badge per node
+edge take rates          edge thickness/label per edge
+expected cost share      per-node share of total expected spend
+failure locations        where non-success runs ended
+```
+
+Stepping a single retained trace still uses the active-node/taken-edge
+highlight; the overlay is the multi-run aggregate view. Toggling between
+overlay and plain board is one control in the bottom panel.
+
 Validation interactions:
 
 ```text

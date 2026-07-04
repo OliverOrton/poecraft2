@@ -373,6 +373,8 @@ Simulator integration:
   action: run solver (worker, progress, cancel)
   output: generated strategy document opened in the Strategy Board,
           nodes annotated with expected remaining cost,
+          expected materials list (inputs and expected quantities,
+          priced by the active economy snapshot),
           one-click verification run (the end-to-end gate)
 ```
 

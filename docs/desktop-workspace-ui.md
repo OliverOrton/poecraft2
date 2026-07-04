@@ -83,8 +83,9 @@ An Emulator tab owns:
 ```text
 one mutable item
 engine session configuration
-craft history
-undo/redo position
+craft history tree
+position within the history tree
+watched modifiers
 selected crafting operation
 unsaved-change state
 ```
@@ -106,6 +107,33 @@ Send To Strategy Builder
 ```
 
 Sending an Emulator item to Strategy Builder creates a new unsaved strategy whose start state is the current item snapshot.
+
+### Watched Modifiers And Action Odds
+
+An Emulator tab carries a watched-modifier tray: the user pins the modifier
+families (with tier thresholds) they are crafting toward, using the same
+picker as the modifier pool. Once watched mods exist, every craft control
+shows the chance that this action on this item hits watched mods, computed
+by the calculation engine's outcome call
+(see [crafting-solver-plan.md](crafting-solver-plan.md)). Hovering a craft
+control expands to the full outcome distribution — the Calculator view
+rendered in place. Odds are ambient in the Emulator; the Calculator tab is
+for deeper two-item and comparison work, not the only place odds appear.
+
+### Craft History Tree
+
+Craft history is a tree, not a line. Undoing and then crafting again
+creates a branch instead of discarding the abandoned future. Each branch
+tracks its accumulated currency spend from the root item.
+
+```text
+Undo/Redo    walk the current branch
+history panel  shows the tree; clicking any node jumps the live item
+               to that state and makes its branch current
+```
+
+History is per-tab session state. Saved items store the item, not the
+tree; layout/persistence rules for content are unchanged.
 
 ## Strategy Builder
 
@@ -163,6 +191,22 @@ The standardized publication run is:
 
 Simulator results remain associated with the exact strategy version, engine/data version, and economy snapshot used for the run.
 
+### Cost Distribution
+
+Completed runs show the full cost distribution, not only summary numbers:
+a histogram with P10/P50/P90 markers and a budget query — enter a budget X
+and see the chance of finishing at or under X. Expected cost alone hides
+the variance that gamble-heavy and recombinator strategies are made of.
+
+### Materials Summary
+
+Completed runs also aggregate expected consumption per input across all
+runs: currencies, essences, fossils and resonators, bases, and bought
+items (trade-leaf feeders when present). Quantities come from run
+averages; prices come from the active economy snapshot, with missing keys
+explicit as elsewhere. The summary exports as a shopping list. This is a
+general Simulator feature for every strategy, not a recombinator feature.
+
 ## Stash
 
 Stash is the user's resource library. It contains manually saved:
@@ -205,6 +249,41 @@ author/fork attribution when applicable
 ```
 
 Complex strategy goals should be represented by title, description, and a success-route summary rather than synthesizing a fake goal item.
+
+## Economy
+
+Prices are a workspace-level service, not a per-tab setting or a buried
+options page.
+
+```text
+league selector          choose the active league (or a custom profile)
+snapshot fetch           client fetches published league price snapshots
+                         (poe.ninja-style source), cached in IndexedDB;
+                         offline falls back to the cached snapshot
+manual overrides         per-key price edits layered over the fetched
+                         snapshot; overrides persist locally
+```
+
+The active economy is the fetched snapshot plus the override layer,
+compiled into the immutable Economy Snapshot JSON defined in
+[strategy-editor-ui.md](strategy-editor-ui.md) whenever a run or solve
+starts, so results keep pinning an exact snapshot as they do today.
+
+Every cost surface reads the active economy and reacts live: Emulator
+spend counters, Simulator summaries and materials lists, solver costs and
+strategy-board annotations. Solver re-costing after a price change is
+cheap by design — transition caches are price-independent
+(see [crafting-solver-plan.md](crafting-solver-plan.md)) — so a price edit
+updates cost displays without recomputing distributions.
+
+## Background Work
+
+Long-running work — Run N simulations, solver runs, feeder summary
+recomputes — is owned by the tab that started it. Progress and cancel
+live in that tab; there is no global task manager. A tab with active
+background work shows a busy indicator on its tab title so buried work
+stays discoverable. Jobs continue while the tab is unfocused and survive
+tab switches; closing the owning tab cancels its jobs after confirmation.
 
 ## Edit And Import
 
