@@ -200,10 +200,12 @@ corruption endgames, and finishing-cost items, are planned in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 Recombinators and beast imprints stress the single-item state assumption
-(they involve a second item or a saved copy). The registry schema reserves
-a `companion state` slot in the descriptor so the abstract state can grow a
-second compact component later without reworking the solver core; v1 does
-not implement it.
+(they involve a second item or a saved copy). Recombinators resolve this
+outside the item-level DP: a spec-level pyramid solver plus recomb/feeder
+strategy blocks, per the extensions doc. The registry schema still
+reserves a `companion state` slot in the descriptor for any future
+technique that must track a second live item inside the item-level solver
+itself; nothing planned uses it.
 
 ## Calculation Engine (Transition Provider)
 
