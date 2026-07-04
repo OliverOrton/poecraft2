@@ -517,6 +517,104 @@ warn when an edge condition references unavailable data
 warn when a graph has no reachable success or non-success terminal
 ```
 
+## Recombinator Blocks And Item Flow
+
+The editor model above is control flow: one implicit item walks guarded
+edges. Recombinators add item flow: items as values that merge at blocks
+(see [solver-mechanic-extensions.md](solver-mechanic-extensions.md) for
+the underlying spec-pyramid model). The two flavors must stay visually
+and semantically distinct so existing strategies are unaffected:
+
+```text
+guard edge   routing decision (existing, unchanged)
+item wire    carries an item between blocks; exists only around
+             recomb and feeder blocks; distinct color/weight
+```
+
+Recomb and feeder blocks live in the same `StrategyDocument` schema as
+every other node — new node kinds plus a new wire kind, not a separate
+pyramid document type. Mixed strategies stay natural (craft a base
+conventionally, then feed it into a recomb tier in the same graph), and
+persistence, validation, and compilation extend rather than fork.
+
+### Recomb Block
+
+```text
+inputs:  two item ports (A, B), each gated by a spec condition
+output:  one item port; outgoing guard edges route by result conditions
+```
+
+When both inputs are wired, the block shows a live badge computed by the
+exact recomb enumerator: success chance, expected attempts, expected cost
+including feeder costs. Hovering expands to the full outcome
+distribution — the Calculator's two-item view rendered in place. Item
+wires show the spec distribution flowing through them on hover. Users see
+the odds change as they edit feeders, before running anything.
+
+### Feeder Block
+
+A feeder block references another strategy document. It displays the
+referenced strategy's name, its cached summary (average cost and output
+spec distribution), and a staleness indicator when the referenced
+strategy has changed since the summary was computed, with one-click
+recompute. It is never re-executed during the parent's simulation; the
+summary is the contribution.
+
+Fluent creation paths:
+
+```text
+double-click feeder block  -> open referenced strategy in a new
+                              workspace tab (splits: goal strategy
+                              left, feeder strategy right)
+drag strategy onto canvas  -> create feeder block referencing it
+drag Stash item onto port  -> fixed-price bought feeder instead of a
+                              crafted one
+```
+
+### Recycling Wires
+
+Dragging a recomb output back to another block's input port creates a
+condition-gated return wire. The guard is pre-filled by computing which
+failure outcomes of the source block satisfy the target port's spec
+condition (the enumerator answers this statically); the user edits from
+there. Return wires render as distinct curved back-edges so pyramids
+stay readable.
+
+### Palette Template
+
+One palette template, "recomb pair", drops the standard motif pre-wired:
+two feeder blocks feeding a recomb block, a success guard edge upward,
+and a salvage return wire downward. Most pyramids are this motif
+stacked, so authoring becomes drag, drop, retarget.
+
+### Solver Round-Trip
+
+"Plan pyramid" (the auto-planner) emits ordinary recomb/feeder blocks
+onto the canvas — fully editable, nothing opaque. After hand-editing,
+"re-cost" reruns the spec-level fixed point over the user's structure
+and refreshes every badge without replanning the structure. The
+plan-tweak-re-cost loop is the intended workflow, not a fallback.
+
+### Run Trace: Item Lineage
+
+For runs containing recomb blocks, the run trace gains a lineage view: a
+family tree of items per attempt showing which feeders were produced,
+consumed, or recycled where, plus an expected-cost rollup by pyramid
+tier (e.g. "62% of expected cost is tier-2 recombs") so users can see
+exactly where to optimize.
+
+### Item-Flow Validation
+
+Additional checks in the existing validation-issue system:
+
+```text
+warn when recomb inputs have mismatched item classes
+warn when a return-wire condition is unsatisfiable by the source
+  block's outcome set (checked statically via the enumerator)
+warn when a feeder summary is stale
+warn when an item wire's source may not produce an item on all paths
+```
+
 ## Web Implementation Approach
 
 Keep the earlier frontend stack decision:

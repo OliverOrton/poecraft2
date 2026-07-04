@@ -80,6 +80,11 @@ variance coupling between sub-strategies). The verification gate for
 recomb fixtures therefore also runs a nested-execution mode — feeders
 actually simulated, not summarized — to bound the approximation error.
 
+Editor UX for these blocks — item ports and wires, live enumerator
+badges, recycling gestures, feeder summaries and staleness, the recomb
+pair template, lineage tracing, and item-flow validation — is specified
+in [strategy-editor-ui.md](strategy-editor-ui.md).
+
 ### Engine Work
 
 - Recomb outcome enumerator as a `special` transition kind operating on
@@ -190,7 +195,9 @@ S10 recomb foundations: outcome enumerator + in-game fixtures;
 
 S11 pyramid auto-planner: spec enumeration + dominance pruning,
     fixed-point spec-level DP with salvage credits over cached
-    craft/buy sub-costs, emit pyramid as recomb/feeder block graph
+    craft/buy sub-costs, emit pyramid as recomb/feeder block graph;
+    "re-cost" of user-edited pyramids ships alongside as the
+    fixed-structure subset of the same solve
     gate: on a pinned recomb goal, the auto-planned pyramid's simulated
           cost matches C(goal spec) within tolerance and does not lose
           to a hand-authored reference pyramid
