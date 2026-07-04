@@ -187,19 +187,27 @@ Planned registry coverage, in engine implementation order:
 
 ```text
 implemented now:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
-                   essences, fossils
-next:              bench crafts, metamods, harvest reforge family,
-                   veiled/unveil (aisling), influence + awakener orb
-later:             eldritch currency, beastcrafting, fracturing,
-                   recombinators (session-universe implications already
+                   essences, fossils, bench crafts, metamod locks,
+                   veiled chaos/exalt + unveil, harvest reforge/
+                   augment/resist conversion, eldritch implicits and
+                   currency, influenced exalts (engine Phase 13)
+next:              awakener orb, fracturing, corruption
+later:             beastcrafting, recombinators (implementation plan
+                   Phase 18; session-universe implications already
                    handled by the bitset plan)
 ```
 
+The deferred mechanics, plus trade-leaf actions, Hinekora's Lock,
+corruption endgames, and finishing-cost items, are planned in
+[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+
 Recombinators and beast imprints stress the single-item state assumption
-(they involve a second item or a saved copy). The registry schema reserves
-a `companion state` slot in the descriptor so the abstract state can grow a
-second compact component later without reworking the solver core; v1 does
-not implement it.
+(they involve a second item or a saved copy). Recombinators resolve this
+outside the item-level DP: a spec-level pyramid solver plus recomb/feeder
+strategy blocks, per the extensions doc. The registry schema still
+reserves a `companion state` slot in the descriptor for any future
+technique that must track a second live item inside the item-level solver
+itself; nothing planned uses it.
 
 ## Calculation Engine (Transition Provider)
 
@@ -367,6 +375,8 @@ Simulator integration:
   action: run solver (worker, progress, cancel)
   output: generated strategy document opened in the Strategy Board,
           nodes annotated with expected remaining cost,
+          expected materials list (inputs and expected quantities,
+          priced by the active economy snapshot),
           one-click verification run (the end-to-end gate)
 ```
 

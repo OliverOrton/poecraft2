@@ -91,6 +91,7 @@ This repo is intended to house a native crafting simulation engine, a browser-ba
 
 Start with:
 
+- [docs/direction.md](docs/direction.md) — one-page orientation and doc map
 - [docs/accounts-publishing-and-discovery.md](docs/accounts-publishing-and-discovery.md)
 - [docs/architecture-plan.md](docs/architecture-plan.md)
 - [docs/codebase-structure.md](docs/codebase-structure.md)
@@ -101,5 +102,6 @@ Start with:
 - [docs/implementation-plan.md](docs/implementation-plan.md)
 - [docs/item-state-flow.md](docs/item-state-flow.md)
 - [docs/mod-data-and-pool-semantics.md](docs/mod-data-and-pool-semantics.md)
+- [docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md)
 - [docs/strategy-editor-ui.md](docs/strategy-editor-ui.md)
 - [docs/weight-calculation-flow.md](docs/weight-calculation-flow.md)
