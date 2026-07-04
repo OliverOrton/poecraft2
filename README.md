@@ -101,5 +101,6 @@ Start with:
 - [docs/implementation-plan.md](docs/implementation-plan.md)
 - [docs/item-state-flow.md](docs/item-state-flow.md)
 - [docs/mod-data-and-pool-semantics.md](docs/mod-data-and-pool-semantics.md)
+- [docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md)
 - [docs/strategy-editor-ui.md](docs/strategy-editor-ui.md)
 - [docs/weight-calculation-flow.md](docs/weight-calculation-flow.md)

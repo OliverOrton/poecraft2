@@ -195,6 +195,10 @@ later:             eldritch currency, beastcrafting, fracturing,
                    handled by the bitset plan)
 ```
 
+The deferred mechanics, plus trade-leaf actions, Hinekora's Lock,
+corruption endgames, and finishing-cost items, are planned in
+[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+
 Recombinators and beast imprints stress the single-item state assumption
 (they involve a second item or a saved copy). The registry schema reserves
 a `companion state` slot in the descriptor so the abstract state can grow a
