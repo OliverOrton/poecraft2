@@ -94,6 +94,7 @@ Start with:
 - [docs/accounts-publishing-and-discovery.md](docs/accounts-publishing-and-discovery.md)
 - [docs/architecture-plan.md](docs/architecture-plan.md)
 - [docs/codebase-structure.md](docs/codebase-structure.md)
+- [docs/crafting-solver-plan.md](docs/crafting-solver-plan.md)
 - [docs/data-shapes-and-ingest.md](docs/data-shapes-and-ingest.md)
 - [docs/desktop-workspace-ui.md](docs/desktop-workspace-ui.md)
 - [docs/engine-bitsets.md](docs/engine-bitsets.md)
