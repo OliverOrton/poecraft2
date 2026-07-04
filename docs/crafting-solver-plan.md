@@ -187,11 +187,13 @@ Planned registry coverage, in engine implementation order:
 
 ```text
 implemented now:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
-                   essences, fossils
-next:              bench crafts, metamods, harvest reforge family,
-                   veiled/unveil (aisling), influence + awakener orb
-later:             eldritch currency, beastcrafting, fracturing,
-                   recombinators (session-universe implications already
+                   essences, fossils, bench crafts, metamod locks,
+                   veiled chaos/exalt + unveil, harvest reforge/
+                   augment/resist conversion, eldritch implicits and
+                   currency, influenced exalts (engine Phase 13)
+next:              awakener orb, fracturing, corruption
+later:             beastcrafting, recombinators (implementation plan
+                   Phase 18; session-universe implications already
                    handled by the bitset plan)
 ```
 
