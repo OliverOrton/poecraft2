@@ -29,7 +29,9 @@ function Get-PoeCraftPython {
 }
 
 $Python = Get-PoeCraftPython
-$env:PYTHONPATH = "$Root/tools/ingest;$Root/bindings/python"
+# Join with the platform path separator so the same script works on Windows
+# (";") and Linux/macOS (":") PowerShell.
+$env:PYTHONPATH = @("$Root/tools/ingest", "$Root/bindings/python") -join [IO.Path]::PathSeparator
 & $Python.Command @($Python.Prefix) -m unittest discover -s "$Root/tools/ingest/tests" -t "$Root/tools/ingest"
 if ($LASTEXITCODE -ne 0) {
     throw "Python tests failed with exit code $LASTEXITCODE."
