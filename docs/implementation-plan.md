@@ -1004,10 +1004,11 @@ Acceptance gate:
 
 Goal: add ML tooling after simulator correctness and throughput are stable.
 
-The detailed planning, model, training, graph-synthesis, and benchmark direction
-is defined in [ml-strategy-planning.md](ml-strategy-planning.md). Phase 17 should
-be decomposed into the ML-0 through ML-5 research gates in that document before
-implementation begins.
+Before any learned model, the exact DP crafting solver
+([crafting-solver-plan.md](crafting-solver-plan.md), phases S1-S6) must
+exist: it computes optimal strategies from known transition
+probabilities, and its logged (state, value, action) corpus is the
+training data and evaluation baseline for everything in this phase.
 
 Initial ML path:
 
@@ -1046,6 +1047,15 @@ Use the existing recombinator architecture notes in
 the starting contract. Re-check the live Path of Exile 1 rules and current
 source data when this phase begins; do not infer recombination behavior from
 ordinary one-item rolling.
+
+The solver/editor side of recombinators — the spec-pyramid model,
+recomb/feeder strategy blocks, recycling wires, and the pyramid
+auto-planner — is specified in
+[solver-mechanic-extensions.md](solver-mechanic-extensions.md) (solver
+phases S10-S11) and [strategy-editor-ui.md](strategy-editor-ui.md). This
+phase provides the engine substrate those phases consume; the exact
+outcome enumerator here and solver phase S10 are the same effort viewed
+from the engine and solver sides.
 
 Acceptance gate:
 

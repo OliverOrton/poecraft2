@@ -195,7 +195,11 @@ The simulator's credibility depends on users trusting the crafting rules, but th
 
 ## ML Strategy Suggestion
 
-ML is intentionally deferred until the simulator core is stable.
+ML is intentionally deferred until the simulator core is stable. Before any
+learned model, an exact dynamic-programming solver computes optimal
+strategies from the engine's known transition probabilities and doubles as
+the training-data generator and evaluation baseline for later ML work. See
+[crafting-solver-plan.md](crafting-solver-plan.md).
 
 The research-backed target architecture is specified in
 [ml-strategy-planning.md](ml-strategy-planning.md). The model should guide a
