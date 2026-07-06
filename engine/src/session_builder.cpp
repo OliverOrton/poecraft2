@@ -3,6 +3,7 @@
 #include "poecraft/bitset.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cctype>
 #include <cstring>
 #include <limits>
@@ -143,26 +144,35 @@ std::uint32_t first_blocking_group(
 
 void build_current_group_block_mask(
     ActionContextImpl& context,
-    const pc_item_state* item) {
+    const std::vector<std::uint32_t>& occupied_groups) {
     const SessionImpl& session = *context.session;
     context.block_mask_scratch.assign(session.words, 0);
+    for (std::uint32_t group : occupied_groups) {
+        if (group < session.group_masks.size()) {
+            const auto& mask = session.group_masks[group];
+            if (!mask.empty()) {
+                or_into(context.block_mask_scratch, mask);
+            }
+        }
+    }
+}
+
+void collect_occupied_groups(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    std::vector<std::uint32_t>& out) {
+    out.clear();
     if (item == nullptr) return;
     auto add_slot = [&](const pc_mod_slot& slot) {
         if (slot.mod_id == PC_MOD_NONE) return;
         if (slot.mod_id < session.mod_count) {
-            for (std::uint32_t i = session.group_offsets[slot.mod_id];
-                 i < session.group_offsets[slot.mod_id + 1]; ++i) {
-                const auto it =
-                    session.group_masks.find(session.group_ids[i]);
-                if (it != session.group_masks.end()) {
-                    or_into(context.block_mask_scratch, it->second);
-                }
-            }
+            out.insert(
+                out.end(),
+                session.group_ids.begin() + session.group_offsets[slot.mod_id],
+                session.group_ids.begin() +
+                    session.group_offsets[slot.mod_id + 1]);
         } else {
-            const auto it = session.group_masks.find(slot.group_id);
-            if (it != session.group_masks.end()) {
-                or_into(context.block_mask_scratch, it->second);
-            }
+            out.push_back(slot.group_id);
         }
     };
     for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
@@ -171,6 +181,8 @@ void build_current_group_block_mask(
     for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
         add_slot(item->suffixes[i]);
     }
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
 }
 
 std::vector<std::uint64_t> influence_allowed_mask(
@@ -362,38 +374,130 @@ bool item_has_metamod(
 
 void apply_metamod_pool_blocks(
     const SessionImpl& session,
-    const pc_item_state* item,
+    bool block_attack,
+    bool block_caster,
     std::vector<std::uint64_t>& candidate) {
     const DataImpl& d = *session.data;
     auto block_tag = [&](const char* name) {
         const auto tag = d.tag_id_by_name.find(name);
         if (tag == d.tag_id_by_name.end()) return;
-        const auto mask = session.implicit_tag_masks.find(tag->second);
-        if (mask == session.implicit_tag_masks.end()) return;
+        if (tag->second >= session.implicit_tag_masks.size()) return;
+        const auto& mask = session.implicit_tag_masks[tag->second];
+        if (mask.empty()) return;
         pc_bitset_andnot(candidate.data(), candidate.data(),
-                         mask->second.data(), session.words);
+                         mask.data(), session.words);
     };
-    if (item_has_metamod(session, item, d.metamod_no_attack_code))
-        block_tag("attack");
-    if (item_has_metamod(session, item, d.metamod_no_caster_code))
-        block_tag("caster");
+    if (block_attack) block_tag("attack");
+    if (block_caster) block_tag("caster");
 }
 
 } // namespace
 
-std::size_t PoolCacheKeyHash::operator()(const PoolCacheKey& key) const {
+std::size_t hash_pool_cache_parts(
+    const std::vector<std::uint64_t>& candidate_mask,
+    std::uint32_t tag_signature_id,
+    PoolWeightKind weight_kind,
+    std::uint32_t target_tag_id,
+    const std::vector<std::uint32_t>& fossil_indices) {
     std::uint64_t hash = 1469598103934665603ULL;
-    for (std::uint64_t word : key.candidate_mask) {
+    for (std::uint64_t word : candidate_mask) {
         hash ^= word;
         hash *= 1099511628211ULL;
     }
-    hash = mix_hash(hash, key.tag_signature_id);
-    hash = mix_hash(hash, static_cast<std::uint64_t>(key.weight_kind));
-    hash = mix_hash(hash, key.target_tag_id);
-    for (std::uint32_t fossil : key.fossil_indices) {
+    hash = mix_hash(hash, tag_signature_id);
+    hash = mix_hash(hash, static_cast<std::uint64_t>(weight_kind));
+    hash = mix_hash(hash, target_tag_id);
+    for (std::uint32_t fossil : fossil_indices) {
         hash = mix_hash(hash, fossil);
     }
     return static_cast<std::size_t>(hash);
+}
+
+std::size_t PoolCacheKeyHash::operator()(const PoolCacheKey& key) const {
+    return hash_pool_cache_parts(
+        key.candidate_mask, key.tag_signature_id, key.weight_kind,
+        key.target_tag_id, key.fossil_indices);
+}
+
+std::size_t PoolCacheKeyHash::operator()(const PoolCacheLookup& key) const {
+    return hash_pool_cache_parts(
+        *key.candidate_mask, key.tag_signature_id, key.weight_kind,
+        key.target_tag_id, *key.fossil_indices);
+}
+
+bool PoolCacheKeyEqual::operator()(
+    const PoolCacheKey& a,
+    const PoolCacheLookup& b) const {
+    return a.candidate_mask == *b.candidate_mask &&
+           a.tag_signature_id == b.tag_signature_id &&
+           a.weight_kind == b.weight_kind &&
+           a.target_tag_id == b.target_tag_id &&
+           a.fossil_indices == *b.fossil_indices;
+}
+
+std::size_t hash_refill_pool_cache_parts(
+    const std::vector<std::uint64_t>& group_block_mask,
+    std::uint32_t tag_signature_id,
+    PoolWeightKind weight_kind,
+    std::uint32_t target_tag_id,
+    std::uint8_t influence_bits,
+    std::int8_t side_filter,
+    std::int8_t influence_only_code,
+    bool block_attack,
+    bool block_caster,
+    const std::vector<std::uint32_t>& fossil_indices) {
+    std::uint64_t hash = 1469598103934665603ULL;
+    for (std::uint64_t word : group_block_mask) {
+        hash ^= word;
+        hash *= 1099511628211ULL;
+    }
+    hash = mix_hash(hash, tag_signature_id);
+    hash = mix_hash(hash, static_cast<std::uint64_t>(weight_kind));
+    hash = mix_hash(hash, target_tag_id);
+    hash = mix_hash(hash, influence_bits);
+    hash = mix_hash(
+        hash, static_cast<std::uint64_t>(side_filter + 1));
+    hash = mix_hash(
+        hash, static_cast<std::uint64_t>(influence_only_code + 1));
+    hash = mix_hash(hash, block_attack);
+    hash = mix_hash(hash, block_caster);
+    for (std::uint32_t fossil : fossil_indices) {
+        hash = mix_hash(hash, fossil);
+    }
+    return static_cast<std::size_t>(hash);
+}
+
+std::size_t RefillPoolCacheHash::operator()(
+    const RefillPoolCacheKey& key) const {
+    return hash_refill_pool_cache_parts(
+        key.group_block_mask, key.tag_signature_id, key.weight_kind,
+        key.target_tag_id, key.influence_bits, key.side_filter,
+        key.influence_only_code, key.block_attack, key.block_caster,
+        key.fossil_indices);
+}
+
+std::size_t RefillPoolCacheHash::operator()(
+    const RefillPoolCacheLookup& key) const {
+    return hash_refill_pool_cache_parts(
+        *key.group_block_mask, key.tag_signature_id, key.weight_kind,
+        key.target_tag_id, key.influence_bits, key.side_filter,
+        key.influence_only_code, key.block_attack, key.block_caster,
+        *key.fossil_indices);
+}
+
+bool RefillPoolCacheEqual::operator()(
+    const RefillPoolCacheKey& a,
+    const RefillPoolCacheLookup& b) const {
+    return a.group_block_mask == *b.group_block_mask &&
+           a.tag_signature_id == b.tag_signature_id &&
+           a.weight_kind == b.weight_kind &&
+           a.target_tag_id == b.target_tag_id &&
+           a.influence_bits == b.influence_bits &&
+           a.side_filter == b.side_filter &&
+           a.influence_only_code == b.influence_only_code &&
+           a.block_attack == b.block_attack &&
+           a.block_caster == b.block_caster &&
+           a.fossil_indices == *b.fossil_indices;
 }
 
 void build_session(SessionImpl& session) {
@@ -662,6 +766,21 @@ void build_session(SessionImpl& session) {
 
     session.mod_count = static_cast<std::uint32_t>(session.global_index.size());
     session.words = pc_bitset_words(session.mod_count);
+    if (!d.mod_group_ids_flat.empty()) {
+        session.group_masks.resize(
+            static_cast<std::size_t>(
+                *std::max_element(
+                    d.mod_group_ids_flat.begin(),
+                    d.mod_group_ids_flat.end())) +
+            1);
+    }
+    if (!d.class_tag_ids.empty()) {
+        session.implicit_tag_masks.resize(
+            static_cast<std::size_t>(
+                *std::max_element(
+                    d.class_tag_ids.begin(), d.class_tag_ids.end())) +
+            1);
+    }
     session.influence_masks.assign(d.influence_name_by_code.size(),
                                    std::vector<std::uint64_t>(
                                        session.words, 0));
@@ -908,8 +1027,10 @@ void build_session(SessionImpl& session) {
     zero_padding(session.eldritch_implicit_mask);
     zero_padding(session.eldritch_searing_mask);
     zero_padding(session.eldritch_eater_mask);
-    for (auto& [_, mask] : session.group_masks) zero_padding(mask);
-    for (auto& [_, mask] : session.implicit_tag_masks) zero_padding(mask);
+    for (auto& mask : session.group_masks)
+        if (!mask.empty()) zero_padding(mask);
+    for (auto& mask : session.implicit_tag_masks)
+        if (!mask.empty()) zero_padding(mask);
     for (auto& mask : session.influence_masks) zero_padding(mask);
 }
 
@@ -917,12 +1038,14 @@ std::uint32_t intern_item_tag_signature(
     ActionContextImpl& context,
     const pc_item_state* item) {
     const SessionImpl& session = *context.session;
+    const std::uint8_t bits = item != nullptr ? item->generic_influence_bits : 0;
+    const std::uint32_t cached = context.signature_by_influence_bits[bits];
+    if (cached != std::numeric_limits<std::uint32_t>::max()) return cached;
     if (context.signature_by_key.empty()) {
         context.signature_by_key.emplace(
             signature_key(session.effective_base_tag_ids), 0);
     }
     std::vector<std::uint32_t> tags = session.effective_base_tag_ids;
-    const std::uint8_t bits = item != nullptr ? item->generic_influence_bits : 0;
     for (std::size_t code = 1;
          code < session.selector_tag_by_influence.size() && code <= 8; ++code) {
         if ((bits & (std::uint8_t{1} << (code - 1))) &&
@@ -935,7 +1058,10 @@ std::uint32_t intern_item_tag_signature(
     tags.erase(std::unique(tags.begin(), tags.end()), tags.end());
     const std::string key = signature_key(tags);
     const auto found = context.signature_by_key.find(key);
-    if (found != context.signature_by_key.end()) return found->second;
+    if (found != context.signature_by_key.end()) {
+        context.signature_by_influence_bits[bits] = found->second;
+        return found->second;
+    }
 
     WeightTable table;
     fill_weight_table(session, tags, table);
@@ -943,6 +1069,7 @@ std::uint32_t intern_item_tag_signature(
         static_cast<std::uint32_t>(context.uncommon_weight_tables.size() + 1);
     context.uncommon_weight_tables.push_back(std::move(table));
     context.signature_by_key.emplace(key, id);
+    context.signature_by_influence_bits[bits] = id;
     return id;
 }
 
@@ -950,13 +1077,75 @@ const WeightedPool& get_weighted_pool(
     ActionContextImpl& context,
     const pc_item_state* item,
     const PoolBuildRequest& request,
-    bool* out_cache_hit) {
+    bool* out_cache_hit,
+    const PoolBuildHints* hints) {
     const SessionImpl& session = *context.session;
     const std::uint32_t signature_id =
         intern_item_tag_signature(context, item);
     const WeightView weights = weight_view(context, signature_id);
+    const bool use_refill_cache =
+        hints != nullptr && hints->group_block_mask != nullptr;
+    RefillPoolCacheLookup refill_lookup;
+    if (use_refill_cache) {
+        refill_lookup = {
+            hints->group_block_mask,
+            signature_id,
+            request.weight_kind,
+            request.target_tag_id,
+            static_cast<std::uint8_t>(
+                item != nullptr ? item->generic_influence_bits : 0),
+            static_cast<std::int8_t>(request.side_filter),
+            static_cast<std::int8_t>(request.influence_only_code),
+            hints->block_attack,
+            hints->block_caster,
+            &request.fossil_indices};
+        if (context.last_refill_pool_key != nullptr &&
+            context.last_refill_pool != nullptr &&
+            RefillPoolCacheEqual{}(
+                *context.last_refill_pool_key, refill_lookup)) {
+            ++context.pool_cache_hits;
+            if (out_cache_hit != nullptr) *out_cache_hit = true;
+            return *context.last_refill_pool;
+        }
+        const auto refill_found =
+            context.refill_pool_cache.find(refill_lookup);
+        if (refill_found != context.refill_pool_cache.end()) {
+            context.last_refill_pool_key = &refill_found->first;
+            context.last_refill_pool = refill_found->second;
+            ++context.pool_cache_hits;
+            if (out_cache_hit != nullptr) *out_cache_hit = true;
+            return *refill_found->second;
+        }
+    }
+    auto remember_refill_pool = [&](const WeightedPool* pool) {
+        if (!use_refill_cache) return;
+        if (context.refill_pool_cache.size() >= kMaxPoolCacheEntries) {
+            context.last_refill_pool_key = nullptr;
+            context.last_refill_pool = nullptr;
+            context.refill_pool_cache.clear();
+        }
+        RefillPoolCacheKey key;
+        key.group_block_mask = *refill_lookup.group_block_mask;
+        key.tag_signature_id = refill_lookup.tag_signature_id;
+        key.weight_kind = refill_lookup.weight_kind;
+        key.target_tag_id = refill_lookup.target_tag_id;
+        key.influence_bits = refill_lookup.influence_bits;
+        key.side_filter = refill_lookup.side_filter;
+        key.influence_only_code = refill_lookup.influence_only_code;
+        key.block_attack = refill_lookup.block_attack;
+        key.block_caster = refill_lookup.block_caster;
+        key.fossil_indices = *refill_lookup.fossil_indices;
+        const auto inserted =
+            context.refill_pool_cache.emplace(std::move(key), pool).first;
+        context.last_refill_pool_key = &inserted->first;
+        context.last_refill_pool = inserted->second;
+    };
 
-    context.candidate_mask_scratch.assign(session.words, 0);
+    std::chrono::steady_clock::time_point candidate_started;
+    if (context.perf_timing_enabled) {
+        candidate_started = std::chrono::steady_clock::now();
+    }
+
     std::vector<std::uint64_t>& candidate = context.candidate_mask_scratch;
     if (request.weight_kind == PoolWeightKind::Fossil) {
         candidate = session.normal_random_roll_mask;
@@ -975,11 +1164,6 @@ const WeightedPool& get_weighted_pool(
     } else if (request.side_filter == 1) {
         pc_bitset_and(candidate.data(), candidate.data(),
                       session.suffix_mask.data(), session.words);
-    } else {
-        std::vector<std::uint64_t> affix = session.prefix_mask;
-        or_into(affix, session.suffix_mask);
-        pc_bitset_and(candidate.data(), candidate.data(), affix.data(),
-                      session.words);
     }
 
     const std::vector<std::uint64_t>* positive =
@@ -990,46 +1174,94 @@ const WeightedPool& get_weighted_pool(
                   session.words);
 
     if (request.weight_kind == PoolWeightKind::HarvestSpawnOnly) {
-        const auto tag_mask =
-            session.implicit_tag_masks.find(request.target_tag_id);
-        if (tag_mask == session.implicit_tag_masks.end()) {
+        if (request.target_tag_id >= session.implicit_tag_masks.size() ||
+            session.implicit_tag_masks[request.target_tag_id].empty()) {
             pc_bitset_zero(candidate.data(), session.words);
         } else {
             pc_bitset_and(candidate.data(), candidate.data(),
-                          tag_mask->second.data(), session.words);
+                          session.implicit_tag_masks[request.target_tag_id].data(),
+                          session.words);
         }
     }
 
-    std::vector<std::uint64_t> influence;
     if (request.influence_only_code >= 0 &&
         static_cast<std::size_t>(request.influence_only_code) <
             session.influence_masks.size()) {
-        influence = session.influence_masks[request.influence_only_code];
+        pc_bitset_and(
+            candidate.data(), candidate.data(),
+            session.influence_masks[request.influence_only_code].data(),
+            session.words);
     } else {
-        influence = influence_allowed_mask(session, item);
+        if (session.influence_masks.empty()) {
+            context.influence_mask_scratch.assign(session.words, 0);
+        } else {
+            context.influence_mask_scratch = session.influence_masks[0];
+        }
+        const std::uint8_t influence_bits =
+            item != nullptr ? item->generic_influence_bits : 0;
+        for (std::size_t code = 1;
+             code < session.influence_masks.size() && code <= 8; ++code) {
+            if (influence_bits & (std::uint8_t{1} << (code - 1))) {
+                or_into(context.influence_mask_scratch,
+                        session.influence_masks[code]);
+            }
+        }
+        pc_bitset_and(candidate.data(), candidate.data(),
+                      context.influence_mask_scratch.data(), session.words);
     }
-    pc_bitset_and(candidate.data(), candidate.data(), influence.data(),
-                  session.words);
-    apply_metamod_pool_blocks(session, item, candidate);
-    build_current_group_block_mask(context, item);
+    apply_metamod_pool_blocks(
+        session,
+        hints != nullptr
+            ? hints->block_attack
+            : item_has_metamod(
+                  session, item, session.data->metamod_no_attack_code),
+        hints != nullptr
+            ? hints->block_caster
+            : item_has_metamod(
+                  session, item, session.data->metamod_no_caster_code),
+        candidate);
+    const std::vector<std::uint64_t>* group_block =
+        hints != nullptr ? hints->group_block_mask : nullptr;
+    if (group_block == nullptr) {
+        collect_occupied_groups(
+            session, item, context.occupied_groups_scratch);
+        build_current_group_block_mask(
+            context, context.occupied_groups_scratch);
+        group_block = &context.block_mask_scratch;
+    }
     pc_bitset_andnot(candidate.data(), candidate.data(),
-                     context.block_mask_scratch.data(), session.words);
+                     group_block->data(), session.words);
     pc_bitset_zero_padding(candidate.data(), session.mod_count);
 
-    PoolCacheKey key;
-    key.candidate_mask = candidate;
-    key.tag_signature_id = signature_id;
-    key.weight_kind = request.weight_kind;
-    key.target_tag_id = request.target_tag_id;
-    key.fossil_indices = request.fossil_indices;
-    const auto found = context.pool_cache.find(key);
+    if (context.perf_timing_enabled) {
+        context.candidate_build_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - candidate_started)
+                    .count());
+    }
+    const PoolCacheLookup lookup{
+        &candidate,
+        signature_id,
+        request.weight_kind,
+        request.target_tag_id,
+        &request.fossil_indices};
+    const auto found = context.pool_cache.find(lookup);
     if (found != context.pool_cache.end()) {
         ++context.pool_cache_hits;
         if (out_cache_hit != nullptr) *out_cache_hit = true;
+        remember_refill_pool(&found->second);
         return found->second;
     }
-
+    std::chrono::steady_clock::time_point pool_started;
+    if (context.perf_timing_enabled) {
+        pool_started = std::chrono::steady_clock::now();
+    }
     WeightedPool pool;
+    const std::size_t candidate_count =
+        pc_bitset_count(candidate.data(), session.words);
+    pool.entries.reserve(candidate_count);
+    pool.prefix_sums.reserve(candidate_count);
     pc_bitset_for_each(candidate.data(), session.words, [&](std::size_t raw) {
         if (raw >= session.mod_count) return;
         const std::uint32_t s = static_cast<std::uint32_t>(raw);
@@ -1081,11 +1313,30 @@ const WeightedPool& get_weighted_pool(
     });
 
     ++context.pool_cache_misses;
+    if (context.perf_timing_enabled) {
+        context.weighted_pool_build_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - pool_started)
+                    .count());
+    }
     if (out_cache_hit != nullptr) *out_cache_hit = false;
     if (context.pool_cache.size() >= kMaxPoolCacheEntries) {
+        context.last_refill_pool_key = nullptr;
+        context.last_refill_pool = nullptr;
+        context.refill_pool_cache.clear();
         context.pool_cache.clear();
     }
-    return context.pool_cache.emplace(key, std::move(pool)).first->second;
+    PoolCacheKey key;
+    key.candidate_mask = candidate;
+    key.tag_signature_id = signature_id;
+    key.weight_kind = request.weight_kind;
+    key.target_tag_id = request.target_tag_id;
+    key.fossil_indices = request.fossil_indices;
+    const auto inserted =
+        context.pool_cache.emplace(std::move(key), std::move(pool)).first;
+    remember_refill_pool(&inserted->second);
+    return inserted->second;
 }
 
 void build_pool_debug_rows(
@@ -1116,8 +1367,16 @@ void build_pool_debug_rows(
     }
     std::vector<std::uint64_t> metamod_allowed(session.words, ~std::uint64_t{0});
     pc_bitset_zero_padding(metamod_allowed.data(), session.mod_count);
-    apply_metamod_pool_blocks(session, item, metamod_allowed);
-    build_current_group_block_mask(context, item);
+    apply_metamod_pool_blocks(
+        session,
+        item_has_metamod(
+            session, item, session.data->metamod_no_attack_code),
+        item_has_metamod(
+            session, item, session.data->metamod_no_caster_code),
+        metamod_allowed);
+    std::vector<std::uint32_t> occupied_groups;
+    collect_occupied_groups(session, item, occupied_groups);
+    build_current_group_block_mask(context, occupied_groups);
     std::unordered_map<std::uint32_t, const PoolEntry*> accepted;
     for (const PoolEntry& entry : pool.entries) {
         accepted.emplace(entry.session_mod_id, &entry);

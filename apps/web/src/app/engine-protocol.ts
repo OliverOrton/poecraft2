@@ -48,7 +48,8 @@ export interface CraftAction {
         | "eldritch_exalt"
         | "eldritch_chaos"
         | "eldritch_annul"
-        | "influence_exalt";
+        | "influence_exalt"
+        | "fracture";
     essence?: string;
     fossils?: string[];
     mod_key?: string;

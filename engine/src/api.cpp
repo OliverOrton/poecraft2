@@ -133,7 +133,7 @@ pc_result parse_action_request(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     if (request.action_type < PC_ACTION_TRANSMUTE ||
-        request.action_type > PC_ACTION_INFLUENCE_EXALT) {
+        request.action_type > PC_ACTION_FRACTURE) {
         set_error(error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
         return PC_RESULT_INVALID_ARGUMENT;
     }
@@ -964,20 +964,24 @@ pc_result pc_session_dump_implicit_tag(
         set_error(out_error, PC_RESULT_NOT_FOUND, "unknown classification tag");
         return PC_RESULT_NOT_FOUND;
     }
-    const auto mask_it = s.implicit_tag_masks.find(it->second);
+    const std::vector<std::uint64_t>* mask =
+        it->second < s.implicit_tag_masks.size() &&
+                !s.implicit_tag_masks[it->second].empty()
+            ? &s.implicit_tag_masks[it->second]
+            : nullptr;
     const std::size_t total =
-        mask_it == s.implicit_tag_masks.end()
+        mask == nullptr
             ? 0
-            : poecraft::pc_bitset_count(mask_it->second.data(), s.words);
+            : poecraft::pc_bitset_count(mask->data(), s.words);
     *out_count = static_cast<std::uint32_t>(total);
     if (out_ids == nullptr || capacity < total) {
         set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
         return PC_RESULT_BUFFER_TOO_SMALL;
     }
     std::uint32_t write = 0;
-    if (mask_it != s.implicit_tag_masks.end()) {
+    if (mask != nullptr) {
         poecraft::pc_bitset_for_each(
-            mask_it->second.data(), s.words,
+            mask->data(), s.words,
             [&](std::size_t id) {
                 if (id < s.mod_count) {
                     out_ids[write++] = static_cast<std::uint32_t>(id);
@@ -1056,7 +1060,8 @@ pc_result pc_debug_pool_query(
         action_type == PC_ACTION_HARVEST_RESIST ||
         action_type == PC_ACTION_ELDRITCH_EMBER ||
         action_type == PC_ACTION_ELDRITCH_ICHOR ||
-        action_type == PC_ACTION_ELDRITCH_ANNUL) {
+        action_type == PC_ACTION_ELDRITCH_ANNUL ||
+        action_type == PC_ACTION_FRACTURE) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
                   "action has no weighted add pool");
         return PC_RESULT_UNSUPPORTED_FEATURE;
@@ -1255,6 +1260,52 @@ pc_result pc_apply_action_batch(
         }
     }
     *out_summary = summary;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_action_context_perf_stats_query(
+    pc_action_context_handle context,
+    pc_action_perf_stats* out_stats,
+    int32_t reset,
+    pc_error_info* out_error) {
+    if (context == nullptr || out_stats == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    poecraft::ActionContextImpl& impl = *context->impl;
+    out_stats->struct_size =
+        static_cast<std::uint32_t>(sizeof(pc_action_perf_stats));
+    out_stats->abi_version = PC_ABI_VERSION;
+    out_stats->pool_requests =
+        impl.pool_cache_hits + impl.pool_cache_misses;
+    out_stats->cache_hits = impl.pool_cache_hits;
+    out_stats->cache_misses = impl.pool_cache_misses;
+    out_stats->candidate_build_ns = impl.candidate_build_ns;
+    out_stats->weighted_pool_build_ns = impl.weighted_pool_build_ns;
+    out_stats->sampling_calls = impl.sampling_calls;
+    out_stats->sampling_ns = impl.sampling_ns;
+    if (reset) {
+        impl.pool_cache_hits = 0;
+        impl.pool_cache_misses = 0;
+        impl.candidate_build_ns = 0;
+        impl.weighted_pool_build_ns = 0;
+        impl.sampling_calls = 0;
+        impl.sampling_ns = 0;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_action_context_perf_timing_set(
+    pc_action_context_handle context,
+    int32_t enabled,
+    pc_error_info* out_error) {
+    if (context == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null context");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    context->impl->perf_timing_enabled = enabled != 0;
     clear_error(out_error);
     return PC_RESULT_OK;
 }

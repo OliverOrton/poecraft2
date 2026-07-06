@@ -560,6 +560,17 @@ append corrupted implicit
 set ITEM_CORRUPTED
 ```
 
+Fracturing Orb flow:
+
+```text
+require rare item with at least 4 explicit modifiers
+reject generic influence, synthesised state, or any existing fractured slot
+choose uniformly from every explicit slot without consulting metamods
+set MOD_SLOT_FRACTURED on the selected slot
+```
+
+Eldritch implicits and split state do not block Fracturing Orb.
+
 Blessed Orb rerolls implicit slot values only. Divine rerolls explicit slot values only and skips fractured slots.
 
 ## Socket, Link, And Quality State

@@ -46,6 +46,9 @@ void run_blocking_tests() {
         pc_bitset_set(s.normal_random_roll_mask.data(), i);
         pc_bitset_set(s.prefix_mask.data(), i);
         pc_bitset_set(s.influence_masks[0].data(), i);
+        if (s.primary_group[i] >= s.group_masks.size()) {
+            s.group_masks.resize(s.primary_group[i] + 1);
+        }
         auto& group_mask = s.group_masks[s.primary_group[i]];
         if (group_mask.empty()) group_mask.assign(s.words, 0);
         pc_bitset_set(group_mask.data(), i);

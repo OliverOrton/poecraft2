@@ -76,6 +76,7 @@ const OPERATIONS = [
     "eldritch_chaos",
     "eldritch_annul",
     "influence_exalt",
+    "fracture",
     "condition_check_only",
 ];
 
@@ -89,6 +90,7 @@ const PALETTE: Array<[string, string]> = [
     ["operation:exalt", "Exalted Orb"],
     ["operation:annul", "Orb of Annulment"],
     ["operation:scour", "Orb of Scouring"],
+    ["operation:fracture", "Fracturing Orb"],
     ["operation:essence", "Essence"],
     ["operation:fossil", "Fossils"],
     ["operation:bench", "Bench craft"],
@@ -138,6 +140,7 @@ export class PcStrategyEditor extends HTMLElement {
     private runController: AbortController | null = null;
     private currentRun: Promise<void> | null = null;
     private persistTimer = 0;
+    private progressFrame = 0;
     private disposed = false;
     private connectedOnce = false;
     private hasChosenBase = false;
@@ -1276,6 +1279,7 @@ export class PcStrategyEditor extends HTMLElement {
             );
             simulator = await this.client.createSimulator(session, compiled);
             this.setStatus(`Running ${count.toLocaleString()} simulation${count === 1 ? "" : "s"}…`);
+            this.simulator.beginMeasurement();
             this.result = await this.client.runStrategy(
                 simulator,
                 {
@@ -1293,10 +1297,11 @@ export class PcStrategyEditor extends HTMLElement {
                     signal: this.runController.signal,
                     onProgress: (progress) => {
                         this.progress = progress;
-                        this.updateView();
+                        this.scheduleProgressRender();
                     },
                 },
             );
+            this.simulator.endMeasurement();
             this.progress = {
                 done: this.result.progress.completed_runs,
                 total: this.result.progress.target_runs,
@@ -1306,6 +1311,8 @@ export class PcStrategyEditor extends HTMLElement {
             this.result = null;
             this.setStatus(error instanceof Error ? error.message : String(error));
         } finally {
+            window.cancelAnimationFrame(this.progressFrame);
+            this.progressFrame = 0;
             if (simulator) await this.client.closeSimulator(simulator);
             if (compiled) await this.client.closeStrategy(compiled);
             if (session) await this.client.closeSession(session);
@@ -1320,6 +1327,8 @@ export class PcStrategyEditor extends HTMLElement {
         if (this.disposed) return;
         this.disposed = true;
         window.clearTimeout(this.persistTimer);
+        window.cancelAnimationFrame(this.progressFrame);
+        this.progressFrame = 0;
         workspace().unregisterDocument(this.docId);
         this.runController?.abort();
         if (this.currentRun) {
@@ -1334,6 +1343,20 @@ export class PcStrategyEditor extends HTMLElement {
     private setStatus(text: string): void {
         const status = this.querySelector(".pc-strategy-status");
         if (status) status.textContent = text;
+    }
+
+    private scheduleProgressRender(): void {
+        if (this.progressFrame || this.disposed) return;
+        this.progressFrame = window.requestAnimationFrame(() => {
+            this.progressFrame = 0;
+            if (this.disposed) return;
+            this.simulator.setView({
+                running: this.running,
+                disabled: false,
+                progress: this.progress,
+                result: this.result,
+            });
+        });
     }
 
     private get board(): PcStrategyBoard {

@@ -65,6 +65,24 @@ class BindingTests(unittest.TestCase):
             self.assertEqual(item.rarity, "normal")
             self.assertEqual(item.explicit_count, 0)
 
+    def test_fracturing_orb_action(self):
+        with self.session.create_action_context(seed=19) as context:
+            item = self.session.create_item(
+                rarity="normal", with_implicits=False
+            )
+            self.assertTrue(context.apply(item, {"type": "alchemy"}).applied)
+            before = set(item.prefix_mod_ids + item.suffix_mod_ids)
+            self.assertGreaterEqual(len(before), 4)
+            result = context.apply(item, {"type": "fracture"})
+            self.assertTrue(result.applied)
+            self.assertEqual(result.added, 0)
+            self.assertEqual(result.removed, 0)
+            self.assertEqual(
+                set(item.prefix_mod_ids + item.suffix_mod_ids), before
+            )
+            self.assertEqual(len(item.fractured_mod_ids), 1)
+            self.assertFalse(context.apply(item, {"type": "fracture"}).applied)
+
     def test_spec_pool_fixtures(self):
         with self.session.create_action_context(seed=1) as context:
             item = self.session.create_item(rarity="rare", with_implicits=False)
@@ -191,6 +209,32 @@ class BindingTests(unittest.TestCase):
             self.assertGreater(exalt.summary.applied_count, 0)
             self.assertTrue(all(item.explicit_count <= 6 for item in exalt.items))
 
+    def test_performance_timing_is_opt_in(self):
+        items = [
+            self.session.create_item(rarity="normal", with_implicits=False)
+            for _ in range(100)
+        ]
+        with self.session.create_action_context(seed=101) as context:
+            context.apply_batch(items, {"type": "alchemy"})
+            stats = context.performance_stats()
+            self.assertGreater(stats["pool_requests"], 0)
+            self.assertEqual(stats["candidate_build_ns"], 0)
+            self.assertEqual(stats["weighted_pool_build_ns"], 0)
+            self.assertEqual(stats["sampling_ns"], 0)
+
+        timed_items = [
+            self.session.create_item(rarity="normal", with_implicits=False)
+            for _ in range(100)
+        ]
+        with self.session.create_action_context(seed=102) as context:
+            context.set_performance_timing(True)
+            context.apply_batch(timed_items, {"type": "alchemy"})
+            stats = context.performance_stats()
+            self.assertGreater(stats["candidate_build_ns"], 0)
+            self.assertGreater(stats["weighted_pool_build_ns"], 0)
+            self.assertGreater(stats["sampling_calls"], 0)
+            self.assertGreater(stats["sampling_ns"], 0)
+
     def test_native_strategy_simulator(self):
         strategy_json = {
             "version": "v1",
@@ -289,7 +333,10 @@ class BindingTests(unittest.TestCase):
             )
             prefixes = item.prefix_mod_ids
             self.assertTrue(context.apply(item, {"type": "chaos"}).applied)
-            self.assertEqual(prefixes, item.prefix_mod_ids)
+            self.assertTrue(
+                set(prefixes).issubset(item.prefix_mod_ids),
+                "locked prefixes must survive even when chaos fills an open prefix",
+            )
 
             # Veiled crafts produce three persisted options and unveil in place.
             item = self.session.create_item(rarity="rare")

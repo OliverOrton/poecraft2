@@ -285,6 +285,40 @@ test("emulator editing can add and remove an exact explicit mod", async () => {
     await client.closeItem(item);
 });
 
+test("Fracturing Orb fractures one random explicit modifier", async () => {
+    const item = await client.createItem(sessionId, {
+        rarity: "normal",
+        withImplicits: false,
+    });
+    const alchemy = await client.apply(contextId, item, { type: "alchemy" });
+    assert.equal(alchemy.applied, true);
+    const before = await client.itemInfo(item);
+    const beforeIds = [
+        ...(before.prefix_mod_ids as number[]),
+        ...(before.suffix_mod_ids as number[]),
+    ];
+    assert.ok(beforeIds.length >= 4);
+
+    const fracture = await client.apply(contextId, item, { type: "fracture" });
+    assert.deepEqual(fracture, { applied: true, added: 0, removed: 0 });
+    const after = await client.itemInfo(item);
+    const afterIds = [
+        ...(after.prefix_mod_ids as number[]),
+        ...(after.suffix_mod_ids as number[]),
+    ];
+    const fracturedIds = [
+        ...(after.fractured_prefix_mod_ids as number[]),
+        ...(after.fractured_suffix_mod_ids as number[]),
+    ];
+    assert.deepEqual(afterIds.sort((a, b) => a - b), beforeIds.sort((a, b) => a - b));
+    assert.equal(fracturedIds.length, 1);
+    assert.equal(
+        (await client.apply(contextId, item, { type: "fracture" })).applied,
+        false,
+    );
+    await client.closeItem(item);
+});
+
 test("catalog exposes mod groups, essences, and fossils as usable keys", async () => {
     const catalog = await client.catalog(dataId);
     assert.ok(catalog.groupKeyById.length > 0);

@@ -9,6 +9,7 @@
     "dev": "vite",
     "prebuild": "npm run build:data",
     "build": "tsc --noEmit && vite build",
+    "benchmark": "tsx test/performance-benchmark.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "tsx test/engine-smoke.test.ts && tsx test/workspace-model.test.ts && tsx test/strategy-model.test.ts"

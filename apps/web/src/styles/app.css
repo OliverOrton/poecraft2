@@ -853,6 +853,10 @@ select {
     color: var(--pc-fractured);
 }
 
+.pc-mod-slot.is-filled[data-side] {
+    cursor: context-menu;
+}
+
 .pc-mod-slot-tags {
     min-height: 18px;
     margin-top: 2px;

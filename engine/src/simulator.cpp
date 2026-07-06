@@ -340,6 +340,7 @@ bool action_type_from_name(const std::string& name, ActionType& out) {
         {"eldritch_chaos", ActionType::EldritchChaos},
         {"eldritch_annul", ActionType::EldritchAnnul},
         {"influence_exalt", ActionType::InfluenceExalt},
+        {"fracture", ActionType::Fracture},
     };
     for (const auto& entry : table) {
         if (name == entry.first) {
@@ -629,6 +630,21 @@ const char* failure_default_detail(int reason) {
     }
 }
 
+bool action_needs_rollback(ActionType type) {
+    // These reforges validate before mutation and always report applied once
+    // entered; an empty pool simply yields fewer mods. Avoid copying the full
+    // item state for their overwhelmingly common success path.
+    switch (type) {
+    case ActionType::Transmute:
+    case ActionType::Alteration:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+        return false;
+    default:
+        return true;
+    }
+}
+
 void aggregate_failure(
     SimulatorImpl& simulator,
     int reason,
@@ -683,18 +699,20 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
         result.failure_reason = reason;
         result.terminal_node_id = node.id;
         result.detail = detail.empty() ? failure_default_detail(reason) : detail;
-        TraceEntryInternal entry;
-        entry.step_index = static_cast<std::uint32_t>(graph_steps);
-        entry.node_id = node.id;
-        entry.node_kind = static_cast<int>(node.kind);
-        entry.action_type = node.action_type;
-        entry.cumulative_actions = result.actions;
-        entry.known_cumulative_cost = result.known_cost;
-        entry.cost_complete = result.cost_complete;
-        entry.terminal_kind = terminal_kind;
-        entry.failure_reason = reason;
-        entry.item = result.item;
-        append_trace(trace, options, std::move(entry), true);
+        if (trace != nullptr && options.max_trace_entries != 0) {
+            TraceEntryInternal entry;
+            entry.step_index = static_cast<std::uint32_t>(graph_steps);
+            entry.node_id = node.id;
+            entry.node_kind = static_cast<int>(node.kind);
+            entry.action_type = node.action_type;
+            entry.cumulative_actions = result.actions;
+            entry.known_cumulative_cost = result.known_cost;
+            entry.cost_complete = result.cost_complete;
+            entry.terminal_kind = terminal_kind;
+            entry.failure_reason = reason;
+            entry.item = result.item;
+            append_trace(trace, options, std::move(entry), true);
+        }
     };
 
     while (true) {
@@ -716,17 +734,20 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 result.failure_reason = PC_SIM_FAILURE_TERMINAL;
                 result.detail = node.reason.empty() ? "stop terminal" : node.reason;
             }
-            TraceEntryInternal entry;
-            entry.step_index = static_cast<std::uint32_t>(graph_steps - 1);
-            entry.node_id = node.id;
-            entry.node_kind = static_cast<int>(node.kind);
-            entry.cumulative_actions = result.actions;
-            entry.known_cumulative_cost = result.known_cost;
-            entry.cost_complete = result.cost_complete;
-            entry.terminal_kind = node.terminal_kind;
-            entry.failure_reason = result.failure_reason;
-            entry.item = result.item;
-            append_trace(trace, options, std::move(entry), true);
+            if (trace != nullptr && options.max_trace_entries != 0) {
+                TraceEntryInternal entry;
+                entry.step_index =
+                    static_cast<std::uint32_t>(graph_steps - 1);
+                entry.node_id = node.id;
+                entry.node_kind = static_cast<int>(node.kind);
+                entry.cumulative_actions = result.actions;
+                entry.known_cumulative_cost = result.known_cost;
+                entry.cost_complete = result.cost_complete;
+                entry.terminal_kind = node.terminal_kind;
+                entry.failure_reason = result.failure_reason;
+                entry.item = result.item;
+                append_trace(trace, options, std::move(entry), true);
+            }
             break;
         }
 
@@ -771,17 +792,20 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 break;
             }
 
-            pc_item_state working = result.item;
+            pc_item_state rollback;
+            const bool needs_rollback =
+                action_needs_rollback(node.action.type);
+            if (needs_rollback) rollback = result.item;
             const ActionOutcome outcome =
-                apply_action(*simulator.context, &working, node.action);
+                apply_action(*simulator.context, &result.item, node.action);
             ++result.actions;
             ++simulator.action_counts[node_index];
             if (!outcome.applied) {
+                if (needs_rollback) result.item = rollback;
                 finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
                 break;
             }
 
-            result.item = working;
             applied = true;
             if (price_known && simulator.economy != nullptr) {
                 result.known_cost += price;
@@ -797,18 +821,20 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
         }
 
         const StrategyEdge* edge = select_edge(node, session, result.item);
-        TraceEntryInternal entry;
-        entry.step_index = static_cast<std::uint32_t>(graph_steps - 1);
-        entry.node_id = node.id;
-        entry.node_kind = static_cast<int>(node.kind);
-        entry.action_type = node.action_type;
-        entry.action_applied = applied;
-        entry.matched_edge_id = edge != nullptr ? edge->id : "";
-        entry.cumulative_actions = result.actions;
-        entry.known_cumulative_cost = result.known_cost;
-        entry.cost_complete = result.cost_complete;
-        entry.item = result.item;
-        append_trace(trace, options, std::move(entry));
+        if (trace != nullptr && options.max_trace_entries != 0) {
+            TraceEntryInternal entry;
+            entry.step_index = static_cast<std::uint32_t>(graph_steps - 1);
+            entry.node_id = node.id;
+            entry.node_kind = static_cast<int>(node.kind);
+            entry.action_type = node.action_type;
+            entry.action_applied = applied;
+            entry.matched_edge_id = edge != nullptr ? edge->id : "";
+            entry.cumulative_actions = result.actions;
+            entry.known_cumulative_cost = result.known_cost;
+            entry.cost_complete = result.cost_complete;
+            entry.item = result.item;
+            append_trace(trace, options, std::move(entry));
+        }
         if (edge == nullptr) {
             finish_failure(PC_SIM_FAILURE_NO_MATCHING_EDGE, node, "");
             break;
@@ -1008,6 +1034,7 @@ void run_simulator_chunk(
         simulator.options_set = true;
         simulator.context = std::make_unique<ActionContextImpl>(options.seed);
         simulator.context->session = simulator.session;
+        simulator.context->capture_action_trace = false;
     } else if (!options_equal(simulator.options, options)) {
         throw std::runtime_error(
             "simulation options changed after the first chunk");
@@ -1065,22 +1092,28 @@ void run_simulator_chunk(
                 result.detail);
         }
 
-        SimulationExampleInternal example;
-        example.terminal_kind = result.terminal_kind;
-        example.failure_reason = result.failure_reason;
-        example.terminal_node_id = result.terminal_node_id;
-        example.action_count = result.actions;
-        example.known_total_cost = result.known_cost;
-        example.cost_complete = result.cost_complete;
-        example.item = result.item;
-        if (result.terminal_kind == PC_TERMINAL_SUCCESS) {
-            if (simulator.success_examples.size() <
-                simulator.options.retained_success_count) {
+        const bool retain_success =
+            result.terminal_kind == PC_TERMINAL_SUCCESS &&
+            simulator.success_examples.size() <
+                simulator.options.retained_success_count;
+        const bool retain_failure =
+            result.terminal_kind != PC_TERMINAL_SUCCESS &&
+            simulator.failure_examples.size() <
+                simulator.options.retained_failure_count;
+        if (retain_success || retain_failure) {
+            SimulationExampleInternal example;
+            example.terminal_kind = result.terminal_kind;
+            example.failure_reason = result.failure_reason;
+            example.terminal_node_id = result.terminal_node_id;
+            example.action_count = result.actions;
+            example.known_total_cost = result.known_cost;
+            example.cost_complete = result.cost_complete;
+            example.item = result.item;
+            if (retain_success) {
                 simulator.success_examples.push_back(std::move(example));
+            } else {
+                simulator.failure_examples.push_back(std::move(example));
             }
-        } else if (simulator.failure_examples.size() <
-                   simulator.options.retained_failure_count) {
-            simulator.failure_examples.push_back(std::move(example));
         }
     }
 }

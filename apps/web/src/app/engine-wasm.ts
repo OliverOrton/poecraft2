@@ -141,6 +141,10 @@ export class EngineBindings {
         this.module.ccall("pcw_context_close", null, ["number"], [context]);
     }
 
+    memoryStats(): { wasm_memory_bytes: number } {
+        return { wasm_memory_bytes: this.module.HEAPU8.byteLength };
+    }
+
     createItem(
         session: number,
         rarity: string,

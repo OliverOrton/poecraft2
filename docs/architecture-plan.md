@@ -197,6 +197,12 @@ The simulator's credibility depends on users trusting the crafting rules, but th
 
 ML is intentionally deferred until the simulator core is stable.
 
+The research-backed target architecture is specified in
+[ml-strategy-planning.md](ml-strategy-planning.md). The model should guide a
+symbolic, cyclic stochastic planner and a separate Strategy Builder graph
+compiler rather than directly replacing mechanics or emitting unverified graph
+JSON.
+
 Likely approaches:
 
 - Monte Carlo strategy evaluation.

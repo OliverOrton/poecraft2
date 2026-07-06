@@ -1,6 +1,7 @@
 #ifndef POECRAFT_SRC_ENGINE_INTERNAL_HPP
 #define POECRAFT_SRC_ENGINE_INTERNAL_HPP
 
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -258,9 +259,10 @@ struct SessionImpl {
     std::vector<std::uint64_t> eldritch_eater_mask;
     std::vector<std::uint64_t> positive_spawn_weight_mask;
     std::vector<std::uint64_t> positive_base_weight_mask;
-    std::unordered_map<std::uint32_t, std::vector<std::uint64_t>> group_masks;
-    std::unordered_map<std::uint32_t, std::vector<std::uint64_t>>
-        implicit_tag_masks;
+    // Group/tag ids are dense global ids. Flat outer vectors avoid hash-table
+    // lookups in the per-pick path; absent ids have an empty inner mask.
+    std::vector<std::vector<std::uint64_t>> group_masks;
+    std::vector<std::vector<std::uint64_t>> implicit_tag_masks;
     std::vector<std::vector<std::uint64_t>> influence_masks;
 
     std::vector<std::uint32_t> effective_base_tag_ids; // sorted, for debug/info
@@ -339,6 +341,12 @@ struct PoolBuildRequest {
     std::vector<std::uint32_t> fossil_indices;
 };
 
+struct PoolBuildHints {
+    std::vector<std::uint64_t>* group_block_mask = nullptr;
+    bool block_attack = false;
+    bool block_caster = false;
+};
+
 struct PoolCacheKey {
     std::vector<std::uint64_t> candidate_mask;
     std::uint32_t tag_signature_id = 0;
@@ -355,8 +363,97 @@ struct PoolCacheKey {
     }
 };
 
+struct PoolCacheLookup {
+    const std::vector<std::uint64_t>* candidate_mask = nullptr;
+    std::uint32_t tag_signature_id = 0;
+    PoolWeightKind weight_kind = PoolWeightKind::Normal;
+    std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
+    const std::vector<std::uint32_t>* fossil_indices = nullptr;
+};
+
 struct PoolCacheKeyHash {
+    using is_transparent = void;
     std::size_t operator()(const PoolCacheKey& key) const;
+    std::size_t operator()(const PoolCacheLookup& key) const;
+};
+
+struct PoolCacheKeyEqual {
+    using is_transparent = void;
+    bool operator()(
+        const PoolCacheKey& a,
+        const PoolCacheKey& b) const {
+        return a == b;
+    }
+    bool operator()(
+        const PoolCacheKey& a,
+        const PoolCacheLookup& b) const;
+    bool operator()(
+        const PoolCacheLookup& a,
+        const PoolCacheKey& b) const {
+        return (*this)(b, a);
+    }
+};
+
+struct RefillPoolCacheKey {
+    std::vector<std::uint64_t> group_block_mask;
+    std::uint32_t tag_signature_id = 0;
+    PoolWeightKind weight_kind = PoolWeightKind::Normal;
+    std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint8_t influence_bits = 0;
+    std::int8_t side_filter = -1;
+    std::int8_t influence_only_code = -1;
+    bool block_attack = false;
+    bool block_caster = false;
+    std::vector<std::uint32_t> fossil_indices;
+
+    bool operator==(const RefillPoolCacheKey& other) const {
+        return group_block_mask == other.group_block_mask &&
+               tag_signature_id == other.tag_signature_id &&
+               weight_kind == other.weight_kind &&
+               target_tag_id == other.target_tag_id &&
+               influence_bits == other.influence_bits &&
+               side_filter == other.side_filter &&
+               influence_only_code == other.influence_only_code &&
+               block_attack == other.block_attack &&
+               block_caster == other.block_caster &&
+               fossil_indices == other.fossil_indices;
+    }
+};
+
+struct RefillPoolCacheLookup {
+    const std::vector<std::uint64_t>* group_block_mask = nullptr;
+    std::uint32_t tag_signature_id = 0;
+    PoolWeightKind weight_kind = PoolWeightKind::Normal;
+    std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
+    std::uint8_t influence_bits = 0;
+    std::int8_t side_filter = -1;
+    std::int8_t influence_only_code = -1;
+    bool block_attack = false;
+    bool block_caster = false;
+    const std::vector<std::uint32_t>* fossil_indices = nullptr;
+};
+
+struct RefillPoolCacheHash {
+    using is_transparent = void;
+    std::size_t operator()(const RefillPoolCacheKey& key) const;
+    std::size_t operator()(const RefillPoolCacheLookup& key) const;
+};
+
+struct RefillPoolCacheEqual {
+    using is_transparent = void;
+    bool operator()(
+        const RefillPoolCacheKey& a,
+        const RefillPoolCacheKey& b) const {
+        return a == b;
+    }
+    bool operator()(
+        const RefillPoolCacheKey& a,
+        const RefillPoolCacheLookup& b) const;
+    bool operator()(
+        const RefillPoolCacheLookup& a,
+        const RefillPoolCacheKey& b) const {
+        return (*this)(b, a);
+    }
 };
 
 struct PoolDebugRow {
@@ -400,15 +497,43 @@ struct ActionContextImpl {
     std::shared_ptr<const SessionImpl> session;
     Rng rng;
     std::unordered_map<std::string, std::uint32_t> signature_by_key;
+    std::array<std::uint32_t, 256> signature_by_influence_bits;
     std::vector<WeightTable> uncommon_weight_tables;
-    std::unordered_map<PoolCacheKey, WeightedPool, PoolCacheKeyHash> pool_cache;
+    std::unordered_map<
+        PoolCacheKey,
+        WeightedPool,
+        PoolCacheKeyHash,
+        PoolCacheKeyEqual>
+        pool_cache;
+    std::unordered_map<
+        RefillPoolCacheKey,
+        const WeightedPool*,
+        RefillPoolCacheHash,
+        RefillPoolCacheEqual>
+        refill_pool_cache;
+    const RefillPoolCacheKey* last_refill_pool_key = nullptr;
+    const WeightedPool* last_refill_pool = nullptr;
     std::vector<std::uint64_t> candidate_mask_scratch;
     std::vector<std::uint64_t> block_mask_scratch;
+    std::vector<std::uint64_t> influence_mask_scratch;
+    std::vector<std::uint64_t> empty_group_mask;
+    std::vector<std::uint32_t> occupied_groups_scratch;
     std::vector<ActionTraceStage> last_action_trace;
     std::uint64_t pool_cache_hits = 0;
     std::uint64_t pool_cache_misses = 0;
+    std::uint64_t candidate_build_ns = 0;
+    std::uint64_t weighted_pool_build_ns = 0;
+    std::uint64_t sampling_calls = 0;
+    std::uint64_t sampling_ns = 0;
+    bool perf_timing_enabled = false;
+    bool incremental_refill_enabled = true;
+    bool capture_action_trace = true;
 
-    explicit ActionContextImpl(std::uint64_t seed) : rng(seed) {}
+    explicit ActionContextImpl(std::uint64_t seed) : rng(seed) {
+        signature_by_influence_bits.fill(
+            std::numeric_limits<std::uint32_t>::max());
+        signature_by_influence_bits[0] = 0;
+    }
 };
 
 /*
@@ -446,7 +571,8 @@ const WeightedPool& get_weighted_pool(
     ActionContextImpl& context,
     const pc_item_state* item,
     const PoolBuildRequest& request,
-    bool* out_cache_hit = nullptr);
+    bool* out_cache_hit = nullptr,
+    const PoolBuildHints* hints = nullptr);
 
 void build_pool_debug_rows(
     ActionContextImpl& context,
@@ -482,7 +608,8 @@ enum class ActionType : int {
     EldritchExalt = 20,
     EldritchChaos = 21,
     EldritchAnnul = 22,
-    InfluenceExalt = 23
+    InfluenceExalt = 23,
+    Fracture = 24
 };
 
 struct ActionParameters {

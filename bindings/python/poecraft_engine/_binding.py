@@ -41,6 +41,7 @@ _ACTION_TYPES = {
     "eldritch_chaos": 21,
     "eldritch_annul": 22,
     "influence_exalt": 23,
+    "fracture": 24,
 }
 _RARITIES = {"normal": 0, "magic": 1, "rare": 2}
 _TERMINAL_KINDS = {"success": 0, "failure": 1, "stop": 2}
@@ -208,6 +209,19 @@ class _PoolDebugSummary(ct.Structure):
         ("combined_total_weight", ct.c_uint64),
         ("cache_hits", ct.c_uint64),
         ("cache_misses", ct.c_uint64),
+    ]
+
+class _ActionPerfStats(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("pool_requests", ct.c_uint64),
+        ("cache_hits", ct.c_uint64),
+        ("cache_misses", ct.c_uint64),
+        ("candidate_build_ns", ct.c_uint64),
+        ("weighted_pool_build_ns", ct.c_uint64),
+        ("sampling_calls", ct.c_uint64),
+        ("sampling_ns", ct.c_uint64),
     ]
 
 
@@ -478,6 +492,19 @@ _lib.pc_action_context_create.argtypes = [
 ]
 _lib.pc_action_context_create.restype = ct.c_int32
 _lib.pc_action_context_destroy.argtypes = [_handle]
+_lib.pc_action_context_perf_stats_query.argtypes = [
+    _handle,
+    ct.POINTER(_ActionPerfStats),
+    ct.c_int32,
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_action_context_perf_stats_query.restype = ct.c_int32
+_lib.pc_action_context_perf_timing_set.argtypes = [
+    _handle,
+    ct.c_int32,
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_action_context_perf_timing_set.restype = ct.c_int32
 _lib.pc_item_init.argtypes = [
     _handle,
     ct.POINTER(_ItemInitOptions),
@@ -1466,6 +1493,41 @@ class ActionContext(_OwnedHandle):
     def _check_item(self, item: Item) -> None:
         if item._session is not self._session:
             raise ValueError("item belongs to a different session")
+
+    def performance_stats(self, *, reset: bool = False) -> dict[str, int | float]:
+        stats = _ActionPerfStats()
+        error = _error()
+        _check(
+            _lib.pc_action_context_perf_stats_query(
+                self._handle,
+                ct.byref(stats),
+                int(reset),
+                ct.byref(error),
+            ),
+            error,
+        )
+        requests = stats.pool_requests
+        return {
+            "pool_requests": requests,
+            "cache_hits": stats.cache_hits,
+            "cache_misses": stats.cache_misses,
+            "cache_hit_rate": stats.cache_hits / requests if requests else 0.0,
+            "candidate_build_ns": stats.candidate_build_ns,
+            "weighted_pool_build_ns": stats.weighted_pool_build_ns,
+            "sampling_calls": stats.sampling_calls,
+            "sampling_ns": stats.sampling_ns,
+        }
+
+    def set_performance_timing(self, enabled: bool) -> None:
+        error = _error()
+        _check(
+            _lib.pc_action_context_perf_timing_set(
+                self._handle,
+                int(enabled),
+                ct.byref(error),
+            ),
+            error,
+        )
 
     def apply(
         self, item: Item, action: str | Mapping[str, Any]

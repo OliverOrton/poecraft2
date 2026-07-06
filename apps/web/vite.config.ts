@@ -6,6 +6,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..");
 
 export default defineConfig({
+    // Browser/Electron shells may expose a partial global process object inside
+    // workers. The Emscripten module must still select its web-worker loader in
+    // the production bundle; the unbundled Node test module keeps native Node
+    // detection.
+    define: {
+        "globalThis.process": "undefined",
+    },
     // The engine worker imports the generated WASM module from
     // bindings/wasm/dist, which sits outside the app root; allow the dev server
     // to read from the repo root so that import resolves.

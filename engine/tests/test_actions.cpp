@@ -47,6 +47,9 @@ SessionImpl make_synth_session() {
         pc_bitset_set(s.normal_random_roll_mask.data(), i);
         pc_bitset_set((i < 2 ? s.prefix_mask : s.suffix_mask).data(), i);
         pc_bitset_set(s.influence_masks[0].data(), i);
+        if (s.primary_group[i] >= s.group_masks.size()) {
+            s.group_masks.resize(s.primary_group[i] + 1);
+        }
         auto& group_mask = s.group_masks[s.primary_group[i]];
         if (group_mask.empty()) group_mask.assign(s.words, 0);
         pc_bitset_set(group_mask.data(), i);
@@ -68,6 +71,85 @@ void run_reforge_unit_tests() {
         action.type = type;
         return apply_action(context, item, action);
     };
+
+    // The incremental refill sampler must preserve the reference path's RNG
+    // mapping, selected mods, and per-pick pool totals.
+    {
+        ActionContextImpl incremental(12345);
+        incremental.session = session;
+        incremental.incremental_refill_enabled = true;
+        ActionContextImpl reference(12345);
+        reference.session = session;
+        reference.incremental_refill_enabled = false;
+        pc_item_state fast;
+        pc_item_state slow;
+        pc_item_clear(&fast);
+        pc_item_clear(&slow);
+        fast.rarity = slow.rarity = PC_RARITY_RARE;
+        ActionParameters action;
+        action.type = ActionType::Chaos;
+        for (int iteration = 0; iteration < 32; ++iteration) {
+            const ActionOutcome fast_out =
+                apply_action(incremental, &fast, action);
+            const ActionOutcome slow_out =
+                apply_action(reference, &slow, action);
+            PC_CHECK(fast_out.applied == slow_out.applied);
+            PC_CHECK(fast_out.added == slow_out.added);
+            PC_CHECK(fast_out.removed == slow_out.removed);
+            PC_CHECK(fast.prefix_count == slow.prefix_count);
+            PC_CHECK(fast.suffix_count == slow.suffix_count);
+            for (std::uint8_t i = 0; i < fast.prefix_count; ++i) {
+                PC_CHECK(
+                    fast.prefixes[i].mod_id == slow.prefixes[i].mod_id);
+            }
+            for (std::uint8_t i = 0; i < fast.suffix_count; ++i) {
+                PC_CHECK(
+                    fast.suffixes[i].mod_id == slow.suffixes[i].mod_id);
+            }
+            PC_CHECK(incremental.last_action_trace.size() ==
+                     reference.last_action_trace.size());
+            for (std::size_t i = 0;
+                 i < incremental.last_action_trace.size(); ++i) {
+                const auto& a = incremental.last_action_trace[i];
+                const auto& b = reference.last_action_trace[i];
+                PC_CHECK(a.roll == b.roll);
+                PC_CHECK(a.chosen_mod_id == b.chosen_mod_id);
+                PC_CHECK(a.chosen_side == b.chosen_side);
+                PC_CHECK(a.prefix_total_weight == b.prefix_total_weight);
+                PC_CHECK(a.suffix_total_weight == b.suffix_total_weight);
+                PC_CHECK(a.combined_total_weight == b.combined_total_weight);
+            }
+        }
+        PC_CHECK(!incremental.refill_pool_cache.empty());
+    }
+
+    // Simulator-mode superset rejection remains unbiased over surviving mods.
+    // Mods 0 and 1 share equal weight/group, so exactly one survives each
+    // craft and their long-run selection rates should remain near 50/50.
+    {
+        ActionContextImpl rejection(98765);
+        rejection.session = session;
+        rejection.capture_action_trace = false;
+        int picked_zero = 0;
+        int picked_one = 0;
+        ActionParameters action;
+        action.type = ActionType::Chaos;
+        for (int iteration = 0; iteration < 10'000; ++iteration) {
+            pc_item_state item;
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            const ActionOutcome out =
+                apply_action(rejection, &item, action);
+            PC_CHECK(out.applied);
+            PC_CHECK(item.prefix_count == 1);
+            PC_CHECK(item.suffix_count == 1);
+            PC_CHECK(item.suffixes[0].mod_id == 2);
+            picked_zero += item.prefixes[0].mod_id == 0;
+            picked_one += item.prefixes[0].mod_id == 1;
+        }
+        PC_CHECK(picked_zero + picked_one == 10'000);
+        PC_CHECK(picked_zero > 4'700 && picked_zero < 5'300);
+    }
 
     // A) A removed (non-fractured) mod's group is freed: chaos rerolls a fresh
     //    group-10 prefix and a group-20 suffix. If the block were not cleared,
@@ -393,6 +475,63 @@ void run_integration_tests(const char* artifact_dir) {
         int total = item.prefix_count + item.suffix_count;
         PC_CHECK(total >= 1 && total <= 2);
         check_groups_distinct(session, &item);
+    }
+
+    // Fracturing Orb marks exactly one random explicit modifier, keeps the
+    // item otherwise unchanged, and cannot be applied twice.
+    {
+        pc_item_state item = make_item(session, PC_RARITY_NORMAL);
+        PC_CHECK(apply(ctx, &item, PC_ACTION_ALCHEMY).applied == 1);
+        const std::set<uint32_t> before = live_mod_ids(&item);
+        PC_CHECK(before.size() >= 4);
+
+        pc_action_result fractured = apply(ctx, &item, PC_ACTION_FRACTURE);
+        PC_CHECK(fractured.applied == 1);
+        PC_CHECK(fractured.added == 0 && fractured.removed == 0);
+        PC_CHECK(live_mod_ids(&item) == before);
+        int fractured_count = 0;
+        for (uint8_t i = 0; i < item.prefix_count; ++i)
+            fractured_count +=
+                (item.prefixes[i].flags & PC_MOD_SLOT_FRACTURED) != 0;
+        for (uint8_t i = 0; i < item.suffix_count; ++i)
+            fractured_count +=
+                (item.suffixes[i].flags & PC_MOD_SLOT_FRACTURED) != 0;
+        PC_CHECK(fractured_count == 1);
+        PC_CHECK(apply(ctx, &item, PC_ACTION_FRACTURE).applied == 0);
+
+        uint32_t trace_count = 0;
+        PC_CHECK(pc_action_context_debug_last_trace(
+                     ctx, nullptr, 0, &trace_count, &error) ==
+                 PC_RESULT_BUFFER_TOO_SMALL);
+        PC_CHECK(trace_count == 0); // failed second use clears the trace
+    }
+
+    // Generic influence and synthesised state block fracturing, while
+    // Eldritch implicits do not.
+    {
+        pc_item_state influenced = make_item(session, PC_RARITY_NORMAL);
+        PC_CHECK(apply(ctx, &influenced, PC_ACTION_ALCHEMY).applied == 1);
+        influenced.generic_influence_bits = 1;
+        PC_CHECK(apply(ctx, &influenced, PC_ACTION_FRACTURE).applied == 0);
+
+        pc_item_state synthesised = make_item(session, PC_RARITY_NORMAL);
+        PC_CHECK(apply(ctx, &synthesised, PC_ACTION_ALCHEMY).applied == 1);
+        synthesised.item_flags |= PC_ITEM_SYNTHESISED;
+        PC_CHECK(apply(ctx, &synthesised, PC_ACTION_FRACTURE).applied == 0);
+
+        pc_item_state eldritch = make_item(session, PC_RARITY_NORMAL);
+        PC_CHECK(apply(ctx, &eldritch, PC_ACTION_ALCHEMY).applied == 1);
+        pc_action_request ember{};
+        ember.struct_size = sizeof(ember);
+        ember.abi_version = PC_ABI_VERSION;
+        ember.action_type = PC_ACTION_ELDRITCH_EMBER;
+        ember.tier = 1;
+        pc_action_result ember_result{};
+        PC_CHECK(pc_apply_action(
+                     ctx, &eldritch, &ember, &ember_result, &error) ==
+                 PC_RESULT_OK);
+        PC_CHECK(ember_result.applied == 1);
+        PC_CHECK(apply(ctx, &eldritch, PC_ACTION_FRACTURE).applied == 1);
     }
 
     // exalt on a normal item is a no-op (wrong rarity)

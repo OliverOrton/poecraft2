@@ -28,6 +28,7 @@ import {
 export interface EngineTransport {
     postMessage(message: ClientMessage, transfer?: Transferable[]): void;
     onMessage(handler: (message: WorkerMessage) => void): void;
+    onError?(handler: (error: Error) => void): void;
     terminate?(): void;
 }
 
@@ -51,13 +52,16 @@ export class EngineClient {
     private abiVersion = 0;
     private readonly ready: Promise<void>;
     private resolveReady!: () => void;
+    private rejectReady!: (error: Error) => void;
 
     constructor(transport: EngineTransport) {
         this.transport = transport;
-        this.ready = new Promise((resolve) => {
+        this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
+            this.rejectReady = reject;
         });
         this.transport.onMessage((message) => this.onMessage(message));
+        this.transport.onError?.((error) => this.onError(error));
     }
 
     /** Create a client backed by a browser Web Worker loaded from this module's
@@ -72,6 +76,14 @@ export class EngineClient {
             onMessage: (handler) => {
                 worker.onmessage = (event: MessageEvent) =>
                     handler(event.data as WorkerMessage);
+            },
+            onError: (handler) => {
+                worker.onerror = (event: ErrorEvent) =>
+                    handler(
+                        new Error(
+                            event.message || "engine worker failed to start",
+                        ),
+                    );
             },
             terminate: () => worker.terminate(),
         });
@@ -111,6 +123,15 @@ export class EngineClient {
                 ),
             );
         }
+    }
+
+    private onError(error: Error): void {
+        this.rejectReady(error);
+        for (const pending of this.pending.values()) {
+            pending.abortCleanup?.();
+            pending.reject(error);
+        }
+        this.pending.clear();
     }
 
     private async call<T>(
@@ -225,6 +246,10 @@ export class EngineClient {
 
     closeContext(context: number): Promise<void> {
         return this.call<void>("closeContext", { context });
+    }
+
+    memoryStats(): Promise<{ wasm_memory_bytes: number }> {
+        return this.call("memoryStats", {});
     }
 
     async createItem(

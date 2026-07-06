@@ -67,8 +67,24 @@ crafting, metamod locks and cannot-roll filters, veiled exalt/chaos and unveil,
 Harvest reforge/augment/resistance conversion, Eldritch implicits and currency,
 generic influenced exalts, and current special fossil behavior. Sanctified
 required-level weighting, Bloodstained/Gilded implicits, and mirrored
-Fractured-Fossil output are covered across native, Python, and WASM. Phase 12
-accounts and standalone Phase 18 recombinators remain deferred.
+Fractured-Fossil output are covered across native, Python, and WASM.
+Fracturing Orb is also implemented across the shared action vocabulary, while
+the Emulator supports exact-mod fracture editing from item-row right-clicks
+and the condition builder supports fractured-family requirements.
+
+Phase 14 is complete. The benchmark harness records native and worker/WASM
+session, pool/cache, action, strategy, progress, and memory measurements. The
+measured hot-path optimization removes repeated common tag-signature work,
+skips a redundant combined-affix mask operation for both-side pools, and reuses
+influence-mask storage. Detailed timing probes are opt-in so normal simulations
+do not call the clock inside candidate and sampling loops. The benchmark matrix
+separates one- and ten-action Alteration and Chaos graphs; the Strategy Builder
+uses adaptive worker chunks and frame-throttled progress rendering, and shows
+the measured actions per second after each run.
+`scripts/package-public-artifacts.mjs` creates a content-addressed,
+hash-verified bundle for the native/WASM engines, compiled data, production UI,
+and economy snapshot. Phase 12 accounts and standalone Phase 18 recombinators
+remain deferred; Phase 15 publishing is not started.
 
 Python binding smoke example:
 
@@ -87,6 +103,16 @@ Build a self-contained Python wheel containing the native library:
 .\scripts\package-python.ps1
 ```
 
+Run the Phase 14 benchmarks and package immutable public-engine artifacts:
+
+```powershell
+.\scripts\benchmark.ps1
+Push-Location apps/web
+npm run build
+Pop-Location
+node .\scripts\package-public-artifacts.mjs
+```
+
 This repo is intended to house a native crafting simulation engine, a browser-based public simulator, and later ML tooling for crafting strategy suggestions.
 
 Start with:
@@ -99,6 +125,7 @@ Start with:
 - [docs/engine-bitsets.md](docs/engine-bitsets.md)
 - [docs/implementation-plan.md](docs/implementation-plan.md)
 - [docs/item-state-flow.md](docs/item-state-flow.md)
+- [docs/ml-strategy-planning.md](docs/ml-strategy-planning.md)
 - [docs/mod-data-and-pool-semantics.md](docs/mod-data-and-pool-semantics.md)
 - [docs/strategy-editor-ui.md](docs/strategy-editor-ui.md)
 - [docs/weight-calculation-flow.md](docs/weight-calculation-flow.md)

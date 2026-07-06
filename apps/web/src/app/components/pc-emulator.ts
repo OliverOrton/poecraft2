@@ -38,6 +38,7 @@ const BASIC_ACTIONS: CraftAction["type"][] = [
     "exalt",
     "annul",
     "scour",
+    "fracture",
 ];
 
 type CraftPanel =
@@ -739,7 +740,7 @@ export class PcEmulator extends HTMLElement {
                                     `<button data-simple-action="${type}">${craftActionLabel(type)}</button>`,
                             ).join("")}
                         </div>
-                        <div class="pc-fracture-hint">Right-click a modifier tier to add or mark it as fractured.</div>`;
+                        <div class="pc-fracture-hint">Use Fracture for the real random orb outcome. Right-click an item modifier to mark that exact mod fractured, or right-click a pool tier to add it fractured.</div>`;
                 case "essence":
                     return `
                         <div class="pc-mechanic-row">
@@ -1086,6 +1087,23 @@ export class PcEmulator extends HTMLElement {
                     detail.modId,
                     detail.side,
                     detail.onItem,
+                ),
+            );
+        });
+        this.modList.addEventListener("fracture-mod", (event) => {
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    true,
                 ),
             );
         });

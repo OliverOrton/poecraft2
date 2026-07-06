@@ -333,7 +333,8 @@ typedef enum pc_action_type {
     PC_ACTION_ELDRITCH_EXALT = 20,
     PC_ACTION_ELDRITCH_CHAOS = 21,
     PC_ACTION_ELDRITCH_ANNUL = 22,
-    PC_ACTION_INFLUENCE_EXALT = 23
+    PC_ACTION_INFLUENCE_EXALT = 23,
+    PC_ACTION_FRACTURE = 24
 } pc_action_type;
 
 #define PC_MAX_FOSSILS_PER_ACTION 4
@@ -460,6 +461,39 @@ typedef struct pc_pool_debug_summary {
     uint64_t cache_hits;
     uint64_t cache_misses;
 } pc_pool_debug_summary;
+
+typedef struct pc_action_perf_stats {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint64_t pool_requests;
+    uint64_t cache_hits;
+    uint64_t cache_misses;
+    uint64_t candidate_build_ns;
+    uint64_t weighted_pool_build_ns;
+    uint64_t sampling_calls;
+    uint64_t sampling_ns;
+} pc_action_perf_stats;
+
+/*
+ * Return cumulative low-overhead performance counters for this worker-local
+ * context. When reset is non-zero, the counters are cleared after the snapshot
+ * is copied to out_stats.
+ */
+pc_result pc_action_context_perf_stats_query(
+    pc_action_context_handle context,
+    pc_action_perf_stats* out_stats,
+    int32_t reset,
+    pc_error_info* out_error);
+
+/*
+ * Enable or disable detailed wall-clock timing for focused benchmark probes.
+ * Disabled by default so production simulation hot loops pay no clock-call
+ * cost. Cheap cache hit/miss counters remain available either way.
+ */
+pc_result pc_action_context_perf_timing_set(
+    pc_action_context_handle context,
+    int32_t enabled,
+    pc_error_info* out_error);
 
 /*
  * Inspect the exact pool used by an action request. With include_rejected=0,

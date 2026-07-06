@@ -837,8 +837,14 @@ Implemented baseline:
   Essences, Harvest, Fossil, Eldritch, Influenced, and Veiled panels. Essence
   selection is type-first with the highest available tier selected by default,
   and mechanic selections persist while crafting.
-- Modifier-pool right-clicking can add or mark an explicit modifier as
-  fractured. Strategy family conditions use the same gesture to require the
+- Fracturing Orb is a shared native/Python/WASM/strategy action. It fractures
+  one random explicit modifier on a rare item with at least four modifiers,
+  ignores metamods, rejects generic influence, synthesised state, and an
+  existing fracture, and remains legal with Eldritch implicits or split state.
+- Emulator item rows can be right-clicked to mark that exact modifier as
+  fractured for direct state editing; modifier-pool right-clicking can still
+  add a selected modifier already fractured. Strategy family conditions use
+  the same gesture in the condition picker or selected row to require the
   matched modifier to be fractured.
 - Item displays show influence badges, reserve stable modifier-row space, use
   modifier-specific text colors, and frame the item using its rarity color.
@@ -879,11 +885,44 @@ tuning are justified.
 
 Acceptance gate:
 
-- Benchmarks show the new engine is meaningfully faster than an object-heavy Python baseline.
+- Benchmarks capture a pre-optimization native baseline and show a meaningful
+  improvement in the measured hot path. The retired object-heavy Python engine
+  is not used as a Phase 14 comparison.
 - Optimizations do not change rule fixtures, legality, or weight calculations.
 - A representative 100,000-run WASM job has bounded memory, visible progress, cancellation, and an acceptable completion time.
 - Engine, compiled game data, UI/cold data, and economy artifacts have immutable version/hash manifests suitable for publication retention.
-- Public publishing remains disabled until this gate passes.
+- Public publishing remains disabled until Phase 15 and the deferred Phase 12
+  account foundation are completed.
+
+Status: complete.
+
+- `tools/benchmark_engine.py` and `apps/web/test/performance-benchmark.ts`
+  measure native and worker/WASM session build, pool/cache, action, strategy,
+  progress, and memory behavior. The strategy matrix covers both one- and
+  ten-action runs with Alteration and Chaos actions so fixed per-run overhead
+  is not confused with weighted-roll throughput. `scripts/benchmark.ps1` runs
+  the full matrix.
+- Common non-influenced actions now use a direct tag-signature lookup, skip a
+  redundant combined-affix mask operation for both-side pools, and reuse
+  influence-mask storage. Detailed clock-based profiling is explicitly opt-in;
+  production action contexts retain cheap cache counters without making host
+  clock calls in candidate-building and modifier-sampling loops.
+- Against commit `7158ca5` with the same current data and direct WASM harness,
+  one-action Alteration improved from about 832k to 1.29m actions/s and
+  ten-action Alteration from 985k to 1.80m actions/s. One-action Chaos improved
+  from about 232k to 384k actions/s and ten-action Chaos from 252k to 456k
+  actions/s. Chaos is intentionally slower because each action performs four
+  to six weighted modifier draws.
+- Worker yielding uses `MessageChannel` instead of timer clamping and adapts
+  chunk sizes toward about 16 ms of native work. Strategy Builder progress
+  rendering is frame-throttled and no longer rebuilds the graph for every
+  chunk. A real warmed browser run of 100,000 one-action Alteration simulations
+  reports about 1.0m actions/s. The 100,000-run worker matrix retains visible
+  progress, prompt AbortSignal cancellation, and zero WASM memory growth after
+  simulator creation.
+- `scripts/package-public-artifacts.mjs` builds a content-addressed,
+  hash-verified manifest containing native and WASM engines, compiled game
+  data, production UI/cold assets, and an immutable no-price economy snapshot.
 
 ## Phase 15: Publishing And Discovery
 
@@ -965,6 +1004,11 @@ Acceptance gate:
 
 Goal: add ML tooling after simulator correctness and throughput are stable.
 
+The detailed planning, model, training, graph-synthesis, and benchmark direction
+is defined in [ml-strategy-planning.md](ml-strategy-planning.md). Phase 17 should
+be decomposed into the ML-0 through ML-5 research gates in that document before
+implementation begins.
+
 Initial ML path:
 
 ```text
@@ -1012,16 +1056,9 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Phase 13 is complete. Phase 14 is the next planned phase, but do not begin it
-without an explicit request.
-
-```text
-measure current native and WASM performance
-capture session/pool/cache/action throughput baselines
-optimize only where the measurements justify it
-```
-
-Phase 12 remains deferred. Recombinators remain deferred to Phase 18.
+Phase 14 is complete. Phase 15 publishing remains blocked until the deferred
+Phase 12 account and sync foundation is explicitly resumed and completed.
+Recombinators remain deferred to Phase 18.
 
 ## Definition Of Done For MVP
 

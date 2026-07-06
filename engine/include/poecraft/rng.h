@@ -23,8 +23,8 @@ public:
     /* Uniform double in [0, 1). */
     double next_double();
 
-    /* Uniform integer in [0, bound). Returns 0 when bound is 0. Unbiased via
-     * rejection sampling. */
+    /* Uniform integer in [0, bound). Returns 0 when bound is 0. Uses unbiased
+     * multiply-high rejection sampling. */
     std::uint64_t next_below(std::uint64_t bound);
 
 private:

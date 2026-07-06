@@ -32,14 +32,23 @@ export class PcSimulator extends HTMLElement {
         const wasRunning = this.view.running;
         this.view = view;
         if (view.running && !wasRunning) {
-            this.runStartMs = performance.now();
-            this.runEndMs = 0;
-            this.startTimer();
+            this.beginMeasurement();
         } else if (!view.running && wasRunning) {
-            this.runEndMs = performance.now();
-            this.stopTimer();
+            this.endMeasurement();
         }
         this.render();
+    }
+
+    beginMeasurement(): void {
+        this.runStartMs = performance.now();
+        this.runEndMs = 0;
+        this.startTimer();
+    }
+
+    endMeasurement(): void {
+        if (!this.runStartMs || this.runEndMs) return;
+        this.runEndMs = performance.now();
+        this.stopTimer();
     }
 
     private startTimer(): void {
@@ -78,6 +87,12 @@ export class PcSimulator extends HTMLElement {
             summary && summary.costed_action_count > 0
                 ? (summary.known_total_cost / completed).toFixed(2)
                 : "—";
+        const actionsPerSecond =
+            summary && !running && this.elapsedMs() > 0
+                ? formatThroughput(
+                      (summary.total_actions * 1000) / this.elapsedMs(),
+                  )
+                : "—";
         this.innerHTML = `
             <div class="pc-simulator-controls">
                 <button data-cmd="run-once" ${running || disabled ? "disabled" : ""}>Run once</button>
@@ -107,6 +122,7 @@ export class PcSimulator extends HTMLElement {
                 ${metric("Success rate", `${successRate}${successRate === "—" ? "" : "%"}`)}
                 ${metric("Total actions", summary ? summary.total_actions.toLocaleString() : "—")}
                 ${metric("Avg actions", avgActions)}
+                ${metric("Actions / sec", actionsPerSecond)}
                 ${metric("Avg known cost", avgCost)}
                 ${metric("Cost", summary?.cost_status ?? "—")}
                 <div class="pc-sim-metric"><span>Time</span><strong data-sim-elapsed>${formatElapsed(
@@ -190,6 +206,10 @@ function formatElapsed(ms: number): string {
     const minutes = Math.floor(ms / 60_000);
     const seconds = Math.round((ms % 60_000) / 1000);
     return `${minutes}m ${seconds}s`;
+}
+
+function formatThroughput(actionsPerSecond: number): string {
+    return Math.round(actionsPerSecond).toLocaleString();
 }
 
 function metric(label: string, value: string): string {

@@ -4,6 +4,7 @@
 #include "poecraft/item_state.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -170,44 +171,156 @@ std::uint8_t max_affix(const SessionImpl& session, const pc_item_state* item) {
     }
 }
 
-// Draw one mod from the open affix sides and append it. Prefix/suffix candidates
-// share one prefix-sum table, so the side is always selected by total weight.
-bool add_random_mod(
-    ActionContextImpl& context,
-    const PoolBuildRequest& base_request,
-    pc_item_state* item) {
-    const SessionImpl& session = *context.session;
+int open_side_filter(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    const PoolBuildRequest& base_request) {
     const std::uint8_t cap = max_affix(session, item);
     const bool prefix_open =
         item->prefix_count < cap && base_request.side_filter != 1;
     const bool suffix_open =
         item->suffix_count < cap && base_request.side_filter != 0;
-    int side_filter;
-    if (prefix_open && suffix_open) {
-        side_filter = -1;
-    } else if (prefix_open) {
-        side_filter = 0;
-    } else if (suffix_open) {
-        side_filter = 1;
-    } else {
-        return false;
+    if (prefix_open && suffix_open) return -1;
+    if (prefix_open) return 0;
+    if (suffix_open) return 1;
+    return -2;
+}
+
+void record_weighted_pick(
+    ActionContextImpl& context,
+    const pc_item_state* item,
+    const PoolBuildRequest& request,
+    int side_filter,
+    bool cache_hit,
+    std::uint64_t prefix_total_weight,
+    std::uint64_t suffix_total_weight,
+    std::uint64_t total_weight,
+    std::uint64_t roll,
+    const PoolEntry& chosen) {
+    if (!context.capture_action_trace) return;
+    ActionTraceStage stage;
+    stage.stage_index =
+        static_cast<std::uint32_t>(context.last_action_trace.size());
+    stage.cache_hit = cache_hit;
+    stage.tag_signature_id = intern_item_tag_signature(context, item);
+    stage.weight_kind = request.weight_kind;
+    stage.side_filter = side_filter;
+    stage.prefix_total_weight = prefix_total_weight;
+    stage.suffix_total_weight = suffix_total_weight;
+    stage.combined_total_weight = total_weight;
+    stage.roll = roll;
+    stage.chosen_mod_id = chosen.session_mod_id;
+    stage.chosen_side = chosen.gen_type;
+    context.last_action_trace.push_back(stage);
+}
+
+void or_mod_group_masks(
+    const SessionImpl& session,
+    std::uint32_t mod_id,
+    std::vector<std::uint64_t>& block_mask) {
+    if (mod_id >= session.mod_count) return;
+    for (std::uint32_t i = session.group_offsets[mod_id];
+         i < session.group_offsets[mod_id + 1]; ++i) {
+        const std::uint32_t group = session.group_ids[i];
+        if (group < session.group_masks.size()) {
+            const auto& mask = session.group_masks[group];
+            if (!mask.empty()) {
+                pc_bitset_or(
+                    block_mask.data(), block_mask.data(), mask.data(),
+                    session.words);
+            }
+        }
     }
+}
+
+void build_refill_group_block_mask(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    std::vector<std::uint64_t>& block_mask) {
+    block_mask.assign(session.words, 0);
+    auto add_slot = [&](const pc_mod_slot& slot) {
+        if (slot.mod_id == PC_MOD_NONE) return;
+        if (slot.mod_id < session.mod_count) {
+            or_mod_group_masks(session, slot.mod_id, block_mask);
+        } else if (slot.group_id < session.group_masks.size()) {
+            const auto& mask = session.group_masks[slot.group_id];
+            if (!mask.empty()) {
+                pc_bitset_or(
+                    block_mask.data(), block_mask.data(), mask.data(),
+                    session.words);
+            }
+        }
+    };
+    for (std::uint8_t i = 0; i < item->prefix_count; ++i) {
+        add_slot(item->prefixes[i]);
+    }
+    for (std::uint8_t i = 0; i < item->suffix_count; ++i) {
+        add_slot(item->suffixes[i]);
+    }
+}
+
+void build_refill_metamod_hints(
+    const SessionImpl& session,
+    const pc_item_state* item,
+    PoolBuildHints& hints) {
+    const int attack_code = session.data->metamod_no_attack_code;
+    const int caster_code = session.data->metamod_no_caster_code;
+    auto scan = [&](const pc_mod_slot* slots, std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const std::uint32_t id = slots[i].mod_id;
+            if (id >= session.metamod_type.size()) continue;
+            hints.block_attack |=
+                session.metamod_type[id] == attack_code;
+            hints.block_caster |=
+                session.metamod_type[id] == caster_code;
+        }
+    };
+    scan(item->prefixes, item->prefix_count);
+    scan(item->suffixes, item->suffix_count);
+}
+
+// Draw one mod from the open affix sides and append it. Prefix/suffix candidates
+// share one prefix-sum table, so the side is always selected by total weight.
+bool add_random_mod(
+    ActionContextImpl& context,
+    const PoolBuildRequest& base_request,
+    pc_item_state* item,
+    PoolBuildHints* refill_hints = nullptr,
+    std::uint32_t* out_mod_id = nullptr) {
+    const SessionImpl& session = *context.session;
+    const int side_filter =
+        open_side_filter(session, item, base_request);
+    if (side_filter == -2) return false;
 
     PoolBuildRequest request = base_request;
     request.side_filter = side_filter;
     bool cache_hit = false;
     const WeightedPool& pool =
-        get_weighted_pool(context, item, request, &cache_hit);
+        get_weighted_pool(
+            context, item, request, &cache_hit, refill_hints);
     if (pool.total_weight == 0) {
         return false;
     }
 
+    std::chrono::steady_clock::time_point sampling_started;
+    if (context.perf_timing_enabled) {
+        sampling_started = std::chrono::steady_clock::now();
+    }
     const std::uint64_t roll = context.rng.next_below(pool.total_weight);
     const auto it =
         std::lower_bound(pool.prefix_sums.begin(), pool.prefix_sums.end(),
                          roll + 1);
+    if (context.perf_timing_enabled) {
+        ++context.sampling_calls;
+        context.sampling_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - sampling_started)
+                    .count());
+    }
     const PoolEntry& chosen =
         pool.entries[static_cast<std::size_t>(it - pool.prefix_sums.begin())];
+    if (out_mod_id != nullptr) *out_mod_id = chosen.session_mod_id;
     const bool added =
         pc_item_add_mod(item,
                         chosen.gen_type == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
@@ -215,22 +328,146 @@ bool add_random_mod(
                         static_cast<std::uint16_t>(chosen.primary_group), 0,
                         nullptr) == PC_RESULT_OK;
     if (added) {
-        ActionTraceStage stage;
-        stage.stage_index =
-            static_cast<std::uint32_t>(context.last_action_trace.size());
-        stage.cache_hit = cache_hit;
-        stage.tag_signature_id = intern_item_tag_signature(context, item);
-        stage.weight_kind = request.weight_kind;
-        stage.side_filter = side_filter;
-        stage.prefix_total_weight = pool.prefix_total_weight;
-        stage.suffix_total_weight = pool.suffix_total_weight;
-        stage.combined_total_weight = pool.total_weight;
-        stage.roll = roll;
-        stage.chosen_mod_id = chosen.session_mod_id;
-        stage.chosen_side = chosen.gen_type;
-        context.last_action_trace.push_back(stage);
+        record_weighted_pick(
+            context, item, request, side_filter, cache_hit,
+            pool.prefix_total_weight, pool.suffix_total_weight,
+            pool.total_weight, roll, chosen);
+        if (refill_hints != nullptr) {
+            or_mod_group_masks(
+                session, chosen.session_mod_id,
+                *refill_hints->group_block_mask);
+            if (chosen.session_mod_id < session.metamod_type.size()) {
+                refill_hints->block_attack |=
+                    session.metamod_type[chosen.session_mod_id] ==
+                    session.data->metamod_no_attack_code;
+                refill_hints->block_caster |=
+                    session.metamod_type[chosen.session_mod_id] ==
+                    session.data->metamod_no_caster_code;
+            }
+        }
     }
     return added;
+}
+
+bool add_random_mod_from_superset(
+    ActionContextImpl& context,
+    const WeightedPool& superset,
+    const PoolBuildRequest& base_request,
+    pc_item_state* item,
+    PoolBuildHints& refill_hints,
+    std::uint32_t max_rejections) {
+    const SessionImpl& session = *context.session;
+    auto tag_mask = [&](bool blocked, const char* name)
+        -> const std::vector<std::uint64_t>* {
+        if (!blocked) return nullptr;
+        const auto tag = session.data->tag_id_by_name.find(name);
+        if (tag == session.data->tag_id_by_name.end() ||
+            tag->second >= session.implicit_tag_masks.size()) {
+            return nullptr;
+        }
+        const auto& mask = session.implicit_tag_masks[tag->second];
+        return mask.empty() ? nullptr : &mask;
+    };
+    const auto* attack_mask =
+        tag_mask(refill_hints.block_attack, "attack");
+    const auto* caster_mask =
+        tag_mask(refill_hints.block_caster, "caster");
+    for (std::uint32_t attempt = 0; attempt <= max_rejections; ++attempt) {
+        if (superset.total_weight == 0) return false;
+        const std::uint64_t roll =
+            context.rng.next_below(superset.total_weight);
+        const auto it = std::lower_bound(
+            superset.prefix_sums.begin(), superset.prefix_sums.end(),
+            roll + 1);
+        const PoolEntry& chosen =
+            superset.entries[
+                static_cast<std::size_t>(
+                    it - superset.prefix_sums.begin())];
+        const int side_filter =
+            open_side_filter(session, item, base_request);
+        if (side_filter == -2) return false;
+        const bool side_allowed =
+            side_filter < 0 || chosen.gen_type == side_filter;
+        const bool group_allowed =
+            !pc_bitset_test(
+                refill_hints.group_block_mask->data(),
+                chosen.session_mod_id);
+        const bool metamod_allowed =
+            (attack_mask == nullptr ||
+             !pc_bitset_test(
+                 attack_mask->data(), chosen.session_mod_id)) &&
+            (caster_mask == nullptr ||
+             !pc_bitset_test(
+                 caster_mask->data(), chosen.session_mod_id));
+        if (!side_allowed || !group_allowed || !metamod_allowed) continue;
+
+        const bool added =
+            pc_item_add_mod(
+                item,
+                chosen.gen_type == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX,
+                chosen.session_mod_id,
+                static_cast<std::uint16_t>(chosen.primary_group), 0,
+                nullptr) == PC_RESULT_OK;
+        if (!added) return false;
+        or_mod_group_masks(
+            session, chosen.session_mod_id,
+            *refill_hints.group_block_mask);
+        if (chosen.session_mod_id < session.metamod_type.size()) {
+            refill_hints.block_attack |=
+                session.metamod_type[chosen.session_mod_id] ==
+                session.data->metamod_no_attack_code;
+            refill_hints.block_caster |=
+                session.metamod_type[chosen.session_mod_id] ==
+                session.data->metamod_no_caster_code;
+        }
+        return true;
+    }
+    return add_random_mod(
+        context, base_request, item, &refill_hints);
+}
+
+void fill_random_mods(
+    ActionContextImpl& context,
+    const PoolBuildRequest& base_request,
+    pc_item_state* item,
+    int target_total) {
+    int total = item->prefix_count + item->suffix_count;
+    const SessionImpl& session = *context.session;
+    PoolBuildHints hints;
+    PoolBuildHints* refill_hints = nullptr;
+    if (context.incremental_refill_enabled && target_total - total > 1) {
+        build_refill_group_block_mask(
+            session, item, context.block_mask_scratch);
+        hints.group_block_mask = &context.block_mask_scratch;
+        build_refill_metamod_hints(session, item, hints);
+        refill_hints = &hints;
+    }
+    const WeightedPool* rejection_superset = nullptr;
+    if (refill_hints != nullptr && !context.capture_action_trace) {
+        if (context.empty_group_mask.size() != session.words) {
+            context.empty_group_mask.assign(session.words, 0);
+        }
+        PoolBuildHints superset_hints = hints;
+        superset_hints.group_block_mask = &context.empty_group_mask;
+        PoolBuildRequest superset_request = base_request;
+        superset_request.side_filter =
+            open_side_filter(session, item, base_request);
+        rejection_superset = &get_weighted_pool(
+            context, item, superset_request, nullptr, &superset_hints);
+    }
+    while (total < target_total) {
+        const bool added =
+            rejection_superset != nullptr
+                ? add_random_mod_from_superset(
+                      context, *rejection_superset, base_request, item,
+                      *refill_hints, 4)
+                : add_random_mod(
+                      context, base_request, item, refill_hints);
+        if (!added) {
+            break;
+        }
+        ++total;
+    }
 }
 
 bool add_direct_mod(
@@ -348,23 +585,21 @@ ActionOutcome reforge(
             context.last_action_trace.clear();
             return {};
         }
-        ActionTraceStage stage;
-        stage.stage_index =
-            static_cast<std::uint32_t>(context.last_action_trace.size());
-        stage.direct = true;
-        stage.tag_signature_id = intern_item_tag_signature(context, item);
-        stage.weight_kind = pool_request.weight_kind;
-        stage.chosen_mod_id = direct;
-        stage.chosen_side = session.gen_type[direct];
-        context.last_action_trace.push_back(stage);
-        ++total;
-    }
-    while (total < target_total) {
-        if (!add_random_mod(context, pool_request, item)) {
-            break;
+        if (context.capture_action_trace) {
+            ActionTraceStage stage;
+            stage.stage_index =
+                static_cast<std::uint32_t>(context.last_action_trace.size());
+            stage.direct = true;
+            stage.tag_signature_id = intern_item_tag_signature(context, item);
+            stage.weight_kind = pool_request.weight_kind;
+            stage.chosen_mod_id = direct;
+            stage.chosen_side = session.gen_type[direct];
+            context.last_action_trace.push_back(stage);
         }
         ++total;
     }
+    fill_random_mods(context, pool_request, item, target_total);
+    total = item->prefix_count + item->suffix_count;
     ActionOutcome out;
     out.applied = true;
     out.added = total - preserved;
@@ -484,6 +719,7 @@ void record_direct(
     const pc_item_state* item,
     std::uint32_t mod_id,
     int side) {
+    if (!context.capture_action_trace) return;
     ActionTraceStage stage;
     stage.stage_index =
         static_cast<std::uint32_t>(context.last_action_trace.size());
@@ -492,6 +728,33 @@ void record_direct(
     stage.chosen_mod_id = mod_id;
     stage.chosen_side = static_cast<std::int8_t>(side);
     context.last_action_trace.push_back(stage);
+}
+
+ActionOutcome do_fracture(
+    ActionContextImpl& context,
+    pc_item_state* item) {
+    if (item->rarity != PC_RARITY_RARE ||
+        item->generic_influence_bits != 0 ||
+        (item->item_flags & PC_ITEM_SYNTHESISED) != 0 ||
+        pc_item_find_fractured(item, nullptr, nullptr) == PC_RESULT_OK) {
+        return {};
+    }
+    const std::uint32_t total =
+        static_cast<std::uint32_t>(item->prefix_count + item->suffix_count);
+    if (total < 4) return {};
+
+    const std::uint32_t pick =
+        static_cast<std::uint32_t>(context.rng.next_below(total));
+    const int side =
+        pick < item->prefix_count ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX;
+    const std::uint32_t index =
+        side == PC_SIDE_PREFIX ? pick : pick - item->prefix_count;
+    pc_mod_slot& slot =
+        side == PC_SIDE_PREFIX ? item->prefixes[index]
+                               : item->suffixes[index];
+    slot.flags |= PC_MOD_SLOT_FRACTURED;
+    record_direct(context, item, slot.mod_id, side);
+    return {true, 0, 0};
 }
 
 std::vector<std::uint32_t> ids_from_mask(
@@ -636,9 +899,7 @@ ActionOutcome do_harvest_reforge(
     guaranteed.target_tag_id = tag_id;
     if (!add_random_mod(context, guaranteed, item)) return {};
     int target = std::min<int>(rare_count(context), session.rare_affix_cap * 2);
-    while (item->prefix_count + item->suffix_count < target) {
-        if (!add_random_mod(context, PoolBuildRequest{}, item)) break;
-    }
+    fill_random_mods(context, PoolBuildRequest{}, item, target);
     const int after = item->prefix_count + item->suffix_count;
     return {true, after - static_cast<int>(kept.size()),
             before - static_cast<int>(kept.size())};
@@ -657,11 +918,11 @@ ActionOutcome do_harvest_augment(
     PoolBuildRequest request;
     request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
     request.target_tag_id = tag_id;
-    if (!add_random_mod(context, request, item)) return {};
-    const std::uint32_t added_id =
-        context.last_action_trace.empty()
-            ? kNoMod
-            : context.last_action_trace.back().chosen_mod_id;
+    std::uint32_t added_id = kNoMod;
+    if (!add_random_mod(
+            context, request, item, nullptr, &added_id)) {
+        return {};
+    }
     struct Ref { int side; std::uint32_t index; };
     std::vector<Ref> removable;
     auto collect = [&](int side, const pc_mod_slot* slots, std::uint8_t count) {
@@ -834,10 +1095,12 @@ ActionOutcome do_eldritch_chaos(
     const int target = 2 + static_cast<int>(context.rng.next_below(2));
     PoolBuildRequest request;
     request.side_filter = side;
-    while ((side == PC_SIDE_PREFIX ? item->prefix_count : item->suffix_count) <
-           target) {
-        if (!add_random_mod(context, request, item)) break;
-    }
+    fill_random_mods(
+        context, request, item,
+        item->prefix_count + item->suffix_count +
+            target -
+            (side == PC_SIDE_PREFIX ? item->prefix_count
+                                    : item->suffix_count));
     return {true, target - (has_fractured ? 1 : 0),
             static_cast<int>(count) - (has_fractured ? 1 : 0)};
 }
@@ -902,7 +1165,9 @@ ActionOutcome apply_action(
     pc_item_state* item,
     const ActionParameters& action) {
     const SessionImpl& session = *context.session;
-    context.last_action_trace.clear();
+    if (context.capture_action_trace) {
+        context.last_action_trace.clear();
+    }
     if (!item_craftable(item)) return {};
     switch (action.type) {
     case ActionType::Transmute:
@@ -1006,9 +1271,8 @@ ActionOutcome apply_action(
         restore_slots(item, kept);
         const int target = std::min<int>(
             rare_count(context), session.rare_affix_cap * 2);
-        while (item->prefix_count + item->suffix_count < target - 1) {
-            if (!add_random_mod(context, PoolBuildRequest{}, item)) break;
-        }
+        fill_random_mods(
+            context, PoolBuildRequest{}, item, target - 1);
         if (!add_veiled_mod(context, item)) return {};
         const int after = item->prefix_count + item->suffix_count;
         return {true, after - static_cast<int>(kept.size()),
@@ -1090,6 +1354,8 @@ ActionOutcome apply_action(
         }
         return {true, 1, 0};
     }
+    case ActionType::Fracture:
+        return do_fracture(context, item);
     }
     return {};
 }

@@ -53,6 +53,26 @@ export class PcModList extends HTMLElement {
                 ${renderSlotGroup("Prefixes", "prefix", model.prefixes, model.maxPrefix)}
                 ${renderSlotGroup("Suffixes", "suffix", model.suffixes, model.maxSuffix)}
             </div>`;
+        this.querySelectorAll<HTMLElement>(
+            '.pc-mod-slot.is-filled[data-side][data-mod-id]',
+        ).forEach((row) => {
+            row.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                if (row.dataset.fractured === "true") return;
+                const side = row.dataset.side;
+                if (side !== "prefix" && side !== "suffix") return;
+                this.dispatchEvent(
+                    new CustomEvent("fracture-mod", {
+                        bubbles: true,
+                        detail: {
+                            key: row.dataset.modKey ?? "",
+                            modId: Number(row.dataset.modId),
+                            side,
+                        },
+                    }),
+                );
+            });
+        });
     }
 }
 
@@ -102,10 +122,14 @@ function renderFilledSlot(mod: SlotMod, side: "prefix" | "suffix" | "implicit"):
             : `${sideTitle} Modifier "${escapeHtml(mod.displayName || mod.key)}" ${
                   mod.tierIndex ? `(Tier: ${mod.tierIndex})` : ""
               }`;
+    const fractureAttributes =
+        side === "implicit"
+            ? ""
+            : ` data-side="${side}" data-mod-id="${mod.sessionModId}" data-mod-key="${escapeAttribute(mod.key)}" data-fractured="${mod.fractured ? "true" : "false"}" title="${mod.fractured ? "Fractured modifier" : "Right-click to mark this modifier as fractured"}"`;
     return `
         <li class="pc-mod-slot pc-mod-${side} is-filled ${mod.crafted ? "is-crafted" : ""} ${
         mod.fractured ? "is-fractured" : ""
-    }">
+    }"${fractureAttributes}>
             <div class="pc-mod-slot-helper">${helper}</div>
             <div class="pc-mod-slot-lines">
                 ${lines
@@ -139,6 +163,10 @@ function escapeHtml(text: string): string {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+}
+
+function escapeAttribute(text: string): string {
+    return escapeHtml(text).replace(/"/g, "&quot;");
 }
 
 function formatTag(tag: string): string {

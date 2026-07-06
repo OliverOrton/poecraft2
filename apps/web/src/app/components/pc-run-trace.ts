@@ -14,6 +14,20 @@ const ACTION_NAMES = [
     "Scour",
     "Essence",
     "Fossil",
+    "Bench",
+    "Veiled Chaos",
+    "Veiled Exalt",
+    "Unveil",
+    "Harvest Reforge",
+    "Harvest Augment",
+    "Harvest Resist",
+    "Eldritch Ember",
+    "Eldritch Ichor",
+    "Eldritch Exalt",
+    "Eldritch Chaos",
+    "Eldritch Annul",
+    "Influence Exalt",
+    "Fracturing Orb",
 ];
 
 export class PcRunTrace extends HTMLElement {

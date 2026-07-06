@@ -8,7 +8,7 @@
  * delivered, keeping the UI responsive and cancellation prompt.
  */
 
-import { createEngineBindings, EngineBindings } from "./engine-wasm";
+import type { EngineBindings } from "./engine-wasm";
 import {
     Catalog,
     CatalogEntry,
@@ -16,6 +16,7 @@ import {
     CraftAction,
     EngineError,
     SimulationOptions,
+    SimulationProgress,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -171,7 +172,24 @@ function catalogFor(data: number): Catalog {
     return catalog;
 }
 
-const yieldToEventLoop = (): Promise<void> =>
+const yieldToEventLoop = (() => {
+    if (typeof MessageChannel !== "undefined") {
+        const channel = new MessageChannel();
+        const pending: Array<() => void> = [];
+        channel.port1.onmessage = () => {
+            pending.shift()?.();
+        };
+        return (): Promise<void> =>
+            new Promise((resolve) => {
+                pending.push(resolve);
+                channel.port2.postMessage(undefined);
+            });
+    }
+    return (): Promise<void> =>
+        new Promise((resolve) => setTimeout(resolve, 0));
+})();
+
+const yieldToTimerTask = (): Promise<void> =>
     new Promise((resolve) => setTimeout(resolve, 0));
 
 async function runStrategy(
@@ -180,7 +198,23 @@ async function runStrategy(
 ): Promise<StrategyResult> {
     const simulator = params.simulator as number;
     const options = params.options as SimulationOptions;
-    const chunkSize = (params.chunkSize as number) || DEFAULT_CHUNK_SIZE;
+    let chunkSize = (params.chunkSize as number) || DEFAULT_CHUNK_SIZE;
+    let yieldCount = 0;
+    const runChunk = (): SimulationProgress => {
+        const started = performance.now();
+        const progress = bindings.runSimulatorChunk(
+            simulator,
+            options,
+            chunkSize,
+        );
+        const elapsedMs = Math.max(0.1, performance.now() - started);
+        const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
+        chunkSize = Math.min(
+            10_000,
+            Math.max(1, Math.round(chunkSize * scale)),
+        );
+        return progress;
+    };
 
     if (cancelled.has(id)) {
         const progress = bindings.runSimulatorChunk(simulator, options, 0);
@@ -190,7 +224,7 @@ async function runStrategy(
             ...bindings.simulatorResult(simulator),
         };
     }
-    let progress = bindings.runSimulatorChunk(simulator, options, chunkSize);
+    let progress = runChunk();
     post({
         kind: "progress",
         id,
@@ -198,8 +232,13 @@ async function runStrategy(
         total: progress.target_runs,
     });
     while (!progress.finished) {
-        // Yield so queued cancel messages are processed before the next chunk.
-        await yieldToEventLoop();
+        // MessageChannel is the low-latency yield, but some worker runtimes can
+        // repeatedly service its private queue before incoming cancel messages.
+        // Periodically use a timer task to guarantee external messages a turn.
+        ++yieldCount;
+        await (yieldCount % 4 === 0
+            ? yieldToTimerTask()
+            : yieldToEventLoop());
         if (cancelled.has(id)) {
             return {
                 cancelled: true,
@@ -207,7 +246,7 @@ async function runStrategy(
                 ...bindings.simulatorResult(simulator),
             };
         }
-        progress = bindings.runSimulatorChunk(simulator, options, chunkSize);
+        progress = runChunk();
         post({
             kind: "progress",
             id,
@@ -273,6 +312,8 @@ async function dispatch(
         case "closeContext":
             bindings.closeContext(params.context as number);
             return {};
+        case "memoryStats":
+            return bindings.memoryStats();
         case "createItem":
             return {
                 item: bindings.createItem(
@@ -389,10 +430,24 @@ async function handle(message: ClientMessage): Promise<void> {
 }
 
 async function main(): Promise<void> {
-    bindings = await createEngineBindings();
     const isBrowserWorker =
-        typeof (globalThis as { WorkerGlobalScope?: unknown }).WorkerGlobalScope !==
-        "undefined";
+        typeof (globalThis as { postMessage?: unknown }).postMessage ===
+            "function" &&
+        typeof (globalThis as { document?: unknown }).document === "undefined";
+    if (
+        isBrowserWorker &&
+        typeof (globalThis as { WorkerGlobalScope?: unknown })
+            .WorkerGlobalScope === "undefined"
+    ) {
+        // Some embedded Chromium shells omit the WorkerGlobalScope constructor
+        // even though the module is running in a real worker. Emscripten uses
+        // this marker to choose its fetch-based worker loader.
+        (
+            globalThis as { WorkerGlobalScope?: unknown }
+        ).WorkerGlobalScope = Object;
+    }
+    const { createEngineBindings } = await import("./engine-wasm");
+    bindings = await createEngineBindings();
     if (isBrowserWorker) {
         const scope = globalThis as unknown as {
             postMessage: (message: unknown) => void;

@@ -62,6 +62,19 @@ void run_rng_tests() {
     }
     PC_CHECK(all_seen);
 
+    /* Edge bounds exercise multiply-high and its rejection threshold. */
+    Rng h(88);
+    bool edge_bounds_ok = true;
+    for (int i = 0; i < 1000; ++i) {
+        edge_bounds_ok &= h.next_below(1) == 0;
+        edge_bounds_ok &=
+            h.next_below(UINT64_MAX) < UINT64_MAX;
+        edge_bounds_ok &=
+            h.next_below((std::uint64_t{1} << 63) + 1) <
+            (std::uint64_t{1} << 63) + 1;
+    }
+    PC_CHECK(edge_bounds_ok);
+
     /* next_double in [0, 1). */
     Rng g(5);
     bool double_ok = true;

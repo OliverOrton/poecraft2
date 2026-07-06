@@ -131,6 +131,7 @@ bool action_type_from_name(const std::string& name, int32_t& out) {
         {"eldritch_chaos", PC_ACTION_ELDRITCH_CHAOS},
         {"eldritch_annul", PC_ACTION_ELDRITCH_ANNUL},
         {"influence_exalt", PC_ACTION_INFLUENCE_EXALT},
+        {"fracture", PC_ACTION_FRACTURE},
     };
     for (const auto& entry : table) {
         if (name == entry.first) {
