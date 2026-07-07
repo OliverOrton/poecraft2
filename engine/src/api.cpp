@@ -4,6 +4,7 @@
 #include "poecraft/simulator.h"
 
 #include "engine_internal.hpp"
+#include "handles_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -14,26 +15,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-/* Opaque handle bodies. */
-struct pc_data {
-    std::shared_ptr<poecraft::DataImpl> impl;
-};
-struct pc_session {
-    std::shared_ptr<poecraft::SessionImpl> impl;
-};
-struct pc_action_context {
-    std::unique_ptr<poecraft::ActionContextImpl> impl;
-};
-struct pc_strategy {
-    std::shared_ptr<poecraft::StrategyImpl> impl;
-};
-struct pc_economy {
-    std::shared_ptr<poecraft::EconomyImpl> impl;
-};
-struct pc_simulator {
-    std::unique_ptr<poecraft::SimulatorImpl> impl;
-};
 
 namespace {
 

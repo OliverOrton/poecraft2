@@ -383,6 +383,82 @@ Simulator integration:
 ## Phasing
 
 Solver phases are numbered independently of the main implementation plan.
+S1 is complete: `engine/src/solver_internal.hpp` defines the registry
+schema, goal spec, and abstract state layout; `solver_registry.cpp`
+enumerates descriptors for every implemented mechanic plus the synthetic
+restart action; `solver_abstract.cpp` derives junk classes from the session
+masks; `engine/tests/test_solver_abstract.cpp` is the gate.
+
+S2's transition provider is complete in `solver_calc.cpp`: `CalcContext`
+owns the state table and price-independent distribution cache,
+materializes representative items, and evaluates exact deterministic
+(scour, bench, restart) and single-slot (augment, regal, exalt, annul,
+influenced exalt) distributions by enumerating the same weighted pool the
+engine samples. `engine/tests/test_solver_calc.cpp` gates it against
+hand-computed pool sums and engine Monte Carlo histograms. Outstanding S2
+surface: the `pc_calc_action_outcomes` C ABI and the Calculator tab (the
+tab needs a WASM rebuild). Eldritch/veiled single-slot evaluators report
+`supported = false` until implemented.
+
+S3's core reforge evaluator is complete in `solver_reforge.cpp`: a
+forward-frontier sequential-roll DP over roll buckets — per-goal-slot
+satisfied/below-tier buckets plus (side, junk class, block mask, family
+weight) junk buckets with family multiplicities — giving exact group
+removal between rolls, target-count mixing (1-2 magic, 4-6 rare), and
+early-stop absorption. It covers transmute, alteration, alchemy, chaos,
+essence (guaranteed direct adds), and fossils (fossil-weighted pools,
+forced adds, Bloodstained/mirror flag effects). The S3 gate in
+`test_solver_calc.cpp` pins hand-computed sequential probabilities on the
+synthetic session and Monte Carlo agreement for chaos, essence, and
+fossil on the Vaal Regalia fixture. Harvest reforge is evaluated exactly
+via a two-phase roll DP (guaranteed spawn-only tag pick, then normal
+fills, with dual-weight buckets); harvest augment — intentionally
+add-then-remove per the project owner's ruling — enumerates its two
+stages exactly. Both are MC-gated on the synthetic and Vaal Regalia
+fixtures. Veiled chaos/exalt/unveil and the eldritch actions remain
+unsupported pending their bespoke enumerators.
+
+S4's solver core is complete in `solver_solve.cpp`: reachable-closure
+expansion through the calculation engine, in-place value iteration
+descending monotonically from a finite ceiling (the restart bound makes
+every goal-connected value finite), price-vector costs with explicit
+missing-price/unsupported-action exclusion diagnostics, deterministic
+policy extraction (variance then action-id tie-breaks), policy-reachable
+marking, and `serialize_solve_log` producing the per-state ML corpus
+records. The S4 gate in `engine/tests/test_solver_solve.cpp` matches
+analytic alt-spam costs (V = 1/p), verifies restart optimality in
+forced-bad (corrupted) states and under price flips, and solves a toy
+one-mod goal on the Vaal Regalia fixture deterministically. Worker/
+progress/cancel plumbing arrives with the C ABI.
+
+S5's compiler and the end-to-end verification gate are complete.
+`solver_compile.cpp` emits ordinary strategy JSON: a master router whose
+prioritized edges test policy-reachable state membership with existing
+condition types, operation nodes annotated with `expected_cost` (V(s)),
+a success terminal, and a failure terminal that makes off-policy leaks
+fail loudly. The strategy vocabulary gained a `restart` operation
+(simulator resets to a fresh base, price key `base`). Vocabulary gaps
+throw instead of mis-compiling: tag-discriminating layouts, flagged
+states, group slots with tier thresholds, and ambiguous signatures all
+need the junk-class/flag condition types planned as follow-ups. The gate
+in `engine/tests/test_solver_compile.cpp` runs the full loop —
+solve -> compile -> simulate — and empirical mean cost matches V(start)
+on the synthetic alt-spam and restart policies and on the Vaal Regalia
+toy goal.
+
+The C ABI surface lives in `engine/include/poecraft/solver.h` and
+`engine/src/solver_api.cpp`: `pc_solver_create` takes a goal-spec JSON
+(slots by group key or family mod key, rarity, optional candidate action
+subset), `pc_calc_action_outcomes` is the Calculator backend (exact
+successor distribution plus per-slot hit odds for a concrete item),
+`pc_solver_solve` runs synchronous value iteration against a `pc_economy`
+price table, and `pc_solver_compile_strategy` / `pc_solver_solve_log`
+return the strategy JSON and ML corpus records. The public-ABI gate in
+`engine/tests/test_solver_api.cpp` exercises the whole surface end to
+end, finishing with the compiled policy verified through the public
+simulator. Remaining before S6: chunked solve with progress/cancel for
+workers, the wasm facade exports and Calculator tab, veiled/eldritch
+evaluators, and the flag/junk-count condition types.
 
 ```text
 S1  action registry schema + descriptors for implemented mechanics;

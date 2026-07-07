@@ -20,6 +20,13 @@ add_library(poecraft_engine_objects OBJECT
     src/session_builder.cpp
     src/actions_basic.cpp
     src/simulator.cpp
+    src/solver_registry.cpp
+    src/solver_abstract.cpp
+    src/solver_calc.cpp
+    src/solver_reforge.cpp
+    src/solver_solve.cpp
+    src/solver_compile.cpp
+    src/solver_api.cpp
 )
 set_target_properties(poecraft_engine_objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
@@ -57,6 +64,11 @@ if(BUILD_TESTING)
         tests/test_session_builder.cpp
         tests/test_actions.cpp
         tests/test_simulator.cpp
+        tests/test_solver_abstract.cpp
+        tests/test_solver_calc.cpp
+        tests/test_solver_solve.cpp
+        tests/test_solver_compile.cpp
+        tests/test_solver_api.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

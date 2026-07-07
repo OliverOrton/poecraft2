@@ -1,0 +1,495 @@
+#include "poecraft/solver.h"
+
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "handles_internal.hpp"
+#include "json.hpp"
+#include "solver_internal.hpp"
+
+/*
+ * C ABI for the solver/calculation engine. Thin translation layer: goal
+ * JSON in, CalcContext + solve results behind an opaque handle, buffers
+ * out. All crafting math lives in solver_*.cpp.
+ */
+namespace {
+
+using poecraft::json::Parser;
+using poecraft::json::Type;
+using poecraft::json::Value;
+namespace solver = poecraft::solver;
+
+void set_error(pc_error_info* error, pc_result code, const char* message) {
+    if (error == nullptr) return;
+    error->struct_size = static_cast<uint32_t>(sizeof(pc_error_info));
+    error->abi_version = PC_ABI_VERSION;
+    error->code = static_cast<int32_t>(code);
+    std::snprintf(error->message, sizeof(error->message), "%s",
+                  message ? message : "");
+}
+
+void clear_error(pc_error_info* error) {
+    set_error(error, PC_RESULT_OK, "");
+}
+
+std::string string_member(const Value& value, const char* key) {
+    const Value* found = value.find(key);
+    return found != nullptr && found->type == Type::String ? found->string
+                                                           : std::string();
+}
+
+solver::GoalSpec parse_goal(
+    const poecraft::SessionImpl& session,
+    const char* goal_json,
+    std::size_t goal_json_size,
+    std::vector<std::uint32_t>& out_candidates,
+    const solver::ActionRegistry& registry) {
+    const poecraft::DataImpl& data = *session.data;
+    Value root = Parser(goal_json, goal_json_size).parse();
+    if (root.type != Type::Object) {
+        throw std::runtime_error("goal: root must be an object");
+    }
+    const std::string version = string_member(root, "version");
+    if (!version.empty() && version != "v1") {
+        throw std::runtime_error("goal: version must be v1");
+    }
+
+    solver::GoalSpec goal;
+    const std::string rarity = string_member(root, "rarity");
+    if (rarity == "normal") {
+        goal.rarity = PC_RARITY_NORMAL;
+    } else if (rarity == "magic") {
+        goal.rarity = PC_RARITY_MAGIC;
+    } else if (rarity == "rare" || rarity.empty()) {
+        goal.rarity = PC_RARITY_RARE;
+    } else {
+        throw std::runtime_error("goal: unknown rarity: " + rarity);
+    }
+
+    const Value* slots = root.find("slots");
+    if (slots == nullptr || slots->type != Type::Array ||
+        slots->array.empty()) {
+        throw std::runtime_error("goal: slots must be a non-empty array");
+    }
+    for (const Value& entry : slots->array) {
+        if (entry.type != Type::Object) {
+            throw std::runtime_error("goal: slot must be an object");
+        }
+        solver::GoalSlot slot;
+        const std::string group = string_member(entry, "group");
+        const std::string family = string_member(entry, "family_mod_key");
+        if (!group.empty()) {
+            const auto it = data.group_id_by_key.find(group);
+            if (it == data.group_id_by_key.end()) {
+                throw std::runtime_error("goal: unknown group: " + group);
+            }
+            slot.group_id = it->second;
+        } else if (!family.empty()) {
+            const auto pos = data.mod_pos_by_key.find(family);
+            if (pos == data.mod_pos_by_key.end()) {
+                throw std::runtime_error(
+                    "goal: unknown modifier key: " + family);
+            }
+            const auto session_mod = session.session_id_by_global_id.find(
+                data.mod_global_ids[pos->second]);
+            if (session_mod == session.session_id_by_global_id.end()) {
+                throw std::runtime_error(
+                    "goal: modifier is not in this session: " + family);
+            }
+            slot.family_id = session.family_id[session_mod->second];
+        } else {
+            throw std::runtime_error(
+                "goal: slot needs group or family_mod_key");
+        }
+        const Value* tier = entry.find("min_tier");
+        if (tier != nullptr && tier->type == Type::Number) {
+            if (tier->number < 0) {
+                throw std::runtime_error("goal: min_tier must be >= 0");
+            }
+            slot.min_tier = static_cast<std::uint32_t>(tier->number);
+        }
+        goal.slots.push_back(slot);
+    }
+
+    const Value* actions = root.find("actions");
+    if (actions != nullptr) {
+        if (actions->type != Type::Array) {
+            throw std::runtime_error("goal: actions must be an array");
+        }
+        for (const Value& entry : actions->array) {
+            if (entry.type != Type::String) {
+                throw std::runtime_error("goal: action ids must be strings");
+            }
+            const auto it = registry.index_by_id.find(entry.string);
+            if (it == registry.index_by_id.end()) {
+                throw std::runtime_error(
+                    "goal: unknown action: " + entry.string);
+            }
+            out_candidates.push_back(it->second);
+        }
+    }
+    return goal;
+}
+
+} // namespace
+
+struct pc_solver {
+    std::shared_ptr<const poecraft::SessionImpl> session;
+    std::unique_ptr<solver::CalcContext> calc;
+    std::optional<solver::SolveResult> solved;
+    std::string compiled_strategy; /* scratch for the buffer queries */
+    std::string solve_log;
+};
+
+pc_result pc_solver_create(
+    pc_session_handle session,
+    const char* goal_json,
+    size_t goal_json_size,
+    pc_solver_handle* out_solver,
+    pc_error_info* out_error) {
+    if (session == nullptr || goal_json == nullptr || out_solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_solver = nullptr;
+    try {
+        auto holder = std::make_unique<pc_solver>();
+        holder->session = session->impl;
+        solver::ActionRegistry registry =
+            solver::build_action_registry(*holder->session);
+        std::vector<std::uint32_t> candidates;
+        const solver::GoalSpec goal = parse_goal(
+            *holder->session, goal_json, goal_json_size, candidates,
+            registry);
+        holder->calc = std::make_unique<solver::CalcContext>(
+            holder->session, goal, std::move(registry), candidates);
+        *out_solver = holder.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+}
+
+void pc_solver_destroy(pc_solver_handle solver) {
+    delete solver;
+}
+
+pc_result pc_solver_action_count(
+    pc_solver_handle solver,
+    uint32_t* out_count,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_count = static_cast<uint32_t>(
+        solver->calc->registry().actions.size());
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_solver_get_action_info(
+    pc_solver_handle solver,
+    uint32_t action_index,
+    pc_solver_action_info* out_info,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_info == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& actions = solver->calc->registry().actions;
+    if (action_index >= actions.size()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "action index out of range");
+        return PC_RESULT_NOT_FOUND;
+    }
+    const solver::ActionDescriptor& action = actions[action_index];
+    static thread_local std::vector<const char*> cost_key_ptrs;
+    cost_key_ptrs.clear();
+    for (const std::string& key : action.cost_keys) {
+        cost_key_ptrs.push_back(key.c_str());
+    }
+    out_info->struct_size = static_cast<uint32_t>(sizeof(*out_info));
+    out_info->abi_version = PC_ABI_VERSION;
+    out_info->action_index = action_index;
+    out_info->id = action.id.c_str();
+    out_info->display_name = action.display_name.c_str();
+    out_info->transition_kind = static_cast<int32_t>(action.kind);
+    out_info->synthetic = action.synthetic ? 1 : 0;
+    out_info->cost_key_count =
+        static_cast<uint32_t>(cost_key_ptrs.size());
+    out_info->cost_keys = cost_key_ptrs.data();
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_solver_find_action(
+    pc_solver_handle solver,
+    const char* action_id,
+    uint32_t* out_index,
+    pc_error_info* out_error) {
+    if (solver == nullptr || action_id == nullptr || out_index == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const auto& index = solver->calc->registry().index_by_id;
+    const auto it = index.find(action_id);
+    if (it == index.end()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "unknown action id");
+        return PC_RESULT_NOT_FOUND;
+    }
+    *out_index = it->second;
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_calc_action_outcomes(
+    pc_solver_handle solver,
+    const pc_item_state* item,
+    uint32_t action_index,
+    pc_calc_outcome* entries,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_calc_summary* out_summary,
+    pc_error_info* out_error) {
+    if (solver == nullptr || item == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_count = 0;
+    if (action_index >= solver->calc->registry().actions.size()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "action index out of range");
+        return PC_RESULT_NOT_FOUND;
+    }
+    try {
+        solver::CalcContext& calc = *solver->calc;
+        const std::uint32_t state_id = calc.intern_item(*item);
+        const solver::OutcomeDistribution& distribution =
+            calc.outcomes(state_id, action_index);
+        const bool legal = solver::action_legal(
+            calc.session(), calc.registry().actions[action_index],
+            calc.state(state_id));
+        *out_count = static_cast<uint32_t>(distribution.entries.size());
+        if (out_summary != nullptr) {
+            out_summary->struct_size =
+                static_cast<uint32_t>(sizeof(*out_summary));
+            out_summary->abi_version = PC_ABI_VERSION;
+            out_summary->supported = distribution.supported ? 1 : 0;
+            out_summary->legal = legal ? 1 : 0;
+            out_summary->entry_count = *out_count;
+            for (std::size_t i = 0; i < PC_SOLVER_MAX_GOAL_SLOTS; ++i) {
+                out_summary->slot_satisfied_probability[i] =
+                    distribution.slot_satisfied_probability[i];
+            }
+        }
+        const uint32_t writable =
+            entries == nullptr
+                ? 0
+                : std::min<uint32_t>(capacity, *out_count);
+        for (uint32_t i = 0; i < writable; ++i) {
+            const solver::OutcomeEntry& entry = distribution.entries[i];
+            const solver::AbstractState& state = calc.state(entry.state);
+            pc_calc_outcome& out = entries[i];
+            out.struct_size = static_cast<uint32_t>(sizeof(out));
+            out.abi_version = PC_ABI_VERSION;
+            out.state_id = entry.state;
+            out.probability = entry.probability;
+            out.rarity = state.rarity;
+            out.prefix_count = state.prefix_count;
+            out.suffix_count = state.suffix_count;
+            out.influence_bits = state.influence_bits;
+            out.flags = state.flags;
+            out.blocked_mask = state.blocked_mask;
+            for (std::size_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
+                out.slot_status[s] = state.slot_status[s];
+            }
+        }
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_solve(
+    pc_solver_handle solver,
+    const pc_item_state* start_item,
+    pc_economy_handle economy,
+    const pc_solve_options* options,
+    pc_solve_summary* out_summary,
+    pc_error_info* out_error) {
+    if (solver == nullptr || start_item == nullptr || economy == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "solver, start item, and economy are required");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        solver::SolveOptions solve_options;
+        if (options != nullptr) {
+            if (options->epsilon > 0.0) {
+                solve_options.epsilon = options->epsilon;
+            }
+            if (options->max_states != 0) {
+                solve_options.max_states = options->max_states;
+            }
+            if (options->max_sweeps != 0) {
+                solve_options.max_sweeps = options->max_sweeps;
+            }
+        }
+        std::unordered_map<std::string, double> prices(
+            economy->impl->prices.begin(), economy->impl->prices.end());
+        solver->solved = solver::solve(*solver->calc, *start_item, prices,
+                                       solve_options);
+        solver->compiled_strategy.clear();
+        solver->solve_log.clear();
+        const solver::SolveResult& result = *solver->solved;
+        if (out_summary != nullptr) {
+            out_summary->struct_size =
+                static_cast<uint32_t>(sizeof(*out_summary));
+            out_summary->abi_version = PC_ABI_VERSION;
+            out_summary->converged = result.converged ? 1 : 0;
+            out_summary->start_state = result.start_state;
+            out_summary->start_value = result.values[result.start_state];
+            out_summary->expanded_states =
+                result.diagnostics.expanded_states;
+            out_summary->sweeps = result.diagnostics.sweeps;
+            out_summary->residual = result.diagnostics.residual;
+            out_summary->skipped_action_count = static_cast<uint32_t>(
+                result.diagnostics.skipped_missing_price.size() +
+                result.diagnostics.skipped_unsupported.size());
+        }
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_state_value(
+    pc_solver_handle solver,
+    uint32_t state_id,
+    double* out_value,
+    const char** out_action_id,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_value == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solved.has_value()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
+        return PC_RESULT_NOT_FOUND;
+    }
+    const solver::SolveResult& result = *solver->solved;
+    if (state_id >= result.values.size()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "state id outside the solved set");
+        return PC_RESULT_NOT_FOUND;
+    }
+    *out_value = result.values[state_id];
+    if (out_action_id != nullptr) {
+        const std::uint32_t action = result.policy[state_id];
+        *out_action_id =
+            action == solver::kNoId
+                ? nullptr
+                : solver->calc->registry().actions[action].id.c_str();
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_solver_project_item(
+    pc_solver_handle solver,
+    const pc_item_state* item,
+    uint32_t* out_state_id,
+    pc_error_info* out_error) {
+    if (solver == nullptr || item == nullptr || out_state_id == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_state_id = solver->calc->intern_item(*item);
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+namespace {
+
+pc_result copy_text(
+    const std::string& text,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (out_length == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_length = text.size();
+    if (buffer != nullptr && capacity > 0) {
+        const size_t writable = std::min(capacity - 1, text.size());
+        std::memcpy(buffer, text.data(), writable);
+        buffer[writable] = '\0';
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+} // namespace
+
+pc_result pc_solver_compile_strategy(
+    pc_solver_handle solver,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solved.has_value()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
+        return PC_RESULT_NOT_FOUND;
+    }
+    try {
+        if (solver->compiled_strategy.empty()) {
+            solver->compiled_strategy =
+                solver::compile_policy_strategy_json(
+                    *solver->calc, *solver->solved, "solved policy");
+        }
+        return copy_text(solver->compiled_strategy, buffer, capacity,
+                         out_length, out_error);
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
+}
+
+pc_result pc_solver_solve_log(
+    pc_solver_handle solver,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solved.has_value()) {
+        set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
+        return PC_RESULT_NOT_FOUND;
+    }
+    if (solver->solve_log.empty()) {
+        solver->solve_log =
+            solver::serialize_solve_log(*solver->calc, *solver->solved);
+    }
+    return copy_text(solver->solve_log, buffer, capacity, out_length,
+                     out_error);
+}

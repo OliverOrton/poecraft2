@@ -683,6 +683,11 @@ struct StrategyEdge {
     CompiledCondition condition;
 };
 
+/* Operation-node action_type for the synthetic "restart" operation: throw
+ * the item away and continue on a fresh base (price key "base"). Outside
+ * the pc_action_type range on purpose; apply_action never sees it. */
+inline constexpr int kStrategyRestartOperation = 1000;
+
 struct StrategyNode {
     std::string id;
     StrategyNodeKind kind = StrategyNodeKind::Start;

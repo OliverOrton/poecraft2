@@ -21,6 +21,11 @@ int main(int argc, char** argv) {
     run_session_builder_tests(artifact_dir, fixtures_dir);
     run_action_tests(artifact_dir);
     run_simulator_tests(artifact_dir);
+    run_solver_abstract_tests(artifact_dir);
+    run_solver_calc_tests(artifact_dir);
+    run_solver_solve_tests(artifact_dir);
+    run_solver_compile_tests(artifact_dir);
+    run_solver_api_tests(artifact_dir);
 
     std::printf("engine tests: %d checks, %d failures\n", pctest::g_checks,
                 pctest::g_failures);

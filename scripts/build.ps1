@@ -71,7 +71,12 @@ else {
             "$Root/engine/tests/test_data_loader.cpp",
             "$Root/engine/tests/test_session_builder.cpp",
             "$Root/engine/tests/test_actions.cpp",
-            "$Root/engine/tests/test_simulator.cpp"
+            "$Root/engine/tests/test_simulator.cpp",
+            "$Root/engine/tests/test_solver_abstract.cpp",
+            "$Root/engine/tests/test_solver_calc.cpp",
+            "$Root/engine/tests/test_solver_solve.cpp",
+            "$Root/engine/tests/test_solver_compile.cpp",
+            "$Root/engine/tests/test_solver_api.cpp"
         )
         # -static-libstdc++/-static-libgcc avoid a ld.bfd crash (exit 116) seen
         # in MSYS2 ucrt64 binutils when linking the shared C++ runtime against

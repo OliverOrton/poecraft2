@@ -31,4 +31,11 @@ void run_session_builder_tests(const char* artifact_dir,
 void run_action_tests(const char* artifact_dir);
 void run_simulator_tests(const char* artifact_dir);
 
+/* Solver phase S1-S5 suites. */
+void run_solver_abstract_tests(const char* artifact_dir);
+void run_solver_calc_tests(const char* artifact_dir);
+void run_solver_solve_tests(const char* artifact_dir);
+void run_solver_compile_tests(const char* artifact_dir);
+void run_solver_api_tests(const char* artifact_dir);
+
 #endif

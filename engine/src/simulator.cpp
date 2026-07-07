@@ -361,6 +361,13 @@ void compile_operation(
         node.action_type = -1;
         return;
     }
+    if (type == "restart") {
+        /* Buy a fresh base and keep crafting: no engine action runs; the
+         * run loop resets the item in place. */
+        node.action_type = kStrategyRestartOperation;
+        node.price_keys = {"base"};
+        return;
+    }
     ActionType action_type;
     if (!action_type_from_name(type, action_type)) {
         invalid("unknown operation type: " + type);
@@ -792,16 +799,39 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 break;
             }
 
-            pc_item_state rollback;
-            const bool needs_rollback =
-                action_needs_rollback(node.action.type);
-            if (needs_rollback) rollback = result.item;
-            const ActionOutcome outcome =
-                apply_action(*simulator.context, &result.item, node.action);
+            ActionOutcome outcome;
+            if (node.action_type == kStrategyRestartOperation) {
+                const int removed =
+                    result.item.prefix_count + result.item.suffix_count;
+                pc_item_clear(&result.item);
+                if (session.base_implicit_mod_ids.size() <=
+                    PC_MAX_IMPLICITS) {
+                    for (std::uint32_t mod_id :
+                         session.base_implicit_mod_ids) {
+                        pc_mod_slot& slot =
+                            result.item.implicits[
+                                result.item.implicit_count++];
+                        slot.mod_id = mod_id;
+                        slot.group_id = static_cast<std::uint16_t>(
+                            session.primary_group[mod_id]);
+                    }
+                }
+                outcome.applied = true;
+                outcome.removed = removed;
+            } else {
+                pc_item_state rollback;
+                const bool needs_rollback =
+                    action_needs_rollback(node.action.type);
+                if (needs_rollback) rollback = result.item;
+                outcome = apply_action(*simulator.context, &result.item,
+                                       node.action);
+                if (!outcome.applied && needs_rollback) {
+                    result.item = rollback;
+                }
+            }
             ++result.actions;
             ++simulator.action_counts[node_index];
             if (!outcome.applied) {
-                if (needs_rollback) result.item = rollback;
                 finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
                 break;
             }
