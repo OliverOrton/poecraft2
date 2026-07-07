@@ -49,6 +49,9 @@ $Exported = @(
     "_pcw_economy_open", "_pcw_economy_close",
     "_pcw_simulator_open", "_pcw_simulator_close",
     "_pcw_simulator_run_chunk", "_pcw_simulator_result",
+    "_pcw_solver_open", "_pcw_solver_close", "_pcw_solver_actions",
+    "_pcw_solver_calc", "_pcw_solver_solve", "_pcw_solver_state_value",
+    "_pcw_solver_project", "_pcw_solver_compile", "_pcw_solver_log",
     "_malloc", "_free"
 ) -join ","
 

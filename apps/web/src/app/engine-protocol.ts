@@ -202,6 +202,67 @@ export interface BaseInfo {
     support: number;
 }
 
+// --- solver / calculation engine ---------------------------------------------
+
+/** Goal specification consumed by pc_solver_create (see poecraft/solver.h). */
+export interface SolverGoal {
+    version?: "v1";
+    rarity?: "normal" | "magic" | "rare";
+    slots: Array<
+        | { group: string; min_tier?: number }
+        | { family_mod_key: string; min_tier?: number }
+    >;
+    /** Candidate action ids; omitted means the full registry. */
+    actions?: string[];
+}
+
+export interface SolverActionInfo {
+    index: number;
+    id: string;
+    display_name: string;
+    /** 0 deterministic, 1 single-slot, 2 reforge, 3 special. */
+    transition_kind: number;
+    synthetic: boolean;
+    cost_keys: string[];
+}
+
+/** One abstract successor class from the calculation engine. */
+export interface CalcOutcome {
+    state: number;
+    probability: number;
+    rarity: number;
+    prefixes: number;
+    suffixes: number;
+    flags: number;
+    blocked: number;
+    /** Per goal slot: 0 absent, 1 present below tier, 2 satisfied. */
+    slots: number[];
+}
+
+export interface CalcResult {
+    supported: boolean;
+    legal: boolean;
+    /** Per goal slot: probability the slot is satisfied after the action. */
+    slot_satisfied: number[];
+    outcomes: CalcOutcome[];
+}
+
+export interface SolveSummary {
+    converged: boolean;
+    start_state: number;
+    start_value: number;
+    expanded_states: number;
+    sweeps: number;
+    residual: number;
+    skipped_actions: number;
+}
+
+export interface SolverStateValue {
+    value: number;
+    /** Policy action id, or null for goal/terminal states. */
+    action: string | null;
+}
+
 export interface ModInfo {
     session_mod_id: number;
     global_mod_id: number;

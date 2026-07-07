@@ -17,6 +17,7 @@ import {
     EngineError,
     SimulationOptions,
     SimulationProgress,
+    SolverGoal,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -401,6 +402,55 @@ async function dispatch(
             return {};
         case "runStrategy":
             return runStrategy(id, params);
+        case "openSolver":
+            return {
+                solver: bindings.openSolver(
+                    params.session as number,
+                    params.goal as SolverGoal,
+                ),
+            };
+        case "closeSolver":
+            bindings.closeSolver(params.solver as number);
+            return {};
+        case "solverActions":
+            return {
+                actions: bindings.solverActions(params.solver as number),
+            };
+        case "solverCalc":
+            return bindings.solverCalc(
+                params.solver as number,
+                params.item as number,
+                params.action as string,
+            );
+        case "solverSolve":
+            return bindings.solverSolve(
+                params.solver as number,
+                params.item as number,
+                params.economy as number,
+                params.options as
+                    | { epsilon?: number; max_states?: number; max_sweeps?: number }
+                    | undefined,
+            );
+        case "solverStateValue":
+            return bindings.solverStateValue(
+                params.solver as number,
+                params.state as number,
+            );
+        case "solverProject":
+            return {
+                state: bindings.solverProject(
+                    params.solver as number,
+                    params.item as number,
+                ),
+            };
+        case "solverCompileStrategy":
+            return {
+                strategy: bindings.solverCompileStrategy(
+                    params.solver as number,
+                ),
+            };
+        case "solverLog":
+            return { log: bindings.solverLog(params.solver as number) };
         default:
             throw new EngineError(1, `unknown method: ${method}`);
     }

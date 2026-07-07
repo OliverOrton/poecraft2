@@ -456,8 +456,14 @@ price table, and `pc_solver_compile_strategy` / `pc_solver_solve_log`
 return the strategy JSON and ML corpus records. The public-ABI gate in
 `engine/tests/test_solver_api.cpp` exercises the whole surface end to
 end, finishing with the compiled policy verified through the public
-simulator. Remaining before S6: chunked solve with progress/cancel for
-workers, the wasm facade exports and Calculator tab, veiled/eldritch
+simulator.
+
+The browser runtime is wired: `pcw_solver_*` facade exports in
+`bindings/wasm/wasm_api.cpp`, worker methods and `EngineClient` calls in
+`apps/web/src/app`, and a headless acceptance test that runs Calculator
+odds, a solve, and the compiled policy's simulator verification inside
+the WASM worker. Remaining for S6: the Calculator workspace tab UI,
+chunked solve with progress/cancel for long goals, veiled/eldritch
 evaluators, and the flag/junk-count condition types.
 
 ```text

@@ -650,6 +650,100 @@ test("an already-aborted strategy run performs no simulations", async () => {
     await client.closeStrategy(strategy);
 });
 
+test("solver runs in the browser runtime: odds, solve, compiled policy", async () => {
+    // Goal: the family of the first prefix in the live normal pool.
+    const item = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    const pool = await client.debugPool(contextId, item, {
+        action: { type: "exalt" },
+        side: "prefix",
+    });
+    assert.ok(pool.entries.length > 0);
+    const goalMod = await client.modInfo(
+        sessionId,
+        pool.entries[0].session_mod_id,
+    );
+
+    const solver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        slots: [{ family_mod_key: goalMod.key, min_tier: 0 }],
+        actions: [
+            "transmute", "augment", "alteration", "regal", "alchemy",
+            "chaos", "exalt", "annul", "scour", "restart",
+        ],
+    });
+
+    const actions = await client.solverActions(solver);
+    assert.equal(actions.length, 10);
+    const restart = actions.find((action) => action.id === "restart");
+    assert.ok(restart?.synthetic);
+    assert.deepEqual(restart?.cost_keys, ["base"]);
+
+    // Calculator: exact exalt odds before you click.
+    const odds = await client.solverCalc(solver, item, "exalt");
+    assert.equal(odds.supported, true);
+    assert.equal(odds.legal, true);
+    const total = odds.outcomes.reduce(
+        (sum, outcome) => sum + outcome.probability,
+        0,
+    );
+    assert.ok(Math.abs(total - 1) < 1e-9);
+    assert.ok(odds.slot_satisfied[0] > 0 && odds.slot_satisfied[0] < 1);
+
+    // Solve, then verify the compiled policy through the simulator.
+    const economy = await client.loadEconomy({
+        version: "v1",
+        prices: {
+            transmute: 0.1, augment: 0.5, alteration: 0.2, regal: 1.0,
+            alchemy: 0.5, chaos: 1.0, exalt: 20.0, annul: 3.0,
+            scour: 0.5, base: 5.0,
+        },
+    });
+    const solve = await client.solverSolve(solver, item, economy);
+    assert.equal(solve.converged, true);
+    assert.ok(solve.start_value > 0);
+    assert.equal(solve.skipped_actions, 0);
+
+    const startState = await client.solverProject(solver, item);
+    assert.equal(startState, solve.start_state);
+    const startValue = await client.solverStateValue(solver, startState);
+    assert.equal(startValue.value, solve.start_value);
+    assert.ok(startValue.action !== null);
+
+    const log = await client.solverLog(solver);
+    assert.ok(log.split("\n").filter(Boolean).length === solve.expanded_states);
+
+    const compiled = await client.solverCompileStrategy(solver);
+    const strategy = await client.compileStrategy(sessionId, compiled);
+    const simulator = await client.createSimulator(
+        sessionId,
+        strategy,
+        economy,
+    );
+    const run = await client.runStrategy(simulator, {
+        target_runs: 5000,
+        seed: 20260707,
+        max_actions_per_run: 100000,
+    });
+    assert.equal(run.cancelled, false);
+    assert.equal(run.summary.completed_runs, 5000);
+    assert.equal(run.summary.success_count, 5000);
+    const empirical = run.summary.known_total_cost / 5000;
+    assert.ok(
+        Math.abs(empirical - solve.start_value) < 0.5,
+        `empirical ${empirical} vs V(start) ${solve.start_value}`,
+    );
+
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
+    await client.closeEconomy(economy);
+    await client.closeSolver(solver);
+    await client.closeItem(item);
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

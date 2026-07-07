@@ -86,6 +86,15 @@ pc_result pc_solver_find_action(
     uint32_t* out_index,
     pc_error_info* out_error);
 
+/* Candidate action indices the goal was scoped to (the full registry when
+ * the goal spec named none). Query-required-count buffer pattern. */
+pc_result pc_solver_candidates(
+    pc_solver_handle solver,
+    uint32_t* out_indices,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_error_info* out_error);
+
 /* --- calculation engine (Calculator backend) --------------------------------- */
 
 /* One abstract successor class. state_id is stable for this solver handle

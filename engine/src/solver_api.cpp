@@ -250,6 +250,29 @@ pc_result pc_solver_find_action(
     return PC_RESULT_OK;
 }
 
+pc_result pc_solver_candidates(
+    pc_solver_handle solver,
+    uint32_t* out_indices,
+    uint32_t capacity,
+    uint32_t* out_count,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const std::vector<std::uint32_t>& candidates =
+        solver->calc->candidates();
+    *out_count = static_cast<uint32_t>(candidates.size());
+    if (out_indices != nullptr) {
+        const uint32_t writable = std::min<uint32_t>(capacity, *out_count);
+        for (uint32_t i = 0; i < writable; ++i) {
+            out_indices[i] = candidates[i];
+        }
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result pc_calc_action_outcomes(
     pc_solver_handle solver,
     const pc_item_state* item,

@@ -12,6 +12,7 @@ import {
     ActionOutcome,
     AffixSide,
     BaseInfo,
+    CalcResult,
     Catalog,
     ClientMessage,
     CraftAction,
@@ -19,6 +20,10 @@ import {
     ModInfo,
     PoolDebug,
     SimulationOptions,
+    SolveSummary,
+    SolverActionInfo,
+    SolverGoal,
+    SolverStateValue,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -391,6 +396,84 @@ export class EngineClient {
             { simulator, options: simulation, chunkSize: options?.chunkSize },
             { onProgress: options?.onProgress, signal: options?.signal },
         );
+    }
+
+    // --- solver / calculation engine ----------------------------------------
+
+    async openSolver(session: number, goal: SolverGoal): Promise<number> {
+        const result = await this.call<{ solver: number }>("openSolver", {
+            session,
+            goal,
+        });
+        return result.solver;
+    }
+
+    closeSolver(solver: number): Promise<void> {
+        return this.call<void>("closeSolver", { solver });
+    }
+
+    async solverActions(solver: number): Promise<SolverActionInfo[]> {
+        const result = await this.call<{ actions: SolverActionInfo[] }>(
+            "solverActions",
+            { solver },
+        );
+        return result.actions;
+    }
+
+    /** Exact outcome odds for one action on a live item. */
+    solverCalc(
+        solver: number,
+        item: number,
+        action: string,
+    ): Promise<CalcResult> {
+        return this.call<CalcResult>("solverCalc", { solver, item, action });
+    }
+
+    solverSolve(
+        solver: number,
+        item: number,
+        economy: number,
+        options?: { epsilon?: number; max_states?: number; max_sweeps?: number },
+    ): Promise<SolveSummary> {
+        return this.call<SolveSummary>("solverSolve", {
+            solver,
+            item,
+            economy,
+            options,
+        });
+    }
+
+    solverStateValue(
+        solver: number,
+        state: number,
+    ): Promise<SolverStateValue> {
+        return this.call<SolverStateValue>("solverStateValue", {
+            solver,
+            state,
+        });
+    }
+
+    async solverProject(solver: number, item: number): Promise<number> {
+        const result = await this.call<{ state: number }>("solverProject", {
+            solver,
+            item,
+        });
+        return result.state;
+    }
+
+    async solverCompileStrategy(solver: number): Promise<unknown> {
+        const result = await this.call<{ strategy: unknown }>(
+            "solverCompileStrategy",
+            { solver },
+        );
+        return result.strategy;
+    }
+
+    async solverLog(solver: number): Promise<string> {
+        const result = await this.call<{ log: string }>("solverLog", {
+            solver,
+        });
+        return result.log;
     }
 
     dispose(): void {

@@ -12,12 +12,17 @@ import {
     ActionOutcome,
     BaseInfo,
     BatchSummary,
+    CalcResult,
     CraftAction,
     EngineError,
     ModInfo,
     PoolDebug,
     SimulationOptions,
     SimulationProgress,
+    SolveSummary,
+    SolverActionInfo,
+    SolverGoal,
+    SolverStateValue,
     StrategyResult,
 } from "./engine-protocol";
 
@@ -315,6 +320,81 @@ export class EngineBindings {
         );
         void ok;
         return rest as unknown as PoolDebug;
+    }
+
+    openSolver(session: number, goal: SolverGoal): number {
+        return this.callJson(
+            "pcw_solver_open",
+            ["number", "string"],
+            [session, JSON.stringify(goal)],
+        ).solver as number;
+    }
+
+    closeSolver(solver: number): void {
+        this.module.ccall("pcw_solver_close", null, ["number"], [solver]);
+    }
+
+    solverActions(solver: number): SolverActionInfo[] {
+        return this.callJson("pcw_solver_actions", ["number"], [solver])
+            .actions as unknown as SolverActionInfo[];
+    }
+
+    solverCalc(solver: number, item: number, actionId: string): CalcResult {
+        const { ok, ...rest } = this.callJson(
+            "pcw_solver_calc",
+            ["number", "number", "string"],
+            [solver, item, actionId],
+        );
+        void ok;
+        return rest as unknown as CalcResult;
+    }
+
+    solverSolve(
+        solver: number,
+        item: number,
+        economy: number,
+        options?: { epsilon?: number; max_states?: number; max_sweeps?: number },
+    ): SolveSummary {
+        const { ok, ...rest } = this.callJson(
+            "pcw_solver_solve",
+            ["number", "number", "number", "string"],
+            [solver, item, economy, JSON.stringify(options ?? {})],
+        );
+        void ok;
+        return rest as unknown as SolveSummary;
+    }
+
+    solverStateValue(solver: number, state: number): SolverStateValue {
+        const { ok, ...rest } = this.callJson(
+            "pcw_solver_state_value",
+            ["number", "number"],
+            [solver, state],
+        );
+        void ok;
+        return rest as unknown as SolverStateValue;
+    }
+
+    solverProject(solver: number, item: number): number {
+        return this.callJson(
+            "pcw_solver_project",
+            ["number", "number"],
+            [solver, item],
+        ).state as number;
+    }
+
+    /** Compiled policy as a parsed strategy document (editor/simulator format). */
+    solverCompileStrategy(solver: number): unknown {
+        const strategy = this.callJson(
+            "pcw_solver_compile",
+            ["number"],
+            [solver],
+        ).strategy as string;
+        return JSON.parse(strategy);
+    }
+
+    solverLog(solver: number): string {
+        return this.callJson("pcw_solver_log", ["number"], [solver])
+            .log as string;
     }
 }
 

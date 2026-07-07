@@ -25,6 +25,7 @@
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
 #include "poecraft/simulator.h"
+#include "poecraft/solver.h"
 
 #include "json.hpp"
 
@@ -75,6 +76,7 @@ std::unordered_map<std::uint32_t, pc_item_state> g_items;
 std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
+std::unordered_map<std::uint32_t, pc_solver_handle> g_solvers;
 std::uint32_t g_next_id = 1;
 
 std::string g_response;
@@ -1462,6 +1464,274 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
         out.push_back('}');
     }
     out += "]}";
+    return respond(std::move(out));
+}
+
+// --- solver / calculation engine ---------------------------------------------
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_open(uint32_t session_id, const char* goal_json) {
+    pc_session_handle* session = find(g_sessions, session_id);
+    if (session == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown session");
+    if (goal_json == nullptr) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "goal JSON is required");
+    }
+    pc_solver_handle solver = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_solver_create(
+        *session, goal_json, std::strlen(goal_json), &solver, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::uint32_t id = g_next_id++;
+    g_solvers[id] = solver;
+    std::string out = "{\"ok\":true,\"solver\":";
+    out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_solver_close(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver != nullptr) {
+        pc_solver_destroy(*solver);
+        g_solvers.erase(solver_id);
+    }
+}
+
+/* Candidate actions the goal is scoped to, with ids and cost vectors, for
+ * the Calculator's action picker. */
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_actions(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    uint32_t count = 0;
+    pc_result rc =
+        pc_solver_candidates(*solver, nullptr, 0, &count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::vector<uint32_t> indices(count);
+    rc = pc_solver_candidates(*solver, indices.data(), count, &count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"actions\":[";
+    for (uint32_t i = 0; i < count; ++i) {
+        pc_solver_action_info info;
+        info.struct_size = sizeof(info);
+        rc = pc_solver_get_action_info(*solver, indices[i], &info, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+        if (i != 0) out.push_back(',');
+        out += "{\"index\":" + std::to_string(info.action_index);
+        out += ",\"id\":";
+        append_escaped(out, info.id);
+        out += ",\"display_name\":";
+        append_escaped(out, info.display_name);
+        out += ",\"transition_kind\":" +
+               std::to_string(info.transition_kind);
+        out += ",\"synthetic\":";
+        out += info.synthetic ? "true" : "false";
+        out += ",\"cost_keys\":[";
+        for (uint32_t k = 0; k < info.cost_key_count; ++k) {
+            if (k != 0) out.push_back(',');
+            append_escaped(out, info.cost_keys[k]);
+        }
+        out += "]}";
+    }
+    out += "]}";
+    return respond(std::move(out));
+}
+
+/* Exact outcome distribution for one action on a live item: the
+ * Calculator's "odds before you click". */
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
+                            const char* action_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    if (action_id == nullptr) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, "action id is required");
+    }
+    pc_error_info error = make_error();
+    uint32_t action_index = 0;
+    pc_result rc =
+        pc_solver_find_action(*solver, action_id, &action_index, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    uint32_t count = 0;
+    pc_calc_summary summary;
+    summary.struct_size = sizeof(summary);
+    rc = pc_calc_action_outcomes(*solver, item, action_index, nullptr, 0,
+                                 &count, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::vector<pc_calc_outcome> outcomes(count);
+    if (count > 0) {
+        rc = pc_calc_action_outcomes(*solver, item, action_index,
+                                     outcomes.data(), count, &count,
+                                     &summary, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
+    }
+    std::string out = "{\"ok\":true,\"supported\":";
+    out += summary.supported ? "true" : "false";
+    out += ",\"legal\":";
+    out += summary.legal ? "true" : "false";
+    out += ",\"slot_satisfied\":[";
+    for (uint32_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
+        if (s != 0) out.push_back(',');
+        out += std::to_string(summary.slot_satisfied_probability[s]);
+    }
+    out += "],\"outcomes\":[";
+    for (uint32_t i = 0; i < count; ++i) {
+        const pc_calc_outcome& entry = outcomes[i];
+        if (i != 0) out.push_back(',');
+        out += "{\"state\":" + std::to_string(entry.state_id);
+        out += ",\"probability\":" + std::to_string(entry.probability);
+        out += ",\"rarity\":" + std::to_string(entry.rarity);
+        out += ",\"prefixes\":" + std::to_string(entry.prefix_count);
+        out += ",\"suffixes\":" + std::to_string(entry.suffix_count);
+        out += ",\"flags\":" + std::to_string(entry.flags);
+        out += ",\"blocked\":" + std::to_string(entry.blocked_mask);
+        out += ",\"slots\":[";
+        for (uint32_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
+            if (s != 0) out.push_back(',');
+            out += std::to_string(entry.slot_status[s]);
+        }
+        out += "]}";
+    }
+    out += "]}";
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve(uint32_t solver_id, uint32_t item_id,
+                             uint32_t economy_id, const char* options_json) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    pc_economy_handle* economy = find(g_economies, economy_id);
+    if (economy == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown economy");
+    }
+    pc_solve_options options;
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    options.epsilon = 0.0;
+    options.max_states = 0;
+    options.max_sweeps = 0;
+    if (options_json != nullptr && options_json[0] != '\0') {
+        try {
+            Value opts =
+                Parser(options_json, std::strlen(options_json)).parse();
+            const Value* epsilon = opts.find("epsilon");
+            if (epsilon != nullptr && epsilon->type == Type::Number) {
+                options.epsilon = epsilon->number;
+            }
+            const Value* max_states = opts.find("max_states");
+            if (max_states != nullptr && max_states->type == Type::Number) {
+                options.max_states =
+                    static_cast<uint32_t>(max_states->number);
+            }
+            const Value* max_sweeps = opts.find("max_sweeps");
+            if (max_sweeps != nullptr && max_sweeps->type == Type::Number) {
+                options.max_sweeps =
+                    static_cast<uint32_t>(max_sweeps->number);
+            }
+        } catch (const std::exception& e) {
+            return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+        }
+    }
+    pc_solve_summary summary;
+    summary.struct_size = sizeof(summary);
+    pc_error_info error = make_error();
+    pc_result rc = pc_solver_solve(*solver, item, *economy, &options,
+                                   &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"converged\":";
+    out += summary.converged ? "true" : "false";
+    out += ",\"start_state\":" + std::to_string(summary.start_state);
+    out += ",\"start_value\":" + std::to_string(summary.start_value);
+    out += ",\"expanded_states\":" +
+           std::to_string(summary.expanded_states);
+    out += ",\"sweeps\":" + std::to_string(summary.sweeps);
+    out += ",\"residual\":" + std::to_string(summary.residual);
+    out += ",\"skipped_actions\":" +
+           std::to_string(summary.skipped_action_count);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_state_value(uint32_t solver_id, uint32_t state_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    double value = 0.0;
+    const char* action_id = nullptr;
+    pc_error_info error = make_error();
+    pc_result rc = pc_solver_state_value(*solver, state_id, &value,
+                                         &action_id, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"value\":" + std::to_string(value);
+    out += ",\"action\":";
+    if (action_id == nullptr) {
+        out += "null";
+    } else {
+        append_escaped(out, action_id);
+    }
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_project(uint32_t solver_id, uint32_t item_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    uint32_t state_id = 0;
+    pc_error_info error = make_error();
+    pc_result rc = pc_solver_project_item(*solver, item, &state_id, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"state\":";
+    out += std::to_string(state_id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_compile(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    size_t length = 0;
+    pc_result rc =
+        pc_solver_compile_strategy(*solver, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string strategy(length + 1, '\0');
+    rc = pc_solver_compile_strategy(*solver, strategy.data(),
+                                    strategy.size(), &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    strategy.resize(length);
+    std::string out = "{\"ok\":true,\"strategy\":";
+    append_escaped(out, strategy.c_str());
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_log(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    size_t length = 0;
+    pc_result rc = pc_solver_solve_log(*solver, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string log(length + 1, '\0');
+    rc = pc_solver_solve_log(*solver, log.data(), log.size(), &length,
+                             &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    log.resize(length);
+    std::string out = "{\"ok\":true,\"log\":";
+    append_escaped(out, log.c_str());
+    out.push_back('}');
     return respond(std::move(out));
 }
 
