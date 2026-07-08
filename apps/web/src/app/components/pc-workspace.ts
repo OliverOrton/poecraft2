@@ -27,6 +27,7 @@ import {
     deleteDraft,
     deleteStrategyDraft,
     itemSnapshotRarity,
+    putCalculatorDraft,
     putDraft,
     putStrategyDraft,
     putStash,
@@ -45,6 +46,7 @@ import {
 } from "../workspace/registry";
 import { openDirtyModal } from "../workspace/dirty-modal";
 
+import "./pc-calculator";
 import "./pc-emulator";
 import "./pc-strategy-editor";
 import "./pc-stash";
@@ -88,6 +90,8 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
                         return new ElementRenderer("pc-stash");
                     case "strategy":
                         return new ElementRenderer("pc-strategy-editor");
+                    case "calculator":
+                        return new ElementRenderer("pc-calculator");
                     case "emulator":
                     default:
                         return new ElementRenderer("pc-emulator");
@@ -185,6 +189,32 @@ export class PcWorkspace extends HTMLElement implements WorkspaceApi {
         this.api.addPanel({
             id: docId,
             component: "strategy",
+            title,
+            params: { docId },
+        });
+    }
+
+    async openCalculator(seed?: ItemSnapshot): Promise<void> {
+        const docId = newDocId();
+        if (seed) {
+            // Pre-seed the draft so the fresh calculator loads this item.
+            await putCalculatorDraft({
+                docId,
+                base: seed.base,
+                itemLevel: seed.itemLevel,
+                state: seed.state,
+                goalRarity: "rare",
+                slots: [],
+                actionId: "",
+                fossilKeys: [],
+                updatedAt: Date.now(),
+            });
+        }
+        const title = "Calculator";
+        this.titles.set(docId, title);
+        this.api.addPanel({
+            id: docId,
+            component: "calculator",
             title,
             params: { docId },
         });

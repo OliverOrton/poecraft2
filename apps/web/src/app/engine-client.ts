@@ -412,10 +412,17 @@ export class EngineClient {
         return this.call<void>("closeSolver", { solver });
     }
 
-    async solverActions(solver: number): Promise<SolverActionInfo[]> {
+    /** Candidate actions for the solver's goal. A full-registry solver lists
+     * every 1-4 fossil loadout; `omitFossilCombos` drops the multi-fossil
+     * combinations in the worker so pickers get a browsable list (combo ids
+     * are reconstructable from the single-fossil entries). */
+    async solverActions(
+        solver: number,
+        options?: { omitFossilCombos?: boolean },
+    ): Promise<SolverActionInfo[]> {
         const result = await this.call<{ actions: SolverActionInfo[] }>(
             "solverActions",
-            { solver },
+            { solver, omitFossilCombos: options?.omitFossilCombos ?? false },
         );
         return result.actions;
     }

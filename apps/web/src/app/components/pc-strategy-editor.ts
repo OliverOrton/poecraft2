@@ -7,6 +7,7 @@
 import { EngineClient } from "../engine-client";
 import { BaseInfo, Catalog, ModInfo, StrategyResult } from "../engine-protocol";
 import { getEngine } from "../engine-service";
+import { buildModifierOptions } from "../modifier-options";
 import {
     StrategyDocument,
     StrategyEdge,
@@ -1377,126 +1378,6 @@ function baseLabel(path: string): string {
 }
 
 // Reach-kind codes from the engine (mirrors pc-mod-pool / engine ModInfo).
-const REACH_INFLUENCE = 1;
-const REACH_CRAFTED = 2;
-const REACH_ESSENCE = 3;
-const REACH_FOSSIL = 5;
-
-function modSourceLabel(mod: ModInfo): string {
-    switch (mod.reach_kind) {
-        case REACH_INFLUENCE: {
-            const parts = mod.reach_via.split(":");
-            const key = (parts[parts.length - 1] || "influenced").toLowerCase();
-            if (key === "adjudicator") return "Warlord";
-            if (key === "basilisk") return "Redeemer";
-            if (key === "eyrie") return "Hunter";
-            return titleCase(key);
-        }
-        case REACH_CRAFTED:
-            return "Bench";
-        case REACH_ESSENCE:
-            return "Essence";
-        case REACH_FOSSIL:
-            return "Fossil";
-        default:
-            return "";
-    }
-}
-
-function modSourceKind(
-    mod: ModInfo,
-): ModifierFamilyOption["sourceKind"] {
-    switch (mod.reach_kind) {
-        case REACH_INFLUENCE:
-            return "influence";
-        case REACH_CRAFTED:
-            return "crafted";
-        case REACH_ESSENCE:
-            return "essence";
-        case REACH_FOSSIL:
-            return "fossil";
-        default:
-            return "base";
-    }
-}
-
-function titleCase(value: string): string {
-    return value
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
-/**
- * Group session mods into the same display families as the Emulator. The
- * representative T1 mod key is the stable persisted family identity, and each
- * option carries its complete T1..Tn threshold list.
- */
-function buildModifierOptions(
-    mods: ModInfo[],
-    catalog: Catalog,
-): ModifierFamilyOption[] {
-    const families = new Map<string, ModInfo[]>();
-    for (const mod of mods) {
-        if (mod.generation_type !== 0 && mod.generation_type !== 1) continue;
-        const familyId = Number.isFinite(mod.family_id)
-            ? mod.family_id
-            : mod.primary_group_id;
-        const influence =
-            mod.reach_kind === REACH_INFLUENCE ? `:${mod.reach_influence}` : "";
-        const key = `${mod.reach_kind}${influence}:${mod.generation_type}:${familyId}`;
-        const slot = families.get(key);
-        if (slot) slot.push(mod);
-        else families.set(key, [mod]);
-    }
-
-    const options: ModifierFamilyOption[] = [];
-    for (const tiers of families.values()) {
-        tiers.sort((a, b) => a.family_tier_index - b.family_tier_index);
-        const rep = tiers[0];
-        const text =
-            rep.text_lines.join(" / ") ||
-            catalog.groupNameById[rep.primary_group_id] ||
-            rep.key;
-        const side = rep.generation_type === 0 ? "P" : "S";
-        const source = modSourceLabel(rep);
-        options.push({
-            value: rep.key,
-            label: text,
-            side: side === "P" ? "prefix" : "suffix",
-            sourceKind: modSourceKind(rep),
-            sourceLabel: source,
-            tags: Array.from(
-                new Set(tiers.flatMap((tier) => tier.classification_tags)),
-            ).sort(),
-            tiers: tiers.map((tier) => ({
-                tier: tier.family_tier_index,
-                label: tier.text_lines.join(" / ") || tier.key,
-                requiredLevel: tier.required_level,
-            })),
-        });
-    }
-    options.sort(
-        (a, b) =>
-            sourceOrder(a) - sourceOrder(b) ||
-            influenceOptionOrder(a) - influenceOptionOrder(b) ||
-            a.label.localeCompare(b.label),
-    );
-    return options;
-}
-
-function sourceOrder(option: ModifierFamilyOption): number {
-    return ["base", "influence", "crafted", "essence", "fossil"].indexOf(
-        option.sourceKind,
-    );
-}
-
-function influenceOptionOrder(option: ModifierFamilyOption): number {
-    if (option.sourceKind !== "influence") return 0;
-    const order = ["Shaper", "Elder", "Crusader", "Warlord", "Redeemer", "Hunter"];
-    const index = order.indexOf(option.sourceLabel);
-    return index < 0 ? order.length : index;
-}
-
 function escapeHtml(value: string): string {
     return value
         .replace(/&/g, "&amp;")

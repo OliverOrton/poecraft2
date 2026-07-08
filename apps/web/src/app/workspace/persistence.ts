@@ -79,6 +79,31 @@ export interface StrategyDraftRecord {
     updatedAt: number;
 }
 
+/** One Calculator goal slot; exactly one of familyModKey/group identifies it,
+ * matching the solver goal-spec vocabulary. */
+export interface CalculatorGoalSlot {
+    familyModKey?: string;
+    group?: string;
+    /** family_tier_index threshold (1 = best); 0 accepts any tier. */
+    minTier: number;
+}
+
+/** Calculator documents are never Stash resources; the draft only powers
+ * reload recovery, so there is no savedRef/dirty machinery. */
+export interface CalculatorDraftRecord {
+    docId: string;
+    base: string;
+    itemLevel: number;
+    /** Exported item state, or null before a base is chosen. */
+    state: unknown | null;
+    goalRarity: "normal" | "magic" | "rare";
+    slots: CalculatorGoalSlot[];
+    actionId: string;
+    /** Extra fossils layered onto a selected fossil action (loadout). */
+    fossilKeys: string[];
+    updatedAt: number;
+}
+
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
@@ -164,6 +189,20 @@ export function getStrategyDraft(
 
 export function deleteStrategyDraft(docId: string): Promise<unknown> {
     return tx("drafts", "readwrite", (store) => store.delete(docId));
+}
+
+// --- calculator drafts (same store; deleteDraft(docId) removes these too) ---
+
+export function putCalculatorDraft(
+    record: CalculatorDraftRecord,
+): Promise<unknown> {
+    return tx("drafts", "readwrite", (store) => store.put(record));
+}
+
+export function getCalculatorDraft(
+    docId: string,
+): Promise<CalculatorDraftRecord | undefined> {
+    return tx("drafts", "readonly", (store) => store.get(docId));
 }
 
 export function isStrategyStashRecord(

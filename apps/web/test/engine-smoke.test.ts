@@ -744,6 +744,72 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     await client.closeItem(item);
 });
 
+test("calculator picker: full-registry solver, filtered actions, fossil combos", async () => {
+    const item = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    const pool = await client.debugPool(contextId, item, {
+        action: { type: "exalt" },
+        side: "prefix",
+    });
+    const goalMod = await client.modInfo(
+        sessionId,
+        pool.entries[0].session_mod_id,
+    );
+
+    // No `actions` subset: the Calculator tab keeps the full registry open.
+    const solver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        slots: [{ family_mod_key: goalMod.key, min_tier: 0 }],
+    });
+
+    const actions = await client.solverActions(solver, {
+        omitFossilCombos: true,
+    });
+    assert.ok(actions.some((action) => action.id === "chaos"));
+    assert.ok(actions.some((action) => action.id === "restart"));
+    assert.ok(
+        !actions.some(
+            (action) =>
+                action.id.startsWith("fossil:") && action.id.includes("+"),
+        ),
+        "picker list must not contain multi-fossil combos",
+    );
+    const singles = actions.filter((action) =>
+        action.id.startsWith("fossil:"),
+    );
+    assert.ok(singles.length >= 2, "expected single-fossil actions");
+
+    // The tab reconstructs combo ids from single-fossil keys (sorted, joined
+    // with "+", per solver_registry.cpp) — prove the round trip calculates.
+    const keys = singles
+        .slice(0, 2)
+        .map((action) => action.id.slice("fossil:".length))
+        .sort();
+    const odds = await client.solverCalc(
+        solver,
+        item,
+        `fossil:${keys.join("+")}`,
+    );
+    assert.equal(odds.supported, true);
+    assert.equal(odds.legal, true);
+    // Reforge evaluators carry a ≥99.5% coverage budget, and the WASM facade
+    // rounds each probability to six decimals, so the sum is only near 1.
+    const total = odds.outcomes.reduce(
+        (sum, outcome) => sum + outcome.probability,
+        0,
+    );
+    assert.ok(
+        total > 0.995 && total < 1.001,
+        `probabilities sum to ${total}`,
+    );
+
+    await client.closeSolver(solver);
+    await client.closeItem(item);
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();

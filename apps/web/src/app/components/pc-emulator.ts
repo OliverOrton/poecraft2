@@ -465,6 +465,10 @@ export class PcEmulator extends HTMLElement {
         await workspace().openStrategy(await this.snapshot(), "copy");
     }
 
+    private async openInCalculator(): Promise<void> {
+        await workspace().openCalculator(await this.snapshot());
+    }
+
     private async disposeEngine(): Promise<void> {
         if (this.disposed) {
             return;
@@ -1017,6 +1021,7 @@ export class PcEmulator extends HTMLElement {
                         <button data-cmd="save-as">Save As</button>
                         <button data-cmd="duplicate">Duplicate</button>
                         <button data-cmd="strategy">Use in Strategy</button>
+                        <button data-cmd="calculator">Odds</button>
                     </span>
                     <span class="pc-emu-status" hidden></span>
                 </div>
@@ -1053,6 +1058,7 @@ export class PcEmulator extends HTMLElement {
                     else if (cmd === "save-as") await this.saveAs();
                     else if (cmd === "duplicate") await this.duplicate();
                     else if (cmd === "strategy") await this.useInStrategy();
+                    else if (cmd === "calculator") await this.openInCalculator();
                 });
             });
         });

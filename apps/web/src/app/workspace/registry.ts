@@ -33,6 +33,8 @@ export interface WorkspaceApi {
         savedRef?: string,
         savedName?: string,
     ): Promise<void>;
+    /** Open a Calculator document, optionally seeded with an item snapshot. */
+    openCalculator(seed?: ItemSnapshot): Promise<void>;
     /** Open (or focus) the Stash document. */
     openStash(): void;
     /** Persist a stash record and notify open Stash documents. */

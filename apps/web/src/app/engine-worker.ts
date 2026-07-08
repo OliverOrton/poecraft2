@@ -412,10 +412,19 @@ async function dispatch(
         case "closeSolver":
             bindings.closeSolver(params.solver as number);
             return {};
-        case "solverActions":
-            return {
-                actions: bindings.solverActions(params.solver as number),
-            };
+        case "solverActions": {
+            let actions = bindings.solverActions(params.solver as number);
+            if (params.omitFossilCombos) {
+                // Multi-fossil loadout ids are "fossil:<key>+<key>..." with
+                // sorted keys (solver_registry.cpp); keep only the singles.
+                actions = actions.filter(
+                    (action) =>
+                        !action.id.startsWith("fossil:") ||
+                        !action.id.includes("+"),
+                );
+            }
+            return { actions };
+        }
         case "solverCalc":
             return bindings.solverCalc(
                 params.solver as number,

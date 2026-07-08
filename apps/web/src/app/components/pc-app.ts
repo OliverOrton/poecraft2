@@ -13,6 +13,7 @@ export class PcApp extends HTMLElement {
                 <span class="pc-brand">poecraft</span>
                 <button data-cmd="new-emulator">+ Emulator</button>
                 <button data-cmd="new-strategy">+ Strategy</button>
+                <button data-cmd="new-calculator">+ Calculator</button>
                 <button data-cmd="open-stash">Stash</button>
             </header>
             <main class="pc-main">
@@ -27,6 +28,12 @@ export class PcApp extends HTMLElement {
             "click",
             () => {
                 void workspace.openStrategy();
+            },
+        );
+        this.querySelector('[data-cmd="new-calculator"]')!.addEventListener(
+            "click",
+            () => {
+                void workspace.openCalculator();
             },
         );
         this.querySelector('[data-cmd="open-stash"]')!.addEventListener("click", () => {

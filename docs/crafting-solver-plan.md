@@ -395,9 +395,9 @@ materializes representative items, and evaluates exact deterministic
 (scour, bench, restart) and single-slot (augment, regal, exalt, annul,
 influenced exalt) distributions by enumerating the same weighted pool the
 engine samples. `engine/tests/test_solver_calc.cpp` gates it against
-hand-computed pool sums and engine Monte Carlo histograms. Outstanding S2
-surface: the `pc_calc_action_outcomes` C ABI and the Calculator tab (the
-tab needs a WASM rebuild). Eldritch/veiled single-slot evaluators report
+hand-computed pool sums and engine Monte Carlo histograms. The
+`pc_calc_action_outcomes` C ABI landed with the S5 surface and the
+Calculator tab with S6. Eldritch/veiled single-slot evaluators report
 `supported = false` until implemented.
 
 S3's core reforge evaluator is complete in `solver_reforge.cpp`: a
@@ -462,9 +462,26 @@ The browser runtime is wired: `pcw_solver_*` facade exports in
 `bindings/wasm/wasm_api.cpp`, worker methods and `EngineClient` calls in
 `apps/web/src/app`, and a headless acceptance test that runs Calculator
 odds, a solve, and the compiled policy's simulator verification inside
-the WASM worker. Remaining for S6: the Calculator workspace tab UI,
-chunked solve with progress/cancel for long goals, veiled/eldritch
-evaluators, and the flag/junk-count condition types.
+the WASM worker.
+
+The Calculator workspace tab is built: `pc-calculator`
+(`apps/web/src/app/components/pc-calculator.ts`) is a workspace document
+alongside Emulator/Strategy/Stash, seeded from the Stash ("Odds" on item
+cards), an Emulator handoff (the craft bar's "Odds" button), or a base
+picked in place. It opens a full-registry solver for the authored goal
+(slots by modifier family with tier thresholds, or by mod group), picks
+one action from the candidate list — the worker filters multi-fossil
+combos out of the picker payload and the tab reassembles 1-4 fossil
+loadout ids from single-fossil keys — and renders the exact outcome
+distribution: per-goal-slot hit odds, outcome classes over goal-relevant
+features (rarity, affix counts, slot status, blocked flags, mechanic
+flags), and expected cost per attempt from the action's cost keys dotted
+with the workspace price table (`workspace/prices.ts`, the
+manual-override layer of the planned Economy service). Remaining for S6:
+the solver-in-Simulator flow (solve → compiled strategy opened in the
+Strategy Board), chunked solve with progress/cancel for long goals,
+Emulator ambient odds-before-you-click, veiled/eldritch evaluators, and
+the flag/junk-count condition types.
 
 ```text
 S1  action registry schema + descriptors for implemented mechanics;

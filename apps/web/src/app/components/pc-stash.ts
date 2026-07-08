@@ -104,11 +104,20 @@ export class PcStash extends HTMLElement {
 
         const actions = document.createElement("div");
         actions.className = "pc-stash-actions";
-        for (const [action, label] of [
-            ["open", "Edit"],
-            ["copy", "Import copy"],
-            ["delete", "Delete"],
-        ] as const) {
+        const entries: ReadonlyArray<readonly [string, string]> =
+            isStrategyStashRecord(record)
+                ? [
+                      ["open", "Edit"],
+                      ["copy", "Import copy"],
+                      ["delete", "Delete"],
+                  ]
+                : [
+                      ["open", "Edit"],
+                      ["copy", "Import copy"],
+                      ["odds", "Odds"],
+                      ["delete", "Delete"],
+                  ];
+        for (const [action, label] of entries) {
             const button = document.createElement("button");
             button.textContent = label;
             button.addEventListener("click", () => {
@@ -156,6 +165,8 @@ export class PcStash extends HTMLElement {
             );
         } else if (action === "copy") {
             await workspace().openEmulator(snapshot, "copy");
+        } else if (action === "odds") {
+            await workspace().openCalculator(snapshot);
         } else if (action === "delete") {
             await deleteStash(record.id);
             await this.refresh();
