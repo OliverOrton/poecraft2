@@ -478,11 +478,15 @@ applying a craft — fossil loadout ids are reassembled from single-fossil
 keys, and the worker's `omitFossilCombos` filter keeps the once-per-
 session candidate fetch (used for cost-key lookups) small. It opens a
 full-registry solver for the authored goal and renders the exact outcome
-distribution: per-goal-slot hit odds, outcome classes over goal-relevant
+distribution: per-goal-slot hit odds (inline on each goal row) plus a
+combined "all N mods at once" probability summed over the fully-satisfied
+outcome classes, the outcome classes themselves over goal-relevant
 features (rarity, affix counts, slot status, blocked flags, mechanic
 flags), and expected cost per attempt from the action's cost keys dotted
 with the workspace price table (`workspace/prices.ts`, the
-manual-override layer of the planned Economy service). Remaining for S6:
+manual-override layer of the planned Economy service). The item is a
+read-only input, so it collapses into a top-bar summary rather than
+taking a column. Remaining for S6:
 the solver-in-Simulator flow (solve → compiled strategy opened in the
 Strategy Board), chunked solve with progress/cancel for long goals,
 Emulator ambient odds-before-you-click, veiled/eldritch evaluators, and

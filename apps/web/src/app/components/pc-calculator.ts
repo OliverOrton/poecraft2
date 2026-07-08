@@ -597,14 +597,24 @@ export class PcCalculator extends HTMLElement {
         };
     }
 
-    /** Compact read-only item strip: the item is an input, not an editor. */
+    /** Compact read-only item summary in the top bar: the item is an input,
+     * not an editor, so it collapses out of the way of the goal column. */
     private renderItem(): void {
-        const host = this.querySelector<HTMLElement>(".pc-calc-itemcard");
-        if (!host) return;
-        const counts = {
-            prefix: this.itemMods.filter((mod) => mod.side === "prefix").length,
-            suffix: this.itemMods.filter((mod) => mod.side === "suffix").length,
-        };
+        const summary = this.querySelector<HTMLElement>(".pc-calc-item-summary");
+        const card = this.querySelector<HTMLElement>(".pc-calc-itemcard");
+        if (!summary || !card) return;
+        const prefixCount = this.itemMods.filter(
+            (mod) => mod.side === "prefix",
+        ).length;
+        const suffixCount = this.itemMods.length - prefixCount;
+        summary.innerHTML = `
+            <span class="pc-calc-item-tag">Item</span>
+            <span class="pc-rarity-${escapeHtml(this.itemRarity)}">${titleCase(this.itemRarity)}</span>
+            <span class="pc-calc-item-counts">${prefixCount}/${this.itemMaxPrefix}P · ${suffixCount}/${this.itemMaxSuffix}S${
+                this.itemImplicitCount
+                    ? ` · ${this.itemImplicitCount} implicit${this.itemImplicitCount === 1 ? "" : "s"}`
+                    : ""
+            }</span>`;
         const lines = this.itemMods
             .map(
                 (mod) => `<li class="pc-calc-mod pc-calc-mod-${mod.side}">
@@ -615,20 +625,9 @@ export class PcCalculator extends HTMLElement {
                 </li>`,
             )
             .join("");
-        host.innerHTML = `
-            <div class="pc-calc-itemcard-head">
-                <span class="pc-rarity-${escapeHtml(this.itemRarity)}">${titleCase(this.itemRarity)}</span>
-                <span>${counts.prefix}/${this.itemMaxPrefix}P · ${counts.suffix}/${this.itemMaxSuffix}S${
-                    this.itemImplicitCount
-                        ? ` · ${this.itemImplicitCount} implicit${this.itemImplicitCount === 1 ? "" : "s"}`
-                        : ""
-                }</span>
-            </div>
-            ${
-                this.itemMods.length
-                    ? `<ul class="pc-calc-mods">${lines}</ul>`
-                    : '<p class="pc-empty">No explicit modifiers.</p>'
-            }`;
+        card.innerHTML = this.itemMods.length
+            ? `<ul class="pc-calc-mods">${lines}</ul>`
+            : '<p class="pc-empty">No explicit modifiers.</p>';
     }
 
     private groupIdByKey(key: string): number | undefined {
@@ -676,12 +675,44 @@ export class PcCalculator extends HTMLElement {
         void this.guard(() => this.goalChanged());
     }
 
+    /** Probability that EVERY goal slot is satisfied at once, summed over the
+     * outcome classes where all slots read "satisfied". */
+    private combinedGoalProbability(): number {
+        if (!this.calc) return 0;
+        return this.calc.outcomes.reduce(
+            (sum, outcome) =>
+                this.slots.every((_, index) => outcome.slots[index] === 2)
+                    ? sum + outcome.probability
+                    : sum,
+            0,
+        );
+    }
+
+    /** The headline "chance to hit the whole goal in one action" line. Only
+     * meaningful with two or more slots — for one slot it equals its row. */
+    private renderGoalSummary(showOdds: boolean): void {
+        const host = this.querySelector<HTMLElement>(".pc-calc-goal-all");
+        if (!host) return;
+        if (!showOdds || this.slots.length < 2) {
+            host.hidden = true;
+            host.innerHTML = "";
+            return;
+        }
+        const p = this.combinedGoalProbability();
+        host.hidden = false;
+        host.innerHTML = `
+            <span class="pc-calc-goal-all-label">All ${this.slots.length} mods</span>
+            <span class="pc-calc-goal-all-bar"><span style="width:${(p * 100).toFixed(1)}%"></span></span>
+            <span class="pc-calc-goal-all-value">${formatProbability(p)}</span>`;
+    }
+
     private renderGoal(): void {
         const list = this.querySelector(".pc-calc-slots");
         if (!list) return;
         const showOdds = Boolean(
             this.calc && this.calc.legal && this.calc.supported,
         );
+        this.renderGoalSummary(showOdds);
         if (this.slots.length === 0) {
             list.innerHTML =
                 '<li class="pc-empty">Click modifiers in the pool to define the goal.</li>';
@@ -1381,13 +1412,15 @@ export class PcCalculator extends HTMLElement {
                         </select>
                         <button data-cmd="new-item">New item</button>
                     </label>
+                    <details class="pc-calc-item-details">
+                        <summary class="pc-calc-item-summary"></summary>
+                        <div class="pc-calc-itemcard"></div>
+                    </details>
                     <span class="pc-calc-status" hidden></span>
                 </div>
                 <div class="pc-advanced-crafts"></div>
                 <div class="pc-calc-body">
-                    <section class="pc-calc-item">
-                        <h3>Item</h3>
-                        <div class="pc-calc-itemcard"></div>
+                    <section class="pc-calc-goal">
                         <h3>Goal</h3>
                         <label class="pc-calc-goal-rarity">
                             <span>Finished rarity</span>
@@ -1397,6 +1430,7 @@ export class PcCalculator extends HTMLElement {
                                 <option value="rare">Rare</option>
                             </select>
                         </label>
+                        <div class="pc-calc-goal-all"></div>
                         <ul class="pc-calc-slots"></ul>
                         <pc-combobox data-role="group-slot"
                             placeholder="Or require any mod from a group…"></pc-combobox>

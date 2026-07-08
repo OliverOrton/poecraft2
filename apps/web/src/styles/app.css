@@ -2326,7 +2326,7 @@ pc-run-trace {
     background: var(--pc-border);
 }
 
-.pc-calc-item,
+.pc-calc-goal,
 .pc-calc-pool,
 .pc-calc-results {
     background: var(--pc-bg);
@@ -2343,24 +2343,65 @@ pc-run-trace {
     color: var(--pc-text-dim);
 }
 
-.pc-calc-item .pc-calc-itemcard + h3 {
-    margin-top: 18px;
+/* Item lives in the top bar as a collapsible summary — an input, not a
+   section competing with the goal for the column. */
+.pc-calc-item-details {
+    position: relative;
 }
 
-.pc-calc-itemcard {
-    padding: 7px 9px;
+.pc-calc-item-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 9px;
     background: var(--pc-bg-raised);
     border: 1px solid var(--pc-border);
     border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    list-style: none;
+    white-space: nowrap;
 }
 
-.pc-calc-itemcard-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 11px;
+.pc-calc-item-summary::-webkit-details-marker {
+    display: none;
+}
+
+.pc-calc-item-summary::after {
+    content: "▸";
     color: var(--pc-text-dim);
-    margin-bottom: 4px;
+}
+
+.pc-calc-item-details[open] .pc-calc-item-summary::after {
+    content: "▾";
+}
+
+.pc-calc-item-tag {
+    color: var(--pc-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10px;
+}
+
+.pc-calc-item-counts {
+    color: var(--pc-text-dim);
+    font-family: var(--pc-mono);
+}
+
+.pc-calc-itemcard {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 320px;
+    max-width: 460px;
+    max-height: 420px;
+    overflow: auto;
+    padding: 8px 10px;
+    background: var(--pc-bg-panel);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .pc-rarity-normal { color: var(--pc-normal); }
@@ -2435,6 +2476,47 @@ pc-run-trace {
     font-size: 11px;
 }
 
+.pc-calc-goal-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 7px 9px;
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-accent);
+    border-radius: 3px;
+}
+
+.pc-calc-goal-all-label {
+    flex: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pc-text-strong);
+}
+
+.pc-calc-goal-all-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--pc-bg);
+    border: 1px solid var(--pc-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pc-calc-goal-all-bar span {
+    display: block;
+    height: 100%;
+    background: var(--pc-accent);
+}
+
+.pc-calc-goal-all-value {
+    flex: none;
+    font-family: var(--pc-mono);
+    font-size: 13px;
+    color: var(--pc-text-strong);
+}
+
 .pc-calc-slots {
     margin: 0 0 8px;
     padding: 0;
@@ -2490,7 +2572,7 @@ pc-run-trace {
     color: var(--pc-accent);
 }
 
-.pc-calc-item pc-combobox {
+.pc-calc-goal pc-combobox {
     display: block;
     margin-top: 8px;
 }
