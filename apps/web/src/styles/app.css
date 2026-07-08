@@ -2321,7 +2321,7 @@ pc-run-trace {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(280px, 1.1fr) minmax(340px, 1.3fr) minmax(340px, 1.3fr);
+    grid-template-columns: minmax(240px, 0.9fr) minmax(340px, 1.3fr) minmax(360px, 1.5fr);
     gap: 1px;
     background: var(--pc-border);
 }
@@ -2343,8 +2343,62 @@ pc-run-trace {
     color: var(--pc-text-dim);
 }
 
-.pc-calc-item pc-mod-list + h3 {
+.pc-calc-item .pc-calc-itemcard + h3 {
     margin-top: 18px;
+}
+
+.pc-calc-itemcard {
+    padding: 7px 9px;
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+}
+
+.pc-calc-itemcard-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--pc-text-dim);
+    margin-bottom: 4px;
+}
+
+.pc-rarity-normal { color: var(--pc-normal); }
+.pc-rarity-magic { color: var(--pc-magic); }
+.pc-rarity-rare { color: var(--pc-rare); }
+
+.pc-calc-mods {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-calc-mod {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.pc-calc-mod-tier {
+    flex: none;
+    width: 20px;
+    font-family: var(--pc-mono);
+    font-size: 10px;
+    color: var(--pc-text-dim);
+}
+
+.pc-calc-mod-prefix .pc-calc-mod-text { color: var(--pc-prefix); }
+.pc-calc-mod-suffix .pc-calc-mod-text { color: var(--pc-suffix); }
+
+.pc-calc-mod-mark {
+    flex: none;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pc-fractured);
 }
 
 .pc-calc-selected {
@@ -2458,40 +2512,29 @@ pc-run-trace {
     font-size: 12px;
 }
 
-.pc-calc-odd {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) 58px;
+.pc-calc-slot-odds {
+    flex: none;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 3px 0;
-    font-size: 12px;
-}
-
-.pc-calc-odd-label {
+    gap: 5px;
+    font-family: var(--pc-mono);
+    font-size: 11px;
     color: var(--pc-text-strong);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
-.pc-calc-odd-bar {
-    height: 8px;
-    background: var(--pc-bg-raised);
+.pc-calc-slot-odds-bar {
+    width: 44px;
+    height: 6px;
+    background: var(--pc-bg);
     border: 1px solid var(--pc-border);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
-.pc-calc-odd-bar span {
+.pc-calc-slot-odds-bar span {
     display: block;
     height: 100%;
     background: var(--pc-accent);
-}
-
-.pc-calc-odd-value {
-    text-align: right;
-    font-family: var(--pc-mono);
-    color: var(--pc-text-strong);
 }
 
 .pc-calc-cost-row {

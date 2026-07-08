@@ -12,6 +12,11 @@
  * craft-panel band, except the buttons select a registry action id instead
  * of applying a craft.
  *
+ * The layout is deliberately denser than the Emulator's: the item is a
+ * read-only input here, so it renders as a compact mod strip instead of the
+ * full item card, and each goal slot carries its own hit probability inline
+ * so the results column is just cost and the outcome distribution.
+ *
  * Document lifecycle mirrors pc-emulator, minus Stash saves: a Calculator is
  * never a saved resource, so the IndexedDB draft exists purely for reload
  * recovery and the document is never dirty.
@@ -49,11 +54,9 @@ import {
 } from "../craft-choices";
 import type { ModifierFamilyOption } from "./pc-condition-editor";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
-import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
 import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
-import "./pc-mod-list";
 import "./pc-mod-pool";
 import "./pc-combobox";
 
@@ -116,6 +119,15 @@ const FLAG_LABELS = [
 
 const RARITY_NAMES = ["Normal", "Magic", "Rare"];
 
+/** One compact item line: side, tier, stat text, fractured/crafted marks. */
+interface ItemModLine {
+    side: "prefix" | "suffix";
+    tier: number;
+    text: string;
+    fractured: boolean;
+    crafted: boolean;
+}
+
 export class PcCalculator extends HTMLElement {
     private client!: EngineClient;
     private dataId = 0;
@@ -132,10 +144,15 @@ export class PcCalculator extends HTMLElement {
     private item = 0;
     private solver = 0;
     private modCache: ModInfo[] = [];
-    private familyLabels = new Map<number, string>();
     private modifierOptions: ModifierFamilyOption[] = [];
     private modKeyToFamily = new Map<string, string>();
     private pickerActions: SolverActionInfo[] = [];
+
+    private itemRarity = "normal";
+    private itemMods: ItemModLine[] = [];
+    private itemImplicitCount = 0;
+    private itemMaxPrefix = 3;
+    private itemMaxSuffix = 3;
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
     private slots: CalculatorGoalSlot[] = [];
@@ -247,7 +264,6 @@ export class PcCalculator extends HTMLElement {
             this.session = 0;
         }
         this.modCache = [];
-        this.familyLabels.clear();
         this.modifierOptions = [];
         this.modKeyToFamily.clear();
         this.pickerActions = [];
@@ -283,17 +299,6 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         this.modCache = cache;
-        const labels = new Map<number, string>();
-        for (const info of cache
-            .slice()
-            .sort((a, b) => b.required_level - a.required_level)) {
-            if (labels.has(info.family_id)) continue;
-            labels.set(
-                info.family_id,
-                info.text_lines.join(" / ") || info.key,
-            );
-        }
-        this.familyLabels = labels;
         this.modifierOptions = this.catalog
             ? buildModifierOptions(cache, this.catalog)
             : [];
@@ -494,6 +499,7 @@ export class PcCalculator extends HTMLElement {
                           : String(error);
             }
         }
+        this.renderGoal(); // per-slot odds live inline on the goal rows
         this.renderResults();
     }
 
@@ -524,18 +530,15 @@ export class PcCalculator extends HTMLElement {
         const prefixIds = info.prefix_mod_ids as number[];
         const suffixIds = info.suffix_mod_ids as number[];
         const implicitIds = info.implicit_mod_ids as number[];
-        const prefixes = prefixIds.map((id) => this.toSlot(id, fracturedP));
-        const suffixes = suffixIds.map((id) => this.toSlot(id, fracturedS));
-        const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
-        this.modList.setModel({
-            rarity: info.rarity as string,
-            influences: [],
-            prefixes,
-            suffixes,
-            implicits,
-            maxPrefix: (info.max_prefix as number) ?? prefixes.length,
-            maxSuffix: (info.max_suffix as number) ?? suffixes.length,
-        });
+        this.itemRarity = info.rarity as string;
+        this.itemImplicitCount = implicitIds.length;
+        this.itemMaxPrefix = (info.max_prefix as number) ?? prefixIds.length;
+        this.itemMaxSuffix = (info.max_suffix as number) ?? suffixIds.length;
+        this.itemMods = [
+            ...prefixIds.map((id) => this.toLine(id, "prefix", fracturedP)),
+            ...suffixIds.map((id) => this.toLine(id, "suffix", fracturedS)),
+        ];
+        this.renderItem();
 
         // Feed the goal-selection pool exactly like the Emulator feeds its
         // browser: live chaos-pool weights for the active tab.
@@ -567,8 +570,8 @@ export class PcCalculator extends HTMLElement {
                 fracturedPrefixOnItem: fracturedP,
                 fracturedSuffixOnItem: fracturedS,
                 groupOnItem,
-                maxPrefix: (info.max_prefix as number) ?? prefixes.length,
-                maxSuffix: (info.max_suffix as number) ?? suffixes.length,
+                maxPrefix: this.itemMaxPrefix,
+                maxSuffix: this.itemMaxSuffix,
             },
             pool,
             poolWeights,
@@ -577,33 +580,55 @@ export class PcCalculator extends HTMLElement {
         this.renderActionPanels();
     }
 
-    private toSlot(id: number, fractured: Set<number>): SlotMod {
+    private toLine(
+        id: number,
+        side: "prefix" | "suffix",
+        fractured: Set<number>,
+    ): ItemModLine {
         const info = this.modCache[id];
-        if (!info) {
-            return {
-                sessionModId: id,
-                key: String(id),
-                displayName: "",
-                tierIndex: 0,
-                textLines: [],
-                classificationTags: [],
-                fractured: fractured.has(id),
-                crafted: false,
-            };
-        }
         return {
-            sessionModId: id,
-            key: info.key,
-            displayName:
-                this.familyLabels.get(info.family_id) ||
-                info.text_lines.join(" / ") ||
-                info.key,
-            tierIndex: info.family_tier_index,
-            textLines: info.text_lines,
-            classificationTags: info.classification_tags,
+            side,
+            tier: info?.family_tier_index ?? 0,
+            text: info
+                ? info.text_lines.join(" / ") || info.key
+                : String(id),
             fractured: fractured.has(id),
-            crafted: info.reach_kind === REACH_KIND_CRAFTED,
+            crafted: info?.reach_kind === REACH_KIND_CRAFTED,
         };
+    }
+
+    /** Compact read-only item strip: the item is an input, not an editor. */
+    private renderItem(): void {
+        const host = this.querySelector<HTMLElement>(".pc-calc-itemcard");
+        if (!host) return;
+        const counts = {
+            prefix: this.itemMods.filter((mod) => mod.side === "prefix").length,
+            suffix: this.itemMods.filter((mod) => mod.side === "suffix").length,
+        };
+        const lines = this.itemMods
+            .map(
+                (mod) => `<li class="pc-calc-mod pc-calc-mod-${mod.side}">
+                    <span class="pc-calc-mod-tier">T${mod.tier || "?"}</span>
+                    <span class="pc-calc-mod-text">${escapeHtml(mod.text)}</span>
+                    ${mod.fractured ? '<span class="pc-calc-mod-mark">fractured</span>' : ""}
+                    ${mod.crafted ? '<span class="pc-calc-mod-mark">crafted</span>' : ""}
+                </li>`,
+            )
+            .join("");
+        host.innerHTML = `
+            <div class="pc-calc-itemcard-head">
+                <span class="pc-rarity-${escapeHtml(this.itemRarity)}">${titleCase(this.itemRarity)}</span>
+                <span>${counts.prefix}/${this.itemMaxPrefix}P · ${counts.suffix}/${this.itemMaxSuffix}S${
+                    this.itemImplicitCount
+                        ? ` · ${this.itemImplicitCount} implicit${this.itemImplicitCount === 1 ? "" : "s"}`
+                        : ""
+                }</span>
+            </div>
+            ${
+                this.itemMods.length
+                    ? `<ul class="pc-calc-mods">${lines}</ul>`
+                    : '<p class="pc-empty">No explicit modifiers.</p>'
+            }`;
     }
 
     private groupIdByKey(key: string): number | undefined {
@@ -654,6 +679,9 @@ export class PcCalculator extends HTMLElement {
     private renderGoal(): void {
         const list = this.querySelector(".pc-calc-slots");
         if (!list) return;
+        const showOdds = Boolean(
+            this.calc && this.calc.legal && this.calc.supported,
+        );
         if (this.slots.length === 0) {
             list.innerHTML =
                 '<li class="pc-empty">Click modifiers in the pool to define the goal.</li>';
@@ -665,6 +693,13 @@ export class PcCalculator extends HTMLElement {
                               (entry) => entry.value === slot.familyModKey,
                           )
                         : undefined;
+                    const p = this.calc?.slot_satisfied[index] ?? 0;
+                    const odds = showOdds
+                        ? `<span class="pc-calc-slot-odds" title="Chance this goal mod is satisfied after the selected action">
+                            <span class="pc-calc-slot-odds-bar"><span style="width:${(p * 100).toFixed(1)}%"></span></span>
+                            ${formatProbability(p)}
+                        </span>`
+                        : "";
                     const tierChoices = option
                         ? option.tiers
                               .map(
@@ -683,6 +718,7 @@ export class PcCalculator extends HTMLElement {
                             option ? (option.side === "prefix" ? "P" : "S") : "G"
                         }</span>
                         <span class="pc-calc-slot-label">${escapeHtml(this.slotLabel(slot))}</span>
+                        ${odds}
                         ${
                             option
                                 ? `<select data-slot-tier="${index}">
@@ -1158,7 +1194,6 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
-            ${this.renderSlotOdds(calc)}
             ${this.renderCost()}
             ${this.renderOutcomes(calc)}`;
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
@@ -1170,23 +1205,6 @@ export class PcCalculator extends HTMLElement {
                 });
             },
         );
-    }
-
-    private renderSlotOdds(calc: CalcResult): string {
-        const rows = this.slots
-            .map((slot, index) => {
-                const p = calc.slot_satisfied[index] ?? 0;
-                return `<div class="pc-calc-odd">
-                    <span class="pc-calc-odd-label">${escapeHtml(this.slotLabel(slot))}</span>
-                    <span class="pc-calc-odd-bar"><span style="width:${(p * 100).toFixed(2)}%"></span></span>
-                    <span class="pc-calc-odd-value">${formatProbability(p)}</span>
-                </div>`;
-            })
-            .join("");
-        return `<section class="pc-calc-section">
-            <h4>Goal modifier odds after this action</h4>
-            ${rows}
-        </section>`;
     }
 
     private renderCost(): string {
@@ -1274,10 +1292,6 @@ export class PcCalculator extends HTMLElement {
     }
 
     // --- shell / chrome -----------------------------------------------------
-
-    private get modList(): PcModList {
-        return this.querySelector("pc-mod-list")!;
-    }
 
     private get modPool(): PcModPool {
         return this.querySelector("pc-mod-pool")!;
@@ -1373,7 +1387,7 @@ export class PcCalculator extends HTMLElement {
                 <div class="pc-calc-body">
                     <section class="pc-calc-item">
                         <h3>Item</h3>
-                        <pc-mod-list></pc-mod-list>
+                        <div class="pc-calc-itemcard"></div>
                         <h3>Goal</h3>
                         <label class="pc-calc-goal-rarity">
                             <span>Finished rarity</span>
@@ -1452,6 +1466,7 @@ export class PcCalculator extends HTMLElement {
             box?.setValue("");
             void this.guard(() => this.goalChanged());
         });
+        this.renderItem();
         this.renderGoal();
         this.renderActionPanels();
         this.renderResults();
