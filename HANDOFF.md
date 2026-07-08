@@ -18,11 +18,19 @@ The new tab: `pc-calculator`
 registered in `pc-workspace.ts` beside emulator/strategy/stash, opened
 from the titlebar "+ Calculator", the Emulator craft bar "Odds" button
 (item handoff via snapshot → calculator draft), or "Odds" on Stash item
-cards. Supporting pieces added this session:
+cards. Per Oliver's direction it reuses the Emulator's selection UI:
+goal mods are picked from `pc-mod-pool` (new `select-goal` mode — every
+tier clickable, click = "this tier or better", emits `craft-mod`), and
+the action comes from the same craft-panel band, whose buttons select a
+registry action id (highlighted `is-selected`; mechanic selects
+re-derive a selected action live). Supporting pieces:
 
 - `apps/web/src/app/modifier-options.ts` — `buildModifierOptions` moved
-  out of pc-strategy-editor so the goal editor shares the family picker
-  options.
+  out of pc-strategy-editor (plus `buildModifierKeyIndex`: any tier key →
+  representative family key, for pool-click → goal-slot mapping).
+- `apps/web/src/app/craft-choices.ts` — essence grouping / resistance /
+  action-label helpers shared by the Emulator craft bar and the
+  Calculator's action panels.
 - `apps/web/src/app/workspace/prices.ts` — localStorage price table
   (manual-override layer of the planned Economy service); the cost
   section's inline price inputs write here and all tabs share it.
@@ -80,7 +88,10 @@ cards. Supporting pieces added this session:
   accordingly (see the calculator picker test).
 - Dockview detaches inactive panels' DOM (`document.querySelector` on a
   background tab's content returns null); activate via
-  `panel.api.setActive()` in tests.
+  `panel.api.setActive()` in tests. Re-attachment re-fires child
+  custom elements' `connectedCallback` — any component that rebuilds
+  its DOM there must restore from retained state (pc-mod-pool now
+  re-renders its model) or it comes back blank after a tab switch.
 - A goal family picked from the full option list can be bench/veiled-
   only — 0% odds under pool actions is correct engine behavior, not a
   bug (Jun veiled families burned 20 minutes this session).

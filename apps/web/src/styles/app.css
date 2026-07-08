@@ -2321,13 +2321,13 @@ pc-run-trace {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.1fr) minmax(360px, 1.6fr);
+    grid-template-columns: minmax(280px, 1.1fr) minmax(340px, 1.3fr) minmax(340px, 1.3fr);
     gap: 1px;
     background: var(--pc-border);
 }
 
 .pc-calc-item,
-.pc-calc-config,
+.pc-calc-pool,
 .pc-calc-results {
     background: var(--pc-bg);
     padding: 12px 14px;
@@ -2343,9 +2343,21 @@ pc-run-trace {
     color: var(--pc-text-dim);
 }
 
-.pc-calc-config h3 + h3,
-.pc-calc-config pc-combobox + h3 {
+.pc-calc-item pc-mod-list + h3 {
     margin-top: 18px;
+}
+
+.pc-calc-selected {
+    margin-left: auto;
+    align-self: center;
+    padding-right: 10px;
+    font-size: 11px;
+    color: var(--pc-accent);
+}
+
+.pc-advanced-crafts button.is-selected {
+    border-color: var(--pc-accent);
+    color: var(--pc-text-strong);
 }
 
 .pc-calc-fresh {
@@ -2424,26 +2436,9 @@ pc-run-trace {
     color: var(--pc-accent);
 }
 
-.pc-calc-config pc-combobox {
+.pc-calc-item pc-combobox {
     display: block;
     margin-top: 8px;
-}
-
-.pc-calc-action-hint {
-    margin: 0 0 6px;
-}
-
-.pc-calc-fossils {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
-}
-
-.pc-calc-fossils .pc-selected-fossils {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
 }
 
 .pc-calc-section {

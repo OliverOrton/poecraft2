@@ -57,15 +57,9 @@ export function titleCase(value: string): string {
         .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-/**
- * Group session mods into the same display families as the Emulator. The
- * representative T1 mod key is the stable persisted family identity, and each
- * option carries its complete T1..Tn threshold list.
- */
-export function buildModifierOptions(
-    mods: ModInfo[],
-    catalog: Catalog,
-): ModifierFamilyOption[] {
+/** Group explicit session mods into display families; each group is sorted by
+ * tier so index 0 is the representative (best-tier) mod. */
+function groupFamilies(mods: ModInfo[]): ModInfo[][] {
     const families = new Map<string, ModInfo[]>();
     for (const mod of mods) {
         if (mod.generation_type !== 0 && mod.generation_type !== 1) continue;
@@ -79,10 +73,38 @@ export function buildModifierOptions(
         if (slot) slot.push(mod);
         else families.set(key, [mod]);
     }
-
-    const options: ModifierFamilyOption[] = [];
-    for (const tiers of families.values()) {
+    const out = Array.from(families.values());
+    for (const tiers of out) {
         tiers.sort((a, b) => a.family_tier_index - b.family_tier_index);
+    }
+    return out;
+}
+
+/** Map every explicit mod key to its family's representative (persisted) key,
+ * so a click on any tier resolves to the same family identity the options
+ * from buildModifierOptions use. */
+export function buildModifierKeyIndex(mods: ModInfo[]): Map<string, string> {
+    const index = new Map<string, string>();
+    for (const tiers of groupFamilies(mods)) {
+        const rep = tiers[0];
+        for (const tier of tiers) {
+            index.set(tier.key, rep.key);
+        }
+    }
+    return index;
+}
+
+/**
+ * Group session mods into the same display families as the Emulator. The
+ * representative T1 mod key is the stable persisted family identity, and each
+ * option carries its complete T1..Tn threshold list.
+ */
+export function buildModifierOptions(
+    mods: ModInfo[],
+    catalog: Catalog,
+): ModifierFamilyOption[] {
+    const options: ModifierFamilyOption[] = [];
+    for (const tiers of groupFamilies(mods)) {
         const rep = tiers[0];
         const text =
             rep.text_lines.join(" / ") ||

@@ -7,6 +7,11 @@
  * Mounted with `allow-direct-craft` to enable click-to-craft (force-add the mod
  * regardless of pool — intentional for the emulator's scratch use case). The
  * strategy builder will mount without that attribute later.
+ *
+ * Mounted with `select-goal` (the Calculator's goal editor) every explicit
+ * tier is clickable regardless of the current item — a goal mod need not be
+ * addable right now — and clicks always emit `craft-mod` (the host treats it
+ * as "require this tier or better"); remove/fracture gestures are disabled.
  */
 
 import { ModInfo, PoolDebug } from "../engine-protocol";
@@ -51,6 +56,7 @@ const REACH_KIND_FOSSIL = 5;
 export class PcModPool extends HTMLElement {
     private model: PoolModel | null = null;
     private allowDirectCraft = false;
+    private selectMode = false;
     private tab: Tab = "prefix";
     private search = "";
     private sectionOpen: Record<string, boolean> = {
@@ -63,7 +69,14 @@ export class PcModPool extends HTMLElement {
 
     connectedCallback(): void {
         this.allowDirectCraft = this.hasAttribute("allow-direct-craft");
+        this.selectMode = this.hasAttribute("select-goal");
         this.renderShell();
+        if (this.model) {
+            // Dockview detaches inactive panels and re-attaches them on tab
+            // switch; restore the body from the retained model instead of
+            // showing "Loading" until the host's next setModel.
+            this.render();
+        }
     }
 
     setModel(model: PoolModel): void {
@@ -144,10 +157,12 @@ export class PcModPool extends HTMLElement {
                     ${
                         this.allowDirectCraft
                             ? '<span class="pc-mod-pool-hint">click to add · click the highlighted tier to remove</span>'
-                            : ""
+                            : this.selectMode
+                              ? '<span class="pc-mod-pool-hint">click a tier to require it in the goal (that tier or better)</span>'
+                              : ""
                     }
                 </div>
-                <input class="pc-mod-pool-search" type="text" placeholder="Search mods, groups, stat text…" />
+                <input class="pc-mod-pool-search" type="text" placeholder="Search mods, groups, stat text…" value="${escapeHtml(this.search)}" />
                 <div class="pc-mod-pool-tabs" role="tablist">
                     <button data-tab="prefix" class="pc-tab is-active">Prefixes</button>
                     <button data-tab="suffix" class="pc-tab">Suffixes</button>
@@ -398,7 +413,7 @@ export class PcModPool extends HTMLElement {
                   ? item.fracturedSuffixOnItem.has(tier.session_mod_id)
                   : false;
         let blockedReason: string | null = null;
-        if (this.tab !== "implicit") {
+        if (this.tab !== "implicit" && !this.selectMode) {
             if (family.onItem && !tierOnItem) {
                 blockedReason = "Another tier from this family is on the item";
             } else if (!family.onItem && conflictingGroupOnItem) {
@@ -421,7 +436,10 @@ export class PcModPool extends HTMLElement {
                 blockedReason = "Not currently rollable";
             }
         }
-        const clickable = this.allowDirectCraft && this.tab !== "implicit" && !blockedReason;
+        const clickable =
+            (this.allowDirectCraft || this.selectMode) &&
+            this.tab !== "implicit" &&
+            !blockedReason;
         const tags = tier.classification_tags
             .map((tag) => `<span>${escapeHtml(formatTag(tag))}</span>`)
             .join("");
@@ -445,7 +463,7 @@ export class PcModPool extends HTMLElement {
                     <span class="pc-mod-tier-meta">
                         <span>iLvl ${tier.required_level}</span>
                         ${
-                            tierOnItem
+                            tierOnItem && !this.selectMode
                                 ? tierFractured
                                     ? '<span class="pc-mod-tier-fractured">FRACTURED</span>'
                                     : '<span class="pc-mod-tier-remove">REMOVE</span>'
@@ -488,7 +506,7 @@ export class PcModPool extends HTMLElement {
                 const key = li.dataset.modKey ?? "";
                 const side = li.dataset.side ?? "prefix";
                 if (key && (side === "prefix" || side === "suffix")) {
-                    if (li.dataset.onItem === "true") {
+                    if (!this.selectMode && li.dataset.onItem === "true") {
                         this.dispatchRemove(Number(li.dataset.modId), side);
                     } else {
                         this.dispatchCraft(key, side);
@@ -497,6 +515,7 @@ export class PcModPool extends HTMLElement {
             });
             li.addEventListener("contextmenu", (event) => {
                 if (
+                    this.selectMode ||
                     li.dataset.canFracture !== "true" ||
                     li.dataset.fractured === "true" ||
                     btn.disabled

@@ -468,11 +468,16 @@ The Calculator workspace tab is built: `pc-calculator`
 (`apps/web/src/app/components/pc-calculator.ts`) is a workspace document
 alongside Emulator/Strategy/Stash, seeded from the Stash ("Odds" on item
 cards), an Emulator handoff (the craft bar's "Odds" button), or a base
-picked in place. It opens a full-registry solver for the authored goal
-(slots by modifier family with tier thresholds, or by mod group), picks
-one action from the candidate list — the worker filters multi-fossil
-combos out of the picker payload and the tab reassembles 1-4 fossil
-loadout ids from single-fossil keys — and renders the exact outcome
+picked in place. Its selection surfaces are the Emulator's own: goal
+mods come from the same modifier-pool browser (`pc-mod-pool` mounted
+with `select-goal` — clicking a tier requires that tier or better, plus
+a mod-group combobox and per-slot tier thresholds), and the action comes
+from the same craft-panel band (basic/essence/harvest/fossil/eldritch/
+influenced/veiled), whose buttons select a registry action id instead of
+applying a craft — fossil loadout ids are reassembled from single-fossil
+keys, and the worker's `omitFossilCombos` filter keeps the once-per-
+session candidate fetch (used for cost-key lookups) small. It opens a
+full-registry solver for the authored goal and renders the exact outcome
 distribution: per-goal-slot hit odds, outcome classes over goal-relevant
 features (rarity, affix counts, slot status, blocked flags, mechanic
 flags), and expected cost per attempt from the action's cost keys dotted

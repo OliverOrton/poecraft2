@@ -6,6 +6,12 @@
  * workspace price table. The engine is the only rules authority; this tab
  * renders pc_calc_action_outcomes results verbatim.
  *
+ * The selection surfaces mirror the Emulator: goal mods are picked from the
+ * same modifier-pool browser (pc-mod-pool in select-goal mode — clicking a
+ * tier requires that tier or better) and the action comes from the same
+ * craft-panel band, except the buttons select a registry action id instead
+ * of applying a craft.
+ *
  * Document lifecycle mirrors pc-emulator, minus Stash saves: a Calculator is
  * never a saved resource, so the IndexedDB draft exists purely for reload
  * recovery and the document is never dirty.
@@ -18,6 +24,7 @@ import {
     CalcOutcome,
     CalcResult,
     Catalog,
+    EngineError,
     ModInfo,
     SolverActionInfo,
     SolverGoal,
@@ -30,15 +37,24 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
-import { buildModifierOptions, titleCase } from "../modifier-options";
+import {
+    buildModifierKeyIndex,
+    buildModifierOptions,
+    titleCase,
+} from "../modifier-options";
+import {
+    craftActionLabel,
+    groupEssences,
+    resistanceEntries,
+} from "../craft-choices";
 import type { ModifierFamilyOption } from "./pc-condition-editor";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
-import { PcModifierPicker } from "./pc-modifier-picker";
+import { PcModPool } from "./pc-mod-pool";
 import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
 import "./pc-mod-list";
-import "./pc-modifier-picker";
+import "./pc-mod-pool";
 import "./pc-combobox";
 
 const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -46,6 +62,39 @@ const MAX_GOAL_SLOTS = 8;
 const MAX_FOSSILS = 4;
 const MAX_OUTCOME_ROWS = 40;
 const REACH_KIND_CRAFTED = 2;
+
+/** Same craft panels as the Emulator; buttons select instead of apply. */
+const BASIC_ACTIONS = [
+    "transmute",
+    "augment",
+    "alteration",
+    "regal",
+    "alchemy",
+    "chaos",
+    "exalt",
+    "annul",
+    "scour",
+    "fracture",
+];
+
+type CraftPanel =
+    | "basic"
+    | "essence"
+    | "harvest"
+    | "fossil"
+    | "eldritch"
+    | "influenced"
+    | "veiled";
+
+const CRAFT_PANELS: Array<[CraftPanel, string]> = [
+    ["basic", "Basic currency"],
+    ["essence", "Essences"],
+    ["harvest", "Harvest"],
+    ["fossil", "Fossil"],
+    ["eldritch", "Eldritch"],
+    ["influenced", "Influenced"],
+    ["veiled", "Veiled"],
+];
 
 /** Abstract mechanic flags, in solver_internal.hpp bit order. */
 const FLAG_LABELS = [
@@ -79,17 +128,21 @@ export class PcCalculator extends HTMLElement {
     private freshRarity = "rare";
 
     private session = 0;
+    private context = 0;
     private item = 0;
     private solver = 0;
     private modCache: ModInfo[] = [];
     private familyLabels = new Map<number, string>();
     private modifierOptions: ModifierFamilyOption[] = [];
+    private modKeyToFamily = new Map<string, string>();
     private pickerActions: SolverActionInfo[] = [];
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
     private slots: CalculatorGoalSlot[] = [];
     private actionId = "";
     private fossilKeys: string[] = [];
+    private activeCraftPanel: CraftPanel = "basic";
+    private mechanicValues = new Map<string, string>();
     private calc: CalcResult | null = null;
     private calcError = "";
 
@@ -137,6 +190,7 @@ export class PcCalculator extends HTMLElement {
             this.slots = draft.slots;
             this.actionId = draft.actionId;
             this.fossilKeys = draft.fossilKeys;
+            this.activeCraftPanel = panelForAction(this.actionId);
         }
         if (!this.bases.some((b) => b.path === this.base)) {
             this.base = this.bases[0]?.path ?? this.base;
@@ -187,12 +241,15 @@ export class PcCalculator extends HTMLElement {
         }
         await this.closeSolverHandle();
         if (this.session) {
+            await this.client.closeContext(this.context);
             await this.client.closeSession(this.session);
+            this.context = 0;
             this.session = 0;
         }
         this.modCache = [];
         this.familyLabels.clear();
         this.modifierOptions = [];
+        this.modKeyToFamily.clear();
         this.pickerActions = [];
         const session = await this.client.createSession(
             this.dataId,
@@ -203,7 +260,14 @@ export class PcCalculator extends HTMLElement {
             await this.client.closeSession(session);
             return;
         }
+        const context = await this.client.createContext(session, 0);
+        if (this.disposed) {
+            await this.client.closeContext(context);
+            await this.client.closeSession(session);
+            return;
+        }
         this.session = session;
+        this.context = context;
         await this.cacheAllMods();
     }
 
@@ -233,6 +297,7 @@ export class PcCalculator extends HTMLElement {
         this.modifierOptions = this.catalog
             ? buildModifierOptions(cache, this.catalog)
             : [];
+        this.modKeyToFamily = buildModifierKeyIndex(cache);
         // Drop goal slots that do not exist in the new session.
         this.slots = this.slots.filter((slot) =>
             slot.group
@@ -265,7 +330,7 @@ export class PcCalculator extends HTMLElement {
         };
         try {
             // No `actions` subset: the full registry stays available so any
-            // picked action (including fossil loadouts) can be calculated.
+            // selected action (including fossil loadouts) can be calculated.
             this.solver = await this.client.openSolver(this.session, goal);
         } catch (error) {
             this.calcError =
@@ -276,8 +341,8 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         if (this.pickerActions.length === 0) {
-            // The registry depends only on the session, so the picker list
-            // survives goal edits; fetch it once per session.
+            // The registry depends only on the session, so this list survives
+            // goal edits; fetched once per session for cost-key lookups.
             this.pickerActions = await this.client.solverActions(this.solver, {
                 omitFossilCombos: true,
             });
@@ -309,15 +374,20 @@ export class PcCalculator extends HTMLElement {
         }
         const item = this.item;
         const solver = this.solver;
+        const context = this.context;
         const session = this.session;
         this.item = 0;
         this.solver = 0;
+        this.context = 0;
         this.session = 0;
         if (solver && this.client) {
             await this.client.closeSolver(solver);
         }
         if (item && this.client) {
             await this.client.closeItem(item);
+        }
+        if (context && this.client) {
+            await this.client.closeContext(context);
         }
         if (session && this.client) {
             await this.client.closeSession(session);
@@ -363,29 +433,36 @@ export class PcCalculator extends HTMLElement {
     private async goalChanged(): Promise<void> {
         await this.openSolver();
         this.renderGoal();
-        this.renderAction();
         await this.recalc();
         await this.persist();
     }
 
     private async actionChanged(): Promise<void> {
-        this.renderAction();
+        this.renderActionPanels();
         await this.recalc();
         await this.persist();
     }
 
-    /** "fossil:<a>+<b>" with sorted keys, matching solver_registry.cpp. */
-    private effectiveActionId(): string {
-        if (this.fossilKeys.length > 1) {
-            return `fossil:${[...this.fossilKeys].sort().join("+")}`;
+    /** Select a registry action id from the craft panels. */
+    private selectAction(id: string): void {
+        this.actionId = id;
+        if (!id.startsWith("fossil:")) {
+            this.fossilKeys = [];
         }
-        return this.actionId;
+        void this.guard(() => this.actionChanged());
     }
 
-    /** Cost keys for the effective action; combos mirror the registry's
-     * per-fossil + resonator-size vector. */
-    private effectiveCostKeys(): string[] {
-        if (this.fossilKeys.length > 1) {
+    /** "fossil:<a>+<b>" with sorted keys, matching solver_registry.cpp. */
+    private fossilComboId(): string {
+        return this.fossilKeys.length
+            ? `fossil:${[...this.fossilKeys].sort().join("+")}`
+            : "";
+    }
+
+    /** Cost keys for the selected action; fossil loadouts mirror the
+     * registry's per-fossil + resonator-size vector. */
+    private selectedCostKeys(): string[] {
+        if (this.actionId.startsWith("fossil:") && this.fossilKeys.length) {
             return [
                 ...[...this.fossilKeys].sort().map((key) => `fossil:${key}`),
                 `resonator:${this.fossilKeys.length}`,
@@ -400,17 +477,21 @@ export class PcCalculator extends HTMLElement {
     private async recalc(): Promise<void> {
         this.calc = null;
         this.calcError = "";
-        const actionId = this.effectiveActionId();
-        if (this.solver && this.item && actionId) {
+        if (this.solver && this.item && this.actionId) {
             try {
                 this.calc = await this.client.solverCalc(
                     this.solver,
                     this.item,
-                    actionId,
+                    this.actionId,
                 );
             } catch (error) {
                 this.calcError =
-                    error instanceof Error ? error.message : String(error);
+                    error instanceof EngineError &&
+                    error.message.includes("unknown action")
+                        ? "This action is not available for this base and item level."
+                        : error instanceof Error
+                          ? error.message
+                          : String(error);
             }
         }
         this.renderResults();
@@ -440,15 +521,12 @@ export class PcCalculator extends HTMLElement {
         const info = await this.client.itemInfo(this.item, this.session);
         const fracturedP = new Set(info.fractured_prefix_mod_ids as number[]);
         const fracturedS = new Set(info.fractured_suffix_mod_ids as number[]);
-        const prefixes = (info.prefix_mod_ids as number[]).map((id) =>
-            this.toSlot(id, fracturedP),
-        );
-        const suffixes = (info.suffix_mod_ids as number[]).map((id) =>
-            this.toSlot(id, fracturedS),
-        );
-        const implicits = (info.implicit_mod_ids as number[]).map((id) =>
-            this.toSlot(id, new Set()),
-        );
+        const prefixIds = info.prefix_mod_ids as number[];
+        const suffixIds = info.suffix_mod_ids as number[];
+        const implicitIds = info.implicit_mod_ids as number[];
+        const prefixes = prefixIds.map((id) => this.toSlot(id, fracturedP));
+        const suffixes = suffixIds.map((id) => this.toSlot(id, fracturedS));
+        const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
         this.modList.setModel({
             rarity: info.rarity as string,
             influences: [],
@@ -458,8 +536,45 @@ export class PcCalculator extends HTMLElement {
             maxPrefix: (info.max_prefix as number) ?? prefixes.length,
             maxSuffix: (info.max_suffix as number) ?? suffixes.length,
         });
+
+        // Feed the goal-selection pool exactly like the Emulator feeds its
+        // browser: live chaos-pool weights for the active tab.
+        const pool =
+            this.modPool.getActiveTab() === "implicit"
+                ? null
+                : await this.client.debugPool(this.context, this.item, {
+                      action: { type: "chaos" },
+                  });
+        const poolWeights = new Map<number, number>();
+        if (pool) {
+            for (const entry of pool.entries) {
+                if (!entry.accepted) continue;
+                poolWeights.set(entry.session_mod_id, entry.final_weight);
+            }
+        }
+        const groupOnItem = new Set<number>();
+        for (const id of [...prefixIds, ...suffixIds]) {
+            const cached = this.modCache[id];
+            if (cached) groupOnItem.add(cached.primary_group_id);
+        }
+        this.modPool.setModel({
+            mods: this.modCache,
+            item: {
+                rarity: info.rarity as string,
+                prefixOnItem: new Set(prefixIds),
+                suffixOnItem: new Set(suffixIds),
+                implicitOnItem: new Set(implicitIds),
+                fracturedPrefixOnItem: fracturedP,
+                fracturedSuffixOnItem: fracturedS,
+                groupOnItem,
+                maxPrefix: (info.max_prefix as number) ?? prefixes.length,
+                maxSuffix: (info.max_suffix as number) ?? suffixes.length,
+            },
+            pool,
+            poolWeights,
+        });
         this.renderGoal();
-        this.renderAction();
+        this.renderActionPanels();
     }
 
     private toSlot(id: number, fractured: Set<number>): SlotMod {
@@ -514,12 +629,34 @@ export class PcCalculator extends HTMLElement {
         return `${option.label}${source}`;
     }
 
+    /** A pool tier was clicked: require that family at that tier or better. */
+    private addGoalFromPool(modKey: string): void {
+        const familyKey = this.modKeyToFamily.get(modKey);
+        const info = this.modCache.find((mod) => mod.key === modKey);
+        if (!familyKey || !info) {
+            return;
+        }
+        const minTier = info.family_tier_index || 0;
+        const existing = this.slots.find(
+            (slot) => slot.familyModKey === familyKey,
+        );
+        if (existing) {
+            existing.minTier = minTier;
+        } else if (this.slots.length < MAX_GOAL_SLOTS) {
+            this.slots = [...this.slots, { familyModKey: familyKey, minTier }];
+        } else {
+            this.setStatus(`Goals are limited to ${MAX_GOAL_SLOTS} modifiers.`);
+            return;
+        }
+        void this.guard(() => this.goalChanged());
+    }
+
     private renderGoal(): void {
         const list = this.querySelector(".pc-calc-slots");
         if (!list) return;
         if (this.slots.length === 0) {
             list.innerHTML =
-                '<li class="pc-empty">Add the modifiers the finished item needs.</li>';
+                '<li class="pc-empty">Click modifiers in the pool to define the goal.</li>';
         } else {
             list.innerHTML = this.slots
                 .map((slot, index) => {
@@ -581,15 +718,6 @@ export class PcCalculator extends HTMLElement {
             },
         );
 
-        const picker = this.querySelector<PcModifierPicker>(
-            "pc-modifier-picker",
-        );
-        picker?.setOptions(
-            this.slots.length < MAX_GOAL_SLOTS ? this.modifierOptions : [],
-            this.slots
-                .map((slot) => slot.familyModKey ?? "")
-                .filter(Boolean),
-        );
         const groupBox = this.querySelector<PcCombobox>(
             '[data-role="group-slot"]',
         );
@@ -619,106 +747,334 @@ export class PcCalculator extends HTMLElement {
         }
     }
 
-    private renderAction(): void {
-        const host = this.querySelector(".pc-calc-action");
-        if (!host) return;
-        const combo = host.querySelector<PcCombobox>('[data-role="action"]');
-        if (combo) {
-            combo.setOptions(
-                this.pickerActions.map((action) => ({
-                    value: action.id,
-                    label: this.actionLabel(action),
-                })),
-            );
-            combo.setValue(this.actionId);
-        }
-        const hint = host.querySelector<HTMLElement>(".pc-calc-action-hint");
-        if (hint) {
-            hint.hidden = this.slots.length > 0;
-        }
-        this.renderFossils();
-    }
+    // --- action panels (Emulator craft bar, selecting instead of applying) ---
 
-    private renderFossils(): void {
-        const host = this.querySelector<HTMLElement>(".pc-calc-fossils");
-        if (!host) return;
-        if (!this.actionId.startsWith("fossil:")) {
-            host.hidden = true;
-            host.innerHTML = "";
-            return;
-        }
-        host.hidden = false;
-        const nameOf = (key: string): string =>
-            this.catalog?.fossils.find((entry) => entry.key === key)?.name ??
-            key;
-        host.innerHTML = `
-            <span class="pc-help">Resonator loadout</span>
-            <span class="pc-selected-fossils">
-                ${this.fossilKeys
-                    .map(
-                        (key, index) =>
-                            `<span class="pc-chip">${escapeHtml(nameOf(key))}${
-                                this.fossilKeys.length > 1
-                                    ? `<button data-fossil-remove="${index}" title="Remove">&times;</button>`
-                                    : ""
-                            }</span>`,
-                    )
-                    .join("")}
-            </span>
-            ${
-                this.fossilKeys.length < MAX_FOSSILS
-                    ? '<pc-combobox data-role="add-fossil" placeholder="Add fossil…"></pc-combobox>'
-                    : ""
-            }`;
-        const addBox = host.querySelector<PcCombobox>(
-            '[data-role="add-fossil"]',
+    private renderActionPanels(): void {
+        const host = this.querySelector(".pc-advanced-crafts");
+        if (!host || !this.catalog) return;
+        host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(
+            (select) => {
+                const name = select.dataset.mechanic;
+                if (name) this.mechanicValues.set(name, select.value);
+            },
         );
-        if (addBox) {
-            const taken = new Set(this.fossilKeys);
-            addBox.setOptions(
-                this.pickerActions
-                    .filter(
-                        (action) =>
-                            action.id.startsWith("fossil:") &&
-                            !taken.has(action.id.slice("fossil:".length)),
-                    )
-                    .map((action) => ({
-                        value: action.id.slice("fossil:".length),
-                        label: this.actionLabel(action).replace(
-                            /^Fossil · /,
-                            "",
-                        ),
-                    })),
-            );
-            addBox.addEventListener("change", (event) => {
-                const key = (event as CustomEvent<{ value: string }>).detail
-                    .value;
+        const selected = (name: string, fallback = "") =>
+            this.mechanicValues.get(name) ?? fallback;
+        const options = (
+            entries: Array<{ key: string; name: string }>,
+            selected?: string,
+        ) =>
+            entries
+                .map(
+                    (entry) =>
+                        `<option value="${escapeHtml(entry.key)}" ${entry.key === selected ? "selected" : ""}>${escapeHtml(entry.name)}</option>`,
+                )
+                .join("");
+        const essenceGroups = groupEssences(this.catalog.essences);
+        const selectedEssenceType = essenceGroups.some(
+            (group) => group.type === selected("essence-type"),
+        )
+            ? selected("essence-type")
+            : (essenceGroups[0]?.type ?? "");
+        const essenceTiers =
+            essenceGroups.find((group) => group.type === selectedEssenceType)
+                ?.tiers ?? [];
+        const selectedEssenceKey = essenceTiers.some(
+            (entry) => entry.key === selected("essence-key"),
+        )
+            ? selected("essence-key")
+            : (essenceTiers[0]?.key ?? "");
+        const panel = (() => {
+            switch (this.activeCraftPanel) {
+                case "basic":
+                    return `
+                        <div class="pc-craft-options">
+                            ${BASIC_ACTIONS.map(
+                                (type) =>
+                                    `<button data-select-action="${type}">${craftActionLabel(type)}</button>`,
+                            ).join("")}
+                            <button data-select-action="restart">Restart (fresh base)</button>
+                        </div>`;
+                case "essence":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <label>
+                                <span>Type</span>
+                                <select data-mechanic="essence-type">${options(
+                                    essenceGroups.map((group) => ({
+                                        key: group.type,
+                                        name: group.type,
+                                    })),
+                                    selectedEssenceType,
+                                )}</select>
+                            </label>
+                            <label>
+                                <span>Tier</span>
+                                <select data-mechanic="essence-key">${options(
+                                    essenceTiers.map((entry) => ({
+                                        key: entry.key,
+                                        name: entry.tier,
+                                    })),
+                                    selectedEssenceKey,
+                                )}</select>
+                            </label>
+                            <button data-derive-action="essence">Use essence</button>
+                        </div>`;
+                case "harvest":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="harvest-tag">${options(
+                                this.catalog.harvestTags,
+                                selected(
+                                    "harvest-tag",
+                                    this.catalog.harvestTags[0]?.key,
+                                ),
+                            )}</select>
+                            <button data-derive-action="harvest_reforge">Reforge</button>
+                            <button data-derive-action="harvest_augment">Augment</button>
+                        </div>
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="resist-from">${options(
+                                resistanceEntries(),
+                                selected("resist-from", "fire"),
+                            )}</select>
+                            <span>&rarr;</span>
+                            <select data-mechanic="resist-to">${options(
+                                resistanceEntries(),
+                                selected("resist-to", "cold"),
+                            )}</select>
+                            <button data-derive-action="harvest_resist">Convert resistance</button>
+                        </div>`;
+                case "fossil":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="fossil">${options(
+                                this.catalog.fossils,
+                                selected("fossil", this.catalog.fossils[0]?.key),
+                            )}</select>
+                            <button data-fossil-add ${this.fossilKeys.length >= MAX_FOSSILS ? "disabled" : ""}>Add fossil</button>
+                        </div>
+                        <div class="pc-selected-fossils">
+                            ${
+                                this.fossilKeys.length
+                                    ? this.fossilKeys
+                                          .map(
+                                              (key, index) =>
+                                                  `<span class="pc-chip">${escapeHtml(
+                                                      this.catalog?.fossils.find(
+                                                          (entry) => entry.key === key,
+                                                      )?.name ?? key,
+                                                  )}<button data-fossil-remove="${index}" title="Remove">&times;</button></span>`,
+                                          )
+                                          .join("")
+                                    : '<span class="pc-help">Choose up to four fossils; the loadout is the selected action.</span>'
+                            }
+                        </div>`;
+                case "eldritch":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="eldritch-tier">${[1, 2, 3, 4]
+                                .map(
+                                    (tier) =>
+                                        `<option value="${tier}" ${String(tier) === selected("eldritch-tier", "1") ? "selected" : ""}>Tier ${tier}</option>`,
+                                )
+                                .join("")}</select>
+                            <button data-derive-action="eldritch_ember">Ember</button>
+                            <button data-derive-action="eldritch_ichor">Ichor</button>
+                        </div>
+                        <div class="pc-craft-options">
+                            ${["eldritch_exalt", "eldritch_chaos", "eldritch_annul"]
+                                .map(
+                                    (type) =>
+                                        `<button data-select-action="${type}">${craftActionLabel(type)}</button>`,
+                                )
+                                .join("")}
+                        </div>`;
+                case "influenced":
+                    return `
+                        <div class="pc-mechanic-row">
+                            <select data-mechanic="influence">${options(
+                                this.catalog.influences,
+                                selected(
+                                    "influence",
+                                    this.catalog.influences[0]?.key,
+                                ),
+                            )}</select>
+                            <button data-derive-action="influence_exalt">Influenced exalt</button>
+                        </div>`;
+                case "veiled":
+                    return `
+                        <div class="pc-craft-options">
+                            <button data-select-action="veiled_chaos">Veiled Chaos</button>
+                            <button data-select-action="veiled_exalt">Veiled Exalt</button>
+                            <button data-select-action="unveil">Unveil</button>
+                        </div>`;
+            }
+        })();
+        host.innerHTML = `
+            <div class="pc-craft-panel-tabs">
+                ${CRAFT_PANELS.map(
+                    ([key, label]) =>
+                        `<button data-craft-panel="${key}" class="${key === this.activeCraftPanel ? "is-active" : ""}">${label}</button>`,
+                ).join("")}
+                <span class="pc-calc-selected">${
+                    this.actionId
+                        ? `Selected: ${escapeHtml(this.actionLabel(this.actionId))}`
+                        : "No action selected"
+                }</span>
+            </div>
+            <div class="pc-craft-panel-body">${panel}</div>`;
+
+        // Highlight the control that produced the current selection.
+        host.querySelectorAll<HTMLButtonElement>("[data-select-action]").forEach(
+            (button) => {
+                button.classList.toggle(
+                    "is-selected",
+                    button.dataset.selectAction === this.actionId,
+                );
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-derive-action]").forEach(
+            (button) => {
+                const prefix = `${button.dataset.deriveAction}:`;
+                button.classList.toggle(
+                    "is-selected",
+                    this.actionId.startsWith(prefix),
+                );
+            },
+        );
+
+        host.querySelectorAll<HTMLSelectElement>("select[data-mechanic]").forEach(
+            (select) => {
+                select.addEventListener("change", () => {
+                    const name = select.dataset.mechanic;
+                    if (!name) return;
+                    this.mechanicValues.set(name, select.value);
+                    if (name === "essence-type") {
+                        this.mechanicValues.delete("essence-key");
+                        this.renderActionPanels();
+                        return;
+                    }
+                    // Re-derive a selected action live when its inputs move.
+                    const rederive = this.rederivedActionId(name);
+                    if (rederive && rederive !== this.actionId) {
+                        this.selectAction(rederive);
+                    }
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-craft-panel]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    this.activeCraftPanel = button.dataset
+                        .craftPanel as CraftPanel;
+                    this.renderActionPanels();
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-select-action]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    this.selectAction(button.dataset.selectAction ?? "");
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-derive-action]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    const id = this.derivedActionId(
+                        button.dataset.deriveAction ?? "",
+                    );
+                    if (id) this.selectAction(id);
+                });
+            },
+        );
+        host.querySelector<HTMLButtonElement>("[data-fossil-add]")?.addEventListener(
+            "click",
+            () => {
+                const key =
+                    host.querySelector<HTMLSelectElement>(
+                        '[data-mechanic="fossil"]',
+                    )?.value ?? "";
                 if (
                     key &&
-                    !this.fossilKeys.includes(key) &&
-                    this.fossilKeys.length < MAX_FOSSILS
+                    this.fossilKeys.length < MAX_FOSSILS &&
+                    !this.fossilKeys.includes(key)
                 ) {
                     this.fossilKeys = [...this.fossilKeys, key];
-                    void this.guard(() => this.actionChanged());
+                    this.selectAction(this.fossilComboId());
                 }
-            });
-        }
+            },
+        );
         host.querySelectorAll<HTMLButtonElement>("[data-fossil-remove]").forEach(
             (button) => {
                 button.addEventListener("click", () => {
                     const index = Number(button.dataset.fossilRemove);
                     this.fossilKeys = this.fossilKeys.filter(
-                        (_, i) => i !== index,
+                        (_, entryIndex) => entryIndex !== index,
                     );
-                    void this.guard(() => this.actionChanged());
+                    if (this.fossilKeys.length) {
+                        this.selectAction(this.fossilComboId());
+                    } else if (this.actionId.startsWith("fossil:")) {
+                        this.selectAction("");
+                    } else {
+                        this.renderActionPanels();
+                    }
                 });
             },
         );
+        this.setBusy(this.busy);
+    }
+
+    /** Registry action id from the current mechanic selects. */
+    private derivedActionId(kind: string): string {
+        const value = (name: string) =>
+            this.querySelector<HTMLSelectElement>(
+                `.pc-advanced-crafts [data-mechanic="${name}"]`,
+            )?.value ??
+            this.mechanicValues.get(name) ??
+            "";
+        switch (kind) {
+            case "essence":
+                return value("essence-key") ? `essence:${value("essence-key")}` : "";
+            case "harvest_reforge":
+                return `harvest_reforge:${value("harvest-tag")}`;
+            case "harvest_augment":
+                return `harvest_augment:${value("harvest-tag")}`;
+            case "harvest_resist":
+                return `harvest_resist:${value("resist-from")}:${value("resist-to")}`;
+            case "eldritch_ember":
+                return `eldritch_ember:${value("eldritch-tier") || "1"}`;
+            case "eldritch_ichor":
+                return `eldritch_ichor:${value("eldritch-tier") || "1"}`;
+            case "influence_exalt":
+                return `influence_exalt:${value("influence")}`;
+            default:
+                return "";
+        }
+    }
+
+    /** If the changed select feeds the currently selected action kind,
+     * return the updated id so the selection follows the controls. */
+    private rederivedActionId(mechanic: string): string {
+        const kindsByMechanic: Record<string, string[]> = {
+            "essence-key": ["essence"],
+            "harvest-tag": ["harvest_reforge", "harvest_augment"],
+            "resist-from": ["harvest_resist"],
+            "resist-to": ["harvest_resist"],
+            "eldritch-tier": ["eldritch_ember", "eldritch_ichor"],
+            influence: ["influence_exalt"],
+        };
+        for (const kind of kindsByMechanic[mechanic] ?? []) {
+            if (this.actionId.startsWith(`${kind}:`)) {
+                return this.derivedActionId(kind);
+            }
+        }
+        return "";
     }
 
     /** Human label for a registry action id, resolved through the catalog. */
-    private actionLabel(action: SolverActionInfo): string {
-        const id = action.id;
+    private actionLabel(id: string): string {
         const colon = id.indexOf(":");
         const kind = colon < 0 ? id : id.slice(0, colon);
         const rest = colon < 0 ? "" : id.slice(colon + 1);
@@ -727,34 +1083,46 @@ export class PcCalculator extends HTMLElement {
                 const name = this.catalog?.essences.find(
                     (entry) => entry.key === rest,
                 )?.name;
-                return `Essence · ${name ?? rest}`;
+                return name ?? rest;
             }
             case "fossil":
-                return `Fossil · ${action.display_name}`;
+                return rest
+                    .split("+")
+                    .map(
+                        (key) =>
+                            this.catalog?.fossils.find(
+                                (entry) => entry.key === key,
+                            )?.name ?? key,
+                    )
+                    .join(" + ");
             case "bench": {
                 const name = this.catalog?.bench.find(
                     (entry) => entry.key === rest,
                 )?.name;
-                return `Bench · ${name ?? rest}`;
+                return `Bench: ${name ?? rest}`;
             }
             case "harvest_reforge":
-                return `Harvest · Reforge ${titleCase(rest)}`;
+                return `Harvest Reforge ${titleCase(rest)}`;
             case "harvest_augment":
-                return `Harvest · Augment ${titleCase(rest)}`;
+                return `Harvest Augment ${titleCase(rest)}`;
             case "harvest_resist": {
                 const [from, to] = rest.split(":");
-                return `Harvest · Resist ${titleCase(from ?? "")} → ${titleCase(to ?? "")}`;
+                return `Harvest Resist ${titleCase(from ?? "")} → ${titleCase(to ?? "")}`;
             }
             case "eldritch_ember":
-                return `Eldritch · Ember T${rest}`;
+                return `Eldritch Ember T${rest}`;
             case "eldritch_ichor":
-                return `Eldritch · Ichor T${rest}`;
-            case "influence_exalt":
-                return `Influence · ${titleCase(rest)} Exalt`;
+                return `Eldritch Ichor T${rest}`;
+            case "influence_exalt": {
+                const name = this.catalog?.influences.find(
+                    (entry) => entry.key === rest,
+                )?.name;
+                return `${name ?? titleCase(rest)} Exalt`;
+            }
             case "restart":
                 return "Restart (fresh base)";
             default:
-                return titleCase(id);
+                return craftActionLabel(id);
         }
     }
 
@@ -770,7 +1138,7 @@ export class PcCalculator extends HTMLElement {
                 '<p class="pc-empty">Define a goal to compute odds against.</p>';
             return;
         }
-        if (!this.effectiveActionId()) {
+        if (!this.actionId) {
             host.innerHTML = '<p class="pc-empty">Pick an action.</p>';
             return;
         }
@@ -822,7 +1190,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private renderCost(): string {
-        const keys = this.effectiveCostKeys();
+        const keys = this.selectedCostKeys();
         if (keys.length === 0) {
             return "";
         }
@@ -842,7 +1210,7 @@ export class PcCalculator extends HTMLElement {
                 }
                 return `<div class="pc-calc-cost-row">
                     <span class="pc-calc-cost-key">${count > 1 ? `${count} × ` : ""}${escapeHtml(key)}</span>
-                    <input type="number" min="0" step="any" data-price-key="${escapeAttribute(key)}"
+                    <input type="number" min="0" step="any" data-price-key="${escapeHtml(key)}"
                         value="${price ?? ""}" placeholder="price">
                     <span class="pc-calc-cost-sub">${price !== undefined ? formatNumber(price * count) : "—"}</span>
                 </div>`;
@@ -870,7 +1238,7 @@ export class PcCalculator extends HTMLElement {
         const slotHeaders = this.slots
             .map(
                 (_, index) =>
-                    `<th title="${escapeAttribute(this.slotLabel(this.slots[index]))}">G${index + 1}</th>`,
+                    `<th title="${escapeHtml(this.slotLabel(this.slots[index]))}">G${index + 1}</th>`,
             )
             .join("");
         const rows = shown
@@ -911,6 +1279,10 @@ export class PcCalculator extends HTMLElement {
         return this.querySelector("pc-mod-list")!;
     }
 
+    private get modPool(): PcModPool {
+        return this.querySelector("pc-mod-pool")!;
+    }
+
     private setStatus(text: string): void {
         const el = this.querySelector(".pc-calc-status");
         if (el) {
@@ -922,9 +1294,15 @@ export class PcCalculator extends HTMLElement {
     private setBusy(busy: boolean): void {
         this.busy = busy;
         this.querySelectorAll<HTMLButtonElement>(
-            "button[data-cmd]",
+            "button[data-cmd], button[data-craft-panel], button[data-select-action], button[data-derive-action], button[data-fossil-add]",
         ).forEach((button) => {
-            button.disabled = busy;
+            if (busy) {
+                button.dataset.disabledBeforeBusy ??= String(button.disabled);
+                button.disabled = true;
+            } else if (button.dataset.disabledBeforeBusy !== undefined) {
+                button.disabled = button.dataset.disabledBeforeBusy === "true";
+                delete button.dataset.disabledBeforeBusy;
+            }
         });
     }
 
@@ -991,12 +1369,11 @@ export class PcCalculator extends HTMLElement {
                     </label>
                     <span class="pc-calc-status" hidden></span>
                 </div>
+                <div class="pc-advanced-crafts"></div>
                 <div class="pc-calc-body">
                     <section class="pc-calc-item">
                         <h3>Item</h3>
                         <pc-mod-list></pc-mod-list>
-                    </section>
-                    <section class="pc-calc-config">
                         <h3>Goal</h3>
                         <label class="pc-calc-goal-rarity">
                             <span>Finished rarity</span>
@@ -1007,16 +1384,11 @@ export class PcCalculator extends HTMLElement {
                             </select>
                         </label>
                         <ul class="pc-calc-slots"></ul>
-                        <pc-modifier-picker></pc-modifier-picker>
                         <pc-combobox data-role="group-slot"
-                            placeholder="Or add a whole mod group…"></pc-combobox>
-                        <h3>Action</h3>
-                        <p class="pc-calc-action-hint pc-help">Add a goal modifier first — odds are computed against the goal.</p>
-                        <div class="pc-calc-action">
-                            <pc-combobox data-role="action"
-                                placeholder="Search actions…"></pc-combobox>
-                            <div class="pc-calc-fossils" hidden></div>
-                        </div>
+                            placeholder="Or require any mod from a group…"></pc-combobox>
+                    </section>
+                    <section class="pc-calc-pool">
+                        <pc-mod-pool select-goal></pc-mod-pool>
                     </section>
                     <section class="pc-calc-results">
                         <h3>Odds</h3>
@@ -1052,23 +1424,14 @@ export class PcCalculator extends HTMLElement {
                 .value as "normal" | "magic" | "rare";
             void this.guard(() => this.goalChanged());
         });
-        this.querySelector<PcModifierPicker>(
-            "pc-modifier-picker",
-        )?.addEventListener("modifier-select", (event) => {
+        this.modPool.addEventListener("craft-mod", (event) => {
             const detail = (
-                event as CustomEvent<{ value: string; fractured: boolean }>
+                event as CustomEvent<{ key: string; side: "prefix" | "suffix" }>
             ).detail;
-            if (
-                this.slots.length >= MAX_GOAL_SLOTS ||
-                this.slots.some((slot) => slot.familyModKey === detail.value)
-            ) {
-                return;
-            }
-            this.slots = [
-                ...this.slots,
-                { familyModKey: detail.value, minTier: 0 },
-            ];
-            void this.guard(() => this.goalChanged());
+            this.addGoalFromPool(detail.key);
+        });
+        this.modPool.addEventListener("tab-change", () => {
+            void this.guard(() => this.refresh());
         });
         this.querySelector<PcCombobox>(
             '[data-role="group-slot"]',
@@ -1089,25 +1452,21 @@ export class PcCalculator extends HTMLElement {
             box?.setValue("");
             void this.guard(() => this.goalChanged());
         });
-        this.querySelector<PcCombobox>(
-            '[data-role="action"]',
-        )?.addEventListener("change", (event) => {
-            const value = (event as CustomEvent<{ value: string }>).detail
-                .value;
-            if (!value || value === this.actionId) {
-                return;
-            }
-            this.actionId = value;
-            this.fossilKeys = value.startsWith("fossil:")
-                ? [value.slice("fossil:".length)]
-                : [];
-            void this.guard(() => this.actionChanged());
-        });
         this.renderGoal();
-        this.renderAction();
+        this.renderActionPanels();
         this.renderResults();
         this.setBusy(this.busy);
     }
+}
+
+function panelForAction(id: string): CraftPanel {
+    if (id.startsWith("essence:")) return "essence";
+    if (id.startsWith("fossil:")) return "fossil";
+    if (id.startsWith("harvest_")) return "harvest";
+    if (id.startsWith("eldritch_")) return "eldritch";
+    if (id.startsWith("influence_exalt:")) return "influenced";
+    if (id.startsWith("veiled_") || id === "unveil") return "veiled";
+    return "basic";
 }
 
 function slotStatusCell(outcome: CalcOutcome, index: number): string {
@@ -1156,10 +1515,6 @@ function escapeHtml(text: string): string {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
-}
-
-function escapeAttribute(text: string): string {
-    return escapeHtml(text);
 }
 
 customElements.define("pc-calculator", PcCalculator);
