@@ -45,24 +45,17 @@ re-derive a selected action live). Supporting pieces:
   action id calculates; the picker list is fetched once per session
   (registry depends on session only, not goal).
 
-## Next task, in priority order
+## Next task
 
-1. **Solver-in-Simulator flow**: goal editor + "Solve" in the Simulator
-   or Strategy Builder context → `solverSolve` (needs a `pc_economy`
-   from the price table; `loadEconomy({version:"v1", prices})`) →
-   `solverCompileStrategy` → open the strategy JSON in the Strategy
-   Board. Nodes carry `expected_cost` annotations the board can display.
-   The end of the browser acceptance test in
-   [apps/web/test/engine-smoke.test.ts](apps/web/test/engine-smoke.test.ts)
-   is the exact call sequence.
-2. Chunked `pc_solver_solve` with progress/cancel (engine + WASM facade
-   change; mirror `runStrategy`'s chunk/yield pattern in
-   `engine-worker.ts`). Long goals currently block the worker.
-3. Emulator ambient odds ("odds before you click", plan §Watched
-   Modifiers): same `solverCalc` against the live emulator item.
-4. Veiled/eldritch calc evaluators (`solver_calc.cpp` `evaluate()`,
-   currently `supported=false`) and junk-count/flag condition types
-   (`solver_compile.cpp` throws precise "vocabulary gap" errors).
+Follow [docs/s6-plan.md](docs/s6-plan.md) — the detailed execution plan
+for the rest of S6, in priority order: (0) pilot the image-model UI
+design loop on a Calculator restyle (Oliver dislikes the current look),
+(1) Solve-in-workspace → compiled strategy opened in the Strategy Board,
+(2) chunked solve with progress/cancel, (3) Emulator ambient odds via
+watched modifiers, (4) veiled/eldritch calc evaluators plus the missing
+condition types. All UI work goes through the image-model design loop
+defined at the top of that plan (brief → mockups → Oliver signs off →
+implement to match).
 
 ## Rulings and decisions already made (don't re-ask, don't re-derive)
 
