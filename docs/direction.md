@@ -30,7 +30,10 @@ compiled strategy graph simulator, the Dockview workspace with Emulator,
 Strategy Builder, Simulator, and Stash, and the Phase 13 mechanic
 expansion (bench, metamods, veiled, harvest, eldritch, influenced exalts).
 See [implementation-plan.md](implementation-plan.md) for phase detail and
-the current next task.
+the current next task. Before S6 Phase 1, a short product-polish interlude is
+scheduled for base ordering, graph auto-labels, concrete Searing/Eater currency
+identity, and multi-goal Calculator authoring. The detailed sequence is in
+[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
 
 ## Direction Of Travel
 
@@ -72,7 +75,8 @@ Data and engine internals:
 
 Solver:
 [crafting-solver-plan.md](crafting-solver-plan.md),
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md)
+[solver-mechanic-extensions.md](solver-mechanic-extensions.md),
+[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md)
 
 UI and workspace:
 [desktop-workspace-ui.md](desktop-workspace-ui.md),

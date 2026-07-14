@@ -849,6 +849,24 @@ Implemented baseline:
 - Item displays show influence badges, reserve stable modifier-row space, use
   modifier-specific text colors, and frame the item using its rarity color.
 
+## Interlude P: Pre-S6 Product Polish (Scheduled)
+
+Before solver S6 Phase 1, complete the ordered polish phases in
+[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md):
+
+1. expose canonical base drop level and order base choices high-to-low; add
+   live auto-labels with manual overrides for strategy nodes and edges;
+2. replace the generic Searing/Eater numeric-tier authoring controls with
+   distinct actual currency identities across engine, bindings, strategy,
+   Calculator, Emulator, and economy surfaces;
+3. specify, design, implement, and present native multi-goal/OR Calculator
+   outcomes through an item-shaped Goal surface and a predicate editor shared
+   structurally with Strategy Builder conditions.
+
+This interlude does not move crafting-rule authority into the frontend. Exact
+overlap accounting for multiple goals belongs to the native calculation
+engine, and PoE mechanic mappings require Oliver's ruling.
+
 ## Phase 14: Performance And Public-Engine Readiness
 
 Goal: optimize only after correctness is measured, then package the complete engine for public workloads.

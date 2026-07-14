@@ -1,9 +1,10 @@
-# Session Handoff — Calculator OOM fixes complete; s6 Phase 1 next
+# Session Handoff — Calculator OOM fixes complete; polish Phase P1 next
 
 Written 2026-07-14 after implementing and gating the Calculator-mode
 rare-reforge exact-evaluation OOM fixes. Read [AGENTS.md](AGENTS.md), then
-[docs/direction.md](docs/direction.md), then this file. The next task is
-[docs/s6-plan.md](docs/s6-plan.md) Phase 1. Phase D in
+[docs/direction.md](docs/direction.md), then this file. Oliver has inserted the
+ordered [pre-S6 product-polish plan](docs/pre-s6-product-polish-plan.md). The
+next task is its Phase P1 only. S6 Phase 1 must not start yet. Phase D in
 [docs/strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md)
 remains unscheduled.
 
@@ -71,15 +72,22 @@ caps, capacity code 8 through the real worker, absence of `bad_alloc`, raw
 detail transport, one prefix only, and code-aware Calculator markup for codes
 4, 5, and 8.
 
-## Next task — s6 plan Phase 1 only
+## Next task — pre-S6 polish Phase P1 only
 
-Implement [docs/s6-plan.md](docs/s6-plan.md) **Phase 1 — Solve in the
-workspace (solve → Strategy Board)**. It starts with the required image-model
-design loop for the solve panel and placement decision. Reuse the existing
-Strategy Builder board-annotation mechanism for compiled-policy expected-cost
-badges; do not introduce a second badge system.
+Implement [docs/pre-s6-product-polish-plan.md](docs/pre-s6-product-polish-plan.md)
+**Phase P1 - Base ordering and graph auto-labels**. The compiled artifact
+already contains `base_items.drop_levels`, but `DataImpl` and `BaseInfo` do not
+currently load/expose it. Sort the shared base picker by known drop level
+descending, unknown last, then name/path. For graph labels, empty authored text
+means automatic, non-empty text is a preserved manual override, and clearing
+returns to automatic mode. Use engine/catalog display names for
+parameter-sensitive operation labels and the existing condition summary for
+edges.
 
-Stop after the Phase 1 gate, rewrite this handoff, and do not begin Phase 2.
+This phase changes behavior within existing controls and does not need a new
+image-model design pass. Run the full P1 acceptance gate, commit locally,
+rewrite this handoff for P2, and do not begin the Eldritch currency migration,
+P3 goal work, or S6 Phase 1.
 
 ## Gotchas
 
@@ -97,6 +105,11 @@ Stop after the Phase 1 gate, rewrite this handoff, and do not begin Phase 2.
   should be code 8.
 - The engine WASM module is committed. Rebuild it after engine/C-ABI changes
   with `scripts/build-wasm.ps1`; the script self-activates `C:\emsdk`.
+- `base_items.drop_levels` is present in the compiled JSON today but is not
+  loaded into `DataImpl`; do not derive base levels from names or paths in
+  TypeScript.
+- Auto-labels are presentation only. Never change stable node/edge IDs, routing
+  priority, or operation/condition payloads while formatting them.
 - Do not use Codex's built-in browser for this repository. Use a separate
   headless browser process when a browser smoke is required.
 - PoE1 mechanic ambiguity goes directly to Oliver; never research or guess.

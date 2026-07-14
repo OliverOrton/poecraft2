@@ -32,6 +32,13 @@ OOM hardening are complete and fully gated. Phase 1 below is now the next task.
 The board-annotation reuse ruling above still applies; Phase D remains
 unscheduled.
 
+Status 2026-07-14 (newest): Oliver scheduled the ordered product-polish
+interlude in
+[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md) before this plan
+resumes. Its Phase P1 is the current next task. Resume S6 Phase 1 only after
+P3c completes. The board-annotation reuse ruling and unscheduled Phase D
+boundary still stand.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what
