@@ -1,7 +1,7 @@
 import {
     StrategyEdge,
     StrategyNode,
-    conditionLabel,
+    strategyEdgeLabel,
 } from "../strategy-model";
 import { StrategyEdgeAnnotation } from "../strategy-eval-presentation";
 
@@ -63,7 +63,7 @@ export class PcEdgeLayer extends HTMLElement {
             ]
                 .filter(Boolean)
                 .join(" ");
-            const label = edge.label || conditionLabel(edge.condition);
+            const label = strategyEdgeLabel(edge);
             const annotation = this.view.annotations?.get(edge.id);
             const point = edgeLabelPoint(from, to, route);
             return [

@@ -101,6 +101,15 @@ pc_result pc_data_get_base_display(
     const char** out_item_class_key,
     pc_error_info* out_error);
 
+/* Canonical base drop-level requirement for picker ordering. A negative value
+ * is the artifact's explicit unknown sentinel; callers must not invent a
+ * replacement level. */
+pc_result pc_data_get_base_drop_level(
+    pc_data_handle data,
+    uint32_t base_index,
+    int32_t* out_drop_level,
+    pc_error_info* out_error);
+
 /*
  * Validate provisional fixed capacities against the loaded dataset. The report
  * records the maximum observed value for each capacity so the ABI can be

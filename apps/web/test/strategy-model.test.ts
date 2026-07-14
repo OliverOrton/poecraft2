@@ -7,11 +7,17 @@ import {
     createDefaultStrategy,
     defaultLeafCondition,
     createStrategyFromItemSnapshot,
+    operationLabel,
     parseConditionTree,
+    strategyEdgeLabel,
+    strategyNodeLabel,
     validateStrategy,
     type ConditionGroupNode,
     type ConditionLeaf,
+    type StrategyEdge,
+    type StrategyNode,
 } from "../src/app/strategy-model";
+import type { Catalog } from "../src/app/engine-protocol";
 
 {
     const strategy = createBlankStrategy("Metadata/Items/Test", 82);
@@ -218,4 +224,188 @@ import {
     };
     assert.deepEqual(compileConditionTree(empty), { type: "always" });
     console.log("  ok - empty condition group compiles to always");
+}
+
+const labelCatalog: Catalog = {
+    groupKeyById: [],
+    groupNameById: [],
+    essences: [
+        { key: "EssenceA", name: "Essence of Accuracy" },
+        { key: "EssenceB", name: "Deafening Essence of Contempt" },
+    ],
+    fossils: [
+        { key: "Jagged", name: "Jagged Fossil" },
+        { key: "Dense", name: "Dense Fossil" },
+    ],
+    bench: [{ key: "CraftedLife", name: "+# to maximum Life" }],
+    harvestTags: [
+        { key: "life", name: "Life" },
+        { key: "fire", name: "Fire" },
+        { key: "cold", name: "Cold" },
+    ],
+    influences: [{ key: "adjudicator", name: "Warlord" }],
+};
+
+const labelContext = {
+    catalog: labelCatalog,
+    modifierNames: new Map([["UnveiledLife", "+# to maximum Life (unveiled)"]]),
+};
+
+{
+    assert.equal(
+        operationLabel(
+            { type: "essence", params: { essence_key: "EssenceB" } },
+            labelContext,
+        ),
+        "Deafening Essence of Contempt",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "fossil", params: { fossils: ["Jagged", "Dense"] } },
+            labelContext,
+        ),
+        "Jagged Fossil + Dense Fossil",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "bench", params: { mod_key: "CraftedLife" } },
+            labelContext,
+        ),
+        "Bench: +# to maximum Life",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "harvest_reforge", params: { target_tag: "life" } },
+            labelContext,
+        ),
+        "Harvest Reforge: Life",
+    );
+    assert.equal(
+        operationLabel(
+            {
+                type: "harvest_resist",
+                params: { source_tag: "fire", target_tag: "cold" },
+            },
+            labelContext,
+        ),
+        "Harvest Resistance: Fire → Cold",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "influence_exalt", params: { influence: "adjudicator" } },
+            labelContext,
+        ),
+        "Influence Exalt: Warlord",
+    );
+    assert.equal(
+        operationLabel(
+            { type: "unveil", params: { mod_key: "UnveiledLife" } },
+            labelContext,
+        ),
+        "Unveil: +# to maximum Life (unveiled)",
+    );
+    console.log("  ok - operation labels use live parameters and catalog names");
+}
+
+{
+    const node: StrategyNode = {
+        id: "stable-node-id",
+        kind: "operation",
+        name: "",
+        operation: { type: "essence", params: { essence_key: "EssenceA" } },
+        position: { x: 0, y: 0 },
+    };
+    assert.equal(strategyNodeLabel(node, labelContext), "Essence of Accuracy");
+    node.operation!.params.essence_key = "EssenceB";
+    assert.equal(
+        strategyNodeLabel(node, labelContext),
+        "Deafening Essence of Contempt",
+    );
+    node.name = "My preserved node name";
+    node.operation!.params.essence_key = "EssenceA";
+    assert.equal(strategyNodeLabel(node, labelContext), "My preserved node name");
+
+    const reopened = JSON.parse(JSON.stringify(node)) as StrategyNode;
+    assert.equal(reopened.id, "stable-node-id");
+    assert.equal(strategyNodeLabel(reopened, labelContext), "My preserved node name");
+    reopened.name = "";
+    assert.equal(strategyNodeLabel(reopened, labelContext), "Essence of Accuracy");
+    console.log("  ok - node manual overrides persist and clear back to automatic");
+}
+
+{
+    const edge: StrategyEdge = {
+        id: "stable-edge-id",
+        from: "a",
+        to: "b",
+        priority: 7,
+        condition: { type: "rarity_is", rarity: "rare" },
+        label: "",
+    };
+    assert.equal(strategyEdgeLabel(edge), "rarity is rare");
+    edge.condition = { type: "open_prefix_count", min: 1, max: 2 };
+    assert.equal(strategyEdgeLabel(edge), "open prefixes 1-2");
+    edge.label = "My preserved edge label";
+    edge.condition = { type: "always" };
+    assert.equal(strategyEdgeLabel(edge), "My preserved edge label");
+
+    const reopened = JSON.parse(JSON.stringify(edge)) as StrategyEdge;
+    assert.equal(reopened.id, "stable-edge-id");
+    assert.equal(reopened.priority, 7);
+    assert.equal(strategyEdgeLabel(reopened), "My preserved edge label");
+    reopened.label = "";
+    assert.equal(strategyEdgeLabel(reopened), "always");
+    console.log("  ok - edge manual overrides persist and clear back to automatic");
+}
+
+{
+    const strategy = createBlankStrategy();
+    strategy.nodes = [
+        {
+            id: "manual-node",
+            kind: "operation",
+            name: "Saved manual node",
+            operation: { type: "essence", params: { essence_key: "EssenceA" } },
+            position: { x: 10, y: 20 },
+        },
+        {
+            id: "automatic-node",
+            kind: "operation",
+            name: "",
+            operation: { type: "essence", params: { essence_key: "EssenceB" } },
+            position: { x: 30, y: 40 },
+        },
+    ];
+    strategy.edges = [
+        {
+            id: "manual-edge",
+            from: "manual-node",
+            to: "automatic-node",
+            priority: 0,
+            condition: { type: "rarity_is", rarity: "rare" },
+            label: "Saved manual edge",
+        },
+        {
+            id: "automatic-edge",
+            from: "automatic-node",
+            to: "manual-node",
+            priority: 1,
+            condition: { type: "rarity_is", rarity: "magic" },
+            label: "",
+        },
+    ];
+
+    const reopened = JSON.parse(
+        JSON.stringify(cloneStrategy(strategy)),
+    ) as typeof strategy;
+    assert.equal(reopened.nodes[0].name, "Saved manual node");
+    assert.equal(reopened.nodes[1].name, "");
+    assert.equal(reopened.edges[0].label, "Saved manual edge");
+    assert.equal(reopened.edges[1].label, "");
+    assert.equal(
+        strategyNodeLabel(reopened.nodes[1], labelContext),
+        "Deafening Essence of Contempt",
+    );
+    assert.equal(strategyEdgeLabel(reopened.edges[1]), "rarity is magic");
+    console.log("  ok - save/reopen preserves manual overrides and automatic mode");
 }

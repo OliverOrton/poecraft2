@@ -1,7 +1,9 @@
 import {
+    StrategyLabelContext,
     StrategyNode,
     StrategyValidationIssue,
     operationLabel,
+    strategyNodeLabel,
 } from "../strategy-model";
 import { StrategyNodeAnnotation } from "../strategy-eval-presentation";
 
@@ -13,6 +15,7 @@ export interface StrategyNodeView {
     issues: StrategyValidationIssue[];
     annotation?: StrategyNodeAnnotation;
     annotationStale?: boolean;
+    labelContext?: StrategyLabelContext;
 }
 
 export class PcStrategyNode extends HTMLElement {
@@ -31,8 +34,16 @@ export class PcStrategyNode extends HTMLElement {
         if (!this.view) {
             return;
         }
-        const { node, selected, active, taken, issues, annotation, annotationStale } =
-            this.view;
+        const {
+            node,
+            selected,
+            active,
+            taken,
+            issues,
+            annotation,
+            annotationStale,
+            labelContext,
+        } = this.view;
         this.dataset.nodeId = node.id;
         this.className = [
             "pc-strategy-node",
@@ -52,7 +63,7 @@ export class PcStrategyNode extends HTMLElement {
 
         const subtitle =
             node.kind === "operation"
-                ? operationLabel(node.operation)
+                ? operationLabel(node.operation, labelContext)
                 : node.kind === "terminal"
                   ? node.terminal ?? "terminal"
                   : node.kind === "router"
@@ -67,7 +78,7 @@ export class PcStrategyNode extends HTMLElement {
                     ${issues.length ? '<span class="pc-node-warning" title="Validation warning">!</span>' : ""}
                 </span>
             </div>
-            <div class="pc-node-title">${escapeHtml(node.name || node.id)}</div>
+            <div class="pc-node-title">${escapeHtml(strategyNodeLabel(node, labelContext))}</div>
             <div class="pc-node-subtitle">${escapeHtml(subtitle)}</div>
             ${node.kind === "terminal" ? "" : '<button class="pc-node-port pc-node-output" title="Drag to connect" aria-label="Output"></button>'}`;
 

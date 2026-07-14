@@ -343,7 +343,9 @@ test("load data through the memory bundle path", async () => {
     assert.ok((summary.base_item_count as number) > 0);
     assert.ok((summary.mod_count as number) > 0);
     const bases = await client.listBases(dataId);
-    assert.ok(bases.some((base) => base.path === BASE && base.support === 0));
+    const base = bases.find((entry) => entry.path === BASE);
+    assert.equal(base?.support, 0);
+    assert.equal(base?.drop_level, 68);
 });
 
 test("create a session and an item", async () => {

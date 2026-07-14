@@ -85,19 +85,88 @@ void run_data_loader_tests(const char* artifact_dir) {
                      PC_RESULT_OK);
             PC_CHECK(mem_summary.base_item_count == summary.base_item_count);
             PC_CHECK(mem_summary.mod_count == summary.mod_count);
+            int32_t first_drop_level = -1;
+            PC_CHECK(pc_data_get_base_drop_level(mem_data, 0,
+                                                  &first_drop_level,
+                                                  &error) == PC_RESULT_OK);
+            PC_CHECK(first_drop_level >= 0);
             pc_data_destroy(mem_data);
+        }
+
+        /* The native loader and enumeration API preserve the artifact's
+         * explicit unknown sentinel instead of manufacturing a level. */
+        std::string unknown_game_text = game_text;
+        const std::string marker = "\"drop_levels\"";
+        const std::size_t marker_at = unknown_game_text.find(marker);
+        PC_CHECK(marker_at != std::string::npos);
+        if (marker_at != std::string::npos) {
+            const std::size_t array_at =
+                unknown_game_text.find('[', marker_at + marker.size());
+            PC_CHECK(array_at != std::string::npos);
+            if (array_at == std::string::npos) {
+                pc_data_destroy(data);
+                return;
+            }
+            std::size_t value_at = array_at + 1;
+            while (value_at < unknown_game_text.size() &&
+                   (unknown_game_text[value_at] == ' ' ||
+                    unknown_game_text[value_at] == '\n' ||
+                    unknown_game_text[value_at] == '\r' ||
+                    unknown_game_text[value_at] == '\t')) {
+                ++value_at;
+            }
+            std::size_t value_end = value_at;
+            if (value_end < unknown_game_text.size() &&
+                unknown_game_text[value_end] == '-') {
+                ++value_end;
+            }
+            while (value_end < unknown_game_text.size() &&
+                   unknown_game_text[value_end] >= '0' &&
+                   unknown_game_text[value_end] <= '9') {
+                ++value_end;
+            }
+            unknown_game_text.replace(value_at, value_end - value_at, "-1");
+
+            std::string unknown_bundle = "{\"manifest\":";
+            unknown_bundle += manifest_text;
+            unknown_bundle += ",\"strings\":";
+            unknown_bundle += strings_text;
+            unknown_bundle += ",\"game_data\":";
+            unknown_bundle += unknown_game_text;
+            unknown_bundle += "}";
+            pc_data_handle unknown_data = nullptr;
+            PC_CHECK(pc_data_load_memory(unknown_bundle.data(),
+                                         unknown_bundle.size(), &unknown_data,
+                                         &error) == PC_RESULT_OK);
+            if (unknown_data != nullptr) {
+                int32_t unknown_drop_level = 0;
+                PC_CHECK(pc_data_get_base_drop_level(
+                             unknown_data, 0, &unknown_drop_level, &error) ==
+                         PC_RESULT_OK);
+                PC_CHECK(unknown_drop_level == -1);
+                pc_data_destroy(unknown_data);
+            }
         }
     }
 
     /* --- resolve multiple ordinary bases by metadata path --- */
     std::vector<std::string> ordinary_paths;
     std::string cluster_path;
+    bool found_vaal_regalia_drop_level = false;
     for (uint32_t i = 0; i < summary.base_item_count; ++i) {
         const char* path = nullptr;
         int32_t support = -1;
         if (pc_data_get_base_path(data, i, &path, &support, &error) !=
             PC_RESULT_OK) {
             continue;
+        }
+        int32_t drop_level = -1;
+        PC_CHECK(pc_data_get_base_drop_level(data, i, &drop_level, &error) ==
+                 PC_RESULT_OK);
+        if (std::string(path) ==
+            "Metadata/Items/Armours/BodyArmours/BodyInt17") {
+            PC_CHECK(drop_level == 68);
+            found_vaal_regalia_drop_level = true;
         }
         if (support == PC_SESSION_SUPPORT_ORDINARY &&
             ordinary_paths.size() < 4) {
@@ -108,6 +177,7 @@ void run_data_loader_tests(const char* artifact_dir) {
         }
     }
     PC_CHECK(ordinary_paths.size() >= 2);
+    PC_CHECK(found_vaal_regalia_drop_level);
 
     pc_session_handle first_session = nullptr;
     for (const std::string& path : ordinary_paths) {

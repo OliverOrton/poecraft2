@@ -1,5 +1,6 @@
 import {
     StrategyDocument,
+    StrategyLabelContext,
     StrategyValidationIssue,
     StrategyViewport,
 } from "../strategy-model";
@@ -49,6 +50,7 @@ export class PcStrategyBoard extends HTMLElement {
         | null = null;
     private connectingFrom: string | null = null;
     private annotations: StrategyBoardAnnotations | null = null;
+    private labelContext: StrategyLabelContext = {};
 
     connectedCallback(): void {
         if (!this.innerHTML) {
@@ -73,12 +75,14 @@ export class PcStrategyBoard extends HTMLElement {
         issues: StrategyValidationIssue[],
         highlight: TraceHighlight,
         annotations: StrategyBoardAnnotations | null = null,
+        labelContext: StrategyLabelContext = {},
     ): void {
         this.strategy = strategy;
         this.selection = selection;
         this.issues = issues;
         this.highlight = highlight;
         this.annotations = annotations;
+        this.labelContext = labelContext;
         this.viewport =
             strategy.ui?.viewport ?? this.viewport ?? {
                 panX: 24,
@@ -303,6 +307,7 @@ export class PcStrategyBoard extends HTMLElement {
                     issues: warningNodeIds.get(node.id) ?? [],
                     annotation: this.annotations?.nodeBadges.get(node.id),
                     annotationStale: this.annotations?.stale,
+                    labelContext: this.labelContext,
                 });
                 return element;
             }),

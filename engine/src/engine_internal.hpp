@@ -44,6 +44,7 @@ struct DataImpl {
     std::vector<std::uint32_t> base_name_sid;
     std::vector<std::uint32_t> base_item_class_id;
     std::vector<std::int32_t> base_domain_code;
+    std::vector<std::int32_t> base_drop_levels;
     std::vector<std::int32_t> base_session_support;
     std::vector<std::int32_t> base_flags;
     std::vector<std::uint32_t> base_tag_offsets;      // base_count + 1

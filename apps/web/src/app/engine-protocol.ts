@@ -270,6 +270,8 @@ export interface BaseInfo {
     path: string;
     name: string;
     item_class_key: string;
+    /** Canonical base drop-level requirement; negative means unknown. */
+    drop_level: number;
     /** pc_session_support: 0 ordinary, 1 cluster, 2 unsupported domain. */
     support: number;
 }

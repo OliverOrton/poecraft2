@@ -10,6 +10,7 @@
  */
 
 import { BaseInfo } from "../engine-protocol";
+import { supportedBasePickerBases } from "../base-picker-model";
 
 export interface BasePickerSelection {
     base: string;
@@ -69,7 +70,7 @@ export class PcBasePicker extends HTMLElement {
     }
 
     setBases(bases: BaseInfo[]): void {
-        this.bases = bases.filter((b) => b.support === 0 && b.name);
+        this.bases = supportedBasePickerBases(bases);
         const byClass = new Map<string, ClassEntry>();
         for (const base of this.bases) {
             const key = base.item_class_key || "Other";
@@ -79,9 +80,6 @@ export class PcBasePicker extends HTMLElement {
                 byClass.set(key, entry);
             }
             entry.bases.push(base);
-        }
-        for (const entry of byClass.values()) {
-            entry.bases.sort((a, b) => a.name.localeCompare(b.name));
         }
         this.classes = Array.from(byClass.values()).sort((a, b) =>
             a.label.localeCompare(b.label),

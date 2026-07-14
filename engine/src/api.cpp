@@ -407,6 +407,25 @@ pc_result pc_data_get_base_display(
     return PC_RESULT_OK;
 }
 
+pc_result pc_data_get_base_drop_level(
+    pc_data_handle data,
+    uint32_t base_index,
+    int32_t* out_drop_level,
+    pc_error_info* out_error) {
+    if (data == nullptr || out_drop_level == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const poecraft::DataImpl& d = *data->impl;
+    if (base_index >= d.base_count) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "base index out of range");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_drop_level = d.base_drop_levels[base_index];
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
 pc_result pc_data_check_capacities(
     pc_data_handle data,
     pc_capacity_report* out_report,

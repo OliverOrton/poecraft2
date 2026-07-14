@@ -215,6 +215,7 @@ static std::shared_ptr<DataImpl> build_data_impl(
     read_u32(bases, "name_string_ids", data->base_name_sid);
     read_u32(bases, "global_item_class_ids", data->base_item_class_id);
     read_i32(bases, "domain_codes", data->base_domain_code);
+    read_i32(bases, "drop_levels", data->base_drop_levels);
     read_i32(bases, "session_support_codes", data->base_session_support);
     read_i32(bases, "flags", data->base_flags);
     read_u32(bases, "tag_offsets", data->base_tag_offsets);
@@ -224,7 +225,12 @@ static std::shared_ptr<DataImpl> build_data_impl(
              data->base_implicit_global_mod_ids);
     require(data->base_global_ids.size() == data->base_count &&
                 data->base_metadata_path_sid.size() == data->base_count &&
-                data->base_session_support.size() == data->base_count,
+                data->base_name_sid.size() == data->base_count &&
+                data->base_item_class_id.size() == data->base_count &&
+                data->base_domain_code.size() == data->base_count &&
+                data->base_drop_levels.size() == data->base_count &&
+                data->base_session_support.size() == data->base_count &&
+                data->base_flags.size() == data->base_count,
             "base_items arrays inconsistent");
     require(data->base_tag_offsets.size() == data->base_count + 1,
             "base tag_offsets must be base_count + 1");

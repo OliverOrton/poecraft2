@@ -1,4 +1,5 @@
 import { ItemSnapshot, itemSnapshotRarity } from "./workspace/persistence";
+import type { Catalog, CatalogEntry } from "./engine-protocol";
 
 export const DEFAULT_STRATEGY_BASE =
     "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -432,23 +433,130 @@ export function nextGraphId(prefix: string, ids: Iterable<string>): string {
     return `${prefix}_${index}`;
 }
 
-export function operationLabel(operation?: StrategyOperation): string {
-    if (!operation) {
-        return "Choose operation";
-    }
-    if (operation.type === "condition_check_only") {
-        return "Condition router";
-    }
-    if (operation.type === "essence") {
-        return "Essence";
-    }
-    if (operation.type === "fossil") {
-        return "Fossils";
-    }
-    return operation.type
+export interface StrategyLabelContext {
+    catalog?: Catalog | null;
+    /** Session-specific display text for authored bench/unveil modifier keys. */
+    modifierNames?: ReadonlyMap<string, string>;
+}
+
+function stringParam(
+    params: Record<string, unknown>,
+    key: string,
+): string {
+    const value = params[key];
+    return typeof value === "string" ? value : "";
+}
+
+function entryName(entries: CatalogEntry[] | undefined, key: string): string {
+    return entries?.find((entry) => entry.key === key)?.name ?? "";
+}
+
+function keyedDisplayName(
+    entries: CatalogEntry[] | undefined,
+    key: string,
+): string {
+    return entryName(entries, key) || key;
+}
+
+function titleCaseKey(key: string): string {
+    return key
         .split("_")
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(" ");
+}
+
+export function operationLabel(
+    operation?: StrategyOperation,
+    context: StrategyLabelContext = {},
+): string {
+    if (!operation) {
+        return "Choose operation";
+    }
+    const params = operation.params ?? {};
+    const catalog = context.catalog;
+    switch (operation.type) {
+        case "condition_check_only":
+            return "Condition router";
+        case "essence": {
+            const key = stringParam(params, "essence_key");
+            return key ? keyedDisplayName(catalog?.essences, key) : "Essence";
+        }
+        case "fossil": {
+            const keys = Array.isArray(params.fossils)
+                ? params.fossils.filter(
+                      (key): key is string => typeof key === "string" && key.length > 0,
+                  )
+                : [];
+            return keys.length
+                ? keys
+                      .map((key) => keyedDisplayName(catalog?.fossils, key))
+                      .join(" + ")
+                : "Fossils";
+        }
+        case "bench": {
+            const key = stringParam(params, "mod_key");
+            const name =
+                context.modifierNames?.get(key) ||
+                keyedDisplayName(catalog?.bench, key);
+            return key ? `Bench: ${name}` : "Bench craft";
+        }
+        case "unveil": {
+            const key = stringParam(params, "mod_key");
+            const name = context.modifierNames?.get(key) || key;
+            return key ? `Unveil: ${name}` : "Unveil";
+        }
+        case "harvest_reforge":
+        case "harvest_augment": {
+            const key = stringParam(params, "target_tag");
+            const name = keyedDisplayName(catalog?.harvestTags, key);
+            const verb =
+                operation.type === "harvest_reforge" ? "Reforge" : "Augment";
+            return key ? `Harvest ${verb}: ${name}` : `Harvest ${verb}`;
+        }
+        case "harvest_resist": {
+            const source = stringParam(params, "source_tag");
+            const target = stringParam(params, "target_tag");
+            if (!source || !target) return "Harvest Resistance";
+            return `Harvest Resistance: ${keyedDisplayName(
+                catalog?.harvestTags,
+                source,
+            )} → ${keyedDisplayName(catalog?.harvestTags, target)}`;
+        }
+        case "influence_exalt": {
+            const key = stringParam(params, "influence");
+            const name = keyedDisplayName(catalog?.influences, key);
+            return key ? `Influence Exalt: ${name}` : "Influence Exalt";
+        }
+        case "eldritch_ember":
+        case "eldritch_ichor": {
+            const tier = Number(params.tier);
+            const base = titleCaseKey(operation.type);
+            return Number.isFinite(tier) && tier > 0
+                ? `${base} · Tier ${tier}`
+                : base;
+        }
+        default:
+            return titleCaseKey(operation.type);
+    }
+}
+
+/** Empty authored text is automatic; non-empty text is a manual override. */
+export function automaticStrategyNodeLabel(
+    node: StrategyNode,
+    context: StrategyLabelContext = {},
+): string {
+    return node.kind === "operation"
+        ? operationLabel(node.operation, context)
+        : node.id;
+}
+
+export function strategyNodeLabel(
+    node: StrategyNode,
+    context: StrategyLabelContext = {},
+): string {
+    return node.name !== undefined && node.name !== ""
+        ? node.name
+        : automaticStrategyNodeLabel(node, context);
 }
 
 export function conditionLabel(condition?: StrategyCondition, fallback = ""): string {
@@ -495,6 +603,17 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
         default:
             return condition.type || "condition";
     }
+}
+
+/** Empty authored text is automatic; non-empty text is a manual override. */
+export function automaticStrategyEdgeLabel(edge: StrategyEdge): string {
+    return conditionLabel(edge.condition);
+}
+
+export function strategyEdgeLabel(edge: StrategyEdge): string {
+    return edge.label !== undefined && edge.label !== ""
+        ? edge.label
+        : automaticStrategyEdgeLabel(edge);
 }
 
 function rangeLabel(label: string, condition: StrategyCondition): string {

@@ -20,6 +20,7 @@ import { buildModifierOptions } from "../modifier-options";
 import {
     StrategyDocument,
     StrategyEdge,
+    StrategyLabelContext,
     StrategyNode,
     StrategyPosition,
     StrategyValidationIssue,
@@ -30,6 +31,8 @@ import {
     isStrategyDocument,
     nextGraphId,
     operationLabel,
+    automaticStrategyEdgeLabel,
+    automaticStrategyNodeLabel,
     validateStrategy,
 } from "../strategy-model";
 import {
@@ -385,7 +388,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.querySelector<PcConditionEditor>(
             "pc-condition-editor",
         )?.setModifierFamilies(this.modifierOptions);
-        if (this.isConnected && this.evalResult) this.syncModeAndOddsView();
+        if (this.isConnected) this.updateView();
     }
 
     private renderShell(): void {
@@ -547,6 +550,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.issues,
                 this.highlight,
                 this.currentAnnotations,
+                this.labelContext,
             );
         });
     }
@@ -560,6 +564,7 @@ export class PcStrategyEditor extends HTMLElement {
             this.issues,
             this.highlight,
             this.currentAnnotations,
+            this.labelContext,
         );
         const invalid =
             !this.engineReady ||
@@ -695,7 +700,7 @@ export class PcStrategyEditor extends HTMLElement {
                     <label class="pc-field">
                         <span>Board label</span>
                         <input data-field="edge-label" value="${escapeAttribute(edge.label ?? "")}"
-                            placeholder="Uses condition summary when empty">
+                            placeholder="${escapeAttribute(automaticStrategyEdgeLabel(edge))}">
                     </label>
                     <label class="pc-field">
                         <span>Priority</span>
@@ -705,9 +710,9 @@ export class PcStrategyEditor extends HTMLElement {
             </details>`;
         host
             .querySelector<HTMLInputElement>('[data-field="edge-label"]')
-            ?.addEventListener("change", (event) => {
+            ?.addEventListener("input", (event) => {
                 edge.label = (event.currentTarget as HTMLInputElement).value;
-                this.markChanged();
+                this.onLabelEdited();
             });
         host
             .querySelector<HTMLInputElement>('[data-field="edge-priority"]')
@@ -752,7 +757,20 @@ export class PcStrategyEditor extends HTMLElement {
             this.issues,
             this.highlight,
             this.currentAnnotations,
+            this.labelContext,
         );
+        const edge =
+            this.selection?.kind === "edge"
+                ? this.strategy.edges.find(
+                      (entry) => entry.id === this.selection!.id,
+                  )
+                : undefined;
+        const labelInput = this.querySelector<HTMLInputElement>(
+            '[data-field="edge-label"]',
+        );
+        if (edge && labelInput) {
+            labelInput.placeholder = automaticStrategyEdgeLabel(edge);
+        }
         this.simulator.setView({
             running: this.running,
             disabled:
@@ -771,7 +789,8 @@ export class PcStrategyEditor extends HTMLElement {
             <div class="pc-inspector-id">${escapeHtml(node.id)}</div>
             <label class="pc-field">
                 <span>Display name</span>
-                <input data-field="node-name" value="${escapeAttribute(node.name ?? "")}">
+                <input data-field="node-name" value="${escapeAttribute(node.name ?? "")}"
+                    placeholder="${escapeAttribute(automaticStrategyNodeLabel(node, this.labelContext))}">
             </label>`;
         if (node.kind === "start") {
             return `${common}
@@ -940,9 +959,9 @@ export class PcStrategyEditor extends HTMLElement {
 
     private bindNodeInspector(node: StrategyNode, host: HTMLElement): void {
         host.querySelector<HTMLInputElement>('[data-field="node-name"]')
-            ?.addEventListener("change", (event) => {
+            ?.addEventListener("input", (event) => {
                 node.name = (event.currentTarget as HTMLInputElement).value;
-                this.markChanged();
+                this.onLabelEdited();
             });
         const basePicker = host.querySelector<PcBasePicker>("pc-base-picker");
         if (basePicker) {
@@ -998,7 +1017,6 @@ export class PcStrategyEditor extends HTMLElement {
                                           }
                               : {},
                 };
-                node.name = operationLabel(node.operation);
                 this.markChanged();
             });
         const essenceCombo = host.querySelector<PcCombobox>(
@@ -1187,7 +1205,7 @@ export class PcStrategyEditor extends HTMLElement {
             node = {
                 id: nextGraphId(type, nodeIds),
                 kind: "operation",
-                name: operationLabel(operation),
+                name: "",
                 operation,
                 position,
             };
@@ -1206,7 +1224,7 @@ export class PcStrategyEditor extends HTMLElement {
             to,
             priority: outgoing.length,
             condition: { type: "always" },
-            label: "always",
+            label: "",
         };
         this.strategy.edges.push(edge);
         this.selection = { kind: "edge", id: edge.id };
@@ -1480,6 +1498,25 @@ export class PcStrategyEditor extends HTMLElement {
         if (render) this.updateView();
     }
 
+    /** Update board labels while preserving focus in the authored-text input. */
+    private onLabelEdited(): void {
+        this.markChanged(false);
+        this.board.setView(
+            this.strategy,
+            this.selection,
+            this.issues,
+            this.highlight,
+            this.currentAnnotations,
+            this.labelContext,
+        );
+        const saved = this.querySelector(".pc-strategy-saved");
+        if (saved) {
+            saved.textContent = this.savedRef
+                ? `${this.dirty ? "Modified" : "Saved"}: ${this.savedName}`
+                : "Unsaved";
+        }
+    }
+
     private captureStructuralChange(): boolean {
         const nextSignature = strategyStructuralSignature(this.strategy);
         const changed =
@@ -1666,6 +1703,17 @@ export class PcStrategyEditor extends HTMLElement {
                 result: this.result,
             });
         });
+    }
+
+    private get labelContext(): StrategyLabelContext {
+        return {
+            catalog: this.catalog,
+            modifierNames: new Map(
+                [...this.sessionBenchOptions, ...this.unveilOptions].map(
+                    (option) => [option.value, option.label],
+                ),
+            ),
+        };
     }
 
     private get board(): PcStrategyBoard {

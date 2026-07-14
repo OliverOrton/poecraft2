@@ -595,6 +595,10 @@ const char* pcw_data_bases(uint32_t data_id) {
         error = make_error();
         rc = pc_data_get_base_display(*data, i, &name, &item_class_key, &error);
         if (rc != PC_RESULT_OK) return fail(error);
+        int32_t drop_level = -1;
+        error = make_error();
+        rc = pc_data_get_base_drop_level(*data, i, &drop_level, &error);
+        if (rc != PC_RESULT_OK) return fail(error);
         if (i != 0) out.push_back(',');
         out += "{\"path\":";
         append_escaped(out, path);
@@ -602,6 +606,7 @@ const char* pcw_data_bases(uint32_t data_id) {
         append_escaped(out, name ? name : "");
         out += ",\"item_class_key\":";
         append_escaped(out, item_class_key ? item_class_key : "");
+        out += ",\"drop_level\":" + std::to_string(drop_level);
         out += ",\"support\":" + std::to_string(support);
         out.push_back('}');
     }

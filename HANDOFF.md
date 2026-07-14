@@ -1,116 +1,115 @@
-# Session Handoff — Calculator OOM fixes complete; polish Phase P1 next
+# Session Handoff — pre-S6 polish P1 complete; P2 mapping next
 
-Written 2026-07-14 after implementing and gating the Calculator-mode
-rare-reforge exact-evaluation OOM fixes. Read [AGENTS.md](AGENTS.md), then
-[docs/direction.md](docs/direction.md), then this file. Oliver has inserted the
-ordered [pre-S6 product-polish plan](docs/pre-s6-product-polish-plan.md). The
-next task is its Phase P1 only. S6 Phase 1 must not start yet. Phase D in
-[docs/strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md)
+Written 2026-07-14 after implementing and gating
+[pre-S6 product-polish Phase P1](docs/pre-s6-product-polish-plan.md). Read
+[AGENTS.md](AGENTS.md), then [docs/direction.md](docs/direction.md), then this
+file. The next task is Phase P2 only. S6 Phase 1 must not start yet, and Phase D
+in [docs/strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md)
 remains unscheduled.
 
 ## Current state
 
-The `std::bad_alloc` failure for wide rare-reforge loops is fixed without
-changing exactness or the v1 result contract:
+Phase P1 — base ordering and graph auto-labels — is complete:
 
-1. `CalcContext` caches `shared_ptr<const OutcomeDistribution>` objects.
-   Reforge states with the same preserved base now return the same distribution
-   object instead of copying thousands of entries per `(state, action)`.
-   State-dependent illegal/unapplied self-loops remain per-state.
-2. Strategy evaluation assigns deterministic integer edge indices in
-   node/edge order. Transition rows and edge-flow accumulation no longer carry
-   heap string copies; serialization still emits authored edge order.
-3. Legal operation pairs share one routed row keyed by
-   `(node, distribution object)`. Router and illegal-state rows remain unique.
-   Every solver/reference consumer reads through the row table.
-4. SCC discovery now runs iterative Tarjan directly over shared rows. It no
-   longer duplicates the logical edge relation into adjacency and reverse
-   vector-of-vectors.
-5. `CalcContext::intern_state` enforces the evaluation's `max_states` before
-   inserting a new state. `max_transitions` is a new public evaluation option
-   (default 10,000,000 stored row entries). Both limits surface as
-   `PC_RESULT_CAPACITY_EXCEEDED` with explicit messages, not `bad_alloc`.
-6. The committed WASM module was rebuilt with `-sMAXIMUM_MEMORY=4GB`.
-7. Worker errors transport raw `EngineError.detail`, so the client adds the
-   `poecraft engine error <code>:` prefix exactly once. Calculator UI copy uses
-   the retained error code: code 4 is unsupported vocabulary; allocation and
-   capacity failures use honest “too large to evaluate exactly” copy.
+1. `DataImpl` loads the canonical `base_items.drop_levels` array and validates
+   it alongside every other parallel base array. The additive public
+   `pc_data_get_base_drop_level` enumeration API returns the stored `int32_t`
+   unchanged, including the negative unknown sentinel.
+2. `pcw_data_bases` and the web `BaseInfo` contract expose `drop_level`. The
+   committed WASM module was rebuilt.
+3. Every Emulator, Calculator, and Strategy Builder base selection still uses
+   `pc-base-picker`. Its shared model filters supported named bases and orders
+   each class/subcategory by known drop level descending, unknown last, display
+   name ascending, then metadata path ascending. Class and subcategory order is
+   unchanged.
+4. Shared strategy presentation code now owns automatic operation-node and edge
+   labels. Empty authored `name`/`label` means automatic; any non-empty text is a
+   manual override. New operation nodes and edges author empty text. Existing
+   non-empty saved/imported text is preserved.
+5. Automatic operation labels follow live parameters and resolve keyed choices
+   through the loaded catalog/session display text: Essences, Fossils, bench and
+   unveil modifiers, Harvest tags, influences, and current Eldritch tiers.
+   Automatic edge labels use the live `conditionLabel` summary.
+6. Board nodes, the edge layer, and inspector placeholders use the same shared
+   formatters. Parameter/condition edits relabel automatic text immediately;
+   manual overrides remain fixed; clearing an override returns to automatic
+   mode without changing graph identity or semantics.
+7. Node IDs, edge IDs, priority/routing order, operation payloads, condition
+   payloads, and compiled behavior are unchanged.
 
-## Pinned regression and performance
+## Pinned regression coverage
 
-`apps/web/test/strategy-eval-benchmark.ts` now includes the original wide
-Vaal Regalia shape: Normal start → Alchemy, then a Chaos self-loop until
-`LocalIncreasedEnergyShield11` tier 1. Through the real Node/WASM worker under
-default options it completes in about 0.9 s, converges with zero fallback
-sweeps, and pins:
-
-- success: within `1e-10` of 1;
-- expected actions: `24.91546431794879`;
-- Alchemy consumption: `1`;
-- Chaos consumption: `23.915464317948782`;
-- all hit/miss/repeat edge traversals.
-
-The two existing magic-loop benchmark pins remain unchanged. A final standalone
-run recorded 31.177 ms and 31.004 ms warmed medians (45.99× and 113.21× versus
-their recorded baselines); progress callback overhead remained below 0.8 ms.
+- Native loader/API tests pin Vaal Regalia at canonical drop level 68 and load
+  a memory artifact whose first level is changed to `-1`, proving the unknown
+  sentinel survives loading and enumeration unchanged.
+- The real WASM worker `BaseInfo` path pins Vaal Regalia at 68.
+- Shared picker tests pin level-descending order, unknown-last behavior,
+  name/path tie-breaking, and supported/named filtering.
+- Strategy tests pin parameter-sensitive catalog labels, live node/condition
+  relabeling, manual override behavior, clear-to-auto, stable IDs/priority, and
+  save/reopen preservation of both automatic and manual authored states.
 
 ## Acceptance gates — all green
 
 - `powershell -File scripts/build.ps1`
 - `build/engine/poecraft_engine_tests.exe data/compiled/current fixtures/spec`
-  — 118,426 checks, 0 failures
+  — 123,409 checks, 0 failures
 - `powershell -File scripts/build-wasm.ps1`
 - `npx tsc --noEmit` in `apps/web`
-- `npm test` in `apps/web` — 22/22 worker smoke tests plus all presentation and
-  model tests
-- `npm run benchmark:strategy-eval` in `apps/web`
+- `npm test` in `apps/web` — 22/22 worker smokes plus all presentation/model
+  tests
 - `npm run build` in `apps/web`
 - `powershell -File scripts/test.ps1`
 
-New gates cover shared reforge identity, native and C-ABI state/transition
-caps, capacity code 8 through the real worker, absence of `bad_alloc`, raw
-detail transport, one prefix only, and code-aware Calculator markup for codes
-4, 5, and 8.
+A separate rendered headless Chrome smoke used a clean profile against the
+production Vite build. It selected from the shared Body Armour picker (122
+supported choices; the level-84 name tie put Conquest Lamellar first), authored
+a Harvest Reforge node and a guarded rarity edge, verified live automatic
+labels and placeholders, exercised manual overrides and clear-to-auto, and
+finished with zero application console errors or uncaught exceptions.
 
-## Next task — pre-S6 polish Phase P1 only
+## Next task — pre-S6 polish Phase P2 only
 
-Implement [docs/pre-s6-product-polish-plan.md](docs/pre-s6-product-polish-plan.md)
-**Phase P1 - Base ordering and graph auto-labels**. The compiled artifact
-already contains `base_items.drop_levels`, but `DataImpl` and `BaseInfo` do not
-currently load/expose it. Sort the shared base picker by known drop level
-descending, unknown last, then name/path. For graph labels, empty authored text
-means automatic, non-empty text is a preserved manual override, and clearing
-returns to automatic mode. Use engine/catalog display names for
-parameter-sensitive operation labels and the existing condition summary for
-edges.
+Implement **Phase P2 — Searing/Eater application as first-class currencies**
+from [docs/pre-s6-product-polish-plan.md](docs/pre-s6-product-polish-plan.md).
+Before changing code, get Oliver's authoritative row for every in-scope
+currency and record it in the plan or a focused mechanic fixture:
 
-This phase changes behavior within existing controls and does not need a new
-image-model design pass. Run the full P1 acceptance gate, commit locally,
-rewrite this handoff for P2, and do not begin the Eldritch currency migration,
-P3 goal work, or S6 Phase 1.
+```text
+stable canonical currency key
+display name
+Searing or Eater side
+native implicit tier produced
+legality or replacement rule if it differs from the current implementation
+economy price key
+```
+
+If any row is missing or ambiguous, stop and ask Oliver. Do not research or
+infer PoE mechanics. Then implement only P2 end to end, run its full acceptance
+gate including a real rendered browser smoke, commit locally, and rewrite this
+handoff for P3a. Do not begin the P3 goal-expression work or S6 Phase 1.
 
 ## Gotchas
 
-- Exactness rulings from the previous handoff still stand: no probability
-  cutoffs in discovery, junk coarsening, frontier/epsilon changes, or result
+- The auto-label contract is authored-text based, not ID based: exactly empty
+  text is automatic; non-empty saved text is manual. Never rewrite a manual
+  override when parameters change or during load/normalization.
+- Catalog/session display names are the label authority for keyed choices.
+  Extend that route for concrete Eldritch currencies in P2; do not add a second
+  hard-coded currency-label table.
+- P2 must preserve a deterministic legacy normalization path for v1
+  `{type: "eldritch_ember"|"eldritch_ichor", tier: N}` operations while new
+  documents serialize concrete currency identity. Invalid mappings fail
+  explicitly.
+- The frontend has no crafting-rule authority. Concrete currency identity must
+  flow through the action registry, native engine, bindings, WASM, Strategy
+  Builder, Calculator, Emulator, traces, and economy keys.
+- The engine WASM module is committed. Rebuild it after C ABI, engine, or
+  strategy-vocabulary changes with `scripts/build-wasm.ps1`; the script
+  self-activates `C:\emsdk`.
+- Exact Calculator evaluation contracts from the earlier OOM work still stand:
+  no probability cutoffs, junk coarsening, frontier/epsilon changes, or result
   contract changes.
-- Shared rows are valid only for legal operation pairs with the same
-  distribution object. Router nodes and state-dependent results must stay
-  unique.
-- `max_transitions` counts stored transition plus absorption entries across
-  unique rows, not the dense logical references created when many pairs share
-  a row.
-- `PC_RESULT_CAPACITY_EXCEEDED` is currently code **8**. Presentation also
-  treats legacy/symptom codes 5 and 7 as size failures, but new cap failures
-  should be code 8.
-- The engine WASM module is committed. Rebuild it after engine/C-ABI changes
-  with `scripts/build-wasm.ps1`; the script self-activates `C:\emsdk`.
-- `base_items.drop_levels` is present in the compiled JSON today but is not
-  loaded into `DataImpl`; do not derive base levels from names or paths in
-  TypeScript.
-- Auto-labels are presentation only. Never change stable node/edge IDs, routing
-  priority, or operation/condition payloads while formatting them.
-- Do not use Codex's built-in browser for this repository. Use a separate
-  headless browser process when a browser smoke is required.
-- PoE1 mechanic ambiguity goes directly to Oliver; never research or guess.
+- Use a separate headless browser process for repository browser smoke; do not
+  use Codex's built-in browser.
 - Commits are local-only unless Oliver explicitly says to push.
