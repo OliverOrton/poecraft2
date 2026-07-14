@@ -692,6 +692,44 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     );
     assert.ok(Math.abs(total - 1) < 1e-9);
     assert.ok(odds.slot_satisfied[0] > 0 && odds.slot_satisfied[0] < 1);
+    assert.ok(
+        Math.abs(odds.success_probability - odds.slot_satisfied[0]) < 1e-9,
+    );
+
+    // The combined threshold is engine-owned, including finished rarity.
+    const suffixPool = await client.debugPool(contextId, item, {
+        action: { type: "exalt" },
+        side: "suffix",
+    });
+    const suffixGoalMod = await client.modInfo(
+        sessionId,
+        suffixPool.entries[0].session_mod_id,
+    );
+    const partialSolver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        min_satisfied_slots: 1,
+        slots: [
+            { family_mod_key: goalMod.key, min_tier: 0 },
+            { family_mod_key: suffixGoalMod.key, min_tier: 0 },
+        ],
+        actions: ["exalt"],
+    });
+    const partialOdds = await client.solverCalc(partialSolver, item, "exalt");
+    const summedPartialSuccess = partialOdds.outcomes.reduce(
+        (sum, outcome) =>
+            outcome.rarity === 2 &&
+            outcome.slots.slice(0, 2).filter((status) => status === 2)
+                .length >= 1
+                ? sum + outcome.probability
+                : sum,
+        0,
+    );
+    assert.ok(
+        Math.abs(partialOdds.success_probability - summedPartialSuccess) <
+            1e-9,
+    );
+    await client.closeSolver(partialSolver);
 
     // Solve, then verify the compiled policy through the simulator.
     const economy = await client.loadEconomy({

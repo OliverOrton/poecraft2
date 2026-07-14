@@ -26,6 +26,7 @@ import {
     putDraft,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
+import { influenceLabels } from "../item-display";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
@@ -92,7 +93,6 @@ export class PcEmulator extends HTMLElement {
     private item = 0;
     private history: HistoryEntry[] = [];
     private modCache: ModInfo[] = [];
-    private familyLabels = new Map<number, string>();
     private veiledOptions: number[] = [];
     private activeCraftPanel: CraftPanel = "basic";
     private selectedFossils: string[] = [];
@@ -217,7 +217,6 @@ export class PcEmulator extends HTMLElement {
             this.session = 0;
         }
         this.modCache = [];
-        this.familyLabels.clear();
         const session = await this.client.createSession(
             this.dataId,
             this.base,
@@ -253,17 +252,6 @@ export class PcEmulator extends HTMLElement {
             return;
         }
         this.modCache = cache;
-        const labels = new Map<number, string>();
-        for (const info of cache
-            .slice()
-            .sort((a, b) => b.required_level - a.required_level)) {
-            if (labels.has(info.family_id)) continue;
-            labels.set(
-                info.family_id,
-                info.text_lines.join(" / ") || info.key,
-            );
-        }
-        this.familyLabels = labels;
     }
 
     private async rebuildSession(): Promise<void> {
@@ -523,6 +511,8 @@ export class PcEmulator extends HTMLElement {
         const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
 
         this.modList.setModel({
+            baseName: this.baseDisplayName(),
+            itemLevel: this.itemLevel,
             rarity: info.rarity as string,
             influences: influenceLabels(
                 Number(info.generic_influence_bits ?? 0),
@@ -588,7 +578,6 @@ export class PcEmulator extends HTMLElement {
             return {
                 sessionModId: id,
                 key: String(id),
-                displayName: "",
                 tierIndex: 0,
                 textLines: [],
                 classificationTags: [],
@@ -599,10 +588,6 @@ export class PcEmulator extends HTMLElement {
         return {
             sessionModId: id,
             key: info.key,
-            displayName:
-                this.familyLabels.get(info.family_id) ||
-                info.text_lines.join(" / ") ||
-                info.key,
             tierIndex: info.family_tier_index,
             textLines: info.text_lines,
             classificationTags: info.classification_tags,
@@ -617,6 +602,13 @@ export class PcEmulator extends HTMLElement {
 
     private get modPool(): PcModPool {
         return this.querySelector("pc-mod-pool")!;
+    }
+
+    private baseDisplayName(): string {
+        return (
+            this.bases.find((base) => base.path === this.base)?.name ??
+            baseLabel(this.base)
+        );
     }
 
     private setStatus(text: string): void {
@@ -1018,7 +1010,7 @@ export class PcEmulator extends HTMLElement {
             <div class="pc-emulator">
                 <div class="pc-craft-bar">
                     <button data-cmd="change-base">Change base…</button>
-                    <span class="pc-emu-base">${escapeHtml(baseLabel(this.base))} · iLvl ${this.itemLevel}</span>
+                    <span class="pc-emu-base">${escapeHtml(this.baseDisplayName())} · iLvl ${this.itemLevel}</span>
                     <button data-cmd="create">Create item</button>
                     <span class="pc-emu-save">
                         <span class="pc-emu-name">Unsaved</span>
@@ -1149,28 +1141,6 @@ export class PcEmulator extends HTMLElement {
     private afterPickerClose(): void {
         // Re-attach mod-pool listeners are already set up in renderShell().
     }
-}
-
-function influenceLabels(
-    genericBits: number,
-    searingExarchTier: number,
-    eaterOfWorldsTier: number,
-    catalog: Catalog | null,
-): string[] {
-    const labels: string[] = [];
-    for (const influence of catalog?.influences ?? []) {
-        const code = influence.code ?? 0;
-        if (code > 0 && (genericBits & (1 << (code - 1))) !== 0) {
-            labels.push(influence.name);
-        }
-    }
-    if (searingExarchTier > 0) {
-        labels.push(`Searing Exarch T${searingExarchTier}`);
-    }
-    if (eaterOfWorldsTier > 0) {
-        labels.push(`Eater of Worlds T${eaterOfWorldsTier}`);
-    }
-    return labels;
 }
 
 function baseLabel(path: string): string {

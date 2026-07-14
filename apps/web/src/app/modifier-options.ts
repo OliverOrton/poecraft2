@@ -6,6 +6,7 @@
  */
 
 import { Catalog, ModInfo } from "./engine-protocol";
+import { visibleModTags } from "./item-display";
 import type { ModifierFamilyOption } from "./components/pc-condition-editor";
 
 const REACH_INFLUENCE = 1;
@@ -118,8 +119,8 @@ export function buildModifierOptions(
             side: side === "P" ? "prefix" : "suffix",
             sourceKind: modSourceKind(rep),
             sourceLabel: source,
-            tags: Array.from(
-                new Set(tiers.flatMap((tier) => tier.classification_tags)),
+            tags: visibleModTags(
+                tiers.flatMap((tier) => tier.classification_tags),
             ).sort(),
             tiers: tiers.map((tier) => ({
                 tier: tier.family_tier_index,

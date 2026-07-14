@@ -20,7 +20,8 @@ Two user-facing surfaces come out of the same machinery:
 Calculator:
   new workspace tab alongside Emulator/Simulator/Strategy Builder.
   given the current item and one action, show the exact outcome
-  distribution, per-goal-mod hit odds, and expected cost.
+  distribution, per-goal-mod hit odds, action cost per attempt, and
+  same-input action-spend estimate per success.
 
 Solver:
   baked into the Simulator workflow.
@@ -93,13 +94,14 @@ A goal split is a list of goal slots:
 goal slot
   mod group or mod family        (same vocabulary as strategy conditions)
   minimum tier                   (tier-perfect: usually 1)
-  required / optional weight     (v1: required only)
 ```
 
-plus global constraints (rarity, max open affixes, fracture/influence
-requirements). The goal spec reuses the condition vocabulary that strategy
-edges already use, so goal authoring in the UI is the existing condition
-editor pointed at a different target.
+plus the required finished rarity and `min_satisfied_slots`. The threshold
+defaults to the number of slots (all requirements), but can express goals such
+as "at least 2 of these 3 modifiers." The same predicate terminates value
+iteration, defines Calculator success, and compiles to the strategy
+vocabulary's native `at_least` condition. Invalid thresholds are rejected at
+goal parse time.
 
 ## Abstract State Model
 
@@ -251,7 +253,7 @@ distribution cache
 ```text
 pc_calc_action_outcomes(session, item_or_abstract_state, action id)
   -> sparse distribution over abstract successors, plus per-goal-slot
-     hit probabilities and expected cost vector
+     hit probabilities and the combined goal-success probability
 
 pc_calc_batch_outcomes(...)         same, for many (state, action) pairs
 ```
@@ -446,11 +448,18 @@ solve -> compile -> simulate — and empirical mean cost matches V(start)
 on the synthetic alt-spam and restart policies and on the Vaal Regalia
 toy goal.
 
+Goal terminals preserve `min_satisfied_slots`: all-slot goals compile as
+`all`, while partial thresholds compile as the simulator's native
+`at_least` composite. The compiler gate simulates a one-of-two policy to pin
+that contract.
+
 The C ABI surface lives in `engine/include/poecraft/solver.h` and
 `engine/src/solver_api.cpp`: `pc_solver_create` takes a goal-spec JSON
-(slots by group key or family mod key, rarity, optional candidate action
-subset), `pc_calc_action_outcomes` is the Calculator backend (exact
-successor distribution plus per-slot hit odds for a concrete item),
+(slots by group key or family mod key, rarity, optional
+`min_satisfied_slots`, optional candidate action subset),
+`pc_calc_action_outcomes` is the Calculator backend (exact successor
+distribution plus per-slot hit odds and combined goal-success probability for
+a concrete item),
 `pc_solver_solve` runs synchronous value iteration against a `pc_economy`
 price table, and `pc_solver_compile_strategy` / `pc_solver_solve_log`
 return the strategy JSON and ML corpus records. The public-ABI gate in
@@ -470,23 +479,23 @@ alongside Emulator/Strategy/Stash, seeded from the Stash ("Odds" on item
 cards), an Emulator handoff (the craft bar's "Odds" button), or a base
 picked in place. Its selection surfaces are the Emulator's own: goal
 mods come from the same modifier-pool browser (`pc-mod-pool` mounted
-with `select-goal` — clicking a tier requires that tier or better, plus
-a mod-group combobox and per-slot tier thresholds), and the action comes
+with `select-goal` — clicking a tier requires that tier or better, with
+per-slot tier thresholds), and the action comes
 from the same craft-panel band (basic/essence/harvest/fossil/eldritch/
 influenced/veiled), whose buttons select a registry action id instead of
 applying a craft — fossil loadout ids are reassembled from single-fossil
 keys, and the worker's `omitFossilCombos` filter keeps the once-per-
-session candidate fetch (used for cost-key lookups) small. It opens a
-full-registry solver for the authored goal and renders the exact outcome
-distribution: per-goal-slot hit odds (inline on each goal row) plus a
-combined "all N mods at once" probability summed over the fully-satisfied
-outcome classes, the outcome classes themselves over goal-relevant
-features (rarity, affix counts, slot status, blocked flags, mechanic
-flags), and expected cost per attempt from the action's cost keys dotted
-with the workspace price table (`workspace/prices.ts`, the
-manual-override layer of the planned Economy service). The item is a
-read-only input, so it collapses into a top-bar summary rather than
-taking a column. Remaining for S6:
+session candidate fetch (used for cost-key lookups) small. Variant E uses a
+stacked left context rail: clicking the concrete input item or authored goal
+switches what the shared modifier pool edits. The goal's `Success means`
+selector changes `min_satisfied_slots` in the native solver. The Odds
+inspector leads with `success_probability`, then groups the returned outcome
+classes by exact modifier coverage and shows overlapping miss signals; the
+raw abstract distribution (rarity, affix counts, slot status, blocked flags,
+mechanic flags) is retained in a collapsed technical drawer. Cost per attempt
+still comes from the action's cost keys dotted with the workspace price table
+(`workspace/prices.ts`, the manual-override layer of the planned Economy
+service). Remaining for S6:
 the solver-in-Simulator flow (solve → compiled strategy opened in the
 Strategy Board), chunked solve with progress/cancel for long goals,
 Emulator ambient odds-before-you-click, veiled/eldritch evaluators, and

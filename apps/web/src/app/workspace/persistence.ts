@@ -98,6 +98,8 @@ export interface CalculatorDraftRecord {
     state: unknown | null;
     goalRarity: "normal" | "magic" | "rare";
     slots: CalculatorGoalSlot[];
+    /** Minimum slots that define success; absent legacy drafts mean all. */
+    minSatisfiedSlots?: number;
     actionId: string;
     /** Extra fossils layered onto a selected fossil action (loadout). */
     fossilKeys: string[];

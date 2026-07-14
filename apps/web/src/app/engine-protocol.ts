@@ -208,6 +208,8 @@ export interface BaseInfo {
 export interface SolverGoal {
     version?: "v1";
     rarity?: "normal" | "magic" | "rare";
+    /** Minimum goal slots that must be satisfied together; defaults to all. */
+    min_satisfied_slots?: number;
     slots: Array<
         | { group: string; min_tier?: number }
         | { family_mod_key: string; min_tier?: number }
@@ -242,6 +244,8 @@ export interface CalcOutcome {
 export interface CalcResult {
     supported: boolean;
     legal: boolean;
+    /** Rarity and configured slot threshold satisfied together. */
+    success_probability: number;
     /** Per goal slot: probability the slot is satisfied after the action. */
     slot_satisfied: number[];
     outcomes: CalcOutcome[];

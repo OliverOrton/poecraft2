@@ -76,6 +76,17 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_session_get_mod_info(session, pool[0].session_mod_id,
                                      &mod_info, &error) == PC_RESULT_OK);
 
+    const std::string invalid_goal_json =
+        std::string("{\"version\":\"v1\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\"}],\"min_satisfied_slots\":2}";
+    pc_solver_handle invalid_solver = nullptr;
+    PC_CHECK(pc_solver_create(session, invalid_goal_json.c_str(),
+                              invalid_goal_json.size(), &invalid_solver,
+                              &error) == PC_RESULT_INVALID_ARGUMENT);
+    PC_CHECK(invalid_solver == nullptr);
+
     const std::string goal_json =
         std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
                     "{\"family_mod_key\":\"") +
@@ -134,6 +145,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(std::fabs(total_probability - 1.0) < 1e-9);
     PC_CHECK(calc_summary.slot_satisfied_probability[0] > 0.0);
     PC_CHECK(calc_summary.slot_satisfied_probability[0] < 1.0);
+    PC_CHECK(std::fabs(calc_summary.success_probability -
+                       calc_summary.slot_satisfied_probability[0]) < 1e-9);
 
     /* Solve against a public economy. */
     const char* economy_json =

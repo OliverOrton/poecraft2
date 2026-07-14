@@ -80,6 +80,18 @@ std::string any_of(const std::vector<std::string>& parts) {
     return out;
 }
 
+std::string at_least(std::size_t count,
+                     const std::vector<std::string>& parts) {
+    std::string out = "{\"type\":\"at_least\",\"count\":" +
+                      std::to_string(count) + ",\"conditions\":[";
+    for (std::size_t i = 0; i < parts.size(); ++i) {
+        if (i > 0) out += ',';
+        out += parts[i];
+    }
+    out += "]}";
+    return out;
+}
+
 std::string not_of(const std::string& part) {
     return "{\"type\":\"not\",\"conditions\":[" + part + "]}";
 }
@@ -365,13 +377,19 @@ std::string compile_policy_strategy_json(
 
     edge("start", "router", 0, "", true);
 
-    /* Goal first: every satisfied-at-rarity item succeeds regardless of
-     * junk. */
+    /* Goal first: the configured number of satisfied slots at the finished
+     * rarity succeeds regardless of junk. */
     {
         std::vector<std::string> parts{rarity_condition(calc.goal().rarity)};
+        std::vector<std::string> satisfied;
         for (std::size_t i = 0; i < layout.slots.size(); ++i) {
-            parts.push_back(vocabulary[i].satisfied);
+            satisfied.push_back(vocabulary[i].satisfied);
         }
+        parts.push_back(
+            calc.goal().required_satisfied_slots() == satisfied.size()
+                ? all_of(satisfied)
+                : at_least(calc.goal().required_satisfied_slots(),
+                           satisfied));
         edge("router", "goal", 0, all_of(parts), false);
     }
 

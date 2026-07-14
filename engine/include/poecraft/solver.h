@@ -121,6 +121,9 @@ typedef struct pc_calc_summary {
     int32_t legal;     /* action legality in the item's abstract state */
     uint32_t entry_count;
     double slot_satisfied_probability[PC_SOLVER_MAX_GOAL_SLOTS];
+    /* Probability of satisfying the goal's rarity and slot threshold
+     * together. This is the same predicate used by pc_solver_solve. */
+    double success_probability;
 } pc_calc_summary;
 
 /*

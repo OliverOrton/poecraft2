@@ -15,9 +15,11 @@
  */
 
 import { ModInfo, PoolDebug } from "../engine-protocol";
+import { visibleModTags } from "../item-display";
 
 type Tab = "prefix" | "suffix" | "implicit";
 type Section = "base" | "influenced" | "crafted" | "essence" | "fossil";
+export type ModPoolMode = "inspect" | "direct" | "goal";
 
 interface PoolModel {
     mods: ModInfo[];           // session-mod metadata in session-mod-id order
@@ -40,6 +42,7 @@ interface FamilyView {
     key: string;
     label: string;
     onItem: boolean;
+    selectedTier: number | undefined;
     category: Section;
     sourceLabel: string;
     tags: string[];
@@ -57,8 +60,12 @@ export class PcModPool extends HTMLElement {
     private model: PoolModel | null = null;
     private allowDirectCraft = false;
     private selectMode = false;
+    private mode: ModPoolMode = "inspect";
     private tab: Tab = "prefix";
     private search = "";
+    /** Host-authored goal thresholds, keyed by the persisted representative
+     * family mod key. Item selections are derived from PoolModel instead. */
+    private selectedTiers = new Map<string, number>();
     private sectionOpen: Record<string, boolean> = {
         base: true,
         crafted: false,
@@ -68,8 +75,13 @@ export class PcModPool extends HTMLElement {
     private expanded = new Set<string>();
 
     connectedCallback(): void {
-        this.allowDirectCraft = this.hasAttribute("allow-direct-craft");
-        this.selectMode = this.hasAttribute("select-goal");
+        this.mode = this.hasAttribute("allow-direct-craft")
+            ? "direct"
+            : this.hasAttribute("select-goal")
+              ? "goal"
+              : "inspect";
+        this.allowDirectCraft = this.mode === "direct";
+        this.selectMode = this.mode === "goal";
         this.renderShell();
         if (this.model) {
             // Dockview detaches inactive panels and re-attaches them on tab
@@ -82,6 +94,32 @@ export class PcModPool extends HTMLElement {
     setModel(model: PoolModel): void {
         this.model = model;
         this.render();
+    }
+
+    setSelectedTiers(
+        selections: ReadonlyArray<{
+            familyModKey: string;
+            minTier: number;
+        }>,
+    ): void {
+        this.selectedTiers = new Map(
+            selections.map((selection) => [
+                selection.familyModKey,
+                selection.minTier,
+            ]),
+        );
+        this.render();
+    }
+
+    setInteractionMode(mode: ModPoolMode): void {
+        if (this.mode === mode) return;
+        this.mode = mode;
+        this.allowDirectCraft = mode === "direct";
+        this.selectMode = mode === "goal";
+        if (this.isConnected) {
+            this.renderShell();
+            this.render();
+        }
     }
 
     setActiveTab(tab: Tab): void {
@@ -153,7 +191,13 @@ export class PcModPool extends HTMLElement {
         this.innerHTML = `
             <div class="pc-mod-pool">
                 <div class="pc-mod-pool-header">
-                    <h3>Modifier Pool</h3>
+                    <h3>Modifier Pool <span>· ${
+                        this.mode === "goal"
+                            ? "Editing goal"
+                            : this.mode === "direct"
+                              ? "Editing input item"
+                              : "Viewing item"
+                    }</span></h3>
                     ${
                         this.allowDirectCraft
                             ? '<span class="pc-mod-pool-hint">click to add · click the highlighted tier to remove</span>'
@@ -300,9 +344,21 @@ export class PcModPool extends HTMLElement {
                 .slice()
                 .sort((a, b) => a.family_tier_index - b.family_tier_index);
             const first = sorted[0];
-            const tags = Array.from(
-                new Set(sorted.flatMap((tier) => tier.classification_tags)),
+            const tags = visibleModTags(
+                sorted.flatMap((tier) => tier.classification_tags),
             ).sort();
+            const selectedThreshold = sorted
+                .map((tier) => this.selectedTiers.get(tier.key))
+                .find((tier) => tier !== undefined);
+            const itemTier = sorted.find((tier) =>
+                this.tab === "prefix"
+                    ? this.model?.item.prefixOnItem.has(tier.session_mod_id)
+                    : this.tab === "suffix"
+                      ? this.model?.item.suffixOnItem.has(tier.session_mod_id)
+                      : this.model?.item.implicitOnItem.has(
+                            tier.session_mod_id,
+                        ),
+            );
             out.push({
                 key,
                 label:
@@ -318,6 +374,10 @@ export class PcModPool extends HTMLElement {
                                 tier.session_mod_id,
                             ),
                 ),
+                selectedTier:
+                    this.selectMode
+                        ? selectedThreshold
+                        : itemTier?.family_tier_index,
                 category: family.category,
                 sourceLabel: sourceLabel(first),
                 tags,
@@ -362,7 +422,7 @@ export class PcModPool extends HTMLElement {
                   .join("")
             : "";
         return `
-            <li class="pc-mod-family ${family.onItem ? "is-on-item" : ""}" data-family-key="${escapeHtml(family.key)}">
+            <li class="pc-mod-family ${family.onItem ? "is-on-item" : ""} ${family.selectedTier !== undefined ? "is-selected" : ""}" data-family-key="${escapeHtml(family.key)}">
                 <button class="pc-mod-family-header">
                     <span class="pc-mod-family-copy">
                         <span class="pc-mod-family-name">${escapeHtml(family.label)}</span>
@@ -378,6 +438,11 @@ export class PcModPool extends HTMLElement {
                         }
                     </span>
                     <span class="pc-mod-family-meta">
+                        ${
+                            family.selectedTier !== undefined
+                                ? `<span class="pc-mod-selected-tier">${family.selectedTier > 0 ? `T${family.selectedTier}` : "ANY TIER"}</span>`
+                                : ""
+                        }
                         ${family.tiers.length} tier${family.tiers.length !== 1 ? "s" : ""}
                         ${
                             family.sourceLabel
@@ -440,11 +505,14 @@ export class PcModPool extends HTMLElement {
             (this.allowDirectCraft || this.selectMode) &&
             this.tab !== "implicit" &&
             !blockedReason;
-        const tags = tier.classification_tags
+        const tags = visibleModTags(tier.classification_tags)
             .map((tag) => `<span>${escapeHtml(formatTag(tag))}</span>`)
             .join("");
+        const tierSelected =
+            family.selectedTier !== undefined &&
+            family.selectedTier === tier.family_tier_index;
         return `
-            <li class="pc-mod-tier ${blockedReason ? "is-blocked" : ""} ${tierOnItem ? "is-on-item" : ""} ${tierFractured ? "is-fractured" : ""}"
+            <li class="pc-mod-tier ${blockedReason ? "is-blocked" : ""} ${tierOnItem ? "is-on-item" : ""} ${tierFractured ? "is-fractured" : ""} ${tierSelected ? "is-selected" : ""}"
                 data-mod-key="${escapeHtml(tier.key)}"
                 data-mod-id="${tier.session_mod_id}"
                 data-side="${this.tab}"

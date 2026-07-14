@@ -117,6 +117,25 @@ solver::GoalSpec parse_goal(
         goal.slots.push_back(slot);
     }
 
+    const Value* min_satisfied = root.find("min_satisfied_slots");
+    if (min_satisfied != nullptr) {
+        if (min_satisfied->type != Type::Number ||
+            min_satisfied->number < 1 ||
+            min_satisfied->number > goal.slots.size() ||
+            min_satisfied->number !=
+                static_cast<double>(
+                    static_cast<std::uint32_t>(min_satisfied->number))) {
+            throw std::runtime_error(
+                "goal: min_satisfied_slots must be an integer from 1 to " +
+                std::to_string(goal.slots.size()));
+        }
+        goal.min_satisfied_slots =
+            static_cast<std::uint32_t>(min_satisfied->number);
+    } else {
+        goal.min_satisfied_slots =
+            static_cast<std::uint32_t>(goal.slots.size());
+    }
+
     const Value* actions = root.find("actions");
     if (actions != nullptr) {
         if (actions->type != Type::Array) {
@@ -310,6 +329,16 @@ pc_result pc_calc_action_outcomes(
             for (std::size_t i = 0; i < PC_SOLVER_MAX_GOAL_SLOTS; ++i) {
                 out_summary->slot_satisfied_probability[i] =
                     distribution.slot_satisfied_probability[i];
+            }
+            out_summary->success_probability = 0.0;
+            if (distribution.supported && legal) {
+                for (const solver::OutcomeEntry& entry :
+                     distribution.entries) {
+                    if (calc.is_goal_state(calc.state(entry.state))) {
+                        out_summary->success_probability +=
+                            entry.probability;
+                    }
+                }
             }
         }
         const uint32_t writable =

@@ -1557,7 +1557,7 @@ const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
         pc_solver_find_action(*solver, action_id, &action_index, &error);
     if (rc != PC_RESULT_OK) return fail(error);
     uint32_t count = 0;
-    pc_calc_summary summary;
+    pc_calc_summary summary{};
     summary.struct_size = sizeof(summary);
     rc = pc_calc_action_outcomes(*solver, item, action_index, nullptr, 0,
                                  &count, &summary, &error);
@@ -1573,6 +1573,8 @@ const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
     out += summary.supported ? "true" : "false";
     out += ",\"legal\":";
     out += summary.legal ? "true" : "false";
+    out += ",\"success_probability\":";
+    out += std::to_string(summary.success_probability);
     out += ",\"slot_satisfied\":[";
     for (uint32_t s = 0; s < PC_SOLVER_MAX_GOAL_SLOTS; ++s) {
         if (s != 0) out.push_back(',');

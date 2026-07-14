@@ -12,7 +12,7 @@
     "benchmark": "tsx test/performance-benchmark.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/engine-smoke.test.ts && tsx test/workspace-model.test.ts && tsx test/strategy-model.test.ts"
+    "test": "tsx test/engine-smoke.test.ts && tsx test/item-display.test.ts && tsx test/odds-presentation.test.ts && tsx test/workspace-model.test.ts && tsx test/strategy-model.test.ts"
   },
   "dependencies": {
     "dockview-core": "^4.2.0"

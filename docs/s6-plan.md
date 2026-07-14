@@ -7,6 +7,19 @@ first; design authority for the solver is
 [desktop-workspace-ui.md](desktop-workspace-ui.md). Phases are in priority
 order; each ends test-green with one commit and an updated HANDOFF.md.
 
+Status 2026-07-13: Phase 0 is complete. Oliver approved Calculator Variant E,
+the shared item display, and the refined goal/outcome presentation. The
+success definition is now native solver input (`min_satisfied_slots`), the C
+ABI/WASM result includes the combined `success_probability`, and compiled
+policies preserve partial thresholds with `at_least`. The Odds inspector shows
+goal-coverage buckets and overlapping miss signals; raw abstract classes are
+collapsed under Technical distribution.
+
+Status 2026-07-14: Oliver inserted the Strategy Builder calculator mode
+([strategy-calculator-mode-plan.md](strategy-calculator-mode-plan.md))
+ahead of Phase 1. Phase 1 resumes after it lands; its compiled-policy
+node badges should reuse that plan's board-annotation mechanism.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what
@@ -230,8 +243,8 @@ cache invalidates naturally because the item's abstract state changes.
      (`derivedActionId`/`fossilComboId` logic in `pc-calculator.ts`) into
      `apps/web/src/app/craft-choices.ts` so Emulator and Calculator use
      one table;
-   - `combinedGoalProbability`, `formatProbability`, and the outcome-
-     class/cost renderers into a shared module (or a small
+   - `formatProbability` and the goal-coverage/miss-signal/cost renderers into
+     a shared module (or a small
      `pc-odds-panel` element) so the hover panel and the Calculator
      results render identically.
 2. Emulator state: add `watched: {familyModKey, minTier}[]` to
@@ -248,10 +261,9 @@ cache invalidates naturally because the item's abstract state changes.
 4. Badge computation: after each item change, compute for the *active*
    craft panel's controls only (sequential worker keeps this sane;
    guard against overlapping refreshes with the existing `busy` pattern).
-   Badge value = P(all watched slots satisfied) — the Calculator's
-   combined number — with per-mod odds in the hover panel. If Oliver
-   would rather see P(any watched hit) on the badge, that is also
-   derivable from the outcome classes; ask at mock review.
+   Badge value is the engine-returned `success_probability` for the watched
+   goal's configured `min_satisfied_slots`, with per-mod odds in the hover
+   panel. Do not recompute the combined predicate in TypeScript.
 5. Illegal/unsupported actions show a muted badge ("—"), not an error.
 
 **Gate.** Web tests green plus a new smoke test that iterates the shared

@@ -45,8 +45,17 @@ struct GoalSlot {
 };
 
 struct GoalSpec {
-    std::vector<GoalSlot> slots; /* 1..kMaxGoalSlots, all required (v1) */
+    std::vector<GoalSlot> slots; /* 1..kMaxGoalSlots */
     std::uint8_t rarity = PC_RARITY_RARE; /* required finished rarity */
+    /* Minimum slots that must be satisfied together. Zero is the internal
+     * default and means every slot, preserving callers that construct a
+     * GoalSpec directly instead of going through the JSON parser. */
+    std::uint32_t min_satisfied_slots = 0;
+
+    std::size_t required_satisfied_slots() const {
+        return min_satisfied_slots == 0 ? slots.size()
+                                        : min_satisfied_slots;
+    }
 };
 
 // --- action registry ---------------------------------------------------------
@@ -261,7 +270,7 @@ class CalcContext {
     const std::vector<std::uint32_t>& candidates() const {
         return candidates_;
     }
-    /* All goal slots satisfied at the required rarity. */
+    /* The configured slot threshold satisfied at the required rarity. */
     bool is_goal_state(const AbstractState& state) const;
 
     /* Interning gives stable dense ids; equal states share one id. */

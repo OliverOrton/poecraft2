@@ -525,6 +525,11 @@ select {
     letter-spacing: 0.06em;
 }
 
+.pc-mod-pool-header h3 span {
+    color: var(--pc-text-strong);
+    font-weight: 500;
+}
+
 .pc-mod-pool-hint {
     color: var(--pc-text-dim);
     font-style: italic;
@@ -600,6 +605,11 @@ select {
     background: rgba(175, 96, 37, 0.08);
 }
 
+.pc-mod-family.is-selected {
+    background: color-mix(in srgb, var(--pc-prefix) 5%, transparent);
+    box-shadow: inset 3px 0 color-mix(in srgb, var(--pc-prefix) 70%, var(--pc-accent));
+}
+
 .pc-mod-family-header {
     width: 100%;
     display: flex;
@@ -660,6 +670,17 @@ select {
     font-weight: 600;
 }
 
+.pc-mod-selected-tier {
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--pc-prefix) 60%, var(--pc-border));
+    border-radius: 3px;
+    color: var(--pc-prefix);
+    font-family: var(--pc-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
 .pc-mod-tier-list {
     margin: 0;
     padding: 0 0 6px;
@@ -688,6 +709,11 @@ select {
 
 .pc-mod-tier.is-on-item .pc-mod-tier-btn {
     background: rgba(175, 96, 37, 0.12);
+}
+
+.pc-mod-tier.is-selected .pc-mod-tier-btn {
+    background: color-mix(in srgb, var(--pc-prefix) 9%, var(--pc-bg));
+    box-shadow: inset 3px 0 var(--pc-prefix);
 }
 
 .pc-mod-tier.is-fractured .pc-mod-tier-btn {
@@ -745,16 +771,17 @@ select {
     color: var(--pc-text-dim);
 }
 
-/* --- mod-list fixed slots --- */
+/* --- shared item display: stable unified slots --- */
 
 .pc-mod-list {
     --pc-item-rarity: var(--pc-normal);
+    --pc-item-surface: #151515;
+    --pc-item-row: #1a1a1a;
+    overflow: hidden;
     padding: 10px;
-    border: 2px solid color-mix(in srgb, var(--pc-item-rarity) 72%, #2b261d);
-    border-radius: 5px;
-    box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.65),
-        0 0 14px color-mix(in srgb, var(--pc-item-rarity) 18%, transparent);
+    background: var(--pc-item-surface);
+    border: 1px solid color-mix(in srgb, var(--pc-item-rarity) 66%, #292929);
+    border-radius: 3px;
 }
 
 .pc-mod-list.pc-item-rarity-magic {
@@ -765,12 +792,43 @@ select {
     --pc-item-rarity: var(--pc-rare);
 }
 
+.pc-item-card-header {
+    display: block;
+    margin: -10px -10px 8px;
+    padding: 8px 10px 7px;
+    background: color-mix(in srgb, var(--pc-item-rarity) 7%, #171717);
+    border-bottom: 1px solid color-mix(in srgb, var(--pc-item-rarity) 34%, #292929);
+}
+
+.pc-item-title-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.pc-item-title-line strong {
+    overflow: hidden;
+    color: var(--pc-item-rarity);
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-item-title-line span {
+    flex: none;
+    color: var(--pc-text-dim);
+    font-family: var(--pc-mono);
+    font-size: 10px;
+}
+
 .pc-mod-list-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--pc-border);
+    gap: 8px;
 }
 
 .pc-item-heading,
@@ -790,29 +848,140 @@ select {
     text-transform: uppercase;
 }
 
+.pc-mod-explicit-ledger {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pc-mod-list .pc-mod-group {
+    margin: 0;
+}
+
+.pc-mod-list .pc-mod-group-implicit {
+    margin-bottom: 8px;
+}
+
+.pc-mod-list .pc-mod-group h4 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 4px;
+    color: var(--pc-text-dim);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.pc-mod-list .pc-mod-group-prefix h4 {
+    color: color-mix(in srgb, var(--pc-prefix) 72%, var(--pc-text-dim));
+}
+
+.pc-mod-list .pc-mod-group-suffix h4 {
+    color: color-mix(in srgb, var(--pc-suffix) 72%, var(--pc-text-dim));
+}
+
 .pc-mod-slots {
     margin: 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .pc-mod-slot {
-    min-height: 124px;
-    padding: 6px 8px;
-    border: 1px solid var(--pc-bg-panel);
+    position: relative;
+    display: grid;
+    grid-template-columns: 3px 38px minmax(0, 1fr);
+    min-height: 58px;
+    padding: 6px 7px 6px 0;
+    overflow: hidden;
+    background: var(--pc-item-row);
+    border: 1px solid #292929;
     border-radius: 3px;
-    background: var(--pc-bg-panel);
     font-family: var(--pc-mono);
+}
+
+.pc-mod-slot-rail {
+    align-self: stretch;
+    background: var(--pc-implicit);
+}
+
+.pc-mod-prefix .pc-mod-slot-rail {
+    background: var(--pc-prefix);
+}
+
+.pc-mod-suffix .pc-mod-slot-rail {
+    background: var(--pc-suffix);
+}
+
+.pc-mod-slot-meta {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 5px;
+    border-right: 1px solid var(--pc-border);
+    color: var(--pc-text-dim);
+    font-size: 9px;
+}
+
+.pc-mod-slot-meta strong {
+    color: var(--pc-implicit);
+    font-size: 11px;
+}
+
+.pc-mod-prefix .pc-mod-slot-meta strong {
+    color: var(--pc-prefix);
+}
+
+.pc-mod-suffix .pc-mod-slot-meta strong {
+    color: var(--pc-suffix);
+}
+
+.pc-mod-slot-meta > span {
+    padding: 1px 3px;
+    border: 1px solid var(--pc-border);
+    border-radius: 2px;
+}
+
+.pc-mod-slot-content {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding-left: 7px;
+}
+
+.pc-mod-state {
+    padding: 1px 4px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pc-mod-state.is-fractured {
+    color: var(--pc-fractured);
+}
+
+.pc-mod-state.is-crafted {
+    color: var(--pc-accent);
 }
 
 .pc-mod-slot.is-empty {
+    min-height: 58px;
     background: transparent;
     border-style: dashed;
+}
+
+.pc-mod-slot.is-empty .pc-mod-slot-meta {
+    justify-content: center;
 }
 
 .pc-mod-slot-empty {
@@ -820,29 +989,22 @@ select {
     font-style: italic;
 }
 
-.pc-mod-slot-helper {
-    min-height: 27px;
-    font-size: 10px;
-    color: var(--pc-text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 2px;
-}
-
 .pc-mod-slot-lines {
-    min-height: 36px;
+    color: var(--pc-text-strong);
+    font-size: 11px;
+    line-height: 1.35;
 }
 
 .pc-mod-slot.pc-mod-prefix .pc-mod-slot-line {
-    color: var(--pc-prefix);
+    color: var(--pc-text-strong);
 }
 
 .pc-mod-slot.pc-mod-suffix .pc-mod-slot-line {
-    color: var(--pc-suffix);
+    color: var(--pc-text-strong);
 }
 
 .pc-mod-slot.pc-mod-implicit .pc-mod-slot-line {
-    color: var(--pc-implicit);
+    color: color-mix(in srgb, var(--pc-implicit) 72%, var(--pc-text-strong));
 }
 
 .pc-mod-slot.is-crafted .pc-mod-slot-line {
@@ -858,8 +1020,7 @@ select {
 }
 
 .pc-mod-slot-tags {
-    min-height: 18px;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 .pc-rarity {
@@ -2321,18 +2482,79 @@ pc-run-trace {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(240px, 0.9fr) minmax(340px, 1.3fr) minmax(360px, 1.5fr);
+    grid-template-columns: minmax(300px, 0.95fr) minmax(440px, 1.55fr) minmax(340px, 1.15fr);
     gap: 1px;
     background: var(--pc-border);
 }
 
-.pc-calc-goal,
-.pc-calc-pool,
 .pc-calc-results {
     background: var(--pc-bg);
     padding: 12px 14px;
     overflow: auto;
     min-height: 0;
+}
+
+.pc-calc-contexts {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: 8px;
+    overflow: auto;
+    padding: 10px;
+    background: var(--pc-bg);
+}
+
+.pc-calc-context-card {
+    padding: 9px;
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+}
+
+.pc-calc-context-card:hover,
+.pc-calc-context-card:focus-visible {
+    border-color: color-mix(in srgb, var(--pc-accent) 65%, var(--pc-border));
+}
+
+.pc-calc-context-card.is-active {
+    border-color: var(--pc-accent);
+    box-shadow: inset 3px 0 color-mix(in srgb, var(--pc-accent) 80%, transparent);
+}
+
+.pc-calc-context-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.pc-calc-context-header h3 {
+    margin: 0;
+}
+
+.pc-calc-context-state {
+    padding: 1px 5px;
+    color: var(--pc-text-dim);
+    border: 1px solid var(--pc-border);
+    border-radius: 2px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pc-calc-context-card.is-active .pc-calc-context-state {
+    color: var(--pc-accent);
+    border-color: var(--pc-accent);
+}
+
+.pc-calc-pool {
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+    background: var(--pc-bg);
 }
 
 .pc-calc-body h3 {
@@ -2343,8 +2565,21 @@ pc-run-trace {
     color: var(--pc-text-dim);
 }
 
-/* Item lives in the top bar as a collapsible summary — an input, not a
-   section competing with the goal for the column. */
+/* The input item stays inline with its base instead of floating as a
+   detached top-right status card. */
+.pc-calc-toolbar {
+    min-height: 54px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.pc-calc-base {
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
 .pc-calc-item-details {
     position: relative;
 }
@@ -2352,13 +2587,12 @@ pc-run-trace {
 .pc-calc-item-summary {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 9px;
+    gap: 7px;
+    padding: 5px 8px;
     background: var(--pc-bg-raised);
     border: 1px solid var(--pc-border);
     border-radius: 3px;
     cursor: pointer;
-    font-size: 11px;
     list-style: none;
     white-space: nowrap;
 }
@@ -2386,6 +2620,7 @@ pc-run-trace {
 .pc-calc-item-counts {
     color: var(--pc-text-dim);
     font-family: var(--pc-mono);
+    font-size: 10px;
 }
 
 .pc-calc-itemcard {
@@ -2450,28 +2685,108 @@ pc-run-trace {
     color: var(--pc-accent);
 }
 
+/* Variant E context rail supersedes the old top-bar item disclosure. */
+.pc-calc-toolbar {
+    min-height: 32px;
+}
+
+.pc-calc-workbench-title {
+    color: var(--pc-text-strong);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.pc-calc-input-actions,
+.pc-calc-new-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pc-calc-input-actions {
+    justify-content: space-between;
+    margin-top: 7px;
+}
+
+.pc-calc-new-item select {
+    max-width: 76px;
+}
+
+.pc-calc-import-help {
+    margin: 6px 0 0;
+    font-size: 9px;
+}
+
 .pc-advanced-crafts button.is-selected {
     border-color: var(--pc-accent);
     color: var(--pc-text-strong);
 }
 
 .pc-calc-fresh {
-    display: flex;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 6px;
+    min-width: 158px;
 }
 
-.pc-calc-goal-rarity {
+.pc-calc-control-label {
+    font-size: 9px;
+}
+
+.pc-calc-fresh-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
+}
+
+.pc-calc-fresh-controls select {
+    min-width: 76px;
+}
+
+.pc-calc-goal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     margin-bottom: 10px;
-    font-size: 11px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--pc-border);
+}
+
+.pc-calc-goal-header h3 {
+    margin: 0;
+}
+
+.pc-calc-goal-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--pc-border);
+}
+
+.pc-calc-goal-controls label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
     color: var(--pc-text-dim);
 }
 
+.pc-calc-goal-controls span {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pc-calc-goal-controls select {
+    width: 100%;
+    min-width: 0;
+}
+
 .pc-calc-status {
+    margin-left: auto;
     color: var(--pc-accent);
     font-size: 11px;
 }
@@ -2487,27 +2802,16 @@ pc-run-trace {
     border-radius: 3px;
 }
 
+.pc-calc-goal-all[hidden] {
+    display: none;
+}
+
 .pc-calc-goal-all-label {
-    flex: none;
+    flex: 1;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--pc-text-strong);
-}
-
-.pc-calc-goal-all-bar {
-    flex: 1;
-    height: 8px;
-    background: var(--pc-bg);
-    border: 1px solid var(--pc-border);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.pc-calc-goal-all-bar span {
-    display: block;
-    height: 100%;
-    background: var(--pc-accent);
 }
 
 .pc-calc-goal-all-value {
@@ -2527,20 +2831,30 @@ pc-run-trace {
 }
 
 .pc-calc-slot {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 7px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 5px 8px;
+    padding: 8px 8px 7px;
     background: var(--pc-bg-raised);
     border: 1px solid var(--pc-border);
     border-radius: 3px;
 }
 
+.pc-calc-slot:has(.pc-side-prefix) {
+    box-shadow: inset 2px 0 color-mix(in srgb, var(--pc-prefix) 70%, transparent);
+}
+
+.pc-calc-slot:has(.pc-side-suffix) {
+    box-shadow: inset 2px 0 color-mix(in srgb, var(--pc-suffix) 70%, transparent);
+}
+
 .pc-calc-slot-label {
-    flex: 1;
     min-width: 0;
     color: var(--pc-text-strong);
     font-size: 12px;
+    line-height: 1.35;
 }
 
 .pc-calc-slot-side {
@@ -2562,19 +2876,112 @@ pc-run-trace {
 }
 
 .pc-calc-slot button {
+    grid-column: 3;
+    grid-row: 1;
     padding: 0 6px;
     border: none;
     background: transparent;
     color: var(--pc-text-dim);
 }
 
+.pc-calc-slot-controls {
+    grid-column: 2 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
 .pc-calc-slot button:hover {
     color: var(--pc-accent);
 }
 
-.pc-calc-goal pc-combobox {
-    display: block;
-    margin-top: 8px;
+.pc-calc-answer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 3px 12px;
+    margin-bottom: 18px;
+    padding: 10px 11px;
+    border: 1px solid var(--pc-accent);
+    border-radius: 3px;
+    background: var(--pc-bg-raised);
+}
+
+.pc-calc-answer-kicker {
+    grid-column: 1 / 3;
+    color: var(--pc-text-dim);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.pc-calc-answer-target {
+    overflow: hidden;
+    color: var(--pc-text-strong);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-calc-answer-value {
+    grid-column: 2;
+    grid-row: 2 / 4;
+    align-self: center;
+    color: var(--pc-rare);
+    font-family: var(--pc-mono);
+    font-size: 27px;
+    font-weight: 500;
+}
+
+.pc-calc-answer-action {
+    color: var(--pc-text-dim);
+    font-size: 10px;
+}
+
+.pc-calc-answer-details {
+    grid-column: 1 / 3;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin-top: 7px;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-border);
+}
+
+.pc-calc-answer-details > span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 7px;
+    background: var(--pc-bg);
+}
+
+.pc-calc-answer-details small,
+.pc-calc-cost-metrics small {
+    color: var(--pc-text-dim);
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.pc-calc-answer-details strong {
+    overflow: hidden;
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 11px;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-calc-answer-note {
+    grid-column: 1 / 3;
+    margin: 2px 0 0;
+    color: var(--pc-text-dim);
+    font-size: 9px;
 }
 
 .pc-calc-section {
@@ -2604,21 +3011,6 @@ pc-run-trace {
     color: var(--pc-text-strong);
 }
 
-.pc-calc-slot-odds-bar {
-    width: 44px;
-    height: 6px;
-    background: var(--pc-bg);
-    border: 1px solid var(--pc-border);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.pc-calc-slot-odds-bar span {
-    display: block;
-    height: 100%;
-    background: var(--pc-accent);
-}
-
 .pc-calc-cost-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 90px 70px;
@@ -2636,20 +3028,206 @@ pc-run-trace {
     white-space: nowrap;
 }
 
-.pc-calc-cost-sub,
-.pc-calc-cost-total {
+.pc-calc-cost-sub {
     text-align: right;
     font-family: var(--pc-mono);
 }
 
-.pc-calc-cost-total {
+.pc-calc-cost-metrics {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 1px;
+    margin-top: 6px;
+    border-top: 1px solid var(--pc-border);
+    border-bottom: 1px solid var(--pc-border);
+    background: var(--pc-border);
+}
+
+.pc-calc-cost-metrics > span {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px 8px;
+    background: var(--pc-bg-raised);
+}
+
+.pc-calc-cost-metrics strong {
+    overflow: hidden;
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 13px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-calc-cost-note {
+    margin: 5px 0 0;
+    font-size: 9px;
+}
+
+.pc-calc-coverage {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pc-calc-coverage-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 5px 8px;
+    padding: 6px 7px;
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+    background: var(--pc-bg-raised);
+}
+
+.pc-calc-coverage-row.is-qualifying {
+    border-color: color-mix(in srgb, #7fce8a 45%, var(--pc-border));
+}
+
+.pc-calc-coverage-label {
+    color: var(--pc-text-strong);
+    font-size: 11px;
+}
+
+.pc-calc-threshold-badge {
+    padding: 1px 4px;
+    border: 1px solid color-mix(in srgb, #7fce8a 45%, var(--pc-border));
+    border-radius: 2px;
+    color: #7fce8a;
+    font-size: 8px;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pc-calc-coverage-value {
+    min-width: 72px;
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 11px;
+    text-align: right;
+}
+
+.pc-calc-coverage-track {
+    grid-column: 1 / 4;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--pc-bg-deep);
+}
+
+.pc-calc-coverage-track > span {
+    display: block;
+    height: 100%;
+    background: var(--pc-text-dim);
+}
+
+.pc-calc-coverage-row.is-qualifying .pc-calc-coverage-track > span {
+    background: #7fce8a;
+}
+
+.pc-calc-coverage-help {
+    margin: 5px 0 0;
+    font-size: 9px;
+}
+
+.pc-calc-misses {
+    margin-top: 11px;
+    padding: 8px 9px;
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+}
+
+.pc-calc-misses h5 {
     display: flex;
     justify-content: space-between;
-    margin-top: 6px;
-    padding-top: 6px;
+    margin: 0 0 5px;
+    color: var(--pc-text-dim);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pc-calc-misses h5 span {
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+}
+
+.pc-calc-miss-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 3px 0;
+    color: var(--pc-text);
+    font-size: 10px;
+}
+
+.pc-calc-miss-row strong {
+    flex: none;
+    color: #d98a7a;
+    font-family: var(--pc-mono);
+    font-weight: 400;
+}
+
+.pc-calc-technical {
+    margin-top: 11px;
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+}
+
+.pc-calc-technical summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 9px;
+    color: var(--pc-text-dim);
+    cursor: pointer;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pc-calc-technical summary::before {
+    content: "▸";
+    color: var(--pc-accent);
+}
+
+.pc-calc-technical[open] summary::before {
+    content: "▾";
+}
+
+.pc-calc-technical summary span:last-child {
+    margin-left: auto;
+}
+
+.pc-calc-technical-body {
+    overflow-x: auto;
+    padding: 0 8px 8px;
     border-top: 1px solid var(--pc-border);
+}
+
+.pc-calc-goal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 7px 0;
+    color: var(--pc-text-dim);
+    font-size: 9px;
+}
+
+.pc-calc-goal-legend strong {
     color: var(--pc-text-strong);
-    font-size: 12px;
+    font-weight: 500;
+}
+
+.pc-calc-table tr.is-success td {
+    background: color-mix(in srgb, #7fce8a 5%, transparent);
 }
 
 .pc-calc-table {
@@ -2690,4 +3268,14 @@ pc-run-trace {
     max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+@media (max-width: 1050px) {
+    .pc-calc-body {
+        min-width: 1030px;
+    }
+
+    .pc-calculator {
+        overflow-x: auto;
+    }
 }

@@ -138,6 +138,44 @@ bool near(double a, double b, double tolerance = 1e-9) {
     return std::fabs(a - b) < tolerance;
 }
 
+void run_goal_threshold_tests() {
+    auto session = make_calc_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    GoalSlot prefix;
+    prefix.family_id = 100;
+    prefix.min_tier = 1;
+    GoalSlot suffix;
+    suffix.family_id = 104;
+    goal.slots = {prefix, suffix};
+    goal.rarity = PC_RARITY_RARE;
+    goal.min_satisfied_slots = 1;
+    CalcContext calc(session, goal, registry, basic_indices(registry));
+
+    AbstractState state;
+    state.rarity = PC_RARITY_RARE;
+    state.slot_status[0] =
+        static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    PC_CHECK(calc.is_goal_state(state));
+    state.slot_status[0] =
+        static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+    PC_CHECK(!calc.is_goal_state(state));
+    state.slot_status[1] =
+        static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    PC_CHECK(calc.is_goal_state(state));
+    state.rarity = PC_RARITY_MAGIC;
+    PC_CHECK(!calc.is_goal_state(state));
+
+    /* Direct GoalSpec callers retain the old all-slots default. */
+    goal.min_satisfied_slots = 0;
+    CalcContext all_calc(session, goal, registry, basic_indices(registry));
+    state.rarity = PC_RARITY_RARE;
+    PC_CHECK(!all_calc.is_goal_state(state));
+    state.slot_status[0] =
+        static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+    PC_CHECK(all_calc.is_goal_state(state));
+}
+
 void run_exact_distribution_tests() {
     auto session = make_calc_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -775,6 +813,7 @@ void run_artifact_calc_tests(const char* artifact_dir) {
 } // namespace
 
 void run_solver_calc_tests(const char* artifact_dir) {
+    run_goal_threshold_tests();
     run_exact_distribution_tests();
     run_reforge_tests();
     run_artifact_calc_tests(artifact_dir);

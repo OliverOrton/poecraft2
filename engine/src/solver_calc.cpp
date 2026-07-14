@@ -101,13 +101,14 @@ CalcContext::CalcContext(
 
 bool CalcContext::is_goal_state(const AbstractState& state) const {
     if (state.rarity != goal_.rarity) return false;
+    std::size_t satisfied = 0;
     for (std::size_t i = 0; i < layout_.slots.size(); ++i) {
-        if (state.slot_status[i] !=
+        if (state.slot_status[i] ==
             static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
-            return false;
+            ++satisfied;
         }
     }
-    return true;
+    return satisfied >= goal_.required_satisfied_slots();
 }
 
 std::uint32_t CalcContext::intern_state(const AbstractState& state) {

@@ -42,6 +42,14 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
+import { influenceLabels } from "../item-display";
+import {
+    estimatedActionSpendPerSuccess,
+    formatChaosValue,
+    formatExpectedAttempts,
+    formatProbabilityExact,
+    formatRawProbability,
+} from "../odds-presentation";
 import {
     buildModifierKeyIndex,
     buildModifierOptions,
@@ -54,11 +62,11 @@ import {
 } from "../craft-choices";
 import type { ModifierFamilyOption } from "./pc-condition-editor";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
+import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
-import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
+import "./pc-mod-list";
 import "./pc-mod-pool";
-import "./pc-combobox";
 
 const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
 const MAX_GOAL_SLOTS = 8;
@@ -118,15 +126,7 @@ const FLAG_LABELS = [
 ];
 
 const RARITY_NAMES = ["Normal", "Magic", "Rare"];
-
-/** One compact item line: side, tier, stat text, fractured/crafted marks. */
-interface ItemModLine {
-    side: "prefix" | "suffix";
-    tier: number;
-    text: string;
-    fractured: boolean;
-    crafted: boolean;
-}
+const RARITY_CODES = { normal: 0, magic: 1, rare: 2 } as const;
 
 export class PcCalculator extends HTMLElement {
     private client!: EngineClient;
@@ -149,13 +149,17 @@ export class PcCalculator extends HTMLElement {
     private pickerActions: SolverActionInfo[] = [];
 
     private itemRarity = "normal";
-    private itemMods: ItemModLine[] = [];
-    private itemImplicitCount = 0;
+    private itemInfluences: string[] = [];
+    private itemPrefixes: SlotMod[] = [];
+    private itemSuffixes: SlotMod[] = [];
+    private itemImplicits: SlotMod[] = [];
     private itemMaxPrefix = 3;
     private itemMaxSuffix = 3;
+    private activeContext: "input" | "goal" = "goal";
 
     private goalRarity: "normal" | "magic" | "rare" = "rare";
     private slots: CalculatorGoalSlot[] = [];
+    private minSatisfiedSlots = 1;
     private actionId = "";
     private fossilKeys: string[] = [];
     private activeCraftPanel: CraftPanel = "basic";
@@ -205,6 +209,9 @@ export class PcCalculator extends HTMLElement {
             this.itemLevel = draft.itemLevel;
             this.goalRarity = draft.goalRarity;
             this.slots = draft.slots;
+            this.minSatisfiedSlots =
+                draft.minSatisfiedSlots ?? draft.slots.length;
+            this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
             this.fossilKeys = draft.fossilKeys;
             this.activeCraftPanel = panelForAction(this.actionId);
@@ -212,6 +219,7 @@ export class PcCalculator extends HTMLElement {
         if (!this.bases.some((b) => b.path === this.base)) {
             this.base = this.bases[0]?.path ?? this.base;
         }
+        this.renderBaseSummary();
         this.hasBase = Boolean(draft?.state);
 
         if (!this.hasBase) {
@@ -303,7 +311,12 @@ export class PcCalculator extends HTMLElement {
             ? buildModifierOptions(cache, this.catalog)
             : [];
         this.modKeyToFamily = buildModifierKeyIndex(cache);
-        // Drop goal slots that do not exist in the new session.
+        // Drop goal slots that do not exist in the new session. A goal that
+        // meant "all" continues to mean all after the base changes.
+        const oldSlotCount = this.slots.length;
+        const followedAll =
+            oldSlotCount === 0 ||
+            this.effectiveMinSatisfiedSlots() === oldSlotCount;
         this.slots = this.slots.filter((slot) =>
             slot.group
                 ? this.groupIdByKey(slot.group) !== undefined
@@ -311,6 +324,7 @@ export class PcCalculator extends HTMLElement {
                       (option) => option.value === slot.familyModKey,
                   ),
         );
+        this.normalizeSuccessThreshold(followedAll);
     }
 
     /** (Re)open the solver for the current goal. Requires >= 1 slot. */
@@ -324,6 +338,7 @@ export class PcCalculator extends HTMLElement {
         const goal: SolverGoal = {
             version: "v1",
             rarity: this.goalRarity,
+            min_satisfied_slots: this.effectiveMinSatisfiedSlots(),
             slots: this.slots.map((slot) =>
                 slot.group
                     ? { group: slot.group, min_tier: slot.minTier }
@@ -414,6 +429,55 @@ export class PcCalculator extends HTMLElement {
         await this.persist();
     }
 
+    private async inputChanged(): Promise<void> {
+        await this.refresh();
+        await this.recalc();
+        await this.persist();
+    }
+
+    private async addInputMod(
+        key: string,
+        side: "prefix" | "suffix",
+        fractured = false,
+    ): Promise<void> {
+        const info = this.modCache.find((mod) => mod.key === key);
+        if (info?.reach_kind === REACH_KIND_CRAFTED && !fractured) {
+            await this.client.apply(this.context, this.item, {
+                type: "bench",
+                mod_key: key,
+            });
+        } else {
+            await this.client.addMod(this.item, this.session, {
+                key,
+                side,
+                fractured,
+            });
+        }
+        await this.inputChanged();
+    }
+
+    private async removeInputMod(
+        modId: number,
+        side: "prefix" | "suffix",
+    ): Promise<void> {
+        await this.client.removeMod(this.item, { modId, side });
+        await this.inputChanged();
+    }
+
+    private async fractureInputMod(
+        key: string,
+        modId: number,
+        side: "prefix" | "suffix",
+        onItem: boolean,
+    ): Promise<void> {
+        if (onItem) {
+            await this.client.setModFractured(this.item, { modId, side });
+            await this.inputChanged();
+            return;
+        }
+        await this.addInputMod(key, side, true);
+    }
+
     private async applyPickerSelection(sel: BasePickerSelection): Promise<void> {
         this.base = sel.base;
         this.itemLevel = sel.itemLevel;
@@ -455,6 +519,28 @@ export class PcCalculator extends HTMLElement {
             this.fossilKeys = [];
         }
         void this.guard(() => this.actionChanged());
+    }
+
+    private selectContext(context: "input" | "goal"): void {
+        this.activeContext = context;
+        this.renderContextSelection();
+        this.querySelector<PcModPool>("pc-mod-pool")?.setInteractionMode(
+            context === "input" ? "direct" : "goal",
+        );
+    }
+
+    private renderContextSelection(): void {
+        this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
+            (card) => {
+                const active = card.dataset.contextCard === this.activeContext;
+                card.classList.toggle("is-active", active);
+                card.setAttribute("aria-selected", String(active));
+                const state = card.querySelector<HTMLElement>(
+                    ".pc-calc-context-state",
+                );
+                if (state) state.textContent = active ? "Editing" : "Select";
+            },
+        );
     }
 
     /** "fossil:<a>+<b>" with sorted keys, matching solver_registry.cpp. */
@@ -511,6 +597,7 @@ export class PcCalculator extends HTMLElement {
             state: this.item ? await this.client.exportItem(this.item) : null,
             goalRarity: this.goalRarity,
             slots: this.slots,
+            minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
             actionId: this.actionId,
             fossilKeys: this.fossilKeys,
             updatedAt: Date.now(),
@@ -531,13 +618,23 @@ export class PcCalculator extends HTMLElement {
         const suffixIds = info.suffix_mod_ids as number[];
         const implicitIds = info.implicit_mod_ids as number[];
         this.itemRarity = info.rarity as string;
-        this.itemImplicitCount = implicitIds.length;
+        this.itemInfluences = influenceLabels(
+            Number(info.generic_influence_bits ?? 0),
+            Number(info.searing_exarch_tier ?? 0),
+            Number(info.eater_of_worlds_tier ?? 0),
+            this.catalog,
+        );
         this.itemMaxPrefix = (info.max_prefix as number) ?? prefixIds.length;
         this.itemMaxSuffix = (info.max_suffix as number) ?? suffixIds.length;
-        this.itemMods = [
-            ...prefixIds.map((id) => this.toLine(id, "prefix", fracturedP)),
-            ...suffixIds.map((id) => this.toLine(id, "suffix", fracturedS)),
-        ];
+        this.itemPrefixes = prefixIds.map((id) =>
+            this.toSlot(id, fracturedP),
+        );
+        this.itemSuffixes = suffixIds.map((id) =>
+            this.toSlot(id, fracturedS),
+        );
+        this.itemImplicits = implicitIds.map((id) =>
+            this.toSlot(id, new Set()),
+        );
         this.renderItem();
 
         // Feed the goal-selection pool exactly like the Emulator feeds its
@@ -580,54 +677,42 @@ export class PcCalculator extends HTMLElement {
         this.renderActionPanels();
     }
 
-    private toLine(
-        id: number,
-        side: "prefix" | "suffix",
-        fractured: Set<number>,
-    ): ItemModLine {
+    private toSlot(id: number, fractured: Set<number>): SlotMod {
         const info = this.modCache[id];
+        if (!info) {
+            return {
+                sessionModId: id,
+                key: String(id),
+                tierIndex: 0,
+                textLines: [],
+                classificationTags: [],
+                fractured: fractured.has(id),
+                crafted: false,
+            };
+        }
         return {
-            side,
-            tier: info?.family_tier_index ?? 0,
-            text: info
-                ? info.text_lines.join(" / ") || info.key
-                : String(id),
+            sessionModId: id,
+            key: info.key,
+            tierIndex: info.family_tier_index,
+            textLines: info.text_lines,
+            classificationTags: info.classification_tags,
             fractured: fractured.has(id),
-            crafted: info?.reach_kind === REACH_KIND_CRAFTED,
+            crafted: info.reach_kind === REACH_KIND_CRAFTED,
         };
     }
 
-    /** Compact read-only item summary in the top bar: the item is an input,
-     * not an editor, so it collapses out of the way of the goal column. */
     private renderItem(): void {
-        const summary = this.querySelector<HTMLElement>(".pc-calc-item-summary");
-        const card = this.querySelector<HTMLElement>(".pc-calc-itemcard");
-        if (!summary || !card) return;
-        const prefixCount = this.itemMods.filter(
-            (mod) => mod.side === "prefix",
-        ).length;
-        const suffixCount = this.itemMods.length - prefixCount;
-        summary.innerHTML = `
-            <span class="pc-calc-item-tag">Item</span>
-            <span class="pc-rarity-${escapeHtml(this.itemRarity)}">${titleCase(this.itemRarity)}</span>
-            <span class="pc-calc-item-counts">${prefixCount}/${this.itemMaxPrefix}P · ${suffixCount}/${this.itemMaxSuffix}S${
-                this.itemImplicitCount
-                    ? ` · ${this.itemImplicitCount} implicit${this.itemImplicitCount === 1 ? "" : "s"}`
-                    : ""
-            }</span>`;
-        const lines = this.itemMods
-            .map(
-                (mod) => `<li class="pc-calc-mod pc-calc-mod-${mod.side}">
-                    <span class="pc-calc-mod-tier">T${mod.tier || "?"}</span>
-                    <span class="pc-calc-mod-text">${escapeHtml(mod.text)}</span>
-                    ${mod.fractured ? '<span class="pc-calc-mod-mark">fractured</span>' : ""}
-                    ${mod.crafted ? '<span class="pc-calc-mod-mark">crafted</span>' : ""}
-                </li>`,
-            )
-            .join("");
-        card.innerHTML = this.itemMods.length
-            ? `<ul class="pc-calc-mods">${lines}</ul>`
-            : '<p class="pc-empty">No explicit modifiers.</p>';
+        this.modList?.setModel({
+            baseName: this.baseDisplayName(),
+            itemLevel: this.itemLevel,
+            rarity: this.itemRarity,
+            influences: this.itemInfluences,
+            implicits: this.itemImplicits,
+            prefixes: this.itemPrefixes,
+            suffixes: this.itemSuffixes,
+            maxPrefix: this.itemMaxPrefix,
+            maxSuffix: this.itemMaxSuffix,
+        });
     }
 
     private groupIdByKey(key: string): number | undefined {
@@ -653,6 +738,37 @@ export class PcCalculator extends HTMLElement {
         return `${option.label}${source}`;
     }
 
+    private effectiveMinSatisfiedSlots(): number {
+        if (this.slots.length === 0) return 0;
+        return Math.max(
+            1,
+            Math.min(this.slots.length, Math.floor(this.minSatisfiedSlots)),
+        );
+    }
+
+    private normalizeSuccessThreshold(followAll = false): void {
+        if (this.slots.length === 0) {
+            this.minSatisfiedSlots = 1;
+            return;
+        }
+        this.minSatisfiedSlots = followAll
+            ? this.slots.length
+            : this.effectiveMinSatisfiedSlots();
+    }
+
+    private successTargetLabel(): string {
+        const rarity = titleCase(this.goalRarity);
+        if (this.slots.length === 1) {
+            return `${rarity} + ${this.slotLabel(this.slots[0])}`;
+        }
+        const required = this.effectiveMinSatisfiedSlots();
+        const modifiers =
+            required === this.slots.length
+                ? `all ${this.slots.length} modifiers`
+                : `at least ${required} of ${this.slots.length} modifiers`;
+        return `${rarity} + ${modifiers}`;
+    }
+
     /** A pool tier was clicked: require that family at that tier or better. */
     private addGoalFromPool(modKey: string): void {
         const familyKey = this.modKeyToFamily.get(modKey);
@@ -661,6 +777,10 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         const minTier = info.family_tier_index || 0;
+        const oldSlotCount = this.slots.length;
+        const followedAll =
+            oldSlotCount === 0 ||
+            this.effectiveMinSatisfiedSlots() === oldSlotCount;
         const existing = this.slots.find(
             (slot) => slot.familyModKey === familyKey,
         );
@@ -672,24 +792,11 @@ export class PcCalculator extends HTMLElement {
             this.setStatus(`Goals are limited to ${MAX_GOAL_SLOTS} modifiers.`);
             return;
         }
+        this.normalizeSuccessThreshold(followedAll);
         void this.guard(() => this.goalChanged());
     }
 
-    /** Probability that EVERY goal slot is satisfied at once, summed over the
-     * outcome classes where all slots read "satisfied". */
-    private combinedGoalProbability(): number {
-        if (!this.calc) return 0;
-        return this.calc.outcomes.reduce(
-            (sum, outcome) =>
-                this.slots.every((_, index) => outcome.slots[index] === 2)
-                    ? sum + outcome.probability
-                    : sum,
-            0,
-        );
-    }
-
-    /** The headline "chance to hit the whole goal in one action" line. Only
-     * meaningful with two or more slots — for one slot it equals its row. */
+    /** Compact combined success result in the goal card. */
     private renderGoalSummary(showOdds: boolean): void {
         const host = this.querySelector<HTMLElement>(".pc-calc-goal-all");
         if (!host) return;
@@ -698,12 +805,26 @@ export class PcCalculator extends HTMLElement {
             host.innerHTML = "";
             return;
         }
-        const p = this.combinedGoalProbability();
+        const p = this.calc?.success_probability ?? 0;
         host.hidden = false;
         host.innerHTML = `
-            <span class="pc-calc-goal-all-label">All ${this.slots.length} mods</span>
-            <span class="pc-calc-goal-all-bar"><span style="width:${(p * 100).toFixed(1)}%"></span></span>
-            <span class="pc-calc-goal-all-value">${formatProbability(p)}</span>`;
+            <span class="pc-calc-goal-all-label">${escapeHtml(this.successTargetLabel())}</span>
+            <span class="pc-calc-goal-all-value">${formatProbabilityExact(p)}</span>`;
+    }
+
+    private syncModPoolSelections(): void {
+        this.querySelector<PcModPool>("pc-mod-pool")?.setSelectedTiers(
+            this.slots.flatMap((slot) =>
+                slot.familyModKey
+                    ? [
+                          {
+                              familyModKey: slot.familyModKey,
+                              minTier: slot.minTier,
+                          },
+                      ]
+                    : [],
+            ),
+        );
     }
 
     private renderGoal(): void {
@@ -712,6 +833,7 @@ export class PcCalculator extends HTMLElement {
         const showOdds = Boolean(
             this.calc && this.calc.legal && this.calc.supported,
         );
+        this.syncModPoolSelections();
         this.renderGoalSummary(showOdds);
         if (this.slots.length === 0) {
             list.innerHTML =
@@ -727,8 +849,7 @@ export class PcCalculator extends HTMLElement {
                     const p = this.calc?.slot_satisfied[index] ?? 0;
                     const odds = showOdds
                         ? `<span class="pc-calc-slot-odds" title="Chance this goal mod is satisfied after the selected action">
-                            <span class="pc-calc-slot-odds-bar"><span style="width:${(p * 100).toFixed(1)}%"></span></span>
-                            ${formatProbability(p)}
+                            ${formatProbabilityExact(p)}
                         </span>`
                         : "";
                     const tierChoices = option
@@ -749,16 +870,18 @@ export class PcCalculator extends HTMLElement {
                             option ? (option.side === "prefix" ? "P" : "S") : "G"
                         }</span>
                         <span class="pc-calc-slot-label">${escapeHtml(this.slotLabel(slot))}</span>
-                        ${odds}
-                        ${
-                            option
-                                ? `<select data-slot-tier="${index}">
-                                    <option value="0" ${slot.minTier === 0 ? "selected" : ""}>Any tier</option>
-                                    ${tierChoices}
-                                </select>`
-                                : ""
-                        }
                         <button data-slot-remove="${index}" title="Remove">&times;</button>
+                        <span class="pc-calc-slot-controls">
+                            ${
+                                option
+                                    ? `<select data-slot-tier="${index}" aria-label="Tier required for ${escapeHtml(this.slotLabel(slot))}">
+                                        <option value="0" ${slot.minTier === 0 ? "selected" : ""}>Any tier</option>
+                                        ${tierChoices}
+                                    </select>`
+                                    : '<span class="pc-help">Any matching tier</span>'
+                            }
+                            ${odds}
+                        </span>
                     </li>`;
                 })
                 .join("");
@@ -767,7 +890,12 @@ export class PcCalculator extends HTMLElement {
             (button) => {
                 button.addEventListener("click", () => {
                     const index = Number(button.dataset.slotRemove);
+                    const oldSlotCount = this.slots.length;
+                    const followedAll =
+                        this.effectiveMinSatisfiedSlots() === oldSlotCount;
                     this.slots = this.slots.filter((_, i) => i !== index);
+                    this.normalizeSuccessThreshold(followedAll);
+                    this.syncModPoolSelections();
                     void this.guard(() => this.goalChanged());
                 });
             },
@@ -779,38 +907,42 @@ export class PcCalculator extends HTMLElement {
                     const slot = this.slots[index];
                     if (slot) {
                         slot.minTier = Number(select.value);
+                        this.syncModPoolSelections();
                         void this.guard(() => this.goalChanged());
                     }
                 });
             },
         );
 
-        const groupBox = this.querySelector<PcCombobox>(
-            '[data-role="group-slot"]',
-        );
-        if (groupBox && this.catalog) {
-            const taken = new Set(
-                this.slots.map((slot) => slot.group).filter(Boolean),
-            );
-            const seen = new Set<string>();
-            const options: ComboOption[] = [];
-            for (let id = 0; id < this.catalog.groupKeyById.length; id += 1) {
-                const key = this.catalog.groupKeyById[id];
-                if (!key || taken.has(key) || seen.has(key)) continue;
-                seen.add(key);
-                options.push({
-                    value: key,
-                    label: this.catalog.groupNameById[id] || key,
-                });
-            }
-            options.sort((a, b) => a.label.localeCompare(b.label));
-            groupBox.setOptions(options);
-        }
         const rarity = this.querySelector<HTMLSelectElement>(
             '[data-role="goal-rarity"]',
         );
         if (rarity) {
             rarity.value = this.goalRarity;
+        }
+        const threshold = this.querySelector<HTMLSelectElement>(
+            '[data-role="success-threshold"]',
+        );
+        if (threshold) {
+            if (this.slots.length === 0) {
+                threshold.innerHTML = '<option value="0">Add modifiers</option>';
+                threshold.disabled = true;
+            } else {
+                threshold.disabled = false;
+                threshold.innerHTML = Array.from(
+                    { length: this.slots.length },
+                    (_, offset) => this.slots.length - offset,
+                )
+                    .map((count) => {
+                        const label =
+                            count === this.slots.length
+                                ? `All ${count}`
+                                : `At least ${count} of ${this.slots.length}`;
+                        return `<option value="${count}">${label}</option>`;
+                    })
+                    .join("");
+                threshold.value = String(this.effectiveMinSatisfiedSlots());
+            }
         }
     }
 
@@ -1225,7 +1357,8 @@ export class PcCalculator extends HTMLElement {
             return;
         }
         host.innerHTML = `
-            ${this.renderCost()}
+            ${this.renderExactResult(calc)}
+            ${this.renderCost(calc.success_probability)}
             ${this.renderOutcomes(calc)}`;
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
             (input) => {
@@ -1238,7 +1371,31 @@ export class PcCalculator extends HTMLElement {
         );
     }
 
-    private renderCost(): string {
+    private renderExactResult(calc: CalcResult): string {
+        return `<section class="pc-calc-answer">
+            <span class="pc-calc-answer-kicker">Exact result</span>
+            <span class="pc-calc-answer-target">${escapeHtml(this.successTargetLabel())}</span>
+            <strong class="pc-calc-answer-value">${formatProbabilityExact(calc.success_probability)}</strong>
+            <span class="pc-calc-answer-action">after ${escapeHtml(this.actionLabel(this.actionId))}</span>
+            <div class="pc-calc-answer-details">
+                <span>
+                    <small>Engine probability</small>
+                    <strong>p = ${formatRawProbability(calc.success_probability)}</strong>
+                </span>
+                <span>
+                    <small>Failure chance</small>
+                    <strong>${formatProbabilityExact(1 - calc.success_probability)}</strong>
+                </span>
+                <span>
+                    <small>Expected attempts</small>
+                    <strong>${formatExpectedAttempts(calc.success_probability)}</strong>
+                </span>
+            </div>
+            <p class="pc-calc-answer-note">Expected attempts assumes every try starts from this same input item.</p>
+        </section>`;
+    }
+
+    private renderCost(successProbability: number): string {
         const keys = this.selectedCostKeys();
         if (keys.length === 0) {
             return "";
@@ -1261,24 +1418,134 @@ export class PcCalculator extends HTMLElement {
                     <span class="pc-calc-cost-key">${count > 1 ? `${count} × ` : ""}${escapeHtml(key)}</span>
                     <input type="number" min="0" step="any" data-price-key="${escapeHtml(key)}"
                         value="${price ?? ""}" placeholder="price">
-                    <span class="pc-calc-cost-sub">${price !== undefined ? formatNumber(price * count) : "—"}</span>
+                    <span class="pc-calc-cost-sub">${price !== undefined ? formatChaosValue(price * count) : "—"}</span>
                 </div>`;
             })
             .join("");
-        return `<section class="pc-calc-section">
-            <h4>Cost per attempt</h4>
+        const spendPerSuccess = estimatedActionSpendPerSuccess(
+            total,
+            successProbability,
+        );
+        return `<section class="pc-calc-section pc-calc-cost">
+            <h4>Cost estimates</h4>
             ${rows}
-            <div class="pc-calc-cost-total">
-                <span>Total</span>
-                <span>${complete ? formatNumber(total) : "set prices above"}</span>
+            <div class="pc-calc-cost-metrics">
+                <span>
+                    <small>Cost per attempt</small>
+                    <strong>${complete ? formatChaosValue(total) : "set prices above"}</strong>
+                </span>
+                <span>
+                    <small>Estimated action spend per success</small>
+                    <strong>${
+                        complete
+                            ? Number.isFinite(spendPerSuccess)
+                                ? formatChaosValue(spendPerSuccess)
+                                : "No finite estimate"
+                            : "set prices above"
+                    }</strong>
+                </span>
             </div>
+            <p class="pc-help pc-calc-cost-note">Uses ${formatExpectedAttempts(successProbability)} attempts at the current success rate. Base, reset, cleanup, and recovery costs are not included unless they are part of the selected action.</p>
         </section>`;
     }
 
     private renderOutcomes(calc: CalcResult): string {
-        const sorted = [...calc.outcomes].sort(
-            (a, b) => b.probability - a.probability,
-        );
+        const required = this.effectiveMinSatisfiedSlots();
+        const rarityCode = RARITY_CODES[this.goalRarity];
+        const satisfiedCount = (outcome: CalcOutcome) =>
+            this.slots.reduce(
+                (count, _, index) =>
+                    count + (outcome.slots[index] === 2 ? 1 : 0),
+                0,
+            );
+        const isSuccess = (outcome: CalcOutcome) =>
+            outcome.rarity === rarityCode &&
+            satisfiedCount(outcome) >= required;
+        const probabilityWhere = (
+            predicate: (outcome: CalcOutcome) => boolean,
+        ) =>
+            calc.outcomes.reduce(
+                (sum, outcome) =>
+                    predicate(outcome) ? sum + outcome.probability : sum,
+                0,
+            );
+
+        const coverage = Array(this.slots.length + 1).fill(0) as number[];
+        for (const outcome of calc.outcomes) {
+            coverage[satisfiedCount(outcome)] += outcome.probability;
+        }
+        const coverageRows = coverage
+            .map((probability, count) => ({ count, probability }))
+            .reverse()
+            .map(({ count, probability }) => {
+                const qualifies = count >= required;
+                const width = Math.max(0, Math.min(100, probability * 100));
+                return `<div class="pc-calc-coverage-row ${qualifies ? "is-qualifying" : ""}">
+                    <span class="pc-calc-coverage-label">${count} of ${this.slots.length} goal modifiers</span>
+                    ${qualifies ? '<span class="pc-calc-threshold-badge">threshold</span>' : ""}
+                    <span class="pc-calc-coverage-value">${formatProbabilityExact(probability)}</span>
+                    <span class="pc-calc-coverage-track"><span style="width:${width}%"></span></span>
+                </div>`;
+            })
+            .join("");
+
+        const missSignals = [
+            {
+                label: "Below modifier threshold",
+                probability: probabilityWhere(
+                    (outcome) => satisfiedCount(outcome) < required,
+                ),
+            },
+            {
+                label: "At least one goal below the required tier",
+                probability: probabilityWhere((outcome) =>
+                    this.slots.some(
+                        (_, index) => outcome.slots[index] === 1,
+                    ),
+                ),
+            },
+            {
+                label: "At least one goal absent",
+                probability: probabilityWhere((outcome) =>
+                    this.slots.some(
+                        (_, index) => outcome.slots[index] === 0,
+                    ),
+                ),
+            },
+            {
+                label: "Goal family blocked by another modifier",
+                probability: probabilityWhere((outcome) =>
+                    this.slots.some(
+                        (_, index) =>
+                            outcome.slots[index] === 0 &&
+                            Boolean((outcome.blocked >> index) & 1),
+                    ),
+                ),
+            },
+            {
+                label: `Finished item is not ${titleCase(this.goalRarity)}`,
+                probability: probabilityWhere(
+                    (outcome) => outcome.rarity !== rarityCode,
+                ),
+            },
+        ].filter((signal) => signal.probability > 1e-12);
+        const missRows = missSignals.length
+            ? missSignals
+                  .map(
+                      (signal) => `<div class="pc-calc-miss-row">
+                        <span>${escapeHtml(signal.label)}</span>
+                        <strong>${formatProbabilityExact(signal.probability)}</strong>
+                    </div>`,
+                  )
+                  .join("")
+            : '<p class="pc-help">No miss signals in the returned distribution.</p>';
+
+        const sorted = [...calc.outcomes].sort((a, b) => {
+            const successOrder = Number(isSuccess(b)) - Number(isSuccess(a));
+            if (successOrder !== 0) return successOrder;
+            const coverageOrder = satisfiedCount(b) - satisfiedCount(a);
+            return coverageOrder || b.probability - a.probability;
+        });
         const shown = sorted.slice(0, MAX_OUTCOME_ROWS);
         const restCount = sorted.length - shown.length;
         const restProbability = sorted
@@ -1292,8 +1559,8 @@ export class PcCalculator extends HTMLElement {
             .join("");
         const rows = shown
             .map(
-                (outcome) => `<tr>
-                    <td class="pc-calc-p">${formatProbability(outcome.probability)}</td>
+                (outcome) => `<tr class="${isSuccess(outcome) ? "is-success" : ""}">
+                    <td class="pc-calc-p">${formatProbabilityExact(outcome.probability)}</td>
                     <td>${RARITY_NAMES[outcome.rarity] ?? outcome.rarity}</td>
                     <td>${outcome.prefixes}P/${outcome.suffixes}S</td>
                     ${this.slots
@@ -1305,20 +1572,41 @@ export class PcCalculator extends HTMLElement {
                 </tr>`,
             )
             .join("");
+        const slotLegend = this.slots
+            .map(
+                (slot, index) =>
+                    `<span><strong>G${index + 1}</strong> ${escapeHtml(this.slotLabel(slot))}</span>`,
+            )
+            .join("");
         return `<section class="pc-calc-section">
-            <h4>Outcome classes (${calc.outcomes.length})</h4>
-            <table class="pc-calc-table">
-                <thead><tr>
-                    <th>Chance</th><th>Rarity</th><th>Affixes</th>
-                    ${slotHeaders}<th>Flags</th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-            ${
-                restCount > 0
-                    ? `<p class="pc-help">…and ${restCount} more classes totalling ${formatProbability(restProbability)}.</p>`
-                    : ""
-            }
+            <h4>Goal coverage</h4>
+            <div class="pc-calc-coverage">${coverageRows}</div>
+            <p class="pc-help pc-calc-coverage-help">Modifier coverage only; finished rarity is included in the exact success result.</p>
+            <div class="pc-calc-misses">
+                <h5>Miss signals <span>can overlap</span></h5>
+                ${missRows}
+            </div>
+            <details class="pc-calc-technical">
+                <summary>
+                    <span>Technical distribution</span>
+                    <span>${calc.outcomes.length} abstract classes</span>
+                </summary>
+                <div class="pc-calc-technical-body">
+                    <div class="pc-calc-goal-legend">${slotLegend}</div>
+                    <table class="pc-calc-table">
+                        <thead><tr>
+                            <th>Chance</th><th>Rarity</th><th>Affixes</th>
+                            ${slotHeaders}<th>Flags</th>
+                        </tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    ${
+                        restCount > 0
+                            ? `<p class="pc-help">&hellip;and ${restCount} more classes totalling ${formatProbabilityExact(restProbability)}.</p>`
+                            : ""
+                    }
+                </div>
+            </details>
         </section>`;
     }
 
@@ -1326,6 +1614,10 @@ export class PcCalculator extends HTMLElement {
 
     private get modPool(): PcModPool {
         return this.querySelector("pc-mod-pool")!;
+    }
+
+    private get modList(): PcModList | null {
+        return this.querySelector<PcModList>("pc-mod-list");
     }
 
     private setStatus(text: string): void {
@@ -1398,45 +1690,63 @@ export class PcCalculator extends HTMLElement {
         }
         this.innerHTML = `
             <div class="pc-calculator">
-                <div class="pc-craft-bar">
-                    <button data-cmd="change-base">Change base…</button>
-                    <span class="pc-calc-base">${escapeHtml(baseLabel(this.base))} · iLvl ${this.itemLevel}</span>
-                    <label class="pc-calc-fresh">
-                        <select data-role="fresh-rarity">
-                            ${["normal", "magic", "rare"]
-                                .map(
-                                    (rarity) =>
-                                        `<option value="${rarity}" ${rarity === this.freshRarity ? "selected" : ""}>${titleCase(rarity)}</option>`,
-                                )
-                                .join("")}
-                        </select>
-                        <button data-cmd="new-item">New item</button>
-                    </label>
-                    <details class="pc-calc-item-details">
-                        <summary class="pc-calc-item-summary"></summary>
-                        <div class="pc-calc-itemcard"></div>
-                    </details>
+                <div class="pc-craft-bar pc-calc-toolbar">
+                    <span class="pc-calc-workbench-title">Calculator workbench</span>
+                    <span class="pc-help">Select the input item or goal to control the shared modifier pool.</span>
                     <span class="pc-calc-status" hidden></span>
                 </div>
                 <div class="pc-advanced-crafts"></div>
                 <div class="pc-calc-body">
-                    <section class="pc-calc-goal">
-                        <h3>Goal</h3>
-                        <label class="pc-calc-goal-rarity">
-                            <span>Finished rarity</span>
-                            <select data-role="goal-rarity">
-                                <option value="normal">Normal</option>
-                                <option value="magic">Magic</option>
-                                <option value="rare">Rare</option>
-                            </select>
-                        </label>
-                        <div class="pc-calc-goal-all"></div>
-                        <ul class="pc-calc-slots"></ul>
-                        <pc-combobox data-role="group-slot"
-                            placeholder="Or require any mod from a group…"></pc-combobox>
-                    </section>
+                    <aside class="pc-calc-contexts" role="tablist" aria-label="Modifier pool context">
+                        <article class="pc-calc-context-card pc-calc-input-context"
+                            data-context-card="input" role="tab" tabindex="0">
+                            <header class="pc-calc-context-header">
+                                <h3>Input item</h3>
+                                <span class="pc-calc-context-state">Select</span>
+                            </header>
+                            <pc-mod-list></pc-mod-list>
+                            <div class="pc-calc-input-actions">
+                                <button data-cmd="change-base">Change base…</button>
+                                <span class="pc-calc-new-item">
+                                    <select data-role="fresh-rarity" aria-label="New item rarity">
+                                        ${["normal", "magic", "rare"]
+                                            .map(
+                                                (rarity) =>
+                                                    `<option value="${rarity}" ${rarity === this.freshRarity ? "selected" : ""}>${titleCase(rarity)}</option>`,
+                                            )
+                                            .join("")}
+                                    </select>
+                                    <button data-cmd="new-item">New item</button>
+                                </span>
+                            </div>
+                            <p class="pc-help pc-calc-import-help">Emulator and Stash items enter Calculator through their Odds action.</p>
+                        </article>
+                        <article class="pc-calc-context-card pc-calc-goal"
+                            data-context-card="goal" role="tab" tabindex="0">
+                            <header class="pc-calc-context-header">
+                                <h3>Goal requirements</h3>
+                                <span class="pc-calc-context-state">Select</span>
+                            </header>
+                            <div class="pc-calc-goal-controls">
+                                <label>
+                                    <span>Finished rarity</span>
+                                    <select data-role="goal-rarity">
+                                        <option value="normal">Normal</option>
+                                        <option value="magic">Magic</option>
+                                        <option value="rare">Rare</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span>Success means</span>
+                                    <select data-role="success-threshold"></select>
+                                </label>
+                            </div>
+                            <div class="pc-calc-goal-all"></div>
+                            <ul class="pc-calc-slots"></ul>
+                        </article>
+                    </aside>
                     <section class="pc-calc-pool">
-                        <pc-mod-pool select-goal></pc-mod-pool>
+                        <pc-mod-pool></pc-mod-pool>
                     </section>
                     <section class="pc-calc-results">
                         <h3>Odds</h3>
@@ -1472,39 +1782,111 @@ export class PcCalculator extends HTMLElement {
                 .value as "normal" | "magic" | "rare";
             void this.guard(() => this.goalChanged());
         });
+        this.querySelector<HTMLSelectElement>(
+            '[data-role="success-threshold"]',
+        )?.addEventListener("change", (event) => {
+            this.minSatisfiedSlots = Number(
+                (event.currentTarget as HTMLSelectElement).value,
+            );
+            this.normalizeSuccessThreshold();
+            void this.guard(() => this.goalChanged());
+        });
         this.modPool.addEventListener("craft-mod", (event) => {
             const detail = (
                 event as CustomEvent<{ key: string; side: "prefix" | "suffix" }>
             ).detail;
-            this.addGoalFromPool(detail.key);
+            if (this.activeContext === "input") {
+                void this.guard(() =>
+                    this.addInputMod(detail.key, detail.side),
+                );
+            } else {
+                this.addGoalFromPool(detail.key);
+            }
+        });
+        this.modPool.addEventListener("remove-mod", (event) => {
+            if (this.activeContext !== "input") return;
+            const detail = (
+                event as CustomEvent<{
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.removeInputMod(detail.modId, detail.side),
+            );
+        });
+        this.modPool.addEventListener("fracture-mod", (event) => {
+            if (this.activeContext !== "input") return;
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                    onItem: boolean;
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureInputMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    detail.onItem,
+                ),
+            );
         });
         this.modPool.addEventListener("tab-change", () => {
             void this.guard(() => this.refresh());
         });
-        this.querySelector<PcCombobox>(
-            '[data-role="group-slot"]',
-        )?.addEventListener("change", (event) => {
-            const value = (event as CustomEvent<{ value: string }>).detail
-                .value;
-            if (
-                !value ||
-                this.slots.length >= MAX_GOAL_SLOTS ||
-                this.slots.some((slot) => slot.group === value)
-            ) {
-                return;
-            }
-            this.slots = [...this.slots, { group: value, minTier: 0 }];
-            const box = this.querySelector<PcCombobox>(
-                '[data-role="group-slot"]',
+        this.modList?.addEventListener("fracture-mod", (event) => {
+            this.selectContext("input");
+            const detail = (
+                event as CustomEvent<{
+                    key: string;
+                    modId: number;
+                    side: "prefix" | "suffix";
+                }>
+            ).detail;
+            void this.guard(() =>
+                this.fractureInputMod(
+                    detail.key,
+                    detail.modId,
+                    detail.side,
+                    true,
+                ),
             );
-            box?.setValue("");
-            void this.guard(() => this.goalChanged());
         });
+        this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
+            (card) => {
+                const context = card.dataset.contextCard as "input" | "goal";
+                card.addEventListener("click", () => this.selectContext(context));
+                card.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        this.selectContext(context);
+                    }
+                });
+            },
+        );
+        this.selectContext(this.activeContext);
         this.renderItem();
         this.renderGoal();
         this.renderActionPanels();
         this.renderResults();
         this.setBusy(this.busy);
+    }
+
+    private baseDisplayName(): string {
+        return (
+            this.bases.find((base) => base.path === this.base)?.name ??
+            baseLabel(this.base)
+        );
+    }
+
+    private renderBaseSummary(): void {
+        const summary = this.querySelector<HTMLElement>(".pc-calc-base");
+        if (summary) {
+            summary.textContent = `${this.baseDisplayName()} · iLvl ${this.itemLevel}`;
+        }
     }
 }
 
@@ -1541,17 +1923,6 @@ function flagLabels(flags: number): string {
         }
     }
     return escapeHtml(labels.join(", "));
-}
-
-function formatProbability(p: number): string {
-    if (p === 0) return "0%";
-    if (p >= 0.1) return `${(p * 100).toFixed(1)}%`;
-    if (p >= 0.001) return `${(p * 100).toFixed(2)}%`;
-    return `${(p * 100).toPrecision(2)}%`;
-}
-
-function formatNumber(value: number): string {
-    return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
 function baseLabel(path: string): string {

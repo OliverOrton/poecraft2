@@ -236,6 +236,35 @@ void run_synthetic_gate() {
         }
         PC_CHECK(threw);
     }
+
+    /* A partial slot threshold compiles to the simulator's native
+     * at_least condition instead of silently reverting to all slots. */
+    {
+        GoalSpec threshold_goal;
+        GoalSlot life;
+        life.family_id = 100;
+        life.min_tier = 1;
+        GoalSlot fire_res;
+        fire_res.family_id = 104;
+        threshold_goal.slots = {life, fire_res};
+        threshold_goal.rarity = PC_RARITY_MAGIC;
+        threshold_goal.min_satisfied_slots = 1;
+        CalcContext threshold_calc(
+            session, threshold_goal, registry,
+            {transmute, alteration, restart});
+        const std::unordered_map<std::string, double> prices{
+            {"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}};
+        const SolveResult solved = solve(threshold_calc, start, prices);
+        PC_CHECK(solved.converged);
+        const std::string json = compile_policy_strategy_json(
+            threshold_calc, solved, "one-of-two");
+        PC_CHECK(json.find("\"type\":\"at_least\",\"count\":1") !=
+                 std::string::npos);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 2000, 777);
+        PC_CHECK(summary.completed_runs == 2000);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+    }
 }
 
 bool read_text_file(const std::string& path, std::string& out) {

@@ -261,6 +261,10 @@ AbstractLayout build_abstract_layout(
         invalid("goal spec exceeds " + std::to_string(kMaxGoalSlots) +
                 " slots");
     }
+    if (goal.required_satisfied_slots() == 0 ||
+        goal.required_satisfied_slots() > goal.slots.size()) {
+        invalid("goal min_satisfied_slots is outside the slot range");
+    }
 
     AbstractLayout layout;
     for (std::size_t i = 0; i < goal.slots.size(); ++i) {
