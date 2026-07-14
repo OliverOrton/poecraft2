@@ -3,6 +3,7 @@ import {
     StrategyValidationIssue,
     operationLabel,
 } from "../strategy-model";
+import { StrategyNodeAnnotation } from "../strategy-eval-presentation";
 
 export interface StrategyNodeView {
     node: StrategyNode;
@@ -10,6 +11,8 @@ export interface StrategyNodeView {
     active: boolean;
     taken: boolean;
     issues: StrategyValidationIssue[];
+    annotation?: StrategyNodeAnnotation;
+    annotationStale?: boolean;
 }
 
 export class PcStrategyNode extends HTMLElement {
@@ -28,7 +31,8 @@ export class PcStrategyNode extends HTMLElement {
         if (!this.view) {
             return;
         }
-        const { node, selected, active, taken, issues } = this.view;
+        const { node, selected, active, taken, issues, annotation, annotationStale } =
+            this.view;
         this.dataset.nodeId = node.id;
         this.className = [
             "pc-strategy-node",
@@ -38,6 +42,8 @@ export class PcStrategyNode extends HTMLElement {
             active ? "is-active" : "",
             taken ? "is-taken" : "",
             issues.length ? "has-warning" : "",
+            annotation ? "has-annotation" : "",
+            annotationStale ? "is-annotation-stale" : "",
         ]
             .filter(Boolean)
             .join(" ");
@@ -56,7 +62,10 @@ export class PcStrategyNode extends HTMLElement {
             <button class="pc-node-port pc-node-input" title="Connect here" aria-label="Input"></button>
             <div class="pc-node-header">
                 <span class="pc-node-kind">${escapeHtml(node.kind)}</span>
-                ${issues.length ? '<span class="pc-node-warning" title="Validation warning">!</span>' : ""}
+                <span class="pc-node-header-detail">
+                    ${annotation ? `<span class="pc-node-eval-badge is-${annotation.kind}" title="${escapeHtml(annotation.title)}">${escapeHtml(annotation.label)}</span>` : ""}
+                    ${issues.length ? '<span class="pc-node-warning" title="Validation warning">!</span>' : ""}
+                </span>
             </div>
             <div class="pc-node-title">${escapeHtml(node.name || node.id)}</div>
             <div class="pc-node-subtitle">${escapeHtml(subtitle)}</div>

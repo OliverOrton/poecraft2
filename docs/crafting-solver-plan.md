@@ -234,6 +234,32 @@ Three evaluation paths by transition kind:
      fallback for mechanics whose sequential structure resists the DP
      (some fossil combinations, harvest more/less stacking).
 
+### Strategy Evaluation
+
+The same transition provider also evaluates an already-authored strategy graph
+exactly. `pc_strategy_evaluate` derives an evaluation layout from the compiled
+graph's referenced families/groups and used action descriptors, then propagates
+probability mass over `(graph node, abstract state)` until it reaches a
+success/failure/stop terminal, a simulator-parity failure bucket, or the
+explicit unresolved remainder. Routing matches the native simulator's stable
+priority/source ordering and default-edge fallback. Illegal actions absorb as
+`action_not_applied`; no matching edge absorbs separately.
+
+Whole-graph evaluation uses a strict exclusion-effect junk partition so
+concrete states that remove different weighted families from later pools do
+not collapse together. This refinement is evaluator-only: the ordinary DP
+solver retains the compact approximately-sound abstraction described above.
+Every used action is checked through the calculation evaluator's support
+dispatch, and unsupported actions/conditions return one element-level gap list
+instead of an estimate.
+
+The result is price-independent and includes terminal probability by node,
+failure/unresolved attribution, expected actions, expected consumption by
+price key, expected node visits, expected edge traversals, condition targets,
+and a top-K incoming abstract-state mixture per node. The Strategy Builder's
+Calculator mode renders those values directly; its only arithmetic is
+conditional edge-share presentation and the workspace-price dot product.
+
 Supporting pieces:
 
 ```text
@@ -256,6 +282,10 @@ pc_calc_action_outcomes(session, item_or_abstract_state, action id)
      hit probabilities and the combined goal-success probability
 
 pc_calc_batch_outcomes(...)         same, for many (state, action) pairs
+
+pc_strategy_evaluate(compiled strategy, options)
+  -> exact graph terminal/failure mass, expected work and consumption,
+     node/edge flows, and incoming state classes
 ```
 
 The Calculator tab calls the first form with the live emulator item, so the

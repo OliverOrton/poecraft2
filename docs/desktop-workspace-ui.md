@@ -165,6 +165,44 @@ Open Goal Example In Emulator
 
 For strategies with multiple success routes, the app must not fabricate a single exact goal item. `Open Goal Example In Emulator` uses a concrete successful result selected from a simulator run. If no successful result is available, the user must run the strategy or choose a saved example first.
 
+### Simulator And Calculator Modes
+
+The Strategy Builder keeps one authored graph and switches its bottom work
+surface between two evaluation modes:
+
+```text
+Simulator
+  Monte Carlo run controls, progress, aggregate results, retained traces
+
+Calculator
+  exact whole-graph terminal odds, expected work and consumption,
+  board flow annotations, selected-node incoming-state classes
+```
+
+Simulator remains available for every engine-supported strategy. Calculator
+asks the native strategy evaluator to propagate exact probability mass through
+the complete graph, including restart loops, and refuses graphs whose actions
+or conditions do not yet have an exact evaluator. The UI displays the native
+refusal verbatim; it does not keep a frontend support list or approximate the
+missing mechanic.
+
+Calculator mode annotates operation nodes with expected visits and terminal
+nodes with absorb probability. Edge labels show each edge's conditional share
+of its source node's evaluated outflow; hover shows absolute expected
+traversals. Selecting an operation still opens its graph-editing controls in
+the right inspector and additionally shows the evaluator's top incoming
+abstract-state classes in the bottom inspector. Structural graph changes
+trigger a debounced re-evaluation, while node movement, viewport changes, and
+display labels do not. Previous results stay visible but stale during that
+transition.
+
+Expected consumption quantities come from the engine and remain
+price-independent. The bottom cost rows dot those quantities with the shared
+workspace price overrides, so price edits update subtotals immediately without
+changing routing or re-running evaluation; missing prices stay explicit. The
+selected mode is crash-recovery state on the Strategy Builder draft and legacy
+drafts open in Simulator mode.
+
 ## Simulator
 
 A Simulator tab runs a strategy and displays:

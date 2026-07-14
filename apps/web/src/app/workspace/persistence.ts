@@ -76,6 +76,8 @@ export interface StrategyDraftRecord {
     savedRef: string | null;
     savedName: string | null;
     dirty: boolean;
+    /** Strategy Builder runner surface; absent legacy drafts use Simulator. */
+    builderMode?: "simulator" | "calculator";
     updatedAt: number;
 }
 

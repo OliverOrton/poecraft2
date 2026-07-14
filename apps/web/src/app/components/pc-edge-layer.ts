@@ -3,6 +3,7 @@ import {
     StrategyNode,
     conditionLabel,
 } from "../strategy-model";
+import { StrategyEdgeAnnotation } from "../strategy-eval-presentation";
 
 const NODE_WIDTH = 210;
 const PORT_Y = 54;
@@ -13,6 +14,8 @@ export interface EdgeLayerView {
     selectedEdgeId: string | null;
     highlightedEdgeIds: Set<string>;
     warningEdgeIds: Set<string>;
+    annotations?: Map<string, StrategyEdgeAnnotation>;
+    annotationsStale?: boolean;
 }
 
 export class PcEdgeLayer extends HTMLElement {
@@ -22,6 +25,8 @@ export class PcEdgeLayer extends HTMLElement {
         selectedEdgeId: null,
         highlightedEdgeIds: new Set(),
         warningEdgeIds: new Set(),
+        annotations: new Map(),
+        annotationsStale: false,
     };
     private preview: { from: string; x: number; y: number } | null = null;
 
@@ -59,12 +64,17 @@ export class PcEdgeLayer extends HTMLElement {
                 .filter(Boolean)
                 .join(" ");
             const label = edge.label || conditionLabel(edge.condition);
+            const annotation = this.view.annotations?.get(edge.id);
             const point = edgeLabelPoint(from, to, route);
             return [
                 `<g data-edge-id="${escapeAttribute(edge.id)}">
+                    ${annotation ? `<title>${escapeText(annotation.title)}</title>` : ""}
                     <path class="pc-edge-hit" d="${d}"></path>
                     <path class="${classes}" d="${d}" marker-end="url(#pc-edge-arrow)"></path>
-                    <text class="pc-edge-label" x="${point.x}" y="${point.y}">${escapeText(label)}</text>
+                    <text class="pc-edge-label ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}" x="${point.x}" y="${point.y}">
+                        <tspan x="${point.x}">${escapeText(label)}</tspan>
+                        ${annotation ? `<tspan class="pc-edge-eval-label" x="${point.x}" dy="14">${escapeText(annotation.label)}</tspan>` : ""}
+                    </text>
                 </g>`,
             ];
         });

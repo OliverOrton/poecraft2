@@ -5,7 +5,13 @@
  */
 
 import { EngineClient } from "../engine-client";
-import { BaseInfo, Catalog, ModInfo, StrategyResult } from "../engine-protocol";
+import {
+    BaseInfo,
+    Catalog,
+    ModInfo,
+    StrategyEvalResult,
+    StrategyResult,
+} from "../engine-protocol";
 import { getEngine } from "../engine-service";
 import { buildModifierOptions } from "../modifier-options";
 import {
@@ -31,6 +37,12 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { openTextModal } from "../workspace/dirty-modal";
+import {
+    StrategyBuilderMode,
+    buildStrategyBoardAnnotations,
+    normalizeStrategyBuilderMode,
+    strategyStructuralSignature,
+} from "../strategy-eval-presentation";
 import { BasePickerSelection, PcBasePicker } from "./pc-base-picker";
 import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
@@ -45,10 +57,12 @@ import {
     TraceHighlight,
 } from "./pc-strategy-board";
 import { PcSimulator } from "./pc-simulator";
+import { PcStrategyOdds } from "./pc-strategy-odds";
 import "./pc-condition-editor";
 import "./pc-run-trace";
 import "./pc-simulator";
 import "./pc-strategy-board";
+import "./pc-strategy-odds";
 
 type Selection = { kind: "node" | "edge"; id: string } | null;
 
@@ -118,6 +132,7 @@ export class PcStrategyEditor extends HTMLElement {
     private influenceOptions: ComboOption[] = [];
     private fossilNames = new Map<string, string>();
     private modifierOptions: ModifierFamilyOption[] = [];
+    private modifierFamilyLabels = new Map<number, string>();
     private unveilOptions: ComboOption[] = [];
     private modifierBaseKey = "";
     private modifierLoading = false;
@@ -145,9 +160,23 @@ export class PcStrategyEditor extends HTMLElement {
     private disposed = false;
     private connectedOnce = false;
     private hasChosenBase = false;
+    private mode: StrategyBuilderMode = "simulator";
+    private structuralSignature = "";
+    private evalResult: StrategyEvalResult | null = null;
+    private evalError: string | null = null;
+    private evalInvalid = false;
+    private evaluating = false;
+    private evalStale = false;
+    private evalTimer = 0;
+    private evalRequestVersion = 0;
+    private evalPending = false;
+    private currentEvaluation: Promise<void> | null = null;
 
     async connectedCallback(): Promise<void> {
-        if (this.connectedOnce) return;
+        if (this.connectedOnce) {
+            this.updateView();
+            return;
+        }
         this.connectedOnce = true;
         this.docId =
             this.getAttribute("doc-id") ?? `strategy-${crypto.randomUUID()}`;
@@ -193,6 +222,7 @@ export class PcStrategyEditor extends HTMLElement {
             );
             const draft = await getStrategyDraft(this.docId);
             await this.restore(draft);
+            this.structuralSignature = strategyStructuralSignature(this.strategy);
             if (this.disposed) return;
             this.renderShell();
             this.issues = validateStrategy(this.strategy);
@@ -201,6 +231,7 @@ export class PcStrategyEditor extends HTMLElement {
             this.setStatus("");
             this.updateView();
             void this.ensureModifiers();
+            if (this.mode === "calculator") this.requestEvaluation(0);
         } catch (error) {
             this.setStatus(error instanceof Error ? error.message : String(error));
         }
@@ -211,6 +242,7 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private async restore(draft?: StrategyDraftRecord): Promise<void> {
+        this.mode = normalizeStrategyBuilderMode(draft?.builderMode);
         this.savedRef = draft?.savedRef ?? null;
         this.savedName = draft?.savedName ?? null;
         this.dirty = draft?.dirty ?? true;
@@ -280,6 +312,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.hasChosenBase = true;
         this.modifierBaseKey = "";
         this.modifierOptions = [];
+        this.modifierFamilyLabels.clear();
         this.unveilOptions = [];
         this.sessionBenchOptions = [];
         this.markChanged();
@@ -317,6 +350,7 @@ export class PcStrategyEditor extends HTMLElement {
                 );
                 if (this.disposed) return;
                 this.modifierOptions = buildModifierOptions(mods, this.catalog);
+                this.modifierFamilyLabels = familyLabelsById(mods);
                 this.unveilOptions = mods
                     .filter((mod) => mod.reach_kind === 7)
                     .map((mod) => ({
@@ -345,6 +379,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.querySelector<PcConditionEditor>(
             "pc-condition-editor",
         )?.setModifierFamilies(this.modifierOptions);
+        if (this.isConnected && this.evalResult) this.syncModeAndOddsView();
     }
 
     private renderShell(): void {
@@ -353,6 +388,10 @@ export class PcStrategyEditor extends HTMLElement {
                 <div class="pc-strategy-toolbar">
                     <strong class="pc-strategy-title">Strategy Builder</strong>
                     <span class="pc-strategy-saved">Unsaved</span>
+                    <div class="pc-strategy-mode" role="group" aria-label="Strategy evaluation mode">
+                        <button data-mode="simulator" aria-pressed="false">Simulator</button>
+                        <button data-mode="calculator" aria-pressed="false">Calculator</button>
+                    </div>
                     <button data-cmd="save">Save</button>
                     <button data-cmd="save-as">Save As</button>
                     <button data-cmd="duplicate">Duplicate</button>
@@ -379,8 +418,11 @@ export class PcStrategyEditor extends HTMLElement {
                     </aside>
                 </div>
                 <section class="pc-strategy-runner">
-                    <pc-simulator></pc-simulator>
-                    <pc-run-trace></pc-run-trace>
+                    <div class="pc-strategy-simulator-surface">
+                        <pc-simulator></pc-simulator>
+                        <pc-run-trace></pc-run-trace>
+                    </div>
+                    <pc-strategy-odds hidden></pc-strategy-odds>
                 </section>
             </div>`;
         this.bindShell();
@@ -415,6 +457,15 @@ export class PcStrategyEditor extends HTMLElement {
                 else if (cmd === "auto-layout") this.autoLayout();
             });
         });
+        this.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    this.setMode(
+                        normalizeStrategyBuilderMode(button.dataset.mode),
+                    );
+                });
+            },
+        );
         this.board.addEventListener("strategy-select", (event) => {
             this.selection = (event as CustomEvent<Selection>).detail;
             this.updateView();
@@ -489,6 +540,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.selection,
                 this.issues,
                 this.highlight,
+                this.currentAnnotations,
             );
         });
     }
@@ -501,6 +553,7 @@ export class PcStrategyEditor extends HTMLElement {
             this.selection,
             this.issues,
             this.highlight,
+            this.currentAnnotations,
         );
         const invalid =
             !this.engineReady ||
@@ -515,12 +568,45 @@ export class PcStrategyEditor extends HTMLElement {
             this.traceResult = this.result;
             this.trace.setResult(this.result);
         }
+        this.syncModeAndOddsView();
         const saved = this.querySelector(".pc-strategy-saved")!;
         saved.textContent = this.savedRef
             ? `${this.dirty ? "Modified" : "Saved"}: ${this.savedName}`
             : "Unsaved";
         this.renderInspector();
         this.renderValidation();
+    }
+
+    private syncModeAndOddsView(): void {
+        const simulatorSurface = this.querySelector<HTMLElement>(
+            ".pc-strategy-simulator-surface",
+        );
+        if (!simulatorSurface) return;
+        simulatorSurface.hidden = this.mode !== "simulator";
+        this.odds.hidden = this.mode !== "calculator";
+        this.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(
+            (button) => {
+                const active = button.dataset.mode === this.mode;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            },
+        );
+        const selectedNode =
+            this.selection?.kind === "node"
+                ? this.strategy.nodes.find(
+                      (node) => node.id === this.selection!.id,
+                  )
+                : undefined;
+        this.odds.setView({
+            result: this.evalResult,
+            error: this.evalError,
+            invalid: this.evalInvalid,
+            evaluating: this.evaluating,
+            stale: this.evalStale,
+            selectedNodeId: selectedNode?.id ?? null,
+            selectedNodeKind: selectedNode?.kind ?? null,
+            targetLabels: this.evalTargetLabels(),
+        });
     }
 
     private renderInspector(): void {
@@ -643,15 +729,22 @@ export class PcStrategyEditor extends HTMLElement {
      * reset its state mid-edit.
      */
     private onConditionEdited(): void {
+        const structuralChanged = this.captureStructuralChange();
         this.dirty = true;
         this.issues = validateStrategy(this.strategy);
         workspace().notifyDirty(this.docId, true, this.docTitle);
         this.schedulePersist();
+        if (structuralChanged) {
+            this.evalInvalid = false;
+            this.evalStale = this.evalResult !== null;
+            if (this.mode === "calculator") this.requestEvaluation();
+        }
         this.board.setView(
             this.strategy,
             this.selection,
             this.issues,
             this.highlight,
+            this.currentAnnotations,
         );
         this.simulator.setView({
             running: this.running,
@@ -661,6 +754,7 @@ export class PcStrategyEditor extends HTMLElement {
             progress: this.progress,
             result: this.result,
         });
+        this.syncModeAndOddsView();
         this.renderValidation();
     }
 
@@ -1180,12 +1274,164 @@ export class PcStrategyEditor extends HTMLElement {
         };
     }
 
+    private setMode(mode: StrategyBuilderMode): void {
+        if (this.mode === mode) return;
+        this.mode = mode;
+        this.schedulePersist();
+        if (mode === "calculator") {
+            this.requestEvaluation(0);
+        } else {
+            window.clearTimeout(this.evalTimer);
+            this.evalTimer = 0;
+            this.evalPending = false;
+            this.setStatus("");
+        }
+        this.updateView();
+    }
+
+    private requestEvaluation(delay = 300): void {
+        this.evalRequestVersion += 1;
+        this.scheduleEvaluation(this.evalRequestVersion, delay);
+    }
+
+    private scheduleEvaluation(version: number, delay: number): void {
+        window.clearTimeout(this.evalTimer);
+        this.evalTimer = window.setTimeout(() => {
+            this.evalTimer = 0;
+            if (this.evaluating) {
+                this.evalPending = true;
+                return;
+            }
+            const evaluation = this.evaluateStrategy(version);
+            this.currentEvaluation = evaluation;
+            void evaluation.finally(() => {
+                if (this.currentEvaluation === evaluation) {
+                    this.currentEvaluation = null;
+                }
+            });
+        }, delay);
+    }
+
+    private async evaluateStrategy(version: number): Promise<void> {
+        if (this.disposed || this.mode !== "calculator") return;
+        if (this.evaluating) {
+            this.evalPending = true;
+            return;
+        }
+        this.issues = validateStrategy(this.strategy);
+        if (this.issues.some((issue) => issue.severity === "error")) {
+            this.evalInvalid = true;
+            this.evalStale = this.evalResult !== null;
+            this.setStatus("Fix graph errors before evaluating.");
+            this.updateView();
+            return;
+        }
+
+        this.evaluating = true;
+        this.evalInvalid = false;
+        this.evalError = null;
+        this.setStatus("Evaluating exact graph…");
+        this.updateView();
+        let session = 0;
+        try {
+            session = await this.client.createSession(
+                this.dataId,
+                this.strategy.base_state.base_key,
+                this.strategy.base_state.item_level,
+            );
+            const result = await this.client.strategyEvaluate(
+                session,
+                cloneStrategy(this.strategy),
+            );
+            if (
+                !this.disposed &&
+                this.mode === "calculator" &&
+                version === this.evalRequestVersion
+            ) {
+                this.evalResult = result;
+                this.evalError = null;
+                this.evalStale = false;
+                this.setStatus(
+                    result.converged
+                        ? "Exact evaluation complete."
+                        : "Evaluation ended with unresolved mass.",
+                );
+            }
+        } catch (error) {
+            if (
+                !this.disposed &&
+                this.mode === "calculator" &&
+                version === this.evalRequestVersion
+            ) {
+                this.evalResult = null;
+                this.evalError =
+                    error instanceof Error ? error.message : String(error);
+                this.evalStale = false;
+                this.setStatus("Exact evaluation refused.");
+            }
+        } finally {
+            if (session) await this.client.closeSession(session);
+            this.evaluating = false;
+            if (!this.disposed) this.updateView();
+            if (
+                !this.disposed &&
+                this.mode === "calculator" &&
+                (this.evalPending || version !== this.evalRequestVersion)
+            ) {
+                this.evalPending = false;
+                this.scheduleEvaluation(this.evalRequestVersion, 0);
+            }
+        }
+    }
+
+    private get currentAnnotations() {
+        return this.mode === "calculator" && this.evalResult
+            ? buildStrategyBoardAnnotations(
+                  this.strategy,
+                  this.evalResult,
+                  this.evalStale,
+              )
+            : null;
+    }
+
+    private evalTargetLabels(): string[] {
+        return (this.evalResult?.targets ?? []).map((target) => {
+            if (target.kind === "group") {
+                return (
+                    this.catalog?.groupNameById[target.group_id] ||
+                    `Group ${target.group_id}`
+                );
+            }
+            const family =
+                this.modifierFamilyLabels.get(target.family_id) ||
+                `Family ${target.family_id}`;
+            return target.min_tier > 0
+                ? `T${target.min_tier} · ${family}`
+                : family;
+        });
+    }
+
     private markChanged(render = true): void {
+        const structuralChanged = this.captureStructuralChange();
         this.dirty = true;
         this.issues = validateStrategy(this.strategy);
         workspace().notifyDirty(this.docId, true, this.docTitle);
         this.schedulePersist();
+        if (structuralChanged) {
+            this.evalInvalid = false;
+            this.evalStale = this.evalResult !== null;
+            if (this.mode === "calculator") this.requestEvaluation();
+        }
         if (render) this.updateView();
+    }
+
+    private captureStructuralChange(): boolean {
+        const nextSignature = strategyStructuralSignature(this.strategy);
+        const changed =
+            this.structuralSignature !== "" &&
+            nextSignature !== this.structuralSignature;
+        this.structuralSignature = nextSignature;
+        return changed;
     }
 
     private schedulePersist(): void {
@@ -1204,6 +1450,7 @@ export class PcStrategyEditor extends HTMLElement {
             savedRef: this.savedRef,
             savedName: this.savedName,
             dirty: this.dirty,
+            builderMode: this.mode,
             updatedAt: Date.now(),
         });
     }
@@ -1328,6 +1575,8 @@ export class PcStrategyEditor extends HTMLElement {
         if (this.disposed) return;
         this.disposed = true;
         window.clearTimeout(this.persistTimer);
+        window.clearTimeout(this.evalTimer);
+        this.evalRequestVersion += 1;
         window.cancelAnimationFrame(this.progressFrame);
         this.progressFrame = 0;
         workspace().unregisterDocument(this.docId);
@@ -1337,6 +1586,13 @@ export class PcStrategyEditor extends HTMLElement {
                 await this.currentRun;
             } catch {
                 // The run path already reports its own error.
+            }
+        }
+        if (this.currentEvaluation) {
+            try {
+                await this.currentEvaluation;
+            } catch {
+                // The evaluation path already reports its own error.
             }
         }
     }
@@ -1371,10 +1627,32 @@ export class PcStrategyEditor extends HTMLElement {
     private get trace(): PcRunTrace {
         return this.querySelector<PcRunTrace>("pc-run-trace")!;
     }
+
+    private get odds(): PcStrategyOdds {
+        return this.querySelector<PcStrategyOdds>("pc-strategy-odds")!;
+    }
 }
 
 function baseLabel(path: string): string {
     return path.split("/").pop() ?? path;
+}
+
+function familyLabelsById(mods: ModInfo[]): Map<number, string> {
+    const labels = new Map<number, { tier: number; label: string }>();
+    for (const mod of mods) {
+        if (mod.generation_type !== 0 && mod.generation_type !== 1) continue;
+        const label = mod.text_lines.join(" / ") || mod.group_display_name || mod.key;
+        const current = labels.get(mod.family_id);
+        if (!current || mod.family_tier_index < current.tier) {
+            labels.set(mod.family_id, {
+                tier: mod.family_tier_index,
+                label,
+            });
+        }
+    }
+    return new Map(
+        Array.from(labels, ([familyId, entry]) => [familyId, entry.label]),
+    );
 }
 
 // Reach-kind codes from the engine (mirrors pc-mod-pool / engine ModInfo).

@@ -7,6 +7,7 @@ import {
     formatExpectedAttempts,
     formatProbabilityExact,
     formatRawProbability,
+    presentExpectedConsumption,
 } from "../src/app/odds-presentation";
 
 const probability = 0.084922;
@@ -23,5 +24,18 @@ assert.equal(formatProbabilityExact(0.000018), "0.0018%");
 assert.equal(formatProbabilityExact(1), "100%");
 assert.equal(formatExpectedAttempts(0), "∞");
 assert.equal(formatChaosValue(Number.POSITIVE_INFINITY), "∞");
+
+const priced = presentExpectedConsumption(
+    [
+        { key: "alteration", quantity: 79.7014428 },
+        { key: "regal", quantity: 1 },
+    ],
+    (key) => (key === "alteration" ? 0.2 : undefined),
+);
+assert.equal(priced.complete, false);
+assert.deepEqual(priced.missingKeys, ["regal"]);
+assert.ok(Math.abs(priced.total - 15.94028856) < 1e-9);
+assert.match(priced.rowsHtml, /79\.7014 × alteration/);
+assert.match(priced.rowsHtml, /Missing price/);
 
 console.log("  ok - odds precision and per-success cost stay explicit");

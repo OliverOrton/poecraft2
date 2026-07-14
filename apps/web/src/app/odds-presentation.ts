@@ -51,3 +51,74 @@ export function formatChaosValue(value: number): string {
     const digits = value >= 1000 ? 2 : value >= 1 ? 4 : 6;
     return `${formatDecimal(value, digits, true)}c`;
 }
+
+export interface ExpectedConsumptionEntry {
+    key: string;
+    quantity: number;
+}
+
+export interface ExpectedConsumptionPresentation {
+    rowsHtml: string;
+    total: number;
+    complete: boolean;
+    missingKeys: string[];
+}
+
+/**
+ * Shared editable price-row presentation for exact-odds surfaces. Quantities
+ * come from the engine; the caller supplies the workspace price lookup.
+ */
+export function presentExpectedConsumption(
+    entries: ExpectedConsumptionEntry[],
+    priceFor: (key: string) => number | undefined,
+): ExpectedConsumptionPresentation {
+    let total = 0;
+    const missingKeys: string[] = [];
+    const rowsHtml = entries
+        .map(({ key, quantity }) => {
+            const price = priceFor(key);
+            if (price === undefined) {
+                missingKeys.push(key);
+            } else {
+                total += price * quantity;
+            }
+            return `<div class="pc-calc-cost-row">
+                <span class="pc-calc-cost-key">${formatConsumptionQuantity(quantity)} × ${escapeHtml(key)}</span>
+                <input type="number" min="0" step="any" data-price-key="${escapeAttribute(key)}"
+                    value="${price ?? ""}" placeholder="Set price">
+                <span class="pc-calc-cost-sub ${price === undefined ? "is-missing" : ""}">${
+                    price === undefined
+                        ? "Missing price"
+                        : formatChaosValue(price * quantity)
+                }</span>
+            </div>`;
+        })
+        .join("");
+    return {
+        rowsHtml,
+        total,
+        complete: missingKeys.length === 0,
+        missingKeys,
+    };
+}
+
+export function formatConsumptionQuantity(quantity: number): string {
+    if (!Number.isFinite(quantity)) return "—";
+    const digits = quantity >= 1000 ? 2 : quantity >= 1 ? 4 : 6;
+    return quantity.toLocaleString("en-US", {
+        useGrouping: true,
+        minimumFractionDigits: Math.min(2, digits),
+        maximumFractionDigits: digits,
+    });
+}
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function escapeAttribute(value: string): string {
+    return escapeHtml(value).replace(/"/g, "&quot;");
+}

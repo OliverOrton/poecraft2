@@ -49,6 +49,7 @@ import {
     formatExpectedAttempts,
     formatProbabilityExact,
     formatRawProbability,
+    presentExpectedConsumption,
 } from "../odds-presentation";
 import {
     buildModifierKeyIndex,
@@ -1404,40 +1405,26 @@ export class PcCalculator extends HTMLElement {
         for (const key of keys) {
             counts.set(key, (counts.get(key) ?? 0) + 1);
         }
-        let total = 0;
-        let complete = true;
-        const rows = Array.from(counts.entries())
-            .map(([key, count]) => {
-                const price = getPrice(key);
-                if (price === undefined) {
-                    complete = false;
-                } else {
-                    total += price * count;
-                }
-                return `<div class="pc-calc-cost-row">
-                    <span class="pc-calc-cost-key">${count > 1 ? `${count} × ` : ""}${escapeHtml(key)}</span>
-                    <input type="number" min="0" step="any" data-price-key="${escapeHtml(key)}"
-                        value="${price ?? ""}" placeholder="price">
-                    <span class="pc-calc-cost-sub">${price !== undefined ? formatChaosValue(price * count) : "—"}</span>
-                </div>`;
-            })
-            .join("");
+        const priced = presentExpectedConsumption(
+            Array.from(counts, ([key, quantity]) => ({ key, quantity })),
+            getPrice,
+        );
         const spendPerSuccess = estimatedActionSpendPerSuccess(
-            total,
+            priced.total,
             successProbability,
         );
         return `<section class="pc-calc-section pc-calc-cost">
             <h4>Cost estimates</h4>
-            ${rows}
+            ${priced.rowsHtml}
             <div class="pc-calc-cost-metrics">
                 <span>
                     <small>Cost per attempt</small>
-                    <strong>${complete ? formatChaosValue(total) : "set prices above"}</strong>
+                    <strong>${priced.complete ? formatChaosValue(priced.total) : "set prices above"}</strong>
                 </span>
                 <span>
                     <small>Estimated action spend per success</small>
                     <strong>${
-                        complete
+                        priced.complete
                             ? Number.isFinite(spendPerSuccess)
                                 ? formatChaosValue(spendPerSuccess)
                                 : "No finite estimate"

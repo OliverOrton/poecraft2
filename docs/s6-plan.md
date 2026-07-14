@@ -20,6 +20,11 @@ Status 2026-07-14: Oliver inserted the Strategy Builder calculator mode
 ahead of Phase 1. Phase 1 resumes after it lands; its compiled-policy
 node badges should reuse that plan's board-annotation mechanism.
 
+Status 2026-07-14 (later): Strategy Builder calculator mode Phases A-C are
+complete. Phase 1 is now the next task. Reuse
+`strategy-eval-presentation.ts` / the `PcStrategyNode` annotation input for
+compiled-policy expected-cost badges instead of adding a second badge system.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what

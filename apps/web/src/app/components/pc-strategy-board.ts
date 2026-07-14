@@ -5,6 +5,7 @@ import {
 } from "../strategy-model";
 import { PcEdgeLayer } from "./pc-edge-layer";
 import { PcStrategyNode } from "./pc-strategy-node";
+import { StrategyBoardAnnotations } from "../strategy-eval-presentation";
 import "./pc-edge-layer";
 import "./pc-strategy-node";
 
@@ -47,6 +48,7 @@ export class PcStrategyBoard extends HTMLElement {
           }
         | null = null;
     private connectingFrom: string | null = null;
+    private annotations: StrategyBoardAnnotations | null = null;
 
     connectedCallback(): void {
         if (!this.innerHTML) {
@@ -57,6 +59,7 @@ export class PcStrategyBoard extends HTMLElement {
                         <pc-edge-layer></pc-edge-layer>
                         <div class="pc-board-nodes"></div>
                     </div>
+                    <div class="pc-board-stale-chip" hidden>Stale · graph changed</div>
                     <div class="pc-board-hint">Drag from a node output to another node · wheel to zoom · drag empty space to pan</div>
                 </div>`;
             this.bind();
@@ -69,11 +72,13 @@ export class PcStrategyBoard extends HTMLElement {
         selection: BoardSelection | null,
         issues: StrategyValidationIssue[],
         highlight: TraceHighlight,
+        annotations: StrategyBoardAnnotations | null = null,
     ): void {
         this.strategy = strategy;
         this.selection = selection;
         this.issues = issues;
         this.highlight = highlight;
+        this.annotations = annotations;
         this.viewport =
             strategy.ui?.viewport ?? this.viewport ?? {
                 panX: 24,
@@ -279,6 +284,10 @@ export class PcStrategyBoard extends HTMLElement {
         }
 
         const container = this.querySelector(".pc-board-nodes")!;
+        const staleChip = this.querySelector<HTMLElement>(
+            ".pc-board-stale-chip",
+        );
+        if (staleChip) staleChip.hidden = !this.annotations?.stale;
         container.replaceChildren(
             ...this.strategy.nodes.map((node) => {
                 const element = document.createElement(
@@ -292,6 +301,8 @@ export class PcStrategyBoard extends HTMLElement {
                     active: this.highlight.activeNodeId === node.id,
                     taken: this.highlight.nodeIds.has(node.id),
                     issues: warningNodeIds.get(node.id) ?? [],
+                    annotation: this.annotations?.nodeBadges.get(node.id),
+                    annotationStale: this.annotations?.stale,
                 });
                 return element;
             }),
@@ -303,6 +314,8 @@ export class PcStrategyBoard extends HTMLElement {
                 this.selection?.kind === "edge" ? this.selection.id : null,
             highlightedEdgeIds: this.highlight.edgeIds,
             warningEdgeIds,
+            annotations: this.annotations?.edgeLabels,
+            annotationsStale: this.annotations?.stale,
         });
     }
 

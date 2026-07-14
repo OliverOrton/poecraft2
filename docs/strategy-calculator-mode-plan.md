@@ -28,6 +28,15 @@ Decisions already made by Oliver — do not relitigate:
 4. **Sequencing: next up, before s6 Phase 1.** The plan assumes the current
    working tree (Calculator Variant E milestone).
 
+Status 2026-07-14: **Phases A, B, and C are complete.** The Strategy Builder
+now switches between its Monte Carlo runner and the exact whole-graph
+Calculator inspector; node/edge annotations, selected-node state classes,
+live-priced expected consumption, persistence, refusals, and stale/evaluating
+states are implemented. Oliver selected a hybrid of mock Variants A and B:
+Variant B's node/result treatment in the existing bottom runner boundary, with
+the right panel retained for actual graph-node inspection. Phase D remains an
+unscheduled follow-up. Resume `s6-plan.md` Phase 1 next.
+
 Two standing rules gate everything below, same as every solver phase:
 
 - **The engine is the only crafting-rule authority.** Condition evaluation
