@@ -21,7 +21,9 @@ ahead of Phase 1. Phase 1 resumes after it lands; its compiled-policy
 node badges should reuse that plan's board-annotation mechanism.
 
 Status 2026-07-14 (later): Strategy Builder calculator mode Phases A-C are
-complete. Phase 1 is now the next task. Reuse
+complete. Oliver then scheduled the loop-acceleration/progress pass in
+`strategy-calculator-mode-plan.md` Phase C.1 before this plan resumes. Phase 1
+is next only after C.1 completes. Reuse
 `strategy-eval-presentation.ts` / the `PcStrategyNode` annotation input for
 compiled-policy expected-cost badges instead of adding a second badge system.
 

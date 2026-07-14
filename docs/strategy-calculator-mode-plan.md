@@ -34,8 +34,11 @@ Calculator inspector; node/edge annotations, selected-node state classes,
 live-priced expected consumption, persistence, refusals, and stale/evaluating
 states are implemented. Oliver selected a hybrid of mock Variants A and B:
 Variant B's node/result treatment in the existing bottom runner boundary, with
-the right panel retained for actual graph-node inspection. Phase D remains an
-unscheduled follow-up. Resume `s6-plan.md` Phase 1 next.
+the right panel retained for actual graph-node inspection.
+
+Status 2026-07-14 (later): Oliver scheduled **Phase C.1, loop acceleration and
+real progress/cancellation, next**, before `s6-plan.md` Phase 1. Phase D remains
+an unscheduled follow-up.
 
 Two standing rules gate everything below, same as every solver phase:
 
@@ -404,6 +407,141 @@ summary panel, board overlays, and the drill-down.
 **Gate.** `npx tsc --noEmit` + `npm test` green in `apps/web`; manual
 preview pass with screenshots compared against the chosen mock (deviations
 noted in the spec file); the Phase B smoke additions still green.
+
+## Phase C.1 — Loop Acceleration + Real Progress (scheduled next)
+
+### Why this pass exists
+
+The Phase A evaluator is exact but advances probability one graph hop per
+sweep until transient mass falls below `epsilon` (default `1e-12`). Action
+distributions are cached, but a loop with exit probability `p` still takes
+approximately `log(epsilon) / log(1 - p)` sweeps to discharge its numerical
+tail. Measured through the same WASM worker path used by the UI on 2026-07-14:
+
+- the Phase C T1 Energy Shield Alteration loop took **1,434 ms**, 2,219
+  sweeps, and reported 81.7014428412 expected actions;
+- the same graph shape targeting a lower-hit-rate T1 family took
+  **3.51–3.64 s**, 4,448 sweeps, and reported 162.4028856824 expected actions;
+- session construction took about 15 ms, so the propagation tail—not setup—is
+  the bottleneck.
+
+Simple loops do not need numerical revisits. For `hit -> exit` with probability
+`p` and `miss -> self` with probability `q`, expected visits are
+`1 / (1 - q)` and all outgoing flows follow directly from that value. General
+multi-state loops are the same problem over a transient transition matrix:
+expected pair visits solve `(I - Q^T)x = incoming`.
+
+### Scope decisions (final)
+
+1. **Do not loosen exactness.** Keep the existing result contract, default
+   epsilon, simulator-parity failure semantics, strict exclusion partition,
+   and deterministic output. This is an algorithm change, not a cheaper odds
+   mode.
+2. **Discover transitions once.** Build the reachable graph of
+   `(compiled node, abstract state)` pairs. Each legal action distribution,
+   condition route, price-key effect, and absorbing/failure transition is
+   derived once and reused for solving and result reconstruction.
+3. **Solve loops by SCC.** Condense the reachable pair graph into strongly
+   connected components:
+   - acyclic singleton: direct forward flow;
+   - singleton with a self-loop: geometric closed form;
+   - small cyclic component: solve `(I - Q^T)x = incoming` with a
+     pivoted dense solve assembled from sparse transitions;
+   - large or numerically ill-conditioned component: retain a bounded local
+     iterative fallback, not whole-graph sweeps.
+4. **Closed recurrent components are unresolved.** Detect an SCC with no
+   positive-probability exit or absorption without waiting for `max_sweeps`;
+   route the probability entering it to the existing unresolved result and
+   provide deterministic node attribution. Do not hide or renormalize it.
+5. **Add honest progress and cancellation in this pass.** Progress reports
+   real phases/counts (transition discovery, SCC solving, fallback residual,
+   finalization), not a fabricated time percentage. A new structural edit,
+   leaving Calculator mode, or document disposal cancels/abandons the obsolete
+   evaluation before the newest one begins.
+6. **Preserve the synchronous API.** Existing native/Python callers of
+   `pc_strategy_evaluate` continue to work; it drives the new stepped engine to
+   completion internally. WASM/web use the stepped API so progress messages and
+   cancellation can flush between chunks.
+7. **No new image-model loop.** The approved Phase C design already specifies
+   the evaluating state. Extend its existing status line with progress text;
+   do not redesign the panel or move the right graph inspector.
+8. **Stop after C.1.** Phase D is still unscheduled. Resume `s6-plan.md`
+   Phase 1 only after this pass is committed and handed off.
+
+### Implementation
+
+1. **Pinned benchmark and reference path.** Add an opt-in benchmark that runs
+   the two measured Vaal Regalia loop graphs through the WASM worker, records
+   warmed median wall time, and asserts the exact result fields independently
+   of timing. Keep a test-only high-precision forward propagator for numerical
+   parity on small graphs; do not keep the old production evaluator.
+2. **Reachable transition graph** (`engine/src/solver_eval.cpp`, split into a
+   helper file only if it improves clarity):
+   - worklist from `(start node, project(start item))`;
+   - one record per reachable pair with sparse transient transitions plus
+     terminal/failure absorption entries and edge ids;
+   - reuse `CalcContext::outcomes` and its `(state, action)` cache;
+   - guard abstract states with `max_states` and add a pair-count guard so
+     `node_count × state_count` cannot exhaust memory;
+   - no mass threshold during discovery: every positive-probability reachable
+     transition is part of the exact finite model.
+3. **Component solver:** Tarjan/Kosaraju SCC decomposition, condensation DAG
+   in topological order, direct/geometric/small-linear/fallback paths from the
+   scope decisions above. Use partial pivoting, finite/conditioning checks,
+   and clamp only tolerance-sized negative FP noise. Any fallback retains mass
+   conservation checks after each local batch.
+4. **Result reconstruction:** derive terminal/failure/unresolved probability,
+   per-node expected visits and incoming normalized classes, per-edge expected
+   traversals, expected actions, and price-key consumption from solved pair
+   visits. Existing converged fixture results must agree with the reference
+   propagator to `1e-9`; identical input remains byte-deterministic under the
+   new implementation.
+5. **Stepped C ABI** (`solver.h`, `solver_api.cpp`): add an opaque evaluation
+   work handle and begin/step/finish/destroy calls. The progress struct reports
+   phase, done flag, discovered/pending pair counts, solved/total SCC counts,
+   fallback sweeps, and current residual where meaningful. Keep the existing
+   query-required-count JSON finish and `pc_strategy_evaluate` wrapper.
+6. **WASM/worker/client:** expose the stepped calls, rebuild WASM, and drive
+   adaptive chunks targeting about 16 ms (mirror `runStrategy`). Yield between
+   chunks, emit at most about 10 progress messages/second, and accept an
+   `AbortSignal`. Destroy both evaluation and temporary compiled-strategy
+   handles in every success/error/cancel path.
+7. **Strategy Builder:** replace the current uncancellable call with an
+   `AbortController`. Show concise actual state such as
+   `Discovering exact states · 143 pairs`,
+   `Solving loops · 12/14 components`, or
+   `Fallback · 320 sweeps · residual 2.4e-7`, plus elapsed time. Keep the
+   previous stale result/annotations visible until the replacement completes.
+
+### Tests and performance gates
+
+- Closed forms: the existing geometric loop plus a two-state cyclic system
+  have hand-computed terminal probabilities, expected visits, edge flows,
+  actions, and consumption at about `1e-10`.
+- Reference parity: representative straight-line, Alt/Regal, recovery/restart,
+  priority/default, illegal-action, and no-matching-edge graphs agree with the
+  test-only high-precision forward propagator at `1e-9` and retain the Phase A
+  MC gates.
+- Closed SCCs: self-loop and router-cycle cases report total unresolved mass
+  immediately with deterministic node attribution; near-closed SCCs with a
+  real exit still solve as converged.
+- Scale/determinism: pair guard failure is explicit, large-SCC fallback
+  conserves mass, and identical input remains byte-identical.
+- Progress/cancel: a deliberately long evaluation emits at least two ordered
+  progress events, cancel abandons promptly with no WASM handle growth, and a
+  burst of structural edits runs only the newest graph after cancellation.
+- Local performance: record before/after warmed medians for both pinned loops;
+  target at least **5×** improvement on each. Reporting enabled versus the
+  same stepped run with callbacks suppressed must add no more than **2% or
+  2 ms**, whichever is larger. If either target is missed, profile and report
+  the cause before committing rather than weakening the gate silently.
+
+**Gate.** `powershell -File scripts/build.ps1`, direct native engine tests,
+`powershell -File scripts/build-wasm.ps1`, `npx tsc --noEmit`, `npm test`, and
+`npm run build` in `apps/web`, then one full
+`powershell -File scripts/test.ps1`. Use a separate headless browser process
+for the Calculator progress/cancel smoke; do not use Codex's built-in browser.
+Rewrite `HANDOFF.md`, make one local commit, and do not push.
 
 ## Phase D — Specced Follow-Ups (not scheduled)
 

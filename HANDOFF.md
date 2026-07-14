@@ -1,118 +1,104 @@
-# Session Handoff — S6 Phase 1 next
+# Session Handoff — Strategy evaluator Phase C.1 next
 
-Written 2026-07-14 after completing Phases A-C of
+Written 2026-07-14 after Oliver scheduled the exact-evaluation loop
+acceleration/progress pass. Read [AGENTS.md](AGENTS.md), then
+[docs/direction.md](docs/direction.md), then
 [strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md).
-Read [AGENTS.md](AGENTS.md), then [docs/direction.md](docs/direction.md).
 
 ## Current state
 
-Strategy Builder Calculator mode is complete across the native evaluator,
-WASM/worker/client transport, and the web UI. The selected Phase C layout is a
-hybrid of the design mockups: Variant B's compact node/result treatment lives
-in the existing bottom runner boundary, while the right panel remains the
-actual selected graph-node/edge inspector.
+Strategy Calculator Mode Phases A-C are complete in local commit `41bb721`:
+native whole-graph evaluation, WASM/worker/client transport, and the approved
+Strategy Builder UI with exact summary/costs, node and edge annotations,
+selected-node incoming classes, persistence, stale/refusal/unresolved states,
+and tests. The worktree was clean before this planning update.
 
-Calculator mode now provides:
+The evaluator in `engine/src/solver_eval.cpp` is exact but currently performs
+whole-graph forward mass propagation one graph hop per sweep. Action outcomes
+are cached, yet low-probability exits still need thousands of sweeps to drive
+the remaining transient tail below the default `1e-12` epsilon. The worker
+calls it synchronously, so the UI cannot receive real progress or cancel an
+obsolete evaluation.
 
-- automatic exact evaluation on entry and about 300 ms after structural
-  changes;
-- no re-evaluation for node movement, viewport changes, strategy/node names,
-  descriptions, or edge display labels;
-- exact success/failure/stop and simulator-parity miss signals, expected
-  actions, convergence/residual detail, and per-node attribution;
-- engine-reported expected consumption with shared live price inputs and an
-  explicit incomplete total when prices are missing;
-- operation expected-visit badges, terminal absorb-probability badges, and
-  conditional edge shares with absolute traversal counts on hover;
-- a selected-operation incoming-state table with resolved target labels,
-  rarity/affix counts, slot statuses, flags/blocked masks, and truncated mass;
-- stale/evaluating/invalid/unresolved/refusal states, with engine refusal text
-  rendered verbatim;
-- optional `builderMode` draft persistence (legacy drafts open in Simulator)
-  and retained instance state across Dockview detach/reconnect.
+Measured through the same Node/WASM worker path as the web tests:
 
-The reusable presentation pieces are in
-`apps/web/src/app/strategy-eval-presentation.ts`,
-`apps/web/src/app/odds-presentation.ts`, and the annotation inputs on
-`PcStrategyBoard` / `PcStrategyNode` / `PcEdgeLayer`. The standalone
-Calculator now uses the same expected-consumption price-row renderer.
-
-The complete image-model design record is under
-`design/briefs/strategy-calculator-mode.md`,
-`design/mockups/strategy-calculator-mode/`, and
-`design/specs/strategy-calculator-mode.md`. The implemented 1280×720 preview is
-`design/refs/strategy-calculator-phase-c-preview.png`.
-
-## Verification
-
-- `powershell -File scripts/build.ps1` — pass.
-- `build/engine/poecraft_engine_tests.exe data/compiled/current fixtures/spec`
-  — pass, 118,285 checks and 0 failures.
-- `npx tsc --noEmit` in `apps/web` — pass.
-- `npm test` in `apps/web` — pass, including 18/18 WASM worker smoke checks and
-  the new Phase C presentation/change-classification tests.
-- `npm run build` in `apps/web` — pass.
-- `powershell -File scripts/test.ps1` — pass across ingest, artifact,
-  bindings, native engine, WASM, and web tests.
-- Separate headless Chrome preview at 1280×720 — real Transmute strategy exact
-  evaluation rendered successfully; right operation inspector remained intact;
-  only the existing favicon 404 appeared in the console.
+- T1 `+(91-100) to maximum Energy Shield` Alteration loop:
+  1,434 ms, 2,219 sweeps, 81.7014428412 expected actions;
+- lower-hit-rate T1 family with the same graph shape:
+  3.51–3.64 s, 4,448 sweeps, 162.4028856824 expected actions;
+- session creation: about 15 ms.
 
 ## Next task
 
-Resume **Phase 1 only** from [s6-plan.md](docs/s6-plan.md): solve in the
-workspace (`solve -> compiled strategy opened in the Strategy Board`) with
-expected-remaining-cost annotations and a one-click verification run.
+Implement **Phase C.1 only** from
+[strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md):
 
-Phase 1 is a UI phase, so begin with its required image-model design loop.
-The placement question in the plan (Calculator solve section versus Simulator
-workflow) still goes to Oliver during mock review. Do not implement before his
-selection. Do not begin Phase 2.
+1. discover the reachable `(compiled node, abstract state)` transition graph
+   once;
+2. condense it into SCCs and solve acyclic flow directly, singleton loops by
+   geometric closed form, small cyclic SCCs as linear systems, and large/
+   ill-conditioned SCCs with a local iterative fallback;
+3. detect closed recurrent SCCs as unresolved immediately;
+4. reconstruct the existing exact result contract from solved pair visits;
+5. add a stepped native C ABI while preserving synchronous
+   `pc_strategy_evaluate`;
+6. drive adaptive WASM worker chunks with real progress and cancellation, and
+   cancel obsolete Strategy Builder evaluations on structural changes;
+7. meet the numerical, MC, cancellation, leak, and performance gates written
+   in Phase C.1.
 
-The engine/client call sequence already works and is pinned by the last
-`engine-smoke.test.ts` solver test:
-
-```text
-openSolver -> solverSolve -> solverCompileStrategy
-           -> compileStrategy -> createSimulator -> runStrategy
-```
+Stop after C.1. Do not begin Phase D or `s6-plan.md` Phase 1. End with one
+local commit and no push.
 
 ## Important files
 
-- `docs/s6-plan.md`
 - `docs/strategy-calculator-mode-plan.md`
-- `apps/web/src/app/components/pc-calculator.ts`
+- `engine/src/solver_eval.cpp`
+- `engine/src/solver_api.cpp`
+- `engine/include/poecraft/solver.h`
+- `engine/src/solver_internal.hpp`
+- `engine/tests/test_solver_eval.cpp`
+- `bindings/wasm/wasm_api.cpp`
+- `scripts/build-wasm.ps1`
+- `apps/web/src/app/engine-protocol.ts`
+- `apps/web/src/app/engine-wasm.ts`
+- `apps/web/src/app/engine-worker.ts`
+- `apps/web/src/app/engine-client.ts`
 - `apps/web/src/app/components/pc-strategy-editor.ts`
-- `apps/web/src/app/components/pc-strategy-board.ts`
-- `apps/web/src/app/components/pc-strategy-node.ts`
-- `apps/web/src/app/strategy-eval-presentation.ts`
-- `apps/web/src/app/odds-presentation.ts`
-- `apps/web/src/app/workspace/prices.ts`
-- `apps/web/src/app/workspace/persistence.ts`
+- `apps/web/src/app/components/pc-strategy-odds.ts`
 - `apps/web/test/engine-smoke.test.ts`
 - `apps/web/test/strategy-calculator-mode.test.ts`
 
 ## Rulings and gotchas
 
-- Do not use Codex's built-in/in-app browser for this repo; Oliver reports it
-  crashes the Codex app. Use a separate headless browser process when a later
-  UI phase reaches its preview gate.
-- The right Strategy Builder inspector is for actual graph authoring. Analysis
-  belongs in the bottom inspector; preserve this layout decision.
-- Exact-evaluation node class `share` values are normalized within each node;
-  `expected_visits` and edge traversals are absolute expected counts.
-- Edge percentages are presentation arithmetic only:
-  `edge traversals / sum(sibling traversals)`. Crafting/routing authority stays
-  native.
-- Structural re-evaluation is keyed by `strategyStructuralSignature`; keep
-  positions, viewport, names/descriptions, and display labels out of it.
-- The evaluator is a synchronous sequential-worker call. Chunking belongs to
-  later solver work, not a Phase C UI workaround.
-- Phase 1's compiled-policy `expected_cost` badge must reuse the current board
-  annotation mechanism rather than introducing parallel node markup.
-- Expected consumption is price-independent. Price edits only recompute the
-  UI dot product and never re-run evaluation.
-- Phase D bounds mode and reach-probability-on-demand were not started.
-- PoE1 mechanic ambiguity still goes directly to Oliver; never research or
-  guess.
-- Commits remain local unless Oliver explicitly asks to push.
+- Exactness remains `1e-12` by default; do not make the feature faster by
+  loosening epsilon, dropping outcome classes, or changing simulator-parity
+  absorption semantics.
+- Transition probabilities and routes are engine authority. Web progress is
+  phase/count presentation only.
+- Keep the existing synchronous ABI as a wrapper over the new stepped engine;
+  WASM/web use begin/step/finish/destroy.
+- Result JSON fields stay compatible. Numerical ordering may change, but each
+  converged value must match the high-precision reference within the planned
+  tolerance and identical input must remain byte-deterministic.
+- New graph edits must abort/abandon the in-flight evaluation rather than wait
+  for it and then queue another. Always destroy the temporary compiled handle
+  and evaluation-work handle on success, refusal, error, and cancel.
+- The existing Phase C evaluating state is the UI design. No image-model loop
+  is required for its progress text; do not move analysis into the right graph
+  inspector.
+- Do not use Codex's built-in/in-app browser; Oliver reports it crashes the
+  app. Use a separate headless browser process for the final UI smoke.
+- PoE1 mechanic ambiguity goes directly to Oliver; never research or guess.
+- Commits are local-only unless Oliver explicitly asks to push.
+
+## Last green gate
+
+At `41bb721`:
+
+- `powershell -File scripts/build.ps1` — pass;
+- direct native suite — 118,285 checks, 0 failures;
+- `npx tsc --noEmit`, `npm test`, `npm run build` — pass;
+- `powershell -File scripts/test.ps1` — pass;
+- separate headless-Chrome Phase C preview — pass, apart from the existing
+  favicon 404.
