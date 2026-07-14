@@ -142,6 +142,33 @@ pc_result pc_calc_action_outcomes(
     pc_calc_summary* out_summary,
     pc_error_info* out_error);
 
+/* --- exact compiled-strategy evaluation ------------------------------------ */
+
+typedef struct pc_strategy_eval_options {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    double epsilon;       /* <= 0 uses the default 1e-12 */
+    uint32_t max_sweeps;  /* 0 uses the default 100000 */
+    uint32_t max_states;  /* 0 uses the default 100000 */
+    uint32_t top_classes_per_node; /* 0 uses the default 16 */
+} pc_strategy_eval_options;
+
+/*
+ * Evaluate a compiled strategy as an exact absorbing Markov chain over
+ * (graph node, abstract item state). The result is JSON v1 and uses the
+ * query-required-count buffer pattern: out_length always receives the full
+ * byte length, and a provided buffer is nul-terminated when capacity > 0.
+ * Unsupported action/condition vocabulary returns
+ * PC_RESULT_UNSUPPORTED_FEATURE with every detected graph gap in out_error.
+ */
+pc_result pc_strategy_evaluate(
+    pc_strategy_handle strategy,
+    const pc_strategy_eval_options* options,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error);
+
 /* --- DP solve ----------------------------------------------------------------- */
 
 typedef struct pc_solve_options {

@@ -6,6 +6,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -171,6 +172,10 @@ struct JunkClass {
     std::int8_t gen_type = 0;           /* 0 prefix, 1 suffix */
     std::uint64_t tag_bits = 0;         /* over discriminating_tag_ids order */
     std::uint32_t goal_block_mask = 0;  /* bit per goal slot index */
+    /* Exact-evaluation layouts additionally partition junk by the complete
+     * session-mod mask excluded by its group memberships. Empty for the
+     * solver's legacy compact abstraction. */
+    std::vector<std::uint64_t> exclusion_effect_mask;
     std::vector<std::uint64_t> member_mask;
     std::uint32_t member_count = 0;
 };
@@ -180,7 +185,8 @@ struct AbstractLayout {
     /* Union of the candidate actions' discriminating tags, sorted. Bit i of
      * JunkClass::tag_bits corresponds to discriminating_tag_ids[i]. */
     std::vector<std::uint32_t> discriminating_tag_ids;
-    /* Deterministic order: sorted by (gen_type, tag_bits, goal_block_mask). */
+    /* Deterministic order: sorted by (gen_type, tag_bits, goal_block_mask,
+     * exclusion_effect_mask). */
     std::vector<JunkClass> junk_classes;
     /* session mod id -> junk class index, or kNoId for goal members and mods
      * no candidate action can place in an explicit slot. */
@@ -190,15 +196,19 @@ struct AbstractLayout {
 /*
  * Derive the abstract state layout for (goal, candidate action subset).
  * action_indices index into registry.actions; an empty vector means the full
- * registry. Throws std::runtime_error on an invalid goal (no slots, too many
- * slots, unknown group/family, overlapping slot member masks) or when the
+ * registry unless empty_actions_mean_all is false. Throws std::runtime_error
+ * on an invalid goal (no slots unless explicitly allowed, too many slots,
+ * unknown group/family, overlapping slot member masks) or when the
  * discriminating tag union exceeds kMaxDiscriminatingTags.
  */
 AbstractLayout build_abstract_layout(
     const SessionImpl& session,
     const GoalSpec& goal,
     const ActionRegistry& registry,
-    const std::vector<std::uint32_t>& action_indices);
+    const std::vector<std::uint32_t>& action_indices,
+    bool allow_empty_goal = false,
+    bool empty_actions_mean_all = true,
+    bool distinguish_junk_exclusion_effects = false);
 
 // --- abstract state -----------------------------------------------------------
 
@@ -230,6 +240,12 @@ bool action_legal(
     const ActionDescriptor& action,
     const AbstractState& state);
 
+/* Shared affix-cap rule used by exact transition and graph-condition
+ * evaluation. */
+std::uint8_t rarity_affix_cap(
+    const SessionImpl& session,
+    std::uint8_t rarity);
+
 // --- calculation engine (S2): exact transition provider ------------------------
 
 struct OutcomeEntry {
@@ -246,6 +262,10 @@ struct OutcomeDistribution {
     std::array<double, kMaxGoalSlots> slot_satisfied_probability{};
 };
 
+/* True when CalcContext has an exact evaluator dispatch for this descriptor,
+ * independent of the current state. */
+bool calc_supports(const ActionDescriptor& action);
+
 /*
  * The solver's inner loop and the Calculator's backend: from abstract state
  * s, applying action a, the exact distribution over abstract successors.
@@ -259,14 +279,18 @@ class CalcContext {
         std::shared_ptr<const SessionImpl> session,
         const GoalSpec& goal,
         ActionRegistry registry,
-        const std::vector<std::uint32_t>& action_indices = {});
+        const std::vector<std::uint32_t>& action_indices = {},
+        bool allow_empty_goal = false,
+        bool empty_actions_mean_all = true,
+        bool distinguish_junk_exclusion_effects = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
     const ActionRegistry& registry() const { return registry_; }
     const GoalSpec& goal() const { return goal_; }
-    /* The candidate action subset the layout was derived for (resolved:
-     * never empty; defaults to every registry action). */
+    /* The candidate action subset the layout was derived for. Normal solver
+     * construction defaults an empty input to every registry action; an
+     * operation-free strategy evaluation deliberately retains an empty set. */
     const std::vector<std::uint32_t>& candidates() const {
         return candidates_;
     }
@@ -323,6 +347,98 @@ class CalcContext {
         const PoolBuildRequest& base_request,
         std::map<std::uint32_t, double>& accumulated);
 };
+
+// --- exact compiled-strategy evaluator ---------------------------------------
+
+struct StrategyEvalOptions {
+    double epsilon = 1e-12;
+    std::uint32_t max_sweeps = 100000;
+    std::uint32_t max_states = 100000;
+    std::uint32_t top_classes_per_node = 16;
+};
+
+struct StrategyEvalClass {
+    double share = 0.0;
+    AbstractState state;
+};
+
+struct StrategyEvalNode {
+    std::string id;
+    double expected_visits = 0.0;
+    std::vector<StrategyEvalClass> classes;
+    double classes_truncated_share = 0.0;
+};
+
+struct StrategyEvalEdge {
+    std::string id;
+    double expected_traversals = 0.0;
+};
+
+struct StrategyEvalTerminalNode {
+    std::string node_id;
+    int terminal_kind = PC_TERMINAL_FAILURE;
+    double probability = 0.0;
+};
+
+struct StrategyEvalNodeMass {
+    std::string node_id;
+    double mass = 0.0;
+};
+
+struct StrategyEvalFailure {
+    std::string node_id;
+    std::string reason;
+    double probability = 0.0;
+};
+
+struct StrategyEvalResult {
+    bool converged = false;
+    std::uint32_t sweeps = 0;
+    double residual_mass = 0.0;
+    double success_probability = 0.0;
+    double failure_probability = 0.0;
+    double stop_probability = 0.0;
+    double action_not_applied_probability = 0.0;
+    double no_matching_edge_probability = 0.0;
+    double unresolved_probability = 0.0;
+    double expected_actions = 0.0;
+    std::map<std::string, double> expected_consumption;
+    std::vector<GoalSlot> targets;
+    std::vector<StrategyEvalTerminalNode> terminal_nodes;
+    std::vector<StrategyEvalNodeMass> unresolved_by_node;
+    std::vector<StrategyEvalFailure> failures_by_node;
+    std::vector<StrategyEvalNode> nodes;
+    std::vector<StrategyEvalEdge> edges;
+    /* White-box diagnostic for the per-sweep conservation property. */
+    double max_mass_conservation_error = 0.0;
+};
+
+class StrategyEvalUnsupported : public std::runtime_error {
+  public:
+    explicit StrategyEvalUnsupported(const std::string& message)
+        : std::runtime_error(message) {}
+};
+
+/* Resolve one compiled operation to its registry descriptor. kNoId means no
+ * exact parameter match exists. Restart resolves to the synthetic descriptor. */
+std::uint32_t resolve_strategy_action(
+    const StrategyNode& node,
+    const ActionRegistry& registry);
+
+/* Abstract-state counterpart of the simulator's compiled condition
+ * predicate. The evaluation derivation guarantees all referenced targets are
+ * present in layout. */
+bool evaluate_abstract_condition(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const AbstractLayout& layout,
+    const AbstractState& state);
+
+StrategyEvalResult evaluate_strategy(
+    const StrategyImpl& strategy,
+    const StrategyEvalOptions& options = {});
+
+std::string serialize_strategy_eval(const StrategyEvalResult& result);
 
 // --- DP solver core (S4) --------------------------------------------------------
 

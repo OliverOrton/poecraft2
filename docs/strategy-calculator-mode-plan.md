@@ -68,6 +68,14 @@ reported expected consumption per price key, dotted with the live workspace
 price table in the UI (the same presentation arithmetic the Calculator's
 cost panel already does).
 
+Implementation note (Phase A): the ordinary DP solver deliberately keeps the
+compact, approximately-sound junk partition described in
+`crafting-solver-plan.md`. Whole-graph evaluation enables a strict layout mode
+that additionally partitions junk modifiers by their complete exclusion-group
+effect mask. Without that refinement, two items collapsed to one abstract
+state can remove different weighted families from a later Regal/Exalt pool,
+which is not exact enough for calculator mode.
+
 ## Simulator-Parity Semantics
 
 Calculator mode predicts what the simulator does. The evaluator must mirror
@@ -171,7 +179,9 @@ registered in three places: engine CMakeLists, `scripts/build.ps1`
    - Build `GoalSpec{slots = targets}` (rarity and `min_satisfied_slots`
      are irrelevant — success is defined by success terminals only; the
      evaluator must never consult `is_goal_state`) and a
-     `CalcContext(session, goal, registry, used_action_indices)`.
+     `CalcContext(session, goal, registry, used_action_indices)` using the
+     evaluator's strict exclusion-effect junk partition. The DP solver keeps
+     its compact partition; calculator-mode evaluation does not.
    - Pre-check evaluator support per used descriptor via the new
      `calc_supports` helper → refusal before any propagation.
 2. **Empty-target graphs.** `build_abstract_layout` currently rejects zero
@@ -261,6 +271,9 @@ registered in three places: engine CMakeLists, `scripts/build.ps1`
      20–50k runs with generous limits and fixed seed: per-terminal
      probabilities within 5σ + slack, expected actions and per-key
      consumption within CLT tolerance;
+   - abstraction regression: the richer graph includes a post-Regal branch
+     where differently weighted non-goal exclusion groups would drift if
+     collapsed; strict evaluation must remain inside the same MC tolerance;
    - semantics parity: illegal-action mass lands in `action_not_applied`
      exactly where the simulator fails runs; `no_matching_edge` parity;
      priority/default-edge ordering parity on a graph with overlapping

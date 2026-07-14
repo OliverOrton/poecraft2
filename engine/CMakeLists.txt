@@ -26,6 +26,7 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_reforge.cpp
     src/solver_solve.cpp
     src/solver_compile.cpp
+    src/solver_eval.cpp
     src/solver_api.cpp
 )
 set_target_properties(poecraft_engine_objects PROPERTIES
@@ -68,6 +69,7 @@ if(BUILD_TESTING)
         tests/test_solver_calc.cpp
         tests/test_solver_solve.cpp
         tests/test_solver_compile.cpp
+        tests/test_solver_eval.cpp
         tests/test_solver_api.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)

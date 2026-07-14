@@ -545,3 +545,54 @@ pc_result pc_solver_solve_log(
     return copy_text(solver->solve_log, buffer, capacity, out_length,
                      out_error);
 }
+
+pc_result pc_strategy_evaluate(
+    pc_strategy_handle strategy,
+    const pc_strategy_eval_options* options,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (strategy == nullptr || out_length == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    solver::StrategyEvalOptions eval_options;
+    if (options != nullptr) {
+        if (options->struct_size < sizeof(pc_strategy_eval_options) ||
+            options->abi_version != PC_ABI_VERSION) {
+            set_error(
+                out_error, PC_RESULT_INVALID_ARGUMENT,
+                "invalid strategy evaluation options ABI");
+            return PC_RESULT_INVALID_ARGUMENT;
+        }
+        if (options->epsilon > 0.0) {
+            eval_options.epsilon = options->epsilon;
+        }
+        if (options->max_sweeps != 0) {
+            eval_options.max_sweeps = options->max_sweeps;
+        }
+        if (options->max_states != 0) {
+            eval_options.max_states = options->max_states;
+        }
+        if (options->top_classes_per_node != 0) {
+            eval_options.top_classes_per_node =
+                options->top_classes_per_node;
+        }
+    }
+    try {
+        const solver::StrategyEvalResult result =
+            solver::evaluate_strategy(*strategy->impl, eval_options);
+        const std::string json = solver::serialize_strategy_eval(result);
+        return copy_text(json, buffer, capacity, out_length, out_error);
+    } catch (const solver::StrategyEvalUnsupported& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}

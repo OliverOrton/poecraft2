@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
     run_solver_calc_tests(artifact_dir);
     run_solver_solve_tests(artifact_dir);
     run_solver_compile_tests(artifact_dir);
+    run_solver_eval_tests(artifact_dir);
     run_solver_api_tests(artifact_dir);
 
     std::printf("engine tests: %d checks, %d failures\n", pctest::g_checks,

@@ -76,6 +76,7 @@ else {
             "$Root/engine/tests/test_solver_calc.cpp",
             "$Root/engine/tests/test_solver_solve.cpp",
             "$Root/engine/tests/test_solver_compile.cpp",
+            "$Root/engine/tests/test_solver_eval.cpp",
             "$Root/engine/tests/test_solver_api.cpp"
         )
         # -static-libstdc++/-static-libgcc avoid a ld.bfd crash (exit 116) seen

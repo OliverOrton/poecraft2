@@ -255,14 +255,20 @@ AbstractLayout build_abstract_layout(
     const SessionImpl& session,
     const GoalSpec& goal,
     const ActionRegistry& registry,
-    const std::vector<std::uint32_t>& action_indices) {
-    if (goal.slots.empty()) invalid("goal spec has no slots");
+    const std::vector<std::uint32_t>& action_indices,
+    bool allow_empty_goal,
+    bool empty_actions_mean_all,
+    bool distinguish_junk_exclusion_effects) {
+    if (goal.slots.empty() && !allow_empty_goal) {
+        invalid("goal spec has no slots");
+    }
     if (goal.slots.size() > kMaxGoalSlots) {
         invalid("goal spec exceeds " + std::to_string(kMaxGoalSlots) +
                 " slots");
     }
-    if (goal.required_satisfied_slots() == 0 ||
-        goal.required_satisfied_slots() > goal.slots.size()) {
+    if (!goal.slots.empty() &&
+        (goal.required_satisfied_slots() == 0 ||
+         goal.required_satisfied_slots() > goal.slots.size())) {
         invalid("goal min_satisfied_slots is outside the slot range");
     }
 
@@ -281,7 +287,7 @@ AbstractLayout build_abstract_layout(
     }
 
     std::vector<std::uint32_t> candidates = action_indices;
-    if (candidates.empty()) {
+    if (candidates.empty() && empty_actions_mean_all) {
         candidates.resize(registry.actions.size());
         for (std::uint32_t i = 0; i < candidates.size(); ++i) {
             candidates[i] = i;
@@ -318,9 +324,12 @@ AbstractLayout build_abstract_layout(
                          slot.member_mask.data(), session.words);
     }
 
-    /* Partition by (generation side, restricted tag signature, blocked
-     * goal slots). std::map keeps the class order deterministic. */
-    using ClassKey = std::tuple<std::int8_t, std::uint64_t, std::uint32_t>;
+    /* Partition by (generation side, restricted tag signature, blocked goal
+     * slots), plus the complete group-exclusion effect for strict evaluation
+     * layouts. std::map keeps the class order deterministic. */
+    using ClassKey = std::tuple<
+        std::int8_t, std::uint64_t, std::uint32_t,
+        std::vector<std::uint64_t>>;
     std::map<ClassKey, std::vector<std::uint32_t>> classes;
     std::vector<std::uint32_t> groups;
     pc_bitset_for_each(reachable.data(), session.words, [&](std::size_t bit) {
@@ -354,7 +363,20 @@ AbstractLayout build_abstract_layout(
                 }
             }
         }
-        classes[{gen, tag_bits, block_mask}].push_back(mod);
+        std::vector<std::uint64_t> exclusion_effect;
+        if (distinguish_junk_exclusion_effects) {
+            exclusion_effect = empty_mask(session);
+            for (std::uint32_t group : groups) {
+                if (group < session.group_masks.size() &&
+                    !session.group_masks[group].empty()) {
+                    pc_bitset_or(
+                        exclusion_effect.data(), exclusion_effect.data(),
+                        session.group_masks[group].data(), session.words);
+                }
+            }
+        }
+        classes[{gen, tag_bits, block_mask, std::move(exclusion_effect)}]
+            .push_back(mod);
     });
 
     layout.junk_class_by_mod.assign(session.mod_count, kNoId);
@@ -363,6 +385,7 @@ AbstractLayout build_abstract_layout(
         junk.gen_type = std::get<0>(key);
         junk.tag_bits = std::get<1>(key);
         junk.goal_block_mask = std::get<2>(key);
+        junk.exclusion_effect_mask = std::get<3>(key);
         junk.member_mask = empty_mask(session);
         for (std::uint32_t mod : members) {
             pc_bitset_set(junk.member_mask.data(), mod);

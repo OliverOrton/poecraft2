@@ -880,6 +880,13 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
 
 } // namespace
 
+bool evaluate_compiled_condition(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item) {
+    return evaluate_condition(condition, session, item);
+}
+
 std::shared_ptr<StrategyImpl> compile_strategy_json(
     std::shared_ptr<const SessionImpl> session,
     const char* strategy_json,

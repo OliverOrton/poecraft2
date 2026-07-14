@@ -1,105 +1,89 @@
-# Session Handoff — Solver S6 Phase 1 next
+# Session Handoff — Strategy Calculator Mode Phase B next
 
-Written 2026-07-13 after the Calculator Variant E, shared item display, and
-native success-threshold milestone. Read [AGENTS.md](AGENTS.md), then
-[docs/direction.md](docs/direction.md). The remaining ordered plan is
-[docs/s6-plan.md](docs/s6-plan.md).
+Written 2026-07-14 after completing Phase A of
+[strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md).
+Read [AGENTS.md](AGENTS.md), then [docs/direction.md](docs/direction.md).
 
 ## Current state
 
-Solver S1–S5 and the Calculator S6 foundation are complete. The current
-workspace also contains the approved Calculator/UI milestone and is not yet
-committed.
+Strategy Calculator Mode Phase A is complete. The native engine can evaluate
+an already-compiled strategy graph as an absorbing Markov chain over graph
+nodes and solver states; no strategy JSON is reparsed.
 
-Calculator now uses Variant E:
+Implemented in `engine/src/solver_eval.cpp`:
 
-- a stacked left context rail for the concrete Input item and authored Goal;
-- one shared `pc-mod-pool`, switching between direct item editing and goal
-  selection when a context card is clicked;
-- the shared `pc-mod-list` item card, also used by Emulator, with implicits,
-  stable prefix/suffix slot positions, actual mod text once, tier labels, and
-  player-facing tags;
-- selected family/tier highlighting in every modifier-pool instance;
-- no detached Current item disclosure and no new Add modifier group control.
+- operation nodes resolve to registry descriptors, including fossil loadouts
+  and synthetic restart;
+- graph conditions derive family/group targets and compile to abstract-state
+  predicates with simulator parity;
+- unsupported operations and structural condition gaps are refused together
+  with element-level node/edge messages;
+- forward propagation reports terminal/failure/unresolved mass, expected
+  actions, per-price-key consumption, node visits/classes, and edge flows;
+- router cycles stop at the sweep cap and retain per-node unresolved mass;
+- count/rarity-only graphs use an explicit empty-goal construction path while
+  ordinary `pc_solver_create` goals still require at least one slot;
+- deterministic JSON serialization backs the query-required-count C ABI
+  `pc_strategy_evaluate` and `pc_strategy_eval_options` in
+  `engine/include/poecraft/solver.h`.
 
-The success-definition dropdown is engine-backed, not presentation-only:
-
-- goal JSON accepts optional `min_satisfied_slots` (default all; validated
-  `1..slots.length`);
-- `CalcContext::is_goal_state` uses finished rarity + the slot threshold, so
-  value iteration uses the same success predicate;
-- `pc_calc_summary` and WASM JSON return `success_probability`;
-- compiled policies use ordinary `all` for all-slot goals and native
-  `at_least` for partial thresholds;
-- Calculator drafts persist `minSatisfiedSlots`; old drafts load as all.
-
-Odds now leads with the native combined probability, then exact modifier-
-coverage buckets and overlapping miss signals. The raw abstract outcome table
-is retained under a collapsed Technical distribution drawer with goal-column
-labels and success-first sorting. Percentages preserve engine precision; the
-headline also shows raw `p`, failure chance, and expected attempts. The price
-panel distinguishes action cost per attempt from estimated action spend per
-success (`cost / success_probability`) and states that reset/recovery spend is
-excluded.
+Whole-graph evaluation uses a strict junk partition that distinguishes the
+complete exclusion-group effect mask. This fixed the abstraction drift found
+by the post-Regal regression: exact expected actions are `51.637347`, versus
+`51.539133` over 30,000 simulator runs. The ordinary DP solver deliberately
+keeps its existing compact, approximately-sound partition; only strategy
+evaluation enables the strict refinement.
 
 ## Verification
 
 - `powershell -File scripts/build.ps1` — pass.
 - `build/engine/poecraft_engine_tests.exe data/compiled/current fixtures/spec`
-  — 102,031 checks, 0 failures.
-- `powershell -File scripts/build-wasm.ps1` — rebuilt successfully.
-- `npx tsc --noEmit`, `npm test`, and `npm run build` in `apps/web` — pass;
-  engine smoke is 16/16.
-- Standalone headless Chrome smoke on Vaal Regalia iLvl 86 with two T1 goals
-  and Chaos: `All 2` 0.18%, `At least 1 of 2` 8.49%; coverage/miss sections
-  render, Technical distribution defaults closed and expands to 40 rows.
-  No application page errors; the existing missing favicon is the only 404.
-- Precision/cost smoke: 8.4933%, `p = 0.084933`, 91.5067% failure, 11.774
-  expected attempts; at 1c per Chaos the panel reports 11.774c estimated
-  action spend per success.
+  — 118,285 checks, 0 failures.
+- The new `test_solver_eval.cpp` is registered in all required locations:
+  `engine/CMakeLists.txt`, `scripts/build.ps1` `TestSources`, and
+  `tests.hpp`/`test_main.cpp`.
+- Tests cover closed forms, the strict abstraction regression, a 30k-run rich
+  exact-vs-MC graph, Vaal Regalia exact-vs-MC, condition parity, illegal and
+  no-edge failures, priority/default routing, price-key/action resolution,
+  refusals, unresolved cycles, deterministic JSON, C ABI queries, and
+  per-sweep mass conservation.
 
 ## Next task
 
-Implement the Strategy Builder simulator/calculator mode switch per
-[docs/strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md)
-(scheduled 2026-07-14, ahead of s6 Phase 1). Phase A (engine evaluator +
-C ABI) first; the plan records Oliver's scope decisions — do not relitigate
-them.
+Implement **Phase B only** from
+[strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md):
 
-After that, resume [docs/s6-plan.md](docs/s6-plan.md) Phase 1: Solve in the
-workspace, then open the compiled policy as a Strategy Board document and
-provide its verification run. The engine call sequence is already exercised
-in `apps/web/test/engine-smoke.test.ts`. Run the Phase 1 solve panel/board
-integration through the same image-model design loop before implementation.
+1. add `pcw_strategy_evaluate` in `bindings/wasm/wasm_api.cpp`;
+2. rebuild WASM with `scripts/build-wasm.ps1`;
+3. add worker/protocol/client strategy-evaluation plumbing;
+4. add the happy-path and refusal engine-smoke tests;
+5. run the Phase B web gates and the full `scripts/test.ps1` gate specified by
+   the plan.
 
-Do not start Phase 2 (chunked progress/cancel) as part of Phase 1. Until Phase
-2, the solve call blocks the worker and the UI should state that clearly.
+Do not begin Phase C UI/design work as part of Phase B. After Phase C, resume
+[s6-plan.md](docs/s6-plan.md) Phase 1.
 
-## Important files from this milestone
+## Important files
 
-- `engine/src/solver_internal.hpp`, `solver_calc.cpp`, `solver_api.cpp`,
-  `solver_compile.cpp`, `engine/include/poecraft/solver.h`
-- `bindings/wasm/wasm_api.cpp` and rebuilt
-  `bindings/wasm/dist/poecraft_engine.mjs`
-- `apps/web/src/app/components/pc-calculator.ts`
-- `apps/web/src/app/components/pc-mod-list.ts`, `pc-mod-pool.ts`
-- `apps/web/src/app/item-display.ts`
-- `apps/web/src/app/odds-presentation.ts`
-- `apps/web/src/app/workspace/persistence.ts`, `engine-protocol.ts`
-- `apps/web/src/styles/app.css`
-- `design/specs/calculator.md`, `design/specs/item-display.md`
+- `engine/src/solver_eval.cpp`
+- `engine/tests/test_solver_eval.cpp`
+- `engine/src/solver_internal.hpp`, `solver_abstract.cpp`, `solver_calc.cpp`
+- `engine/src/solver_api.cpp`, `engine/include/poecraft/solver.h`
+- `engine/src/engine_internal.hpp`, `simulator.cpp`
+- `docs/strategy-calculator-mode-plan.md`
 
 ## Rulings and gotchas
 
-- Mechanic rules are decided by Oliver. Ask him directly; do not research or
-  guess ambiguous Path of Exile behavior.
-- The native engine remains the only crafting-rule authority. Frontend
-  coverage/miss summaries may aggregate returned outcome fields, but the
-  success predicate and combined probability come from the engine.
-- `pcw_*` JSON serializes doubles with `std::to_string` (6 decimals), so large
-  distributions sum near 1 rather than bit-exactly 1.
-- Rebuild WASM after C ABI or strategy-vocabulary changes with
-  `scripts/build-wasm.ps1`.
-- `tsx` does not type-check; keep `npx tsc --noEmit` in the web gate.
-- Dockview detaches inactive panels; component state must survive reconnect.
-- Commits are local only unless Oliver explicitly asks to push.
+- The strict exclusion-effect partition is evaluator-only. Do not silently
+  switch the DP solver to it; that changes its state-space/performance model.
+- Evaluator support comes from `calc_supports(descriptor)`, not a second
+  hardcoded refusal list in bindings or UI.
+- Illegal operation attempts count toward expected actions, matching the
+  simulator, but do not consume price keys.
+- Result costs remain price-independent consumption vectors; Phase B and the
+  UI must not introduce crafting-rule or routing authority.
+- `pcw_*` JSON uses six-decimal doubles, so web probability-sum assertions need
+  the plan's serialization tolerance.
+- Phase A added a C ABI but intentionally stopped before WASM/bindings; Phase B
+  must rebuild the WASM artifact before running web tests.
+- Commits remain local unless Oliver explicitly asks to push.

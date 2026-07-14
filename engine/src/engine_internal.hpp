@@ -708,6 +708,13 @@ struct StrategyImpl {
     std::unordered_map<std::string, std::uint32_t> node_by_id;
 };
 
+/* Simulator-authoritative condition predicate, exposed internally for exact
+ * evaluator parity tests. */
+bool evaluate_compiled_condition(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item);
+
 struct EconomyImpl {
     std::string id;
     std::unordered_map<std::string, double> prices;

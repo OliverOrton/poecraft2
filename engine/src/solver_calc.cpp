@@ -26,8 +26,6 @@
 namespace poecraft {
 namespace solver {
 
-namespace {
-
 std::uint8_t rarity_affix_cap(const SessionImpl& session, std::uint8_t rarity) {
     switch (rarity) {
     case PC_RARITY_NORMAL:
@@ -38,6 +36,8 @@ std::uint8_t rarity_affix_cap(const SessionImpl& session, std::uint8_t rarity) {
         return session.rare_affix_cap;
     }
 }
+
+namespace {
 
 bool slot_metamod_matches(
     const SessionImpl& session,
@@ -79,15 +79,19 @@ CalcContext::CalcContext(
     std::shared_ptr<const SessionImpl> session,
     const GoalSpec& goal,
     ActionRegistry registry,
-    const std::vector<std::uint32_t>& action_indices)
+    const std::vector<std::uint32_t>& action_indices,
+    bool allow_empty_goal,
+    bool empty_actions_mean_all,
+    bool distinguish_junk_exclusion_effects)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
       candidates_(action_indices),
       context_(0) {
     layout_ = build_abstract_layout(
-        *session_, goal_, registry_, action_indices);
-    if (candidates_.empty()) {
+        *session_, goal_, registry_, action_indices, allow_empty_goal,
+        empty_actions_mean_all, distinguish_junk_exclusion_effects);
+    if (candidates_.empty() && empty_actions_mean_all) {
         candidates_.resize(registry_.actions.size());
         for (std::uint32_t i = 0; i < candidates_.size(); ++i) {
             candidates_[i] = i;
@@ -97,6 +101,30 @@ CalcContext::CalcContext(
     /* Exact paths never sample, and evaluation must not depend on trace
      * bookkeeping from earlier queries. */
     context_.capture_action_trace = false;
+}
+
+bool calc_supports(const ActionDescriptor& action) {
+    if (action.synthetic) return true;
+    switch (action.params.type) {
+    case ActionType::Transmute:
+    case ActionType::Augment:
+    case ActionType::Alteration:
+    case ActionType::Regal:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Exalt:
+    case ActionType::Annul:
+    case ActionType::Scour:
+    case ActionType::Essence:
+    case ActionType::Fossil:
+    case ActionType::Bench:
+    case ActionType::HarvestReforge:
+    case ActionType::HarvestAugment:
+    case ActionType::InfluenceExalt:
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool CalcContext::is_goal_state(const AbstractState& state) const {
