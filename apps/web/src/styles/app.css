@@ -2099,16 +2099,19 @@ pc-edge-layer svg {
     fill: #607277;
 }
 
+.pc-edge-label-backdrop {
+    cursor: pointer;
+    fill: rgba(13, 16, 18, 0.9);
+    pointer-events: all;
+    stroke: rgba(96, 114, 119, 0.68);
+    stroke-width: 1px;
+}
+
 .pc-edge-label {
     fill: #9fa9a4;
-    font-family: var(--pc-font);
+    font-family: var(--pc-mono);
     font-size: 11px;
-    text-anchor: middle;
-    paint-order: stroke;
-    pointer-events: none;
-    stroke: #0d1012;
-    stroke-width: 4px;
-    stroke-linejoin: round;
+    text-anchor: start;
     pointer-events: none;
 }
 
@@ -2121,6 +2124,7 @@ pc-edge-layer svg {
     font-family: var(--pc-mono);
     font-size: 11px;
     font-weight: 700;
+    text-anchor: middle;
 }
 
 .pc-edge-label.is-stale .pc-edge-eval-label {

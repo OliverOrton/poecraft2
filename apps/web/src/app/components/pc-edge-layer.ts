@@ -2,6 +2,7 @@ import {
     StrategyEdge,
     StrategyNode,
     strategyEdgeLabel,
+    strategyEdgeLabelLines,
 } from "../strategy-model";
 import { StrategyEdgeAnnotation } from "../strategy-eval-presentation";
 
@@ -64,15 +65,31 @@ export class PcEdgeLayer extends HTMLElement {
                 .filter(Boolean)
                 .join(" ");
             const label = strategyEdgeLabel(edge);
+            const labelLines = strategyEdgeLabelLines(edge);
             const annotation = this.view.annotations?.get(edge.id);
             const point = edgeLabelPoint(from, to, route);
+            const lineHeight = 13;
+            const annotationOffset = annotation ? 14 : 0;
+            const labelStartY =
+                point.y -
+                ((labelLines.length - 1) * lineHeight + annotationOffset) / 2;
+            const widestLine = Math.max(
+                ...labelLines.map((line) => line.length),
+                annotation?.label.length ?? 0,
+            );
+            const backdropWidth = Math.max(66, widestLine * 6.2 + 18);
+            const backdropHeight =
+                labelLines.length * lineHeight + annotationOffset + 4;
+            const labelX = point.x - backdropWidth / 2 + 9;
+            const title = annotation ? `${label}\n${annotation.title}` : label;
             return [
                 `<g data-edge-id="${escapeAttribute(edge.id)}">
-                    ${annotation ? `<title>${escapeText(annotation.title)}</title>` : ""}
+                    <title>${escapeText(title)}</title>
                     <path class="pc-edge-hit" d="${d}"></path>
                     <path class="${classes}" d="${d}" marker-end="url(#pc-edge-arrow)"></path>
-                    <text class="pc-edge-label ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}" x="${point.x}" y="${point.y}">
-                        <tspan x="${point.x}">${escapeText(label)}</tspan>
+                    <rect class="pc-edge-label-backdrop" x="${point.x - backdropWidth / 2}" y="${labelStartY - 10}" width="${backdropWidth}" height="${backdropHeight}" rx="5"></rect>
+                    <text class="pc-edge-label ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}" x="${labelX}" y="${labelStartY}">
+                        ${labelLines.map((line, index) => `<tspan class="pc-edge-condition-line" x="${labelX}"${index === 0 ? "" : ` dy="${lineHeight}"`}>${escapeText(line)}</tspan>`).join("")}
                         ${annotation ? `<tspan class="pc-edge-eval-label" x="${point.x}" dy="14">${escapeText(annotation.label)}</tspan>` : ""}
                     </text>
                 </g>`,

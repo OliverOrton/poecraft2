@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
     cloneStrategy,
     compileConditionTree,
+    conditionLabel,
+    conditionLabelLines,
     createBlankStrategy,
     createDefaultStrategy,
     defaultLeafCondition,
@@ -10,6 +12,7 @@ import {
     operationLabel,
     parseConditionTree,
     strategyEdgeLabel,
+    strategyEdgeLabelLines,
     strategyNodeLabel,
     validateStrategy,
     type ConditionGroupNode,
@@ -356,6 +359,72 @@ const labelContext = {
     reopened.label = "";
     assert.equal(strategyEdgeLabel(reopened), "always");
     console.log("  ok - edge manual overrides persist and clear back to automatic");
+}
+
+{
+    const condition = {
+        type: "all",
+        conditions: [
+            { type: "rarity_is", rarity: "rare" },
+            {
+                type: "any",
+                conditions: [
+                    { type: "open_prefix_count", min: 1, max: 2 },
+                    {
+                        type: "not",
+                        conditions: [{ type: "open_suffix_count", min: 0, max: 0 }],
+                    },
+                ],
+            },
+            {
+                type: "at_least",
+                count: 1,
+                conditions: [
+                    { type: "prefix_count_range", min: 2, max: 3 },
+                    { type: "suffix_count_range", min: 2, max: 3 },
+                ],
+            },
+        ],
+    };
+    assert.equal(
+        conditionLabel(condition),
+        "ALL (rarity is rare; ANY (open prefixes 1-2; NOT (open suffixes = 0)); AT LEAST 1 OF (prefixes 2-3; suffixes 2-3))",
+    );
+    assert.deepEqual(conditionLabelLines(condition), [
+        "ALL",
+        "|- rarity is rare",
+        "|- ANY",
+        "| |- open prefixes 1-2",
+        "| |- NOT",
+        "| | |- open suffixes = 0",
+        "|- AT LEAST 1 OF",
+        "| |- prefixes 2-3",
+        "| |- suffixes 2-3",
+    ]);
+
+    const edge: StrategyEdge = {
+        id: "complete-chain",
+        from: "a",
+        to: "b",
+        priority: 0,
+        condition,
+        label: "",
+    };
+    assert.deepEqual(
+        strategyEdgeLabelLines(edge),
+        conditionLabelLines(condition),
+    );
+    edge.label =
+        "A deliberately long manual override that wraps without changing mode";
+    assert.equal(strategyEdgeLabel(edge), edge.label);
+    assert.deepEqual(strategyEdgeLabelLines(edge), [
+        "A deliberately long manual",
+        "override that wraps without",
+        "changing mode",
+    ]);
+    console.log(
+        "  ok - full nested condition chains are readable without losing overrides",
+    );
 }
 
 {

@@ -29,11 +29,14 @@ Phase P1 — base ordering and graph auto-labels — is complete:
 5. Automatic operation labels follow live parameters and resolve keyed choices
    through the loaded catalog/session display text: Essences, Fossils, bench and
    unveil modifiers, Harvest tags, influences, and current Eldritch tiers.
-   Automatic edge labels use the live `conditionLabel` summary.
+   Automatic edge labels recursively include the complete live condition tree,
+   including nested ALL, ANY, NOT, and AT LEAST branches.
 6. Board nodes, the edge layer, and inspector placeholders use the same shared
    formatters. Parameter/condition edits relabel automatic text immediately;
    manual overrides remain fixed; clearing an override returns to automatic
-   mode without changing graph identity or semantics.
+   mode without changing graph identity or semantics. The board presents full
+   condition chains as compact, wrapped, left-aligned trees on a subdued
+   backdrop; hover and the inspector expose the full parenthesized expression.
 7. Node IDs, edge IDs, priority/routing order, operation payloads, condition
    payloads, and compiled behavior are unchanged.
 
@@ -47,7 +50,8 @@ Phase P1 — base ordering and graph auto-labels — is complete:
   name/path tie-breaking, and supported/named filtering.
 - Strategy tests pin parameter-sensitive catalog labels, live node/condition
   relabeling, manual override behavior, clear-to-auto, stable IDs/priority, and
-  save/reopen preservation of both automatic and manual authored states.
+  save/reopen preservation of both automatic and manual authored states. Nested
+  condition coverage pins the full expression and every rendered tree branch.
 
 ## Acceptance gates — all green
 
@@ -67,6 +71,11 @@ supported choices; the level-84 name tie put Conquest Lamellar first), authored
 a Harvest Reforge node and a guarded rarity edge, verified live automatic
 labels and placeholders, exercised manual overrides and clear-to-auto, and
 finished with zero application console errors or uncaught exceptions.
+
+A follow-up rendered smoke seeded a nine-line nested ALL/ANY/NOT/AT LEAST edge,
+verified every visible branch, the full hover and inspector expression, the
+label backdrop and alignment, and manual override/clear-to-auto behavior. It
+also finished with zero console errors or uncaught exceptions.
 
 ## Next task — pre-S6 polish Phase P2 only
 
@@ -94,6 +103,9 @@ handoff for P3a. Do not begin the P3 goal-expression work or S6 Phase 1.
 - The auto-label contract is authored-text based, not ID based: exactly empty
   text is automatic; non-empty saved text is manual. Never rewrite a manual
   override when parameters change or during load/normalization.
+- Automatic edge presentation must retain every nested condition branch. Keep
+  the full expression and the board tree derived from the same live condition;
+  wrapping is presentation-only and must not rewrite authored text.
 - Catalog/session display names are the label authority for keyed choices.
   Extend that route for concrete Eldritch currencies in P2; do not add a second
   hard-coded currency-label table.

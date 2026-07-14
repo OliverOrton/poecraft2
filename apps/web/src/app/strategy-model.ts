@@ -592,17 +592,111 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
             return rangeLabel("suffixes", condition);
         case "all":
         case "all_of":
-            return `ALL of ${(condition.conditions ?? condition.children ?? []).length}`;
+            return compositeConditionLabel("ALL", childConditions(condition));
         case "any":
         case "any_of":
-            return `ANY of ${(condition.conditions ?? condition.children ?? []).length}`;
-        case "not":
-            return "NOT condition";
+            return compositeConditionLabel("ANY", childConditions(condition));
+        case "not": {
+            const child = childConditions(condition)[0];
+            return child ? `NOT (${conditionLabel(child)})` : "NOT (?)";
+        }
         case "at_least":
-            return `AT LEAST ${condition.count ?? 1}`;
+            return compositeConditionLabel(
+                `AT LEAST ${condition.count ?? 1} OF`,
+                childConditions(condition),
+            );
         default:
             return condition.type || "condition";
     }
+}
+
+function compositeConditionLabel(
+    operator: string,
+    conditions: StrategyCondition[],
+): string {
+    return `${operator} (${conditions.map((child) => conditionLabel(child)).join("; ")})`;
+}
+
+/**
+ * Board-friendly form of the same complete condition expression. Composite
+ * branches become a small tree and long leaves wrap; no condition is omitted.
+ */
+export function conditionLabelLines(condition?: StrategyCondition): string[] {
+    if (!condition) {
+        return ["always"];
+    }
+    return conditionTreeLabelLines(condition, 0);
+}
+
+function conditionTreeLabelLines(
+    condition: StrategyCondition,
+    depth: number,
+): string[] {
+    const children = childConditions(condition);
+    let heading: string | undefined;
+    let visibleChildren = children;
+    switch (condition.type) {
+        case "all":
+        case "all_of":
+            heading = children.length > 0 ? "ALL" : "ALL (empty)";
+            break;
+        case "any":
+        case "any_of":
+            heading = children.length > 0 ? "ANY" : "ANY (empty)";
+            break;
+        case "not":
+            heading = children.length > 0 ? "NOT" : "NOT (?)";
+            visibleChildren = children.slice(0, 1);
+            break;
+        case "at_least":
+            heading =
+                children.length > 0
+                    ? `AT LEAST ${condition.count ?? 1} OF`
+                    : `AT LEAST ${condition.count ?? 1} OF (empty)`;
+            break;
+        default:
+            return wrapConditionLine(conditionLabel(condition), depth);
+    }
+
+    return [
+        ...wrapConditionLine(heading, depth),
+        ...visibleChildren.flatMap((child) =>
+            conditionTreeLabelLines(child, depth + 1),
+        ),
+    ];
+}
+
+function wrapConditionLine(text: string, depth: number): string[] {
+    const prefix = depth === 0 ? "" : `${"| ".repeat(depth - 1)}|- `;
+    const continuation = depth === 0 ? "" : `${"| ".repeat(depth - 1)}|  `;
+    return wrapLabelText(text, prefix, continuation);
+}
+
+function wrapLabelText(
+    text: string,
+    firstPrefix = "",
+    continuationPrefix = "",
+    maxCharacters = 34,
+): string[] {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+        return [firstPrefix];
+    }
+    const lines: string[] = [];
+    let prefix = firstPrefix;
+    let content = "";
+    for (const word of words) {
+        const candidate = content ? `${content} ${word}` : word;
+        if (content && prefix.length + candidate.length > maxCharacters) {
+            lines.push(`${prefix}${content}`);
+            prefix = continuationPrefix;
+            content = word;
+        } else {
+            content = candidate;
+        }
+    }
+    lines.push(`${prefix}${content}`);
+    return lines;
 }
 
 /** Empty authored text is automatic; non-empty text is a manual override. */
@@ -614,6 +708,14 @@ export function strategyEdgeLabel(edge: StrategyEdge): string {
     return edge.label !== undefined && edge.label !== ""
         ? edge.label
         : automaticStrategyEdgeLabel(edge);
+}
+
+/** Visual wrapping only; authored text and automatic/manual mode are unchanged. */
+export function strategyEdgeLabelLines(edge: StrategyEdge): string[] {
+    if (edge.label === undefined || edge.label === "") {
+        return conditionLabelLines(edge.condition);
+    }
+    return edge.label.split(/\r?\n/).flatMap((line) => wrapLabelText(line));
 }
 
 function rangeLabel(label: string, condition: StrategyCondition): string {
