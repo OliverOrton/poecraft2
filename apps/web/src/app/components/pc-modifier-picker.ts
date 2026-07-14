@@ -14,6 +14,7 @@ export class PcModifierPicker extends HTMLElement {
     private side: Side = "prefix";
     private search = "";
     private open = false;
+    private buttonLabel = "+ Add modifier";
 
     connectedCallback(): void {
         this.render();
@@ -22,6 +23,11 @@ export class PcModifierPicker extends HTMLElement {
     setOptions(options: ModifierFamilyOption[], selected: Iterable<string>): void {
         this.options = options;
         this.selected = new Set(selected);
+        this.render();
+    }
+
+    setButtonLabel(label: string): void {
+        this.buttonLabel = label;
         this.render();
     }
 
@@ -43,7 +49,7 @@ export class PcModifierPicker extends HTMLElement {
         this.innerHTML = `
             <div class="pc-modifier-picker">
                 <button type="button" data-action="toggle" class="pc-modifier-picker-toggle">
-                    + Add modifier
+                    ${escapeHtml(this.buttonLabel)}
                 </button>
                 ${
                     this.open

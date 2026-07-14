@@ -11,6 +11,7 @@ import {
     createStrategyFromItemSnapshot,
     operationLabel,
     parseConditionTree,
+    strategyEdgeCardPresentation,
     strategyEdgeLabel,
     strategyEdgeLabelLines,
     strategyNodeLabel,
@@ -414,6 +415,24 @@ const labelContext = {
         strategyEdgeLabelLines(edge),
         conditionLabelLines(condition),
     );
+    assert.deepEqual(strategyEdgeCardPresentation(edge), {
+        title:
+            "ALL (rarity is rare; ANY (open prefixes 1-2; NOT (open suffixes = 0)); AT LEAST 1 OF (prefixes 2-3; suffixes 2-3))",
+        header: "ALL",
+        count: 3,
+        compact: false,
+        manual: false,
+        rows: [
+            { kind: "leaf", label: "rarity is rare", depth: 0 },
+            { kind: "group", label: "ANY", depth: 0, count: 2 },
+            { kind: "leaf", label: "open prefixes 1-2", depth: 1 },
+            { kind: "group", label: "NOT", depth: 1, count: 1 },
+            { kind: "leaf", label: "open suffixes = 0", depth: 2 },
+            { kind: "group", label: "AT LEAST 1", depth: 0, count: 2 },
+            { kind: "leaf", label: "prefixes 2-3", depth: 1 },
+            { kind: "leaf", label: "suffixes 2-3", depth: 1 },
+        ],
+    });
     edge.label =
         "A deliberately long manual override that wraps without changing mode";
     assert.equal(strategyEdgeLabel(edge), edge.label);
@@ -422,6 +441,42 @@ const labelContext = {
         "override that wraps without",
         "changing mode",
     ]);
+    assert.deepEqual(strategyEdgeCardPresentation(edge), {
+        title:
+            "A deliberately long manual override that wraps without changing mode",
+        header: "LABEL",
+        compact: false,
+        manual: true,
+        rows: [
+            {
+                kind: "leaf",
+                label: "A deliberately long manual",
+                depth: 0,
+            },
+            {
+                kind: "leaf",
+                label: "override that wraps without",
+                depth: 0,
+            },
+            { kind: "leaf", label: "changing mode", depth: 0 },
+        ],
+    });
+    assert.deepEqual(
+        strategyEdgeCardPresentation({
+            ...edge,
+            label: "",
+            condition: { type: "rarity_is", rarity: "rare" },
+        }),
+        {
+            title: "rarity is rare",
+            header: "",
+            compact: true,
+            manual: false,
+            rows: [
+                { kind: "leaf", label: "rarity is rare", depth: 0 },
+            ],
+        },
+    );
     console.log(
         "  ok - full nested condition chains are readable without losing overrides",
     );

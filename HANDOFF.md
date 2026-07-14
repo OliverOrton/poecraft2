@@ -34,10 +34,18 @@ Phase P1 — base ordering and graph auto-labels — is complete:
 6. Board nodes, the edge layer, and inspector placeholders use the same shared
    formatters. Parameter/condition edits relabel automatic text immediately;
    manual overrides remain fixed; clearing an override returns to automatic
-   mode without changing graph identity or semantics. The board presents full
-   condition chains as compact, wrapped, left-aligned trees on a subdued
-   backdrop; hover and the inspector expose the full parenthesized expression.
-7. Node IDs, edge IDs, priority/routing order, operation payloads, condition
+   mode without changing graph identity or semantics. Simple edge conditions
+   render as compact pills. Composite conditions render as structured graph
+   cards with an operator header, rule count, nested group badges and branch
+   rails, and every live leaf. Hover and the inspector retain the full
+   parenthesized expression.
+7. The edge inspector now provides a recursive visual condition composer in
+   the existing product style. It supports ALL, ANY, and N OF groups; nested
+   groups; inline NOT; ordering, duplicate, and remove actions; live summaries;
+   modifier family, minimum-tier, and fractured controls; and a collapsed
+   Advanced JSON escape hatch. Default fallback remains explicit, and switching
+   back to guarded mode restores the in-memory tree while the editor stays open.
+8. Node IDs, edge IDs, priority/routing order, operation payloads, condition
    payloads, and compiled behavior are unchanged.
 
 ## Pinned regression coverage
@@ -51,7 +59,8 @@ Phase P1 — base ordering and graph auto-labels — is complete:
 - Strategy tests pin parameter-sensitive catalog labels, live node/condition
   relabeling, manual override behavior, clear-to-auto, stable IDs/priority, and
   save/reopen preservation of both automatic and manual authored states. Nested
-  condition coverage pins the full expression and every rendered tree branch.
+  condition coverage pins the full expression, every rendered tree branch, the
+  compact simple-condition presentation, and the manual-card presentation.
 
 ## Acceptance gates — all green
 
@@ -72,10 +81,12 @@ a Harvest Reforge node and a guarded rarity edge, verified live automatic
 labels and placeholders, exercised manual overrides and clear-to-auto, and
 finished with zero application console errors or uncaught exceptions.
 
-A follow-up rendered smoke seeded a nine-line nested ALL/ANY/NOT/AT LEAST edge,
-verified every visible branch, the full hover and inspector expression, the
-label backdrop and alignment, and manual override/clear-to-auto behavior. It
-also finished with zero console errors or uncaught exceptions.
+A follow-up image-model brainstorm established the graph-first visual language,
+then a rendered smoke seeded nested ALL/ANY/NOT/AT LEAST and simple guarded
+edges. It verified the composite graph card, compact pill, full live summary,
+three recursive editor groups and five leaves, root operator edits, default to
+guarded restoration, manual override/clear-to-auto behavior, and collapsed
+Advanced JSON. It finished with zero console errors or uncaught exceptions.
 
 ## Next task — pre-S6 polish Phase P2 only
 
@@ -104,8 +115,8 @@ handoff for P3a. Do not begin the P3 goal-expression work or S6 Phase 1.
   text is automatic; non-empty saved text is manual. Never rewrite a manual
   override when parameters change or during load/normalization.
 - Automatic edge presentation must retain every nested condition branch. Keep
-  the full expression and the board tree derived from the same live condition;
-  wrapping is presentation-only and must not rewrite authored text.
+  the full expression, structured graph card, and sidebar tree derived from the
+  same live condition; visual structure must not rewrite authored text.
 - Catalog/session display names are the label authority for keyed choices.
   Extend that route for concrete Eldritch currencies in P2; do not add a second
   hard-coded currency-label table.

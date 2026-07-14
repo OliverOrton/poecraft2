@@ -718,6 +718,111 @@ export function strategyEdgeLabelLines(edge: StrategyEdge): string[] {
     return edge.label.split(/\r?\n/).flatMap((line) => wrapLabelText(line));
 }
 
+export interface StrategyEdgeCardRow {
+    kind: "group" | "leaf";
+    label: string;
+    depth: number;
+    count?: number;
+}
+
+export interface StrategyEdgeCardPresentation {
+    title: string;
+    header: string;
+    count?: number;
+    rows: StrategyEdgeCardRow[];
+    compact: boolean;
+    manual: boolean;
+}
+
+/** Structured canvas-card presentation derived from the live edge condition. */
+export function strategyEdgeCardPresentation(
+    edge: StrategyEdge,
+): StrategyEdgeCardPresentation {
+    const title = strategyEdgeLabel(edge);
+    if (edge.label !== undefined && edge.label !== "") {
+        const rows = strategyEdgeLabelLines(edge).map((label) => ({
+            kind: "leaf" as const,
+            label,
+            depth: 0,
+        }));
+        return {
+            title,
+            header: rows.length > 1 ? "LABEL" : "",
+            rows,
+            compact: rows.length === 1,
+            manual: true,
+        };
+    }
+
+    const condition = edge.condition ?? { type: "always" };
+    const composite = conditionCompositeHeading(condition);
+    if (!composite) {
+        return {
+            title,
+            header: "",
+            rows: [
+                {
+                    kind: "leaf",
+                    label: conditionLabel(condition),
+                    depth: 0,
+                },
+            ],
+            compact: true,
+            manual: false,
+        };
+    }
+
+    const children = childConditions(condition);
+    return {
+        title,
+        header: composite,
+        count: children.length,
+        rows: children.flatMap((child) => conditionCardRows(child, 0)),
+        compact: false,
+        manual: false,
+    };
+}
+
+function conditionCardRows(
+    condition: StrategyCondition,
+    depth: number,
+): StrategyEdgeCardRow[] {
+    const heading = conditionCompositeHeading(condition);
+    if (!heading) {
+        return [
+            {
+                kind: "leaf",
+                label: conditionLabel(condition),
+                depth,
+            },
+        ];
+    }
+    const children = childConditions(condition);
+    return [
+        { kind: "group", label: heading, depth, count: children.length },
+        ...children.flatMap((child) => conditionCardRows(child, depth + 1)),
+    ];
+}
+
+function conditionCompositeHeading(
+    condition: StrategyCondition,
+): string | undefined {
+    switch (condition.type) {
+        case "all":
+        case "all_of":
+            return "ALL";
+        case "any":
+        case "any_of":
+            return "ANY";
+        case "not":
+            return "NOT";
+        case "at_least":
+            return `AT LEAST ${condition.count ?? 1}`;
+        default:
+            return undefined;
+    }
+}
+
 function rangeLabel(label: string, condition: StrategyCondition): string {
     const min = condition.min ?? condition.value ?? condition.count ?? 0;
     const max = condition.max;

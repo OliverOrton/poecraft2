@@ -1,8 +1,8 @@
 import {
     StrategyEdge,
     StrategyNode,
+    strategyEdgeCardPresentation,
     strategyEdgeLabel,
-    strategyEdgeLabelLines,
 } from "../strategy-model";
 import { StrategyEdgeAnnotation } from "../strategy-eval-presentation";
 
@@ -65,33 +65,40 @@ export class PcEdgeLayer extends HTMLElement {
                 .filter(Boolean)
                 .join(" ");
             const label = strategyEdgeLabel(edge);
-            const labelLines = strategyEdgeLabelLines(edge);
+            const presentation = strategyEdgeCardPresentation(edge);
             const annotation = this.view.annotations?.get(edge.id);
             const point = edgeLabelPoint(from, to, route);
-            const lineHeight = 13;
-            const annotationOffset = annotation ? 14 : 0;
-            const labelStartY =
-                point.y -
-                ((labelLines.length - 1) * lineHeight + annotationOffset) / 2;
-            const widestLine = Math.max(
-                ...labelLines.map((line) => line.length),
-                annotation?.label.length ?? 0,
+            const rowHeight = 19;
+            const headerHeight = presentation.header ? 27 : 0;
+            const annotationHeight = annotation ? 20 : 0;
+            const widestText = Math.max(
+                presentation.header.length + 8,
+                ...presentation.rows.map(
+                    (row) => row.label.length + row.depth * 3,
+                ),
             );
-            const backdropWidth = Math.max(66, widestLine * 6.2 + 18);
-            const backdropHeight =
-                labelLines.length * lineHeight + annotationOffset + 4;
-            const labelX = point.x - backdropWidth / 2 + 9;
+            const cardWidth = presentation.compact
+                ? Math.max(78, Math.min(210, widestText * 6.1 + 26))
+                : 224;
+            const cardHeight = presentation.compact
+                ? 30 + annotationHeight
+                : headerHeight + presentation.rows.length * rowHeight + 10 +
+                  annotationHeight;
             const title = annotation ? `${label}\n${annotation.title}` : label;
             return [
-                `<g data-edge-id="${escapeAttribute(edge.id)}">
+                `<g class="pc-edge-group ${edge.id === this.view.selectedEdgeId ? "is-selected" : ""}" data-edge-id="${escapeAttribute(edge.id)}">
                     <title>${escapeText(title)}</title>
                     <path class="pc-edge-hit" d="${d}"></path>
                     <path class="${classes}" d="${d}" marker-end="url(#pc-edge-arrow)"></path>
-                    <rect class="pc-edge-label-backdrop" x="${point.x - backdropWidth / 2}" y="${labelStartY - 10}" width="${backdropWidth}" height="${backdropHeight}" rx="5"></rect>
-                    <text class="pc-edge-label ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}" x="${labelX}" y="${labelStartY}">
-                        ${labelLines.map((line, index) => `<tspan class="pc-edge-condition-line" x="${labelX}"${index === 0 ? "" : ` dy="${lineHeight}"`}>${escapeText(line)}</tspan>`).join("")}
-                        ${annotation ? `<tspan class="pc-edge-eval-label" x="${point.x}" dy="14">${escapeText(annotation.label)}</tspan>` : ""}
-                    </text>
+                    <foreignObject class="pc-edge-card-object" x="${point.x - cardWidth / 2}" y="${point.y - cardHeight / 2}" width="${cardWidth}" height="${cardHeight}">
+                        <div xmlns="http://www.w3.org/1999/xhtml" class="pc-edge-card ${presentation.compact ? "is-compact" : "is-tree"} ${presentation.manual ? "is-manual" : ""} ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}">
+                            ${presentation.header ? `<div class="pc-edge-card-head"><span class="pc-edge-card-operator">${escapeText(presentation.header)}</span>${presentation.count === undefined ? "" : `<span>${presentation.count} rule${presentation.count === 1 ? "" : "s"}</span>`}</div>` : ""}
+                            <div class="pc-edge-card-rows">
+                                ${presentation.rows.map((row) => `<div class="pc-edge-card-row is-${row.kind}" style="--pc-edge-depth: ${Math.min(row.depth, 8)}"><span class="pc-edge-card-branch"></span>${row.kind === "group" ? `<span class="pc-edge-card-operator">${escapeText(row.label)}</span><span class="pc-edge-card-count">${row.count ?? 0} rule${row.count === 1 ? "" : "s"}</span>` : `<span class="pc-edge-card-leaf">${escapeText(row.label)}</span>`}</div>`).join("")}
+                            </div>
+                            ${annotation ? `<div class="pc-edge-card-eval">${escapeText(annotation.label)}</div>` : ""}
+                        </div>
+                    </foreignObject>
                 </g>`,
             ];
         });
@@ -199,7 +206,10 @@ function edgeRoutes(edges: StrategyEdge[]): Map<string, number> {
 }
 
 function escapeText(value: string): string {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
 function escapeAttribute(value: string): string {
