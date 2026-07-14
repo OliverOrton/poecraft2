@@ -150,8 +150,59 @@ typedef struct pc_strategy_eval_options {
     double epsilon;       /* <= 0 uses the default 1e-12 */
     uint32_t max_sweeps;  /* 0 uses the default 100000 */
     uint32_t max_states;  /* 0 uses the default 100000 */
+    uint32_t max_pairs;   /* 0 uses the default 1000000 */
     uint32_t top_classes_per_node; /* 0 uses the default 16 */
 } pc_strategy_eval_options;
+
+typedef struct pc_strategy_eval_work* pc_strategy_eval_work_handle;
+
+typedef enum pc_strategy_eval_phase {
+    PC_STRATEGY_EVAL_PHASE_DISCOVERY = 1,
+    PC_STRATEGY_EVAL_PHASE_SOLVING = 2,
+    PC_STRATEGY_EVAL_PHASE_FALLBACK = 3,
+    PC_STRATEGY_EVAL_PHASE_FINALIZATION = 4,
+    PC_STRATEGY_EVAL_PHASE_DONE = 5
+} pc_strategy_eval_phase;
+
+typedef struct pc_strategy_eval_progress {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    int32_t phase; /* pc_strategy_eval_phase */
+    int32_t done;
+    uint64_t discovered_pairs;
+    uint64_t pending_pairs;
+    uint64_t solved_sccs;
+    uint64_t total_sccs;
+    uint64_t fallback_sweeps;
+    double residual;
+} pc_strategy_eval_progress;
+
+/*
+ * Stateful exact evaluation. begin pins the compiled strategy; step performs
+ * at most max_work_items bounded units and reports honest phase/count
+ * progress; finish is available only after progress.done is true. Destroy is
+ * always safe and is the cancellation/abandon path.
+ */
+pc_result pc_strategy_eval_begin(
+    pc_strategy_handle strategy,
+    const pc_strategy_eval_options* options,
+    pc_strategy_eval_work_handle* out_work,
+    pc_error_info* out_error);
+
+pc_result pc_strategy_eval_step(
+    pc_strategy_eval_work_handle work,
+    uint32_t max_work_items,
+    pc_strategy_eval_progress* out_progress,
+    pc_error_info* out_error);
+
+pc_result pc_strategy_eval_finish(
+    pc_strategy_eval_work_handle work,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error);
+
+void pc_strategy_eval_destroy(pc_strategy_eval_work_handle work);
 
 /*
  * Evaluate a compiled strategy as an exact absorbing Markov chain over

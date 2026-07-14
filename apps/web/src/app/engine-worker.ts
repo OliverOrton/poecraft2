@@ -19,6 +19,7 @@ import {
     SimulationProgress,
     SolverGoal,
     StrategyEvalOptions,
+    StrategyEvalProgress,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -263,6 +264,101 @@ async function runStrategy(
     };
 }
 
+function evaluationProgressCounts(
+    progress: StrategyEvalProgress,
+): { done: number; total: number } {
+    if (progress.phase === "discovery") {
+        return {
+            done: progress.discovered_pairs,
+            total: progress.discovered_pairs + progress.pending_pairs,
+        };
+    }
+    if (progress.phase === "solving") {
+        return {
+            done: progress.solved_sccs,
+            total: progress.total_sccs,
+        };
+    }
+    if (progress.phase === "fallback") {
+        return {
+            done: progress.fallback_sweeps,
+            total: progress.fallback_sweeps + 1,
+        };
+    }
+    return { done: progress.done ? 1 : 0, total: 1 };
+}
+
+async function evaluateStrategy(
+    id: number,
+    params: Record<string, unknown>,
+): Promise<unknown> {
+    let strategy = 0;
+    let evaluation = 0;
+    let workItems = Math.max(1, (params.chunkSize as number) || 16);
+    let yieldCount = 0;
+    let lastProgressAt = -Infinity;
+    let emittedProgress = false;
+    const reportProgress = params.reportProgress === true;
+    try {
+        if (cancelled.has(id)) {
+            throw new EngineError(1, "strategy evaluation cancelled");
+        }
+        strategy = bindings.compileStrategy(
+            params.session as number,
+            params.strategy,
+        );
+        evaluation = bindings.beginStrategyEvaluation(
+            strategy,
+            params.options as StrategyEvalOptions | undefined,
+        );
+        let progress: StrategyEvalProgress;
+        do {
+            if (cancelled.has(id)) {
+                throw new EngineError(1, "strategy evaluation cancelled");
+            }
+            const started = performance.now();
+            progress = bindings.stepStrategyEvaluation(evaluation, workItems);
+            const elapsedMs = Math.max(0.1, performance.now() - started);
+            const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
+            workItems = Math.min(
+                16_384,
+                Math.max(1, Math.round(workItems * scale)),
+            );
+            const now = performance.now();
+            if (
+                reportProgress &&
+                (!emittedProgress || progress.done || now - lastProgressAt >= 100)
+            ) {
+                const counts = evaluationProgressCounts(progress);
+                post({
+                    kind: "progress",
+                    id,
+                    ...counts,
+                    evaluation: progress,
+                });
+                emittedProgress = true;
+                lastProgressAt = now;
+            }
+            if (!progress.done) {
+                ++yieldCount;
+                // Exact evaluations can finish in only a few chunks. Give
+                // external abort messages a timer-task turn immediately, then
+                // alternate with the lower-latency MessageChannel yield.
+                await (yieldCount % 2 === 1
+                    ? yieldToTimerTask()
+                    : yieldToEventLoop());
+            }
+        } while (!progress.done);
+        if (cancelled.has(id)) {
+            throw new EngineError(1, "strategy evaluation cancelled");
+        }
+        return bindings.finishStrategyEvaluation(evaluation);
+    } finally {
+        if (evaluation) bindings.closeStrategyEvaluation(evaluation);
+        if (strategy) bindings.closeStrategy(strategy);
+    }
+}
+
 async function dispatch(
     id: number,
     method: string,
@@ -386,18 +482,7 @@ async function dispatch(
             bindings.closeStrategy(params.strategy as number);
             return {};
         case "strategyEvaluate": {
-            const strategy = bindings.compileStrategy(
-                params.session as number,
-                params.strategy,
-            );
-            try {
-                return bindings.strategyEvaluate(
-                    strategy,
-                    params.options as StrategyEvalOptions | undefined,
-                );
-            } finally {
-                bindings.closeStrategy(strategy);
-            }
+            return evaluateStrategy(id, params);
         }
         case "loadEconomy":
             return { economy: bindings.loadEconomy(params.economy) };

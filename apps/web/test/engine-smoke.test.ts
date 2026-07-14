@@ -177,6 +177,79 @@ function evaluatorStrategy(
     };
 }
 
+function alterationLoopStrategy(familyKey: string): Record<string, unknown> {
+    return {
+        version: "v1",
+        name: "Exact Alteration loop",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "magic",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "alteration",
+                kind: "operation",
+                operation: { type: "alteration", params: {} },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "alteration",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "hit",
+                from: "alteration",
+                to: "success",
+                priority: 0,
+                condition: {
+                    type: "has_mod_family",
+                    family_mod_key: familyKey,
+                    min_tier: 1,
+                },
+            },
+            {
+                id: "repeat",
+                from: "alteration",
+                to: "alteration",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
+async function lowWeightAlterationFamily(): Promise<string> {
+    const item = await client.createItem(sessionId, {
+        rarity: "magic",
+        withImplicits: false,
+    });
+    try {
+        const pool = await client.debugPool(contextId, item, {
+            action: { type: "alteration" },
+            side: "both",
+        });
+        const candidate = pool.entries
+            .filter((entry) => entry.accepted && entry.final_weight > 0)
+            .sort(
+                (a, b) =>
+                    a.final_weight - b.final_weight ||
+                    a.session_mod_id - b.session_mod_id,
+            )[0];
+        assert.ok(candidate, "expected an Alteration pool candidate");
+        return (await client.modInfo(sessionId, candidate.session_mod_id)).key;
+    } finally {
+        await client.closeItem(item);
+    }
+}
+
 function familyTierStrategy(
     familyKey: string,
     itemModKey: string,
@@ -531,6 +604,96 @@ test("exact strategy evaluation names unsupported operations", async () => {
         ),
         /veiled_chaos/,
     );
+});
+
+test("stepped exact evaluation reports ordered progress", async () => {
+    const family = await lowWeightAlterationFamily();
+    const progress: Array<{
+        phase: string;
+        discovered: number;
+        solved: number;
+    }> = [];
+    const result = await client.strategyEvaluate(
+        sessionId,
+        alterationLoopStrategy(family),
+        undefined,
+        {
+            chunkSize: 1,
+            onProgress: (event) =>
+                progress.push({
+                    phase: event.phase,
+                    discovered: event.discovered_pairs,
+                    solved: event.solved_sccs,
+                }),
+        },
+    );
+    assert.equal(result.converged, true);
+    assert.ok(progress.length >= 2, "expected at least two progress events");
+    assert.equal(progress[0].phase, "discovery");
+    assert.equal(progress.at(-1)?.phase, "done");
+    for (let i = 1; i < progress.length; i += 1) {
+        assert.ok(
+            progress[i].discovered >= progress[i - 1].discovered,
+            "discovered pair count must not go backwards",
+        );
+        assert.ok(
+            progress[i].solved >= progress[i - 1].solved,
+            "solved SCC count must not go backwards",
+        );
+    }
+});
+
+test("exact evaluation cancellation is prompt and leaks no handles", async () => {
+    const family = await lowWeightAlterationFamily();
+    const graph = alterationLoopStrategy(family);
+    const baseline = await client.memoryStats();
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+        const controller = new AbortController();
+        const started = performance.now();
+        await assert.rejects(
+            client.strategyEvaluate(sessionId, graph, undefined, {
+                chunkSize: 1,
+                signal: controller.signal,
+                onProgress: () => controller.abort(),
+            }),
+            /cancelled/,
+        );
+        assert.ok(
+            performance.now() - started < 1000,
+            "cancelled evaluation should abandon promptly",
+        );
+    }
+    const after = await client.memoryStats();
+    assert.equal(after.live_handles, baseline.live_handles);
+});
+
+test("a burst of obsolete evaluations leaves only the newest graph", async () => {
+    const family = await lowWeightAlterationFamily();
+    const controllerA = new AbortController();
+    const controllerB = new AbortController();
+    const first = client.strategyEvaluate(
+        sessionId,
+        alterationLoopStrategy(family),
+        undefined,
+        { chunkSize: 1, signal: controllerA.signal },
+    );
+    controllerA.abort();
+    const second = client.strategyEvaluate(
+        sessionId,
+        alterationLoopStrategy(family),
+        undefined,
+        { chunkSize: 1, signal: controllerB.signal },
+    );
+    controllerB.abort();
+    const newest = client.strategyEvaluate(sessionId, evaluatorStrategy());
+    const settled = await Promise.allSettled([first, second, newest]);
+    assert.equal(settled[0].status, "rejected");
+    assert.equal(settled[1].status, "rejected");
+    assert.equal(settled[2].status, "fulfilled");
+    if (settled[2].status === "fulfilled") {
+        assert.equal(settled[2].value.converged, true);
+        assert.equal(settled[2].value.expected_actions, 1);
+    }
 });
 
 test("apply an action mutates the item per the rules", async () => {

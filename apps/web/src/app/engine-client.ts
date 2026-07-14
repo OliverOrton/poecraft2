@@ -25,6 +25,7 @@ import {
     SolverGoal,
     SolverStateValue,
     StrategyEvalOptions,
+    StrategyEvalProgress,
     StrategyEvalResult,
     StrategyResult,
     WorkerMessage,
@@ -43,12 +44,19 @@ interface Pending {
     resolve: (value: unknown) => void;
     reject: (reason: unknown) => void;
     onProgress?: (progress: { done: number; total: number }) => void;
+    onEvaluationProgress?: (progress: StrategyEvalProgress) => void;
     abortCleanup?: () => void;
 }
 
 export interface StrategyRunOptions {
     chunkSize?: number;
     onProgress?: (progress: { done: number; total: number }) => void;
+    signal?: AbortSignal;
+}
+
+export interface StrategyEvaluationRunOptions {
+    chunkSize?: number;
+    onProgress?: (progress: StrategyEvalProgress) => void;
     signal?: AbortSignal;
 }
 
@@ -108,10 +116,14 @@ export class EngineClient {
             return;
         }
         if (message.kind === "progress") {
-            this.pending.get(message.id)?.onProgress?.({
+            const pending = this.pending.get(message.id);
+            pending?.onProgress?.({
                 done: message.done,
                 total: message.total,
             });
+            if (message.evaluation) {
+                pending?.onEvaluationProgress?.(message.evaluation);
+            }
             return;
         }
         const pending = this.pending.get(message.id);
@@ -147,6 +159,7 @@ export class EngineClient {
         options?: {
             transfer?: Transferable[];
             onProgress?: (progress: { done: number; total: number }) => void;
+            onEvaluationProgress?: (progress: StrategyEvalProgress) => void;
             signal?: AbortSignal;
         },
     ): Promise<T> {
@@ -157,6 +170,7 @@ export class EngineClient {
                 resolve: resolve as (value: unknown) => void,
                 reject,
                 onProgress: options?.onProgress,
+                onEvaluationProgress: options?.onEvaluationProgress,
             };
             this.pending.set(id, pending);
             const signal = options?.signal;
@@ -255,7 +269,7 @@ export class EngineClient {
         return this.call<void>("closeContext", { context });
     }
 
-    memoryStats(): Promise<{ wasm_memory_bytes: number }> {
+    memoryStats(): Promise<{ wasm_memory_bytes: number; live_handles: number }> {
         return this.call("memoryStats", {});
     }
 
@@ -364,12 +378,22 @@ export class EngineClient {
         session: number,
         strategy: unknown,
         options?: StrategyEvalOptions,
+        runOptions?: StrategyEvaluationRunOptions,
     ): Promise<StrategyEvalResult> {
-        return this.call<StrategyEvalResult>("strategyEvaluate", {
-            session,
-            strategy,
-            options,
-        });
+        return this.call<StrategyEvalResult>(
+            "strategyEvaluate",
+            {
+                session,
+                strategy,
+                options,
+                chunkSize: runOptions?.chunkSize,
+                reportProgress: runOptions?.onProgress !== undefined,
+            },
+            {
+                onEvaluationProgress: runOptions?.onProgress,
+                signal: runOptions?.signal,
+            },
+        );
     }
 
     async loadEconomy(economy: unknown): Promise<number> {

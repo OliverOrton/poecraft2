@@ -171,7 +171,19 @@ export interface StrategyEvalOptions {
     epsilon?: number;
     max_sweeps?: number;
     max_states?: number;
+    max_pairs?: number;
     top_classes_per_node?: number;
+}
+
+export interface StrategyEvalProgress {
+    phase: "discovery" | "solving" | "fallback" | "finalization" | "done";
+    done: boolean;
+    discovered_pairs: number;
+    pending_pairs: number;
+    solved_sccs: number;
+    total_sccs: number;
+    fallback_sweeps: number;
+    residual: number;
 }
 
 export interface StrategyEvalClass {
@@ -409,6 +421,7 @@ export interface ProgressMessage {
     id: number;
     done: number;
     total: number;
+    evaluation?: StrategyEvalProgress;
 }
 
 export interface ResponseMessage {

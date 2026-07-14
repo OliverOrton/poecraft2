@@ -24,6 +24,7 @@ import {
     SolverGoal,
     SolverStateValue,
     StrategyEvalOptions,
+    StrategyEvalProgress,
     StrategyEvalResult,
     StrategyResult,
 } from "./engine-protocol";
@@ -148,8 +149,16 @@ export class EngineBindings {
         this.module.ccall("pcw_context_close", null, ["number"], [context]);
     }
 
-    memoryStats(): { wasm_memory_bytes: number } {
-        return { wasm_memory_bytes: this.module.HEAPU8.byteLength };
+    memoryStats(): { wasm_memory_bytes: number; live_handles: number } {
+        return {
+            wasm_memory_bytes: this.module.HEAPU8.byteLength,
+            live_handles: this.module.ccall(
+                "pcw_live_handle_count",
+                "number",
+                [],
+                [],
+            ) as number,
+        };
     }
 
     createItem(
@@ -268,6 +277,45 @@ export class EngineBindings {
             ["number", "string"],
             [strategy, JSON.stringify(options ?? {})],
         ).result as unknown as StrategyEvalResult;
+    }
+
+    beginStrategyEvaluation(
+        strategy: number,
+        options?: StrategyEvalOptions,
+    ): number {
+        return this.callJson(
+            "pcw_strategy_eval_begin",
+            ["number", "string"],
+            [strategy, JSON.stringify(options ?? {})],
+        ).evaluation as number;
+    }
+
+    stepStrategyEvaluation(
+        evaluation: number,
+        maxWorkItems: number,
+    ): StrategyEvalProgress {
+        return this.callJson(
+            "pcw_strategy_eval_step",
+            ["number", "number"],
+            [evaluation, maxWorkItems],
+        ).progress as unknown as StrategyEvalProgress;
+    }
+
+    finishStrategyEvaluation(evaluation: number): StrategyEvalResult {
+        return this.callJson(
+            "pcw_strategy_eval_finish",
+            ["number"],
+            [evaluation],
+        ).result as unknown as StrategyEvalResult;
+    }
+
+    closeStrategyEvaluation(evaluation: number): void {
+        this.module.ccall(
+            "pcw_strategy_eval_close",
+            null,
+            ["number"],
+            [evaluation],
+        );
     }
 
     loadEconomy(economy: unknown): number {

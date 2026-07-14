@@ -354,7 +354,27 @@ struct StrategyEvalOptions {
     double epsilon = 1e-12;
     std::uint32_t max_sweeps = 100000;
     std::uint32_t max_states = 100000;
+    std::uint32_t max_pairs = 1000000;
     std::uint32_t top_classes_per_node = 16;
+};
+
+enum class StrategyEvalPhase {
+    Discovery,
+    Solving,
+    Fallback,
+    Finalization,
+    Done,
+};
+
+struct StrategyEvalProgress {
+    StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
+    bool done = false;
+    std::uint64_t discovered_pairs = 0;
+    std::uint64_t pending_pairs = 0;
+    std::uint64_t solved_sccs = 0;
+    std::uint64_t total_sccs = 0;
+    std::uint64_t fallback_sweeps = 0;
+    double residual = 0.0;
 };
 
 struct StrategyEvalClass {
@@ -419,6 +439,29 @@ class StrategyEvalUnsupported : public std::runtime_error {
         : std::runtime_error(message) {}
 };
 
+class StrategyEvalWork {
+  public:
+    StrategyEvalWork(
+        std::shared_ptr<const StrategyImpl> strategy,
+        const StrategyEvalOptions& options = {});
+    ~StrategyEvalWork();
+    StrategyEvalWork(StrategyEvalWork&&) noexcept;
+    StrategyEvalWork& operator=(StrategyEvalWork&&) noexcept;
+    StrategyEvalWork(const StrategyEvalWork&) = delete;
+    StrategyEvalWork& operator=(const StrategyEvalWork&) = delete;
+
+    void step(std::uint32_t max_work_items);
+    StrategyEvalProgress progress() const;
+    const StrategyEvalResult& result() const;
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+    friend StrategyEvalResult evaluate_strategy_forward_reference_for_test(
+        const StrategyImpl& strategy,
+        const StrategyEvalOptions& options);
+};
+
 /* Resolve one compiled operation to its registry descriptor. kNoId means no
  * exact parameter match exists. Restart resolves to the synthetic descriptor. */
 std::uint32_t resolve_strategy_action(
@@ -435,6 +478,13 @@ bool evaluate_abstract_condition(
     const AbstractState& state);
 
 StrategyEvalResult evaluate_strategy(
+    const StrategyImpl& strategy,
+    const StrategyEvalOptions& options = {});
+
+/* Test-only numerical oracle: discovers the same finite pair graph, then uses
+ * high-precision whole-graph forward propagation instead of the production
+ * SCC solver. */
+StrategyEvalResult evaluate_strategy_forward_reference_for_test(
     const StrategyImpl& strategy,
     const StrategyEvalOptions& options = {});
 

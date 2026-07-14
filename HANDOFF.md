@@ -1,54 +1,83 @@
-# Session Handoff — Strategy evaluator Phase C.1 next
+# Session Handoff — Strategy evaluator Phase C.1 complete
 
-Written 2026-07-14 after Oliver scheduled the exact-evaluation loop
-acceleration/progress pass. Read [AGENTS.md](AGENTS.md), then
-[docs/direction.md](docs/direction.md), then
+Written 2026-07-14 after completing the exact-evaluation loop acceleration and
+progress/cancellation milestone. Read [AGENTS.md](AGENTS.md), then
+[docs/direction.md](docs/direction.md), then this file. Strategy Calculator
+Mode design and the completed phase record live in
 [strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md).
 
 ## Current state
 
-Strategy Calculator Mode Phases A-C are complete in local commit `41bb721`:
-native whole-graph evaluation, WASM/worker/client transport, and the approved
-Strategy Builder UI with exact summary/costs, node and edge annotations,
-selected-node incoming classes, persistence, stale/refusal/unresolved states,
-and tests. The worktree was clean before this planning update.
+Strategy Calculator Mode Phases A-C.1 are complete in the local commit that
+contains this handoff. Phase C.1 replaced whole-graph probability sweeps with a
+one-time reachable `(compiled node, abstract state)` transition graph and an
+SCC condensation solver:
 
-The evaluator in `engine/src/solver_eval.cpp` is exact but currently performs
-whole-graph forward mass propagation one graph hop per sweep. Action outcomes
-are cached, yet low-probability exits still need thousands of sweeps to drive
-the remaining transient tail below the default `1e-12` epsilon. The worker
-calls it synchronously, so the UI cannot receive real progress or cancel an
-obsolete evaluation.
+- acyclic singleton components flow directly;
+- singleton self-loops use the geometric closed form;
+- identical-row cyclic components use an exact rank-one closed form (the hot
+  Alteration/reforge-loop path);
+- small general cyclic components use a pivoted dense solve;
+- large or ill-conditioned components use a bounded local iterative fallback;
+- closed recurrent components become unresolved immediately, with deterministic
+  entry-node attribution.
 
-Measured through the same Node/WASM worker path as the web tests:
+Result reconstruction still produces the existing v1 terminal, failure,
+expected action/consumption, node-class, and edge-flow contract. The synchronous
+`pc_strategy_evaluate` API drives the same new work object internally. The
+additive begin/step/finish/destroy C ABI exposes real discovery/SCC/fallback/
+finalization progress and lets WASM abandon obsolete work safely.
 
-- T1 `+(91-100) to maximum Energy Shield` Alteration loop:
-  1,434 ms, 2,219 sweeps, 81.7014428412 expected actions;
-- lower-hit-rate T1 family with the same graph shape:
-  3.51–3.64 s, 4,448 sweeps, 162.4028856824 expected actions;
-- session creation: about 15 ms.
+The worker now runs adaptive ~16 ms evaluation chunks, limits progress messages
+to about 10/s, accepts an `AbortSignal`, and destroys both temporary compiled
+strategy and evaluation handles on success, refusal, error, and cancellation.
+Strategy Builder structural edits abort the in-flight evaluation immediately;
+leaving Calculator mode and document disposal do the same. The last result and
+stale annotations remain visible until the replacement finishes.
+
+## Performance result
+
+`npm run benchmark:strategy-eval` is the opt-in pinned Node/WASM worker gate.
+Its final warmed medians were:
+
+- T1 `+(91-100) to maximum Energy Shield`: 1,434 ms before, 31.639 ms after,
+  **45.32× faster**; callback-enabled median 31.440 ms (-0.200 ms,
+  measurement noise/no observed overhead);
+- lower-hit-rate T1 hybrid Energy Shield/Life: 3,510 ms before, 31.243 ms
+  after, **112.35× faster**; callback-enabled median 31.379 ms (+0.136 ms).
+
+Both cases independently pin terminal probability, expected actions,
+consumption, edge flows, and zero fallback sweeps. The target was at least 5×
+per graph and callback overhead no more than 2% or 2 ms.
+
+## Verification completed
+
+- `powershell -File scripts/build.ps1` — pass;
+- direct native suite — 118,414 checks, 0 failures;
+- `powershell -File scripts/build-wasm.ps1` — pass;
+- `npx tsc --noEmit` — pass;
+- `npm test` — pass, including 21/21 worker smoke checks;
+- `npm run build` — pass;
+- `npm run benchmark:strategy-eval` — both performance/overhead gates pass;
+- `powershell -File scripts/test.ps1` — pass;
+- separate headless Chrome process — progress text observed, a burst of
+  structural replacements ended on the newest 81.7014428413-action graph,
+  final surface reported `direct SCC solve`, and the console/error capture was
+  empty. Codex browser tooling was not used.
+
+Native coverage now includes hand-computed geometric and two-node cyclic
+systems, test-only high-precision forward-reference parity, retained MC gates,
+immediate self/router closed SCCs, a converged near-closed exit, forced
+large-SCC fallback conservation, explicit pair-cap failure, stepped progress,
+and byte determinism. Worker coverage includes ordered progress, prompt repeated
+cancellation, stable live-handle count, and an obsolete-request burst where only
+the newest graph completes.
 
 ## Next task
 
-Implement **Phase C.1 only** from
-[strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md):
-
-1. discover the reachable `(compiled node, abstract state)` transition graph
-   once;
-2. condense it into SCCs and solve acyclic flow directly, singleton loops by
-   geometric closed form, small cyclic SCCs as linear systems, and large/
-   ill-conditioned SCCs with a local iterative fallback;
-3. detect closed recurrent SCCs as unresolved immediately;
-4. reconstruct the existing exact result contract from solved pair visits;
-5. add a stepped native C ABI while preserving synchronous
-   `pc_strategy_evaluate`;
-6. drive adaptive WASM worker chunks with real progress and cancellation, and
-   cancel obsolete Strategy Builder evaluations on structural changes;
-7. meet the numerical, MC, cancellation, leak, and performance gates written
-   in Phase C.1.
-
-Stop after C.1. Do not begin Phase D or `s6-plan.md` Phase 1. End with one
-local commit and no push.
+Resume **`docs/s6-plan.md` Phase 1**. Phase D in
+`docs/strategy-calculator-mode-plan.md` remains an unscheduled follow-up. Do not
+silently start Phase D while doing s6 work.
 
 ## Important files
 
@@ -67,38 +96,31 @@ local commit and no push.
 - `apps/web/src/app/components/pc-strategy-editor.ts`
 - `apps/web/src/app/components/pc-strategy-odds.ts`
 - `apps/web/test/engine-smoke.test.ts`
-- `apps/web/test/strategy-calculator-mode.test.ts`
+- `apps/web/test/strategy-eval-benchmark.ts`
 
 ## Rulings and gotchas
 
-- Exactness remains `1e-12` by default; do not make the feature faster by
-  loosening epsilon, dropping outcome classes, or changing simulator-parity
-  absorption semantics.
-- Transition probabilities and routes are engine authority. Web progress is
-  phase/count presentation only.
-- Keep the existing synchronous ABI as a wrapper over the new stepped engine;
-  WASM/web use begin/step/finish/destroy.
-- Result JSON fields stay compatible. Numerical ordering may change, but each
-  converged value must match the high-precision reference within the planned
-  tolerance and identical input must remain byte-deterministic.
-- New graph edits must abort/abandon the in-flight evaluation rather than wait
-  for it and then queue another. Always destroy the temporary compiled handle
-  and evaluation-work handle on success, refusal, error, and cancel.
-- The existing Phase C evaluating state is the UI design. No image-model loop
-  is required for its progress text; do not move analysis into the right graph
-  inspector.
-- Do not use Codex's built-in/in-app browser; Oliver reports it crashes the
-  app. Use a separate headless browser process for the final UI smoke.
-- PoE1 mechanic ambiguity goes directly to Oliver; never research or guess.
+- Exactness remains `1e-12` by default. The speedup does not loosen epsilon,
+  drop outcome classes, or change simulator-parity absorption semantics.
+- `pc_strategy_eval_options.max_pairs` defaults to 1,000,000 and is distinct
+  from `max_states`; exceeding it returns `PC_RESULT_CAPACITY_EXCEEDED` with an
+  explicit `max_pairs` message.
+- The result JSON's existing `sweeps` field now counts local fallback sweeps.
+  Direct SCC solves report 0 and the UI labels them `direct SCC solve`.
+- Closed recurrent SCC visit counts are mathematically infinite. The finite v1
+  node-class surface records their entry snapshot and reports all entering mass
+  as unresolved instead of fabricating repeated traversals.
+- Do not remove the rank-one solve as an apparent special case: exact reforge
+  and Alteration loops produce many pair states with identical internal rows;
+  this is the path responsible for the pinned speedup.
+- SCC discovery contains every positive-probability reachable transition; it
+  never uses a mass cutoff. Epsilon applies only to local fallback termination.
+- Web progress is engine phase/count presentation only. Probability, routing,
+  legality, and SCC membership remain native-engine authority.
+- Cancellation is handle destruction, not a partial result. Always retain the
+  worker `finally` cleanup for both temporary handles.
+- Do not use Codex's built-in/in-app browser for this repository. Use a separate
+  headless browser process when a browser smoke is required.
+- PoE1 mechanic ambiguity still goes directly to Oliver; never research or
+  guess.
 - Commits are local-only unless Oliver explicitly asks to push.
-
-## Last green gate
-
-At `41bb721`:
-
-- `powershell -File scripts/build.ps1` — pass;
-- direct native suite — 118,285 checks, 0 failures;
-- `npx tsc --noEmit`, `npm test`, `npm run build` — pass;
-- `powershell -File scripts/test.ps1` — pass;
-- separate headless-Chrome Phase C preview — pass, apart from the existing
-  favicon 404.

@@ -36,9 +36,12 @@ states are implemented. Oliver selected a hybrid of mock Variants A and B:
 Variant B's node/result treatment in the existing bottom runner boundary, with
 the right panel retained for actual graph-node inspection.
 
-Status 2026-07-14 (later): Oliver scheduled **Phase C.1, loop acceleration and
-real progress/cancellation, next**, before `s6-plan.md` Phase 1. Phase D remains
-an unscheduled follow-up.
+Status 2026-07-14 (later): **Phase C.1 is complete.** Exact evaluation now
+discovers the reachable pair graph once, solves its SCC condensation directly
+with geometric/rank-one/dense paths plus a bounded local fallback, exposes a
+stepped ABI with real worker progress and cancellation, and retains the
+synchronous API as a wrapper. Phase D remains unscheduled; `s6-plan.md` Phase 1
+resumes next.
 
 Two standing rules gate everything below, same as every solver phase:
 
@@ -408,7 +411,18 @@ summary panel, board overlays, and the drill-down.
 preview pass with screenshots compared against the chosen mock (deviations
 noted in the spec file); the Phase B smoke additions still green.
 
-## Phase C.1 — Loop Acceleration + Real Progress (scheduled next)
+## Phase C.1 — Loop Acceleration + Real Progress (complete)
+
+Implementation status (2026-07-14): the native SCC evaluator, stepped C ABI,
+WASM/worker/client progress and cancellation, Strategy Builder abort lifecycle,
+reference/MC/closed-SCC/fallback/cap/determinism gates, and opt-in pinned worker
+benchmark are complete. On the same Vaal Regalia graphs used for the baseline,
+the final warmed worker medians are 31.639 ms for the T1 flat Energy Shield
+loop (45.32× faster than 1,434 ms) and 31.243 ms for the lower-hit-rate T1
+hybrid family (112.35× faster than 3,510 ms). The callback-enabled median delta
+was -0.200 ms (measurement noise, no observed overhead) for the first graph and
++0.136 ms for the second. The result JSON remains v1-compatible; its `sweeps`
+field now counts only local fallback sweeps, so a direct SCC solve reports 0.
 
 ### Why this pass exists
 

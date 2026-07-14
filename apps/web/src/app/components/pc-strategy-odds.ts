@@ -17,6 +17,7 @@ export interface StrategyOddsView {
     error: string | null;
     invalid: boolean;
     evaluating: boolean;
+    progressText: string | null;
     stale: boolean;
     selectedNodeId: string | null;
     selectedNodeKind: string | null;
@@ -28,6 +29,7 @@ const EMPTY_VIEW: StrategyOddsView = {
     error: null,
     invalid: false,
     evaluating: false,
+    progressText: null,
     stale: false,
     selectedNodeId: null,
     selectedNodeKind: null,
@@ -58,7 +60,8 @@ export class PcStrategyOdds extends HTMLElement {
 
     private render(): void {
         if (!this.isConnected) return;
-        const { result, error, invalid, evaluating, stale } = this.view;
+        const { result, error, invalid, evaluating, stale, progressText } =
+            this.view;
         this.classList.toggle("is-stale", stale);
         if (!result) {
             const body = error
@@ -66,7 +69,7 @@ export class PcStrategyOdds extends HTMLElement {
                 : invalid
                   ? '<p class="pc-strategy-eval-empty">Complete the graph to evaluate exact odds.</p>'
                 : evaluating
-                  ? '<p class="pc-strategy-eval-empty">Evaluating exact graph…</p>'
+                  ? `<p class="pc-strategy-eval-empty">${escapeStrategyEvalHtml(progressText ?? "Evaluating exact graph…")}</p>`
                   : '<p class="pc-strategy-eval-empty">Complete the graph to evaluate exact odds.</p>';
             this.innerHTML = `<div class="pc-strategy-eval-placeholder">
                 <span class="pc-strategy-eval-kicker">Calculator · Exact graph evaluation</span>
@@ -79,7 +82,7 @@ export class PcStrategyOdds extends HTMLElement {
             <div class="pc-strategy-eval-state">
                 <span class="pc-strategy-eval-kicker">Calculator · Exact graph evaluation</span>
                 ${stale ? '<span class="pc-strategy-stale">Stale · graph changed</span>' : ""}
-                ${evaluating ? '<span class="pc-strategy-evaluating">Evaluating exact graph…</span>' : ""}
+                ${evaluating ? `<span class="pc-strategy-evaluating">${escapeStrategyEvalHtml(progressText ?? "Evaluating exact graph…")}</span>` : ""}
             </div>
             <div class="pc-strategy-eval-grid">
                 ${this.renderSummary(result, error)}
@@ -131,7 +134,7 @@ export class PcStrategyOdds extends HTMLElement {
                 <span><small>Expected actions</small><strong>${formatCount(result.expected_actions)}</strong></span>
             </div>
             <p class="pc-strategy-eval-convergence ${warning ? "is-warning" : ""}">
-                ${result.converged ? "Converged" : "Evaluation did not converge"} · ${result.sweeps.toLocaleString()} sweeps · residual ${formatRawProbability(result.residual_mass)}
+                ${result.converged ? "Converged" : "Evaluation did not converge"} · ${result.sweeps === 0 ? "direct SCC solve" : `${result.sweeps.toLocaleString()} fallback sweeps`} · residual ${formatRawProbability(result.residual_mass)}
             </p>
             ${attributions ? `<ul class="pc-strategy-eval-attribution">${attributions}</ul>` : ""}
             ${this.view.invalid ? '<p class="pc-strategy-eval-invalid">Complete the graph to evaluate exact odds. Showing the previous result.</p>' : ""}

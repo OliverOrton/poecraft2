@@ -494,7 +494,62 @@ pc_result copy_text(
     return PC_RESULT_OK;
 }
 
+solver::StrategyEvalOptions strategy_eval_options(
+    const pc_strategy_eval_options* options) {
+    solver::StrategyEvalOptions result;
+    if (options == nullptr) return result;
+    if (options->struct_size < sizeof(pc_strategy_eval_options) ||
+        options->abi_version != PC_ABI_VERSION) {
+        throw std::invalid_argument("invalid strategy evaluation options ABI");
+    }
+    if (options->epsilon > 0.0) result.epsilon = options->epsilon;
+    if (options->max_sweeps != 0) result.max_sweeps = options->max_sweeps;
+    if (options->max_states != 0) result.max_states = options->max_states;
+    if (options->max_pairs != 0) result.max_pairs = options->max_pairs;
+    if (options->top_classes_per_node != 0) {
+        result.top_classes_per_node = options->top_classes_per_node;
+    }
+    return result;
+}
+
+int32_t strategy_eval_phase(solver::StrategyEvalPhase phase) {
+    switch (phase) {
+    case solver::StrategyEvalPhase::Discovery:
+        return PC_STRATEGY_EVAL_PHASE_DISCOVERY;
+    case solver::StrategyEvalPhase::Solving:
+        return PC_STRATEGY_EVAL_PHASE_SOLVING;
+    case solver::StrategyEvalPhase::Fallback:
+        return PC_STRATEGY_EVAL_PHASE_FALLBACK;
+    case solver::StrategyEvalPhase::Finalization:
+        return PC_STRATEGY_EVAL_PHASE_FINALIZATION;
+    case solver::StrategyEvalPhase::Done:
+        return PC_STRATEGY_EVAL_PHASE_DONE;
+    }
+    return PC_STRATEGY_EVAL_PHASE_DONE;
+}
+
+void copy_strategy_eval_progress(
+    const solver::StrategyEvalProgress& source,
+    pc_strategy_eval_progress& target) {
+    target = {};
+    target.struct_size = sizeof(target);
+    target.abi_version = PC_ABI_VERSION;
+    target.phase = strategy_eval_phase(source.phase);
+    target.done = source.done ? 1 : 0;
+    target.discovered_pairs = source.discovered_pairs;
+    target.pending_pairs = source.pending_pairs;
+    target.solved_sccs = source.solved_sccs;
+    target.total_sccs = source.total_sccs;
+    target.fallback_sweeps = source.fallback_sweeps;
+    target.residual = source.residual;
+}
+
 } // namespace
+
+struct pc_strategy_eval_work {
+    std::unique_ptr<solver::StrategyEvalWork> impl;
+    std::string result_json;
+};
 
 pc_result pc_solver_compile_strategy(
     pc_solver_handle solver,
@@ -557,33 +612,12 @@ pc_result pc_strategy_evaluate(
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
         return PC_RESULT_INVALID_ARGUMENT;
     }
-    solver::StrategyEvalOptions eval_options;
-    if (options != nullptr) {
-        if (options->struct_size < sizeof(pc_strategy_eval_options) ||
-            options->abi_version != PC_ABI_VERSION) {
-            set_error(
-                out_error, PC_RESULT_INVALID_ARGUMENT,
-                "invalid strategy evaluation options ABI");
-            return PC_RESULT_INVALID_ARGUMENT;
-        }
-        if (options->epsilon > 0.0) {
-            eval_options.epsilon = options->epsilon;
-        }
-        if (options->max_sweeps != 0) {
-            eval_options.max_sweeps = options->max_sweeps;
-        }
-        if (options->max_states != 0) {
-            eval_options.max_states = options->max_states;
-        }
-        if (options->top_classes_per_node != 0) {
-            eval_options.top_classes_per_node =
-                options->top_classes_per_node;
-        }
-    }
     try {
-        const solver::StrategyEvalResult result =
-            solver::evaluate_strategy(*strategy->impl, eval_options);
-        const std::string json = solver::serialize_strategy_eval(result);
+        solver::StrategyEvalWork work(
+            strategy->impl, strategy_eval_options(options));
+        while (!work.progress().done) work.step(4096);
+        const std::string json =
+            solver::serialize_strategy_eval(work.result());
         return copy_text(json, buffer, capacity, out_length, out_error);
     } catch (const solver::StrategyEvalUnsupported& ex) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
@@ -591,8 +625,105 @@ pc_result pc_strategy_evaluate(
     } catch (const std::invalid_argument& ex) {
         set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
         return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
         return PC_RESULT_INTERNAL_ERROR;
     }
+}
+
+pc_result pc_strategy_eval_begin(
+    pc_strategy_handle strategy,
+    const pc_strategy_eval_options* options,
+    pc_strategy_eval_work_handle* out_work,
+    pc_error_info* out_error) {
+    if (strategy == nullptr || out_work == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    *out_work = nullptr;
+    try {
+        auto work = std::make_unique<pc_strategy_eval_work>();
+        work->impl = std::make_unique<solver::StrategyEvalWork>(
+            strategy->impl, strategy_eval_options(options));
+        *out_work = work.release();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const solver::StrategyEvalUnsupported& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_strategy_eval_step(
+    pc_strategy_eval_work_handle work,
+    uint32_t max_work_items,
+    pc_strategy_eval_progress* out_progress,
+    pc_error_info* out_error) {
+    if (work == nullptr || out_progress == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        work->impl->step(max_work_items);
+        copy_strategy_eval_progress(work->impl->progress(), *out_progress);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const solver::StrategyEvalUnsupported& ex) {
+        set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE, ex.what());
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
+    } catch (const std::invalid_argument& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_strategy_eval_finish(
+    pc_strategy_eval_work_handle work,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (work == nullptr || out_length == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!work->impl->progress().done) {
+        set_error(
+            out_error, PC_RESULT_INVALID_ARGUMENT,
+            "strategy evaluation is not finished");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        if (work->result_json.empty()) {
+            work->result_json =
+                solver::serialize_strategy_eval(work->impl->result());
+        }
+        return copy_text(
+            work->result_json, buffer, capacity, out_length, out_error);
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+void pc_strategy_eval_destroy(pc_strategy_eval_work_handle work) {
+    delete work;
 }

@@ -151,6 +151,43 @@ double edge_value(const StrategyEvalResult& result, const std::string& id) {
     return -1.0;
 }
 
+void check_reference_parity(
+    const StrategyImpl& strategy,
+    const StrategyEvalResult& exact,
+    const StrategyEvalOptions& options = {}) {
+    const StrategyEvalResult reference =
+        evaluate_strategy_forward_reference_for_test(strategy, options);
+    PC_CHECK(std::fabs(
+                 exact.success_probability - reference.success_probability) <
+             1e-9);
+    PC_CHECK(std::fabs(
+                 exact.failure_probability - reference.failure_probability) <
+             1e-9);
+    PC_CHECK(std::fabs(exact.stop_probability - reference.stop_probability) <
+             1e-9);
+    PC_CHECK(std::fabs(
+                 exact.action_not_applied_probability -
+                 reference.action_not_applied_probability) < 1e-9);
+    PC_CHECK(std::fabs(
+                 exact.no_matching_edge_probability -
+                 reference.no_matching_edge_probability) < 1e-9);
+    PC_CHECK(std::fabs(exact.expected_actions - reference.expected_actions) <
+             1e-9);
+    PC_CHECK(exact.expected_consumption.size() ==
+             reference.expected_consumption.size());
+    for (const auto& [key, quantity] : exact.expected_consumption) {
+        PC_CHECK(std::fabs(
+                     quantity - reference.expected_consumption.at(key)) <
+                 1e-9);
+    }
+    PC_CHECK(exact.edges.size() == reference.edges.size());
+    for (const StrategyEvalEdge& edge : exact.edges) {
+        PC_CHECK(std::fabs(
+                     edge.expected_traversals -
+                     edge_value(reference, edge.id)) < 1e-9);
+    }
+}
+
 void run_closed_form_tests() {
     auto session = make_eval_session();
 
@@ -171,6 +208,7 @@ void run_closed_form_tests() {
     PC_CHECK(near(edge_value(straight, "begin"), 1.0));
     PC_CHECK(near(edge_value(straight, "done"), 1.0));
     PC_CHECK(straight.max_mass_conservation_error < 1e-12);
+    check_reference_parity(*deterministic_strategy, straight);
 
     const std::string loop = shell(
         "chaos loop", "rare",
@@ -208,15 +246,70 @@ void run_closed_form_tests() {
     options.epsilon = 1e-13;
     const StrategyEvalResult exact = evaluate_strategy(*loop_strategy, options);
     PC_CHECK(exact.converged);
-    PC_CHECK(std::fabs(exact.success_probability - 1.0) < 1e-9);
-    PC_CHECK(std::fabs(exact.expected_actions - 1.0 / p) < 1e-9);
-    PC_CHECK(std::fabs(edge_value(exact, "hit") - 1.0) < 1e-9);
+    PC_CHECK(std::fabs(exact.success_probability - 1.0) < 1e-10);
+    PC_CHECK(std::fabs(exact.expected_actions - 1.0 / p) < 1e-10);
+    PC_CHECK(std::fabs(edge_value(exact, "hit") - 1.0) < 1e-10);
     PC_CHECK(std::fabs(edge_value(exact, "repeat") - (1.0 - p) / p) <
-             1e-9);
+             1e-10);
     PC_CHECK(std::fabs(
                  exact.expected_consumption.at("chaos") - 1.0 / p) <
-             1e-9);
+             1e-10);
     PC_CHECK(exact.max_mass_conservation_error < 1e-10);
+    PC_CHECK(exact.sweeps == 0);
+    check_reference_parity(*loop_strategy, exact, options);
+
+    auto two_state_session = make_eval_session();
+    pc_bitset_zero(
+        two_state_session->normal_random_roll_mask.data(),
+        two_state_session->words);
+    pc_bitset_zero(
+        two_state_session->positive_spawn_weight_mask.data(),
+        two_state_session->words);
+    pc_bitset_zero(
+        two_state_session->positive_base_weight_mask.data(),
+        two_state_session->words);
+    pc_bitset_zero(
+        two_state_session->influence_masks[0].data(),
+        two_state_session->words);
+    two_state_session->base_spawn_weight.assign(10, 0);
+    two_state_session->base_roll_weight.assign(10, 0);
+    for (const std::uint32_t mod : {0u, 2u}) {
+        pc_bitset_set(two_state_session->normal_random_roll_mask.data(), mod);
+        pc_bitset_set(
+            two_state_session->positive_spawn_weight_mask.data(), mod);
+        pc_bitset_set(
+            two_state_session->positive_base_weight_mask.data(), mod);
+        pc_bitset_set(two_state_session->influence_masks[0].data(), mod);
+        two_state_session->base_spawn_weight[mod] = 100;
+        two_state_session->base_roll_weight[mod] = 100;
+    }
+    const auto two_node_strategy = compile(
+        two_state_session,
+        shell(
+            "two state cyclic", "magic",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"augment","kind":"operation","operation":{"type":"augment","params":{}}},
+{"id":"annul","kind":"operation","operation":{"type":"annul","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"augment","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"augment","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"miss","from":"augment","to":"annul","priority":999,"is_default":true},
+{"id":"retry","from":"annul","to":"augment","priority":0,"condition":{"type":"always"}})JSON"));
+    const StrategyEvalResult two_node = evaluate_strategy(*two_node_strategy);
+    PC_CHECK(two_node.converged);
+    PC_CHECK(std::fabs(two_node.success_probability - 1.0) < 1e-10);
+    PC_CHECK(std::fabs(two_node.expected_actions - 3.0) < 1e-10);
+    PC_CHECK(std::fabs(edge_value(two_node, "hit") - 1.0) < 1e-10);
+    PC_CHECK(std::fabs(edge_value(two_node, "miss") - 1.0) < 1e-10);
+    PC_CHECK(std::fabs(edge_value(two_node, "retry") - 1.0) < 1e-10);
+    PC_CHECK(std::fabs(
+                 two_node.expected_consumption.at("augment") - 2.0) <
+             1e-10);
+    PC_CHECK(std::fabs(
+                 two_node.expected_consumption.at("annul") - 1.0) <
+             1e-10);
+    PC_CHECK(two_node.sweeps == 0);
+    check_reference_parity(*two_node_strategy, two_node);
 
     const std::string bytes = serialize_strategy_eval(exact);
     PC_CHECK(bytes == serialize_strategy_eval(evaluate_strategy(
@@ -355,6 +448,7 @@ void run_mc_gate() {
     PC_CHECK(exact.converged);
     PC_CHECK(exact.success_probability > 1.0 - 1e-9);
     PC_CHECK(exact.max_mass_conservation_error < 1e-9);
+    check_reference_parity(*strategy, exact, options);
 
     SimulatorImpl simulator;
     const std::uint64_t runs = 30000;
@@ -407,6 +501,7 @@ void run_simulator_semantics_tests() {
 {"id":"done","from":"exalt","to":"success","priority":0,"condition":{"type":"always"}})JSON",
             full_item));
     const StrategyEvalResult illegal_exact = evaluate_strategy(*illegal);
+    check_reference_parity(*illegal, illegal_exact);
     PC_CHECK(near(illegal_exact.action_not_applied_probability, 1.0));
     PC_CHECK(near(illegal_exact.expected_actions, 1.0));
     PC_CHECK(illegal_exact.expected_consumption.count("exalt") == 0);
@@ -423,6 +518,7 @@ void run_simulator_semantics_tests() {
 {"id":"success","kind":"terminal","terminal":"success"})JSON",
             ""));
     const StrategyEvalResult no_edge_exact = evaluate_strategy(*no_edge);
+    check_reference_parity(*no_edge, no_edge_exact);
     PC_CHECK(near(no_edge_exact.no_matching_edge_probability, 1.0));
     PC_CHECK(simulate(session, no_edge, 1, 2).no_matching_edge_count == 1);
 
@@ -438,6 +534,7 @@ void run_simulator_semantics_tests() {
 {"id":"early","from":"start","to":"stop","priority":1,"condition":{"type":"always"}},
 {"id":"late","from":"start","to":"success","priority":5,"condition":{"type":"always"}})JSON"));
     const StrategyEvalResult ordering_exact = evaluate_strategy(*ordering);
+    check_reference_parity(*ordering, ordering_exact);
     PC_CHECK(near(ordering_exact.stop_probability, 1.0));
     PC_CHECK(near(edge_value(ordering_exact, "early"), 1.0));
     PC_CHECK(near(edge_value(ordering_exact, "fallback"), 0.0));
@@ -539,6 +636,77 @@ void run_refusal_and_unresolved_tests() {
     PC_CHECK(unresolved.unresolved_by_node[0].node_id == "loop");
     PC_CHECK(near(unresolved.unresolved_by_node[0].mass, 1.0));
     PC_CHECK(unresolved.max_mass_conservation_error < 1e-12);
+    PC_CHECK(unresolved.sweeps == 0);
+
+    const auto router_cycle = compile(
+        session,
+        shell(
+            "router cycle", "normal",
+            R"JSON({"id":"start","kind":"start"},{"id":"a","kind":"router"},{"id":"b","kind":"router"})JSON",
+            R"JSON({"id":"enter","from":"start","to":"a","priority":0,"condition":{"type":"always"}},
+{"id":"a_to_b","from":"a","to":"b","priority":0,"condition":{"type":"always"}},
+{"id":"b_to_a","from":"b","to":"a","priority":0,"condition":{"type":"always"}})JSON"));
+    const StrategyEvalResult router_unresolved =
+        evaluate_strategy(*router_cycle);
+    PC_CHECK(!router_unresolved.converged);
+    PC_CHECK(near(router_unresolved.residual_mass, 1.0));
+    PC_CHECK(router_unresolved.sweeps == 0);
+    PC_CHECK(router_unresolved.unresolved_by_node.size() == 1);
+    PC_CHECK(router_unresolved.unresolved_by_node[0].node_id == "a");
+    PC_CHECK(near(router_unresolved.unresolved_by_node[0].mass, 1.0));
+}
+
+void run_scale_and_fallback_tests() {
+    auto session = make_eval_session();
+    std::ostringstream nodes;
+    nodes << R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON";
+    constexpr int kRouterCount = 65;
+    for (int i = 0; i < kRouterCount; ++i) {
+        nodes << ",{\"id\":\"router_" << i
+              << "\",\"kind\":\"router\"}";
+    }
+    std::ostringstream edges;
+    edges << R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"miss","from":"chaos","to":"router_0","priority":999,"is_default":true})JSON";
+    for (int i = 0; i < kRouterCount; ++i) {
+        edges << ",{\"id\":\"route_" << i << "\",\"from\":\"router_"
+              << i << "\",\"to\":\""
+              << (i + 1 == kRouterCount
+                      ? std::string("chaos")
+                      : "router_" + std::to_string(i + 1))
+              << "\",\"priority\":0,\"condition\":{\"type\":\"always\"}}";
+    }
+    const auto large = compile(
+        session, shell("large fallback", "rare", nodes.str(), edges.str()));
+    StrategyEvalOptions options;
+    options.epsilon = 1e-10;
+    const StrategyEvalResult result = evaluate_strategy(*large, options);
+    PC_CHECK(result.converged);
+    PC_CHECK(result.sweeps > 0);
+    PC_CHECK(std::fabs(result.success_probability - 1.0) < 1e-9);
+    PC_CHECK(result.max_mass_conservation_error < 1e-9);
+
+    const auto pair_guard = compile(
+        session,
+        shell(
+            "pair guard", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"restart","kind":"operation","operation":{"type":"restart","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"restart","priority":0,"condition":{"type":"always"}},
+{"id":"done","from":"restart","to":"success","priority":0,"condition":{"type":"always"}})JSON"));
+    StrategyEvalOptions guarded;
+    guarded.max_pairs = 1;
+    bool failed = false;
+    try {
+        (void)evaluate_strategy(*pair_guard, guarded);
+    } catch (const std::length_error& ex) {
+        failed = std::string(ex.what()).find("max_pairs") != std::string::npos;
+    }
+    PC_CHECK(failed);
 }
 
 void run_c_abi_tests() {
@@ -568,6 +736,48 @@ void run_c_abi_tests() {
     PC_CHECK(json.find("\"version\":\"v1\"") != std::string::npos);
     PC_CHECK(json.find("\"success\":1") != std::string::npos);
     PC_CHECK(json.find("\"key\":\"base\"") != std::string::npos);
+
+    pc_strategy_eval_work_handle work = nullptr;
+    PC_CHECK(pc_strategy_eval_begin(
+                 &strategy, nullptr, &work, &error) == PC_RESULT_OK);
+    PC_CHECK(work != nullptr);
+    pc_strategy_eval_progress progress{};
+    std::vector<int32_t> phases;
+    do {
+        PC_CHECK(pc_strategy_eval_step(
+                     work, 1, &progress, &error) == PC_RESULT_OK);
+        phases.push_back(progress.phase);
+    } while (!progress.done);
+    PC_CHECK(!phases.empty());
+    PC_CHECK(phases.front() == PC_STRATEGY_EVAL_PHASE_DISCOVERY);
+    PC_CHECK(phases.back() == PC_STRATEGY_EVAL_PHASE_DONE);
+    std::size_t stepped_length = 0;
+    PC_CHECK(pc_strategy_eval_finish(
+                 work, nullptr, 0, &stepped_length, &error) == PC_RESULT_OK);
+    std::string stepped(stepped_length + 1, '\0');
+    PC_CHECK(pc_strategy_eval_finish(
+                 work, stepped.data(), stepped.size(), &stepped_length,
+                 &error) == PC_RESULT_OK);
+    stepped.resize(stepped_length);
+    json.resize(length);
+    PC_CHECK(stepped == json);
+    pc_strategy_eval_destroy(work);
+
+    pc_strategy_eval_options pair_limit{};
+    pair_limit.struct_size = sizeof(pair_limit);
+    pair_limit.abi_version = PC_ABI_VERSION;
+    pair_limit.max_pairs = 1;
+    work = nullptr;
+    PC_CHECK(pc_strategy_eval_begin(
+                 &strategy, &pair_limit, &work, &error) == PC_RESULT_OK);
+    pc_result step_result = PC_RESULT_OK;
+    progress = {};
+    while (step_result == PC_RESULT_OK && !progress.done) {
+        step_result = pc_strategy_eval_step(work, 1, &progress, &error);
+    }
+    PC_CHECK(step_result == PC_RESULT_CAPACITY_EXCEEDED);
+    PC_CHECK(std::string(error.message).find("max_pairs") != std::string::npos);
+    pc_strategy_eval_destroy(work);
 
     pc_strategy_eval_options bad{};
     bad.struct_size = sizeof(bad);
@@ -851,6 +1061,7 @@ void run_solver_eval_tests(const char* artifact_dir) {
     stage("mc gate", [&] { run_mc_gate(); });
     stage("simulator semantics", [&] { run_simulator_semantics_tests(); });
     stage("refusals", [&] { run_refusal_and_unresolved_tests(); });
+    stage("scale and fallback", [&] { run_scale_and_fallback_tests(); });
     stage("c abi", [&] { run_c_abi_tests(); });
     stage("artifact", [&] { run_artifact_and_registry_tests(artifact_dir); });
 }

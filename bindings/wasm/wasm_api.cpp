@@ -77,6 +77,7 @@ std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
 std::unordered_map<std::uint32_t, pc_solver_handle> g_solvers;
+std::unordered_map<std::uint32_t, pc_strategy_eval_work_handle> g_evaluations;
 std::uint32_t g_next_id = 1;
 
 std::string g_response;
@@ -405,6 +406,65 @@ double obj_double(const Value& object, const char* key, double fallback = 0.0) {
     return value != nullptr && value->type == Type::Number
                ? value->number
                : fallback;
+}
+
+bool parse_strategy_eval_options(
+    const char* options_json,
+    pc_strategy_eval_options& options,
+    std::string& error) {
+    options = {};
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    if (options_json == nullptr || options_json[0] == '\0') return true;
+    Value spec;
+    try {
+        spec = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& ex) {
+        error = ex.what();
+        return false;
+    }
+    if (spec.type != Type::Object) {
+        error = "options must be an object";
+        return false;
+    }
+    options.epsilon = obj_double(spec, "epsilon");
+    options.max_sweeps = obj_u32(spec, "max_sweeps");
+    options.max_states = obj_u32(spec, "max_states");
+    options.max_pairs = obj_u32(spec, "max_pairs");
+    options.top_classes_per_node =
+        obj_u32(spec, "top_classes_per_node");
+    return true;
+}
+
+const char* strategy_eval_phase_name(int32_t phase) {
+    switch (phase) {
+    case PC_STRATEGY_EVAL_PHASE_DISCOVERY: return "discovery";
+    case PC_STRATEGY_EVAL_PHASE_SOLVING: return "solving";
+    case PC_STRATEGY_EVAL_PHASE_FALLBACK: return "fallback";
+    case PC_STRATEGY_EVAL_PHASE_FINALIZATION: return "finalization";
+    case PC_STRATEGY_EVAL_PHASE_DONE: return "done";
+    default: return "discovery";
+    }
+}
+
+void append_strategy_eval_progress(
+    std::string& out,
+    const pc_strategy_eval_progress& progress) {
+    out += "{\"phase\":\"";
+    out += strategy_eval_phase_name(progress.phase);
+    out += "\",\"done\":";
+    out += progress.done ? "true" : "false";
+    out += ",\"discovered_pairs\":";
+    append_u64(out, progress.discovered_pairs);
+    out += ",\"pending_pairs\":";
+    append_u64(out, progress.pending_pairs);
+    out += ",\"solved_sccs\":";
+    append_u64(out, progress.solved_sccs);
+    out += ",\"total_sccs\":";
+    append_u64(out, progress.total_sccs);
+    out += ",\"fallback_sweeps\":";
+    append_u64(out, progress.fallback_sweeps);
+    out += ",\"residual\":" + std::to_string(progress.residual) + '}';
 }
 
 const char* terminal_name(int32_t kind) {
@@ -1175,24 +1235,9 @@ const char* pcw_strategy_evaluate(uint32_t strategy_id,
     }
 
     pc_strategy_eval_options options{};
-    options.struct_size = sizeof(options);
-    options.abi_version = PC_ABI_VERSION;
-    if (options_json != nullptr && options_json[0] != '\0') {
-        Value spec;
-        try {
-            spec = Parser(options_json, std::strlen(options_json)).parse();
-        } catch (const std::exception& e) {
-            return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
-        }
-        if (spec.type != Type::Object) {
-            return fail(
-                PC_RESULT_INVALID_ARGUMENT, "options must be an object");
-        }
-        options.epsilon = obj_double(spec, "epsilon");
-        options.max_sweeps = obj_u32(spec, "max_sweeps");
-        options.max_states = obj_u32(spec, "max_states");
-        options.top_classes_per_node =
-            obj_u32(spec, "top_classes_per_node");
+    std::string parse_error;
+    if (!parse_strategy_eval_options(options_json, options, parse_error)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
     }
 
     pc_error_info error = make_error();
@@ -1210,6 +1255,87 @@ const char* pcw_strategy_evaluate(uint32_t strategy_id,
     out += result;
     out.push_back('}');
     return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_strategy_eval_begin(uint32_t strategy_id,
+                                    const char* options_json) {
+    pc_strategy_handle* strategy = find(g_strategies, strategy_id);
+    if (strategy == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown strategy");
+    }
+    pc_strategy_eval_options options{};
+    std::string parse_error;
+    if (!parse_strategy_eval_options(options_json, options, parse_error)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
+    }
+    pc_strategy_eval_work_handle work = nullptr;
+    pc_error_info error = make_error();
+    const pc_result rc =
+        pc_strategy_eval_begin(*strategy, &options, &work, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    const std::uint32_t id = g_next_id++;
+    g_evaluations[id] = work;
+    return respond(
+        "{\"ok\":true,\"evaluation\":" + std::to_string(id) + '}');
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_strategy_eval_step(uint32_t evaluation_id,
+                                   uint32_t max_work_items) {
+    pc_strategy_eval_work_handle* work =
+        find(g_evaluations, evaluation_id);
+    if (work == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown strategy evaluation");
+    }
+    pc_strategy_eval_progress progress{};
+    pc_error_info error = make_error();
+    const pc_result rc = pc_strategy_eval_step(
+        *work, max_work_items, &progress, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"progress\":";
+    append_strategy_eval_progress(out, progress);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_strategy_eval_finish(uint32_t evaluation_id) {
+    pc_strategy_eval_work_handle* work =
+        find(g_evaluations, evaluation_id);
+    if (work == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown strategy evaluation");
+    }
+    pc_error_info error = make_error();
+    std::size_t length = 0;
+    pc_result rc = pc_strategy_eval_finish(
+        *work, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string result(length + 1, '\0');
+    rc = pc_strategy_eval_finish(
+        *work, result.data(), result.size(), &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    result.resize(length);
+    std::string out = "{\"ok\":true,\"result\":";
+    out += result;
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_strategy_eval_close(uint32_t evaluation_id) {
+    auto it = g_evaluations.find(evaluation_id);
+    if (it == g_evaluations.end()) return;
+    pc_strategy_eval_destroy(it->second);
+    g_evaluations.erase(it);
+}
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t pcw_live_handle_count() {
+    return static_cast<std::uint32_t>(
+        g_data.size() + g_sessions.size() + g_contexts.size() +
+        g_items.size() + g_strategies.size() + g_economies.size() +
+        g_simulators.size() + g_solvers.size() + g_evaluations.size());
 }
 
 EMSCRIPTEN_KEEPALIVE

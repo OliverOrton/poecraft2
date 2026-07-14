@@ -10,6 +10,7 @@ import {
     Catalog,
     ModInfo,
     StrategyEvalResult,
+    StrategyEvalProgress,
     StrategyResult,
 } from "../engine-protocol";
 import { getEngine } from "../engine-service";
@@ -166,11 +167,14 @@ export class PcStrategyEditor extends HTMLElement {
     private evalError: string | null = null;
     private evalInvalid = false;
     private evaluating = false;
+    private evalProgressText: string | null = null;
+    private evalStartedAt = 0;
+    private evalController: AbortController | null = null;
     private evalStale = false;
     private evalTimer = 0;
     private evalRequestVersion = 0;
-    private evalPending = false;
     private currentEvaluation: Promise<void> | null = null;
+    private evaluationPromises = new Set<Promise<void>>();
 
     async connectedCallback(): Promise<void> {
         if (this.connectedOnce) {
@@ -602,6 +606,7 @@ export class PcStrategyEditor extends HTMLElement {
             error: this.evalError,
             invalid: this.evalInvalid,
             evaluating: this.evaluating,
+            progressText: this.evalProgressText,
             stale: this.evalStale,
             selectedNodeId: selectedNode?.id ?? null,
             selectedNodeKind: selectedNode?.kind ?? null,
@@ -1281,9 +1286,10 @@ export class PcStrategyEditor extends HTMLElement {
         if (mode === "calculator") {
             this.requestEvaluation(0);
         } else {
+            this.evalRequestVersion += 1;
+            this.evalController?.abort();
             window.clearTimeout(this.evalTimer);
             this.evalTimer = 0;
-            this.evalPending = false;
             this.setStatus("");
         }
         this.updateView();
@@ -1291,6 +1297,7 @@ export class PcStrategyEditor extends HTMLElement {
 
     private requestEvaluation(delay = 300): void {
         this.evalRequestVersion += 1;
+        this.evalController?.abort();
         this.scheduleEvaluation(this.evalRequestVersion, delay);
     }
 
@@ -1298,13 +1305,11 @@ export class PcStrategyEditor extends HTMLElement {
         window.clearTimeout(this.evalTimer);
         this.evalTimer = window.setTimeout(() => {
             this.evalTimer = 0;
-            if (this.evaluating) {
-                this.evalPending = true;
-                return;
-            }
             const evaluation = this.evaluateStrategy(version);
             this.currentEvaluation = evaluation;
+            this.evaluationPromises.add(evaluation);
             void evaluation.finally(() => {
+                this.evaluationPromises.delete(evaluation);
                 if (this.currentEvaluation === evaluation) {
                     this.currentEvaluation = null;
                 }
@@ -1314,10 +1319,6 @@ export class PcStrategyEditor extends HTMLElement {
 
     private async evaluateStrategy(version: number): Promise<void> {
         if (this.disposed || this.mode !== "calculator") return;
-        if (this.evaluating) {
-            this.evalPending = true;
-            return;
-        }
         this.issues = validateStrategy(this.strategy);
         if (this.issues.some((issue) => issue.severity === "error")) {
             this.evalInvalid = true;
@@ -1327,7 +1328,11 @@ export class PcStrategyEditor extends HTMLElement {
             return;
         }
 
+        const controller = new AbortController();
+        this.evalController = controller;
         this.evaluating = true;
+        this.evalStartedAt = performance.now();
+        this.evalProgressText = "Preparing exact evaluation · 0.0s";
         this.evalInvalid = false;
         this.evalError = null;
         this.setStatus("Evaluating exact graph…");
@@ -1342,6 +1347,23 @@ export class PcStrategyEditor extends HTMLElement {
             const result = await this.client.strategyEvaluate(
                 session,
                 cloneStrategy(this.strategy),
+                undefined,
+                {
+                    signal: controller.signal,
+                    onProgress: (progress) => {
+                        if (
+                            controller.signal.aborted ||
+                            this.disposed ||
+                            version !== this.evalRequestVersion
+                        ) {
+                            return;
+                        }
+                        this.evalProgressText =
+                            this.formatEvaluationProgress(progress);
+                        this.setStatus(this.evalProgressText);
+                        this.syncModeAndOddsView();
+                    },
+                },
             );
             if (
                 !this.disposed &&
@@ -1351,6 +1373,7 @@ export class PcStrategyEditor extends HTMLElement {
                 this.evalResult = result;
                 this.evalError = null;
                 this.evalStale = false;
+                this.evalProgressText = null;
                 this.setStatus(
                     result.converged
                         ? "Exact evaluation complete."
@@ -1358,6 +1381,7 @@ export class PcStrategyEditor extends HTMLElement {
                 );
             }
         } catch (error) {
+            if (controller.signal.aborted) return;
             if (
                 !this.disposed &&
                 this.mode === "calculator" &&
@@ -1367,21 +1391,38 @@ export class PcStrategyEditor extends HTMLElement {
                 this.evalError =
                     error instanceof Error ? error.message : String(error);
                 this.evalStale = false;
+                this.evalProgressText = null;
                 this.setStatus("Exact evaluation refused.");
             }
         } finally {
             if (session) await this.client.closeSession(session);
-            this.evaluating = false;
-            if (!this.disposed) this.updateView();
-            if (
-                !this.disposed &&
-                this.mode === "calculator" &&
-                (this.evalPending || version !== this.evalRequestVersion)
-            ) {
-                this.evalPending = false;
-                this.scheduleEvaluation(this.evalRequestVersion, 0);
+            if (this.evalController === controller) {
+                this.evalController = null;
+                this.evaluating = false;
+                if (controller.signal.aborted) this.evalProgressText = null;
+                if (!this.disposed) this.updateView();
             }
         }
+    }
+
+    private formatEvaluationProgress(progress: StrategyEvalProgress): string {
+        const elapsed = Math.max(
+            0,
+            (performance.now() - this.evalStartedAt) / 1000,
+        ).toFixed(1);
+        if (progress.phase === "discovery") {
+            return `Discovering exact states · ${progress.discovered_pairs.toLocaleString()} pairs · ${elapsed}s`;
+        }
+        if (progress.phase === "solving") {
+            return `Solving loops · ${progress.solved_sccs.toLocaleString()}/${progress.total_sccs.toLocaleString()} components · ${elapsed}s`;
+        }
+        if (progress.phase === "fallback") {
+            return `Fallback · ${progress.fallback_sweeps.toLocaleString()} sweeps · residual ${progress.residual.toExponential(2)} · ${elapsed}s`;
+        }
+        if (progress.phase === "finalization") {
+            return `Finalizing exact result · ${elapsed}s`;
+        }
+        return `Exact evaluation complete · ${elapsed}s`;
     }
 
     private get currentAnnotations() {
@@ -1577,6 +1618,7 @@ export class PcStrategyEditor extends HTMLElement {
         window.clearTimeout(this.persistTimer);
         window.clearTimeout(this.evalTimer);
         this.evalRequestVersion += 1;
+        this.evalController?.abort();
         window.cancelAnimationFrame(this.progressFrame);
         this.progressFrame = 0;
         workspace().unregisterDocument(this.docId);
@@ -1588,12 +1630,8 @@ export class PcStrategyEditor extends HTMLElement {
                 // The run path already reports its own error.
             }
         }
-        if (this.currentEvaluation) {
-            try {
-                await this.currentEvaluation;
-            } catch {
-                // The evaluation path already reports its own error.
-            }
+        if (this.evaluationPromises.size) {
+            await Promise.allSettled([...this.evaluationPromises]);
         }
     }
 

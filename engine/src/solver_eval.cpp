@@ -12,6 +12,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -32,6 +33,40 @@ struct EvalModel {
     std::vector<std::uint32_t> action_by_node;
     std::vector<GoalSlot> targets;
 };
+
+enum class EvalAbsorptionKind {
+    Terminal,
+    ActionNotApplied,
+    NoMatchingEdge,
+};
+
+struct EvalTransition {
+    std::uint32_t target = kNoId;
+    double probability = 0.0;
+    std::string edge_id;
+};
+
+struct EvalAbsorption {
+    EvalAbsorptionKind kind = EvalAbsorptionKind::Terminal;
+    std::uint32_t node = kNoId;
+    std::uint32_t state = kNoId;
+    double probability = 0.0;
+    std::string edge_id;
+};
+
+struct EvalPair {
+    std::uint32_t node = kNoId;
+    std::uint32_t state = kNoId;
+    bool operation = false;
+    bool consumes = false;
+    std::uint32_t action = kNoId;
+    std::vector<EvalTransition> transitions;
+    std::vector<EvalAbsorption> absorptions;
+};
+
+std::uint64_t eval_pair_key(std::uint32_t node, std::uint32_t state) {
+    return (static_cast<std::uint64_t>(node) << 32) | state;
+}
 
 void add_gap(std::vector<std::string>& gaps, const std::string& gap) {
     if (std::find(gaps.begin(), gaps.end(), gap) == gaps.end()) {
@@ -265,6 +300,14 @@ EvalModel derive_model(const StrategyImpl& strategy) {
     return model;
 }
 
+EvalModel derive_checked_model(
+    const std::shared_ptr<const StrategyImpl>& strategy) {
+    if (strategy == nullptr) {
+        throw std::invalid_argument("invalid compiled strategy");
+    }
+    return derive_model(*strategy);
+}
+
 std::size_t layout_slot_for(
     const CompiledCondition& condition,
     const AbstractLayout& layout) {
@@ -422,237 +465,977 @@ bool evaluate_abstract_condition(
     return false;
 }
 
-StrategyEvalResult evaluate_strategy(
-    const StrategyImpl& strategy,
-    const StrategyEvalOptions& options) {
-    if (strategy.session == nullptr || strategy.start_node >= strategy.nodes.size()) {
-        throw std::invalid_argument("invalid compiled strategy");
-    }
-    if (!std::isfinite(options.epsilon) || options.epsilon <= 0.0 ||
-        options.max_sweeps == 0 || options.max_states == 0) {
-        throw std::invalid_argument("invalid strategy evaluation options");
-    }
+struct StrategyEvalWork::Impl {
+    struct FallbackState {
+        std::uint32_t component = kNoId;
+        std::vector<std::uint32_t> members;
+        std::map<std::uint32_t, std::size_t> local_index;
+        std::vector<double> wave;
+        std::vector<double> visits;
+        double input_mass = 0.0;
+        double exited_mass = 0.0;
+        std::uint32_t sweeps = 0;
+    };
 
-    EvalModel model = derive_model(strategy);
-    CalcContext& calc = *model.calc;
-    StrategyEvalResult result;
-    result.targets = model.targets;
+    std::shared_ptr<const StrategyImpl> strategy;
+    StrategyEvalOptions options;
+    EvalModel model;
+    StrategyEvalResult output;
+    StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
 
-    const std::size_t node_count = strategy.nodes.size();
-    std::vector<double> node_visits(node_count, 0.0);
-    std::vector<std::map<std::uint32_t, double>> incoming(node_count);
-    std::vector<double> terminal_mass(node_count, 0.0);
-    std::vector<double> action_not_applied(node_count, 0.0);
-    std::vector<double> no_matching_edge(node_count, 0.0);
+    std::map<std::uint64_t, std::uint32_t> pair_by_key;
+    std::vector<EvalPair> pairs;
+    std::size_t discover_index = 0;
+    std::uint32_t start_pair = kNoId;
+
+    std::vector<std::vector<std::uint32_t>> components;
+    std::vector<std::uint32_t> component_by_pair;
+    std::size_t component_index = 0;
+    std::vector<double> external_incoming;
+    std::vector<double> pair_visits;
+    std::vector<double> unresolved_pair;
+    std::unique_ptr<FallbackState> fallback;
+    std::uint64_t fallback_sweeps = 0;
+    bool hard_unresolved = false;
+
+    std::vector<double> terminal_mass;
+    std::vector<double> action_not_applied;
+    std::vector<double> no_matching_edge;
+    std::vector<std::map<std::uint32_t, double>> terminal_incoming;
     std::map<std::string, double> edge_traversals;
 
-    using Wave = std::map<std::uint64_t, double>;
-    const auto pair_key = [](std::uint32_t node, std::uint32_t state) {
-        return (static_cast<std::uint64_t>(node) << 32) | state;
-    };
-    const auto pair_node = [](std::uint64_t key) {
-        return static_cast<std::uint32_t>(key >> 32);
-    };
-    const auto pair_state = [](std::uint64_t key) {
-        return static_cast<std::uint32_t>(key & 0xffffffffu);
-    };
-
-    const std::uint32_t start_state = calc.intern_item(strategy.start_item);
-    if (calc.state_count() > options.max_states) {
-        throw std::runtime_error("strategy evaluation exceeded max_states");
-    }
-    Wave current;
-    current[pair_key(strategy.start_node, start_state)] = 1.0;
-    node_visits[strategy.start_node] = 1.0;
-    incoming[strategy.start_node][start_state] = 1.0;
-
-    const auto absorb_terminal = [&](std::uint32_t node_index, double mass) {
-        const StrategyNode& node = strategy.nodes[node_index];
-        terminal_mass[node_index] += mass;
-        if (node.terminal_kind == PC_TERMINAL_SUCCESS) {
-            result.success_probability += mass;
-        } else if (node.terminal_kind == PC_TERMINAL_FAILURE) {
-            result.failure_probability += mass;
-        } else {
-            result.stop_probability += mass;
+    Impl(
+        std::shared_ptr<const StrategyImpl> strategy_in,
+        const StrategyEvalOptions& options_in)
+        : strategy(std::move(strategy_in)),
+          options(options_in),
+          model(derive_checked_model(strategy)) {
+        if (strategy == nullptr || strategy->session == nullptr ||
+            strategy->start_node >= strategy->nodes.size()) {
+            throw std::invalid_argument("invalid compiled strategy");
         }
-    };
+        if (!std::isfinite(options.epsilon) || options.epsilon <= 0.0 ||
+            options.max_sweeps == 0 || options.max_states == 0 ||
+            options.max_pairs == 0) {
+            throw std::invalid_argument("invalid strategy evaluation options");
+        }
+        output.targets = model.targets;
+        const std::size_t node_count = strategy->nodes.size();
+        terminal_mass.assign(node_count, 0.0);
+        action_not_applied.assign(node_count, 0.0);
+        no_matching_edge.assign(node_count, 0.0);
+        terminal_incoming.resize(node_count);
 
-    for (std::uint32_t sweep = 0; sweep < options.max_sweeps; ++sweep) {
-        Wave next;
-        const auto enqueue = [&](std::uint32_t node_index,
-                                 std::uint32_t state_id,
-                                 double mass) {
-            if (mass == 0.0) return;
-            node_visits[node_index] += mass;
-            incoming[node_index][state_id] += mass;
-            if (strategy.nodes[node_index].kind ==
-                StrategyNodeKind::Terminal) {
-                absorb_terminal(node_index, mass);
-            } else {
-                next[pair_key(node_index, state_id)] += mass;
+        const std::uint32_t start_state =
+            model.calc->intern_item(strategy->start_item);
+        ensure_state_limit();
+        if (strategy->nodes[strategy->start_node].kind ==
+            StrategyNodeKind::Terminal) {
+            terminal_mass[strategy->start_node] = 1.0;
+            terminal_incoming[strategy->start_node][start_state] = 1.0;
+            phase = StrategyEvalPhase::Finalization;
+        } else {
+            start_pair = intern_pair(strategy->start_node, start_state);
+        }
+    }
+
+    void ensure_state_limit() const {
+        if (model.calc->state_count() > options.max_states) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_states (" +
+                std::to_string(options.max_states) + ")");
+        }
+    }
+
+    std::uint32_t intern_pair(
+        std::uint32_t node,
+        std::uint32_t state) {
+        const std::uint64_t key = eval_pair_key(node, state);
+        const auto found = pair_by_key.find(key);
+        if (found != pair_by_key.end()) return found->second;
+        if (pairs.size() >= options.max_pairs) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_pairs (" +
+                std::to_string(options.max_pairs) + ")");
+        }
+        const std::uint32_t id = static_cast<std::uint32_t>(pairs.size());
+        pair_by_key.emplace(key, id);
+        EvalPair pair;
+        pair.node = node;
+        pair.state = state;
+        pairs.push_back(std::move(pair));
+        return id;
+    }
+
+    const StrategyEdge* select_edge(
+        const StrategyNode& node,
+        std::uint32_t state) const {
+        const StrategyEdge* fallback_edge = nullptr;
+        for (const StrategyEdge& edge : node.edges) {
+            if (edge.is_default) {
+                fallback_edge = &edge;
+            } else if (evaluate_abstract_condition(
+                           edge.condition, model.calc->session(),
+                           model.calc->layout(), model.calc->state(state))) {
+                return &edge;
             }
-        };
-        const auto route = [&](std::uint32_t node_index,
-                               std::uint32_t state_id,
-                               double mass) {
-            const StrategyNode& node = strategy.nodes[node_index];
-            const StrategyEdge* fallback = nullptr;
-            const StrategyEdge* selected = nullptr;
-            for (const StrategyEdge& edge : node.edges) {
-                if (edge.is_default) {
-                    fallback = &edge;
-                } else if (evaluate_abstract_condition(
-                               edge.condition, calc.session(), calc.layout(),
-                               calc.state(state_id))) {
-                    selected = &edge;
-                    break;
-                }
+        }
+        return fallback_edge;
+    }
+
+    void expand_pair(std::uint32_t pair_id) {
+        const std::uint32_t node_index = pairs.at(pair_id).node;
+        const std::uint32_t state_id = pairs.at(pair_id).state;
+        const StrategyNode& node = strategy->nodes.at(node_index);
+        bool operation = false;
+        bool consumes = false;
+        std::uint32_t action_index = kNoId;
+        std::map<std::pair<std::uint32_t, std::string>, double> transitions;
+        std::map<
+            std::tuple<int, std::uint32_t, std::uint32_t, std::string>,
+            double> absorptions;
+
+        const auto route = [&](std::uint32_t state, double probability) {
+            if (!(probability > 0.0)) return;
+            if (!std::isfinite(probability)) {
+                throw std::runtime_error(
+                    "strategy evaluation found a non-finite transition");
             }
-            if (selected == nullptr) selected = fallback;
+            const StrategyEdge* selected = select_edge(node, state);
             if (selected == nullptr) {
-                no_matching_edge[node_index] += mass;
-                result.no_matching_edge_probability += mass;
+                absorptions[{static_cast<int>(
+                                  EvalAbsorptionKind::NoMatchingEdge),
+                              node_index, state, std::string()}] += probability;
                 return;
             }
-            edge_traversals[selected->id] += mass;
-            enqueue(selected->target, state_id, mass);
+            const StrategyNode& target = strategy->nodes.at(selected->target);
+            if (target.kind == StrategyNodeKind::Terminal) {
+                absorptions[{static_cast<int>(EvalAbsorptionKind::Terminal),
+                              selected->target, state, selected->id}] +=
+                    probability;
+                return;
+            }
+            const std::uint32_t target_pair =
+                intern_pair(selected->target, state);
+            transitions[{target_pair, selected->id}] += probability;
         };
 
-        for (const auto& [key, mass] : current) {
-            const std::uint32_t node_index = pair_node(key);
-            const std::uint32_t state_id = pair_state(key);
-            const StrategyNode& node = strategy.nodes[node_index];
-            if (node.kind == StrategyNodeKind::Terminal) {
-                absorb_terminal(node_index, mass);
-                continue;
-            }
-            if (node.kind != StrategyNodeKind::Operation) {
-                route(node_index, state_id, mass);
-                continue;
-            }
-
-            /* The simulator counts an attempted illegal operation as an
-             * action, but does not consume its price keys. */
-            result.expected_actions += mass;
-            const std::uint32_t action_index =
-                model.action_by_node[node_index];
+        if (node.kind != StrategyNodeKind::Operation) {
+            route(state_id, 1.0);
+        } else {
+            operation = true;
+            action_index = model.action_by_node.at(node_index);
             const ActionDescriptor& action =
-                calc.registry().actions.at(action_index);
-            if (!action_legal(calc.session(), action, calc.state(state_id))) {
-                action_not_applied[node_index] += mass;
-                result.action_not_applied_probability += mass;
-                continue;
-            }
-            for (const std::string& key_name : action.cost_keys) {
-                result.expected_consumption[key_name] += mass;
-            }
-            const OutcomeDistribution& outcomes =
-                calc.outcomes(state_id, action_index);
-            if (!outcomes.supported) {
-                throw StrategyEvalUnsupported(
-                    "strategy evaluation unsupported:\n- node '" + node.id +
-                    "' operation '" + action.id +
-                    "' has no exact distribution for a reachable state");
-            }
-            if (calc.state_count() > options.max_states) {
-                throw std::runtime_error(
-                    "strategy evaluation exceeded max_states");
-            }
-            double distribution_mass = 0.0;
-            for (const OutcomeEntry& outcome : outcomes.entries) {
-                distribution_mass += outcome.probability;
-                route(
-                    node_index, outcome.state,
-                    mass * outcome.probability);
-            }
-            if (std::fabs(distribution_mass - 1.0) > 1e-9) {
-                throw std::runtime_error(
-                    "strategy evaluation action distribution does not sum "
-                    "to one at node '" + node.id + "'");
+                model.calc->registry().actions.at(action_index);
+            if (!action_legal(
+                    model.calc->session(), action,
+                    model.calc->state(state_id))) {
+                absorptions[{static_cast<int>(
+                                  EvalAbsorptionKind::ActionNotApplied),
+                              node_index, state_id, std::string()}] = 1.0;
+            } else {
+                consumes = true;
+                const OutcomeDistribution& outcomes =
+                    model.calc->outcomes(state_id, action_index);
+                if (!outcomes.supported) {
+                    throw StrategyEvalUnsupported(
+                        "strategy evaluation unsupported:\n- node '" +
+                        node.id + "' operation '" + action.id +
+                        "' has no exact distribution for a reachable state");
+                }
+                ensure_state_limit();
+                double distribution_mass = 0.0;
+                for (const OutcomeEntry& outcome : outcomes.entries) {
+                    distribution_mass += outcome.probability;
+                    route(outcome.state, outcome.probability);
+                }
+                if (std::fabs(distribution_mass - 1.0) > 1e-9) {
+                    throw std::runtime_error(
+                        "strategy evaluation action distribution does not "
+                        "sum to one at node '" + node.id + "'");
+                }
             }
         }
 
-        double transient_mass = 0.0;
-        for (const auto& entry : next) transient_mass += entry.second;
-        const double error = std::fabs(
-            absorbed_probability(result) + transient_mass - 1.0);
-        result.max_mass_conservation_error =
-            std::max(result.max_mass_conservation_error, error);
-        if (error > 1e-8) {
-            throw std::runtime_error(
-                "strategy evaluation mass conservation failed");
+        EvalPair& pair = pairs.at(pair_id);
+        pair.operation = operation;
+        pair.consumes = consumes;
+        pair.action = action_index;
+        pair.transitions.reserve(transitions.size());
+        for (const auto& [key, probability] : transitions) {
+            pair.transitions.push_back(
+                {key.first, probability, key.second});
         }
-        result.sweeps = sweep + 1;
-        current = std::move(next);
-        if (transient_mass < options.epsilon) {
-            result.converged = true;
+        pair.absorptions.reserve(absorptions.size());
+        for (const auto& [key, probability] : absorptions) {
+            pair.absorptions.push_back(
+                {static_cast<EvalAbsorptionKind>(std::get<0>(key)),
+                 std::get<1>(key), std::get<2>(key), probability,
+                 std::get<3>(key)});
+        }
+        double row_mass = 0.0;
+        for (const EvalTransition& transition : pair.transitions) {
+            row_mass += transition.probability;
+        }
+        for (const EvalAbsorption& absorption : pair.absorptions) {
+            row_mass += absorption.probability;
+        }
+        if (std::fabs(row_mass - 1.0) > 1e-9) {
+            throw std::runtime_error(
+                "strategy evaluation transition row does not sum to one at "
+                "node '" + node.id + "'");
+        }
+    }
+
+    void build_components() {
+        const std::size_t count = pairs.size();
+        std::vector<std::vector<std::uint32_t>> adjacency(count);
+        std::vector<std::vector<std::uint32_t>> reverse(count);
+        for (std::uint32_t source = 0; source < count; ++source) {
+            for (const EvalTransition& transition : pairs[source].transitions) {
+                adjacency[source].push_back(transition.target);
+                reverse[transition.target].push_back(source);
+            }
+            std::sort(adjacency[source].begin(), adjacency[source].end());
+            adjacency[source].erase(
+                std::unique(
+                    adjacency[source].begin(), adjacency[source].end()),
+                adjacency[source].end());
+        }
+        for (auto& incoming : reverse) {
+            std::sort(incoming.begin(), incoming.end());
+            incoming.erase(
+                std::unique(incoming.begin(), incoming.end()), incoming.end());
+        }
+
+        std::vector<std::uint8_t> visited(count, 0);
+        std::vector<std::uint32_t> finish;
+        finish.reserve(count);
+        for (std::uint32_t root = 0; root < count; ++root) {
+            if (visited[root]) continue;
+            visited[root] = 1;
+            std::vector<std::pair<std::uint32_t, std::size_t>> stack;
+            stack.push_back({root, 0});
+            while (!stack.empty()) {
+                auto& frame = stack.back();
+                const auto& next = adjacency[frame.first];
+                if (frame.second < next.size()) {
+                    const std::uint32_t target = next[frame.second++];
+                    if (!visited[target]) {
+                        visited[target] = 1;
+                        stack.push_back({target, 0});
+                    }
+                } else {
+                    finish.push_back(frame.first);
+                    stack.pop_back();
+                }
+            }
+        }
+
+        component_by_pair.assign(count, kNoId);
+        std::vector<std::vector<std::uint32_t>> raw_components;
+        for (auto it = finish.rbegin(); it != finish.rend(); ++it) {
+            const std::uint32_t root = *it;
+            if (component_by_pair[root] != kNoId) continue;
+            const std::uint32_t component =
+                static_cast<std::uint32_t>(raw_components.size());
+            raw_components.emplace_back();
+            std::vector<std::uint32_t> stack{root};
+            component_by_pair[root] = component;
+            while (!stack.empty()) {
+                const std::uint32_t current = stack.back();
+                stack.pop_back();
+                raw_components.back().push_back(current);
+                for (const std::uint32_t source : reverse[current]) {
+                    if (component_by_pair[source] == kNoId) {
+                        component_by_pair[source] = component;
+                        stack.push_back(source);
+                    }
+                }
+            }
+            std::sort(
+                raw_components.back().begin(), raw_components.back().end());
+        }
+
+        std::vector<std::set<std::uint32_t>> dag(raw_components.size());
+        std::vector<std::uint32_t> indegree(raw_components.size(), 0);
+        for (std::uint32_t source = 0; source < count; ++source) {
+            const std::uint32_t from = component_by_pair[source];
+            for (const EvalTransition& transition : pairs[source].transitions) {
+                const std::uint32_t to = component_by_pair[transition.target];
+                if (from != to && dag[from].insert(to).second) ++indegree[to];
+            }
+        }
+        std::set<std::uint32_t> ready;
+        for (std::uint32_t i = 0; i < indegree.size(); ++i) {
+            if (indegree[i] == 0) ready.insert(i);
+        }
+        std::vector<std::uint32_t> order;
+        while (!ready.empty()) {
+            const std::uint32_t current = *ready.begin();
+            ready.erase(ready.begin());
+            order.push_back(current);
+            for (const std::uint32_t next : dag[current]) {
+                if (--indegree[next] == 0) ready.insert(next);
+            }
+        }
+        if (order.size() != raw_components.size()) {
+            throw std::logic_error("strategy evaluation SCC DAG is cyclic");
+        }
+        components.clear();
+        components.reserve(order.size());
+        for (const std::uint32_t old : order) {
+            components.push_back(std::move(raw_components[old]));
+        }
+        for (std::uint32_t component = 0;
+             component < components.size(); ++component) {
+            for (const std::uint32_t pair : components[component]) {
+                component_by_pair[pair] = component;
+            }
+        }
+
+        external_incoming.assign(count, 0.0);
+        pair_visits.assign(count, 0.0);
+        unresolved_pair.assign(count, 0.0);
+        if (start_pair != kNoId) external_incoming[start_pair] = 1.0;
+        component_index = 0;
+    }
+
+    bool component_has_exit(
+        std::uint32_t component,
+        const std::vector<std::uint32_t>& members) const {
+        for (const std::uint32_t pair : members) {
+            if (!pairs[pair].absorptions.empty()) return true;
+            for (const EvalTransition& transition : pairs[pair].transitions) {
+                if (component_by_pair[transition.target] != component &&
+                    transition.probability > 0.0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool dense_solve(
+        std::uint32_t component,
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& incoming,
+        std::vector<double>& visits) const {
+        const std::size_t n = members.size();
+        std::map<std::uint32_t, std::size_t> local;
+        for (std::size_t i = 0; i < n; ++i) local[members[i]] = i;
+        std::vector<std::vector<long double>> matrix(
+            n, std::vector<long double>(n + 1, 0.0L));
+        for (std::size_t row = 0; row < n; ++row) {
+            matrix[row][row] = 1.0L;
+            matrix[row][n] = incoming[row];
+        }
+        for (std::size_t source = 0; source < n; ++source) {
+            for (const EvalTransition& transition :
+                 pairs[members[source]].transitions) {
+                if (component_by_pair[transition.target] != component) continue;
+                matrix[local.at(transition.target)][source] -=
+                    static_cast<long double>(transition.probability);
+            }
+        }
+
+        long double matrix_scale = 0.0L;
+        for (const auto& row : matrix) {
+            for (std::size_t col = 0; col < n; ++col) {
+                matrix_scale = std::max(matrix_scale, std::fabs(row[col]));
+            }
+        }
+        long double min_pivot = std::numeric_limits<long double>::infinity();
+        long double max_pivot = 0.0L;
+        for (std::size_t col = 0; col < n; ++col) {
+            std::size_t pivot = col;
+            long double pivot_abs = std::fabs(matrix[col][col]);
+            for (std::size_t row = col + 1; row < n; ++row) {
+                const long double candidate = std::fabs(matrix[row][col]);
+                if (candidate > pivot_abs) {
+                    pivot = row;
+                    pivot_abs = candidate;
+                }
+            }
+            if (pivot_abs <= std::max(1e-18L, matrix_scale * 1e-14L)) {
+                return false;
+            }
+            if (pivot != col) std::swap(matrix[pivot], matrix[col]);
+            min_pivot = std::min(min_pivot, pivot_abs);
+            max_pivot = std::max(max_pivot, pivot_abs);
+            for (std::size_t row = col + 1; row < n; ++row) {
+                const long double factor = matrix[row][col] / matrix[col][col];
+                if (factor == 0.0L) continue;
+                for (std::size_t k = col; k <= n; ++k) {
+                    matrix[row][k] -= factor * matrix[col][k];
+                }
+            }
+        }
+        if (max_pivot > 0.0L && min_pivot / max_pivot < 1e-13L) {
+            return false;
+        }
+
+        std::vector<long double> solved(n, 0.0L);
+        for (std::size_t back = n; back-- > 0;) {
+            long double value = matrix[back][n];
+            for (std::size_t col = back + 1; col < n; ++col) {
+                value -= matrix[back][col] * solved[col];
+            }
+            solved[back] = value / matrix[back][back];
+            if (!std::isfinite(solved[back])) return false;
+        }
+        long double max_value = 0.0L;
+        for (const long double value : solved) {
+            max_value = std::max(max_value, std::fabs(value));
+        }
+        const long double negative_tolerance =
+            1e-12L * std::max(1.0L, max_value);
+        visits.resize(n);
+        for (std::size_t i = 0; i < n; ++i) {
+            if (solved[i] < -negative_tolerance) return false;
+            visits[i] = static_cast<double>(std::max(0.0L, solved[i]));
+            if (!std::isfinite(visits[i])) return false;
+        }
+
+        long double max_residual = 0.0L;
+        for (std::size_t target = 0; target < n; ++target) {
+            long double expected = incoming[target];
+            for (std::size_t source = 0; source < n; ++source) {
+                for (const EvalTransition& transition :
+                     pairs[members[source]].transitions) {
+                    if (transition.target == members[target]) {
+                        expected += static_cast<long double>(visits[source]) *
+                                    transition.probability;
+                    }
+                }
+            }
+            max_residual = std::max(
+                max_residual,
+                std::fabs(static_cast<long double>(visits[target]) - expected));
+        }
+        const long double tolerance = std::max(
+            1e-12L,
+            static_cast<long double>(options.epsilon) *
+                std::max(1.0L, max_value) * 10.0L);
+        return max_residual <= tolerance;
+    }
+
+    bool rank_one_solve(
+        std::uint32_t component,
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& incoming,
+        std::vector<double>& visits) const {
+        if (members.size() < 2) return false;
+        const auto row = [&](std::uint32_t pair) {
+            std::map<std::uint32_t, double> probabilities;
+            for (const EvalTransition& transition : pairs[pair].transitions) {
+                if (component_by_pair[transition.target] == component) {
+                    probabilities[transition.target] += transition.probability;
+                }
+            }
+            return probabilities;
+        };
+        const std::map<std::uint32_t, double> reference = row(members.front());
+        for (std::size_t source = 1; source < members.size(); ++source) {
+            const auto candidate = row(members[source]);
+            if (candidate.size() != reference.size()) return false;
+            auto a = reference.begin();
+            auto b = candidate.begin();
+            for (; a != reference.end(); ++a, ++b) {
+                if (a->first != b->first ||
+                    std::fabs(a->second - b->second) > 1e-15) {
+                    return false;
+                }
+            }
+        }
+        double internal_probability = 0.0;
+        for (const auto& [target, probability] : reference) {
+            (void)target;
+            internal_probability += probability;
+        }
+        const double denominator = 1.0 - internal_probability;
+        if (!(denominator > 1e-14)) return false;
+        double total_incoming = 0.0;
+        for (const double mass : incoming) total_incoming += mass;
+        const double total_visits = total_incoming / denominator;
+        if (!std::isfinite(total_visits)) return false;
+        visits = incoming;
+        for (std::size_t target = 0; target < members.size(); ++target) {
+            const auto found = reference.find(members[target]);
+            if (found != reference.end()) {
+                visits[target] += found->second * total_visits;
+            }
+        }
+        return true;
+    }
+
+    void add_absorption(const EvalAbsorption& absorption, double mass) {
+        if (!(mass > 0.0)) return;
+        if (!absorption.edge_id.empty()) {
+            edge_traversals[absorption.edge_id] += mass;
+        }
+        switch (absorption.kind) {
+        case EvalAbsorptionKind::Terminal:
+            terminal_mass[absorption.node] += mass;
+            terminal_incoming[absorption.node][absorption.state] += mass;
+            break;
+        case EvalAbsorptionKind::ActionNotApplied:
+            action_not_applied[absorption.node] += mass;
+            break;
+        case EvalAbsorptionKind::NoMatchingEdge:
+            no_matching_edge[absorption.node] += mass;
             break;
         }
     }
 
-    std::vector<double> unresolved(node_count, 0.0);
-    for (const auto& [key, mass] : current) {
-        unresolved[pair_node(key)] += mass;
-        result.residual_mass += mass;
-    }
-    result.unresolved_probability = result.residual_mass;
-    if (result.residual_mass < options.epsilon) result.converged = true;
-    result.max_mass_conservation_error = std::max(
-        result.max_mass_conservation_error,
-        std::fabs(absorbed_probability(result) + result.residual_mass - 1.0));
-
-    for (std::size_t i = 0; i < node_count; ++i) {
-        const StrategyNode& source = strategy.nodes[i];
-        if (source.kind == StrategyNodeKind::Terminal) {
-            result.terminal_nodes.push_back(
-                {source.id, source.terminal_kind, terminal_mass[i]});
-        }
-        if (unresolved[i] > 0.0) {
-            result.unresolved_by_node.push_back({source.id, unresolved[i]});
-        }
-        if (action_not_applied[i] > 0.0) {
-            result.failures_by_node.push_back(
-                {source.id, "action_not_applied", action_not_applied[i]});
-        }
-        if (no_matching_edge[i] > 0.0) {
-            result.failures_by_node.push_back(
-                {source.id, "no_matching_edge", no_matching_edge[i]});
-        }
-
-        StrategyEvalNode output_node;
-        output_node.id = source.id;
-        output_node.expected_visits = node_visits[i];
-        std::vector<std::pair<std::uint32_t, double>> classes(
-            incoming[i].begin(), incoming[i].end());
-        std::stable_sort(
-            classes.begin(), classes.end(), [](const auto& a, const auto& b) {
-                if (a.second != b.second) return a.second > b.second;
-                return a.first < b.first;
-            });
-        const std::size_t keep = std::min<std::size_t>(
-            options.top_classes_per_node, classes.size());
-        for (std::size_t c = 0; c < keep; ++c) {
-            output_node.classes.push_back(
-                {node_visits[i] == 0.0
-                     ? 0.0
-                     : classes[c].second / node_visits[i],
-                 calc.state(classes[c].first)});
-        }
-        double truncated = 0.0;
-        for (std::size_t c = keep; c < classes.size(); ++c) {
-            truncated += classes[c].second;
-        }
-        output_node.classes_truncated_share =
-            node_visits[i] == 0.0 ? 0.0 : truncated / node_visits[i];
-        result.nodes.push_back(std::move(output_node));
-
-        for (const StrategyEdge& edge : source.edges) {
-            result.edges.push_back(
-                {edge.id, edge_traversals[edge.id]});
+    void commit_component(
+        std::uint32_t component,
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& visits) {
+        for (std::size_t i = 0; i < members.size(); ++i) {
+            const std::uint32_t pair = members[i];
+            const double visit = visits[i];
+            pair_visits[pair] += visit;
+            for (const EvalTransition& transition : pairs[pair].transitions) {
+                const double flow = visit * transition.probability;
+                if (!transition.edge_id.empty()) {
+                    edge_traversals[transition.edge_id] += flow;
+                }
+                if (component_by_pair[transition.target] != component) {
+                    external_incoming[transition.target] += flow;
+                }
+            }
+            for (const EvalAbsorption& absorption : pairs[pair].absorptions) {
+                add_absorption(
+                    absorption, visit * absorption.probability);
+            }
         }
     }
-    return result;
+
+    void add_unresolved(
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& mass,
+        bool hard) {
+        for (std::size_t i = 0; i < members.size(); ++i) {
+            unresolved_pair[members[i]] += mass[i];
+        }
+        hard_unresolved = hard_unresolved || hard;
+    }
+
+    void begin_fallback(
+        std::uint32_t component,
+        const std::vector<std::uint32_t>& members,
+        const std::vector<double>& incoming) {
+        fallback = std::make_unique<FallbackState>();
+        fallback->component = component;
+        fallback->members = members;
+        fallback->wave = incoming;
+        fallback->visits.assign(members.size(), 0.0);
+        for (std::size_t i = 0; i < members.size(); ++i) {
+            fallback->local_index[members[i]] = i;
+            fallback->input_mass += incoming[i];
+        }
+        phase = StrategyEvalPhase::Fallback;
+    }
+
+    void finish_component() {
+        ++component_index;
+        phase = component_index < components.size()
+                    ? StrategyEvalPhase::Solving
+                    : StrategyEvalPhase::Finalization;
+    }
+
+    void solve_component() {
+        if (component_index >= components.size()) {
+            phase = StrategyEvalPhase::Finalization;
+            return;
+        }
+        const std::uint32_t component =
+            static_cast<std::uint32_t>(component_index);
+        const auto& members = components[component_index];
+        std::vector<double> incoming;
+        incoming.reserve(members.size());
+        double input_mass = 0.0;
+        for (const std::uint32_t pair : members) {
+            incoming.push_back(external_incoming[pair]);
+            input_mass += external_incoming[pair];
+        }
+        if (input_mass == 0.0) {
+            commit_component(component, members, incoming);
+            finish_component();
+            return;
+        }
+        if (!component_has_exit(component, members)) {
+            /* A recurrent class has infinite visit counts. Preserve a finite,
+             * useful entry snapshot and attribute all entering probability as
+             * unresolved without fabricating repeated traversals. */
+            for (std::size_t i = 0; i < members.size(); ++i) {
+                pair_visits[members[i]] += incoming[i];
+            }
+            add_unresolved(members, incoming, true);
+            finish_component();
+            return;
+        }
+
+        std::vector<double> visits;
+        bool solved = false;
+        if (members.size() == 1) {
+            double self_probability = 0.0;
+            for (const EvalTransition& transition :
+                 pairs[members.front()].transitions) {
+                if (transition.target == members.front()) {
+                    self_probability += transition.probability;
+                }
+            }
+            const double denominator = 1.0 - self_probability;
+            if (denominator > 1e-14) {
+                const double value = incoming.front() / denominator;
+                if (std::isfinite(value) && value >= 0.0) {
+                    visits = {value};
+                    solved = true;
+                }
+            }
+        } else if (rank_one_solve(
+                       component, members, incoming, visits)) {
+            solved = true;
+        } else if (members.size() <= 64) {
+            solved = dense_solve(component, members, incoming, visits);
+        }
+        if (solved) {
+            commit_component(component, members, visits);
+            finish_component();
+        } else {
+            begin_fallback(component, members, incoming);
+        }
+    }
+
+    void run_fallback_batch() {
+        FallbackState& state = *fallback;
+        constexpr std::uint32_t kBatchSweeps = 32;
+        bool finished = false;
+        for (std::uint32_t batch = 0;
+             batch < kBatchSweeps && state.sweeps < options.max_sweeps;
+             ++batch) {
+            double wave_mass = 0.0;
+            for (std::size_t i = 0; i < state.wave.size(); ++i) {
+                state.visits[i] += state.wave[i];
+                wave_mass += state.wave[i];
+            }
+            std::vector<double> next(state.wave.size(), 0.0);
+            for (std::size_t source = 0; source < state.members.size(); ++source) {
+                for (const EvalTransition& transition :
+                     pairs[state.members[source]].transitions) {
+                    if (component_by_pair[transition.target] ==
+                        state.component) {
+                        next[state.local_index.at(transition.target)] +=
+                            state.wave[source] * transition.probability;
+                    }
+                }
+            }
+            double residual = 0.0;
+            for (const double mass : next) residual += mass;
+            state.exited_mass += wave_mass - residual;
+            state.wave = std::move(next);
+            ++state.sweeps;
+            ++fallback_sweeps;
+            const double conservation_error = std::fabs(
+                state.input_mass - state.exited_mass - residual);
+            output.max_mass_conservation_error = std::max(
+                output.max_mass_conservation_error, conservation_error);
+            if (conservation_error >
+                1e-8 * std::max(1.0, state.input_mass)) {
+                throw std::runtime_error(
+                    "strategy evaluation fallback mass conservation failed");
+            }
+            if (residual < options.epsilon) {
+                finished = true;
+                break;
+            }
+        }
+        if (state.sweeps >= options.max_sweeps) finished = true;
+        if (!finished) return;
+
+        double residual = 0.0;
+        for (const double mass : state.wave) residual += mass;
+        commit_component(state.component, state.members, state.visits);
+        if (residual > 0.0) {
+            add_unresolved(
+                state.members, state.wave, residual >= options.epsilon);
+        }
+        fallback.reset();
+        finish_component();
+    }
+
+    void finalize() {
+        CalcContext& calc = *model.calc;
+        const std::size_t node_count = strategy->nodes.size();
+        std::vector<double> node_visits(node_count, 0.0);
+        std::vector<double> unresolved_by_node(node_count, 0.0);
+        std::vector<std::map<std::uint32_t, double>> incoming(node_count);
+
+        for (std::size_t pair = 0; pair < pairs.size(); ++pair) {
+            const EvalPair& record = pairs[pair];
+            const double visits = pair_visits[pair];
+            node_visits[record.node] += visits;
+            incoming[record.node][record.state] += visits;
+            unresolved_by_node[record.node] += unresolved_pair[pair];
+            output.residual_mass += unresolved_pair[pair];
+            if (record.operation) {
+                output.expected_actions += visits;
+                if (record.consumes) {
+                    const ActionDescriptor& action =
+                        calc.registry().actions.at(record.action);
+                    for (const std::string& key : action.cost_keys) {
+                        output.expected_consumption[key] += visits;
+                    }
+                }
+            }
+        }
+        for (std::size_t node = 0; node < node_count; ++node) {
+            node_visits[node] += terminal_mass[node];
+            for (const auto& [state, mass] : terminal_incoming[node]) {
+                incoming[node][state] += mass;
+            }
+            const StrategyNode& source = strategy->nodes[node];
+            if (source.kind == StrategyNodeKind::Terminal) {
+                output.terminal_nodes.push_back(
+                    {source.id, source.terminal_kind, terminal_mass[node]});
+                if (source.terminal_kind == PC_TERMINAL_SUCCESS) {
+                    output.success_probability += terminal_mass[node];
+                } else if (source.terminal_kind == PC_TERMINAL_FAILURE) {
+                    output.failure_probability += terminal_mass[node];
+                } else {
+                    output.stop_probability += terminal_mass[node];
+                }
+            }
+            if (unresolved_by_node[node] > 0.0) {
+                output.unresolved_by_node.push_back(
+                    {source.id, unresolved_by_node[node]});
+            }
+            if (action_not_applied[node] > 0.0) {
+                output.failures_by_node.push_back(
+                    {source.id, "action_not_applied",
+                     action_not_applied[node]});
+                output.action_not_applied_probability +=
+                    action_not_applied[node];
+            }
+            if (no_matching_edge[node] > 0.0) {
+                output.failures_by_node.push_back(
+                    {source.id, "no_matching_edge",
+                     no_matching_edge[node]});
+                output.no_matching_edge_probability +=
+                    no_matching_edge[node];
+            }
+
+            StrategyEvalNode output_node;
+            output_node.id = source.id;
+            output_node.expected_visits = node_visits[node];
+            std::vector<std::pair<std::uint32_t, double>> classes(
+                incoming[node].begin(), incoming[node].end());
+            std::stable_sort(
+                classes.begin(), classes.end(), [](const auto& a, const auto& b) {
+                    if (a.second != b.second) return a.second > b.second;
+                    return a.first < b.first;
+                });
+            const std::size_t keep = std::min<std::size_t>(
+                options.top_classes_per_node, classes.size());
+            for (std::size_t c = 0; c < keep; ++c) {
+                output_node.classes.push_back(
+                    {node_visits[node] == 0.0
+                         ? 0.0
+                         : classes[c].second / node_visits[node],
+                     calc.state(classes[c].first)});
+            }
+            double truncated = 0.0;
+            for (std::size_t c = keep; c < classes.size(); ++c) {
+                truncated += classes[c].second;
+            }
+            output_node.classes_truncated_share =
+                node_visits[node] == 0.0
+                    ? 0.0
+                    : truncated / node_visits[node];
+            output.nodes.push_back(std::move(output_node));
+
+            for (const StrategyEdge& edge : source.edges) {
+                output.edges.push_back(
+                    {edge.id, edge_traversals[edge.id]});
+            }
+        }
+        output.unresolved_probability = output.residual_mass;
+        output.sweeps = static_cast<std::uint32_t>(std::min<std::uint64_t>(
+            fallback_sweeps,
+            std::numeric_limits<std::uint32_t>::max()));
+        output.converged =
+            !hard_unresolved && output.residual_mass < options.epsilon;
+        const double conservation_error = std::fabs(
+            absorbed_probability(output) + output.residual_mass - 1.0);
+        output.max_mass_conservation_error = std::max(
+            output.max_mass_conservation_error, conservation_error);
+        if (conservation_error > 1e-8) {
+            throw std::runtime_error(
+                "strategy evaluation mass conservation failed");
+        }
+        phase = StrategyEvalPhase::Done;
+    }
+
+    StrategyEvalResult forward_reference() {
+        if (phase == StrategyEvalPhase::Finalization) {
+            unresolved_pair.assign(pairs.size(), 0.0);
+            pair_visits.assign(pairs.size(), 0.0);
+            finalize();
+            return output;
+        }
+        if (discover_index != pairs.size()) {
+            throw std::logic_error(
+                "strategy evaluation reference requires completed discovery");
+        }
+        pair_visits.assign(pairs.size(), 0.0);
+        unresolved_pair.assign(pairs.size(), 0.0);
+        std::vector<double> wave(pairs.size(), 0.0);
+        wave.at(start_pair) = 1.0;
+        std::uint32_t sweeps = 0;
+        for (; sweeps < options.max_sweeps; ++sweeps) {
+            std::vector<double> next(pairs.size(), 0.0);
+            for (std::size_t pair = 0; pair < pairs.size(); ++pair) {
+                const double mass = wave[pair];
+                if (!(mass > 0.0)) continue;
+                pair_visits[pair] += mass;
+                for (const EvalTransition& transition :
+                     pairs[pair].transitions) {
+                    const double flow = mass * transition.probability;
+                    next[transition.target] += flow;
+                    if (!transition.edge_id.empty()) {
+                        edge_traversals[transition.edge_id] += flow;
+                    }
+                }
+                for (const EvalAbsorption& absorption :
+                     pairs[pair].absorptions) {
+                    add_absorption(
+                        absorption, mass * absorption.probability);
+                }
+            }
+            double transient = 0.0;
+            for (const double mass : next) transient += mass;
+            double absorbed = 0.0;
+            for (const double mass : terminal_mass) absorbed += mass;
+            for (const double mass : action_not_applied) absorbed += mass;
+            for (const double mass : no_matching_edge) absorbed += mass;
+            const double error = std::fabs(absorbed + transient - 1.0);
+            output.max_mass_conservation_error = std::max(
+                output.max_mass_conservation_error, error);
+            if (error > 1e-8) {
+                throw std::runtime_error(
+                    "strategy evaluation reference mass conservation failed");
+            }
+            wave = std::move(next);
+            if (transient < options.epsilon) {
+                ++sweeps;
+                break;
+            }
+        }
+        double residual = 0.0;
+        for (std::size_t pair = 0; pair < wave.size(); ++pair) {
+            unresolved_pair[pair] = wave[pair];
+            residual += wave[pair];
+        }
+        hard_unresolved = residual >= options.epsilon;
+        fallback_sweeps = sweeps;
+        phase = StrategyEvalPhase::Finalization;
+        finalize();
+        return output;
+    }
+
+    void step(std::uint32_t max_work_items) {
+        std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
+        while (remaining-- > 0 && phase != StrategyEvalPhase::Done) {
+            switch (phase) {
+            case StrategyEvalPhase::Discovery:
+                if (discover_index < pairs.size()) {
+                    expand_pair(static_cast<std::uint32_t>(discover_index));
+                    ++discover_index;
+                } else {
+                    build_components();
+                    phase = StrategyEvalPhase::Solving;
+                }
+                break;
+            case StrategyEvalPhase::Solving:
+                solve_component();
+                break;
+            case StrategyEvalPhase::Fallback:
+                run_fallback_batch();
+                break;
+            case StrategyEvalPhase::Finalization:
+                finalize();
+                break;
+            case StrategyEvalPhase::Done:
+                break;
+            }
+        }
+    }
+
+    StrategyEvalProgress progress() const {
+        StrategyEvalProgress value;
+        value.phase = phase;
+        value.done = phase == StrategyEvalPhase::Done;
+        value.discovered_pairs = discover_index;
+        value.pending_pairs = pairs.size() - discover_index;
+        value.solved_sccs = component_index;
+        value.total_sccs = components.size();
+        value.fallback_sweeps = fallback_sweeps;
+        if (fallback != nullptr) {
+            for (const double mass : fallback->wave) value.residual += mass;
+        } else {
+            for (const double mass : unresolved_pair) value.residual += mass;
+        }
+        return value;
+    }
+};
+
+StrategyEvalWork::StrategyEvalWork(
+    std::shared_ptr<const StrategyImpl> strategy,
+    const StrategyEvalOptions& options)
+    : impl_(std::make_unique<Impl>(std::move(strategy), options)) {}
+
+StrategyEvalWork::~StrategyEvalWork() = default;
+StrategyEvalWork::StrategyEvalWork(StrategyEvalWork&&) noexcept = default;
+StrategyEvalWork& StrategyEvalWork::operator=(StrategyEvalWork&&) noexcept =
+    default;
+
+void StrategyEvalWork::step(std::uint32_t max_work_items) {
+    impl_->step(max_work_items);
+}
+
+StrategyEvalProgress StrategyEvalWork::progress() const {
+    return impl_->progress();
+}
+
+const StrategyEvalResult& StrategyEvalWork::result() const {
+    if (impl_->phase != StrategyEvalPhase::Done) {
+        throw std::logic_error("strategy evaluation is not finished");
+    }
+    return impl_->output;
+}
+
+StrategyEvalResult evaluate_strategy(
+    const StrategyImpl& strategy,
+    const StrategyEvalOptions& options) {
+    std::shared_ptr<const StrategyImpl> borrowed(
+        &strategy, [](const StrategyImpl*) {});
+    StrategyEvalWork work(std::move(borrowed), options);
+    while (!work.progress().done) work.step(4096);
+    return work.result();
+}
+
+StrategyEvalResult evaluate_strategy_forward_reference_for_test(
+    const StrategyImpl& strategy,
+    const StrategyEvalOptions& options) {
+    std::shared_ptr<const StrategyImpl> borrowed(
+        &strategy, [](const StrategyImpl*) {});
+    StrategyEvalWork work(std::move(borrowed), options);
+    while (work.impl_->phase == StrategyEvalPhase::Discovery) {
+        work.impl_->step(1);
+    }
+    return work.impl_->forward_reference();
 }
 
 std::string serialize_strategy_eval(const StrategyEvalResult& result) {
