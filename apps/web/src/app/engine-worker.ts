@@ -18,6 +18,7 @@ import {
     SimulationOptions,
     SimulationProgress,
     SolverGoal,
+    StrategyEvalOptions,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -384,6 +385,20 @@ async function dispatch(
         case "closeStrategy":
             bindings.closeStrategy(params.strategy as number);
             return {};
+        case "strategyEvaluate": {
+            const strategy = bindings.compileStrategy(
+                params.session as number,
+                params.strategy,
+            );
+            try {
+                return bindings.strategyEvaluate(
+                    strategy,
+                    params.options as StrategyEvalOptions | undefined,
+                );
+            } finally {
+                bindings.closeStrategy(strategy);
+            }
+        }
         case "loadEconomy":
             return { economy: bindings.loadEconomy(params.economy) };
         case "closeEconomy":

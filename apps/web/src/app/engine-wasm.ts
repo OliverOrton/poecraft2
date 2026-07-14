@@ -23,6 +23,8 @@ import {
     SolverActionInfo,
     SolverGoal,
     SolverStateValue,
+    StrategyEvalOptions,
+    StrategyEvalResult,
     StrategyResult,
 } from "./engine-protocol";
 
@@ -255,6 +257,17 @@ export class EngineBindings {
 
     closeStrategy(strategy: number): void {
         this.module.ccall("pcw_strategy_close", null, ["number"], [strategy]);
+    }
+
+    strategyEvaluate(
+        strategy: number,
+        options?: StrategyEvalOptions,
+    ): StrategyEvalResult {
+        return this.callJson(
+            "pcw_strategy_evaluate",
+            ["number", "string"],
+            [strategy, JSON.stringify(options ?? {})],
+        ).result as unknown as StrategyEvalResult;
     }
 
     loadEconomy(economy: unknown): number {

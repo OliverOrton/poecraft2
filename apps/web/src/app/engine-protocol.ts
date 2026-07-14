@@ -167,6 +167,63 @@ export interface StrategyResult {
     missing_prices: Array<{ key: string; missing_count: number }>;
 }
 
+export interface StrategyEvalOptions {
+    epsilon?: number;
+    max_sweeps?: number;
+    max_states?: number;
+    top_classes_per_node?: number;
+}
+
+export interface StrategyEvalClass {
+    share: number;
+    rarity: number;
+    prefixes: number;
+    suffixes: number;
+    flags: number;
+    blocked: number;
+    /** Per target: 0 absent, 1 present below tier, 2 satisfied. */
+    slots: number[];
+}
+
+export interface StrategyEvalResult {
+    version: "v1";
+    converged: boolean;
+    sweeps: number;
+    residual_mass: number;
+    terminals: {
+        success: number;
+        failure: number;
+        stop: number;
+        action_not_applied: number;
+        no_matching_edge: number;
+        unresolved: number;
+        by_node: Array<{
+            node_id: string;
+            kind: "success" | "failure" | "stop";
+            p: number;
+        }>;
+    };
+    unresolved_by_node: Array<{ node_id: string; mass: number }>;
+    failures_by_node: Array<{
+        node_id: string;
+        reason: "action_not_applied" | "no_matching_edge";
+        p: number;
+    }>;
+    expected_actions: number;
+    expected_consumption: Array<{ key: string; quantity: number }>;
+    targets: Array<
+        | { kind: "family"; family_id: number; min_tier: number }
+        | { kind: "group"; group_id: number }
+    >;
+    nodes: Array<{
+        id: string;
+        expected_visits: number;
+        classes: StrategyEvalClass[];
+        classes_truncated_share: number;
+    }>;
+    edges: Array<{ id: string; expected_traversals: number }>;
+}
+
 export interface PoolEntry {
     session_mod_id: number;
     global_mod_id: number;

@@ -133,6 +133,50 @@ function repeatStrategy(): Record<string, unknown> {
     };
 }
 
+function evaluatorStrategy(
+    operation: Record<string, unknown> = { type: "chaos", params: {} },
+): Record<string, unknown> {
+    return {
+        version: "v1",
+        name: "Evaluate one reforge",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "rare",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            { id: "reforge", kind: "operation", operation },
+            { id: "success", kind: "terminal", terminal: "success" },
+            { id: "failure", kind: "terminal", terminal: "failure" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "reforge",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "three-prefixes",
+                from: "reforge",
+                to: "success",
+                priority: 0,
+                condition: { type: "prefix_count_range", min: 3, max: 3 },
+            },
+            {
+                id: "otherwise",
+                from: "reforge",
+                to: "failure",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
 function familyTierStrategy(
     familyKey: string,
     itemModKey: string,
@@ -434,6 +478,59 @@ test("Phase 13 strategy operations run natively through WASM", async () => {
     assert.equal(result.summary.total_actions, 5);
     await client.closeSimulator(simulator);
     await client.closeStrategy(strategy);
+});
+
+test("exact strategy evaluation agrees with a 5k-run simulation", async () => {
+    const document = evaluatorStrategy();
+    const exact = await client.strategyEvaluate(sessionId, document, {
+        top_classes_per_node: 4,
+    });
+    const terminalTotal =
+        exact.terminals.success +
+        exact.terminals.failure +
+        exact.terminals.stop +
+        exact.terminals.action_not_applied +
+        exact.terminals.no_matching_edge +
+        exact.terminals.unresolved;
+    assert.ok(
+        Math.abs(terminalTotal - 1) < 1e-3,
+        `terminal probabilities sum to ${terminalTotal}`,
+    );
+    assert.ok(exact.edges.some((edge) => edge.expected_traversals > 0));
+    assert.ok(exact.expected_actions > 0);
+    assert.ok(
+        exact.expected_consumption.some(
+            (entry) => entry.key === "chaos" && entry.quantity > 0,
+        ),
+    );
+
+    const strategy = await client.compileStrategy(sessionId, document);
+    const simulator = await client.createSimulator(sessionId, strategy);
+    const run = await client.runStrategy(simulator, {
+        target_runs: 5000,
+        seed: 20260714,
+    });
+    const empiricalSuccess = run.summary.success_count / 5000;
+    assert.ok(
+        Math.abs(empiricalSuccess - exact.terminals.success) < 0.03,
+        `empirical success ${empiricalSuccess} vs exact ${exact.terminals.success}`,
+    );
+    assert.ok(
+        Math.abs(run.summary.total_actions / 5000 - exact.expected_actions) <
+            0.03,
+    );
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
+});
+
+test("exact strategy evaluation names unsupported operations", async () => {
+    await assert.rejects(
+        client.strategyEvaluate(
+            sessionId,
+            evaluatorStrategy({ type: "veiled_chaos", params: {} }),
+        ),
+        /veiled_chaos/,
+    );
 });
 
 test("apply an action mutates the item per the rules", async () => {

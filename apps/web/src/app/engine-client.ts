@@ -24,6 +24,8 @@ import {
     SolverActionInfo,
     SolverGoal,
     SolverStateValue,
+    StrategyEvalOptions,
+    StrategyEvalResult,
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
@@ -355,6 +357,19 @@ export class EngineClient {
 
     closeStrategy(strategy: number): Promise<void> {
         return this.call<void>("closeStrategy", { strategy });
+    }
+
+    /** Compile and exactly evaluate one strategy graph in the worker. */
+    strategyEvaluate(
+        session: number,
+        strategy: unknown,
+        options?: StrategyEvalOptions,
+    ): Promise<StrategyEvalResult> {
+        return this.call<StrategyEvalResult>("strategyEvaluate", {
+            session,
+            strategy,
+            options,
+        });
     }
 
     async loadEconomy(economy: unknown): Promise<number> {

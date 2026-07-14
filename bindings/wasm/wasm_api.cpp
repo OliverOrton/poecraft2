@@ -1167,6 +1167,52 @@ void pcw_strategy_close(uint32_t strategy_id) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* pcw_strategy_evaluate(uint32_t strategy_id,
+                                  const char* options_json) {
+    pc_strategy_handle* strategy = find(g_strategies, strategy_id);
+    if (strategy == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown strategy");
+    }
+
+    pc_strategy_eval_options options{};
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    if (options_json != nullptr && options_json[0] != '\0') {
+        Value spec;
+        try {
+            spec = Parser(options_json, std::strlen(options_json)).parse();
+        } catch (const std::exception& e) {
+            return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
+        }
+        if (spec.type != Type::Object) {
+            return fail(
+                PC_RESULT_INVALID_ARGUMENT, "options must be an object");
+        }
+        options.epsilon = obj_double(spec, "epsilon");
+        options.max_sweeps = obj_u32(spec, "max_sweeps");
+        options.max_states = obj_u32(spec, "max_states");
+        options.top_classes_per_node =
+            obj_u32(spec, "top_classes_per_node");
+    }
+
+    pc_error_info error = make_error();
+    size_t length = 0;
+    pc_result rc = pc_strategy_evaluate(
+        *strategy, &options, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string result(length + 1, '\0');
+    rc = pc_strategy_evaluate(
+        *strategy, &options, result.data(), result.size(), &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    result.resize(length);
+
+    std::string out = "{\"ok\":true,\"result\":";
+    out += result;
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
 const char* pcw_economy_open(const char* economy_json) {
     pc_economy_handle economy = nullptr;
     pc_error_info error = make_error();
