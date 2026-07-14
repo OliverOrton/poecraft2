@@ -506,6 +506,9 @@ solver::StrategyEvalOptions strategy_eval_options(
     if (options->max_sweeps != 0) result.max_sweeps = options->max_sweeps;
     if (options->max_states != 0) result.max_states = options->max_states;
     if (options->max_pairs != 0) result.max_pairs = options->max_pairs;
+    if (options->max_transitions != 0) {
+        result.max_transitions = options->max_transitions;
+    }
     if (options->top_classes_per_node != 0) {
         result.top_classes_per_node = options->top_classes_per_node;
     }

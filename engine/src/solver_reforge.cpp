@@ -197,7 +197,7 @@ std::uint8_t occupied_mask(const RollState& state, std::uint8_t base_mask) {
 
 } // namespace
 
-OutcomeDistribution CalcContext::evaluate_reforge(
+std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint32_t state_id,
     std::uint32_t action_index) {
     const ActionDescriptor& action = registry_.actions.at(action_index);
@@ -206,7 +206,9 @@ OutcomeDistribution CalcContext::evaluate_reforge(
     OutcomeDistribution result;
 
     pc_item_state item;
-    if (!materialize(state_id, item)) return result;
+    if (!materialize(state_id, item)) {
+        return std::make_shared<OutcomeDistribution>(std::move(result));
+    }
 
     /* --- preserved base: fractured slots and locked sides ----------------- */
     const bool magic_reforge =
@@ -270,7 +272,7 @@ OutcomeDistribution CalcContext::evaluate_reforge(
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
     bool state_dependent = false;
-    const auto finalize = [&]() -> OutcomeDistribution& {
+    const auto finalize = [&]() -> std::shared_ptr<const OutcomeDistribution> {
         double committed = 0.0;
         for (const auto& [successor, probability] : outcome_acc) {
             committed += probability;
@@ -295,9 +297,9 @@ OutcomeDistribution CalcContext::evaluate_reforge(
             }
         }
         result.supported = true;
-        return result;
+        return std::make_shared<OutcomeDistribution>(std::move(result));
     };
-    const auto unapplied = [&]() -> OutcomeDistribution& {
+    const auto unapplied = [&]() -> std::shared_ptr<const OutcomeDistribution> {
         outcome_acc.clear();
         outcome_acc[state_id] = 1.0;
         state_dependent = true;
@@ -731,11 +733,11 @@ OutcomeDistribution CalcContext::evaluate_reforge(
 
     /* Dropped paths (epsilon/frontier truncation) leave the committed mass
      * slightly under 1; finalize renormalizes. */
-    finalize();
+    std::shared_ptr<const OutcomeDistribution> finalized = finalize();
     if (!state_dependent) {
-        reforge_cache_.emplace(memo_key, result);
+        reforge_cache_.emplace(memo_key, finalized);
     }
-    return result;
+    return finalized;
 }
 
 } // namespace solver

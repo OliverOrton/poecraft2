@@ -158,6 +158,75 @@ function graph(familyKey: string): Record<string, unknown> {
     };
 }
 
+function rareReforgeGraph(): Record<string, unknown> {
+    const condition = {
+        type: "has_mod_family",
+        family_mod_key: "LocalIncreasedEnergyShield11",
+        min_tier: 1,
+    };
+    return {
+        version: "v1",
+        name: "Pinned exact rare-reforge loop",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: 86,
+            rarity: "normal",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "alchemy",
+                kind: "operation",
+                operation: { type: "alchemy", params: {} },
+            },
+            {
+                id: "chaos",
+                kind: "operation",
+                operation: { type: "chaos", params: {} },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "alchemy",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "alchemy_hit",
+                from: "alchemy",
+                to: "success",
+                priority: 0,
+                condition,
+            },
+            {
+                id: "alchemy_miss",
+                from: "alchemy",
+                to: "chaos",
+                priority: 999,
+                is_default: true,
+            },
+            {
+                id: "chaos_hit",
+                from: "chaos",
+                to: "success",
+                priority: 0,
+                condition,
+            },
+            {
+                id: "repeat",
+                from: "chaos",
+                to: "chaos",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
 function median(values: number[]): number {
     const sorted = [...values].sort((a, b) => a - b);
     return sorted[Math.floor(sorted.length / 2)];
@@ -212,6 +281,41 @@ function assertExact(result: StrategyEvalResult, benchmark: BenchmarkCase): void
     );
 }
 
+function assertWideRareReforge(result: StrategyEvalResult): void {
+    const expectedActions = 24.91546431794879;
+    assert.equal(result.converged, true);
+    assert.equal(
+        result.sweeps,
+        0,
+        "the wide rare loop must use the direct solve",
+    );
+    assert.ok(Math.abs(result.terminals.success - 1) < 1e-10);
+    assert.ok(Math.abs(result.expected_actions - expectedActions) < 1e-9);
+    const alchemy = result.expected_consumption.find(
+        (entry) => entry.key === "alchemy",
+    );
+    const chaos = result.expected_consumption.find(
+        (entry) => entry.key === "chaos",
+    );
+    assert.ok(alchemy && Math.abs(alchemy.quantity - 1) < 1e-12);
+    assert.ok(
+        chaos && Math.abs(chaos.quantity - 23.915464317948782) < 1e-9,
+    );
+    const edge = (id: string): number | undefined =>
+        result.edges.find((entry) => entry.id === id)?.expected_traversals;
+    assert.ok(
+        Math.abs((edge("alchemy_hit") ?? 0) - 0.040135716005084476) <
+            1e-10,
+    );
+    assert.ok(
+        Math.abs((edge("alchemy_miss") ?? 0) - 0.959864283994916) < 1e-10,
+    );
+    assert.ok(
+        Math.abs((edge("chaos_hit") ?? 0) - 0.9598642839954707) < 1e-9,
+    );
+    assert.ok(Math.abs((edge("repeat") ?? 0) - 22.955600033932225) < 1e-9);
+}
+
 async function timed(
     client: EngineClient,
     session: number,
@@ -234,6 +338,10 @@ const data = await client.loadData(bundle());
 const session = await client.createSession(data, BASE, 86);
 try {
     const report: Array<Record<string, number | string>> = [];
+    const rareStarted = performance.now();
+    const rare = await client.strategyEvaluate(session, rareReforgeGraph());
+    const rareElapsedMs = performance.now() - rareStarted;
+    assertWideRareReforge(rare);
     for (const benchmark of CASES) {
         for (let warm = 0; warm < 2; warm += 1) {
             assertExact((await timed(client, session, benchmark, false)).result, benchmark);
@@ -271,7 +379,20 @@ try {
             expected_actions: benchmark.expectedActions,
         });
     }
-    console.log(JSON.stringify({ strategy_eval_benchmark: report }, null, 2));
+    console.log(
+        JSON.stringify(
+            {
+                wide_rare_reforge: {
+                    elapsed_ms: Number(rareElapsedMs.toFixed(3)),
+                    expected_actions: rare.expected_actions,
+                    success: rare.terminals.success,
+                },
+                strategy_eval_benchmark: report,
+            },
+            null,
+            2,
+        ),
+    );
 } finally {
     await client.closeSession(session);
     await client.closeData(data);

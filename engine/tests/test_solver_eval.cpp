@@ -707,6 +707,27 @@ void run_scale_and_fallback_tests() {
         failed = std::string(ex.what()).find("max_pairs") != std::string::npos;
     }
     PC_CHECK(failed);
+
+    StrategyEvalOptions state_guard;
+    state_guard.max_states = 1;
+    failed = false;
+    try {
+        (void)evaluate_strategy(*pair_guard, state_guard);
+    } catch (const std::length_error& ex) {
+        failed = std::string(ex.what()).find("max_states") != std::string::npos;
+    }
+    PC_CHECK(failed);
+
+    StrategyEvalOptions transition_guard;
+    transition_guard.max_transitions = 1;
+    failed = false;
+    try {
+        (void)evaluate_strategy(*pair_guard, transition_guard);
+    } catch (const std::length_error& ex) {
+        failed =
+            std::string(ex.what()).find("max_transitions") != std::string::npos;
+    }
+    PC_CHECK(failed);
 }
 
 void run_c_abi_tests() {
@@ -777,6 +798,42 @@ void run_c_abi_tests() {
     }
     PC_CHECK(step_result == PC_RESULT_CAPACITY_EXCEEDED);
     PC_CHECK(std::string(error.message).find("max_pairs") != std::string::npos);
+    pc_strategy_eval_destroy(work);
+
+    pc_strategy_eval_options state_limit{};
+    state_limit.struct_size = sizeof(state_limit);
+    state_limit.abi_version = PC_ABI_VERSION;
+    state_limit.max_states = 1;
+    work = nullptr;
+    PC_CHECK(pc_strategy_eval_begin(
+                 &strategy, &state_limit, &work, &error) == PC_RESULT_OK);
+    step_result = PC_RESULT_OK;
+    progress = {};
+    while (step_result == PC_RESULT_OK && !progress.done) {
+        step_result = pc_strategy_eval_step(work, 1, &progress, &error);
+    }
+    PC_CHECK(step_result == PC_RESULT_CAPACITY_EXCEEDED);
+    PC_CHECK(std::string(error.message).find("max_states") != std::string::npos);
+    PC_CHECK(std::string(error.message).find("bad_alloc") == std::string::npos);
+    pc_strategy_eval_destroy(work);
+
+    pc_strategy_eval_options transition_limit{};
+    transition_limit.struct_size = sizeof(transition_limit);
+    transition_limit.abi_version = PC_ABI_VERSION;
+    transition_limit.max_transitions = 1;
+    work = nullptr;
+    PC_CHECK(pc_strategy_eval_begin(
+                 &strategy, &transition_limit, &work, &error) == PC_RESULT_OK);
+    step_result = PC_RESULT_OK;
+    progress = {};
+    while (step_result == PC_RESULT_OK && !progress.done) {
+        step_result = pc_strategy_eval_step(work, 1, &progress, &error);
+    }
+    PC_CHECK(step_result == PC_RESULT_CAPACITY_EXCEEDED);
+    PC_CHECK(
+        std::string(error.message).find("max_transitions") !=
+        std::string::npos);
+    PC_CHECK(std::string(error.message).find("bad_alloc") == std::string::npos);
     pc_strategy_eval_destroy(work);
 
     pc_strategy_eval_options bad{};

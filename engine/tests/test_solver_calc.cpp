@@ -774,6 +774,15 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             reforge_start, registry.index_by_id.at("chaos"));
         PC_CHECK(chaos_dist.supported);
         PC_CHECK(chaos_dist.slot_satisfied_probability[0] > 0.0);
+        PC_CHECK(!chaos_dist.entries.empty());
+        if (!chaos_dist.entries.empty()) {
+            const OutcomeDistribution& shared_chaos = reforge_calc.outcomes(
+                chaos_dist.entries.front().state,
+                registry.index_by_id.at("chaos"));
+            PC_CHECK(
+                &shared_chaos == &chaos_dist &&
+                "reforge states with the same preserved base must share one distribution");
+        }
         std::printf("solver reforge artifact: chaos goal-hit p=%.6f over "
                     "%zu outcomes\n",
                     chaos_dist.slot_satisfied_probability[0],

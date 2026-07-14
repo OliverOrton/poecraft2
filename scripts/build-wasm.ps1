@@ -73,6 +73,7 @@ $EmccArgs += @(
     "-sEXPORT_NAME=createPoecraftEngine",
     "-sENVIRONMENT=web,worker,node",
     "-sALLOW_MEMORY_GROWTH=1",
+    "-sMAXIMUM_MEMORY=4GB",
     "-sEXIT_RUNTIME=0",
     "-sEXPORTED_FUNCTIONS=$Exported",
     "-sEXPORTED_RUNTIME_METHODS=$RuntimeMethods",
@@ -88,5 +89,14 @@ $ErrorActionPreference = $PreviousPreference
 if ($EmccExit -ne 0) {
     throw "emcc build failed with exit code $EmccExit."
 }
+
+# Emscripten emits the minified ES module with CRLF and trailing whitespace.
+# Normalize the committed wrapper so rebuilds stay diff-check clean.
+$GeneratedModule = [System.IO.File]::ReadAllText($Output)
+$GeneratedModule = $GeneratedModule.Replace("`r`n", "`n").TrimEnd() + "`n"
+[System.IO.File]::WriteAllText(
+    $Output,
+    $GeneratedModule,
+    [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "WASM engine written to $Output"

@@ -580,8 +580,12 @@ async function handle(message: ClientMessage): Promise<void> {
     } catch (error) {
         const info =
             error instanceof EngineError
-                ? { code: error.code, message: error.message }
-                : { code: -1, message: String(error) };
+                ? { code: error.code, detail: error.detail }
+                : {
+                      code: -1,
+                      detail:
+                          error instanceof Error ? error.message : String(error),
+                  };
         post({ kind: "response", id, ok: false, error: info });
     } finally {
         cancelled.delete(id);

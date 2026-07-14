@@ -1,126 +1,103 @@
-# Session Handoff — Strategy evaluator Phase C.1 complete
+# Session Handoff — Calculator OOM fixes complete; s6 Phase 1 next
 
-Written 2026-07-14 after completing the exact-evaluation loop acceleration and
-progress/cancellation milestone. Read [AGENTS.md](AGENTS.md), then
-[docs/direction.md](docs/direction.md), then this file. Strategy Calculator
-Mode design and the completed phase record live in
-[strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md).
+Written 2026-07-14 after implementing and gating the Calculator-mode
+rare-reforge exact-evaluation OOM fixes. Read [AGENTS.md](AGENTS.md), then
+[docs/direction.md](docs/direction.md), then this file. The next task is
+[docs/s6-plan.md](docs/s6-plan.md) Phase 1. Phase D in
+[docs/strategy-calculator-mode-plan.md](docs/strategy-calculator-mode-plan.md)
+remains unscheduled.
 
 ## Current state
 
-Strategy Calculator Mode Phases A-C.1 are complete in the local commit that
-contains this handoff. Phase C.1 replaced whole-graph probability sweeps with a
-one-time reachable `(compiled node, abstract state)` transition graph and an
-SCC condensation solver:
+The `std::bad_alloc` failure for wide rare-reforge loops is fixed without
+changing exactness or the v1 result contract:
 
-- acyclic singleton components flow directly;
-- singleton self-loops use the geometric closed form;
-- identical-row cyclic components use an exact rank-one closed form (the hot
-  Alteration/reforge-loop path);
-- small general cyclic components use a pivoted dense solve;
-- large or ill-conditioned components use a bounded local iterative fallback;
-- closed recurrent components become unresolved immediately, with deterministic
-  entry-node attribution.
+1. `CalcContext` caches `shared_ptr<const OutcomeDistribution>` objects.
+   Reforge states with the same preserved base now return the same distribution
+   object instead of copying thousands of entries per `(state, action)`.
+   State-dependent illegal/unapplied self-loops remain per-state.
+2. Strategy evaluation assigns deterministic integer edge indices in
+   node/edge order. Transition rows and edge-flow accumulation no longer carry
+   heap string copies; serialization still emits authored edge order.
+3. Legal operation pairs share one routed row keyed by
+   `(node, distribution object)`. Router and illegal-state rows remain unique.
+   Every solver/reference consumer reads through the row table.
+4. SCC discovery now runs iterative Tarjan directly over shared rows. It no
+   longer duplicates the logical edge relation into adjacency and reverse
+   vector-of-vectors.
+5. `CalcContext::intern_state` enforces the evaluation's `max_states` before
+   inserting a new state. `max_transitions` is a new public evaluation option
+   (default 10,000,000 stored row entries). Both limits surface as
+   `PC_RESULT_CAPACITY_EXCEEDED` with explicit messages, not `bad_alloc`.
+6. The committed WASM module was rebuilt with `-sMAXIMUM_MEMORY=4GB`.
+7. Worker errors transport raw `EngineError.detail`, so the client adds the
+   `poecraft engine error <code>:` prefix exactly once. Calculator UI copy uses
+   the retained error code: code 4 is unsupported vocabulary; allocation and
+   capacity failures use honest “too large to evaluate exactly” copy.
 
-Result reconstruction still produces the existing v1 terminal, failure,
-expected action/consumption, node-class, and edge-flow contract. The synchronous
-`pc_strategy_evaluate` API drives the same new work object internally. The
-additive begin/step/finish/destroy C ABI exposes real discovery/SCC/fallback/
-finalization progress and lets WASM abandon obsolete work safely.
+## Pinned regression and performance
 
-The worker now runs adaptive ~16 ms evaluation chunks, limits progress messages
-to about 10/s, accepts an `AbortSignal`, and destroys both temporary compiled
-strategy and evaluation handles on success, refusal, error, and cancellation.
-Strategy Builder structural edits abort the in-flight evaluation immediately;
-leaving Calculator mode and document disposal do the same. The last result and
-stale annotations remain visible until the replacement finishes.
+`apps/web/test/strategy-eval-benchmark.ts` now includes the original wide
+Vaal Regalia shape: Normal start → Alchemy, then a Chaos self-loop until
+`LocalIncreasedEnergyShield11` tier 1. Through the real Node/WASM worker under
+default options it completes in about 0.9 s, converges with zero fallback
+sweeps, and pins:
 
-## Performance result
+- success: within `1e-10` of 1;
+- expected actions: `24.91546431794879`;
+- Alchemy consumption: `1`;
+- Chaos consumption: `23.915464317948782`;
+- all hit/miss/repeat edge traversals.
 
-`npm run benchmark:strategy-eval` is the opt-in pinned Node/WASM worker gate.
-Its final warmed medians were:
+The two existing magic-loop benchmark pins remain unchanged. A final standalone
+run recorded 31.177 ms and 31.004 ms warmed medians (45.99× and 113.21× versus
+their recorded baselines); progress callback overhead remained below 0.8 ms.
 
-- T1 `+(91-100) to maximum Energy Shield`: 1,434 ms before, 31.639 ms after,
-  **45.32× faster**; callback-enabled median 31.440 ms (-0.200 ms,
-  measurement noise/no observed overhead);
-- lower-hit-rate T1 hybrid Energy Shield/Life: 3,510 ms before, 31.243 ms
-  after, **112.35× faster**; callback-enabled median 31.379 ms (+0.136 ms).
+## Acceptance gates — all green
 
-Both cases independently pin terminal probability, expected actions,
-consumption, edge flows, and zero fallback sweeps. The target was at least 5×
-per graph and callback overhead no more than 2% or 2 ms.
+- `powershell -File scripts/build.ps1`
+- `build/engine/poecraft_engine_tests.exe data/compiled/current fixtures/spec`
+  — 118,426 checks, 0 failures
+- `powershell -File scripts/build-wasm.ps1`
+- `npx tsc --noEmit` in `apps/web`
+- `npm test` in `apps/web` — 22/22 worker smoke tests plus all presentation and
+  model tests
+- `npm run benchmark:strategy-eval` in `apps/web`
+- `npm run build` in `apps/web`
+- `powershell -File scripts/test.ps1`
 
-## Verification completed
+New gates cover shared reforge identity, native and C-ABI state/transition
+caps, capacity code 8 through the real worker, absence of `bad_alloc`, raw
+detail transport, one prefix only, and code-aware Calculator markup for codes
+4, 5, and 8.
 
-- `powershell -File scripts/build.ps1` — pass;
-- direct native suite — 118,414 checks, 0 failures;
-- `powershell -File scripts/build-wasm.ps1` — pass;
-- `npx tsc --noEmit` — pass;
-- `npm test` — pass, including 21/21 worker smoke checks;
-- `npm run build` — pass;
-- `npm run benchmark:strategy-eval` — both performance/overhead gates pass;
-- `powershell -File scripts/test.ps1` — pass;
-- separate headless Chrome process — progress text observed, a burst of
-  structural replacements ended on the newest 81.7014428413-action graph,
-  final surface reported `direct SCC solve`, and the console/error capture was
-  empty. Codex browser tooling was not used.
+## Next task — s6 plan Phase 1 only
 
-Native coverage now includes hand-computed geometric and two-node cyclic
-systems, test-only high-precision forward-reference parity, retained MC gates,
-immediate self/router closed SCCs, a converged near-closed exit, forced
-large-SCC fallback conservation, explicit pair-cap failure, stepped progress,
-and byte determinism. Worker coverage includes ordered progress, prompt repeated
-cancellation, stable live-handle count, and an obsolete-request burst where only
-the newest graph completes.
+Implement [docs/s6-plan.md](docs/s6-plan.md) **Phase 1 — Solve in the
+workspace (solve → Strategy Board)**. It starts with the required image-model
+design loop for the solve panel and placement decision. Reuse the existing
+Strategy Builder board-annotation mechanism for compiled-policy expected-cost
+badges; do not introduce a second badge system.
 
-## Next task
+Stop after the Phase 1 gate, rewrite this handoff, and do not begin Phase 2.
 
-Resume **`docs/s6-plan.md` Phase 1**. Phase D in
-`docs/strategy-calculator-mode-plan.md` remains an unscheduled follow-up. Do not
-silently start Phase D while doing s6 work.
+## Gotchas
 
-## Important files
-
-- `docs/strategy-calculator-mode-plan.md`
-- `engine/src/solver_eval.cpp`
-- `engine/src/solver_api.cpp`
-- `engine/include/poecraft/solver.h`
-- `engine/src/solver_internal.hpp`
-- `engine/tests/test_solver_eval.cpp`
-- `bindings/wasm/wasm_api.cpp`
-- `scripts/build-wasm.ps1`
-- `apps/web/src/app/engine-protocol.ts`
-- `apps/web/src/app/engine-wasm.ts`
-- `apps/web/src/app/engine-worker.ts`
-- `apps/web/src/app/engine-client.ts`
-- `apps/web/src/app/components/pc-strategy-editor.ts`
-- `apps/web/src/app/components/pc-strategy-odds.ts`
-- `apps/web/test/engine-smoke.test.ts`
-- `apps/web/test/strategy-eval-benchmark.ts`
-
-## Rulings and gotchas
-
-- Exactness remains `1e-12` by default. The speedup does not loosen epsilon,
-  drop outcome classes, or change simulator-parity absorption semantics.
-- `pc_strategy_eval_options.max_pairs` defaults to 1,000,000 and is distinct
-  from `max_states`; exceeding it returns `PC_RESULT_CAPACITY_EXCEEDED` with an
-  explicit `max_pairs` message.
-- The result JSON's existing `sweeps` field now counts local fallback sweeps.
-  Direct SCC solves report 0 and the UI labels them `direct SCC solve`.
-- Closed recurrent SCC visit counts are mathematically infinite. The finite v1
-  node-class surface records their entry snapshot and reports all entering mass
-  as unresolved instead of fabricating repeated traversals.
-- Do not remove the rank-one solve as an apparent special case: exact reforge
-  and Alteration loops produce many pair states with identical internal rows;
-  this is the path responsible for the pinned speedup.
-- SCC discovery contains every positive-probability reachable transition; it
-  never uses a mass cutoff. Epsilon applies only to local fallback termination.
-- Web progress is engine phase/count presentation only. Probability, routing,
-  legality, and SCC membership remain native-engine authority.
-- Cancellation is handle destruction, not a partial result. Always retain the
-  worker `finally` cleanup for both temporary handles.
-- Do not use Codex's built-in/in-app browser for this repository. Use a separate
+- Exactness rulings from the previous handoff still stand: no probability
+  cutoffs in discovery, junk coarsening, frontier/epsilon changes, or result
+  contract changes.
+- Shared rows are valid only for legal operation pairs with the same
+  distribution object. Router nodes and state-dependent results must stay
+  unique.
+- `max_transitions` counts stored transition plus absorption entries across
+  unique rows, not the dense logical references created when many pairs share
+  a row.
+- `PC_RESULT_CAPACITY_EXCEEDED` is currently code **8**. Presentation also
+  treats legacy/symptom codes 5 and 7 as size failures, but new cap failures
+  should be code 8.
+- The engine WASM module is committed. Rebuild it after engine/C-ABI changes
+  with `scripts/build-wasm.ps1`; the script self-activates `C:\emsdk`.
+- Do not use Codex's built-in browser for this repository. Use a separate
   headless browser process when a browser smoke is required.
-- PoE1 mechanic ambiguity still goes directly to Oliver; never research or
-  guess.
-- Commits are local-only unless Oliver explicitly asks to push.
+- PoE1 mechanic ambiguity goes directly to Oliver; never research or guess.
+- Commits are local-only unless Oliver explicitly says to push.

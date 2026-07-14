@@ -77,9 +77,12 @@ import { StrategyDraftRecord } from "../src/app/workspace/persistence";
 }
 
 {
-    const refusal =
-        "poecraft engine error 4: strategy evaluation unsupported:\n" +
-        "- node 'veiled-reforge' operation '<veiled_chaos>' has no exact calculator evaluator";
+    const refusal = {
+        code: 4,
+        detail:
+            "strategy evaluation unsupported:\n" +
+            "- node 'veiled-reforge' operation '<veiled_chaos>' has no exact calculator evaluator",
+    };
     const markup = strategyEvalRefusalMarkup(refusal);
     assert.match(
         markup,
@@ -90,6 +93,29 @@ import { StrategyDraftRecord } from "../src/app/workspace/persistence";
     assert.ok(!markup.includes("<veiled_chaos>"));
     console.log("  ok - evaluator refusal text is preserved and safely rendered");
 }
+
+for (const code of [5, 8]) {
+    const markup = strategyEvalRefusalMarkup({
+        code,
+        detail:
+            code === 5
+                ? "std::bad_alloc"
+                : "strategy evaluation exceeded max_transitions (1)",
+    });
+    assert.match(
+        markup,
+        /This strategy is too large to evaluate exactly with the current limits\./,
+    );
+    assert.doesNotMatch(
+        markup,
+        /uses actions or conditions Calculator mode cannot evaluate/,
+    );
+    assert.equal(
+        markup.match(new RegExp(`poecraft engine error ${code}`, "g"))?.length,
+        1,
+    );
+}
+console.log("  ok - capacity and allocation failures use honest exact-size copy");
 
 function cannedResult(): StrategyEvalResult {
     return {

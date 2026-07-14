@@ -431,6 +431,7 @@ bool parse_strategy_eval_options(
     options.max_sweeps = obj_u32(spec, "max_sweeps");
     options.max_states = obj_u32(spec, "max_states");
     options.max_pairs = obj_u32(spec, "max_pairs");
+    options.max_transitions = obj_u32(spec, "max_transitions");
     options.top_classes_per_node =
         obj_u32(spec, "top_classes_per_node");
     return true;

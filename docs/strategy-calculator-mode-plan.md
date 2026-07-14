@@ -43,6 +43,14 @@ stepped ABI with real worker progress and cancellation, and retains the
 synchronous API as a wrapper. Phase D remains unscheduled; `s6-plan.md` Phase 1
 resumes next.
 
+Status 2026-07-14 (latest): **The Calculator exact-evaluation OOM hardening is
+complete.** Base-shared reforge distributions and routed rows are shared,
+edge ids are interned, SCC discovery no longer copies the dense edge relation,
+state/transition capacity failures are explicit, WASM has a 4 GB ceiling, and
+worker/UI errors retain their real code without double-prefixing. The pinned
+rare Alchemy/Chaos loop now completes exactly under default options; Phase D
+is still unscheduled and `s6-plan.md` Phase 1 is next.
+
 Two standing rules gate everything below, same as every solver phase:
 
 - **The engine is the only crafting-rule authority.** Condition evaluation

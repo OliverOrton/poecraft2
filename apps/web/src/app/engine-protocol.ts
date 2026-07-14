@@ -9,16 +9,18 @@
 
 export interface EngineErrorInfo {
     code: number;
-    message: string;
+    detail: string;
 }
 
 /** Thrown on the main thread when the worker reports a failed call. */
 export class EngineError extends Error {
     readonly code: number;
-    constructor(code: number, message: string) {
-        super(`poecraft engine error ${code}: ${message}`);
+    readonly detail: string;
+    constructor(code: number, detail: string) {
+        super(`poecraft engine error ${code}: ${detail}`);
         this.name = "EngineError";
         this.code = code;
+        this.detail = detail;
     }
 }
 
@@ -172,6 +174,7 @@ export interface StrategyEvalOptions {
     max_sweeps?: number;
     max_states?: number;
     max_pairs?: number;
+    max_transitions?: number;
     top_classes_per_node?: number;
 }
 

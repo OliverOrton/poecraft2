@@ -82,12 +82,14 @@ CalcContext::CalcContext(
     const std::vector<std::uint32_t>& action_indices,
     bool allow_empty_goal,
     bool empty_actions_mean_all,
-    bool distinguish_junk_exclusion_effects)
+    bool distinguish_junk_exclusion_effects,
+    std::optional<std::uint32_t> state_cap)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
       candidates_(action_indices),
-      context_(0) {
+      context_(0),
+      state_cap_(state_cap) {
     layout_ = build_abstract_layout(
         *session_, goal_, registry_, action_indices, allow_empty_goal,
         empty_actions_mean_all, distinguish_junk_exclusion_effects);
@@ -141,13 +143,23 @@ bool CalcContext::is_goal_state(const AbstractState& state) const {
 
 std::uint32_t CalcContext::intern_state(const AbstractState& state) {
     const std::size_t hash = abstract_state_hash(state);
-    auto& bucket = state_ids_by_hash_[hash];
-    for (std::uint32_t id : bucket) {
-        if (states_[id] == state) return id;
+    const auto found = state_ids_by_hash_.find(hash);
+    if (found != state_ids_by_hash_.end()) {
+        for (std::uint32_t id : found->second) {
+            if (states_[id] == state) return id;
+        }
+    }
+    if (state_cap_.has_value() && states_.size() >= *state_cap_) {
+        throw std::length_error(
+            "calculation context exceeded max_states (" +
+            std::to_string(*state_cap_) + ")");
+    }
+    if (states_.size() >= std::numeric_limits<std::uint32_t>::max()) {
+        throw std::length_error("calculation context state id space exhausted");
     }
     const std::uint32_t id = static_cast<std::uint32_t>(states_.size());
     states_.push_back(state);
-    bucket.push_back(id);
+    state_ids_by_hash_[hash].push_back(id);
     return id;
 }
 
@@ -325,13 +337,14 @@ const OutcomeDistribution& CalcContext::outcomes(
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | action_index;
     const auto cached = distribution_cache_.find(key);
-    if (cached != distribution_cache_.end()) return cached->second;
-    OutcomeDistribution distribution = evaluate(state_id, action_index);
-    return distribution_cache_.emplace(key, std::move(distribution))
-        .first->second;
+    if (cached != distribution_cache_.end()) return *cached->second;
+    std::shared_ptr<const OutcomeDistribution> distribution =
+        evaluate(state_id, action_index);
+    return *distribution_cache_.emplace(key, std::move(distribution))
+                .first->second;
 }
 
-OutcomeDistribution CalcContext::evaluate(
+std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
     std::uint32_t state_id,
     std::uint32_t action_index) {
     const ActionDescriptor& action = registry_.actions.at(action_index);
@@ -367,7 +380,7 @@ OutcomeDistribution CalcContext::evaluate(
     } else {
         pc_item_state item;
         if (!materialize(state_id, item)) {
-            return result; /* unsupported: no consistent representative */
+            return std::make_shared<OutcomeDistribution>(std::move(result));
         }
         switch (action.params.type) {
         case ActionType::Scour:
@@ -523,7 +536,7 @@ OutcomeDistribution CalcContext::evaluate(
         }
         default:
             /* Reforge and bespoke enumerators are S3. */
-            return result;
+            return std::make_shared<OutcomeDistribution>(std::move(result));
         }
     }
 
@@ -539,7 +552,7 @@ OutcomeDistribution CalcContext::evaluate(
             }
         }
     }
-    return result;
+    return std::make_shared<OutcomeDistribution>(std::move(result));
 }
 
 /*

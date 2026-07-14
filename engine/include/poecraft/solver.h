@@ -151,6 +151,7 @@ typedef struct pc_strategy_eval_options {
     uint32_t max_sweeps;  /* 0 uses the default 100000 */
     uint32_t max_states;  /* 0 uses the default 100000 */
     uint32_t max_pairs;   /* 0 uses the default 1000000 */
+    uint32_t max_transitions; /* 0 uses the default 10000000 stored row entries */
     uint32_t top_classes_per_node; /* 0 uses the default 16 */
 } pc_strategy_eval_options;
 

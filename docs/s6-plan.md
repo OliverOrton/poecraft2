@@ -27,6 +27,11 @@ is next only after C.1 completes. Reuse
 `strategy-eval-presentation.ts` / the `PcStrategyNode` annotation input for
 compiled-policy expected-cost badges instead of adding a second badge system.
 
+Status 2026-07-14 (latest): Phase C.1 and its rare-reforge exact-evaluation
+OOM hardening are complete and fully gated. Phase 1 below is now the next task.
+The board-annotation reuse ruling above still applies; Phase D remains
+unscheduled.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what

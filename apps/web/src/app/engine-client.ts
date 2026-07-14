@@ -138,7 +138,7 @@ export class EngineClient {
             pending.reject(
                 new EngineError(
                     message.error?.code ?? -1,
-                    message.error?.message ?? "unknown error",
+                    message.error?.detail ?? "unknown error",
                 ),
             );
         }

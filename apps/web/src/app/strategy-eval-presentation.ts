@@ -1,4 +1,4 @@
-import { StrategyEvalResult } from "./engine-protocol";
+import { EngineErrorInfo, StrategyEvalResult } from "./engine-protocol";
 import { StrategyDocument } from "./strategy-model";
 import { formatProbabilityExact } from "./odds-presentation";
 
@@ -130,9 +130,16 @@ export function escapeStrategyEvalHtml(value: string): string {
         .replace(/"/g, "&quot;");
 }
 
-export function strategyEvalRefusalMarkup(message: string): string {
+export function strategyEvalRefusalMarkup(error: EngineErrorInfo): string {
+    const heading =
+        error.code === 4
+            ? "This strategy uses actions or conditions Calculator mode cannot evaluate exactly yet."
+            : error.code === 5 || error.code === 7 || error.code === 8
+              ? "This strategy is too large to evaluate exactly with the current limits."
+              : "Calculator mode could not evaluate this strategy exactly.";
+    const message = `poecraft engine error ${error.code}: ${error.detail}`;
     return `<div class="pc-strategy-eval-refusal">
-        <strong>This strategy uses actions or conditions Calculator mode cannot evaluate exactly yet.</strong>
+        <strong>${heading}</strong>
         <pre>${escapeStrategyEvalHtml(message)}</pre>
     </div>`;
 }

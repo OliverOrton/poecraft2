@@ -8,6 +8,8 @@ import { EngineClient } from "../engine-client";
 import {
     BaseInfo,
     Catalog,
+    EngineError,
+    EngineErrorInfo,
     ModInfo,
     StrategyEvalResult,
     StrategyEvalProgress,
@@ -164,7 +166,7 @@ export class PcStrategyEditor extends HTMLElement {
     private mode: StrategyBuilderMode = "simulator";
     private structuralSignature = "";
     private evalResult: StrategyEvalResult | null = null;
-    private evalError: string | null = null;
+    private evalError: EngineErrorInfo | null = null;
     private evalInvalid = false;
     private evaluating = false;
     private evalProgressText: string | null = null;
@@ -1389,10 +1391,22 @@ export class PcStrategyEditor extends HTMLElement {
             ) {
                 this.evalResult = null;
                 this.evalError =
-                    error instanceof Error ? error.message : String(error);
+                    error instanceof EngineError
+                        ? { code: error.code, detail: error.detail }
+                        : {
+                              code: -1,
+                              detail:
+                                  error instanceof Error
+                                      ? error.message
+                                      : String(error),
+                          };
                 this.evalStale = false;
                 this.evalProgressText = null;
-                this.setStatus("Exact evaluation refused.");
+                this.setStatus(
+                    this.evalError.code === 4
+                        ? "Exact evaluation refused."
+                        : "Exact evaluation could not complete.",
+                );
             }
         } finally {
             if (session) await this.client.closeSession(session);

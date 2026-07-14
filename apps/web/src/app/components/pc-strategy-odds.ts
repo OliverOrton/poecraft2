@@ -1,4 +1,4 @@
-import { StrategyEvalResult } from "../engine-protocol";
+import { EngineErrorInfo, StrategyEvalResult } from "../engine-protocol";
 import {
     formatChaosValue,
     formatConsumptionQuantity,
@@ -14,7 +14,7 @@ import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
 
 export interface StrategyOddsView {
     result: StrategyEvalResult | null;
-    error: string | null;
+    error: EngineErrorInfo | null;
     invalid: boolean;
     evaluating: boolean;
     progressText: string | null;
@@ -100,7 +100,10 @@ export class PcStrategyOdds extends HTMLElement {
         );
     }
 
-    private renderSummary(result: StrategyEvalResult, error: string | null): string {
+    private renderSummary(
+        result: StrategyEvalResult,
+        error: EngineErrorInfo | null,
+    ): string {
         const unresolved = result.terminals.unresolved;
         const warning = !result.converged || unresolved > 0;
         const missRows = [

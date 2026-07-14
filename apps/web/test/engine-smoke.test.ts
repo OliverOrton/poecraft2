@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { Worker, type TransferListItem } from "node:worker_threads";
 
 import { EngineClient, EngineTransport } from "../src/app/engine-client";
+import { EngineError } from "../src/app/engine-protocol";
 import type {
     ClientMessage,
     ModInfo,
@@ -604,6 +605,26 @@ test("exact strategy evaluation names unsupported operations", async () => {
         ),
         /veiled_chaos/,
     );
+});
+
+test("exact evaluation reports capacity without double-prefixing", async () => {
+    let caught: unknown;
+    try {
+        await client.strategyEvaluate(sessionId, evaluatorStrategy(), {
+            max_transitions: 1,
+        });
+    } catch (error) {
+        caught = error;
+    }
+    assert.ok(caught instanceof EngineError);
+    assert.equal(caught.code, 8);
+    assert.match(caught.detail, /max_transitions/);
+    assert.doesNotMatch(caught.detail, /poecraft engine error/);
+    assert.equal(
+        caught.message.match(/poecraft engine error 8/g)?.length,
+        1,
+    );
+    assert.doesNotMatch(caught.message, /bad_alloc/);
 });
 
 test("stepped exact evaluation reports ordered progress", async () => {

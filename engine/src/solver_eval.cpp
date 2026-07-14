@@ -8,7 +8,6 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -43,7 +42,7 @@ enum class EvalAbsorptionKind {
 struct EvalTransition {
     std::uint32_t target = kNoId;
     double probability = 0.0;
-    std::string edge_id;
+    std::uint32_t edge = kNoId;
 };
 
 struct EvalAbsorption {
@@ -51,7 +50,12 @@ struct EvalAbsorption {
     std::uint32_t node = kNoId;
     std::uint32_t state = kNoId;
     double probability = 0.0;
-    std::string edge_id;
+    std::uint32_t edge = kNoId;
+};
+
+struct EvalRow {
+    std::vector<EvalTransition> transitions;
+    std::vector<EvalAbsorption> absorptions;
 };
 
 struct EvalPair {
@@ -60,8 +64,7 @@ struct EvalPair {
     bool operation = false;
     bool consumes = false;
     std::uint32_t action = kNoId;
-    std::vector<EvalTransition> transitions;
-    std::vector<EvalAbsorption> absorptions;
+    std::uint32_t row = kNoId;
 };
 
 std::uint64_t eval_pair_key(std::uint32_t node, std::uint32_t state) {
@@ -197,7 +200,9 @@ bool targets_overlap(
     return false;
 }
 
-EvalModel derive_model(const StrategyImpl& strategy) {
+EvalModel derive_model(
+    const StrategyImpl& strategy,
+    std::optional<std::uint32_t> state_cap) {
     const auto session = strategy.session;
     ActionRegistry registry = build_action_registry(*session);
     std::vector<std::string> gaps;
@@ -285,7 +290,8 @@ EvalModel derive_model(const StrategyImpl& strategy) {
             session, goal, std::move(registry), used_actions,
             true,  /* allow count/rarity-only graphs */
             false, /* no operations must not mean the full registry */
-            true   /* preserve exact group effects between graph actions */);
+            true,  /* preserve exact group effects between graph actions */
+            state_cap);
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
@@ -301,11 +307,12 @@ EvalModel derive_model(const StrategyImpl& strategy) {
 }
 
 EvalModel derive_checked_model(
-    const std::shared_ptr<const StrategyImpl>& strategy) {
+    const std::shared_ptr<const StrategyImpl>& strategy,
+    std::uint32_t max_states) {
     if (strategy == nullptr) {
         throw std::invalid_argument("invalid compiled strategy");
     }
-    return derive_model(*strategy);
+    return derive_model(*strategy, max_states);
 }
 
 std::size_t layout_slot_for(
@@ -485,6 +492,11 @@ struct StrategyEvalWork::Impl {
 
     std::map<std::uint64_t, std::uint32_t> pair_by_key;
     std::vector<EvalPair> pairs;
+    std::vector<EvalRow> rows;
+    std::map<
+        std::pair<std::uint32_t, const OutcomeDistribution*>,
+        std::uint32_t> row_by_distribution;
+    std::uint64_t stored_transitions = 0;
     std::size_t discover_index = 0;
     std::uint32_t start_pair = kNoId;
 
@@ -502,21 +514,22 @@ struct StrategyEvalWork::Impl {
     std::vector<double> action_not_applied;
     std::vector<double> no_matching_edge;
     std::vector<std::map<std::uint32_t, double>> terminal_incoming;
-    std::map<std::string, double> edge_traversals;
+    std::map<std::string, std::uint32_t> edge_index_by_id;
+    std::vector<double> edge_traversals;
 
     Impl(
         std::shared_ptr<const StrategyImpl> strategy_in,
         const StrategyEvalOptions& options_in)
         : strategy(std::move(strategy_in)),
           options(options_in),
-          model(derive_checked_model(strategy)) {
+          model(derive_checked_model(strategy, options_in.max_states)) {
         if (strategy == nullptr || strategy->session == nullptr ||
             strategy->start_node >= strategy->nodes.size()) {
             throw std::invalid_argument("invalid compiled strategy");
         }
         if (!std::isfinite(options.epsilon) || options.epsilon <= 0.0 ||
             options.max_sweeps == 0 || options.max_states == 0 ||
-            options.max_pairs == 0) {
+            options.max_pairs == 0 || options.max_transitions == 0) {
             throw std::invalid_argument("invalid strategy evaluation options");
         }
         output.targets = model.targets;
@@ -525,6 +538,17 @@ struct StrategyEvalWork::Impl {
         action_not_applied.assign(node_count, 0.0);
         no_matching_edge.assign(node_count, 0.0);
         terminal_incoming.resize(node_count);
+        for (const StrategyNode& node : strategy->nodes) {
+            for (const StrategyEdge& edge : node.edges) {
+                const std::uint32_t index =
+                    static_cast<std::uint32_t>(edge_traversals.size());
+                if (!edge_index_by_id.emplace(edge.id, index).second) {
+                    throw std::logic_error(
+                        "compiled strategy contains a duplicate edge id");
+                }
+                edge_traversals.push_back(0.0);
+            }
+        }
 
         const std::uint32_t start_state =
             model.calc->intern_item(strategy->start_item);
@@ -567,6 +591,19 @@ struct StrategyEvalWork::Impl {
         return id;
     }
 
+    const EvalRow& pair_row(std::uint32_t pair) const {
+        return rows.at(pairs.at(pair).row);
+    }
+
+    void ensure_transition_budget(std::uint64_t additional) const {
+        if (stored_transitions > options.max_transitions ||
+            additional > options.max_transitions - stored_transitions) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_transitions (" +
+                std::to_string(options.max_transitions) + ")");
+        }
+    }
+
     const StrategyEdge* select_edge(
         const StrategyNode& node,
         std::uint32_t state) const {
@@ -590,10 +627,40 @@ struct StrategyEvalWork::Impl {
         bool operation = false;
         bool consumes = false;
         std::uint32_t action_index = kNoId;
-        std::map<std::pair<std::uint32_t, std::string>, double> transitions;
+        const OutcomeDistribution* shared_distribution = nullptr;
+        std::map<std::pair<std::uint32_t, std::uint32_t>, double> transitions;
         std::map<
-            std::tuple<int, std::uint32_t, std::uint32_t, std::string>,
+            std::tuple<int, std::uint32_t, std::uint32_t, std::uint32_t>,
             double> absorptions;
+
+        const auto add_transition = [&](const std::pair<
+                                            std::uint32_t,
+                                            std::uint32_t>& key,
+                                        double probability) {
+            auto found = transitions.find(key);
+            if (found == transitions.end()) {
+                ensure_transition_budget(
+                    transitions.size() + absorptions.size() + 1);
+                transitions.emplace(key, probability);
+            } else {
+                found->second += probability;
+            }
+        };
+        const auto add_absorption = [&](const std::tuple<
+                                            int,
+                                            std::uint32_t,
+                                            std::uint32_t,
+                                            std::uint32_t>& key,
+                                        double probability) {
+            auto found = absorptions.find(key);
+            if (found == absorptions.end()) {
+                ensure_transition_budget(
+                    transitions.size() + absorptions.size() + 1);
+                absorptions.emplace(key, probability);
+            } else {
+                found->second += probability;
+            }
+        };
 
         const auto route = [&](std::uint32_t state, double probability) {
             if (!(probability > 0.0)) return;
@@ -603,21 +670,24 @@ struct StrategyEvalWork::Impl {
             }
             const StrategyEdge* selected = select_edge(node, state);
             if (selected == nullptr) {
-                absorptions[{static_cast<int>(
-                                  EvalAbsorptionKind::NoMatchingEdge),
-                              node_index, state, std::string()}] += probability;
+                add_absorption(
+                    {static_cast<int>(EvalAbsorptionKind::NoMatchingEdge),
+                     node_index, state, kNoId},
+                    probability);
                 return;
             }
+            const std::uint32_t edge = edge_index_by_id.at(selected->id);
             const StrategyNode& target = strategy->nodes.at(selected->target);
             if (target.kind == StrategyNodeKind::Terminal) {
-                absorptions[{static_cast<int>(EvalAbsorptionKind::Terminal),
-                              selected->target, state, selected->id}] +=
-                    probability;
+                add_absorption(
+                    {static_cast<int>(EvalAbsorptionKind::Terminal),
+                     selected->target, state, edge},
+                    probability);
                 return;
             }
             const std::uint32_t target_pair =
                 intern_pair(selected->target, state);
-            transitions[{target_pair, selected->id}] += probability;
+            add_transition({target_pair, edge}, probability);
         };
 
         if (node.kind != StrategyNodeKind::Operation) {
@@ -630,9 +700,10 @@ struct StrategyEvalWork::Impl {
             if (!action_legal(
                     model.calc->session(), action,
                     model.calc->state(state_id))) {
-                absorptions[{static_cast<int>(
-                                  EvalAbsorptionKind::ActionNotApplied),
-                              node_index, state_id, std::string()}] = 1.0;
+                add_absorption(
+                    {static_cast<int>(EvalAbsorptionKind::ActionNotApplied),
+                     node_index, state_id, kNoId},
+                    1.0);
             } else {
                 consumes = true;
                 const OutcomeDistribution& outcomes =
@@ -644,6 +715,17 @@ struct StrategyEvalWork::Impl {
                         "' has no exact distribution for a reachable state");
                 }
                 ensure_state_limit();
+                const auto shared = row_by_distribution.find(
+                    {node_index, &outcomes});
+                if (shared != row_by_distribution.end()) {
+                    EvalPair& pair = pairs.at(pair_id);
+                    pair.operation = operation;
+                    pair.consumes = consumes;
+                    pair.action = action_index;
+                    pair.row = shared->second;
+                    return;
+                }
+                shared_distribution = &outcomes;
                 double distribution_mass = 0.0;
                 for (const OutcomeEntry& outcome : outcomes.entries) {
                     distribution_mass += outcome.probability;
@@ -661,23 +743,24 @@ struct StrategyEvalWork::Impl {
         pair.operation = operation;
         pair.consumes = consumes;
         pair.action = action_index;
-        pair.transitions.reserve(transitions.size());
+        EvalRow row;
+        row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
-            pair.transitions.push_back(
+            row.transitions.push_back(
                 {key.first, probability, key.second});
         }
-        pair.absorptions.reserve(absorptions.size());
+        row.absorptions.reserve(absorptions.size());
         for (const auto& [key, probability] : absorptions) {
-            pair.absorptions.push_back(
+            row.absorptions.push_back(
                 {static_cast<EvalAbsorptionKind>(std::get<0>(key)),
-                 std::get<1>(key), std::get<2>(key), probability,
-                 std::get<3>(key)});
+                  std::get<1>(key), std::get<2>(key), probability,
+                  std::get<3>(key)});
         }
         double row_mass = 0.0;
-        for (const EvalTransition& transition : pair.transitions) {
+        for (const EvalTransition& transition : row.transitions) {
             row_mass += transition.probability;
         }
-        for (const EvalAbsorption& absorption : pair.absorptions) {
+        for (const EvalAbsorption& absorption : row.absorptions) {
             row_mass += absorption.probability;
         }
         if (std::fabs(row_mass - 1.0) > 1e-9) {
@@ -685,108 +768,90 @@ struct StrategyEvalWork::Impl {
                 "strategy evaluation transition row does not sum to one at "
                 "node '" + node.id + "'");
         }
+        stored_transitions += row.transitions.size() + row.absorptions.size();
+        pair.row = static_cast<std::uint32_t>(rows.size());
+        rows.push_back(std::move(row));
+        if (shared_distribution != nullptr) {
+            row_by_distribution.emplace(
+                std::make_pair(node_index, shared_distribution), pair.row);
+        }
     }
 
     void build_components() {
         const std::size_t count = pairs.size();
-        std::vector<std::vector<std::uint32_t>> adjacency(count);
-        std::vector<std::vector<std::uint32_t>> reverse(count);
-        for (std::uint32_t source = 0; source < count; ++source) {
-            for (const EvalTransition& transition : pairs[source].transitions) {
-                adjacency[source].push_back(transition.target);
-                reverse[transition.target].push_back(source);
-            }
-            std::sort(adjacency[source].begin(), adjacency[source].end());
-            adjacency[source].erase(
-                std::unique(
-                    adjacency[source].begin(), adjacency[source].end()),
-                adjacency[source].end());
-        }
-        for (auto& incoming : reverse) {
-            std::sort(incoming.begin(), incoming.end());
-            incoming.erase(
-                std::unique(incoming.begin(), incoming.end()), incoming.end());
-        }
-
-        std::vector<std::uint8_t> visited(count, 0);
-        std::vector<std::uint32_t> finish;
-        finish.reserve(count);
-        for (std::uint32_t root = 0; root < count; ++root) {
-            if (visited[root]) continue;
-            visited[root] = 1;
-            std::vector<std::pair<std::uint32_t, std::size_t>> stack;
-            stack.push_back({root, 0});
-            while (!stack.empty()) {
-                auto& frame = stack.back();
-                const auto& next = adjacency[frame.first];
-                if (frame.second < next.size()) {
-                    const std::uint32_t target = next[frame.second++];
-                    if (!visited[target]) {
-                        visited[target] = 1;
-                        stack.push_back({target, 0});
-                    }
-                } else {
-                    finish.push_back(frame.first);
-                    stack.pop_back();
-                }
-            }
-        }
-
-        component_by_pair.assign(count, kNoId);
+        struct Frame {
+            std::uint32_t pair = kNoId;
+            std::size_t next_transition = 0;
+        };
+        std::vector<std::uint32_t> index(count, kNoId);
+        std::vector<std::uint32_t> lowlink(count, kNoId);
+        std::vector<std::uint8_t> on_stack(count, 0);
+        std::vector<std::uint32_t> tarjan_stack;
+        tarjan_stack.reserve(count);
         std::vector<std::vector<std::uint32_t>> raw_components;
-        for (auto it = finish.rbegin(); it != finish.rend(); ++it) {
-            const std::uint32_t root = *it;
-            if (component_by_pair[root] != kNoId) continue;
-            const std::uint32_t component =
-                static_cast<std::uint32_t>(raw_components.size());
-            raw_components.emplace_back();
-            std::vector<std::uint32_t> stack{root};
-            component_by_pair[root] = component;
-            while (!stack.empty()) {
-                const std::uint32_t current = stack.back();
-                stack.pop_back();
-                raw_components.back().push_back(current);
-                for (const std::uint32_t source : reverse[current]) {
-                    if (component_by_pair[source] == kNoId) {
-                        component_by_pair[source] = component;
-                        stack.push_back(source);
+        std::uint32_t next_index = 0;
+
+        const auto push_pair = [&](std::uint32_t pair,
+                                   std::vector<Frame>& dfs) {
+            index[pair] = next_index;
+            lowlink[pair] = next_index;
+            ++next_index;
+            tarjan_stack.push_back(pair);
+            on_stack[pair] = 1;
+            dfs.push_back({pair, 0});
+        };
+        for (std::uint32_t root = 0; root < count; ++root) {
+            if (index[root] != kNoId) continue;
+            std::vector<Frame> dfs;
+            push_pair(root, dfs);
+            while (!dfs.empty()) {
+                Frame& frame = dfs.back();
+                const auto& transitions = pair_row(frame.pair).transitions;
+                if (frame.next_transition < transitions.size()) {
+                    const std::uint32_t target =
+                        transitions[frame.next_transition++].target;
+                    if (index[target] == kNoId) {
+                        push_pair(target, dfs);
+                    } else if (on_stack[target]) {
+                        lowlink[frame.pair] = std::min(
+                            lowlink[frame.pair], index[target]);
                     }
+                    continue;
+                }
+
+                const std::uint32_t completed = frame.pair;
+                dfs.pop_back();
+                if (!dfs.empty()) {
+                    const std::uint32_t parent = dfs.back().pair;
+                    lowlink[parent] = std::min(
+                        lowlink[parent], lowlink[completed]);
+                }
+                if (lowlink[completed] == index[completed]) {
+                    raw_components.emplace_back();
+                    while (true) {
+                        const std::uint32_t member = tarjan_stack.back();
+                        tarjan_stack.pop_back();
+                        on_stack[member] = 0;
+                        raw_components.back().push_back(member);
+                        if (member == completed) break;
+                    }
+                    std::sort(
+                        raw_components.back().begin(),
+                        raw_components.back().end());
                 }
             }
-            std::sort(
-                raw_components.back().begin(), raw_components.back().end());
         }
 
-        std::vector<std::set<std::uint32_t>> dag(raw_components.size());
-        std::vector<std::uint32_t> indegree(raw_components.size(), 0);
-        for (std::uint32_t source = 0; source < count; ++source) {
-            const std::uint32_t from = component_by_pair[source];
-            for (const EvalTransition& transition : pairs[source].transitions) {
-                const std::uint32_t to = component_by_pair[transition.target];
-                if (from != to && dag[from].insert(to).second) ++indegree[to];
-            }
-        }
-        std::set<std::uint32_t> ready;
-        for (std::uint32_t i = 0; i < indegree.size(); ++i) {
-            if (indegree[i] == 0) ready.insert(i);
-        }
-        std::vector<std::uint32_t> order;
-        while (!ready.empty()) {
-            const std::uint32_t current = *ready.begin();
-            ready.erase(ready.begin());
-            order.push_back(current);
-            for (const std::uint32_t next : dag[current]) {
-                if (--indegree[next] == 0) ready.insert(next);
-            }
-        }
-        if (order.size() != raw_components.size()) {
-            throw std::logic_error("strategy evaluation SCC DAG is cyclic");
-        }
+        /* Tarjan emits sink components first. Reverse that order so forward
+         * mass reaches every component before it is solved, without copying
+         * the (potentially dense) edge relation into adjacency lists. */
         components.clear();
-        components.reserve(order.size());
-        for (const std::uint32_t old : order) {
-            components.push_back(std::move(raw_components[old]));
+        components.reserve(raw_components.size());
+        for (auto it = raw_components.rbegin();
+             it != raw_components.rend(); ++it) {
+            components.push_back(std::move(*it));
         }
+        component_by_pair.assign(count, kNoId);
         for (std::uint32_t component = 0;
              component < components.size(); ++component) {
             for (const std::uint32_t pair : components[component]) {
@@ -805,8 +870,9 @@ struct StrategyEvalWork::Impl {
         std::uint32_t component,
         const std::vector<std::uint32_t>& members) const {
         for (const std::uint32_t pair : members) {
-            if (!pairs[pair].absorptions.empty()) return true;
-            for (const EvalTransition& transition : pairs[pair].transitions) {
+            const EvalRow& row = pair_row(pair);
+            if (!row.absorptions.empty()) return true;
+            for (const EvalTransition& transition : row.transitions) {
                 if (component_by_pair[transition.target] != component &&
                     transition.probability > 0.0) {
                     return true;
@@ -832,7 +898,7 @@ struct StrategyEvalWork::Impl {
         }
         for (std::size_t source = 0; source < n; ++source) {
             for (const EvalTransition& transition :
-                 pairs[members[source]].transitions) {
+                 pair_row(members[source]).transitions) {
                 if (component_by_pair[transition.target] != component) continue;
                 matrix[local.at(transition.target)][source] -=
                     static_cast<long double>(transition.probability);
@@ -902,7 +968,7 @@ struct StrategyEvalWork::Impl {
             long double expected = incoming[target];
             for (std::size_t source = 0; source < n; ++source) {
                 for (const EvalTransition& transition :
-                     pairs[members[source]].transitions) {
+                     pair_row(members[source]).transitions) {
                     if (transition.target == members[target]) {
                         expected += static_cast<long double>(visits[source]) *
                                     transition.probability;
@@ -928,7 +994,7 @@ struct StrategyEvalWork::Impl {
         if (members.size() < 2) return false;
         const auto row = [&](std::uint32_t pair) {
             std::map<std::uint32_t, double> probabilities;
-            for (const EvalTransition& transition : pairs[pair].transitions) {
+            for (const EvalTransition& transition : pair_row(pair).transitions) {
                 if (component_by_pair[transition.target] == component) {
                     probabilities[transition.target] += transition.probability;
                 }
@@ -937,6 +1003,9 @@ struct StrategyEvalWork::Impl {
         };
         const std::map<std::uint32_t, double> reference = row(members.front());
         for (std::size_t source = 1; source < members.size(); ++source) {
+            if (pairs[members[source]].row == pairs[members.front()].row) {
+                continue;
+            }
             const auto candidate = row(members[source]);
             if (candidate.size() != reference.size()) return false;
             auto a = reference.begin();
@@ -971,8 +1040,8 @@ struct StrategyEvalWork::Impl {
 
     void add_absorption(const EvalAbsorption& absorption, double mass) {
         if (!(mass > 0.0)) return;
-        if (!absorption.edge_id.empty()) {
-            edge_traversals[absorption.edge_id] += mass;
+        if (absorption.edge != kNoId) {
+            edge_traversals.at(absorption.edge) += mass;
         }
         switch (absorption.kind) {
         case EvalAbsorptionKind::Terminal:
@@ -996,16 +1065,17 @@ struct StrategyEvalWork::Impl {
             const std::uint32_t pair = members[i];
             const double visit = visits[i];
             pair_visits[pair] += visit;
-            for (const EvalTransition& transition : pairs[pair].transitions) {
+            const EvalRow& row = pair_row(pair);
+            for (const EvalTransition& transition : row.transitions) {
                 const double flow = visit * transition.probability;
-                if (!transition.edge_id.empty()) {
-                    edge_traversals[transition.edge_id] += flow;
+                if (transition.edge != kNoId) {
+                    edge_traversals.at(transition.edge) += flow;
                 }
                 if (component_by_pair[transition.target] != component) {
                     external_incoming[transition.target] += flow;
                 }
             }
-            for (const EvalAbsorption& absorption : pairs[pair].absorptions) {
+            for (const EvalAbsorption& absorption : row.absorptions) {
                 add_absorption(
                     absorption, visit * absorption.probability);
             }
@@ -1082,7 +1152,7 @@ struct StrategyEvalWork::Impl {
         if (members.size() == 1) {
             double self_probability = 0.0;
             for (const EvalTransition& transition :
-                 pairs[members.front()].transitions) {
+                 pair_row(members.front()).transitions) {
                 if (transition.target == members.front()) {
                     self_probability += transition.probability;
                 }
@@ -1124,7 +1194,7 @@ struct StrategyEvalWork::Impl {
             std::vector<double> next(state.wave.size(), 0.0);
             for (std::size_t source = 0; source < state.members.size(); ++source) {
                 for (const EvalTransition& transition :
-                     pairs[state.members[source]].transitions) {
+                     pair_row(state.members[source]).transitions) {
                     if (component_by_pair[transition.target] ==
                         state.component) {
                         next[state.local_index.at(transition.target)] +=
@@ -1258,7 +1328,7 @@ struct StrategyEvalWork::Impl {
 
             for (const StrategyEdge& edge : source.edges) {
                 output.edges.push_back(
-                    {edge.id, edge_traversals[edge.id]});
+                    {edge.id, edge_traversals.at(edge_index_by_id.at(edge.id))});
             }
         }
         output.unresolved_probability = output.residual_mass;
@@ -1300,16 +1370,17 @@ struct StrategyEvalWork::Impl {
                 const double mass = wave[pair];
                 if (!(mass > 0.0)) continue;
                 pair_visits[pair] += mass;
+                const EvalRow& row = pair_row(static_cast<std::uint32_t>(pair));
                 for (const EvalTransition& transition :
-                     pairs[pair].transitions) {
+                     row.transitions) {
                     const double flow = mass * transition.probability;
                     next[transition.target] += flow;
-                    if (!transition.edge_id.empty()) {
-                        edge_traversals[transition.edge_id] += flow;
+                    if (transition.edge != kNoId) {
+                        edge_traversals.at(transition.edge) += flow;
                     }
                 }
                 for (const EvalAbsorption& absorption :
-                     pairs[pair].absorptions) {
+                     row.absorptions) {
                     add_absorption(
                         absorption, mass * absorption.probability);
                 }

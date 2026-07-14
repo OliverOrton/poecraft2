@@ -6,6 +6,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -282,7 +283,8 @@ class CalcContext {
         const std::vector<std::uint32_t>& action_indices = {},
         bool allow_empty_goal = false,
         bool empty_actions_mean_all = true,
-        bool distinguish_junk_exclusion_effects = false);
+        bool distinguish_junk_exclusion_effects = false,
+        std::optional<std::uint32_t> state_cap = std::nullopt);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -327,19 +329,23 @@ class CalcContext {
     std::vector<std::uint32_t> candidates_;
     ActionContextImpl context_;
     std::vector<AbstractState> states_;
+    std::optional<std::uint32_t> state_cap_;
     std::unordered_map<std::size_t, std::vector<std::uint32_t>>
         state_ids_by_hash_;
-    std::unordered_map<std::uint64_t, OutcomeDistribution> distribution_cache_;
+    std::unordered_map<
+        std::uint64_t,
+        std::shared_ptr<const OutcomeDistribution>> distribution_cache_;
     /* Reforges depend only on the preserved base (fractured/locked slots,
      * rarity, item-wide flags), so states sharing one base share one roll
      * DP. Key: (action index, base signature hash). */
-    std::map<std::pair<std::uint32_t, std::uint64_t>, OutcomeDistribution>
-        reforge_cache_;
+    std::map<
+        std::pair<std::uint32_t, std::uint64_t>,
+        std::shared_ptr<const OutcomeDistribution>> reforge_cache_;
 
-    OutcomeDistribution evaluate(
+    std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,
         std::uint32_t action_index);
-    OutcomeDistribution evaluate_reforge(
+    std::shared_ptr<const OutcomeDistribution> evaluate_reforge(
         std::uint32_t state_id,
         std::uint32_t action_index);
     bool evaluate_pool_add(
@@ -355,6 +361,7 @@ struct StrategyEvalOptions {
     std::uint32_t max_sweeps = 100000;
     std::uint32_t max_states = 100000;
     std::uint32_t max_pairs = 1000000;
+    std::uint32_t max_transitions = 10000000;
     std::uint32_t top_classes_per_node = 16;
 };
 
