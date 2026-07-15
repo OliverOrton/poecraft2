@@ -32,12 +32,14 @@ OOM hardening are complete and fully gated. Phase 1 below is now the next task.
 The board-annotation reuse ruling above still applies; Phase D remains
 unscheduled.
 
-Status 2026-07-14 (newest): Oliver scheduled the ordered product-polish
-interlude in
-[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md) before this plan
-resumes. Its Phase P1 is the current next task. Resume S6 Phase 1 only after
-P3c completes. The board-annotation reuse ruling and unscheduled Phase D
-boundary still stand.
+Status 2026-07-14 (newest): pre-S6 polish P1 and the exact-evaluation loop
+repair are complete. Oliver skipped P2 and narrowed P3 to presentation only:
+Calculator remains one input item, one v1 goal item, one selected action, and
+engine-returned odds. Oliver approved P3a Goal Item Variant A; P3b shared
+item-frame implementation is next. Resume S6 Phase 1 only after P3b. The
+earlier multi-goal/OR engine contract and shared predicate editor are no longer
+scheduled. The board-annotation reuse ruling and unscheduled Strategy Builder
+Calculator Phase D boundary still stand.
 
 Two standing rules bear repeating because they gate everything below:
 

@@ -849,23 +849,26 @@ Implemented baseline:
 - Item displays show influence badges, reserve stable modifier-row space, use
   modifier-specific text colors, and frame the item using its rarity color.
 
-## Interlude P: Pre-S6 Product Polish (Scheduled)
+## Interlude P: Pre-S6 Product Polish (In Progress)
 
-Before solver S6 Phase 1, complete the ordered polish phases in
+Before solver S6 Phase 1, complete the active polish phases in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md):
 
 1. expose canonical base drop level and order base choices high-to-low; add
    live auto-labels with manual overrides for strategy nodes and edges;
-2. replace the generic Searing/Eater numeric-tier authoring controls with
-   distinct actual currency identities across engine, bindings, strategy,
-   Calculator, Emulator, and economy surfaces;
-3. specify, design, implement, and present native multi-goal/OR Calculator
-   outcomes through an item-shaped Goal surface and a predicate editor shared
-   structurally with Strategy Builder conditions.
+2. skipped by Oliver for now: the concrete Searing/Eater currency migration;
+3. keep Calculator deliberately narrow at one input item, one goal item, one
+   selected action, and engine-returned odds; redesign only the Goal surface so
+   it uses the same shared item-frame UI as the input item.
 
-This interlude does not move crafting-rule authority into the frontend. Exact
-overlap accounting for multiple goals belongs to the native calculation
-engine, and PoE mechanic mappings require Oliver's ruling.
+Status 2026-07-14: item-frame Variant A is approved and its implementation spec
+is frozen; the shared Goal item implementation is the next phase.
+
+This interlude does not move crafting-rule authority into the frontend. The
+Calculator and Strategy Builder keep their task-shaped public APIs, but both
+remain backed by the same native action registry and exact transition provider.
+The earlier multi-goal/OR contract and shared predicate-editor work are not
+scheduled.
 
 ## Phase 14: Performance And Public-Engine Readiness
 

@@ -31,8 +31,10 @@ Strategy Builder, Simulator, and Stash, and the Phase 13 mechanic
 expansion (bench, metamods, veiled, harvest, eldritch, influenced exalts).
 See [implementation-plan.md](implementation-plan.md) for phase detail and
 the current next task. Before S6 Phase 1, a short product-polish interlude is
-scheduled for base ordering, graph auto-labels, concrete Searing/Eater currency
-identity, and multi-goal Calculator authoring. The detailed sequence is in
+scheduled for base ordering, graph auto-labels, and making the Calculator's one
+goal look and edit like its input item. The Searing/Eater currency migration is
+skipped for now, and the earlier multi-goal/OR expansion is no longer part of
+this interlude. The detailed sequence is in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
 
 ## Direction Of Travel

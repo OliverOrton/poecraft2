@@ -3,24 +3,26 @@
 Execution plan for the product-polish interlude Oliver scheduled on 2026-07-14
 before [s6-plan.md](s6-plan.md) Phase 1. Read [AGENTS.md](../AGENTS.md),
 [direction.md](direction.md), and [HANDOFF.md](../HANDOFF.md) first. Work
-through the phases below in order. Each phase ends test-green with one local
-commit and a rewritten handoff; stop at the stated boundary instead of rolling
-the next phase into the same change.
+through the active phases below in order. Each implementation phase ends
+test-green with one local commit and a rewritten handoff; stop at the stated
+boundary instead of rolling the next phase into the same change. Oliver skipped
+P2 on 2026-07-14, so it is retained only as a deferred record and is not a gate
+for P3 or S6.
 
-This interlude covers four product requests:
+This interlude now covers three active product requests:
 
 1. order bases from highest to lowest base level requirement;
 2. automatically name Strategy Builder nodes and edges;
-3. represent Searing Exarch and Eater of Worlds application as the actual
-   currency items instead of a generic side plus numeric tier selector;
-4. make Calculator goals look like goal items and support multiple goals, OR
-   expressions, and multiple named outcomes for a one-step calculation, using
-   condition-authoring UI shared with Strategy Builder where the semantics
-   overlap.
+3. keep Calculator intentionally simple at one input item, one goal item, one
+   selected crafting action, and the odds for that action; make the goal use the
+   same item-frame UI as the input item without changing goal semantics.
 
-The phases are ordered from the smallest independent correction to the largest
-contract change. S6 Phase 1 resumes only after P3c is complete. Strategy
-Builder calculator mode Phase D remains unscheduled.
+The proposed Searing Exarch/Eater currency migration is deferred. The proposed
+multi-goal/OR/named-outcome expansion is cancelled rather than postponed.
+
+P1 and P3a are complete. Variant A is the approved goal-item direction; P3b is
+the next implementation phase. S6 Phase 1 resumes only after P3b is complete.
+Strategy Builder calculator mode Phase D remains unscheduled.
 
 ## Standing contracts
 
@@ -28,25 +30,27 @@ Builder calculator mode Phase D remains unscheduled.
   probability, goal matching, and overlapping-outcome accounting. TypeScript
   may sort display data and render engine results; it must not recreate
   crafting rules or add probabilities together.
-- SQLite is canonical and the compiled artifact is derived. The current
-  compiled artifact already carries `base_items.drop_levels`; the runtime
-  currently discards that field. Plumb it through the runtime catalog rather
-  than deriving a level from names or metadata paths in the frontend.
+- SQLite is canonical and the compiled artifact is derived. Completed P1 loads
+  `base_items.drop_levels` into the runtime catalog and exposes it through the
+  shared base picker; keep that canonical route rather than deriving a level
+  from names or metadata paths in the frontend.
 - PoE mechanic details, including the exact Searing/Eater currency-to-tier
-  mapping and any edge cases, come from Oliver. Phase P2 begins by writing the
-  approved mapping into the plan or a focused mechanic fixture; never research
-  or guess it.
+  mapping and any edge cases, come from Oliver. If P2 is ever rescheduled, it
+  begins by writing the approved mapping into the plan or a focused mechanic
+  fixture; never research or guess it.
 - Stable graph IDs are not display names. Auto-naming must not rename IDs or
   graph references.
-- Existing saved strategies and v1 goal documents remain readable. New
-  contracts may normalize legacy input, but they must not silently reinterpret
-  it.
+- Existing saved strategies and v1 Calculator goal documents remain readable
+  and keep their exact meaning. P3 introduces no new goal schema.
 - P1 changes behavior inside existing controls and does not need a new visual
-  design. P2 reuses the approved grouped craft-panel language. P3 changes a
-  major surface and must use the image-model design loop in
-  [s6-plan.md](s6-plan.md) before UI implementation.
+  design. P3 changes a major surface and must use the image-model design loop
+  in [s6-plan.md](s6-plan.md) before UI implementation.
+- Calculator one-step odds and Strategy Builder whole-graph odds keep separate
+  task-shaped entry points. They already share the native action registry,
+  `CalcContext`, action legality, and exact transition distributions; do not
+  route one through the other or create another crafting-rule backend.
 
-## Phase P1 - Base ordering and graph auto-labels (next)
+## Phase P1 - Base ordering and graph auto-labels (complete)
 
 **Goal.** Base pickers show the highest-level bases first, and new graph nodes
 and edges carry useful labels that stay in sync with their operation or
@@ -113,10 +117,15 @@ view agree. Pin parameter-sensitive examples in tests; a generic "Essence" or
 - `npx tsc --noEmit`, `npm test`, and `npm run build` in `apps/web`
 - `powershell -File scripts/test.ps1`
 
-Stop after the P1 gate, commit locally, rewrite `HANDOFF.md` for P2, and do not
-begin the Eldritch currency migration.
+P1 completed and was committed locally. Oliver then skipped the planned P2
+Eldritch currency migration.
 
-## Phase P2 - Searing/Eater application as first-class currencies
+## Phase P2 - Searing/Eater application as first-class currencies (skipped)
+
+**Status.** Oliver skipped this phase on 2026-07-14. It is not an execution
+prerequisite for P3 or S6 Phase 1. The specification below is retained only as
+a possible future migration; do not implement it unless Oliver schedules it
+again and supplies the authoritative currency table.
 
 **Goal.** Every actual Searing Exarch and Eater of Worlds implicit-applying
 currency is a distinct catalog/action/economy item. Users choose a named
@@ -173,123 +182,101 @@ Then implement the migration end to end:
 - Rebuild native and WASM, then run the complete `scripts/test.ps1`, web
   type-check/test/build, and relevant binding tests.
 
-Stop after the P2 gate, commit locally, rewrite `HANDOFF.md` for P3a, and do not
-begin the goal-expression UI.
+Because P2 is skipped, proceed directly from the completed P1 baseline to P3a.
 
-## Phase P3a - Goal expression semantics and approved design
+## Phase P3a - Simple goal-item design and reuse contract (complete)
 
-**Goal.** Freeze the meaning and visual shape of multi-goal Calculator input
-before changing engine or UI contracts.
+**Goal.** Freeze the visual shape and reuse boundary for the existing v1
+Calculator goal before changing UI code.
 
-Write a focused goal-expression contract that answers:
+The product contract is deliberately narrow:
 
-- how named goal outcomes are represented;
-- how `ALL`, `ANY`/OR, `NOT`, and `AT LEAST N` compose leaf predicates;
-- whether rarity is a leaf predicate or a branch property;
-- how an item satisfying more than one named outcome is reported;
-- how the combined success probability is an exact union without double
-  counting overlaps;
-- which expression shapes the optimal solver supports initially, versus the
-  one-step Calculator only;
-- how v1 `{rarity, slots, min_satisfied_slots}` goals migrate without changing
-  meaning;
-- which primitives are truly shared with Strategy Builder conditions and which
-  need goal-specific adapters.
+```text
+one concrete input item
++ one authored v1 goal item
++ one selected registry action
+-> exact engine-returned odds for that action
+```
 
-Recommended data direction: a versioned predicate tree with stable named goal
-branches and engine-returned membership/coverage information. Do not implement
-"OR" by running several Calculator calls and summing the results in TypeScript;
-one successor may satisfy several branches.
+P3 does not add named goals, OR branches, a predicate tree, action comparison,
+or a new native goal contract. Existing `rarity`, modifier-family `slots`, tier
+thresholds, and `min_satisfied_slots` retain their current semantics.
 
-Run the required image-model design loop for these states:
+Document and design the following reuse boundary:
 
-- one simple goal;
-- several named goals joined by OR;
-- nested `ALL` / `ANY` / `AT LEAST N` editing;
-- a normal item-shaped goal card that visually reuses the accepted item frame
-  and modifier rows while clearly remaining a target, not a rolled concrete
-  item;
-- one-step results with several goal outcomes, including overlapping matches;
-- empty, loading, illegal/unsupported, and dense states.
+- native: Calculator's `pc_calc_action_outcomes` and Strategy Builder's
+  `pc_strategy_evaluate` stay separate public entry points over the same action
+  registry, `CalcContext`, legality checks, and transition distributions;
+- catalog/model: Calculator and Strategy Builder continue sharing
+  `buildModifierOptions`; Calculator continues using the engine-backed
+  `pc-mod-pool` for input and goal authoring;
+- presentation: extend the shared `pc-mod-list` item frame with an explicit
+  goal/target model instead of maintaining Calculator-only goal-row markup;
+- Strategy Builder's recursive `pc-condition-editor` is not reused for this
+  simple goal item. Its routing vocabulary and persistence contract solve a
+  different problem and would add unnecessary backend/UI surface.
 
-The design should factor a reusable predicate-expression editing shell that
-can host both Calculator goal leaves and Strategy Builder condition leaves. It
-must not force the two domains to share invalid leaf types or execution
-semantics. Oliver approves the semantics contract and mock before P3b begins.
+Run the required image-model design loop for two item-frame treatments while
+holding the rest of the approved Calculator layout fixed:
+
+1. literal twin item frames, with target rows carrying tier-threshold controls;
+2. the same shared frame with a quieter target treatment and compact goal
+   controls integrated into the header/footer.
+
+Both treatments must cover empty, populated, and dense six-slot goal items;
+loading and illegal/unsupported states remain in the unchanged Odds inspector.
+The goal must read as a target rather than a fabricated rolled item, while base,
+item level, rarity border, prefix/suffix rails, slot positions, and typography
+match the input item.
 
 ### P3a acceptance gate
 
-- The versioned goal/predicate schema and overlap semantics are documented with
-  concrete JSON and truth-table examples.
-- Backward compatibility and Calculator-versus-solver support boundaries are
-  explicit.
-- The design brief, references, structurally different image-model variants,
-  Oliver's selection, and implementation spec are committed under `design/`.
+- The design brief records the narrow product contract, realistic content,
+  states, interactions, and the backend/component reuse boundary.
+- Reference screenshots, prompts, and at least two image-model examples are
+  committed under `design/`.
+- Oliver selected Variant A.
+- The approved implementation spec states exactly how `pc-mod-list` represents
+  target rows without changing concrete-item behavior.
 
-Stop after approval and documentation, commit locally, rewrite `HANDOFF.md` for
-P3b, and do not implement the engine contract in the design phase.
+Oliver approved Variant A on 2026-07-14. The implementation contract is in
+`design/specs/calculator-goal-item.md`. P3a stopped without UI implementation.
 
-## Phase P3b - Native multi-goal calculation contract
+## Phase P3b - Shared item-frame Calculator goal (next)
 
-**Goal.** The native engine can evaluate the approved expression and return
-exact combined and per-named-outcome probabilities for one action.
+**Goal.** Replace the Calculator-only Goal requirements list with the approved
+goal/target mode of the same shared item-frame UI used by the input item.
 
-Implement the P3a schema in the native goal parser, abstract-state/goal
-projection, Calculator outcome evaluator, C ABI, Python binding, and WASM
-worker. Preserve the v1 adapter. Return enough engine-owned membership data to
-render named outcome probabilities and overlap honestly. Keep capacity limits
-and unsupported-vocabulary failures explicit.
-
-If P3a deliberately limits the optimal solver to a subset, validate and reject
-unsupported expression shapes at solver creation with a precise message; the
-Calculator may support the broader approved one-step subset. Do not silently
-weaken an expression.
+1. Extend `pc-mod-list` through an explicit concrete-versus-target model. Keep
+   concrete Emulator/Calculator rendering and right-click fracture behavior
+   unchanged.
+2. Adapt each existing `CalculatorGoalSlot` through the already-shared
+   `ModifierFamilyOption` catalog data into a target prefix/suffix row with its
+   selected tier-or-better threshold. Empty goal positions remain visibly
+   stable.
+3. Keep goal rarity, `min_satisfied_slots`, add/update/remove, persistence, and
+   solver reopen behavior unchanged. The shared modifier pool remains the only
+   goal authoring surface.
+4. Remove the superseded Calculator-only goal-row rendering and CSS. Do not
+   duplicate item-frame markup or modifier-family lookup logic.
+5. Do not change native engine, C ABI, bindings, WASM, Strategy Builder graph
+   evaluation, or goal JSON.
 
 ### P3b acceptance gate
 
-- Native truth-table and overlap tests pin named probabilities and combined
-  union probability, including one successor satisfying multiple goals.
-- C ABI, Python, and WASM return identical results and preserve the old v1
-  simple-goal results.
-- Capacity/error behavior stays bounded and code-aware.
-- Native build, WASM rebuild, binding tests, web worker tests, and
-  `scripts/test.ps1` are green.
-
-Stop after the P3b gate, commit locally, rewrite `HANDOFF.md` for P3c, and do
-not implement the redesigned Goal tab in the engine phase.
-
-## Phase P3c - Shared expression editor and item-shaped Calculator goals
-
-**Goal.** Implement the approved P3a design on top of the P3b engine contract.
-
-1. Extract a reusable expression-tree editor shell from the current Strategy
-   Builder condition editor. Supply domain adapters for available leaf types,
-   labels, validation, and modifier selection; do not fork a second recursive
-   editor in Calculator.
-2. Preserve Strategy Builder condition behavior and saved strategy documents.
-   Sharing UI infrastructure does not itself expand strategy routing
-   vocabulary.
-3. Replace the Calculator goal summary with the approved item-shaped target
-   presentation and allow multiple named goals/OR composition.
-4. Render per-named-outcome and combined success results directly from the
-   engine. Show overlaps according to the approved design and keep the existing
-   technical distribution available for diagnosis.
-5. Keep the modifier-family picker and item display primitives shared with the
-   Emulator; do not build parallel modifier data or item-frame systems.
-
-### P3c acceptance gate
-
-- Component/model tests cover expression editing, multiple named outcomes,
-  serialization/reopen, v1 migration, validation, and Strategy Builder
-  regression behavior.
-- Worker/component tests prove the UI renders engine-returned combined and
-  overlapping outcome values without client-side probability arithmetic.
+- Component/model tests cover empty, populated, and dense target item frames,
+  tier changes/removal, stable slot placement, and unchanged concrete item
+  behavior.
+- Calculator tests preserve v1 draft recovery, rarity and `All / At least N`
+  semantics, one selected action, and verbatim engine-returned odds.
 - Screenshot comparison against the approved mock is recorded in the design
-  spec; empty, dense, error, and overlap states remain usable.
-- Real browser smoke covers Calculator authoring and Strategy Builder condition
-  editing, with a clean console.
+  spec.
+- A real separate-process headless browser smoke edits input and goal through
+  the shared pool, changes a target tier/removes a target, calculates one
+  action, and finishes with a clean application console.
 - `npx tsc --noEmit`, `npm test`, `npm run build`, and
-  `powershell -File scripts/test.ps1` are green.
+  `powershell -File scripts/test.ps1` are green. Native/WASM rebuilds are not
+  expected because the engine contract does not change.
 
-After P3c, commit locally, rewrite `HANDOFF.md`, and resume
+After P3b, commit locally, rewrite `HANDOFF.md`, and resume
 [s6-plan.md](s6-plan.md) Phase 1. Do not begin S6 Phase 2.
