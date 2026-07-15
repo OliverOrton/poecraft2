@@ -40,21 +40,24 @@ DEFAULT_GAME_DATABASE = REPO_ROOT / "data" / "sqlite" / "poecraft.db"
 DEFAULT_PUBLISH_DIR = REPO_ROOT / "data" / "economy" / "published"
 
 
+# poe.ninja identifies currencies by short trade ids (alt, aug, exalted,
+# chrome, ...), not name slugs; every source id here must match a live
+# exchange row id.
 BENCH_CURRENCY_COMPONENTS: dict[str, tuple[str, str]] = {
     "Metadata/Items/Currency/CurrencyRerollRare": ("chaos", "chaos"),
     "Metadata/Items/Currency/CurrencyModValues": ("currency:divine", "divine"),
-    "Metadata/Items/Currency/CurrencyAddModToRare": ("exalt", "exalted-orb"),
-    "Metadata/Items/Currency/CurrencyRemoveMod": ("annul", "orb-of-annulment"),
-    "Metadata/Items/Currency/CurrencyUpgradeToRare": ("alchemy", "orb-of-alchemy"),
-    "Metadata/Items/Currency/CurrencyUpgradeMagicToRare": ("regal", "regal-orb"),
-    "Metadata/Items/Currency/CurrencyRerollMagic": ("alteration", "orb-of-alteration"),
-    "Metadata/Items/Currency/CurrencyConvertToNormal": ("scour", "orb-of-scouring"),
-    "Metadata/Items/Currency/CurrencyUpgradeToMagic": ("transmute", "orb-of-transmutation"),
-    "Metadata/Items/Currency/CurrencyAddModToMagic": ("augment", "orb-of-augmentation"),
-    "Metadata/Items/Currency/CurrencyVaal": ("currency:vaal", "vaal-orb"),
-    "Metadata/Items/Currency/CurrencyRerollSocketColours": ("currency:chromatic", "chromatic-orb"),
-    "Metadata/Items/Currency/CurrencyRerollSocketNumbers": ("currency:jeweller", "jewellers-orb"),
-    "Metadata/Items/Currency/CurrencyRerollSocketLinks": ("currency:fusing", "orb-of-fusing"),
+    "Metadata/Items/Currency/CurrencyAddModToRare": ("exalt", "exalted"),
+    "Metadata/Items/Currency/CurrencyRemoveMod": ("annul", "annul"),
+    "Metadata/Items/Currency/CurrencyUpgradeToRare": ("alchemy", "alch"),
+    "Metadata/Items/Currency/CurrencyUpgradeMagicToRare": ("regal", "regal"),
+    "Metadata/Items/Currency/CurrencyRerollMagic": ("alteration", "alt"),
+    "Metadata/Items/Currency/CurrencyConvertToNormal": ("scour", "scour"),
+    "Metadata/Items/Currency/CurrencyUpgradeToMagic": ("transmute", "transmute"),
+    "Metadata/Items/Currency/CurrencyAddModToMagic": ("augment", "aug"),
+    "Metadata/Items/Currency/CurrencyVaal": ("currency:vaal", "vaal"),
+    "Metadata/Items/Currency/CurrencyRerollSocketColours": ("currency:chromatic", "chrome"),
+    "Metadata/Items/Currency/CurrencyRerollSocketNumbers": ("currency:jeweller", "jewellers"),
+    "Metadata/Items/Currency/CurrencyRerollSocketLinks": ("currency:fusing", "fusing"),
 }
 
 
@@ -216,15 +219,26 @@ def _seed_catalog(
     # Bench-only market components are not active runtime keys themselves.
     for component, source_item_id in {
         "currency:divine": "divine",
-        "currency:vaal": "vaal-orb",
-        "currency:chromatic": "chromatic-orb",
-        "currency:jeweller": "jewellers-orb",
-        "currency:fusing": "orb-of-fusing",
+        "currency:vaal": "vaal",
+        "currency:chromatic": "chrome",
+        "currency:jeweller": "jewellers",
+        "currency:fusing": "fusing",
     }.items():
         _upsert_price_key(connection, component, "market_quote", active=False)
         _upsert_mapping(
             connection, "Currency", source_item_id, component, "catalog", version
         )
+
+    # Retire catalog mappings this catalog version no longer names, so a
+    # corrected source id cannot leave its stale predecessor behind in an
+    # already-seeded database.
+    connection.execute(
+        """
+        DELETE FROM economy_source_mapping
+        WHERE source_key = ? AND mapping_kind = 'catalog' AND mapping_version != ?
+        """,
+        (SOURCE_KEY, version),
+    )
 
     components: Mapping[str, str] = recipes["components"]
     for recipe_kind, prefix in (
