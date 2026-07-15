@@ -134,7 +134,8 @@ std::string mod_key_of(const SessionImpl& session, std::uint32_t mod_id) {
 std::string mod_count_condition(
     const SessionImpl& session,
     const JunkClass& junk,
-    std::uint8_t count) {
+    std::uint8_t count,
+    std::uint8_t required_flags = 0) {
     std::string out = "{\"type\":\"mod_count\",\"mod_keys\":[";
     bool first = true;
     pc_bitset_for_each(
@@ -150,9 +151,31 @@ std::string mod_count_condition(
             out += "\"" + json_escape(key) + "\"";
         });
     if (first) gap("junk class has no members");
-    out += "],\"min\":" + std::to_string(count) +
+    out += "]";
+    if ((required_flags & PC_MOD_SLOT_FRACTURED) != 0) {
+        out += ",\"fractured\":true";
+    }
+    if ((required_flags & PC_MOD_SLOT_CRAFTED) != 0) {
+        out += ",\"crafted\":true";
+    }
+    out += ",\"min\":" + std::to_string(count) +
            ",\"max\":" + std::to_string(count) + "}";
     return out;
+}
+
+std::string with_slot_flags(
+    std::string condition,
+    bool fractured,
+    bool crafted) {
+    if (!fractured && !crafted) return condition;
+    if (condition.empty() || condition.back() != '}') {
+        gap("slot condition is not a JSON object");
+    }
+    condition.pop_back();
+    if (fractured) condition += ",\"fractured\":true";
+    if (crafted) condition += ",\"crafted\":true";
+    condition += '}';
+    return condition;
 }
 
 std::uint32_t first_bit(const std::vector<std::uint64_t>& mask,
@@ -309,6 +332,10 @@ std::string compile_policy_strategy_json(
     std::uint32_t node_count = 4; /* start, router, goal, offpolicy */
 
     const AbstractState& start = calc.state(result.start_state);
+    pc_item_state start_item;
+    if (!calc.materialize(result.start_state, start_item)) {
+        gap("start state cannot be materialized exactly");
+    }
 
     /* --- emit --------------------------------------------------------------- */
     std::string json = "{\"version\":\"v1\",\"name\":\"";
@@ -332,6 +359,28 @@ std::string compile_policy_strategy_json(
             std::to_string(start.searing_exarch_tier);
     json += ",\"eater_of_worlds_tier\":" +
             std::to_string(start.eater_of_worlds_tier);
+    const auto start_mods = [&](const char* name, const pc_mod_slot* slots,
+                                std::uint8_t count) {
+        json += ",\"";
+        json += name;
+        json += "\":[";
+        for (std::uint8_t i = 0; i < count; ++i) {
+            if (i > 0) json += ',';
+            json += "{\"mod_key\":\"";
+            json += json_escape(mod_key_of(session, slots[i].mod_id));
+            json += "\"";
+            if ((slots[i].flags & PC_MOD_SLOT_FRACTURED) != 0) {
+                json += ",\"fractured\":true";
+            }
+            if ((slots[i].flags & PC_MOD_SLOT_CRAFTED) != 0) {
+                json += ",\"crafted\":true";
+            }
+            json += '}';
+        }
+        json += ']';
+    };
+    start_mods("prefixes", start_item.prefixes, start_item.prefix_count);
+    start_mods("suffixes", start_item.suffixes, start_item.suffix_count);
     json += "},\"start_node_id\":\"start\",\"nodes\":[";
     json += "{\"id\":\"start\",\"kind\":\"start\"},";
     json += "{\"id\":\"router\",\"kind\":\"router\"},";
@@ -431,13 +480,37 @@ std::string compile_policy_strategy_json(
         for (std::size_t i = 0; i < layout.slots.size(); ++i) {
             const auto status =
                 static_cast<GoalSlotStatus>(state.slot_status[i]);
+            const bool fractured =
+                (state.fractured_goal_mask & (1u << i)) != 0;
+            const bool crafted =
+                (state.crafted_goal_mask & (1u << i)) != 0;
             switch (status) {
             case GoalSlotStatus::Satisfied:
                 parts.push_back(vocabulary[i].satisfied);
+                parts.push_back(
+                    fractured
+                        ? with_slot_flags(vocabulary[i].member, true, false)
+                        : not_of(with_slot_flags(
+                              vocabulary[i].member, true, false)));
+                parts.push_back(
+                    crafted
+                        ? with_slot_flags(vocabulary[i].member, false, true)
+                        : not_of(with_slot_flags(
+                              vocabulary[i].member, false, true)));
                 break;
             case GoalSlotStatus::PresentBelowTier:
                 parts.push_back(vocabulary[i].member);
                 parts.push_back(not_of(vocabulary[i].satisfied));
+                parts.push_back(
+                    fractured
+                        ? with_slot_flags(vocabulary[i].member, true, false)
+                        : not_of(with_slot_flags(
+                              vocabulary[i].member, true, false)));
+                parts.push_back(
+                    crafted
+                        ? with_slot_flags(vocabulary[i].member, false, true)
+                        : not_of(with_slot_flags(
+                              vocabulary[i].member, false, true)));
                 break;
             case GoalSlotStatus::Absent:
                 parts.push_back(not_of(vocabulary[i].member));
@@ -486,6 +559,16 @@ std::string compile_policy_strategy_json(
         for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
             parts.push_back(mod_count_condition(
                 session, layout.junk_classes[i], state.junk_counts[i]));
+            parts.push_back(mod_count_condition(
+                session, layout.junk_classes[i],
+                state.fractured_junk_counts[i], PC_MOD_SLOT_FRACTURED));
+            parts.push_back(mod_count_condition(
+                session, layout.junk_classes[i],
+                state.crafted_junk_counts[i], PC_MOD_SLOT_CRAFTED));
+            parts.push_back(mod_count_condition(
+                session, layout.junk_classes[i],
+                state.fractured_crafted_junk_counts[i],
+                PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED));
         }
         edge("router", "s" + std::to_string(state_id), 1, all_of(parts),
              false);

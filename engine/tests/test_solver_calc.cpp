@@ -161,6 +161,23 @@ bool near(double a, double b, double tolerance = 1e-9) {
     return std::fabs(a - b) < tolerance;
 }
 
+bool same_distribution(
+    const OutcomeDistribution& left,
+    const OutcomeDistribution& right) {
+    if (left.supported != right.supported ||
+        left.entries.size() != right.entries.size()) {
+        return false;
+    }
+    for (const OutcomeEntry& entry : left.entries) {
+        if (!near(
+                entry.probability,
+                probability_of(right, entry.state))) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void run_goal_threshold_tests() {
     auto session = make_calc_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -616,6 +633,29 @@ void run_special_evaluator_tests() {
     mc_cross_check(
         calc, mc, dominated, registry.index_by_id.at("eldritch_chaos"),
         20000, 4e-3, 5e-3);
+
+    /* Owner-approved S7.1 fixture: absent or tied dominance makes all three
+     * Eldritch explicit currencies exactly match their ordinary counterparts.
+     * Side-specific intent is represented later as an explicit setup option. */
+    for (const std::uint8_t tied_tier : {std::uint8_t{0}, std::uint8_t{2}}) {
+        pc_item_state tied;
+        pc_item_clear(&tied);
+        tied.rarity = PC_RARITY_RARE;
+        tied.searing_exarch_tier = tied_tier;
+        tied.eater_of_worlds_tier = tied_tier;
+        place(&tied, PC_SIDE_PREFIX, 3, 12);
+        place(&tied, PC_SIDE_SUFFIX, 6, 21);
+        const std::uint32_t tied_state = calc.intern_item(tied);
+        for (const auto& [ordinary, eldritch] : {
+                 std::pair{"exalt", "eldritch_exalt"},
+                 std::pair{"chaos", "eldritch_chaos"},
+                 std::pair{"annul", "eldritch_annul"},
+             }) {
+            PC_CHECK(same_distribution(
+                calc.outcomes(tied_state, registry.index_by_id.at(ordinary)),
+                calc.outcomes(tied_state, registry.index_by_id.at(eldritch))));
+        }
+    }
 }
 
 /*

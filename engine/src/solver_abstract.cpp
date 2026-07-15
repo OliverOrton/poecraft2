@@ -172,6 +172,7 @@ void action_reachable_mask(const SessionImpl& session,
     case ActionType::Annul:
     case ActionType::EldritchAnnul:
     case ActionType::Scour:
+    case ActionType::RemoveCraftedModifiers:
     case ActionType::Fracture:
     case ActionType::EldritchEmber:
     case ActionType::EldritchIchor: /* implicit-side; not explicit junk */
@@ -415,6 +416,10 @@ AbstractState project_item(
     state.searing_exarch_tier = item.searing_exarch_tier;
     state.eater_of_worlds_tier = item.eater_of_worlds_tier;
     state.junk_counts.assign(layout.junk_classes.size(), 0);
+    state.fractured_junk_counts.assign(layout.junk_classes.size(), 0);
+    state.crafted_junk_counts.assign(layout.junk_classes.size(), 0);
+    state.fractured_crafted_junk_counts.assign(
+        layout.junk_classes.size(), 0);
 
     if (item.item_flags & PC_ITEM_CORRUPTED) state.flags |= kFlagCorrupted;
     if (item.item_flags & PC_ITEM_MIRRORED) state.flags |= kFlagMirrored;
@@ -455,12 +460,22 @@ AbstractState project_item(
         mod_groups(session, mod, groups);
         for (std::size_t s = 0; s < layout.slots.size(); ++s) {
             const ResolvedGoalSlot& goal_slot = layout.slots[s];
+            const bool member =
+                pc_bitset_test(goal_slot.member_mask.data(), mod);
+            if (member) {
+                if (slot.flags & PC_MOD_SLOT_FRACTURED) {
+                    state.fractured_goal_mask |= 1u << s;
+                }
+                if (slot.flags & PC_MOD_SLOT_CRAFTED) {
+                    state.crafted_goal_mask |= 1u << s;
+                }
+            }
             if (pc_bitset_test(goal_slot.satisfying_mask.data(), mod)) {
                 state.slot_status[s] = static_cast<std::uint8_t>(
                     GoalSlotStatus::Satisfied);
                 continue;
             }
-            if (pc_bitset_test(goal_slot.member_mask.data(), mod)) {
+            if (member) {
                 if (state.slot_status[s] !=
                     static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
                     state.slot_status[s] = static_cast<std::uint8_t>(
@@ -481,6 +496,17 @@ AbstractState project_item(
             state.junk_counts[junk_class] <
                 std::numeric_limits<std::uint8_t>::max()) {
             ++state.junk_counts[junk_class];
+            if (slot.flags & PC_MOD_SLOT_FRACTURED) {
+                ++state.fractured_junk_counts[junk_class];
+            }
+            if (slot.flags & PC_MOD_SLOT_CRAFTED) {
+                ++state.crafted_junk_counts[junk_class];
+            }
+            if ((slot.flags &
+                 (PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)) ==
+                (PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)) {
+                ++state.fractured_crafted_junk_counts[junk_class];
+            }
         }
     };
     for (std::uint8_t i = 0; i < item.prefix_count; ++i) {
@@ -499,6 +525,8 @@ std::size_t abstract_state_hash(const AbstractState& state) {
         hash *= 1099511628211ull;
     };
     for (std::uint8_t status : state.slot_status) mix(status);
+    mix(state.fractured_goal_mask);
+    mix(state.crafted_goal_mask);
     mix(state.blocked_mask);
     mix(state.prefix_count);
     mix(state.suffix_count);
@@ -509,6 +537,9 @@ std::size_t abstract_state_hash(const AbstractState& state) {
     mix(state.eater_of_worlds_tier);
     mix(state.flags);
     for (std::uint8_t count : state.junk_counts) mix(count);
+    for (std::uint8_t count : state.fractured_junk_counts) mix(count);
+    for (std::uint8_t count : state.crafted_junk_counts) mix(count);
+    for (std::uint8_t count : state.fractured_crafted_junk_counts) mix(count);
     return static_cast<std::size_t>(hash);
 }
 

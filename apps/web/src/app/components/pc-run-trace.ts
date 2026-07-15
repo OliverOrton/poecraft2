@@ -28,6 +28,7 @@ const ACTION_NAMES = [
     "Eldritch Annul",
     "Influence Exalt",
     "Fracturing Orb",
+    "Remove Crafted Modifiers",
 ];
 
 export class PcRunTrace extends HTMLElement {

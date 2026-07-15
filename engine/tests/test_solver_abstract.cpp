@@ -145,14 +145,16 @@ void place(pc_item_state* item, int side, std::uint32_t mod_id,
 void run_registry_tests(const SessionImpl& session) {
     const ActionRegistry registry = build_action_registry(session);
 
-    /* Synthetic session: nine basic currency actions, fracture, restart,
+    /* Synthetic session: nine ordinary currencies, remove-crafted-modifiers,
+     * fracture, restart,
      * and the fossil loadouts over the two *named* fossils (A, B, A+B).
      * The nameless RandomFossilOutcome-style row must not enumerate. */
-    PC_CHECK(registry.actions.size() == 14);
+    PC_CHECK(registry.actions.size() == 15);
     PC_CHECK(registry.index_by_id.size() == registry.actions.size());
     PC_CHECK(registry.index_by_id.count("chaos") == 1);
     PC_CHECK(registry.index_by_id.count("exalt") == 1);
     PC_CHECK(registry.index_by_id.count("restart") == 1);
+    PC_CHECK(registry.index_by_id.count("remove_crafted_modifiers") == 1);
     PC_CHECK(registry.index_by_id.count("fossil:fossil_a") == 1);
     PC_CHECK(registry.index_by_id.count("fossil:fossil_b") == 1);
     PC_CHECK(registry.index_by_id.count("fossil:fossil_a+fossil_b") == 1);
@@ -181,6 +183,11 @@ void run_registry_tests(const SessionImpl& session) {
     PC_CHECK(restart.synthetic);
     PC_CHECK(restart.legality.forbidden_flags == 0);
     PC_CHECK(restart.cost_keys == std::vector<std::string>{"base"});
+    const ActionDescriptor& remove_crafted = registry.actions[
+        registry.index_by_id.at("remove_crafted_modifiers")];
+    PC_CHECK(remove_crafted.cost_keys ==
+             std::vector<std::string>{"scour"});
+    PC_CHECK(remove_crafted.legality.required_flags == kFlagCraftedMod);
 }
 
 void run_junk_class_tests(const std::shared_ptr<SessionImpl>& session) {
@@ -417,6 +424,9 @@ void run_projection_tests(const std::shared_ptr<SessionImpl>& session) {
         const AbstractState state = project_item(*session, layout, item);
         PC_CHECK(state.flags & kFlagCorrupted);
         PC_CHECK(state.flags & kFlagCraftedMod);
+        PC_CHECK(state.crafted_goal_mask == 0);
+        PC_CHECK(state.crafted_junk_counts ==
+                 (std::vector<std::uint8_t>{1, 0, 0}));
 
         const AbstractState again = project_item(*session, layout, item);
         PC_CHECK(state == again);
@@ -427,6 +437,26 @@ void run_projection_tests(const std::shared_ptr<SessionImpl>& session) {
         const AbstractState different =
             project_item(*session, layout, other);
         PC_CHECK(!(state == different));
+    }
+
+    /* Carrier flags remain attached to the exact goal slot or junk class,
+     * including their intersection, rather than collapsing to item booleans. */
+    {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_PREFIX, 0, 10,
+              PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED);
+        place(&item, PC_SIDE_PREFIX, 3, 12, PC_MOD_SLOT_FRACTURED);
+        const AbstractState state = project_item(*session, layout, item);
+        PC_CHECK(state.fractured_goal_mask == 1);
+        PC_CHECK(state.crafted_goal_mask == 1);
+        PC_CHECK(state.fractured_junk_counts ==
+                 (std::vector<std::uint8_t>{1, 0, 0}));
+        PC_CHECK(state.crafted_junk_counts ==
+                 (std::vector<std::uint8_t>{0, 0, 0}));
+        PC_CHECK(state.fractured_crafted_junk_counts ==
+                 (std::vector<std::uint8_t>{0, 0, 0}));
     }
 }
 

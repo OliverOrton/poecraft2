@@ -42,6 +42,7 @@ _ACTION_TYPES = {
     "eldritch_annul": 22,
     "influence_exalt": 23,
     "fracture": 24,
+    "remove_crafted_modifiers": 25,
 }
 _RARITIES = {"normal": 0, "magic": 1, "rare": 2}
 _TERMINAL_KINDS = {"success": 0, "failure": 1, "stop": 2}

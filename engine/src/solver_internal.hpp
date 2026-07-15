@@ -216,6 +216,10 @@ AbstractLayout build_abstract_layout(
 
 struct AbstractState {
     std::array<std::uint8_t, kMaxGoalSlots> slot_status{}; /* GoalSlotStatus */
+    /* Exact carrier identity for slot-local mechanics. Bit i means the
+     * modifier occupying goal slot i carries the corresponding slot flag. */
+    std::uint32_t fractured_goal_mask = 0;
+    std::uint32_t crafted_goal_mask = 0;
     std::uint32_t blocked_mask = 0; /* bit per goal slot: a non-member
                                        explicit occupies a blocking group */
     std::uint8_t prefix_count = 0;
@@ -230,6 +234,11 @@ struct AbstractState {
     std::uint8_t eater_of_worlds_tier = 0;
     std::uint32_t flags = 0; /* AbstractFlag bits */
     std::vector<std::uint8_t> junk_counts; /* parallel to layout.junk_classes */
+    std::vector<std::uint8_t> fractured_junk_counts;
+    std::vector<std::uint8_t> crafted_junk_counts;
+    /* Required only for exact reconstruction when one carrier has both
+     * flags; always bounded by both corresponding per-class counts. */
+    std::vector<std::uint8_t> fractured_crafted_junk_counts;
 
     bool operator==(const AbstractState& other) const = default;
 };
@@ -350,7 +359,7 @@ class CalcContext {
      * (representative materialization). Returns false when no consistent
      * item exists (contradictory flags, unfillable junk counts).
      */
-    bool materialize(std::uint32_t state_id, pc_item_state& out_item);
+    bool materialize(std::uint32_t state_id, pc_item_state& out_item) const;
 
     /*
      * Exact successor distribution, cache-first. The result stays valid

@@ -7,12 +7,15 @@ realistic end-to-end crafts before adding more mechanic families. Read
 [crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
-Status 2026-07-15: S7.0 is implemented and locally accepted. The versioned
+Status 2026-07-15: S7.0 and S7.1 are implemented. The versioned
 native/worker-WASM corpus, telemetry contract, unoptimized reports, and
-cross-backend comparison tooling are in place. Oliver approved the permanent
-corpus and numeric criteria below on 2026-07-15; no approved case exposes an
-unsettled metamod interaction. S7.1 is ready to begin. Trade leaves, corruption,
-Hinekora's Lock, imprints, recombinators, and other mechanic expansion remain parked in
+cross-backend comparison tooling are in place. The one-item correctness/state
+substrate now includes the approved Eldritch fallback fixture, one-Scour crafted
+modifier removal, exact Harvest resistance/Fracture calculation, and
+carrier-specific compilation. Oliver approved the permanent corpus and numeric
+criteria below on 2026-07-15. S7.2 is ready to begin after the required fresh
+pre-optimization measurements. Trade leaves, corruption, Hinekora's Lock,
+imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 ## Outcome
@@ -79,10 +82,10 @@ S1-S6 prove a correct vertical slice, not realistic endgame scalability:
   to Chaos and Restart. It validates solve/compile/simulate contracts, not a
   real multi-stage endgame craft.
 
-Two registered one-item actions are not calculation-supported today:
-Harvest resistance conversion and Fracture. The stable solver doc also lists
-scour-plus-alchemy and bench removal even though neither is a primitive solver
-descriptor today.
+At the S7.0 baseline, two registered one-item actions were not
+calculation-supported: Harvest resistance conversion and Fracture. S7.1 added
+both exact evaluators plus primitive one-Scour crafted-modifier removal.
+Scour-plus-alchemy remains a later solver option rather than a primitive.
 
 ## S7 Invariants
 
@@ -175,7 +178,7 @@ native-unit fixture.
 | Ordinary | Empty rare ilvl 86 Vaal Regalia to T1 flat ES, T1 increased ES, and the selected cold-resistance bench finish | Alchemy, Chaos, Exalt, Annul, Scour, selected bench craft, Restart | Approved and enabled |
 | Advanced | Empty rare ilvl 86 Vaal Regalia to T1 flat ES, T1 increased ES, T2-or-better fire resistance, and the selected cold-resistance bench finish | Chaos, Exalt, Annul, selected bench craft, Restart | Approved and enabled; no Eldritch side-intent craft |
 | Endgame | Rare ilvl 86 Vaal Regalia with fractured T1 flat ES to T1 increased ES, T1 ES/stun recovery, T1 fire and cold resistance, and the selected Intelligence bench finish | Chaos, Exalt, Annul, Harvest defence reforge, Dense Fossil, selected bench craft, Restart | Approved and enabled |
-| Stress/refusal | Missing price, one-state exhaustion, unsupported Fracture, unreachable Restart-only goal, cancellation, and full 15,604-action registry | Frozen case-specific action/economy envelopes | Approved and enabled |
+| Stress/refusal | Missing price, one-state exhaustion, the historical unsupported-Fracture row (now unreachable-goal after S7.1 evaluator support), unreachable Restart-only goal, cancellation, and the S7.0 full 15,604-action registry | Frozen case-specific action/economy envelopes | Approved and enabled |
 
 The approved advanced case uses ordinary currency plus a deterministic bench
 finish and deliberately excludes Eldritch side-intent setup/crafting. The
@@ -473,6 +476,8 @@ real cases before S7.2 performs optimization.
 
 ### S7.1 - One-item correctness and state substrate
 
+Status: complete in the S7.1 correctness/state-substrate commit.
+
 - Preserve and fixture the approved tied/no-dominance ordinary-currency
   behavior. No approved corpus case currently needs another metamod ruling.
 - Add remove-crafted-modifiers at a cost of one Scour.
@@ -621,9 +626,8 @@ Recorded 2026-07-15:
    value impact if it reports the discarded delta and honest optimality status;
    it is not S7.1 work or an S7 completion requirement.
 
-No owner approval remains before S7.1. The permanent corpus and numeric criteria
-are approved, and no approved case currently exposes an unsettled metamod
-interaction. Ask Oliver only if later implementation reveals a new mechanic
+No owner approval remains before S7.2. The permanent corpus and numeric criteria
+are approved. Ask Oliver only if later implementation reveals a new mechanic
 ambiguity.
 
 Mechanic answers come from Oliver and are written into focused fixtures before

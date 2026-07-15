@@ -114,7 +114,7 @@ pc_result parse_action_request(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     if (request.action_type < PC_ACTION_TRANSMUTE ||
-        request.action_type > PC_ACTION_FRACTURE) {
+        request.action_type > PC_ACTION_REMOVE_CRAFTED_MODIFIERS) {
         set_error(error, PC_RESULT_INVALID_ARGUMENT, "unknown action type");
         return PC_RESULT_INVALID_ARGUMENT;
     }
@@ -1061,7 +1061,8 @@ pc_result pc_debug_pool_query(
         action_type == PC_ACTION_ELDRITCH_EMBER ||
         action_type == PC_ACTION_ELDRITCH_ICHOR ||
         action_type == PC_ACTION_ELDRITCH_ANNUL ||
-        action_type == PC_ACTION_FRACTURE) {
+        action_type == PC_ACTION_FRACTURE ||
+        action_type == PC_ACTION_REMOVE_CRAFTED_MODIFIERS) {
         set_error(out_error, PC_RESULT_UNSUPPORTED_FEATURE,
                   "action has no weighted add pool");
         return PC_RESULT_UNSUPPORTED_FEATURE;

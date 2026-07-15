@@ -113,6 +113,18 @@ bool mod_groups_conflict(
     return false;
 }
 
+bool has_class_tag(
+    const SessionImpl& session,
+    std::uint32_t mod_id,
+    std::uint32_t tag_id) {
+    if (mod_id >= session.mod_count) return false;
+    for (std::uint32_t i = session.class_offsets[mod_id];
+         i < session.class_offsets[mod_id + 1]; ++i) {
+        if (session.class_tag_ids[i] == tag_id) return true;
+    }
+    return false;
+}
+
 std::uint32_t unveil_weight(
     const SessionImpl& session,
     std::uint32_t mod_id) {
@@ -162,8 +174,12 @@ CalcContext::CalcContext(
         std::any_of(
             candidates_.begin(), candidates_.end(),
             [&](std::uint32_t index) {
-                return registry_.actions.at(index).params.type ==
-                       ActionType::Unveil;
+                const ActionType type =
+                    registry_.actions.at(index).params.type;
+                return type == ActionType::Unveil ||
+                       type == ActionType::HarvestResist ||
+                       type == ActionType::Fracture ||
+                       type == ActionType::RemoveCraftedModifiers;
             });
     const auto layout_started = std::chrono::steady_clock::now();
     layout_ = build_abstract_layout(
@@ -191,6 +207,7 @@ bool calc_supports(const ActionDescriptor& action) {
     case ActionType::Exalt:
     case ActionType::Annul:
     case ActionType::Scour:
+    case ActionType::RemoveCraftedModifiers:
     case ActionType::Essence:
     case ActionType::Fossil:
     case ActionType::Bench:
@@ -205,6 +222,8 @@ bool calc_supports(const ActionDescriptor& action) {
     case ActionType::EldritchExalt:
     case ActionType::EldritchChaos:
     case ActionType::EldritchAnnul:
+    case ActionType::HarvestResist:
+    case ActionType::Fracture:
         return true;
     default:
         return false;
@@ -257,7 +276,9 @@ std::uint32_t CalcContext::intern_item(const pc_item_state& item) {
     return intern_state(project_item(*session_, layout_, item));
 }
 
-bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
+bool CalcContext::materialize(
+    std::uint32_t state_id,
+    pc_item_state& out) const {
     const SessionImpl& session = *session_;
     const AbstractState& target = states_.at(state_id);
     pc_item_clear(&out);
@@ -293,7 +314,7 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
     std::vector<std::uint32_t> occupied_groups;
     std::vector<std::uint32_t> used_mods;
     std::vector<std::uint32_t> scratch_groups;
-    const auto try_add = [&](std::uint32_t mod) {
+    const auto try_add = [&](std::uint32_t mod, std::uint8_t flags) {
         if (std::find(used_mods.begin(), used_mods.end(), mod) !=
             used_mods.end()) {
             return false;
@@ -310,7 +331,7 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
         if (gen != 0 && gen != 1) return false;
         if (pc_item_add_mod(
                 &out, gen == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX, mod,
-                static_cast<std::uint16_t>(session.primary_group[mod]), 0,
+                static_cast<std::uint16_t>(session.primary_group[mod]), flags,
                 nullptr) != PC_RESULT_OK) {
             return false;
         }
@@ -321,7 +342,8 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
     };
     const auto first_from_mask =
         [&](const std::vector<std::uint64_t>& include,
-            const std::vector<std::uint64_t>* exclude) {
+            const std::vector<std::uint64_t>* exclude,
+            std::uint8_t flags) {
             bool added = false;
             pc_bitset_for_each(
                 include.data(), session.words, [&](std::size_t bit) {
@@ -332,7 +354,7 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
                         pc_bitset_test(exclude->data(), bit)) {
                         return;
                     }
-                    added = try_add(mod);
+                    added = try_add(mod, flags);
                 });
             return added;
         };
@@ -343,34 +365,88 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
             static_cast<GoalSlotStatus>(target.slot_status[i]);
         if (status == GoalSlotStatus::Absent) continue;
         const bool satisfied = status == GoalSlotStatus::Satisfied;
+        std::uint8_t slot_flags = 0;
+        if ((target.fractured_goal_mask & (1u << i)) != 0) {
+            slot_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        if ((target.crafted_goal_mask & (1u << i)) != 0) {
+            slot_flags |= PC_MOD_SLOT_CRAFTED;
+        }
         if (!first_from_mask(
                 satisfied ? slot.satisfying_mask : slot.member_mask,
-                satisfied ? nullptr : &slot.satisfying_mask)) {
+                satisfied ? nullptr : &slot.satisfying_mask, slot_flags)) {
             return false;
+        }
+        const pc_mod_slot& added = session.gen_type[used_mods.back()] == 0
+                                       ? out.prefixes[out.prefix_count - 1]
+                                       : out.suffixes[out.suffix_count - 1];
+        const std::int32_t metamod = session.metamod_type[added.mod_id];
+        if (metamod >= 0) {
+            const auto found = std::find(
+                needed_codes.begin(), needed_codes.end(), metamod);
+            if (found != needed_codes.end()) needed_codes.erase(found);
         }
     }
 
     for (std::size_t c = 0; c < layout_.junk_classes.size(); ++c) {
-        std::uint32_t remaining =
+        const std::uint32_t total =
             c < target.junk_counts.size() ? target.junk_counts[c] : 0;
-        if (remaining == 0) continue;
+        if (total == 0) continue;
         const JunkClass& junk = layout_.junk_classes[c];
+        const std::uint32_t fractured =
+            c < target.fractured_junk_counts.size()
+                ? target.fractured_junk_counts[c]
+                : 0;
+        const std::uint32_t crafted =
+            c < target.crafted_junk_counts.size()
+                ? target.crafted_junk_counts[c]
+                : 0;
+        const std::uint32_t both =
+            c < target.fractured_crafted_junk_counts.size()
+                ? target.fractured_crafted_junk_counts[c]
+                : 0;
+        if (both > fractured || both > crafted ||
+            fractured + crafted - both > total) {
+            return false;
+        }
+        std::vector<std::uint8_t> desired_flags;
+        desired_flags.insert(
+            desired_flags.end(), both,
+            PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED);
+        desired_flags.insert(
+            desired_flags.end(), fractured - both, PC_MOD_SLOT_FRACTURED);
+        desired_flags.insert(
+            desired_flags.end(), crafted - both, PC_MOD_SLOT_CRAFTED);
+        desired_flags.insert(
+            desired_flags.end(), total - (fractured + crafted - both), 0);
         /* Prefer members that satisfy a still-needed metamod flag. */
         for (auto it = needed_codes.begin();
-             remaining > 0 && it != needed_codes.end();) {
+             !desired_flags.empty() && it != needed_codes.end();) {
             bool found = false;
+            std::size_t flag_index = desired_flags.size();
+            for (std::size_t i = 0; i < desired_flags.size(); ++i) {
+                if ((desired_flags[i] & PC_MOD_SLOT_CRAFTED) != 0) {
+                    flag_index = i;
+                    break;
+                }
+            }
+            if (flag_index == desired_flags.size()) {
+                ++it;
+                continue;
+            }
             pc_bitset_for_each(
                 junk.member_mask.data(), session.words,
                 [&](std::size_t bit) {
                     if (found) return;
                     const std::uint32_t mod =
                         static_cast<std::uint32_t>(bit);
-                    if (session.metamod_type[mod] == *it && try_add(mod)) {
+                    if (session.metamod_type[mod] == *it &&
+                        try_add(mod, desired_flags[flag_index])) {
                         found = true;
                     }
                 });
             if (found) {
-                --remaining;
+                desired_flags.erase(desired_flags.begin() + flag_index);
                 it = needed_codes.erase(it);
             } else {
                 ++it;
@@ -379,10 +455,13 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
         bool exhausted = false;
         pc_bitset_for_each(
             junk.member_mask.data(), session.words, [&](std::size_t bit) {
-                if (remaining == 0 || exhausted) return;
-                if (try_add(static_cast<std::uint32_t>(bit))) --remaining;
+                if (desired_flags.empty() || exhausted) return;
+                if (try_add(static_cast<std::uint32_t>(bit),
+                            desired_flags.front())) {
+                    desired_flags.erase(desired_flags.begin());
+                }
             });
-        if (remaining > 0) return false;
+        if (!desired_flags.empty()) return false;
     }
     if (!needed_codes.empty()) return false;
     if (out.prefix_count != target.prefix_count ||
@@ -390,25 +469,6 @@ bool CalcContext::materialize(std::uint32_t state_id, pc_item_state& out) {
         return false;
     }
 
-    /* Slot-level decorations the abstraction tracks only as flags. The
-     * choice of carrier slot is the accepted approximation; the S5 gate
-     * measures whether it ever matters. */
-    const auto decorate = [&](std::uint32_t flag, std::uint8_t slot_flag) {
-        if ((target.flags & flag) == 0) return true;
-        if (out.prefix_count > 0) {
-            out.prefixes[0].flags |= slot_flag;
-            return true;
-        }
-        if (out.suffix_count > 0) {
-            out.suffixes[0].flags |= slot_flag;
-            return true;
-        }
-        return false;
-    };
-    if (!decorate(kFlagCraftedMod, PC_MOD_SLOT_CRAFTED) ||
-        !decorate(kFlagFractured, PC_MOD_SLOT_FRACTURED)) {
-        return false;
-    }
     if (target.flags & kFlagVeiledMod) {
         pc_mod_slot* slots = target.veiled_side == PC_SIDE_SUFFIX
                                  ? out.suffixes
@@ -528,6 +588,12 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     bytes += states_.capacity() * sizeof(AbstractState);
     for (const AbstractState& state : states_) {
         bytes += state.junk_counts.capacity() * sizeof(std::uint8_t);
+        bytes += state.fractured_junk_counts.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += state.crafted_junk_counts.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += state.fractured_crafted_junk_counts.capacity() *
+                 sizeof(std::uint8_t);
     }
     bytes += state_ids_by_hash_.bucket_count() * sizeof(void*);
     bytes += state_ids_by_hash_.size() *
@@ -613,6 +679,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
         }
         switch (action.params.type) {
         case ActionType::Scour:
+        case ActionType::RemoveCraftedModifiers:
         case ActionType::Bench: {
             /* RNG-free engine actions: apply and project. */
             pc_item_state copy = item;
@@ -774,6 +841,121 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                 }
             }
             if (accumulated.empty()) self_loop();
+            break;
+        }
+        case ActionType::HarvestResist: {
+            result.supported = true;
+            const auto resistance =
+                session.data->tag_id_by_name.find("resistance");
+            if (resistance == session.data->tag_id_by_name.end()) {
+                self_loop();
+                break;
+            }
+            struct SourceOutcome {
+                pc_item_state removed{};
+                int side = -1;
+                std::vector<std::pair<std::uint32_t, std::uint64_t>> targets;
+                std::uint64_t total_weight = 0;
+            };
+            std::vector<SourceOutcome> viable;
+            const auto collect = [&](int side, const pc_mod_slot* slots,
+                                     std::uint8_t count) {
+                if (item_side_locked(session, item, side)) return;
+                for (std::uint8_t i = 0; i < count; ++i) {
+                    const pc_mod_slot& source = slots[i];
+                    if ((source.flags & PC_MOD_SLOT_FRACTURED) != 0 ||
+                        !has_class_tag(
+                            session, source.mod_id, resistance->second) ||
+                        !has_class_tag(
+                            session, source.mod_id,
+                            action.params.source_tag_id)) {
+                        continue;
+                    }
+                    SourceOutcome option;
+                    option.removed = item;
+                    option.side = side;
+                    pc_item_remove_at(&option.removed, side, i);
+                    PoolBuildRequest request;
+                    request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+                    request.target_tag_id = action.params.target_tag_id;
+                    request.side_filter = side;
+                    const WeightedPool& pool = get_weighted_pool(
+                        context_, &option.removed, request);
+                    for (const PoolEntry& entry : pool.entries) {
+                        if (entry.final_weight == 0 ||
+                            entry.required_level !=
+                                session.required_level[source.mod_id] ||
+                            !has_class_tag(
+                                session, entry.session_mod_id,
+                                resistance->second) ||
+                            has_class_tag(
+                                session, entry.session_mod_id,
+                                action.params.source_tag_id)) {
+                            continue;
+                        }
+                        option.total_weight += entry.final_weight;
+                        option.targets.push_back(
+                            {entry.session_mod_id, entry.final_weight});
+                    }
+                    if (option.total_weight > 0) {
+                        viable.push_back(std::move(option));
+                    }
+                }
+            };
+            collect(PC_SIDE_PREFIX, item.prefixes, item.prefix_count);
+            collect(PC_SIDE_SUFFIX, item.suffixes, item.suffix_count);
+            if (viable.empty()) {
+                self_loop();
+                break;
+            }
+            /* The engine retries invalid source carriers without replacement;
+             * equivalently, the first viable carrier in that random ordering
+             * is uniform over the viable carriers. */
+            const double source_probability =
+                1.0 / static_cast<double>(viable.size());
+            for (const SourceOutcome& option : viable) {
+                for (const auto& [mod_id, weight] : option.targets) {
+                    pc_item_state converted = option.removed;
+                    if (pc_item_add_mod(
+                            &converted, option.side, mod_id,
+                            static_cast<std::uint16_t>(
+                                session.primary_group[mod_id]),
+                            0, nullptr) != PC_RESULT_OK) {
+                        continue;
+                    }
+                    add_successor(
+                        converted,
+                        source_probability *
+                            static_cast<double>(weight) /
+                            static_cast<double>(option.total_weight));
+                }
+            }
+            if (accumulated.empty()) self_loop();
+            break;
+        }
+        case ActionType::Fracture: {
+            result.supported = true;
+            const std::uint32_t total =
+                static_cast<std::uint32_t>(
+                    item.prefix_count + item.suffix_count);
+            if (total < 4 || item.generic_influence_bits != 0 ||
+                (item.item_flags & PC_ITEM_SYNTHESISED) != 0 ||
+                (states_.at(state_id).flags & kFlagFractured) != 0) {
+                self_loop();
+                break;
+            }
+            const double each = 1.0 / static_cast<double>(total);
+            for (std::uint32_t pick = 0; pick < total; ++pick) {
+                pc_item_state fractured = item;
+                if (pick < item.prefix_count) {
+                    fractured.prefixes[pick].flags |=
+                        PC_MOD_SLOT_FRACTURED;
+                } else {
+                    fractured.suffixes[pick - item.prefix_count].flags |=
+                        PC_MOD_SLOT_FRACTURED;
+                }
+                add_successor(fractured, each);
+            }
             break;
         }
         case ActionType::Annul:

@@ -195,10 +195,9 @@ Current one-item coverage:
 engine + solver:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
                    essences, fossils, bench crafts, metamod locks,
                    veiled chaos/exalt + unveil, harvest reforge/augment,
-                   eldritch implicits/currency, influenced exalts
-engine only:       harvest resistance conversion, Fracture
-S7 substrate:      exact evaluators for those two actions; bench removal;
-                   solver-only scour/Alchemy and macro/sub-policy operators
+                   harvest resistance conversion, eldritch implicits/currency,
+                   influenced exalts, Fracture, remove-crafted-modifiers
+S7 operators:      solver-only scour/Alchemy and macro/sub-policy operators
 later:             corruption, beastcrafting, recombinators (implementation plan
                    Phase 18; session-universe implications already
                    handled by the bitset plan)

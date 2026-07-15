@@ -4,7 +4,7 @@
   "category": "stress_refusal",
   "approval_status": "approved_owner_2026-07-15",
   "benchmark_enabled": true,
-  "description": "Pins the S7.0 baseline refusal for a registered action without an exact solver evaluator.",
+  "description": "Historical S7.0 unsupported-Fracture row; after S7.1 the exact carrier-aware evaluator is present and this action envelope is refused because it cannot create the requested modifier.",
   "comparison_profile": "native-wasm-solver-v1",
   "session": {
     "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
@@ -54,7 +54,7 @@
     }
   },
   "expected": {
-    "solve_status": "refused_unsupported_action",
+    "solve_status": "refused_unreachable_goal",
     "optimality_status": "not_claimed",
     "compile_status": "not_required",
     "verification_status": "not_required"

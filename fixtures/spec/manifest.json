@@ -4,7 +4,8 @@
     "session-pools/vaal-regalia-ilvl-86-normal-prefix.json",
     "session-pools/vaal-regalia-ilvl-86-normal-suffix.json",
     "session-pools/vaal-regalia-ilvl-86-alchemy-combined.json",
-    "action-results/vaal-regalia-ilvl-86-fractured-reforge.json"
+    "action-results/vaal-regalia-ilvl-86-fractured-reforge.json",
+    "action-results/vaal-regalia-ilvl-86-tied-eldritch-currency.json"
   ],
   "fixture_version": 1,
   "oracle": "poecraft2_docs_and_canonical_sqlite",

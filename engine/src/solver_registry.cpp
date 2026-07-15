@@ -120,6 +120,17 @@ void add_basic_currency(ActionRegistry& registry) {
         d.clears_flags = kFlagCraftedMod | kFlagVeiledMod;
         add(registry, std::move(d));
     }
+    {
+        auto d = base_descriptor(
+            "remove_crafted_modifiers", ActionType::RemoveCraftedModifiers,
+            TransitionKind::Deterministic, kRarityMagic | kRarityRare);
+        d.cost_keys = {"scour"};
+        d.legality.required_flags = kFlagCraftedMod;
+        d.clears_flags =
+            kFlagCraftedMod | kFlagMultimod | kFlagNoAttack |
+            kFlagNoCaster | kFlagPrefixesLocked | kFlagSuffixesLocked;
+        add(registry, std::move(d));
+    }
 }
 
 void add_essences(const SessionImpl& session, ActionRegistry& registry) {

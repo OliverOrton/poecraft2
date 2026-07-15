@@ -610,7 +610,8 @@ enum class ActionType : int {
     EldritchChaos = 21,
     EldritchAnnul = 22,
     InfluenceExalt = 23,
-    Fracture = 24
+    Fracture = 24,
+    RemoveCraftedModifiers = 25
 };
 
 struct ActionParameters {

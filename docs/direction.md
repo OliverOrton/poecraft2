@@ -44,10 +44,14 @@ multi-stage end-to-end crafts and complete a dedicated native/WASM solver
 performance pass. S7.0 is complete: versioned native/worker-WASM benchmarks,
 read-only solver telemetry, an unoptimized baseline, and structural comparison
 reports now quantify the current full-closure/value-iteration behavior. S7.1 is
-next: Oliver approved the permanent real craft corpus and the performance,
-safety, responsiveness, and simulator-verification criteria on 2026-07-15.
-The old any-tier two-mod row remains historical; measure its approved T1/T1
-replacement and the newly enabled real cases before S7.2 optimization.
+complete: the tied/no-dominance rule is permanently fixtured, one-Scour crafted
+modifier removal is a primitive operation, Harvest resistance conversion and
+Fracture have exact calculation paths, and crafted/fractured carriers compile
+through ordinary strategy conditions and explicit start state. S7.2 is next.
+Oliver approved the permanent real craft corpus and the performance, safety,
+responsiveness, and simulator-verification criteria on 2026-07-15. The old
+any-tier two-mod row remains historical; measure its approved T1/T1 replacement
+and the newly enabled real cases before S7.2 optimization.
 Macro/sub-policy operators, safe action control, cycle acceleration, memory
 bounds, and real craft gates are specified in
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
@@ -72,8 +76,9 @@ secrets.
    correctness gaps, safe action generation/pruning, exact macro/sub-policy
    operators, compact transition storage, cycle-aware optimization, policy
    compression, and a final native/WASM benchmark plus compiled-strategy
-   simulator gate. S7.0 baseline/telemetry is complete; S7.1 correctness/state
-   substrate is the exact next boundary.
+   simulator gate. S7.0 baseline/telemetry and S7.1 correctness/state substrate
+   are complete; S7.2 action control, storage, and first performance pass is the
+   exact next boundary.
    [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
 2. Parked mechanic track M1-M5 after S7: trade leaves/corruption/finishers,
    Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an

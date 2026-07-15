@@ -44,6 +44,7 @@ const BASIC_ACTIONS: CraftAction["type"][] = [
     "exalt",
     "annul",
     "scour",
+    "remove_crafted_modifiers",
     "fracture",
 ];
 

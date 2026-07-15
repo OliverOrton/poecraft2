@@ -126,13 +126,6 @@ void collect_condition_targets(
     std::vector<TargetEntry>& targets,
     std::vector<std::string>& gaps) {
     if (condition.kind == ConditionKind::HasModFamily) {
-        if ((condition.required_flags & PC_MOD_SLOT_FRACTURED) != 0) {
-            add_gap(
-                gaps,
-                "edge '" + edge_id +
-                    "' condition has_mod_family(fractured=true) cannot be "
-                    "represented exactly");
-        }
         auto found = std::find_if(
             targets.begin(), targets.end(), [&](const TargetEntry& target) {
                 return target.slot.family_id == condition.family_id;
@@ -449,21 +442,43 @@ bool evaluate_abstract_condition(
         return true;
     case ConditionKind::HasModGroup: {
         const std::size_t slot = layout_slot_for(condition, layout);
-        if (condition.min_value == 0) {
-            return state.slot_status[slot] !=
-                   static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+        const bool present = condition.min_value == 0
+                                 ? state.slot_status[slot] !=
+                                       static_cast<std::uint8_t>(
+                                           GoalSlotStatus::Absent)
+                                 : state.slot_status[slot] ==
+                                       static_cast<std::uint8_t>(
+                                           GoalSlotStatus::Satisfied);
+        if (!present) return false;
+        if ((condition.required_flags & PC_MOD_SLOT_FRACTURED) != 0 &&
+            (state.fractured_goal_mask & (1u << slot)) == 0) {
+            return false;
         }
-        return state.slot_status[slot] ==
-               static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+        if ((condition.required_flags & PC_MOD_SLOT_CRAFTED) != 0 &&
+            (state.crafted_goal_mask & (1u << slot)) == 0) {
+            return false;
+        }
+        return true;
     }
     case ConditionKind::HasModFamily: {
         const std::size_t slot = layout_slot_for(condition, layout);
-        if (condition.min_value == 0) {
-            return state.slot_status[slot] !=
-                   static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+        const bool present = condition.min_value == 0
+                                 ? state.slot_status[slot] !=
+                                       static_cast<std::uint8_t>(
+                                           GoalSlotStatus::Absent)
+                                 : state.slot_status[slot] ==
+                                       static_cast<std::uint8_t>(
+                                           GoalSlotStatus::Satisfied);
+        if (!present) return false;
+        if ((condition.required_flags & PC_MOD_SLOT_FRACTURED) != 0 &&
+            (state.fractured_goal_mask & (1u << slot)) == 0) {
+            return false;
         }
-        return state.slot_status[slot] ==
-               static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
+        if ((condition.required_flags & PC_MOD_SLOT_CRAFTED) != 0 &&
+            (state.crafted_goal_mask & (1u << slot)) == 0) {
+            return false;
+        }
+        return true;
     }
     case ConditionKind::RarityIs:
         return state.rarity == condition.min_value;

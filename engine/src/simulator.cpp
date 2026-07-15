@@ -221,6 +221,12 @@ CompiledCondition compile_condition(
         out.kind = ConditionKind::HasModGroup;
         out.group_id = it->second;
         out.min_value = int_member(value, "min_tier", 0);
+        if (bool_member(value, "fractured", false)) {
+            out.required_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        if (bool_member(value, "crafted", false)) {
+            out.required_flags |= PC_MOD_SLOT_CRAFTED;
+        }
         if (out.min_value < 0) {
             invalid("has_mod_group min_tier must be non-negative");
         }
@@ -248,6 +254,9 @@ CompiledCondition compile_condition(
         out.min_value = int_member(value, "min_tier", 0);
         if (bool_member(value, "fractured", false)) {
             out.required_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        if (bool_member(value, "crafted", false)) {
+            out.required_flags |= PC_MOD_SLOT_CRAFTED;
         }
         if (out.min_value < 0) {
             invalid("has_mod_family min_tier must be non-negative");
@@ -287,6 +296,12 @@ CompiledCondition compile_condition(
         out.min_value = int_member(value, "min", 0);
         out.max_value = int_member(
             value, "max", PC_MAX_PREFIXES + PC_MAX_SUFFIXES);
+        if (bool_member(value, "fractured", false)) {
+            out.required_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        if (bool_member(value, "crafted", false)) {
+            out.required_flags |= PC_MOD_SLOT_CRAFTED;
+        }
         if (out.min_value < 0 || out.max_value < out.min_value) {
             invalid("mod_count range is invalid");
         }
@@ -448,6 +463,7 @@ bool action_type_from_name(const std::string& name, ActionType& out) {
         {"eldritch_annul", ActionType::EldritchAnnul},
         {"influence_exalt", ActionType::InfluenceExalt},
         {"fracture", ActionType::Fracture},
+        {"remove_crafted_modifiers", ActionType::RemoveCraftedModifiers},
     };
     for (const auto& entry : table) {
         if (name == entry.first) {
@@ -579,6 +595,8 @@ void compile_operation(
             invalid("unknown influence: " + influence);
         node.action.influence_code = it->second;
         node.price_keys = {"influence_exalt:" + influence};
+    } else if (action_type == ActionType::RemoveCraftedModifiers) {
+        node.price_keys = {"scour"};
     }
 }
 
@@ -586,11 +604,13 @@ bool has_group(
     const SessionImpl& session,
     const pc_item_state& item,
     std::uint32_t group_id,
-    int min_tier) {
+    int min_tier,
+    std::uint8_t required_flags) {
     auto side_has = [&](const pc_mod_slot* slots, std::uint8_t count) {
         for (std::uint8_t i = 0; i < count; ++i) {
             const std::uint32_t mod_id = slots[i].mod_id;
             if (mod_id >= session.mod_count) continue;
+            if ((slots[i].flags & required_flags) != required_flags) continue;
             const std::uint32_t tier = session.family_tier_index[mod_id];
             if (min_tier > 0 &&
                 (tier == 0 || tier > static_cast<std::uint32_t>(min_tier))) {
@@ -609,12 +629,14 @@ bool has_group(
 
 int count_mods(
     const pc_item_state& item,
-    const std::vector<std::uint32_t>& mod_ids) {
+    const std::vector<std::uint32_t>& mod_ids,
+    std::uint8_t required_flags) {
     int count = 0;
     const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
         for (std::uint8_t i = 0; i < size; ++i) {
             if (std::binary_search(
-                    mod_ids.begin(), mod_ids.end(), slots[i].mod_id)) {
+                    mod_ids.begin(), mod_ids.end(), slots[i].mod_id) &&
+                (slots[i].flags & required_flags) == required_flags) {
                 ++count;
             }
         }
@@ -763,7 +785,8 @@ bool evaluate_condition(
         return true;
     case ConditionKind::HasModGroup:
         return has_group(
-            session, item, condition.group_id, condition.min_value);
+            session, item, condition.group_id, condition.min_value,
+            condition.required_flags);
     case ConditionKind::HasModFamily:
         return has_family(
             session,
@@ -792,7 +815,8 @@ bool evaluate_condition(
         return item.suffix_count >= condition.min_value &&
                item.suffix_count <= condition.max_value;
     case ConditionKind::ModCount: {
-        const int count = count_mods(item, condition.mod_ids);
+        const int count = count_mods(
+            item, condition.mod_ids, condition.required_flags);
         return count >= condition.min_value && count <= condition.max_value;
     }
     case ConditionKind::ItemFlag:

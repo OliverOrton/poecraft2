@@ -31,6 +31,7 @@ FIXTURE_FILES = (
     "session-pools/vaal-regalia-ilvl-86-normal-suffix.json",
     "session-pools/vaal-regalia-ilvl-86-alchemy-combined.json",
     "action-results/vaal-regalia-ilvl-86-fractured-reforge.json",
+    "action-results/vaal-regalia-ilvl-86-tied-eldritch-currency.json",
 )
 
 
@@ -214,6 +215,37 @@ def expected_fixture_documents(
                 "candidate_pool_summary_before_refill": pool_summary(
                     blocked_pool
                 ),
+                "rng_sequence_asserted": False,
+            },
+        },
+        FIXTURE_FILES[5]: {
+            "fixture_version": FIXTURE_VERSION,
+            "fixture_id": "vaal-regalia-ilvl-86-tied-eldritch-currency",
+            "fixture_type": "eldritch_no_dominance",
+            "rule": (
+                "When the Searing Exarch and Eater of Worlds implicit tiers "
+                "are absent or tied, Eldritch Exalted, Chaos, and Annulment "
+                "Orbs use the corresponding ordinary-currency behavior. "
+                "Side-specific intent requires a separate dominance setup."
+            ),
+            **selection,
+            "input_cases": [
+                {
+                    "name": "no_dominance",
+                    "searing_exarch_tier": 0,
+                    "eater_of_worlds_tier": 0,
+                },
+                {
+                    "name": "tied_dominance",
+                    "searing_exarch_tier": 2,
+                    "eater_of_worlds_tier": 2,
+                },
+            ],
+            "expected": {
+                "eldritch_exalt_equivalent": "exalt",
+                "eldritch_chaos_equivalent": "chaos",
+                "eldritch_annul_equivalent": "annul",
+                "side_specific_intent_requires_setup": True,
                 "rng_sequence_asserted": False,
             },
         },

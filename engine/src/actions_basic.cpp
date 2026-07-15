@@ -714,6 +714,30 @@ ActionOutcome do_scour(
     return out;
 }
 
+ActionOutcome do_remove_crafted_modifiers(pc_item_state* item) {
+    ActionOutcome out;
+    if (item->rarity != PC_RARITY_MAGIC && item->rarity != PC_RARITY_RARE) {
+        return out;
+    }
+    const auto remove_crafted = [&](int side) {
+        pc_mod_slot* slots = side == PC_SIDE_PREFIX ? item->prefixes
+                                                    : item->suffixes;
+        std::uint8_t& count = side == PC_SIDE_PREFIX ? item->prefix_count
+                                                     : item->suffix_count;
+        for (std::uint8_t i = count; i > 0; --i) {
+            if ((slots[i - 1].flags & PC_MOD_SLOT_CRAFTED) != 0 &&
+                (slots[i - 1].flags & PC_MOD_SLOT_FRACTURED) == 0 &&
+                pc_item_remove_at(item, side, i - 1) == PC_RESULT_OK) {
+                ++out.removed;
+            }
+        }
+    };
+    remove_crafted(PC_SIDE_PREFIX);
+    remove_crafted(PC_SIDE_SUFFIX);
+    out.applied = out.removed > 0;
+    return out;
+}
+
 void record_direct(
     ActionContextImpl& context,
     const pc_item_state* item,
@@ -1217,6 +1241,8 @@ ActionOutcome apply_action(
         return do_annul(session, context.rng, item);
     case ActionType::Scour:
         return do_scour(session, item);
+    case ActionType::RemoveCraftedModifiers:
+        return do_remove_crafted_modifiers(item);
     case ActionType::Essence: {
         if (action.essence_index >=
             session.essence_guaranteed_mod_ids.size()) {

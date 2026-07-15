@@ -1,0 +1,35 @@
+{
+  "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+  "base_name": "Vaal Regalia",
+  "effective_tags": [
+    "armour",
+    "body_armour",
+    "default",
+    "int_armour",
+    "top_tier_base_item_type"
+  ],
+  "expected": {
+    "eldritch_annul_equivalent": "annul",
+    "eldritch_chaos_equivalent": "chaos",
+    "eldritch_exalt_equivalent": "exalt",
+    "rng_sequence_asserted": false,
+    "side_specific_intent_requires_setup": true
+  },
+  "fixture_id": "vaal-regalia-ilvl-86-tied-eldritch-currency",
+  "fixture_type": "eldritch_no_dominance",
+  "fixture_version": 1,
+  "input_cases": [
+    {
+      "eater_of_worlds_tier": 0,
+      "name": "no_dominance",
+      "searing_exarch_tier": 0
+    },
+    {
+      "eater_of_worlds_tier": 2,
+      "name": "tied_dominance",
+      "searing_exarch_tier": 2
+    }
+  ],
+  "item_level": 86,
+  "rule": "When the Searing Exarch and Eater of Worlds implicit tiers are absent or tied, Eldritch Exalted, Chaos, and Annulment Orbs use the corresponding ordinary-currency behavior. Side-specific intent requires a separate dominance setup."
+}

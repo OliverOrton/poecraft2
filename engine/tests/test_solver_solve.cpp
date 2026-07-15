@@ -254,9 +254,9 @@ void run_alt_spam_tests() {
     {
         ActionRegistry unsupported_registry = registry;
         ActionDescriptor unsupported;
-        unsupported.id = "unsupported-fracture";
-        unsupported.display_name = "Unsupported Fracture";
-        unsupported.params.type = ActionType::Fracture;
+        unsupported.id = "unsupported-test-action";
+        unsupported.display_name = "Unsupported Test Action";
+        unsupported.params.type = static_cast<ActionType>(999);
         unsupported.kind = TransitionKind::Special;
         unsupported.cost_keys = {"fracture"};
         const std::uint32_t unsupported_index =

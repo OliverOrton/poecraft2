@@ -226,6 +226,28 @@ void run_reforge_unit_tests() {
         PC_CHECK(!out2.applied);
         PC_CHECK(item.prefix_count == 1);
     }
+
+    // F) Bench removal consumes the action once and removes every crafted
+    //    explicit modifier without changing rarity or ordinary modifiers.
+    {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_PREFIX, 0, 10, PC_MOD_SLOT_CRAFTED);
+        place(&item, PC_SIDE_SUFFIX, 2, 20, 0);
+        ActionOutcome out =
+            run(&item, ActionType::RemoveCraftedModifiers);
+        PC_CHECK(out.applied && out.removed == 1);
+        PC_CHECK(item.rarity == PC_RARITY_RARE);
+        PC_CHECK(item.prefix_count == 0 && item.suffix_count == 1);
+        PC_CHECK(item.suffixes[0].mod_id == 2);
+        PC_CHECK(!run(&item, ActionType::RemoveCraftedModifiers).applied);
+
+        item.suffixes[0].flags =
+            PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_FRACTURED;
+        PC_CHECK(!run(&item, ActionType::RemoveCraftedModifiers).applied);
+        PC_CHECK(item.suffix_count == 1);
+    }
 }
 
 void run_fossil_precision_unit_test() {

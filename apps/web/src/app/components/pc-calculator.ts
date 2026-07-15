@@ -101,6 +101,7 @@ const BASIC_ACTIONS = [
     "exalt",
     "annul",
     "scour",
+    "remove_crafted_modifiers",
     "fracture",
 ];
 
