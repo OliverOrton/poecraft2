@@ -203,6 +203,65 @@ import type { Catalog } from "../src/app/engine-protocol";
 }
 
 {
+    const modifiers = [
+        {
+            type: "has_mod_family",
+            family_mod_key: "Metadata/Mods/LifeTier1",
+            family_label: "+# to maximum Life",
+            min_tier: 2,
+        },
+        {
+            type: "has_mod_family",
+            family_mod_key: "Metadata/Mods/FireResistTier1",
+            family_label: "+#% to Fire Resistance",
+            min_tier: 3,
+            fractured: true,
+        },
+    ];
+    const allSet = { type: "all", conditions: modifiers };
+    const nOfSet = { type: "at_least", count: 1, conditions: modifiers };
+    assert.deepEqual(
+        compileConditionTree(parseConditionTree(allSet)),
+        allSet,
+    );
+    assert.deepEqual(
+        compileConditionTree(parseConditionTree(nOfSet)),
+        nOfSet,
+    );
+    assert.deepEqual(
+        strategyEdgeCardPresentation({
+            id: "modifier-set",
+            from: "a",
+            to: "b",
+            priority: 0,
+            condition: nOfSet,
+            label: "",
+        }),
+        {
+            title:
+                "AT LEAST 1 OF (+# to maximum Life T2+; +#% to Fire Resistance T3+ fractured)",
+            header: "AT LEAST 1",
+            count: 2,
+            compact: false,
+            manual: false,
+            rows: [
+                {
+                    kind: "leaf",
+                    label: "+# to maximum Life T2+",
+                    depth: 0,
+                },
+                {
+                    kind: "leaf",
+                    label: "+#% to Fire Resistance T3+ fractured",
+                    depth: 0,
+                },
+            ],
+        },
+    );
+    console.log("  ok - multi-modifier ALL and N OF sets round-trip and expand");
+}
+
+{
     // NOT toggles the negate flag on the wrapped node and compiles back out.
     const negated = {
         type: "not",

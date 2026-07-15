@@ -42,9 +42,10 @@ Phase P1 — base ordering and graph auto-labels — is complete:
 7. The edge inspector now provides a recursive visual condition composer in
    the existing product style. It supports ALL, ANY, and N OF groups; nested
    groups; inline NOT; ordering, duplicate, and remove actions; live summaries;
-   modifier family, minimum-tier, and fractured controls; and a collapsed
-   Advanced JSON escape hatch. Default fallback remains explicit, and switching
-   back to guarded mode restores the in-memory tree while the editor stays open.
+   multi-row Has modifier sets with internal ALL or N OF matching and per-row
+   minimum-tier/fractured controls; and a collapsed Advanced JSON escape hatch.
+   Default fallback remains explicit, and switching back to guarded mode
+   restores the in-memory tree while the editor stays open.
 8. Node IDs, edge IDs, priority/routing order, operation payloads, condition
    payloads, and compiled behavior are unchanged.
 
@@ -60,7 +61,8 @@ Phase P1 — base ordering and graph auto-labels — is complete:
   relabeling, manual override behavior, clear-to-auto, stable IDs/priority, and
   save/reopen preservation of both automatic and manual authored states. Nested
   condition coverage pins the full expression, every rendered tree branch, the
-  compact simple-condition presentation, and the manual-card presentation.
+  compact simple-condition presentation, the manual-card presentation, and
+  multi-modifier ALL/N OF round trips with complete graph rows.
 
 ## Acceptance gates — all green
 
@@ -87,6 +89,12 @@ edges. It verified the composite graph card, compact pill, full live summary,
 three recursive editor groups and five leaves, root operator edits, default to
 guarded restoration, manual override/clear-to-auto behavior, and collapsed
 Advanced JSON. It finished with zero console errors or uncaught exceptions.
+
+A final rendered modifier-set smoke selected two real modifier families through
+the picker, switched ALL to N OF and edited N, changed the per-row fractured
+state, removed back to a compact single-modifier condition, and added the second
+modifier again. Both full modifier names were present and unclipped on the graph,
+and the console and uncaught-exception logs stayed empty.
 
 ## Next task — pre-S6 polish Phase P2 only
 

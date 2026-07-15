@@ -78,12 +78,28 @@ export class PcEdgeLayer extends HTMLElement {
                 ),
             );
             const cardWidth = presentation.compact
-                ? Math.max(78, Math.min(210, widestText * 6.1 + 26))
-                : 224;
+                ? Math.max(78, Math.min(300, widestText * 6.1 + 26))
+                : Math.max(224, Math.min(320, widestText * 6.1 + 34));
+            const rowHeights = presentation.rows.map((row) => {
+                if (row.kind === "group") return rowHeight;
+                const availableWidth = Math.max(
+                    72,
+                    cardWidth - 30 - row.depth * 10,
+                );
+                const charactersPerLine = Math.max(
+                    12,
+                    Math.floor(availableWidth / 6.1),
+                );
+                const lines = Math.max(
+                    1,
+                    Math.ceil(row.label.length / charactersPerLine),
+                );
+                return lines * 12 + 7;
+            });
             const cardHeight = presentation.compact
-                ? 30 + annotationHeight
-                : headerHeight + presentation.rows.length * rowHeight + 10 +
-                  annotationHeight;
+                ? Math.max(30, rowHeights[0] ?? 30) + annotationHeight
+                : headerHeight + rowHeights.reduce((sum, height) => sum + height, 0) +
+                  10 + annotationHeight;
             const title = annotation ? `${label}\n${annotation.title}` : label;
             return [
                 `<g class="pc-edge-group ${edge.id === this.view.selectedEdgeId ? "is-selected" : ""}" data-edge-id="${escapeAttribute(edge.id)}">
@@ -94,7 +110,7 @@ export class PcEdgeLayer extends HTMLElement {
                         <div xmlns="http://www.w3.org/1999/xhtml" class="pc-edge-card ${presentation.compact ? "is-compact" : "is-tree"} ${presentation.manual ? "is-manual" : ""} ${annotation ? "has-annotation" : ""} ${this.view.annotationsStale ? "is-stale" : ""}">
                             ${presentation.header ? `<div class="pc-edge-card-head"><span class="pc-edge-card-operator">${escapeText(presentation.header)}</span>${presentation.count === undefined ? "" : `<span>${presentation.count} rule${presentation.count === 1 ? "" : "s"}</span>`}</div>` : ""}
                             <div class="pc-edge-card-rows">
-                                ${presentation.rows.map((row) => `<div class="pc-edge-card-row is-${row.kind}" style="--pc-edge-depth: ${Math.min(row.depth, 8)}"><span class="pc-edge-card-branch"></span>${row.kind === "group" ? `<span class="pc-edge-card-operator">${escapeText(row.label)}</span><span class="pc-edge-card-count">${row.count ?? 0} rule${row.count === 1 ? "" : "s"}</span>` : `<span class="pc-edge-card-leaf">${escapeText(row.label)}</span>`}</div>`).join("")}
+                                ${presentation.rows.map((row, index) => `<div class="pc-edge-card-row is-${row.kind}" style="--pc-edge-depth: ${Math.min(row.depth, 8)}; --pc-edge-row-height: ${rowHeights[index]}px"><span class="pc-edge-card-branch"></span>${row.kind === "group" ? `<span class="pc-edge-card-operator">${escapeText(row.label)}</span><span class="pc-edge-card-count">${row.count ?? 0} rule${row.count === 1 ? "" : "s"}</span>` : `<span class="pc-edge-card-leaf">${escapeText(row.label)}</span>`}</div>`).join("")}
                             </div>
                             ${annotation ? `<div class="pc-edge-card-eval">${escapeText(annotation.label)}</div>` : ""}
                         </div>

@@ -35,6 +35,11 @@ export interface ModifierFamilyOption {
     tiers: ModifierTierOption[];
 }
 
+interface ModifierSetMember {
+    leaf: ConditionLeaf;
+    path: number[];
+}
+
 const LEAF_LABELS: Record<string, string> = {
     has_mod_family: "Has modifier",
     rarity_is: "Rarity",
@@ -135,6 +140,9 @@ export class PcConditionEditor extends HTMLElement {
         isRoot: boolean,
         siblingCount = 1,
     ): string {
+        if (isModifierSetGroup(group)) {
+            return this.renderModifierSet(group, path, isRoot, siblingCount);
+        }
         const key = pathKey(path);
         return `
             <div class="pc-cond-group ${isRoot ? "is-root" : ""}" data-node-path="${key}">
@@ -209,6 +217,9 @@ export class PcConditionEditor extends HTMLElement {
         path: number[],
         siblingCount: number,
     ): string {
+        if (leaf.cond.type === "has_mod_family") {
+            return this.renderModifierSet(leaf, path, false, siblingCount);
+        }
         const key = pathKey(path);
         const knownType = LEAF_CONDITION_TYPES.includes(
             leaf.cond.type as (typeof LEAF_CONDITION_TYPES)[number],
@@ -262,9 +273,6 @@ export class PcConditionEditor extends HTMLElement {
         path: number[],
     ): string {
         const key = pathKey(path);
-        if (condition.type === "has_mod_family") {
-            return this.renderModifierBody(condition, key);
-        }
         if (condition.type === "rarity_is") {
             return `<label class="pc-cond-inline-field">
                 <span>Required rarity</span>
@@ -304,10 +312,101 @@ export class PcConditionEditor extends HTMLElement {
         </div>`;
     }
 
-    private renderModifierBody(
-        condition: StrategyCondition,
-        key: string,
+    private renderModifierSet(
+        node: ConditionLeaf | ConditionGroupNode,
+        path: number[],
+        isRoot: boolean,
+        siblingCount: number,
     ): string {
+        const key = pathKey(path);
+        const members: ModifierSetMember[] =
+            node.kind === "leaf"
+                ? [{ leaf: node, path }]
+                : node.children.map((child, index) => ({
+                      leaf: child as ConditionLeaf,
+                      path: [...path, index],
+                  }));
+        const mode = node.kind === "group" ? node.mode : "all";
+        const count =
+            mode === "at_least" && node.kind === "group"
+                ? Math.max(1, Math.min(members.length, node.count || 1))
+                : members.length;
+        return `
+            <div class="pc-cond-leaf pc-cond-modifier-set ${isRoot ? "is-root" : ""}"
+                data-node-path="${key}">
+                <div class="pc-cond-leaf-head">
+                    <select data-action="condition-type" data-path="${key}" aria-label="Condition type">
+                        ${LEAF_CONDITION_TYPES.map(
+                            (value) =>
+                                `<option value="${value}" ${value === "has_mod_family" ? "selected" : ""}>
+                                    ${LEAF_LABELS[value]}
+                                </option>`,
+                        ).join("")}
+                    </select>
+                    ${
+                        isRoot
+                            ? ""
+                            : `<button data-action="toggle-not" data-path="${key}"
+                                class="pc-cond-not ${node.negate ? "is-active" : ""}"
+                                aria-pressed="${node.negate}">NOT</button>
+                                ${this.renderNodeActions(path, siblingCount)}`
+                    }
+                </div>
+                <div class="pc-cond-leaf-body">
+                    <div class="pc-cond-modifier-logic">
+                        <span>Require</span>
+                        <div class="pc-cond-logic" role="group" aria-label="Modifier matching">
+                            <button data-action="modifier-set-mode" data-path="${key}" data-mode="all"
+                                class="${mode === "all" ? "is-active" : ""}"
+                                aria-pressed="${mode === "all"}">ALL</button>
+                            <button data-action="modifier-set-mode" data-path="${key}" data-mode="at_least"
+                                class="${mode === "at_least" ? "is-active" : ""}"
+                                aria-pressed="${mode === "at_least"}">N OF</button>
+                        </div>
+                        ${
+                            mode === "at_least"
+                                ? `<label class="pc-cond-count-wrap">
+                                    <input type="number" data-action="modifier-set-count" data-path="${key}"
+                                        min="1" max="${Math.max(1, members.length)}" value="${count}">
+                                    <span>of ${members.length}</span>
+                                </label>`
+                                : `<span class="pc-cond-modifier-count">${members.filter(({ leaf }) => leaf.cond.family_mod_key).length} selected</span>`
+                        }
+                    </div>
+                    <div class="pc-cond-selected-modifiers">
+                        ${members
+                            .filter(({ leaf }) => Boolean(leaf.cond.family_mod_key))
+                            .map(({ leaf, path: memberPath }) =>
+                                this.renderSelectedModifier(leaf, memberPath),
+                            )
+                            .join("")}
+                        ${
+                            members.some(({ leaf }) => !leaf.cond.family_mod_key)
+                                ? `<div class="pc-condition-empty is-compact">
+                                    <span>Choose one or more modifier families.</span>
+                                </div>`
+                                : ""
+                        }
+                    </div>
+                    <pc-modifier-picker data-modifier-set-path="${key}"></pc-modifier-picker>
+                </div>
+                ${
+                    isRoot
+                        ? `<div class="pc-cond-add">
+                            <button data-action="add-root-condition">+ Condition</button>
+                            <button data-action="add-root-group">+ Group</button>
+                        </div>`
+                        : ""
+                }
+            </div>`;
+    }
+
+    private renderSelectedModifier(
+        leaf: ConditionLeaf,
+        path: number[],
+    ): string {
+        const condition = leaf.cond;
+        const key = pathKey(path);
         const family = this.modifierFamilies.find(
             (option) => option.value === condition.family_mod_key,
         );
@@ -315,48 +414,39 @@ export class PcConditionEditor extends HTMLElement {
             family?.label || condition.family_label || condition.family_mod_key || "";
         const selectedTier = Math.max(1, Number(condition.min_tier) || 1);
         const tiers = family?.tiers ?? [];
-        return `
-            <div class="pc-cond-modifier-choice">
-                ${
-                    label
-                        ? `<div class="pc-cond-selected-modifier ${condition.fractured ? "is-fractured" : ""}">
-                            <div class="pc-cond-selected-modifier-copy">
-                                <strong>${escapeHtml(label)}</strong>
-                                <span>
-                                    ${family?.side === "prefix" ? "Prefix" : family?.side === "suffix" ? "Suffix" : "Modifier"}
-                                    ${family?.sourceLabel ? ` &middot; ${escapeHtml(family.sourceLabel)}` : ""}
-                                </span>
-                            </div>
-                            <label>
-                                <span>Minimum tier</span>
-                                <select data-action="modifier-tier" data-path="${key}">
-                                    ${
-                                        tiers.length
-                                            ? tiers
-                                                  .map(
-                                                      (tier) =>
-                                                          `<option value="${tier.tier}" ${tier.tier === selectedTier ? "selected" : ""}
-                                                              title="${escapeAttribute(tier.label)}">T${tier.tier}+</option>`,
-                                                  )
-                                                  .join("")
-                                            : `<option value="${selectedTier}">T${selectedTier}+</option>`
-                                    }
-                                </select>
-                            </label>
-                            <label class="pc-cond-fractured-toggle">
-                                <input type="checkbox" data-action="modifier-fractured"
-                                    data-path="${key}" ${condition.fractured ? "checked" : ""}>
-                                <span>Fractured</span>
-                            </label>
-                            <button data-action="clear-modifier" data-path="${key}"
-                                title="Clear modifier">&times;</button>
-                        </div>`
-                        : `<div class="pc-condition-empty is-compact">
-                            <span>Choose one modifier family.</span>
-                        </div>`
-                }
-                <pc-modifier-picker data-modifier-path="${key}"></pc-modifier-picker>
-            </div>`;
+        return `<div class="pc-cond-selected-modifier ${condition.fractured ? "is-fractured" : ""}"
+            title="${escapeAttribute(label)}">
+            <div class="pc-cond-selected-modifier-copy">
+                <strong>${escapeHtml(label)}</strong>
+                <span>
+                    ${family?.side === "prefix" ? "Prefix" : family?.side === "suffix" ? "Suffix" : "Modifier"}
+                    ${family?.sourceLabel ? ` &middot; ${escapeHtml(family.sourceLabel)}` : ""}
+                </span>
+            </div>
+            <label>
+                <span>Minimum tier</span>
+                <select data-action="modifier-tier" data-path="${key}">
+                    ${
+                        tiers.length
+                            ? tiers
+                                  .map(
+                                      (tier) =>
+                                          `<option value="${tier.tier}" ${tier.tier === selectedTier ? "selected" : ""}
+                                              title="${escapeAttribute(tier.label)}">T${tier.tier}+</option>`,
+                                  )
+                                  .join("")
+                            : `<option value="${selectedTier}">T${selectedTier}+</option>`
+                    }
+                </select>
+            </label>
+            <label class="pc-cond-fractured-toggle">
+                <input type="checkbox" data-action="modifier-fractured"
+                    data-path="${key}" ${condition.fractured ? "checked" : ""}>
+                <span>Fractured</span>
+            </label>
+            <button data-action="remove-modifier-member" data-path="${key}"
+                title="Remove modifier">&times;</button>
+        </div>`;
     }
 
     private bind(): void {
@@ -411,6 +501,53 @@ export class PcConditionEditor extends HTMLElement {
             });
         });
         this.querySelectorAll<HTMLButtonElement>(
+            '[data-action="modifier-set-mode"]',
+        ).forEach((button) => {
+            button.addEventListener("click", () => {
+                const path = parsePath(button.dataset.path);
+                const node = this.nodeAt(path);
+                if (!node || !isModifierSetNode(node)) return;
+                const mode = button.dataset.mode as "all" | "at_least";
+                if (node.kind === "group") {
+                    node.mode = mode;
+                    node.count =
+                        mode === "all"
+                            ? node.children.length
+                            : Math.max(
+                                  1,
+                                  Math.min(
+                                      node.children.length,
+                                      node.count || 1,
+                                  ),
+                              );
+                } else {
+                    const member = structuredClone(node);
+                    member.negate = false;
+                    this.replaceNode(path, {
+                        kind: "group",
+                        negate: node.negate,
+                        mode,
+                        count: 1,
+                        children: [member],
+                    });
+                }
+                this.commit();
+            });
+        });
+        this.querySelectorAll<HTMLInputElement>(
+            '[data-action="modifier-set-count"]',
+        ).forEach((input) => {
+            input.addEventListener("change", () => {
+                const node = this.groupAt(parsePath(input.dataset.path));
+                if (!node || !isModifierSetGroup(node)) return;
+                node.count = Math.max(
+                    1,
+                    Math.min(node.children.length, Number(input.value) || 1),
+                );
+                this.commit();
+            });
+        });
+        this.querySelectorAll<HTMLButtonElement>(
             '[data-action="add-leaf"]',
         ).forEach((button) => {
             button.addEventListener("click", () => {
@@ -436,14 +573,32 @@ export class PcConditionEditor extends HTMLElement {
                 this.commit();
             });
         });
+        this.querySelector('[data-action="add-root-condition"]')?.addEventListener(
+            "click",
+            () => this.wrapRootModifierSet(newLeaf("rarity_is")),
+        );
+        this.querySelector('[data-action="add-root-group"]')?.addEventListener(
+            "click",
+            () =>
+                this.wrapRootModifierSet({
+                    kind: "group",
+                    negate: false,
+                    mode: "all",
+                    count: 1,
+                    children: [newLeaf("rarity_is")],
+                }),
+        );
 
         this.querySelectorAll<HTMLSelectElement>(
             '[data-action="condition-type"]',
         ).forEach((select) => {
             select.addEventListener("change", () => {
-                const node = this.nodeAt(parsePath(select.dataset.path));
-                if (!node || node.kind !== "leaf") return;
-                node.cond = defaultLeafCondition(select.value);
+                const path = parsePath(select.dataset.path);
+                const node = this.nodeAt(path);
+                if (!node) return;
+                const replacement = newLeaf(select.value);
+                replacement.negate = node.negate;
+                this.replaceNode(path, replacement);
                 this.commit();
             });
         });
@@ -545,12 +700,10 @@ export class PcConditionEditor extends HTMLElement {
             });
         });
         this.querySelectorAll<HTMLButtonElement>(
-            '[data-action="clear-modifier"]',
+            '[data-action="remove-modifier-member"]',
         ).forEach((button) => {
             button.addEventListener("click", () => {
-                const leaf = this.leafAt(parsePath(button.dataset.path));
-                if (!leaf) return;
-                leaf.cond = defaultLeafCondition("has_mod_family");
+                this.removeModifierMember(parsePath(button.dataset.path));
                 this.commit();
             });
         });
@@ -558,15 +711,19 @@ export class PcConditionEditor extends HTMLElement {
 
     private bindModifierPickers(): void {
         this.querySelectorAll<PcModifierPicker>(
-            "pc-modifier-picker[data-modifier-path]",
+            "pc-modifier-picker[data-modifier-set-path]",
         ).forEach((picker) => {
-            const path = parsePath(picker.dataset.modifierPath);
-            const leaf = this.leafAt(path);
-            if (!leaf) return;
-            picker.setButtonLabel(
-                leaf.cond.family_mod_key ? "Change modifier" : "Choose modifier",
+            const path = parsePath(picker.dataset.modifierSetPath);
+            const node = this.nodeAt(path);
+            if (!node || !isModifierSetNode(node)) return;
+            const members = modifierSetLeaves(node);
+            const selected = members.flatMap((leaf) =>
+                leaf.cond.family_mod_key ? [leaf.cond.family_mod_key] : [],
             );
-            picker.setOptions(this.modifierFamilies, []);
+            picker.setButtonLabel(
+                selected.length ? "+ Add modifier" : "Choose modifiers",
+            );
+            picker.setOptions(this.modifierFamilies, selected);
             picker.addEventListener("modifier-select", (event) => {
                 const detail = (
                     event as CustomEvent<{ value: string; fractured?: boolean }>
@@ -575,18 +732,105 @@ export class PcConditionEditor extends HTMLElement {
                     (option) => option.value === detail.value,
                 );
                 if (!family) return;
-                const current = this.leafAt(path);
-                if (!current) return;
-                current.cond = {
+                const current = this.nodeAt(path);
+                if (!current || !isModifierSetNode(current)) return;
+                const member = newLeaf("has_mod_family");
+                member.cond = {
                     type: "has_mod_family",
                     family_mod_key: family.value,
                     family_label: family.label,
                     min_tier: 1,
                     fractured: Boolean(detail.fractured) || undefined,
                 };
+                if (current.kind === "group") {
+                    const blank = current.children.find(
+                        (child) =>
+                            isModifierLeaf(child) &&
+                            !child.cond.family_mod_key,
+                    ) as ConditionLeaf | undefined;
+                    if (blank) {
+                        blank.cond = member.cond;
+                    } else {
+                        current.children.push(member);
+                    }
+                    current.count =
+                        current.mode === "all"
+                            ? current.children.length
+                            : Math.max(
+                                  1,
+                                  Math.min(
+                                      current.children.length,
+                                      current.count || 1,
+                                  ),
+                              );
+                } else if (!current.cond.family_mod_key) {
+                    current.cond = member.cond;
+                } else {
+                    const existing = structuredClone(current);
+                    existing.negate = false;
+                    this.replaceNode(path, {
+                        kind: "group",
+                        negate: current.negate,
+                        mode: "all",
+                        count: 2,
+                        children: [existing, member],
+                    });
+                }
                 this.commit();
             });
         });
+    }
+
+    private wrapRootModifierSet(sibling: ConditionTree): void {
+        const modifierSet = structuredClone(this.root);
+        modifierSet.negate = false;
+        this.root = {
+            kind: "group",
+            negate: false,
+            mode: "all",
+            count: 2,
+            children: [modifierSet, sibling],
+        };
+        this.commit();
+    }
+
+    private replaceNode(path: number[], replacement: ConditionTree): void {
+        if (!path.length) {
+            this.root =
+                replacement.kind === "group" && !replacement.negate
+                    ? replacement
+                    : {
+                          kind: "group",
+                          negate: false,
+                          mode: "all",
+                          count: 1,
+                          children: [replacement],
+                      };
+            return;
+        }
+        const ref = this.parentRef(path);
+        if (ref) ref.parent.children[ref.index] = replacement;
+    }
+
+    private removeModifierMember(path: number[]): void {
+        const ref = this.parentRef(path);
+        if (ref && isModifierSetGroup(ref.parent)) {
+            const group = ref.parent;
+            const groupPath = path.slice(0, -1);
+            group.children.splice(ref.index, 1);
+            if (group.children.length <= 1) {
+                const replacement =
+                    group.children[0] ?? newLeaf("has_mod_family");
+                replacement.negate =
+                    Boolean(replacement.negate) !== Boolean(group.negate);
+                this.replaceNode(groupPath, replacement);
+            }
+            return;
+        }
+        const leaf = this.leafAt(path);
+        if (leaf?.cond.type === "has_mod_family") {
+            leaf.cond = defaultLeafCondition("has_mod_family");
+        }
     }
 
     private applyJson(): void {
@@ -686,6 +930,35 @@ function newLeaf(type: string): ConditionLeaf {
         negate: false,
         cond: defaultLeafCondition(type),
     };
+}
+
+function isModifierLeaf(node: ConditionTree): node is ConditionLeaf {
+    return node.kind === "leaf" && node.cond.type === "has_mod_family";
+}
+
+function isModifierSetGroup(node: ConditionGroupNode): boolean {
+    return (
+        (node.mode === "all" || node.mode === "at_least") &&
+        node.children.length > 0 &&
+        node.children.every(
+            (child) => isModifierLeaf(child) && !child.negate,
+        )
+    );
+}
+
+function isModifierSetNode(node: ConditionTree): boolean {
+    return (
+        isModifierLeaf(node) ||
+        (node.kind === "group" && isModifierSetGroup(node))
+    );
+}
+
+function modifierSetLeaves(
+    node: ConditionLeaf | ConditionGroupNode,
+): ConditionLeaf[] {
+    return node.kind === "leaf"
+        ? [node]
+        : node.children.filter(isModifierLeaf);
 }
 
 function normalizeGroupCounts(node: ConditionTree): void {

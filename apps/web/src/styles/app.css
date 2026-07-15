@@ -2293,7 +2293,7 @@ pc-edge-layer svg {
 }
 
 .pc-edge-card-row {
-    height: 19px;
+    height: var(--pc-edge-row-height, 19px);
     display: flex;
     align-items: center;
     gap: 5px;
@@ -2318,11 +2318,16 @@ pc-edge-layer svg {
 }
 
 .pc-edge-card-leaf {
-    overflow: hidden;
     min-width: 0;
     color: #b7c0bb;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.pc-edge-card.is-compact .pc-edge-card-leaf {
+    width: 100%;
+    text-align: center;
 }
 
 .pc-edge-card-count {
