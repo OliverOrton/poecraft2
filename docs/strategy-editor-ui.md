@@ -445,6 +445,28 @@ Emulator, Calculator, or Stash. Its Simulator/Calculator runner, inspector, and
 condition editor remain part of the Strategy Builder area rather than becoming
 unrelated top-level applications.
 
+### Large-Graph Degradation
+
+Solver-compiled policies can be orders of magnitude larger than authored
+boards, and the full board renderer (condition cards, card collision
+resolution, obstacle-avoiding edge routing, per-node size measurement) is
+quadratic in graph size. The board therefore degrades by size, with thresholds
+in `pc-strategy-board.ts`:
+
+- Above the simplified limits, edges render as plain lane-offset curves and
+  only the selected edge shows its condition card; node measurement is
+  skipped.
+- Above the summary limits, the board renders a collapsed summary (node/edge
+  counts plus an explicit "render anyway" button) instead of one element per
+  node. Validation, exact evaluation, simulation, saving, and closing still
+  operate on the full document.
+- The validation panel caps its rendered rows (errors first) and reports how
+  many more issues exist.
+
+Opening, restoring, or re-rendering a huge document must never lock the page;
+S7's policy compression is the real fix for board usability, this is the
+floor that keeps the workspace responsive.
+
 ```text
 strategy editor on the left
 simulator on the right

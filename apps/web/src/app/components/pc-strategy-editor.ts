@@ -1147,12 +1147,26 @@ export class PcStrategyEditor extends HTMLElement {
                 '<h3>Validation</h3><p class="pc-validation-ok">Graph is valid.</p>';
             return;
         }
+        // Solver-compiled boards can carry thousands of warnings; rendering a
+        // row for each on every view update stalls the page. Errors sort
+        // ahead of warnings so nothing blocking hides behind the cap.
+        const MAX_ISSUE_ROWS = 80;
+        const ranked = this.issues
+            .map((issue, index) => ({ issue, index }))
+            .sort(
+                (a, b) =>
+                    Number(b.issue.severity === "error") -
+                        Number(a.issue.severity === "error") ||
+                    a.index - b.index,
+            )
+            .slice(0, MAX_ISSUE_ROWS);
+        const hidden = this.issues.length - ranked.length;
         host.innerHTML = `
             <h3>Validation <span>${this.issues.length}</span></h3>
             <ul>
-                ${this.issues
+                ${ranked
                     .map(
-                        (issue, index) => `
+                        ({ issue, index }) => `
                         <li class="is-${issue.severity}">
                             <button data-issue="${index}">
                                 <strong>${issue.severity}</strong>
@@ -1161,6 +1175,7 @@ export class PcStrategyEditor extends HTMLElement {
                         </li>`,
                     )
                     .join("")}
+                ${hidden > 0 ? `<li class="is-warning"><span class="pc-validation-more">… ${hidden.toLocaleString()} more issues not shown</span></li>` : ""}
             </ul>`;
         host.querySelectorAll<HTMLButtonElement>("[data-issue]").forEach(
             (button) => {

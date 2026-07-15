@@ -962,8 +962,18 @@ export function validateStrategy(
                 edgeId: edge.id,
             });
         }
-        outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge]);
-        incoming.set(edge.to, [...(incoming.get(edge.to) ?? []), edge]);
+        let fromEdges = outgoing.get(edge.from);
+        if (!fromEdges) {
+            fromEdges = [];
+            outgoing.set(edge.from, fromEdges);
+        }
+        fromEdges.push(edge);
+        let toEdges = incoming.get(edge.to);
+        if (!toEdges) {
+            toEdges = [];
+            incoming.set(edge.to, toEdges);
+        }
+        toEdges.push(edge);
         validateCondition(edge.condition, edge, issues);
     }
 

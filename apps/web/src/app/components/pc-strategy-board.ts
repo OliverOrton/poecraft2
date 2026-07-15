@@ -15,6 +15,19 @@ interface BoardSelection {
     id: string;
 }
 
+/*
+ * Solver-compiled policies can be orders of magnitude larger than authored
+ * boards. Above the simplified limits the edge layer skips its quadratic
+ * card-collision and obstacle-routing work; above the summary limits the
+ * board renders a collapsed summary instead of one element per node, so a
+ * huge document still opens, validates, evaluates, and simulates without
+ * freezing the page.
+ */
+export const BOARD_SIMPLIFIED_NODE_LIMIT = 220;
+export const BOARD_SIMPLIFIED_EDGE_LIMIT = 320;
+export const BOARD_SUMMARY_NODE_LIMIT = 1200;
+export const BOARD_SUMMARY_EDGE_LIMIT = 2400;
+
 export interface TraceHighlight {
     nodeIds: Set<string>;
     edgeIds: Set<string>;
@@ -51,6 +64,7 @@ export class PcStrategyBoard extends HTMLElement {
     private connectingFrom: string | null = null;
     private annotations: StrategyBoardAnnotations | null = null;
     private labelContext: StrategyLabelContext = {};
+    private renderLargeBoard = false;
 
     connectedCallback(): void {
         if (!this.innerHTML) {
@@ -60,6 +74,14 @@ export class PcStrategyBoard extends HTMLElement {
                     <div class="pc-board-content">
                         <pc-edge-layer></pc-edge-layer>
                         <div class="pc-board-nodes"></div>
+                    </div>
+                    <div class="pc-board-summary" hidden>
+                        <h3>Large strategy graph</h3>
+                        <p class="pc-board-summary-counts"></p>
+                        <p>Drawing every node at once would lock this page, so the
+                        board stays collapsed. Validation, exact evaluation,
+                        simulation, and saving still use the full graph.</p>
+                        <button type="button" class="pc-board-summary-render">Render the graph anyway (slow)</button>
                     </div>
                     <div class="pc-board-stale-chip" hidden>Stale · graph changed</div>
                     <div class="pc-board-hint">Drag from a node output to another node · wheel to zoom · drag empty space to pan</div>
@@ -94,10 +116,16 @@ export class PcStrategyBoard extends HTMLElement {
 
     private bind(): void {
         const viewport = this.querySelector<HTMLElement>(".pc-board-viewport")!;
+        this.querySelector<HTMLButtonElement>(
+            ".pc-board-summary-render",
+        )!.addEventListener("click", () => {
+            this.renderLargeBoard = true;
+            this.render();
+        });
         viewport.addEventListener("pointerdown", (event) => {
             if (
                 (event.target as HTMLElement).closest(
-                    "pc-strategy-node, [data-edge-id]",
+                    "pc-strategy-node, [data-edge-id], .pc-board-summary",
                 )
             ) {
                 return;
@@ -275,23 +303,60 @@ export class PcStrategyBoard extends HTMLElement {
             return;
         }
         this.applyTransform();
-        const warningNodeIds = new Map<string, StrategyValidationIssue[]>();
-        const warningEdgeIds = new Set<string>();
-        for (const issue of this.issues) {
-            if (issue.nodeId) {
-                warningNodeIds.set(issue.nodeId, [
-                    ...(warningNodeIds.get(issue.nodeId) ?? []),
-                    issue,
-                ]);
+        const nodeCount = this.strategy.nodes.length;
+        const edgeCount = this.strategy.edges.length;
+        const summary =
+            !this.renderLargeBoard &&
+            (nodeCount > BOARD_SUMMARY_NODE_LIMIT ||
+                edgeCount > BOARD_SUMMARY_EDGE_LIMIT);
+        const simplified =
+            nodeCount > BOARD_SIMPLIFIED_NODE_LIMIT ||
+            edgeCount > BOARD_SIMPLIFIED_EDGE_LIMIT;
+        const summaryEl = this.querySelector<HTMLElement>(".pc-board-summary");
+        if (summaryEl) {
+            summaryEl.hidden = !summary;
+            if (summary) {
+                const counts = summaryEl.querySelector(
+                    ".pc-board-summary-counts",
+                );
+                if (counts) {
+                    counts.textContent = `${nodeCount.toLocaleString()} nodes · ${edgeCount.toLocaleString()} edges`;
+                }
             }
-            if (issue.edgeId) warningEdgeIds.add(issue.edgeId);
         }
-
         const container = this.querySelector(".pc-board-nodes")!;
         const staleChip = this.querySelector<HTMLElement>(
             ".pc-board-stale-chip",
         );
-        if (staleChip) staleChip.hidden = !this.annotations?.stale;
+        if (staleChip) {
+            staleChip.hidden = summary || !this.annotations?.stale;
+        }
+        if (summary) {
+            container.replaceChildren();
+            this.edgeLayer.setView({
+                nodes: [],
+                edges: [],
+                selectedEdgeId: null,
+                highlightedEdgeIds: new Set(),
+                warningEdgeIds: new Set(),
+                canvas: { width: 3000, height: 2000 },
+            });
+            return;
+        }
+        const warningNodeIds = new Map<string, StrategyValidationIssue[]>();
+        const warningEdgeIds = new Set<string>();
+        for (const issue of this.issues) {
+            if (issue.nodeId) {
+                let list = warningNodeIds.get(issue.nodeId);
+                if (!list) {
+                    list = [];
+                    warningNodeIds.set(issue.nodeId, list);
+                }
+                list.push(issue);
+            }
+            if (issue.edgeId) warningEdgeIds.add(issue.edgeId);
+        }
+
         const canvas = this.canvasSize();
         const content = this.querySelector<HTMLElement>(".pc-board-content");
         if (content) {
@@ -328,7 +393,10 @@ export class PcStrategyBoard extends HTMLElement {
             annotations: this.annotations?.edgeLabels,
             annotationsStale: this.annotations?.stale,
             canvas,
-            nodeSizes: this.measureNodeSizes(),
+            // Reading offsetWidth/offsetHeight forces a synchronous layout of
+            // every node element; simplified rendering never uses the sizes.
+            nodeSizes: simplified ? undefined : this.measureNodeSizes(),
+            simplified,
         });
     }
 

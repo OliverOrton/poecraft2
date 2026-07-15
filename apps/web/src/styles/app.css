@@ -2303,6 +2303,13 @@ pc-stash {
     color: #7fc68a;
 }
 
+.pc-validation .pc-validation-more {
+    display: block;
+    padding: 5px 0;
+    color: #687376;
+    font-size: 10px;
+}
+
 pc-strategy-board {
     position: relative;
     display: block;
@@ -2374,6 +2381,45 @@ pc-strategy-board {
     font-size: 10px;
     letter-spacing: 0.04em;
     pointer-events: none;
+}
+
+.pc-board-summary {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    max-width: 420px;
+    padding: 18px 22px;
+    color: var(--pc-text);
+    background: rgba(13, 16, 18, 0.94);
+    border: 1px solid var(--pc-border);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.pc-board-summary h3 {
+    margin: 0 0 6px;
+    color: var(--pc-text-strong);
+    font-size: 13px;
+}
+
+.pc-board-summary-counts {
+    margin: 0 0 8px;
+    color: var(--pc-accent);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+}
+
+.pc-board-summary p {
+    margin: 0 0 10px;
+    color: #8b979a;
+}
+
+.pc-board-summary-render {
+    padding: 6px 12px;
+    cursor: pointer;
 }
 
 pc-edge-layer {

@@ -37,6 +37,12 @@ export interface EdgeLayerView {
     canvas?: { width: number; height: number };
     /** Rendered node sizes; routing treats nodes as obstacles. */
     nodeSizes?: Map<string, { width: number; height: number }>;
+    /**
+     * Large-graph mode: skip condition cards (except the selected edge) and
+     * the per-edge collision/obstacle work, which is quadratic in edge count
+     * and freezes the page on big solver-compiled policies.
+     */
+    simplified?: boolean;
 }
 
 interface EdgeCardRowLayout {
@@ -174,10 +180,12 @@ function edgeRanks(
 ): Map<string, { rank: number; fallback: boolean }> {
     const bySource = new Map<string, { edge: StrategyEdge; index: number }[]>();
     edges.forEach((edge, index) => {
-        bySource.set(edge.from, [
-            ...(bySource.get(edge.from) ?? []),
-            { edge, index },
-        ]);
+        let group = bySource.get(edge.from);
+        if (!group) {
+            group = [];
+            bySource.set(edge.from, group);
+        }
+        group.push({ edge, index });
     });
     const ranks = new Map<string, { rank: number; fallback: boolean }>();
     for (const group of bySource.values()) {
@@ -214,6 +222,7 @@ export class PcEdgeLayer extends HTMLElement {
         annotationsStale: false,
     };
     private preview: { from: string; x: number; y: number } | null = null;
+    private delegated = false;
 
     setView(view: EdgeLayerView): void {
         this.view = view;
@@ -222,18 +231,195 @@ export class PcEdgeLayer extends HTMLElement {
 
     setPreview(preview: { from: string; x: number; y: number } | null): void {
         this.preview = preview;
-        this.render();
+        const svg = this.querySelector("svg");
+        if (!svg) {
+            this.render();
+            return;
+        }
+        // Patch the preview path in place: re-rendering every edge on each
+        // connect-drag mousemove is far too slow on large graphs.
+        svg.querySelector(".pc-edge-preview")?.remove();
+        if (!preview) return;
+        const from = this.view.nodes.find((node) => node.id === preview.from);
+        if (!from) return;
+        const path = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path",
+        );
+        path.setAttribute("class", "pc-edge-preview");
+        path.setAttribute(
+            "d",
+            chainPath([
+                { x: from.position.x + NODE_WIDTH, y: from.position.y + PORT_Y },
+                { x: preview.x, y: preview.y },
+            ]),
+        );
+        svg.appendChild(path);
     }
 
     connectedCallback(): void {
+        if (!this.delegated) {
+            this.delegated = true;
+            // One delegated listener for every edge group: innerHTML swaps in
+            // render() would drop per-group listeners anyway, and attaching
+            // thousands of them per render is expensive on large graphs.
+            this.addEventListener("pointerdown", (event) => {
+                const group = (event.target as Element | null)?.closest?.(
+                    "[data-edge-id]",
+                );
+                if (!group || !this.contains(group)) return;
+                event.stopPropagation();
+                this.dispatchEvent(
+                    new CustomEvent("strategy-select", {
+                        bubbles: true,
+                        detail: {
+                            kind: "edge",
+                            id: (group as SVGGElement).dataset.edgeId,
+                        },
+                    }),
+                );
+            });
+        }
         this.render();
     }
 
     private render(): void {
+        const canvas = this.view.canvas ?? { width: 3000, height: 2000 };
+        const paths = this.view.simplified
+            ? this.simplifiedPaths()
+            : this.fullPaths();
+        if (this.preview) {
+            const from = this.view.nodes.find(
+                (node) => node.id === this.preview!.from,
+            );
+            if (from) {
+                const d = chainPath([
+                    {
+                        x: from.position.x + NODE_WIDTH,
+                        y: from.position.y + PORT_Y,
+                    },
+                    { x: this.preview.x, y: this.preview.y },
+                ]);
+                paths.push(`<path class="pc-edge-preview" d="${d}"></path>`);
+            }
+        }
+        const markerDefs = RANK_MARKERS.map(
+            ([key, color]) => `<marker id="pc-edge-arrow-${key}" markerWidth="7" markerHeight="7"
+                        refX="6" refY="3.5" orient="auto">
+                        <path d="M0,0 L7,3.5 L0,7 z" fill="${color}"></path>
+                    </marker>`,
+        ).join("");
+        this.innerHTML = `
+            <svg style="width:${canvas.width}px;height:${canvas.height}px" viewBox="0 0 ${canvas.width} ${canvas.height}">
+                <defs>${markerDefs}</defs>
+                ${paths.join("")}
+            </svg>`;
+    }
+
+    /**
+     * Large-graph pass: O(nodes + edges). Lane-offset curves from port to
+     * port, no card collision or obstacle detours, and a condition card only
+     * for the selected edge.
+     */
+    private simplifiedPaths(): string[] {
         const nodes = new Map(this.view.nodes.map((node) => [node.id, node]));
         const routes = edgeRoutes(this.view.edges);
         const ranks = edgeRanks(this.view.edges);
-        const canvas = this.view.canvas ?? { width: 3000, height: 2000 };
+        const stale = Boolean(this.view.annotationsStale);
+        const paths: string[] = [];
+        let selectedMarkup: string | null = null;
+        for (const edge of this.view.edges) {
+            const from = nodes.get(edge.from);
+            const to = nodes.get(edge.to);
+            if (!from || !to) continue;
+            const route = routes.get(edge.id) ?? 0;
+            const selected = edge.id === this.view.selectedEdgeId;
+            const taken = this.view.highlightedEdgeIds.has(edge.id);
+            const rankInfo = ranks.get(edge.id) ?? { rank: 0, fallback: false };
+            const ports = {
+                x1: from.position.x + NODE_WIDTH,
+                y1: from.position.y + PORT_Y,
+                x2: to.position.x,
+                y2: to.position.y + PORT_Y,
+            };
+            const kind: EdgeRenderItem["kind"] =
+                from.id === to.id
+                    ? "self"
+                    : ports.x2 < ports.x1 + 30
+                      ? "back"
+                      : "forward";
+            let d: string;
+            if (kind === "self") {
+                const height = 105 + Math.abs(route) * 0.9;
+                const width = 120 + route;
+                d = `M ${ports.x1} ${ports.y1} C ${ports.x1 + width} ${ports.y1 - height}, ${ports.x2 - width} ${ports.y2 - height}, ${ports.x2} ${ports.y2}`;
+            } else if (kind === "back") {
+                const laneY =
+                    Math.max(ports.y1, ports.y2) +
+                    118 +
+                    Math.abs(route) * 0.9 +
+                    (route > 0 ? 25 : 0);
+                d = routeBackEdge(ports, laneY, []);
+            } else {
+                d = chainPath([
+                    { x: ports.x1, y: ports.y1 },
+                    {
+                        x: (ports.x1 + ports.x2) / 2,
+                        y: (ports.y1 + ports.y2) / 2 + route * 0.75,
+                    },
+                    { x: ports.x2, y: ports.y2 },
+                ]);
+            }
+            const rankClass = rankInfo.fallback
+                ? "is-fallback"
+                : `is-rank-${rankInfo.rank}`;
+            const classes = [
+                "pc-edge-path",
+                rankClass,
+                selected ? "is-selected" : "",
+                taken ? "is-taken" : "",
+                this.view.warningEdgeIds.has(edge.id) ? "has-warning" : "",
+            ]
+                .filter(Boolean)
+                .join(" ");
+            const annotation = this.view.annotations?.get(edge.id);
+            const label = strategyEdgeLabel(edge);
+            const marker = taken
+                ? "taken"
+                : selected
+                  ? "sel"
+                  : rankInfo.fallback
+                    ? "fb"
+                    : `r${rankInfo.rank}`;
+            let cardMarkup = "";
+            if (selected) {
+                const layout = edgeCardLayout(edge, annotation);
+                const anchor = edgeAnchor(kind, from, ports, route, layout);
+                cardMarkup = `<foreignObject class="pc-edge-card-object" x="${anchor.x - layout.width / 2}" y="${anchor.y - layout.height / 2}" width="${layout.width}" height="${layout.height}">
+                        ${edgeCardMarkup(layout, rankClass, stale)}
+                    </foreignObject>`;
+            }
+            const markup = `<g class="pc-edge-group ${selected ? "is-selected" : ""}" data-edge-id="${escapeAttribute(edge.id)}">
+                    <title>${escapeText(annotation ? `${label}\n${annotation.title}` : label)}</title>
+                    <path class="pc-edge-hit" d="${d}"></path>
+                    <path class="${classes}" d="${d}" marker-end="url(#pc-edge-arrow-${marker})"></path>
+                    ${cardMarkup}
+                </g>`;
+            if (selected) {
+                selectedMarkup = markup;
+            } else {
+                paths.push(markup);
+            }
+        }
+        // Selected edge paints last so its path and card sit above siblings.
+        if (selectedMarkup) paths.push(selectedMarkup);
+        return paths;
+    }
+
+    private fullPaths(): string[] {
+        const nodes = new Map(this.view.nodes.map((node) => [node.id, node]));
+        const routes = edgeRoutes(this.view.edges);
+        const ranks = edgeRanks(this.view.edges);
         const stale = Boolean(this.view.annotationsStale);
         const nodeRectById = new Map<string, EdgeCardRect>(
             this.view.nodes.map((node) => [
@@ -436,41 +622,7 @@ export class PcEdgeLayer extends HTMLElement {
                 </g>`;
         });
 
-        if (this.preview) {
-            const from = nodes.get(this.preview.from);
-            if (from) {
-                const x1 = from.position.x + NODE_WIDTH;
-                const y1 = from.position.y + PORT_Y;
-                const d = chainPath([
-                    { x: x1, y: y1 },
-                    { x: this.preview.x, y: this.preview.y },
-                ]);
-                paths.push(`<path class="pc-edge-preview" d="${d}"></path>`);
-            }
-        }
-
-        const markerDefs = RANK_MARKERS.map(
-            ([key, color]) => `<marker id="pc-edge-arrow-${key}" markerWidth="7" markerHeight="7"
-                        refX="6" refY="3.5" orient="auto">
-                        <path d="M0,0 L7,3.5 L0,7 z" fill="${color}"></path>
-                    </marker>`,
-        ).join("");
-        this.innerHTML = `
-            <svg style="width:${canvas.width}px;height:${canvas.height}px" viewBox="0 0 ${canvas.width} ${canvas.height}">
-                <defs>${markerDefs}</defs>
-                ${paths.join("")}
-            </svg>`;
-        this.querySelectorAll<SVGGElement>("[data-edge-id]").forEach((group) => {
-            group.addEventListener("pointerdown", (event) => {
-                event.stopPropagation();
-                this.dispatchEvent(
-                    new CustomEvent("strategy-select", {
-                        bubbles: true,
-                        detail: { kind: "edge", id: group.dataset.edgeId },
-                    }),
-                );
-            });
-        });
+        return paths;
     }
 }
 
@@ -827,7 +979,12 @@ function edgeRoutes(edges: StrategyEdge[]): Map<string, number> {
         JSON.stringify([from, to]);
     for (const edge of edges) {
         const key = keyOf(edge.from, edge.to);
-        groups.set(key, [...(groups.get(key) ?? []), edge]);
+        let group = groups.get(key);
+        if (!group) {
+            group = [];
+            groups.set(key, group);
+        }
+        group.push(edge);
     }
     const routes = new Map<string, number>();
     for (const [key, group] of groups) {

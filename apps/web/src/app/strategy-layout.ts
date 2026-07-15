@@ -64,28 +64,51 @@ export function autoLayoutStrategy(
             outgoing.set(edge.from, new Set()).get(edge.from)!).add(edge.to);
     }
 
-    // Drop back edges while deriving a DAG and topological order.
+    // Drop back edges while deriving a DAG and topological order. Iterative
+    // DFS with an explicit stack: compiled solver policies can chain thousands
+    // of nodes deep, past the call-stack limit.
     const state = new Map<string, "active" | "done">();
     const forward = new Map<string, string[]>();
     const incoming = new Map<string, string[]>();
-    const topo: string[] = [];
-    const visit = (id: string): void => {
-        state.set(id, "active");
-        for (const target of outgoing.get(id) ?? []) {
-            if (state.get(target) === "active") continue;
-            if (!state.has(target)) visit(target);
-            forward.set(id, [...(forward.get(id) ?? []), target]);
-            incoming.set(target, [...(incoming.get(target) ?? []), id]);
+    const listOf = (map: Map<string, string[]>, key: string): string[] => {
+        let list = map.get(key);
+        if (!list) {
+            list = [];
+            map.set(key, list);
         }
-        state.set(id, "done");
-        topo.push(id);
+        return list;
+    };
+    const topo: string[] = [];
+    const visit = (rootId: string): void => {
+        if (state.has(rootId)) return;
+        const stack: { id: string; targets: string[]; index: number }[] = [];
+        const enter = (id: string): void => {
+            state.set(id, "active");
+            stack.push({ id, targets: [...(outgoing.get(id) ?? [])], index: 0 });
+        };
+        enter(rootId);
+        while (stack.length) {
+            const frame = stack[stack.length - 1];
+            if (frame.index >= frame.targets.length) {
+                state.set(frame.id, "done");
+                topo.push(frame.id);
+                stack.pop();
+                continue;
+            }
+            const target = frame.targets[frame.index];
+            frame.index += 1;
+            if (state.get(target) === "active") continue;
+            listOf(forward, frame.id).push(target);
+            listOf(incoming, target).push(frame.id);
+            if (!state.has(target)) enter(target);
+        }
     };
     const startId = nodeIds.has(strategy.start_node_id)
         ? strategy.start_node_id
         : nodes[0].id;
     visit(startId);
     for (const node of nodes) {
-        if (!state.has(node.id)) visit(node.id);
+        visit(node.id);
     }
     topo.reverse();
 
@@ -124,12 +147,13 @@ export function autoLayoutStrategy(
         });
     }
 
-    // Barycenter sweeps reduce crossings between adjacent columns.
+    // Barycenter sweeps reduce crossings between adjacent columns. Sorting a
+    // column only changes that column's row indices, so re-index just the
+    // sorted column instead of rescanning every column (large compiled
+    // policies made the full rescan quadratic).
     const rowIndex = new Map<string, number>();
-    const refreshRows = (): void =>
-        columns.forEach((column) =>
-            column?.forEach((node, index) => rowIndex.set(node.id, index)),
-        );
+    const indexColumn = (column: StrategyNode[]): void =>
+        column.forEach((node, index) => rowIndex.set(node.id, index));
     const sortColumn = (
         column: StrategyNode[],
         neighbors: Map<string, string[]>,
@@ -147,16 +171,15 @@ export function autoLayoutStrategy(
             );
         });
         column.sort((a, b) => scores.get(a.id)! - scores.get(b.id)!);
+        indexColumn(column);
     };
-    refreshRows();
+    columns.forEach((column) => indexColumn(column ?? []));
     for (let pass = 0; pass < 4; pass += 1) {
         for (let index = 1; index < columns.length; index += 1) {
             sortColumn(columns[index] ?? [], incoming);
-            refreshRows();
         }
         for (let index = columns.length - 2; index >= 0; index -= 1) {
             sortColumn(columns[index] ?? [], forward);
-            refreshRows();
         }
     }
 
