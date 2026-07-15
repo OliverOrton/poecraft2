@@ -1,19 +1,23 @@
 # Solver Mechanic Extensions
 
-Short companion to [crafting-solver-plan.md](crafting-solver-plan.md). It
-covers the mechanics that plan deferred — recombinators above all — and the
-smaller gaps not yet in the action registry. Vocabulary defers to
-[mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md).
+**Status: parked future track.** S7 solver depth and performance comes first;
+do not begin any phase in this file until
+[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
+is complete and Oliver explicitly selects the next mechanic milestone.
+
+This is a future companion to
+[crafting-solver-plan.md](crafting-solver-plan.md). It covers trade leaves,
+corruption/finishing work, Hinekora's Lock, beast imprint, and recombinators.
+Vocabulary defers to
+[mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). Mechanic
+rules come from Oliver; agents must not research or infer them.
 
 ## Recombinators
 
-Mechanics summary (3.25 Settlers rules, exact tables pinned during
-implementation): two items of the same item class are consumed and produce
-one item. Prefixes from both inputs form one pool, suffixes another; the
-result's affix count per side comes from a probability table keyed on pool
-size; affixes are then drawn from the pool without same-group duplicates;
-the surviving base is chosen between the two inputs; crafted, fractured,
-influence, and enchant mods follow special retention rules.
+The text below is an architecture sketch, not an authoritative mechanic
+fixture. When this track resumes, Oliver must pin the supported PoE1 variant,
+outcome tables, transfer rules, base selection, and crafted/fractured/
+influence/enchant behavior before implementation.
 
 Recomb outcomes are exact-mod dependent in ways most mechanics are not:
 crafted mods used as pool padding, exclusive-mod retention, and per-side
@@ -166,34 +170,35 @@ segment, but not in the abstract state.
 Mirror/reflecting-mist copies, synthesis implicit crafting, and removed
 league mechanics (e.g. Necropolis corpse crafting) are not planned.
 
-## Phasing
+## Parked Phasing
 
-Continues the main plan's numbering; S7 is cheap wins first.
+This track uses `M` numbers so it does not compete with the active solver
+sequence. None is scheduled.
 
 ```text
-S7  trade-leaf actions; corruption/tainted descriptors; finishing-cost
+M1  trade-leaf actions; corruption/tainted descriptors; finishing-cost
     reporting (blessed/anoint/catalyst)
     gate: solver prefers buying an intermediate when the price table
           makes crafting it dominated
 
-S8  Hinekora's Lock evaluation mode, auto-generated locked variants
+M2  Hinekora's Lock evaluation mode, auto-generated locked variants
     gate: locked-exalt fixture matches hand-computed E[min(...)] values;
           policy flips on a slam decision when lock price crosses the
           analytic break-even
 
-S9  beast imprint macro-actions
+M3  beast imprint macro-actions
     gate: imprint-regal loop cost matches the closed-form geometric
           expectation
 
-S10 recomb foundations: outcome enumerator + in-game fixtures;
+M4  recomb foundations: outcome enumerator + owner-approved fixtures;
     recomb/feeder blocks in the strategy model; item-flow simulation
     with summary-cost feeders, condition-gated recycling edges, and
     nested-execution verification mode; Calculator two-item support
-    gate: enumerator matches MC and pinned in-game outcome tables;
+    gate: enumerator matches MC and owner-approved outcome tables;
           a hand-authored pyramid simulates end to end with recycling,
           and summary-mode cost agrees with nested-mode within tolerance
 
-S11 pyramid auto-planner: spec enumeration + dominance pruning,
+M5  pyramid auto-planner: spec enumeration + dominance pruning,
     fixed-point spec-level DP with salvage credits over cached
     craft/buy sub-costs, emit pyramid as recomb/feeder block graph;
     "re-cost" of user-edited pyramids ships alongside as the

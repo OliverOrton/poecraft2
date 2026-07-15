@@ -1,5 +1,9 @@
 # Accounts, Publishing, And Discovery
 
+**Status: deferred design.** Phase 12 accounts/sync has not been resumed;
+publishing and discovery remain blocked on it. This file records future product
+contracts, not active implementation sequencing. See [HANDOFF](../HANDOFF.md).
+
 ## Scope
 
 Accounts are a later phase. The local Emulator, Simulator, Strategy Builder, and Stash should work first without login.

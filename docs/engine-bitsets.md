@@ -1,5 +1,8 @@
 # Engine Bitset Plan
 
+**Status:** implemented one-item engine reference. Recombinator masks and
+two-item universe notes are reserved future substrate, not active work.
+
 ## Purpose
 
 The native engine should not carry rich mod objects through hot crafting loops. It should operate on dense session-local mod IDs, compact arrays, and bitsets.

@@ -27,6 +27,18 @@ source data -> SQLite -> compiled data -> native engine -> action simulation -> 
 
 Once that slice is correct, mechanics and UI surfaces can expand safely.
 
+## Portfolio Status
+
+```text
+complete:  phases 0-11, 13, 14; pre-S6 polish; solver S1-S6
+active:    solver S7 depth and performance
+parallel:  Economy E0-E4 may proceed independently
+deferred:  Phase 12 accounts/sync
+blocked:   Phases 15-16 publishing/community depend on Phase 12
+parked:    mechanic track M1-M5 and Phase 18 recombinators
+later:     Phase 17 ML, after S7 produces realistic exact baselines
+```
+
 ## Build Principles
 
 - Keep SQLite canonical, but never use SQLite in hot simulation loops.
@@ -723,8 +735,9 @@ Implemented baseline:
 Goal: add optional accounts after the local app, Stash, and Strategy Builder are usable.
 
 Status: intentionally skipped for now. Do not implement this phase until it is
-explicitly resumed. Phase 13 is the next active phase. Any later phase that
-requires accounts or server-backed resources still depends on this phase.
+explicitly resumed. Phases 13 and 14 were completed while Phase 12 remained
+deferred. Any later phase that requires accounts or server-backed resources
+still depends on this phase.
 
 Implement:
 
@@ -851,8 +864,9 @@ Implemented baseline:
 
 ## Interlude P: Pre-S6 Product Polish (Complete)
 
-Before solver S6 Phase 1, complete the active polish phases in
-[pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md):
+Before solver S6 Phase 1, the completed polish phases were recorded in the
+archived
+[pre-s6-product-polish-plan.md](archive/2026-07-solver-s6/pre-s6-product-polish-plan.md):
 
 1. expose canonical base drop level and order base choices high-to-low; add
    live auto-labels with manual overrides for strategy nodes and edges;
@@ -877,6 +891,21 @@ Calculator and Strategy Builder keep their task-shaped public APIs, but both
 remain backed by the same native action registry and exact transition provider.
 The earlier multi-goal/OR contract and shared predicate-editor work are not
 scheduled.
+
+## Solver S7: End-To-End Capability And Performance (Active)
+
+S1-S6 completed the exact calculation, DP solve, policy compilation,
+workspace, progress/cancellation, and simulation-verification vertical slice.
+S7 now takes priority over new mechanic breadth. Its goal is realistic
+multi-stage one-item crafting plus a dedicated solver search/memory performance
+pass; the completed Phase 14 throughput pass did not benchmark optimal solving.
+
+The authoritative execution plan is
+[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
+It covers a real craft benchmark corpus, one-item correctness gaps, safe action
+generation and pruning, exact solver-only macro/sub-policy operators, compact
+transition storage, cycle-aware optimization, policy compression, and native/
+WASM end-to-end gates. Do not begin the parked mechanic track until S7 passes.
 
 ## Parallel Track E: Economy Ingest And League Switching (Planned)
 
@@ -1093,17 +1122,17 @@ focused recombination fixtures
 
 Use the existing recombinator architecture notes in
 `architecture-plan.md`, `data-shapes-and-ingest.md`, and `engine-bitsets.md` as
-the starting contract. Re-check the live Path of Exile 1 rules and current
-source data when this phase begins; do not infer recombination behavior from
-ordinary one-item rolling.
+the starting architecture. When this phase begins, Oliver must pin the
+supported PoE1 mechanic rules and focused fixtures; agents must not research,
+guess, or infer recombination behavior from ordinary one-item rolling.
 
 The solver/editor side of recombinators — the spec-pyramid model,
 recomb/feeder strategy blocks, recycling wires, and the pyramid
 auto-planner — is specified in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md) (solver
-phases S10-S11) and [strategy-editor-ui.md](strategy-editor-ui.md). This
+mechanic phases M4-M5) and [strategy-editor-ui.md](strategy-editor-ui.md). This
 phase provides the engine substrate those phases consume; the exact
-outcome enumerator here and solver phase S10 are the same effort viewed
+outcome enumerator here and mechanic phase M4 are the same effort viewed
 from the engine and solver sides.
 
 Acceptance gate:
@@ -1115,13 +1144,14 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Phase 14 is complete. Phase 15 publishing remains blocked until the deferred
-Phase 12 account and sync foundation is explicitly resumed and completed.
-Solver S6 is complete: Phases 1, 2, and 4 landed, and Oliver skipped Phase 3
-entirely. No new primary boundary is active until Oliver chooses one. Parallel
-Economy Track E is planned with its main decisions recorded; its E0-E4
-implementation may proceed independently on a dedicated branch. Recombinators
-remain deferred to Phase 18.
+Implement S7.0 only from
+[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
+build the native/WASM optimal-solver benchmark and telemetry surface, propose
+the permanent real craft corpus, capture the unoptimized baseline, and ratify
+performance budgets. Stop before S7.1. Oliver skipped S6 Phase 3 entirely; do
+not revive it. Parallel Economy E0-E4 may proceed independently. Phase 12,
+publishing, mechanic track M1-M5, and Phase 18 recombinators remain deferred,
+blocked, or parked as recorded above.
 
 ## Definition Of Done For MVP
 

@@ -122,6 +122,7 @@ Start with:
 - [docs/architecture-plan.md](docs/architecture-plan.md)
 - [docs/codebase-structure.md](docs/codebase-structure.md)
 - [docs/crafting-solver-plan.md](docs/crafting-solver-plan.md)
+- [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md)
 - [docs/data-shapes-and-ingest.md](docs/data-shapes-and-ingest.md)
 - [docs/desktop-workspace-ui.md](docs/desktop-workspace-ui.md)
 - [docs/engine-bitsets.md](docs/engine-bitsets.md)
@@ -132,3 +133,4 @@ Start with:
 - [docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md)
 - [docs/strategy-editor-ui.md](docs/strategy-editor-ui.md)
 - [docs/weight-calculation-flow.md](docs/weight-calculation-flow.md)
+- [docs/archive/README.md](docs/archive/README.md) — completed execution plans

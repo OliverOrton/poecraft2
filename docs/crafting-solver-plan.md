@@ -1,5 +1,9 @@
 # Crafting Solver And Calculation Engine Plan
 
+**Status:** S1-S6 are implemented. This file is the stable architecture and
+baseline record; active scalability, macro-action, and performance execution is
+owned by [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
+
 Modifier vocabulary, pool semantics, and weight rules in this plan defer to
 [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md) and
 [weight-calculation-flow.md](weight-calculation-flow.md). Item state layout
@@ -156,10 +160,10 @@ abandoning it.
 
 ## Action Model
 
-The full PoE1 mechanic set is modeled as data from the start. The solver
-never hardcodes mechanics; it consumes an action registry. An engine build
-that has not implemented a mechanic simply does not register it, and the
-solver plans without it. No solver code changes when a mechanic lands.
+The solver consumes an engine-owned action registry rather than hardcoding
+pool rules. A mechanic is plannable only when its engine action, descriptor,
+legality model, and exact calculation evaluator are all present; registering an
+engine action alone is not sufficient.
 
 ```text
 action descriptor
@@ -171,11 +175,11 @@ action descriptor
     single-slot              exact enumeration from the weighted pool
                              (exalt, annul, aug, regal, veiled add...)
     reforge                  sequential multi-mod roll
-                             (chaos, alch, scour+alch, essence, fossil,
+                             (chaos, alch, essence, fossil,
                               harvest reforges, veiled chaos)
     deterministic            probability-1 successor
-                             (scour, bench craft, bench remove, metamod
-                              application, restart/buy base)
+                             (scour, bench craft, metamod application,
+                              restart/buy base)
     special                  bespoke enumerator
                              (beast split/imprint, awakener orb,
                               eldritch currency, fracture, recombinator)
@@ -185,16 +189,17 @@ action descriptor
                               influence, fracture...)
 ```
 
-Planned registry coverage, in engine implementation order:
+Current one-item coverage:
 
 ```text
-implemented now:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
+engine + solver:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
                    essences, fossils, bench crafts, metamod locks,
-                   veiled chaos/exalt + unveil, harvest reforge/
-                   augment/resist conversion, eldritch implicits and
-                   currency, influenced exalts (engine Phase 13)
-next:              awakener orb, fracturing, corruption
-later:             beastcrafting, recombinators (implementation plan
+                   veiled chaos/exalt + unveil, harvest reforge/augment,
+                   eldritch implicits/currency, influenced exalts
+engine only:       harvest resistance conversion, Fracture
+S7 substrate:      exact evaluators for those two actions; bench removal;
+                   solver-only scour/Alchemy and macro/sub-policy operators
+later:             corruption, beastcrafting, recombinators (implementation plan
                    Phase 18; session-universe implications already
                    handled by the bitset plan)
 ```
@@ -331,18 +336,38 @@ demands it.
 
 ### Action Pruning
 
-Pruning happens before abstraction (it defines the junk classes), so it is
-part of solver input preparation:
+The implemented S1-S6 solver accepts an explicit action subset, but does not
+automatically perform the goal-relevance pruning described below. Calculator
+Solve currently includes every priced registry action. S7 implements the safe
+version of this contract before abstraction, because the candidate set defines
+the junk classes:
 
 - keep actions that can produce, remove, or protect a goal slot, plus
   structural actions (scour, restart, rarity changes, metamods that gate
   them);
-- drop essences/fossils whose guaranteed or biased mods neither hit a goal
-  slot nor bias toward one;
+- generate and retain only actions proved relevant, while keeping structural
+  dependencies and deferring uncertain candidates behind valid bounds;
 - always keep the restart action.
 
-Pruned-away actions are listed in solver diagnostics so a user can see what
-was considered.
+Every action receives an included, deferred, pruned, unpriced, or unsupported
+diagnostic reason. Exhaustive-oracle mode verifies certified pruning on small
+fixtures. The detailed contract is in the active S7 plan.
+
+### Solver Options And Macro Actions
+
+S7 adds a solver-only operator layer above primitive actions. A fixed option is
+an internally exact primitive strategy fragment with an initiation predicate,
+expected resource vector, finite exit-state distribution, observation-owned
+choice groups, and an expansion recipe. Its Bellman value is the resource
+price dot product plus the value of its exits. The simulator never executes an
+opaque macro: selected options compile back into ordinary operation/router
+subgraphs and pass the same simulation verification gate.
+
+Initial options include valid scour/Alchemy sequences, explicit-side
+Eldritch intent, protected-side operations, deterministic Multimod finishes,
+and fixed-exit renewal loops. Options may not hide salvage exits, preselect
+Unveil choices, or collapse crafted/fractured carrier distinctions that affect
+future mechanics.
 
 ## Policy To Strategy Graph
 
@@ -557,16 +582,21 @@ S4  DP solver core: reachability expansion, value iteration, policy
 
 S5  policy -> strategy graph compiler + end-to-end verification gate
     gate: pinned goals pass the simulate-vs-V(start) check, including
-          one all-T1 perfect-item goal
+          one synthetic all-T1 perfect-item goal
 
 S6  simulator/workspace integration, diagnostics UI, WASM validation
     gate: browser solve of a representative goal completes within
           budget in a worker with live progress
+
+S7  realistic end-to-end one-item capability and solver performance
+    gate: approved real multi-stage crafts solve, compile, and verify
+          inside owner-approved native/WASM time and memory budgets
 ```
 
 New engine mechanics (bench, metamods, harvest, ...) land as registry
-descriptors plus engine actions and immediately widen the solver, gated by
-S3-style distribution fixtures per mechanic.
+descriptors plus engine actions and exact calculation evaluators, gated by
+S3-style distribution fixtures per mechanic. Parked future mechanics use the
+M1-M5 sequence in [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 ## Risks
 
@@ -574,10 +604,11 @@ S3-style distribution fixtures per mechanic.
   the S5 gate; refine features when a goal shows material error.
 - Sequential-roll DP correctness under group removal and tag-weight
   updates mid-roll: mitigated by the mandatory MC cross-check in S3.
-- State explosion on all-T1 goals with many tier-tracked slots: bounded
-  by policy-reachable expansion and the accepted minutes-scale budget;
-  prioritized sweeping and (only if forced) LAO*-style focused expansion
-  are the escape hatches, in that order.
+- State explosion on all-T1 goals with many tier-tracked slots: the current
+  solver expands the full reachable closure; policy reachability only reduces
+  compilation afterward. S7 addresses action generation, compact storage,
+  exact macro kernels, cycle-aware policy optimization, and—only if still
+  required—bounded LAO*-style focused expansion.
 - Metamod/flag interactions multiply legality edge cases: legality lives
   in one predicate per descriptor, tested per mechanic, never inline in
   solver code.

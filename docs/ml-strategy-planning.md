@@ -1,6 +1,12 @@
 # ML Strategy Planning Architecture
 
-**Status:** research-backed design direction, not an implementation phase
+**Status:** research-backed future direction, not an implementation phase.
+The exact S1-S6 solver, goal slots, action registry, transition provider,
+compiled policy graph, and simulation gate now exist. Current classical
+planner scaling, reusable options, and real benchmark work belongs to
+[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md),
+not ML-0/ML-1 below. Treat those sections as research history where the active
+plan has superseded them.
 
 **Date:** 2026-06-30
 

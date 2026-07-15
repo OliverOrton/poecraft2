@@ -3,8 +3,10 @@
 Status: Oliver's 2026-07-15 product and mechanic decisions are fully recorded
 below. No implementation has started.
 
-This is a parallel product track. It may proceed beside solver S6 Phase 3, but
-its workspace integration phases must rebase after any overlapping S6 UI work.
+This is a parallel product track. E0-E4 may proceed beside active solver work;
+workspace integration phases must rebase after any overlapping UI or price-
+surface changes. Oliver skipped S6 Phase 3 entirely, so it is not a dependency
+or future merge target.
 
 ## Outcome
 
@@ -45,8 +47,8 @@ not part of publishing/accounts.
   call the upstream provider once per user.
 
 Phases E0-E4 are deliberately isolated enough to run on a separate laptop and
-branch alongside S6 Phase 3. Phases E5-E6 touch the shared workspace-price UI
-and merge only after rebasing onto the completed S6 work.
+branch alongside S7. Phases E5-E6 touch the shared workspace-price UI and merge
+only after rebasing onto the then-current workspace and solver cost surfaces.
 
 ## Current Contracts To Preserve
 

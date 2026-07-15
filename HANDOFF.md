@@ -1,101 +1,129 @@
-# Session Handoff - S6 Phase 4 complete
+# Session Handoff - S7 planning active
 
-Written 2026-07-15 after S6 Phase 4, "Veiled/eldritch evaluators + missing
-condition types," completed and passed the full repository gate. Read
+Written 2026-07-15 after Oliver selected realistic end-to-end one-item solving
+and a large solver-specific performance pass as the next milestone. Read
 [AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
-[docs/s6-plan.md](docs/s6-plan.md). Oliver explicitly selected Phase 4 before
-Phase 3, then skipped Phase 3 entirely. It is not deferred work.
+[docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md).
 
-## Product result
+## Active boundary
 
-Calculator and exact Strategy Builder evaluation now support every currently
-registered veiled and eldritch action instead of reporting an unsupported-
-evaluator gap:
+Implement **S7.0 only: benchmark corpus and solver telemetry**. Add native and
+worker/WASM optimal-solver benchmarks, propose the permanent real craft corpus,
+capture the unoptimized baseline, and ratify time/memory budgets. Stop before
+S7.1; do not mix optimization or mechanic fixes into the baseline commit.
 
-- veiled chaos and veiled exalt preserve the correct veiled prefix/suffix
-  carrier state;
-- unveil enumerates weighted three-option offers and lets the solved policy
-  choose the minimum-cost offered result, rather than preselecting an option;
-- eldritch ember/ichor set the engine-owned implicit tier;
-- eldritch exalt/chaos/annul use the actual dominance and modified-side rules.
+S7 takes priority over new mechanic breadth. The trade/corruption/finishing,
+Hinekora's Lock, beast imprint, and recombinator work is parked as mechanic
+track M1-M5. Phase 18 recombinator engine work, accounts/publishing, and ML also
+remain parked, deferred, blocked, or later. Economy E0-E4 may proceed in
+parallel but is not an S7 dependency.
 
-Generated policies that previously solved but failed compilation now compile
-to ordinary Strategy Board documents. The Calculator's obsolete special
-"condition types are not implemented" framing was removed; genuine compiler
-errors still preserve the native detail.
+Oliver skipped S6 Phase 3 ambient Emulator odds entirely. It is not deferred
+work and must not reappear in a kickoff, backlog, or performance scope.
 
-## Native implementation
+## Why S7 exists
 
-`AbstractState` now carries the veiled side plus Searing Exarch and Eater of
-Worlds tiers. Veiled template modifiers remain distinct junk identities, and
-Calculator-mode layouts distinguish complete exclusion effects when unveil is
-a candidate. `solver_calc.cpp` and `solver_reforge.cpp` implement the special
-transitions directly from the existing action behavior. Unveil outcomes carry
-sampled choice groups; solve expansion takes the Bellman minimum within each
-offer and records a stable preference order for policy compilation.
+S1-S6 is a working exact vertical slice, but not yet a realistic endgame
+planner:
 
-The simulator condition vocabulary gained:
+- solve expands the full reachable closure;
+- expansion, every Bellman sweep, and policy extraction scan the candidate
+  action set again;
+- the current Vaal Regalia registry can contain 15,604 actions, including
+  15,275 one-to-four-fossil combinations;
+- the candidate action set also widens the junk-class abstraction;
+- solve caps do not independently bound discovered states, state/action rows,
+  transitions, reforge work, bytes, or compiled graph size;
+- existing Phase 14 benchmarks measure action/simulator throughput, not
+  optimal solving;
+- the six-slot all-T1 gate is a small synthetic Chaos/Restart fixture.
+
+The active plan therefore combines real craft gates, exact solver-only macro/
+sub-policy operators, certified action control, compact transition storage,
+cycle-aware optimization, policy compression, and native/WASM performance.
+
+## Planned S7 sequence
 
 ```text
-has_mod_group.min_tier
-mod_count over stable mod keys
-item_flag
-influence_bits
-eldritch_tier
-has_unveil_option
+S7.0 benchmark corpus + solver telemetry
+S7.1 one-item correctness/state substrate
+S7.2 action control + storage + first performance pass
+S7.3 fixed solver options/macros
+S7.4 renewal and observation-aware options
+S7.5 deep optimization, cache reuse, policy compression
+S7.6 real end-to-end product gate
 ```
 
-The compiler uses those predicates to encode exact junk-class counts, all
-tracked state flags, exact influence and eldritch tier state, group-tier goals,
-and preference-ordered unveil routers. The Strategy Board model validates and
-labels the complete vocabulary. Item flags and eldritch tiers are visually
-authorable; compiler-only predicates remain preserved through Advanced JSON.
-Imported Emulator start items now retain both eldritch tiers.
+Each phase ends test-green with one local commit and a rewritten handoff. Do
+not roll the next phase into the same change.
 
-Selecting an unveil remains a zero-cost operation. Its preceding veiled
-currency owns the cost, matching the existing economy decision.
+## Decisions still required from Oliver
 
-## Verification
+Record these in focused fixtures before S7.1:
 
-- `powershell -File scripts/build.ps1` passes.
-- Native engine suite: `370530 checks, 0 failures`.
-- Special evaluator matrices use 20k engine samples on both the synthetic
-  session and Vaal Regalia; exact distributions pass the per-outcome tolerance
-  and reforge coverage gates.
-- The six-slot all-T1 solve compiles and completes 30k simulations with
-  `V(start)=9.0000`, empirical mean `8.8683`.
-- A dedicated tag-discriminating policy compiles and completes 20k simulations
-  without an off-policy route (`65.6250` expected, `65.0238` empirical).
-- The policy-selected unveil solve compiles and completes 30k/30k simulations
-  with `V(start)=2.7000`, empirical mean `2.7056`, and no off-policy failures.
-- `scripts/build-wasm.ps1` rebuilt the checked-in module.
-- `npx tsc --noEmit`, `npm test` (24/24 worker smokes plus model suites), and
-  `npm run build` pass in `apps/web`.
-- `powershell -File scripts/test.ps1` passes end to end.
+1. the permanent ordinary, advanced, and endgame craft targets;
+2. the hardest acceptable browser solve time and memory budget;
+3. whether tied/no Eldritch dominance is illegal and whether prefix/suffix
+   intent options may establish dominance automatically;
+4. which actions honor, remove, or consume each metamod used by the corpus;
+5. whether remove-crafted-modifiers is added and its cost key;
+6. the required optimality standard for hard solves; the current default is
+   provably optimal up to the declared abstraction, with any heuristic mode
+   separate and clearly labeled.
 
-The web smoke now proves a veiled reforge exact evaluation and every new
-condition shape through the real WASM worker boundary. This phase is engine
-and contract work; no new UI design surface was introduced.
+Mechanic rulings come from Oliver. Do not research or guess them.
 
-## Boundary and next work
+## Current correctness gaps S7 will own
 
-S6 is complete: Phases 1, 2, and 4 landed, and Oliver skipped Phase 3
-(Emulator watched-mod ambient odds) entirely. Do not revive it as deferred or
-next work. No new active milestone is selected; wait for Oliver to choose the
-next track.
+- Harvest resistance conversion and Fracture are registered engine actions but
+  are not supported by `solver_calc.cpp`.
+- The stable solver plan mentioned scour/Alchemy and bench removal, but neither
+  is a primitive solver descriptor today.
+- With no dominant Eldritch side, current Exalt/Chaos/Annul code falls back to
+  unrestricted ordinary behavior; Oliver's ruling will determine the fix.
+- Crafted/fractured Boolean abstraction is insufficient for Multimod,
+  recrafting, or fracture-retry options that depend on the actual carrier.
+- Side-targeted operations need side-specific open/removable legality facts.
 
-Parallel Economy Track E remains planned but unimplemented. Phase 12 account/
-sync remains deferred, Phase 15 publishing remains blocked on it, and
-recombinators remain deferred to Phase 18.
+## Documentation state
+
+Active authority is now:
+
+1. [docs/direction.md](docs/direction.md)
+2. this handoff
+3. [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md)
+4. stable architecture in
+   [docs/crafting-solver-plan.md](docs/crafting-solver-plan.md)
+
+Completed pre-S6, Strategy Builder Calculator, and S6 execution plans were
+moved intact to [docs/archive/README.md](docs/archive/README.md). S6 Phase 3's
+skipped status is preserved. Future mechanics are parked in
+[docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md) under
+M1-M5 so they no longer compete with S7 numbering.
+
+## S7.0 gate
+
+- One PowerShell entry point produces comparable native and WASM JSON reports.
+- Reports separate registry/layout, expansion, transition calculation,
+  optimization, extraction, compilation, and verification time.
+- Counts include actions at every filter, tags/junk classes, states, evaluated
+  pairs, transitions, cache behavior, policy/graph size, and resource caps.
+- Native process and WASM heap memory, maximum worker step, and cancellation
+  latency are measured.
+- Approved real fixtures plus oracle/refusal cases have frozen prices and
+  versioned inputs.
+- The baseline is captured before any optimization and the final performance
+  budgets are written into the active plan.
 
 ## Gotchas worth retaining
 
-- Do not collapse the two-stage unveil model into one random chosen modifier;
-  the policy decision occurs after the three-option offer is sampled.
-- `has_unveil_option` must inspect currently veiled slots only. Revealed slots
-  retain historical option metadata in `pc_item_state` and must not match.
-- Exact junk member counts are what distinguish group blockers and
-  tag/exclusion-sensitive states in compiled policies; a broad occupied-group
-  guard is insufficient because the goal modifier can share that group.
-- New strategy vocabulary requires a WASM rebuild before web tests can be
-  trusted.
+- Do not collapse Unveil's sampled offer and policy choice into one random mod.
+- A repeat option must use a fixed expressible exit predicate and return every
+  meaningful success, salvage, and brick exit.
+- Scour then Alchemy is not universally legal when locks or fractures preserve
+  explicit modifiers.
+- Generate macro options lazily; adding them all to the existing flat registry
+  would worsen the action explosion.
+- Price-only solves should eventually reuse transition work, but S7.0 measures
+  the current rebuild behavior before changing it.
+- New C ABI or strategy vocabulary requires a WASM rebuild before web tests.

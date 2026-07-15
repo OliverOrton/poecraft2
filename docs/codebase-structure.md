@@ -2,7 +2,12 @@
 
 ## Purpose
 
-This document defines the implementation shape before code begins. The goal is to keep the project split into clear layers:
+This document records layer ownership and the repository shape established by
+the implemented vertical slice. It is an architectural guide, not an exact file
+inventory or roadmap; the live tree and public headers are authoritative for
+current symbols, and [HANDOFF](../HANDOFF.md) owns next-work sequencing.
+
+The project stays split into clear layers:
 
 ```text
 data ingest -> compiled data/session build -> native engine -> bindings -> UI/tools
@@ -186,7 +191,7 @@ Engine tests are the most important, but they should stay focused. Cover the few
 
 ## Repository Layout
 
-Target layout:
+Implemented baseline layout (verify additions against the live tree):
 
 ```text
 poecraft2/
@@ -419,6 +424,10 @@ Responsibilities:
 Reports, moderation, and comments are later API capabilities, not requirements for the initial publishing release. The API should not implement crafting rules or run the engine in the initial account phase.
 
 ## Engine Public API Shape
+
+The signatures below are historical shape guidance, not a complete current ABI
+inventory. Current authority is `engine/include/poecraft/*.h`; solver and exact
+strategy-evaluation surfaces were added after the original sketch.
 
 Keep the first API small.
 
@@ -654,7 +663,7 @@ explicit test-item construction for fixture parity without duplicating pool
 rules in Python. `scripts/package-python.ps1` produces a platform-tagged wheel
 containing the shared library and required local runtime DLLs.
 
-## First Implementation Slice
+## First Implementation Slice (Completed Historical Baseline)
 
 Build the first vertical slice in this order:
 
@@ -669,11 +678,14 @@ Build the first vertical slice in this order:
 9. Lean regression tests against spec fixtures.
 10. Minimal workspace shell with real Emulator and Stash tabs, manual local saves, recovery, and the first item emulator panel.
 
-This proves the entire architecture before adding every special mechanic.
+This slice is complete and proved the architecture before special mechanic,
+strategy, Calculator, and solver expansion.
 
 Canonical SQLite and the compiled runtime artifact are both full-dataset. Vaal Regalia is only the detailed rule fixture. Cluster records are retained in the artifact, while cluster-jewel session creation returns an explicit unsupported-feature result until its passive-tag, notable-cap, and socket rules are implemented.
 
-The native strategy simulator and editor can come after the emulator slice. Add real Simulator and Strategy Builder tabs with those implementations rather than building placeholder application surfaces that will be discarded.
+The native strategy simulator/editor, Strategy Builder runner modes, Calculator
+document, and Stash-backed workspace now exist. Simulator is the Strategy
+Builder runner, not a separate document tab.
 
 ## Frontend Recommendation
 

@@ -1,13 +1,17 @@
 # Pre-S6 Product Polish Plan
 
+> Archived milestone record. This plan is preserved for implementation history;
+> it is not active roadmap authority. See [Project Direction](../../direction.md)
+> and [HANDOFF](../../../HANDOFF.md) for current work.
+
 Execution plan for the product-polish interlude Oliver scheduled on 2026-07-14
-before [s6-plan.md](s6-plan.md) Phase 1. Read [AGENTS.md](../AGENTS.md),
-[direction.md](direction.md), and [HANDOFF.md](../HANDOFF.md) first. Work
+before [s6-plan.md](s6-plan.md) Phase 1. Read [AGENTS.md](../../../AGENTS.md),
+[direction.md](../../direction.md), and [HANDOFF.md](../../../HANDOFF.md) first. Work
 through the active phases below in order. Each implementation phase ends
 test-green with one local commit and a rewritten handoff; stop at the stated
 boundary instead of rolling the next phase into the same change. Oliver skipped
-P2 on 2026-07-14, so it is retained only as a deferred record and is not a gate
-for P3 or S6.
+P2 on 2026-07-14, so it is retained only as a skipped historical record and is
+not a gate for P3 or S6. Reopen it only if Oliver explicitly creates new scope.
 
 This interlude now covers three active product requests:
 
@@ -17,7 +21,7 @@ This interlude now covers three active product requests:
    selected crafting action, and the odds for that action; make the goal use the
    same item-frame UI as the input item without changing goal semantics.
 
-The proposed Searing Exarch/Eater currency migration is deferred. The proposed
+The proposed Searing Exarch/Eater currency migration was skipped. The proposed
 multi-goal/OR/named-outcome expansion is cancelled rather than postponed.
 
 P1, P3a, and P3b are complete. Variant A is implemented through the shared

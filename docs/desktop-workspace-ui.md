@@ -6,7 +6,7 @@ The app has four core areas:
 
 ```text
 Emulator
-Simulator
+Calculator
 Strategy Builder
 Stash
 ```
@@ -19,7 +19,7 @@ Examples:
 
 ```text
 Emulator item beside Strategy Builder
-Strategy Builder beside Simulator
+Strategy Builder beside Calculator
 two Emulator items in separate tabs
 Stash beside an open item
 ```
@@ -56,12 +56,14 @@ Each open tab has a stable `documentId` and one of four kinds:
 ```ts
 type DocumentKind =
   | "emulator"
-  | "simulator"
+  | "calculator"
   | "strategy"
   | "stash";
 ```
 
-Multiple Emulator, Simulator, and Strategy Builder documents may be open. Stash is normally a singleton tab.
+Multiple Emulator, Calculator, and Strategy Builder documents may be open.
+Stash is normally a singleton tab. Simulator is the Strategy Builder's native
+runner mode, not a separate workspace document kind.
 
 ```ts
 interface WorkspaceDocument {
@@ -151,7 +153,7 @@ Open From Stash
 Save
 Save As
 Import Copy
-Run In Simulator
+Switch To Simulator Mode
 Open Start Item In Emulator
 Open Goal Example In Emulator
 ```
@@ -196,9 +198,9 @@ changing routing or re-running evaluation; missing prices stay explicit. The
 selected mode is crash-recovery state on the Strategy Builder draft and legacy
 drafts open in Simulator mode.
 
-## Simulator
+## Simulator Mode
 
-A Simulator tab runs a strategy and displays:
+The Strategy Builder's Simulator mode runs its authored strategy and displays:
 
 ```text
 run configuration
@@ -212,7 +214,8 @@ successful result examples
 failure summaries
 ```
 
-Simulator tabs may be opened from Strategy Builder or from a saved/published strategy in Stash.
+Opening a saved or published strategy creates a Strategy Builder document; its
+runner defaults to Simulator mode unless recovery state selects Calculator.
 
 The standardized publication run is:
 

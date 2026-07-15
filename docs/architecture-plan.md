@@ -256,21 +256,12 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 
 ## Implementation Phases
 
-1. Repo and project scaffolding.
-2. Data pipeline prototype from old project data into canonical SQLite.
-3. Generated engine data blob format.
-4. Native engine port with lean rule and invariant tests.
-5. WASM build and TypeScript integration.
-6. Public emulator UI for one-action crafting flows.
-7. Strategy graph editor and simulator trace UI.
-8. Account backend, Path of Exile OAuth login, and account Stash sync.
-9. Complete the intended public crafting mechanics and validation coverage.
-10. Performance, browser-worker, packaging, and public-engine readiness pass.
-11. Strategy publishing, discovery, and initial social features.
-12. Reports, moderation, and comments.
-13. Baseline strategy search / Monte Carlo evaluator.
-14. Private training coordinator and worker loop.
-15. Client-side ML or strategy suggestion prototype.
+This architecture no longer owns sequencing. The original vertical slice,
+native/WASM engine, workspace, strategy simulator/editor, mechanic expansion,
+public-engine throughput pass, and solver S1-S6 are complete. Accounts remain
+deferred and the active milestone is solver S7 depth/performance. See
+[implementation-plan.md](implementation-plan.md) for portfolio status and
+[HANDOFF](../HANDOFF.md) for the sole current next-work pointer.
 
 ## Open Questions
 

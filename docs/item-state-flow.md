@@ -666,7 +666,7 @@ roll new mods
 
 That is what makes the old "current buckets do not matter after a reforge" behavior work correctly.
 
-## Recommended Implementation Order
+## Implemented Historical Order
 
 1. Implement `ItemState`, `ModSlot`, and side helper functions.
 2. Implement conversion from old-style/JSON item snapshots to `ItemState`.

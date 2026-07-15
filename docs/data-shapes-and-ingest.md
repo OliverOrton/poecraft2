@@ -1,5 +1,9 @@
 # Data Shapes And Ingest Plan
 
+**Status:** implemented reference for canonical/compiled data and session
+construction. Sections describing the old project are evidence; sequencing and
+the first slice are historical rather than active roadmap work.
+
 ## Purpose
 
 This document captures the data lessons from the old `C:\Users\Oliver\poeCraft` project and turns them into a target ingest/data-shape plan for `poecraft2`.
@@ -886,7 +890,7 @@ Recommended checks:
 - Essence-only mods must be globally resolvable but excluded from normal random rolls.
 - UI text translation is useful but should stay outside the engine-hot path.
 
-## First Implementation Slice
+## First Implementation Slice (Completed Historical Baseline)
 
 Ingest and compile broadly, then validate rule behavior narrowly:
 

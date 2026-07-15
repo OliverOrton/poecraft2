@@ -8,13 +8,17 @@ The project has two related user-facing workflows:
 Emulator:
   user performs crafting operations one by one
 
-Simulator:
-  user loads or builds a strategy, then runs many simulations
+Strategy Builder:
+  user builds a strategy, then uses Simulator or Calculator runner mode
 ```
 
-The old project already had this split. The new project should keep it, but the strategy editor should become a visual graph editor instead of a mostly linear list of steps.
+The strategy runner is the Simulator; it is not a separate workspace document.
+Calculator is the Strategy Builder's exact whole-graph evaluation mode. The old
+project's workflow remains useful reference, but the current product shape is
+the implemented four-document workspace.
 
-Strategy Builder is one of the four core workspace areas alongside Emulator, Simulator, and Stash.
+Strategy Builder is one of the four core workspace areas alongside Emulator,
+Calculator, and Stash.
 
 The direction is:
 
@@ -435,7 +439,11 @@ bottom panel:
 Do not use a landing page for the strategy editor. A new strategy may show the
 base picker first; confirming it opens the working board directly.
 
-The Strategy Builder itself should be a tab inside the desktop workspace described in [desktop-workspace-ui.md](desktop-workspace-ui.md). It can be split beside Emulator, Simulator, or Stash. Its inspector and condition editor remain part of the Strategy Builder area rather than becoming unrelated top-level applications.
+The Strategy Builder itself is a tab inside the desktop workspace described in
+[desktop-workspace-ui.md](desktop-workspace-ui.md). It can be split beside
+Emulator, Calculator, or Stash. Its Simulator/Calculator runner, inspector, and
+condition editor remain part of the Strategy Builder area rather than becoming
+unrelated top-level applications.
 
 ```text
 strategy editor on the left
@@ -542,6 +550,9 @@ warn when a graph has no reachable success or non-success terminal
 ```
 
 ## Recombinator Blocks And Item Flow
+
+**Status: parked future mechanic work (M4-M5).** This section is retained as
+architecture only; do not implement it during active S7 solver work.
 
 The editor model above is control flow: one implicit item walks guarded
 edges. Recombinators add item flow: items as values that merge at blocks
@@ -931,7 +942,7 @@ For strategies with multiple success routes, do not synthesize a fake item. If n
 
 The Strategy Builder should also be able to open any item snapshot from a trace in Emulator as a new unsaved item.
 
-## First UI Slice
+## First UI Slice (Completed Historical Baseline)
 
 First useful strategy editor slice:
 

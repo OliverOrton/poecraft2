@@ -402,7 +402,7 @@ common harvest tags
 
 But correctness should not depend on prewarming. A cache miss should just build the weighted pool from masks and arrays.
 
-## Recommended Implementation Order
+## Implemented Historical Order
 
 1. Implement `tag_signature_id` interning.
 2. Implement `base_roll_weight[tag_signature_id][mod_id]`.
