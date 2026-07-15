@@ -33,7 +33,10 @@ and receive a complete crafting policy that:
 - expands every solver shortcut into real primitive engine operations;
 - verifies through the native simulator with realized cost and success
   behavior consistent with the solver result;
-- completes inside owner-approved native and browser time/memory budgets.
+- completes after a measured native/browser optimization pass, reports its
+  time and memory use, and remains bounded and cancellable. Oliver set no
+  solve-time or memory completion ceiling; S7 should make both as good as
+  practical.
 
 This is still the one-item solver. Locks, imprints, recombinators, corruption
 endgames, trade-leaf intermediates, and ML guidance remain outside S7. Live
@@ -83,11 +86,12 @@ descriptor today.
 
 1. **The native engine remains the rule authority.** TypeScript may present
    progress, diagnostics, and prices; it does not infer legality or odds.
-2. **The primary result remains exact up to the declared abstraction.** Safe
-   pruning requires a proof or an exhaustive-oracle comparison. Deferred
-   candidates remain discoverable through bounds rather than being silently
-   deleted. A heuristic mode may exist only if Oliver explicitly approves it,
-   and it must be labeled separately.
+2. **Make the result as optimal as practical and expose its status.** Exact
+   oracle-sized cases remain mandatory. Safe pruning uses a proof or an
+   exhaustive-oracle comparison; hard cases may use bounds, focused expansion,
+   or heuristic prioritization when exhaustive work is impractical. Never call
+   an unproven result exact, silently delete an uncertain candidate, or hide a
+   reported optimality gap. Oliver will evaluate the resulting strategies.
 3. **Macros are solver operators, not new crafting rules.** The simulator runs
    primitive actions only. Every selected macro expands into the same ordinary
    graph vocabulary a user can inspect and edit.
@@ -119,7 +123,7 @@ goal slots, tiers, rarity, and success threshold
 allowed mechanic families and exhaustive-oracle action mode
 frozen resource price table
 expected support/refusal status
-native and WASM budgets
+native and WASM comparison objectives and safety caps
 verification run count and statistical tolerance
 ```
 
@@ -162,9 +166,9 @@ policy-reachable states, compiled nodes/edges, and strategy JSON bytes
 V(start), simulated mean cost, success count, and off-policy failures
 ```
 
-S7.0 records the unoptimized baseline before setting final machine-specific
-budgets. Structural gates below apply on every machine; time and memory ceilings
-are ratified against Oliver's machine after the baseline is captured.
+S7.0 records the unoptimized baseline before setting comparison targets and
+safety caps. Structural gates below apply on every machine. Solve time and
+memory are optimization measurements, not owner-set completion ceilings.
 
 ## Planner Operator Model
 
@@ -255,14 +259,15 @@ fractured carrier; a Boolean "some mod is fractured" flag is insufficient.
 
 Before relying on macro policies, S7 must close these one-item gaps:
 
-1. Pin Oliver's Eldritch dominance rule. The current primitive engine falls
-   back to unrestricted ordinary Exalt/Chaos/Annul behavior when neither side
-   is dominant; registry legality does not require dominance.
+1. Preserve Oliver's Eldritch dominance rule: tied/no dominance uses the
+   ordinary Exalt/Chaos/Annul behavior. Prefix/suffix intent is a separate
+   explicit option that may establish the required dominance and must charge
+   for its setup currency.
 2. Pin which actions honor, remove, or consume each metamod. The native action
    and calculation paths must agree before protected-crafting options are
    summarized.
-3. Add a real remove-crafted-modifiers primitive and approved cost if Oliver
-   wants blocker/no-attack/no-caster cleanup represented.
+3. Add a real remove-crafted-modifiers primitive costing one Scour so blocker/
+   no-attack/no-caster cleanup can be represented.
 4. Implement exact Harvest resistance conversion and Fracture calculation
    evaluators.
 5. Refine abstract state only where required by future decisions:
@@ -357,7 +362,9 @@ the next phase into the same change.
   approval; pin frozen prices and exhaustive oracle subsets.
 - Capture baseline runtime, memory, state/action/transition size, graph size,
   cancellation, and simulation agreement without optimizing solver behavior.
-- Ratify hard native/WASM time and memory ceilings after the baseline.
+- Set benchmark comparison targets and safety caps after the baseline. There is
+  no owner-set solve-time or memory completion ceiling; keep both measurements
+  visible.
 
 Gate: comparable native/WASM JSON exists for every approved case; repeated
 runs report stable structural counts; no optimization claim is made without a
@@ -365,8 +372,9 @@ saved baseline.
 
 ### S7.1 - One-item correctness and state substrate
 
-- Implement approved Eldritch dominance and metamod behavior.
-- Add bench removal if approved.
+- Preserve and fixture the approved tied/no-dominance ordinary-currency
+  behavior; pin any corpus-relevant metamod ambiguities with Oliver.
+- Add remove-crafted-modifiers at a cost of one Scour.
 - Add Harvest resistance conversion and carrier-exact Fracture evaluators.
 - Add only the crafted/fractured/side-specific abstract features required by
   the approved benchmark crafts and compiler.
@@ -385,14 +393,14 @@ off-policy routing.
 
 Gate: reduced and exhaustive modes agree on oracle fixtures; no approved case
 exceeds a configured cap without an explicit diagnostic; the phase improves
-the benchmark corpus and does not regress any pinned case beyond the ratified
+the benchmark corpus and does not regress any pinned case beyond the recorded
 tolerance.
 
 ### S7.3 - Fixed solver options
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.
-- Implement scour/Alchemy, approved Eldritch side-intent, protected-side, and
+- Implement scour/Alchemy, explicit Eldritch side-intent, protected-side, and
   deterministic Multimod finishing options.
 
 Gate: every option kernel matches its expanded primitive graph's exit
@@ -420,9 +428,10 @@ outer policies still see all success, salvage, and brick exits.
 - Compress policy regions before compilation.
 
 Gate: final native/WASM time, memory, worker-slice, cancellation, and graph-size
-budgets pass; the hard-corpus geometric-mean speed and peak memory improve by
-the ratified large-pass targets; small-policy values remain unchanged within
-current numerical tolerance.
+objectives pass; the hard-corpus report shows the cumulative speed and peak-
+memory improvement; small-policy values remain unchanged within current
+numerical tolerance. Continue while profiling still identifies a material,
+safe solver bottleneck inside S7 scope.
 
 ### S7.6 - End-to-end product gate
 
@@ -450,34 +459,42 @@ These do not depend on machine speed:
 - Macro kernels equal their expanded primitive graphs on exact fixtures.
 - Discovered states, pairs, transitions, bytes, reforge work, and graph size
   obey independent caps.
-- The worker yields and cancellation is acknowledged within the ratified bound.
+- The worker yields and cancellation is acknowledged within its engineering
+  responsiveness bound.
 - Raw and compressed policies agree under exact evaluation.
 - Compiled-policy simulation remains consistent with `V(start)` and reports no
   unmatched route.
 
-Provisional performance targets, to be confirmed after S7.0, are:
+Initial engineering objectives, not owner-set completion ceilings, are:
 
 ```text
-moderate real craft: native <= 10 s, WASM <= 30 s
-hard endgame craft:   native <= 2 min, WASM <= 5 min
 worker step:          <= 50 ms
 cancel acknowledgement: <= 250 ms
-final hard-corpus improvement: >= 5x geometric-mean solve speed,
-                               >= 2x peak-memory reduction
+directional large-pass target: >= 5x geometric-mean solve speed,
+                               >= 2x peak-memory reduction if the baseline
+                               leaves that much headroom
 ```
 
-The final owner-approved limits replace these provisional numbers before S7.1.
+Native/WASM solve time and memory are always reported. A slow hard craft is not
+rejected solely for crossing a fixed duration; cap exhaustion, unresponsiveness,
+incorrect optimality claims, or unexplained regressions still fail the gate.
 
-## Owner Decisions Required Before S7.1
+## Recorded Owner Decisions And Remaining Approval
 
-1. Approve the permanent real craft targets and their start states.
-2. Set the hardest acceptable browser solve time and memory budget.
-3. Confirm whether tied/no Eldritch dominance is illegal and whether a
-   prefix/suffix intent option may establish dominance automatically.
-4. Pin which actions honor, remove, or consume each metamod used by the corpus.
-5. Confirm whether remove-crafted-modifiers should be added and its cost key.
-6. Confirm that the primary solver must remain provably optimal up to its
-   abstraction; decide separately whether a labeled heuristic mode is wanted.
+Recorded 2026-07-15:
+
+1. Tied/no Eldritch dominance acts as the corresponding ordinary currency.
+   Prefix/suffix intent remains an explicit setup-and-craft option.
+2. Remove-crafted-modifiers costs one Scour.
+3. Make the solver as optimal as practical and report exact/bounded/heuristic
+   status honestly; Oliver will evaluate strategy quality.
+4. There is no owner-set solve-time or memory completion ceiling. Optimize both
+   as far as practical, keep the measurements visible, and retain operational
+   safety caps and responsiveness gates.
+
+Still required: Oliver approves the permanent real craft targets/start states
+proposed during S7.0, and pins any metamod interaction that those crafts expose
+as ambiguous before its S7.1 fixture is implemented.
 
 Mechanic answers come from Oliver and are written into focused fixtures before
 implementation. Agents must not research or guess them.

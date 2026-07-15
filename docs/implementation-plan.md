@@ -1147,11 +1147,13 @@ Acceptance gate:
 Implement S7.0 only from
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
 build the native/WASM optimal-solver benchmark and telemetry surface, propose
-the permanent real craft corpus, capture the unoptimized baseline, and ratify
-performance budgets. Stop before S7.1. Oliver skipped S6 Phase 3 entirely; do
-not revive it. Parallel Economy E0-E4 may proceed independently. Phase 12,
-publishing, mechanic track M1-M5, and Phase 18 recombinators remain deferred,
-blocked, or parked as recorded above.
+the permanent real craft corpus, capture the unoptimized baseline, and set
+comparison targets and safety caps. Oliver set no solve-time or memory
+completion ceiling; optimize both as far as practical and report them
+throughout. Stop before S7.1. Oliver skipped S6 Phase 3 entirely; do not revive
+it. Parallel Economy E0-E4 may proceed independently. Phase 12, publishing,
+mechanic track M1-M5, and Phase 18 recombinators remain deferred, blocked, or
+parked as recorded above.
 
 ## Definition Of Done For MVP
 

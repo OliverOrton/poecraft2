@@ -590,7 +590,7 @@ S6  simulator/workspace integration, diagnostics UI, WASM validation
 
 S7  realistic end-to-end one-item capability and solver performance
     gate: approved real multi-stage crafts solve, compile, and verify
-          inside owner-approved native/WASM time and memory budgets
+          after a measured, regression-gated native/WASM performance pass
 ```
 
 New engine mechanics (bench, metamods, harvest, ...) land as registry

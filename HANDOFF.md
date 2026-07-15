@@ -9,8 +9,9 @@ and a large solver-specific performance pass as the next milestone. Read
 
 Implement **S7.0 only: benchmark corpus and solver telemetry**. Add native and
 worker/WASM optimal-solver benchmarks, propose the permanent real craft corpus,
-capture the unoptimized baseline, and ratify time/memory budgets. Stop before
-S7.1; do not mix optimization or mechanic fixes into the baseline commit.
+capture the unoptimized baseline, and set comparison targets and safety caps.
+Stop before S7.1; do not mix optimization or mechanic fixes into the baseline
+commit.
 
 S7 takes priority over new mechanic breadth. The trade/corruption/finishing,
 Hinekora's Lock, beast imprint, and recombinator work is parked as mechanic
@@ -57,19 +58,22 @@ S7.6 real end-to-end product gate
 Each phase ends test-green with one local commit and a rewritten handoff. Do
 not roll the next phase into the same change.
 
-## Decisions still required from Oliver
+## Recorded decisions and remaining approval
 
-Record these in focused fixtures before S7.1:
+Oliver ruled on 2026-07-15:
 
-1. the permanent ordinary, advanced, and endgame craft targets;
-2. the hardest acceptable browser solve time and memory budget;
-3. whether tied/no Eldritch dominance is illegal and whether prefix/suffix
-   intent options may establish dominance automatically;
-4. which actions honor, remove, or consume each metamod used by the corpus;
-5. whether remove-crafted-modifiers is added and its cost key;
-6. the required optimality standard for hard solves; the current default is
-   provably optimal up to the declared abstraction, with any heuristic mode
-   separate and clearly labeled.
+1. tied/no Eldritch dominance acts as the corresponding ordinary currency;
+   prefix/suffix intent is a separate explicit setup-and-craft option;
+2. remove-crafted-modifiers costs one Scour;
+3. make the solver as optimal as practical and report its status honestly;
+   Oliver will evaluate the resulting strategies;
+4. there is no owner-set solve-time or memory completion ceiling—make both as
+   good as practical, keep them measured, and retain operational safety caps
+   and responsiveness gates.
+
+During S7.0, propose the permanent ordinary, advanced, and endgame targets and
+start states for Oliver's approval. Before S7.1 implements a corpus-relevant
+metamod ambiguity, ask Oliver for the focused ruling and encode it as a fixture.
 
 Mechanic rulings come from Oliver. Do not research or guess them.
 
@@ -79,8 +83,9 @@ Mechanic rulings come from Oliver. Do not research or guess them.
   are not supported by `solver_calc.cpp`.
 - The stable solver plan mentioned scour/Alchemy and bench removal, but neither
   is a primitive solver descriptor today.
-- With no dominant Eldritch side, current Exalt/Chaos/Annul code falls back to
-  unrestricted ordinary behavior; Oliver's ruling will determine the fix.
+- With tied/no Eldritch dominance, current Exalt/Chaos/Annul fallback to
+  ordinary currency behavior is owner-approved and needs a pinned fixture, not
+  a semantic change.
 - Crafted/fractured Boolean abstraction is insufficient for Multimod,
   recrafting, or fracture-retry options that depend on the actual carrier.
 - Side-targeted operations need side-specific open/removable legality facts.
@@ -113,7 +118,8 @@ M1-M5 so they no longer compete with S7 numbering.
 - Approved real fixtures plus oracle/refusal cases have frozen prices and
   versioned inputs.
 - The baseline is captured before any optimization and the final performance
-  budgets are written into the active plan.
+  comparison targets and safety caps are written into the active plan. Solve
+  time and memory have no owner-set completion ceiling.
 
 ## Gotchas worth retaining
 
