@@ -40,8 +40,8 @@ progress and cancel without blocking the worker. Solver S6 Phase 4 is also
 complete: veiled/eldritch actions have exact outcome evaluators, sampled
 unveil offers are policy choices, and generated policies can express exact
 junk identities, flags, influence, eldritch tiers, group tier thresholds, and
-unveil-option routes. Oliver selected Phase 4 ahead of Phase 3; ambient
-Emulator odds was not started and remains deferred. The
+unveil-option routes. Oliver skipped Phase 3 ambient Emulator odds entirely;
+it is not deferred work. S6 is complete. The
 completed polish sequence is in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
 The parallel live-economy track is planned in
@@ -59,10 +59,10 @@ fully recorded; implementation has not started.
    corruption endgames, Hinekora's Lock, beast imprint macro-actions,
    and recombinators as spec pyramids with an auto-planner.
    [solver-mechanic-extensions.md](solver-mechanic-extensions.md)
-3. Workspace fluency: watched-mod odds in the Emulator, craft history
-   tree, cost distributions and materials/shopping lists, aggregate
-   board overlays, a live economy service (league snapshot fetch with
-   overrides), and recomb/feeder blocks with item-flow wiring.
+3. Workspace fluency: craft history tree, cost distributions and materials/
+   shopping lists, aggregate board overlays, a live economy service (league
+   snapshot fetch with overrides), and recomb/feeder blocks with item-flow
+   wiring. Ambient watched-mod odds in the Emulator were skipped entirely.
    [desktop-workspace-ui.md](desktop-workspace-ui.md),
    [strategy-editor-ui.md](strategy-editor-ui.md),
    [economy-ingest-plan.md](economy-ingest-plan.md)

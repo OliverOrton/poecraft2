@@ -288,9 +288,10 @@ pc_strategy_evaluate(compiled strategy, options)
      node/edge flows, and incoming state classes
 ```
 
-The Calculator tab calls the first form with the live emulator item, so the
-Emulator gains "odds before you click" for free. The solver calls the batch
-form during expansion.
+The Calculator tab calls the first form with its live input item. The solver
+calls the batch form during expansion. An earlier proposal to expose the same
+calls as ambient Emulator odds was skipped entirely by Oliver and is not a
+scheduled consumer of this API.
 
 ## DP Solver
 
@@ -530,8 +531,8 @@ raw abstract distribution (rarity, affix counts, slot status, blocked flags,
 mechanic flags) is retained in a collapsed technical drawer. Cost per attempt
 still comes from the action's cost keys dotted with the workspace price table
 (`workspace/prices.ts`, the manual-override layer of the planned Economy
-service). S6 Phases 1, 2, and 4 are complete. The only unfinished planned S6
-phase is the deferred Emulator ambient odds-before-you-click surface.
+service). S6 Phases 1, 2, and 4 are complete. Oliver skipped the planned Phase
+3 Emulator ambient odds-before-you-click surface entirely, so S6 is complete.
 
 ```text
 S1  action registry schema + descriptors for implemented mechanics;

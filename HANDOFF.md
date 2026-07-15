@@ -4,7 +4,7 @@ Written 2026-07-15 after S6 Phase 4, "Veiled/eldritch evaluators + missing
 condition types," completed and passed the full repository gate. Read
 [AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
 [docs/s6-plan.md](docs/s6-plan.md). Oliver explicitly selected Phase 4 before
-Phase 3; Phase 3 was not started and remains deferred.
+Phase 3, then skipped Phase 3 entirely. It is not deferred work.
 
 ## Product result
 
@@ -79,11 +79,10 @@ and contract work; no new UI design surface was introduced.
 
 ## Boundary and next work
 
-S6 Phases 1, 2, and 4 are complete. Phase 3 (Emulator watched-mod ambient odds)
-is the only unfinished phase in `docs/s6-plan.md`, but it remains deferred and
-has not entered its required image-model design loop. Do not infer a new active
-milestone from this handoff; wait for Oliver to resume Phase 3 or select another
-track.
+S6 is complete: Phases 1, 2, and 4 landed, and Oliver skipped Phase 3
+(Emulator watched-mod ambient odds) entirely. Do not revive it as deferred or
+next work. No new active milestone is selected; wait for Oliver to choose the
+next track.
 
 Parallel Economy Track E remains planned but unimplemented. Phase 12 account/
 sync remains deferred, Phase 15 publishing remains blocked on it, and

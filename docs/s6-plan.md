@@ -65,14 +65,19 @@ cancellation; Calculator shows only live states, sweeps, residual, V(start)
 bound, and Cancel while work is active.
 
 Status 2026-07-15 (Phase 4): Oliver explicitly selected Phase 4 before Phase 3,
-so Phase 3 was not begun and remains deferred. Phase 4 is complete. Veiled
-chaos/exalt/unveil and all five eldritch actions now have exact evaluators,
+so Phase 3 was not begun at that boundary. Phase 4 is complete. Veiled chaos/
+exalt/unveil and all five eldritch actions now have exact evaluators,
 including policy-owned choice among sampled unveil offers. The policy compiler
 now represents tag-sensitive junk identities, exact item flags/influence/
 eldritch tiers, group tier thresholds, and unveil-option routing with native
 strategy conditions. Synthetic and Vaal Regalia Monte Carlo gates, all-T1 and
 unveil solve -> compile -> simulate gates, rebuilt WASM/web checks, and the full
 repository pipeline pass.
+
+Status 2026-07-15 (final): Oliver skipped Phase 3 entirely. It is not deferred
+work and must not be reintroduced as a future milestone unless Oliver explicitly
+creates a new scope for it. With Phases 1, 2, and 4 complete and Phase 3 skipped,
+S6 is complete.
 
 Two standing rules bear repeating because they gate everything below:
 
@@ -303,7 +308,10 @@ solve with zero console errors; its progress capture showed `109` states,
 Solve surface still matched Modifier Pool left and Odds right exactly. Native,
 WASM, web, build, and full repository gates passed.
 
-## Phase 3 — Emulator ambient odds ("odds before you click") — deferred
+## Phase 3 — Emulator ambient odds ("odds before you click") — skipped
+
+**Final status:** skipped entirely by Oliver on 2026-07-15. The material below
+is retained only as historical planning context; it is not scheduled work.
 
 **Goal.** Per [desktop-workspace-ui.md](desktop-workspace-ui.md)
 §"Watched Modifiers And Action Odds": the Emulator gets a watched-

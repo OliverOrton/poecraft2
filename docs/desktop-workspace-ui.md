@@ -85,7 +85,6 @@ one mutable item
 engine session configuration
 craft history tree
 position within the history tree
-watched modifiers
 selected crafting operation
 unsaved-change state
 ```
@@ -108,17 +107,11 @@ Send To Strategy Builder
 
 Sending an Emulator item to Strategy Builder creates a new unsaved strategy whose start state is the current item snapshot.
 
-### Watched Modifiers And Action Odds
+### Watched Modifiers And Action Odds — skipped
 
-An Emulator tab carries a watched-modifier tray: the user pins the modifier
-families (with tier thresholds) they are crafting toward, using the same
-picker as the modifier pool. Once watched mods exist, every craft control
-shows the chance that this action on this item hits watched mods, computed
-by the calculation engine's outcome call
-(see [crafting-solver-plan.md](crafting-solver-plan.md)). Hovering a craft
-control expands to the full outcome distribution — the Calculator view
-rendered in place. Odds are ambient in the Emulator; the Calculator tab is
-for deeper two-item and comparison work, not the only place odds appear.
+Oliver skipped this proposed Emulator surface entirely on 2026-07-15. It is
+not deferred workspace work: the Emulator does not own watched modifiers or
+ambient per-control odds. Exact action odds remain in the Calculator.
 
 ### Craft History Tree
 
