@@ -695,8 +695,7 @@ export class PcCalculator extends HTMLElement {
                 this.solveError =
                     error instanceof EngineError && error.code === 4
                         ? {
-                              heading:
-                                  "This goal needs condition types that are not implemented yet.",
+                              heading: "The solved policy could not be compiled.",
                               detail,
                           }
                         : {

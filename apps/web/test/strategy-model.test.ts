@@ -83,6 +83,8 @@ import type { Catalog } from "../src/app/engine-protocol";
                 quality: 20,
                 item_flags: 1,
                 generic_influence_bits: 4,
+                searing_exarch_tier: 2,
+                eater_of_worlds_tier: 3,
                 prefixes: [{ mod_id: 3, flags: 1 }],
                 suffixes: [{ mod_id: 7, flags: 2 }],
             },
@@ -96,6 +98,8 @@ import type { Catalog } from "../src/app/engine-protocol";
     assert.deepEqual(imported.base_state.suffixes, [
         { mod_key: "SuffixKey", fractured: undefined, crafted: true },
     ]);
+    assert.equal(imported.base_state.searing_exarch_tier, 2);
+    assert.equal(imported.base_state.eater_of_worlds_tier, 3);
     assert.equal(imported.nodes.length, 1);
     assert.equal(imported.nodes[0].kind, "start");
     assert.deepEqual(imported.edges, []);
@@ -185,6 +189,27 @@ import type { Catalog } from "../src/app/engine-protocol";
         ),
     );
     console.log("  ok - modifier family minimum tier validates");
+}
+
+{
+    const strategy = createDefaultStrategy();
+    strategy.edges[1].condition = {
+        type: "all",
+        conditions: [
+            { type: "has_mod_group", group: "IncreasedLife", min_tier: 1 },
+            { type: "item_flag", flag: "prefixes_locked" },
+            { type: "eldritch_tier", side: "searing", min: 1, max: 4 },
+            { type: "mod_count", mod_keys: ["Metadata/Mods/Test"], min: 1, max: 1 },
+            { type: "influence_bits", value: 0 },
+            { type: "has_unveil_option", mod_key: "Metadata/Mods/Unveiled" },
+        ],
+    };
+    assert.deepEqual(
+        validateStrategy(strategy).filter((issue) => issue.severity === "error"),
+        [],
+    );
+    assert.match(conditionLabel(strategy.edges[1].condition), /prefixes locked/);
+    console.log("  ok - S6 Phase 4 condition vocabulary validates and labels");
 }
 
 {

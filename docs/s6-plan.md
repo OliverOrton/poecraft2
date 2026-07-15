@@ -62,7 +62,17 @@ Status 2026-07-15 (later): Phase 2 is complete. The synchronous and stepped C
 ABI paths share one native `SolveWork` state machine; WASM and the worker drive
 bounded expansion/sweep chunks with structured progress and AbortSignal
 cancellation; Calculator shows only live states, sweeps, residual, V(start)
-bound, and Cancel while work is active. Phase 3 is next.
+bound, and Cancel while work is active.
+
+Status 2026-07-15 (Phase 4): Oliver explicitly selected Phase 4 before Phase 3,
+so Phase 3 was not begun and remains deferred. Phase 4 is complete. Veiled
+chaos/exalt/unveil and all five eldritch actions now have exact evaluators,
+including policy-owned choice among sampled unveil offers. The policy compiler
+now represents tag-sensitive junk identities, exact item flags/influence/
+eldritch tiers, group tier thresholds, and unveil-option routing with native
+strategy conditions. Synthetic and Vaal Regalia Monte Carlo gates, all-T1 and
+unveil solve -> compile -> simulate gates, rebuilt WASM/web checks, and the full
+repository pipeline pass.
 
 Two standing rules bear repeating because they gate everything below:
 
@@ -293,7 +303,7 @@ solve with zero console errors; its progress capture showed `109` states,
 Solve surface still matched Modifier Pool left and Odds right exactly. Native,
 WASM, web, build, and full repository gates passed.
 
-## Phase 3 — Emulator ambient odds ("odds before you click")
+## Phase 3 — Emulator ambient odds ("odds before you click") — deferred
 
 **Goal.** Per [desktop-workspace-ui.md](desktop-workspace-ui.md)
 §"Watched Modifiers And Action Odds": the Emulator gets a watched-
@@ -346,7 +356,7 @@ both Emulator badges and the Calculator depend on. Manual preview pass:
 watch two mods, verify badges change after crafting, hover panel matches
 the Calculator's numbers for the same action.
 
-## Phase 4 — Veiled/eldritch evaluators + missing condition types
+## Phase 4 — Veiled/eldritch evaluators + missing condition types — complete
 
 Engine work; no UI beyond error-message removal. Two independent halves.
 
@@ -397,6 +407,20 @@ influenced, eldritch), and a `min_tier` extension for `has_mod_group`.
   target is the right headline test: **one all-T1 "perfect item" goal**
   solving, compiling, and verifying. Run the full `scripts/test.ps1`
   before the commit.
+
+**Completion record (2026-07-15).** The special evaluators are exact against
+the engine implementations. Abstract states now preserve the veiled side and
+both eldritch tiers; unveil expands weighted three-option offers and Bellman
+selection minimizes over the options actually offered. Compiler output uses
+`mod_count`, `item_flag`, exact `influence_bits`, ranged `eldritch_tier`,
+`has_unveil_option`, and `has_mod_group.min_tier`; the latter two plus exact
+junk-class member keys close ambiguous and tag-discriminating policy routes.
+Flag/tier conditions are visually authorable while solver-only predicates stay
+valid advanced JSON. The synthetic and Vaal Regalia evaluator matrices each
+use 20k engine samples. A dedicated tag-discriminating policy completes 20k
+runs without off-policy routing, and compiled all-T1 and unveil policies both
+complete 30k simulation runs with empirical cost matching `V(start)`. WASM was
+rebuilt, web type/tests/build pass, and `scripts/test.ps1` passes end to end.
 
 ## Cross-phase conventions
 

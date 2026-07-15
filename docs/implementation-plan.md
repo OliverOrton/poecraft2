@@ -865,7 +865,11 @@ Status 2026-07-15: P1 and P3 are complete; P2 remains skipped. Calculator Goal
 now uses the same shared item-frame structure as Input through an explicit
 target model, with the v1 goal and native odds contracts unchanged. The full
 repository gate and separate-process browser recovery smoke passed. Solver S6
-Phases 1-2 are complete; Phase 3 ambient Emulator odds is next.
+Phases 1-2 and 4 are complete. Oliver selected Phase 4 before Phase 3; ambient
+Emulator odds was not started and remains deferred. Phase 4 added exact
+veiled/eldritch evaluators, policy-selected unveil offers, and the native
+condition vocabulary required to compile tag-sensitive, flagged, tiered, and
+otherwise ambiguous solver states. Its full repository gate passed.
 
 This interlude does not move crafting-rule authority into the frontend. The
 Calculator and Strategy Builder keep their task-shaped public APIs, but both
@@ -884,8 +888,8 @@ The track builds a separate canonical economy SQLite database, dynamically
 ingests every PoE1 league exposed by the configured economy provider, publishes
 immutable content-addressed snapshots, caches them in the browser, and adds a
 workspace-level league selector with per-league overrides. Phases E0-E4 may run
-on a separate branch beside S6 Phase 3. E5-E6 must rebase before touching the
-shared workspace price and cost surfaces.
+on a separate branch while S6 Phase 3 remains deferred. E5-E6 must rebase
+before touching the shared workspace price and cost surfaces.
 
 Status: plan written and Oliver's primary decisions recorded: poe.ninja, PoE1
 PC, six-hour refresh, 30-day detail plus weekly retention forever, warned
@@ -1112,10 +1116,11 @@ Acceptance gate:
 
 Phase 14 is complete. Phase 15 publishing remains blocked until the deferred
 Phase 12 account and sync foundation is explicitly resumed and completed.
-Solver S6 Phase 3 remains the next primary product boundary. Parallel Economy
-Track E is planned with its main decisions recorded; its E0-E4 implementation
-may proceed independently on a dedicated branch. Recombinators remain deferred
-to Phase 18.
+Solver S6 Phase 3 is the only unfinished S6 phase, but remains deferred after
+Oliver selected Phase 4 first; no new primary boundary is active until Oliver
+chooses one. Parallel Economy Track E is planned with its main decisions
+recorded; its E0-E4 implementation may proceed independently on a dedicated
+branch. Recombinators remain deferred to Phase 18.
 
 ## Definition Of Done For MVP
 

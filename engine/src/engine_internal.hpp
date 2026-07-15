@@ -655,16 +655,43 @@ enum class ConditionKind : std::uint8_t {
       Any = 8,
       Not = 9,
       AtLeast = 10,
-      HasModFamily = 11
+      HasModFamily = 11,
+      ModCount = 12,
+      ItemFlag = 13,
+      InfluenceBits = 14,
+      EldritchTier = 15,
+      HasUnveilOption = 16
   };
+
+enum class ItemFlagKind : std::uint8_t {
+    Corrupted,
+    Mirrored,
+    Split,
+    Synthesised,
+    Fractured,
+    Crafted,
+    Veiled,
+    VeiledPrefix,
+    VeiledSuffix,
+    Multimod,
+    NoAttack,
+    NoCaster,
+    PrefixesLocked,
+    SuffixesLocked,
+    Influenced,
+    EldritchImplicit,
+};
 
 struct CompiledCondition {
     ConditionKind kind = ConditionKind::Always;
     std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
     std::uint32_t family_id = std::numeric_limits<std::uint32_t>::max();
     std::uint8_t required_flags = 0;
+    ItemFlagKind item_flag = ItemFlagKind::Corrupted;
+    std::uint8_t eldritch_side = 0; /* 0 searing, 1 eater */
     int min_value = 0;
     int max_value = 0;
+    std::vector<std::uint32_t> mod_ids;
     std::vector<CompiledCondition> children;
 };
 

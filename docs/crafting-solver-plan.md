@@ -429,8 +429,9 @@ influenced exalt) distributions by enumerating the same weighted pool the
 engine samples. `engine/tests/test_solver_calc.cpp` gates it against
 hand-computed pool sums and engine Monte Carlo histograms. The
 `pc_calc_action_outcomes` C ABI landed with the S5 surface and the
-Calculator tab with S6. Eldritch/veiled single-slot evaluators report
-`supported = false` until implemented.
+Calculator tab with S6. S6 Phase 4 completed the veiled and eldritch
+evaluators described below, so every currently registered veiled/eldritch
+mechanic has an exact calculation path.
 
 S3's core reforge evaluator is complete in `solver_reforge.cpp`: a
 forward-frontier sequential-roll DP over roll buckets — per-goal-slot
@@ -447,8 +448,10 @@ via a two-phase roll DP (guaranteed spawn-only tag pick, then normal
 fills, with dual-weight buckets); harvest augment — intentionally
 add-then-remove per the project owner's ruling — enumerates its two
 stages exactly. Both are MC-gated on the synthetic and Vaal Regalia
-fixtures. Veiled chaos/exalt/unveil and the eldritch actions remain
-unsupported pending their bespoke enumerators.
+fixtures. S6 Phase 4 added exact veiled chaos/exalt transitions, weighted
+three-option unveil offers with policy-owned Bellman choice, tiered eldritch
+ember/ichor setters, and dominance-aware eldritch exalt/chaos/annul. Synthetic
+and Vaal Regalia 20k-sample Monte Carlo matrices gate the special evaluators.
 
 S4's solver core is complete in `solver_solve.cpp`: reachable-closure
 expansion through the calculation engine, in-place value iteration
@@ -469,14 +472,16 @@ prioritized edges test policy-reachable state membership with existing
 condition types, operation nodes annotated with `expected_cost` (V(s)),
 a success terminal, and a failure terminal that makes off-policy leaks
 fail loudly. The strategy vocabulary gained a `restart` operation
-(simulator resets to a fresh base, price key `base`). Vocabulary gaps
-throw instead of mis-compiling: tag-discriminating layouts, flagged
-states, group slots with tier thresholds, and ambiguous signatures all
-need the junk-class/flag condition types planned as follow-ups. The gate
-in `engine/tests/test_solver_compile.cpp` runs the full loop —
+(simulator resets to a fresh base, price key `base`). Vocabulary gaps throw
+instead of mis-compiling. S6 Phase 4 closed the original tag-discriminating-
+layout, flagged-state, group-tier, and ambiguous-signature gaps with exact
+junk-member counts, item flags, influence bits, eldritch tiers, group minimum
+tiers, and unveil-option conditions. The gate in
+`engine/tests/test_solver_compile.cpp` runs the full loop —
 solve -> compile -> simulate — and empirical mean cost matches V(start)
 on the synthetic alt-spam and restart policies and on the Vaal Regalia
-toy goal.
+toy goal. It also verifies one six-slot all-T1 policy and a sampled-unveil
+policy for 30k successful runs each.
 
 Goal terminals preserve `min_satisfied_slots`: all-slot goals compile as
 `all`, while partial thresholds compile as the simulator's native
@@ -525,11 +530,8 @@ raw abstract distribution (rarity, affix counts, slot status, blocked flags,
 mechanic flags) is retained in a collapsed technical drawer. Cost per attempt
 still comes from the action's cost keys dotted with the workspace price table
 (`workspace/prices.ts`, the manual-override layer of the planned Economy
-service). Remaining for S6:
-the solver-in-Simulator flow (solve → compiled strategy opened in the
-Strategy Board), chunked solve with progress/cancel for long goals,
-Emulator ambient odds-before-you-click, veiled/eldritch evaluators, and
-the flag/junk-count condition types.
+service). S6 Phases 1, 2, and 4 are complete. The only unfinished planned S6
+phase is the deferred Emulator ambient odds-before-you-click surface.
 
 ```text
 S1  action registry schema + descriptors for implemented mechanics;

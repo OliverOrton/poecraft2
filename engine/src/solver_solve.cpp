@@ -129,6 +129,12 @@ struct SolveWork::Impl {
             for (const OutcomeEntry& entry : distribution.entries) {
                 enqueue(entry.state);
             }
+            for (const OutcomeChoiceGroup& group :
+                 distribution.choice_groups) {
+                for (std::uint32_t successor : group.states) {
+                    enqueue(successor);
+                }
+            }
         }
     }
 
@@ -143,6 +149,7 @@ struct SolveWork::Impl {
         result.expanded = expanded;
         result.values.assign(state_count, kValueCeiling);
         result.policy.assign(state_count, kNoId);
+        result.unveil_preferences.assign(state_count, {});
         result.goal_states.assign(state_count, 0);
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) {
@@ -169,6 +176,18 @@ struct SolveWork::Impl {
             calc.outcomes(state, action.index);
         if (!distribution.supported) return kInfinity;
         double expected = action.cost;
+        if (!distribution.choice_groups.empty()) {
+            for (const OutcomeChoiceGroup& group :
+                 distribution.choice_groups) {
+                double best = kInfinity;
+                for (std::uint32_t successor : group.states) {
+                    best = std::min(best, result.values[successor]);
+                }
+                if (best == kInfinity) return kInfinity;
+                expected += group.probability * best;
+            }
+            return expected;
+        }
         for (const OutcomeEntry& entry : distribution.entries) {
             const double value = result.values[entry.state];
             if (value == kInfinity) return kInfinity;
@@ -268,13 +287,32 @@ struct SolveWork::Impl {
                 const OutcomeDistribution& distribution =
                     calc.outcomes(state, action.index);
                 double mean = 0.0;
-                for (const OutcomeEntry& entry : distribution.entries) {
-                    mean += entry.probability * result.values[entry.state];
+                std::vector<std::pair<double, double>> random_values;
+                if (!distribution.choice_groups.empty()) {
+                    for (const OutcomeChoiceGroup& group :
+                         distribution.choice_groups) {
+                        double chosen = kInfinity;
+                        for (std::uint32_t successor : group.states) {
+                            chosen = std::min(
+                                chosen, result.values[successor]);
+                        }
+                        random_values.push_back(
+                            {group.probability, chosen});
+                        mean += group.probability * chosen;
+                    }
+                } else {
+                    for (const OutcomeEntry& entry : distribution.entries) {
+                        random_values.push_back(
+                            {entry.probability,
+                             result.values[entry.state]});
+                        mean +=
+                            entry.probability * result.values[entry.state];
+                    }
                 }
                 double variance = 0.0;
-                for (const OutcomeEntry& entry : distribution.entries) {
-                    const double delta = result.values[entry.state] - mean;
-                    variance += entry.probability * delta * delta;
+                for (const auto& [probability, value] : random_values) {
+                    const double delta = value - mean;
+                    variance += probability * delta * delta;
                 }
                 const bool better =
                     q < best_q - 1e-12 ||
@@ -287,6 +325,27 @@ struct SolveWork::Impl {
                 }
             }
             result.policy[state] = best_action;
+            if (best_action != kNoId &&
+                calc.registry().actions[best_action].params.type ==
+                    ActionType::Unveil) {
+                const OutcomeDistribution& distribution =
+                    calc.outcomes(state, best_action);
+                std::vector<OutcomeChoiceOption> options =
+                    distribution.choice_options;
+                std::sort(
+                    options.begin(), options.end(),
+                    [&](const OutcomeChoiceOption& a,
+                        const OutcomeChoiceOption& b) {
+                        const double left = result.values[a.state];
+                        const double right = result.values[b.state];
+                        return left != right ? left < right
+                                             : a.mod_id < b.mod_id;
+                    });
+                for (const OutcomeChoiceOption& option : options) {
+                    result.unveil_preferences[state].push_back(
+                        option.mod_id);
+                }
+            }
         }
 
         result.policy_reachable.assign(state_count, 0);
@@ -304,6 +363,14 @@ struct SolveWork::Impl {
                 for (const OutcomeEntry& entry : distribution.entries) {
                     if (!result.policy_reachable[entry.state]) {
                         walk.push_back(entry.state);
+                    }
+                }
+                for (const OutcomeChoiceGroup& group :
+                     distribution.choice_groups) {
+                    for (std::uint32_t successor : group.states) {
+                        if (!result.policy_reachable[successor]) {
+                            walk.push_back(successor);
+                        }
                     }
                 }
             }
@@ -374,11 +441,15 @@ std::string serialize_solve_log(
         std::snprintf(
             buffer, sizeof(buffer),
             ",\"goal\":%d,\"reachable\":%d,\"rarity\":%u,\"prefixes\":%u,"
-            "\"suffixes\":%u,\"blocked\":%u,\"flags\":%u,\"slots\":[",
+            "\"suffixes\":%u,\"blocked\":%u,\"flags\":%u,"
+            "\"veiled_side\":%d,\"searing_tier\":%u,\"eater_tier\":%u,"
+            "\"slots\":[",
             result.goal_states[state] ? 1 : 0,
             result.policy_reachable[state] ? 1 : 0, features.rarity,
             features.prefix_count, features.suffix_count,
-            features.blocked_mask, features.flags);
+            features.blocked_mask, features.flags, features.veiled_side,
+            features.searing_exarch_tier,
+            features.eater_of_worlds_tier);
         log += buffer;
         for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
             if (i > 0) log += ',';

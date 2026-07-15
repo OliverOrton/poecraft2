@@ -285,7 +285,9 @@ void add_veiled(const SessionImpl& session, ActionRegistry& registry) {
         d.display_name = "unveil";
         d.params.type = ActionType::Unveil;
         d.kind = TransitionKind::Special;
-        d.cost_keys = {"unveil"};
+        /* Selecting one of the options is the zero-cost resolution step;
+         * the preceding veiled currency owns the economic cost. */
+        d.cost_keys.clear();
         d.legality.rarity_mask = kRarityMagic | kRarityRare;
         d.legality.required_flags = kFlagVeiledMod;
         d.clears_flags = kFlagVeiledMod;

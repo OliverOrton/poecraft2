@@ -166,9 +166,37 @@ void collect_condition_targets(
         if (found == targets.end()) {
             TargetEntry target;
             target.slot.group_id = condition.group_id;
+            target.slot.min_tier = static_cast<std::uint32_t>(
+                std::max(0, condition.min_value));
             target.origin = edge_id;
             targets.push_back(std::move(target));
+        } else if (condition.min_value != 0) {
+            const std::uint32_t threshold = static_cast<std::uint32_t>(
+                condition.min_value);
+            if (found->slot.min_tier != 0 &&
+                found->slot.min_tier != threshold) {
+                add_gap(
+                    gaps,
+                    "edge '" + edge_id + "' and edge '" + found->origin +
+                        "' use different non-zero tier thresholds for "
+                        "group " + std::to_string(condition.group_id) +
+                        "; align the tiers");
+            } else {
+                found->slot.min_tier = threshold;
+            }
         }
+    } else if (condition.kind == ConditionKind::ModCount) {
+        add_gap(
+            gaps,
+            "edge '" + edge_id +
+                "' compiler-only mod_count cannot be represented by "
+                "Calculator mode yet");
+    } else if (condition.kind == ConditionKind::HasUnveilOption) {
+        add_gap(
+            gaps,
+            "edge '" + edge_id +
+                "' unveil-option routing cannot be represented by "
+                "Calculator mode yet");
     }
     for (const CompiledCondition& child : condition.children) {
         collect_condition_targets(child, edge_id, targets, gaps);
@@ -227,6 +255,13 @@ EvalModel derive_model(
             continue;
         }
         const ActionDescriptor& descriptor = registry.actions[action];
+        if (descriptor.params.type == ActionType::Unveil) {
+            add_gap(
+                gaps,
+                "node '" + node.id +
+                    "' authored unveil selection depends on its concrete "
+                    "offered options");
+        }
         if (!calc_supports(descriptor)) {
             add_gap(
                 gaps,
@@ -414,8 +449,12 @@ bool evaluate_abstract_condition(
         return true;
     case ConditionKind::HasModGroup: {
         const std::size_t slot = layout_slot_for(condition, layout);
-        return state.slot_status[slot] !=
-               static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+        if (condition.min_value == 0) {
+            return state.slot_status[slot] !=
+                   static_cast<std::uint8_t>(GoalSlotStatus::Absent);
+        }
+        return state.slot_status[slot] ==
+               static_cast<std::uint8_t>(GoalSlotStatus::Satisfied);
     }
     case ConditionKind::HasModFamily: {
         const std::size_t slot = layout_slot_for(condition, layout);
@@ -446,6 +485,43 @@ bool evaluate_abstract_condition(
     case ConditionKind::SuffixCountRange:
         return state.suffix_count >= condition.min_value &&
                state.suffix_count <= condition.max_value;
+    case ConditionKind::ItemFlag: {
+        std::uint32_t flag = 0;
+        switch (condition.item_flag) {
+        case ItemFlagKind::Corrupted: flag = kFlagCorrupted; break;
+        case ItemFlagKind::Mirrored: flag = kFlagMirrored; break;
+        case ItemFlagKind::Split: flag = kFlagSplit; break;
+        case ItemFlagKind::Synthesised: flag = kFlagSynthesised; break;
+        case ItemFlagKind::Fractured: flag = kFlagFractured; break;
+        case ItemFlagKind::Crafted: flag = kFlagCraftedMod; break;
+        case ItemFlagKind::Veiled: flag = kFlagVeiledMod; break;
+        case ItemFlagKind::Multimod: flag = kFlagMultimod; break;
+        case ItemFlagKind::NoAttack: flag = kFlagNoAttack; break;
+        case ItemFlagKind::NoCaster: flag = kFlagNoCaster; break;
+        case ItemFlagKind::PrefixesLocked: flag = kFlagPrefixesLocked; break;
+        case ItemFlagKind::SuffixesLocked: flag = kFlagSuffixesLocked; break;
+        case ItemFlagKind::Influenced: flag = kFlagInfluenced; break;
+        case ItemFlagKind::EldritchImplicit:
+            flag = kFlagEldritchImplicit;
+            break;
+        case ItemFlagKind::VeiledPrefix:
+            return state.veiled_side == PC_SIDE_PREFIX;
+        case ItemFlagKind::VeiledSuffix:
+            return state.veiled_side == PC_SIDE_SUFFIX;
+        }
+        return (state.flags & flag) != 0;
+    }
+    case ConditionKind::InfluenceBits:
+        return state.influence_bits == condition.min_value;
+    case ConditionKind::EldritchTier: {
+        const int tier = condition.eldritch_side == 0
+                             ? state.searing_exarch_tier
+                             : state.eater_of_worlds_tier;
+        return tier >= condition.min_value && tier <= condition.max_value;
+    }
+    case ConditionKind::ModCount:
+    case ConditionKind::HasUnveilOption:
+        return false; /* rejected during model derivation */
     case ConditionKind::All:
         return std::all_of(
             condition.children.begin(), condition.children.end(),

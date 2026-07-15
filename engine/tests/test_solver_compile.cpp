@@ -20,25 +20,31 @@ using namespace poecraft::solver;
 namespace {
 
 /*
- * The eight-mod weighted universe again, extended with the identity data
- * (mod keys, group keys, base path) that compiled strategy conditions
- * reference.
+ * The eight ordinary-mod weighted universe again, plus dedicated prefix and
+ * suffix veiled placeholders and the identity data (mod keys, group keys,
+ * base path) that compiled strategy conditions reference.
  */
 std::shared_ptr<SessionImpl> make_compile_session() {
     auto data = std::make_shared<DataImpl>();
-    data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7};
+    data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    data->spawn_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    data->spawn_tag_ids.assign(10, 0);
+    data->spawn_weights = {
+        100, 100, 100, 100, 100, 100, 100, 400, 100, 100};
+    data->mod_gen_type_code.assign(10, 0);
     data->strings = {"",       "synthetic/base", "mod0", "mod1", "mod2",
                      "mod3",   "mod4",           "mod5", "mod6", "mod7",
                      "g10",    "g11",            "g12",  "g13",  "g20",
-                     "g21",    "g22"};
+                     "g21",    "g22",            "mod8", "mod9",
+                     "g30",    "g31"};
     data->base_count = 1;
     data->base_metadata_path_sid = {1};
-    data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9};
-    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+    data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9, 17, 18};
+    for (std::uint32_t mod = 0; mod < 10; ++mod) {
         data->mod_pos_by_key.emplace(
             data->strings[data->mod_key_sid[mod]], mod);
     }
-    data->group_key_sids.assign(23, 0);
+    data->group_key_sids.assign(32, 0);
     const auto group_key = [&](std::uint32_t group, std::uint32_t sid) {
         data->group_key_sids[group] = sid;
         data->group_id_by_key.emplace(data->strings[sid], group);
@@ -50,32 +56,38 @@ std::shared_ptr<SessionImpl> make_compile_session() {
     group_key(20, 14);
     group_key(21, 15);
     group_key(22, 16);
+    group_key(30, 19);
+    group_key(31, 20);
 
     auto session = std::make_shared<SessionImpl>();
     session->data = data;
     session->base_index = 0;
     session->item_level = 1;
-    session->mod_count = 8;
-    session->words = pc_bitset_words(8);
-    session->global_index = {0, 1, 2, 3, 4, 5, 6, 7};
-    session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1};
-    session->primary_group = {10, 10, 10, 12, 13, 20, 21, 22};
-    session->required_level = {1, 1, 1, 1, 1, 1, 1, 1};
-    session->group_offsets = {0, 1, 2, 4, 5, 6, 7, 8, 9};
-    session->group_ids = {10, 10, 10, 11, 12, 13, 20, 21, 22};
-    session->family_id = {100, 100, 101, 102, 103, 104, 105, 106};
-    session->family_tier_index = {1, 2, 1, 1, 1, 1, 1, 1};
-    session->metamod_type.assign(8, -1);
-    session->special_kind.assign(8, -1);
-    session->flags.assign(8, 0);
-    session->influence_code.assign(8, -1);
-    session->class_offsets = {0, 0, 0, 0, 1, 2, 4, 6, 7};
+    session->mod_count = 10;
+    session->words = pc_bitset_words(10);
+    session->global_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1, 0, 1};
+    session->primary_group = {10, 10, 10, 12, 13, 20, 21, 22, 30, 31};
+    session->required_level.assign(10, 1);
+    session->group_offsets = {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11};
+    session->group_ids = {10, 10, 10, 11, 12, 13, 20, 21, 22, 30, 31};
+    session->family_id = {
+        100, 100, 101, 102, 103, 104, 105, 106, 107, 108};
+    session->family_tier_index.assign(10, 1);
+    session->family_tier_index[1] = 2;
+    session->metamod_type.assign(10, -1);
+    session->special_kind.assign(10, -1);
+    session->flags.assign(10, 0);
+    session->influence_code.assign(10, -1);
+    session->class_offsets = {0, 0, 0, 0, 1, 2, 4, 6, 7, 7, 7};
     session->class_tag_ids = {1, 2, 3, 6, 4, 6, 5};
     session->rare_affix_cap = 3;
-    session->base_spawn_weight = {100, 100, 100, 100, 100, 100, 100, 400};
-    session->base_gen_pct.assign(8, 100);
+    session->base_spawn_weight = {
+        100, 100, 100, 100, 100, 100, 100, 400, 100, 100};
+    session->base_gen_pct.assign(10, 100);
     session->base_roll_weight = session->base_spawn_weight;
-    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+    session->effective_base_tag_ids = {0};
+    for (std::uint32_t mod = 0; mod < 10; ++mod) {
         session->session_id_by_global_id.emplace(mod, mod);
     }
 
@@ -86,8 +98,9 @@ std::shared_ptr<SessionImpl> make_compile_session() {
     session->prefix_mask.assign(words, 0);
     session->suffix_mask.assign(words, 0);
     session->unveiled_mask.assign(words, 0);
+    session->unveiled_generic_mask.assign(words, 0);
     session->implicit_tag_masks.assign(7, {});
-    session->group_masks.assign(23, {});
+    session->group_masks.assign(32, {});
     session->influence_masks.assign(1, std::vector<std::uint64_t>(words, 0));
     for (std::uint32_t mod = 0; mod < 8; ++mod) {
         pc_bitset_set(session->normal_random_roll_mask.data(), mod);
@@ -113,6 +126,17 @@ std::shared_ptr<SessionImpl> make_compile_session() {
             pc_bitset_set(mask.data(), mod);
         }
     }
+    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+        pc_bitset_set(session->unveiled_mask.data(), mod);
+        pc_bitset_set(session->unveiled_generic_mask.data(), mod);
+    }
+    session->veiled_prefix_mod_id = 8;
+    session->veiled_suffix_mod_id = 9;
+    session->eldritch_eligible = true;
+    session->eldritch_searing_tier_mod_ids.resize(5);
+    session->eldritch_eater_tier_mod_ids.resize(5);
+    session->eldritch_searing_tier_mod_ids[1] = {0};
+    session->eldritch_eater_tier_mod_ids[1] = {5};
     return session;
 }
 
@@ -142,6 +166,14 @@ SimulationSummaryInternal run_compiled(
     options.max_actions_per_run = 100000;
     run_simulator_chunk(simulator, options,
                         static_cast<std::uint32_t>(runs));
+    for (const FailureSummaryInternal& failure :
+         simulator.failure_summaries) {
+        std::printf(
+            "compiled strategy failure: node=%s reason=%d count=%llu detail=%s\n",
+            failure.node_id.c_str(), failure.failure_reason,
+            static_cast<unsigned long long>(failure.count),
+            failure.detail.c_str());
+    }
     return simulator.summary;
 }
 
@@ -219,8 +251,8 @@ void run_synthetic_gate() {
         PC_CHECK(std::fabs(expected - (2.0 - p) / p) < 1e-6);
     }
 
-    /* Vocabulary gaps must throw, not mis-compile: a corrupted start
-     * carries flags no condition can test. */
+    /* Flagged states compile to exact item-flag guards. A corrupted start
+     * must route through restart and still verify against V(start). */
     {
         const std::unordered_map<std::string, double> prices{
             {"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}};
@@ -228,13 +260,18 @@ void run_synthetic_gate() {
         corrupted.item_flags = PC_ITEM_CORRUPTED;
         const SolveResult solved = solve(calc, corrupted, prices);
         PC_CHECK(solved.converged);
-        bool threw = false;
-        try {
-            compile_policy_strategy_json(calc, solved, "gap");
-        } catch (const std::runtime_error&) {
-            threw = true;
-        }
-        PC_CHECK(threw);
+        const std::string json =
+            compile_policy_strategy_json(calc, solved, "flagged restart");
+        PC_CHECK(json.find("\"type\":\"item_flag\",\"flag\":\"corrupted\"") !=
+                 std::string::npos);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 5000, 9001);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+        const double mean = summary.known_total_cost /
+                            static_cast<double>(summary.completed_runs);
+        std::printf("solver compile flagged: V=%.4f empirical=%.4f\n",
+                    solved.values[solved.start_state], mean);
+        PC_CHECK(std::fabs(mean - solved.values[solved.start_state]) < 0.25);
     }
 
     /* A partial slot threshold compiles to the simulator's native
@@ -264,6 +301,125 @@ void run_synthetic_gate() {
             run_compiled(session, json, prices, 2000, 777);
         PC_CHECK(summary.completed_runs == 2000);
         PC_CHECK(summary.success_count == summary.completed_runs);
+    }
+
+    /* A tag-discriminating layout must retain separate junk identities in
+     * ordinary strategy conditions, then route every sampled result exactly
+     * instead of hitting the off-policy terminal. The descriptor decoration
+     * isolates the former compiler refusal without adding a second expensive
+     * reforge solve to the repository gate. */
+    {
+        ActionRegistry tagged_registry = registry;
+        tagged_registry.actions[transmute].discriminating_tag_ids = {3};
+        CalcContext tagged_calc(
+            session, goal, std::move(tagged_registry),
+            {transmute, restart});
+        PC_CHECK(!tagged_calc.layout().discriminating_tag_ids.empty());
+        const std::unordered_map<std::string, double> prices{
+            {"transmute", 1.0}, {"base", 10.0}};
+        const SolveResult solved = solve(tagged_calc, start, prices);
+        PC_CHECK(solved.converged);
+        const std::string json = compile_policy_strategy_json(
+            tagged_calc, solved, "tag-discriminating transmute");
+        PC_CHECK(json.find("\"type\":\"mod_count\"") !=
+                 std::string::npos);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 20000, 8675310);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+        PC_CHECK(summary.no_matching_edge_count == 0);
+        const double expected = solved.values[solved.start_state];
+        const double mean = summary.known_total_cost /
+                            static_cast<double>(summary.completed_runs);
+        std::printf(
+            "solver compile tagged: V=%.4f empirical=%.4f\n",
+            expected, mean);
+        PC_CHECK(std::fabs(mean - expected) < 2.0);
+    }
+
+    /* S5/S6 headline gate: six distinct all-T1 slots solve, compile with
+     * group-tier and junk-count guards, and simulate at V(start). */
+    {
+        GoalSpec perfect;
+        for (std::uint32_t group : {11u, 12u, 13u, 20u, 21u, 22u}) {
+            GoalSlot wanted;
+            wanted.group_id = group;
+            wanted.min_tier = 1;
+            perfect.slots.push_back(wanted);
+        }
+        perfect.rarity = PC_RARITY_RARE;
+        const std::uint32_t chaos = registry.index_by_id.at("chaos");
+        CalcContext perfect_calc(
+            session, perfect, registry, {chaos, restart});
+        const std::unordered_map<std::string, double> prices{
+            {"chaos", 1.0}, {"base", 10.0}};
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const SolveResult solved = solve(perfect_calc, rare, prices);
+        PC_CHECK(solved.converged);
+        const std::string json = compile_policy_strategy_json(
+            perfect_calc, solved, "six-slot all-T1 perfect item");
+        PC_CHECK(json.find("\"type\":\"mod_count\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"has_mod_group\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"min_tier\":1") != std::string::npos);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 30000, 8675309);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+        const double expected = solved.values[solved.start_state];
+        const double mean = summary.known_total_cost /
+                            static_cast<double>(summary.completed_runs);
+        std::printf(
+            "solver compile perfect item: V=%.4f empirical=%.4f (%u states)\n",
+            expected, mean, perfect_calc.state_count());
+        PC_CHECK(std::fabs(mean - expected) < 2.0);
+    }
+
+    /* Unveil is a sampled offer followed by a zero-cost policy choice. The
+     * compiler emits preference-ordered option guards and concrete unveil
+     * operations; simulation must reproduce the Bellman value. */
+    {
+        GoalSpec unveil_goal;
+        GoalSlot life;
+        life.family_id = 100;
+        life.min_tier = 1;
+        unveil_goal.slots.push_back(life);
+        unveil_goal.rarity = PC_RARITY_RARE;
+        const std::uint32_t veiled_exalt =
+            registry.index_by_id.at("veiled_exalt");
+        const std::uint32_t unveil = registry.index_by_id.at("unveil");
+        CalcContext unveil_calc(
+            session, unveil_goal, registry,
+            {veiled_exalt, unveil, restart});
+        const std::unordered_map<std::string, double> prices{
+            {"veiled_exalt", 1.0}, {"base", 10.0}};
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const SolveResult solved = solve(unveil_calc, rare, prices);
+        PC_CHECK(solved.converged);
+        const std::string json = compile_policy_strategy_json(
+            unveil_calc, solved, "policy-selected unveil");
+        PC_CHECK(json.find("\"type\":\"has_unveil_option\"") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"unveil\"") !=
+                 std::string::npos);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 30000, 1234567);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+        PC_CHECK(summary.missing_price_run_count == 0);
+        const double expected = solved.values[solved.start_state];
+        const double mean = summary.known_total_cost /
+                            static_cast<double>(summary.completed_runs);
+        std::printf(
+            "solver compile unveil: V=%.4f empirical=%.4f success=%llu failure=%llu noedge=%llu unapplied=%llu\n",
+            expected, mean,
+            static_cast<unsigned long long>(summary.success_count),
+            static_cast<unsigned long long>(summary.failure_count),
+            static_cast<unsigned long long>(summary.no_matching_edge_count),
+            static_cast<unsigned long long>(summary.action_not_applied_count));
+        PC_CHECK(std::fabs(mean - expected) < 0.25);
     }
 }
 

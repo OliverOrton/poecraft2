@@ -561,7 +561,7 @@ void expect_refusal(
 
 void run_refusal_and_unresolved_tests() {
     auto session = make_eval_session();
-    /* Make unsupported descriptor families present for this preflight-only
+    /* Make the special descriptor families present for this preflight-only
      * suite without changing the transition universe used by the exact/MC
      * tests. */
     session->veiled_prefix_mod_id = 0;
@@ -580,7 +580,17 @@ void run_refusal_and_unresolved_tests() {
 {"id":"fracture_node","kind":"operation","operation":{"type":"fracture","params":{}}},
 {"id":"success","kind":"terminal","terminal":"success"})JSON",
             R"JSON({"id":"only","from":"start","to":"success","priority":0,"condition":{"type":"always"}})JSON"),
-        {"veil_node", "eldritch_node", "fracture_node"});
+        {"fracture_node"});
+
+    expect_refusal(
+        session,
+        shell(
+            "authored unveil", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"unveil_node","kind":"operation","operation":{"type":"unveil","params":{"mod_key":"mod0"}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"only","from":"start","to":"success","priority":0,"condition":{"type":"always"}})JSON"),
+        {"unveil_node", "concrete offered options"});
 
     expect_refusal(
         session,

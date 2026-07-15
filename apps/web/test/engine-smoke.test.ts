@@ -671,14 +671,42 @@ test("exact strategy evaluation agrees with a 5k-run simulation", async () => {
     await client.closeStrategy(strategy);
 });
 
-test("exact strategy evaluation names unsupported operations", async () => {
-    await assert.rejects(
-        client.strategyEvaluate(
-            sessionId,
-            evaluatorStrategy({ type: "veiled_chaos", params: {} }),
-        ),
-        /veiled_chaos/,
+test("S6 Phase 4 exact evaluation supports veiled reforges", async () => {
+    const exact = await client.strategyEvaluate(
+        sessionId,
+        evaluatorStrategy({ type: "veiled_chaos", params: {} }),
     );
+    const terminalTotal =
+        exact.terminals.success +
+        exact.terminals.failure +
+        exact.terminals.stop +
+        exact.terminals.action_not_applied +
+        exact.terminals.no_matching_edge +
+        exact.terminals.unresolved;
+    assert.ok(Math.abs(terminalTotal - 1) < 1e-3);
+    assert.ok(exact.expected_actions > 0);
+});
+
+test("S6 Phase 4 condition vocabulary compiles through WASM", async () => {
+    const mod = await client.modInfo(sessionId, 0);
+    const catalog = await client.catalog(dataId);
+    const group = catalog.groupKeyById[mod.primary_group_id];
+    assert.ok(group);
+    const document = repeatStrategy();
+    (document.edges as Array<Record<string, unknown>>)[0].condition = {
+        type: "any",
+        conditions: [
+            { type: "has_mod_group", group, min_tier: 1 },
+            { type: "mod_count", mod_keys: [mod.key], min: 0, max: 1 },
+            { type: "item_flag", flag: "prefixes_locked" },
+            { type: "influence_bits", value: 0 },
+            { type: "eldritch_tier", side: "searing", min: 0, max: 4 },
+            { type: "has_unveil_option", mod_key: mod.key },
+        ],
+    };
+    const strategy = await client.compileStrategy(sessionId, document);
+    assert.ok(strategy > 0);
+    await client.closeStrategy(strategy);
 });
 
 test("exact evaluation reports capacity without double-prefixing", async () => {

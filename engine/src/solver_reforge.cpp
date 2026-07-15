@@ -214,6 +214,16 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const bool magic_reforge =
         action.params.type == ActionType::Transmute ||
         action.params.type == ActionType::Alteration;
+    const bool veiled_reforge =
+        action.params.type == ActionType::VeiledChaos;
+    const bool eldritch_reforge =
+        action.params.type == ActionType::EldritchChaos;
+    const int eldritch_side =
+        item.searing_exarch_tier > item.eater_of_worlds_tier
+            ? PC_SIDE_PREFIX
+            : (item.eater_of_worlds_tier > item.searing_exarch_tier
+                   ? PC_SIDE_SUFFIX
+                   : -1);
     pc_item_state base;
     pc_item_clear(&base);
     base.rarity = magic_reforge ? PC_RARITY_MAGIC : PC_RARITY_RARE;
@@ -228,7 +238,15 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const auto preserve = [&](int side, const pc_mod_slot* slots,
                               std::uint8_t count, bool locked) {
         for (std::uint8_t i = 0; i < count; ++i) {
-            if (locked || (slots[i].flags & PC_MOD_SLOT_FRACTURED)) {
+            const bool preserve_eldritch =
+                eldritch_reforge && eldritch_side >= 0 &&
+                side != eldritch_side;
+            const bool clear_eldritch =
+                eldritch_reforge && eldritch_side >= 0 &&
+                side == eldritch_side;
+            if (preserve_eldritch ||
+                (!clear_eldritch && locked) ||
+                (slots[i].flags & PC_MOD_SLOT_FRACTURED)) {
                 pc_mod_slot* restored = nullptr;
                 pc_item_add_mod(&base, side, slots[i].mod_id,
                                 slots[i].group_id, slots[i].flags,
@@ -361,6 +379,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (action.params.type == ActionType::Fossil) {
         request.weight_kind = PoolWeightKind::Fossil;
         request.fossil_indices = action.params.fossil_indices;
+    }
+    if (eldritch_reforge && eldritch_side >= 0) {
+        request.side_filter = eldritch_side;
     }
     const WeightedPool& pool = get_weighted_pool(context_, &base, request);
 
@@ -531,9 +552,15 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (magic_reforge) {
         add_target(1, 0.5);
         add_target(2, 0.5);
+    } else if (eldritch_reforge && eldritch_side >= 0) {
+        const int other_count =
+            eldritch_side == PC_SIDE_PREFIX ? base.suffix_count
+                                            : base.prefix_count;
+        add_target(other_count + 2, 0.5);
+        add_target(other_count + 3, 0.5);
     } else {
         for (int t = 4; t <= 6; ++t) {
-            add_target(t, 1.0 / 3.0);
+            add_target(t - (veiled_reforge ? 1 : 0), 1.0 / 3.0);
         }
     }
     const int max_target = targets.rbegin()->first;
@@ -575,7 +602,45 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         if (special_flags & PC_ITEM_MIRRORED) {
             successor.flags |= kFlagMirrored;
         }
-        outcome_acc[intern_state(successor)] += weight;
+        if (!veiled_reforge) {
+            outcome_acc[intern_state(successor)] += weight;
+            return;
+        }
+
+        /* Veiled chaos reserves its final affix for a uniformly selected
+         * open side. Materialize the roll state before adding the placeholder
+         * so goal/block/junk projection remains identical to the engine. */
+        const std::uint8_t side_cap = rarity_cap(session, successor.rarity);
+        const bool prefix_open = successor.prefix_count < side_cap;
+        const bool suffix_open = successor.suffix_count < side_cap;
+        const double side_probability =
+            prefix_open && suffix_open ? 0.5 : 1.0;
+        const auto add_veiled = [&](int side, bool open) {
+            if (!open) return;
+            const std::uint32_t mod_id =
+                side == PC_SIDE_PREFIX ? session.veiled_prefix_mod_id
+                                       : session.veiled_suffix_mod_id;
+            pc_item_state concrete;
+            const std::uint32_t rolled_state = intern_state(successor);
+            if (mod_id == kNoId || !materialize(rolled_state, concrete) ||
+                pc_item_add_mod(
+                    &concrete, side, mod_id,
+                    static_cast<std::uint16_t>(
+                        session.primary_group[mod_id]),
+                    PC_MOD_SLOT_VEILED, nullptr) != PC_RESULT_OK) {
+                outcome_acc[state_id] += weight * side_probability;
+                state_dependent = true;
+                return;
+            }
+            outcome_acc[intern_item(concrete)] +=
+                weight * side_probability;
+        };
+        add_veiled(PC_SIDE_PREFIX, prefix_open);
+        add_veiled(PC_SIDE_SUFFIX, suffix_open);
+        if (!prefix_open && !suffix_open) {
+            outcome_acc[state_id] += weight;
+            state_dependent = true;
+        }
     };
 
     /*

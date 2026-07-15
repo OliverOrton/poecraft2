@@ -27,6 +27,8 @@ interface ModifierSetMember {
 
 const LEAF_LABELS: Record<string, string> = {
     has_mod_family: "Has modifier",
+    item_flag: "Item flag",
+    eldritch_tier: "Eldritch tier",
     rarity_is: "Rarity",
     open_prefix_count: "Open prefixes",
     open_suffix_count: "Open suffixes",
@@ -34,6 +36,25 @@ const LEAF_LABELS: Record<string, string> = {
     suffix_count_range: "Suffix count",
     always: "Always",
 };
+
+const ITEM_FLAGS = [
+    "corrupted",
+    "mirrored",
+    "split",
+    "synthesised",
+    "fractured",
+    "crafted",
+    "veiled",
+    "veiled_prefix",
+    "veiled_suffix",
+    "multimod",
+    "no_attack",
+    "no_caster",
+    "prefixes_locked",
+    "suffixes_locked",
+    "influenced",
+    "eldritch_implicit",
+] as const;
 
 const RANGE_TYPES = new Set([
     "open_prefix_count",
@@ -272,6 +293,40 @@ export class PcConditionEditor extends HTMLElement {
                         .join("")}
                 </select>
             </label>`;
+        }
+        if (condition.type === "item_flag") {
+            return `<label class="pc-cond-inline-field">
+                <span>Required flag</span>
+                <select data-action="item-flag" data-path="${key}">
+                    ${ITEM_FLAGS.map(
+                        (flag) =>
+                            `<option value="${flag}" ${condition.flag === flag ? "selected" : ""}>
+                                ${titleCase(flag.replaceAll("_", " "))}
+                            </option>`,
+                    ).join("")}
+                </select>
+            </label>`;
+        }
+        if (condition.type === "eldritch_tier") {
+            const min = condition.min ?? 1;
+            const max = condition.max ?? 4;
+            return `<div class="pc-cond-range">
+                <label><span>Influence</span>
+                    <select data-action="eldritch-side" data-path="${key}">
+                        <option value="searing" ${condition.side === "searing" ? "selected" : ""}>Searing Exarch</option>
+                        <option value="eater" ${condition.side === "eater" ? "selected" : ""}>Eater of Worlds</option>
+                    </select>
+                </label>
+                <label><span>Minimum tier</span>
+                    <input type="number" min="0" max="4" data-action="min"
+                        data-path="${key}" value="${min}">
+                </label>
+                <span class="pc-cond-range-separator">to</span>
+                <label><span>Maximum tier</span>
+                    <input type="number" min="0" max="4" data-action="max"
+                        data-path="${key}" value="${max}">
+                </label>
+            </div>`;
         }
         if (RANGE_TYPES.has(condition.type)) {
             const min = condition.min ?? condition.value ?? condition.count ?? 0;
@@ -649,6 +704,24 @@ export class PcConditionEditor extends HTMLElement {
                     const leaf = this.leafAt(parsePath(select.dataset.path));
                     if (!leaf) return;
                     leaf.cond.rarity = select.value;
+                    this.commit();
+                });
+            });
+        this.querySelectorAll<HTMLSelectElement>('[data-action="item-flag"]')
+            .forEach((select) => {
+                select.addEventListener("change", () => {
+                    const leaf = this.leafAt(parsePath(select.dataset.path));
+                    if (!leaf) return;
+                    leaf.cond.flag = select.value;
+                    this.commit();
+                });
+            });
+        this.querySelectorAll<HTMLSelectElement>('[data-action="eldritch-side"]')
+            .forEach((select) => {
+                select.addEventListener("change", () => {
+                    const leaf = this.leafAt(parsePath(select.dataset.path));
+                    if (!leaf) return;
+                    leaf.cond.side = select.value;
                     this.commit();
                 });
             });

@@ -26,6 +26,8 @@ export interface StrategyBaseState {
     quality?: number;
     item_flags?: number;
     generic_influence_bits?: number;
+    searing_exarch_tier?: number;
+    eater_of_worlds_tier?: number;
     prefixes?: StrategyStartMod[];
     suffixes?: StrategyStartMod[];
 }
@@ -53,10 +55,14 @@ export type StrategyCondition = {
     conditions?: StrategyCondition[];
     children?: StrategyCondition[];
     group?: string;
+    mod_key?: string;
+    mod_keys?: string[];
     family_mod_key?: string;
     family_label?: string;
     min_tier?: number;
     fractured?: boolean;
+    flag?: string;
+    side?: string;
     rarity?: string;
     value?: number;
     count?: number;
@@ -86,6 +92,8 @@ export type ConditionGroupMode = "all" | "any" | "at_least";
 /** Atomic, non-composite condition types the builder offers as leaves. */
 export const LEAF_CONDITION_TYPES = [
     "has_mod_family",
+    "item_flag",
+    "eldritch_tier",
     "rarity_is",
     "open_prefix_count",
     "open_suffix_count",
@@ -123,6 +131,10 @@ export function defaultLeafCondition(type: string): StrategyCondition {
     switch (type) {
         case "has_mod_family":
             return { type, family_mod_key: "", min_tier: 1 };
+        case "item_flag":
+            return { type, flag: "fractured" };
+        case "eldritch_tier":
+            return { type, side: "searing", min: 1, max: 4 };
         case "rarity_is":
             return { type, rarity: "rare" };
         case "open_prefix_count":
@@ -258,6 +270,8 @@ interface ExportedItemState {
     quality?: number;
     item_flags?: number;
     generic_influence_bits?: number;
+    searing_exarch_tier?: number;
+    eater_of_worlds_tier?: number;
     prefixes?: ExportedSlot[];
     suffixes?: ExportedSlot[];
 }
@@ -408,6 +422,8 @@ export function createStrategyFromItemSnapshot(
             quality: state.quality ?? 0,
             item_flags: state.item_flags ?? 0,
             generic_influence_bits: state.generic_influence_bits ?? 0,
+            searing_exarch_tier: state.searing_exarch_tier ?? 0,
+            eater_of_worlds_tier: state.eater_of_worlds_tier ?? 0,
             prefixes: toMods(state.prefixes),
             suffixes: toMods(state.suffixes),
         },
@@ -568,8 +584,13 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
     switch (condition.type) {
         case "always":
             return fallback || "always";
-        case "has_mod_group":
-            return condition.group ? `has ${condition.group}` : "has mod group";
+        case "has_mod_group": {
+            const tier =
+                typeof condition.min_tier === "number" && condition.min_tier > 0
+                    ? ` T${condition.min_tier}+`
+                    : "";
+            return condition.group ? `has ${condition.group}${tier}` : "has mod group";
+        }
         case "has_mod_family": {
             const tier =
                 typeof condition.min_tier === "number" && condition.min_tier > 0
@@ -592,6 +613,16 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
             return rangeLabel("prefixes", condition);
         case "suffix_count_range":
             return rangeLabel("suffixes", condition);
+        case "item_flag":
+            return `item is ${String(condition.flag ?? "flagged").replaceAll("_", " ")}`;
+        case "influence_bits":
+            return `influence bits = ${condition.value ?? 0}`;
+        case "eldritch_tier":
+            return rangeLabel(`${condition.side ?? "searing"} tier`, condition);
+        case "mod_count":
+            return rangeLabel("matching mods", condition);
+        case "has_unveil_option":
+            return condition.mod_key ? "has preferred unveil option" : "has unveil option";
         case "all":
         case "all_of":
             return compositeConditionLabel("ALL", childConditions(condition));
@@ -1036,6 +1067,11 @@ function validateCondition(
         "always",
         "has_mod_group",
         "has_mod_family",
+        "mod_count",
+        "item_flag",
+        "influence_bits",
+        "eldritch_tier",
+        "has_unveil_option",
         "rarity_is",
         "open_prefix_count",
         "open_suffix_count",
@@ -1061,6 +1097,20 @@ function validateCondition(
             severity: "error",
             code: "condition-group",
             message: `${edge.id} needs a mod group key.`,
+            edgeId: edge.id,
+        });
+    }
+    if (
+        condition.type === "has_mod_group" &&
+        condition.min_tier !== undefined &&
+        (typeof condition.min_tier !== "number" ||
+            condition.min_tier < 0 ||
+            !Number.isInteger(condition.min_tier))
+    ) {
+        issues.push({
+            severity: "error",
+            code: "condition-tier",
+            message: `${edge.id} has an invalid minimum tier.`,
             edgeId: edge.id,
         });
     }
@@ -1093,6 +1143,30 @@ function validateCondition(
             severity: "error",
             code: "condition-rarity",
             message: `${edge.id} needs a rarity.`,
+            edgeId: edge.id,
+        });
+    }
+    if (condition.type === "item_flag" && !condition.flag) {
+        issues.push({
+            severity: "error",
+            code: "condition-flag",
+            message: `${edge.id} needs an item flag.`,
+            edgeId: edge.id,
+        });
+    }
+    if (condition.type === "mod_count" && !condition.mod_keys?.length) {
+        issues.push({
+            severity: "error",
+            code: "condition-mod-keys",
+            message: `${edge.id} needs modifier keys to count.`,
+            edgeId: edge.id,
+        });
+    }
+    if (condition.type === "has_unveil_option" && !condition.mod_key) {
+        issues.push({
+            severity: "error",
+            code: "condition-mod-key",
+            message: `${edge.id} needs an unveil modifier key.`,
             edgeId: edge.id,
         });
     }

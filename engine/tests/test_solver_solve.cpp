@@ -111,6 +111,7 @@ bool identical_solve(
            left.expanded == right.expanded &&
            left.goal_states == right.goal_states &&
            left.policy_reachable == right.policy_reachable &&
+           left.unveil_preferences == right.unveil_preferences &&
            left.diagnostics.skipped_missing_price ==
                right.diagnostics.skipped_missing_price &&
            left.diagnostics.skipped_unsupported ==

@@ -328,7 +328,7 @@ AbstractLayout build_abstract_layout(
      * slots), plus the complete group-exclusion effect for strict evaluation
      * layouts. std::map keeps the class order deterministic. */
     using ClassKey = std::tuple<
-        std::int8_t, std::uint64_t, std::uint32_t,
+        std::int8_t, std::uint64_t, std::uint32_t, std::uint8_t,
         std::vector<std::uint64_t>>;
     std::map<ClassKey, std::vector<std::uint32_t>> classes;
     std::vector<std::uint32_t> groups;
@@ -375,7 +375,12 @@ AbstractLayout build_abstract_layout(
                 }
             }
         }
-        classes[{gen, tag_bits, block_mask, std::move(exclusion_effect)}]
+        const std::uint8_t special_role =
+            mod == session.veiled_prefix_mod_id
+                ? 1
+                : (mod == session.veiled_suffix_mod_id ? 2 : 0);
+        classes[{gen, tag_bits, block_mask, special_role,
+                 std::move(exclusion_effect)}]
             .push_back(mod);
     });
 
@@ -385,7 +390,7 @@ AbstractLayout build_abstract_layout(
         junk.gen_type = std::get<0>(key);
         junk.tag_bits = std::get<1>(key);
         junk.goal_block_mask = std::get<2>(key);
-        junk.exclusion_effect_mask = std::get<3>(key);
+        junk.exclusion_effect_mask = std::get<4>(key);
         junk.member_mask = empty_mask(session);
         for (std::uint32_t mod : members) {
             pc_bitset_set(junk.member_mask.data(), mod);
@@ -407,6 +412,8 @@ AbstractState project_item(
     state.suffix_count = item.suffix_count;
     state.rarity = item.rarity;
     state.influence_bits = item.generic_influence_bits;
+    state.searing_exarch_tier = item.searing_exarch_tier;
+    state.eater_of_worlds_tier = item.eater_of_worlds_tier;
     state.junk_counts.assign(layout.junk_classes.size(), 0);
 
     if (item.item_flags & PC_ITEM_CORRUPTED) state.flags |= kFlagCorrupted;
@@ -420,13 +427,16 @@ AbstractState project_item(
 
     const DataImpl& data = *session.data;
     std::vector<std::uint32_t> groups;
-    const auto visit = [&](const pc_mod_slot& slot) {
+    const auto visit = [&](const pc_mod_slot& slot, int side) {
         const std::uint32_t mod = slot.mod_id;
         if (mod == PC_MOD_NONE || mod >= session.mod_count) return;
 
         if (slot.flags & PC_MOD_SLOT_FRACTURED) state.flags |= kFlagFractured;
         if (slot.flags & PC_MOD_SLOT_CRAFTED) state.flags |= kFlagCraftedMod;
-        if (slot.flags & PC_MOD_SLOT_VEILED) state.flags |= kFlagVeiledMod;
+        if (slot.flags & PC_MOD_SLOT_VEILED) {
+            state.flags |= kFlagVeiledMod;
+            state.veiled_side = static_cast<std::int8_t>(side);
+        }
         const std::int32_t metamod = session.metamod_type[mod];
         if (metamod >= 0) {
             if (metamod == data.metamod_multimod_code) {
@@ -474,10 +484,10 @@ AbstractState project_item(
         }
     };
     for (std::uint8_t i = 0; i < item.prefix_count; ++i) {
-        visit(item.prefixes[i]);
+        visit(item.prefixes[i], PC_SIDE_PREFIX);
     }
     for (std::uint8_t i = 0; i < item.suffix_count; ++i) {
-        visit(item.suffixes[i]);
+        visit(item.suffixes[i], PC_SIDE_SUFFIX);
     }
     return state;
 }
@@ -494,6 +504,9 @@ std::size_t abstract_state_hash(const AbstractState& state) {
     mix(state.suffix_count);
     mix(state.rarity);
     mix(state.influence_bits);
+    mix(static_cast<std::uint8_t>(state.veiled_side + 1));
+    mix(state.searing_exarch_tier);
+    mix(state.eater_of_worlds_tier);
     mix(state.flags);
     for (std::uint8_t count : state.junk_counts) mix(count);
     return static_cast<std::size_t>(hash);

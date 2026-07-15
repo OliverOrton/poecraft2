@@ -107,16 +107,52 @@ std::string count_condition(const char* type, std::uint8_t count) {
            ",\"max\":" + std::to_string(count) + "}";
 }
 
+std::string item_flag_condition(const char* flag) {
+    return std::string("{\"type\":\"item_flag\",\"flag\":\"") +
+           flag + "\"}";
+}
+
+std::string eldritch_tier_condition(
+    const char* side,
+    std::uint8_t tier) {
+    return std::string("{\"type\":\"eldritch_tier\",\"side\":\"") +
+           side + "\",\"min\":" + std::to_string(tier) +
+           ",\"max\":" + std::to_string(tier) + "}";
+}
+
 /* Per-slot condition builders resolved once up front. */
 struct SlotVocabulary {
     std::string member;     /* any-tier membership */
     std::string satisfied;  /* membership at the required tier */
-    std::string blocked;    /* a blocking group is occupied */
 };
 
 std::string mod_key_of(const SessionImpl& session, std::uint32_t mod_id) {
     const DataImpl& data = *session.data;
     return data.string_at(data.mod_key_sid[session.global_index[mod_id]]);
+}
+
+std::string mod_count_condition(
+    const SessionImpl& session,
+    const JunkClass& junk,
+    std::uint8_t count) {
+    std::string out = "{\"type\":\"mod_count\",\"mod_keys\":[";
+    bool first = true;
+    pc_bitset_for_each(
+        junk.member_mask.data(), session.words, [&](std::size_t bit) {
+            const std::string key =
+                mod_key_of(session, static_cast<std::uint32_t>(bit));
+            if (key.empty()) {
+                gap("junk class member " + std::to_string(bit) +
+                    " has no stable modifier key");
+            }
+            if (!first) out += ',';
+            first = false;
+            out += "\"" + json_escape(key) + "\"";
+        });
+    if (first) gap("junk class has no members");
+    out += "],\"min\":" + std::to_string(count) +
+           ",\"max\":" + std::to_string(count) + "}";
+    return out;
 }
 
 std::uint32_t first_bit(const std::vector<std::uint64_t>& mask,
@@ -149,11 +185,6 @@ SlotVocabulary slot_vocabulary(const SessionImpl& session,
             json_escape(key) + "\",\"min_tier\":" +
             std::to_string(slot.spec.min_tier) + "}";
     } else {
-        if (slot.spec.min_tier != 0) {
-            gap("goal slot " + std::to_string(slot_index) +
-                " is group-identified with a tier threshold; the condition "
-                "vocabulary has no group-tier test yet");
-        }
         const std::string key =
             data.string_at(data.group_key_sids[slot.spec.group_id]);
         if (key.empty()) {
@@ -161,20 +192,12 @@ SlotVocabulary slot_vocabulary(const SessionImpl& session,
                 " group has no stable key");
         }
         vocabulary.member = "{\"type\":\"has_mod_group\",\"group\":\"" +
-                            json_escape(key) + "\"}";
-        vocabulary.satisfied = vocabulary.member;
+                            json_escape(key) + "\",\"min_tier\":0}";
+        vocabulary.satisfied =
+            "{\"type\":\"has_mod_group\",\"group\":\"" +
+            json_escape(key) + "\",\"min_tier\":" +
+            std::to_string(slot.spec.min_tier) + "}";
     }
-    std::vector<std::string> occupied;
-    for (std::uint32_t group : slot.blocking_group_ids) {
-        const std::string key = data.string_at(data.group_key_sids[group]);
-        if (key.empty()) {
-            gap("blocking group " + std::to_string(group) +
-                " has no stable key");
-        }
-        occupied.push_back("{\"type\":\"has_mod_group\",\"group\":\"" +
-                           json_escape(key) + "\"}");
-    }
-    vocabulary.blocked = any_of(occupied);
     return vocabulary;
 }
 
@@ -255,10 +278,6 @@ std::string compile_policy_strategy_json(
     const DataImpl& data = *session.data;
     const AbstractLayout& layout = calc.layout();
 
-    if (!layout.discriminating_tag_ids.empty()) {
-        gap("tag-discriminating layouts need junk-class conditions the "
-            "strategy vocabulary does not have yet");
-    }
     if (result.start_state == kNoId ||
         result.start_state >= result.values.size()) {
         gap("solve result has no start state");
@@ -272,7 +291,6 @@ std::string compile_policy_strategy_json(
 
     /* Collect and validate the policy-reachable working states. */
     std::vector<std::uint32_t> compiled_states;
-    std::map<std::string, std::uint32_t> signature_owner;
     for (std::uint32_t state_id = 0; state_id < result.values.size();
          ++state_id) {
         if (!result.policy_reachable[state_id] ||
@@ -280,41 +298,9 @@ std::string compile_policy_strategy_json(
             continue;
         }
         const AbstractState& state = calc.state(state_id);
-        if (state.flags != 0 || state.influence_bits != 0) {
-            gap("state " + std::to_string(state_id) +
-                " carries mechanic flags the condition vocabulary cannot "
-                "test yet");
-        }
         if (result.policy[state_id] == kNoId) {
             gap("policy-reachable state " + std::to_string(state_id) +
                 " has no action");
-        }
-        for (std::size_t i = 0; i < layout.slots.size(); ++i) {
-            const bool blocked = (state.blocked_mask & (1u << i)) != 0;
-            const bool present =
-                state.slot_status[i] !=
-                static_cast<std::uint8_t>(GoalSlotStatus::Absent);
-            if (blocked && present) {
-                gap("state " + std::to_string(state_id) +
-                    " is blocked while the goal is present; not "
-                    "expressible yet");
-            }
-        }
-        std::string signature;
-        signature += static_cast<char>('0' + state.rarity);
-        signature += static_cast<char>('0' + state.prefix_count);
-        signature += static_cast<char>('0' + state.suffix_count);
-        for (std::size_t i = 0; i < layout.slots.size(); ++i) {
-            signature += static_cast<char>('0' + state.slot_status[i]);
-            signature += (state.blocked_mask & (1u << i)) ? 'b' : '.';
-        }
-        const auto [owner, inserted] =
-            signature_owner.emplace(signature, state_id);
-        if (!inserted) {
-            gap("states " + std::to_string(owner->second) + " and " +
-                std::to_string(state_id) +
-                " share one expressible signature; junk-class conditions "
-                "are required to split them");
         }
         compiled_states.push_back(state_id);
     }
@@ -332,7 +318,19 @@ std::string compile_policy_strategy_json(
     json += std::to_string(session.item_level);
     json += ",\"rarity\":\"";
     json += rarity_name(start.rarity);
-    json += "\"},\"start_node_id\":\"start\",\"nodes\":[";
+    std::uint32_t item_flags = 0;
+    if (start.flags & kFlagCorrupted) item_flags |= PC_ITEM_CORRUPTED;
+    if (start.flags & kFlagMirrored) item_flags |= PC_ITEM_MIRRORED;
+    if (start.flags & kFlagSplit) item_flags |= PC_ITEM_SPLIT;
+    if (start.flags & kFlagSynthesised) item_flags |= PC_ITEM_SYNTHESISED;
+    json += "\",\"item_flags\":" + std::to_string(item_flags);
+    json += ",\"generic_influence_bits\":" +
+            std::to_string(start.influence_bits);
+    json += ",\"searing_exarch_tier\":" +
+            std::to_string(start.searing_exarch_tier);
+    json += ",\"eater_of_worlds_tier\":" +
+            std::to_string(start.eater_of_worlds_tier);
+    json += "},\"start_node_id\":\"start\",\"nodes\":[";
     json += "{\"id\":\"start\",\"kind\":\"start\"},";
     json += "{\"id\":\"router\",\"kind\":\"router\"},";
     json +=
@@ -343,6 +341,31 @@ std::string compile_policy_strategy_json(
     for (std::uint32_t state_id : compiled_states) {
         const ActionDescriptor& action =
             calc.registry().actions[result.policy[state_id]];
+        if (action.params.type == ActionType::Unveil) {
+            if (state_id >= result.unveil_preferences.size() ||
+                result.unveil_preferences[state_id].empty()) {
+                gap("unveil state " + std::to_string(state_id) +
+                    " has no resolved option preference");
+            }
+            json += ",{\"id\":\"s";
+            json += std::to_string(state_id);
+            json += "\",\"kind\":\"router\"}";
+            for (std::size_t option = 0;
+                 option < result.unveil_preferences[state_id].size();
+                 ++option) {
+                const std::uint32_t mod_id =
+                    result.unveil_preferences[state_id][option];
+                json += ",{\"id\":\"s";
+                json += std::to_string(state_id);
+                json += "_u" + std::to_string(option);
+                json += "\",\"kind\":\"operation\",\"expected_cost\":";
+                json += number(result.values[state_id]);
+                json += ",\"operation\":{\"type\":\"unveil\",\"mod_key\":\"";
+                json += json_escape(mod_key_of(session, mod_id));
+                json += "\"}}";
+            }
+            continue;
+        }
         json += ",{\"id\":\"s";
         json += std::to_string(state_id);
         json += "\",\"kind\":\"operation\",\"expected_cost\":";
@@ -403,7 +426,6 @@ std::string compile_policy_strategy_json(
         for (std::size_t i = 0; i < layout.slots.size(); ++i) {
             const auto status =
                 static_cast<GoalSlotStatus>(state.slot_status[i]);
-            const bool blocked = (state.blocked_mask & (1u << i)) != 0;
             switch (status) {
             case GoalSlotStatus::Satisfied:
                 parts.push_back(vocabulary[i].satisfied);
@@ -414,18 +436,78 @@ std::string compile_policy_strategy_json(
                 break;
             case GoalSlotStatus::Absent:
                 parts.push_back(not_of(vocabulary[i].member));
-                parts.push_back(blocked
-                                    ? vocabulary[i].blocked
-                                    : not_of(vocabulary[i].blocked));
                 break;
             }
+        }
+        static const std::pair<std::uint32_t, const char*> flag_conditions[] = {
+            {kFlagCorrupted, "corrupted"},
+            {kFlagMirrored, "mirrored"},
+            {kFlagSplit, "split"},
+            {kFlagSynthesised, "synthesised"},
+            {kFlagFractured, "fractured"},
+            {kFlagCraftedMod, "crafted"},
+            {kFlagVeiledMod, "veiled"},
+            {kFlagMultimod, "multimod"},
+            {kFlagNoAttack, "no_attack"},
+            {kFlagNoCaster, "no_caster"},
+            {kFlagPrefixesLocked, "prefixes_locked"},
+            {kFlagSuffixesLocked, "suffixes_locked"},
+            {kFlagInfluenced, "influenced"},
+            {kFlagEldritchImplicit, "eldritch_implicit"},
+        };
+        for (const auto& [flag, name] : flag_conditions) {
+            const std::string condition = item_flag_condition(name);
+            parts.push_back((state.flags & flag) != 0
+                                ? condition
+                                : not_of(condition));
+        }
+        const std::string veiled_prefix =
+            item_flag_condition("veiled_prefix");
+        const std::string veiled_suffix =
+            item_flag_condition("veiled_suffix");
+        parts.push_back(state.veiled_side == PC_SIDE_PREFIX
+                            ? veiled_prefix
+                            : not_of(veiled_prefix));
+        parts.push_back(state.veiled_side == PC_SIDE_SUFFIX
+                            ? veiled_suffix
+                            : not_of(veiled_suffix));
+        parts.push_back(
+            "{\"type\":\"influence_bits\",\"value\":" +
+            std::to_string(state.influence_bits) + "}");
+        parts.push_back(eldritch_tier_condition(
+            "searing", state.searing_exarch_tier));
+        parts.push_back(eldritch_tier_condition(
+            "eater", state.eater_of_worlds_tier));
+        for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
+            parts.push_back(mod_count_condition(
+                session, layout.junk_classes[i], state.junk_counts[i]));
         }
         edge("router", "s" + std::to_string(state_id), 1, all_of(parts),
              false);
     }
     edge("router", "offpolicy", 2, "", true);
     for (std::uint32_t state_id : compiled_states) {
-        edge("s" + std::to_string(state_id), "router", 0, "", true);
+        const ActionDescriptor& action =
+            calc.registry().actions[result.policy[state_id]];
+        if (action.params.type != ActionType::Unveil) {
+            edge("s" + std::to_string(state_id), "router", 0, "", true);
+            continue;
+        }
+        const auto& preferences = result.unveil_preferences[state_id];
+        for (std::size_t option = 0; option < preferences.size(); ++option) {
+            const std::string operation =
+                "s" + std::to_string(state_id) + "_u" +
+                std::to_string(option);
+            const std::string condition =
+                "{\"type\":\"has_unveil_option\",\"mod_key\":\"" +
+                json_escape(mod_key_of(session, preferences[option])) +
+                "\"}";
+            edge("s" + std::to_string(state_id), operation,
+                 static_cast<int>(option), condition, false);
+            edge(operation, "router", 0, "", true);
+        }
+        edge("s" + std::to_string(state_id), "offpolicy",
+             static_cast<int>(preferences.size()), "", true);
     }
     json += "]}";
     return json;

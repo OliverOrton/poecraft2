@@ -278,28 +278,38 @@ record success/failure/stop reason
 
 ## Conditions
 
-The first condition system should preserve the old condition vocabulary:
+The native condition vocabulary currently used by authored and solver-compiled
+strategies is:
 
 ```text
-has mod group
-has modifier family at minimum tier
-has exact mod id
-has metamod
+always
+has mod group at minimum tier
+has modifier family at minimum tier (optionally fractured)
+item flag (corrupted, mirrored, split, synthesised, fractured, crafted,
+           veiled/veiled side, metamods, influenced, eldritch implicit)
+eldritch implicit tier range by Searing/Eater side
 rarity is
-open prefix count >= N
-open suffix count >= N
-has influence
-has fractured mod
-prefix count in range
-suffix count in range
+open prefix/suffix count in range
+prefix/suffix count in range
+all / any / not / at least N of
 ```
 
 `has modifier family at minimum tier` may also require that the matched modifier
 is fractured. In the condition builder, right-clicking a modifier in the picker
 adds it with that requirement; right-clicking an already selected modifier
-turns the requirement on.
+turns the requirement on. Item flags and eldritch tier ranges are also ordinary
+visual condition rows.
 
-Add these soon after:
+The S6 policy compiler additionally emits advanced conditions that are valid in
+stored JSON but deliberately stay out of the ordinary leaf picker:
+
+```text
+mod_count          exact count across a compiler-supplied set of mod keys
+influence_bits     exact generic influence bitset
+has_unveil_option  whether a currently veiled slot offers one stable mod key
+```
+
+Still-planned additions include:
 
 ```text
 has mod with tag
@@ -307,7 +317,6 @@ does not have mod group/id/tag
 total affix count in range
 has empty affix side
 item is craftable
-item is corrupted/mirrored/split/synthesised
 cost spent <= amount
 total craft actions <= amount
 ```
@@ -317,8 +326,7 @@ Later condition types:
 ```text
 stat total >= value
 open/closed prefix/suffix combinations
-influence dominance
-eldritch implicit tier
+influence dominance as a user-facing semantic predicate
 crafted mod count
 ```
 

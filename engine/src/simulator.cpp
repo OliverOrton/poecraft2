@@ -174,6 +174,13 @@ pc_item_state parse_start_item(
     }
     item.generic_influence_bits = static_cast<std::uint8_t>(
         int_member(base_state, "generic_influence_bits", 0));
+    item.searing_exarch_tier = static_cast<std::uint8_t>(
+        int_member(base_state, "searing_exarch_tier", 0));
+    item.eater_of_worlds_tier = static_cast<std::uint8_t>(
+        int_member(base_state, "eater_of_worlds_tier", 0));
+    if (item.searing_exarch_tier > 4 || item.eater_of_worlds_tier > 4) {
+        invalid("base-state eldritch tiers must be 0-4");
+    }
 
     for (const auto& spec :
          (base_state.find("prefixes") != nullptr
@@ -213,6 +220,10 @@ CompiledCondition compile_condition(
         }
         out.kind = ConditionKind::HasModGroup;
         out.group_id = it->second;
+        out.min_value = int_member(value, "min_tier", 0);
+        if (out.min_value < 0) {
+            invalid("has_mod_group min_tier must be non-negative");
+        }
         return out;
     }
     if (type == "has_mod_family") {
@@ -241,6 +252,102 @@ CompiledCondition compile_condition(
         if (out.min_value < 0) {
             invalid("has_mod_family min_tier must be non-negative");
         }
+        return out;
+    }
+    const auto resolve_mod_key = [&](const std::string& key,
+                                     const char* label) {
+        const auto pos = data.mod_pos_by_key.find(key);
+        if (pos == data.mod_pos_by_key.end()) {
+            invalid(std::string("unknown ") + label + ": " + key);
+        }
+        const auto session_mod = session.session_id_by_global_id.find(
+            data.mod_global_ids[pos->second]);
+        if (session_mod == session.session_id_by_global_id.end()) {
+            invalid(std::string(label) + " is not in the session: " + key);
+        }
+        return session_mod->second;
+    };
+    if (type == "mod_count") {
+        const Value* keys = value.find("mod_keys");
+        if (keys == nullptr || keys->type != Type::Array ||
+            keys->array.empty()) {
+            invalid("mod_count requires a non-empty mod_keys array");
+        }
+        out.kind = ConditionKind::ModCount;
+        for (const Value& key : keys->array) {
+            if (key.type != Type::String) {
+                invalid("mod_count mod_keys must be strings");
+            }
+            out.mod_ids.push_back(resolve_mod_key(key.string, "modifier"));
+        }
+        std::sort(out.mod_ids.begin(), out.mod_ids.end());
+        out.mod_ids.erase(
+            std::unique(out.mod_ids.begin(), out.mod_ids.end()),
+            out.mod_ids.end());
+        out.min_value = int_member(value, "min", 0);
+        out.max_value = int_member(
+            value, "max", PC_MAX_PREFIXES + PC_MAX_SUFFIXES);
+        if (out.min_value < 0 || out.max_value < out.min_value) {
+            invalid("mod_count range is invalid");
+        }
+        return out;
+    }
+    if (type == "item_flag") {
+        static const std::pair<const char*, ItemFlagKind> flags[] = {
+            {"corrupted", ItemFlagKind::Corrupted},
+            {"mirrored", ItemFlagKind::Mirrored},
+            {"split", ItemFlagKind::Split},
+            {"synthesised", ItemFlagKind::Synthesised},
+            {"fractured", ItemFlagKind::Fractured},
+            {"crafted", ItemFlagKind::Crafted},
+            {"veiled", ItemFlagKind::Veiled},
+            {"veiled_prefix", ItemFlagKind::VeiledPrefix},
+            {"veiled_suffix", ItemFlagKind::VeiledSuffix},
+            {"multimod", ItemFlagKind::Multimod},
+            {"no_attack", ItemFlagKind::NoAttack},
+            {"no_caster", ItemFlagKind::NoCaster},
+            {"prefixes_locked", ItemFlagKind::PrefixesLocked},
+            {"suffixes_locked", ItemFlagKind::SuffixesLocked},
+            {"influenced", ItemFlagKind::Influenced},
+            {"eldritch_implicit", ItemFlagKind::EldritchImplicit},
+        };
+        const std::string flag = string_member(value, "flag");
+        const auto found = std::find_if(
+            std::begin(flags), std::end(flags),
+            [&](const auto& entry) { return flag == entry.first; });
+        if (found == std::end(flags)) invalid("unknown item flag: " + flag);
+        out.kind = ConditionKind::ItemFlag;
+        out.item_flag = found->second;
+        return out;
+    }
+    if (type == "influence_bits") {
+        out.kind = ConditionKind::InfluenceBits;
+        out.min_value = int_member(value, "value", 0);
+        if (out.min_value < 0 || out.min_value > 255) {
+            invalid("influence_bits value must be 0-255");
+        }
+        return out;
+    }
+    if (type == "eldritch_tier") {
+        const std::string side = string_member(value, "side");
+        if (side != "searing" && side != "eater") {
+            invalid("eldritch_tier side must be searing or eater");
+        }
+        out.kind = ConditionKind::EldritchTier;
+        out.eldritch_side = side == "eater" ? 1 : 0;
+        out.min_value = int_member(value, "min", 0);
+        out.max_value = int_member(value, "max", 4);
+        if (out.min_value < 0 || out.max_value < out.min_value ||
+            out.max_value > 4) {
+            invalid("eldritch_tier range is invalid");
+        }
+        return out;
+    }
+    if (type == "has_unveil_option") {
+        const std::string key = string_member(value, "mod_key");
+        if (key.empty()) invalid("has_unveil_option requires mod_key");
+        out.kind = ConditionKind::HasUnveilOption;
+        out.mod_ids.push_back(resolve_mod_key(key, "unveil option"));
         return out;
     }
     if (type == "rarity_is") {
@@ -437,7 +544,7 @@ void compile_operation(
         node.action.mod_id = session_mod->second;
         node.price_keys = action_type == ActionType::Bench
                               ? std::vector<std::string>{"bench:" + key}
-                              : std::vector<std::string>{"unveil"};
+                              : std::vector<std::string>{};
     } else if (action_type == ActionType::HarvestReforge ||
                action_type == ActionType::HarvestAugment) {
         std::string tag = string_member(source, "target_tag");
@@ -478,11 +585,17 @@ void compile_operation(
 bool has_group(
     const SessionImpl& session,
     const pc_item_state& item,
-    std::uint32_t group_id) {
+    std::uint32_t group_id,
+    int min_tier) {
     auto side_has = [&](const pc_mod_slot* slots, std::uint8_t count) {
         for (std::uint8_t i = 0; i < count; ++i) {
             const std::uint32_t mod_id = slots[i].mod_id;
             if (mod_id >= session.mod_count) continue;
+            const std::uint32_t tier = session.family_tier_index[mod_id];
+            if (min_tier > 0 &&
+                (tier == 0 || tier > static_cast<std::uint32_t>(min_tier))) {
+                continue;
+            }
             for (std::uint32_t p = session.group_offsets[mod_id];
                  p < session.group_offsets[mod_id + 1]; ++p) {
                 if (session.group_ids[p] == group_id) return true;
@@ -492,6 +605,127 @@ bool has_group(
     };
     return side_has(item.prefixes, item.prefix_count) ||
            side_has(item.suffixes, item.suffix_count);
+}
+
+int count_mods(
+    const pc_item_state& item,
+    const std::vector<std::uint32_t>& mod_ids) {
+    int count = 0;
+    const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
+        for (std::uint8_t i = 0; i < size; ++i) {
+            if (std::binary_search(
+                    mod_ids.begin(), mod_ids.end(), slots[i].mod_id)) {
+                ++count;
+            }
+        }
+    };
+    visit(item.prefixes, item.prefix_count);
+    visit(item.suffixes, item.suffix_count);
+    return count;
+}
+
+bool item_has_slot_flag(
+    const pc_item_state& item,
+    std::uint8_t flag,
+    int side = -1) {
+    const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
+        for (std::uint8_t i = 0; i < size; ++i) {
+            if (slots[i].flags & flag) return true;
+        }
+        return false;
+    };
+    return (side != PC_SIDE_SUFFIX &&
+            visit(item.prefixes, item.prefix_count)) ||
+           (side != PC_SIDE_PREFIX &&
+            visit(item.suffixes, item.suffix_count));
+}
+
+bool item_has_metamod_code(
+    const SessionImpl& session,
+    const pc_item_state& item,
+    int code) {
+    if (code < 0) return false;
+    const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
+        for (std::uint8_t i = 0; i < size; ++i) {
+            const std::uint32_t mod = slots[i].mod_id;
+            if (mod < session.metamod_type.size() &&
+                session.metamod_type[mod] == code) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return visit(item.prefixes, item.prefix_count) ||
+           visit(item.suffixes, item.suffix_count);
+}
+
+bool has_item_flag(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item) {
+    const DataImpl& data = *session.data;
+    switch (condition.item_flag) {
+    case ItemFlagKind::Corrupted:
+        return (item.item_flags & PC_ITEM_CORRUPTED) != 0;
+    case ItemFlagKind::Mirrored:
+        return (item.item_flags & PC_ITEM_MIRRORED) != 0;
+    case ItemFlagKind::Split:
+        return (item.item_flags & PC_ITEM_SPLIT) != 0;
+    case ItemFlagKind::Synthesised:
+        return (item.item_flags & PC_ITEM_SYNTHESISED) != 0;
+    case ItemFlagKind::Fractured:
+        return item_has_slot_flag(item, PC_MOD_SLOT_FRACTURED);
+    case ItemFlagKind::Crafted:
+        return item_has_slot_flag(item, PC_MOD_SLOT_CRAFTED);
+    case ItemFlagKind::Veiled:
+        return item_has_slot_flag(item, PC_MOD_SLOT_VEILED);
+    case ItemFlagKind::VeiledPrefix:
+        return item_has_slot_flag(
+            item, PC_MOD_SLOT_VEILED, PC_SIDE_PREFIX);
+    case ItemFlagKind::VeiledSuffix:
+        return item_has_slot_flag(
+            item, PC_MOD_SLOT_VEILED, PC_SIDE_SUFFIX);
+    case ItemFlagKind::Multimod:
+        return item_has_metamod_code(
+            session, item, data.metamod_multimod_code);
+    case ItemFlagKind::NoAttack:
+        return item_has_metamod_code(
+            session, item, data.metamod_no_attack_code);
+    case ItemFlagKind::NoCaster:
+        return item_has_metamod_code(
+            session, item, data.metamod_no_caster_code);
+    case ItemFlagKind::PrefixesLocked:
+        return item_has_metamod_code(
+            session, item, data.metamod_prefixes_locked_code);
+    case ItemFlagKind::SuffixesLocked:
+        return item_has_metamod_code(
+            session, item, data.metamod_suffixes_locked_code);
+    case ItemFlagKind::Influenced:
+        return item.generic_influence_bits != 0;
+    case ItemFlagKind::EldritchImplicit:
+        return item.searing_exarch_tier != 0 ||
+               item.eater_of_worlds_tier != 0;
+    }
+    return false;
+}
+
+bool has_unveil_option(
+    const pc_item_state& item,
+    std::uint32_t mod_id) {
+    const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
+        for (std::uint8_t i = 0; i < size; ++i) {
+            if ((slots[i].flags & PC_MOD_SLOT_VEILED) == 0) continue;
+            for (std::uint8_t option = 0;
+                 option < slots[i].veiled_option_count; ++option) {
+                if (slots[i].veiled_option_mod_ids[option] == mod_id) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    return visit(item.prefixes, item.prefix_count) ||
+           visit(item.suffixes, item.suffix_count);
 }
 
 bool has_family(
@@ -528,7 +762,8 @@ bool evaluate_condition(
     case ConditionKind::Always:
         return true;
     case ConditionKind::HasModGroup:
-        return has_group(session, item, condition.group_id);
+        return has_group(
+            session, item, condition.group_id, condition.min_value);
     case ConditionKind::HasModFamily:
         return has_family(
             session,
@@ -556,6 +791,23 @@ bool evaluate_condition(
     case ConditionKind::SuffixCountRange:
         return item.suffix_count >= condition.min_value &&
                item.suffix_count <= condition.max_value;
+    case ConditionKind::ModCount: {
+        const int count = count_mods(item, condition.mod_ids);
+        return count >= condition.min_value && count <= condition.max_value;
+    }
+    case ConditionKind::ItemFlag:
+        return has_item_flag(condition, session, item);
+    case ConditionKind::InfluenceBits:
+        return item.generic_influence_bits == condition.min_value;
+    case ConditionKind::EldritchTier: {
+        const int tier = condition.eldritch_side == 0
+                             ? item.searing_exarch_tier
+                             : item.eater_of_worlds_tier;
+        return tier >= condition.min_value && tier <= condition.max_value;
+    }
+    case ConditionKind::HasUnveilOption:
+        return !condition.mod_ids.empty() &&
+               has_unveil_option(item, condition.mod_ids.front());
     case ConditionKind::All:
         return std::all_of(
             condition.children.begin(),

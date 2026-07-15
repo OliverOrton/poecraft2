@@ -527,7 +527,8 @@ void run_artifact_registry_tests(const char* artifact_dir) {
     std::size_t resist_pairs = 0;
     std::size_t discriminating_fossils = 0;
     for (const ActionDescriptor& action : registry.actions) {
-        PC_CHECK(!action.cost_keys.empty());
+        PC_CHECK(!action.cost_keys.empty() ||
+                 action.params.type == ActionType::Unveil);
         PC_CHECK(std::is_sorted(action.discriminating_tag_ids.begin(),
                                 action.discriminating_tag_ids.end()));
         /* RandomFossilOutcome rows are Tangled Fossil internals, never

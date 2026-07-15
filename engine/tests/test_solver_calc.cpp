@@ -11,6 +11,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using namespace poecraft;
@@ -21,41 +22,51 @@ namespace {
 constexpr std::uint32_t kTagFire = 3;
 
 /*
- * Same eight-mod white-box universe as test_solver_abstract.cpp, plus base
- * signature weights so weighted pools build. Spawn weights are 100 for every
- * mod except mod 7 (speed suffix) at 400, making the hand-computed
- * distributions non-uniform:
+ * Same eight ordinary mods as test_solver_abstract.cpp, plus dedicated
+ * prefix/suffix veiled placeholders and base signature weights so weighted
+ * pools build. Spawn weights are 100 for every mod except mod 7 (speed suffix)
+ * at 400, making the hand-computed distributions non-uniform:
  *   0 prefix life T1 {10} fam100      1 prefix life T2 {10} fam100
  *   2 prefix hybrid  {10,11} fam101   3 prefix attack {12}
  *   4 prefix caster  {13}             5 suffix fire res {20}
  *   6 suffix cold res {21}            7 suffix speed {22} weight 400
+ *   8 prefix veiled placeholder {30}  9 suffix veiled placeholder {31}
  */
 std::shared_ptr<SessionImpl> make_calc_session() {
     auto data = std::make_shared<DataImpl>();
-    data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7};
+    data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    data->spawn_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    data->spawn_tag_ids.assign(10, 0);
+    data->spawn_weights = {
+        100, 100, 100, 100, 100, 100, 100, 400, 100, 100};
+    data->mod_gen_type_code.assign(10, 0);
 
     auto session = std::make_shared<SessionImpl>();
     session->data = data;
-    session->mod_count = 8;
-    session->words = pc_bitset_words(8);
-    session->global_index = {0, 1, 2, 3, 4, 5, 6, 7};
-    session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1};
-    session->primary_group = {10, 10, 10, 12, 13, 20, 21, 22};
-    session->required_level = {1, 1, 1, 1, 1, 1, 1, 1};
-    session->group_offsets = {0, 1, 2, 4, 5, 6, 7, 8, 9};
-    session->group_ids = {10, 10, 10, 11, 12, 13, 20, 21, 22};
-    session->family_id = {100, 100, 101, 102, 103, 104, 105, 106};
-    session->family_tier_index = {1, 2, 1, 1, 1, 1, 1, 1};
-    session->metamod_type.assign(8, -1);
-    session->special_kind.assign(8, -1);
-    session->flags.assign(8, 0);
-    session->influence_code.assign(8, -1);
-    session->class_offsets = {0, 0, 0, 0, 1, 2, 4, 6, 7};
+    session->mod_count = 10;
+    session->words = pc_bitset_words(10);
+    session->global_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1, 0, 1};
+    session->primary_group = {10, 10, 10, 12, 13, 20, 21, 22, 30, 31};
+    session->required_level.assign(10, 1);
+    session->group_offsets = {0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11};
+    session->group_ids = {10, 10, 10, 11, 12, 13, 20, 21, 22, 30, 31};
+    session->family_id = {
+        100, 100, 101, 102, 103, 104, 105, 106, 107, 108};
+    session->family_tier_index.assign(10, 1);
+    session->family_tier_index[1] = 2;
+    session->metamod_type.assign(10, -1);
+    session->special_kind.assign(10, -1);
+    session->flags.assign(10, 0);
+    session->influence_code.assign(10, -1);
+    session->class_offsets = {0, 0, 0, 0, 1, 2, 4, 6, 7, 7, 7};
     session->class_tag_ids = {1, 2, 3, 6, 4, 6, 5};
     session->rare_affix_cap = 3;
-    session->base_spawn_weight = {100, 100, 100, 100, 100, 100, 100, 400};
-    session->base_gen_pct.assign(8, 100);
+    session->base_spawn_weight = {
+        100, 100, 100, 100, 100, 100, 100, 400, 100, 100};
+    session->base_gen_pct.assign(10, 100);
     session->base_roll_weight = session->base_spawn_weight;
+    session->effective_base_tag_ids = {0};
 
     const std::size_t words = session->words;
     session->normal_random_roll_mask.assign(words, 0);
@@ -64,8 +75,9 @@ std::shared_ptr<SessionImpl> make_calc_session() {
     session->prefix_mask.assign(words, 0);
     session->suffix_mask.assign(words, 0);
     session->unveiled_mask.assign(words, 0);
+    session->unveiled_generic_mask.assign(words, 0);
     session->implicit_tag_masks.assign(7, {});
-    session->group_masks.assign(23, {});
+    session->group_masks.assign(32, {});
     session->influence_masks.assign(1, std::vector<std::uint64_t>(words, 0));
     for (std::uint32_t mod = 0; mod < 8; ++mod) {
         pc_bitset_set(session->normal_random_roll_mask.data(), mod);
@@ -91,6 +103,17 @@ std::shared_ptr<SessionImpl> make_calc_session() {
             pc_bitset_set(mask.data(), mod);
         }
     }
+    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+        pc_bitset_set(session->unveiled_mask.data(), mod);
+        pc_bitset_set(session->unveiled_generic_mask.data(), mod);
+    }
+    session->veiled_prefix_mod_id = 8;
+    session->veiled_suffix_mod_id = 9;
+    session->eldritch_eligible = true;
+    session->eldritch_searing_tier_mod_ids.resize(5);
+    session->eldritch_eater_tier_mod_ids.resize(5);
+    session->eldritch_searing_tier_mod_ids[1] = {0};
+    session->eldritch_eater_tier_mod_ids[1] = {5};
     return session;
 }
 
@@ -411,15 +434,188 @@ void mc_cross_check(
             it == histogram.end()
                 ? 0.0
                 : static_cast<double>(it->second) / samples;
-        const double sigma = std::sqrt(
-            entry.probability * (1.0 - entry.probability) / samples);
-        PC_CHECK(std::fabs(observed - entry.probability) <
-                 5.0 * sigma + slack);
+        const double sigma = std::sqrt(std::max(
+            0.0,
+            entry.probability * (1.0 - entry.probability) / samples));
+        const double tolerance = 5.0 * sigma + slack;
+        if (std::fabs(observed - entry.probability) >= tolerance) {
+            std::printf(
+                "solver calc MC mismatch %s state=%u exact=%.8f observed=%.8f tol=%.8f\n",
+                action.id.c_str(), entry.state, entry.probability, observed,
+                tolerance);
+            std::fflush(stdout);
+        }
+        PC_CHECK(std::fabs(observed - entry.probability) < tolerance);
         total_checked += observed;
     }
     /* Sampled successors outside the exact support are bounded by the
      * evaluator's truncation budget. */
     PC_CHECK(total_checked > 1.0 - coverage_tolerance - 1e-9);
+}
+
+void unveil_mc_cross_check(
+    CalcContext& calc,
+    ActionContextImpl& mc,
+    std::uint32_t veiled_state,
+    std::uint32_t veiled_exalt,
+    std::uint32_t unveil,
+    std::uint32_t samples) {
+    const OutcomeDistribution& exact = calc.outcomes(veiled_state, unveil);
+    PC_CHECK(exact.supported);
+    PC_CHECK(sums_to_one(exact));
+    PC_CHECK(!exact.choice_groups.empty());
+    double offer_probability = 0.0;
+    for (const OutcomeChoiceGroup& group : exact.choice_groups) {
+        offer_probability += group.probability;
+    }
+    PC_CHECK(near(offer_probability, 1.0, 1e-8));
+
+    std::map<std::uint32_t, std::uint32_t> state_by_mod;
+    for (const OutcomeChoiceOption& option : exact.choice_options) {
+        state_by_mod.emplace(option.mod_id, option.state);
+    }
+    const auto better = [&](std::uint32_t a, std::uint32_t b) {
+        const auto score = [&](std::uint32_t id) {
+            const AbstractState& value = calc.state(id);
+            int satisfied = 0;
+            int below = 0;
+            for (std::size_t i = 0; i < calc.layout().slots.size(); ++i) {
+                satisfied += value.slot_status[i] ==
+                             static_cast<std::uint8_t>(
+                                 GoalSlotStatus::Satisfied);
+                below += value.slot_status[i] ==
+                         static_cast<std::uint8_t>(
+                             GoalSlotStatus::PresentBelowTier);
+            }
+            return std::tuple<int, int, int>{
+                calc.is_goal_state(value) ? 1 : 0, satisfied, below};
+        };
+        return score(a) != score(b) ? score(a) > score(b) : a < b;
+    };
+
+    pc_item_state empty;
+    pc_item_clear(&empty);
+    empty.rarity = PC_RARITY_RARE;
+    std::map<std::uint32_t, std::uint32_t> histogram;
+    std::uint32_t accepted = 0;
+    while (accepted < samples) {
+        pc_item_state offered = empty;
+        const ActionOutcome veiled = apply_action(
+            mc, &offered,
+            calc.registry().actions[veiled_exalt].params);
+        if (!veiled.applied || calc.intern_item(offered) != veiled_state) {
+            continue;
+        }
+        int side = -1;
+        std::uint32_t index = 0;
+        PC_CHECK(pc_item_find_veiled(&offered, &side, &index) ==
+                 PC_RESULT_OK);
+        const pc_mod_slot& slot = side == PC_SIDE_PREFIX
+                                      ? offered.prefixes[index]
+                                      : offered.suffixes[index];
+        std::uint32_t chosen_mod = kNoId;
+        std::uint32_t chosen_state = kNoId;
+        for (std::uint8_t option = 0;
+             option < slot.veiled_option_count; ++option) {
+            const std::uint32_t mod = slot.veiled_option_mod_ids[option];
+            const auto found = state_by_mod.find(mod);
+            PC_CHECK(found != state_by_mod.end());
+            if (found == state_by_mod.end()) continue;
+            if (chosen_state == kNoId ||
+                better(found->second, chosen_state)) {
+                chosen_mod = mod;
+                chosen_state = found->second;
+            }
+        }
+        PC_CHECK(chosen_mod != kNoId);
+        if (chosen_mod == kNoId) continue;
+        ActionParameters choice = calc.registry().actions[unveil].params;
+        choice.mod_id = chosen_mod;
+        const ActionOutcome revealed = apply_action(mc, &offered, choice);
+        PC_CHECK(revealed.applied);
+        if (!revealed.applied) continue;
+        ++histogram[calc.intern_item(offered)];
+        ++accepted;
+    }
+    for (const OutcomeEntry& entry : exact.entries) {
+        const double observed =
+            static_cast<double>(histogram[entry.state]) / samples;
+        const double sigma = std::sqrt(
+            entry.probability * (1.0 - entry.probability) / samples);
+        PC_CHECK(std::fabs(observed - entry.probability) <
+                 5.0 * sigma + 2e-3);
+    }
+}
+
+void run_special_evaluator_tests() {
+    auto session = make_calc_session();
+    ActionRegistry registry = build_action_registry(*session);
+    const std::vector<std::string> ids{
+        "veiled_chaos", "veiled_exalt", "unveil",
+        "eldritch_ember:1", "eldritch_ichor:1", "eldritch_exalt",
+        "eldritch_chaos", "eldritch_annul"};
+    std::vector<std::uint32_t> candidates = basic_indices(registry);
+    for (const std::string& id : ids) {
+        const std::uint32_t action = registry.index_by_id.at(id);
+        candidates.push_back(action);
+        PC_CHECK(calc_supports(registry.actions[action]));
+    }
+    CalcContext calc(session, family_goal_100(), registry, candidates);
+    ActionContextImpl mc(0x5eed);
+    mc.session = session;
+
+    pc_item_state empty_rare;
+    pc_item_clear(&empty_rare);
+    empty_rare.rarity = PC_RARITY_RARE;
+    const std::uint32_t empty = calc.intern_item(empty_rare);
+    const std::uint32_t veiled_exalt =
+        registry.index_by_id.at("veiled_exalt");
+    const std::uint32_t veiled_chaos =
+        registry.index_by_id.at("veiled_chaos");
+    mc_cross_check(calc, mc, empty, veiled_exalt, 20000, 2e-3);
+    mc_cross_check(
+        calc, mc, empty, veiled_chaos, 20000, 4e-3, 5e-3);
+
+    const OutcomeDistribution& added =
+        calc.outcomes(empty, veiled_exalt);
+    std::uint32_t veiled_state = kNoId;
+    for (const OutcomeEntry& entry : added.entries) {
+        if (calc.state(entry.state).veiled_side == PC_SIDE_PREFIX) {
+            veiled_state = entry.state;
+            break;
+        }
+    }
+    PC_CHECK(veiled_state != kNoId);
+    if (veiled_state != kNoId) {
+        unveil_mc_cross_check(
+            calc, mc, veiled_state, veiled_exalt,
+            registry.index_by_id.at("unveil"), 20000);
+    }
+
+    mc_cross_check(
+        calc, mc, empty, registry.index_by_id.at("eldritch_ember:1"),
+        20000);
+    mc_cross_check(
+        calc, mc, empty, registry.index_by_id.at("eldritch_ichor:1"),
+        20000);
+
+    pc_item_state dominant;
+    pc_item_clear(&dominant);
+    dominant.rarity = PC_RARITY_RARE;
+    dominant.searing_exarch_tier = 2;
+    dominant.eater_of_worlds_tier = 1;
+    place(&dominant, PC_SIDE_PREFIX, 3, 12);
+    place(&dominant, PC_SIDE_SUFFIX, 6, 21);
+    const std::uint32_t dominated = calc.intern_item(dominant);
+    mc_cross_check(
+        calc, mc, dominated, registry.index_by_id.at("eldritch_exalt"),
+        20000);
+    mc_cross_check(
+        calc, mc, dominated, registry.index_by_id.at("eldritch_annul"),
+        20000);
+    mc_cross_check(
+        calc, mc, dominated, registry.index_by_id.at("eldritch_chaos"),
+        20000, 4e-3, 5e-3);
 }
 
 /*
@@ -817,6 +1013,113 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             "chaos/essence/fossil/harvest\n",
             reforge_calc.state_count());
     }
+
+    /* --- S6 Phase 4 gate: every veiled/eldritch evaluator on the real
+     * Vaal Regalia session, again against engine Monte Carlo. */
+    {
+        const std::vector<std::string> fixed_ids{
+            "veiled_chaos", "veiled_exalt", "unveil",
+            "eldritch_exalt", "eldritch_chaos", "eldritch_annul"};
+        std::vector<std::uint32_t> candidates = basic_indices(registry);
+        for (const std::string& id : fixed_ids) {
+            PC_CHECK(registry.index_by_id.count(id) == 1);
+            candidates.push_back(registry.index_by_id.at(id));
+        }
+        std::uint32_t ember = kNoId;
+        std::uint32_t ichor = kNoId;
+        for (std::uint32_t i = 0; i < registry.actions.size(); ++i) {
+            if (ember == kNoId &&
+                registry.actions[i].params.type ==
+                    ActionType::EldritchEmber) {
+                ember = i;
+            }
+            if (ichor == kNoId &&
+                registry.actions[i].params.type ==
+                    ActionType::EldritchIchor) {
+                ichor = i;
+            }
+        }
+        PC_CHECK(ember != kNoId && ichor != kNoId);
+        if (ember == kNoId || ichor == kNoId) return;
+        candidates.push_back(ember);
+        candidates.push_back(ichor);
+
+        CalcContext special_calc(session, goal, registry, candidates);
+        ActionContextImpl special_mc(0x51a1);
+        special_mc.session = session;
+        const std::uint32_t special_start =
+            special_calc.intern_item(empty_rare);
+        const std::uint32_t veiled_exalt =
+            registry.index_by_id.at("veiled_exalt");
+        mc_cross_check(
+            special_calc, special_mc, special_start, veiled_exalt, 20000,
+            2e-3);
+        mc_cross_check(
+            special_calc, special_mc, special_start,
+            registry.index_by_id.at("veiled_chaos"), 20000, 4e-3, 5e-3);
+
+        std::uint32_t veiled_state = kNoId;
+        for (const OutcomeEntry& entry :
+             special_calc.outcomes(special_start, veiled_exalt).entries) {
+            if (special_calc.state(entry.state).veiled_side ==
+                PC_SIDE_PREFIX) {
+                veiled_state = entry.state;
+                break;
+            }
+        }
+        PC_CHECK(veiled_state != kNoId);
+        if (veiled_state != kNoId) {
+            unveil_mc_cross_check(
+                special_calc, special_mc, veiled_state, veiled_exalt,
+                registry.index_by_id.at("unveil"), 20000);
+        }
+        mc_cross_check(
+            special_calc, special_mc, special_start, ember, 20000);
+        mc_cross_check(
+            special_calc, special_mc, special_start, ichor, 20000);
+
+        pc_item_state dominant = empty_rare;
+        dominant.searing_exarch_tier = 2;
+        dominant.eater_of_worlds_tier = 1;
+        std::uint32_t prefix_mod = kNoId;
+        std::uint32_t suffix_mod = kNoId;
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (!pc_bitset_test(
+                    session->normal_random_roll_mask.data(), mod) ||
+                !pc_bitset_test(
+                    session->positive_base_weight_mask.data(), mod)) {
+                continue;
+            }
+            if (session->gen_type[mod] == 0 && prefix_mod == kNoId) {
+                prefix_mod = mod;
+            }
+            if (session->gen_type[mod] == 1 && suffix_mod == kNoId) {
+                suffix_mod = mod;
+            }
+        }
+        PC_CHECK(prefix_mod != kNoId && suffix_mod != kNoId);
+        if (prefix_mod == kNoId || suffix_mod == kNoId) return;
+        place(&dominant, PC_SIDE_PREFIX, prefix_mod,
+              static_cast<std::uint16_t>(
+                  session->primary_group[prefix_mod]));
+        place(&dominant, PC_SIDE_SUFFIX, suffix_mod,
+              static_cast<std::uint16_t>(
+                  session->primary_group[suffix_mod]));
+        const std::uint32_t dominated = special_calc.intern_item(dominant);
+        mc_cross_check(
+            special_calc, special_mc, dominated,
+            registry.index_by_id.at("eldritch_exalt"), 20000);
+        mc_cross_check(
+            special_calc, special_mc, dominated,
+            registry.index_by_id.at("eldritch_annul"), 20000);
+        mc_cross_check(
+            special_calc, special_mc, dominated,
+            registry.index_by_id.at("eldritch_chaos"), 20000, 4e-3,
+            5e-3);
+        std::printf(
+            "solver special artifact: %u states after veiled/eldritch\n",
+            special_calc.state_count());
+    }
 }
 
 } // namespace
@@ -825,5 +1128,6 @@ void run_solver_calc_tests(const char* artifact_dir) {
     run_goal_threshold_tests();
     run_exact_distribution_tests();
     run_reforge_tests();
+    run_special_evaluator_tests();
     run_artifact_calc_tests(artifact_dir);
 }

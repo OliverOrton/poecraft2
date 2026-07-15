@@ -36,7 +36,12 @@ and edits like its input item through the shared item frame. The Searing/Eater
 currency migration remains skipped, and the earlier multi-goal/OR expansion
 was removed from this interlude. Solver S6 Phases 1-2 are complete: Calculator
 can solve into an annotated Strategy Board, and long solves now report native
-progress and cancel without blocking the worker. S6 Phase 3 is next. The
+progress and cancel without blocking the worker. Solver S6 Phase 4 is also
+complete: veiled/eldritch actions have exact outcome evaluators, sampled
+unveil offers are policy choices, and generated policies can express exact
+junk identities, flags, influence, eldritch tiers, group tier thresholds, and
+unveil-option routes. Oliver selected Phase 4 ahead of Phase 3; ambient
+Emulator odds was not started and remains deferred. The
 completed polish sequence is in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
 The parallel live-economy track is planned in

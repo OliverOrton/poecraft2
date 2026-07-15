@@ -167,7 +167,8 @@ enum class GoalSlotStatus : std::uint8_t {
  * One junk equivalence class. Two non-goal mods share a class iff every
  * candidate action treats them identically: same generation side, same
  * restricted tag signature (classification tags intersected with the
- * candidate actions' discriminating tags), and blocking the same goal slots.
+ * candidate actions' discriminating tags), blocking the same goal slots, and
+ * (when relevant) the same veiled-template role.
  */
 struct JunkClass {
     std::int8_t gen_type = 0;           /* 0 prefix, 1 suffix */
@@ -187,7 +188,7 @@ struct AbstractLayout {
      * JunkClass::tag_bits corresponds to discriminating_tag_ids[i]. */
     std::vector<std::uint32_t> discriminating_tag_ids;
     /* Deterministic order: sorted by (gen_type, tag_bits, goal_block_mask,
-     * exclusion_effect_mask). */
+     * veiled-template role, exclusion_effect_mask). */
     std::vector<JunkClass> junk_classes;
     /* session mod id -> junk class index, or kNoId for goal members and mods
      * no candidate action can place in an explicit slot. */
@@ -221,6 +222,12 @@ struct AbstractState {
     std::uint8_t suffix_count = 0;
     std::uint8_t rarity = PC_RARITY_NORMAL;
     std::uint8_t influence_bits = 0;
+    /* Exact mechanic routing state. Veiled side is -1/0/1 for none/prefix/
+     * suffix; eldritch tiers determine which explicit side the dominance
+     * currencies modify. */
+    std::int8_t veiled_side = -1;
+    std::uint8_t searing_exarch_tier = 0;
+    std::uint8_t eater_of_worlds_tier = 0;
     std::uint32_t flags = 0; /* AbstractFlag bits */
     std::vector<std::uint8_t> junk_counts; /* parallel to layout.junk_classes */
 
@@ -254,12 +261,26 @@ struct OutcomeEntry {
     double probability = 0.0;
 };
 
+/* An unveil first samples an offered set, then the policy chooses the
+ * cheapest successor in that set. Ordinary action distributions leave these
+ * vectors empty. */
+struct OutcomeChoiceGroup {
+    double probability = 0.0;
+    std::vector<std::uint32_t> states;
+};
+
+struct OutcomeChoiceOption {
+    std::uint32_t mod_id = kNoId;
+    std::uint32_t state = kNoId;
+};
+
 struct OutcomeDistribution {
-    /* True when an exact evaluator exists for this action. Reforge and
-     * bespoke enumerators land in S3; until then those actions report
-     * supported = false and the caller falls back or skips. */
+    /* True when an exact evaluator exists for this action. Unsupported
+     * mechanics report false so callers can skip or surface the gap. */
     bool supported = false;
     std::vector<OutcomeEntry> entries; /* sorted by state id, sums to 1 */
+    std::vector<OutcomeChoiceGroup> choice_groups;
+    std::vector<OutcomeChoiceOption> choice_options;
     std::array<double, kMaxGoalSlots> slot_satisfied_probability{};
 };
 
@@ -348,6 +369,8 @@ class CalcContext {
     std::shared_ptr<const OutcomeDistribution> evaluate_reforge(
         std::uint32_t state_id,
         std::uint32_t action_index);
+    std::shared_ptr<const OutcomeDistribution> evaluate_unveil(
+        std::uint32_t state_id);
     bool evaluate_pool_add(
         const pc_item_state& item,
         const PoolBuildRequest& base_request,
@@ -528,6 +551,9 @@ struct SolveResult {
     std::vector<std::uint8_t> expanded;
     std::vector<std::uint8_t> goal_states;
     std::vector<std::uint8_t> policy_reachable;
+    /* For an abstract unveil policy action, concrete option mod ids in
+     * Bellman-optimal preference order, parallel to the state table. */
+    std::vector<std::vector<std::uint32_t>> unveil_preferences;
     SolveDiagnostics diagnostics;
 };
 
