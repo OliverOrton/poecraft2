@@ -43,4 +43,25 @@ const afterReroll = placeStableSlots(
 );
 assert.deepEqual(afterReroll.ids, [40, 50, undefined]);
 
-console.log("  ok - item display tags and modifier slots stay presentation-safe");
+interface TargetMod {
+    familyKey: string;
+}
+
+const targetIdOf = (mod: TargetMod): string => mod.familyKey;
+const initialTargets = placeStableSlots(
+    [{ familyKey: "life" }, { familyKey: "defence" }],
+    3,
+    [],
+    targetIdOf,
+);
+assert.deepEqual(initialTargets.ids, ["life", "defence", undefined]);
+
+const editedTargets = placeStableSlots(
+    [{ familyKey: "defence" }, { familyKey: "resistance" }],
+    3,
+    initialTargets.ids,
+    targetIdOf,
+);
+assert.deepEqual(editedTargets.ids, ["resistance", "defence", undefined]);
+
+console.log("  ok - concrete and target slots keep stable presentation identities");

@@ -1,10 +1,8 @@
 /*
- * pc-mod-list — presentational view of an item: fixed prefix / suffix slot grid
- * with in-game-style text. Empty slots stay in place as the item fills so the
- * stepper-style emulator flow doesn't reflow on every craft.
- *
- * Implicits render above explicits as a free-form list (their count is fixed
- * per base; we just show whatever the engine returned).
+ * pc-mod-list — presentational concrete-item and target-item slot ledgers.
+ * Both modes share the same fixed prefix / suffix frame. Concrete mode shows
+ * rolled modifiers and emits fracture actions; target mode shows authored
+ * family thresholds and emits stable goal-edit actions.
  */
 
 import { placeStableSlots, visibleModTags } from "../item-display";
@@ -19,7 +17,8 @@ export interface SlotMod {
     crafted: boolean;
 }
 
-export interface ModListModel {
+export interface ConcreteModListModel {
+    kind: "concrete";
     baseName?: string;
     itemLevel?: number;
     rarity: string;
@@ -31,59 +30,116 @@ export interface ModListModel {
     maxSuffix: number;
 }
 
-export class PcModList extends HTMLElement {
-    private prefixSlotIds: Array<number | undefined> = [];
-    private suffixSlotIds: Array<number | undefined> = [];
+export interface TargetTierChoice {
+    tier: number;
+    label: string;
+}
 
-    setModel(model: ModListModel): void {
+export interface TargetSlotMod {
+    familyModKey: string;
+    textLines: string[];
+    classificationTags: string[];
+    sourceLabel: string;
+    minTier: number;
+    tiers: TargetTierChoice[];
+    probabilityLabel?: string;
+}
+
+export interface TargetOtherRequirement {
+    slotIndex: number;
+    label: string;
+    minTier: number;
+    probabilityLabel?: string;
+}
+
+export interface TargetModListModel {
+    kind: "target";
+    baseName: string;
+    itemLevel: number;
+    rarity: "normal" | "magic" | "rare";
+    prefixes: TargetSlotMod[];
+    suffixes: TargetSlotMod[];
+    otherRequirements: TargetOtherRequirement[];
+    maxPrefix: number;
+    maxSuffix: number;
+}
+
+export type PcModListModel = ConcreteModListModel | TargetModListModel;
+
+export class PcModList extends HTMLElement {
+    private concretePrefixSlotIds: Array<number | undefined> = [];
+    private concreteSuffixSlotIds: Array<number | undefined> = [];
+    private targetPrefixSlotIds: Array<string | undefined> = [];
+    private targetSuffixSlotIds: Array<string | undefined> = [];
+
+    setModel(model: PcModListModel): void {
+        if (model.kind === "target") {
+            this.renderTarget(model);
+            return;
+        }
+        this.renderConcrete(model);
+    }
+
+    private renderConcrete(model: ConcreteModListModel): void {
         const explicitCount = model.prefixes.length + model.suffixes.length;
         const prefixLayout = placeStableSlots(
             model.prefixes,
             model.maxPrefix,
-            this.prefixSlotIds,
+            this.concretePrefixSlotIds,
             (mod) => mod.sessionModId,
         );
         const suffixLayout = placeStableSlots(
             model.suffixes,
             model.maxSuffix,
-            this.suffixSlotIds,
+            this.concreteSuffixSlotIds,
             (mod) => mod.sessionModId,
         );
-        this.prefixSlotIds = prefixLayout.ids;
-        this.suffixSlotIds = suffixLayout.ids;
-        const title = model.baseName
-            ? `<div class="pc-item-title-line">
-                <strong>${escapeHtml(model.baseName)}</strong>
-                ${model.itemLevel ? `<span>iLvl ${model.itemLevel}</span>` : ""}
-            </div>`
-            : "";
+        this.concretePrefixSlotIds = prefixLayout.ids;
+        this.concreteSuffixSlotIds = suffixLayout.ids;
         this.innerHTML = `
-            <div class="pc-mod-list pc-item-rarity-${model.rarity}">
-                <header class="pc-item-card-header">
-                    ${title}
-                    <div class="pc-mod-list-header">
-                        <span class="pc-item-heading">
-                            <span class="pc-rarity pc-rarity-${model.rarity}">${model.rarity}</span>
-                            ${
-                                model.influences.length
-                                    ? `<span class="pc-item-influences">${model.influences
-                                          .map(
-                                              (influence) =>
-                                                  `<span class="pc-item-influence">${escapeHtml(influence)}</span>`,
-                                          )
-                                          .join("")}</span>`
-                                    : ""
-                            }
-                        </span>
-                        <span class="pc-mod-count">${explicitCount} explicit · ${model.prefixes.length}P / ${model.suffixes.length}S</span>
-                    </div>
-                </header>
+            <div class="pc-mod-list pc-item-rarity-${model.rarity}" data-mode="concrete">
+                ${renderHeader(model, `${explicitCount} explicit · ${model.prefixes.length}P / ${model.suffixes.length}S`)}
                 ${renderImplicits(model.implicits)}
                 <div class="pc-mod-explicit-ledger">
-                    ${renderSlotGroup("Prefixes", "prefix", prefixLayout.slots, model.prefixes.length)}
-                    ${renderSlotGroup("Suffixes", "suffix", suffixLayout.slots, model.suffixes.length)}
+                    ${renderConcreteSlotGroup("Prefixes", "prefix", prefixLayout.slots, model.prefixes.length)}
+                    ${renderConcreteSlotGroup("Suffixes", "suffix", suffixLayout.slots, model.suffixes.length)}
                 </div>
             </div>`;
+        this.bindConcreteEvents();
+    }
+
+    private renderTarget(model: TargetModListModel): void {
+        const prefixLayout = placeStableSlots(
+            model.prefixes,
+            Math.max(model.maxPrefix, model.prefixes.length),
+            this.targetPrefixSlotIds,
+            (mod) => mod.familyModKey,
+        );
+        const suffixLayout = placeStableSlots(
+            model.suffixes,
+            Math.max(model.maxSuffix, model.suffixes.length),
+            this.targetSuffixSlotIds,
+            (mod) => mod.familyModKey,
+        );
+        this.targetPrefixSlotIds = prefixLayout.ids;
+        this.targetSuffixSlotIds = suffixLayout.ids;
+        const requirementCount =
+            model.prefixes.length +
+            model.suffixes.length +
+            model.otherRequirements.length;
+        this.innerHTML = `
+            <div class="pc-mod-list pc-mod-list-target pc-item-rarity-${model.rarity}" data-mode="target">
+                ${renderHeader(model, `${requirementCount} requirements · ${model.prefixes.length}P / ${model.suffixes.length}S`, true)}
+                <div class="pc-mod-explicit-ledger">
+                    ${renderTargetSlotGroup("Prefixes", "prefix", prefixLayout.slots, model.prefixes.length, model.maxPrefix)}
+                    ${renderTargetSlotGroup("Suffixes", "suffix", suffixLayout.slots, model.suffixes.length, model.maxSuffix)}
+                    ${renderOtherRequirements(model.otherRequirements)}
+                </div>
+            </div>`;
+        this.bindTargetEvents();
+    }
+
+    private bindConcreteEvents(): void {
         this.querySelectorAll<HTMLElement>(
             '.pc-mod-slot.is-filled[data-side][data-mod-id]',
         ).forEach((row) => {
@@ -105,6 +161,76 @@ export class PcModList extends HTMLElement {
             });
         });
     }
+
+    private bindTargetEvents(): void {
+        this.querySelectorAll<HTMLSelectElement>(
+            "select[data-target-family-key]",
+        ).forEach((select) => {
+            select.addEventListener("change", () => {
+                this.dispatchEvent(
+                    new CustomEvent("target-tier-change", {
+                        bubbles: true,
+                        detail: {
+                            familyModKey: select.dataset.targetFamilyKey ?? "",
+                            minTier: Number(select.value),
+                        },
+                    }),
+                );
+            });
+        });
+        this.querySelectorAll<HTMLButtonElement>(
+            "button[data-target-family-key], button[data-target-slot-index]",
+        ).forEach((button) => {
+            button.addEventListener("click", () => {
+                const familyModKey = button.dataset.targetFamilyKey;
+                const slotIndex = button.dataset.targetSlotIndex;
+                this.dispatchEvent(
+                    new CustomEvent("target-remove", {
+                        bubbles: true,
+                        detail: familyModKey
+                            ? { familyModKey }
+                            : { slotIndex: Number(slotIndex) },
+                    }),
+                );
+            });
+        });
+    }
+}
+
+function renderHeader(
+    model: Pick<PcModListModel, "baseName" | "itemLevel" | "rarity"> &
+        Partial<Pick<ConcreteModListModel, "influences">>,
+    countLabel: string,
+    target = false,
+): string {
+    const title = model.baseName
+        ? `<div class="pc-item-title-line">
+                <strong>${escapeHtml(model.baseName)}</strong>
+                ${model.itemLevel ? `<span>iLvl ${model.itemLevel}</span>` : ""}
+            </div>`
+        : "";
+    const influences = model.influences ?? [];
+    return `
+        <header class="pc-item-card-header">
+            ${title}
+            <div class="pc-mod-list-header">
+                <span class="pc-item-heading">
+                    <span class="pc-rarity pc-rarity-${model.rarity}">${escapeHtml(model.rarity)}</span>
+                    ${target ? '<span class="pc-item-target-badge">TARGET</span>' : ""}
+                    ${
+                        influences.length
+                            ? `<span class="pc-item-influences">${influences
+                                  .map(
+                                      (influence) =>
+                                          `<span class="pc-item-influence">${escapeHtml(influence)}</span>`,
+                                  )
+                                  .join("")}</span>`
+                            : ""
+                    }
+                </span>
+                <span class="pc-mod-count">${escapeHtml(countLabel)}</span>
+            </div>
+        </header>`;
 }
 
 function renderImplicits(mods: SlotMod[]): string {
@@ -115,40 +241,34 @@ function renderImplicits(mods: SlotMod[]): string {
             <ul class="pc-mod-slots">
                 ${mods
                     .map((mod, index) =>
-                        renderFilledSlot(mod, "implicit", index),
+                        renderConcreteFilledSlot(mod, "implicit", index),
                     )
                     .join("")}
             </ul>
         </section>`;
 }
 
-function renderSlotGroup(
+function renderConcreteSlotGroup(
     title: string,
     side: "prefix" | "suffix",
     slots: Array<SlotMod | undefined>,
     occupied: number,
 ): string {
-    if (slots.length === 0) {
-        // Normal items have 0 slots — render nothing.
-        return "";
-    }
-    const rows: string[] = [];
-    for (let i = 0; i < slots.length; i += 1) {
-        const mod = slots[i];
-        rows.push(
-            mod
-                ? renderFilledSlot(mod, side, i)
-                : renderEmptySlot(side, i),
-        );
-    }
+    if (slots.length === 0) return "";
     return `
         <section class="pc-mod-group pc-mod-group-${side}">
             <h4><span>${title}</span><span>${occupied}/${slots.length}</span></h4>
-            <ul class="pc-mod-slots">${rows.join("")}</ul>
+            <ul class="pc-mod-slots">${slots
+                .map((mod, index) =>
+                    mod
+                        ? renderConcreteFilledSlot(mod, side, index)
+                        : renderEmptySlot(side, index, false),
+                )
+                .join("")}</ul>
         </section>`;
 }
 
-function renderFilledSlot(
+function renderConcreteFilledSlot(
     mod: SlotMod,
     side: "prefix" | "suffix" | "implicit",
     index: number,
@@ -203,9 +323,116 @@ function renderFilledSlot(
         </li>`;
 }
 
-function renderEmptySlot(side: "prefix" | "suffix", index: number): string {
+function renderTargetSlotGroup(
+    title: string,
+    side: "prefix" | "suffix",
+    slots: Array<TargetSlotMod | undefined>,
+    occupied: number,
+    capacity: number,
+): string {
+    if (slots.length === 0) return "";
+    return `
+        <section class="pc-mod-group pc-mod-group-${side}">
+            <h4><span>${title}</span><span>${occupied}/${capacity}</span></h4>
+            <ul class="pc-mod-slots">${slots
+                .map((mod, index) =>
+                    mod
+                        ? renderTargetFilledSlot(mod, side, index)
+                        : renderEmptySlot(side, index, true),
+                )
+                .join("")}</ul>
+        </section>`;
+}
+
+function renderTargetFilledSlot(
+    mod: TargetSlotMod,
+    side: "prefix" | "suffix",
+    index: number,
+): string {
+    const slotCode = `${side === "prefix" ? "P" : "S"}${index + 1}`;
+    const tierCode = mod.minTier > 0 ? `T${mod.minTier}` : "ANY";
+    const tags = visibleModTags(mod.classificationTags).map(formatTag);
+    if (mod.sourceLabel && !tags.includes(mod.sourceLabel)) {
+        tags.push(mod.sourceLabel);
+    }
+    return `
+        <li class="pc-mod-slot pc-mod-${side} pc-mod-target-slot is-filled" data-target-family="${escapeAttribute(mod.familyModKey)}">
+            <span class="pc-mod-slot-rail" aria-hidden="true"></span>
+            <span class="pc-mod-slot-meta">
+                <strong>${slotCode}</strong>
+                <span>${tierCode}</span>
+            </span>
+            <div class="pc-mod-slot-content">
+                <div class="pc-mod-slot-lines">
+                    ${mod.textLines
+                        .map(
+                            (line) =>
+                                `<div class="pc-mod-slot-line">${escapeHtml(line)}</div>`,
+                        )
+                        .join("")}
+                </div>
+                ${
+                    tags.length
+                        ? `<div class="pc-mod-slot-tags">${tags
+                              .map((tag) => `<span>${escapeHtml(tag)}</span>`)
+                              .join("")}</div>`
+                        : ""
+                }
+                <div class="pc-mod-target-actions">
+                    <select data-target-family-key="${escapeAttribute(mod.familyModKey)}" aria-label="Minimum tier for ${escapeAttribute(mod.textLines[0] ?? mod.familyModKey)}">
+                        <option value="0"${mod.minTier === 0 ? " selected" : ""}>Any tier</option>
+                        ${mod.tiers
+                            .map(
+                                (tier) =>
+                                    `<option value="${tier.tier}"${tier.tier === mod.minTier ? " selected" : ""}>T${tier.tier} or better</option>`,
+                            )
+                            .join("")}
+                    </select>
+                    ${mod.probabilityLabel ? `<span class="pc-mod-target-probability">${escapeHtml(mod.probabilityLabel)}</span>` : ""}
+                    <button type="button" class="pc-icon-button pc-mod-target-remove" data-target-family-key="${escapeAttribute(mod.familyModKey)}" aria-label="Remove requirement">×</button>
+                </div>
+            </div>
+        </li>`;
+}
+
+function renderOtherRequirements(
+    requirements: TargetOtherRequirement[],
+): string {
+    if (requirements.length === 0) return "";
+    return `
+        <section class="pc-mod-group pc-mod-group-other">
+            <h4><span>Other requirements</span><span>${requirements.length}</span></h4>
+            <ul class="pc-mod-other-requirements">
+                ${requirements
+                    .map(
+                        (requirement) => `
+                            <li>
+                                <div>
+                                    <strong>${escapeHtml(requirement.label)}</strong>
+                                    <span>${requirement.minTier > 0 ? `T${requirement.minTier} or better` : "Any matching tier"}</span>
+                                </div>
+                                ${requirement.probabilityLabel ? `<span class="pc-mod-target-probability">${escapeHtml(requirement.probabilityLabel)}</span>` : ""}
+                                <button type="button" class="pc-icon-button pc-mod-target-remove" data-target-slot-index="${requirement.slotIndex}" aria-label="Remove requirement">×</button>
+                            </li>`,
+                    )
+                    .join("")}
+            </ul>
+        </section>`;
+}
+
+function renderEmptySlot(
+    side: "prefix" | "suffix",
+    index: number,
+    target: boolean,
+): string {
     const code = `${side === "prefix" ? "P" : "S"}${index + 1}`;
-    const label = side === "prefix" ? "Open prefix" : "Open suffix";
+    const label = target
+        ? side === "prefix"
+            ? "No prefix requirement"
+            : "No suffix requirement"
+        : side === "prefix"
+          ? "Open prefix"
+          : "Open suffix";
     return `
         <li class="pc-mod-slot pc-mod-${side} is-empty">
             <span class="pc-mod-slot-rail" aria-hidden="true"></span>

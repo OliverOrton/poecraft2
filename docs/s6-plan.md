@@ -41,6 +41,13 @@ earlier multi-goal/OR engine contract and shared predicate editor are no longer
 scheduled. The board-annotation reuse ruling and unscheduled Strategy Builder
 Calculator Phase D boundary still stand.
 
+Status 2026-07-14 (current): pre-S6 P3b is complete. Calculator still uses one
+concrete input item, one v1 goal item, and one selected action, but Input and
+Goal now share the explicit concrete/target `pc-mod-list` frame. The
+implementation, full gates, browser recovery smoke, and comparison captures
+are recorded in `design/specs/calculator-goal-item.md`. Phase 1 below is now
+the next task; do not begin Phase 2 in the same milestone.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what

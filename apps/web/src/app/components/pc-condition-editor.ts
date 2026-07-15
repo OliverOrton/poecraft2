@@ -16,24 +16,9 @@ import {
     defaultLeafCondition,
     parseConditionTree,
 } from "../strategy-model";
+import type { ModifierFamilyOption } from "../modifier-options";
 import "./pc-modifier-picker";
 import type { PcModifierPicker } from "./pc-modifier-picker";
-
-export interface ModifierTierOption {
-    tier: number;
-    label: string;
-    requiredLevel: number;
-}
-
-export interface ModifierFamilyOption {
-    value: string;
-    label: string;
-    side: "prefix" | "suffix";
-    sourceKind: "base" | "influence" | "crafted" | "essence" | "fossil";
-    sourceLabel: string;
-    tags: string[];
-    tiers: ModifierTierOption[];
-}
 
 interface ModifierSetMember {
     leaf: ConditionLeaf;

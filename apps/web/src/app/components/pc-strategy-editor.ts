@@ -16,7 +16,10 @@ import {
     StrategyResult,
 } from "../engine-protocol";
 import { getEngine } from "../engine-service";
-import { buildModifierOptions } from "../modifier-options";
+import {
+    buildModifierOptions,
+    type ModifierFamilyOption,
+} from "../modifier-options";
 import {
     StrategyDocument,
     StrategyEdge,
@@ -53,10 +56,7 @@ import { BasePickerSelection, PcBasePicker } from "./pc-base-picker";
 import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
 import "./pc-combobox";
-import {
-    ModifierFamilyOption,
-    PcConditionEditor,
-} from "./pc-condition-editor";
+import { PcConditionEditor } from "./pc-condition-editor";
 import { PcRunTrace } from "./pc-run-trace";
 import {
     PcStrategyBoard,

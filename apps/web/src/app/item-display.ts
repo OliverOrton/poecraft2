@@ -44,21 +44,21 @@ export function visibleModTags(tags: readonly string[]): string[] {
     return visible;
 }
 
-export interface StableSlotLayout<T> {
+export interface StableSlotLayout<T, TId = number> {
     slots: Array<T | undefined>;
-    ids: Array<number | undefined>;
+    ids: Array<TId | undefined>;
 }
 
 /**
  * Retain surviving modifiers in their previous visual slots. New modifiers
  * fill the first available positions, so removing P1 does not make P2 jump.
  */
-export function placeStableSlots<T>(
+export function placeStableSlots<T, TId = number>(
     mods: readonly T[],
     capacity: number,
-    previousIds: readonly (number | undefined)[],
-    idOf: (mod: T) => number,
-): StableSlotLayout<T> {
+    previousIds: readonly (TId | undefined)[],
+    idOf: (mod: T) => TId,
+): StableSlotLayout<T, TId> {
     if (capacity <= 0) {
         return { slots: [], ids: [] };
     }

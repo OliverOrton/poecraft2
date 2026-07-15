@@ -511,6 +511,7 @@ export class PcEmulator extends HTMLElement {
         const implicits = implicitIds.map((id) => this.toSlot(id, new Set()));
 
         this.modList.setModel({
+            kind: "concrete",
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: info.rarity as string,

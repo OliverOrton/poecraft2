@@ -20,9 +20,10 @@ This interlude now covers three active product requests:
 The proposed Searing Exarch/Eater currency migration is deferred. The proposed
 multi-goal/OR/named-outcome expansion is cancelled rather than postponed.
 
-P1 and P3a are complete. Variant A is the approved goal-item direction; P3b is
-the next implementation phase. S6 Phase 1 resumes only after P3b is complete.
-Strategy Builder calculator mode Phase D remains unscheduled.
+P1, P3a, and P3b are complete. Variant A is implemented through the shared
+item frame, fully gated, and recorded in
+`design/specs/calculator-goal-item.md`. S6 Phase 1 is next. Strategy Builder
+calculator mode Phase D remains unscheduled.
 
 ## Standing contracts
 
@@ -242,7 +243,7 @@ match the input item.
 Oliver approved Variant A on 2026-07-14. The implementation contract is in
 `design/specs/calculator-goal-item.md`. P3a stopped without UI implementation.
 
-## Phase P3b - Shared item-frame Calculator goal (next)
+## Phase P3b - Shared item-frame Calculator goal (complete)
 
 **Goal.** Replace the Calculator-only Goal requirements list with the approved
 goal/target mode of the same shared item-frame UI used by the input item.
@@ -280,3 +281,12 @@ goal/target mode of the same shared item-frame UI used by the input item.
 
 After P3b, commit locally, rewrite `HANDOFF.md`, and resume
 [s6-plan.md](s6-plan.md) Phase 1. Do not begin S6 Phase 2.
+
+P3b completed on 2026-07-14. `pc-mod-list` now has explicit concrete and
+target models; Calculator Input and Goal use separate roles; stable target
+placement uses `familyModKey`; legacy group requirements remain readable and
+removable; and the old Calculator-only goal rows/CSS are gone. The v1 goal
+JSON and native Calculator entry point are unchanged. Focused tests, the full
+repository pipeline, and a clean separate-process browser smoke passed. The
+implemented screenshots and mock deviations are recorded in the approved
+design spec.

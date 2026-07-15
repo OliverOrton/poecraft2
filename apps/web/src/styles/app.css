@@ -848,6 +848,15 @@ select {
     text-transform: uppercase;
 }
 
+.pc-item-target-badge {
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--pc-accent) 55%, transparent);
+    border-radius: 2px;
+    color: var(--pc-accent);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+}
+
 .pc-mod-explicit-ledger {
     display: flex;
     flex-direction: column;
@@ -1021,6 +1030,85 @@ select {
 
 .pc-mod-slot-tags {
     margin-top: 4px;
+}
+
+.pc-mod-target-slot {
+    cursor: default;
+}
+
+.pc-mod-target-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.pc-mod-target-actions select {
+    width: 100%;
+    min-width: 0;
+    font-size: 10px;
+}
+
+.pc-mod-target-probability {
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.pc-mod-target-remove {
+    min-width: 20px;
+    padding: 0 5px;
+    border: none;
+    background: transparent;
+    color: var(--pc-text-dim);
+}
+
+.pc-mod-target-remove:hover {
+    color: var(--pc-accent);
+}
+
+.pc-mod-other-requirements {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-mod-other-requirements li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    background: var(--pc-item-row);
+    border: 1px solid var(--pc-border);
+    border-radius: 3px;
+}
+
+.pc-mod-other-requirements div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pc-mod-other-requirements strong {
+    overflow: hidden;
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 11px;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pc-mod-other-requirements div > span {
+    color: var(--pc-text-dim);
+    font-size: 9px;
 }
 
 .pc-rarity {
@@ -3362,110 +3450,6 @@ pc-run-trace {
     font-size: 11px;
 }
 
-.pc-calc-goal-all {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    padding: 7px 9px;
-    background: var(--pc-bg-raised);
-    border: 1px solid var(--pc-accent);
-    border-radius: 3px;
-}
-
-.pc-calc-goal-all[hidden] {
-    display: none;
-}
-
-.pc-calc-goal-all-label {
-    flex: 1;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--pc-text-strong);
-}
-
-.pc-calc-goal-all-value {
-    flex: none;
-    font-family: var(--pc-mono);
-    font-size: 13px;
-    color: var(--pc-text-strong);
-}
-
-.pc-calc-slots {
-    margin: 0 0 8px;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.pc-calc-slot {
-    position: relative;
-    display: grid;
-    grid-template-columns: 20px minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 5px 8px;
-    padding: 8px 8px 7px;
-    background: var(--pc-bg-raised);
-    border: 1px solid var(--pc-border);
-    border-radius: 3px;
-}
-
-.pc-calc-slot:has(.pc-side-prefix) {
-    box-shadow: inset 2px 0 color-mix(in srgb, var(--pc-prefix) 70%, transparent);
-}
-
-.pc-calc-slot:has(.pc-side-suffix) {
-    box-shadow: inset 2px 0 color-mix(in srgb, var(--pc-suffix) 70%, transparent);
-}
-
-.pc-calc-slot-label {
-    min-width: 0;
-    color: var(--pc-text-strong);
-    font-size: 12px;
-    line-height: 1.35;
-}
-
-.pc-calc-slot-side {
-    flex: none;
-    width: 16px;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 600;
-    border-radius: 2px;
-    border: 1px solid var(--pc-border);
-}
-
-.pc-side-prefix { color: var(--pc-prefix); }
-.pc-side-suffix { color: var(--pc-suffix); }
-.pc-side-group { color: var(--pc-text-dim); }
-
-.pc-calc-slot select {
-    font-size: 11px;
-}
-
-.pc-calc-slot button {
-    grid-column: 3;
-    grid-row: 1;
-    padding: 0 6px;
-    border: none;
-    background: transparent;
-    color: var(--pc-text-dim);
-}
-
-.pc-calc-slot-controls {
-    grid-column: 2 / 4;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.pc-calc-slot button:hover {
-    color: var(--pc-accent);
-}
 
 .pc-calc-answer {
     display: grid;
@@ -3570,16 +3554,6 @@ pc-run-trace {
 .pc-calc-error {
     color: #d98a7a;
     font-size: 12px;
-}
-
-.pc-calc-slot-odds {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: var(--pc-mono);
-    font-size: 11px;
-    color: var(--pc-text-strong);
 }
 
 .pc-calc-cost-row {

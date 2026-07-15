@@ -1,13 +1,13 @@
-# Session Handoff - simple Calculator Goal Item P3b next
+# Session Handoff - S6 Phase 1 next
 
-Written 2026-07-14 after Oliver approved pre-S6 polish P3a Variant A. Read
+Written 2026-07-14 after the pre-S6 product-polish interlude completed. Read
 [AGENTS.md](AGENTS.md), then [docs/direction.md](docs/direction.md), then this
-file. The next task is revised Phase P3b only. P2 remains skipped; do not start
-S6 Phase 1 until P3b is complete.
+file. The next task is [docs/s6-plan.md](docs/s6-plan.md) Phase 1 only. Do not
+begin S6 Phase 2 in the same milestone.
 
-## Settled scope
+## Settled product boundary
 
-Calculator stays deliberately simple:
+Calculator remains deliberately simple:
 
 ```text
 one concrete input item
@@ -16,102 +16,77 @@ one concrete input item
 -> exact engine-returned odds for that action
 ```
 
-Preserve the existing v1 goal contract and behavior: finished rarity,
-modifier-family slots with tier-or-better thresholds, and
-`min_satisfied_slots` (`All N` / `At least N of N`). Do not add named goals, OR
-branches, predicate trees, multiple selected actions, or a new engine schema.
+P2's concrete Searing/Eater currency migration remains skipped. The cancelled
+multi-goal/OR/named-outcome work is not a prerequisite for S6. Strategy Builder
+Calculator Phase D remains unscheduled.
 
-The only P3b product change is making Goal use the same item-frame UI as Input
-item.
+## P3b completed
 
-## Approved design and implementation authority
+- `pc-mod-list` now accepts a discriminated concrete or target model and owns
+  the shared header, rarity treatment, fixed prefix/suffix ledger, stable slot
+  placement, and empty-row rhythm.
+- Calculator Input and Goal use explicit `data-role="input-item"` and
+  `data-role="goal-item"` instances. Concrete fracture events bind only to
+  Input; Goal emits stable family-key tier/remove edits.
+- `calculator-goal-model.ts` adapts the unchanged `CalculatorGoalSlot[]` into
+  catalog-backed target rows. It preserves persisted order, Any tier, marginal
+  engine odds, and readable/removable recovered legacy group requirements.
+- Modifier family/tier option types now live with their shared builder in
+  `modifier-options.ts`; Calculator, Strategy Builder, the condition editor,
+  and the modifier picker consume that common contract.
+- The old `.pc-calc-slots` / `.pc-calc-slot*` goal markup and CSS were removed.
+  Native, C ABI, bindings, WASM, v1 goal JSON, and Calculator solver calls did
+  not change.
 
-Oliver selected:
-
-- `design/mockups/calculator-goal-item/variant-a-literal-twin.png`
-
-The load-bearing implementation contract is:
+Approved design and verification record:
 
 - `design/specs/calculator-goal-item.md`
+- `design/mockups/calculator-goal-item/variant-a-literal-twin.png`
+- `design/mockups/calculator-goal-item/implemented-p3b.png`
+- `design/mockups/calculator-goal-item/implemented-p3b-goal.png`
 
-The brief, alternate mock, prompts, and known image-model fiction remain under
-`design/`. The mock controls hierarchy only. Runtime labels, counts, tier
-choices, and odds come from the catalog/native engine.
+## P3b gate
 
-## Backend/component reuse ruling
+All passed:
 
-There are not two crafting-rule backends to merge:
+- `npx tsc --noEmit`, `npm test`, and `npm run build` in `apps/web`;
+- `powershell -File scripts/test.ps1` (123,485 engine checks, zero failures);
+- separate-process headless Chrome: edit Input and Goal through the shared
+  pool, change/remove/re-add a target, exercise partial and All thresholds,
+  select Chaos, observe exact and marginal odds, reload v1 recovery, and finish
+  with no console errors or uncaught exceptions.
 
-1. one-step Calculator odds use `pc_calc_action_outcomes`;
-2. Strategy Builder whole-graph odds use `pc_strategy_evaluate`;
-3. both already use the same native action registry, `CalcContext`, legality,
-   and exact action distributions.
+## Next: S6 Phase 1 only
 
-Keep those task-shaped entry points separate. P3b is frontend component reuse:
+Follow [docs/s6-plan.md](docs/s6-plan.md) Phase 1, "Solve in the workspace."
+Everything below that UI already exists: open solver, load economy, solve,
+compile the policy to an ordinary strategy, compile/simulate it, and compare
+empirical mean cost to `start_value`.
 
-- extend `pc-mod-list` with an explicit concrete-versus-target model;
-- keep `buildModifierOptions` as the shared family/tier source;
-- keep Calculator's one `pc-mod-pool` as the input/goal authoring surface;
-- do not touch Strategy Builder's recursive `pc-condition-editor`.
+Before implementation, run the required image-model design loop for the solve
+panel. The brief must make the placement decision visible for Oliver: solve in
+Calculator (recommended by the plan because it owns item/goal/solver/prices)
+versus Simulator integration. Do not choose a materially different placement
+without his mock approval.
 
-## P3b implementation slice
+Implementation rulings already settled in the plan:
 
-1. In `apps/web/src/app/components/pc-mod-list.ts`, add the explicit target
-   model from the approved spec. Share the outer frame/header/ledger/slot
-   structure with concrete mode. Preserve concrete right-click fracture events.
-2. Target rows use stable `familyModKey` identity, catalog-derived selected-tier
-   text, `Tn or better` / `Any tier`, optional engine-returned marginal odds,
-   and tier/remove events. Empty rows say `No prefix requirement` or
-   `No suffix requirement`.
-3. In `pc-calculator.ts`, keep the current `Finished rarity` and
-   `Success means` controls above a new target-mode `pc-mod-list`. Adapt the
-   existing `CalculatorGoalSlot[]` through `ModifierFamilyOption`; do not change
-   persistence or `SolverGoal` JSON.
-4. Keep recovered legacy group slots readable/removable in target mode without
-   inventing a P/S side or re-enabling group authoring.
-5. Remove the superseded Calculator-only goal-list markup and CSS after the
-   target component owns every state.
+1. reuse `solverActions` and the shared workspace price table for readiness;
+   unpriced actions are excluded and `skipped_actions` must be prominent;
+2. use the existing synchronous `solverSolve` through Calculator's `guard()`
+   busy pattern for Phase 1; progress/cancel belongs to Phase 2;
+3. compile through `solverCompileStrategy`, assign missing positions using the
+   Strategy Editor's existing auto-layout, then open a copied Strategy document;
+4. add/preserve `expected_cost` on strategy nodes and render it through the
+   existing `strategy-eval-presentation.ts` / board annotation path, not a
+   second badge system;
+5. offer the 5,000-run verification flow and show empirical mean cost beside
+   exact `start_value` with the delta;
+6. show solver vocabulary-gap messages verbatim with the plan's explanatory
+   framing.
 
-## Important implementation gotchas
-
-- Calculator will contain two `pc-mod-list` elements. Replace the current broad
-  `querySelector("pc-mod-list")` getter/listener with explicit input and goal
-  roles. Concrete fracture events must bind only to Input item.
-- `itemMaxPrefix` / `itemMaxSuffix` are the engine/session capacity already fed
-  to Input item; reuse those values for stable Goal positions. Do not hard-code
-  rarity capacity rules in TypeScript.
-- Preserve `slots` array order within each side. Stable visual placement uses
-  `familyModKey`; never sort by name, tier, or probability.
-- Keep the all-slots-follow behavior when adding/removing requirements and the
-  current clamp behavior for partial thresholds.
-- A target is not a rolled item. Header copy is `N requirements`, not
-  `N explicit`; do not infer influence badges or exact rolls not represented by
-  v1 goal state.
-- Variant A contains illustrative errors: its Input `S3` label and target
-  section counts are wrong. The approved spec records the correct behavior.
-- The frontend remains non-authoritative for legality and odds.
-
-## Acceptance gate
-
-- Extend `apps/web/test/item-display.test.ts` for unchanged concrete behavior
-  and empty/populated/dense target modes, stable placement, any-tier, marginal
-  odds, legacy groups, and target events.
-- Add focused Calculator component/model coverage for rarity, all/partial
-  thresholds, tier/remove edits, v1 recovery, one selected action, and verbatim
-  engine results.
-- `npx tsc --noEmit`, `npm test`, and `npm run build` in `apps/web`.
-- `powershell -File scripts/test.ps1`.
-- Separate-process headless Chrome smoke: edit Input and Goal through the shared
-  pool, change/remove a target, select one action, observe odds, and finish with
-  no application console errors or uncaught exceptions. Do not use Codex's
-  in-app browser.
-- Capture the implemented populated state beside the approved mock and append
-  verification/deviations to `design/specs/calculator-goal-item.md`.
-
-Native/WASM rebuilds are not expected because P3b changes no native or ABI
-contract.
-
-After the gate, commit locally, rewrite this handoff, and resume
-[docs/s6-plan.md](docs/s6-plan.md) Phase 1. Do not begin S6 Phase 2.
+Gate Phase 1 with its worker solve/compile/auto-layout/expected-cost web test,
+web type-check/tests, and a real rendered screenshot/browser flow. Rewrite this
+handoff and commit locally at the phase boundary. Do not begin S6 Phase 2.
 
 Commits remain local-only unless Oliver explicitly says to push.

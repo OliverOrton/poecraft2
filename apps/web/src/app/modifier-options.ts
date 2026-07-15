@@ -7,7 +7,22 @@
 
 import { Catalog, ModInfo } from "./engine-protocol";
 import { visibleModTags } from "./item-display";
-import type { ModifierFamilyOption } from "./components/pc-condition-editor";
+
+export interface ModifierTierOption {
+    tier: number;
+    label: string;
+    requiredLevel: number;
+}
+
+export interface ModifierFamilyOption {
+    value: string;
+    label: string;
+    side: "prefix" | "suffix";
+    sourceKind: "base" | "influence" | "crafted" | "essence" | "fossil";
+    sourceLabel: string;
+    tags: string[];
+    tiers: ModifierTierOption[];
+}
 
 const REACH_INFLUENCE = 1;
 const REACH_CRAFTED = 2;

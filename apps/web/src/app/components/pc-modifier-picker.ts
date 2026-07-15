@@ -4,7 +4,7 @@
  * tags, and tier counts without exposing direct crafting controls.
  */
 
-import type { ModifierFamilyOption } from "./pc-condition-editor";
+import type { ModifierFamilyOption } from "../modifier-options";
 
 type Side = "prefix" | "suffix";
 

@@ -12,10 +12,9 @@
  * craft-panel band, except the buttons select a registry action id instead
  * of applying a craft.
  *
- * The layout is deliberately denser than the Emulator's: the item is a
- * read-only input here, so it renders as a compact mod strip instead of the
- * full item card, and each goal slot carries its own hit probability inline
- * so the results column is just cost and the outcome distribution.
+ * Input and Goal share the same fixed-slot item frame in a compact context
+ * rail. Goal rows carry engine-returned marginal probabilities inline; the
+ * results column owns the combined result, costs, and outcome distribution.
  *
  * Document lifecycle mirrors pc-emulator, minus Stash saves: a Calculator is
  * never a saved resource, so the IndexedDB draft exists purely for reload
@@ -43,6 +42,7 @@ import {
 import { workspace } from "../workspace/registry";
 import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
 import { influenceLabels } from "../item-display";
+import { buildCalculatorTargetModel } from "../calculator-goal-model";
 import {
     estimatedActionSpendPerSuccess,
     formatChaosValue,
@@ -55,13 +55,13 @@ import {
     buildModifierKeyIndex,
     buildModifierOptions,
     titleCase,
+    type ModifierFamilyOption,
 } from "../modifier-options";
 import {
     craftActionLabel,
     groupEssences,
     resistanceEntries,
 } from "../craft-choices";
-import type { ModifierFamilyOption } from "./pc-condition-editor";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
@@ -703,7 +703,8 @@ export class PcCalculator extends HTMLElement {
     }
 
     private renderItem(): void {
-        this.modList?.setModel({
+        this.inputModList?.setModel({
+            kind: "concrete",
             baseName: this.baseDisplayName(),
             itemLevel: this.itemLevel,
             rarity: this.itemRarity,
@@ -797,22 +798,6 @@ export class PcCalculator extends HTMLElement {
         void this.guard(() => this.goalChanged());
     }
 
-    /** Compact combined success result in the goal card. */
-    private renderGoalSummary(showOdds: boolean): void {
-        const host = this.querySelector<HTMLElement>(".pc-calc-goal-all");
-        if (!host) return;
-        if (!showOdds || this.slots.length < 2) {
-            host.hidden = true;
-            host.innerHTML = "";
-            return;
-        }
-        const p = this.calc?.success_probability ?? 0;
-        host.hidden = false;
-        host.innerHTML = `
-            <span class="pc-calc-goal-all-label">${escapeHtml(this.successTargetLabel())}</span>
-            <span class="pc-calc-goal-all-value">${formatProbabilityExact(p)}</span>`;
-    }
-
     private syncModPoolSelections(): void {
         this.querySelector<PcModPool>("pc-mod-pool")?.setSelectedTiers(
             this.slots.flatMap((slot) =>
@@ -829,90 +814,31 @@ export class PcCalculator extends HTMLElement {
     }
 
     private renderGoal(): void {
-        const list = this.querySelector(".pc-calc-slots");
-        if (!list) return;
         const showOdds = Boolean(
             this.calc && this.calc.legal && this.calc.supported,
         );
         this.syncModPoolSelections();
-        this.renderGoalSummary(showOdds);
-        if (this.slots.length === 0) {
-            list.innerHTML =
-                '<li class="pc-empty">Click modifiers in the pool to define the goal.</li>';
-        } else {
-            list.innerHTML = this.slots
-                .map((slot, index) => {
-                    const option = slot.familyModKey
-                        ? this.modifierOptions.find(
-                              (entry) => entry.value === slot.familyModKey,
-                          )
-                        : undefined;
-                    const p = this.calc?.slot_satisfied[index] ?? 0;
-                    const odds = showOdds
-                        ? `<span class="pc-calc-slot-odds" title="Chance this goal mod is satisfied after the selected action">
-                            ${formatProbabilityExact(p)}
-                        </span>`
-                        : "";
-                    const tierChoices = option
-                        ? option.tiers
-                              .map(
-                                  (tier) =>
-                                      `<option value="${tier.tier}" ${tier.tier === slot.minTier ? "selected" : ""}>T${tier.tier}${tier.tier === 1 ? " (best)" : " or better"}</option>`,
-                              )
-                              .join("")
-                        : "";
-                    const sideClass = option
-                        ? option.side === "prefix"
-                            ? "pc-side-prefix"
-                            : "pc-side-suffix"
-                        : "pc-side-group";
-                    return `<li class="pc-calc-slot">
-                        <span class="pc-calc-slot-side ${sideClass}">${
-                            option ? (option.side === "prefix" ? "P" : "S") : "G"
-                        }</span>
-                        <span class="pc-calc-slot-label">${escapeHtml(this.slotLabel(slot))}</span>
-                        <button data-slot-remove="${index}" title="Remove">&times;</button>
-                        <span class="pc-calc-slot-controls">
-                            ${
-                                option
-                                    ? `<select data-slot-tier="${index}" aria-label="Tier required for ${escapeHtml(this.slotLabel(slot))}">
-                                        <option value="0" ${slot.minTier === 0 ? "selected" : ""}>Any tier</option>
-                                        ${tierChoices}
-                                    </select>`
-                                    : '<span class="pc-help">Any matching tier</span>'
-                            }
-                            ${odds}
-                        </span>
-                    </li>`;
-                })
-                .join("");
-        }
-        list.querySelectorAll<HTMLButtonElement>("[data-slot-remove]").forEach(
-            (button) => {
-                button.addEventListener("click", () => {
-                    const index = Number(button.dataset.slotRemove);
-                    const oldSlotCount = this.slots.length;
-                    const followedAll =
-                        this.effectiveMinSatisfiedSlots() === oldSlotCount;
-                    this.slots = this.slots.filter((_, i) => i !== index);
-                    this.normalizeSuccessThreshold(followedAll);
-                    this.syncModPoolSelections();
-                    void this.guard(() => this.goalChanged());
-                });
-            },
-        );
-        list.querySelectorAll<HTMLSelectElement>("[data-slot-tier]").forEach(
-            (select) => {
-                select.addEventListener("change", () => {
-                    const index = Number(select.dataset.slotTier);
-                    const slot = this.slots[index];
-                    if (slot) {
-                        slot.minTier = Number(select.value);
-                        this.syncModPoolSelections();
-                        void this.guard(() => this.goalChanged());
-                    }
-                });
-            },
+        this.goalModList?.setModel(
+            buildCalculatorTargetModel({
+                baseName: this.baseDisplayName(),
+                itemLevel: this.itemLevel,
+                rarity: this.goalRarity,
+                slots: this.slots,
+                modifierOptions: this.modifierOptions,
+                maxPrefix: this.itemMaxPrefix,
+                maxSuffix: this.itemMaxSuffix,
+                slotProbabilities: showOdds
+                    ? this.calc?.slot_satisfied
+                    : undefined,
+                formatProbability: formatProbabilityExact,
+                groupLabel: (groupKey) => {
+                    const id = this.groupIdByKey(groupKey);
+                    return (
+                        (id !== undefined && this.catalog?.groupNameById[id]) ||
+                        groupKey
+                    );
+                },
+            }),
         );
 
         const rarity = this.querySelector<HTMLSelectElement>(
@@ -1603,8 +1529,16 @@ export class PcCalculator extends HTMLElement {
         return this.querySelector("pc-mod-pool")!;
     }
 
-    private get modList(): PcModList | null {
-        return this.querySelector<PcModList>("pc-mod-list");
+    private get inputModList(): PcModList | null {
+        return this.querySelector<PcModList>(
+            'pc-mod-list[data-role="input-item"]',
+        );
+    }
+
+    private get goalModList(): PcModList | null {
+        return this.querySelector<PcModList>(
+            'pc-mod-list[data-role="goal-item"]',
+        );
     }
 
     private setStatus(text: string): void {
@@ -1691,7 +1625,7 @@ export class PcCalculator extends HTMLElement {
                                 <h3>Input item</h3>
                                 <span class="pc-calc-context-state">Select</span>
                             </header>
-                            <pc-mod-list></pc-mod-list>
+                            <pc-mod-list data-role="input-item"></pc-mod-list>
                             <div class="pc-calc-input-actions">
                                 <button data-cmd="change-base">Change base…</button>
                                 <span class="pc-calc-new-item">
@@ -1711,7 +1645,7 @@ export class PcCalculator extends HTMLElement {
                         <article class="pc-calc-context-card pc-calc-goal"
                             data-context-card="goal" role="tab" tabindex="0">
                             <header class="pc-calc-context-header">
-                                <h3>Goal requirements</h3>
+                                <h3>Goal item</h3>
                                 <span class="pc-calc-context-state">Select</span>
                             </header>
                             <div class="pc-calc-goal-controls">
@@ -1728,8 +1662,7 @@ export class PcCalculator extends HTMLElement {
                                     <select data-role="success-threshold"></select>
                                 </label>
                             </div>
-                            <div class="pc-calc-goal-all"></div>
-                            <ul class="pc-calc-slots"></ul>
+                            <pc-mod-list data-role="goal-item"></pc-mod-list>
                         </article>
                     </aside>
                     <section class="pc-calc-pool">
@@ -1824,7 +1757,7 @@ export class PcCalculator extends HTMLElement {
         this.modPool.addEventListener("tab-change", () => {
             void this.guard(() => this.refresh());
         });
-        this.modList?.addEventListener("fracture-mod", (event) => {
+        this.inputModList?.addEventListener("fracture-mod", (event) => {
             this.selectContext("input");
             const detail = (
                 event as CustomEvent<{
@@ -1841,6 +1774,44 @@ export class PcCalculator extends HTMLElement {
                     true,
                 ),
             );
+        });
+        this.goalModList?.addEventListener("target-tier-change", (event) => {
+            this.selectContext("goal");
+            const detail = (
+                event as CustomEvent<{
+                    familyModKey: string;
+                    minTier: number;
+                }>
+            ).detail;
+            const slot = this.slots.find(
+                (entry) => entry.familyModKey === detail.familyModKey,
+            );
+            if (!slot) return;
+            slot.minTier = detail.minTier;
+            this.syncModPoolSelections();
+            void this.guard(() => this.goalChanged());
+        });
+        this.goalModList?.addEventListener("target-remove", (event) => {
+            this.selectContext("goal");
+            const detail = (
+                event as CustomEvent<{
+                    familyModKey?: string;
+                    slotIndex?: number;
+                }>
+            ).detail;
+            const index = detail.familyModKey
+                ? this.slots.findIndex(
+                      (slot) => slot.familyModKey === detail.familyModKey,
+                  )
+                : (detail.slotIndex ?? -1);
+            if (index < 0 || index >= this.slots.length) return;
+            const oldSlotCount = this.slots.length;
+            const followedAll =
+                this.effectiveMinSatisfiedSlots() === oldSlotCount;
+            this.slots = this.slots.filter((_, slotIndex) => slotIndex !== index);
+            this.normalizeSuccessThreshold(followedAll);
+            this.syncModPoolSelections();
+            void this.guard(() => this.goalChanged());
         });
         this.querySelectorAll<HTMLElement>("[data-context-card]").forEach(
             (card) => {

@@ -197,3 +197,51 @@ current compact type scale. Mobile remains out of scope.
 
 Native and WASM rebuilds are not expected because P3b changes no engine or ABI
 contract.
+
+## P3b implementation verification
+
+Implemented and verified on 2026-07-14.
+
+Visual records:
+
+- approved hierarchy: `design/mockups/calculator-goal-item/variant-a-literal-twin.png`;
+- full populated Calculator: `design/mockups/calculator-goal-item/implemented-p3b.png`;
+- focused populated Goal item: `design/mockups/calculator-goal-item/implemented-p3b-goal.png`.
+
+The implementation follows Variant A's literal-twin hierarchy: Input and Goal
+now render through separate, explicitly identified `pc-mod-list` instances;
+Goal retains its rarity and success-threshold controls above a target-mode item
+frame. The captured Vaal Regalia example has one concrete input prefix, a rare
+two-requirement goal (one prefix and one suffix), `All 2`, one selected Chaos
+action, engine-returned marginal odds on both target rows, and a combined exact
+result of 1.4751%.
+
+Engine-truth deviations from the illustrative mock are intentional:
+
+- section counts are the real `1/3` prefix and `1/3` suffix requirements, not
+  the mock's fictional full counts;
+- modifier text, tier availability, tags, and percentages come from the live
+  Vaal Regalia iLvl 86 catalog and exact Calculator result;
+- the any-tier requirement is labeled `ANY` / `Any tier`, while the concrete
+  tier is labeled `T1` / `T1 or better`;
+- target rows include quiet marginal odds and real player-facing tags, so they
+  are slightly taller than the mock's invented compact rows;
+- Goal does not invent influences or exact rolled values that are absent from
+  the v1 goal state.
+
+Separate-process headless Chrome exercised the complete shared-pool flow:
+edited Input, authored prefix and suffix Goal requirements, changed one target
+to Any tier, removed and re-added a target, switched between partial and All
+success thresholds, selected Chaos, observed exact and marginal odds, and
+reloaded the recovered v1 draft. The final application console and uncaught-
+exception lists were empty.
+
+Acceptance gates passed:
+
+- `npx tsc --noEmit`;
+- `npm test`;
+- `npm run build`;
+- `powershell -File scripts/test.ps1` (123,485 native engine checks, zero
+  failures, plus all ingest, artifact, binding, and web checks).
+
+No native, C ABI, binding, WASM, persistence, or solver-goal contract changed.
