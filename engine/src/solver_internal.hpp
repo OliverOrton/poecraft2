@@ -531,6 +531,47 @@ struct SolveResult {
     SolveDiagnostics diagnostics;
 };
 
+enum class SolvePhase {
+    Expanding,
+    Iterating,
+    Done,
+};
+
+struct SolveProgress {
+    SolvePhase phase = SolvePhase::Expanding;
+    bool done = false;
+    std::uint32_t expanded_states = 0;
+    std::uint32_t sweeps = 0;
+    double residual = 0.0;
+    double start_value_bound = 0.0;
+};
+
+/* Stateful counterpart of solve(). Each expansion work item processes one
+ * reachable abstract state; each iteration work item performs one complete,
+ * deterministic Bellman sweep. finish() extracts the policy only after the
+ * stepped work reports done. */
+class SolveWork {
+  public:
+    SolveWork(
+        CalcContext& calc,
+        const pc_item_state& start_item,
+        const std::unordered_map<std::string, double>& prices,
+        const SolveOptions& options = {});
+    ~SolveWork();
+    SolveWork(SolveWork&&) noexcept;
+    SolveWork& operator=(SolveWork&&) noexcept;
+    SolveWork(const SolveWork&) = delete;
+    SolveWork& operator=(const SolveWork&) = delete;
+
+    void step(std::uint32_t max_work_items);
+    SolveProgress progress() const;
+    SolveResult finish();
+
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+
 /*
  * Value iteration over the reachable closure of the start item. Action
  * costs are the descriptor cost vectors dotted with `prices`; actions with

@@ -20,9 +20,11 @@ import {
     ModInfo,
     PoolDebug,
     SimulationOptions,
-    SolveSummary,
+    SolveOptions,
+    SolveProgress,
     SolverActionInfo,
     SolverGoal,
+    SolverSolveResult,
     SolverStateValue,
     StrategyEvalOptions,
     StrategyEvalProgress,
@@ -45,6 +47,7 @@ interface Pending {
     reject: (reason: unknown) => void;
     onProgress?: (progress: { done: number; total: number }) => void;
     onEvaluationProgress?: (progress: StrategyEvalProgress) => void;
+    onSolveProgress?: (progress: SolveProgress) => void;
     abortCleanup?: () => void;
 }
 
@@ -57,6 +60,12 @@ export interface StrategyRunOptions {
 export interface StrategyEvaluationRunOptions {
     chunkSize?: number;
     onProgress?: (progress: StrategyEvalProgress) => void;
+    signal?: AbortSignal;
+}
+
+export interface SolverRunOptions {
+    chunkSize?: number;
+    onProgress?: (progress: SolveProgress) => void;
     signal?: AbortSignal;
 }
 
@@ -124,6 +133,9 @@ export class EngineClient {
             if (message.evaluation) {
                 pending?.onEvaluationProgress?.(message.evaluation);
             }
+            if (message.solve) {
+                pending?.onSolveProgress?.(message.solve);
+            }
             return;
         }
         const pending = this.pending.get(message.id);
@@ -160,6 +172,7 @@ export class EngineClient {
             transfer?: Transferable[];
             onProgress?: (progress: { done: number; total: number }) => void;
             onEvaluationProgress?: (progress: StrategyEvalProgress) => void;
+            onSolveProgress?: (progress: SolveProgress) => void;
             signal?: AbortSignal;
         },
     ): Promise<T> {
@@ -171,6 +184,7 @@ export class EngineClient {
                 reject,
                 onProgress: options?.onProgress,
                 onEvaluationProgress: options?.onEvaluationProgress,
+                onSolveProgress: options?.onSolveProgress,
             };
             this.pending.set(id, pending);
             const signal = options?.signal;
@@ -479,14 +493,23 @@ export class EngineClient {
         solver: number,
         item: number,
         economy: number,
-        options?: { epsilon?: number; max_states?: number; max_sweeps?: number },
-    ): Promise<SolveSummary> {
-        return this.call<SolveSummary>("solverSolve", {
-            solver,
-            item,
-            economy,
-            options,
-        });
+        options?: SolveOptions,
+        runOptions?: SolverRunOptions,
+    ): Promise<SolverSolveResult> {
+        return this.call<SolverSolveResult>(
+            "solverSolve",
+            {
+                solver,
+                item,
+                economy,
+                options,
+                chunkSize: runOptions?.chunkSize,
+            },
+            {
+                onSolveProgress: runOptions?.onProgress,
+                signal: runOptions?.signal,
+            },
+        );
     }
 
     solverStateValue(

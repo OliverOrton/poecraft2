@@ -19,6 +19,8 @@ import {
     PoolDebug,
     SimulationOptions,
     SimulationProgress,
+    SolveOptions,
+    SolveProgress,
     SolveSummary,
     SolverActionInfo,
     SolverGoal,
@@ -414,7 +416,7 @@ export class EngineBindings {
         solver: number,
         item: number,
         economy: number,
-        options?: { epsilon?: number; max_states?: number; max_sweeps?: number },
+        options?: SolveOptions,
     ): SolveSummary {
         const { ok, ...rest } = this.callJson(
             "pcw_solver_solve",
@@ -423,6 +425,46 @@ export class EngineBindings {
         );
         void ok;
         return rest as unknown as SolveSummary;
+    }
+
+    beginSolverSolve(
+        solver: number,
+        item: number,
+        economy: number,
+        options?: SolveOptions,
+    ): void {
+        this.callJson(
+            "pcw_solver_solve_begin",
+            ["number", "number", "number", "string"],
+            [solver, item, economy, JSON.stringify(options ?? {})],
+        );
+    }
+
+    stepSolverSolve(solver: number, maxWorkItems: number): SolveProgress {
+        return this.callJson(
+            "pcw_solver_solve_step",
+            ["number", "number"],
+            [solver, maxWorkItems],
+        ).progress as unknown as SolveProgress;
+    }
+
+    finishSolverSolve(solver: number): SolveSummary {
+        const { ok, ...rest } = this.callJson(
+            "pcw_solver_solve_finish",
+            ["number"],
+            [solver],
+        );
+        void ok;
+        return rest as unknown as SolveSummary;
+    }
+
+    abandonSolverSolve(solver: number): void {
+        this.module.ccall(
+            "pcw_solver_solve_abandon",
+            null,
+            ["number"],
+            [solver],
+        );
     }
 
     solverStateValue(solver: number, state: number): SolverStateValue {

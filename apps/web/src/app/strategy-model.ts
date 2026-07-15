@@ -44,6 +44,8 @@ export interface StrategyNode {
     reason?: string;
     position: StrategyPosition;
     notes?: string;
+    /** Native solver value V(s), preserved on compiled policy nodes. */
+    expected_cost?: number;
 }
 
 export type StrategyCondition = {

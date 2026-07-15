@@ -48,6 +48,22 @@ implementation, full gates, browser recovery smoke, and comparison captures
 are recorded in `design/specs/calculator-goal-item.md`. Phase 1 below is now
 the next task; do not begin Phase 2 in the same milestone.
 
+Status 2026-07-15: Phase 1 is complete. Oliver approved the Calculator's
+natural lower center/right workspace, and the implemented panel spans exactly
+from the Modifier Pool's left edge to the Odds column's right edge. It reuses
+the shared action-price rows, exposes a real `Start solve` action, scopes a
+temporary Solve-only solver to the fully priced native action ids, compiles and
+auto-layouts the policy, opens an ordinary copied Strategy Board document,
+renders native `expected_cost` through the existing annotation channel, and
+verifies with 5,000 simulator runs. Vocabulary-gap refusals retain the native
+message. Phase 2 is the next boundary.
+
+Status 2026-07-15 (later): Phase 2 is complete. The synchronous and stepped C
+ABI paths share one native `SolveWork` state machine; WASM and the worker drive
+bounded expansion/sweep chunks with structured progress and AbortSignal
+cancellation; Calculator shows only live states, sweeps, residual, V(start)
+bound, and Cancel while work is active. Phase 3 is next.
+
 Two standing rules bear repeating because they gate everything below:
 
 - **The engine is the only crafting-rule authority.** UI code renders what
@@ -109,7 +125,7 @@ methods and `app.css` only). Deliverables: brief, mocks, Oliver's pick,
 implementation, before/after screenshots. If Oliver would rather not
 block Phase 1 on this, he can defer it — ask him when presenting mocks.
 
-## Phase 1 — Solve in the workspace (solve → Strategy Board)
+## Phase 1 — Solve in the workspace (solve → Strategy Board) — complete
 
 **Goal.** A user authors a goal, clicks Solve, and gets the optimal
 strategy opened as a Strategy Board document, nodes annotated with
@@ -187,7 +203,18 @@ the worker (assert positions were assigned and `expected_cost` present
 on operation nodes); manual preview verification of the full flow with
 screenshots.
 
-## Phase 2 — Chunked solve with progress and cancel
+**Completion record (2026-07-15).** `npx tsc --noEmit`, `npm test`, and
+`npm run build` pass. The worker smoke now prepares the compiled policy through
+the shared board layout and asserts finite positions, board validity, and
+operation-node `expected_cost`. A separate headless Chrome flow exercised
+ready → solve → 5,000-run verify → open Strategy Board with zero console
+errors. Its compiler-safe fixture returned exact `5.4351c`, empirical
+`5.4084c`, delta `-0.026712c`, and a `~5.4351c to go` node annotation. The
+measured Solve surface was `375.265625..1440px`, exactly matching the Modifier
+Pool left edge and Odds right edge. The UI also exercised a real compiler
+vocabulary refusal before the success fixture and preserved its native detail.
+
+## Phase 2 — Chunked solve with progress and cancel — complete
 
 **Goal.** Long solves report progress and honor cancellation instead of
 blocking the worker; UI from Phase 1 gets a live progress readout
@@ -248,6 +275,23 @@ a solve on a multi-slot goal reports ≥2 progress events and cancels
 promptly via AbortSignal (mirror the two existing cancellation tests);
 full `scripts/test.ps1` once before commit since this touches engine,
 bindings, and web.
+
+**Completion record (2026-07-15).** `SolveWork` now advances one reachable
+state per expansion unit and one deterministic Bellman sweep per iteration
+unit; synchronous `pc_solver_solve` drives that same work to completion. The
+new begin/step/finish/abandon C ABI and WASM facade preserve summary, values,
+and policy exactly across assorted budgets, including the synthetic and Vaal
+Regalia fixtures. The worker adapts expansion chunks, yields between every
+iteration sweep, posts `SolveProgress`, and abandons native partial state on
+AbortSignal. Calculator's approved lower panel replaces Start with a live
+Cancel action only while solving and renders states, sweeps, residual, and the
+current V(start) bound; cancelled solves return to a restartable minimal idle
+state. Worker tests cover multi-slot progress plus prompt cancellation.
+Separate headless Chrome exercised progress -> cancel -> restart -> converged
+solve with zero console errors; its progress capture showed `109` states,
+`5,450` sweeps, residual `2.47e-2`, and bound `733.2208c`. The measured outer
+Solve surface still matched Modifier Pool left and Odds right exactly. Native,
+WASM, web, build, and full repository gates passed.
 
 ## Phase 3 — Emulator ambient odds ("odds before you click")
 

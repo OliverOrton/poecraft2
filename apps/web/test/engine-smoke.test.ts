@@ -23,8 +23,11 @@ import { EngineError } from "../src/app/engine-protocol";
 import type {
     ClientMessage,
     ModInfo,
+    SolveProgress,
     WorkerMessage,
 } from "../src/app/engine-protocol";
+import { prepareSolverStrategy } from "../src/app/solve-workspace";
+import { validateStrategy } from "../src/app/strategy-model";
 
 const REPO_ROOT = new URL("../../../", import.meta.url);
 const ARTIFACT_DIR = new URL("data/compiled/current/", REPO_ROOT);
@@ -1112,9 +1115,8 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         Math.abs(partialOdds.success_probability - summedPartialSuccess) <
             1e-9,
     );
-    await client.closeSolver(partialSolver);
-
-    // Solve, then verify the compiled policy through the simulator.
+    // A multi-slot solve emits honest stepped progress and can be abandoned
+    // promptly before policy extraction.
     const economy = await client.loadEconomy({
         version: "v1",
         prices: {
@@ -1123,7 +1125,46 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
             scour: 0.5, base: 5.0,
         },
     });
-    const solve = await client.solverSolve(solver, item, economy);
+    const controller = new AbortController();
+    const cancelProgress: SolveProgress[] = [];
+    const cancelStarted = performance.now();
+    const cancelledSolve = await client.solverSolve(
+        partialSolver,
+        item,
+        economy,
+        undefined,
+        {
+            chunkSize: 1,
+            signal: controller.signal,
+            onProgress: (progress) => {
+                cancelProgress.push(progress);
+                if (cancelProgress.length >= 2) controller.abort();
+            },
+        },
+    );
+    assert.equal(cancelledSolve.cancelled, true);
+    assert.ok(cancelProgress.length >= 2);
+    assert.ok(
+        performance.now() - cancelStarted < 5000,
+        "cancelled solve should abandon promptly",
+    );
+    await client.closeSolver(partialSolver);
+
+    // Solve, then verify the compiled policy through the simulator.
+    const solveProgress: SolveProgress[] = [];
+    const solve = await client.solverSolve(solver, item, economy, undefined, {
+        onProgress: (progress) => solveProgress.push(progress),
+    });
+    assert.equal(solve.cancelled, false);
+    if (solve.cancelled) assert.fail("completed solve was cancelled");
+    assert.ok(solveProgress.length >= 2);
+    assert.ok(
+        solveProgress.some((progress) => progress.phase === "expanding"),
+    );
+    assert.ok(
+        solveProgress.some((progress) => progress.phase === "iterating"),
+    );
+    assert.equal(solveProgress.at(-1)?.phase, "done");
     assert.equal(solve.converged, true);
     assert.ok(solve.start_value > 0);
     assert.equal(solve.skipped_actions, 0);
@@ -1138,7 +1179,29 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.ok(log.split("\n").filter(Boolean).length === solve.expanded_states);
 
     const compiled = await client.solverCompileStrategy(solver);
-    const strategy = await client.compileStrategy(sessionId, compiled);
+    const prepared = prepareSolverStrategy(compiled);
+    assert.ok(
+        prepared.nodes.every(
+            (node) =>
+                Number.isFinite(node.position.x) &&
+                Number.isFinite(node.position.y),
+        ),
+        "solver policies receive board positions before opening",
+    );
+    assert.ok(
+        prepared.nodes.some(
+            (node) =>
+                node.kind === "operation" &&
+                typeof node.expected_cost === "number",
+        ),
+        "operation nodes preserve native expected_cost annotations",
+    );
+    assert.deepEqual(
+        validateStrategy(prepared).filter((issue) => issue.severity === "error"),
+        [],
+        "the prepared policy is Strategy Board-valid",
+    );
+    const strategy = await client.compileStrategy(sessionId, prepared);
     const simulator = await client.createSimulator(
         sessionId,
         strategy,

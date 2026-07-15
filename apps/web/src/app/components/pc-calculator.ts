@@ -30,6 +30,8 @@ import {
     Catalog,
     EngineError,
     ModInfo,
+    SolveProgress,
+    SolveSummary,
     SolverActionInfo,
     SolverGoal,
 } from "../engine-protocol";
@@ -40,7 +42,12 @@ import {
     putCalculatorDraft,
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
-import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
+import {
+    getPrice,
+    getPrices,
+    onPricesChange,
+    setPrice,
+} from "../workspace/prices";
 import { influenceLabels } from "../item-display";
 import { buildCalculatorTargetModel } from "../calculator-goal-model";
 import {
@@ -62,6 +69,12 @@ import {
     groupEssences,
     resistanceEntries,
 } from "../craft-choices";
+import {
+    prepareSolverStrategy,
+    pricedSolverActionIds,
+    solvePriceReadiness,
+} from "../solve-workspace";
+import { cloneStrategy, type StrategyDocument } from "../strategy-model";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
@@ -167,6 +180,21 @@ export class PcCalculator extends HTMLElement {
     private mechanicValues = new Map<string, string>();
     private calc: CalcResult | null = null;
     private calcError = "";
+    private solveSummary: SolveSummary | null = null;
+    private solvedStrategy: StrategyDocument | null = null;
+    private solveError: { heading: string; detail: string } | null = null;
+    private verification: {
+        completedRuns: number;
+        empiricalCost: number;
+        delta: number;
+    } | null = null;
+    private solveCandidateActions = 0;
+    private solveExcludedActions = 0;
+    private solveRunning = false;
+    private solveProgress: SolveProgress | null = null;
+    private solveAbort: AbortController | null = null;
+    private solveCancelled = false;
+    private verificationRunning = false;
 
     private busy = true;
     private pickerOpen = false;
@@ -188,7 +216,11 @@ export class PcCalculator extends HTMLElement {
             save: async () => true, // nothing to save; never dirty
             dispose: () => this.disposeEngine(),
         });
-        this.unsubscribePrices = onPricesChange(() => this.renderResults());
+        this.unsubscribePrices = onPricesChange(() => {
+            this.clearSolveResult();
+            this.renderResults();
+            this.renderSolvePanel();
+        });
         this.setStatus("Loading engine…");
         const engine = await getEngine();
         if (this.disposed) {
@@ -330,25 +362,14 @@ export class PcCalculator extends HTMLElement {
 
     /** (Re)open the solver for the current goal. Requires >= 1 slot. */
     private async openSolver(): Promise<void> {
+        this.clearSolveResult();
         await this.closeSolverHandle();
         this.calc = null;
         this.calcError = "";
         if (this.disposed || this.slots.length === 0) {
             return;
         }
-        const goal: SolverGoal = {
-            version: "v1",
-            rarity: this.goalRarity,
-            min_satisfied_slots: this.effectiveMinSatisfiedSlots(),
-            slots: this.slots.map((slot) =>
-                slot.group
-                    ? { group: slot.group, min_tier: slot.minTier }
-                    : {
-                          family_mod_key: slot.familyModKey ?? "",
-                          min_tier: slot.minTier,
-                      },
-            ),
-        };
+        const goal = this.solverGoal();
         try {
             // No `actions` subset: the full registry stays available so any
             // selected action (including fossil loadouts) can be calculated.
@@ -368,6 +389,23 @@ export class PcCalculator extends HTMLElement {
                 omitFossilCombos: true,
             });
         }
+    }
+
+    private solverGoal(actions?: string[]): SolverGoal {
+        return {
+            version: "v1",
+            rarity: this.goalRarity,
+            min_satisfied_slots: this.effectiveMinSatisfiedSlots(),
+            slots: this.slots.map((slot) =>
+                slot.group
+                    ? { group: slot.group, min_tier: slot.minTier }
+                    : {
+                          family_mod_key: slot.familyModKey ?? "",
+                          min_tier: slot.minTier,
+                    },
+            ),
+            ...(actions ? { actions } : {}),
+        };
     }
 
     private async closeSolverHandle(): Promise<void> {
@@ -417,7 +455,19 @@ export class PcCalculator extends HTMLElement {
 
     // --- state changes ------------------------------------------------------
 
+    private clearSolveResult(): void {
+        this.solveSummary = null;
+        this.solvedStrategy = null;
+        this.solveError = null;
+        this.verification = null;
+        this.solveCandidateActions = 0;
+        this.solveExcludedActions = 0;
+        this.solveProgress = null;
+        this.solveCancelled = false;
+    }
+
     private async newItem(): Promise<void> {
+        this.clearSolveResult();
         if (this.item) {
             await this.client.closeItem(this.item);
         }
@@ -431,6 +481,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async inputChanged(): Promise<void> {
+        this.clearSolveResult();
         await this.refresh();
         await this.recalc();
         await this.persist();
@@ -564,6 +615,191 @@ export class PcCalculator extends HTMLElement {
             (action) => action.id === this.actionId,
         );
         return entry?.cost_keys ?? [];
+    }
+
+    private async startSolve(): Promise<void> {
+        const readiness = solvePriceReadiness(this.pickerActions, getPrice);
+        if (!this.solver || !this.item || this.slots.length === 0) {
+            this.solveError = {
+                heading: "Solve is not ready.",
+                detail: "Choose an input item and define at least one goal modifier.",
+            };
+            this.renderSolvePanel();
+            return;
+        }
+        if (readiness.pricedActions === 0) {
+            this.solveError = {
+                heading: "Solve needs at least one priced action.",
+                detail: "Set a chaos-equivalent price in the shared action price table.",
+            };
+            this.renderSolvePanel();
+            return;
+        }
+
+        this.clearSolveResult();
+        this.solveRunning = true;
+        const solveAbort = new AbortController();
+        this.solveAbort = solveAbort;
+        this.setStatus("Solving — may take a while on large goals.");
+        this.renderSolvePanel();
+        let economy = 0;
+        let solveSolver = 0;
+        try {
+            const actions = await this.client.solverActions(this.solver);
+            const candidateIds = pricedSolverActionIds(actions, getPrice);
+            if (candidateIds.length === 0) {
+                throw new Error("No priced solver actions are available.");
+            }
+            this.solveCandidateActions = candidateIds.length;
+            this.solveExcludedActions = actions.length - candidateIds.length;
+            solveSolver = await this.client.openSolver(
+                this.session,
+                this.solverGoal(candidateIds),
+            );
+            economy = await this.client.loadEconomy({
+                version: "v1",
+                prices: { ...getPrices() },
+            });
+            const result = await this.client.solverSolve(
+                solveSolver,
+                this.item,
+                economy,
+                undefined,
+                {
+                    signal: solveAbort.signal,
+                    onProgress: (progress) => {
+                        this.solveProgress = progress;
+                        const phase =
+                            progress.phase === "expanding"
+                                ? `${progress.expanded_states.toLocaleString()} states expanded`
+                                : progress.phase === "iterating"
+                                  ? `${progress.sweeps.toLocaleString()} sweeps`
+                                  : "finishing policy";
+                        this.setStatus(`Solving · ${phase}`);
+                        this.renderSolvePanel();
+                    },
+                },
+            );
+            if (result.cancelled) {
+                this.solveCancelled = true;
+                return;
+            }
+            this.solveSummary = result;
+            try {
+                const compiled = await this.client.solverCompileStrategy(
+                    solveSolver,
+                );
+                this.solvedStrategy = prepareSolverStrategy(compiled);
+            } catch (error) {
+                const detail = engineErrorDetail(error);
+                this.solveError =
+                    error instanceof EngineError && error.code === 4
+                        ? {
+                              heading:
+                                  "This goal needs condition types that are not implemented yet.",
+                              detail,
+                          }
+                        : {
+                              heading:
+                                  "The policy solved, but its Strategy Board document could not be prepared.",
+                              detail,
+                          };
+            }
+        } catch (error) {
+            this.solveError = {
+                heading: "Solve could not complete.",
+                detail: engineErrorDetail(error),
+            };
+        } finally {
+            this.solveAbort = null;
+            if (economy) await this.client.closeEconomy(economy);
+            if (solveSolver) await this.client.closeSolver(solveSolver);
+            this.solveRunning = false;
+            this.renderSolvePanel();
+        }
+    }
+
+    private cancelSolve(): void {
+        if (!this.solveRunning || !this.solveAbort) return;
+        this.setStatus("Cancelling solve...");
+        this.solveAbort.abort();
+    }
+
+    private async openSolvedStrategy(): Promise<void> {
+        if (!this.solvedStrategy) return;
+        await workspace().openStrategy(
+            cloneStrategy(this.solvedStrategy),
+            "copy",
+        );
+    }
+
+    private async verifySolvedStrategy(): Promise<void> {
+        if (!this.solveSummary || !this.solvedStrategy) return;
+        this.verification = null;
+        this.solveError = null;
+        this.verificationRunning = true;
+        this.setStatus("Verifying policy · 0 / 5,000 runs");
+        this.renderSolvePanel();
+        let economy = 0;
+        let strategy = 0;
+        let simulator = 0;
+        try {
+            economy = await this.client.loadEconomy({
+                version: "v1",
+                prices: { ...getPrices() },
+            });
+            strategy = await this.client.compileStrategy(
+                this.session,
+                cloneStrategy(this.solvedStrategy),
+            );
+            simulator = await this.client.createSimulator(
+                this.session,
+                strategy,
+                economy,
+            );
+            const result = await this.client.runStrategy(
+                simulator,
+                {
+                    target_runs: 5_000,
+                    max_actions_per_run: 100_000,
+                },
+                {
+                    onProgress: (progress) =>
+                        this.setStatus(
+                            `Verifying policy · ${progress.done.toLocaleString()} / ${progress.total.toLocaleString()} runs`,
+                        ),
+                },
+            );
+            const completedRuns = result.summary.completed_runs;
+            if (result.cancelled || completedRuns !== 5_000) {
+                throw new Error(
+                    `Verification completed ${completedRuns.toLocaleString()} of 5,000 runs.`,
+                );
+            }
+            if (result.summary.cost_status !== "complete") {
+                throw new Error(
+                    "Verification could not calculate a complete cost for every run.",
+                );
+            }
+            const empiricalCost =
+                result.summary.known_total_cost / completedRuns;
+            this.verification = {
+                completedRuns,
+                empiricalCost,
+                delta: empiricalCost - this.solveSummary.start_value,
+            };
+        } catch (error) {
+            this.solveError = {
+                heading: "Verification could not complete.",
+                detail: engineErrorDetail(error),
+            };
+        } finally {
+            if (simulator) await this.client.closeSimulator(simulator);
+            if (strategy) await this.client.closeStrategy(strategy);
+            if (economy) await this.client.closeEconomy(economy);
+            this.verificationRunning = false;
+            this.renderSolvePanel();
+        }
     }
 
     private async recalc(): Promise<void> {
@@ -1298,6 +1534,135 @@ export class PcCalculator extends HTMLElement {
         );
     }
 
+    private renderSolvePanel(): void {
+        const host = this.querySelector<HTMLElement>(".pc-calc-solve-panel");
+        if (!host) return;
+        const readiness = solvePriceReadiness(this.pickerActions, getPrice);
+        const priceTable = presentExpectedConsumption(
+            readiness.costKeys.map((key) => ({ key, quantity: 1 })),
+            getPrice,
+        );
+        const canStart =
+            Boolean(this.solver && this.item && this.slots.length) &&
+            readiness.pricedActions > 0 &&
+            !this.busy;
+        const progress = this.solveProgress;
+        const progressMarkup =
+            this.solveRunning && progress
+                ? `<section class="pc-calc-solve-progress" aria-live="polite">
+                    <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : "Finishing policy"}</strong>
+                    <span>States <b>${progress.expanded_states.toLocaleString()}</b></span>
+                    <span>Sweeps <b>${progress.sweeps.toLocaleString()}</b></span>
+                    <span>Residual <b>${progress.phase === "expanding" || progress.sweeps === 0 ? "Pending" : progress.residual.toExponential(2)}</b></span>
+                    <span>V(start) bound <b>${progress.phase === "expanding" || progress.start_value_bound >= 1e12 ? "Pending" : formatChaosValue(progress.start_value_bound)}</b></span>
+                </section>`
+                : "";
+        const summary = this.solveSummary;
+        const resultMarkup = summary
+            ? `<section class="pc-calc-solve-result">
+                <div class="pc-calc-solve-headline">
+                    <span>Expected cost</span>
+                    <strong>${formatChaosValue(summary.start_value)}</strong>
+                </div>
+                <div class="pc-calc-solve-state ${summary.converged ? "is-success" : "is-warning"}">
+                    ${summary.converged ? "Converged" : "Did not converge"}
+                    · ${summary.expanded_states.toLocaleString()} states
+                    · ${summary.sweeps.toLocaleString()} sweeps
+                    · residual ${summary.residual.toExponential(2)}
+                </div>
+                <strong class="pc-calc-solve-skipped">${this.solveExcludedActions.toLocaleString()} unpriced actions excluded before Solve</strong>
+                <span class="pc-calc-solve-native-skipped">${summary.skipped_actions.toLocaleString()} of ${this.solveCandidateActions.toLocaleString()} priced candidates skipped by the native solver</span>
+                ${
+                    this.solvedStrategy
+                        ? `<div class="pc-calc-solve-actions">
+                            <button data-solve-cmd="open" ${this.busy ? "disabled" : ""}>Open in Strategy Board</button>
+                            <button data-solve-cmd="verify" ${this.busy ? "disabled" : ""}>Verify 5,000 runs</button>
+                        </div>`
+                        : ""
+                }
+                ${
+                    this.verification
+                        ? `<div class="pc-calc-solve-verification">
+                            <span>Exact <strong>${formatChaosValue(summary.start_value)}</strong></span>
+                            <span>Empirical <strong>${formatChaosValue(this.verification.empiricalCost)}</strong></span>
+                            <span>Delta <strong>${this.verification.delta >= 0 ? "+" : "−"}${formatChaosValue(Math.abs(this.verification.delta))}</strong></span>
+                        </div>`
+                        : ""
+                }
+            </section>`
+            : "";
+        const errorMarkup = this.solveError
+            ? `<div class="pc-calc-solve-error">
+                <strong>${escapeHtml(this.solveError.heading)}</strong>
+                <pre>${escapeHtml(this.solveError.detail)}</pre>
+            </div>`
+            : "";
+        const idleMessage = !this.slots.length
+            ? "Define a goal to enable Solve."
+            : readiness.pricedActions === 0
+              ? "Set at least one action price to enable Solve."
+              : this.solveRunning
+                ? "Solving — may take a while on large goals."
+              : this.verificationRunning
+                  ? "Running 5,000 verification simulations."
+                  : this.solveCancelled
+                    ? "Solve cancelled. Adjust the goal or prices, then start again."
+                  : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
+
+        host.innerHTML = `
+            <header class="pc-calc-solve-header">
+                <div>
+                    <h3>Solve to Strategy</h3>
+                    <p>${idleMessage}</p>
+                </div>
+                ${
+                    this.solveRunning
+                        ? '<button class="pc-calc-solve-cancel" data-solve-cmd="cancel">Cancel</button>'
+                        : `<button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>`
+                }
+            </header>
+            ${progressMarkup}
+            ${
+                readiness.costKeys.length
+                    ? `<details class="pc-calc-solve-price-table">
+                        <summary>Action price table · ${readiness.missingKeys.length.toLocaleString()} missing</summary>
+                        <div class="pc-calc-solve-price-rows">${priceTable.rowsHtml}</div>
+                        <p class="pc-help">Prices are shared with Calculator and Strategy Builder. Unpriced actions are excluded from Solve.</p>
+                    </details>`
+                    : ""
+            }
+            ${resultMarkup}
+            ${errorMarkup}`;
+
+        host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
+            (input) => {
+                input.addEventListener("change", () => {
+                    const key = input.dataset.priceKey ?? "";
+                    const value = Number(input.value);
+                    setPrice(key, input.value === "" ? null : value);
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    const command = button.dataset.solveCmd;
+                    if (command === "cancel") {
+                        this.cancelSolve();
+                        return;
+                    }
+                    void this.guard(async () => {
+                        if (command === "start") await this.startSolve();
+                        if (command === "open") await this.openSolvedStrategy();
+                        if (command === "verify") {
+                            await this.verifySolvedStrategy();
+                        }
+                    });
+                });
+            },
+        );
+    }
+
     private renderExactResult(calc: CalcResult): string {
         return `<section class="pc-calc-answer">
             <span class="pc-calc-answer-kicker">Exact result</span>
@@ -1552,7 +1917,7 @@ export class PcCalculator extends HTMLElement {
     private setBusy(busy: boolean): void {
         this.busy = busy;
         this.querySelectorAll<HTMLButtonElement>(
-            "button[data-cmd], button[data-craft-panel], button[data-select-action], button[data-derive-action], button[data-fossil-add]",
+            "button[data-cmd], button[data-solve-cmd], button[data-craft-panel], button[data-select-action], button[data-derive-action], button[data-fossil-add]",
         ).forEach((button) => {
             if (busy) {
                 button.dataset.disabledBeforeBusy ??= String(button.disabled);
@@ -1581,6 +1946,7 @@ export class PcCalculator extends HTMLElement {
                 this.currentWork = null;
             }
             this.setBusy(false);
+            this.renderSolvePanel();
         }
     }
 
@@ -1671,6 +2037,9 @@ export class PcCalculator extends HTMLElement {
                     <section class="pc-calc-results">
                         <h3>Odds</h3>
                         <div class="pc-calc-output"></div>
+                    </section>
+                    <section class="pc-calc-solve">
+                        <div class="pc-calc-solve-panel"></div>
                     </section>
                 </div>
             </div>`;
@@ -1830,6 +2199,7 @@ export class PcCalculator extends HTMLElement {
         this.renderGoal();
         this.renderActionPanels();
         this.renderResults();
+        this.renderSolvePanel();
         this.setBusy(this.busy);
     }
 
@@ -1885,6 +2255,11 @@ function flagLabels(flags: number): string {
 
 function baseLabel(path: string): string {
     return path.split("/").pop() ?? path;
+}
+
+function engineErrorDetail(error: unknown): string {
+    if (error instanceof EngineError) return error.detail;
+    return error instanceof Error ? error.message : String(error);
 }
 
 function escapeHtml(text: string): string {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { StrategyEvalResult } from "../src/app/engine-protocol";
 import {
     buildStrategyBoardAnnotations,
+    buildSolverCostAnnotations,
     normalizeStrategyBuilderMode,
     strategyEvalRefusalMarkup,
     strategyStructuralSignature,
@@ -31,6 +32,17 @@ import { StrategyDraftRecord } from "../src/app/workspace/persistence";
         "calculator",
     );
     console.log("  ok - calculator mode persists and legacy drafts use Simulator");
+}
+
+{
+    const strategy = createDefaultStrategy();
+    strategy.nodes[1].expected_cost = 2.9319;
+    const annotations = buildSolverCostAnnotations(strategy);
+    assert.equal(annotations?.stale, false);
+    assert.equal(annotations?.nodeBadges.get("chaos")?.label, "~2.9319c to go");
+    assert.equal(annotations?.nodeBadges.get("chaos")?.kind, "cost");
+    assert.equal(annotations?.edgeLabels.size, 0);
+    console.log("  ok - solver values use the existing board annotation channel");
 }
 
 {

@@ -335,6 +335,32 @@ export interface SolveSummary {
     skipped_actions: number;
 }
 
+export interface SolveOptions {
+    epsilon?: number;
+    max_states?: number;
+    max_sweeps?: number;
+}
+
+export interface SolveProgress {
+    phase: "expanding" | "iterating" | "done";
+    done: boolean;
+    expanded_states: number;
+    sweeps: number;
+    residual: number;
+    /** Monotonically descending upper bound; 1e12 means iteration is pending. */
+    start_value_bound: number;
+}
+
+export type SolverSolveResult =
+    | (SolveSummary & {
+          cancelled: false;
+          progress: SolveProgress;
+      })
+    | {
+          cancelled: true;
+          progress: SolveProgress;
+      };
+
 export interface SolverStateValue {
     value: number;
     /** Policy action id, or null for goal/terminal states. */
@@ -427,6 +453,7 @@ export interface ProgressMessage {
     done: number;
     total: number;
     evaluation?: StrategyEvalProgress;
+    solve?: SolveProgress;
 }
 
 export interface ResponseMessage {

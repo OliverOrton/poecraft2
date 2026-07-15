@@ -17,7 +17,10 @@ import {
     EngineError,
     SimulationOptions,
     SimulationProgress,
+    SolveOptions,
+    SolveProgress,
     SolverGoal,
+    SolverSolveResult,
     StrategyEvalOptions,
     StrategyEvalProgress,
     StrategyResult,
@@ -262,6 +265,117 @@ async function runStrategy(
         progress,
         ...bindings.simulatorResult(simulator),
     };
+}
+
+function solveProgressCounts(
+    progress: SolveProgress,
+): { done: number; total: number } {
+    if (progress.phase === "expanding") {
+        return {
+            done: progress.expanded_states,
+            total: progress.expanded_states + 1,
+        };
+    }
+    if (progress.phase === "iterating") {
+        return { done: progress.sweeps, total: progress.sweeps + 1 };
+    }
+    return { done: 1, total: 1 };
+}
+
+async function solveSolver(
+    id: number,
+    params: Record<string, unknown>,
+): Promise<SolverSolveResult> {
+    const solver = params.solver as number;
+    let begun = false;
+    let workItems = Math.max(1, (params.chunkSize as number) || 8);
+    let observedPhase: SolveProgress["phase"] = "expanding";
+    let emittedProgress = false;
+    let lastProgressAt = -Infinity;
+    let yieldCount = 0;
+    const reportEveryChunk = params.chunkSize !== undefined;
+    let progress: SolveProgress = {
+        phase: "expanding",
+        done: false,
+        expanded_states: 0,
+        sweeps: 0,
+        residual: 1e12,
+        start_value_bound: 1e12,
+    };
+
+    try {
+        if (cancelled.has(id)) {
+            return { cancelled: true, progress };
+        }
+        bindings.beginSolverSolve(
+            solver,
+            params.item as number,
+            params.economy as number,
+            params.options as SolveOptions | undefined,
+        );
+        begun = true;
+
+        do {
+            if (cancelled.has(id)) {
+                return { cancelled: true, progress };
+            }
+            /* One full Bellman sweep can already be substantial. Expansion
+             * chunks adapt toward a 16 ms worker slice; iteration stays at a
+             * single sweep so cancellation is serviced between sweeps. */
+            const stepWorkItems =
+                observedPhase === "iterating" ? 1 : workItems;
+            const started = performance.now();
+            progress = bindings.stepSolverSolve(solver, stepWorkItems);
+            const elapsedMs = Math.max(0.1, performance.now() - started);
+            const phaseChanged = progress.phase !== observedPhase;
+            if (phaseChanged) {
+                workItems = 1;
+            } else if (progress.phase === "expanding") {
+                const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
+                workItems = Math.min(
+                    4096,
+                    Math.max(1, Math.round(stepWorkItems * scale)),
+                );
+            }
+            observedPhase = progress.phase;
+
+            const now = performance.now();
+            if (
+                reportEveryChunk ||
+                !emittedProgress ||
+                phaseChanged ||
+                progress.done ||
+                now - lastProgressAt >= 100
+            ) {
+                const counts = solveProgressCounts(progress);
+                post({
+                    kind: "progress",
+                    id,
+                    ...counts,
+                    solve: progress,
+                });
+                emittedProgress = true;
+                lastProgressAt = now;
+            }
+
+            if (!progress.done) {
+                ++yieldCount;
+                // Give an external AbortSignal a timer-task turn immediately.
+                await (yieldCount % 2 === 1
+                    ? yieldToTimerTask()
+                    : yieldToEventLoop());
+            }
+        } while (!progress.done);
+
+        if (cancelled.has(id)) {
+            return { cancelled: true, progress };
+        }
+        const summary = bindings.finishSolverSolve(solver);
+        begun = false;
+        return { ...summary, cancelled: false, progress };
+    } finally {
+        if (begun) bindings.abandonSolverSolve(solver);
+    }
 }
 
 function evaluationProgressCounts(
@@ -555,14 +669,7 @@ async function dispatch(
                 params.action as string,
             );
         case "solverSolve":
-            return bindings.solverSolve(
-                params.solver as number,
-                params.item as number,
-                params.economy as number,
-                params.options as
-                    | { epsilon?: number; max_states?: number; max_sweeps?: number }
-                    | undefined,
-            );
+            return solveSolver(id, params);
         case "solverStateValue":
             return bindings.solverStateValue(
                 params.solver as number,

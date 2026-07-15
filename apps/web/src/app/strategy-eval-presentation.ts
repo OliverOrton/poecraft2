@@ -1,13 +1,13 @@
 import { EngineErrorInfo, StrategyEvalResult } from "./engine-protocol";
 import { StrategyDocument } from "./strategy-model";
-import { formatProbabilityExact } from "./odds-presentation";
+import { formatChaosValue, formatProbabilityExact } from "./odds-presentation";
 
 export type StrategyBuilderMode = "simulator" | "calculator";
 
 export interface StrategyNodeAnnotation {
     label: string;
     title: string;
-    kind: "visits" | "terminal";
+    kind: "visits" | "terminal" | "cost";
 }
 
 export interface StrategyEdgeAnnotation {
@@ -103,6 +103,39 @@ export function buildStrategyBoardAnnotations(
         });
     }
     return { stale, nodeBadges, edgeLabels };
+}
+
+/**
+ * Solver-compiled operation nodes carry V(s) directly. Present those values
+ * through the board's existing annotation channel instead of a second badge
+ * layer.
+ */
+export function buildSolverCostAnnotations(
+    strategy: StrategyDocument,
+): StrategyBoardAnnotations | null {
+    const nodeBadges = new Map<string, StrategyNodeAnnotation>();
+    for (const node of strategy.nodes) {
+        if (
+            node.kind !== "operation" ||
+            node.expected_cost === undefined ||
+            !Number.isFinite(node.expected_cost)
+        ) {
+            continue;
+        }
+        const cost = formatChaosValue(node.expected_cost);
+        nodeBadges.set(node.id, {
+            label: `~${cost} to go`,
+            title: `${cost} expected remaining cost from this solver state`,
+            kind: "cost",
+        });
+    }
+    return nodeBadges.size
+        ? {
+              stale: false,
+              nodeBadges,
+              edgeLabels: new Map(),
+          }
+        : null;
 }
 
 function formatVisits(value: number): string {

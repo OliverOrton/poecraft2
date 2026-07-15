@@ -7,6 +7,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "handles_internal.hpp"
@@ -161,10 +162,77 @@ solver::GoalSpec parse_goal(
 struct pc_solver {
     std::shared_ptr<const poecraft::SessionImpl> session;
     std::unique_ptr<solver::CalcContext> calc;
+    std::unique_ptr<solver::SolveWork> solve_work;
     std::optional<solver::SolveResult> solved;
     std::string compiled_strategy; /* scratch for the buffer queries */
     std::string solve_log;
 };
+
+namespace {
+
+solver::SolveOptions solve_options(const pc_solve_options* options) {
+    solver::SolveOptions value;
+    if (options == nullptr) return value;
+    if (options->epsilon > 0.0) value.epsilon = options->epsilon;
+    if (options->max_states != 0) value.max_states = options->max_states;
+    if (options->max_sweeps != 0) value.max_sweeps = options->max_sweeps;
+    return value;
+}
+
+std::unordered_map<std::string, double> economy_prices(
+    const pc_economy_handle economy) {
+    return std::unordered_map<std::string, double>(
+        economy->impl->prices.begin(), economy->impl->prices.end());
+}
+
+int32_t solve_phase(const solver::SolvePhase phase) {
+    switch (phase) {
+    case solver::SolvePhase::Expanding: return PC_SOLVE_PHASE_EXPANDING;
+    case solver::SolvePhase::Iterating: return PC_SOLVE_PHASE_ITERATING;
+    case solver::SolvePhase::Done: return PC_SOLVE_PHASE_DONE;
+    }
+    return PC_SOLVE_PHASE_DONE;
+}
+
+void copy_solve_progress(
+    const solver::SolveProgress& source,
+    pc_solve_progress& target) {
+    target = {};
+    target.struct_size = sizeof(target);
+    target.abi_version = PC_ABI_VERSION;
+    target.phase = solve_phase(source.phase);
+    target.done = source.done ? 1 : 0;
+    target.expanded_states = source.expanded_states;
+    target.sweeps = source.sweeps;
+    target.residual = source.residual;
+    target.start_value_bound = source.start_value_bound;
+}
+
+void copy_solve_summary(
+    const solver::SolveResult& result,
+    pc_solve_summary* out_summary) {
+    if (out_summary == nullptr) return;
+    *out_summary = {};
+    out_summary->struct_size = sizeof(*out_summary);
+    out_summary->abi_version = PC_ABI_VERSION;
+    out_summary->converged = result.converged ? 1 : 0;
+    out_summary->start_state = result.start_state;
+    out_summary->start_value = result.values[result.start_state];
+    out_summary->expanded_states = result.diagnostics.expanded_states;
+    out_summary->sweeps = result.diagnostics.sweeps;
+    out_summary->residual = result.diagnostics.residual;
+    out_summary->skipped_action_count = static_cast<uint32_t>(
+        result.diagnostics.skipped_missing_price.size() +
+        result.diagnostics.skipped_unsupported.size());
+}
+
+void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
+    solver->solved = std::move(result);
+    solver->compiled_strategy.clear();
+    solver->solve_log.clear();
+}
+
+} // namespace
 
 pc_result pc_solver_create(
     pc_session_handle session,
@@ -384,46 +452,105 @@ pc_result pc_solver_solve(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
-        solver::SolveOptions solve_options;
-        if (options != nullptr) {
-            if (options->epsilon > 0.0) {
-                solve_options.epsilon = options->epsilon;
-            }
-            if (options->max_states != 0) {
-                solve_options.max_states = options->max_states;
-            }
-            if (options->max_sweeps != 0) {
-                solve_options.max_sweeps = options->max_sweeps;
-            }
-        }
-        std::unordered_map<std::string, double> prices(
-            economy->impl->prices.begin(), economy->impl->prices.end());
-        solver->solved = solver::solve(*solver->calc, *start_item, prices,
-                                       solve_options);
-        solver->compiled_strategy.clear();
-        solver->solve_log.clear();
-        const solver::SolveResult& result = *solver->solved;
-        if (out_summary != nullptr) {
-            out_summary->struct_size =
-                static_cast<uint32_t>(sizeof(*out_summary));
-            out_summary->abi_version = PC_ABI_VERSION;
-            out_summary->converged = result.converged ? 1 : 0;
-            out_summary->start_state = result.start_state;
-            out_summary->start_value = result.values[result.start_state];
-            out_summary->expanded_states =
-                result.diagnostics.expanded_states;
-            out_summary->sweeps = result.diagnostics.sweeps;
-            out_summary->residual = result.diagnostics.residual;
-            out_summary->skipped_action_count = static_cast<uint32_t>(
-                result.diagnostics.skipped_missing_price.size() +
-                result.diagnostics.skipped_unsupported.size());
-        }
+        solver->solve_work.reset();
+        solver::SolveWork work(
+            *solver->calc, *start_item, economy_prices(economy),
+            solve_options(options));
+        while (!work.progress().done) work.step(4096);
+        commit_solve(solver, work.finish());
+        copy_solve_summary(*solver->solved, out_summary);
         clear_error(out_error);
         return PC_RESULT_OK;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
         return PC_RESULT_INTERNAL_ERROR;
     }
+}
+
+pc_result pc_solver_solve_begin(
+    pc_solver_handle solver,
+    const pc_item_state* start_item,
+    pc_economy_handle economy,
+    const pc_solve_options* options,
+    pc_error_info* out_error) {
+    if (solver == nullptr || start_item == nullptr || economy == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "solver, start item, and economy are required");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        auto work = std::make_unique<solver::SolveWork>(
+            *solver->calc, *start_item, economy_prices(economy),
+            solve_options(options));
+        solver->solve_work = std::move(work);
+        solver->solved.reset();
+        solver->compiled_strategy.clear();
+        solver->solve_log.clear();
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_solve_step(
+    pc_solver_handle solver,
+    uint32_t max_work_items,
+    pc_solve_progress* out_progress,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_progress == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solve_work) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "no stepped solve is in progress");
+        return PC_RESULT_NOT_FOUND;
+    }
+    try {
+        solver->solve_work->step(max_work_items);
+        copy_solve_progress(solver->solve_work->progress(), *out_progress);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+pc_result pc_solver_solve_finish(
+    pc_solver_handle solver,
+    pc_solve_summary* out_summary,
+    pc_error_info* out_error) {
+    if (solver == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    if (!solver->solve_work) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "no stepped solve is in progress");
+        return PC_RESULT_NOT_FOUND;
+    }
+    if (!solver->solve_work->progress().done) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT,
+                  "stepped solve is not finished");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        commit_solve(solver, solver->solve_work->finish());
+        solver->solve_work.reset();
+        copy_solve_summary(*solver->solved, out_summary);
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
+}
+
+void pc_solver_solve_abandon(pc_solver_handle solver) {
+    if (solver != nullptr) solver->solve_work.reset();
 }
 
 pc_result pc_solver_state_value(

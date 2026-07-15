@@ -142,7 +142,7 @@ export class PcStrategyBoard extends HTMLElement {
                     this.viewport.zoom;
                 const next = Math.min(
                     1.75,
-                    Math.max(0.45, this.viewport.zoom * (event.deltaY > 0 ? 0.9 : 1.1)),
+                    Math.max(0.3, this.viewport.zoom * (event.deltaY > 0 ? 0.9 : 1.1)),
                 );
                 this.viewport.zoom = next;
                 this.viewport.panX =
@@ -292,6 +292,12 @@ export class PcStrategyBoard extends HTMLElement {
             ".pc-board-stale-chip",
         );
         if (staleChip) staleChip.hidden = !this.annotations?.stale;
+        const canvas = this.canvasSize();
+        const content = this.querySelector<HTMLElement>(".pc-board-content");
+        if (content) {
+            content.style.width = `${canvas.width}px`;
+            content.style.height = `${canvas.height}px`;
+        }
         container.replaceChildren(
             ...this.strategy.nodes.map((node) => {
                 const element = document.createElement(
@@ -321,7 +327,46 @@ export class PcStrategyBoard extends HTMLElement {
             warningEdgeIds,
             annotations: this.annotations?.edgeLabels,
             annotationsStale: this.annotations?.stale,
+            canvas,
+            nodeSizes: this.measureNodeSizes(),
         });
+    }
+
+    /** Canvas large enough to hold every node plus room for cards and lanes. */
+    private canvasSize(): { width: number; height: number } {
+        let maxX = 0;
+        let maxY = 0;
+        for (const node of this.strategy?.nodes ?? []) {
+            maxX = Math.max(maxX, node.position.x);
+            maxY = Math.max(maxY, node.position.y);
+        }
+        return {
+            width: Math.max(3000, Math.ceil(maxX + 900)),
+            height: Math.max(2000, Math.ceil(maxY + 800)),
+        };
+    }
+
+    /** Rendered size of each node element, in graph units. */
+    measureNodeSizes(): Map<string, { width: number; height: number }> {
+        const sizes = new Map<string, { width: number; height: number }>();
+        this.querySelectorAll<PcStrategyNode>("pc-strategy-node").forEach(
+            (element) => {
+                const id = element.dataset.nodeId;
+                if (!id) return;
+                sizes.set(id, {
+                    width: element.offsetWidth || 210,
+                    height: element.offsetHeight || 132,
+                });
+            },
+        );
+        return sizes;
+    }
+
+    /** Client size of the visible board viewport. */
+    viewportSize(): { width: number; height: number } {
+        const viewport = this.querySelector<HTMLElement>(".pc-board-viewport");
+        const rect = viewport?.getBoundingClientRect();
+        return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
     }
 
     private get edgeLayer(): PcEdgeLayer {

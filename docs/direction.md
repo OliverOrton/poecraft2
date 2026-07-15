@@ -34,8 +34,10 @@ the current next task. The pre-S6 product-polish interlude is complete: base
 ordering and graph auto-labels landed, and Calculator's one v1 goal now looks
 and edits like its input item through the shared item frame. The Searing/Eater
 currency migration remains skipped, and the earlier multi-goal/OR expansion
-was removed from this interlude. Solver S6 Phase 1 is next. The completed
-sequence is in
+was removed from this interlude. Solver S6 Phases 1-2 are complete: Calculator
+can solve into an annotated Strategy Board, and long solves now report native
+progress and cancel without blocking the worker. S6 Phase 3 is next. The
+completed polish sequence is in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
 
 ## Direction Of Travel

@@ -165,6 +165,46 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_summary.start_value > 0.0);
     PC_CHECK(solve_summary.skipped_action_count == 0);
 
+    /* The stepped ABI uses the same solver state machine. Exercise abandon,
+     * then complete with deliberately tiny and uneven budgets. */
+    PC_CHECK(pc_solver_solve_begin(solver, &item, economy, nullptr, &error) ==
+             PC_RESULT_OK);
+    pc_solve_progress solve_progress{};
+    PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_EXPANDING);
+    PC_CHECK(solve_progress.expanded_states == 1);
+    pc_solver_solve_abandon(solver);
+    PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
+             PC_RESULT_NOT_FOUND);
+
+    PC_CHECK(pc_solver_solve_begin(solver, &item, economy, nullptr, &error) ==
+             PC_RESULT_OK);
+    uint32_t step_count = 0;
+    do {
+        const uint32_t budget = step_count % 3 == 0 ? 1 : 7;
+        PC_CHECK(pc_solver_solve_step(solver, budget, &solve_progress,
+                                      &error) == PC_RESULT_OK);
+        PC_CHECK(solve_progress.expanded_states > 0);
+        PC_CHECK(solve_progress.start_value_bound >= 0.0);
+        ++step_count;
+    } while (!solve_progress.done);
+    PC_CHECK(step_count >= 2);
+    PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_DONE);
+
+    pc_solve_summary stepped_summary{};
+    PC_CHECK(pc_solver_solve_finish(solver, &stepped_summary, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(stepped_summary.converged == solve_summary.converged);
+    PC_CHECK(stepped_summary.start_state == solve_summary.start_state);
+    PC_CHECK(stepped_summary.start_value == solve_summary.start_value);
+    PC_CHECK(stepped_summary.expanded_states == solve_summary.expanded_states);
+    PC_CHECK(stepped_summary.sweeps == solve_summary.sweeps);
+    PC_CHECK(stepped_summary.residual == solve_summary.residual);
+    PC_CHECK(stepped_summary.skipped_action_count ==
+             solve_summary.skipped_action_count);
+    solve_summary = stepped_summary;
+
     uint32_t start_state = 0;
     PC_CHECK(pc_solver_project_item(solver, &item, &start_state, &error) ==
              PC_RESULT_OK);

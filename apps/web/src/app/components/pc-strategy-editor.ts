@@ -49,9 +49,11 @@ import { openTextModal } from "../workspace/dirty-modal";
 import {
     StrategyBuilderMode,
     buildStrategyBoardAnnotations,
+    buildSolverCostAnnotations,
     normalizeStrategyBuilderMode,
     strategyStructuralSignature,
 } from "../strategy-eval-presentation";
+import { autoLayoutStrategy } from "../strategy-layout";
 import { BasePickerSelection, PcBasePicker } from "./pc-base-picker";
 import { ComboOption, PcCombobox } from "./pc-combobox";
 import "./pc-base-picker";
@@ -62,6 +64,7 @@ import {
     PcStrategyBoard,
     TraceHighlight,
 } from "./pc-strategy-board";
+import { NODE_WIDTH, estimateEdgeCardSize } from "./pc-edge-layer";
 import { PcSimulator } from "./pc-simulator";
 import { PcStrategyOdds } from "./pc-strategy-odds";
 import "./pc-condition-editor";
@@ -407,6 +410,7 @@ export class PcStrategyEditor extends HTMLElement {
                     <button data-cmd="change-base">Change base…</button>
                     <button data-cmd="delete">Delete selected</button>
                     <button data-cmd="auto-layout">Auto layout</button>
+                    <button data-cmd="fit-view">Fit view</button>
                     <span class="pc-strategy-status"></span>
                 </div>
                 <div class="pc-strategy-main">
@@ -464,6 +468,7 @@ export class PcStrategyEditor extends HTMLElement {
                 else if (cmd === "change-base") this.openBasePicker();
                 else if (cmd === "delete") this.deleteSelection();
                 else if (cmd === "auto-layout") this.autoLayout();
+                else if (cmd === "fit-view") this.fitView();
             });
         });
         this.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach(
@@ -1256,39 +1261,61 @@ export class PcStrategyEditor extends HTMLElement {
         this.markChanged();
     }
 
+    /**
+     * Layered (Sugiyama-style) layout: drop back edges, place each node one
+     * column after its last predecessor, order rows to reduce crossings, and
+     * size the gaps so edge condition cards fit between columns.
+     */
     private autoLayout(): void {
-        const outgoing = new Map<string, string[]>();
-        for (const edge of this.strategy.edges) {
-            if (edge.from === edge.to) continue;
-            outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge.to]);
-        }
-        const levels = new Map<string, number>();
-        const pending = [this.strategy.start_node_id];
-        levels.set(this.strategy.start_node_id, 0);
-        while (pending.length) {
-            const id = pending.shift()!;
-            const nextLevel = (levels.get(id) ?? 0) + 1;
-            for (const target of outgoing.get(id) ?? []) {
-                if (!levels.has(target) || nextLevel < levels.get(target)!) {
-                    levels.set(target, nextLevel);
-                    pending.push(target);
-                }
-            }
-        }
-        let orphanLevel = Math.max(0, ...levels.values()) + 1;
-        const grouped = new Map<number, StrategyNode[]>();
-        for (const node of this.strategy.nodes) {
-            const level = levels.get(node.id) ?? orphanLevel;
-            grouped.set(level, [...(grouped.get(level) ?? []), node]);
-        }
-        for (const [level, nodes] of grouped) {
-            nodes.forEach((node, index) => {
-                node.position = { x: 100 + level * 330, y: 100 + index * 170 };
-            });
-        }
-        orphanLevel += 1;
-        void orphanLevel;
+        if (!this.strategy.nodes.length) return;
+        autoLayoutStrategy(this.strategy, {
+            nodeSizes: this.board.measureNodeSizes(),
+            edgeCardSize: estimateEdgeCardSize,
+        });
         this.markChanged();
+        this.fitView();
+    }
+
+    /** Pan/zoom the board so the whole graph is visible. */
+    private fitView(): void {
+        const nodes = this.strategy.nodes;
+        if (!nodes.length) return;
+        const sizes = this.board.measureNodeSizes();
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const node of nodes) {
+            const size = sizes.get(node.id) ?? { width: NODE_WIDTH, height: 132 };
+            minX = Math.min(minX, node.position.x);
+            minY = Math.min(minY, node.position.y);
+            maxX = Math.max(maxX, node.position.x + size.width);
+            maxY = Math.max(maxY, node.position.y + size.height);
+        }
+        const viewport = this.board.viewportSize();
+        if (!viewport.width || !viewport.height) return;
+        const pad = 130;
+        const width = maxX - minX + pad * 2;
+        const height = maxY - minY + pad * 2;
+        const zoom = Math.min(
+            1,
+            Math.max(
+                0.3,
+                Math.min(viewport.width / width, viewport.height / height),
+            ),
+        );
+        this.strategy.ui ??= {};
+        this.strategy.ui.viewport = {
+            zoom,
+            panX: Math.round(
+                (viewport.width - (maxX - minX) * zoom) / 2 - minX * zoom,
+            ),
+            panY: Math.round(
+                (viewport.height - (maxY - minY) * zoom) / 2 - minY * zoom,
+            ),
+        };
+        this.markChanged(false);
+        this.updateView();
     }
 
     private nextOpenPosition(): StrategyPosition {
@@ -1458,13 +1485,14 @@ export class PcStrategyEditor extends HTMLElement {
     }
 
     private get currentAnnotations() {
-        return this.mode === "calculator" && this.evalResult
-            ? buildStrategyBoardAnnotations(
-                  this.strategy,
-                  this.evalResult,
-                  this.evalStale,
-              )
-            : null;
+        if (this.mode === "calculator" && this.evalResult) {
+            return buildStrategyBoardAnnotations(
+                this.strategy,
+                this.evalResult,
+                this.evalStale,
+            );
+        }
+        return buildSolverCostAnnotations(this.strategy);
     }
 
     private evalTargetLabels(): string[] {

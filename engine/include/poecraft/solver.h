@@ -244,6 +244,46 @@ typedef struct pc_solve_summary {
                                       solve planned without */
 } pc_solve_summary;
 
+typedef enum pc_solve_phase {
+    PC_SOLVE_PHASE_EXPANDING = 1,
+    PC_SOLVE_PHASE_ITERATING = 2,
+    PC_SOLVE_PHASE_DONE = 3
+} pc_solve_phase;
+
+typedef struct pc_solve_progress {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    int32_t phase; /* pc_solve_phase */
+    int32_t done;
+    uint32_t expanded_states;
+    uint32_t sweeps;
+    double residual;
+    double start_value_bound;
+} pc_solve_progress;
+
+/* Stateful solve surface. begin snapshots the economy and resets the latest
+ * result; step performs bounded expansion/sweep work; finish extracts and
+ * stores the policy after progress.done; abandon discards partial work. */
+pc_result pc_solver_solve_begin(
+    pc_solver_handle solver,
+    const pc_item_state* start_item,
+    pc_economy_handle economy,
+    const pc_solve_options* options,
+    pc_error_info* out_error);
+
+pc_result pc_solver_solve_step(
+    pc_solver_handle solver,
+    uint32_t max_work_items,
+    pc_solve_progress* out_progress,
+    pc_error_info* out_error);
+
+pc_result pc_solver_solve_finish(
+    pc_solver_handle solver,
+    pc_solve_summary* out_summary,
+    pc_error_info* out_error);
+
+void pc_solver_solve_abandon(pc_solver_handle solver);
+
 /*
  * Synchronous value iteration from the start item. The economy supplies
  * the price table (a null economy is invalid: costs are required).

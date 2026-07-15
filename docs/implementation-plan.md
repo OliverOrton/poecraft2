@@ -861,11 +861,11 @@ Before solver S6 Phase 1, complete the active polish phases in
    selected action, and engine-returned odds; redesign only the Goal surface so
    it uses the same shared item-frame UI as the input item.
 
-Status 2026-07-14: P1 and P3 are complete; P2 remains skipped. Calculator Goal
+Status 2026-07-15: P1 and P3 are complete; P2 remains skipped. Calculator Goal
 now uses the same shared item-frame structure as Input through an explicit
 target model, with the v1 goal and native odds contracts unchanged. The full
 repository gate and separate-process browser recovery smoke passed. Solver S6
-Phase 1 is next.
+Phases 1-2 are complete; Phase 3 ambient Emulator odds is next.
 
 This interlude does not move crafting-rule authority into the frontend. The
 Calculator and Strategy Builder keep their task-shaped public APIs, but both

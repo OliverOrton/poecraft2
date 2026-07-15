@@ -87,6 +87,42 @@ bool near(double a, double b, double tolerance = 1e-6) {
     return std::fabs(a - b) < tolerance;
 }
 
+SolveResult solve_stepped(
+    CalcContext& calc,
+    const pc_item_state& start,
+    const std::unordered_map<std::string, double>& prices,
+    const std::uint32_t budget) {
+    SolveWork work(calc, start, prices);
+    std::uint32_t progress_events = 0;
+    while (!work.progress().done) {
+        work.step(budget);
+        ++progress_events;
+    }
+    PC_CHECK(progress_events >= 2);
+    return work.finish();
+}
+
+bool identical_solve(
+    const SolveResult& left,
+    const SolveResult& right) {
+    return left.converged == right.converged &&
+           left.start_state == right.start_state &&
+           left.values == right.values && left.policy == right.policy &&
+           left.expanded == right.expanded &&
+           left.goal_states == right.goal_states &&
+           left.policy_reachable == right.policy_reachable &&
+           left.diagnostics.skipped_missing_price ==
+               right.diagnostics.skipped_missing_price &&
+           left.diagnostics.skipped_unsupported ==
+               right.diagnostics.skipped_unsupported &&
+           left.diagnostics.expanded_states ==
+               right.diagnostics.expanded_states &&
+           left.diagnostics.sweeps == right.diagnostics.sweeps &&
+           left.diagnostics.residual == right.diagnostics.residual &&
+           left.diagnostics.state_cap_hit ==
+               right.diagnostics.state_cap_hit;
+}
+
 void place(pc_item_state* item, int side, std::uint32_t mod_id,
            std::uint16_t group) {
     pc_item_add_mod(item, side, mod_id, group, 0, nullptr);
@@ -158,6 +194,12 @@ void run_alt_spam_tests() {
         }
         PC_CHECK(lines == result.diagnostics.expanded_states);
         PC_CHECK(log.find("\"action\":\"transmute\"") != std::string::npos);
+
+        for (const std::uint32_t budget : {1u, 2u, 7u, 64u, 4096u}) {
+            const SolveResult stepped =
+                solve_stepped(calc, start, prices, budget);
+            PC_CHECK(identical_solve(result, stepped));
+        }
     }
 
     /* Forced-bad state: a corrupted start can only restart, so its value
@@ -294,6 +336,10 @@ void run_artifact_solve_tests(const char* artifact_dir) {
                     first.policy[i] == second.policy[i];
     }
     PC_CHECK(identical);
+    for (const std::uint32_t budget : {1u, 7u, 128u}) {
+        const SolveResult stepped = solve_stepped(calc, start, prices, budget);
+        PC_CHECK(identical_solve(first, stepped));
+    }
 
     std::printf(
         "solver solve artifact: %u states, %u sweeps, V(start)=%.3f\n",

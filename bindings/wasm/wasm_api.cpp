@@ -437,6 +437,31 @@ bool parse_strategy_eval_options(
     return true;
 }
 
+bool parse_solve_options(
+    const char* options_json,
+    pc_solve_options& options,
+    std::string& error) {
+    options = {};
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    if (options_json == nullptr || options_json[0] == '\0') return true;
+    Value spec;
+    try {
+        spec = Parser(options_json, std::strlen(options_json)).parse();
+    } catch (const std::exception& ex) {
+        error = ex.what();
+        return false;
+    }
+    if (spec.type != Type::Object) {
+        error = "options must be an object";
+        return false;
+    }
+    options.epsilon = obj_double(spec, "epsilon");
+    options.max_states = obj_u32(spec, "max_states");
+    options.max_sweeps = obj_u32(spec, "max_sweeps");
+    return true;
+}
+
 const char* strategy_eval_phase_name(int32_t phase) {
     switch (phase) {
     case PC_STRATEGY_EVAL_PHASE_DISCOVERY: return "discovery";
@@ -466,6 +491,45 @@ void append_strategy_eval_progress(
     out += ",\"fallback_sweeps\":";
     append_u64(out, progress.fallback_sweeps);
     out += ",\"residual\":" + std::to_string(progress.residual) + '}';
+}
+
+const char* solve_phase_name(const int32_t phase) {
+    switch (phase) {
+    case PC_SOLVE_PHASE_EXPANDING: return "expanding";
+    case PC_SOLVE_PHASE_ITERATING: return "iterating";
+    case PC_SOLVE_PHASE_DONE: return "done";
+    default: return "expanding";
+    }
+}
+
+void append_solve_progress(
+    std::string& out,
+    const pc_solve_progress& progress) {
+    out += "{\"phase\":\"";
+    out += solve_phase_name(progress.phase);
+    out += "\",\"done\":";
+    out += progress.done ? "true" : "false";
+    out += ",\"expanded_states\":" +
+           std::to_string(progress.expanded_states);
+    out += ",\"sweeps\":" + std::to_string(progress.sweeps);
+    out += ",\"residual\":" + std::to_string(progress.residual);
+    out += ",\"start_value_bound\":" +
+           std::to_string(progress.start_value_bound) + '}';
+}
+
+void append_solve_summary(
+    std::string& out,
+    const pc_solve_summary& summary) {
+    out += "\"converged\":";
+    out += summary.converged ? "true" : "false";
+    out += ",\"start_state\":" + std::to_string(summary.start_state);
+    out += ",\"start_value\":" + std::to_string(summary.start_value);
+    out += ",\"expanded_states\":" +
+           std::to_string(summary.expanded_states);
+    out += ",\"sweeps\":" + std::to_string(summary.sweeps);
+    out += ",\"residual\":" + std::to_string(summary.residual);
+    out += ",\"skipped_actions\":" +
+           std::to_string(summary.skipped_action_count);
 }
 
 const char* terminal_name(int32_t kind) {
@@ -1781,6 +1845,66 @@ const char* pcw_solver_calc(uint32_t solver_id, uint32_t item_id,
 }
 
 EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve_begin(uint32_t solver_id, uint32_t item_id,
+                                   uint32_t economy_id,
+                                   const char* options_json) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    pc_economy_handle* economy = find(g_economies, economy_id);
+    if (economy == nullptr) {
+        return fail(PC_RESULT_NOT_FOUND, "unknown economy");
+    }
+    pc_solve_options options{};
+    std::string parse_error;
+    if (!parse_solve_options(options_json, options, parse_error)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
+    }
+    pc_error_info error = make_error();
+    const pc_result rc = pc_solver_solve_begin(
+        *solver, item, *economy, &options, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    return respond("{\"ok\":true}");
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve_step(uint32_t solver_id,
+                                  uint32_t max_work_items) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_solve_progress progress{};
+    pc_error_info error = make_error();
+    const pc_result rc = pc_solver_solve_step(
+        *solver, max_work_items, &progress, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,\"progress\":";
+    append_solve_progress(out, progress);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_solve_finish(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_solve_summary summary{};
+    pc_error_info error = make_error();
+    const pc_result rc = pc_solver_solve_finish(*solver, &summary, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string out = "{\"ok\":true,";
+    append_solve_summary(out, summary);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_solver_solve_abandon(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver != nullptr) pc_solver_solve_abandon(*solver);
+}
+
+EMSCRIPTEN_KEEPALIVE
 const char* pcw_solver_solve(uint32_t solver_id, uint32_t item_id,
                              uint32_t economy_id, const char* options_json) {
     pc_solver_handle* solver = find(g_solvers, solver_id);
@@ -1791,50 +1915,18 @@ const char* pcw_solver_solve(uint32_t solver_id, uint32_t item_id,
     if (economy == nullptr) {
         return fail(PC_RESULT_NOT_FOUND, "unknown economy");
     }
-    pc_solve_options options;
-    options.struct_size = sizeof(options);
-    options.abi_version = PC_ABI_VERSION;
-    options.epsilon = 0.0;
-    options.max_states = 0;
-    options.max_sweeps = 0;
-    if (options_json != nullptr && options_json[0] != '\0') {
-        try {
-            Value opts =
-                Parser(options_json, std::strlen(options_json)).parse();
-            const Value* epsilon = opts.find("epsilon");
-            if (epsilon != nullptr && epsilon->type == Type::Number) {
-                options.epsilon = epsilon->number;
-            }
-            const Value* max_states = opts.find("max_states");
-            if (max_states != nullptr && max_states->type == Type::Number) {
-                options.max_states =
-                    static_cast<uint32_t>(max_states->number);
-            }
-            const Value* max_sweeps = opts.find("max_sweeps");
-            if (max_sweeps != nullptr && max_sweeps->type == Type::Number) {
-                options.max_sweeps =
-                    static_cast<uint32_t>(max_sweeps->number);
-            }
-        } catch (const std::exception& e) {
-            return fail(PC_RESULT_INVALID_ARGUMENT, e.what());
-        }
+    pc_solve_options options{};
+    std::string parse_error;
+    if (!parse_solve_options(options_json, options, parse_error)) {
+        return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
     }
-    pc_solve_summary summary;
-    summary.struct_size = sizeof(summary);
+    pc_solve_summary summary{};
     pc_error_info error = make_error();
     pc_result rc = pc_solver_solve(*solver, item, *economy, &options,
                                    &summary, &error);
     if (rc != PC_RESULT_OK) return fail(error);
-    std::string out = "{\"ok\":true,\"converged\":";
-    out += summary.converged ? "true" : "false";
-    out += ",\"start_state\":" + std::to_string(summary.start_state);
-    out += ",\"start_value\":" + std::to_string(summary.start_value);
-    out += ",\"expanded_states\":" +
-           std::to_string(summary.expanded_states);
-    out += ",\"sweeps\":" + std::to_string(summary.sweeps);
-    out += ",\"residual\":" + std::to_string(summary.residual);
-    out += ",\"skipped_actions\":" +
-           std::to_string(summary.skipped_action_count);
+    std::string out = "{\"ok\":true,";
+    append_solve_summary(out, summary);
     out.push_back('}');
     return respond(std::move(out));
 }
