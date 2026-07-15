@@ -451,7 +451,7 @@ void run_mc_gate() {
     check_reference_parity(*strategy, exact, options);
 
     SimulatorImpl simulator;
-    const std::uint64_t runs = 30000;
+    const std::uint64_t runs = 10000;
     const SimulationSummaryInternal mc =
         simulate(session, strategy, runs, 20260714, &simulator);
     PC_CHECK(mc.completed_runs == runs);

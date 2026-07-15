@@ -1,5 +1,6 @@
 #include "tests.hpp"
 
+#include "../src/json.hpp"
 #include "../src/solver_internal.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -85,6 +86,15 @@ std::shared_ptr<SessionImpl> make_solve_session() {
 
 bool near(double a, double b, double tolerance = 1e-6) {
     return std::fabs(a - b) < tolerance;
+}
+
+bool valid_json_object(const std::string& text) {
+    try {
+        return json::Parser(text.data(), text.size()).parse().type ==
+               json::Type::Object;
+    } catch (const std::exception&) {
+        return false;
+    }
 }
 
 SolveResult solve_stepped(
@@ -196,11 +206,91 @@ void run_alt_spam_tests() {
         PC_CHECK(lines == result.diagnostics.expanded_states);
         PC_CHECK(log.find("\"action\":\"transmute\"") != std::string::npos);
 
+        const std::unordered_map<std::string, double> subset_prices{
+            {"transmute", 1.0}, {"alteration", 1.0}};
+        const SolveResult subset = solve(calc, start, subset_prices);
+        PC_CHECK(subset.converged);
+        PC_CHECK(subset.diagnostics.skipped_missing_price.size() == 1);
+        PC_CHECK(subset.diagnostics.priced_scanned_actions == 2);
+        PC_CHECK(subset.diagnostics.supported_priced_actions == 2);
+        const std::string subset_telemetry = serialize_solver_telemetry(
+            calc, &subset, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(subset_telemetry));
+        PC_CHECK(subset_telemetry.find(
+                     "\"status\":\"exact_supported_priced_subset\"") !=
+                 std::string::npos);
+        PC_CHECK(subset_telemetry.find(
+                     "\"full_request_status\":\"incomplete_action_subset\"") !=
+                 std::string::npos);
+
+        SolveOptions capped_options;
+        capped_options.max_states = 1;
+        const SolveResult capped = solve(calc, start, prices, capped_options);
+        PC_CHECK(!capped.converged);
+        PC_CHECK(capped.diagnostics.state_cap_hit);
+        const std::string capped_telemetry = serialize_solver_telemetry(
+            calc, &capped, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(capped_telemetry));
+        PC_CHECK(capped_telemetry.find(
+                     "\"status\":\"incomplete_state_cap\"") !=
+                 std::string::npos);
+        PC_CHECK(capped_telemetry.find(
+                     "\"value\":{\"start\":null") !=
+                 std::string::npos);
+        PC_CHECK(capped_telemetry.find("\"raw_start_bound\":") !=
+                 std::string::npos);
+
         for (const std::uint32_t budget : {1u, 2u, 7u, 64u, 4096u}) {
             const SolveResult stepped =
                 solve_stepped(calc, start, prices, budget);
             PC_CHECK(identical_solve(result, stepped));
         }
+    }
+
+    /* Evaluator support is diagnostic, not an applied filter: a priced
+     * unsupported descriptor remains in the scanned vector and is observed
+     * state-by-state, while the converged value is qualified to the usable
+     * supported/priced subset. */
+    {
+        ActionRegistry unsupported_registry = registry;
+        ActionDescriptor unsupported;
+        unsupported.id = "unsupported-fracture";
+        unsupported.display_name = "Unsupported Fracture";
+        unsupported.params.type = ActionType::Fracture;
+        unsupported.kind = TransitionKind::Special;
+        unsupported.cost_keys = {"fracture"};
+        const std::uint32_t unsupported_index =
+            static_cast<std::uint32_t>(unsupported_registry.actions.size());
+        unsupported_registry.index_by_id.emplace(
+            unsupported.id, unsupported_index);
+        unsupported_registry.actions.push_back(std::move(unsupported));
+        CalcContext unsupported_calc(
+            session, goal, std::move(unsupported_registry),
+            {transmute, alteration, restart, unsupported_index});
+        const std::unordered_map<std::string, double> prices{
+            {"transmute", 1.0},
+            {"alteration", 1.0},
+            {"base", 10.0},
+            {"fracture", 1.0}};
+        const SolveResult result = solve(unsupported_calc, start, prices);
+        PC_CHECK(result.converged);
+        PC_CHECK(result.diagnostics.evaluator_supported_actions == 3);
+        PC_CHECK(result.diagnostics.priced_scanned_actions == 4);
+        PC_CHECK(result.diagnostics.supported_priced_actions == 3);
+        PC_CHECK(result.diagnostics.skipped_unsupported.size() == 1);
+        const std::string telemetry = serialize_solver_telemetry(
+            unsupported_calc, &result, nullptr, std::nullopt, nullptr);
+        PC_CHECK(telemetry.find("\"evaluator_supported\":3") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("\"priced_scanned\":4") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("\"supported_priced\":3") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find("\"unsupported_observed\":1") !=
+                 std::string::npos);
+        PC_CHECK(telemetry.find(
+                     "\"status\":\"exact_supported_priced_subset\"") !=
+                 std::string::npos);
     }
 
     /* Forced-bad state: a corrupted start can only restart, so its value
@@ -313,6 +403,7 @@ void run_artifact_solve_tests(const char* artifact_dir) {
     pc_item_clear(&start);
     start.rarity = PC_RARITY_RARE;
     const SolveResult first = solve(calc, start, prices);
+    const CalcTelemetry first_telemetry = calc.telemetry();
     PC_CHECK(first.converged);
     PC_CHECK(first.diagnostics.skipped_missing_price.empty());
     PC_CHECK(first.diagnostics.skipped_unsupported.empty());
@@ -330,6 +421,7 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 
     /* Identical inputs must yield identical values and policy. */
     const SolveResult second = solve(calc, start, prices);
+    const CalcTelemetry second_telemetry = calc.telemetry();
     PC_CHECK(second.values.size() == first.values.size());
     bool identical = second.values.size() == first.values.size();
     for (std::size_t i = 0; identical && i < first.values.size(); ++i) {
@@ -337,6 +429,17 @@ void run_artifact_solve_tests(const char* artifact_dir) {
                     first.policy[i] == second.policy[i];
     }
     PC_CHECK(identical);
+    PC_CHECK(second.diagnostics.discovered_states ==
+             first.diagnostics.discovered_states);
+    PC_CHECK(second.diagnostics.frontier_states ==
+             first.diagnostics.frontier_states);
+    PC_CHECK(second.diagnostics.goal_states == first.diagnostics.goal_states);
+    PC_CHECK(second.diagnostics.policy_reachable_states ==
+             first.diagnostics.policy_reachable_states);
+    PC_CHECK(second_telemetry.state_action_rows ==
+             first_telemetry.state_action_rows);
+    PC_CHECK(second_telemetry.transition_entries ==
+             first_telemetry.transition_entries);
     for (const std::uint32_t budget : {1u, 7u, 128u}) {
         const SolveResult stepped = solve_stepped(calc, start, prices, budget);
         PC_CHECK(identical_solve(first, stepped));

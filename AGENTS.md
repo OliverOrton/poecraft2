@@ -29,7 +29,8 @@ Start here, in order:
 - The engine WASM module (`bindings/wasm/dist/poecraft_engine.mjs`) is
   rebuildable: `scripts/build-wasm.ps1` self-activates the Emscripten SDK
   from `C:\emsdk` (emcc is not on PATH in a fresh shell). Rebuild after
-  engine C ABI or strategy-vocabulary changes, then run the web tests.
+  engine C ABI or strategy-vocabulary changes. Run web tests only under the
+  testing cadence below.
 - SQLite (`data/sqlite/poecraft.db`) is canonical, the compiled artifact
   (`data/compiled/current`) is derived — never hand-edit either; recompile
   via `tools/ingest/compile_engine_data.py`.
@@ -44,7 +45,16 @@ research online or guess.
 
 ## Conventions
 
-- Single big commits per milestone are fine; drive each task to a gated,
-  test-green state before committing.
+- Single big commits per milestone are fine. Intermediate plan phases are
+  implementation checkpoints, not test gates.
+- Do not run routine test suites at the end of each intermediate phase. Run a
+  narrowly relevant test only when something is broken and the test is needed
+  to diagnose or fix it. Run the appropriate complete acceptance suite once at
+  the end of the full plan, unless Oliver explicitly asks for an earlier run.
+- Oliver owns rendered and visual UI review. Do not perform browser visual
+  checks, screenshots, or rendered UI smoke unless Oliver explicitly asks.
+  Non-visual automated web tests follow the same testing cadence above.
+- Compiled-strategy verification uses 10,000 simulator runs whenever
+  verification is required, unless Oliver explicitly changes that count.
 - Commits are local-only unless Oliver says to push.
 - End commit messages with your agent's co-author line.

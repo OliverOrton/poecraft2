@@ -905,7 +905,22 @@ The authoritative execution plan is
 It covers a real craft benchmark corpus, one-item correctness gaps, safe action
 generation and pruning, exact solver-only macro/sub-policy operators, compact
 transition storage, cycle-aware optimization, policy compression, and native/
-WASM end-to-end gates. Do not begin the parked mechanic track until S7 passes.
+WASM performance measurement followed by a final compiled-strategy simulator
+gate. Oliver sets or approves the comparison targets and safety limits and
+evaluates the gains. Status 2026-07-15: S7.0 benchmark/telemetry and the
+original unoptimized native/WASM baseline are complete. Oliver approved the
+permanent craft corpus, 5x/2x directional performance minimums, 50 ms/250 ms
+responsiveness budgets, per-case caps, existing tolerances, and a universal
+10,000-run compiled-strategy verification count on 2026-07-15. S7.1 is next;
+no approved case currently exposes an unsettled metamod interaction. Routine
+test suites are deferred until the end of the complete S7 plan, and visual UI
+review belongs to Oliver unless he explicitly requests it. Do not begin the
+parked mechanic track until S7 passes.
+
+The approved T1/T1 second oracle replaced the pre-approval any-tier row. Capture
+its fresh unoptimized native/WASM baseline, plus first baselines for the newly
+enabled real cases, before S7.2 performs optimization. This benchmark capture is
+measurement, not an intermediate test-suite gate.
 
 ## Parallel Track E: Economy Ingest And League Switching (Complete)
 
@@ -1145,17 +1160,22 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Implement S7.0 only from
+Implement **S7.1 only** from
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
-build the native/WASM optimal-solver benchmark and telemetry surface, propose
-the permanent real craft corpus, capture the unoptimized baseline, and set
-comparison targets and safety caps. Oliver set no solve-time or memory
-completion ceiling; optimize both as far as practical and report them
-throughout. Stop before S7.1. Oliver skipped S6 Phase 3 entirely; do not revive
-it. Economy E0-E7 is implemented and locally accepted; only external R2 and
-custom-domain activation remains. Phase 12, publishing, mechanic track M1-M5,
-and Phase 18 recombinators remain deferred, blocked, or parked as recorded
-above.
+pin the approved tied/no-dominance behavior, add the one-Scour
+remove-crafted-modifiers primitive, add exact Harvest resistance conversion and
+carrier-aware Fracture calculation support, and land only the
+crafted/fractured/side-specific state required by the approved crafts. No
+approved case currently needs another metamod ruling; ask Oliver only if
+implementation reveals a new ambiguity. Treat S7.1 as an implementation
+checkpoint and stop before S7.2; do not run routine
+native, bindings, WASM, web, compile, simulator, or visual-browser gates for the
+phase. A narrowly relevant test is allowed only if something breaks and it is
+needed to diagnose or fix the problem. Do not optimize against the S7.0
+baseline in S7.1. Oliver skipped S6 Phase 3 entirely; do not revive it. Economy
+E0-E7 is implemented and locally accepted; only external R2 and custom-domain
+activation remains. Phase 12, publishing, mechanic track M1-M5, and Phase 18
+recombinators remain deferred, blocked, or parked as recorded above.
 
 ## Definition Of Done For MVP
 

@@ -284,6 +284,25 @@ struct OutcomeDistribution {
     std::array<double, kMaxGoalSlots> slot_satisfied_probability{};
 };
 
+/* Per-solve transition-provider telemetry. The distribution cache itself
+ * survives price-only re-solves; reset_solve_telemetry clears only counters
+ * and the set of rows touched by the next solve. */
+struct CalcTelemetry {
+    std::uint64_t distribution_requests = 0;
+    std::uint64_t distribution_hits = 0;
+    std::uint64_t distribution_misses = 0;
+    std::uint64_t distribution_build_ns = 0;
+    std::uint64_t state_action_rows = 0;
+    std::uint64_t transition_entries = 0;
+    std::uint64_t outcome_entries = 0;
+    std::uint64_t choice_groups = 0;
+    std::uint64_t choice_successor_entries = 0;
+    std::uint64_t reforge_requests = 0;
+    std::uint64_t reforge_hits = 0;
+    std::uint64_t reforge_misses = 0;
+    std::uint64_t reforge_build_ns = 0;
+};
+
 /* True when CalcContext has an exact evaluator dispatch for this descriptor,
  * independent of the current state. */
 bool calc_supports(const ActionDescriptor& action);
@@ -342,6 +361,17 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index);
 
+    void reset_solve_telemetry();
+    const CalcTelemetry& telemetry() const { return telemetry_; }
+    std::uint64_t layout_build_ns() const { return layout_build_ns_; }
+    std::uint64_t estimated_owned_bytes() const;
+    std::uint64_t cached_distribution_count() const {
+        return distribution_cache_.size();
+    }
+    std::uint64_t cached_reforge_count() const {
+        return reforge_cache_.size();
+    }
+
   private:
     std::shared_ptr<const SessionImpl> session_;
     GoalSpec goal_;
@@ -362,6 +392,9 @@ class CalcContext {
     std::map<
         std::pair<std::uint32_t, std::uint64_t>,
         std::shared_ptr<const OutcomeDistribution>> reforge_cache_;
+    CalcTelemetry telemetry_;
+    std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
+    std::uint64_t layout_build_ns_ = 0;
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,
@@ -536,6 +569,23 @@ struct SolveDiagnostics {
     std::uint32_t sweeps = 0;
     double residual = 0.0;
     bool state_cap_hit = false;
+    std::uint32_t registry_actions = 0;
+    std::uint32_t candidate_actions = 0;
+    std::uint32_t evaluator_supported_actions = 0;
+    std::uint32_t priced_scanned_actions = 0;
+    std::uint32_t supported_priced_actions = 0;
+    std::uint32_t discovered_states = 0;
+    std::uint32_t frontier_states = 0;
+    std::uint32_t goal_states = 0;
+    std::uint32_t policy_reachable_states = 0;
+    std::uint64_t bellman_backups = 0;
+    std::uint64_t bellman_action_evaluations = 0;
+    std::uint64_t extraction_action_evaluations = 0;
+    std::uint64_t solve_setup_ns = 0;
+    std::uint64_t expansion_ns = 0;
+    std::uint64_t optimization_ns = 0;
+    std::uint64_t extraction_ns = 0;
+    std::uint64_t solver_owned_bytes_estimate = 0;
 };
 
 /*
@@ -572,6 +622,15 @@ struct SolveProgress {
     double start_value_bound = 0.0;
 };
 
+/* Read-only, non-finalizing view of stepped work. It never extracts a policy
+ * or changes convergence state, and can therefore be frozen on abandon. */
+struct SolveTelemetrySnapshot {
+    SolvePhase phase = SolvePhase::Expanding;
+    bool abandoned = false;
+    SolveDiagnostics diagnostics;
+    double raw_start_bound = 0.0;
+};
+
 /* Stateful counterpart of solve(). Each expansion work item processes one
  * reachable abstract state; each iteration work item performs one complete,
  * deterministic Bellman sweep. finish() extracts the policy only after the
@@ -591,6 +650,7 @@ class SolveWork {
 
     void step(std::uint32_t max_work_items);
     SolveProgress progress() const;
+    SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
     SolveResult finish();
 
   private:
@@ -621,6 +681,21 @@ std::string serialize_solve_log(
     const CalcContext& calc,
     const SolveResult& result);
 
+struct PolicyCompilationTelemetry {
+    std::uint64_t duration_ns = 0;
+    std::uint32_t working_states = 0;
+    std::uint32_t nodes = 0;
+    std::uint32_t edges = 0;
+    std::uint64_t strategy_json_bytes = 0;
+};
+
+std::string serialize_solver_telemetry(
+    const CalcContext& calc,
+    const SolveResult* result,
+    const SolveTelemetrySnapshot* snapshot,
+    const std::optional<std::uint64_t>& registry_generation_ns,
+    const PolicyCompilationTelemetry* compilation);
+
 // --- policy -> strategy graph compiler (S5) --------------------------------------
 
 /*
@@ -640,7 +715,8 @@ std::string serialize_solve_log(
 std::string compile_policy_strategy_json(
     const CalcContext& calc,
     const SolveResult& result,
-    const std::string& name);
+    const std::string& name,
+    PolicyCompilationTelemetry* telemetry = nullptr);
 
 } // namespace solver
 } // namespace poecraft

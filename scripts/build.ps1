@@ -108,6 +108,27 @@ else {
         if ($LASTEXITCODE -ne 0) {
             throw "C++ shared engine build failed with exit code $LASTEXITCODE."
         }
+
+        # Keep the opt-in S7 solver benchmark available in compiler-only
+        # environments too. CMake builds the same public-API harness through
+        # engine/CMakeLists.txt; the fallback has no reusable static library,
+        # so it links the engine sources directly.
+        $BenchmarkSystemLibraries = @()
+        if ($env:OS -eq "Windows_NT") {
+            $BenchmarkSystemLibraries += "-lpsapi"
+        }
+        & $Compiler.Source `
+            -std=c++20 -O2 `
+            -static-libstdc++ -static-libgcc `
+            "-I$Root/engine/include" `
+            "-I$Root/engine/src" `
+            @EngineSources `
+            "$Root/engine/benchmarks/solver_benchmark.cpp" `
+            @BenchmarkSystemLibraries `
+            -o "$BuildDirectory/poecraft_solver_benchmark.exe"
+        if ($LASTEXITCODE -ne 0) {
+            throw "C++ solver benchmark build failed with exit code $LASTEXITCODE."
+        }
         $CompilerDirectory = Split-Path -Parent $Compiler.Source
         $WinPthread = Join-Path $CompilerDirectory "libwinpthread-1.dll"
         if (Test-Path $WinPthread) {

@@ -1219,6 +1219,8 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         },
     );
     assert.equal(cancelledSolve.cancelled, true);
+    assert.ok(cancelledSolve.worker.step_count > 0);
+    assert.ok(cancelledSolve.worker.max_step_ms > 0);
     assert.ok(cancelProgress.length >= 2);
     assert.ok(
         performance.now() - cancelStarted < 5000,
@@ -1244,6 +1246,19 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.equal(solve.converged, true);
     assert.ok(solve.start_value > 0);
     assert.equal(solve.skipped_actions, 0);
+    assert.ok(solve.worker.step_count > 0);
+    assert.ok(solve.worker.max_step_ms > 0);
+
+    const solveTelemetry = await client.solverTelemetry(solver);
+    assert.equal(solveTelemetry.version, "solver_telemetry_v1");
+    assert.equal(
+        (solveTelemetry.actions as Record<string, unknown>).candidate,
+        10,
+    );
+    assert.equal(
+        (solveTelemetry.optimization as Record<string, unknown>).status,
+        "exact_abstract",
+    );
 
     const startState = await client.solverProject(solver, item);
     assert.equal(startState, solve.start_state);
@@ -1255,6 +1270,11 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.ok(log.split("\n").filter(Boolean).length === solve.expanded_states);
 
     const compiled = await client.solverCompileStrategy(solver);
+    const compiledTelemetry = await client.solverTelemetry(solver);
+    assert.equal(
+        (compiledTelemetry.compilation as Record<string, unknown>).available,
+        true,
+    );
     const prepared = prepareSolverStrategy(compiled);
     assert.ok(
         prepared.nodes.every(

@@ -1,0 +1,88 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "ordinary-es-bench",
+  "category": "ordinary",
+  "approval_status": "approved_owner_2026-07-15",
+  "benchmark_enabled": true,
+  "description": "Proposed clean rare Vaal Regalia with two T1 Energy Shield prefixes and a deterministic crafted cold-resistance finish.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedEnergyShieldPercent8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "EinharMasterColdResist3__",
+        "min_tier": 1
+      }
+    ],
+    "actions": [
+      "alchemy",
+      "chaos",
+      "exalt",
+      "annul",
+      "scour",
+      "bench:EinharMasterColdResist3__",
+      "restart"
+    ]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "bench", "restart"],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-frozen-v1",
+    "prices": {
+      "alchemy": 0.25,
+      "chaos": 1.0,
+      "exalt": 10.0,
+      "annul": 2.0,
+      "scour": 0.5,
+      "bench:EinharMasterColdResist3__": 0.5,
+      "base": 5.0
+    }
+  },
+  "expected": {
+    "solve_status": "baseline_cap_or_compile_refusal_allowed",
+    "optimality_status": "exact_if_converged",
+    "compile_status": "baseline_measured",
+    "verification_status": "run_if_compiled"
+  },
+  "caps": {
+    "max_states": 100000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 100000,
+    "max_state_action_rows": 2000000,
+    "max_transitions": 20000000,
+    "max_solver_owned_bytes": 2147483648,
+    "max_compiled_nodes": 200000,
+    "max_compiled_edges": 800000,
+    "max_strategy_json_bytes": 134217728,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071510,
+    "max_actions_per_run": 200000,
+    "mean_cost_relative_tolerance": 0.08,
+    "minimum_success_rate": 0.995
+  }
+}

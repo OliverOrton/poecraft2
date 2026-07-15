@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <functional>
 #include <limits>
 #include <map>
@@ -164,9 +165,14 @@ CalcContext::CalcContext(
                 return registry_.actions.at(index).params.type ==
                        ActionType::Unveil;
             });
+    const auto layout_started = std::chrono::steady_clock::now();
     layout_ = build_abstract_layout(
         *session_, goal_, registry_, candidates_, allow_empty_goal,
         false, exact_group_effects);
+    layout_build_ns_ = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - layout_started)
+            .count());
     context_.session = session_;
     /* Exact paths never sample, and evaluation must not depend on trace
      * bookkeeping from earlier queries. */
@@ -434,12 +440,133 @@ const OutcomeDistribution& CalcContext::outcomes(
     std::uint32_t action_index) {
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | action_index;
+    ++telemetry_.distribution_requests;
     const auto cached = distribution_cache_.find(key);
-    if (cached != distribution_cache_.end()) return *cached->second;
-    std::shared_ptr<const OutcomeDistribution> distribution =
-        evaluate(state_id, action_index);
-    return *distribution_cache_.emplace(key, std::move(distribution))
-                .first->second;
+    const OutcomeDistribution* result = nullptr;
+    if (cached != distribution_cache_.end()) {
+        ++telemetry_.distribution_hits;
+        result = cached->second.get();
+    } else {
+        ++telemetry_.distribution_misses;
+        const auto started = std::chrono::steady_clock::now();
+        std::shared_ptr<const OutcomeDistribution> distribution =
+            evaluate(state_id, action_index);
+        telemetry_.distribution_build_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+        result = distribution_cache_.emplace(key, std::move(distribution))
+                     .first->second.get();
+    }
+
+    if (telemetry_rows_.emplace(key, 1).second) {
+        ++telemetry_.state_action_rows;
+        telemetry_.outcome_entries += result->entries.size();
+        telemetry_.choice_groups += result->choice_groups.size();
+        std::uint64_t choice_successors = 0;
+        for (const OutcomeChoiceGroup& group : result->choice_groups) {
+            choice_successors += group.states.size();
+        }
+        telemetry_.choice_successor_entries += choice_successors;
+        telemetry_.transition_entries +=
+            result->choice_groups.empty()
+                ? result->entries.size()
+                : choice_successors;
+    }
+    return *result;
+}
+
+void CalcContext::reset_solve_telemetry() {
+    telemetry_ = {};
+    telemetry_rows_.clear();
+}
+
+std::uint64_t CalcContext::estimated_owned_bytes() const {
+    /* This deliberately reports a conservative selected-allocation estimate.
+     * Standard-library node overhead, allocator metadata, and pool-cache
+     * storage inside ActionContextImpl are not portable enough to claim as an
+     * exact byte count. Process/WASM heap measurements complement this value. */
+    std::uint64_t bytes = sizeof(*this);
+    const auto string_bytes = [](const std::string& value) {
+        return static_cast<std::uint64_t>(value.capacity() + 1);
+    };
+    bytes += registry_.actions.capacity() * sizeof(ActionDescriptor);
+    for (const ActionDescriptor& action : registry_.actions) {
+        bytes += string_bytes(action.id) + string_bytes(action.display_name);
+        bytes += action.cost_keys.capacity() * sizeof(std::string);
+        for (const std::string& key : action.cost_keys) {
+            bytes += string_bytes(key);
+        }
+        bytes += action.discriminating_tag_ids.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += action.params.fossil_indices.capacity() *
+                 sizeof(std::uint32_t);
+    }
+    bytes += registry_.index_by_id.bucket_count() * sizeof(void*);
+    bytes += registry_.index_by_id.size() *
+             (sizeof(std::pair<const std::string, std::uint32_t>) +
+              2 * sizeof(void*));
+    for (const auto& [key, unused] : registry_.index_by_id) {
+        (void)unused;
+        bytes += string_bytes(key);
+    }
+    bytes += candidates_.capacity() * sizeof(std::uint32_t);
+    bytes += layout_.slots.capacity() * sizeof(ResolvedGoalSlot);
+    for (const ResolvedGoalSlot& slot : layout_.slots) {
+        bytes += slot.member_mask.capacity() * sizeof(std::uint64_t);
+        bytes += slot.satisfying_mask.capacity() * sizeof(std::uint64_t);
+        bytes += slot.blocking_group_ids.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += layout_.discriminating_tag_ids.capacity() *
+             sizeof(std::uint32_t);
+    bytes += layout_.junk_classes.capacity() * sizeof(JunkClass);
+    for (const JunkClass& junk : layout_.junk_classes) {
+        bytes += junk.exclusion_effect_mask.capacity() * sizeof(std::uint64_t);
+        bytes += junk.member_mask.capacity() * sizeof(std::uint64_t);
+    }
+    bytes += layout_.junk_class_by_mod.capacity() * sizeof(std::uint32_t);
+    bytes += states_.capacity() * sizeof(AbstractState);
+    for (const AbstractState& state : states_) {
+        bytes += state.junk_counts.capacity() * sizeof(std::uint8_t);
+    }
+    bytes += state_ids_by_hash_.bucket_count() * sizeof(void*);
+    bytes += state_ids_by_hash_.size() *
+             (sizeof(std::pair<const std::size_t,
+                               std::vector<std::uint32_t>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, ids] : state_ids_by_hash_) {
+        (void)unused;
+        bytes += ids.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += distribution_cache_.bucket_count() * sizeof(void*);
+    bytes += distribution_cache_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::shared_ptr<const OutcomeDistribution>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, distribution] : distribution_cache_) {
+        (void)unused;
+        bytes += sizeof(OutcomeDistribution);
+        bytes += distribution->entries.capacity() * sizeof(OutcomeEntry);
+        bytes += distribution->choice_groups.capacity() *
+                 sizeof(OutcomeChoiceGroup);
+        for (const OutcomeChoiceGroup& group :
+             distribution->choice_groups) {
+            bytes += group.states.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += distribution->choice_options.capacity() *
+                 sizeof(OutcomeChoiceOption);
+    }
+    bytes += reforge_cache_.size() *
+             (sizeof(std::pair<
+                  const std::pair<std::uint32_t, std::uint64_t>,
+                  std::shared_ptr<const OutcomeDistribution>>) +
+              3 * sizeof(void*));
+    bytes += telemetry_rows_.bucket_count() * sizeof(void*);
+    bytes += telemetry_rows_.size() *
+             (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
+              2 * sizeof(void*));
+    return bytes;
 }
 
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(

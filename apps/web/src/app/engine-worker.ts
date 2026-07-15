@@ -19,6 +19,7 @@ import {
     SimulationProgress,
     SolveOptions,
     SolveProgress,
+    SolverWorkerMetrics,
     SolverGoal,
     SolverSolveResult,
     StrategyEvalOptions,
@@ -293,6 +294,12 @@ async function solveSolver(
     let emittedProgress = false;
     let lastProgressAt = -Infinity;
     let yieldCount = 0;
+    const worker: SolverWorkerMetrics = {
+        step_count: 0,
+        yield_count: 0,
+        max_step_ms: 0,
+        total_step_ms: 0,
+    };
     const reportEveryChunk = params.chunkSize !== undefined;
     let progress: SolveProgress = {
         phase: "expanding",
@@ -305,7 +312,7 @@ async function solveSolver(
 
     try {
         if (cancelled.has(id)) {
-            return { cancelled: true, progress };
+            return { cancelled: true, progress, worker };
         }
         bindings.beginSolverSolve(
             solver,
@@ -317,7 +324,7 @@ async function solveSolver(
 
         do {
             if (cancelled.has(id)) {
-                return { cancelled: true, progress };
+                return { cancelled: true, progress, worker };
             }
             /* One full Bellman sweep can already be substantial. Expansion
              * chunks adapt toward a 16 ms worker slice; iteration stays at a
@@ -326,7 +333,11 @@ async function solveSolver(
                 observedPhase === "iterating" ? 1 : workItems;
             const started = performance.now();
             progress = bindings.stepSolverSolve(solver, stepWorkItems);
-            const elapsedMs = Math.max(0.1, performance.now() - started);
+            const measuredMs = Math.max(0, performance.now() - started);
+            const elapsedMs = Math.max(0.1, measuredMs);
+            worker.step_count += 1;
+            worker.max_step_ms = Math.max(worker.max_step_ms, measuredMs);
+            worker.total_step_ms += measuredMs;
             const phaseChanged = progress.phase !== observedPhase;
             if (phaseChanged) {
                 workItems = 1;
@@ -360,6 +371,7 @@ async function solveSolver(
 
             if (!progress.done) {
                 ++yieldCount;
+                worker.yield_count = yieldCount;
                 // Give an external AbortSignal a timer-task turn immediately.
                 await (yieldCount % 2 === 1
                     ? yieldToTimerTask()
@@ -368,11 +380,11 @@ async function solveSolver(
         } while (!progress.done);
 
         if (cancelled.has(id)) {
-            return { cancelled: true, progress };
+            return { cancelled: true, progress, worker };
         }
         const summary = bindings.finishSolverSolve(solver);
         begun = false;
-        return { ...summary, cancelled: false, progress };
+        return { ...summary, cancelled: false, progress, worker };
     } finally {
         if (begun) bindings.abandonSolverSolve(solver);
     }
@@ -690,6 +702,8 @@ async function dispatch(
             };
         case "solverLog":
             return { log: bindings.solverLog(params.solver as number) };
+        case "solverTelemetry":
+            return bindings.solverTelemetry(params.solver as number);
         default:
             throw new EngineError(1, `unknown method: ${method}`);
     }

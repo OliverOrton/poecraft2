@@ -1,0 +1,72 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "stress-full-registry",
+  "category": "stress_refusal",
+  "approval_status": "approved_owner_2026-07-15",
+  "benchmark_enabled": true,
+  "description": "Full Vaal Regalia action registry under a one-state cap; measures registry/layout explosion without entering an unbounded solve.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      }
+    ]
+  },
+  "allowed_mechanic_families": ["full_current_registry"],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-full-registry-sparse-prices-v1",
+    "prices": {
+      "transmute": 0.05,
+      "augment": 0.05,
+      "alteration": 0.1,
+      "regal": 0.5,
+      "alchemy": 0.25,
+      "chaos": 1.0,
+      "exalt": 10.0,
+      "annul": 2.0,
+      "scour": 0.5,
+      "base": 5.0
+    }
+  },
+  "expected": {
+    "solve_status": "refused_state_cap_with_filtered_actions",
+    "optimality_status": "not_claimed",
+    "compile_status": "not_required",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "max_states": 1,
+    "max_sweeps": 10,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 20000,
+    "max_expanded_states": 1,
+    "max_state_action_rows": 20000,
+    "max_transitions": 1000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_compiled_nodes": 1000,
+    "max_compiled_edges": 4000,
+    "max_strategy_json_bytes": 1048576,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 2026071543,
+    "max_actions_per_run": 1000
+  }
+}

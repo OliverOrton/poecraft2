@@ -1,6 +1,7 @@
 #include "poecraft/solver.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -164,8 +165,11 @@ struct pc_solver {
     std::unique_ptr<solver::CalcContext> calc;
     std::unique_ptr<solver::SolveWork> solve_work;
     std::optional<solver::SolveResult> solved;
+    std::optional<std::uint64_t> registry_generation_ns;
+    std::optional<solver::PolicyCompilationTelemetry> compilation;
     std::string compiled_strategy; /* scratch for the buffer queries */
     std::string solve_log;
+    std::string abandoned_telemetry;
 };
 
 namespace {
@@ -228,8 +232,10 @@ void copy_solve_summary(
 
 void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
     solver->solved = std::move(result);
+    solver->compilation.reset();
     solver->compiled_strategy.clear();
     solver->solve_log.clear();
+    solver->abandoned_telemetry.clear();
 }
 
 } // namespace
@@ -248,8 +254,13 @@ pc_result pc_solver_create(
     try {
         auto holder = std::make_unique<pc_solver>();
         holder->session = session->impl;
+        const auto registry_started = std::chrono::steady_clock::now();
         solver::ActionRegistry registry =
             solver::build_action_registry(*holder->session);
+        holder->registry_generation_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - registry_started)
+                .count());
         std::vector<std::uint32_t> candidates;
         const solver::GoalSpec goal = parse_goal(
             *holder->session, goal_json, goal_json_size, candidates,
@@ -453,6 +464,7 @@ pc_result pc_solver_solve(
     }
     try {
         solver->solve_work.reset();
+        solver->abandoned_telemetry.clear();
         solver::SolveWork work(
             *solver->calc, *start_item, economy_prices(economy),
             solve_options(options));
@@ -484,8 +496,10 @@ pc_result pc_solver_solve_begin(
             solve_options(options));
         solver->solve_work = std::move(work);
         solver->solved.reset();
+        solver->compilation.reset();
         solver->compiled_strategy.clear();
         solver->solve_log.clear();
+        solver->abandoned_telemetry.clear();
         clear_error(out_error);
         return PC_RESULT_OK;
     } catch (const std::exception& ex) {
@@ -550,7 +564,17 @@ pc_result pc_solver_solve_finish(
 }
 
 void pc_solver_solve_abandon(pc_solver_handle solver) {
-    if (solver != nullptr) solver->solve_work.reset();
+    if (solver == nullptr || !solver->solve_work) return;
+    try {
+        const solver::SolveTelemetrySnapshot snapshot =
+            solver->solve_work->telemetry_snapshot(true);
+        solver->abandoned_telemetry = solver::serialize_solver_telemetry(
+            *solver->calc, nullptr, &snapshot,
+            solver->registry_generation_ns, nullptr);
+    } catch (const std::exception&) {
+        solver->abandoned_telemetry.clear();
+    }
+    solver->solve_work.reset();
 }
 
 pc_result pc_solver_state_value(
@@ -697,9 +721,17 @@ pc_result pc_solver_compile_strategy(
     }
     try {
         if (solver->compiled_strategy.empty()) {
+            const auto started = std::chrono::steady_clock::now();
+            solver::PolicyCompilationTelemetry telemetry;
             solver->compiled_strategy =
                 solver::compile_policy_strategy_json(
-                    *solver->calc, *solver->solved, "solved policy");
+                    *solver->calc, *solver->solved, "solved policy",
+                    &telemetry);
+            telemetry.duration_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
+            solver->compilation = telemetry;
         }
         return copy_text(solver->compiled_strategy, buffer, capacity,
                          out_length, out_error);
@@ -729,6 +761,41 @@ pc_result pc_solver_solve_log(
     }
     return copy_text(solver->solve_log, buffer, capacity, out_length,
                      out_error);
+}
+
+pc_result pc_solver_telemetry(
+    pc_solver_handle solver,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_length == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        if (!solver->solve_work && !solver->solved.has_value() &&
+            !solver->abandoned_telemetry.empty()) {
+            return copy_text(solver->abandoned_telemetry, buffer, capacity,
+                             out_length, out_error);
+        }
+        std::optional<solver::SolveTelemetrySnapshot> snapshot;
+        if (solver->solve_work) {
+            snapshot = solver->solve_work->telemetry_snapshot();
+        }
+        const std::string telemetry = solver::serialize_solver_telemetry(
+            *solver->calc,
+            solver->solved.has_value() ? &*solver->solved : nullptr,
+            snapshot.has_value() ? &*snapshot : nullptr,
+            solver->registry_generation_ns,
+            solver->compilation.has_value() ? &*solver->compilation
+                                            : nullptr);
+        return copy_text(
+            telemetry, buffer, capacity, out_length, out_error);
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
+        return PC_RESULT_INTERNAL_ERROR;
+    }
 }
 
 pc_result pc_strategy_evaluate(

@@ -117,6 +117,20 @@ elseif (Test-Path $HeaderSmoke) {
     }
 }
 
+$SolverBenchmark = "$Root/build/engine/poecraft_solver_benchmark.exe"
+$SolverCorpus = "$Root/fixtures/solver-benchmarks/v1/manifest.json"
+if ((Test-Path $SolverBenchmark) -and
+    (Test-Path $Artifact) -and
+    (Test-Path $SolverCorpus)) {
+    & $SolverBenchmark `
+        --artifact $Artifact `
+        --corpus $SolverCorpus `
+        --validate-only
+    if ($LASTEXITCODE -ne 0) {
+        throw "Solver benchmark corpus validation failed with exit code $LASTEXITCODE."
+    }
+}
+
 # Web/WASM acceptance checks use the generated Emscripten module and the same
 # EngineClient/worker path as the browser application.
 $Npm = Get-Command npm -ErrorAction SilentlyContinue

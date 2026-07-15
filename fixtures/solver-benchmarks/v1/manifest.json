@@ -1,0 +1,51 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-s7-optimal-solver-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 1,
+    "artifact_schema_version": 3,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "c459d0b9b774973ee165b8390dde226b5422b09b3250dda0b38feed16bdc0eba",
+    "game_data_sha256": "9776797b31345f3ac3f8b911e717b5583c72da255b5f6d72ccb4128f149a64c0",
+    "strings_sha256": "6ba72d7139349c4e5db6fddb21d443304ac4881062ded48322c139d01fe37a9b"
+  },
+  "comparison_profile": {
+    "id": "native-wasm-solver-v1",
+    "status": "must_match",
+    "structural_counts": "must_match",
+    "v_start_absolute_tolerance": 1e-7,
+    "phase_timings": "reported_not_machine_gated",
+    "memory": "reported_not_owner_ceiling",
+    "directional_large_pass_geometric_mean_speedup": 5.0,
+    "directional_peak_memory_reduction": 2.0,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "owner_decisions": [
+    "Tied or absent Eldritch dominance uses the corresponding ordinary currency behavior.",
+    "Prefix or suffix Eldritch intent is a separate explicit setup-and-craft solver option.",
+    "Remove-crafted-modifiers costs one Scour.",
+    "Optimality status must be reported honestly as exact, bounded, or heuristic.",
+    "Solve time and memory have no owner-set completion ceiling; strive for the fastest practical solver beyond the minimum directional targets.",
+    "The 50 ms worker-step and 250 ms cancellation acknowledgement budgets are approved.",
+    "Per-case limits are approved as operational guardrails.",
+    "Every compiled-strategy verification uses 10000 simulator runs.",
+    "Negligible-value policy trimming for readable strategies is a later owner-controlled follow-up."
+  ],
+  "cases": [
+    "cases/oracle-synthetic-six-slot.json",
+    "cases/oracle-real-one-mod.json",
+    "cases/oracle-real-two-mod.json",
+    "cases/ordinary-es-bench.json",
+    "cases/advanced-es-resist-bench.json",
+    "cases/endgame-fractured-es.json",
+    "cases/refusal-missing-price.json",
+    "cases/refusal-state-cap.json",
+    "cases/refusal-unsupported-fracture.json",
+    "cases/refusal-unreachable-goal.json",
+    "cases/cancellation-oracle-two-mod.json",
+    "cases/stress-full-registry.json"
+  ]
+}

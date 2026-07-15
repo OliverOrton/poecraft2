@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstring>
 #include <limits>
 #include <map>
@@ -43,6 +44,21 @@ namespace {
 
 constexpr double kPathEpsilon = 1e-9;
 constexpr std::size_t kMaxFrontier = 400000;
+
+struct ReforgeBuildTimer {
+    CalcTelemetry& telemetry;
+    std::chrono::steady_clock::time_point started =
+        std::chrono::steady_clock::now();
+    bool miss = false;
+
+    ~ReforgeBuildTimer() {
+        if (!miss) return;
+        telemetry.reforge_build_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+    }
+};
 
 std::uint8_t rarity_cap(const SessionImpl& session, std::uint8_t rarity) {
     switch (rarity) {
@@ -200,6 +216,8 @@ std::uint8_t occupied_mask(const RollState& state, std::uint8_t base_mask) {
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint32_t state_id,
     std::uint32_t action_index) {
+    ++telemetry_.reforge_requests;
+    ReforgeBuildTimer telemetry_timer{telemetry_};
     const ActionDescriptor& action = registry_.actions.at(action_index);
     const SessionImpl& session = *session_;
     const DataImpl& data = *session.data;
@@ -207,6 +225,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
     pc_item_state item;
     if (!materialize(state_id, item)) {
+        ++telemetry_.reforge_misses;
+        telemetry_timer.miss = true;
         return std::make_shared<OutcomeDistribution>(std::move(result));
     }
 
@@ -284,7 +304,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const std::pair<std::uint32_t, std::uint64_t> memo_key{action_index,
                                                            base_hash};
     const auto memo = reforge_cache_.find(memo_key);
-    if (memo != reforge_cache_.end()) return memo->second;
+    if (memo != reforge_cache_.end()) {
+        ++telemetry_.reforge_hits;
+        return memo->second;
+    }
+    ++telemetry_.reforge_misses;
+    telemetry_timer.miss = true;
 
     std::map<std::uint32_t, double> outcome_acc;
     /* Self-loop results reference the querying state and must not be

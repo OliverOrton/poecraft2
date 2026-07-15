@@ -273,7 +273,8 @@ std::string operation_json(const SessionImpl& session,
 std::string compile_policy_strategy_json(
     const CalcContext& calc,
     const SolveResult& result,
-    const std::string& name) {
+    const std::string& name,
+    PolicyCompilationTelemetry* telemetry) {
     const SessionImpl& session = calc.session();
     const DataImpl& data = *session.data;
     const AbstractLayout& layout = calc.layout();
@@ -305,6 +306,7 @@ std::string compile_policy_strategy_json(
         compiled_states.push_back(state_id);
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
+    std::uint32_t node_count = 4; /* start, router, goal, offpolicy */
 
     const AbstractState& start = calc.state(result.start_state);
 
@@ -350,6 +352,7 @@ std::string compile_policy_strategy_json(
             json += ",{\"id\":\"s";
             json += std::to_string(state_id);
             json += "\",\"kind\":\"router\"}";
+            ++node_count;
             for (std::size_t option = 0;
                  option < result.unveil_preferences[state_id].size();
                  ++option) {
@@ -363,6 +366,7 @@ std::string compile_policy_strategy_json(
                 json += ",\"operation\":{\"type\":\"unveil\",\"mod_key\":\"";
                 json += json_escape(mod_key_of(session, mod_id));
                 json += "\"}}";
+                ++node_count;
             }
             continue;
         }
@@ -373,6 +377,7 @@ std::string compile_policy_strategy_json(
         json += ",\"operation\":";
         json += operation_json(session, action);
         json += "}";
+        ++node_count;
     }
     json += "],\"edges\":[";
 
@@ -510,6 +515,13 @@ std::string compile_policy_strategy_json(
              static_cast<int>(preferences.size()), "", true);
     }
     json += "]}";
+    if (telemetry != nullptr) {
+        telemetry->working_states = static_cast<std::uint32_t>(
+            compiled_states.size());
+        telemetry->nodes = node_count;
+        telemetry->edges = edge_counter;
+        telemetry->strategy_json_bytes = json.size();
+    }
     return json;
 }
 

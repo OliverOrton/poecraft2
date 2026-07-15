@@ -2007,4 +2007,24 @@ const char* pcw_solver_log(uint32_t solver_id) {
     return respond(std::move(out));
 }
 
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_solver_telemetry(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown solver");
+    pc_error_info error = make_error();
+    size_t length = 0;
+    pc_result rc =
+        pc_solver_telemetry(*solver, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    std::string telemetry(length + 1, '\0');
+    rc = pc_solver_telemetry(*solver, telemetry.data(), telemetry.size(),
+                             &length, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    telemetry.resize(length);
+    std::string out = "{\"ok\":true,\"telemetry\":";
+    out += telemetry;
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
 } // extern "C"

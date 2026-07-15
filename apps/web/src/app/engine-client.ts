@@ -26,6 +26,7 @@ import {
     SolverGoal,
     SolverSolveResult,
     SolverStateValue,
+    SolverTelemetry,
     StrategyEvalOptions,
     StrategyEvalProgress,
     StrategyEvalResult,
@@ -543,6 +544,10 @@ export class EngineClient {
             solver,
         });
         return result.log;
+    }
+
+    solverTelemetry(solver: number): Promise<SolverTelemetry> {
+        return this.call<SolverTelemetry>("solverTelemetry", { solver });
     }
 
     dispose(): void {

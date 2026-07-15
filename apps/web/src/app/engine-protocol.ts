@@ -366,14 +366,32 @@ export interface SolveProgress {
     start_value_bound: number;
 }
 
+/** Benchmark telemetry emitted by the native optimal solver.  The versioned
+ * payload deliberately remains forward-compatible so S7 can add counters
+ * without forcing the worker protocol to duplicate the C ABI schema. */
+export interface SolverTelemetry {
+    version: "solver_telemetry_v1";
+    [key: string]: unknown;
+}
+
+/** Worker-owned measurements around bounded pc_solver_solve_step calls. */
+export interface SolverWorkerMetrics {
+    step_count: number;
+    yield_count: number;
+    max_step_ms: number;
+    total_step_ms: number;
+}
+
 export type SolverSolveResult =
     | (SolveSummary & {
           cancelled: false;
           progress: SolveProgress;
+          worker: SolverWorkerMetrics;
       })
-    | {
+      | {
           cancelled: true;
           progress: SolveProgress;
+          worker: SolverWorkerMetrics;
       };
 
 export interface SolverStateValue {

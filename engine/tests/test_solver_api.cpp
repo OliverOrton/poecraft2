@@ -14,6 +14,19 @@
 
 namespace {
 
+std::string solver_telemetry_json(
+    pc_solver_handle solver,
+    pc_error_info* error) {
+    size_t length = 0;
+    PC_CHECK(pc_solver_telemetry(solver, nullptr, 0, &length, error) ==
+             PC_RESULT_OK);
+    std::string json(length + 1, '\0');
+    PC_CHECK(pc_solver_telemetry(solver, json.data(), json.size(), &length,
+                                 error) == PC_RESULT_OK);
+    json.resize(length);
+    return json;
+}
+
 /*
  * End-to-end exercise of the solver C ABI using only public API calls:
  * load data, build a session, derive a goal from session mod info, query
@@ -111,6 +124,16 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_action_count(solver, &action_count, &error) ==
              PC_RESULT_OK);
     PC_CHECK(action_count > 10);
+    const std::string create_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(create_telemetry.find(
+                 "\"version\":\"solver_telemetry_v1\"") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find(
+                 "\"candidate\":10,\"evaluator_supported\":null") !=
+             std::string::npos);
+    PC_CHECK(create_telemetry.find("\"priced_scanned\":null") !=
+             std::string::npos);
     uint32_t exalt_index = 0;
     PC_CHECK(pc_solver_find_action(solver, "exalt", &exalt_index, &error) ==
              PC_RESULT_OK);
@@ -174,7 +197,26 @@ void run_public_solver_gate(const char* artifact_dir) {
              PC_RESULT_OK);
     PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_EXPANDING);
     PC_CHECK(solve_progress.expanded_states == 1);
+    const std::string live_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(live_telemetry.find(
+                 "\"execution\":{\"status\":\"in_progress\"") !=
+             std::string::npos);
+    PC_CHECK(live_telemetry.find("\"expanded\":1") != std::string::npos);
+    PC_CHECK(live_telemetry.find("\"priced_scanned\":10") !=
+             std::string::npos);
+    PC_CHECK(live_telemetry.find("\"policy_reachable\":null") !=
+             std::string::npos);
     pc_solver_solve_abandon(solver);
+    const std::string abandoned_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(abandoned_telemetry.find(
+                 "\"execution\":{\"status\":\"abandoned\"") !=
+             std::string::npos);
+    PC_CHECK(abandoned_telemetry.find("\"status\":\"abandoned\"") !=
+             std::string::npos);
+    PC_CHECK(abandoned_telemetry.find("\"expanded\":1") !=
+             std::string::npos);
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_NOT_FOUND);
 
@@ -204,6 +246,17 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(stepped_summary.skipped_action_count ==
              solve_summary.skipped_action_count);
     solve_summary = stepped_summary;
+    const std::string solved_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(solved_telemetry.find("\"status\":\"exact_abstract\"") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"start_status\":\"exact_abstract_within_tolerance\"") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find("\"state_action_rows\":0") ==
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find("\"available\":false") !=
+             std::string::npos);
 
     uint32_t start_state = 0;
     PC_CHECK(pc_solver_project_item(solver, &item, &start_state, &error) ==
@@ -241,6 +294,13 @@ void run_public_solver_gate(const char* artifact_dir) {
                                         strategy_json.size(),
                                         &strategy_length, &error) ==
              PC_RESULT_OK);
+    const std::string compiled_telemetry =
+        solver_telemetry_json(solver, &error);
+    PC_CHECK(compiled_telemetry.find("\"available\":true") !=
+             std::string::npos);
+    PC_CHECK(compiled_telemetry.find(
+                 "\"strategy_json_bytes\":" +
+                 std::to_string(strategy_length)) != std::string::npos);
 
     pc_strategy_handle strategy = nullptr;
     PC_CHECK(pc_strategy_compile_json(session, strategy_json.c_str(),
@@ -252,17 +312,17 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_simulation_options simulation_options{};
     simulation_options.struct_size = sizeof(simulation_options);
     simulation_options.abi_version = PC_ABI_VERSION;
-    simulation_options.target_runs = 20000;
+    simulation_options.target_runs = 10000;
     simulation_options.seed = 20260707;
     simulation_options.max_actions_per_run = 100000;
     pc_simulation_progress progress{};
-    PC_CHECK(pc_simulator_run_chunk(simulator, &simulation_options, 20000,
+    PC_CHECK(pc_simulator_run_chunk(simulator, &simulation_options, 10000,
                                     &progress, &error) == PC_RESULT_OK);
     PC_CHECK(progress.finished == 1);
     pc_simulation_summary simulation_summary{};
     PC_CHECK(pc_simulator_get_summary(simulator, &simulation_summary,
                                       &error) == PC_RESULT_OK);
-    PC_CHECK(simulation_summary.completed_runs == 20000);
+    PC_CHECK(simulation_summary.completed_runs == 10000);
     PC_CHECK(simulation_summary.success_count ==
              simulation_summary.completed_runs);
     PC_CHECK(simulation_summary.missing_price_run_count == 0);

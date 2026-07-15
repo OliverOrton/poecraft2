@@ -391,10 +391,11 @@ strategy model, not by inventing a second execution format.
 
 ### End-To-End Verification Gate
 
-The load-bearing correctness check for the whole plan:
+The sole plan-level correctness check is performed once at the end of the full
+active solver plan:
 
 ```text
-solve goal -> compile policy -> simulate compiled strategy N times
+solve goal -> compile policy -> simulate compiled strategy exactly 10,000 times
            -> empirical mean cost within tolerance of V(start)
            -> empirical success rate consistent with policy semantics
 ```
@@ -402,7 +403,15 @@ solve goal -> compile policy -> simulate compiled strategy N times
 This one loop catches abstraction unsoundness, transition math errors,
 compiler bugs, and condition-vocabulary gaps at once. It becomes a fixture
 test for a small set of pinned goals (including one all-T1 "perfect item"
-goal) and a diagnostic the UI can run on demand.
+goal). Separate evaluator/oracle matrices are not required plan acceptance
+gates; a narrowly targeted internal test may be used only when something is
+broken and it is needed to diagnose or fix it. Rendered or visual UI checking
+is left to Oliver unless he explicitly asks for it.
+
+Exact policy compression may merge equivalent regions. A later, owner-controlled
+readability mode may also trim choices with negligible value impact, but must
+report the discarded delta and honest bounded/heuristic status; it is not part
+of S7.1 or the core S7 acceptance gate.
 
 ## ML Data Logging
 
@@ -589,8 +598,9 @@ S6  simulator/workspace integration, diagnostics UI, WASM validation
           budget in a worker with live progress
 
 S7  realistic end-to-end one-item capability and solver performance
-    gate: approved real multi-stage crafts solve, compile, and verify
-          after a measured, regression-gated native/WASM performance pass
+    gate at the end of the full plan: approved real multi-stage crafts solve,
+          compile, and run in the simulator after native/WASM gains are
+          reported for Oliver to evaluate against owner-set criteria
 ```
 
 New engine mechanics (bench, metamods, harvest, ...) land as registry

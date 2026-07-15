@@ -341,6 +341,19 @@ pc_result pc_solver_solve_log(
     size_t* out_length,
     pc_error_info* out_error);
 
+/* Versioned solver telemetry JSON for the current handle and latest solve.
+ * Available before solving (registry/layout fields are populated), during a
+ * stepped solve (partial counters advance), after abandon (the last partial
+ * snapshot is retained), and after solve/compile. Fields the current
+ * algorithm does not provide are explicit JSON nulls with an availability
+ * reason; no sentinel values stand in for missing metrics. */
+pc_result pc_solver_telemetry(
+    pc_solver_handle solver,
+    char* buffer,
+    size_t capacity,
+    size_t* out_length,
+    pc_error_info* out_error);
+
 #ifdef __cplusplus
 }
 #endif

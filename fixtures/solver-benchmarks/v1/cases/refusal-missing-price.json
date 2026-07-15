@@ -1,0 +1,65 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "refusal-missing-price",
+  "category": "stress_refusal",
+  "approval_status": "approved_owner_2026-07-15",
+  "benchmark_enabled": true,
+  "description": "A valid one-mod goal whose only productive action is deliberately unpriced.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "normal",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "magic",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["transmute", "alteration", "restart"]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "restart"],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-missing-price-v1",
+    "prices": {
+      "transmute": 0.05,
+      "base": 5.0
+    }
+  },
+  "expected": {
+    "solve_status": "refused_missing_price",
+    "optimality_status": "not_claimed",
+    "compile_status": "not_required",
+    "verification_status": "not_required"
+  },
+  "caps": {
+    "max_states": 10000,
+    "max_sweeps": 1000,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 10000,
+    "max_expanded_states": 10000,
+    "max_state_action_rows": 50000,
+    "max_transitions": 500000,
+    "max_solver_owned_bytes": 134217728,
+    "max_compiled_nodes": 10000,
+    "max_compiled_edges": 40000,
+    "max_strategy_json_bytes": 8388608,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 2026071540,
+    "max_actions_per_run": 1000
+  }
+}

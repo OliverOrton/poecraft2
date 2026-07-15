@@ -1,6 +1,7 @@
 #include "solver_internal.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <deque>
@@ -56,6 +57,7 @@ struct SolveWork::Impl {
     std::vector<std::uint8_t> queued;
     std::deque<std::uint32_t> queue;
     std::uint32_t expanded_count = 0;
+    std::uint32_t peak_queue_size = 0;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
     SolvePhase phase = SolvePhase::Expanding;
@@ -68,11 +70,21 @@ struct SolveWork::Impl {
         const SolveOptions& solve_options)
         : calc(context), session(context.session()), options(solve_options),
           reported_unsupported(context.registry().actions.size(), false) {
+        const auto setup_started = std::chrono::steady_clock::now();
+        calc.reset_solve_telemetry();
+        result.diagnostics.registry_actions = static_cast<std::uint32_t>(
+            calc.registry().actions.size());
+        result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
+            calc.candidates().size());
         /* Price the candidate actions once. Missing prices are excluded and
          * reported exactly as in the synchronous solver. */
         for (const std::uint32_t index : calc.candidates()) {
             const ActionDescriptor& descriptor =
                 calc.registry().actions.at(index);
+            const bool supported = calc_supports(descriptor);
+            if (supported) {
+                ++result.diagnostics.evaluator_supported_actions;
+            }
             double cost = 0.0;
             bool priced = true;
             for (const std::string& key : descriptor.cost_keys) {
@@ -89,10 +101,16 @@ struct SolveWork::Impl {
                 continue;
             }
             actions.push_back({index, cost});
+            ++result.diagnostics.priced_scanned_actions;
+            if (supported) ++result.diagnostics.supported_priced_actions;
         }
 
         result.start_state = calc.intern_item(start_item);
         enqueue(result.start_state);
+        result.diagnostics.solve_setup_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - setup_started)
+                .count());
     }
 
     void enqueue(const std::uint32_t state) {
@@ -100,15 +118,24 @@ struct SolveWork::Impl {
         if (queued[state]) return;
         queued[state] = 1;
         queue.push_back(state);
+        peak_queue_size = std::max<std::uint32_t>(
+            peak_queue_size, static_cast<std::uint32_t>(queue.size()));
     }
 
     void expand_one() {
+        const auto started = std::chrono::steady_clock::now();
         const std::uint32_t state = queue.front();
         queue.pop_front();
         if (state >= expanded.size()) expanded.resize(state + 1, 0);
         expanded[state] = 1;
         ++expanded_count;
-        if (calc.is_goal_state(calc.state(state))) return;
+        if (calc.is_goal_state(calc.state(state))) {
+            result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
+            return;
+        }
 
         for (const PricedAction& action : actions) {
             if (!action_legal(session,
@@ -136,15 +163,22 @@ struct SolveWork::Impl {
                 }
             }
         }
+        result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
     }
 
     void prepare_iteration() {
+        const auto started = std::chrono::steady_clock::now();
         if (!queue.empty() && expanded_count >= options.max_states) {
             result.diagnostics.state_cap_hit = true;
         }
         result.diagnostics.expanded_states = expanded_count;
 
         const std::uint32_t state_count = calc.state_count();
+        result.diagnostics.discovered_states = state_count;
+        result.diagnostics.frontier_states = state_count - expanded_count;
         expanded.resize(state_count, 0);
         result.expanded = expanded;
         result.values.assign(state_count, kValueCeiling);
@@ -154,6 +188,7 @@ struct SolveWork::Impl {
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) {
                 result.goal_states[state] = 1;
+                ++result.diagnostics.goal_states;
                 result.values[state] = 0.0;
             } else if (!result.expanded[state]) {
                 /* Past-the-cap frontier: no Bellman backing, keep infinite so
@@ -163,6 +198,10 @@ struct SolveWork::Impl {
         }
         residual = kValueCeiling;
         phase = SolvePhase::Iterating;
+        result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
     }
 
     double action_q(
@@ -197,6 +236,7 @@ struct SolveWork::Impl {
     }
 
     void run_sweep() {
+        const auto started = std::chrono::steady_clock::now();
         residual = 0.0;
         ++sweeps;
         const std::uint32_t state_count =
@@ -205,8 +245,10 @@ struct SolveWork::Impl {
             if (!result.expanded[state] || result.goal_states[state]) {
                 continue;
             }
+            ++result.diagnostics.bellman_backups;
             double best = kInfinity;
             for (const PricedAction& action : actions) {
+                ++result.diagnostics.bellman_action_evaluations;
                 best = std::min(best, action_q(state, action));
             }
             /* Monotone descent from the ceiling: updates never raise a
@@ -218,6 +260,10 @@ struct SolveWork::Impl {
         }
         result.diagnostics.sweeps = sweeps;
         result.diagnostics.residual = residual;
+        result.diagnostics.optimization_ns += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
     }
 
     void step(std::uint32_t max_work_items) {
@@ -264,6 +310,29 @@ struct SolveWork::Impl {
         return value;
     }
 
+    SolveTelemetrySnapshot telemetry_snapshot(bool abandoned) const {
+        SolveTelemetrySnapshot snapshot;
+        snapshot.phase = phase;
+        snapshot.abandoned = abandoned;
+        snapshot.diagnostics = result.diagnostics;
+        snapshot.diagnostics.expanded_states = expanded_count;
+        snapshot.diagnostics.discovered_states = calc.state_count();
+        snapshot.diagnostics.frontier_states =
+            snapshot.diagnostics.discovered_states - expanded_count;
+        snapshot.diagnostics.goal_states = 0;
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            if (calc.is_goal_state(calc.state(state))) {
+                ++snapshot.diagnostics.goal_states;
+            }
+        }
+        snapshot.diagnostics.sweeps = sweeps;
+        snapshot.diagnostics.residual = residual;
+        snapshot.diagnostics.solver_owned_bytes_estimate =
+            estimated_owned_bytes();
+        snapshot.raw_start_bound = progress().start_value_bound;
+        return snapshot;
+    }
+
     SolveResult finish() {
         if (phase != SolvePhase::Done) {
             throw std::logic_error("solver work is not finished");
@@ -271,6 +340,7 @@ struct SolveWork::Impl {
         if (consumed) {
             throw std::logic_error("solver work was already finished");
         }
+        const auto extraction_started = std::chrono::steady_clock::now();
 
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
@@ -282,6 +352,7 @@ struct SolveWork::Impl {
             double best_variance = kInfinity;
             std::uint32_t best_action = kNoId;
             for (const PricedAction& action : actions) {
+                ++result.diagnostics.extraction_action_evaluations;
                 const double q = action_q(state, action);
                 if (q == kInfinity) continue;
                 const OutcomeDistribution& distribution =
@@ -356,6 +427,7 @@ struct SolveWork::Impl {
                 walk.pop_front();
                 if (result.policy_reachable[state]) continue;
                 result.policy_reachable[state] = 1;
+                ++result.diagnostics.policy_reachable_states;
                 const std::uint32_t action = result.policy[state];
                 if (action == kNoId) continue;
                 const OutcomeDistribution& distribution =
@@ -380,8 +452,46 @@ struct SolveWork::Impl {
                            residual <= options.epsilon &&
                            result.start_state < state_count &&
                            result.values[result.start_state] < kValueCeiling;
+        result.diagnostics.extraction_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - extraction_started)
+                .count());
+        result.diagnostics.solver_owned_bytes_estimate =
+            estimated_owned_bytes();
         consumed = true;
         return std::move(result);
+    }
+
+    std::uint64_t estimated_owned_bytes() const {
+        std::uint64_t bytes = sizeof(*this) + calc.estimated_owned_bytes();
+        bytes += actions.capacity() * sizeof(PricedAction);
+        bytes += (reported_unsupported.capacity() + 7) / 8;
+        bytes += expanded.capacity() * sizeof(std::uint8_t);
+        bytes += queued.capacity() * sizeof(std::uint8_t);
+        bytes += static_cast<std::uint64_t>(peak_queue_size) *
+                 sizeof(std::uint32_t);
+        bytes += result.values.capacity() * sizeof(double);
+        bytes += result.policy.capacity() * sizeof(std::uint32_t);
+        bytes += result.expanded.capacity() * sizeof(std::uint8_t);
+        bytes += result.goal_states.capacity() * sizeof(std::uint8_t);
+        bytes += result.policy_reachable.capacity() * sizeof(std::uint8_t);
+        bytes += result.unveil_preferences.capacity() *
+                 sizeof(std::vector<std::uint32_t>);
+        for (const auto& preferences : result.unveil_preferences) {
+            bytes += preferences.capacity() * sizeof(std::uint32_t);
+        }
+        const auto string_vector_bytes = [](const auto& values) {
+            std::uint64_t total =
+                values.capacity() * sizeof(std::string);
+            for (const std::string& value : values) {
+                total += value.capacity() + 1;
+            }
+            return total;
+        };
+        bytes += string_vector_bytes(
+            result.diagnostics.skipped_missing_price);
+        bytes += string_vector_bytes(result.diagnostics.skipped_unsupported);
+        return bytes;
     }
 };
 
@@ -402,6 +512,10 @@ void SolveWork::step(const std::uint32_t max_work_items) {
 
 SolveProgress SolveWork::progress() const {
     return impl_->progress();
+}
+
+SolveTelemetrySnapshot SolveWork::telemetry_snapshot(bool abandoned) const {
+    return impl_->telemetry_snapshot(abandoned);
 }
 
 SolveResult SolveWork::finish() {
@@ -463,6 +577,314 @@ std::string serialize_solve_log(
         log += "]}\n";
     }
     return log;
+}
+
+std::string serialize_solver_telemetry(
+    const CalcContext& calc,
+    const SolveResult* result,
+    const SolveTelemetrySnapshot* snapshot,
+    const std::optional<std::uint64_t>& registry_generation_ns,
+    const PolicyCompilationTelemetry* compilation) {
+    const CalcTelemetry& cache = calc.telemetry();
+    const SolveDiagnostics* diagnostics =
+        result != nullptr
+            ? &result->diagnostics
+            : (snapshot == nullptr ? nullptr : &snapshot->diagnostics);
+    const bool qualified_action_subset =
+        diagnostics != nullptr &&
+        (!diagnostics->skipped_missing_price.empty() ||
+         diagnostics->evaluator_supported_actions <
+             diagnostics->candidate_actions ||
+         !diagnostics->skipped_unsupported.empty());
+    const auto count_or_null = [](const std::uint64_t* value) {
+        return value == nullptr ? std::string("null")
+                                : std::to_string(*value);
+    };
+    const auto optional_count = [](const auto& value) {
+        return value.has_value() ? std::to_string(*value)
+                                 : std::string("null");
+    };
+    const auto bool_json = [](bool value) {
+        return value ? "true" : "false";
+    };
+
+    std::string json = "{\"version\":\"solver_telemetry_v1\"";
+    json += ",\"availability\":{";
+    json += "\"evaluator_support\":\"diagnostic_not_applied_filter\"";
+    json += ",\"relevance_filter\":\"not_implemented\"";
+    json += ",\"dominance_filter\":\"not_implemented\"";
+    json += ",\"policy_improvement_rounds\":\"not_applicable\"";
+    json += ",\"optimality_gap\":\"not_available\"";
+    json += ",\"verification\":\"external_harness\"}";
+
+    json += ",\"execution\":{";
+    if (result != nullptr) {
+        json += "\"status\":\"complete\",\"phase\":\"done\"";
+    } else if (snapshot != nullptr) {
+        const char* phase = snapshot->phase == SolvePhase::Expanding
+                                ? "expanding"
+                                : (snapshot->phase == SolvePhase::Iterating
+                                       ? "iterating"
+                                       : "ready_to_finish");
+        json += "\"status\":\"";
+        json += snapshot->abandoned ? "abandoned" : "in_progress";
+        json += "\",\"phase\":\"" + std::string(phase) + "\"";
+    } else {
+        json += "\"status\":\"not_started\",\"phase\":null";
+    }
+    json += "}";
+
+    const std::uint64_t registry_actions =
+        diagnostics == nullptr
+            ? calc.registry().actions.size()
+            : diagnostics->registry_actions;
+    const std::uint64_t candidate_actions =
+        diagnostics == nullptr ? calc.candidates().size()
+                               : diagnostics->candidate_actions;
+    json += ",\"actions\":{\"registry\":" +
+            std::to_string(registry_actions);
+    json += ",\"candidate\":" + std::to_string(candidate_actions);
+    if (diagnostics == nullptr) {
+        json += ",\"evaluator_supported\":null";
+        json += ",\"priced_scanned\":null,\"supported_priced\":null";
+        json += ",\"unsupported_requested\":null";
+        json += ",\"relevance_reduced\":null,\"dominance_reduced\":null";
+        json += ",\"missing_price\":null,\"unsupported_observed\":null";
+    } else {
+        json += ",\"evaluator_supported\":" +
+                std::to_string(diagnostics->evaluator_supported_actions);
+        json += ",\"priced_scanned\":" +
+                std::to_string(diagnostics->priced_scanned_actions);
+        json += ",\"supported_priced\":" +
+                std::to_string(diagnostics->supported_priced_actions);
+        json += ",\"unsupported_requested\":" +
+                std::to_string(diagnostics->candidate_actions -
+                               diagnostics->evaluator_supported_actions);
+        json += ",\"relevance_reduced\":null,\"dominance_reduced\":null";
+        json += ",\"missing_price\":" + std::to_string(
+                    diagnostics->skipped_missing_price.size());
+        json += ",\"unsupported_observed\":" + std::to_string(
+                    diagnostics->skipped_unsupported.size());
+    }
+    json += "}";
+
+    json += ",\"abstraction\":{\"discriminating_tags\":" +
+            std::to_string(calc.layout().discriminating_tag_ids.size());
+    json += ",\"junk_classes\":" +
+            std::to_string(calc.layout().junk_classes.size()) + "}";
+
+    json += ",\"states\":{";
+    if (diagnostics == nullptr) {
+        json += "\"discovered\":null,\"expanded\":null,\"frontier\":null";
+        json += ",\"goal\":null,\"policy_reachable\":null";
+    } else {
+        json += "\"discovered\":" +
+                std::to_string(diagnostics->discovered_states);
+        json += ",\"expanded\":" +
+                std::to_string(diagnostics->expanded_states);
+        json += ",\"frontier\":" +
+                std::to_string(diagnostics->frontier_states);
+        json += ",\"goal\":" +
+                std::to_string(diagnostics->goal_states);
+        if (result == nullptr) {
+            json += ",\"policy_reachable\":null";
+        } else {
+            json += ",\"policy_reachable\":" +
+                    std::to_string(diagnostics->policy_reachable_states);
+        }
+    }
+    json += "}";
+
+    json += ",\"work\":{\"state_action_rows\":" +
+            std::to_string(cache.state_action_rows);
+    json += ",\"transition_entries\":" +
+            std::to_string(cache.transition_entries);
+    json += ",\"outcome_entries\":" +
+            std::to_string(cache.outcome_entries);
+    json += ",\"choice_groups\":" +
+            std::to_string(cache.choice_groups);
+    json += ",\"choice_successor_entries\":" +
+            std::to_string(cache.choice_successor_entries);
+    if (diagnostics == nullptr) {
+        json += ",\"bellman_backups\":null";
+        json += ",\"bellman_action_evaluations\":null";
+        json += ",\"extraction_action_evaluations\":null";
+    } else {
+        json += ",\"bellman_backups\":" +
+                std::to_string(diagnostics->bellman_backups);
+        json += ",\"bellman_action_evaluations\":" +
+                std::to_string(diagnostics->bellman_action_evaluations);
+        json += ",\"extraction_action_evaluations\":" +
+                std::to_string(diagnostics->extraction_action_evaluations);
+    }
+    json += "}";
+
+    json += ",\"cache\":{\"distribution\":{\"requests\":" +
+            std::to_string(cache.distribution_requests);
+    json += ",\"hits\":" + std::to_string(cache.distribution_hits);
+    json += ",\"misses\":" + std::to_string(cache.distribution_misses);
+    json += ",\"entries\":" +
+            std::to_string(calc.cached_distribution_count());
+    json += ",\"build_ns\":" +
+            std::to_string(cache.distribution_build_ns) + "}";
+    json += ",\"reforge\":{\"requests\":" +
+            std::to_string(cache.reforge_requests);
+    json += ",\"hits\":" + std::to_string(cache.reforge_hits);
+    json += ",\"misses\":" + std::to_string(cache.reforge_misses);
+    json += ",\"entries\":" +
+            std::to_string(calc.cached_reforge_count());
+    json += ",\"build_ns\":" +
+            std::to_string(cache.reforge_build_ns) + "}}";
+
+    json += ",\"optimization\":{";
+    json += "\"method\":\"value_iteration\"";
+    if (result == nullptr && snapshot == nullptr) {
+        json += ",\"status\":\"not_run\",\"converged\":null";
+        json += ",\"sweeps\":null,\"policy_improvement_rounds\":null";
+        json += ",\"residual\":null,\"optimality_gap\":null";
+        json += ",\"state_cap_hit\":null";
+        json += ",\"full_request_status\":\"not_run\"";
+    } else if (result == nullptr) {
+        json += ",\"status\":\"";
+        json += snapshot->abandoned ? "abandoned" : "in_progress";
+        json += "\",\"converged\":null";
+        json += ",\"sweeps\":" + std::to_string(diagnostics->sweeps);
+        json += ",\"policy_improvement_rounds\":null";
+        json += ",\"residual\":" + std::to_string(diagnostics->residual);
+        json += ",\"optimality_gap\":null";
+        json += ",\"state_cap_hit\":" +
+                std::string(bool_json(diagnostics->state_cap_hit));
+        json += ",\"full_request_status\":\"incomplete_not_finished\"";
+    } else {
+        const char* status = result->converged
+                                 ? (qualified_action_subset
+                                        ? "exact_supported_priced_subset"
+                                        : "exact_abstract")
+                                 : (diagnostics->state_cap_hit
+                                        ? "incomplete_state_cap"
+                                        : "not_converged");
+        json += ",\"status\":\"" + std::string(status) + "\"";
+        json += ",\"converged\":" +
+                std::string(bool_json(result->converged));
+        json += ",\"sweeps\":" + std::to_string(diagnostics->sweeps);
+        json += ",\"policy_improvement_rounds\":null";
+        json += ",\"residual\":" + std::to_string(diagnostics->residual);
+        json += ",\"optimality_gap\":null";
+        json += ",\"state_cap_hit\":" +
+                std::string(bool_json(diagnostics->state_cap_hit));
+        json += ",\"full_request_status\":\"";
+        if (!result->converged) {
+            json += "incomplete_solve";
+        } else if (qualified_action_subset) {
+            json += "incomplete_action_subset";
+        } else {
+            json += "exact_abstract_within_tolerance";
+        }
+        json += "\"";
+    }
+    json += "}";
+
+    json += ",\"timings_ns\":{\"registry_generation\":" +
+            optional_count(registry_generation_ns);
+    json += ",\"abstract_layout\":" +
+            std::to_string(calc.layout_build_ns());
+    if (diagnostics == nullptr) {
+        json += ",\"solve_setup\":null,\"expansion\":null";
+        json += ",\"transition_calculation\":null,\"optimization\":null";
+        json += ",\"extraction\":null";
+    } else {
+        json += ",\"solve_setup\":" +
+                std::to_string(diagnostics->solve_setup_ns);
+        json += ",\"expansion\":" +
+                std::to_string(diagnostics->expansion_ns);
+        json += ",\"transition_calculation\":" +
+                std::to_string(cache.distribution_build_ns);
+        json += ",\"optimization\":" +
+                std::to_string(diagnostics->optimization_ns);
+        if (result == nullptr) {
+            json += ",\"extraction\":null";
+        } else {
+            json += ",\"extraction\":" +
+                    std::to_string(diagnostics->extraction_ns);
+        }
+    }
+    json += ",\"compilation\":" +
+            count_or_null(compilation == nullptr ? nullptr
+                                                 : &compilation->duration_ns);
+    json += ",\"verification\":null}";
+
+    const std::uint64_t current_bytes = calc.estimated_owned_bytes();
+    json += ",\"memory\":{\"solver_owned_bytes_estimate\":" +
+            std::to_string(diagnostics == nullptr
+                               ? current_bytes
+                               : diagnostics->solver_owned_bytes_estimate);
+    json += ",\"estimate_kind\":\"selected_allocations_not_process_heap\"}";
+
+    json += ",\"compilation\":{";
+    if (compilation == nullptr) {
+        json += "\"available\":false,\"working_states\":null";
+        json += ",\"nodes\":null,\"edges\":null";
+        json += ",\"strategy_json_bytes\":null";
+    } else {
+        json += "\"available\":true,\"working_states\":" +
+                std::to_string(compilation->working_states);
+        json += ",\"nodes\":" + std::to_string(compilation->nodes);
+        json += ",\"edges\":" + std::to_string(compilation->edges);
+        json += ",\"strategy_json_bytes\":" +
+                std::to_string(compilation->strategy_json_bytes);
+    }
+    json += "}";
+
+    const bool has_result_bound =
+        result != nullptr && result->start_state < result->values.size() &&
+        std::isfinite(result->values[result->start_state]);
+    const bool has_snapshot_bound =
+        snapshot != nullptr && std::isfinite(snapshot->raw_start_bound);
+    json += ",\"value\":{\"start\":";
+    if (!has_result_bound || !result->converged) {
+        json += "null";
+    } else {
+        char buffer[40];
+        std::snprintf(buffer, sizeof(buffer), "%.17g",
+                      result->values[result->start_state]);
+        json += buffer;
+    }
+    json += ",\"start_status\":";
+    if (result == nullptr && snapshot == nullptr) {
+        json += "\"not_run\"";
+    } else if (result == nullptr) {
+        json += snapshot->abandoned ? "\"abandoned_before_completion\""
+                                    : "\"solve_in_progress\"";
+    } else if (result->converged) {
+        json += qualified_action_subset
+                    ? "\"exact_supported_priced_subset_within_tolerance\""
+                    : "\"exact_abstract_within_tolerance\"";
+    } else {
+        json += "\"unavailable_incomplete_solve\"";
+    }
+    json += ",\"start_scope\":";
+    if (result == nullptr || !result->converged) {
+        json += "null";
+    } else {
+        json += qualified_action_subset ? "\"supported_priced_subset\""
+                                        : "\"full_requested_action_set\"";
+    }
+    json += ",\"raw_start_bound\":";
+    if (has_result_bound) {
+        char buffer[40];
+        std::snprintf(buffer, sizeof(buffer), "%.17g",
+                      result->values[result->start_state]);
+        json += buffer;
+    } else if (has_snapshot_bound) {
+        char buffer[40];
+        std::snprintf(buffer, sizeof(buffer), "%.17g",
+                      snapshot->raw_start_bound);
+        json += buffer;
+    } else {
+        json += "null";
+    }
+    json += "},\"verification\":null}";
+    return json;
 }
 
 } // namespace solver

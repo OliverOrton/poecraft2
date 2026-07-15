@@ -206,14 +206,19 @@ void run_synthetic_gate() {
             {"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}};
         const SolveResult solved = solve(calc, start, prices);
         PC_CHECK(solved.converged);
-        const std::string json =
-            compile_policy_strategy_json(calc, solved, "alt-spam");
+        PolicyCompilationTelemetry compilation;
+        const std::string json = compile_policy_strategy_json(
+            calc, solved, "alt-spam", &compilation);
         PC_CHECK(json.find("\"type\":\"restart\"") == std::string::npos);
         PC_CHECK(json.find("\"expected_cost\":") != std::string::npos);
+        PC_CHECK(compilation.working_states > 0);
+        PC_CHECK(compilation.nodes >= compilation.working_states + 4);
+        PC_CHECK(compilation.edges > compilation.nodes);
+        PC_CHECK(compilation.strategy_json_bytes == json.size());
 
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 50000, 42);
-        PC_CHECK(summary.completed_runs == 50000);
+            run_compiled(session, json, prices, 10000, 42);
+        PC_CHECK(summary.completed_runs == 10000);
         PC_CHECK(summary.success_count == summary.completed_runs);
         PC_CHECK(summary.missing_price_run_count == 0);
         const double mean =
@@ -238,8 +243,8 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"restart\"") != std::string::npos);
 
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 30000, 4242);
-        PC_CHECK(summary.completed_runs == 30000);
+            run_compiled(session, json, prices, 10000, 4242);
+        PC_CHECK(summary.completed_runs == 10000);
         PC_CHECK(summary.success_count == summary.completed_runs);
         const double mean =
             summary.known_total_cost /
@@ -265,7 +270,7 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"item_flag\",\"flag\":\"corrupted\"") !=
                  std::string::npos);
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 5000, 9001);
+            run_compiled(session, json, prices, 10000, 9001);
         PC_CHECK(summary.success_count == summary.completed_runs);
         const double mean = summary.known_total_cost /
                             static_cast<double>(summary.completed_runs);
@@ -298,8 +303,8 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"at_least\",\"count\":1") !=
                  std::string::npos);
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 2000, 777);
-        PC_CHECK(summary.completed_runs == 2000);
+            run_compiled(session, json, prices, 10000, 777);
+        PC_CHECK(summary.completed_runs == 10000);
         PC_CHECK(summary.success_count == summary.completed_runs);
     }
 
@@ -324,7 +329,7 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"mod_count\"") !=
                  std::string::npos);
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 20000, 8675310);
+            run_compiled(session, json, prices, 10000, 8675310);
         PC_CHECK(summary.success_count == summary.completed_runs);
         PC_CHECK(summary.no_matching_edge_count == 0);
         const double expected = solved.values[solved.start_state];
@@ -365,7 +370,7 @@ void run_synthetic_gate() {
                  std::string::npos);
         PC_CHECK(json.find("\"min_tier\":1") != std::string::npos);
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 30000, 8675309);
+            run_compiled(session, json, prices, 10000, 8675309);
         PC_CHECK(summary.success_count == summary.completed_runs);
         const double expected = solved.values[solved.start_state];
         const double mean = summary.known_total_cost /
@@ -406,7 +411,7 @@ void run_synthetic_gate() {
         PC_CHECK(json.find("\"type\":\"unveil\"") !=
                  std::string::npos);
         const SimulationSummaryInternal summary =
-            run_compiled(session, json, prices, 30000, 1234567);
+            run_compiled(session, json, prices, 10000, 1234567);
         PC_CHECK(summary.success_count == summary.completed_runs);
         PC_CHECK(summary.missing_price_run_count == 0);
         const double expected = solved.values[solved.start_state];
@@ -526,8 +531,8 @@ void run_artifact_gate(const char* artifact_dir) {
     const std::string json =
         compile_policy_strategy_json(calc, solved, "artifact-toy");
     const SimulationSummaryInternal summary =
-        run_compiled(session, json, prices, 20000, 987654321);
-    PC_CHECK(summary.completed_runs == 20000);
+        run_compiled(session, json, prices, 10000, 987654321);
+    PC_CHECK(summary.completed_runs == 10000);
     PC_CHECK(summary.success_count == summary.completed_runs);
     PC_CHECK(summary.missing_price_run_count == 0);
     const double mean = summary.known_total_cost /

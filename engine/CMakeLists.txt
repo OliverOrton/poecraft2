@@ -49,6 +49,23 @@ set_target_properties(poecraft_engine_shared PROPERTIES
 target_include_directories(poecraft_engine_shared PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(poecraft_engine_shared PUBLIC cxx_std_20)
 
+# S7 optimal-solver baseline harness. It consumes versioned corpus specs and
+# only calls the public engine API; json.hpp is reused solely for tooling-side
+# spec/report parsing.
+add_executable(poecraft_solver_benchmark
+    benchmarks/solver_benchmark.cpp)
+target_include_directories(poecraft_solver_benchmark
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(poecraft_solver_benchmark PRIVATE poecraft_engine)
+target_compile_features(poecraft_solver_benchmark PRIVATE cxx_std_20)
+if(WIN32)
+    target_link_libraries(poecraft_solver_benchmark PRIVATE Psapi)
+endif()
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_options(poecraft_solver_benchmark PRIVATE
+        -static-libstdc++ -static-libgcc)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(poecraft_header_smoke tests/header_smoke.cpp)
@@ -87,5 +104,12 @@ if(BUILD_TESTING)
         COMMAND poecraft_engine_tests
             "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
             "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/spec"
+    )
+    add_test(
+        NAME poecraft_solver_benchmark_validate
+        COMMAND poecraft_solver_benchmark
+            --artifact "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
+            --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-benchmarks/v1/manifest.json"
+            --validate-only
     )
 endif()

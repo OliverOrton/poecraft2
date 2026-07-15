@@ -1,0 +1,109 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "endgame-fractured-es",
+  "category": "endgame",
+  "approval_status": "approved_owner_2026-07-15",
+  "benchmark_enabled": true,
+  "description": "Approved six-condition Vaal Regalia from a fractured T1 flat-Energy-Shield start, with T1 Energy-Shield/stun recovery, Dense Fossil and Harvest defence rerolls, plus a bench finish.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": [
+      {
+        "key": "LocalIncreasedEnergyShield11",
+        "flags": ["fractured"]
+      }
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedEnergyShieldPercent8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedEnergyShieldPercentAndStunRecovery6",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ColdResist8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "EinharMasterIntelligence3",
+        "min_tier": 1
+      }
+    ],
+    "actions": [
+      "chaos",
+      "exalt",
+      "annul",
+      "harvest_reforge:defences",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "bench:EinharMasterIntelligence3",
+      "restart"
+    ]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "harvest_reforge", "fossil", "bench", "restart"],
+  "mechanic_notes": [
+    "The fractured carrier is explicit in the start state; no fracture mechanic interaction is assumed."
+  ],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-frozen-v1",
+    "prices": {
+      "chaos": 1.0,
+      "exalt": 10.0,
+      "annul": 2.0,
+      "harvest_reforge:defences": 5.0,
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences": 1.0,
+      "resonator:1": 0.25,
+      "bench:EinharMasterIntelligence3": 0.5,
+      "base": 25.0
+    }
+  },
+  "expected": {
+    "solve_status": "baseline_cap_or_compile_refusal_allowed",
+    "optimality_status": "exact_if_converged",
+    "compile_status": "baseline_measured",
+    "verification_status": "run_if_compiled"
+  },
+  "caps": {
+    "max_states": 250000,
+    "max_sweeps": 150000,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 500000,
+    "max_expanded_states": 250000,
+    "max_state_action_rows": 6000000,
+    "max_transitions": 60000000,
+    "max_solver_owned_bytes": 4294967296,
+    "max_compiled_nodes": 400000,
+    "max_compiled_edges": 1600000,
+    "max_strategy_json_bytes": 268435456,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071530,
+    "max_actions_per_run": 500000,
+    "mean_cost_relative_tolerance": 0.1,
+    "minimum_success_rate": 0.995
+  }
+}

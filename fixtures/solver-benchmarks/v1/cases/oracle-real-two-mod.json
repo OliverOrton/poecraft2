@@ -1,0 +1,73 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "oracle-real-two-mod",
+  "category": "oracle",
+  "approval_status": "approved_owner_2026-07-15",
+  "benchmark_enabled": true,
+  "description": "Clean magic Vaal Regalia oracle for T1 flat Energy Shield plus T1 Fire Resistance.",
+  "comparison_profile": "native-wasm-solver-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "normal",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "magic",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["transmute", "augment", "alteration", "restart"]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "restart"],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-frozen-v1",
+    "prices": {
+      "transmute": 0.05,
+      "augment": 0.05,
+      "alteration": 0.1,
+      "base": 5.0
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "run"
+  },
+  "caps": {
+    "max_states": 25000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 256,
+    "max_discovered_states": 25000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 250000,
+    "max_transitions": 2500000,
+    "max_solver_owned_bytes": 536870912,
+    "max_compiled_nodes": 50000,
+    "max_compiled_edges": 200000,
+    "max_strategy_json_bytes": 33554432,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071502,
+    "max_actions_per_run": 100000,
+    "mean_cost_relative_tolerance": 0.08,
+    "minimum_success_rate": 0.995
+  }
+}

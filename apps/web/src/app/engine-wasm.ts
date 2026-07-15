@@ -25,6 +25,7 @@ import {
     SolverActionInfo,
     SolverGoal,
     SolverStateValue,
+    SolverTelemetry,
     StrategyEvalOptions,
     StrategyEvalProgress,
     StrategyEvalResult,
@@ -524,6 +525,11 @@ export class EngineBindings {
     solverLog(solver: number): string {
         return this.callJson("pcw_solver_log", ["number"], [solver])
             .log as string;
+    }
+
+    solverTelemetry(solver: number): SolverTelemetry {
+        return this.callJson("pcw_solver_telemetry", ["number"], [solver])
+            .telemetry as SolverTelemetry;
     }
 }
 
