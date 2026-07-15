@@ -72,14 +72,12 @@ enabled and returned a restartable panel. The next one-goal solve converged at
 right. Capture:
 `design/mockups/s6-solve-panel/implemented-phase2-progress.png`.
 
-## Worktree caution
+## Worktree baseline
 
-This worktree still contains the pre-existing uncommitted Strategy Board
-layout/polish changes in `pc-edge-layer.ts`, `pc-strategy-board.ts`,
-`pc-strategy-editor.ts`, and `app.css`, plus the uncommitted S6 Phase 1 slice.
-Phase 2 preserves those changes and overlaps Calculator/CSS/docs. Inspect and
-stage deliberately; do not assume every current diff belongs solely to Phase
-2. Commits remain local-only unless Oliver explicitly asks to push.
+S6 Phases 1-2 and the overlapping Strategy Board polish were committed together
+as `fd0f26f`; Oliver reported that commit pushed to `main`. Start parallel work
+from updated `main`, use a dedicated branch, and do not have both machines push
+unrelated work directly to `main`.
 
 ## Next boundary
 
@@ -88,3 +86,19 @@ per-action odds). Follow the image-model design loop in `docs/s6-plan.md`
 before implementation. The plan explicitly calls out the watched-goal rarity
 default as a mechanic/product choice to confirm with Oliver. Do not begin Phase
 4 or fold its evaluator/condition-vocabulary work into Phase 3.
+
+## Parallel economy track
+
+`docs/economy-ingest-plan.md` now specifies a full separate economy SQLite,
+dynamic ingest for every provider-exposed PoE1 PC economy league, immutable
+snapshot publication, browser caching, per-league overrides, and workspace
+league switching. Oliver approved the primary source, PoE1-PC scope, six-hour
+refresh, retention, low-confidence warnings, manual-only base price,
+per-league overrides, pinned in-flight behavior, and delegated category/hosting
+choices; the plan selects capability-driven categories and GitHub Actions ->
+Cloudflare R2. Oliver also confirmed that Archived shows one previous challenge
+family including softcore/hardcore variants and that selecting an unveil is a
+zero-cost step paid by the preceding veiled-currency action. No economy
+implementation has started. E0-E4 paths are suitable for a separate laptop
+branch alongside S6 Phase 3; rebase before E5-E6 touch shared price/UI/native
+cost-key files. S6 Phase 3 remains the primary next boundary.

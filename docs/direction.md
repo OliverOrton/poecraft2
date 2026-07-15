@@ -39,6 +39,9 @@ can solve into an annotated Strategy Board, and long solves now report native
 progress and cancel without blocking the worker. S6 Phase 3 is next. The
 completed polish sequence is in
 [pre-s6-product-polish-plan.md](pre-s6-product-polish-plan.md).
+The parallel live-economy track is planned in
+[economy-ingest-plan.md](economy-ingest-plan.md). Its main product decisions are
+fully recorded; implementation has not started.
 
 ## Direction Of Travel
 
@@ -56,7 +59,8 @@ completed polish sequence is in
    board overlays, a live economy service (league snapshot fetch with
    overrides), and recomb/feeder blocks with item-flow wiring.
    [desktop-workspace-ui.md](desktop-workspace-ui.md),
-   [strategy-editor-ui.md](strategy-editor-ui.md)
+   [strategy-editor-ui.md](strategy-editor-ui.md),
+   [economy-ingest-plan.md](economy-ingest-plan.md)
 4. Engine track continues in parallel: performance baselining
    (Phase 14), then publishing/accounts (Phases 12, 15-16) and the
    recombinator engine substrate (Phase 18, consumed by S10-S11).
@@ -73,6 +77,7 @@ Foundations:
 
 Data and engine internals:
 [data-shapes-and-ingest.md](data-shapes-and-ingest.md),
+[economy-ingest-plan.md](economy-ingest-plan.md),
 [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md),
 [weight-calculation-flow.md](weight-calculation-flow.md),
 [item-state-flow.md](item-state-flow.md),

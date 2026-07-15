@@ -873,6 +873,26 @@ remain backed by the same native action registry and exact transition provider.
 The earlier multi-goal/OR contract and shared predicate-editor work are not
 scheduled.
 
+## Parallel Track E: Economy Ingest And League Switching (Planned)
+
+The complete economy subsystem is specified in
+[economy-ingest-plan.md](economy-ingest-plan.md). It is a parallel
+workspace-fluency track, not a continuation of the original RePoE phases and
+not a reason to mix volatile league prices into `data/sqlite/poecraft.db`.
+
+The track builds a separate canonical economy SQLite database, dynamically
+ingests every PoE1 league exposed by the configured economy provider, publishes
+immutable content-addressed snapshots, caches them in the browser, and adds a
+workspace-level league selector with per-league overrides. Phases E0-E4 may run
+on a separate branch beside S6 Phase 3. E5-E6 must rebase before touching the
+shared workspace price and cost surfaces.
+
+Status: plan written and Oliver's primary decisions recorded: poe.ninja, PoE1
+PC, six-hour refresh, 30-day detail plus weekly retention forever, warned
+low-confidence prices, manual-only base cost, per-league overrides, pinned
+in-flight work, one archived challenge family, zero-cost unveil selection, and
+GitHub Actions -> Cloudflare R2 publication. No implementation has started.
+
 ## Phase 14: Performance And Public-Engine Readiness
 
 Goal: optimize only after correctness is measured, then package the complete engine for public workloads.
@@ -1092,7 +1112,10 @@ Acceptance gate:
 
 Phase 14 is complete. Phase 15 publishing remains blocked until the deferred
 Phase 12 account and sync foundation is explicitly resumed and completed.
-Recombinators remain deferred to Phase 18.
+Solver S6 Phase 3 remains the next primary product boundary. Parallel Economy
+Track E is planned with its main decisions recorded; its E0-E4 implementation
+may proceed independently on a dedicated branch. Recombinators remain deferred
+to Phase 18.
 
 ## Definition Of Done For MVP
 
