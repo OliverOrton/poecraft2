@@ -43,6 +43,10 @@ struct EvalTransition {
     std::uint32_t target = kNoId;
     double probability = 0.0;
     std::uint32_t edge = kNoId;
+    /* When pass-through contraction rewrites this transition, the pair it
+     * originally entered (the head of the folded deterministic chain).
+     * Flow committed through the transition is credited to that chain. */
+    std::uint32_t via = kNoId;
 };
 
 struct EvalAbsorption {
@@ -506,6 +510,16 @@ struct StrategyEvalWork::Impl {
     std::vector<double> external_incoming;
     std::vector<double> pair_visits;
     std::vector<double> unresolved_pair;
+    /* Deterministic pass-through contraction (contract_pass_through).
+     * A contracted pair keeps its single outgoing transition in
+     * chain_next/chain_edge; chain_inflow accumulates the mass that
+     * entered it so its visits and edge traversal are settled during
+     * finalization. */
+    std::vector<std::uint8_t> pair_contracted;
+    std::vector<std::uint32_t> chain_next;
+    std::vector<std::uint32_t> chain_edge;
+    std::vector<std::uint32_t> chain_terminal;
+    std::vector<double> chain_inflow;
     std::unique_ptr<FallbackState> fallback;
     std::uint64_t fallback_sweeps = 0;
     bool hard_unresolved = false;
@@ -777,7 +791,158 @@ struct StrategyEvalWork::Impl {
         }
     }
 
+    /* Fold deterministic pass-through pairs — exactly one outgoing
+     * transition with probability exactly 1 and no absorptions — out of
+     * the transition relation before components are built. Every
+     * transition entering such a pair is redirected to the first
+     * non-pass-through pair down its chain, so hub-and-spoke loops
+     * (reforge ↔ deterministic scour, solver router/restart graphs)
+     * become self-loops the closed-form solvers handle instead of
+     * multi-thousand-member fallback components. The rewrite is exact:
+     * probabilities are only regrouped, never truncated, and the folded
+     * pairs' visits and edge traversals are settled from chain_inflow at
+     * finalization. Pairs on a purely deterministic cycle are left in
+     * place so recurrent classes keep their unresolved treatment. */
+    void contract_pass_through() {
+        const std::size_t count = pairs.size();
+        pair_contracted.assign(count, 0);
+        chain_next.assign(count, kNoId);
+        chain_edge.assign(count, kNoId);
+        chain_terminal.assign(count, kNoId);
+        chain_inflow.assign(count, 0.0);
+        if (count == 0) return;
+
+        std::vector<std::uint8_t> pass(count, 0);
+        for (std::uint32_t pair = 0; pair < count; ++pair) {
+            const EvalRow& row = pair_row(pair);
+            if (row.absorptions.empty() && row.transitions.size() == 1 &&
+                row.transitions.front().probability == 1.0) {
+                pass[pair] = 1;
+                chain_next[pair] = row.transitions.front().target;
+                chain_edge[pair] = row.transitions.front().edge;
+            }
+        }
+
+        /* Resolve each pair's forward target: itself when it is not a
+         * pass-through, otherwise the end of its deterministic chain.
+         * state: 0 unvisited, 1 on the current walk, 2 resolved. */
+        std::vector<std::uint8_t> state(count, 0);
+        std::vector<std::uint32_t> forward(count, kNoId);
+        std::vector<std::uint32_t> path;
+        bool any_contracted = false;
+        for (std::uint32_t root = 0; root < count; ++root) {
+            if (state[root] == 2) continue;
+            path.clear();
+            std::uint32_t cursor = root;
+            while (state[cursor] != 2) {
+                if (!pass[cursor]) {
+                    state[cursor] = 2;
+                    forward[cursor] = cursor;
+                    break;
+                }
+                if (state[cursor] == 1) {
+                    /* The walk re-entered itself: cursor..path.back()
+                     * form a deterministic cycle. Keep those pairs. */
+                    std::size_t cycle = path.size();
+                    while (path[cycle - 1] != cursor) --cycle;
+                    --cycle;
+                    for (std::size_t i = cycle; i < path.size(); ++i) {
+                        state[path[i]] = 2;
+                        forward[path[i]] = path[i];
+                        pass[path[i]] = 0;
+                    }
+                    path.resize(cycle);
+                    break;
+                }
+                state[cursor] = 1;
+                path.push_back(cursor);
+                cursor = chain_next[cursor];
+            }
+            for (std::size_t i = path.size(); i-- > 0;) {
+                const std::uint32_t pair = path[i];
+                state[pair] = 2;
+                forward[pair] = forward[chain_next[pair]];
+                chain_terminal[pair] = forward[pair];
+                pair_contracted[pair] = 1;
+                any_contracted = true;
+            }
+        }
+        if (!any_contracted) return;
+
+        std::uint64_t remaining_transitions = 0;
+        for (EvalRow& row : rows) {
+            bool touched = false;
+            for (const EvalTransition& transition : row.transitions) {
+                if (pair_contracted[transition.target]) {
+                    touched = true;
+                    break;
+                }
+            }
+            if (touched) {
+                std::map<
+                    std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+                    double> merged;
+                for (const EvalTransition& transition : row.transitions) {
+                    const std::uint32_t via =
+                        pair_contracted[transition.target]
+                            ? transition.target
+                            : kNoId;
+                    const std::uint32_t target =
+                        via == kNoId ? transition.target
+                                     : forward[transition.target];
+                    merged[{target, transition.edge, via}] +=
+                        transition.probability;
+                }
+                row.transitions.clear();
+                row.transitions.reserve(merged.size());
+                for (const auto& [key, probability] : merged) {
+                    row.transitions.push_back(
+                        {std::get<0>(key), probability, std::get<1>(key),
+                         std::get<2>(key)});
+                }
+            }
+            remaining_transitions +=
+                row.transitions.size() + row.absorptions.size();
+        }
+        stored_transitions = remaining_transitions;
+    }
+
+    /* Settle the mass that flowed through contracted pairs: each visit
+     * of a folded chain and its single edge, in chain order. Runs once,
+     * at finalization, after every component (or the reference sweep)
+     * has committed its flows into chain_inflow. */
+    void propagate_chain_inflow() {
+        const std::size_t count = pair_contracted.size();
+        std::vector<std::uint32_t> indegree(count, 0);
+        for (std::uint32_t pair = 0; pair < count; ++pair) {
+            if (!pair_contracted[pair]) continue;
+            const std::uint32_t next = chain_next[pair];
+            if (pair_contracted[next]) ++indegree[next];
+        }
+        std::vector<std::uint32_t> ready;
+        for (std::uint32_t pair = 0; pair < count; ++pair) {
+            if (pair_contracted[pair] && indegree[pair] == 0) {
+                ready.push_back(pair);
+            }
+        }
+        while (!ready.empty()) {
+            const std::uint32_t pair = ready.back();
+            ready.pop_back();
+            const double inflow = chain_inflow[pair];
+            pair_visits[pair] += inflow;
+            if (chain_edge[pair] != kNoId) {
+                edge_traversals.at(chain_edge[pair]) += inflow;
+            }
+            const std::uint32_t next = chain_next[pair];
+            if (pair_contracted[next]) {
+                chain_inflow[next] += inflow;
+                if (--indegree[next] == 0) ready.push_back(next);
+            }
+        }
+    }
+
     void build_components() {
+        contract_pass_through();
         const std::size_t count = pairs.size();
         struct Frame {
             std::uint32_t pair = kNoId;
@@ -801,7 +966,7 @@ struct StrategyEvalWork::Impl {
             dfs.push_back({pair, 0});
         };
         for (std::uint32_t root = 0; root < count; ++root) {
-            if (index[root] != kNoId) continue;
+            if (pair_contracted[root] || index[root] != kNoId) continue;
             std::vector<Frame> dfs;
             push_pair(root, dfs);
             while (!dfs.empty()) {
@@ -862,7 +1027,14 @@ struct StrategyEvalWork::Impl {
         external_incoming.assign(count, 0.0);
         pair_visits.assign(count, 0.0);
         unresolved_pair.assign(count, 0.0);
-        if (start_pair != kNoId) external_incoming[start_pair] = 1.0;
+        if (start_pair != kNoId) {
+            if (pair_contracted[start_pair]) {
+                chain_inflow[start_pair] = 1.0;
+                external_incoming.at(chain_terminal[start_pair]) = 1.0;
+            } else {
+                external_incoming[start_pair] = 1.0;
+            }
+        }
         component_index = 0;
     }
 
@@ -1071,6 +1243,9 @@ struct StrategyEvalWork::Impl {
                 if (transition.edge != kNoId) {
                     edge_traversals.at(transition.edge) += flow;
                 }
+                if (transition.via != kNoId) {
+                    chain_inflow.at(transition.via) += flow;
+                }
                 if (component_by_pair[transition.target] != component) {
                     external_incoming[transition.target] += flow;
                 }
@@ -1237,6 +1412,7 @@ struct StrategyEvalWork::Impl {
     }
 
     void finalize() {
+        propagate_chain_inflow();
         CalcContext& calc = *model.calc;
         const std::size_t node_count = strategy->nodes.size();
         std::vector<double> node_visits(node_count, 0.0);
@@ -1361,8 +1537,7 @@ struct StrategyEvalWork::Impl {
         }
         pair_visits.assign(pairs.size(), 0.0);
         unresolved_pair.assign(pairs.size(), 0.0);
-        std::vector<double> wave(pairs.size(), 0.0);
-        wave.at(start_pair) = 1.0;
+        std::vector<double> wave = external_incoming;
         std::uint32_t sweeps = 0;
         for (; sweeps < options.max_sweeps; ++sweeps) {
             std::vector<double> next(pairs.size(), 0.0);
@@ -1377,6 +1552,9 @@ struct StrategyEvalWork::Impl {
                     next[transition.target] += flow;
                     if (transition.edge != kNoId) {
                         edge_traversals.at(transition.edge) += flow;
+                    }
+                    if (transition.via != kNoId) {
+                        chain_inflow.at(transition.via) += flow;
                     }
                 }
                 for (const EvalAbsorption& absorption :

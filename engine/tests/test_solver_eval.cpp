@@ -685,9 +685,10 @@ void run_scale_and_fallback_tests() {
     options.epsilon = 1e-10;
     const StrategyEvalResult result = evaluate_strategy(*large, options);
     PC_CHECK(result.converged);
-    PC_CHECK(result.sweeps > 0);
+    PC_CHECK(result.sweeps == 0);
     PC_CHECK(std::fabs(result.success_probability - 1.0) < 1e-9);
     PC_CHECK(result.max_mass_conservation_error < 1e-9);
+    check_reference_parity(*large, result, options);
 
     const auto pair_guard = compile(
         session,

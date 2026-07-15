@@ -298,6 +298,8 @@ async function evaluateStrategy(
     let yieldCount = 0;
     let lastProgressAt = -Infinity;
     let emittedProgress = false;
+    let observedPhase: StrategyEvalProgress["phase"] = "discovery";
+    let pendingDiscovery: number | undefined;
     const reportProgress = params.reportProgress === true;
     try {
         if (cancelled.has(id)) {
@@ -316,18 +318,39 @@ async function evaluateStrategy(
             if (cancelled.has(id)) {
                 throw new EngineError(1, "strategy evaluation cancelled");
             }
+            // Do not let a discovery-calibrated budget spill across the
+            // discovery/solve boundary, and enter each SCC one at a time so
+            // an iterative fallback is observable before any sweeps run.
+            const stepWorkItems =
+                observedPhase === "discovery" && pendingDiscovery !== undefined
+                    ? Math.min(workItems, Math.max(1, pendingDiscovery))
+                    : observedPhase === "solving"
+                      ? 1
+                      : workItems;
             const started = performance.now();
-            progress = bindings.stepStrategyEvaluation(evaluation, workItems);
+            progress = bindings.stepStrategyEvaluation(evaluation, stepWorkItems);
             const elapsedMs = Math.max(0.1, performance.now() - started);
-            const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
-            workItems = Math.min(
-                16_384,
-                Math.max(1, Math.round(workItems * scale)),
-            );
+            const phaseChanged = progress.phase !== observedPhase;
+            if (phaseChanged) {
+                // One fallback work item is already 32 native sweeps. Rebase
+                // at every phase boundary, then adapt from that phase's cost.
+                workItems = 1;
+            } else {
+                const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
+                workItems = Math.min(
+                    16_384,
+                    Math.max(1, Math.round(stepWorkItems * scale)),
+                );
+            }
+            observedPhase = progress.phase;
+            pendingDiscovery = progress.pending_pairs;
             const now = performance.now();
             if (
                 reportProgress &&
-                (!emittedProgress || progress.done || now - lastProgressAt >= 100)
+                (!emittedProgress ||
+                    phaseChanged ||
+                    progress.done ||
+                    now - lastProgressAt >= 100)
             ) {
                 const counts = evaluationProgressCounts(progress);
                 post({

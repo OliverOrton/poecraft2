@@ -227,6 +227,75 @@ function alterationLoopStrategy(familyKey: string): Record<string, unknown> {
     };
 }
 
+function fallbackPhaseStrategy(familyKey: string): Record<string, unknown> {
+    const hit = {
+        type: "has_mod_family",
+        family_mod_key: familyKey,
+        min_tier: 1,
+    };
+    return {
+        version: "v1",
+        name: "Two-distribution fallback loop",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: ITEM_LEVEL,
+            rarity: "magic",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "alteration_a",
+                kind: "operation",
+                operation: { type: "alteration", params: {} },
+            },
+            {
+                id: "alteration_b",
+                kind: "operation",
+                operation: { type: "alteration", params: {} },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "alteration_a",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "a_hit",
+                from: "alteration_a",
+                to: "success",
+                priority: 0,
+                condition: hit,
+            },
+            {
+                id: "a_miss",
+                from: "alteration_a",
+                to: "alteration_b",
+                priority: 999,
+                is_default: true,
+            },
+            {
+                id: "b_hit",
+                from: "alteration_b",
+                to: "success",
+                priority: 0,
+                condition: hit,
+            },
+            {
+                id: "b_miss",
+                from: "alteration_b",
+                to: "alteration_a",
+                priority: 999,
+                is_default: true,
+            },
+        ],
+    };
+}
+
 async function lowWeightAlterationFamily(): Promise<string> {
     const item = await client.createItem(sessionId, {
         rarity: "magic",
@@ -688,6 +757,37 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
     }
     const after = await client.memoryStats();
     assert.equal(after.live_handles, baseline.live_handles);
+});
+
+test("fallback-phase evaluation reports progress and cancels promptly", async () => {
+    const family = await lowWeightAlterationFamily();
+    const controller = new AbortController();
+    const phases: string[] = [];
+    let fallbackAt = 0;
+    await assert.rejects(
+        client.strategyEvaluate(
+            sessionId,
+            fallbackPhaseStrategy(family),
+            { epsilon: 1e-30, max_sweeps: 100_000 },
+            {
+                signal: controller.signal,
+                onProgress: (event) => {
+                    phases.push(event.phase);
+                    if (event.phase === "fallback" && fallbackAt === 0) {
+                        fallbackAt = performance.now();
+                        controller.abort();
+                    }
+                },
+            },
+        ),
+        /cancelled/,
+    );
+    assert.ok(phases.includes("fallback"), "expected fallback progress");
+    assert.ok(fallbackAt > 0);
+    assert.ok(
+        performance.now() - fallbackAt < 1000,
+        "fallback cancellation should abandon promptly",
+    );
 });
 
 test("a burst of obsolete evaluations leaves only the newest graph", async () => {

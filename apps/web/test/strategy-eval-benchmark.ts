@@ -227,6 +227,78 @@ function rareReforgeGraph(): Record<string, unknown> {
     };
 }
 
+function alchemyScourGraph(): Record<string, unknown> {
+    const condition = {
+        type: "all",
+        conditions: [
+            {
+                type: "has_mod_family",
+                family_mod_key: "LocalIncreasedEnergyShield11",
+                min_tier: 1,
+            },
+            {
+                type: "has_mod_family",
+                family_mod_key: "LocalBaseEnergyShieldAndLife4_",
+                min_tier: 1,
+            },
+        ],
+    };
+    return {
+        version: "v1",
+        name: "Pinned exact Alchemy-Scour loop",
+        start_node_id: "start",
+        base_state: {
+            base_key: BASE,
+            item_level: 86,
+            rarity: "normal",
+        },
+        nodes: [
+            { id: "start", kind: "start" },
+            {
+                id: "alchemy",
+                kind: "operation",
+                operation: { type: "alchemy", params: {} },
+            },
+            {
+                id: "scour",
+                kind: "operation",
+                operation: { type: "scour", params: {} },
+            },
+            { id: "success", kind: "terminal", terminal: "success" },
+        ],
+        edges: [
+            {
+                id: "begin",
+                from: "start",
+                to: "alchemy",
+                priority: 0,
+                condition: { type: "always" },
+            },
+            {
+                id: "alchemy_hit",
+                from: "alchemy",
+                to: "success",
+                priority: 0,
+                condition,
+            },
+            {
+                id: "alchemy_miss",
+                from: "alchemy",
+                to: "scour",
+                priority: 999,
+                is_default: true,
+            },
+            {
+                id: "repeat",
+                from: "scour",
+                to: "alchemy",
+                priority: 0,
+                condition: { type: "always" },
+            },
+        ],
+    };
+}
+
 function median(values: number[]): number {
     const sorted = [...values].sort((a, b) => a - b);
     return sorted[Math.floor(sorted.length / 2)];
@@ -316,6 +388,36 @@ function assertWideRareReforge(result: StrategyEvalResult): void {
     assert.ok(Math.abs((edge("repeat") ?? 0) - 22.955600033932225) < 1e-9);
 }
 
+function assertAlchemyScour(result: StrategyEvalResult): void {
+    const expectedActions = 2933.0267080405497;
+    assert.equal(result.converged, true);
+    assert.equal(
+        result.sweeps,
+        0,
+        "deterministic Scour spokes must contract to a direct singleton solve",
+    );
+    assert.ok(Math.abs(result.terminals.success - 1) < 1e-10);
+    assert.ok(Math.abs(result.expected_actions - expectedActions) < 1e-8);
+    const alchemy = result.expected_consumption.find(
+        (entry) => entry.key === "alchemy",
+    );
+    const scour = result.expected_consumption.find(
+        (entry) => entry.key === "scour",
+    );
+    assert.ok(alchemy && scour);
+    assert.ok(Math.abs(alchemy.quantity - scour.quantity - 1) < 1e-8);
+    assert.ok(
+        Math.abs(result.expected_actions - alchemy.quantity - scour.quantity) <
+            1e-8,
+    );
+    const edge = (id: string): number | undefined =>
+        result.edges.find((entry) => entry.id === id)?.expected_traversals;
+    assert.ok(Math.abs((edge("begin") ?? 0) - 1) < 1e-12);
+    assert.ok(Math.abs((edge("alchemy_hit") ?? 0) - 1) < 1e-8);
+    assert.ok(Math.abs((edge("alchemy_miss") ?? 0) - scour.quantity) < 1e-8);
+    assert.ok(Math.abs((edge("repeat") ?? 0) - scour.quantity) < 1e-8);
+}
+
 async function timed(
     client: EngineClient,
     session: number,
@@ -342,6 +444,37 @@ try {
     const rare = await client.strategyEvaluate(session, rareReforgeGraph());
     const rareElapsedMs = performance.now() - rareStarted;
     assertWideRareReforge(rare);
+    const alchemyScourStarted = performance.now();
+    let alchemyScourDiscoveredPairs = 0;
+    let alchemyScourDiscoveryMs = 0;
+    const alchemyScour = await client.strategyEvaluate(
+        session,
+        alchemyScourGraph(),
+        undefined,
+        {
+            onProgress: (progress) => {
+                alchemyScourDiscoveredPairs = Math.max(
+                    alchemyScourDiscoveredPairs,
+                    progress.discovered_pairs,
+                );
+                if (
+                    progress.phase !== "discovery" &&
+                    alchemyScourDiscoveryMs === 0
+                ) {
+                    alchemyScourDiscoveryMs =
+                        performance.now() - alchemyScourStarted;
+                }
+            },
+        },
+    );
+    const alchemyScourElapsedMs = performance.now() - alchemyScourStarted;
+    assertAlchemyScour(alchemyScour);
+    assert.equal(alchemyScourDiscoveredPairs, 16_607);
+    assert.ok(alchemyScourDiscoveryMs > 0);
+    assert.ok(
+        alchemyScourElapsedMs <= alchemyScourDiscoveryMs * 1.5 + 25,
+        `Alchemy-Scour total ${alchemyScourElapsedMs.toFixed(1)} ms exceeded discovery ${alchemyScourDiscoveryMs.toFixed(1)} ms by too much`,
+    );
     for (const benchmark of CASES) {
         for (let warm = 0; warm < 2; warm += 1) {
             assertExact((await timed(client, session, benchmark, false)).result, benchmark);
@@ -386,6 +519,14 @@ try {
                     elapsed_ms: Number(rareElapsedMs.toFixed(3)),
                     expected_actions: rare.expected_actions,
                     success: rare.terminals.success,
+                },
+                alchemy_scour: {
+                    elapsed_ms: Number(alchemyScourElapsedMs.toFixed(3)),
+                    discovery_ms: Number(alchemyScourDiscoveryMs.toFixed(3)),
+                    discovered_pairs: alchemyScourDiscoveredPairs,
+                    expected_actions: alchemyScour.expected_actions,
+                    success: alchemyScour.terminals.success,
+                    sweeps: alchemyScour.sweeps,
                 },
                 strategy_eval_benchmark: report,
             },
