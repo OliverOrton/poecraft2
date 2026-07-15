@@ -1,5 +1,5 @@
 import { ItemSnapshot, itemSnapshotRarity } from "./workspace/persistence";
-import type { Catalog, CatalogEntry } from "./engine-protocol";
+import type { Catalog, CatalogEntry, EconomyIdentity } from "./engine-protocol";
 
 export const DEFAULT_STRATEGY_BASE =
     "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -246,6 +246,7 @@ export interface StrategyDocument {
     base_state: StrategyBaseState;
     nodes: StrategyNode[];
     edges: StrategyEdge[];
+    economy?: EconomyIdentity;
     ui?: {
         viewport?: StrategyViewport;
     };

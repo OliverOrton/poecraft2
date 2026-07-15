@@ -564,7 +564,7 @@ void compile_operation(
             invalid("unknown Harvest resistance tag");
         node.action.source_tag_id = from->second;
         node.action.target_tag_id = to->second;
-        node.price_keys = {"harvest_resist"};
+        node.price_keys = {"harvest_resist:" + target_tag};
     } else if (action_type == ActionType::EldritchEmber ||
                action_type == ActionType::EldritchIchor) {
         node.action.tier =

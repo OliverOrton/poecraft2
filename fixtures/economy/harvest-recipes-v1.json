@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "recipe_version": "harvest-core-2026-07-15",
+  "source_url": "https://www.poewiki.net/wiki/List_of_harvest_crafting_options",
+  "retrieved_at": "2026-07-15",
+  "components": {
+    "wild": "lifeforce:wild",
+    "vivid": "lifeforce:vivid",
+    "primal": "lifeforce:primal",
+    "sacred": "lifeforce:sacred",
+    "rancour": "lifeforce:rancour"
+  },
+  "reforge": {
+    "fire": { "wild": 50 },
+    "cold": { "vivid": 50 },
+    "lightning": { "primal": 50 },
+    "physical": { "vivid": 50 },
+    "life": { "wild": 75 },
+    "defence": { "primal": 75 },
+    "chaos": { "vivid": 100 },
+    "attack": { "wild": 75 },
+    "caster": { "primal": 75 },
+    "speed": { "vivid": 150 },
+    "critical": { "primal": 150 },
+    "minion": { "primal": 200, "rancour": 3 },
+    "elemental": { "wild": 200, "rancour": 1 },
+    "attribute": { "vivid": 200, "rancour": 2 },
+    "mana": { "primal": 200, "rancour": 2 },
+    "drop": { "vivid": 200, "rancour": 1 }
+  },
+  "augment": {
+    "fire": { "wild": 15000, "sacred": 1 },
+    "cold": { "vivid": 15000, "sacred": 1 },
+    "lightning": { "primal": 15000, "sacred": 1 },
+    "physical": { "vivid": 15000, "sacred": 1 },
+    "life": { "wild": 17500, "sacred": 1 },
+    "defence": { "primal": 17500, "sacred": 1 },
+    "chaos": { "vivid": 17500, "sacred": 1 },
+    "attack": { "wild": 17500, "sacred": 1 },
+    "caster": { "primal": 17500, "sacred": 1 },
+    "speed": { "vivid": 20000, "sacred": 1 },
+    "critical": { "primal": 20000, "sacred": 1 }
+  },
+  "resistance": {
+    "fire": { "wild": 500 },
+    "cold": { "vivid": 500 },
+    "lightning": { "primal": 500 }
+  }
+}

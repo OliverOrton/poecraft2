@@ -1,0 +1,13 @@
+{
+  "core": { "items": [], "rates": {}, "primary": "chaos", "secondary": "divine" },
+  "lines": [
+    { "id": "chaos", "primaryValue": 1.0, "volumePrimaryValue": 36000, "maxVolumeCurrency": "divine", "maxVolumeRate": 700.0 },
+    { "id": "orb-of-alteration", "primaryValue": 0.1, "volumePrimaryValue": 9000, "maxVolumeCurrency": "chaos", "maxVolumeRate": 10.0 },
+    { "id": "wild-crystallised-lifeforce", "primaryValue": 0.01, "volumePrimaryValue": 3000, "maxVolumeCurrency": "chaos", "maxVolumeRate": 100.0 }
+  ],
+  "items": [
+    { "id": "chaos", "name": "Chaos Orb", "category": "Currency", "detailsId": "chaos-orb" },
+    { "id": "orb-of-alteration", "name": "Orb of Alteration", "category": "Currency", "detailsId": "orb-of-alteration" },
+    { "id": "wild-crystallised-lifeforce", "name": "Wild Crystallised Lifeforce", "category": "Currency", "detailsId": "wild-crystallised-lifeforce" }
+  ]
+}

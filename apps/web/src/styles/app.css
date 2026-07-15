@@ -84,6 +84,132 @@ pc-app {
     color: var(--pc-text-dim);
 }
 
+pc-economy-selector {
+    position: relative;
+    display: block;
+    margin-left: auto;
+}
+
+.pc-economy-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 130px;
+    justify-content: flex-start;
+    white-space: nowrap;
+}
+
+.pc-economy-age {
+    color: var(--pc-text-dim);
+}
+
+.pc-economy-status {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pc-text-dim);
+    box-shadow: 0 0 0 1px #0008;
+}
+
+.pc-economy-status.is-fresh {
+    background: #65a95b;
+}
+
+.pc-economy-status.is-stale {
+    background: #c39745;
+}
+
+.pc-economy-status.is-offline,
+.pc-economy-status.is-manual-only {
+    background: #7d7890;
+}
+
+.pc-economy-popover {
+    position: absolute;
+    z-index: 1000;
+    top: calc(100% + 6px);
+    right: 0;
+    width: min(280px, calc(100vw - 24px));
+    padding: 5px;
+    background: var(--pc-bg-raised);
+    border: 1px solid var(--pc-border);
+    border-radius: 4px;
+    box-shadow: 0 12px 28px #000a;
+}
+
+.pc-economy-group-label {
+    padding: 7px 7px 4px;
+    color: var(--pc-text-dim);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pc-economy-row {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 7px;
+    border-color: transparent;
+    background: transparent;
+    text-align: left;
+}
+
+.pc-economy-row:hover:not(:disabled),
+.pc-economy-row.is-selected {
+    border-color: var(--pc-border);
+    background: #30291c;
+}
+
+.pc-economy-badge {
+    color: var(--pc-text-dim);
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.pc-economy-row-state {
+    color: var(--pc-fractured);
+    font-size: 11px;
+}
+
+.pc-economy-error {
+    margin: 5px 3px;
+    padding: 6px;
+    color: #d98b76;
+    background: #2b1915;
+    border: 1px solid #5e3327;
+    font-size: 11px;
+}
+
+.pc-economy-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 5px;
+    padding: 6px 3px 1px 7px;
+    border-top: 1px solid var(--pc-border);
+    color: var(--pc-text-dim);
+    font-size: 10px;
+}
+
+.pc-economy-footer button {
+    padding: 2px 7px;
+}
+
+.pc-calc-economy-pin,
+.pc-sim-economy {
+    color: var(--pc-text-dim);
+    font-size: 10px;
+}
+
+.pc-sim-economy {
+    padding: 5px 10px;
+    border-top: 1px solid var(--pc-border);
+}
+
 .pc-main {
     flex: 1;
     min-height: 0;

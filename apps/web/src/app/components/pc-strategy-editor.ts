@@ -16,6 +16,8 @@ import {
     StrategyResult,
 } from "../engine-protocol";
 import { getEngine } from "../engine-service";
+import { pinEconomy } from "../workspace/prices";
+import type { PinnedEconomy } from "../workspace/economy-service";
 import {
     buildModifierOptions,
     type ModifierFamilyOption,
@@ -172,6 +174,7 @@ export class PcStrategyEditor extends HTMLElement {
     private mode: StrategyBuilderMode = "simulator";
     private structuralSignature = "";
     private evalResult: StrategyEvalResult | null = null;
+    private evalEconomy: PinnedEconomy | null = null;
     private evalError: EngineErrorInfo | null = null;
     private evalInvalid = false;
     private evaluating = false;
@@ -536,6 +539,15 @@ export class PcStrategyEditor extends HTMLElement {
         this.simulator.addEventListener("strategy-cancel", () =>
             this.runController?.abort(),
         );
+        this.odds.addEventListener("strategy-recost", () => {
+            if (!this.evalResult) return;
+            this.evalEconomy = pinEconomy();
+            this.evalResult = {
+                ...this.evalResult,
+                economy: this.evalEconomy.identity,
+            };
+            this.syncModeAndOddsView();
+        });
         this.trace.addEventListener("trace-highlight", (event) => {
             const detail = (
                 event as CustomEvent<{
@@ -623,6 +635,8 @@ export class PcStrategyEditor extends HTMLElement {
             selectedNodeId: selectedNode?.id ?? null,
             selectedNodeKind: selectedNode?.kind ?? null,
             targetLabels: this.evalTargetLabels(),
+            prices: this.evalEconomy?.snapshot.prices ?? {},
+            economy: this.evalResult?.economy ?? null,
         });
     }
 
@@ -1384,6 +1398,7 @@ export class PcStrategyEditor extends HTMLElement {
         this.evalError = null;
         this.setStatus("Evaluating exact graph…");
         this.updateView();
+        const pinned = pinEconomy();
         let session = 0;
         try {
             session = await this.client.createSession(
@@ -1417,7 +1432,9 @@ export class PcStrategyEditor extends HTMLElement {
                 this.mode === "calculator" &&
                 version === this.evalRequestVersion
             ) {
+                result.economy = pinned.identity;
                 this.evalResult = result;
+                this.evalEconomy = pinned;
                 this.evalError = null;
                 this.evalStale = false;
                 this.evalProgressText = null;
@@ -1635,6 +1652,8 @@ export class PcStrategyEditor extends HTMLElement {
         let session = 0;
         let compiled = 0;
         let simulator = 0;
+        let economy = 0;
+        const pinned = pinEconomy();
         try {
             session = await this.client.createSession(
                 this.dataId,
@@ -1645,7 +1664,12 @@ export class PcStrategyEditor extends HTMLElement {
                 session,
                 cloneStrategy(this.strategy),
             );
-            simulator = await this.client.createSimulator(session, compiled);
+            economy = await this.client.loadEconomy(pinned.snapshot);
+            simulator = await this.client.createSimulator(
+                session,
+                compiled,
+                economy,
+            );
             this.setStatus(`Running ${count.toLocaleString()} simulation${count === 1 ? "" : "s"}…`);
             this.simulator.beginMeasurement();
             this.result = await this.client.runStrategy(
@@ -1669,6 +1693,7 @@ export class PcStrategyEditor extends HTMLElement {
                     },
                 },
             );
+            this.result.economy = pinned.identity;
             this.simulator.endMeasurement();
             this.progress = {
                 done: this.result.progress.completed_runs,
@@ -1682,6 +1707,7 @@ export class PcStrategyEditor extends HTMLElement {
             window.cancelAnimationFrame(this.progressFrame);
             this.progressFrame = 0;
             if (simulator) await this.client.closeSimulator(simulator);
+            if (economy) await this.client.closeEconomy(economy);
             if (compiled) await this.client.closeStrategy(compiled);
             if (session) await this.client.closeSession(session);
             this.running = false;

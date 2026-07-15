@@ -1,0 +1,9 @@
+{
+  "core": { "items": [], "rates": {}, "primary": "chaos", "secondary": "divine" },
+  "lines": [
+    { "id": "deafening-essence-of-greed", "primaryValue": 3.1, "volumePrimaryValue": 400, "maxVolumeCurrency": "chaos", "maxVolumeRate": 0.3226 }
+  ],
+  "items": [
+    { "id": "deafening-essence-of-greed", "name": "Deafening Essence of Greed", "category": "Essences", "detailsId": "deafening-essence-of-greed" }
+  ]
+}

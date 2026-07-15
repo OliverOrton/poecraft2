@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft.example/schemas/economy/league-index-v1.json",
+  "title": "poecraft2 published economy league index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at_utc", "leagues"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "leagues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "league_key", "display_name", "realm", "ruleset", "temporary", "active",
+          "archived", "latest_snapshot_id", "latest_snapshot_url",
+          "content_sha256", "source_cutoff_at_utc", "stale", "error",
+          "coverage"
+        ],
+        "properties": {
+          "league_key": { "type": "string", "minLength": 1 },
+          "display_name": { "type": "string", "minLength": 1 },
+          "realm": { "type": "string", "minLength": 1 },
+          "ruleset": { "type": "string", "minLength": 1 },
+          "temporary": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "archived": { "type": "boolean" },
+          "latest_snapshot_id": { "type": ["string", "null"] },
+          "latest_snapshot_url": { "type": ["string", "null"] },
+          "content_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "source_cutoff_at_utc": { "type": ["string", "null"], "format": "date-time" },
+          "stale": { "type": "boolean" },
+          "error": { "type": ["string", "null"] },
+          "coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["priced", "missing", "low_confidence"],
+            "properties": {
+              "priced": { "type": "integer", "minimum": 0 },
+              "missing": { "type": "integer", "minimum": 0 },
+              "low_confidence": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -67,6 +67,28 @@ export class EngineBindings {
         args: unknown[],
     ): OkEnvelope {
         const json = this.module.ccall(name, "string", argTypes, args) as string;
+        return this.parseEnvelope(json);
+    }
+
+    private callJsonWithHeapString(name: string, value: string): OkEnvelope {
+        const encoded = new TextEncoder().encode(value);
+        const ptr = this.module._malloc(encoded.length + 1);
+        try {
+            this.module.HEAPU8.set(encoded, ptr);
+            this.module.HEAPU8[ptr + encoded.length] = 0;
+            const json = this.module.ccall(
+                name,
+                "string",
+                ["number"],
+                [ptr],
+            ) as string;
+            return this.parseEnvelope(json);
+        } finally {
+            this.module._free(ptr);
+        }
+    }
+
+    private parseEnvelope(json: string): OkEnvelope {
         const parsed = JSON.parse(json) as OkEnvelope;
         if (!parsed.ok) {
             throw new EngineError(parsed.code ?? -1, parsed.message ?? "unknown error");
@@ -321,9 +343,13 @@ export class EngineBindings {
     }
 
     loadEconomy(economy: unknown): number {
-        return this.callJson("pcw_economy_open", ["string"], [
+        // Emscripten's ccall string conversion uses the small native stack.
+        // Published snapshots include provenance arrays that can exceed it, so
+        // marshal this unbounded JSON input through WASM heap memory instead.
+        return this.callJsonWithHeapString(
+            "pcw_economy_open",
             JSON.stringify(economy),
-        ]).economy as number;
+        ).economy as number;
     }
 
     closeEconomy(economy: number): void {

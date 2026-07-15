@@ -541,7 +541,18 @@ void run_artifact_registry_tests(const char* artifact_dir) {
         }
         if (action.id.rfind("bench:", 0) == 0) ++bench;
         if (action.id.rfind("harvest_reforge:", 0) == 0) ++harvest;
-        if (action.id.rfind("harvest_resist:", 0) == 0) ++resist_pairs;
+        if (action.id.rfind("harvest_resist:", 0) == 0) {
+            ++resist_pairs;
+            const std::size_t target_separator = action.id.rfind(':');
+            PC_CHECK(target_separator != std::string::npos);
+            PC_CHECK(action.cost_keys.size() == 1);
+            if (target_separator != std::string::npos &&
+                action.cost_keys.size() == 1) {
+                PC_CHECK(action.cost_keys[0] ==
+                         "harvest_resist:" +
+                             action.id.substr(target_separator + 1));
+            }
+        }
         if (action.params.type == ActionType::Fossil &&
             !action.discriminating_tag_ids.empty()) {
             ++discriminating_fossils;

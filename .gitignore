@@ -37,11 +37,16 @@ __pycache__/
 /data/raw/repoe/*.json
 /data/sqlite/*.json
 /data/compiled/**/*.json
+/data/economy/raw/**/*.json
+/data/economy/published/
+/data/economy/*.json
 
 # Preserve generated-data directory structure
 !/data/raw/repoe/.gitkeep
 !/data/sqlite/.gitkeep
 !/data/compiled/.gitkeep
+!/data/economy/public-none.json
+!/data/economy/raw/.gitkeep
 
 # Generated web data bundle (rebuilt by apps/web predev/prebuild)
 /apps/web/public/poecraft-data.json

@@ -5,6 +5,7 @@
 
 import { PcWorkspace } from "./pc-workspace";
 import "./pc-workspace";
+import "./pc-economy-selector";
 
 export class PcApp extends HTMLElement {
     connectedCallback(): void {
@@ -15,6 +16,7 @@ export class PcApp extends HTMLElement {
                 <button data-cmd="new-strategy">+ Strategy</button>
                 <button data-cmd="new-calculator">+ Calculator</button>
                 <button data-cmd="open-stash">Stash</button>
+                <pc-economy-selector></pc-economy-selector>
             </header>
             <main class="pc-main">
                 <pc-workspace></pc-workspace>

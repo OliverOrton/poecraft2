@@ -1,7 +1,13 @@
 # Economy Ingest, Storage, And League Switching Plan
 
-Status: Oliver's 2026-07-15 product and mechanic decisions are fully recorded
-below. No implementation has started.
+Status 2026-07-15: phases E0-E7 are implemented on
+`codex/economy-ingest` and locally accepted across Python, native, Python
+bindings, WASM/worker, TypeScript, production build, and rendered-browser
+checks. A live opt-in refresh discovered and completed all six provider leagues
+available at acceptance time, with 496/496 rows accounted and no unresolved
+mappings. Production activation still requires the documented Cloudflare R2
+buckets/custom domain and GitHub Actions secrets; those external resources are
+not created by the repository implementation.
 
 This is a parallel product track. E0-E4 may proceed beside active solver work;
 workspace integration phases must rebase after any overlapping UI or price-

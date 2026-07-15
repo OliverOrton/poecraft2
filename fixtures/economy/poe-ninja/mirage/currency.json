@@ -1,0 +1,23 @@
+{
+  "core": {
+    "items": [
+      { "id": "chaos", "name": "Chaos Orb", "category": "Currency", "detailsId": "chaos-orb" },
+      { "id": "divine", "name": "Divine Orb", "category": "Currency", "detailsId": "divine-orb" }
+    ],
+    "rates": { "divine": 0.00625 },
+    "primary": "chaos",
+    "secondary": "divine"
+  },
+  "lines": [
+    { "id": "chaos", "primaryValue": 1.0, "volumePrimaryValue": 80000, "maxVolumeCurrency": "divine", "maxVolumeRate": 160.0 },
+    { "id": "orb-of-alteration", "primaryValue": 0.18, "volumePrimaryValue": 22000, "maxVolumeCurrency": "chaos", "maxVolumeRate": 5.55 },
+    { "id": "wild-crystallised-lifeforce", "primaryValue": 0.02, "volumePrimaryValue": 9000, "maxVolumeCurrency": "chaos", "maxVolumeRate": 50.0 },
+    { "id": "vivid-crystallised-lifeforce", "primaryValue": 0.025, "volumePrimaryValue": 500, "maxVolumeCurrency": "chaos", "maxVolumeRate": 40.0 }
+  ],
+  "items": [
+    { "id": "chaos", "name": "Chaos Orb", "category": "Currency", "detailsId": "chaos-orb" },
+    { "id": "orb-of-alteration", "name": "Orb of Alteration", "category": "Currency", "detailsId": "orb-of-alteration" },
+    { "id": "wild-crystallised-lifeforce", "name": "Wild Crystallised Lifeforce", "category": "Currency", "detailsId": "wild-crystallised-lifeforce" },
+    { "id": "vivid-crystallised-lifeforce", "name": "Vivid Crystallised Lifeforce", "category": "Currency", "detailsId": "vivid-crystallised-lifeforce" }
+  ]
+}

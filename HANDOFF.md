@@ -16,8 +16,8 @@ commit.
 S7 takes priority over new mechanic breadth. The trade/corruption/finishing,
 Hinekora's Lock, beast imprint, and recombinator work is parked as mechanic
 track M1-M5. Phase 18 recombinator engine work, accounts/publishing, and ML also
-remain parked, deferred, blocked, or later. Economy E0-E4 may proceed in
-parallel but is not an S7 dependency.
+remain parked, deferred, blocked, or later. Economy E0-E7 is complete and is
+not an S7 dependency; only external production activation remains.
 
 Oliver skipped S6 Phase 3 ambient Emulator odds entirely. It is not deferred
 work and must not reappear in a kickoff, backlog, or performance scope.
@@ -90,6 +90,25 @@ Mechanic rulings come from Oliver. Do not research or guess them.
   recrafting, or fracture-retry options that depend on the actual carrier.
 - Side-targeted operations need side-specific open/removable legality facts.
 
+## Economy track completed
+
+Economy E0-E7 is implemented and locally accepted. `tools/economy` maintains a
+separate canonical SQLite database, dynamically ingests every exposed PoE1
+league, and publishes immutable content-addressed snapshots. The workspace has
+a compact league selector, verified IndexedDB caching, per-league overrides,
+and pinned economy identities for runs, evaluations, solves, compiled
+strategies, and saved results. Harvest resistance prices use the target-specific
+`harvest_resist:<target>` vocabulary throughout native and web registries.
+
+The six-hour publisher, retention tooling, and deployment instructions are in
+the repository. External activation still requires the two R2 buckets, custom
+domain, and repository secrets listed in
+[docs/economy-deployment.md](docs/economy-deployment.md). The last live smoke
+covered all six then-available leagues, accounted for 496/496 rows with zero
+unresolved mappings, and loaded every snapshot through native, Python, and
+WASM. Large economy payloads are heap-marshalled to avoid Emscripten stack
+exhaustion.
+
 ## Documentation state
 
 Active authority is now:
@@ -100,6 +119,9 @@ Active authority is now:
 4. stable architecture in
    [docs/crafting-solver-plan.md](docs/crafting-solver-plan.md)
 
+The completed economy track is recorded in
+[docs/economy-ingest-plan.md](docs/economy-ingest-plan.md), with operational
+activation in [docs/economy-deployment.md](docs/economy-deployment.md).
 Completed pre-S6, Strategy Builder Calculator, and S6 execution plans were
 moved intact to [docs/archive/README.md](docs/archive/README.md). S6 Phase 3's
 skipped status is preserved. Future mechanics are parked in
@@ -132,4 +154,6 @@ M1-M5 so they no longer compete with S7 numbering.
   would worsen the action explosion.
 - Price-only solves should eventually reuse transition work, but S7.0 measures
   the current rebuild behavior before changing it.
+- Cost-bearing work must pin its effective economy identity at start; changing
+  league or overrides only affects new work unless the user explicitly re-costs.
 - New C ABI or strategy vocabulary requires a WASM rebuild before web tests.

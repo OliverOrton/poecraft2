@@ -12,6 +12,18 @@ export interface EngineErrorInfo {
     detail: string;
 }
 
+/** Immutable economy identity attached by the workspace to completed work. */
+export interface EconomyIdentity {
+    profile: string;
+    effective_snapshot_id: string;
+    source_snapshot_id: string;
+    source_content_sha256: string | null;
+    source_cutoff_at_utc: string | null;
+    league_name: string;
+    status: "loading" | "fresh" | "stale" | "offline" | "manual-only";
+    low_confidence_keys: string[];
+}
+
 /** Thrown on the main thread when the worker reports a failed call. */
 export class EngineError extends Error {
     readonly code: number;
@@ -167,6 +179,7 @@ export interface StrategyResult {
     };
     failure_summaries: FailureSummary[];
     missing_prices: Array<{ key: string; missing_count: number }>;
+    economy?: EconomyIdentity;
 }
 
 export interface StrategyEvalOptions {
@@ -237,6 +250,7 @@ export interface StrategyEvalResult {
         classes_truncated_share: number;
     }>;
     edges: Array<{ id: string; expected_traversals: number }>;
+    economy?: EconomyIdentity;
 }
 
 export interface PoolEntry {
@@ -333,6 +347,7 @@ export interface SolveSummary {
     sweeps: number;
     residual: number;
     skipped_actions: number;
+    economy?: EconomyIdentity;
 }
 
 export interface SolveOptions {

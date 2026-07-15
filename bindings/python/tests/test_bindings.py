@@ -40,6 +40,14 @@ class BindingTests(unittest.TestCase):
             self.assertEqual(len(pool), pool.summary["candidate_count"])
             self.assertTrue(all(entry["final_weight"] > 0 for entry in pool))
 
+    def test_packaged_manual_economy_uses_runtime_v1_envelope(self):
+        path = Path(__file__).resolve().parents[3] / "data" / "economy" / "public-none.json"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["version"], "v1")
+        self.assertEqual(payload["metadata"]["schema_version"], 1)
+        with load_economy(payload):
+            pass
+
     def test_core_action_rules(self):
         with self.session.create_action_context(seed=0xC0FFEE) as context:
             item = self.session.create_item(rarity="normal")

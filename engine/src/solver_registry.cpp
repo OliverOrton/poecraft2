@@ -379,7 +379,11 @@ void add_harvest(const SessionImpl& session, ActionRegistry& registry) {
             d.params.source_tag_id = source;
             d.params.target_tag_id = target;
             d.kind = TransitionKind::SingleSlot;
-            d.cost_keys = {"harvest_resist"};
+            /* Lifeforce depends on the resistance being created, not the
+             * resistance being removed. Keep the vocabulary target-specific
+             * so economy recipes cannot accidentally price all six actions
+             * with one arbitrary lifeforce. */
+            d.cost_keys = {"harvest_resist:" + target_name};
             d.legality.rarity_mask = kRarityMagic | kRarityRare;
             d.discriminating_tag_ids = {source, target, resistance};
             add(registry, std::move(d));

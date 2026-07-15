@@ -129,6 +129,7 @@ export class PcSimulator extends HTMLElement {
                     this.elapsedMs(),
                 )}</strong></div>
             </div>
+            ${result?.economy ? `<div class="pc-sim-economy">Costs pinned to ${escapeHtml(result.economy.league_name)} · ${escapeHtml(result.economy.source_cutoff_at_utc ? new Date(result.economy.source_cutoff_at_utc).toLocaleString() : "manual prices")}</div>` : ""}
             ${
                 result?.failure_summaries.length
                     ? `<div class="pc-failure-summary">${result.failure_summaries

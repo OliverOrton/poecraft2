@@ -33,6 +33,10 @@ $Python = Get-PoeCraftPython
 if ($LASTEXITCODE -ne 0) {
     throw "Python compile smoke check failed with exit code $LASTEXITCODE."
 }
+& $Python.Command @($Python.Prefix) -m compileall -q "$Root/tools/economy/poecraft_economy"
+if ($LASTEXITCODE -ne 0) {
+    throw "Economy Python compile smoke check failed with exit code $LASTEXITCODE."
+}
 
 $CMake = Get-Command cmake -ErrorAction SilentlyContinue
 if ($CMake) {

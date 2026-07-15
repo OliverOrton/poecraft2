@@ -35,6 +35,14 @@ if ($LASTEXITCODE -ne 0) {
     throw "Python tests failed with exit code $LASTEXITCODE."
 }
 
+$env:PYTHONPATH = "$Root/tools/economy;$Root/tools/ingest;$Root/bindings/python"
+& $Python.Command @($Python.Prefix) -m unittest discover `
+    -s "$Root/tools/economy/tests" -t "$Root/tools/economy"
+if ($LASTEXITCODE -ne 0) {
+    throw "Economy tests failed with exit code $LASTEXITCODE."
+}
+$env:PYTHONPATH = "$Root/tools/ingest;$Root/tools/economy;$Root/bindings/python"
+
 # Build/validate the canonical database derivatives before the engine tests run,
 # so the engine data-loader suite has a complete runtime artifact to load.
 $Database = "$Root/data/sqlite/poecraft.db"

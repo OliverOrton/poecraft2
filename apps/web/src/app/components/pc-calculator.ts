@@ -29,6 +29,7 @@ import {
     CalcResult,
     Catalog,
     EngineError,
+    EconomyIdentity,
     ModInfo,
     SolveProgress,
     SolveSummary,
@@ -44,10 +45,11 @@ import {
 import { workspace } from "../workspace/registry";
 import {
     getPrice,
-    getPrices,
     onPricesChange,
+    pinEconomy,
     setPrice,
 } from "../workspace/prices";
+import type { PinnedEconomy } from "../workspace/economy-service";
 import { influenceLabels } from "../item-display";
 import { buildCalculatorTargetModel } from "../calculator-goal-model";
 import {
@@ -182,6 +184,7 @@ export class PcCalculator extends HTMLElement {
     private calcError = "";
     private solveSummary: SolveSummary | null = null;
     private solvedStrategy: StrategyDocument | null = null;
+    private solveEconomy: PinnedEconomy | null = null;
     private solveError: { heading: string; detail: string } | null = null;
     private verification: {
         completedRuns: number;
@@ -217,7 +220,6 @@ export class PcCalculator extends HTMLElement {
             dispose: () => this.disposeEngine(),
         });
         this.unsubscribePrices = onPricesChange(() => {
-            this.clearSolveResult();
             this.renderResults();
             this.renderSolvePanel();
         });
@@ -458,6 +460,7 @@ export class PcCalculator extends HTMLElement {
     private clearSolveResult(): void {
         this.solveSummary = null;
         this.solvedStrategy = null;
+        this.solveEconomy = null;
         this.solveError = null;
         this.verification = null;
         this.solveCandidateActions = 0;
@@ -618,7 +621,10 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async startSolve(): Promise<void> {
-        const readiness = solvePriceReadiness(this.pickerActions, getPrice);
+        const pinned = pinEconomy();
+        const pinnedPrice = (key: string): number | undefined =>
+            pinned.snapshot.prices[key];
+        const readiness = solvePriceReadiness(this.pickerActions, pinnedPrice);
         if (!this.solver || !this.item || this.slots.length === 0) {
             this.solveError = {
                 heading: "Solve is not ready.",
@@ -637,6 +643,7 @@ export class PcCalculator extends HTMLElement {
         }
 
         this.clearSolveResult();
+        this.solveEconomy = pinned;
         this.solveRunning = true;
         const solveAbort = new AbortController();
         this.solveAbort = solveAbort;
@@ -646,7 +653,7 @@ export class PcCalculator extends HTMLElement {
         let solveSolver = 0;
         try {
             const actions = await this.client.solverActions(this.solver);
-            const candidateIds = pricedSolverActionIds(actions, getPrice);
+            const candidateIds = pricedSolverActionIds(actions, pinnedPrice);
             if (candidateIds.length === 0) {
                 throw new Error("No priced solver actions are available.");
             }
@@ -656,10 +663,7 @@ export class PcCalculator extends HTMLElement {
                 this.session,
                 this.solverGoal(candidateIds),
             );
-            economy = await this.client.loadEconomy({
-                version: "v1",
-                prices: { ...getPrices() },
-            });
+            economy = await this.client.loadEconomy(pinned.snapshot);
             const result = await this.client.solverSolve(
                 solveSolver,
                 this.item,
@@ -684,12 +688,14 @@ export class PcCalculator extends HTMLElement {
                 this.solveCancelled = true;
                 return;
             }
+            result.economy = pinned.identity;
             this.solveSummary = result;
             try {
                 const compiled = await this.client.solverCompileStrategy(
                     solveSolver,
                 );
                 this.solvedStrategy = prepareSolverStrategy(compiled);
+                this.solvedStrategy.economy = pinned.identity;
             } catch (error) {
                 const detail = engineErrorDetail(error);
                 this.solveError =
@@ -742,11 +748,9 @@ export class PcCalculator extends HTMLElement {
         let economy = 0;
         let strategy = 0;
         let simulator = 0;
+        const pinned = this.solveEconomy ?? pinEconomy();
         try {
-            economy = await this.client.loadEconomy({
-                version: "v1",
-                prices: { ...getPrices() },
-            });
+            economy = await this.client.loadEconomy(pinned.snapshot);
             strategy = await this.client.compileStrategy(
                 this.session,
                 cloneStrategy(this.solvedStrategy),
@@ -769,6 +773,7 @@ export class PcCalculator extends HTMLElement {
                         ),
                 },
             );
+            result.economy = pinned.identity;
             const completedRuns = result.summary.completed_runs;
             if (result.cancelled || completedRuns !== 5_000) {
                 throw new Error(
@@ -1569,6 +1574,7 @@ export class PcCalculator extends HTMLElement {
                     · ${summary.sweeps.toLocaleString()} sweeps
                     · residual ${summary.residual.toExponential(2)}
                 </div>
+                ${summary.economy ? `<span class="pc-calc-economy-pin">${escapeHtml(economyIdentityLabel(summary.economy))}</span>` : ""}
                 <strong class="pc-calc-solve-skipped">${this.solveExcludedActions.toLocaleString()} unpriced actions excluded before Solve</strong>
                 <span class="pc-calc-solve-native-skipped">${summary.skipped_actions.toLocaleString()} of ${this.solveCandidateActions.toLocaleString()} priced candidates skipped by the native solver</span>
                 ${
@@ -2259,6 +2265,13 @@ function baseLabel(path: string): string {
 function engineErrorDetail(error: unknown): string {
     if (error instanceof EngineError) return error.detail;
     return error instanceof Error ? error.message : String(error);
+}
+
+function economyIdentityLabel(economy: EconomyIdentity): string {
+    const cutoff = economy.source_cutoff_at_utc
+        ? new Date(economy.source_cutoff_at_utc).toLocaleString()
+        : "manual prices";
+    return `${economy.league_name} · pinned ${cutoff}`;
 }
 
 function escapeHtml(text: string): string {

@@ -46,9 +46,12 @@ scans a large flat action registry, and is proven mainly on toy real goals plus
 a synthetic six-slot fixture. Macro/sub-policy operators, safe action control,
 cycle acceleration, memory bounds, and real craft gates are specified in
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
-The parallel live-economy track is planned in
-[economy-ingest-plan.md](economy-ingest-plan.md). Its main product decisions are
-fully recorded; implementation has not started.
+The parallel live-economy track in
+[economy-ingest-plan.md](economy-ingest-plan.md) is implemented: the separate
+canonical ingest/publisher, immutable league snapshots, browser cache and
+selector, per-league overrides, and pinned cost identities are in place.
+Production activation only needs the documented R2 resources and repository
+secrets.
 
 ## Direction Of Travel
 
@@ -61,16 +64,18 @@ fully recorded; implementation has not started.
    Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an
    auto-planner. These are not active work.
    [solver-mechanic-extensions.md](solver-mechanic-extensions.md)
-3. Workspace fluency: craft history tree, cost distributions and materials/
-   shopping lists, aggregate board overlays, a live economy service (league
-   snapshot fetch with overrides), and recomb/feeder blocks with item-flow
-   wiring. Ambient watched-mod odds in the Emulator were skipped entirely.
+3. Workspace fluency: the live economy service, league snapshot cache,
+   overrides, and pinned cost identities are complete. Remaining work includes
+   craft history, cost distributions and materials/shopping lists, aggregate
+   board overlays, and recomb/feeder blocks with item-flow wiring. Ambient
+   watched-mod odds in the Emulator were skipped entirely.
    [desktop-workspace-ui.md](desktop-workspace-ui.md),
    [strategy-editor-ui.md](strategy-editor-ui.md),
    [economy-ingest-plan.md](economy-ingest-plan.md)
-4. Product infrastructure remains later or parallel: Economy E0-E4 may proceed
-   independently; accounts Phase 12 is deferred, so publishing Phases 15-16
-   stay blocked; recombinator engine Phase 18 remains parked for M4-M5.
+4. Product infrastructure remains later or parallel: economy production
+   activation is an external operational step; accounts Phase 12 is deferred,
+   so publishing Phases 15-16 stay blocked; recombinator engine Phase 18
+   remains parked for M4-M5.
 5. ML last, on purpose (Phase 17): value-distillation and search
    guidance trained on the solver's logged (state, value, action)
    corpus, with the exact solver as ground truth.

@@ -907,25 +907,26 @@ generation and pruning, exact solver-only macro/sub-policy operators, compact
 transition storage, cycle-aware optimization, policy compression, and native/
 WASM end-to-end gates. Do not begin the parked mechanic track until S7 passes.
 
-## Parallel Track E: Economy Ingest And League Switching (Planned)
+## Parallel Track E: Economy Ingest And League Switching (Complete)
 
 The complete economy subsystem is specified in
 [economy-ingest-plan.md](economy-ingest-plan.md). It is a parallel
 workspace-fluency track, not a continuation of the original RePoE phases and
 not a reason to mix volatile league prices into `data/sqlite/poecraft.db`.
 
-The track builds a separate canonical economy SQLite database, dynamically
+The track uses a separate canonical economy SQLite database, dynamically
 ingests every PoE1 league exposed by the configured economy provider, publishes
 immutable content-addressed snapshots, caches them in the browser, and adds a
-workspace-level league selector with per-league overrides. Phases E0-E4 may run
-independently on a separate branch. E5-E6 must rebase before touching the
-shared workspace price and cost surfaces.
+workspace-level league selector with per-league overrides.
 
-Status: plan written and Oliver's primary decisions recorded: poe.ninja, PoE1
-PC, six-hour refresh, 30-day detail plus weekly retention forever, warned
-low-confidence prices, manual-only base cost, per-league overrides, pinned
-in-flight work, one archived challenge family, zero-cost unveil selection, and
-GitHub Actions -> Cloudflare R2 publication. No implementation has started.
+Status 2026-07-15: E0-E7 are implemented and locally accepted. The engine
+Harvest resistance vocabulary is target-specific, all cost surfaces use one
+shared pinned economy, the six-hour GitHub Actions/R2 publisher and retention
+tooling are present, and production-sized snapshots load through native,
+Python, and WASM. The live acceptance smoke completed all six provider leagues
+then available. Operational deployment remains an external configuration step:
+provision the two R2 buckets/custom domain and set the secrets in
+[economy-deployment.md](economy-deployment.md).
 
 ## Phase 14: Performance And Public-Engine Readiness
 
@@ -1151,9 +1152,10 @@ the permanent real craft corpus, capture the unoptimized baseline, and set
 comparison targets and safety caps. Oliver set no solve-time or memory
 completion ceiling; optimize both as far as practical and report them
 throughout. Stop before S7.1. Oliver skipped S6 Phase 3 entirely; do not revive
-it. Parallel Economy E0-E4 may proceed independently. Phase 12, publishing,
-mechanic track M1-M5, and Phase 18 recombinators remain deferred, blocked, or
-parked as recorded above.
+it. Economy E0-E7 is implemented and locally accepted; only external R2 and
+custom-domain activation remains. Phase 12, publishing, mechanic track M1-M5,
+and Phase 18 recombinators remain deferred, blocked, or parked as recorded
+above.
 
 ## Definition Of Done For MVP
 

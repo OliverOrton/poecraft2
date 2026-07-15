@@ -1,0 +1,9 @@
+{
+  "core": { "items": [], "rates": {}, "primary": "chaos", "secondary": "divine" },
+  "lines": [
+    { "id": "lucent-fossil", "primaryValue": 1.0, "volumePrimaryValue": 900, "maxVolumeCurrency": "chaos", "maxVolumeRate": 1.0 }
+  ],
+  "items": [
+    { "id": "lucent-fossil", "name": "Lucent Fossil", "category": "Delve", "detailsId": "lucent-fossil" }
+  ]
+}

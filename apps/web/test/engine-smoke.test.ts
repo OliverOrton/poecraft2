@@ -943,7 +943,55 @@ test("native strategy run reports progress, traces, and economy cost", async () 
     assert.equal(progress.at(-1), 2000);
     await client.closeSimulator(simulator);
     await client.closeEconomy(economy);
+
+    const otherEconomy = await client.loadEconomy({
+        version: "v1",
+        id: "fixture-other-league",
+        prices: { chaos: 5 },
+    });
+    const otherSimulator = await client.createSimulator(
+        sessionId,
+        strategy,
+        otherEconomy,
+    );
+    const other = await client.runStrategy(otherSimulator, {
+        target_runs: 2000,
+        seed: 42,
+        max_actions_per_run: 100,
+        retained_trace_count: 3,
+        retained_success_count: 2,
+    });
+    assert.equal(other.summary.success_count, result.summary.success_count);
+    assert.equal(other.summary.total_actions, result.summary.total_actions);
+    assert.deepEqual(other.action_distribution, result.action_distribution);
+    assert.ok(
+        Math.abs(
+            other.summary.known_total_cost -
+                result.summary.known_total_cost * 2.5,
+        ) < 1e-6,
+        "league prices change costs without changing transitions",
+    );
+    await client.closeSimulator(otherSimulator);
+    await client.closeEconomy(otherEconomy);
     await client.closeStrategy(strategy);
+});
+
+test("published-size economy metadata loads without exhausting the WASM stack", async () => {
+    const keys = Array.from(
+        { length: 1800 },
+        (_, index) => `missing:fixture-key-${index.toString().padStart(4, "0")}`,
+    );
+    const economy = await client.loadEconomy({
+        version: "v1",
+        id: "economy:large-metadata-fixture",
+        metadata: {
+            schema_version: 1,
+            missing_keys: keys,
+            low_confidence_keys: keys.slice(0, 500),
+        },
+        prices: { chaos: 1, alteration: 0.2 },
+    });
+    await client.closeEconomy(economy);
 });
 
 test("modifier family minimum tier executes in the native WASM simulator", async () => {
@@ -1293,6 +1341,14 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
         action.id.startsWith("fossil:"),
     );
     assert.ok(singles.length >= 2, "expected single-fossil actions");
+    const resistanceConversions = actions.filter((action) =>
+        action.id.startsWith("harvest_resist:"),
+    );
+    assert.equal(resistanceConversions.length, 6);
+    for (const action of resistanceConversions) {
+        const target = action.id.split(":").at(-1);
+        assert.deepEqual(action.cost_keys, [`harvest_resist:${target}`]);
+    }
 
     // The tab reconstructs combo ids from single-fossil keys (sorted, joined
     // with "+", per solver_registry.cpp) — prove the round trip calculates.

@@ -1,0 +1,9 @@
+{
+  "core": { "items": [], "rates": {}, "primary": "chaos", "secondary": "divine" },
+  "lines": [
+    { "id": "primitive-chaotic-resonator", "primaryValue": 0.4, "volumePrimaryValue": 1800, "maxVolumeCurrency": "chaos", "maxVolumeRate": 2.5 }
+  ],
+  "items": [
+    { "id": "primitive-chaotic-resonator", "name": "Primitive Chaotic Resonator", "category": "Delve", "detailsId": "primitive-chaotic-resonator" }
+  ]
+}

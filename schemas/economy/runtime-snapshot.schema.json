@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft.example/schemas/economy/runtime-snapshot-v1.json",
+  "title": "poecraft2 immutable economy runtime snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "id", "metadata", "prices"],
+  "properties": {
+    "version": { "const": "v1" },
+    "id": { "type": "string", "minLength": 1 },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version", "game", "realm", "league_key", "league_name",
+        "source", "source_cutoff_at_utc", "created_at_utc", "game_data_hash",
+        "price_count", "missing_keys", "low_confidence_keys", "content_sha256"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "game": { "const": "poe1" },
+        "realm": { "type": "string", "minLength": 1 },
+        "league_key": { "type": "string", "minLength": 1 },
+        "league_name": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "source_cutoff_at_utc": { "type": ["string", "null"], "format": "date-time" },
+        "created_at_utc": { "type": ["string", "null"], "format": "date-time" },
+        "game_data_hash": { "type": ["string", "null"] },
+        "price_count": { "type": "integer", "minimum": 0 },
+        "missing_keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "low_confidence_keys": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "content_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "prices": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    }
+  }
+}

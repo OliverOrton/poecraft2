@@ -1,4 +1,8 @@
-import { EngineErrorInfo, StrategyEvalResult } from "../engine-protocol";
+import {
+    EconomyIdentity,
+    EngineErrorInfo,
+    StrategyEvalResult,
+} from "../engine-protocol";
 import {
     formatChaosValue,
     formatConsumptionQuantity,
@@ -10,7 +14,7 @@ import {
     escapeStrategyEvalHtml,
     strategyEvalRefusalMarkup,
 } from "../strategy-eval-presentation";
-import { getPrice, onPricesChange, setPrice } from "../workspace/prices";
+import { setPrice } from "../workspace/prices";
 
 export interface StrategyOddsView {
     result: StrategyEvalResult | null;
@@ -22,6 +26,8 @@ export interface StrategyOddsView {
     selectedNodeId: string | null;
     selectedNodeKind: string | null;
     targetLabels: string[];
+    prices: Readonly<Record<string, number>>;
+    economy: EconomyIdentity | null;
 }
 
 const EMPTY_VIEW: StrategyOddsView = {
@@ -34,6 +40,8 @@ const EMPTY_VIEW: StrategyOddsView = {
     selectedNodeId: null,
     selectedNodeKind: null,
     targetLabels: [],
+    prices: {},
+    economy: null,
 };
 
 const RARITY_NAMES = ["Normal", "Magic", "Rare"];
@@ -41,16 +49,9 @@ const SLOT_STATUS = ["Absent", "Below tier", "Satisfied"];
 
 export class PcStrategyOdds extends HTMLElement {
     private view: StrategyOddsView = EMPTY_VIEW;
-    private unsubscribePrices: (() => void) | null = null;
 
     connectedCallback(): void {
-        this.unsubscribePrices ??= onPricesChange(() => this.render());
         this.render();
-    }
-
-    disconnectedCallback(): void {
-        this.unsubscribePrices?.();
-        this.unsubscribePrices = null;
     }
 
     setView(view: StrategyOddsView): void {
@@ -97,6 +98,13 @@ export class PcStrategyOdds extends HTMLElement {
                     setPrice(key, input.value === "" ? null : value);
                 });
             },
+        );
+        this.querySelector<HTMLButtonElement>("[data-recost]")?.addEventListener(
+            "click",
+            () =>
+                this.dispatchEvent(
+                    new CustomEvent("strategy-recost", { bubbles: true }),
+                ),
         );
     }
 
@@ -148,20 +156,21 @@ export class PcStrategyOdds extends HTMLElement {
     private renderCost(result: StrategyEvalResult): string {
         const priced = presentExpectedConsumption(
             result.expected_consumption,
-            getPrice,
+            (key) => this.view.prices[key],
         );
         const total = priced.complete
             ? formatChaosValue(priced.total)
             : `Incomplete · ${formatChaosValue(priced.total)} known`;
         return `<section class="pc-strategy-eval-cost">
             <span class="pc-strategy-eval-kicker">Expected consumption</span>
-            <p class="pc-help">Per strategy run · edit chaos-equivalent prices</p>
+            <p class="pc-help">Per strategy run · ${this.view.economy ? escapeStrategyEvalHtml(economyLabel(this.view.economy)) : "manual prices"}</p>
             <div class="pc-strategy-eval-cost-rows">
                 ${priced.rowsHtml || '<p class="pc-help">No priced actions in this strategy.</p>'}
             </div>
             <div class="pc-strategy-eval-total">
                 <span>Total expected cost</span><strong>${total}</strong>
             </div>
+            <button data-recost>Re-cost with active league</button>
         </section>`;
     }
 
@@ -223,6 +232,13 @@ function reasonLabel(reason: string): string {
         : reason === "no_matching_edge"
           ? "No matching edge"
           : reason;
+}
+
+function economyLabel(economy: EconomyIdentity): string {
+    const cutoff = economy.source_cutoff_at_utc
+        ? new Date(economy.source_cutoff_at_utc).toLocaleString()
+        : "manual prices";
+    return `${economy.league_name} · pinned ${cutoff}`;
 }
 
 function slotStatusShort(status: number): string {
