@@ -915,11 +915,12 @@ responsiveness budgets, per-case caps, existing tolerances, and a universal
 complete: the approved Eldritch fallback fixture, one-Scour crafted-modifier
 removal, exact Harvest resistance/Fracture calculation, and carrier-specific
 state/compiler substrate are present. S7.2 action control/storage and the
-out-of-sequence S7.3 fixed-option checkpoint are also complete; S7.4 renewal
-and observation-aware options are next. Routine test suites are deferred until
-the end of the complete S7 plan, and visual UI review belongs to Oliver unless
-he explicitly requests it. Do not begin the parked mechanic track until S7
-passes.
+out-of-sequence S7.3 fixed-option checkpoint are also complete. S7.2R completed
+bounded product fossil selection, removal of fake Harvest actions, and the
+pinned missing-price fallback. S7.4 renewal and observation-aware options are
+next. Routine test suites are deferred until the end of the complete S7 plan,
+and visual UI review belongs to Oliver unless he explicitly requests it. Do not
+begin the parked mechanic track until S7 passes.
 
 The approved T1/T1 second oracle replaced the pre-approval any-tier row. The
 requested fresh pre-S7.2 full-corpus run was recorded as an owner-stopped
@@ -1165,15 +1166,13 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Implement **S7.2 only** from
+Implement **S7.4 only** from
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
-first capture the required fresh unoptimized native/WASM measurements for the
-approved T1/T1 oracle and newly enabled real cases, then add goal-relevant
-action/dependency control, lazy fossil generation, certified equivalent-action
-collapse, inclusion diagnostics, independent resource caps, compact stored
-transition rows, and bounded Bellman work units. Preserve exhaustive-oracle
-mode only where it remains diagnostically useful, report every cap hit, and
-stop before S7.3. Do not run routine native, bindings, WASM, web, simulator, or
+implement fixed-exit repeat options for approved rolling/reforge methods,
+protected repeat loops that repay setup, observation-correct Unveil choices,
+and carrier-exact fracture preparation/retry. Compile them to ordinary Strategy
+Board primitives and preserve expressible success, salvage, and brick exits.
+Stop before S7.5. Do not run routine native, bindings, WASM, web, simulator, or
 visual-browser gates for the intermediate phase. Oliver skipped S6 Phase 3
 entirely; do not revive it. Economy E0-E7 is implemented and locally accepted;
 only external R2 and custom-domain activation remains. Phase 12, publishing,

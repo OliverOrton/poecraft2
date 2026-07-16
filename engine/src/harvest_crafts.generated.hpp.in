@@ -1,0 +1,38 @@
+#ifndef POECRAFT_HARVEST_CRAFTS_GENERATED_HPP
+#define POECRAFT_HARVEST_CRAFTS_GENERATED_HPP
+
+#include <array>
+#include <cstddef>
+#include <string_view>
+
+namespace poecraft {
+
+inline constexpr std::array<std::string_view, @HARVEST_REFORGE_COUNT@>
+    kHarvestReforgeTags = {
+@HARVEST_REFORGE_ENTRIES@};
+
+inline constexpr std::array<std::string_view, @HARVEST_AUGMENT_COUNT@>
+    kHarvestAugmentTags = {
+@HARVEST_AUGMENT_ENTRIES@};
+
+template <std::size_t N>
+constexpr bool harvest_tag_allowed(
+    const std::array<std::string_view, N>& allowed,
+    const std::string_view tag) {
+    for (const std::string_view candidate : allowed) {
+        if (candidate == tag) return true;
+    }
+    return false;
+}
+
+constexpr bool harvest_reforge_tag_allowed(const std::string_view tag) {
+    return harvest_tag_allowed(kHarvestReforgeTags, tag);
+}
+
+constexpr bool harvest_augment_tag_allowed(const std::string_view tag) {
+    return harvest_tag_allowed(kHarvestAugmentTags, tag);
+}
+
+} // namespace poecraft
+
+#endif

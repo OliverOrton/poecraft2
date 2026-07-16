@@ -31,6 +31,14 @@ if (-not $Emcc) {
 $OutputDirectory = Join-Path $Root "bindings/wasm/dist"
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $Output = Join-Path $OutputDirectory "poecraft_engine.mjs"
+$GeneratedDirectory = Join-Path $Root "build/wasm/generated"
+$GeneratedHeader = Join-Path $GeneratedDirectory "harvest_crafts.generated.hpp"
+py -3 "$Root/scripts/generate-harvest-crafts.py" `
+    --recipes "$Root/fixtures/economy/harvest-recipes-v1.json" `
+    --output $GeneratedHeader
+if ($LASTEXITCODE -ne 0) {
+    throw "Harvest craft allowlist generation failed with exit code $LASTEXITCODE."
+}
 
 $EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
     ForEach-Object { $_.FullName }
@@ -63,7 +71,7 @@ $RuntimeMethods = @("ccall", "cwrap", "UTF8ToString", "HEAPU8") -join ","
 
 $EmccArgs = @(
     "-std=c++20", "-O2", "-fexceptions",
-    "-I$Root/engine/include", "-I$Root/engine/src"
+    "-I$Root/engine/include", "-I$Root/engine/src", "-I$GeneratedDirectory"
 )
 $EmccArgs += $EngineSources
 $EmccArgs += $Facade

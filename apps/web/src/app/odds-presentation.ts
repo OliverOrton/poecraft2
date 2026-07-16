@@ -64,6 +64,28 @@ export interface ExpectedConsumptionPresentation {
     missingKeys: string[];
 }
 
+export type DisplayPriceSource =
+    | "override"
+    | "quote"
+    | "recipe"
+    | "zero"
+    | "fallback";
+
+export function priceSourceLabel(source: DisplayPriceSource): string {
+    switch (source) {
+        case "override":
+            return "Override";
+        case "recipe":
+            return "Certified recipe";
+        case "zero":
+            return "Certified zero";
+        case "fallback":
+            return "User fallback";
+        default:
+            return "Market quote";
+    }
+}
+
 /**
  * Shared editable price-row presentation for exact-odds surfaces. Quantities
  * come from the engine; the caller supplies the workspace price lookup.
@@ -71,12 +93,14 @@ export interface ExpectedConsumptionPresentation {
 export function presentExpectedConsumption(
     entries: ExpectedConsumptionEntry[],
     priceFor: (key: string) => number | undefined,
+    sourceFor?: (key: string) => DisplayPriceSource | null,
 ): ExpectedConsumptionPresentation {
     let total = 0;
     const missingKeys: string[] = [];
     const rowsHtml = entries
         .map(({ key, quantity }) => {
             const price = priceFor(key);
+            const source = sourceFor?.(key) ?? null;
             if (price === undefined) {
                 missingKeys.push(key);
             } else {
@@ -89,7 +113,7 @@ export function presentExpectedConsumption(
                 <span class="pc-calc-cost-sub ${price === undefined ? "is-missing" : ""}">${
                     price === undefined
                         ? "Missing price"
-                        : formatChaosValue(price * quantity)
+                        : `${formatChaosValue(price * quantity)}${source ? ` &middot; ${priceSourceLabel(source)}` : ""}`
                 }</span>
             </div>`;
         })

@@ -128,20 +128,30 @@ struct SolveWork::Impl {
             calc.candidates().size());
         const ActionControlSummary& control = calc.action_control();
         result.diagnostics.relevance_reduced_actions =
+            control.pruned_outside_goal_relevance +
             control.pruned_outside_envelope;
         result.diagnostics.dependency_actions =
             control.dependency_primitives;
         result.diagnostics.deferred_actions =
             control.deferred_fossil_loadouts;
         result.diagnostics.action_inclusion_reasons.push_back(
-            std::string(control.explicit_envelope
-                            ? "included:explicit_goal_envelope:"
-                            : "included:conservative_exhaustive_envelope:") +
+            std::string(
+                control.explicit_envelope
+                    ? "included:explicit_goal_envelope:"
+                    : calc.registry().fossil_generation_goal_relevant
+                          ? "included:bounded_goal_relevant_envelope:"
+                          : "included:conservative_exhaustive_envelope:") +
             std::to_string(control.included_primitives));
         if (control.pruned_outside_envelope != 0) {
             result.diagnostics.action_inclusion_reasons.push_back(
                 "pruned:not_permitted_by_explicit_goal_envelope:" +
                 std::to_string(control.pruned_outside_envelope));
+        }
+        if (control.pruned_outside_goal_relevance != 0) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                "pruned:outside_product_goal_relevance:" +
+                std::to_string(
+                    control.pruned_outside_goal_relevance));
         }
         if (control.dependency_primitives != 0) {
             result.diagnostics.action_inclusion_reasons.push_back(
@@ -150,7 +160,10 @@ struct SolveWork::Impl {
         }
         if (control.deferred_fossil_loadouts != 0) {
             result.diagnostics.action_inclusion_reasons.push_back(
-                "deferred:lazy_fossil_signature_not_requested:" +
+                std::string(
+                    calc.registry().fossil_generation_goal_relevant
+                        ? "deferred:outside_bounded_goal_relevant_fossil_beam:"
+                        : "deferred:lazy_fossil_signature_not_requested:") +
                 std::to_string(control.deferred_fossil_loadouts));
         }
         /* Primitive support remains action-registry telemetry. Fixed options
@@ -1230,6 +1243,8 @@ std::string serialize_solver_telemetry(
         calc.action_control().explicit_envelope));
     json += ",\"dependency_primitives\":" + std::to_string(
         calc.action_control().dependency_primitives);
+    json += ",\"goal_relevant_pruned\":" + std::to_string(
+        calc.action_control().pruned_outside_goal_relevance);
     json += ",\"fossil_loadouts\":{";
     json += "\"possible\":" + std::to_string(
         calc.registry().fossil_loadouts_possible);
@@ -1238,7 +1253,13 @@ std::string serialize_solver_telemetry(
     json += ",\"deferred\":" + std::to_string(
         calc.registry().fossil_loadouts_deferred);
     json += ",\"lazy\":" + std::string(bool_json(
-        calc.registry().fossil_generation_lazy)) + "}";
+        calc.registry().fossil_generation_lazy));
+    json += ",\"mode\":\"";
+    json += calc.registry().fossil_generation_goal_relevant
+                ? "goal_relevant"
+                : calc.registry().fossil_generation_lazy ? "requested"
+                                                         : "exhaustive";
+    json += "\"}";
     json += ",\"reasons\":[";
     if (diagnostics != nullptr) {
         for (std::size_t i = 0;

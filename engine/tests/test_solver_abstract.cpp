@@ -591,6 +591,8 @@ void run_artifact_registry_tests(const char* artifact_dir) {
     PC_CHECK(essences > 0);
     PC_CHECK(bench > 0);
     PC_CHECK(harvest > 0);
+    PC_CHECK(registry.index_by_id.count("harvest_reforge:resistance") == 0);
+    PC_CHECK(registry.index_by_id.count("harvest_augment:resistance") == 0);
     /* Most fossils bias tags; specials (lucky rolls, mirrors, sockets)
      * legitimately discriminate on nothing. */
     PC_CHECK(discriminating_fossils > 0);

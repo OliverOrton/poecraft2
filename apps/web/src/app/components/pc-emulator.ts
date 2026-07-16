@@ -27,6 +27,11 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import { influenceLabels } from "../item-display";
+import {
+    HARVEST_AUGMENT,
+    HARVEST_REFORGE,
+    harvestTagsFor,
+} from "../harvest-crafts";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
 import { PcModPool } from "./pc-mod-pool";
@@ -726,6 +731,14 @@ export class PcEmulator extends HTMLElement {
             )
                 ? selected("essence-key")
                 : (essenceTiers[0]?.key ?? "");
+        const harvestReforgeTags = harvestTagsFor(
+            this.catalog.harvestTags,
+            HARVEST_REFORGE,
+        );
+        const harvestAugmentTags = harvestTagsFor(
+            this.catalog.harvestTags,
+            HARVEST_AUGMENT,
+        );
         const unveilEntries = this.veiledOptions
             .map((id) => this.modCache[id])
             .filter((mod): mod is ModInfo => Boolean(mod))
@@ -772,14 +785,25 @@ export class PcEmulator extends HTMLElement {
                 case "harvest":
                     return `
                         <div class="pc-mechanic-row">
-                            <select data-mechanic="harvest-tag">${options(
-                                this.catalog.harvestTags,
+                            <label>
+                                <span>Reforge</span>
+                                <select data-mechanic="harvest-reforge-tag">${options(
+                                harvestReforgeTags,
                                 selected(
-                                    "harvest-tag",
-                                    this.catalog.harvestTags[0]?.key,
+                                    "harvest-reforge-tag",
+                                    harvestReforgeTags[0]?.key,
                                 ),
-                            )}</select>
+                            )}</select></label>
                             <button data-config-action="harvest_reforge">Reforge</button>
+                            <label>
+                                <span>Augment</span>
+                                <select data-mechanic="harvest-augment-tag">${options(
+                                harvestAugmentTags,
+                                selected(
+                                    "harvest-augment-tag",
+                                    harvestAugmentTags[0]?.key,
+                                ),
+                            )}</select></label>
                             <button data-config-action="harvest_augment">Augment</button>
                         </div>
                         <div class="pc-mechanic-row">
@@ -932,7 +956,14 @@ export class PcEmulator extends HTMLElement {
                         type === "harvest_reforge" ||
                         type === "harvest_augment"
                     )
-                        action = { type, target_tag: value("harvest-tag") };
+                        action = {
+                            type,
+                            target_tag: value(
+                                type === "harvest_reforge"
+                                    ? "harvest-reforge-tag"
+                                    : "harvest-augment-tag",
+                            ),
+                        };
                     else if (type === "harvest_resist")
                         action = {
                             type,

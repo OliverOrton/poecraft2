@@ -976,6 +976,11 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             if (mask.empty() || data->tag_name_by_id.count(tag) == 0) {
                 continue;
             }
+            const std::string& name = data->tag_name_by_id.at(tag);
+            if (registry.index_by_id.count("harvest_reforge:" + name) == 0 ||
+                registry.index_by_id.count("harvest_augment:" + name) == 0) {
+                continue;
+            }
             bool viable = false;
             pc_bitset_for_each(
                 mask.data(), session->words, [&](std::size_t bit) {

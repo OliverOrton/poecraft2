@@ -194,6 +194,45 @@ test("league overrides remain separate and pinned work keeps its original identi
     assert.equal(pinned.snapshot.prices.alteration, 2);
 });
 
+test("engine-key fallback is non-zero, lower priority than overrides, and pinned", async () => {
+    const data = fixture();
+    const service = new EconomyService({
+        indexUrl: "https://economy.test/league-index.json",
+        fetch: data.fetcher,
+        storage: new TestStorage(),
+        cache: new MemoryEconomyCache(),
+        broadcast: false,
+    });
+    await service.initialize();
+    service.setFallbackPrice(7);
+    assert.deepEqual(service.resolveActionPrice("unquoted-real-action"), {
+        value: 7,
+        source: "fallback",
+    });
+    assert.deepEqual(service.resolveActionPrice("alteration"), {
+        value: 0.18,
+        source: "quote",
+    });
+    service.setPrice("unquoted-real-action", 2);
+    assert.deepEqual(service.resolveActionPrice("unquoted-real-action"), {
+        value: 2,
+        source: "override",
+    });
+    service.setPrice("unquoted-real-action", null);
+    const pinned = service.pin(["alteration", "unquoted-real-action"]);
+    assert.equal(pinned.snapshot.prices["unquoted-real-action"], 7);
+    assert.equal(pinned.identity.fallback_price, 7);
+    assert.equal(
+        pinned.identity.price_sources?.["unquoted-real-action"],
+        "fallback",
+    );
+    service.setFallbackPrice(0);
+    assert.equal(
+        service.resolveActionPrice("unquoted-real-action").value,
+        undefined,
+    );
+});
+
 test("offline startup uses the last verified cached snapshot", async () => {
     const data = fixture();
     const storage = new TestStorage();

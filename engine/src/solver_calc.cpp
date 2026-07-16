@@ -175,6 +175,8 @@ CalcContext::CalcContext(
         registry_.actions.size());
     action_control_.included_primitives = static_cast<std::uint32_t>(
         candidates_.size());
+    action_control_.pruned_outside_goal_relevance =
+        registry_.goal_relevant_actions_pruned;
     action_control_.pruned_outside_envelope =
         goal_.primitive_actions_explicit
             ? static_cast<std::uint32_t>(

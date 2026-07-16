@@ -27,6 +27,7 @@ import {
     StrategyResult,
     WorkerMessage,
 } from "./engine-protocol";
+import { buildHarvestCatalog } from "./harvest-crafts";
 
 const DEFAULT_CHUNK_SIZE = 1000;
 
@@ -114,24 +115,7 @@ function buildCatalog(bundle: Uint8Array): Catalog {
     }
     bench.sort((a, b) => a.name.localeCompare(b.name));
     const tagNames = new Set(g.tags.name_string_ids.map(s));
-    const harvestTags = [
-        "attack",
-        "caster",
-        "life",
-        "defences",
-        "physical",
-        "fire",
-        "cold",
-        "lightning",
-        "chaos",
-        "speed",
-        "critical",
-    ]
-        .filter((key) => tagNames.has(key))
-        .map((key) => ({
-            key,
-            name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-        }));
+    const harvestTags = buildHarvestCatalog(tagNames);
     const influences = [
         "shaper",
         "elder",

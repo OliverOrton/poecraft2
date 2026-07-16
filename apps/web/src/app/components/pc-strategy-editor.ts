@@ -16,6 +16,11 @@ import {
     StrategyResult,
 } from "../engine-protocol";
 import { getEngine } from "../engine-service";
+import {
+    HARVEST_AUGMENT,
+    HARVEST_REFORGE,
+    harvestTagsFor,
+} from "../harvest-crafts";
 import { pinEconomy } from "../workspace/prices";
 import type { PinnedEconomy } from "../workspace/economy-service";
 import {
@@ -141,7 +146,8 @@ export class PcStrategyEditor extends HTMLElement {
     private fossilOptions: ComboOption[] = [];
     private benchOptions: ComboOption[] = [];
     private sessionBenchOptions: ComboOption[] = [];
-    private harvestOptions: ComboOption[] = [];
+    private harvestReforgeOptions: ComboOption[] = [];
+    private harvestAugmentOptions: ComboOption[] = [];
     private influenceOptions: ComboOption[] = [];
     private fossilNames = new Map<string, string>();
     private modifierOptions: ModifierFamilyOption[] = [];
@@ -226,10 +232,14 @@ export class PcStrategyEditor extends HTMLElement {
                 value: entry.key,
                 label: entry.name,
             }));
-            this.harvestOptions = this.catalog.harvestTags.map((entry) => ({
-                value: entry.key,
-                label: entry.name,
-            }));
+            this.harvestReforgeOptions = harvestTagsFor(
+                this.catalog.harvestTags,
+                HARVEST_REFORGE,
+            ).map((entry) => ({ value: entry.key, label: entry.name }));
+            this.harvestAugmentOptions = harvestTagsFor(
+                this.catalog.harvestTags,
+                HARVEST_AUGMENT,
+            ).map((entry) => ({ value: entry.key, label: entry.name }));
             this.influenceOptions = this.catalog.influences.map((entry) => ({
                 value: entry.key,
                 label: entry.name,
@@ -835,6 +845,10 @@ export class PcStrategyEditor extends HTMLElement {
         if (node.kind === "operation") {
             const type = node.operation?.type ?? "chaos";
             const params = node.operation?.params ?? {};
+            const harvestOptions =
+                type === "harvest_augment"
+                    ? this.harvestAugmentOptions
+                    : this.harvestReforgeOptions;
             return `${common}
                 <label class="pc-field">
                     <span>Operation</span>
@@ -877,7 +891,7 @@ export class PcStrategyEditor extends HTMLElement {
                         ? `<label class="pc-field">
                             <span>Harvest tag</span>
                             <select data-field="target-tag">
-                                ${this.harvestOptions
+                                ${harvestOptions
                                     .map(
                                         (option) =>
                                             `<option value="${escapeAttribute(option.value)}" ${option.value === params.target_tag ? "selected" : ""}>${escapeHtml(option.label)}</option>`,
@@ -1020,7 +1034,10 @@ export class PcStrategyEditor extends HTMLElement {
                                     type === "harvest_augment"
                                   ? {
                                         target_tag:
-                                            this.harvestOptions[0]?.value ?? "life",
+                                            (type === "harvest_augment"
+                                                ? this.harvestAugmentOptions
+                                                : this.harvestReforgeOptions)[0]
+                                                ?.value ?? "life",
                                     }
                                   : type === "harvest_resist"
                                     ? {

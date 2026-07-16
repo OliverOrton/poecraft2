@@ -518,6 +518,15 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
     assert.ok(catalog.fossils.length > 0);
     assert.ok(catalog.bench.length > 0);
     assert.ok(catalog.harvestTags.some((entry) => entry.key === "life"));
+    assert.equal(
+        catalog.harvestTags.find((entry) => entry.key === "defences")?.code,
+        3,
+    );
+    assert.equal(
+        catalog.harvestTags.find((entry) => entry.key === "elemental")?.code,
+        1,
+    );
+    assert.ok(!catalog.harvestTags.some((entry) => entry.key === "resistance"));
     assert.ok(catalog.influences.some((entry) => entry.key === "crusader"));
     assert.equal(
         catalog.influences.find((entry) => entry.key === "shaper")?.code,
@@ -1393,6 +1402,56 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
         total > 0.995 && total < 1.001,
         `probabilities sum to ${total}`,
     );
+
+    const focusedSolver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        slots: [
+            { family_mod_key: "LocalIncreasedEnergyShield11", min_tier: 1 },
+            { family_mod_key: "ColdResist8", min_tier: 1 },
+        ],
+        action_mode: "goal_relevant",
+        fossil_mode: "goal_relevant",
+    });
+    const focusedActions = await client.solverActions(focusedSolver);
+    const focusedFossils = focusedActions.filter((action) =>
+        action.id.startsWith("fossil:"),
+    );
+    assert.ok(focusedFossils.length > 0 && focusedFossils.length < 500);
+    assert.deepEqual(
+        Array.from(
+            new Set(
+                focusedFossils.map(
+                    (action) => action.id.split("+").length,
+                ),
+            ),
+        ).sort(),
+        [1, 2, 3, 4],
+        "product envelope must retain useful fossil leaders at every socket count",
+    );
+    assert.ok(
+        focusedFossils.some(
+            (action) =>
+                action.id ===
+                "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold+Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        ),
+        "focused ES/cold goal must retain the useful Frigid + Dense loadout",
+    );
+    for (const deferred of [
+        "bench:StrMasterItemGenerationCannotChangePrefixes",
+        "bench:DexMasterItemGenerationCannotChangeSuffixes",
+        "bench:StrIntMasterItemGenerationCanHaveMultipleCraftedMods",
+        "bench:IntMasterItemGenerationCannotRollAttackAffixes",
+        "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
+        "remove_crafted_modifiers",
+        "fracture",
+    ]) {
+        assert.ok(
+            !focusedActions.some((action) => action.id === deferred),
+            `${deferred} waits for its bounded S7.4 assembly route`,
+        );
+    }
+    await client.closeSolver(focusedSolver);
 
     await client.closeSolver(solver);
     await client.closeItem(item);

@@ -4,6 +4,7 @@
 #include "poecraft/simulator.h"
 
 #include "engine_internal.hpp"
+#include "harvest_crafts.generated.hpp"
 #include "handles_internal.hpp"
 
 #include <algorithm>
@@ -198,6 +199,15 @@ pc_result parse_action_request(
         const auto tag = d.tag_id_by_name.find(request.target_tag);
         if (tag == d.tag_id_by_name.end()) {
             set_error(error, PC_RESULT_NOT_FOUND, "target tag not found");
+            return PC_RESULT_NOT_FOUND;
+        }
+        const bool real_craft =
+            request.action_type == PC_ACTION_HARVEST_REFORGE
+                ? poecraft::harvest_reforge_tag_allowed(request.target_tag)
+                : poecraft::harvest_augment_tag_allowed(request.target_tag);
+        if (!real_craft) {
+            set_error(error, PC_RESULT_NOT_FOUND,
+                      "Harvest craft is not available for target tag");
             return PC_RESULT_NOT_FOUND;
         }
         out_action.target_tag_id = tag->second;

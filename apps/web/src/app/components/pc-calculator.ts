@@ -44,14 +44,22 @@ import {
 } from "../workspace/persistence";
 import { workspace } from "../workspace/registry";
 import {
-    getPrice,
+    getActionPrice,
+    getActionPriceResolution,
+    getFallbackPrice,
     onPricesChange,
     pinEconomy,
+    setFallbackPrice,
     setPrice,
 } from "../workspace/prices";
 import type { PinnedEconomy } from "../workspace/economy-service";
 import { influenceLabels } from "../item-display";
 import { buildCalculatorTargetModel } from "../calculator-goal-model";
+import {
+    HARVEST_AUGMENT,
+    HARVEST_REFORGE,
+    harvestTagsFor,
+} from "../harvest-crafts";
 import {
     estimatedActionSpendPerSuccess,
     formatChaosValue,
@@ -374,8 +382,9 @@ export class PcCalculator extends HTMLElement {
         }
         const goal = this.solverGoal();
         try {
-            // No `actions` subset: the full registry stays available so any
-            // selected action (including fossil loadouts) can be calculated.
+            // The engine owns bounded goal-relevant fossil synthesis. Keep a
+            // hand-selected loadout materialized for exact odds even when it
+            // falls outside the current automatic beam.
             this.solver = await this.client.openSolver(this.session, goal);
         } catch (error) {
             this.calcError =
@@ -385,19 +394,21 @@ export class PcCalculator extends HTMLElement {
         if (this.disposed) {
             return;
         }
-        if (this.pickerActions.length === 0) {
-            // The registry depends only on the session, so this list survives
-            // goal edits; fetched once per session for cost-key lookups.
-            this.pickerActions = await this.client.solverActions(this.solver, {
-                omitFossilCombos: true,
-            });
-        }
+        // Goal-relevant fossil actions change with the target, so the displayed
+        // price/action envelope is refreshed from this exact solver handle.
+        this.pickerActions = await this.client.solverActions(this.solver);
     }
 
-    private solverGoal(actions?: string[]): SolverGoal {
+    private solverGoal(
+        actions?: string[],
+        goalRelevantActions = false,
+    ): SolverGoal {
         return {
             version: "v1",
             rarity: this.goalRarity,
+            ...(goalRelevantActions
+                ? { action_mode: "goal_relevant" as const }
+                : {}),
             min_satisfied_slots: this.effectiveMinSatisfiedSlots(),
             slots: this.slots.map((slot) =>
                 slot.group
@@ -407,7 +418,16 @@ export class PcCalculator extends HTMLElement {
                           min_tier: slot.minTier,
                     },
             ),
-            ...(actions ? { actions } : {}),
+            ...(actions
+                ? { actions }
+                : {
+                      fossil_mode: "goal_relevant" as const,
+                      requested_fossil_actions: this.actionId.startsWith(
+                          "fossil:",
+                      )
+                          ? [this.actionId]
+                          : [],
+                  }),
         };
     }
 
@@ -564,6 +584,12 @@ export class PcCalculator extends HTMLElement {
 
     private async actionChanged(): Promise<void> {
         this.renderActionPanels();
+        if (
+            this.actionId.startsWith("fossil:") &&
+            !this.pickerActions.some((action) => action.id === this.actionId)
+        ) {
+            await this.openSolver();
+        }
         await this.recalc();
         await this.persist();
     }
@@ -622,7 +648,9 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async startSolve(): Promise<void> {
-        const pinned = pinEconomy();
+        const pinned = pinEconomy(
+            this.pickerActions.flatMap((action) => action.cost_keys),
+        );
         const pinnedPrice = (key: string): number | undefined =>
             pinned.snapshot.prices[key];
         const readiness = solvePriceReadiness(this.pickerActions, pinnedPrice);
@@ -653,16 +681,31 @@ export class PcCalculator extends HTMLElement {
         let economy = 0;
         let solveSolver = 0;
         try {
-            const actions = await this.client.solverActions(this.solver);
-            const candidateIds = pricedSolverActionIds(actions, pinnedPrice);
+            /* Build the native product envelope before selecting its priced
+             * subset. The ordinary Calculator handle stays exhaustive so
+             * exact single-action odds and craft panels do not lose actions
+             * merely because Solve uses a smaller abstraction. */
+            solveSolver = await this.client.openSolver(
+                this.session,
+                this.solverGoal(undefined, true),
+            );
+            const relevantActions =
+                await this.client.solverActions(solveSolver);
+            await this.client.closeSolver(solveSolver);
+            solveSolver = 0;
+            const candidateIds = pricedSolverActionIds(
+                relevantActions,
+                pinnedPrice,
+            );
             if (candidateIds.length === 0) {
                 throw new Error("No priced solver actions are available.");
             }
             this.solveCandidateActions = candidateIds.length;
-            this.solveExcludedActions = actions.length - candidateIds.length;
+            this.solveExcludedActions =
+                relevantActions.length - candidateIds.length;
             solveSolver = await this.client.openSolver(
                 this.session,
-                this.solverGoal(candidateIds),
+                this.solverGoal(candidateIds, true),
             );
             economy = await this.client.loadEconomy(pinned.snapshot);
             const result = await this.client.solverSolve(
@@ -691,6 +734,14 @@ export class PcCalculator extends HTMLElement {
             }
             result.economy = pinned.identity;
             this.solveSummary = result;
+            if (!result.converged) {
+                this.solveError = {
+                    heading: "Solve did not converge.",
+                    detail:
+                        "The incomplete policy was not compiled. Missing prices remain excluded; adjust the goal or action prices and retry.",
+                };
+                return;
+            }
             try {
                 const compiled = await this.client.solverCompileStrategy(
                     solveSolver,
@@ -1151,6 +1202,14 @@ export class PcCalculator extends HTMLElement {
         )
             ? selected("essence-key")
             : (essenceTiers[0]?.key ?? "");
+        const harvestReforgeTags = harvestTagsFor(
+            this.catalog.harvestTags,
+            HARVEST_REFORGE,
+        );
+        const harvestAugmentTags = harvestTagsFor(
+            this.catalog.harvestTags,
+            HARVEST_AUGMENT,
+        );
         const panel = (() => {
             switch (this.activeCraftPanel) {
                 case "basic":
@@ -1190,14 +1249,25 @@ export class PcCalculator extends HTMLElement {
                 case "harvest":
                     return `
                         <div class="pc-mechanic-row">
-                            <select data-mechanic="harvest-tag">${options(
-                                this.catalog.harvestTags,
+                            <label>
+                                <span>Reforge</span>
+                                <select data-mechanic="harvest-reforge-tag">${options(
+                                harvestReforgeTags,
                                 selected(
-                                    "harvest-tag",
-                                    this.catalog.harvestTags[0]?.key,
+                                    "harvest-reforge-tag",
+                                    harvestReforgeTags[0]?.key,
                                 ),
-                            )}</select>
+                            )}</select></label>
                             <button data-derive-action="harvest_reforge">Reforge</button>
+                            <label>
+                                <span>Augment</span>
+                                <select data-mechanic="harvest-augment-tag">${options(
+                                harvestAugmentTags,
+                                selected(
+                                    "harvest-augment-tag",
+                                    harvestAugmentTags[0]?.key,
+                                ),
+                            )}</select></label>
                             <button data-derive-action="harvest_augment">Augment</button>
                         </div>
                         <div class="pc-mechanic-row">
@@ -1405,9 +1475,9 @@ export class PcCalculator extends HTMLElement {
             case "essence":
                 return value("essence-key") ? `essence:${value("essence-key")}` : "";
             case "harvest_reforge":
-                return `harvest_reforge:${value("harvest-tag")}`;
+                return `harvest_reforge:${value("harvest-reforge-tag")}`;
             case "harvest_augment":
-                return `harvest_augment:${value("harvest-tag")}`;
+                return `harvest_augment:${value("harvest-augment-tag")}`;
             case "harvest_resist":
                 return `harvest_resist:${value("resist-from")}:${value("resist-to")}`;
             case "eldritch_ember":
@@ -1426,7 +1496,8 @@ export class PcCalculator extends HTMLElement {
     private rederivedActionId(mechanic: string): string {
         const kindsByMechanic: Record<string, string[]> = {
             "essence-key": ["essence"],
-            "harvest-tag": ["harvest_reforge", "harvest_augment"],
+            "harvest-reforge-tag": ["harvest_reforge"],
+            "harvest-augment-tag": ["harvest_augment"],
             "resist-from": ["harvest_resist"],
             "resist-to": ["harvest_resist"],
             "eldritch-tier": ["eldritch_ember", "eldritch_ichor"],
@@ -1542,11 +1613,16 @@ export class PcCalculator extends HTMLElement {
     private renderSolvePanel(): void {
         const host = this.querySelector<HTMLElement>(".pc-calc-solve-panel");
         if (!host) return;
-        const readiness = solvePriceReadiness(this.pickerActions, getPrice);
+        const readiness = solvePriceReadiness(
+            this.pickerActions,
+            getActionPrice,
+        );
         const priceTable = presentExpectedConsumption(
             readiness.costKeys.map((key) => ({ key, quantity: 1 })),
-            getPrice,
+            getActionPrice,
+            (key) => getActionPriceResolution(key).source,
         );
+        const fallbackPrice = getFallbackPrice();
         const canStart =
             Boolean(this.solver && this.item && this.slots.length) &&
             readiness.pricedActions > 0 &&
@@ -1563,11 +1639,15 @@ export class PcCalculator extends HTMLElement {
                 </section>`
                 : "";
         const summary = this.solveSummary;
+        const finiteSolveValue =
+            summary !== null &&
+            Number.isFinite(summary.start_value) &&
+            summary.start_value < 1e12;
         const resultMarkup = summary
             ? `<section class="pc-calc-solve-result">
                 <div class="pc-calc-solve-headline">
-                    <span>Expected cost</span>
-                    <strong>${formatChaosValue(summary.start_value)}</strong>
+                    <span>${summary.converged ? "Expected cost" : "Current cost bound"}</span>
+                    <strong>${finiteSolveValue ? formatChaosValue(summary.start_value) : "Unavailable"}</strong>
                 </div>
                 <div class="pc-calc-solve-state ${summary.converged ? "is-success" : "is-warning"}">
                     ${summary.converged ? "Converged" : "Did not converge"}
@@ -1632,8 +1712,14 @@ export class PcCalculator extends HTMLElement {
                 readiness.costKeys.length
                     ? `<details class="pc-calc-solve-price-table">
                         <summary>Action price table · ${readiness.missingKeys.length.toLocaleString()} missing</summary>
+                        <label class="pc-calc-price-fallback">
+                            <span>Unquoted real-action fallback</span>
+                            <input type="number" min="0" step="any" data-price-fallback
+                                value="${fallbackPrice ?? ""}" placeholder="Disabled">
+                            <small>Must be greater than zero. Used only for engine-listed cost keys after overrides and certified recipes.</small>
+                        </label>
                         <div class="pc-calc-solve-price-rows">${priceTable.rowsHtml}</div>
-                        <p class="pc-help">Prices are shared with Calculator and Strategy Builder. Unpriced actions are excluded from Solve.</p>
+                        <p class="pc-help">Every row discloses its source. Clearing an override reveals its recipe, quote, or fallback; keys still missing are excluded.</p>
                     </details>`
                     : ""
             }
@@ -1649,6 +1735,12 @@ export class PcCalculator extends HTMLElement {
                 });
             },
         );
+        host.querySelector<HTMLInputElement>("[data-price-fallback]")
+            ?.addEventListener("change", (event) => {
+                const input = event.currentTarget as HTMLInputElement;
+                const value = Number(input.value);
+                setFallbackPrice(input.value === "" ? null : value);
+            });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {
@@ -1704,7 +1796,8 @@ export class PcCalculator extends HTMLElement {
         }
         const priced = presentExpectedConsumption(
             Array.from(counts, ([key, quantity]) => ({ key, quantity })),
-            getPrice,
+            getActionPrice,
+            (key) => getActionPriceResolution(key).source,
         );
         const spendPerSuccess = estimatedActionSpendPerSuccess(
             priced.total,

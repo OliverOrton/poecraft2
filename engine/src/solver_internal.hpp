@@ -159,17 +159,24 @@ struct ActionDescriptor {
 struct ActionRegistry {
     std::vector<ActionDescriptor> actions;
     std::unordered_map<std::string, std::uint32_t> index_by_id;
+    std::uint32_t goal_relevant_actions_pruned = 0;
     std::uint32_t fossil_loadouts_possible = 0;
     std::uint32_t fossil_loadouts_generated = 0;
     std::uint32_t fossil_loadouts_deferred = 0;
     bool fossil_generation_lazy = false;
+    bool fossil_generation_goal_relevant = false;
 };
 
 struct ActionRegistryBuildOptions {
     /* Full enumeration remains available for explicit exhaustive diagnostics.
-     * Normal goal-selected solves provide only the fossil ids they request. */
+     * Explicit action envelopes provide only the fossil ids they request.
+     * Product solves ask the engine for a bounded goal-relevant beam instead
+     * of enumerating the complete 1-4 fossil powerset. */
     bool exhaustive_fossils = true;
+    bool goal_relevant_fossils = false;
+    bool goal_relevant_actions = false;
     std::vector<std::string> requested_fossil_action_ids;
+    std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
 };
 
 // --- solver-only planner operators -------------------------------------------
@@ -592,6 +599,7 @@ struct ActionControlSummary {
     std::uint32_t registry_actions = 0;
     std::uint32_t included_primitives = 0;
     std::uint32_t dependency_primitives = 0;
+    std::uint32_t pruned_outside_goal_relevance = 0;
     std::uint32_t pruned_outside_envelope = 0;
     std::uint32_t deferred_fossil_loadouts = 0;
 };

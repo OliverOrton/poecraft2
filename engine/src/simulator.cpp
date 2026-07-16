@@ -1,4 +1,5 @@
 #include "engine_internal.hpp"
+#include "harvest_crafts.generated.hpp"
 #include "json.hpp"
 #include "poecraft/session.h"
 
@@ -568,6 +569,12 @@ void compile_operation(
         const auto it = data.tag_id_by_name.find(tag);
         if (it == data.tag_id_by_name.end())
             invalid("unknown Harvest tag: " + tag);
+        const bool real_craft =
+            action_type == ActionType::HarvestReforge
+                ? harvest_reforge_tag_allowed(tag)
+                : harvest_augment_tag_allowed(tag);
+        if (!real_craft)
+            invalid("unavailable Harvest craft tag: " + tag);
         node.action.target_tag_id = it->second;
         node.price_keys = {type + ":" + tag};
     } else if (action_type == ActionType::HarvestResist) {

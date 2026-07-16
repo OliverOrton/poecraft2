@@ -30,6 +30,11 @@ extern "C" {
  *       {"group": "<group key>", "min_tier": 0},
  *       {"family_mod_key": "<mod key>", "min_tier": 1}
  *     ],
+ *     "action_mode": "goal_relevant", // optional product action control
+ *     "fossil_mode": "goal_relevant", // optional bounded product mode
+ *     "requested_fossil_actions": [    // optional extra materialized ids
+ *       "fossil:<key>+<key>"
+ *     ],
  *     "actions": ["chaos", "exalt", "restart"],  // optional primitives
  *     "options": [                  // optional fixed solver programs
  *       {"type":"scour_alchemy"},
@@ -37,11 +42,11 @@ extern "C" {
  *        "action":"eldritch_exalt",
  *        "setup":["eldritch_ichor:1","eldritch_ember:2"]},
  *       {"type":"protected_side","side":"suffix",
- *        "action":"harvest_reforge:defence"},
+ *        "action":"harvest_reforge:defences"},
  *       {"type":"multimod_finish",
  *        "bench_crafts":["bench:<mod key>","bench:<mod key>"]}
  *     ]
- *   }                               // omitted actions = full registry;
+ *   }                               // omitted actions = generated registry;
  *                                   // [] = options only
  *
  * Costs are currency-quantity vectors dotted with a pc_economy price table

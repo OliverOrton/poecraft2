@@ -22,8 +22,9 @@ bounded Bellman units now provide the first performance layer. Oliver approved
 the permanent corpus and numeric criteria below on 2026-07-15. The fresh
 pre-optimization full-corpus command was recorded as a timeout when its native
 report had not completed after roughly 49 minutes, and Oliver directed the
-phase to proceed to performance work. S7.4 is next. Trade leaves, corruption,
-Hinekora's Lock, imprints, recombinators, and other mechanic expansion remain parked in
+phase to proceed to performance work. The S7.2R product repair is complete and
+S7.4 is next. Trade leaves, corruption, Hinekora's Lock,
+imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 ## Outcome
@@ -528,10 +529,35 @@ The final one-mod and ordinary native/WASM reports agree on statuses, structural
 counts, compiled graphs, values, and 10,000-run outcomes. Cycle-heavy endgame
 work remains too slow and is intentionally left for S7.5.
 
+### S7.2R - Product action and price repair
+
+Status: complete in the S7.2R product-action/price-repair commit. Calculator now requests engine-owned,
+goal-relevant 1-4 fossil generation so useful loadouts remain available without
+passing the full fossil powerset. Remove fake tag-derived Harvest actions and
+share one owner-approved real-craft allowlist with economy recipe keys. For a
+real action with no market quote, resolve price in this order: explicit
+per-action override, certified derived recipe, then an explicit user-set
+non-zero fallback; disclose and pin the source, and never price invalid actions
+or silently treat a missing price as free.
+
+Checkpoint result: the displayed and solved action envelopes agree, a focused
+multi-fossil craft retains its useful loadout without registry explosion, fake
+Harvest crafts are absent, and genuinely unquoted real actions use the visible
+fallback policy or remain explicitly excluded. The follow-up product envelope
+is applied natively before abstract-layout construction: the Calculator keeps
+its exhaustive odds catalog, Solve retains direct goal mechanics, and missing
+prices remove only their individual actions. Standalone metamod, crafted-mod
+cleanup, and Fracture assembly primitives remain in the exhaustive catalog but
+wait for the bounded protected/retry routes specified by S7.4. Pinned Mirage
+replays converged through 13 priced actions with five missing prices for a
+one-slot goal (49 states) and three missing prices for the reported two-prefix
+goal (109 states). Incomplete solves are not compiled and the internal infinity
+sentinel is not presented as an expected cost.
+
 ### S7.3 - Fixed solver options
 
-Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 is now
-also complete; S7.4 is the next boundary.
+Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 and
+S7.2R are also complete; S7.4 is the next boundary.
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.
@@ -653,9 +679,9 @@ Recorded 2026-07-15:
    value impact if it reports the discarded delta and honest optimality status;
    it is not S7.1 work or an S7 completion requirement.
 
-No owner approval remains before S7.4. The permanent corpus and numeric criteria
-are approved. Ask Oliver only if later implementation reveals a new mechanic
-ambiguity.
+The permanent corpus, numeric criteria, and manifest-backed real Harvest
+allowlist are implemented and owner-authoritative. S7.4 is next. Ask Oliver
+only if implementation reveals a new mechanic ambiguity.
 
 Mechanic answers come from Oliver and are written into focused fixtures before
 implementation. Agents must not research or guess them.

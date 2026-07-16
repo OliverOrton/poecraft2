@@ -54,8 +54,11 @@ compact states, interned sparse transition rows, and bounded Bellman work now
 control the first performance pass. At Oliver's direction, S7.3 was implemented
 ahead of S7.2: explicitly selected fixed Scour/Alchemy, Eldritch side-intent,
 protected-side, and deterministic Multimod options use price-independent exact
-kernels and compile into ordinary primitive Strategy Board subgraphs. S7.4 is
-the exact next boundary and has not begun.
+kernels and compile into ordinary primitive Strategy Board subgraphs. S7.2R is
+complete: Calculator uses bounded engine-owned goal-relevant fossil generation,
+Harvest crafts share the real economy-recipe allowlist, and genuinely unquoted
+engine actions can use a visible pinned non-zero fallback. S7.4 is next and has
+not begun.
 Oliver approved the permanent real craft corpus and the performance, safety,
 responsiveness, and simulator-verification criteria on 2026-07-15. The old
 any-tier two-mod row remains historical. The requested fresh pre-S7.2 full-corpus
@@ -87,8 +90,8 @@ secrets.
    compression, and a final native/WASM benchmark plus compiled-strategy
    simulator gate. S7.0 baseline/telemetry, S7.1 correctness/state substrate,
    S7.2 action control/storage/first performance work, and the out-of-sequence
-   S7.3 fixed-option layer are complete. S7.4 renewal and observation-aware
-   options are the exact next boundary.
+   S7.3 fixed-option layer and the S7.2R product action/price repair are
+   complete. S7.4 renewal and observation-aware options are next.
    [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
 2. Parked mechanic track M1-M5 after S7: trade leaves/corruption/finishers,
    Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an

@@ -1,6 +1,9 @@
 #include "solver_internal.hpp"
 
+#include "harvest_crafts.generated.hpp"
+
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <string>
 #include <vector>
@@ -43,6 +46,398 @@ bool session_tag_nonempty(const SessionImpl& session, std::uint32_t tag) {
         if (word != 0) return true;
     }
     return false;
+}
+
+bool mod_has_tag(
+    const SessionImpl& session,
+    const std::uint32_t mod,
+    const std::uint32_t tag) {
+    if (mod >= session.mod_count) return false;
+    for (std::uint32_t row = session.class_offsets[mod];
+         row < session.class_offsets[mod + 1]; ++row) {
+        if (session.class_tag_ids[row] == tag) return true;
+    }
+    return false;
+}
+
+bool goal_contains_mod_family(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const std::uint32_t mod) {
+    if (mod >= session.mod_count) return false;
+    return std::any_of(
+        options.fossil_goal_mod_ids.begin(),
+        options.fossil_goal_mod_ids.end(),
+        [&](const std::vector<std::uint32_t>& slot) {
+            return std::any_of(
+                slot.begin(), slot.end(), [&](const std::uint32_t goal_mod) {
+                    return goal_mod == mod ||
+                           (goal_mod < session.mod_count &&
+                            session.family_id[goal_mod] ==
+                                session.family_id[mod]);
+                });
+        });
+}
+
+bool goal_has_tag(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const std::uint32_t tag) {
+    return std::any_of(
+        options.fossil_goal_mod_ids.begin(),
+        options.fossil_goal_mod_ids.end(),
+        [&](const std::vector<std::uint32_t>& slot) {
+            return std::any_of(
+                slot.begin(), slot.end(), [&](const std::uint32_t goal_mod) {
+                    return mod_has_tag(session, goal_mod, tag);
+                });
+        });
+}
+
+bool goal_has_influence(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const int influence) {
+    return std::any_of(
+        options.fossil_goal_mod_ids.begin(),
+        options.fossil_goal_mod_ids.end(),
+        [&](const std::vector<std::uint32_t>& slot) {
+            return std::any_of(
+                slot.begin(), slot.end(), [&](const std::uint32_t goal_mod) {
+                    return goal_mod < session.influence_code.size() &&
+                           session.influence_code[goal_mod] == influence;
+                });
+        });
+}
+
+bool action_is_goal_relevant(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    const ActionDescriptor& action) {
+    if (action.synthetic) return true;
+    switch (action.params.type) {
+    case ActionType::Essence:
+        return action.params.essence_index <
+                   session.essence_guaranteed_mod_ids.size() &&
+               goal_contains_mod_family(
+                   session, options,
+                   session.essence_guaranteed_mod_ids[
+                       action.params.essence_index]);
+    case ActionType::Fossil:
+        return true;
+    case ActionType::Bench:
+        /* Direct goal crafts can terminate a route. Structural metamods wait
+         * for the bounded S7.4 protected/repeat options instead of entering
+         * the unrestricted product MDP as standalone flag setters. */
+        return action.params.mod_id < session.metamod_type.size() &&
+               goal_contains_mod_family(
+                   session, options, action.params.mod_id);
+    case ActionType::VeiledChaos:
+    case ActionType::VeiledExalt:
+    case ActionType::Unveil:
+    case ActionType::EldritchEmber:
+    case ActionType::EldritchIchor:
+    case ActionType::EldritchExalt:
+    case ActionType::EldritchChaos:
+    case ActionType::EldritchAnnul:
+        /* These mechanics cannot directly satisfy the explicit natural-mod
+         * goal slots accepted by the current product solver. Keeping their
+         * setup flags in every solve materially widens the abstract state. */
+        return false;
+    case ActionType::HarvestReforge:
+    case ActionType::HarvestAugment:
+    case ActionType::HarvestResist:
+        return goal_has_tag(session, options, action.params.target_tag_id);
+    case ActionType::InfluenceExalt:
+        return goal_has_influence(
+            session, options, action.params.influence_code);
+    case ActionType::Fracture:
+    case ActionType::RemoveCraftedModifiers:
+        /* Metamod setup/cleanup and Fracture preparation need the bounded
+         * observation-aware assembly routes specified by S7.4. Exposing the
+         * unfinished primitives to the product MDP creates flag/tag state
+         * combinations that exhaust the normal state cap before iteration.
+         * They remain available in the exhaustive Calculator registry. */
+        return false;
+    default:
+        /* General currency and restart are structural ways to reach any
+         * explicit goal. */
+        return true;
+    }
+}
+
+void retain_goal_relevant_actions(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options,
+    ActionRegistry& registry) {
+    if (!options.goal_relevant_actions) return;
+    const std::size_t before = registry.actions.size();
+    registry.actions.erase(
+        std::remove_if(
+            registry.actions.begin(), registry.actions.end(),
+            [&](const ActionDescriptor& action) {
+                return !action_is_goal_relevant(session, options, action);
+            }),
+        registry.actions.end());
+    registry.goal_relevant_actions_pruned =
+        static_cast<std::uint32_t>(before - registry.actions.size());
+    registry.index_by_id.clear();
+    for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
+        registry.index_by_id.emplace(registry.actions[index].id, index);
+    }
+}
+
+struct GoalRelevantFossilCandidate {
+    std::vector<std::uint32_t> combo;
+    std::vector<long double> slot_shares;
+    long double quality = 0.0L;
+    bool useful = false;
+};
+
+GoalRelevantFossilCandidate score_fossil_combo(
+    const SessionImpl& session,
+    const std::vector<std::vector<std::uint32_t>>& goal_mods,
+    std::vector<std::uint32_t> combo,
+    const std::vector<long double>& baseline) {
+    const DataImpl& data = *session.data;
+    GoalRelevantFossilCandidate candidate;
+    candidate.combo = std::move(combo);
+    candidate.slot_shares.assign(goal_mods.size(), 0.0L);
+    std::vector<long double> goal_weights(goal_mods.size(), 0.0L);
+    long double total_weight = 0.0L;
+    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+        if (!pc_bitset_test(session.normal_random_roll_mask.data(), mod) ||
+            session.base_roll_weight[mod] == 0) {
+            continue;
+        }
+        long double multiplier = 1.0L;
+        for (const std::uint32_t fossil : candidate.combo) {
+            for (std::uint32_t row = data.fossil_weight_offsets[fossil];
+                 row < data.fossil_weight_offsets[fossil + 1]; ++row) {
+                const int kind = data.fossil_weight_kind_codes[row];
+                if ((kind != data.fossil_weight_negative_code &&
+                     kind != data.fossil_weight_positive_code) ||
+                    !mod_has_tag(
+                        session, mod, data.fossil_weight_tag_ids[row])) {
+                    continue;
+                }
+                const std::int32_t value = data.fossil_weight_values[row];
+                if (value <= 0) {
+                    multiplier = 0.0L;
+                    break;
+                }
+                multiplier *= static_cast<long double>(value) / 100.0L;
+            }
+            if (multiplier == 0.0L) break;
+        }
+        const long double weight =
+            static_cast<long double>(session.base_roll_weight[mod]) *
+            multiplier;
+        total_weight += weight;
+        for (std::size_t slot = 0; slot < goal_mods.size(); ++slot) {
+            if (std::find(goal_mods[slot].begin(), goal_mods[slot].end(), mod) !=
+                goal_mods[slot].end()) {
+                goal_weights[slot] += weight;
+            }
+        }
+    }
+    if (total_weight <= 0.0L) {
+        candidate.quality = -std::numeric_limits<long double>::infinity();
+        return candidate;
+    }
+    bool direct_goal = false;
+    for (std::size_t slot = 0; slot < goal_mods.size(); ++slot) {
+        candidate.slot_shares[slot] = goal_weights[slot] / total_weight;
+        for (const std::uint32_t fossil : candidate.combo) {
+            const auto direct_contains = [&](const auto& lists) {
+                if (fossil >= lists.size()) return false;
+                return std::any_of(
+                    lists[fossil].begin(), lists[fossil].end(),
+                    [&](const std::uint32_t mod) {
+                        return std::find(
+                                   goal_mods[slot].begin(),
+                                   goal_mods[slot].end(), mod) !=
+                               goal_mods[slot].end();
+                    });
+            };
+            direct_goal = direct_goal ||
+                          direct_contains(session.fossil_added_mod_ids) ||
+                          direct_contains(session.fossil_forced_mod_ids);
+        }
+        const long double before =
+            slot < baseline.size() ? baseline[slot] : 0.0L;
+        if (candidate.slot_shares[slot] > before + 1e-18L) {
+            candidate.useful = true;
+        }
+        const long double floor = 1e-24L;
+        candidate.quality +=
+            std::log(std::max(candidate.slot_shares[slot], floor)) -
+            std::log(std::max(before, floor));
+    }
+    if (direct_goal) {
+        candidate.useful = true;
+        candidate.quality += 32.0L;
+    }
+    return candidate;
+}
+
+std::vector<std::vector<std::uint32_t>> goal_relevant_fossil_combos(
+    const SessionImpl& session,
+    const std::vector<std::uint32_t>& fossils,
+    const ActionRegistryBuildOptions& options) {
+    if (options.fossil_goal_mod_ids.empty()) return {};
+    const GoalRelevantFossilCandidate baseline_candidate =
+        score_fossil_combo(
+            session, options.fossil_goal_mod_ids, {},
+            std::vector<long double>(
+                options.fossil_goal_mod_ids.size(), 0.0L));
+    const std::vector<long double> baseline = baseline_candidate.slot_shares;
+    constexpr std::size_t kBeamWidth = 96;
+    constexpr std::size_t kPerSlotLeaders = 8;
+    constexpr std::size_t kEmittedAggregateLeaders = 1;
+    constexpr std::size_t kEmittedPerSlotLeaders = 1;
+    std::vector<GoalRelevantFossilCandidate> beam(1);
+    std::vector<std::vector<std::uint32_t>> result;
+    std::vector<std::uint32_t> best_single_by_slot(
+        options.fossil_goal_mod_ids.size(), kNoId);
+    for (std::size_t size = 1; size <= PC_MAX_FOSSILS_PER_ACTION; ++size) {
+        std::vector<GoalRelevantFossilCandidate> expanded;
+        expanded.reserve(beam.size() * fossils.size());
+        for (const GoalRelevantFossilCandidate& parent : beam) {
+            std::size_t begin = 0;
+            if (!parent.combo.empty()) {
+                begin = static_cast<std::size_t>(
+                    std::upper_bound(
+                        fossils.begin(), fossils.end(), parent.combo.back()) -
+                    fossils.begin());
+            }
+            for (std::size_t position = begin; position < fossils.size();
+                 ++position) {
+                std::vector<std::uint32_t> combo = parent.combo;
+                combo.push_back(fossils[position]);
+                expanded.push_back(score_fossil_combo(
+                    session, options.fossil_goal_mod_ids,
+                    std::move(combo), baseline));
+            }
+        }
+        expanded.erase(
+            std::remove_if(
+                expanded.begin(), expanded.end(),
+                [](const GoalRelevantFossilCandidate& candidate) {
+                    return !std::isfinite(candidate.quality);
+                }),
+            expanded.end());
+        const auto better = [](const GoalRelevantFossilCandidate& left,
+                               const GoalRelevantFossilCandidate& right) {
+            if (left.quality != right.quality) {
+                return left.quality > right.quality;
+            }
+            return left.combo < right.combo;
+        };
+        std::sort(expanded.begin(), expanded.end(), better);
+        std::vector<GoalRelevantFossilCandidate> next;
+        const auto retain = [&](const GoalRelevantFossilCandidate& value) {
+            if (next.size() >= kBeamWidth) return;
+            if (std::none_of(
+                    next.begin(), next.end(),
+                    [&](const GoalRelevantFossilCandidate& existing) {
+                        return existing.combo == value.combo;
+                    })) {
+                next.push_back(value);
+            }
+        };
+        /* Preserve leaders for every goal slot before filling by aggregate
+         * quality. This keeps focused Dense+element combinations available
+         * without enumerating the complete fossil powerset. */
+        for (std::size_t slot = 0;
+             slot < options.fossil_goal_mod_ids.size(); ++slot) {
+            std::vector<const GoalRelevantFossilCandidate*> leaders;
+            leaders.reserve(expanded.size());
+            for (const auto& candidate : expanded) {
+                leaders.push_back(&candidate);
+            }
+            std::sort(
+                leaders.begin(), leaders.end(),
+                [slot](const auto* left, const auto* right) {
+                    if (left->slot_shares[slot] !=
+                        right->slot_shares[slot]) {
+                        return left->slot_shares[slot] >
+                               right->slot_shares[slot];
+                    }
+                    return left->combo < right->combo;
+                });
+            for (std::size_t i = 0;
+                 i < std::min(kPerSlotLeaders, leaders.size()); ++i) {
+                retain(*leaders[i]);
+            }
+        }
+        for (const auto& candidate : expanded) retain(candidate);
+        /* The wider beam is search state, not product action output. Preserve
+         * the strongest aggregate signatures plus focused leaders for every
+         * goal slot at each socket count; emitting the whole beam recreates a
+         * smaller powerset and widens the abstract tag layout enough to exhaust
+         * the normal product state cap before the first state is expanded. */
+        const auto emit_result = [&](const GoalRelevantFossilCandidate& value) {
+            if (!value.useful) return;
+            if (std::find(result.begin(), result.end(), value.combo) ==
+                result.end()) {
+                result.push_back(value.combo);
+            }
+        };
+        for (std::size_t slot = 0;
+             slot < options.fossil_goal_mod_ids.size(); ++slot) {
+            std::vector<const GoalRelevantFossilCandidate*> leaders;
+            leaders.reserve(next.size());
+            for (const auto& candidate : next) leaders.push_back(&candidate);
+            std::sort(
+                leaders.begin(), leaders.end(),
+                [slot](const auto* left, const auto* right) {
+                    if (left->slot_shares[slot] !=
+                        right->slot_shares[slot]) {
+                        return left->slot_shares[slot] >
+                               right->slot_shares[slot];
+                    }
+                    return left->combo < right->combo;
+                });
+            for (std::size_t i = 0;
+                 i < std::min(kEmittedPerSlotLeaders, leaders.size()); ++i) {
+                emit_result(*leaders[i]);
+            }
+            if (size == 1 && !leaders.empty() &&
+                !leaders.front()->combo.empty()) {
+                best_single_by_slot[slot] = leaders.front()->combo.front();
+            }
+        }
+        for (std::size_t i = 0;
+             i < std::min(kEmittedAggregateLeaders, next.size()); ++i) {
+            emit_result(next[i]);
+        }
+        beam = std::move(next);
+        if (beam.empty()) break;
+    }
+    /* Preserve the direct cross-slot loadout assembled from each slot's best
+     * singleton. This keeps combinations such as Frigid + Dense even when a
+     * different two-socket signature wins the aggregate beam score. */
+    std::vector<std::uint32_t> cross_slot;
+    for (const std::uint32_t fossil : best_single_by_slot) {
+        if (fossil != kNoId) cross_slot.push_back(fossil);
+    }
+    std::sort(cross_slot.begin(), cross_slot.end());
+    cross_slot.erase(
+        std::unique(cross_slot.begin(), cross_slot.end()), cross_slot.end());
+    if (!cross_slot.empty() &&
+        cross_slot.size() <= PC_MAX_FOSSILS_PER_ACTION) {
+        GoalRelevantFossilCandidate cross_candidate = score_fossil_combo(
+            session, options.fossil_goal_mod_ids, std::move(cross_slot),
+            baseline);
+        if (cross_candidate.useful &&
+            std::find(
+                result.begin(), result.end(), cross_candidate.combo) ==
+                result.end()) {
+            result.push_back(std::move(cross_candidate.combo));
+        }
+    }
+    return result;
 }
 
 void add(ActionRegistry& registry, ActionDescriptor descriptor) {
@@ -187,12 +582,14 @@ void add_fossils(
         choose(fossils.size(), 3) + choose(fossils.size(), 4);
     registry.fossil_loadouts_possible = static_cast<std::uint32_t>(possible);
     registry.fossil_generation_lazy = !options.exhaustive_fossils;
+    registry.fossil_generation_goal_relevant =
+        options.goal_relevant_fossils;
 
     /* Every emitted 1-4 fossil resonator loadout is a distinct action. In
-     * reduced mode only explicitly requested signatures are materialized;
-     * the remaining combinations stay diagnostic deferred actions rather
-     * than allocating 15k descriptors before layout construction. */
+     * reduced mode explicit signatures and/or the bounded goal-relevant beam
+     * are materialized; everything else remains diagnostically deferred. */
     const auto emit = [&](const std::vector<std::uint32_t>& combo) {
+        if (combo.empty()) return;
         ActionDescriptor d;
         d.params.type = ActionType::Fossil;
         d.params.fossil_indices = combo;
@@ -204,12 +601,6 @@ void add_fossils(
         for (std::uint32_t fossil : combo) {
             keys.push_back(data.string_at(data.fossil_key_sids[fossil]));
             names.push_back(data.string_at(data.fossil_name_sids[fossil]));
-            const std::uint32_t begin = data.fossil_weight_offsets[fossil];
-            const std::uint32_t end = data.fossil_weight_offsets[fossil + 1];
-            for (std::uint32_t row = begin; row < end; ++row) {
-                d.discriminating_tag_ids.push_back(
-                    data.fossil_weight_tag_ids[row]);
-            }
         }
         std::sort(keys.begin(), keys.end());
         d.id = "fossil:";
@@ -218,17 +609,16 @@ void add_fossils(
             d.id += keys[i];
             d.cost_keys.push_back("fossil:" + keys[i]);
         }
+        if (registry.index_by_id.contains(d.id)) return;
         d.cost_keys.push_back("resonator:" + std::to_string(keys.size()));
         d.display_name = names[0];
         for (std::size_t i = 1; i < names.size(); ++i) {
             d.display_name += " + " + names[i];
         }
-        std::sort(d.discriminating_tag_ids.begin(),
-                  d.discriminating_tag_ids.end());
-        d.discriminating_tag_ids.erase(
-            std::unique(d.discriminating_tag_ids.begin(),
-                        d.discriminating_tag_ids.end()),
-            d.discriminating_tag_ids.end());
+        /* Fossil tags change the pool used by this reforge; they do not make
+         * an already-rolled junk modifier decision-relevant to a later
+         * reforge. Adding every weight tag to the state discriminator widens
+         * the junk partition without preserving any future predicate. */
         add(registry, std::move(d));
         ++registry.fossil_loadouts_generated;
     };
@@ -249,6 +639,7 @@ void add_fossils(
             if (!id.starts_with("fossil:")) continue;
             std::vector<std::uint32_t> combo;
             std::size_t begin = 7;
+            bool valid = begin < id.size();
             while (begin <= id.size()) {
                 const std::size_t end = id.find('+', begin);
                 const std::string key = id.substr(
@@ -256,7 +647,10 @@ void add_fossils(
                                ? std::string::npos
                                : end - begin);
                 const auto found = fossil_by_key.find(key);
-                if (found == fossil_by_key.end()) break;
+                if (key.empty() || found == fossil_by_key.end()) {
+                    valid = false;
+                    break;
+                }
                 combo.push_back(found->second);
                 if (end == std::string::npos) {
                     begin = id.size() + 1;
@@ -264,10 +658,17 @@ void add_fossils(
                 }
                 begin = end + 1;
             }
-            if (!combo.empty() && combo.size() <= PC_MAX_FOSSILS_PER_ACTION) {
+            if (valid && !combo.empty() &&
+                combo.size() <= PC_MAX_FOSSILS_PER_ACTION) {
                 std::sort(combo.begin(), combo.end());
                 combo.erase(std::unique(combo.begin(), combo.end()),
                             combo.end());
+                if (combo.size() <= PC_MAX_FOSSILS_PER_ACTION) emit(combo);
+            }
+        }
+        if (options.goal_relevant_fossils) {
+            for (const auto& combo :
+                 goal_relevant_fossil_combos(session, fossils, options)) {
                 emit(combo);
             }
         }
@@ -372,47 +773,46 @@ void add_veiled(const SessionImpl& session, ActionRegistry& registry) {
 
 void add_harvest(const SessionImpl& session, ActionRegistry& registry) {
     const DataImpl& data = *session.data;
-    /* One reforge/augment action per classification tag with session
-     * members; the engine executes arbitrary tags, the solver plans over
-     * the ones that exist here. */
-    for (std::uint32_t tag = 0;
-         tag < static_cast<std::uint32_t>(session.implicit_tag_masks.size());
-         ++tag) {
-        if (!session_tag_nonempty(session, tag)) continue;
-        const auto name_it = data.tag_name_by_id.find(tag);
-        if (name_it == data.tag_name_by_id.end()) continue;
-        const std::string& name = name_it->second;
-        {
-            ActionDescriptor d;
-            d.id = "harvest_reforge:" + name;
-            d.display_name = d.id;
-            d.params.type = ActionType::HarvestReforge;
-            d.params.target_tag_id = tag;
-            d.kind = TransitionKind::Reforge;
-            d.cost_keys = {d.id};
-            d.legality.rarity_mask = kRarityRare;
-            d.discriminating_tag_ids = {tag};
-            add(registry, std::move(d));
+    /* The checked-in economy recipe manifest is the owner-approved craft
+     * allowlist. It generates these native arrays at configure time, so the
+     * registry never promotes arbitrary data tags into fictional crafts. */
+    const auto add_targeted = [&](const std::string_view name,
+                                  const ActionType type) {
+        const auto found = data.tag_id_by_name.find(std::string(name));
+        if (found == data.tag_id_by_name.end() ||
+            !session_tag_nonempty(session, found->second)) {
+            return;
         }
-        {
+        ActionDescriptor d;
+        const bool reforge = type == ActionType::HarvestReforge;
+        d.id = std::string(reforge ? "harvest_reforge:"
+                                   : "harvest_augment:") +
+               std::string(name);
+        d.display_name = d.id;
+        d.params.type = type;
+        d.params.target_tag_id = found->second;
+        d.kind = reforge ? TransitionKind::Reforge : TransitionKind::Special;
+        d.cost_keys = {d.id};
+        d.legality.rarity_mask =
+            reforge ? kRarityRare : kRarityMagic | kRarityRare;
+        if (!reforge) {
             /* Harvest augment is intentionally add-then-remove (ruled by
-             * the project owner): the targeted mod is added, then one
-             * random other non-fractured mod on an unlocked side is
-             * removed. Two-stage, so Special rather than SingleSlot. */
-            ActionDescriptor d;
-            d.id = "harvest_augment:" + name;
-            d.display_name = d.id;
-            d.params.type = ActionType::HarvestAugment;
-            d.params.target_tag_id = tag;
-            d.kind = TransitionKind::Special;
-            d.cost_keys = {d.id};
-            d.legality.rarity_mask = kRarityMagic | kRarityRare;
+             * the project owner). */
             d.legality.requires_open_affix = true;
             d.legality.forbidden_flags |=
                 kFlagInfluenced | kFlagEldritchImplicit;
-            d.discriminating_tag_ids = {tag};
-            add(registry, std::move(d));
         }
+        /* Target tags choose this action's roll pool. Existing mod tags do not
+         * affect a later targeted reforge/augment, so they are not persistent
+         * state discriminators. Resistance conversion below is different: it
+         * explicitly selects an existing source-tagged modifier. */
+        add(registry, std::move(d));
+    };
+    for (const std::string_view name : kHarvestReforgeTags) {
+        add_targeted(name, ActionType::HarvestReforge);
+    }
+    for (const std::string_view name : kHarvestAugmentTags) {
+        add_targeted(name, ActionType::HarvestAugment);
     }
 
     /* Resistance conversion exists only between the three elements
@@ -589,6 +989,7 @@ ActionRegistry build_action_registry(
     add_eldritch(session, registry);
     add_influence_exalts(session, registry);
     add_structural(registry);
+    retain_goal_relevant_actions(session, options, registry);
     return registry;
 }
 

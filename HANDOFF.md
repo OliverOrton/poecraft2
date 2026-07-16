@@ -1,11 +1,12 @@
-# Session Handoff - S7.2 Complete, S7.4 Next
+# Session Handoff - S7.2R Complete, S7.4 Next
 
-Updated 2026-07-15 after the S7.2 action-control, storage, and first-performance
-checkpoint. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-16 after the S7.2R product action/price repair and its Mirage
+partial-price follow-ups. Read
+[AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md).
 
-S7.0-S7.2 are complete. S7.3 also remains complete from its earlier
+S7.0-S7.3 and S7.2R are complete. S7.3 remains the earlier
 out-of-sequence fixed-option commit; S7.2 did not reimplement or broaden those
 options. S7.4 has not begun.
 
@@ -19,10 +20,54 @@ Implement **S7.4 only: renewal and observation-aware options**.
 4. Add fracture preparation/retry only on the existing carrier-exact state.
 
 Compile every option to ordinary primitive Strategy Board operations and retain
-all expressible success, salvage, and brick exits. Do not begin S7.5 cycle
+all expressible success, salvage, and brick exits. Stop before S7.5 cycle
 acceleration/cache reuse or S7.6 acceptance work. Do not run routine native,
 binding, WASM, web, simulator, full-repository, or visual-browser gates at this
 intermediate checkpoint. Oliver owns visual review.
+
+## S7.2R result
+
+- Calculator now opens the native solver with `fossil_mode: goal_relevant`.
+  Native generation advances a deterministic 96-entry beam through 1-4 fossil
+  loadouts, preserves leaders for every goal slot, and emits only signatures
+  that improve at least one goal target. This bounds generation instead of
+  enumerating the 15,275-loadout powerset. `requested_fossil_actions` keeps a
+  hand-selected loadout materialized for exact odds even when it is outside the
+  automatic beam.
+- Calculator refreshes its action/price envelope for every goal and uses that
+  same envelope to create the priced solve. Multi-fossil entries therefore
+  remain solver candidates rather than disappearing from the UI-side list.
+  Telemetry distinguishes `goal_relevant`, `requested`, and `exhaustive`
+  fossil modes and reports deferred signatures honestly.
+- The Calculator keeps its exhaustive non-fossil handle for exact single-action
+  odds, while Start Solve first asks native code for a pre-layout
+  `action_mode: goal_relevant` product envelope and then opens the explicit
+  priced subset. Missing prices exclude only those relevant actions; they do
+  not block a solve while any priced route remains. Direct goal
+  Essence/bench/Harvest/influence actions remain eligible, while unrelated
+  Veiled/Eldritch actions are omitted. Standalone structural metamods,
+  crafted-mod removal, and Fracture are also omitted from product solves: their
+  unrestricted flag/tag combinations exhaust the state cap, while their
+  bounded protected/retry assembly routes are explicitly S7.4 work. They remain
+  available in the exhaustive Calculator registry. The omission count and
+  reason are native telemetry.
+- Non-converged or resource-capped results are no longer passed to the policy
+  compiler, and the `1e12` internal infinity sentinel is displayed as
+  unavailable rather than as an expected chaos cost.
+- `fixtures/economy/harvest-recipes-v1.json` is now the owner-approved Harvest
+  availability source for economy recipes, native generated allowlists, and
+  the web catalog. The canonical defence tag/key is `defences`. Reforge and
+  Augment expose their separate real tag sets; arbitrary tag-derived crafts are
+  absent from the solver and rejected by direct action and strategy compilation
+  paths.
+- Published economy snapshots now pin each price as `quote`, `recipe`, or
+  `zero`. Per-profile explicit overrides remain first priority. A visible
+  strictly positive fallback can price only cost keys returned by the engine;
+  it applies after snapshot quotes/certified recipes, never populates arbitrary
+  keys, and is copied with per-key source into the pinned solve identity.
+- Native fallback builds and the direct WASM build both generate the Harvest
+  header from the checked-in recipe manifest, so non-CMake and Emscripten builds
+  cannot drift from the CMake path.
 
 ## S7.2 result
 
@@ -108,12 +153,26 @@ States, actions, stored transitions, compiled graph shape, status, cap hits,
 
 ## Verification performed
 
-- `powershell -File scripts/build.ps1` completed successfully against the final
-  native source. It compiled the engine and benchmark targets but executed no
-  test binary.
-- `powershell -File scripts/build-wasm.ps1` completed successfully against the
-  final source and produced the normal optimized WASM artifact.
-- Targeted `s7.2-final` benchmark runs covered one-mod native/WASM agreement,
+- For S7.2R, `powershell -File scripts/build.ps1` completed successfully. It
+  compiled the native engine, test, and benchmark targets but executed no test
+  binary. `npm run build` in `apps/web` also completed successfully, including
+  its TypeScript check and production bundle build.
+- For S7.2R, `powershell -File scripts/build-wasm.ps1` completed successfully
+  and regenerated the optimized WASM artifact from the manifest-backed Harvest
+  allowlist.
+- After the Mirage partial-price repair, `powershell -File scripts/build.ps1`,
+  `powershell -File scripts/build-wasm.ps1`, and `npx tsc --noEmit` completed
+  successfully. A narrow headless replay used the pinned Mirage snapshot and a
+  Vaal Regalia T1 energy-shield goal: 5 relevant actions had no price, the 13
+  priced actions still converged in 49 states to `V(start) = 8.541424`, and the
+  product envelope retained one useful fossil action at each socket count 1-4.
+- A second narrow replay matched the reported Conquest Lamellar two-prefix T1
+  goal against the same pinned Mirage snapshot. With 3 relevant prices missing,
+  the remaining 13 actions retained useful 1-4 fossil loadouts and converged in
+  109 states to `V(start) = 334.393381`. Before structural assembly primitives
+  were deferred to S7.4, that exact case hit `max_discovered_states` after
+  12,679 expansions and zero sweeps.
+- Earlier targeted `s7.2-final` benchmark runs covered one-mod native/WASM agreement,
   ordinary native/WASM agreement, cancellation, explicit state-cap refusal,
   and exhaustive-registry stress refusal. These were measurements requested by
   the phase, not routine suite runs.

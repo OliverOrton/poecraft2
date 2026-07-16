@@ -38,6 +38,16 @@ if ($LASTEXITCODE -ne 0) {
     throw "Economy Python compile smoke check failed with exit code $LASTEXITCODE."
 }
 
+$HarvestGeneratedDirectory = "$Root/build/engine/generated"
+$HarvestGeneratedHeader = "$HarvestGeneratedDirectory/harvest_crafts.generated.hpp"
+& $Python.Command @($Python.Prefix) `
+    "$Root/scripts/generate-harvest-crafts.py" `
+    --recipes "$Root/fixtures/economy/harvest-recipes-v1.json" `
+    --output $HarvestGeneratedHeader
+if ($LASTEXITCODE -ne 0) {
+    throw "Harvest craft allowlist generation failed with exit code $LASTEXITCODE."
+}
+
 $CMake = Get-Command cmake -ErrorAction SilentlyContinue
 if ($CMake) {
     & $CMake.Source -S "$Root/engine" -B "$Root/build/engine" -DBUILD_TESTING=ON
@@ -91,6 +101,7 @@ else {
             -std=c++20 -O2 `
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
+            "-I$HarvestGeneratedDirectory" `
             @EngineSources `
             @TestSources `
             -o "$BuildDirectory/poecraft_engine_tests.exe"
@@ -103,6 +114,7 @@ else {
             -static-libstdc++ -static-libgcc `
             "-Wl,--export-all-symbols" `
             "-I$Root/engine/include" `
+            "-I$HarvestGeneratedDirectory" `
             @EngineSources `
             -o "$BuildDirectory/poecraft_engine.dll"
         if ($LASTEXITCODE -ne 0) {
@@ -122,6 +134,7 @@ else {
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
             "-I$Root/engine/src" `
+            "-I$HarvestGeneratedDirectory" `
             @EngineSources `
             "$Root/engine/benchmarks/solver_benchmark.cpp" `
             @BenchmarkSystemLibraries `

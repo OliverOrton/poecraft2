@@ -4,6 +4,42 @@ project(poecraft LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Harvest craft availability and economy recipe keys have one owner-approved
+# source. Generate the native allowlists from that same checked-in manifest so
+# the engine cannot drift back to exposing arbitrary tag-derived actions.
+set(HARVEST_RECIPES_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/economy/harvest-recipes-v1.json")
+file(READ "${HARVEST_RECIPES_PATH}" HARVEST_RECIPES_JSON)
+
+function(harvest_recipe_keys MEMBER OUT_ENTRIES OUT_COUNT)
+    string(JSON ENTRY_COUNT LENGTH "${HARVEST_RECIPES_JSON}" "${MEMBER}")
+    set(TAGS "")
+    if(ENTRY_COUNT GREATER 0)
+        math(EXPR LAST_ENTRY "${ENTRY_COUNT} - 1")
+        foreach(INDEX RANGE 0 ${LAST_ENTRY})
+            string(JSON TAG MEMBER "${HARVEST_RECIPES_JSON}" "${MEMBER}" ${INDEX})
+            list(APPEND TAGS "${TAG}")
+        endforeach()
+    endif()
+    list(SORT TAGS)
+    set(ENTRIES "")
+    foreach(TAG IN LISTS TAGS)
+            string(APPEND ENTRIES "    std::string_view{\"${TAG}\"},\n")
+    endforeach()
+    set(${OUT_ENTRIES} "${ENTRIES}" PARENT_SCOPE)
+    list(LENGTH TAGS SORTED_ENTRY_COUNT)
+    set(${OUT_COUNT} "${SORTED_ENTRY_COUNT}" PARENT_SCOPE)
+endfunction()
+
+harvest_recipe_keys(reforge HARVEST_REFORGE_ENTRIES HARVEST_REFORGE_COUNT)
+harvest_recipe_keys(augment HARVEST_AUGMENT_ENTRIES HARVEST_AUGMENT_COUNT)
+set(HARVEST_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${HARVEST_GENERATED_DIR}")
+configure_file(
+    src/harvest_crafts.generated.hpp.in
+    "${HARVEST_GENERATED_DIR}/harvest_crafts.generated.hpp"
+    @ONLY)
+
 # Header-only interface target for callers that only need the public API types.
 add_library(poecraft_headers INTERFACE)
 target_include_directories(poecraft_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -34,7 +70,9 @@ set_target_properties(poecraft_engine_objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
 target_include_directories(poecraft_engine_objects
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${HARVEST_GENERATED_DIR}")
 target_compile_features(poecraft_engine_objects PUBLIC cxx_std_20)
 
 add_library(poecraft_engine STATIC

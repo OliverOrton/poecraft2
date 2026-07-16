@@ -1,6 +1,12 @@
 import type { EconomyIdentity } from "../engine-protocol";
 
 export type Prices = Record<string, number>;
+export type PublishedPriceSource = "quote" | "recipe" | "zero";
+export type PriceSource = PublishedPriceSource | "override" | "fallback";
+export interface PriceResolution {
+    value: number | undefined;
+    source: PriceSource | null;
+}
 export type EconomyStatus =
     | "loading"
     | "fresh"
@@ -29,6 +35,8 @@ export interface EconomySnapshot {
     id: string;
     metadata: EconomySnapshotMetadata;
     prices: Prices;
+    /** Publisher-certified provenance; absent on pre-S7.2R cached snapshots. */
+    sources?: Record<string, PublishedPriceSource>;
 }
 
 export interface LeagueIndexEntry {
@@ -75,6 +83,8 @@ export interface PinnedEconomy {
     sourceSnapshotId: string;
     sourceContentSha256: string | null;
     sourceCutoffAtUtc: string | null;
+    priceSources: Record<string, PriceSource>;
+    fallbackPrice: number | null;
     identity: EconomyIdentity;
 }
 
@@ -105,6 +115,7 @@ export interface EconomyServiceOptions {
 const INDEX_CACHE_KEY = "league-index";
 const SELECTED_KEY = "poecraft.economy.selected.v1";
 const OVERRIDES_KEY = "poecraft.economy.overrides.v1";
+const FALLBACKS_KEY = "poecraft.economy.fallbacks.v1";
 const MIGRATED_KEY = "poecraft.economy.legacy-prices-migrated.v1";
 const LEGACY_PRICES_KEY = "poecraft.prices";
 const MANUAL_PROFILE = "manual";
@@ -230,7 +241,7 @@ function priceToken(value: number): string {
 }
 
 function snapshotHashContent(snapshot: EconomySnapshot): unknown {
-    return {
+    const content: Record<string, unknown> = {
         schema_version: 1,
         league_key: snapshot.metadata.league_key,
         game_data_hash: snapshot.metadata.game_data_hash,
@@ -242,6 +253,14 @@ function snapshotHashContent(snapshot: EconomySnapshot): unknown {
         missing_keys: [...snapshot.metadata.missing_keys].sort(),
         low_confidence_keys: [...snapshot.metadata.low_confidence_keys].sort(),
     };
+    if (snapshot.sources) {
+        content.sources = Object.fromEntries(
+            Object.entries(snapshot.sources).sort(([left], [right]) =>
+                compareCanonicalKeys(left, right),
+            ),
+        );
+    }
+    return content;
 }
 
 async function sha256(value: string): Promise<string> {
@@ -330,6 +349,7 @@ export class EconomyService {
     private initialization: Promise<void> | null = null;
     private lastDownloadUsedCache = false;
     private overrides: Record<string, Prices> = {};
+    private fallbacks: Record<string, number> = {};
     private state: EconomyState = {
         initialized: false,
         status: "loading",
@@ -358,7 +378,11 @@ export class EconomyService {
         this.channel?.addEventListener("message", () => this.reloadLocalState());
         if (typeof window !== "undefined") {
             window.addEventListener("storage", (event) => {
-                if (event.key === OVERRIDES_KEY || event.key === SELECTED_KEY) {
+                if (
+                    event.key === OVERRIDES_KEY ||
+                    event.key === FALLBACKS_KEY ||
+                    event.key === SELECTED_KEY
+                ) {
                     void this.reloadLocalState();
                 }
             });
@@ -377,6 +401,7 @@ export class EconomyService {
     private async initializeOnce(): Promise<void> {
         this.migrateLegacyPrices();
         this.readOverrides();
+        this.readFallbacks();
         const storedSelection = this.storage.getItem(SELECTED_KEY);
         const cachedIndex = await this.cache.get<LeagueIndex>(INDEX_CACHE_KEY);
         if (cachedIndex?.schema_version === 1) {
@@ -624,6 +649,26 @@ export class EconomyService {
         }
     }
 
+    private readFallbacks(): void {
+        try {
+            const raw = this.storage.getItem(FALLBACKS_KEY);
+            const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+            this.fallbacks =
+                parsed && typeof parsed === "object"
+                    ? Object.fromEntries(
+                          Object.entries(parsed as Record<string, unknown>).filter(
+                              (entry): entry is [string, number] =>
+                                  typeof entry[1] === "number" &&
+                                  Number.isFinite(entry[1]) &&
+                                  entry[1] > 0,
+                          ),
+                      )
+                    : {};
+        } catch {
+            this.fallbacks = {};
+        }
+    }
+
     private migrateLegacyPrices(): void {
         if (this.storage.getItem(MIGRATED_KEY)) return;
         try {
@@ -643,6 +688,7 @@ export class EconomyService {
 
     private async reloadLocalState(): Promise<void> {
         this.readOverrides();
+        this.readFallbacks();
         const selected = this.storage.getItem(SELECTED_KEY) || MANUAL_PROFILE;
         if (selected !== this.state.selectedProfile) {
             try {
@@ -662,6 +708,52 @@ export class EconomyService {
 
     getPrice(key: string): number | undefined {
         return this.getPrices()[key];
+    }
+
+    /** Resolve an engine-certified action key, optionally using the visible
+     * non-zero fallback. Callers must not use this for arbitrary user keys. */
+    resolveActionPrice(key: string): PriceResolution {
+        const profile = this.state.selectedProfile;
+        const override = this.overrides[profile] ?? {};
+        if (Object.hasOwn(override, key)) {
+            return { value: override[key], source: "override" };
+        }
+        const source = this.state.sourceSnapshot;
+        if (source && Object.hasOwn(source.prices, key)) {
+            const value = source.prices[key];
+            return {
+                value,
+                source:
+                    source.sources?.[key] ?? (value === 0 ? "zero" : "quote"),
+            };
+        }
+        const fallback = this.fallbacks[profile];
+        return fallback > 0
+            ? { value: fallback, source: "fallback" }
+            : { value: undefined, source: null };
+    }
+
+    getFallbackPrice(): number | undefined {
+        return this.fallbacks[this.state.selectedProfile];
+    }
+
+    setFallbackPrice(value: number | null): void {
+        const profile = this.state.selectedProfile;
+        const next = { ...this.fallbacks };
+        if (value === null || !Number.isFinite(value) || value <= 0) {
+            delete next[profile];
+        } else {
+            next[profile] = value;
+        }
+        this.fallbacks = next;
+        this.storage.setItem(FALLBACKS_KEY, JSON.stringify(this.fallbacks));
+        const source = this.state.sourceSnapshot || manualSnapshot();
+        this.state = {
+            ...this.state,
+            effectiveSnapshotId: this.effectiveId(source, profile),
+        };
+        this.channel?.postMessage("fallbacks");
+        this.emit();
     }
 
     getPrices(): Readonly<Prices> {
@@ -686,33 +778,70 @@ export class EconomyService {
         this.emit();
     }
 
-    pin(): PinnedEconomy {
+    pin(actionKeys: Iterable<string> = []): PinnedEconomy {
         const source = this.state.sourceSnapshot || manualSnapshot();
         const prices = { ...this.getPrices() };
+        const profile = this.state.selectedProfile;
+        const priceSources: Record<string, PriceSource> = {};
+        const validKeys = Array.from(new Set(actionKeys)).sort(compareCanonicalKeys);
+        for (const key of validKeys) {
+            const resolution = this.resolveActionPrice(key);
+            if (resolution.value === undefined || !resolution.source) continue;
+            prices[key] = resolution.value;
+            priceSources[key] = resolution.source;
+        }
+        const fallbackPrice = this.getFallbackPrice() ?? null;
+        const pinToken = JSON.stringify(
+            sortCanonical({
+                effective: this.state.effectiveSnapshotId,
+                valid_action_keys: validKeys,
+                action_price_sources: priceSources,
+                fallback_price: fallbackPrice,
+            }),
+        );
+        const pinnedId = validKeys.length
+            ? `${this.state.effectiveSnapshotId}:pin:${quickIdentity(pinToken)}`
+            : this.state.effectiveSnapshotId;
         const snapshot: EconomySnapshot = {
             version: "v1",
-            id: this.state.effectiveSnapshotId,
+            id: pinnedId,
             metadata: {
                 ...source.metadata,
                 price_count: Object.keys(prices).length,
             },
             prices,
+            sources: {
+                ...(source.sources ?? {}),
+                ...Object.fromEntries(
+                    Object.entries(priceSources).flatMap(([key, priceSource]) =>
+                        priceSource === "quote" ||
+                        priceSource === "recipe" ||
+                        priceSource === "zero"
+                            ? [[key, priceSource]]
+                            : [],
+                    ),
+                ),
+            },
         };
         return {
             snapshot,
-            profile: this.state.selectedProfile,
+            profile,
             sourceSnapshotId: source.id,
             sourceContentSha256: source.metadata.content_sha256,
             sourceCutoffAtUtc: source.metadata.source_cutoff_at_utc,
+            priceSources,
+            fallbackPrice,
             identity: {
-                profile: this.state.selectedProfile,
-                effective_snapshot_id: snapshot.id,
+                profile,
+                effective_snapshot_id: pinnedId,
                 source_snapshot_id: source.id,
                 source_content_sha256: source.metadata.content_sha256,
                 source_cutoff_at_utc: source.metadata.source_cutoff_at_utc,
                 league_name: source.metadata.league_name,
                 status: this.state.status,
                 low_confidence_keys: [...source.metadata.low_confidence_keys],
+                price_sources: priceSources,
+                fallback_price: fallbackPrice,
             },
         };
     }
@@ -732,7 +861,12 @@ export class EconomyService {
     private effectiveId(source: EconomySnapshot, profile: string): string {
         const override = this.overrides[profile] ?? {};
         const identity = JSON.stringify(
-            sortCanonical({ source: source.id, profile, overrides: override }),
+            sortCanonical({
+                source: source.id,
+                profile,
+                overrides: override,
+                fallback: this.fallbacks[profile] ?? null,
+            }),
         );
         return `${source.id}:effective:${quickIdentity(identity)}`;
     }

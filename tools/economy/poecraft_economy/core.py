@@ -671,6 +671,7 @@ def _snapshot_content(
     prices: Mapping[str, float],
     missing: Sequence[str],
     low_confidence: Sequence[str],
+    sources: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
     # Hash price numbers through a language-neutral decimal token. JSON itself
     # does not distinguish 1 from 1.0 after a browser parse, so hashing raw
@@ -678,7 +679,7 @@ def _snapshot_content(
     def price_token(value: float) -> str:
         return format(float(value), ".12f").rstrip("0").rstrip(".") or "0"
 
-    return {
+    content = {
         "schema_version": 1,
         "league_key": league_key,
         "game_data_hash": game_data_hash,
@@ -686,6 +687,9 @@ def _snapshot_content(
         "missing_keys": sorted(missing),
         "low_confidence_keys": sorted(low_confidence),
     }
+    if sources is not None:
+        content["sources"] = dict(sorted(sources.items()))
+    return content
 
 
 def _compile_snapshot(
@@ -812,8 +816,29 @@ def _compile_snapshot(
     low = sorted(
         key for key in runtime_prices if confidence.get(key) == "low"
     )
+    key_kind = {
+        str(row["canonical_price_key"]): str(row["kind"])
+        for row in connection.execute(
+            "SELECT canonical_price_key, kind FROM economy_price_key"
+        )
+    }
+    price_sources = {
+        key: (
+            "zero"
+            if key_kind[key] == "zero_cost"
+            else "recipe"
+            if key in derived_components
+            else "quote"
+        )
+        for key in runtime_prices
+    }
     content = _snapshot_content(
-        league_key, game_data_hash, runtime_prices, missing, low
+        league_key,
+        game_data_hash,
+        runtime_prices,
+        missing,
+        low,
+        price_sources,
     )
     content_hash = sha256_bytes(canonical_json(content).encode("utf-8"))
     existing = connection.execute(
@@ -853,6 +878,7 @@ def _compile_snapshot(
             "content_sha256": content_hash,
         },
         "prices": dict(sorted(runtime_prices.items())),
+        "sources": dict(sorted(price_sources.items())),
     }
     artifact_json = canonical_json(artifact)
     connection.execute(
@@ -877,12 +903,6 @@ def _compile_snapshot(
             artifact_json,
         ),
     )
-    key_kind = {
-        str(row["canonical_price_key"]): str(row["kind"])
-        for row in connection.execute(
-            "SELECT canonical_price_key, kind FROM economy_price_key"
-        )
-    }
     for key, value in sorted(runtime_prices.items()):
         if key_kind[key] == "zero_cost":
             provenance = "zero"

@@ -22,6 +22,13 @@ export interface EconomyIdentity {
     league_name: string;
     status: "loading" | "fresh" | "stale" | "offline" | "manual-only";
     low_confidence_keys: string[];
+    /** Price provenance pinned for the engine-listed action keys in this work. */
+    price_sources?: Record<
+        string,
+        "override" | "quote" | "recipe" | "zero" | "fallback"
+    >;
+    /** User fallback at pin time; null means unquoted actions stayed excluded. */
+    fallback_price?: number | null;
 }
 
 /** Thrown on the main thread when the worker reports a failed call. */
@@ -305,6 +312,12 @@ export interface SolverGoal {
     >;
     /** Candidate primitive ids; omitted means full registry, [] means options only. */
     actions?: string[];
+    /** Engine-owned bounded generation for useful 1-4 fossil signatures. */
+    fossil_mode?: "exhaustive" | "goal_relevant";
+    /** Engine-owned product relevance/dependency action envelope. */
+    action_mode?: "goal_relevant";
+    /** Additional hand-selected loadouts to materialize without scoping actions. */
+    requested_fossil_actions?: string[];
     /** Explicit, price-independent fixed planner programs. */
     options?: SolverFixedOption[];
 }

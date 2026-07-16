@@ -374,13 +374,12 @@ Resistance conversion costs depend on the target element:
 | Cold | 500 Vivid |
 | Lightning | 500 Primal |
 
-The current registry exposes reforge/augment actions for arbitrary session tags,
-but the approved table does not price arbitrary tags. Such actions stay
-explicitly unpriced rather than borrowing a recipe. The current generic
-`harvest_resist` cost key also cannot represent target-dependent lifeforce; E0
-must migrate it to an action-specific or target-specific key, with native,
-Python, WASM, and web parity tests. This is a price-vocabulary correction, not a
-change to resistance-conversion outcomes.
+The recipe manifest is also the owner-approved engine/web craft allowlist.
+Arbitrary session tags do not become reforge/augment actions, and the canonical
+defence target and price key are both `defences`. Resistance conversion uses a
+target-specific `harvest_resist:<target>` key so all six ordered actions resolve
+to the correct lifeforce recipe. These are price-vocabulary and availability
+corrections, not changes to the approved Harvest outcome rules.
 
 ### Base pricing
 
@@ -416,7 +415,8 @@ Compile one immutable snapshot per league and source cutoff:
     "low_confidence_keys": [],
     "content_sha256": "..."
   },
-  "prices": {}
+  "prices": {},
+  "sources": {}
 }
 ```
 
@@ -428,7 +428,9 @@ Every valid mapped quote appears in `prices`, including low-confidence quotes
 as Oliver requested. Low-confidence keys are also listed in metadata and shown
 with a warning in the workspace; users may override them. Unknown or unresolved
 keys remain absent rather than becoming zero. A real zero is allowed only for
-an explicitly classified zero-cost key.
+an explicitly classified zero-cost key. `sources` pins each published value as
+`quote`, `recipe`, or `zero`; workspace overrides and the user-set unquoted-
+action fallback are pinned separately with completed work.
 
 ### Published league index
 

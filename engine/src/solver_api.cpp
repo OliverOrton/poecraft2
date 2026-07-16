@@ -1,4 +1,5 @@
 #include "poecraft/solver.h"
+#include "poecraft/bitset.h"
 
 #include <algorithm>
 #include <chrono>
@@ -48,6 +49,7 @@ std::string string_member(const Value& value, const char* key) {
 }
 
 solver::ActionRegistryBuildOptions registry_build_options(
+    const poecraft::SessionImpl& session,
     const char* goal_json,
     std::size_t goal_json_size) {
     const Value root = Parser(goal_json, goal_json_size).parse();
@@ -56,14 +58,46 @@ solver::ActionRegistryBuildOptions registry_build_options(
     }
     solver::ActionRegistryBuildOptions options;
     const Value* actions = root.find("actions");
-    if (actions == nullptr) return options;
-    if (actions->type != Type::Array) {
-        throw std::runtime_error("goal: actions must be an array");
+    if (actions != nullptr) {
+        if (actions->type != Type::Array) {
+            throw std::runtime_error("goal: actions must be an array");
+        }
+        options.exhaustive_fossils = false;
+        for (const Value& entry : actions->array) {
+            if (entry.type == Type::String &&
+                entry.string.starts_with("fossil:")) {
+                options.requested_fossil_action_ids.push_back(entry.string);
+            }
+        }
     }
-    options.exhaustive_fossils = false;
-    for (const Value& entry : actions->array) {
-        if (entry.type == Type::String &&
-            entry.string.starts_with("fossil:")) {
+    const std::string fossil_mode = string_member(root, "fossil_mode");
+    if (!fossil_mode.empty() && fossil_mode != "exhaustive" &&
+        fossil_mode != "goal_relevant") {
+        throw std::runtime_error(
+            "goal: fossil_mode must be exhaustive or goal_relevant");
+    }
+    if (fossil_mode == "goal_relevant") {
+        options.exhaustive_fossils = false;
+        options.goal_relevant_fossils = true;
+    }
+    const std::string action_mode = string_member(root, "action_mode");
+    if (!action_mode.empty() && action_mode != "goal_relevant") {
+        throw std::runtime_error(
+            "goal: action_mode must be goal_relevant when provided");
+    }
+    options.goal_relevant_actions = action_mode == "goal_relevant";
+    const Value* requested = root.find("requested_fossil_actions");
+    if (requested != nullptr) {
+        if (requested->type != Type::Array) {
+            throw std::runtime_error(
+                "goal: requested_fossil_actions must be an array");
+        }
+        for (const Value& entry : requested->array) {
+            if (entry.type != Type::String ||
+                !entry.string.starts_with("fossil:")) {
+                throw std::runtime_error(
+                    "goal: requested fossil actions must be fossil ids");
+            }
             options.requested_fossil_action_ids.push_back(entry.string);
         }
     }
@@ -88,6 +122,79 @@ solver::ActionRegistryBuildOptions registry_build_options(
                     }
                 }
             }
+        }
+    }
+    if (options.goal_relevant_fossils || options.goal_relevant_actions) {
+        const poecraft::DataImpl& data = *session.data;
+        const Value* slots = root.find("slots");
+        if (slots == nullptr || slots->type != Type::Array ||
+            slots->array.empty()) {
+            throw std::runtime_error(
+                "goal: slots must be a non-empty array");
+        }
+        for (const Value& entry : slots->array) {
+            if (entry.type != Type::Object) {
+                throw std::runtime_error("goal: slot must be an object");
+            }
+            const std::string group = string_member(entry, "group");
+            const std::string family =
+                string_member(entry, "family_mod_key");
+            std::uint32_t group_id = solver::kNoId;
+            std::uint32_t family_id = solver::kNoId;
+            if (!group.empty()) {
+                const auto found = data.group_id_by_key.find(group);
+                if (found == data.group_id_by_key.end()) {
+                    throw std::runtime_error(
+                        "goal: unknown group: " + group);
+                }
+                group_id = found->second;
+            } else if (!family.empty()) {
+                const auto position = data.mod_pos_by_key.find(family);
+                if (position == data.mod_pos_by_key.end()) {
+                    throw std::runtime_error(
+                        "goal: unknown modifier key: " + family);
+                }
+                const auto session_mod = session.session_id_by_global_id.find(
+                    data.mod_global_ids[position->second]);
+                if (session_mod == session.session_id_by_global_id.end()) {
+                    throw std::runtime_error(
+                        "goal: modifier is not in this session: " + family);
+                }
+                family_id = session.family_id[session_mod->second];
+            } else {
+                throw std::runtime_error(
+                    "goal: slot needs group or family_mod_key");
+            }
+            std::uint32_t min_tier = 0;
+            const Value* tier = entry.find("min_tier");
+            if (tier != nullptr && tier->type == Type::Number &&
+                tier->number >= 0) {
+                min_tier = static_cast<std::uint32_t>(tier->number);
+            }
+            std::vector<std::uint32_t> satisfying;
+            for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+                const bool member =
+                    group_id != solver::kNoId
+                        ? group_id < session.group_masks.size() &&
+                              !session.group_masks[group_id].empty() &&
+                              poecraft::pc_bitset_test(
+                                  session.group_masks[group_id].data(), mod)
+                        : session.family_id[mod] == family_id;
+                const std::uint32_t mod_tier =
+                    session.family_tier_index[mod];
+                if (member &&
+                    (session.gen_type[mod] == 0 ||
+                     session.gen_type[mod] == 1) &&
+                    (min_tier == 0 ||
+                     (mod_tier != 0 && mod_tier <= min_tier))) {
+                    satisfying.push_back(mod);
+                }
+            }
+            if (satisfying.empty()) {
+                throw std::runtime_error(
+                    "goal: fossil relevance slot has no satisfying mods");
+            }
+            options.fossil_goal_mod_ids.push_back(std::move(satisfying));
         }
     }
     return options;
@@ -435,7 +542,8 @@ pc_result pc_solver_create(
         holder->session = session->impl;
         const auto registry_started = std::chrono::steady_clock::now();
         const solver::ActionRegistryBuildOptions registry_options =
-            registry_build_options(goal_json, goal_json_size);
+            registry_build_options(
+                *holder->session, goal_json, goal_json_size);
         solver::ActionRegistry registry =
             solver::build_action_registry(*holder->session, registry_options);
         holder->registry_generation_ns = static_cast<std::uint64_t>(
