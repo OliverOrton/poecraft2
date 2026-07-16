@@ -7,7 +7,7 @@ realistic end-to-end crafts before adding more mechanic families. Read
 [crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
-Status 2026-07-16: S7.0-S7.4 are implemented; S7.3 landed ahead of S7.2 and
+Status 2026-07-16: S7.0-S7.5 are implemented; S7.3 landed ahead of S7.2 and
 S7.2 was then completed without redoing the fixed-option checkpoint. The
 versioned native/worker-WASM corpus, telemetry contract, unoptimized reports,
 and cross-backend comparison tooling are in place. The one-item correctness/state
@@ -22,8 +22,9 @@ bounded Bellman units now provide the first performance layer. Oliver approved
 the permanent corpus and numeric criteria below on 2026-07-15. The fresh
 pre-optimization full-corpus command was recorded as a timeout when its native
 report had not completed after roughly 49 minutes, and Oliver directed the
-phase to proceed to performance work. The S7.2R product repair and S7.4
-renewal/observation-aware option checkpoint are complete; S7.5 is next. Trade
+phase to proceed to performance work. The S7.2R product repair, S7.4
+renewal/observation-aware option checkpoint, and S7.5 deep optimization/cache
+checkpoint are complete; S7.6 acceptance is next. Trade
 leaves, corruption, Hinekora's Lock,
 imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
@@ -559,7 +560,7 @@ sentinel is not presented as an expected cost.
 ### S7.3 - Fixed solver options
 
 Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2,
-S7.2R, and S7.4 are also complete; S7.5 is the next boundary.
+S7.2R, S7.4, and S7.5 are also complete; S7.6 is the next boundary.
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.
@@ -599,6 +600,8 @@ compatible and explicit in routing state.
 
 ### S7.5 - Deep optimization and cache reuse
 
+Status: complete in the S7.5 cycle-optimization/cache-reuse checkpoint.
+
 - Eliminate algebraic self-loops and benchmark prioritized backups.
 - Extract/reuse SCC policy-evaluation machinery and implement policy iteration
   if it wins the pinned matrix.
@@ -614,6 +617,25 @@ geometric-mean solve speed on native and WASM plus at least 2x peak-memory
 reduction where the baseline leaves enough headroom. These are not stop goals:
 continue while profiling identifies a material, safe S7 bottleneck, and present
 the final gains to Oliver for evaluation.
+
+Checkpoint result: sparse rows remove direct self transitions and solve both
+ordinary and observed-choice self-loop contributions algebraically. Residual-
+prioritized backups remain the bounded fallback; fixed-policy SCC evaluation
+with policy improvement won the pinned matrix and reduced the applicable S7.2
+native solve measurements from 0.365/33.051/688.372/12671.034 ms to
+0.149/0.183/12.352/55.580 ms for one-mod, two-mod, ordinary, and advanced.
+Compatible price-independent transition closures are retained on the solver
+handle and repriced without transition-provider work. A bounded optimistic
+focused-expansion path is enabled only for large pending closures and reports
+its lower/upper bound and proof gap honestly. It still did not close the
+endgame fractured corpus within a five-minute diagnostic attempt, so that
+case remains the explicit performance risk for S7.6 rather than being reported
+as converged. Exact state-independent policy programs are compressed into
+canonical regions of at most eight states; the four measured cases compile
+6/15/135/402 working states into 2/5/41/133 regions. Native and worker WASM
+matched all 83 structural/value/compiled-size checks per case, with worker
+slices at or below 18.688 ms. These were solver-only reports with simulator
+verification deliberately skipped under the intermediate-phase cadence.
 
 ### S7.6 - End-to-end product gate
 
@@ -698,7 +720,7 @@ Recorded 2026-07-15:
    it is not S7.1 work or an S7 completion requirement.
 
 The permanent corpus, numeric criteria, and manifest-backed real Harvest
-allowlist are implemented and owner-authoritative. S7.5 is next. Ask Oliver
+allowlist are implemented and owner-authoritative. S7.6 is next. Ask Oliver
 only if implementation reveals a new mechanic ambiguity.
 
 Mechanic answers come from Oliver and are written into focused fixtures before

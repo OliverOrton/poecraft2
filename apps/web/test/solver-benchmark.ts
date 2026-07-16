@@ -25,6 +25,7 @@ interface CliOptions {
     corpus: string;
     output?: string;
     caseId?: string;
+    skipVerification: boolean;
 }
 
 interface CaseReport {
@@ -35,6 +36,7 @@ interface CaseReport {
     expected: SolverBenchmarkCase["expected"];
     actual_status: string;
     expectation_met: boolean;
+    verification_skipped: boolean;
     input: Record<string, unknown>;
     phase_wall_ms: {
         registry_layout: number | null;
@@ -81,6 +83,7 @@ function parseArgs(args: string[]): CliOptions {
     let corpus = resolve(REPO_ROOT, "fixtures/solver-benchmarks/v1/manifest.json");
     let output: string | undefined;
     let caseId: string | undefined;
+    let skipVerification = false;
     for (let index = 0; index < args.length; index += 1) {
         const value = args[index + 1];
         if (args[index] === "--corpus" && value) {
@@ -92,11 +95,13 @@ function parseArgs(args: string[]): CliOptions {
         } else if (args[index] === "--case" && value) {
             caseId = value;
             index += 1;
+        } else if (args[index] === "--skip-verification") {
+            skipVerification = true;
         } else {
             throw new Error(`unknown or incomplete argument: ${args[index]}`);
         }
     }
-    return { corpus, output, caseId };
+    return { corpus, output, caseId, skipVerification };
 }
 
 function readText(path: string): string {
@@ -150,6 +155,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
                 ? "covered_by_native_unit_gate"
                 : "not_run_approval_pending"),
         expectation_met: true,
+        verification_skipped: false,
         input: {
             comparison_profile:
                 spec.execution_backend === "native_unit_fixture"
@@ -347,7 +353,11 @@ function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseRepo
     return { all_passed: Object.values(checks).every(Boolean), checks };
 }
 
-function caseExpectationMet(spec: SolverBenchmarkCase, report: CaseReport): boolean {
+function caseExpectationMet(
+    spec: SolverBenchmarkCase,
+    report: CaseReport,
+    skipVerification: boolean,
+): boolean {
     if (!expectationMet(spec.expected.solve_status, report.actual_status)) return false;
     if (report.errors.length > 0) return false;
     if (report.solver_telemetry?.version !== "solver_telemetry_v1") return false;
@@ -385,12 +395,13 @@ function caseExpectationMet(spec: SolverBenchmarkCase, report: CaseReport): bool
     if (spec.expected.compile_status === "compiled" && !report.compiled_graph) {
         return false;
     }
-    if (spec.expected.verification_status === "run") {
+    if (!skipVerification && spec.expected.verification_status === "run") {
         if (!report.verification || report.verification.verification_passed !== true) {
             return false;
         }
     }
-    if (spec.expected.verification_status === "run_if_compiled" &&
+    if (!skipVerification &&
+        spec.expected.verification_status === "run_if_compiled" &&
         report.compiled_graph &&
         (!report.verification || report.verification.verification_passed !== true)) {
         return false;
@@ -402,6 +413,7 @@ async function runCase(
     client: EngineClient,
     data: number,
     spec: SolverBenchmarkCase,
+    skipVerification: boolean,
 ): Promise<CaseReport> {
     const totalStarted = performance.now();
     const errors: string[] = [];
@@ -539,11 +551,18 @@ async function runCase(
                 };
                 strategyHandle = await client.compileStrategy(session, strategy);
                 telemetry = await safeTelemetry(client, solver, errors);
+                const engineStrategyBytes = nestedNumber(
+                    telemetry, "compilation", "strategy_json_bytes");
+                if (compiledGraph && engineStrategyBytes !== null) {
+                    compiledGraph.strategy_json_bytes = engineStrategyBytes;
+                }
             } catch (error) {
                 errors.push(`compile: ${errorDetail(error)}`);
+                telemetry = await safeTelemetry(client, solver, errors);
             }
             compileMs = roundMs(performance.now() - compileStarted);
-            if (strategyHandle && spec.verification.runs > 0) {
+            if (strategyHandle && spec.verification.runs > 0 &&
+                !skipVerification) {
                 const verifyStarted = performance.now();
                 try {
                     verification = await verifyStrategy(
@@ -589,6 +608,7 @@ async function runCase(
         expected: spec.expected,
         actual_status: actualStatus,
         expectation_met: false,
+        verification_skipped: skipVerification,
         input: {
             comparison_profile: "native-wasm-solver-v1",
             session: spec.session,
@@ -652,7 +672,8 @@ async function runCase(
         errors,
     };
     report.cap_checks = buildCapChecks(spec, report);
-    report.expectation_met = caseExpectationMet(spec, report);
+    report.expectation_met = caseExpectationMet(
+        spec, report, skipVerification);
     return report;
 }
 
@@ -739,7 +760,8 @@ try {
             reports.push(disabledReport(spec));
         } else {
             process.stdout.write(`solver benchmark: ${spec.id}\n`);
-            reports.push(await runCase(client, data, spec));
+            reports.push(await runCase(
+                client, data, spec, options.skipVerification));
         }
     }
     const report = {

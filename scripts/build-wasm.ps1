@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     # Root of an activated Emscripten SDK. Defaults to $env:EMSDK, then C:\emsdk.
-    [string]$EmsdkRoot
+    [string]$EmsdkRoot,
+    [switch]$Diagnostics
 )
 
 $ErrorActionPreference = "Stop"
@@ -73,6 +74,13 @@ $EmccArgs = @(
     "-std=c++20", "-O2", "-fexceptions",
     "-I$Root/engine/include", "-I$Root/engine/src", "-I$GeneratedDirectory"
 )
+if ($Diagnostics) {
+    $EmccArgs += @(
+        "-sASSERTIONS=2",
+        "-sSAFE_HEAP=1",
+        "-sSTACK_OVERFLOW_CHECK=2"
+    )
+}
 $EmccArgs += $EngineSources
 $EmccArgs += $Facade
 $EmccArgs += @(
@@ -82,8 +90,11 @@ $EmccArgs += @(
     "-sEXPORT_NAME=createPoecraftEngine",
     "-sENVIRONMENT=web,worker,node",
     "-sALLOW_MEMORY_GROWTH=1",
+    "-sINITIAL_MEMORY=33554432",
     "-sMAXIMUM_MEMORY=4GB",
-    "-sSTACK_SIZE=4194304",
+    # Large compiled policy conditions are constructed and parsed recursively;
+    # the advanced S7 corpus exceeds Emscripten's 4 MiB default-safe stack.
+    "-sSTACK_SIZE=16777216",
     "-sEXIT_RUNTIME=0",
     "-sEXPORTED_FUNCTIONS=$Exported",
     "-sEXPORTED_RUNTIME_METHODS=$RuntimeMethods",

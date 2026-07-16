@@ -637,6 +637,11 @@ struct CalcTelemetry {
     std::uint64_t reforge_frontier_work = 0;
 };
 
+/* Price-independent sparse closure retained by CalcContext between compatible
+ * solves. Its definition is private to solver_solve.cpp; the context only
+ * owns the last completed closure so a price-only solve can reuse it. */
+struct SolveTransitionCache;
+
 class SolverResourceLimit : public std::length_error {
   public:
     SolverResourceLimit(std::string cap_name, std::uint64_t limit)
@@ -754,6 +759,14 @@ class CalcContext {
     std::uint64_t cached_reforge_count() const {
         return reforge_cache_.size();
     }
+    const std::shared_ptr<SolveTransitionCache>& solve_transition_cache()
+        const {
+        return solve_transition_cache_;
+    }
+    void retain_solve_transition_cache(
+        std::shared_ptr<SolveTransitionCache> cache) {
+        solve_transition_cache_ = std::move(cache);
+    }
 
   private:
     std::shared_ptr<const SessionImpl> session_;
@@ -785,6 +798,7 @@ class CalcContext {
     CalcTelemetry telemetry_;
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
+    std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
     std::uint64_t layout_build_ns_ = 0;
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
@@ -967,6 +981,9 @@ struct SolveDiagnostics {
     std::vector<std::string> skipped_unsupported;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;
+    std::uint32_t policy_improvement_rounds = 0;
+    bool policy_iteration_fallback = false;
+    std::string policy_evaluation_failure;
     double residual = 0.0;
     bool state_cap_hit = false;
     bool resource_cap_hit = false;
@@ -991,6 +1008,14 @@ struct SolveDiagnostics {
     std::uint64_t extraction_action_evaluations = 0;
     std::uint64_t sparse_rows = 0;
     std::uint64_t sparse_transitions = 0;
+    std::uint64_t algebraic_self_loops = 0;
+    bool transition_cache_reused = false;
+    bool focused_expansion = false;
+    std::uint32_t focused_expansion_rounds = 0;
+    double focused_lower_bound = 0.0;
+    double focused_upper_bound = std::numeric_limits<double>::infinity();
+    double focused_optimality_gap = std::numeric_limits<double>::infinity();
+    std::uint64_t focused_expansion_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;
@@ -1105,6 +1130,7 @@ std::string serialize_solve_log(
 struct PolicyCompilationTelemetry {
     std::uint64_t duration_ns = 0;
     std::uint32_t working_states = 0;
+    std::uint32_t policy_regions = 0;
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;

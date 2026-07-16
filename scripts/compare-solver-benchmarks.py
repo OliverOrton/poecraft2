@@ -61,6 +61,7 @@ STRUCTURAL_TELEMETRY_PATHS = (
     "optimization.full_request_status",
     "compilation.available",
     "compilation.working_states",
+    "compilation.policy_regions",
     "compilation.nodes",
     "compilation.edges",
     "compilation.strategy_json_bytes",

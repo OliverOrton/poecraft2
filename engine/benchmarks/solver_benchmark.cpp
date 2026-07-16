@@ -46,6 +46,7 @@ struct Arguments {
     fs::path output;
     std::string case_id;
     bool validate_only = false;
+    bool skip_verification = false;
 };
 
 struct NativeHandles {
@@ -67,6 +68,7 @@ struct NativeHandles {
 struct CaseResult {
     std::string actual_status = "not_run";
     bool expectation_met = false;
+    bool verification_skipped = false;
     double registry_layout_ms = 0.0;
     double solve_ms = 0.0;
     double compile_ms = 0.0;
@@ -496,7 +498,8 @@ void evaluate_cap_checks(const Value& specification, CaseResult& report) {
 }
 
 bool evaluate_expectation(
-    const Value& specification, const CaseResult& report) {
+    const Value& specification, const CaseResult& report,
+    const bool skip_verification) {
     if (report.actual_status == "covered_by_native_unit_gate" ||
         report.actual_status == "not_run_approval_pending") {
         return true;
@@ -531,6 +534,7 @@ bool evaluate_expectation(
         report.strategy_json_bytes == 0) {
         return false;
     }
+    if (skip_verification) return true;
     if (required_string(expected, "verification_status") != "run") {
         return true;
     }
@@ -695,8 +699,11 @@ void create_case_objects(
     }
 }
 
-CaseResult run_case(pc_data_handle data, const Value& specification) {
+CaseResult run_case(
+    pc_data_handle data, const Value& specification,
+    const bool skip_verification) {
     CaseResult report;
+    report.verification_skipped = skip_verification;
     const auto total_begin = Clock::now();
     report.working_set_before = process_working_set();
     const std::string backend =
@@ -837,7 +844,7 @@ CaseResult run_case(pc_data_handle data, const Value& specification) {
                             specification, "verification", Type::Object);
                         const std::uint64_t runs =
                             optional_u64(verification, "runs", 0);
-                        if (runs > 0) {
+                        if (runs > 0 && !skip_verification) {
                             const auto verification_begin = Clock::now();
                             result = pc_simulator_create(
                                 handles.session, handles.strategy,
@@ -920,7 +927,8 @@ CaseResult run_case(pc_data_handle data, const Value& specification) {
     }
 
     evaluate_cap_checks(specification, report);
-    report.expectation_met = evaluate_expectation(specification, report);
+    report.expectation_met = evaluate_expectation(
+        specification, report, skip_verification);
     report.working_set_after = process_working_set();
     report.total_ms = milliseconds(total_begin, Clock::now());
     return report;
@@ -946,6 +954,8 @@ void append_case_report(
     out << "  \"expected\":" << json_of(required(specification, "expected", Type::Object)) << ",\n";
     out << "  \"actual_status\":" << escape_json(result.actual_status) << ",\n";
     out << "  \"expectation_met\":" << (result.expectation_met ? "true" : "false") << ",\n";
+    out << "  \"verification_skipped\":"
+        << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
     for (const char* key : {"comparison_profile", "session", "start", "goal", "allowed_mechanic_families", "economy", "caps", "verification"}) {
@@ -1122,6 +1132,9 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--output") args.output = value("--output");
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
+        else if (argument == "--skip-verification") {
+            args.skip_verification = true;
+        }
         else throw std::runtime_error("unknown argument: " + argument);
     }
     if (args.artifact.empty()) throw std::runtime_error("--artifact is required");
@@ -1255,7 +1268,8 @@ int main(int argc, char** argv) {
             bool first = true;
             bool all_expected = true;
             for (const Value& specification : specifications) {
-                const CaseResult result = run_case(data, specification);
+                const CaseResult result = run_case(
+                    data, specification, args.skip_verification);
                 if (!first) output << ",\n";
                 first = false;
                 append_case_report(output, specification, result);

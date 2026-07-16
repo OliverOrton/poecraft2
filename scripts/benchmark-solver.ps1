@@ -5,7 +5,8 @@ param(
     [string]$Case = "",
     [ValidatePattern("^[A-Za-z0-9._-]+$")]
     [string]$Label = "s7.0-unoptimized",
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [switch]$SkipVerification
 )
 
 $ErrorActionPreference = "Stop"
@@ -47,6 +48,7 @@ if ($Runner -in @("all", "native")) {
         "--output", $NativeReport
     )
     if ($Case) { $NativeArgs += @("--case", $Case) }
+    if ($SkipVerification) { $NativeArgs += "--skip-verification" }
     & $Native.FullName @NativeArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Native solver benchmark failed with exit code $LASTEXITCODE."
@@ -68,6 +70,7 @@ if ($Runner -in @("all", "wasm")) {
             "--output", $WasmReport
         )
         if ($Case) { $WasmArgs += @("--case", $Case) }
+        if ($SkipVerification) { $WasmArgs += "--skip-verification" }
         & npm run benchmark:solver -- @WasmArgs
         if ($LASTEXITCODE -ne 0) {
             throw "WASM solver benchmark failed with exit code $LASTEXITCODE."

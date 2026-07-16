@@ -438,10 +438,26 @@ void run_artifact_solve_tests(const char* artifact_dir) {
     PC_CHECK(second.diagnostics.goal_states == first.diagnostics.goal_states);
     PC_CHECK(second.diagnostics.policy_reachable_states ==
              first.diagnostics.policy_reachable_states);
-    PC_CHECK(second_telemetry.state_action_rows ==
-             first_telemetry.state_action_rows);
-    PC_CHECK(second_telemetry.transition_entries ==
-             first_telemetry.transition_entries);
+    PC_CHECK(!first.diagnostics.transition_cache_reused);
+    PC_CHECK(second.diagnostics.transition_cache_reused);
+    PC_CHECK(first_telemetry.state_action_rows > 0);
+    PC_CHECK(second_telemetry.state_action_rows == 0);
+    PC_CHECK(second_telemetry.transition_entries == 0);
+
+    auto repriced = prices;
+    for (auto& [unused_key, price] : repriced) {
+        (void)unused_key;
+        price *= 2.0;
+    }
+    const SolveResult price_only = solve(calc, start, repriced);
+    const CalcTelemetry price_only_telemetry = calc.telemetry();
+    PC_CHECK(price_only.converged);
+    PC_CHECK(price_only.diagnostics.transition_cache_reused);
+    PC_CHECK(price_only_telemetry.state_action_rows == 0);
+    PC_CHECK(price_only_telemetry.transition_entries == 0);
+    PC_CHECK(std::abs(
+                 price_only.values[price_only.start_state] -
+                 start_value * 2.0) < 1e-6);
     for (const std::uint32_t budget : {1u, 7u, 128u}) {
         const SolveResult stepped = solve_stepped(calc, start, prices, budget);
         PC_CHECK(identical_solve(first, stepped));

@@ -168,6 +168,8 @@ export class PcCalculator extends HTMLElement {
     private context = 0;
     private item = 0;
     private solver = 0;
+    private solveSolver = 0;
+    private solveSolverKey = "";
     private modCache: ModInfo[] = [];
     private modifierOptions: ModifierFamilyOption[] = [];
     private modKeyToFamily = new Map<string, string>();
@@ -437,6 +439,12 @@ export class PcCalculator extends HTMLElement {
             this.solver = 0;
             await this.client.closeSolver(solver);
         }
+        if (this.solveSolver) {
+            const solver = this.solveSolver;
+            this.solveSolver = 0;
+            this.solveSolverKey = "";
+            await this.client.closeSolver(solver);
+        }
     }
 
     private async disposeEngine(): Promise<void> {
@@ -456,14 +464,20 @@ export class PcCalculator extends HTMLElement {
         }
         const item = this.item;
         const solver = this.solver;
+        const solveSolver = this.solveSolver;
         const context = this.context;
         const session = this.session;
         this.item = 0;
         this.solver = 0;
+        this.solveSolver = 0;
+        this.solveSolverKey = "";
         this.context = 0;
         this.session = 0;
         if (solver && this.client) {
             await this.client.closeSolver(solver);
+        }
+        if (solveSolver && this.client) {
+            await this.client.closeSolver(solveSolver);
         }
         if (item && this.client) {
             await this.client.closeItem(item);
@@ -679,20 +693,20 @@ export class PcCalculator extends HTMLElement {
         this.setStatus("Solving — may take a while on large goals.");
         this.renderSolvePanel();
         let economy = 0;
-        let solveSolver = 0;
+        let envelopeSolver = 0;
         try {
             /* Build the native product envelope before selecting its priced
              * subset. The ordinary Calculator handle stays exhaustive so
              * exact single-action odds and craft panels do not lose actions
              * merely because Solve uses a smaller abstraction. */
-            solveSolver = await this.client.openSolver(
+            envelopeSolver = await this.client.openSolver(
                 this.session,
                 this.solverGoal(undefined, true),
             );
             const relevantActions =
-                await this.client.solverActions(solveSolver);
-            await this.client.closeSolver(solveSolver);
-            solveSolver = 0;
+                await this.client.solverActions(envelopeSolver);
+            await this.client.closeSolver(envelopeSolver);
+            envelopeSolver = 0;
             const candidateIds = pricedSolverActionIds(
                 relevantActions,
                 pinnedPrice,
@@ -703,13 +717,23 @@ export class PcCalculator extends HTMLElement {
             this.solveCandidateActions = candidateIds.length;
             this.solveExcludedActions =
                 relevantActions.length - candidateIds.length;
-            solveSolver = await this.client.openSolver(
-                this.session,
-                this.solverGoal(candidateIds, true),
-            );
+            const solveGoal = this.solverGoal(candidateIds, true);
+            const solveKey = JSON.stringify(solveGoal);
+            if (this.solveSolver && this.solveSolverKey !== solveKey) {
+                await this.client.closeSolver(this.solveSolver);
+                this.solveSolver = 0;
+                this.solveSolverKey = "";
+            }
+            if (!this.solveSolver) {
+                this.solveSolver = await this.client.openSolver(
+                    this.session,
+                    solveGoal,
+                );
+                this.solveSolverKey = solveKey;
+            }
             economy = await this.client.loadEconomy(pinned.snapshot);
             const result = await this.client.solverSolve(
-                solveSolver,
+                this.solveSolver,
                 this.item,
                 economy,
                 undefined,
@@ -744,7 +768,7 @@ export class PcCalculator extends HTMLElement {
             }
             try {
                 const compiled = await this.client.solverCompileStrategy(
-                    solveSolver,
+                    this.solveSolver,
                 );
                 this.solvedStrategy = prepareSolverStrategy(compiled);
                 this.solvedStrategy.economy = pinned.identity;
@@ -770,7 +794,9 @@ export class PcCalculator extends HTMLElement {
         } finally {
             this.solveAbort = null;
             if (economy) await this.client.closeEconomy(economy);
-            if (solveSolver) await this.client.closeSolver(solveSolver);
+            if (envelopeSolver) {
+                await this.client.closeSolver(envelopeSolver);
+            }
             this.solveRunning = false;
             this.renderSolvePanel();
         }

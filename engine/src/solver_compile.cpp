@@ -44,7 +44,10 @@ std::string json_escape(const std::string& text) {
 
 std::string number(double value) {
     char buffer[40];
-    std::snprintf(buffer, sizeof(buffer), "%.9g", value);
+    /* Cost annotations are presentation metadata. Fixed micro-chaos
+     * precision keeps native/WASM documents byte-stable across harmless
+     * last-bit differences in dense fixed-policy evaluation. */
+    std::snprintf(buffer, sizeof(buffer), "%.6f", value);
     return buffer;
 }
 
@@ -444,6 +447,84 @@ std::string compile_policy_strategy_json(
         compiled_states.push_back(state_id);
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
+
+    /* Abstract-state ids follow transition discovery order, which is allowed
+     * to differ between native and WASM. Canonicalize the compile order and
+     * emitted node ids by the exact state predicate so policy compression
+     * produces the same document for the same solved policy. */
+    std::map<std::uint32_t, std::string> state_conditions;
+    for (const std::uint32_t state_id : compiled_states) {
+        state_conditions.emplace(
+            state_id,
+            abstract_state_condition(
+                session, layout, vocabulary, calc.state(state_id)));
+    }
+    std::sort(
+        compiled_states.begin(), compiled_states.end(),
+        [&](const std::uint32_t left, const std::uint32_t right) {
+            const std::string& left_condition = state_conditions.at(left);
+            const std::string& right_condition = state_conditions.at(right);
+            if (left_condition != right_condition) {
+                return left_condition < right_condition;
+            }
+            if (result.policy[left].index != result.policy[right].index) {
+                return result.policy[left].index < result.policy[right].index;
+            }
+            const std::string left_cost = number(result.values[left]);
+            const std::string right_cost = number(result.values[right]);
+            if (left_cost != right_cost) return left_cost < right_cost;
+            return left < right;
+        });
+    std::vector<std::uint32_t> canonical_state_ids(
+        result.values.size(), kNoId);
+    for (std::uint32_t i = 0; i < compiled_states.size(); ++i) {
+        canonical_state_ids[compiled_states[i]] = i;
+    }
+    const auto state_node = [&](const std::uint32_t state_id) {
+        if (state_id >= canonical_state_ids.size() ||
+            canonical_state_ids[state_id] == kNoId) {
+            gap("policy node requested for a non-working state");
+        }
+        return "s" + std::to_string(canonical_state_ids[state_id]);
+    };
+
+    /* Exact policy-region compression. States may share one emitted
+     * continuation only when the selected program is state-independent and
+     * the serialized expected-cost annotation is identical. Observation-
+     * owned and state-local retry options remain singleton regions so their
+     * concrete routing recipes cannot be conflated. */
+    std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
+    std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
+    std::vector<std::uint32_t> emitted_states;
+    for (const std::uint32_t state_id : compiled_states) {
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        const bool primitive_unveil =
+            planner.kind == PlannerOperatorKind::Primitive &&
+            calc.registry().actions[planner.primitive_action].params.type ==
+                ActionType::Unveil;
+        const bool state_local_option =
+            planner.kind == PlannerOperatorKind::FixedOption &&
+            (planner.option_kind == FixedOptionKind::Renewal ||
+             planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+             planner.option_kind == FixedOptionKind::FracturePrepare);
+        std::uint32_t leader = state_id;
+        if (!primitive_unveil && !state_local_option) {
+            const std::string key =
+                std::to_string(result.policy[state_id].index) + ":" +
+                number(result.values[state_id]);
+            std::vector<std::uint32_t>& leaders = leaders_by_key[key];
+            if (leaders.empty() ||
+                states_by_leader[leaders.back()].size() >= 8) {
+                leaders.push_back(state_id);
+                emitted_states.push_back(state_id);
+            }
+            leader = leaders.back();
+        } else {
+            emitted_states.push_back(state_id);
+        }
+        states_by_leader[leader].push_back(state_id);
+    }
     std::map<std::uint32_t, OptionKernel> compiled_option_kernels;
     for (const std::uint32_t state_id : compiled_states) {
         const PlannerOperator& planner =
@@ -529,7 +610,7 @@ std::string compile_policy_strategy_json(
     json += "{\"id\":\"offpolicy\",\"kind\":\"terminal\",\"terminal\":"
             "\"failure\",\"reason\":\"item left the policy-reachable "
             "state set\"}";
-    for (std::uint32_t state_id : compiled_states) {
+    for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
         const bool unveil =
@@ -542,8 +623,8 @@ std::string compile_policy_strategy_json(
                 gap("unveil state " + std::to_string(state_id) +
                     " has no resolved option preference");
             }
-            json += ",{\"id\":\"s";
-            json += std::to_string(state_id);
+            json += ",{\"id\":\"";
+            json += state_node(state_id);
             json += "\",\"kind\":\"router\"}";
             ++node_count;
             check_node_cap();
@@ -552,8 +633,8 @@ std::string compile_policy_strategy_json(
                  ++option) {
                 const std::uint32_t mod_id =
                     result.unveil_preferences[state_id][option];
-                json += ",{\"id\":\"s";
-                json += std::to_string(state_id);
+                json += ",{\"id\":\"";
+                json += state_node(state_id);
                 json += "_u" + std::to_string(option);
                 json += "\",\"kind\":\"operation\",\"expected_cost\":";
                 json += number(result.values[state_id]);
@@ -579,7 +660,7 @@ std::string compile_policy_strategy_json(
                 gap("renewal option has no executable rolling step");
             }
             for (std::size_t step = 0; step < primitive_steps; ++step) {
-                json += ",{\"id\":\"s" + std::to_string(state_id);
+                json += ",{\"id\":\"" + state_node(state_id);
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
                 if (step == 0) {
@@ -598,13 +679,13 @@ std::string compile_policy_strategy_json(
                 if (preferences.empty()) {
                     gap("observed renewal has no Unveil preferences");
                 }
-                json += ",{\"id\":\"s" + std::to_string(state_id) +
+                json += ",{\"id\":\"" + state_node(state_id) +
                         "_observe\",\"kind\":\"router\"}";
                 ++node_count;
                 check_node_cap();
                 for (std::size_t observation = 0;
                      observation < preferences.size(); ++observation) {
-                    json += ",{\"id\":\"s" + std::to_string(state_id) +
+                    json += ",{\"id\":\"" + state_node(state_id) +
                             "_obs" + std::to_string(observation) +
                             "\",\"kind\":\"router\"}";
                     ++node_count;
@@ -612,8 +693,8 @@ std::string compile_policy_strategy_json(
                     for (std::size_t choice = 0;
                          choice < preferences[observation].choices.size();
                          ++choice) {
-                        json += ",{\"id\":\"s" +
-                                std::to_string(state_id) + "_obs" +
+                        json += ",{\"id\":\"" +
+                                state_node(state_id) + "_obs" +
                                 std::to_string(observation) + "_u" +
                                 std::to_string(choice) +
                                 "\",\"kind\":\"operation\",\"operation\":";
@@ -628,7 +709,7 @@ std::string compile_policy_strategy_json(
                     }
                 }
             } else {
-                json += ",{\"id\":\"s" + std::to_string(state_id) +
+                json += ",{\"id\":\"" + state_node(state_id) +
                         "_retry\",\"kind\":\"router\"}";
                 ++node_count;
                 check_node_cap();
@@ -640,7 +721,7 @@ std::string compile_policy_strategy_json(
             const OptionKernel& kernel =
                 compiled_option_kernels.at(state_id);
             if (kernel.entry_continues) {
-                json += ",{\"id\":\"s" + std::to_string(state_id) +
+                json += ",{\"id\":\"" + state_node(state_id) +
                         "\",\"kind\":\"operation\",\"expected_cost\":" +
                         number(result.values[state_id]) +
                         ",\"operation\":" + operation_json(
@@ -652,7 +733,7 @@ std::string compile_policy_strategy_json(
             }
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
-                json += ",{\"id\":\"s" + std::to_string(state_id);
+                json += ",{\"id\":\"" + state_node(state_id);
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
                 if (step == 0) {
@@ -665,9 +746,9 @@ std::string compile_policy_strategy_json(
                 ++node_count;
                 check_node_cap();
             }
-            json += ",{\"id\":\"s" + std::to_string(state_id) +
+            json += ",{\"id\":\"" + state_node(state_id) +
                     "_fracture_route\",\"kind\":\"router\"}";
-            json += ",{\"id\":\"s" + std::to_string(state_id) +
+            json += ",{\"id\":\"" + state_node(state_id) +
                     "_fracture\",\"kind\":\"operation\",\"operation\":" +
                     operation_json(
                         session, calc.registry().actions.at(
@@ -682,8 +763,8 @@ std::string compile_policy_strategy_json(
             gap("planner operator " + planner.id + " has no primitive program");
         }
         for (std::size_t step = 0; step < program.size(); ++step) {
-            json += ",{\"id\":\"s";
-            json += std::to_string(state_id);
+            json += ",{\"id\":\"";
+            json += state_node(state_id);
             if (step > 0) json += "_o" + std::to_string(step);
             json += "\",\"kind\":\"operation\"";
             if (step == 0) {
@@ -753,111 +834,16 @@ std::string compile_policy_strategy_json(
         edge("router", "goal", 0, all_of(parts), false);
     }
 
-    for (std::uint32_t state_id : compiled_states) {
-        const AbstractState& state = calc.state(state_id);
-        std::vector<std::string> parts{rarity_condition(state.rarity)};
-        parts.push_back(
-            count_condition("prefix_count_range", state.prefix_count));
-        parts.push_back(
-            count_condition("suffix_count_range", state.suffix_count));
-        for (std::size_t i = 0; i < layout.slots.size(); ++i) {
-            const auto status =
-                static_cast<GoalSlotStatus>(state.slot_status[i]);
-            const bool fractured =
-                (state.fractured_goal_mask & (1u << i)) != 0;
-            const bool crafted =
-                (state.crafted_goal_mask & (1u << i)) != 0;
-            switch (status) {
-            case GoalSlotStatus::Satisfied:
-                parts.push_back(vocabulary[i].satisfied);
-                parts.push_back(
-                    fractured
-                        ? with_slot_flags(vocabulary[i].member, true, false)
-                        : not_of(with_slot_flags(
-                              vocabulary[i].member, true, false)));
-                parts.push_back(
-                    crafted
-                        ? with_slot_flags(vocabulary[i].member, false, true)
-                        : not_of(with_slot_flags(
-                              vocabulary[i].member, false, true)));
-                break;
-            case GoalSlotStatus::PresentBelowTier:
-                parts.push_back(vocabulary[i].member);
-                parts.push_back(not_of(vocabulary[i].satisfied));
-                parts.push_back(
-                    fractured
-                        ? with_slot_flags(vocabulary[i].member, true, false)
-                        : not_of(with_slot_flags(
-                              vocabulary[i].member, true, false)));
-                parts.push_back(
-                    crafted
-                        ? with_slot_flags(vocabulary[i].member, false, true)
-                        : not_of(with_slot_flags(
-                              vocabulary[i].member, false, true)));
-                break;
-            case GoalSlotStatus::Absent:
-                parts.push_back(not_of(vocabulary[i].member));
-                break;
-            }
+    for (const std::uint32_t leader : emitted_states) {
+        for (const std::uint32_t state_id : states_by_leader.at(leader)) {
+            edge(
+                "router", state_node(leader), 1,
+                state_conditions.at(state_id),
+                false);
         }
-        static const std::pair<std::uint32_t, const char*> flag_conditions[] = {
-            {kFlagCorrupted, "corrupted"},
-            {kFlagMirrored, "mirrored"},
-            {kFlagSplit, "split"},
-            {kFlagSynthesised, "synthesised"},
-            {kFlagFractured, "fractured"},
-            {kFlagCraftedMod, "crafted"},
-            {kFlagVeiledMod, "veiled"},
-            {kFlagMultimod, "multimod"},
-            {kFlagNoAttack, "no_attack"},
-            {kFlagNoCaster, "no_caster"},
-            {kFlagPrefixesLocked, "prefixes_locked"},
-            {kFlagSuffixesLocked, "suffixes_locked"},
-            {kFlagInfluenced, "influenced"},
-            {kFlagEldritchImplicit, "eldritch_implicit"},
-        };
-        for (const auto& [flag, name] : flag_conditions) {
-            const std::string condition = item_flag_condition(name);
-            parts.push_back((state.flags & flag) != 0
-                                ? condition
-                                : not_of(condition));
-        }
-        const std::string veiled_prefix =
-            item_flag_condition("veiled_prefix");
-        const std::string veiled_suffix =
-            item_flag_condition("veiled_suffix");
-        parts.push_back(state.veiled_side == PC_SIDE_PREFIX
-                            ? veiled_prefix
-                            : not_of(veiled_prefix));
-        parts.push_back(state.veiled_side == PC_SIDE_SUFFIX
-                            ? veiled_suffix
-                            : not_of(veiled_suffix));
-        parts.push_back(
-            "{\"type\":\"influence_bits\",\"value\":" +
-            std::to_string(state.influence_bits) + "}");
-        parts.push_back(eldritch_tier_condition(
-            "searing", state.searing_exarch_tier));
-        parts.push_back(eldritch_tier_condition(
-            "eater", state.eater_of_worlds_tier));
-        for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
-            parts.push_back(mod_count_condition(
-                session, layout.junk_classes[i], state.junk_counts[i]));
-            parts.push_back(mod_count_condition(
-                session, layout.junk_classes[i],
-                state.fractured_junk_counts[i], PC_MOD_SLOT_FRACTURED));
-            parts.push_back(mod_count_condition(
-                session, layout.junk_classes[i],
-                state.crafted_junk_counts[i], PC_MOD_SLOT_CRAFTED));
-            parts.push_back(mod_count_condition(
-                session, layout.junk_classes[i],
-                state.fractured_crafted_junk_counts[i],
-                PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED));
-        }
-        edge("router", "s" + std::to_string(state_id), 1, all_of(parts),
-             false);
     }
     edge("router", "offpolicy", 2, "", true);
-    for (std::uint32_t state_id : compiled_states) {
+    for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
         const bool unveil =
@@ -875,14 +861,14 @@ std::string compile_policy_strategy_json(
             const std::size_t primitive_steps =
                 planner.primitive_program.size() - (observed ? 1u : 0u);
             for (std::size_t step = 0; step < primitive_steps; ++step) {
-                std::string from = "s" + std::to_string(state_id);
+                std::string from = state_node(state_id);
                 if (step > 0) from += "_o" + std::to_string(step);
                 std::string to;
                 if (step + 1 < primitive_steps) {
-                    to = "s" + std::to_string(state_id) + "_o" +
+                    to = state_node(state_id) + "_o" +
                          std::to_string(step + 1);
                 } else {
-                    to = "s" + std::to_string(state_id) +
+                    to = state_node(state_id) +
                          (observed ? "_observe" : "_retry");
                 }
                 edge(from, to, 0, "", true);
@@ -891,11 +877,11 @@ std::string compile_policy_strategy_json(
                 const auto& preferences =
                     result.option_unveil_preferences.at(state_id);
                 const std::string dispatcher =
-                    "s" + std::to_string(state_id) + "_observe";
+                    state_node(state_id) + "_observe";
                 for (std::size_t observation = 0;
                      observation < preferences.size(); ++observation) {
                     const std::string offer =
-                        "s" + std::to_string(state_id) + "_obs" +
+                        state_node(state_id) + "_obs" +
                         std::to_string(observation);
                     edge(
                         dispatcher, offer,
@@ -922,7 +908,7 @@ std::string compile_policy_strategy_json(
                         edge(
                             operation,
                             selected.successor_state == state_id
-                                ? "s" + std::to_string(state_id)
+                                ? state_node(state_id)
                                 : "router",
                             0, "", true);
                     }
@@ -941,10 +927,10 @@ std::string compile_policy_strategy_json(
                 const OptionKernel& kernel =
                     compiled_option_kernels.at(state_id);
                 const std::string retry =
-                    "s" + std::to_string(state_id) + "_retry";
+                    state_node(state_id) + "_retry";
                 for (std::size_t i = 0; i < kernel.retry_states.size(); ++i) {
                     edge(
-                        retry, "s" + std::to_string(state_id),
+                        retry, state_node(state_id),
                         static_cast<int>(i),
                         abstract_state_condition(
                             session, layout, vocabulary,
@@ -962,29 +948,29 @@ std::string compile_policy_strategy_json(
             const OptionKernel& kernel =
                 compiled_option_kernels.at(state_id);
             if (kernel.entry_continues) {
-                edge("s" + std::to_string(state_id), "router", 0, "", true);
+                edge(state_node(state_id), "router", 0, "", true);
                 continue;
             }
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
-                std::string from = "s" + std::to_string(state_id);
+                std::string from = state_node(state_id);
                 if (step > 0) from += "_o" + std::to_string(step);
                 std::string to =
                     step + 1 < planner.primitive_program.size()
-                        ? "s" + std::to_string(state_id) + "_o" +
+                        ? state_node(state_id) + "_o" +
                               std::to_string(step + 1)
-                        : "s" + std::to_string(state_id) +
+                        : state_node(state_id) +
                               "_fracture_route";
                 edge(from, to, 0, "", true);
             }
             const std::string route =
-                "s" + std::to_string(state_id) + "_fracture_route";
+                state_node(state_id) + "_fracture_route";
             int priority = 0;
             for (const std::uint32_t continuation :
                  kernel.continuation_states) {
                 edge(
                     route,
-                    "s" + std::to_string(state_id) + "_fracture",
+                    state_node(state_id) + "_fracture",
                     priority++,
                     abstract_state_condition(
                         session, layout, vocabulary,
@@ -993,7 +979,7 @@ std::string compile_policy_strategy_json(
             }
             for (const std::uint32_t retry_state : kernel.retry_states) {
                 edge(
-                    route, "s" + std::to_string(state_id), priority++,
+                    route, state_node(state_id), priority++,
                     abstract_state_condition(
                         session, layout, vocabulary,
                         calc.state(retry_state)),
@@ -1001,18 +987,18 @@ std::string compile_policy_strategy_json(
             }
             edge(route, "router", priority, "", true);
             edge(
-                "s" + std::to_string(state_id) + "_fracture", "router",
+                state_node(state_id) + "_fracture", "router",
                 0, "", true);
             continue;
         }
         if (!unveil) {
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
-                std::string from = "s" + std::to_string(state_id);
+                std::string from = state_node(state_id);
                 if (step > 0) from += "_o" + std::to_string(step);
                 std::string to = "router";
                 if (step + 1 < planner.primitive_program.size()) {
-                    to = "s" + std::to_string(state_id) + "_o" +
+                    to = state_node(state_id) + "_o" +
                          std::to_string(step + 1);
                 }
                 edge(from, to, 0, "", true);
@@ -1022,17 +1008,17 @@ std::string compile_policy_strategy_json(
         const auto& preferences = result.unveil_preferences[state_id];
         for (std::size_t option = 0; option < preferences.size(); ++option) {
             const std::string operation =
-                "s" + std::to_string(state_id) + "_u" +
+                state_node(state_id) + "_u" +
                 std::to_string(option);
             const std::string condition =
                 "{\"type\":\"has_unveil_option\",\"mod_key\":\"" +
                 json_escape(mod_key_of(session, preferences[option])) +
                 "\"}";
-            edge("s" + std::to_string(state_id), operation,
+            edge(state_node(state_id), operation,
                  static_cast<int>(option), condition, false);
             edge(operation, "router", 0, "", true);
         }
-        edge("s" + std::to_string(state_id), "offpolicy",
+        edge(state_node(state_id), "offpolicy",
              static_cast<int>(preferences.size()), "", true);
     }
     json += "]}";
@@ -1044,6 +1030,8 @@ std::string compile_policy_strategy_json(
     if (telemetry != nullptr) {
         telemetry->working_states = static_cast<std::uint32_t>(
             compiled_states.size());
+        telemetry->policy_regions = static_cast<std::uint32_t>(
+            emitted_states.size());
         telemetry->nodes = node_count;
         telemetry->edges = edge_counter;
         telemetry->strategy_json_bytes = json.size();
