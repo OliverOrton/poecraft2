@@ -53,6 +53,9 @@ enum class FixedOptionKind : std::uint8_t {
     EldritchSideIntent = 1,
     ProtectedSide = 2,
     MultimodFinish = 3,
+    Renewal = 4,
+    ProtectedRepeat = 5,
+    FracturePrepare = 6,
 };
 
 /*
@@ -66,6 +69,14 @@ struct FixedOptionSpec {
     std::string action_id; /* Eldritch craft or protected operation */
     std::vector<std::string> setup_action_ids; /* explicit dominance setup */
     std::vector<std::string> bench_craft_ids;  /* explicit Multimod finish */
+    /* S7.4 renewal programs. Unveil may appear only as the final observed
+     * step. The exit predicate is a threshold over the named goal slots. */
+    std::vector<std::string> program_action_ids;
+    std::vector<std::uint32_t> exit_goal_slots;
+    std::uint32_t exit_min_satisfied = 0;
+    /* Fracture preparation waits for this exact satisfying goal carrier.
+     * Wrong-carrier fracture outcomes remain outer-policy exits. */
+    std::uint32_t carrier_goal_slot = kNoId;
 };
 
 struct GoalSpec {
@@ -176,6 +187,11 @@ struct ActionRegistryBuildOptions {
     bool goal_relevant_fossils = false;
     bool goal_relevant_actions = false;
     std::vector<std::string> requested_fossil_action_ids;
+    std::vector<std::string> option_dependency_action_ids;
+    bool needs_prefix_lock = false;
+    bool needs_suffix_lock = false;
+    bool needs_multimod = false;
+    bool needs_fracture = false;
     std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
 };
 
@@ -200,8 +216,13 @@ struct PlannerOperator {
     std::uint32_t primitive_action = kNoId;
     std::vector<std::uint32_t> primitive_program;
     std::int8_t intended_side = -1;
-    /* Sorted, aggregated quantities. Fixed programs execute every primitive
-     * exactly once, so these are both exact and price-independent. */
+    std::vector<std::uint32_t> exit_goal_slots;
+    std::uint32_t exit_min_satisfied = 0;
+    std::uint32_t carrier_goal_slot = kNoId;
+    std::uint32_t conditional_action = kNoId; /* Fracture after preparation */
+    /* Sorted dependency quantities. S7.3 fixed programs execute each entry
+     * exactly once; S7.4 kernels return the exact state-dependent expected
+     * quantities used for pricing conditional and observed paths. */
     std::vector<std::pair<std::string, double>> resource_quantities;
 };
 
@@ -519,6 +540,8 @@ std::uint8_t rarity_affix_cap(
 struct OutcomeEntry {
     std::uint32_t state = kNoId; /* interned successor state id */
     double probability = 0.0;
+
+    bool operator==(const OutcomeEntry&) const = default;
 };
 
 /* An unveil first samples an offered set, then the policy chooses the
@@ -527,11 +550,22 @@ struct OutcomeEntry {
 struct OutcomeChoiceGroup {
     double probability = 0.0;
     std::vector<std::uint32_t> states;
+
+    bool operator==(const OutcomeChoiceGroup&) const = default;
 };
 
 struct OutcomeChoiceOption {
     std::uint32_t mod_id = kNoId;
+    /* Bellman successor. A renewal option may normalize an exact-equivalent
+     * retry result to its option entry state. */
     std::uint32_t state = kNoId;
+    /* Concrete abstract state where the offer is visible, and the concrete
+     * successor produced by selecting this modifier. Primitive Unveil uses
+     * the action entry and state respectively. */
+    std::uint32_t observation_state = kNoId;
+    std::uint32_t actual_state = kNoId;
+
+    bool operator==(const OutcomeChoiceOption&) const = default;
 };
 
 struct OutcomeDistribution {
@@ -545,9 +579,10 @@ struct OutcomeDistribution {
 };
 
 /*
- * Exact absorbing result of running a finite option program from one entry
- * abstract state. S7.3 options have no observation-owned choice groups: every
- * meaningful program exit is returned directly to the outer policy.
+ * Exact price-independent result of one option decision row. S7.3 programs
+ * return every finite exit; S7.4 may normalize a certified retry to the entry
+ * state and may retain observation-owned choices. The Bellman row pays the
+ * returned expected resources again on every normalized retry.
  */
 struct OptionKernel {
     bool legal = false;
@@ -556,9 +591,30 @@ struct OptionKernel {
     double expected_primitive_actions = 0.0;
     std::vector<std::pair<std::string, double>> expected_resources;
     std::vector<OutcomeEntry> exits;
-    /* Empty for every S7.3 fixed option. Reserved by the kernel contract for
-     * S7.4 observe-then-decide programs such as Unveil. */
+    /* Observe-then-decide groups retain the sampled Unveil offer. */
     std::vector<OutcomeChoiceGroup> observation_choice_groups;
+    std::vector<OutcomeChoiceOption> observation_choice_options;
+    /* Concrete states hidden behind an exact-equivalent retry self-loop.
+     * Fracture preparation additionally records states that route to the
+     * conditional primitive Fracture step during graph expansion. */
+    std::vector<std::uint32_t> retry_states;
+    std::vector<std::uint32_t> continuation_states;
+    bool entry_continues = false;
+};
+
+struct ObservedUnveilChoice {
+    std::uint32_t mod_id = kNoId;
+    std::uint32_t successor_state = kNoId; /* Bellman-normalized successor */
+    std::uint32_t actual_state = kNoId;
+
+    bool operator==(const ObservedUnveilChoice&) const = default;
+};
+
+struct ObservedUnveilPreference {
+    std::uint32_t observation_state = kNoId;
+    std::vector<ObservedUnveilChoice> choices;
+
+    bool operator==(const ObservedUnveilPreference&) const = default;
 };
 
 /* Per-solve transition-provider telemetry. The distribution cache itself
@@ -668,7 +724,7 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index);
 
-    /* Exact fixed-program kernel. operator_index must identify a
+    /* Exact fixed-program or renewal kernel. operator_index must identify a
      * PlannerOperatorKind::FixedOption entry. */
     const OptionKernel& option_kernel(
         std::uint32_t state_id,
@@ -963,6 +1019,11 @@ struct SolveResult {
     /* For an abstract unveil policy action, concrete option mod ids in
      * Bellman-optimal preference order, parallel to the state table. */
     std::vector<std::vector<std::uint32_t>> unveil_preferences;
+    /* State-local preferences for Unveil observations owned by a selected
+     * fixed option. Unlike primitive Unveil, one option attempt can expose
+     * several pre-Unveil abstract states. */
+    std::vector<std::vector<ObservedUnveilPreference>>
+        option_unveil_preferences;
     SolveDiagnostics diagnostics;
     SolveOptions options;
 };
@@ -1075,7 +1136,7 @@ std::string serialize_solver_telemetry(
  * expressible signature.
  */
 std::string compile_policy_strategy_json(
-    const CalcContext& calc,
+    CalcContext& calc,
     const SolveResult& result,
     const std::string& name,
     PolicyCompilationTelemetry* telemetry = nullptr);

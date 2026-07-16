@@ -917,8 +917,10 @@ removal, exact Harvest resistance/Fracture calculation, and carrier-specific
 state/compiler substrate are present. S7.2 action control/storage and the
 out-of-sequence S7.3 fixed-option checkpoint are also complete. S7.2R completed
 bounded product fossil selection, removal of fake Harvest actions, and the
-pinned missing-price fallback. S7.4 renewal and observation-aware options are
-next. Routine test suites are deferred until the end of the complete S7 plan,
+pinned missing-price fallback. S7.4 completed exact-equivalent renewal,
+protected repeats, observed Unveil choices, and carrier-exact Fracture
+preparation. S7.5 deep optimization and cache reuse are next. Routine test
+suites are deferred until the end of the complete S7 plan,
 and visual UI review belongs to Oliver unless he explicitly requests it. Do not
 begin the parked mechanic track until S7 passes.
 
@@ -1166,13 +1168,13 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Implement **S7.4 only** from
+Implement **S7.5 only** from
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
-implement fixed-exit repeat options for approved rolling/reforge methods,
-protected repeat loops that repay setup, observation-correct Unveil choices,
-and carrier-exact fracture preparation/retry. Compile them to ordinary Strategy
-Board primitives and preserve expressible success, salvage, and brick exits.
-Stop before S7.5. Do not run routine native, bindings, WASM, web, simulator, or
+eliminate direct self-loops algebraically, benchmark residual-prioritized
+backups and SCC/policy iteration, retain compatible transition caches for
+price-only solves, add bounded focused expansion only if the preceding work
+still misses the hard corpus, and compress policy regions before compilation.
+Stop before S7.6. Do not run routine native, bindings, WASM, web, simulator, or
 visual-browser gates for the intermediate phase. Oliver skipped S6 Phase 3
 entirely; do not revive it. Economy E0-E7 is implemented and locally accepted;
 only external R2 and custom-domain activation remains. Phase 12, publishing,

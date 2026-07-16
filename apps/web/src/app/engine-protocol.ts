@@ -338,7 +338,31 @@ export type SolverFixedOption =
     | {
           type: "multimod_finish";
           bench_crafts: string[];
+      }
+    | {
+          type: "renewal";
+          /** One approved roll/reforge, Scour+Alchemy, optionally followed by Unveil. */
+          actions: string[];
+          until: SolverOptionExit;
+      }
+    | {
+          type: "protected_repeat";
+          side: "prefix" | "suffix";
+          action: string;
+          until: SolverOptionExit;
+      }
+    | {
+          type: "fracture_prepare";
+          /** Approved roll/reforge used until the exact carrier is ready. */
+          preparation: string[];
+          carrier_goal_slot: number;
       };
+
+export interface SolverOptionExit {
+    /** Zero-based indices into SolverGoal.slots. */
+    goal_slots: number[];
+    min_satisfied: number;
+}
 
 export interface SolverActionInfo {
     index: number;

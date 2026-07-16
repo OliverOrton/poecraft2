@@ -44,7 +44,16 @@ extern "C" {
  *       {"type":"protected_side","side":"suffix",
  *        "action":"harvest_reforge:defences"},
  *       {"type":"multimod_finish",
- *        "bench_crafts":["bench:<mod key>","bench:<mod key>"]}
+ *        "bench_crafts":["bench:<mod key>","bench:<mod key>"]},
+ *       {"type":"renewal","actions":["chaos"],
+ *        "until":{"goal_slots":[0,1],"min_satisfied":1}},
+ *       {"type":"renewal","actions":["veiled_chaos","unveil"],
+ *        "until":{"goal_slots":[0],"min_satisfied":1}},
+ *       {"type":"protected_repeat","side":"prefix",
+ *        "action":"harvest_reforge:defences",
+ *        "until":{"goal_slots":[0,1],"min_satisfied":2}},
+ *       {"type":"fracture_prepare","preparation":["chaos"],
+ *        "carrier_goal_slot":0}
  *     ]
  *   }                               // omitted actions = generated registry;
  *                                   // [] = options only

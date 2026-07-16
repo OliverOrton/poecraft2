@@ -203,6 +203,14 @@ CalcContext::CalcContext(
                 ++action_control_.dependency_primitives;
             }
         }
+        const std::uint32_t conditional =
+            operators_[operator_index].conditional_action;
+        if (conditional != kNoId &&
+            std::find(layout_actions.begin(), layout_actions.end(),
+                      conditional) == layout_actions.end()) {
+            layout_actions.push_back(conditional);
+            ++action_control_.dependency_primitives;
+        }
     }
     candidate_operators_ = candidates_;
     for (std::uint32_t operator_index =
@@ -664,6 +672,7 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     for (const PlannerOperator& op : operators_) {
         bytes += string_bytes(op.id) + string_bytes(op.display_name);
         bytes += op.primitive_program.capacity() * sizeof(std::uint32_t);
+        bytes += op.exit_goal_slots.capacity() * sizeof(std::uint32_t);
         bytes += op.resource_quantities.capacity() *
                  sizeof(std::pair<std::string, double>);
         for (const auto& [key, quantity] : op.resource_quantities) {
@@ -741,6 +750,11 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
              kernel->observation_choice_groups) {
             bytes += group.states.capacity() * sizeof(std::uint32_t);
         }
+        bytes += kernel->observation_choice_options.capacity() *
+                 sizeof(OutcomeChoiceOption);
+        bytes += kernel->retry_states.capacity() * sizeof(std::uint32_t);
+        bytes += kernel->continuation_states.capacity() *
+                 sizeof(std::uint32_t);
     }
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<

@@ -105,22 +105,40 @@ solver::ActionRegistryBuildOptions registry_build_options(
     if (fixed_options != nullptr && fixed_options->type == Type::Array) {
         for (const Value& option : fixed_options->array) {
             if (option.type != Type::Object) continue;
+            const std::string type = string_member(option, "type");
             const std::string action = string_member(option, "action");
+            if (!action.empty()) {
+                options.option_dependency_action_ids.push_back(action);
+            }
             if (action.starts_with("fossil:")) {
                 options.requested_fossil_action_ids.push_back(action);
             }
-            for (const char* key : {"setup", "bench_crafts"}) {
+            for (const char* key : {
+                     "setup", "bench_crafts", "actions", "preparation"}) {
                 const Value* program = option.find(key);
                 if (program == nullptr || program->type != Type::Array) {
                     continue;
                 }
                 for (const Value& step : program->array) {
-                    if (step.type == Type::String &&
-                        step.string.starts_with("fossil:")) {
-                        options.requested_fossil_action_ids.push_back(
+                    if (step.type == Type::String) {
+                        options.option_dependency_action_ids.push_back(
                             step.string);
+                        if (step.string.starts_with("fossil:")) {
+                            options.requested_fossil_action_ids.push_back(
+                                step.string);
+                        }
                     }
                 }
+            }
+            if (type == "protected_side" ||
+                type == "protected_repeat") {
+                const std::string side = string_member(option, "side");
+                options.needs_prefix_lock |= side == "prefix";
+                options.needs_suffix_lock |= side == "suffix";
+            } else if (type == "multimod_finish") {
+                options.needs_multimod = true;
+            } else if (type == "fracture_prepare") {
+                options.needs_fracture = true;
             }
         }
     }
@@ -342,6 +360,56 @@ solver::GoalSpec parse_goal(
             }
             return values;
         };
+        const auto parse_exit = [&](const Value& option,
+                                    solver::FixedOptionSpec& spec) {
+            const Value* exit = option.find("until");
+            if (exit == nullptr || exit->type != Type::Object) {
+                throw std::runtime_error(
+                    "goal: repeat option needs an until object");
+            }
+            const Value* slots = exit->find("goal_slots");
+            if (slots == nullptr || slots->type != Type::Array ||
+                slots->array.empty()) {
+                throw std::runtime_error(
+                    "goal: option until.goal_slots must be a non-empty "
+                    "array");
+            }
+            for (const Value& slot : slots->array) {
+                if (slot.type != Type::Number || slot.number < 0 ||
+                    slot.number != static_cast<double>(
+                        static_cast<std::uint32_t>(slot.number)) ||
+                    slot.number >= goal.slots.size()) {
+                    throw std::runtime_error(
+                        "goal: option until.goal_slots entries must be "
+                        "valid integer goal-slot indices");
+                }
+                const auto index =
+                    static_cast<std::uint32_t>(slot.number);
+                if (std::find(
+                        spec.exit_goal_slots.begin(),
+                        spec.exit_goal_slots.end(), index) !=
+                    spec.exit_goal_slots.end()) {
+                    throw std::runtime_error(
+                        "goal: option until.goal_slots contains a duplicate");
+                }
+                spec.exit_goal_slots.push_back(index);
+            }
+            std::sort(
+                spec.exit_goal_slots.begin(),
+                spec.exit_goal_slots.end());
+            const Value* minimum = exit->find("min_satisfied");
+            if (minimum == nullptr || minimum->type != Type::Number ||
+                minimum->number < 1 ||
+                minimum->number > spec.exit_goal_slots.size() ||
+                minimum->number != static_cast<double>(
+                    static_cast<std::uint32_t>(minimum->number))) {
+                throw std::runtime_error(
+                    "goal: option until.min_satisfied must be an integer "
+                    "from 1 through the selected goal-slot count");
+            }
+            spec.exit_min_satisfied =
+                static_cast<std::uint32_t>(minimum->number);
+        };
         for (const Value& entry : fixed_options->array) {
             if (entry.type != Type::Object) {
                 throw std::runtime_error(
@@ -357,13 +425,20 @@ solver::GoalSpec parse_goal(
                 option.kind = solver::FixedOptionKind::ProtectedSide;
             } else if (type == "multimod_finish") {
                 option.kind = solver::FixedOptionKind::MultimodFinish;
+            } else if (type == "renewal") {
+                option.kind = solver::FixedOptionKind::Renewal;
+            } else if (type == "protected_repeat") {
+                option.kind = solver::FixedOptionKind::ProtectedRepeat;
+            } else if (type == "fracture_prepare") {
+                option.kind = solver::FixedOptionKind::FracturePrepare;
             } else {
                 throw std::runtime_error(
                     "goal: unknown fixed option type: " + type);
             }
 
             if (option.kind == solver::FixedOptionKind::EldritchSideIntent ||
-                option.kind == solver::FixedOptionKind::ProtectedSide) {
+                option.kind == solver::FixedOptionKind::ProtectedSide ||
+                option.kind == solver::FixedOptionKind::ProtectedRepeat) {
                 const std::string side = string_member(entry, "side");
                 if (side == "prefix") {
                     option.side = PC_SIDE_PREFIX;
@@ -387,6 +462,29 @@ solver::GoalSpec parse_goal(
                        solver::FixedOptionKind::MultimodFinish) {
                 option.bench_craft_ids =
                     string_array(entry, "bench_crafts", true);
+            } else if (option.kind == solver::FixedOptionKind::Renewal) {
+                option.program_action_ids =
+                    string_array(entry, "actions", true);
+                parse_exit(entry, option);
+            } else if (option.kind ==
+                       solver::FixedOptionKind::ProtectedRepeat) {
+                parse_exit(entry, option);
+            } else if (option.kind ==
+                       solver::FixedOptionKind::FracturePrepare) {
+                option.program_action_ids =
+                    string_array(entry, "preparation", true);
+                const Value* carrier = entry.find("carrier_goal_slot");
+                if (carrier == nullptr || carrier->type != Type::Number ||
+                    carrier->number < 0 ||
+                    carrier->number >= goal.slots.size() ||
+                    carrier->number != static_cast<double>(
+                        static_cast<std::uint32_t>(carrier->number))) {
+                    throw std::runtime_error(
+                        "goal: fracture_prepare.carrier_goal_slot must be "
+                        "a valid integer goal-slot index");
+                }
+                option.carrier_goal_slot =
+                    static_cast<std::uint32_t>(carrier->number);
             }
             goal.fixed_options.push_back(std::move(option));
         }

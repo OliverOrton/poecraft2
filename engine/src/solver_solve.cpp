@@ -42,6 +42,7 @@ constexpr double kValueCeiling = 1e12;
 struct PricedOperator {
     std::uint32_t index = kNoId;
     double cost = 0.0;
+    std::vector<std::pair<std::string, double>> resource_prices;
 };
 
 struct SparseChoiceGroup {
@@ -180,6 +181,7 @@ struct SolveWork::Impl {
             const PlannerOperator& planner = calc.operators().at(index);
             double cost = 0.0;
             bool priced = true;
+            std::vector<std::pair<std::string, double>> resource_prices;
             for (const auto& [key, quantity] :
                  planner.resource_quantities) {
                 const auto found = prices.find(key);
@@ -188,6 +190,7 @@ struct SolveWork::Impl {
                     break;
                 }
                 cost += quantity * found->second;
+                resource_prices.push_back({key, found->second});
             }
             if (!priced) {
                 result.diagnostics.skipped_missing_price.push_back(
@@ -210,7 +213,8 @@ struct SolveWork::Impl {
                     "no_exact_evaluator_for_requested_primitive");
                 continue;
             }
-            operators.push_back({index, cost});
+            operators.push_back(
+                {index, cost, std::move(resource_prices)});
             ++result.diagnostics.supported_priced_actions;
         }
 
@@ -493,6 +497,26 @@ struct SolveWork::Impl {
                     }
                     if (!kernel.legal) continue;
                     pending.transitions = &kernel.exits;
+                    pending.choices =
+                        &kernel.observation_choice_groups;
+                    pending.choice_options =
+                        &kernel.observation_choice_options;
+                    pending.cost = 0.0;
+                    for (const auto& [key, quantity] :
+                         kernel.expected_resources) {
+                        const auto found = std::find_if(
+                            priced.resource_prices.begin(),
+                            priced.resource_prices.end(),
+                            [&](const auto& price) {
+                                return price.first == key;
+                            });
+                        if (found == priced.resource_prices.end()) {
+                            pending.cost = kInfinity;
+                            break;
+                        }
+                        pending.cost += quantity * found->second;
+                    }
+                    if (!std::isfinite(pending.cost)) continue;
                 } else {
                     const std::uint32_t action_index =
                         planner.primitive_action;
@@ -572,6 +596,7 @@ struct SolveWork::Impl {
         result.values.assign(state_count, kValueCeiling);
         result.policy.assign(state_count, PolicyOperatorRef{});
         result.unveil_preferences.assign(state_count, {});
+        result.option_unveil_preferences.assign(state_count, {});
         result.goal_states.assign(state_count, 0);
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) {
@@ -609,11 +634,28 @@ struct SolveWork::Impl {
             const OptionKernel& kernel =
                 calc.option_kernel(state, priced.index);
             if (!kernel.supported || !kernel.legal) return kInfinity;
-            double expected = priced.cost;
+            double expected = 0.0;
+            for (const auto& [key, quantity] : kernel.expected_resources) {
+                const auto found = std::find_if(
+                    priced.resource_prices.begin(),
+                    priced.resource_prices.end(),
+                    [&](const auto& price) { return price.first == key; });
+                if (found == priced.resource_prices.end()) return kInfinity;
+                expected += quantity * found->second;
+            }
             for (const OutcomeEntry& exit : kernel.exits) {
                 const double value = result.values[exit.state];
                 if (value == kInfinity) return kInfinity;
                 expected += exit.probability * value;
+            }
+            for (const OutcomeChoiceGroup& group :
+                 kernel.observation_choice_groups) {
+                double best = kInfinity;
+                for (const std::uint32_t successor : group.states) {
+                    best = std::min(best, result.values[successor]);
+                }
+                if (best == kInfinity) return kInfinity;
+                expected += group.probability * best;
             }
             return expected;
         }
@@ -651,29 +693,26 @@ struct SolveWork::Impl {
         std::uint32_t& transition_work) const {
         double expected = row.cost;
         transition_work = 0;
-        if (row.choice_count != 0) {
-            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                const SparseChoiceGroup& group = sparse_choices.at(
-                    row.choice_offset + i);
-                double best = kInfinity;
-                for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-                    best = std::min(
-                        best,
-                        result.values[sparse_choice_successors.at(
-                            group.successor_offset + s)]);
-                }
-                transition_work += group.successor_count;
-                if (best == kInfinity) return kInfinity;
-                expected += group.probability * best;
-            }
-            return expected;
-        }
         for (std::uint32_t i = 0; i < row.transition_count; ++i) {
             const std::uint64_t offset = row.transition_offset + i;
             const double value = result.values[sparse_successors.at(offset)];
             ++transition_work;
             if (value == kInfinity) return kInfinity;
             expected += sparse_probabilities.at(offset) * value;
+        }
+        for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+            const SparseChoiceGroup& group = sparse_choices.at(
+                row.choice_offset + i);
+            double best = kInfinity;
+            for (std::uint32_t s = 0; s < group.successor_count; ++s) {
+                best = std::min(
+                    best,
+                    result.values[sparse_choice_successors.at(
+                        group.successor_offset + s)]);
+            }
+            transition_work += group.successor_count;
+            if (best == kInfinity) return kInfinity;
+            expected += group.probability * best;
         }
         return expected;
     }
@@ -864,33 +903,30 @@ struct SolveWork::Impl {
                 if (q == kInfinity) continue;
                 double mean = 0.0;
                 std::vector<std::pair<double, double>> random_values;
-                if (row.choice_count == 0) {
-                    for (std::uint32_t i = 0;
-                         i < row.transition_count; ++i) {
-                        const std::uint64_t offset =
-                            row.transition_offset + i;
-                        random_values.push_back(
-                            {sparse_probabilities.at(offset),
-                             result.values[sparse_successors.at(offset)]});
-                        mean += sparse_probabilities.at(offset) *
-                                result.values[sparse_successors.at(offset)];
+                for (std::uint32_t i = 0;
+                     i < row.transition_count; ++i) {
+                    const std::uint64_t offset =
+                        row.transition_offset + i;
+                    random_values.push_back(
+                        {sparse_probabilities.at(offset),
+                         result.values[sparse_successors.at(offset)]});
+                    mean += sparse_probabilities.at(offset) *
+                            result.values[sparse_successors.at(offset)];
+                }
+                for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                    const SparseChoiceGroup& group = sparse_choices.at(
+                        row.choice_offset + i);
+                    double chosen = kInfinity;
+                    for (std::uint32_t s = 0;
+                         s < group.successor_count; ++s) {
+                        chosen = std::min(
+                            chosen,
+                            result.values[sparse_choice_successors.at(
+                                group.successor_offset + s)]);
                     }
-                } else {
-                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
-                        const SparseChoiceGroup& group = sparse_choices.at(
-                            row.choice_offset + i);
-                        double chosen = kInfinity;
-                        for (std::uint32_t s = 0;
-                             s < group.successor_count; ++s) {
-                            chosen = std::min(
-                                chosen,
-                                result.values[sparse_choice_successors.at(
-                                    group.successor_offset + s)]);
-                        }
-                        random_values.push_back(
-                            {group.probability, chosen});
-                        mean += group.probability * chosen;
-                    }
+                    random_values.push_back(
+                        {group.probability, chosen});
+                    mean += group.probability * chosen;
                 }
                 double variance = 0.0;
                 for (const auto& [probability, value] : random_values) {
@@ -939,6 +975,40 @@ struct SolveWork::Impl {
                 for (const OutcomeChoiceOption& option : choice_options) {
                     result.unveil_preferences[state].push_back(
                         option.mod_id);
+                }
+            } else if (best_operator != kNoId && best_row != nullptr &&
+                       calc.operators()[best_operator].kind ==
+                           PlannerOperatorKind::FixedOption &&
+                       best_row->choice_option_count != 0) {
+                std::map<std::uint32_t, std::vector<OutcomeChoiceOption>>
+                    by_observation;
+                for (std::uint32_t i = 0;
+                     i < best_row->choice_option_count; ++i) {
+                    const OutcomeChoiceOption& choice =
+                        sparse_choice_options.at(
+                            best_row->choice_option_offset + i);
+                    by_observation[choice.observation_state].push_back(
+                        choice);
+                }
+                for (auto& [observation_state, choices] : by_observation) {
+                    std::sort(
+                        choices.begin(), choices.end(),
+                        [&](const OutcomeChoiceOption& a,
+                            const OutcomeChoiceOption& b) {
+                            const double left = result.values[a.state];
+                            const double right = result.values[b.state];
+                            return left != right ? left < right
+                                                 : a.mod_id < b.mod_id;
+                        });
+                    ObservedUnveilPreference preference;
+                    preference.observation_state = observation_state;
+                    for (const OutcomeChoiceOption& choice : choices) {
+                        preference.choices.push_back(
+                            {choice.mod_id, choice.state,
+                             choice.actual_state});
+                    }
+                    result.option_unveil_preferences[state].push_back(
+                        std::move(preference));
                 }
             }
         }
@@ -1005,6 +1075,14 @@ struct SolveWork::Impl {
     std::uint64_t estimated_owned_bytes() const {
         std::uint64_t bytes = sizeof(*this) + calc.estimated_owned_bytes();
         bytes += operators.capacity() * sizeof(PricedOperator);
+        for (const PricedOperator& priced : operators) {
+            bytes += priced.resource_prices.capacity() *
+                     sizeof(std::pair<std::string, double>);
+            for (const auto& [key, price] : priced.resource_prices) {
+                (void)price;
+                bytes += key.capacity() + 1;
+            }
+        }
         bytes += (reported_unsupported.capacity() + 7) / 8;
         bytes += expanded.capacity() * sizeof(std::uint8_t);
         bytes += queued.capacity() * sizeof(std::uint8_t);
@@ -1036,6 +1114,17 @@ struct SolveWork::Impl {
                  sizeof(std::vector<std::uint32_t>);
         for (const auto& preferences : result.unveil_preferences) {
             bytes += preferences.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += result.option_unveil_preferences.capacity() *
+                 sizeof(std::vector<ObservedUnveilPreference>);
+        for (const auto& preferences :
+             result.option_unveil_preferences) {
+            bytes += preferences.capacity() *
+                     sizeof(ObservedUnveilPreference);
+            for (const ObservedUnveilPreference& preference : preferences) {
+                bytes += preference.choices.capacity() *
+                         sizeof(ObservedUnveilChoice);
+            }
         }
         const auto string_vector_bytes = [](const auto& values) {
             std::uint64_t total =

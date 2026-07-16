@@ -4,6 +4,7 @@
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -579,6 +580,118 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(!kernel.exits.empty());
     }
 
+    /* S7.4 renewal normalizes only certified same-kernel failures to the
+     * entry state; the compiled graph expands that normalization back into
+     * an ordinary primitive retry router. */
+    {
+        GoalSpec renewal_goal = goal;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::Renewal;
+        option.program_action_ids = {"chaos"};
+        option.exit_goal_slots = {0};
+        option.exit_min_satisfied = 1;
+        renewal_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, renewal_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const std::uint32_t state = option_calc.intern_item(rare);
+        const std::uint32_t op =
+            static_cast<std::uint32_t>(registry.actions.size());
+        const OptionKernel& kernel = option_calc.option_kernel(state, op);
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.terminates_almost_surely);
+        PC_CHECK(kernel.expected_primitive_actions == 1.0);
+        PC_CHECK(!kernel.retry_states.empty());
+        PC_CHECK(kernel.observation_choice_groups.empty());
+
+        const SolveResult solved = solve(
+            option_calc, rare, {{"chaos", 1.0}});
+        PC_CHECK(solved.converged);
+        PC_CHECK(solved.policy[solved.start_state] == op);
+        const std::string strategy = compile_policy_strategy_json(
+            option_calc, solved, "renewal-chaos");
+        PC_CHECK(strategy.find("\"type\":\"chaos\"") !=
+                 std::string::npos);
+        PC_CHECK(strategy.find("_retry") != std::string::npos);
+    }
+
+    /* A protected repeat includes the lock in every normalized attempt;
+     * failure states retaining the lock are exits rather than free retries. */
+    {
+        GoalSpec protected_goal = goal;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::ProtectedRepeat;
+        option.side = PC_SIDE_PREFIX;
+        option.action_id = "chaos";
+        option.exit_goal_slots = {0};
+        option.exit_min_satisfied = 1;
+        protected_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, protected_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const OptionKernel& kernel = option_calc.option_kernel(
+            option_calc.intern_item(rare),
+            static_cast<std::uint32_t>(registry.actions.size()));
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.expected_primitive_actions == 2.0);
+        PC_CHECK(kernel.expected_resources.size() >= 2);
+        PC_CHECK(!kernel.retry_states.empty());
+    }
+
+    /* Observation-aware renewal keeps the sampled Unveil set for Bellman
+     * choice and for the compiled has_unveil_option routers. */
+    std::uint32_t unveiled_goal_mod = kNoId;
+    if (!session->unveiled_generic_mask.empty()) {
+        pc_bitset_for_each(
+            session->unveiled_generic_mask.data(), session->words,
+            [&](std::size_t bit) {
+                if (unveiled_goal_mod == kNoId) {
+                    unveiled_goal_mod = static_cast<std::uint32_t>(bit);
+                }
+            });
+    }
+    if (unveiled_goal_mod != kNoId) {
+        GoalSpec unveil_goal;
+        GoalSlot unveil_slot;
+        unveil_slot.family_id = session->family_id[unveiled_goal_mod];
+        unveil_goal.slots.push_back(unveil_slot);
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::Renewal;
+        option.program_action_ids = {"veiled_chaos", "unveil"};
+        option.exit_goal_slots = {0};
+        option.exit_min_satisfied = 1;
+        unveil_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, unveil_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const std::uint32_t state = option_calc.intern_item(rare);
+        const std::uint32_t op =
+            static_cast<std::uint32_t>(registry.actions.size());
+        const OptionKernel& kernel = option_calc.option_kernel(state, op);
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(!kernel.observation_choice_groups.empty());
+        PC_CHECK(!kernel.observation_choice_options.empty());
+
+        const SolveResult solved = solve(
+            option_calc, rare, {{"veiled_chaos", 1.0}});
+        PC_CHECK(solved.converged);
+        PC_CHECK(!solved.option_unveil_preferences[state].empty());
+        const std::string strategy = compile_policy_strategy_json(
+            option_calc, solved, "observed-unveil-renewal");
+        PC_CHECK(strategy.find("has_unveil_option") != std::string::npos);
+        PC_CHECK(strategy.find("\"type\":\"veiled_chaos\"") !=
+                 std::string::npos);
+    }
+
     /* Pick one ordinary crafted prefix and suffix with no group conflict, then
      * force the deterministic Multimod option as the only candidate. */
     std::uint32_t finish_prefix = kNoId;
@@ -595,6 +708,106 @@ void run_artifact_gate(const char* artifact_dir) {
         }
         return false;
     };
+
+    /* Fracture preparation keys success to the exact satisfying carrier.
+     * Wrong-carrier results remain exits, a fractured carrier still
+     * satisfies its ordinary goal slot, and Eldritch implicits survive. */
+    {
+        std::uint32_t carrier = kNoId;
+        pc_bitset_for_each(
+            session->group_masks[slot.group_id].data(), session->words,
+            [&](std::size_t bit) {
+                if (carrier == kNoId) {
+                    carrier = static_cast<std::uint32_t>(bit);
+                }
+            });
+        std::vector<std::uint32_t> selected;
+        if (carrier != kNoId) selected.push_back(carrier);
+        for (std::uint32_t mod = 0;
+             mod < session->mod_count && selected.size() < 4; ++mod) {
+            if (session->gen_type[mod] != PC_SIDE_PREFIX &&
+                session->gen_type[mod] != PC_SIDE_SUFFIX) {
+                continue;
+            }
+            const std::size_t same_side = std::count_if(
+                selected.begin(), selected.end(), [&](std::uint32_t current) {
+                    return session->gen_type[current] ==
+                           session->gen_type[mod];
+                });
+            if (same_side >= 3 ||
+                std::any_of(
+                    selected.begin(), selected.end(),
+                    [&](std::uint32_t current) {
+                        return conflicts(current, mod);
+                    })) {
+                continue;
+            }
+            selected.push_back(mod);
+        }
+        PC_CHECK(selected.size() == 4);
+        if (selected.size() == 4) {
+            GoalSpec fracture_goal = goal;
+            FixedOptionSpec option;
+            option.kind = FixedOptionKind::FracturePrepare;
+            option.program_action_ids = {"chaos"};
+            option.carrier_goal_slot = 0;
+            fracture_goal.fixed_options.push_back(option);
+            CalcContext option_calc(
+                session, fracture_goal, registry, {}, false, false);
+            pc_item_state ready;
+            pc_item_clear(&ready);
+            ready.rarity = PC_RARITY_RARE;
+            ready.searing_exarch_tier = 1;
+            for (const std::uint32_t mod : selected) {
+                PC_CHECK(pc_item_add_mod(
+                             &ready, session->gen_type[mod], mod,
+                             static_cast<std::uint16_t>(
+                                 session->primary_group[mod]),
+                             0, nullptr) == PC_RESULT_OK);
+            }
+            const std::uint32_t state = option_calc.intern_item(ready);
+            const OptionKernel& kernel = option_calc.option_kernel(
+                state, static_cast<std::uint32_t>(registry.actions.size()));
+            PC_CHECK(kernel.supported);
+            PC_CHECK(kernel.legal);
+            PC_CHECK(kernel.entry_continues);
+            PC_CHECK(kernel.expected_primitive_actions == 1.0);
+            double carrier_probability = 0.0;
+            for (const OutcomeEntry& exit : kernel.exits) {
+                const AbstractState& fractured =
+                    option_calc.state(exit.state);
+                PC_CHECK(fractured.slot_status[0] ==
+                         static_cast<std::uint8_t>(
+                             GoalSlotStatus::Satisfied));
+                PC_CHECK(fractured.searing_exarch_tier == 1);
+                if ((fractured.fractured_goal_mask & 1u) != 0) {
+                    carrier_probability += exit.probability;
+                }
+            }
+            PC_CHECK(std::fabs(carrier_probability - 0.25) < 1e-12);
+
+            pc_item_state influenced = ready;
+            influenced.generic_influence_bits = 1;
+            const OptionKernel& influenced_kernel =
+                option_calc.option_kernel(
+                    option_calc.intern_item(influenced),
+                    static_cast<std::uint32_t>(registry.actions.size()));
+            PC_CHECK(!influenced_kernel.legal);
+            for (const ActionDescriptor& action : registry.actions) {
+                if (action.params.type == ActionType::InfluenceExalt) {
+                    pc_item_state fractured_item = ready;
+                    fractured_item.prefixes[0].flags |=
+                        PC_MOD_SLOT_FRACTURED;
+                    PC_CHECK(!action_legal(
+                        *session, action,
+                        option_calc.state(option_calc.intern_item(
+                            fractured_item))));
+                    break;
+                }
+            }
+        }
+    }
+
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
         const ActionDescriptor& action = registry.actions[index];
         if (action.params.type != ActionType::Bench ||

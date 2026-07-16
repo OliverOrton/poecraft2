@@ -7,7 +7,7 @@ realistic end-to-end crafts before adding more mechanic families. Read
 [crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
-Status 2026-07-15: S7.0-S7.3 are implemented; S7.3 landed ahead of S7.2 and
+Status 2026-07-16: S7.0-S7.4 are implemented; S7.3 landed ahead of S7.2 and
 S7.2 was then completed without redoing the fixed-option checkpoint. The
 versioned native/worker-WASM corpus, telemetry contract, unoptimized reports,
 and cross-backend comparison tooling are in place. The one-item correctness/state
@@ -22,8 +22,9 @@ bounded Bellman units now provide the first performance layer. Oliver approved
 the permanent corpus and numeric criteria below on 2026-07-15. The fresh
 pre-optimization full-corpus command was recorded as a timeout when its native
 report had not completed after roughly 49 minutes, and Oliver directed the
-phase to proceed to performance work. The S7.2R product repair is complete and
-S7.4 is next. Trade leaves, corruption, Hinekora's Lock,
+phase to proceed to performance work. The S7.2R product repair and S7.4
+renewal/observation-aware option checkpoint are complete; S7.5 is next. Trade
+leaves, corruption, Hinekora's Lock,
 imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
@@ -546,9 +547,10 @@ Harvest crafts are absent, and genuinely unquoted real actions use the visible
 fallback policy or remain explicitly excluded. The follow-up product envelope
 is applied natively before abstract-layout construction: the Calculator keeps
 its exhaustive odds catalog, Solve retains direct goal mechanics, and missing
-prices remove only their individual actions. Standalone metamod, crafted-mod
-cleanup, and Fracture assembly primitives remain in the exhaustive catalog but
-wait for the bounded protected/retry routes specified by S7.4. Pinned Mirage
+prices remove only their individual actions. Standalone metamod and
+crafted-mod cleanup primitives remain in the exhaustive catalog; Fracture and
+side locks enter product planning only through the bounded S7.4 options.
+Pinned Mirage
 replays converged through 13 priced actions with five missing prices for a
 one-slot goal (49 states) and three missing prices for the reported two-prefix
 goal (109 states). Incomplete solves are not compiled and the internal infinity
@@ -556,8 +558,8 @@ sentinel is not presented as an expected cost.
 
 ### S7.3 - Fixed solver options
 
-Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 and
-S7.2R are also complete; S7.4 is the next boundary.
+Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2,
+S7.2R, and S7.4 are also complete; S7.5 is the next boundary.
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.
@@ -570,6 +572,8 @@ simulator run at S7.6, not a required phase-level kernel matrix.
 
 ### S7.4 - Renewal and observation-aware options
 
+Status: complete in the S7.4 renewal/observation-aware option checkpoint.
+
 - Implement fixed-exit repeat options for approved rolling/reforge methods.
 - Add protected repeat loops that correctly repay setup costs.
 - Preserve observed Unveil choice semantics inside option evaluation.
@@ -578,6 +582,20 @@ simulator run at S7.6, not a required phase-level kernel matrix.
 Checkpoint: option definitions preserve expressible success, salvage, and brick
 exits in the compiled strategy. Simulator verification is deferred to S7.6
 unless a broken path needs a narrow diagnostic run.
+
+Checkpoint result: explicit goal-slot exit predicates bound renewal synthesis
+to approved rolling/reforge programs and Scour/Alchemy. Only outcomes whose
+next-attempt kernels are exact-equal normalize to the option entry self-loop;
+all changed-carrier, illegal, salvage, and brick states remain outer exits.
+Protected repeats execute the selected side lock on every normalized attempt,
+so setup is repaid. Veiled Chaos plus Unveil retains sampled offer groups and
+compiles state-local `has_unveil_option` choice routers. Fracture preparation
+repeats only while the selected satisfying goal carrier remains exact-equivalent,
+then executes primitive Fracture; every correct and wrong fractured carrier is
+an outer exit for ordinary recovery/Restart policy. Fractured goal carriers
+continue to satisfy their slots. Ordinary influence and fractures are mutually
+exclusive in engine and solver legality, while Eldritch implicit tiers remain
+compatible and explicit in routing state.
 
 ### S7.5 - Deep optimization and cache reuse
 
@@ -680,7 +698,7 @@ Recorded 2026-07-15:
    it is not S7.1 work or an S7 completion requirement.
 
 The permanent corpus, numeric criteria, and manifest-backed real Harvest
-allowlist are implemented and owner-authoritative. S7.4 is next. Ask Oliver
+allowlist are implemented and owner-authoritative. S7.5 is next. Ask Oliver
 only if implementation reveals a new mechanic ambiguity.
 
 Mechanic answers come from Oliver and are written into focused fixtures before

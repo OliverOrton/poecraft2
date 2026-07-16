@@ -1366,7 +1366,8 @@ ActionOutcome apply_action(
         if (item->rarity != PC_RARITY_RARE ||
             action.influence_code <= 0 || action.influence_code > 8 ||
             item->generic_influence_bits || item->searing_exarch_tier ||
-            item->eater_of_worlds_tier) {
+            item->eater_of_worlds_tier ||
+            pc_item_find_fractured(item, nullptr, nullptr) == PC_RESULT_OK) {
             return {};
         }
         const std::uint8_t bit =

@@ -114,6 +114,12 @@ bool action_is_goal_relevant(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
     const ActionDescriptor& action) {
+    if (std::find(
+            options.option_dependency_action_ids.begin(),
+            options.option_dependency_action_ids.end(), action.id) !=
+        options.option_dependency_action_ids.end()) {
+        return true;
+    }
     if (action.synthetic) return true;
     switch (action.params.type) {
     case ActionType::Essence:
@@ -126,12 +132,25 @@ bool action_is_goal_relevant(
     case ActionType::Fossil:
         return true;
     case ActionType::Bench:
-        /* Direct goal crafts can terminate a route. Structural metamods wait
-         * for the bounded S7.4 protected/repeat options instead of entering
-         * the unrestricted product MDP as standalone flag setters. */
-        return action.params.mod_id < session.metamod_type.size() &&
-               goal_contains_mod_family(
-                   session, options, action.params.mod_id);
+        /* Direct goal crafts can terminate a route. Structural metamods enter
+         * product planning only as dependencies of bounded options, not as
+         * standalone flag setters. */
+        if (action.params.mod_id < session.metamod_type.size()) {
+            const int metamod =
+                session.metamod_type[action.params.mod_id];
+            const DataImpl& data = *session.data;
+            if ((options.needs_prefix_lock &&
+                 metamod == data.metamod_prefixes_locked_code) ||
+                (options.needs_suffix_lock &&
+                 metamod == data.metamod_suffixes_locked_code) ||
+                (options.needs_multimod &&
+                 metamod == data.metamod_multimod_code)) {
+                return true;
+            }
+            return goal_contains_mod_family(
+                session, options, action.params.mod_id);
+        }
+        return false;
     case ActionType::VeiledChaos:
     case ActionType::VeiledExalt:
     case ActionType::Unveil:
@@ -152,9 +171,10 @@ bool action_is_goal_relevant(
         return goal_has_influence(
             session, options, action.params.influence_code);
     case ActionType::Fracture:
+        return options.needs_fracture;
     case ActionType::RemoveCraftedModifiers:
-        /* Metamod setup/cleanup and Fracture preparation need the bounded
-         * observation-aware assembly routes specified by S7.4. Exposing the
+        /* Crafted cleanup remains outside the product envelope; Fracture is
+         * retained only when a carrier-exact option requests it. Exposing the
          * unfinished primitives to the product MDP creates flag/tag state
          * combinations that exhaust the normal state cap before iteration.
          * They remain available in the exhaustive Calculator registry. */
@@ -942,7 +962,7 @@ void add_influence_exalts(const SessionImpl& session,
         d.legality.rarity_mask = kRarityRare;
         d.legality.requires_open_affix = true;
         d.legality.forbidden_flags |=
-            kFlagInfluenced | kFlagEldritchImplicit;
+            kFlagInfluenced | kFlagEldritchImplicit | kFlagFractured;
         d.sets_flags = kFlagInfluenced;
         add(registry, std::move(d));
     }

@@ -1018,6 +1018,11 @@ EMSCRIPTEN_KEEPALIVE
 const char* pcw_item_set_mod_fractured(uint32_t item_id, const char* spec_json) {
     pc_item_state* item = find(g_items, item_id);
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    if (item->generic_influence_bits != 0) {
+        return fail(
+            PC_RESULT_INVALID_ARGUMENT,
+            "ordinary influence and fractured modifiers are mutually exclusive");
+    }
     Value spec;
     try {
         spec = Parser(spec_json, std::strlen(spec_json)).parse();
@@ -1111,6 +1116,12 @@ const char* pcw_item_import(const char* state_json) {
         parse_slot_array(*state, "implicits", item.implicits, PC_MAX_IMPLICITS);
     item.enchantment_count = parse_slot_array(*state, "enchantments",
                                               item.enchantments, PC_MAX_ENCHANTS);
+    if (item.generic_influence_bits != 0 &&
+        pc_item_find_fractured(&item, nullptr, nullptr) == PC_RESULT_OK) {
+        return fail(
+            PC_RESULT_INVALID_ARGUMENT,
+            "ordinary influence and fractured modifiers are mutually exclusive");
+    }
     std::uint32_t id = g_next_id++;
     g_items[id] = item;
     std::string out = "{\"ok\":true,\"item\":";
