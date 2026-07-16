@@ -508,6 +508,162 @@ void run_artifact_gate(const char* artifact_dir) {
     if (slot.group_id == kNoId) return;
     goal.slots.push_back(slot);
 
+    /* S7.3 fixed options expose exact, finite primitive programs. These are
+     * authored here but run only with the plan-level native suite. */
+    {
+        GoalSpec scour_goal = goal;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::ScourAlchemy;
+        scour_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, scour_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const std::uint32_t state = option_calc.intern_item(rare);
+        const std::uint32_t op =
+            static_cast<std::uint32_t>(registry.actions.size());
+        const OptionKernel& kernel = option_calc.option_kernel(state, op);
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.terminates_almost_surely);
+        PC_CHECK(kernel.expected_primitive_actions == 2.0);
+        PC_CHECK(!kernel.exits.empty());
+    }
+
+    {
+        GoalSpec eldritch_goal = goal;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::EldritchSideIntent;
+        option.side = PC_SIDE_PREFIX;
+        option.action_id = "eldritch_exalt";
+        option.setup_action_ids = {"eldritch_ember:1"};
+        eldritch_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, eldritch_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const OptionKernel& kernel = option_calc.option_kernel(
+            option_calc.intern_item(rare),
+            static_cast<std::uint32_t>(registry.actions.size()));
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.expected_primitive_actions == 2.0);
+        PC_CHECK(!kernel.exits.empty());
+        for (const OutcomeEntry& exit : kernel.exits) {
+            const AbstractState& state = option_calc.state(exit.state);
+            PC_CHECK(state.searing_exarch_tier >
+                     state.eater_of_worlds_tier);
+        }
+    }
+
+    {
+        GoalSpec protected_goal = goal;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::ProtectedSide;
+        option.side = PC_SIDE_PREFIX;
+        option.action_id = "chaos";
+        protected_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, protected_goal, registry, {}, false, false);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const OptionKernel& kernel = option_calc.option_kernel(
+            option_calc.intern_item(rare),
+            static_cast<std::uint32_t>(registry.actions.size()));
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.legal);
+        PC_CHECK(kernel.expected_primitive_actions == 2.0);
+        PC_CHECK(!kernel.exits.empty());
+    }
+
+    /* Pick one ordinary crafted prefix and suffix with no group conflict, then
+     * force the deterministic Multimod option as the only candidate. */
+    std::uint32_t finish_prefix = kNoId;
+    std::uint32_t finish_suffix = kNoId;
+    const auto conflicts = [&](std::uint32_t left, std::uint32_t right) {
+        for (std::uint32_t a = session->group_offsets[left];
+             a < session->group_offsets[left + 1]; ++a) {
+            for (std::uint32_t b = session->group_offsets[right];
+                 b < session->group_offsets[right + 1]; ++b) {
+                if (session->group_ids[a] == session->group_ids[b]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
+        const ActionDescriptor& action = registry.actions[index];
+        if (action.params.type != ActionType::Bench ||
+            action.params.mod_id >= session->metamod_type.size() ||
+            session->metamod_type[action.params.mod_id] >= 0) {
+            continue;
+        }
+        if (session->gen_type[action.params.mod_id] == PC_SIDE_PREFIX &&
+            finish_prefix == kNoId) {
+            finish_prefix = index;
+        }
+        if (session->gen_type[action.params.mod_id] == PC_SIDE_SUFFIX &&
+            finish_prefix != kNoId &&
+            !conflicts(registry.actions[finish_prefix].params.mod_id,
+                       action.params.mod_id)) {
+            finish_suffix = index;
+            break;
+        }
+    }
+    PC_CHECK(finish_prefix != kNoId);
+    PC_CHECK(finish_suffix != kNoId);
+    if (finish_prefix != kNoId && finish_suffix != kNoId) {
+        GoalSpec finish_goal;
+        for (const std::uint32_t action_index :
+             {finish_prefix, finish_suffix}) {
+            GoalSlot finish_slot;
+            finish_slot.family_id = session->family_id[
+                registry.actions[action_index].params.mod_id];
+            finish_goal.slots.push_back(finish_slot);
+        }
+        finish_goal.rarity = PC_RARITY_RARE;
+        FixedOptionSpec option;
+        option.kind = FixedOptionKind::MultimodFinish;
+        option.bench_craft_ids = {
+            registry.actions[finish_prefix].id,
+            registry.actions[finish_suffix].id};
+        finish_goal.fixed_options.push_back(option);
+        CalcContext option_calc(
+            session, finish_goal, registry, {}, false, false);
+
+        const PlannerOperator& planner =
+            option_calc.operators().at(registry.actions.size());
+        PC_CHECK(planner.kind == PlannerOperatorKind::FixedOption);
+        PC_CHECK(planner.primitive_program.size() == 3);
+        std::unordered_map<std::string, double> finish_prices;
+        double expected_cost = 0.0;
+        for (const auto& [key, quantity] : planner.resource_quantities) {
+            const double price =
+                static_cast<double>(finish_prices.size() + 1);
+            finish_prices[key] = price;
+            expected_cost += quantity * price;
+        }
+
+        pc_item_state start;
+        pc_item_clear(&start);
+        start.rarity = PC_RARITY_RARE;
+        const SolveResult solved = solve(option_calc, start, finish_prices);
+        PC_CHECK(solved.converged);
+        PC_CHECK(solved.policy[solved.start_state] ==
+                 static_cast<std::uint32_t>(registry.actions.size()));
+        PC_CHECK(std::fabs(solved.values[solved.start_state] - expected_cost) <
+                 1e-9);
+        const std::string strategy = compile_policy_strategy_json(
+            option_calc, solved, "fixed-multimod-finish");
+        PC_CHECK(strategy.find("option:multimod") == std::string::npos);
+        PC_CHECK(strategy.find("_o1") != std::string::npos);
+        PC_CHECK(strategy.find("_o2") != std::string::npos);
+    }
+
     std::vector<std::uint32_t> candidates;
     for (const char* id : {"transmute", "augment", "alteration", "regal",
                            "alchemy", "chaos", "exalt", "annul", "scour",

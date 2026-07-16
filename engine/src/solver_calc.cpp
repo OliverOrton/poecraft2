@@ -169,10 +169,33 @@ CalcContext::CalcContext(
             candidates_[i] = i;
         }
     }
+    operators_ = build_planner_operators(*session_, goal_, registry_);
+    /* Option dependencies participate in abstraction without silently widening
+     * an explicit primitive candidate subset. Callers can select the option
+     * alone, or list any dependency in actions when it should also remain an
+     * independently selectable primitive. */
+    std::vector<std::uint32_t> layout_actions = candidates_;
+    for (std::uint32_t operator_index =
+             static_cast<std::uint32_t>(registry_.actions.size());
+         operator_index < operators_.size(); ++operator_index) {
+        for (const std::uint32_t dependency :
+             operators_[operator_index].primitive_program) {
+            if (std::find(layout_actions.begin(), layout_actions.end(),
+                          dependency) == layout_actions.end()) {
+                layout_actions.push_back(dependency);
+            }
+        }
+    }
+    candidate_operators_ = candidates_;
+    for (std::uint32_t operator_index =
+             static_cast<std::uint32_t>(registry_.actions.size());
+         operator_index < operators_.size(); ++operator_index) {
+        candidate_operators_.push_back(operator_index);
+    }
     const bool exact_group_effects =
         distinguish_junk_exclusion_effects ||
         std::any_of(
-            candidates_.begin(), candidates_.end(),
+            layout_actions.begin(), layout_actions.end(),
             [&](std::uint32_t index) {
                 const ActionType type =
                     registry_.actions.at(index).params.type;
@@ -183,7 +206,7 @@ CalcContext::CalcContext(
             });
     const auto layout_started = std::chrono::steady_clock::now();
     layout_ = build_abstract_layout(
-        *session_, goal_, registry_, candidates_, allow_empty_goal,
+        *session_, goal_, registry_, layout_actions, allow_empty_goal,
         false, exact_group_effects);
     layout_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -571,6 +594,18 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
         bytes += string_bytes(key);
     }
     bytes += candidates_.capacity() * sizeof(std::uint32_t);
+    bytes += candidate_operators_.capacity() * sizeof(std::uint32_t);
+    bytes += operators_.capacity() * sizeof(PlannerOperator);
+    for (const PlannerOperator& op : operators_) {
+        bytes += string_bytes(op.id) + string_bytes(op.display_name);
+        bytes += op.primitive_program.capacity() * sizeof(std::uint32_t);
+        bytes += op.resource_quantities.capacity() *
+                 sizeof(std::pair<std::string, double>);
+        for (const auto& [key, quantity] : op.resource_quantities) {
+            (void)quantity;
+            bytes += string_bytes(key);
+        }
+    }
     bytes += layout_.slots.capacity() * sizeof(ResolvedGoalSlot);
     for (const ResolvedGoalSlot& slot : layout_.slots) {
         bytes += slot.member_mask.capacity() * sizeof(std::uint64_t);
@@ -622,6 +657,29 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
         }
         bytes += distribution->choice_options.capacity() *
                  sizeof(OutcomeChoiceOption);
+    }
+    bytes += option_kernel_cache_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_cache_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::shared_ptr<const OptionKernel>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, kernel] : option_kernel_cache_) {
+        (void)unused;
+        bytes += sizeof(OptionKernel);
+        bytes += kernel->expected_resources.capacity() *
+                 sizeof(std::pair<std::string, double>);
+        for (const auto& [key, quantity] : kernel->expected_resources) {
+            (void)quantity;
+            bytes += string_bytes(key);
+        }
+        bytes += kernel->exits.capacity() * sizeof(OutcomeEntry);
+        bytes += kernel->observation_choice_groups.capacity() *
+                 sizeof(OutcomeChoiceGroup);
+        for (const OutcomeChoiceGroup& group :
+             kernel->observation_choice_groups) {
+            bytes += group.states.capacity() * sizeof(std::uint32_t);
+        }
     }
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<

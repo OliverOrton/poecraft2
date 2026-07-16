@@ -48,6 +48,11 @@ complete: the tied/no-dominance rule is permanently fixtured, one-Scour crafted
 modifier removal is a primitive operation, Harvest resistance conversion and
 Fracture have exact calculation paths, and crafted/fractured carriers compile
 through ordinary strategy conditions and explicit start state. S7.2 is next.
+At Oliver's direction, S7.3 was implemented ahead of S7.2: explicitly selected
+fixed Scour/Alchemy, Eldritch side-intent, protected-side, and deterministic
+Multimod options now use price-independent exact kernels and compile into
+ordinary primitive Strategy Board subgraphs. S7.2 remains the exact next
+boundary; S7.4 has not begun.
 Oliver approved the permanent real craft corpus and the performance, safety,
 responsiveness, and simulator-verification criteria on 2026-07-15. The old
 any-tier two-mod row remains historical; measure its approved T1/T1 replacement
@@ -76,9 +81,10 @@ secrets.
    correctness gaps, safe action generation/pruning, exact macro/sub-policy
    operators, compact transition storage, cycle-aware optimization, policy
    compression, and a final native/WASM benchmark plus compiled-strategy
-   simulator gate. S7.0 baseline/telemetry and S7.1 correctness/state substrate
-   are complete; S7.2 action control, storage, and first performance pass is the
-   exact next boundary.
+   simulator gate. S7.0 baseline/telemetry, S7.1 correctness/state substrate,
+   and the out-of-sequence S7.3 fixed-option layer are complete; S7.2 action
+   control, storage, and the first performance pass is still the exact next
+   boundary.
    [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
 2. Parked mechanic track M1-M5 after S7: trade leaves/corruption/finishers,
    Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an

@@ -100,6 +100,33 @@ void run_public_solver_gate(const char* artifact_dir) {
                               &error) == PC_RESULT_INVALID_ARGUMENT);
     PC_CHECK(invalid_solver == nullptr);
 
+    const std::string options_only_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"actions\":[],\"options\":["
+        "{\"type\":\"scour_alchemy\"}]}";
+    pc_solver_handle options_only_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, options_only_goal_json.c_str(),
+                 options_only_goal_json.size(), &options_only_solver,
+                 &error) == PC_RESULT_OK);
+    if (options_only_solver != nullptr) {
+        uint32_t primitive_candidate_count = 1;
+        PC_CHECK(pc_solver_candidates(
+                     options_only_solver, nullptr, 0,
+                     &primitive_candidate_count, &error) == PC_RESULT_OK);
+        PC_CHECK(primitive_candidate_count == 0);
+        const std::string option_telemetry =
+            solver_telemetry_json(options_only_solver, &error);
+        PC_CHECK(option_telemetry.find(
+                     "\"planner\":{\"registry\":") != std::string::npos);
+        PC_CHECK(option_telemetry.find(
+                     "\"candidate\":1,\"fixed_options\":1") !=
+                 std::string::npos);
+        pc_solver_destroy(options_only_solver);
+    }
+
     const std::string goal_json =
         std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
                     "{\"family_mod_key\":\"") +

@@ -39,7 +39,7 @@ constexpr double kInfinity = std::numeric_limits<double>::infinity();
  * successor is, and no such state exists initially. */
 constexpr double kValueCeiling = 1e12;
 
-struct PricedAction {
+struct PricedOperator {
     std::uint32_t index = kNoId;
     double cost = 0.0;
 };
@@ -51,7 +51,7 @@ struct SolveWork::Impl {
     const SessionImpl& session;
     SolveOptions options;
     SolveResult result;
-    std::vector<PricedAction> actions;
+    std::vector<PricedOperator> operators;
     std::vector<bool> reported_unsupported;
     std::vector<std::uint8_t> expanded;
     std::vector<std::uint8_t> queued;
@@ -69,15 +69,15 @@ struct SolveWork::Impl {
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& solve_options)
         : calc(context), session(context.session()), options(solve_options),
-          reported_unsupported(context.registry().actions.size(), false) {
+          reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
         calc.reset_solve_telemetry();
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
             calc.candidates().size());
-        /* Price the candidate actions once. Missing prices are excluded and
-         * reported exactly as in the synchronous solver. */
+        /* Primitive support remains action-registry telemetry. Fixed options
+         * are priced and evaluated alongside those primitive wrappers. */
         for (const std::uint32_t index : calc.candidates()) {
             const ActionDescriptor& descriptor =
                 calc.registry().actions.at(index);
@@ -85,23 +85,31 @@ struct SolveWork::Impl {
             if (supported) {
                 ++result.diagnostics.evaluator_supported_actions;
             }
+        }
+        for (const std::uint32_t index : calc.candidate_operators()) {
+            const PlannerOperator& planner = calc.operators().at(index);
             double cost = 0.0;
             bool priced = true;
-            for (const std::string& key : descriptor.cost_keys) {
+            for (const auto& [key, quantity] :
+                 planner.resource_quantities) {
                 const auto found = prices.find(key);
                 if (found == prices.end()) {
                     priced = false;
                     break;
                 }
-                cost += found->second;
+                cost += quantity * found->second;
             }
             if (!priced) {
                 result.diagnostics.skipped_missing_price.push_back(
-                    descriptor.id);
+                    planner.id);
                 continue;
             }
-            actions.push_back({index, cost});
+            operators.push_back({index, cost});
             ++result.diagnostics.priced_scanned_actions;
+            const bool supported =
+                planner.kind == PlannerOperatorKind::FixedOption ||
+                calc_supports(calc.registry().actions.at(
+                    planner.primitive_action));
             if (supported) ++result.diagnostics.supported_priced_actions;
         }
 
@@ -137,19 +145,40 @@ struct SolveWork::Impl {
             return;
         }
 
-        for (const PricedAction& action : actions) {
+        for (const PricedOperator& priced : operators) {
+            const PlannerOperator& planner =
+                calc.operators().at(priced.index);
+            if (planner.kind == PlannerOperatorKind::FixedOption) {
+                const OptionKernel& kernel =
+                    calc.option_kernel(state, priced.index);
+                if (!kernel.supported) {
+                    if (!reported_unsupported[priced.index]) {
+                        reported_unsupported[priced.index] = true;
+                        result.diagnostics.skipped_unsupported.push_back(
+                            planner.id);
+                    }
+                    continue;
+                }
+                if (!kernel.legal) continue;
+                for (const OutcomeEntry& exit : kernel.exits) {
+                    enqueue(exit.state);
+                }
+                continue;
+            }
+
+            const std::uint32_t action_index = planner.primitive_action;
             if (!action_legal(session,
-                              calc.registry().actions[action.index],
+                              calc.registry().actions[action_index],
                               calc.state(state))) {
                 continue;
             }
             const OutcomeDistribution& distribution =
-                calc.outcomes(state, action.index);
+                calc.outcomes(state, action_index);
             if (!distribution.supported) {
-                if (!reported_unsupported[action.index]) {
-                    reported_unsupported[action.index] = true;
+                if (!reported_unsupported[priced.index]) {
+                    reported_unsupported[priced.index] = true;
                     result.diagnostics.skipped_unsupported.push_back(
-                        calc.registry().actions[action.index].id);
+                        planner.id);
                 }
                 continue;
             }
@@ -182,7 +211,7 @@ struct SolveWork::Impl {
         expanded.resize(state_count, 0);
         result.expanded = expanded;
         result.values.assign(state_count, kValueCeiling);
-        result.policy.assign(state_count, kNoId);
+        result.policy.assign(state_count, PolicyOperatorRef{});
         result.unveil_preferences.assign(state_count, {});
         result.goal_states.assign(state_count, 0);
         for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -204,17 +233,31 @@ struct SolveWork::Impl {
                 .count());
     }
 
-    double action_q(
+    double operator_q(
         const std::uint32_t state,
-        const PricedAction& action) {
-        if (!action_legal(session, calc.registry().actions[action.index],
+        const PricedOperator& priced) {
+        const PlannerOperator& planner = calc.operators().at(priced.index);
+        if (planner.kind == PlannerOperatorKind::FixedOption) {
+            const OptionKernel& kernel =
+                calc.option_kernel(state, priced.index);
+            if (!kernel.supported || !kernel.legal) return kInfinity;
+            double expected = priced.cost;
+            for (const OutcomeEntry& exit : kernel.exits) {
+                const double value = result.values[exit.state];
+                if (value == kInfinity) return kInfinity;
+                expected += exit.probability * value;
+            }
+            return expected;
+        }
+        const std::uint32_t action_index = planner.primitive_action;
+        if (!action_legal(session, calc.registry().actions[action_index],
                           calc.state(state))) {
             return kInfinity;
         }
         const OutcomeDistribution& distribution =
-            calc.outcomes(state, action.index);
+            calc.outcomes(state, action_index);
         if (!distribution.supported) return kInfinity;
-        double expected = action.cost;
+        double expected = priced.cost;
         if (!distribution.choice_groups.empty()) {
             for (const OutcomeChoiceGroup& group :
                  distribution.choice_groups) {
@@ -247,9 +290,9 @@ struct SolveWork::Impl {
             }
             ++result.diagnostics.bellman_backups;
             double best = kInfinity;
-            for (const PricedAction& action : actions) {
+            for (const PricedOperator& planner : operators) {
                 ++result.diagnostics.bellman_action_evaluations;
-                best = std::min(best, action_q(state, action));
+                best = std::min(best, operator_q(state, planner));
             }
             /* Monotone descent from the ceiling: updates never raise a
              * value, so unreachable-to-goal states settle at the ceiling. */
@@ -350,34 +393,47 @@ struct SolveWork::Impl {
             if (!result.expanded[state] || result.goal_states[state]) continue;
             double best_q = kInfinity;
             double best_variance = kInfinity;
-            std::uint32_t best_action = kNoId;
-            for (const PricedAction& action : actions) {
+            std::uint32_t best_operator = kNoId;
+            for (const PricedOperator& priced : operators) {
                 ++result.diagnostics.extraction_action_evaluations;
-                const double q = action_q(state, action);
+                const double q = operator_q(state, priced);
                 if (q == kInfinity) continue;
-                const OutcomeDistribution& distribution =
-                    calc.outcomes(state, action.index);
                 double mean = 0.0;
                 std::vector<std::pair<double, double>> random_values;
-                if (!distribution.choice_groups.empty()) {
-                    for (const OutcomeChoiceGroup& group :
-                         distribution.choice_groups) {
-                        double chosen = kInfinity;
-                        for (std::uint32_t successor : group.states) {
-                            chosen = std::min(
-                                chosen, result.values[successor]);
-                        }
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                if (planner.kind == PlannerOperatorKind::FixedOption) {
+                    const OptionKernel& kernel =
+                        calc.option_kernel(state, priced.index);
+                    for (const OutcomeEntry& exit : kernel.exits) {
                         random_values.push_back(
-                            {group.probability, chosen});
-                        mean += group.probability * chosen;
+                            {exit.probability, result.values[exit.state]});
+                        mean += exit.probability * result.values[exit.state];
                     }
                 } else {
-                    for (const OutcomeEntry& entry : distribution.entries) {
-                        random_values.push_back(
-                            {entry.probability,
-                             result.values[entry.state]});
-                        mean +=
-                            entry.probability * result.values[entry.state];
+                    const OutcomeDistribution& distribution = calc.outcomes(
+                        state, planner.primitive_action);
+                    if (!distribution.choice_groups.empty()) {
+                        for (const OutcomeChoiceGroup& group :
+                             distribution.choice_groups) {
+                            double chosen = kInfinity;
+                            for (std::uint32_t successor : group.states) {
+                                chosen = std::min(
+                                    chosen, result.values[successor]);
+                            }
+                            random_values.push_back(
+                                {group.probability, chosen});
+                            mean += group.probability * chosen;
+                        }
+                    } else {
+                        for (const OutcomeEntry& entry :
+                             distribution.entries) {
+                            random_values.push_back(
+                                {entry.probability,
+                                 result.values[entry.state]});
+                            mean += entry.probability *
+                                    result.values[entry.state];
+                        }
                     }
                 }
                 double variance = 0.0;
@@ -392,15 +448,26 @@ struct SolveWork::Impl {
                 if (better) {
                     best_q = q;
                     best_variance = variance;
-                    best_action = action.index;
+                    best_operator = priced.index;
                 }
             }
-            result.policy[state] = best_action;
-            if (best_action != kNoId &&
-                calc.registry().actions[best_action].params.type ==
-                    ActionType::Unveil) {
+            result.policy[state] =
+                best_operator == kNoId
+                    ? PolicyOperatorRef{}
+                    : PolicyOperatorRef{
+                          calc.operators()[best_operator].kind,
+                          best_operator};
+            if (best_operator != kNoId &&
+                calc.operators()[best_operator].kind ==
+                    PlannerOperatorKind::Primitive &&
+                calc.registry()
+                        .actions[calc.operators()[best_operator]
+                                     .primitive_action]
+                        .params.type == ActionType::Unveil) {
+                const std::uint32_t unveil_action =
+                    calc.operators()[best_operator].primitive_action;
                 const OutcomeDistribution& distribution =
-                    calc.outcomes(state, best_action);
+                    calc.outcomes(state, unveil_action);
                 std::vector<OutcomeChoiceOption> options =
                     distribution.choice_options;
                 std::sort(
@@ -428,10 +495,22 @@ struct SolveWork::Impl {
                 if (result.policy_reachable[state]) continue;
                 result.policy_reachable[state] = 1;
                 ++result.diagnostics.policy_reachable_states;
-                const std::uint32_t action = result.policy[state];
-                if (action == kNoId) continue;
-                const OutcomeDistribution& distribution =
-                    calc.outcomes(state, action);
+                const std::uint32_t operator_index = result.policy[state];
+                if (operator_index == kNoId) continue;
+                const PlannerOperator& planner =
+                    calc.operators().at(operator_index);
+                if (planner.kind == PlannerOperatorKind::FixedOption) {
+                    const OptionKernel& kernel =
+                        calc.option_kernel(state, operator_index);
+                    for (const OutcomeEntry& exit : kernel.exits) {
+                        if (!result.policy_reachable[exit.state]) {
+                            walk.push_back(exit.state);
+                        }
+                    }
+                    continue;
+                }
+                const OutcomeDistribution& distribution = calc.outcomes(
+                    state, planner.primitive_action);
                 for (const OutcomeEntry& entry : distribution.entries) {
                     if (!result.policy_reachable[entry.state]) {
                         walk.push_back(entry.state);
@@ -464,14 +543,14 @@ struct SolveWork::Impl {
 
     std::uint64_t estimated_owned_bytes() const {
         std::uint64_t bytes = sizeof(*this) + calc.estimated_owned_bytes();
-        bytes += actions.capacity() * sizeof(PricedAction);
+        bytes += operators.capacity() * sizeof(PricedOperator);
         bytes += (reported_unsupported.capacity() + 7) / 8;
         bytes += expanded.capacity() * sizeof(std::uint8_t);
         bytes += queued.capacity() * sizeof(std::uint8_t);
         bytes += static_cast<std::uint64_t>(peak_queue_size) *
                  sizeof(std::uint32_t);
         bytes += result.values.capacity() * sizeof(double);
-        bytes += result.policy.capacity() * sizeof(std::uint32_t);
+        bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
         bytes += result.expanded.capacity() * sizeof(std::uint8_t);
         bytes += result.goal_states.capacity() * sizeof(std::uint8_t);
         bytes += result.policy_reachable.capacity() * sizeof(std::uint8_t);
@@ -549,7 +628,7 @@ std::string serialize_solve_log(
             log += "null";
         } else {
             log += '"';
-            log += calc.registry().actions[action].id;
+            log += calc.operators().at(action).id;
             log += '"';
         }
         std::snprintf(
@@ -667,6 +746,15 @@ std::string serialize_solver_telemetry(
                     diagnostics->skipped_unsupported.size());
     }
     json += "}";
+
+    json += ",\"planner\":{\"registry\":" +
+            std::to_string(calc.operators().size());
+    json += ",\"candidate\":" +
+            std::to_string(calc.candidate_operators().size());
+    json += ",\"fixed_options\":" +
+            std::to_string(calc.operators().size() -
+                           calc.registry().actions.size()) +
+            "}";
 
     json += ",\"abstraction\":{\"discriminating_tags\":" +
             std::to_string(calc.layout().discriminating_tag_ids.size());

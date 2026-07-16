@@ -1,9 +1,12 @@
-# Session Handoff - S7.1 Complete, S7.2 Next
+# Session Handoff - S7.3 Complete Out Of Sequence, S7.2 Next
 
-Updated 2026-07-15 after the S7.1 one-item correctness and state-substrate
-checkpoint. Read [AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md),
-this file, then
+Updated 2026-07-15 after the S7.3 fixed solver-option checkpoint. Read
+[AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
 [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md).
+
+Oliver explicitly selected S7.3 while the branch was still at S7.1. S7.3 is
+therefore complete ahead of S7.2. S7.2 has not been implemented, and S7.4 has
+not begun.
 
 ## Exact next boundary
 
@@ -24,53 +27,68 @@ pass**.
    split Bellman work into bounded units that preserve the 50 ms worker-step and
    250 ms cancellation budgets.
 
-Stop before S7.3. Do not add planner options/macros, cycle acceleration, policy
-iteration, cache reuse, or policy compression yet. Do not run routine native,
-binding, WASM, web, simulator, full-repository, or visual-browser gates at the
-intermediate checkpoint. Oliver owns visual review.
+Do not reimplement S7.3 while doing S7.2. Stop before S7.4; renewal/repeat
+options, protected retry loops, observation-aware Unveil options, and fracture
+retry policies remain S7.4 work. Do not run routine native, binding, WASM, web,
+simulator, full-repository, or visual-browser gates at the intermediate
+checkpoint. Oliver owns visual review.
 
-## S7.1 result
+## S7.3 result
 
-- Added the permanent owner-rule fixture
-  `fixtures/spec/action-results/vaal-regalia-ilvl-86-tied-eldritch-currency.json`.
-  Absent and tied Eldritch dominance is pinned to ordinary Exalt/Chaos/Annul;
-  side-specific intent still requires the later explicit setup option.
-- Added `remove_crafted_modifiers` as native action 25 across the C ABI,
-  Python/WASM bindings, strategy compiler/simulator vocabulary, and web action
-  surfaces. Its solver and simulator resource vector is exactly one `scour`,
-  and the action removes every non-fractured crafted explicit modifier without
-  changing item rarity or ordinary modifiers.
-- Added exact solver calculation for Harvest fire/cold/lightning resistance
-  conversion using the engine-owned targeted pool, same-required-level rule,
-  side locks, fractured-carrier exclusion, viable-source selection, and exact
-  target weights.
-- Added exact Fracture calculation: every eligible explicit carrier receives
-  its uniform outcome and remains distinguishable after projection.
-- Replaced the old item-wide crafted/fractured materialization approximation
-  with goal-carrier masks and per-junk-class crafted, fractured, and intersection
-  counts. Exact group-effect partitioning is enabled only for Unveil, Harvest
-  conversion, Fracture, and crafted-modifier removal candidate sets.
-- Extended ordinary strategy conditions so family/group and mod-count guards
-  can require crafted/fractured slot flags. Compiled policies now serialize
-  their materialized explicit start modifiers, including the approved fractured
-  endgame start.
-- Preserved the historical `refusal-unsupported-fracture` benchmark id for
-  S7.0 comparison, but changed its current expected refusal to unreachable goal
-  now that Fracture is evaluator-supported.
-- Rebuilt `bindings/wasm/dist/poecraft_engine.wasm` because the engine action
-  ABI and strategy vocabulary changed.
+- Added an explicit solver-goal `options` contract with four fixed definitions:
+  `scour_alchemy`, `eldritch_side_intent`, `protected_side`, and
+  `multimod_finish`. An explicit `actions: []` now means options-only; omitting
+  `actions` still selects the full primitive registry.
+- Added a solver-only planner registry whose primitive wrappers keep their
+  action-registry indices and whose fixed options are appended. Selected policy
+  entries retain an explicit primitive-or-option tag.
+- Added price-independent fixed option kernels cached by option definition and
+  entry abstract state. Every kernel reports legality, evaluator support,
+  almost-sure termination, exact primitive action count, exact resource
+  quantities, and every outer exit state with probability.
+- Scour/Alchemy is legal only when the exact post-Scour state permits Alchemy;
+  preserved fractures or locks therefore cannot be hidden behind a two-action
+  alias.
+- Eldritch side intent requires an explicit ordered Ember/Ichor setup program
+  and a selected Eldritch Exalt, Chaos, or Annul. The kernel verifies the
+  requested dominance before the final craft, charges every setup currency,
+  and leaves the resulting implicit tiers on every exit.
+- Protected-side options resolve the session's approved prefix/suffix lock
+  bench craft, charge it once, then run a selected Scour or exact supported
+  reforge. A charged lock no-op is rejected, and all operation exits return to
+  the outer solver.
+- Deterministic Multimod finishes accept one or two explicitly selected
+  ordinary bench crafts. Sequential engine application checks crafted limits,
+  group conflicts, and side capacity exactly; any charged no-op makes the
+  option illegal.
+- Policy compilation expands a selected option into an ordinary chain of
+  primitive Strategy Board operation nodes. Only the first node carries the
+  state's expected-cost annotation; the simulator charges the ordinary
+  primitive price keys and the final operation routes back through the outer
+  state router. No option-only strategy vocabulary was added.
+- Added native coverage for all four kernels, options-only public goal parsing,
+  exact Multimod cost/policy selection, and primitive-only compiled graph shape.
+  The tests were authored but not executed at this intermediate checkpoint.
+- Rebuilt `bindings/wasm/dist/poecraft_engine.wasm` so the worker uses the same
+  fixed-option solver implementation.
 
 ## Verification performed
 
-- `powershell -File scripts/build.ps1` completed successfully. This configured
-  and compiled the native engine, test executable, and benchmark target; it did
-  not execute the test binary.
-- `powershell -File scripts/build-wasm.ps1` completed successfully.
+- `powershell -File scripts/build.ps1` completed successfully during engine
+  integration. This configured and compiled the native engine, test
+  executable, and benchmark target; it did not execute any test binary.
+- The final touched native engine and test translation units also compiled
+  successfully with `g++ -c`; no binaries were executed.
+- `powershell -File scripts/build-wasm.ps1` completed successfully against the
+  final source. Two immediately preceding invocations transiently failed when
+  the in-place `wasm-opt` step could not reopen its Windows output path; the
+  unchanged final retry succeeded, so the committed WASM is the normal
+  optimized script output.
 - `git diff --check` is clean.
 
 Per the intermediate-phase cadence, the newly authored focused checks and all
-routine native, Python, WASM, web, simulator, benchmark, and repository suites
-were not run. No rendered or visual checks were performed.
+routine native, Python, WASM, web, simulator, benchmark, and full-repository
+suites were not run. No rendered or visual checks were performed.
 
 ## S7 baseline and acceptance reminders
 
@@ -78,8 +96,8 @@ were not run. No rendered or visual checks were performed.
   worker/WASM benchmark entry point. Do not overwrite the committed S7.0
   reports under `build/performance`.
 - S7.0's comparison recorded 421 checks with zero mismatches across the eight
-  then-enabled cases. Its structural counts predate the new primitive and newly
-  supported evaluators and remain historical comparison evidence.
+  then-enabled cases. Its structural counts predate the new primitive,
+  evaluators, and planner options and remain historical comparison evidence.
 - The approved directional minimums remain 5x geometric-mean solve speed and
   2x lower peak memory where the baseline leaves headroom. Continue while a
   material safe S7 bottleneck remains; Oliver evaluates the result.

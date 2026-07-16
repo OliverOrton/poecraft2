@@ -24,6 +24,7 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_abstract.cpp
     src/solver_calc.cpp
     src/solver_reforge.cpp
+    src/solver_options.cpp
     src/solver_solve.cpp
     src/solver_compile.cpp
     src/solver_eval.cpp

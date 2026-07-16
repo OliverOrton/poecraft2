@@ -15,12 +15,13 @@
  *
  * Shape: start -> master router. The router's prioritized edges are, in
  * order, the goal test (success terminal), one membership test per
- * policy-reachable state (to that state's operation node, which routes
- * back to the router), and a default edge to a failure terminal so any
+ * policy-reachable state (to that state's primitive operation or fixed-option
+ * primitive chain, which routes back to the router), and a default edge to a
+ * failure terminal so any
  * off-policy item — abstraction drift, vocabulary mismatch — fails loudly
- * instead of silently rerouting. Every operation node carries its state's
- * expected remaining cost as an "expected_cost" annotation (ignored by
- * the strategy compiler, consumed by the editor/board).
+ * instead of silently rerouting. The first operation node for each state
+ * carries its expected remaining cost as an "expected_cost" annotation
+ * (ignored by the strategy compiler, consumed by the editor/board).
  */
 namespace poecraft {
 namespace solver {
@@ -326,6 +327,16 @@ std::string compile_policy_strategy_json(
             gap("policy-reachable state " + std::to_string(state_id) +
                 " has no action");
         }
+        if (result.policy[state_id] >= calc.operators().size()) {
+            gap("policy-reachable state " + std::to_string(state_id) +
+                " has an unknown planner operator");
+        }
+        const PlannerOperator& selected =
+            calc.operators().at(result.policy[state_id]);
+        if (result.policy[state_id].kind != selected.kind) {
+            gap("policy-reachable state " + std::to_string(state_id) +
+                " has a mismatched planner-operator tag");
+        }
         compiled_states.push_back(state_id);
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
@@ -390,9 +401,13 @@ std::string compile_policy_strategy_json(
             "\"failure\",\"reason\":\"item left the policy-reachable "
             "state set\"}";
     for (std::uint32_t state_id : compiled_states) {
-        const ActionDescriptor& action =
-            calc.registry().actions[result.policy[state_id]];
-        if (action.params.type == ActionType::Unveil) {
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        const bool unveil =
+            planner.kind == PlannerOperatorKind::Primitive &&
+            calc.registry().actions[planner.primitive_action].params.type ==
+                ActionType::Unveil;
+        if (unveil) {
             if (state_id >= result.unveil_preferences.size() ||
                 result.unveil_preferences[state_id].empty()) {
                 gap("unveil state " + std::to_string(state_id) +
@@ -419,14 +434,26 @@ std::string compile_policy_strategy_json(
             }
             continue;
         }
-        json += ",{\"id\":\"s";
-        json += std::to_string(state_id);
-        json += "\",\"kind\":\"operation\",\"expected_cost\":";
-        json += number(result.values[state_id]);
-        json += ",\"operation\":";
-        json += operation_json(session, action);
-        json += "}";
-        ++node_count;
+        const std::vector<std::uint32_t>& program =
+            planner.primitive_program;
+        if (program.empty()) {
+            gap("planner operator " + planner.id + " has no primitive program");
+        }
+        for (std::size_t step = 0; step < program.size(); ++step) {
+            json += ",{\"id\":\"s";
+            json += std::to_string(state_id);
+            if (step > 0) json += "_o" + std::to_string(step);
+            json += "\",\"kind\":\"operation\"";
+            if (step == 0) {
+                json += ",\"expected_cost\":";
+                json += number(result.values[state_id]);
+            }
+            json += ",\"operation\":";
+            json += operation_json(
+                session, calc.registry().actions.at(program[step]));
+            json += "}";
+            ++node_count;
+        }
     }
     json += "],\"edges\":[";
 
@@ -575,10 +602,24 @@ std::string compile_policy_strategy_json(
     }
     edge("router", "offpolicy", 2, "", true);
     for (std::uint32_t state_id : compiled_states) {
-        const ActionDescriptor& action =
-            calc.registry().actions[result.policy[state_id]];
-        if (action.params.type != ActionType::Unveil) {
-            edge("s" + std::to_string(state_id), "router", 0, "", true);
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        const bool unveil =
+            planner.kind == PlannerOperatorKind::Primitive &&
+            calc.registry().actions[planner.primitive_action].params.type ==
+                ActionType::Unveil;
+        if (!unveil) {
+            for (std::size_t step = 0;
+                 step < planner.primitive_program.size(); ++step) {
+                std::string from = "s" + std::to_string(state_id);
+                if (step > 0) from += "_o" + std::to_string(step);
+                std::string to = "router";
+                if (step + 1 < planner.primitive_program.size()) {
+                    to = "s" + std::to_string(state_id) + "_o" +
+                         std::to_string(step + 1);
+                }
+                edge(from, to, 0, "", true);
+            }
             continue;
         }
         const auto& preferences = result.unveil_preferences[state_id];

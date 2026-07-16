@@ -140,6 +140,7 @@ solver::GoalSpec parse_goal(
 
     const Value* actions = root.find("actions");
     if (actions != nullptr) {
+        goal.primitive_actions_explicit = true;
         if (actions->type != Type::Array) {
             throw std::runtime_error("goal: actions must be an array");
         }
@@ -153,6 +154,87 @@ solver::GoalSpec parse_goal(
                     "goal: unknown action: " + entry.string);
             }
             out_candidates.push_back(it->second);
+        }
+    }
+
+    const Value* fixed_options = root.find("options");
+    if (fixed_options != nullptr) {
+        if (fixed_options->type != Type::Array) {
+            throw std::runtime_error("goal: options must be an array");
+        }
+        const auto string_array = [](const Value& object, const char* key,
+                                     bool required) {
+            std::vector<std::string> values;
+            const Value* found = object.find(key);
+            if (found == nullptr) {
+                if (required) {
+                    throw std::runtime_error(
+                        std::string("goal: option needs ") + key);
+                }
+                return values;
+            }
+            if (found->type != Type::Array) {
+                throw std::runtime_error(
+                    std::string("goal: option ") + key +
+                    " must be an array");
+            }
+            for (const Value& entry : found->array) {
+                if (entry.type != Type::String) {
+                    throw std::runtime_error(
+                        std::string("goal: option ") + key +
+                        " entries must be action ids");
+                }
+                values.push_back(entry.string);
+            }
+            return values;
+        };
+        for (const Value& entry : fixed_options->array) {
+            if (entry.type != Type::Object) {
+                throw std::runtime_error(
+                    "goal: fixed option must be an object");
+            }
+            solver::FixedOptionSpec option;
+            const std::string type = string_member(entry, "type");
+            if (type == "scour_alchemy") {
+                option.kind = solver::FixedOptionKind::ScourAlchemy;
+            } else if (type == "eldritch_side_intent") {
+                option.kind = solver::FixedOptionKind::EldritchSideIntent;
+            } else if (type == "protected_side") {
+                option.kind = solver::FixedOptionKind::ProtectedSide;
+            } else if (type == "multimod_finish") {
+                option.kind = solver::FixedOptionKind::MultimodFinish;
+            } else {
+                throw std::runtime_error(
+                    "goal: unknown fixed option type: " + type);
+            }
+
+            if (option.kind == solver::FixedOptionKind::EldritchSideIntent ||
+                option.kind == solver::FixedOptionKind::ProtectedSide) {
+                const std::string side = string_member(entry, "side");
+                if (side == "prefix") {
+                    option.side = PC_SIDE_PREFIX;
+                } else if (side == "suffix") {
+                    option.side = PC_SIDE_SUFFIX;
+                } else {
+                    throw std::runtime_error(
+                        "goal: side-specific option needs side prefix or "
+                        "suffix");
+                }
+                option.action_id = string_member(entry, "action");
+                if (option.action_id.empty()) {
+                    throw std::runtime_error(
+                        "goal: side-specific option needs action");
+                }
+            }
+            if (option.kind == solver::FixedOptionKind::EldritchSideIntent) {
+                option.setup_action_ids =
+                    string_array(entry, "setup", true);
+            } else if (option.kind ==
+                       solver::FixedOptionKind::MultimodFinish) {
+                option.bench_craft_ids =
+                    string_array(entry, "bench_crafts", true);
+            }
+            goal.fixed_options.push_back(std::move(option));
         }
     }
     return goal;
@@ -266,7 +348,8 @@ pc_result pc_solver_create(
             *holder->session, goal_json, goal_json_size, candidates,
             registry);
         holder->calc = std::make_unique<solver::CalcContext>(
-            holder->session, goal, std::move(registry), candidates);
+            holder->session, goal, std::move(registry), candidates, false,
+            !goal.primitive_actions_explicit);
         *out_solver = holder.release();
         clear_error(out_error);
         return PC_RESULT_OK;
@@ -603,7 +686,7 @@ pc_result pc_solver_state_value(
         *out_action_id =
             action == solver::kNoId
                 ? nullptr
-                : solver->calc->registry().actions[action].id.c_str();
+                : solver->calc->operators().at(action).id.c_str();
     }
     clear_error(out_error);
     return PC_RESULT_OK;

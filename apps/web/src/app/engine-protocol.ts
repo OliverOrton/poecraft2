@@ -303,9 +303,29 @@ export interface SolverGoal {
         | { group: string; min_tier?: number }
         | { family_mod_key: string; min_tier?: number }
     >;
-    /** Candidate action ids; omitted means the full registry. */
+    /** Candidate primitive ids; omitted means full registry, [] means options only. */
     actions?: string[];
+    /** Explicit, price-independent fixed planner programs. */
+    options?: SolverFixedOption[];
 }
+
+export type SolverFixedOption =
+    | { type: "scour_alchemy" }
+    | {
+          type: "eldritch_side_intent";
+          side: "prefix" | "suffix";
+          action: "eldritch_exalt" | "eldritch_chaos" | "eldritch_annul";
+          setup: string[];
+      }
+    | {
+          type: "protected_side";
+          side: "prefix" | "suffix";
+          action: string;
+      }
+    | {
+          type: "multimod_finish";
+          bench_crafts: string[];
+      };
 
 export interface SolverActionInfo {
     index: number;

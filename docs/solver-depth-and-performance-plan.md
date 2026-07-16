@@ -7,13 +7,17 @@ realistic end-to-end crafts before adding more mechanic families. Read
 [crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
-Status 2026-07-15: S7.0 and S7.1 are implemented. The versioned
+Status 2026-07-15: S7.0, S7.1, and the out-of-sequence S7.3 fixed-option
+checkpoint are implemented. The versioned
 native/worker-WASM corpus, telemetry contract, unoptimized reports, and
 cross-backend comparison tooling are in place. The one-item correctness/state
 substrate now includes the approved Eldritch fallback fixture, one-Scour crafted
 modifier removal, exact Harvest resistance/Fracture calculation, and
-carrier-specific compilation. Oliver approved the permanent corpus and numeric
-criteria below on 2026-07-15. S7.2 is ready to begin after the required fresh
+carrier-specific compilation. Fixed Scour/Alchemy, explicit Eldritch side
+intent, protected-side operations, and deterministic Multimod finishes now
+evaluate as price-independent exact kernels and compile to primitive strategy
+subgraphs. Oliver approved the permanent corpus and numeric criteria below on
+2026-07-15. S7.2 is ready to begin after the required fresh
 pre-optimization measurements. Trade leaves, corruption, Hinekora's Lock,
 imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
@@ -505,6 +509,9 @@ may be used to debug a broken pruning path, but are not a routine phase gate.
 Use the owner-approved per-case caps and report every cap hit explicitly.
 
 ### S7.3 - Fixed solver options
+
+Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 remains
+unimplemented and is still the next boundary.
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.

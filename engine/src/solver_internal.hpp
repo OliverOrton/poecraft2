@@ -46,6 +46,26 @@ struct GoalSlot {
     std::uint32_t min_tier = 0;
 };
 
+enum class FixedOptionKind : std::uint8_t {
+    ScourAlchemy = 0,
+    EldritchSideIntent = 1,
+    ProtectedSide = 2,
+    MultimodFinish = 3,
+};
+
+/*
+ * User-selected, price-independent fixed option definition. Action ids name
+ * ordinary registry primitives; the planner resolves them once and never
+ * substitutes a cheaper setup or finish behind the caller's back.
+ */
+struct FixedOptionSpec {
+    FixedOptionKind kind = FixedOptionKind::ScourAlchemy;
+    std::int8_t side = -1; /* pc_mod_side for side-specific options */
+    std::string action_id; /* Eldritch craft or protected operation */
+    std::vector<std::string> setup_action_ids; /* explicit dominance setup */
+    std::vector<std::string> bench_craft_ids;  /* explicit Multimod finish */
+};
+
 struct GoalSpec {
     std::vector<GoalSlot> slots; /* 1..kMaxGoalSlots */
     std::uint8_t rarity = PC_RARITY_RARE; /* required finished rarity */
@@ -53,6 +73,8 @@ struct GoalSpec {
      * default and means every slot, preserving callers that construct a
      * GoalSpec directly instead of going through the JSON parser. */
     std::uint32_t min_satisfied_slots = 0;
+    bool primitive_actions_explicit = false;
+    std::vector<FixedOptionSpec> fixed_options;
 
     std::size_t required_satisfied_slots() const {
         return min_satisfied_slots == 0 ? slots.size()
@@ -137,6 +159,55 @@ struct ActionRegistry {
     std::unordered_map<std::string, std::uint32_t> index_by_id;
 };
 
+// --- solver-only planner operators -------------------------------------------
+
+enum class PlannerOperatorKind : std::uint8_t {
+    Primitive = 0,
+    FixedOption = 1,
+};
+
+/*
+ * A primitive wrapper or one finite fixed option. Primitive wrappers occupy
+ * the same indices as ActionRegistry::actions for backwards-compatible policy
+ * ids; fixed options are appended and therefore remain explicitly tagged by
+ * kind. Option programs contain only ordinary primitive registry indices.
+ */
+struct PlannerOperator {
+    std::string id;
+    std::string display_name;
+    PlannerOperatorKind kind = PlannerOperatorKind::Primitive;
+    FixedOptionKind option_kind = FixedOptionKind::ScourAlchemy;
+    std::uint32_t primitive_action = kNoId;
+    std::vector<std::uint32_t> primitive_program;
+    std::int8_t intended_side = -1;
+    /* Sorted, aggregated quantities. Fixed programs execute every primitive
+     * exactly once, so these are both exact and price-independent. */
+    std::vector<std::pair<std::string, double>> resource_quantities;
+};
+
+/* Selected policy reference. The index resolves in CalcContext::operators();
+ * the explicit kind tag prevents an appended option from masquerading as a
+ * primitive registry action. Primitive indices remain numerically identical
+ * to their ActionRegistry index. */
+struct PolicyOperatorRef {
+    PlannerOperatorKind kind = PlannerOperatorKind::Primitive;
+    std::uint32_t index = kNoId;
+
+    PolicyOperatorRef() = default;
+    explicit PolicyOperatorRef(std::uint32_t value) : index(value) {}
+    PolicyOperatorRef(PlannerOperatorKind value_kind, std::uint32_t value)
+        : kind(value_kind), index(value) {}
+
+    operator std::uint32_t() const { return index; }
+    bool operator==(const PolicyOperatorRef&) const = default;
+    bool operator==(std::uint32_t value) const { return index == value; }
+    friend bool operator==(
+        std::uint32_t value,
+        const PolicyOperatorRef& reference) {
+        return reference == value;
+    }
+};
+
 /*
  * Enumerate every plannable action instance for this session: base currency
  * operations, session-available essences, single fossils, bench crafts and
@@ -145,6 +216,13 @@ struct ActionRegistry {
  * the engine build does not support for this session are simply absent.
  */
 ActionRegistry build_action_registry(const SessionImpl& session);
+
+/* Resolve the goal's explicitly selected fixed options. The returned vector
+ * begins with one primitive wrapper per registry action at the same index. */
+std::vector<PlannerOperator> build_planner_operators(
+    const SessionImpl& session,
+    const GoalSpec& goal,
+    const ActionRegistry& registry);
 
 // --- goal resolution and abstract layout --------------------------------------
 
@@ -293,6 +371,23 @@ struct OutcomeDistribution {
     std::array<double, kMaxGoalSlots> slot_satisfied_probability{};
 };
 
+/*
+ * Exact absorbing result of running a finite option program from one entry
+ * abstract state. S7.3 options have no observation-owned choice groups: every
+ * meaningful program exit is returned directly to the outer policy.
+ */
+struct OptionKernel {
+    bool legal = false;
+    bool supported = false;
+    bool terminates_almost_surely = false;
+    double expected_primitive_actions = 0.0;
+    std::vector<std::pair<std::string, double>> expected_resources;
+    std::vector<OutcomeEntry> exits;
+    /* Empty for every S7.3 fixed option. Reserved by the kernel contract for
+     * S7.4 observe-then-decide programs such as Unveil. */
+    std::vector<OutcomeChoiceGroup> observation_choice_groups;
+};
+
 /* Per-solve transition-provider telemetry. The distribution cache itself
  * survives price-only re-solves; reset_solve_telemetry clears only counters
  * and the set of rows touched by the next solve. */
@@ -338,12 +433,18 @@ class CalcContext {
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
     const ActionRegistry& registry() const { return registry_; }
+    const std::vector<PlannerOperator>& operators() const {
+        return operators_;
+    }
     const GoalSpec& goal() const { return goal_; }
     /* The candidate action subset the layout was derived for. Normal solver
      * construction defaults an empty input to every registry action; an
      * operation-free strategy evaluation deliberately retains an empty set. */
     const std::vector<std::uint32_t>& candidates() const {
         return candidates_;
+    }
+    const std::vector<std::uint32_t>& candidate_operators() const {
+        return candidate_operators_;
     }
     /* The configured slot threshold satisfied at the required rarity. */
     bool is_goal_state(const AbstractState& state) const;
@@ -370,6 +471,12 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index);
 
+    /* Exact fixed-program kernel. operator_index must identify a
+     * PlannerOperatorKind::FixedOption entry. */
+    const OptionKernel& option_kernel(
+        std::uint32_t state_id,
+        std::uint32_t operator_index);
+
     void reset_solve_telemetry();
     const CalcTelemetry& telemetry() const { return telemetry_; }
     std::uint64_t layout_build_ns() const { return layout_build_ns_; }
@@ -387,6 +494,8 @@ class CalcContext {
     AbstractLayout layout_;
     ActionRegistry registry_;
     std::vector<std::uint32_t> candidates_;
+    std::vector<PlannerOperator> operators_;
+    std::vector<std::uint32_t> candidate_operators_;
     ActionContextImpl context_;
     std::vector<AbstractState> states_;
     std::optional<std::uint32_t> state_cap_;
@@ -395,6 +504,9 @@ class CalcContext {
     std::unordered_map<
         std::uint64_t,
         std::shared_ptr<const OutcomeDistribution>> distribution_cache_;
+    std::unordered_map<
+        std::uint64_t,
+        std::shared_ptr<const OptionKernel>> option_kernel_cache_;
     /* Reforges depend only on the preserved base (fractured/locked slots,
      * rarity, item-wide flags), so states sharing one base share one roll
      * DP. Key: (action index, base signature hash). */
@@ -606,7 +718,9 @@ struct SolveResult {
     bool converged = false;
     std::uint32_t start_state = kNoId;
     std::vector<double> values;
-    std::vector<std::uint32_t> policy; /* registry action index or kNoId */
+    /* Planner operator index or kNoId. Primitive operator indices are exactly
+     * their registry action indices; appended options are tagged by kind. */
+    std::vector<PolicyOperatorRef> policy;
     std::vector<std::uint8_t> expanded;
     std::vector<std::uint8_t> goal_states;
     std::vector<std::uint8_t> policy_reachable;
@@ -711,7 +825,8 @@ std::string serialize_solver_telemetry(
  * Compile a solved policy into ordinary strategy JSON (the same format the
  * editor and simulator consume): a master router whose prioritized edges
  * test policy-reachable state membership with existing condition types,
- * one operation node per state annotated with its expected remaining cost,
+ * one primitive operation or fixed-option primitive chain per state with the
+ * first node annotated by its expected remaining cost,
  * a success terminal for the goal, and a failure terminal for off-policy
  * leaks so abstraction drift fails loudly in the verification gate.
  *

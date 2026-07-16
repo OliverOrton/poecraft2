@@ -30,8 +30,19 @@ extern "C" {
  *       {"group": "<group key>", "min_tier": 0},
  *       {"family_mod_key": "<mod key>", "min_tier": 1}
  *     ],
- *     "actions": ["chaos", "exalt", "restart"]   // optional candidate
- *   }                               // subset; omitted = full registry
+ *     "actions": ["chaos", "exalt", "restart"],  // optional primitives
+ *     "options": [                  // optional fixed solver programs
+ *       {"type":"scour_alchemy"},
+ *       {"type":"eldritch_side_intent","side":"prefix",
+ *        "action":"eldritch_exalt",
+ *        "setup":["eldritch_ichor:1","eldritch_ember:2"]},
+ *       {"type":"protected_side","side":"suffix",
+ *        "action":"harvest_reforge:defence"},
+ *       {"type":"multimod_finish",
+ *        "bench_crafts":["bench:<mod key>","bench:<mod key>"]}
+ *     ]
+ *   }                               // omitted actions = full registry;
+ *                                   // [] = options only
  *
  * Costs are currency-quantity vectors dotted with a pc_economy price table
  * at solve time (same key vocabulary as strategy operations, plus "base"
@@ -300,9 +311,11 @@ pc_result pc_solver_solve(
     pc_error_info* out_error);
 
 /*
- * Value and policy action for one abstract state from the latest solve.
- * out_action_id receives NULL for goal/terminal states. The id points into
- * solver-owned storage. Returns PC_RESULT_NOT_FOUND before any solve.
+ * Value and policy operator for one abstract state from the latest solve.
+ * Primitive ids retain the action-registry vocabulary; fixed option ids begin
+ * with "option:". out_action_id receives NULL for goal/terminal states. The
+ * id points into solver-owned storage. Returns PC_RESULT_NOT_FOUND before any
+ * solve.
  */
 pc_result pc_solver_state_value(
     pc_solver_handle solver,
