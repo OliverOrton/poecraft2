@@ -47,16 +47,20 @@ reports now quantify the current full-closure/value-iteration behavior. S7.1 is
 complete: the tied/no-dominance rule is permanently fixtured, one-Scour crafted
 modifier removal is a primitive operation, Harvest resistance conversion and
 Fracture have exact calculation paths, and crafted/fractured carriers compile
-through ordinary strategy conditions and explicit start state. S7.2 is next.
-At Oliver's direction, S7.3 was implemented ahead of S7.2: explicitly selected
-fixed Scour/Alchemy, Eldritch side-intent, protected-side, and deterministic
-Multimod options now use price-independent exact kernels and compile into
-ordinary primitive Strategy Board subgraphs. S7.2 remains the exact next
-boundary; S7.4 has not begun.
+through ordinary strategy conditions and explicit start state. S7.2 is
+complete: explicit action envelopes and dependency diagnostics, lazy fossil
+materialization, exact-kernel action collapsing, independent resource caps,
+compact states, interned sparse transition rows, and bounded Bellman work now
+control the first performance pass. At Oliver's direction, S7.3 was implemented
+ahead of S7.2: explicitly selected fixed Scour/Alchemy, Eldritch side-intent,
+protected-side, and deterministic Multimod options use price-independent exact
+kernels and compile into ordinary primitive Strategy Board subgraphs. S7.4 is
+the exact next boundary and has not begun.
 Oliver approved the permanent real craft corpus and the performance, safety,
 responsiveness, and simulator-verification criteria on 2026-07-15. The old
-any-tier two-mod row remains historical; measure its approved T1/T1 replacement
-and the newly enabled real cases before S7.2 optimization.
+any-tier two-mod row remains historical. The requested fresh pre-S7.2 full-corpus
+run was recorded as unusable after it failed to finish the native report in
+roughly 49 minutes; Oliver directed the work to proceed to optimization.
 Macro/sub-policy operators, safe action control, cycle acceleration, memory
 bounds, and real craft gates are specified in
 [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
@@ -82,9 +86,9 @@ secrets.
    operators, compact transition storage, cycle-aware optimization, policy
    compression, and a final native/WASM benchmark plus compiled-strategy
    simulator gate. S7.0 baseline/telemetry, S7.1 correctness/state substrate,
-   and the out-of-sequence S7.3 fixed-option layer are complete; S7.2 action
-   control, storage, and the first performance pass is still the exact next
-   boundary.
+   S7.2 action control/storage/first performance work, and the out-of-sequence
+   S7.3 fixed-option layer are complete. S7.4 renewal and observation-aware
+   options are the exact next boundary.
    [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
 2. Parked mechanic track M1-M5 after S7: trade leaves/corruption/finishers,
    Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an

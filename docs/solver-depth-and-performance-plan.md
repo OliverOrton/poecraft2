@@ -7,19 +7,23 @@ realistic end-to-end crafts before adding more mechanic families. Read
 [crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
-Status 2026-07-15: S7.0, S7.1, and the out-of-sequence S7.3 fixed-option
-checkpoint are implemented. The versioned
-native/worker-WASM corpus, telemetry contract, unoptimized reports, and
-cross-backend comparison tooling are in place. The one-item correctness/state
+Status 2026-07-15: S7.0-S7.3 are implemented; S7.3 landed ahead of S7.2 and
+S7.2 was then completed without redoing the fixed-option checkpoint. The
+versioned native/worker-WASM corpus, telemetry contract, unoptimized reports,
+and cross-backend comparison tooling are in place. The one-item correctness/state
 substrate now includes the approved Eldritch fallback fixture, one-Scour crafted
 modifier removal, exact Harvest resistance/Fracture calculation, and
 carrier-specific compilation. Fixed Scour/Alchemy, explicit Eldritch side
 intent, protected-side operations, and deterministic Multimod finishes now
 evaluate as price-independent exact kernels and compile to primitive strategy
-subgraphs. Oliver approved the permanent corpus and numeric criteria below on
-2026-07-15. S7.2 is ready to begin after the required fresh
-pre-optimization measurements. Trade leaves, corruption, Hinekora's Lock,
-imprints, recombinators, and other mechanic expansion remain parked in
+subgraphs. Explicit action control, lazy fossil generation, exact-kernel action
+collapsing, independent caps, compact states, interned sparse transitions, and
+bounded Bellman units now provide the first performance layer. Oliver approved
+the permanent corpus and numeric criteria below on 2026-07-15. The fresh
+pre-optimization full-corpus command was recorded as a timeout when its native
+report had not completed after roughly 49 minutes, and Oliver directed the
+phase to proceed to performance work. S7.4 is next. Trade leaves, corruption,
+Hinekora's Lock, imprints, recombinators, and other mechanic expansion remain parked in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 ## Outcome
@@ -496,6 +500,11 @@ narrow test needed to diagnose and fix it.
 
 ### S7.2 - Action control, storage, and first performance pass
 
+Status: complete in the S7.2 action-control/storage checkpoint. The required
+pre-optimization command was attempted from the clean S7.3 commit and recorded
+as an owner-stopped timeout after 3,036 seconds; it never completed the native
+report and never started WASM. Existing S7.0 reports remain preserved.
+
 - Build the goal-relevance/dependency analyzer. Keep exhaustive-oracle mode only
   if it materially helps diagnose pruning work.
 - Generate fossil loadouts lazily and collapse certified equivalent actions.
@@ -508,10 +517,21 @@ performance measurements plus explicit cap diagnostics. Exhaustive comparisons
 may be used to debug a broken pruning path, but are not a routine phase gate.
 Use the owner-approved per-case caps and report every cap hit explicitly.
 
+Checkpoint result: explicitly selected cases materialize only requested fossil
+loadouts and report their complete envelope/dependency reasons; exact equal
+transition kernels collapse with price ties retained; per-solve distributions
+are copied into compact interned sparse rows; state payloads no longer allocate
+four junk-count vectors; discovered/expanded state, row, transition,
+reforge-work, solver-byte, and compiled-output caps report their names; and
+Bellman work is bounded by row/transition units with adaptive worker scheduling.
+The final one-mod and ordinary native/WASM reports agree on statuses, structural
+counts, compiled graphs, values, and 10,000-run outcomes. Cycle-heavy endgame
+work remains too slow and is intentionally left for S7.5.
+
 ### S7.3 - Fixed solver options
 
-Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 remains
-unimplemented and is still the next boundary.
+Status: complete in the out-of-sequence S7.3 fixed-option commit. S7.2 is now
+also complete; S7.4 is the next boundary.
 
 - Land the planner-operator/kernel contract and tagged policy actions.
 - Compile options into primitive Strategy Board subgraphs.
@@ -633,7 +653,7 @@ Recorded 2026-07-15:
    value impact if it reports the discarded delta and honest optimality status;
    it is not S7.1 work or an S7 completion requirement.
 
-No owner approval remains before S7.2. The permanent corpus and numeric criteria
+No owner approval remains before S7.4. The permanent corpus and numeric criteria
 are approved. Ask Oliver only if later implementation reveals a new mechanic
 ambiguity.
 

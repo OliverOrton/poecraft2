@@ -341,6 +341,14 @@ std::string compile_policy_strategy_json(
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
     std::uint32_t node_count = 4; /* start, router, goal, offpolicy */
+    const auto check_node_cap = [&]() {
+        if (node_count > result.options.max_compiled_nodes) {
+            if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
+            gap("compiled policy exceeded max_compiled_nodes (" +
+                std::to_string(result.options.max_compiled_nodes) + ")");
+        }
+    };
+    check_node_cap();
 
     const AbstractState& start = calc.state(result.start_state);
     pc_item_state start_item;
@@ -417,6 +425,7 @@ std::string compile_policy_strategy_json(
             json += std::to_string(state_id);
             json += "\",\"kind\":\"router\"}";
             ++node_count;
+            check_node_cap();
             for (std::size_t option = 0;
                  option < result.unveil_preferences[state_id].size();
                  ++option) {
@@ -431,6 +440,7 @@ std::string compile_policy_strategy_json(
                 json += json_escape(mod_key_of(session, mod_id));
                 json += "\"}}";
                 ++node_count;
+                check_node_cap();
             }
             continue;
         }
@@ -453,6 +463,7 @@ std::string compile_policy_strategy_json(
                 session, calc.registry().actions.at(program[step]));
             json += "}";
             ++node_count;
+            check_node_cap();
         }
     }
     json += "],\"edges\":[";
@@ -477,6 +488,19 @@ std::string compile_policy_strategy_json(
             json += condition;
         }
         json += "}";
+        if (edge_counter > result.options.max_compiled_edges) {
+            if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_edges";
+            gap("compiled policy exceeded max_compiled_edges (" +
+                std::to_string(result.options.max_compiled_edges) + ")");
+        }
+        if (json.size() > result.options.max_strategy_json_bytes) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_strategy_json_bytes";
+            }
+            gap("compiled policy exceeded max_strategy_json_bytes (" +
+                std::to_string(result.options.max_strategy_json_bytes) +
+                ")");
+        }
     };
 
     edge("start", "router", 0, "", true);
@@ -639,6 +663,11 @@ std::string compile_policy_strategy_json(
              static_cast<int>(preferences.size()), "", true);
     }
     json += "]}";
+    if (json.size() > result.options.max_strategy_json_bytes) {
+        if (telemetry != nullptr) telemetry->cap_hit = "max_strategy_json_bytes";
+        gap("compiled policy exceeded max_strategy_json_bytes (" +
+            std::to_string(result.options.max_strategy_json_bytes) + ")");
+    }
     if (telemetry != nullptr) {
         telemetry->working_states = static_cast<std::uint32_t>(
             compiled_states.size());

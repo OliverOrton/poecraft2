@@ -44,6 +44,36 @@ struct PricedOperator {
     double cost = 0.0;
 };
 
+struct SparseChoiceGroup {
+    std::uint64_t successor_offset = 0;
+    std::uint32_t successor_count = 0;
+    double probability = 0.0;
+};
+
+struct SparseRow {
+    std::uint32_t operator_index = kNoId;
+    double cost = 0.0;
+    std::uint64_t transition_offset = 0;
+    std::uint32_t transition_count = 0;
+    std::uint64_t choice_offset = 0;
+    std::uint32_t choice_count = 0;
+    std::uint64_t choice_option_offset = 0;
+    std::uint32_t choice_option_count = 0;
+};
+
+struct StateRowSpan {
+    std::uint64_t offset = 0;
+    std::uint32_t count = 0;
+};
+
+struct PendingSparseRow {
+    std::uint32_t operator_index = kNoId;
+    double cost = 0.0;
+    const std::vector<OutcomeEntry>* transitions = nullptr;
+    const std::vector<OutcomeChoiceGroup>* choices = nullptr;
+    const std::vector<OutcomeChoiceOption>* choice_options = nullptr;
+};
+
 } // namespace
 
 struct SolveWork::Impl {
@@ -60,6 +90,21 @@ struct SolveWork::Impl {
     std::uint32_t peak_queue_size = 0;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
+    std::vector<StateRowSpan> state_rows;
+    std::vector<SparseRow> sparse_rows;
+    std::vector<std::uint32_t> sparse_successors;
+    std::vector<double> sparse_probabilities;
+    std::vector<SparseChoiceGroup> sparse_choices;
+    std::vector<std::uint32_t> sparse_choice_successors;
+    std::vector<OutcomeChoiceOption> sparse_choice_options;
+    std::unordered_map<std::size_t, std::vector<std::uint64_t>>
+        kernel_rows_by_hash;
+    std::uint32_t sweep_state = 0;
+    std::uint32_t sweep_row = 0;
+    double sweep_best = kInfinity;
+    double sweep_residual = 0.0;
+    bool sweep_active = false;
+    std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
     bool consumed = false;
 
@@ -71,11 +116,43 @@ struct SolveWork::Impl {
         : calc(context), session(context.session()), options(solve_options),
           reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
+        options.max_expanded_states = std::min(
+            options.max_expanded_states, options.max_states);
         calc.reset_solve_telemetry();
+        calc.set_solve_resource_caps(
+            options.max_discovered_states, options.max_reforge_work);
+        result.options = options;
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
             calc.candidates().size());
+        const ActionControlSummary& control = calc.action_control();
+        result.diagnostics.relevance_reduced_actions =
+            control.pruned_outside_envelope;
+        result.diagnostics.dependency_actions =
+            control.dependency_primitives;
+        result.diagnostics.deferred_actions =
+            control.deferred_fossil_loadouts;
+        result.diagnostics.action_inclusion_reasons.push_back(
+            std::string(control.explicit_envelope
+                            ? "included:explicit_goal_envelope:"
+                            : "included:conservative_exhaustive_envelope:") +
+            std::to_string(control.included_primitives));
+        if (control.pruned_outside_envelope != 0) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                "pruned:not_permitted_by_explicit_goal_envelope:" +
+                std::to_string(control.pruned_outside_envelope));
+        }
+        if (control.dependency_primitives != 0) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                "included:fixed_option_structural_dependency:" +
+                std::to_string(control.dependency_primitives));
+        }
+        if (control.deferred_fossil_loadouts != 0) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                "deferred:lazy_fossil_signature_not_requested:" +
+                std::to_string(control.deferred_fossil_loadouts));
+        }
         /* Primitive support remains action-registry telemetry. Fixed options
          * are priced and evaluated alongside those primitive wrappers. */
         for (const std::uint32_t index : calc.candidates()) {
@@ -102,15 +179,26 @@ struct SolveWork::Impl {
             if (!priced) {
                 result.diagnostics.skipped_missing_price.push_back(
                     planner.id);
+                add_action_reason(
+                    "unpriced", planner.id,
+                    "missing_one_or_more_resource_prices");
                 continue;
             }
-            operators.push_back({index, cost});
             ++result.diagnostics.priced_scanned_actions;
             const bool supported =
                 planner.kind == PlannerOperatorKind::FixedOption ||
                 calc_supports(calc.registry().actions.at(
                     planner.primitive_action));
-            if (supported) ++result.diagnostics.supported_priced_actions;
+            if (!supported) {
+                reported_unsupported[index] = true;
+                result.diagnostics.skipped_unsupported.push_back(planner.id);
+                add_action_reason(
+                    "unsupported", planner.id,
+                    "no_exact_evaluator_for_requested_primitive");
+                continue;
+            }
+            operators.push_back({index, cost});
+            ++result.diagnostics.supported_priced_actions;
         }
 
         result.start_state = calc.intern_item(start_item);
@@ -130,6 +218,230 @@ struct SolveWork::Impl {
             peak_queue_size, static_cast<std::uint32_t>(queue.size()));
     }
 
+    bool same_kernel(
+        const SparseRow& stored,
+        const PendingSparseRow& pending) const {
+        const std::size_t transition_count =
+            pending.transitions == nullptr ? 0 : pending.transitions->size();
+        const std::size_t choice_count =
+            pending.choices == nullptr ? 0 : pending.choices->size();
+        if (stored.transition_count != transition_count ||
+            stored.choice_count != choice_count) {
+            return false;
+        }
+        for (std::size_t i = 0; i < transition_count; ++i) {
+            const std::uint64_t offset = stored.transition_offset + i;
+            const OutcomeEntry& right = pending.transitions->at(i);
+            if (sparse_successors.at(offset) != right.state ||
+                sparse_probabilities.at(offset) != right.probability) {
+                return false;
+            }
+        }
+        for (std::size_t i = 0; i < choice_count; ++i) {
+            const SparseChoiceGroup& left = sparse_choices.at(
+                stored.choice_offset + i);
+            const OutcomeChoiceGroup& right = pending.choices->at(i);
+            if (left.probability != right.probability ||
+                left.successor_count != right.states.size()) {
+                return false;
+            }
+            for (std::size_t s = 0; s < right.states.size(); ++s) {
+                if (sparse_choice_successors.at(
+                        left.successor_offset + s) != right.states[s]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    std::size_t kernel_hash(const PendingSparseRow& pending) const {
+        const auto mix = [](std::size_t& hash, std::size_t value) {
+            hash ^= value + 0x9e3779b97f4a7c15ULL + (hash << 6) +
+                    (hash >> 2);
+        };
+        std::size_t hash = 2166136261u;
+        if (pending.transitions != nullptr) {
+            mix(hash, pending.transitions->size());
+            for (const OutcomeEntry& entry : *pending.transitions) {
+                mix(hash, entry.state);
+                mix(hash, std::hash<double>{}(entry.probability));
+            }
+        }
+        if (pending.choices != nullptr) {
+            mix(hash, pending.choices->size());
+            for (const OutcomeChoiceGroup& group : *pending.choices) {
+                mix(hash, std::hash<double>{}(group.probability));
+                mix(hash, group.states.size());
+                for (const std::uint32_t state : group.states) {
+                    mix(hash, state);
+                }
+            }
+        }
+        return hash;
+    }
+
+    void add_action_reason(
+        const char* disposition,
+        const std::string& action,
+        const std::string& reason) {
+        result.diagnostics.action_inclusion_reasons.push_back(
+            std::string(disposition) + ":" + reason + ":" + action);
+    }
+
+    void record_cap(const std::string& name, bool state_cap = false) {
+        if (std::find(result.diagnostics.cap_hits.begin(),
+                      result.diagnostics.cap_hits.end(), name) ==
+            result.diagnostics.cap_hits.end()) {
+            result.diagnostics.cap_hits.push_back(name);
+        }
+        result.diagnostics.resource_cap_hit = true;
+        if (state_cap) result.diagnostics.state_cap_hit = true;
+    }
+
+    void check_solver_byte_cap() {
+        const std::uint64_t current = estimated_owned_bytes();
+        peak_owned_bytes = std::max(peak_owned_bytes, current);
+        if (current > options.max_solver_owned_bytes) {
+            record_cap("max_solver_owned_bytes");
+        }
+    }
+
+    void append_sparse_row(
+        const std::uint32_t state,
+        PendingSparseRow pending) {
+        static const std::vector<OutcomeEntry> empty_transitions;
+        static const std::vector<OutcomeChoiceGroup> empty_choices;
+        static const std::vector<OutcomeChoiceOption> empty_choice_options;
+        const auto& transitions = pending.transitions == nullptr
+                                      ? empty_transitions
+                                      : *pending.transitions;
+        const auto& choices = pending.choices == nullptr
+                                  ? empty_choices
+                                  : *pending.choices;
+        const auto& choice_options = pending.choice_options == nullptr
+                                         ? empty_choice_options
+                                         : *pending.choice_options;
+        if (state >= state_rows.size()) state_rows.resize(state + 1);
+        StateRowSpan& span = state_rows[state];
+        for (std::uint32_t i = 0; i < span.count; ++i) {
+            SparseRow& stored = sparse_rows.at(span.offset + i);
+            if (!same_kernel(stored, pending)) continue;
+            const std::string& candidate_id =
+                calc.operators().at(pending.operator_index).id;
+            const std::string& representative_id =
+                calc.operators().at(stored.operator_index).id;
+            if (pending.cost < stored.cost - 1e-12) {
+                add_action_reason(
+                    "pruned", representative_id,
+                    "certified_equivalent_kernel_more_expensive_than_" +
+                        candidate_id);
+                stored.operator_index = pending.operator_index;
+                stored.cost = pending.cost;
+                stored.choice_option_offset = sparse_choice_options.size();
+                stored.choice_option_count = static_cast<std::uint32_t>(
+                    choice_options.size());
+                sparse_choice_options.insert(
+                    sparse_choice_options.end(),
+                    choice_options.begin(), choice_options.end());
+            } else if (std::abs(pending.cost - stored.cost) <= 1e-12) {
+                ++result.diagnostics.equivalent_price_ties;
+                add_action_reason(
+                    "included", candidate_id,
+                    "certified_equivalent_kernel_price_tie_with_" +
+                        representative_id);
+            } else {
+                add_action_reason(
+                    "pruned", candidate_id,
+                    "certified_equivalent_kernel_more_expensive_than_" +
+                        representative_id);
+            }
+            ++result.diagnostics.equivalent_actions_collapsed;
+            return;
+        }
+
+        std::uint64_t transition_count = transitions.size();
+        for (const OutcomeChoiceGroup& group : choices) {
+            transition_count += group.states.size();
+        }
+        if (sparse_rows.size() >= options.max_state_action_rows) {
+            throw SolverResourceLimit(
+                "max_state_action_rows", options.max_state_action_rows);
+        }
+
+        SparseRow row;
+        row.operator_index = pending.operator_index;
+        row.cost = pending.cost;
+        const std::size_t hash = kernel_hash(pending);
+        const SparseRow* shared_kernel = nullptr;
+        const auto found = kernel_rows_by_hash.find(hash);
+        if (found != kernel_rows_by_hash.end()) {
+            for (const std::uint64_t row_index : found->second) {
+                const SparseRow& candidate = sparse_rows.at(row_index);
+                if (same_kernel(candidate, pending)) {
+                    shared_kernel = &candidate;
+                    break;
+                }
+            }
+        }
+        if (shared_kernel != nullptr) {
+            row.transition_offset = shared_kernel->transition_offset;
+            row.transition_count = shared_kernel->transition_count;
+            row.choice_offset = shared_kernel->choice_offset;
+            row.choice_count = shared_kernel->choice_count;
+        } else {
+            if (sparse_successors.size() + sparse_choice_successors.size() +
+                    transition_count > options.max_transitions) {
+                throw SolverResourceLimit(
+                    "max_transitions", options.max_transitions);
+            }
+            row.transition_offset = sparse_successors.size();
+            row.transition_count = static_cast<std::uint32_t>(
+                transitions.size());
+            for (const OutcomeEntry& entry : transitions) {
+                sparse_successors.push_back(entry.state);
+                sparse_probabilities.push_back(entry.probability);
+            }
+            row.choice_offset = sparse_choices.size();
+            row.choice_count = static_cast<std::uint32_t>(choices.size());
+            for (const OutcomeChoiceGroup& group : choices) {
+                SparseChoiceGroup stored;
+                stored.successor_offset = sparse_choice_successors.size();
+                stored.successor_count = static_cast<std::uint32_t>(
+                    group.states.size());
+                stored.probability = group.probability;
+                sparse_choice_successors.insert(
+                    sparse_choice_successors.end(), group.states.begin(),
+                    group.states.end());
+                sparse_choices.push_back(stored);
+            }
+        }
+        row.choice_option_offset = sparse_choice_options.size();
+        row.choice_option_count = static_cast<std::uint32_t>(
+            choice_options.size());
+        sparse_choice_options.insert(
+            sparse_choice_options.end(), choice_options.begin(),
+            choice_options.end());
+        if (span.count == 0) span.offset = sparse_rows.size();
+        sparse_rows.push_back(row);
+        if (shared_kernel == nullptr) {
+            kernel_rows_by_hash[hash].push_back(sparse_rows.size() - 1);
+        }
+        ++span.count;
+        result.diagnostics.sparse_rows = sparse_rows.size();
+        result.diagnostics.sparse_transitions =
+            sparse_successors.size() + sparse_choice_successors.size();
+
+        for (const OutcomeEntry& entry : transitions) {
+            enqueue(entry.state);
+        }
+        for (const OutcomeChoiceGroup& group : choices) {
+            for (const std::uint32_t successor : group.states) {
+                enqueue(successor);
+            }
+        }
+    }
+
     void expand_one() {
         const auto started = std::chrono::steady_clock::now();
         const std::uint32_t state = queue.front();
@@ -145,67 +457,101 @@ struct SolveWork::Impl {
             return;
         }
 
-        for (const PricedOperator& priced : operators) {
-            const PlannerOperator& planner =
-                calc.operators().at(priced.index);
-            if (planner.kind == PlannerOperatorKind::FixedOption) {
-                const OptionKernel& kernel =
-                    calc.option_kernel(state, priced.index);
-                if (!kernel.supported) {
-                    if (!reported_unsupported[priced.index]) {
-                        reported_unsupported[priced.index] = true;
-                        result.diagnostics.skipped_unsupported.push_back(
-                            planner.id);
+        try {
+            for (const PricedOperator& priced : operators) {
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                PendingSparseRow pending;
+                pending.operator_index = priced.index;
+                pending.cost = priced.cost;
+                if (planner.kind == PlannerOperatorKind::FixedOption) {
+                    const OptionKernel& kernel =
+                        calc.option_kernel(state, priced.index);
+                    if (!kernel.supported) {
+                        if (!reported_unsupported[priced.index]) {
+                            reported_unsupported[priced.index] = true;
+                            result.diagnostics.skipped_unsupported.push_back(
+                                planner.id);
+                            add_action_reason(
+                                "unsupported", planner.id,
+                                "fixed_option_kernel_unavailable");
+                        }
+                        continue;
                     }
-                    continue;
+                    if (!kernel.legal) continue;
+                    pending.transitions = &kernel.exits;
+                } else {
+                    const std::uint32_t action_index =
+                        planner.primitive_action;
+                    if (!action_legal(
+                            session, calc.registry().actions[action_index],
+                            calc.state(state))) {
+                        continue;
+                    }
+                    const OutcomeDistribution& distribution =
+                        calc.outcomes(state, action_index);
+                    if (!distribution.supported) {
+                        if (!reported_unsupported[priced.index]) {
+                            reported_unsupported[priced.index] = true;
+                            result.diagnostics.skipped_unsupported.push_back(
+                                planner.id);
+                            add_action_reason(
+                                "unsupported", planner.id,
+                                "exact_evaluator_unavailable");
+                        }
+                        continue;
+                    }
+                    if (distribution.choice_groups.empty()) {
+                        pending.transitions = &distribution.entries;
+                    } else {
+                        pending.choices = &distribution.choice_groups;
+                        pending.choice_options =
+                            &distribution.choice_options;
+                    }
                 }
-                if (!kernel.legal) continue;
-                for (const OutcomeEntry& exit : kernel.exits) {
-                    enqueue(exit.state);
+                try {
+                    append_sparse_row(state, std::move(pending));
+                } catch (...) {
+                    if (planner.kind == PlannerOperatorKind::FixedOption) {
+                        calc.release_option_kernel(state, priced.index);
+                    } else {
+                        calc.release_outcome(
+                            state, planner.primitive_action);
+                    }
+                    throw;
                 }
-                continue;
-            }
-
-            const std::uint32_t action_index = planner.primitive_action;
-            if (!action_legal(session,
-                              calc.registry().actions[action_index],
-                              calc.state(state))) {
-                continue;
-            }
-            const OutcomeDistribution& distribution =
-                calc.outcomes(state, action_index);
-            if (!distribution.supported) {
-                if (!reported_unsupported[priced.index]) {
-                    reported_unsupported[priced.index] = true;
-                    result.diagnostics.skipped_unsupported.push_back(
-                        planner.id);
-                }
-                continue;
-            }
-            for (const OutcomeEntry& entry : distribution.entries) {
-                enqueue(entry.state);
-            }
-            for (const OutcomeChoiceGroup& group :
-                 distribution.choice_groups) {
-                for (std::uint32_t successor : group.states) {
-                    enqueue(successor);
+                if (planner.kind == PlannerOperatorKind::FixedOption) {
+                    calc.release_option_kernel(state, priced.index);
+                } else {
+                    calc.release_outcome(state, planner.primitive_action);
                 }
             }
+        } catch (const SolverResourceLimit& limit) {
+            record_cap(
+                limit.cap_name(),
+                limit.cap_name() == "max_discovered_states");
         }
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
+        if (!result.diagnostics.resource_cap_hit &&
+            expanded_count % 64 == 0) {
+            check_solver_byte_cap();
+        }
     }
 
     void prepare_iteration() {
         const auto started = std::chrono::steady_clock::now();
-        if (!queue.empty() && expanded_count >= options.max_states) {
+        if (!queue.empty() &&
+            expanded_count >= options.max_expanded_states) {
             result.diagnostics.state_cap_hit = true;
+            record_cap("max_expanded_states", true);
         }
         result.diagnostics.expanded_states = expanded_count;
 
         const std::uint32_t state_count = calc.state_count();
+        state_rows.resize(state_count);
         result.diagnostics.discovered_states = state_count;
         result.diagnostics.frontier_states = state_count - expanded_count;
         expanded.resize(state_count, 0);
@@ -227,6 +573,15 @@ struct SolveWork::Impl {
         }
         residual = kValueCeiling;
         phase = SolvePhase::Iterating;
+        result.diagnostics.reforge_frontier_work =
+            calc.telemetry().reforge_frontier_work;
+        check_solver_byte_cap();
+        /* The solve now owns the compact CSR rows used by every later phase;
+         * release evaluator distributions so transitions are stored once. A
+         * reusable price-only context is the separate S7.5 cache-reuse pass. */
+        calc.release_solve_transition_caches();
+        peak_owned_bytes = std::max(
+            peak_owned_bytes, estimated_owned_bytes());
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
@@ -278,31 +633,109 @@ struct SolveWork::Impl {
         return expected;
     }
 
-    void run_sweep() {
-        const auto started = std::chrono::steady_clock::now();
-        residual = 0.0;
-        ++sweeps;
-        const std::uint32_t state_count =
-            static_cast<std::uint32_t>(result.values.size());
-        for (std::uint32_t state = 0; state < state_count; ++state) {
-            if (!result.expanded[state] || result.goal_states[state]) {
-                continue;
+    double sparse_row_q(
+        const SparseRow& row,
+        std::uint32_t& transition_work) const {
+        double expected = row.cost;
+        transition_work = 0;
+        if (row.choice_count != 0) {
+            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                const SparseChoiceGroup& group = sparse_choices.at(
+                    row.choice_offset + i);
+                double best = kInfinity;
+                for (std::uint32_t s = 0; s < group.successor_count; ++s) {
+                    best = std::min(
+                        best,
+                        result.values[sparse_choice_successors.at(
+                            group.successor_offset + s)]);
+                }
+                transition_work += group.successor_count;
+                if (best == kInfinity) return kInfinity;
+                expected += group.probability * best;
             }
-            ++result.diagnostics.bellman_backups;
-            double best = kInfinity;
-            for (const PricedOperator& planner : operators) {
-                ++result.diagnostics.bellman_action_evaluations;
-                best = std::min(best, operator_q(state, planner));
-            }
-            /* Monotone descent from the ceiling: updates never raise a
-             * value, so unreachable-to-goal states settle at the ceiling. */
-            const double before = result.values[state];
-            if (best >= before) continue;
-            residual = std::max(residual, before - best);
-            result.values[state] = best;
+            return expected;
         }
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            const double value = result.values[sparse_successors.at(offset)];
+            ++transition_work;
+            if (value == kInfinity) return kInfinity;
+            expected += sparse_probabilities.at(offset) * value;
+        }
+        return expected;
+    }
+
+    void begin_sweep() {
+        sweep_active = true;
+        sweep_state = 0;
+        sweep_row = 0;
+        sweep_best = kInfinity;
+        sweep_residual = 0.0;
+        ++sweeps;
+    }
+
+    void finish_sweep() {
+        residual = sweep_residual;
+        sweep_active = false;
         result.diagnostics.sweeps = sweeps;
         result.diagnostics.residual = residual;
+    }
+
+    void finish_bellman_state() {
+        const double before = result.values[sweep_state];
+        if (sweep_best < before) {
+            sweep_residual = std::max(
+                sweep_residual, before - sweep_best);
+            result.values[sweep_state] = sweep_best;
+        }
+        ++sweep_state;
+        sweep_row = 0;
+        sweep_best = kInfinity;
+    }
+
+    void run_bellman_unit() {
+        const auto started = std::chrono::steady_clock::now();
+        if (!sweep_active) begin_sweep();
+        const std::uint32_t state_count =
+            static_cast<std::uint32_t>(result.values.size());
+        constexpr std::uint32_t kRowsPerUnit = 256;
+        constexpr std::uint32_t kTransitionsPerUnit = 4096;
+        std::uint32_t rows_done = 0;
+        std::uint32_t transitions_done = 0;
+        while (sweep_state < state_count && rows_done < kRowsPerUnit &&
+               (transitions_done < kTransitionsPerUnit || rows_done == 0)) {
+            if (!result.expanded[sweep_state] ||
+                result.goal_states[sweep_state]) {
+                ++sweep_state;
+                sweep_row = 0;
+                sweep_best = kInfinity;
+                continue;
+            }
+            const StateRowSpan& span = state_rows.at(sweep_state);
+            if (sweep_row == 0) {
+                ++result.diagnostics.bellman_backups;
+            }
+            if (sweep_row >= span.count) {
+                finish_bellman_state();
+                ++rows_done;
+                continue;
+            }
+            const SparseRow& row = sparse_rows.at(
+                span.offset + sweep_row);
+            std::uint32_t row_work = 0;
+            const double q = sparse_row_q(row, row_work);
+            sweep_best = std::min(sweep_best, q);
+            ++sweep_row;
+            ++rows_done;
+            transitions_done += row_work;
+            ++result.diagnostics.bellman_action_evaluations;
+            if (sweep_row >= span.count) finish_bellman_state();
+        }
+        if (sweep_state >= state_count) finish_sweep();
+        ++result.diagnostics.bellman_work_units;
+        result.diagnostics.max_bellman_unit_transitions = std::max(
+            result.diagnostics.max_bellman_unit_transitions,
+            transitions_done);
         result.diagnostics.optimization_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
@@ -313,26 +746,38 @@ struct SolveWork::Impl {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (phase == SolvePhase::Expanding) {
-                if (queue.empty() || expanded_count >= options.max_states) {
+                if (queue.empty() ||
+                    expanded_count >= options.max_expanded_states) {
                     prepare_iteration();
+                    if (result.diagnostics.resource_cap_hit) {
+                        phase = SolvePhase::Done;
+                    }
                     break; /* expose the phase boundary to callers */
                 }
                 expand_one();
                 --remaining;
-                if (queue.empty() || expanded_count >= options.max_states) {
+                if (result.diagnostics.resource_cap_hit || queue.empty() ||
+                    expanded_count >= options.max_expanded_states) {
                     prepare_iteration();
+                    if (result.diagnostics.resource_cap_hit) {
+                        phase = SolvePhase::Done;
+                    }
                     break;
                 }
                 continue;
             }
 
-            if (residual <= options.epsilon || sweeps >= options.max_sweeps) {
+            if (!sweep_active &&
+                (residual <= options.epsilon ||
+                 sweeps >= options.max_sweeps)) {
                 phase = SolvePhase::Done;
                 break;
             }
-            run_sweep();
+            run_bellman_unit();
             --remaining;
-            if (residual <= options.epsilon || sweeps >= options.max_sweeps) {
+            if (!sweep_active &&
+                (residual <= options.epsilon ||
+                 sweeps >= options.max_sweeps)) {
                 phase = SolvePhase::Done;
             }
         }
@@ -371,7 +816,7 @@ struct SolveWork::Impl {
         snapshot.diagnostics.sweeps = sweeps;
         snapshot.diagnostics.residual = residual;
         snapshot.diagnostics.solver_owned_bytes_estimate =
-            estimated_owned_bytes();
+            std::max(peak_owned_bytes, estimated_owned_bytes());
         snapshot.raw_start_bound = progress().start_value_bound;
         return snapshot;
     }
@@ -394,46 +839,44 @@ struct SolveWork::Impl {
             double best_q = kInfinity;
             double best_variance = kInfinity;
             std::uint32_t best_operator = kNoId;
-            for (const PricedOperator& priced : operators) {
+            const SparseRow* best_row = nullptr;
+            const StateRowSpan& span = state_rows.at(state);
+            for (std::uint32_t row_index = 0; row_index < span.count;
+                 ++row_index) {
+                const SparseRow& row = sparse_rows.at(
+                    span.offset + row_index);
                 ++result.diagnostics.extraction_action_evaluations;
-                const double q = operator_q(state, priced);
+                std::uint32_t transition_work = 0;
+                const double q = sparse_row_q(row, transition_work);
                 if (q == kInfinity) continue;
                 double mean = 0.0;
                 std::vector<std::pair<double, double>> random_values;
-                const PlannerOperator& planner =
-                    calc.operators().at(priced.index);
-                if (planner.kind == PlannerOperatorKind::FixedOption) {
-                    const OptionKernel& kernel =
-                        calc.option_kernel(state, priced.index);
-                    for (const OutcomeEntry& exit : kernel.exits) {
+                if (row.choice_count == 0) {
+                    for (std::uint32_t i = 0;
+                         i < row.transition_count; ++i) {
+                        const std::uint64_t offset =
+                            row.transition_offset + i;
                         random_values.push_back(
-                            {exit.probability, result.values[exit.state]});
-                        mean += exit.probability * result.values[exit.state];
+                            {sparse_probabilities.at(offset),
+                             result.values[sparse_successors.at(offset)]});
+                        mean += sparse_probabilities.at(offset) *
+                                result.values[sparse_successors.at(offset)];
                     }
                 } else {
-                    const OutcomeDistribution& distribution = calc.outcomes(
-                        state, planner.primitive_action);
-                    if (!distribution.choice_groups.empty()) {
-                        for (const OutcomeChoiceGroup& group :
-                             distribution.choice_groups) {
-                            double chosen = kInfinity;
-                            for (std::uint32_t successor : group.states) {
-                                chosen = std::min(
-                                    chosen, result.values[successor]);
-                            }
-                            random_values.push_back(
-                                {group.probability, chosen});
-                            mean += group.probability * chosen;
+                    for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                        const SparseChoiceGroup& group = sparse_choices.at(
+                            row.choice_offset + i);
+                        double chosen = kInfinity;
+                        for (std::uint32_t s = 0;
+                             s < group.successor_count; ++s) {
+                            chosen = std::min(
+                                chosen,
+                                result.values[sparse_choice_successors.at(
+                                    group.successor_offset + s)]);
                         }
-                    } else {
-                        for (const OutcomeEntry& entry :
-                             distribution.entries) {
-                            random_values.push_back(
-                                {entry.probability,
-                                 result.values[entry.state]});
-                            mean += entry.probability *
-                                    result.values[entry.state];
-                        }
+                        random_values.push_back(
+                            {group.probability, chosen});
+                        mean += group.probability * chosen;
                     }
                 }
                 double variance = 0.0;
@@ -448,7 +891,8 @@ struct SolveWork::Impl {
                 if (better) {
                     best_q = q;
                     best_variance = variance;
-                    best_operator = priced.index;
+                    best_operator = row.operator_index;
+                    best_row = &row;
                 }
             }
             result.policy[state] =
@@ -457,21 +901,21 @@ struct SolveWork::Impl {
                     : PolicyOperatorRef{
                           calc.operators()[best_operator].kind,
                           best_operator};
-            if (best_operator != kNoId &&
+            if (best_operator != kNoId && best_row != nullptr &&
                 calc.operators()[best_operator].kind ==
                     PlannerOperatorKind::Primitive &&
                 calc.registry()
                         .actions[calc.operators()[best_operator]
                                      .primitive_action]
                         .params.type == ActionType::Unveil) {
-                const std::uint32_t unveil_action =
-                    calc.operators()[best_operator].primitive_action;
-                const OutcomeDistribution& distribution =
-                    calc.outcomes(state, unveil_action);
-                std::vector<OutcomeChoiceOption> options =
-                    distribution.choice_options;
+                std::vector<OutcomeChoiceOption> choice_options;
+                for (std::uint32_t i = 0;
+                     i < best_row->choice_option_count; ++i) {
+                    choice_options.push_back(sparse_choice_options.at(
+                        best_row->choice_option_offset + i));
+                }
                 std::sort(
-                    options.begin(), options.end(),
+                    choice_options.begin(), choice_options.end(),
                     [&](const OutcomeChoiceOption& a,
                         const OutcomeChoiceOption& b) {
                         const double left = result.values[a.state];
@@ -479,7 +923,7 @@ struct SolveWork::Impl {
                         return left != right ? left < right
                                              : a.mod_id < b.mod_id;
                     });
-                for (const OutcomeChoiceOption& option : options) {
+                for (const OutcomeChoiceOption& option : choice_options) {
                     result.unveil_preferences[state].push_back(
                         option.mod_id);
                 }
@@ -497,28 +941,31 @@ struct SolveWork::Impl {
                 ++result.diagnostics.policy_reachable_states;
                 const std::uint32_t operator_index = result.policy[state];
                 if (operator_index == kNoId) continue;
-                const PlannerOperator& planner =
-                    calc.operators().at(operator_index);
-                if (planner.kind == PlannerOperatorKind::FixedOption) {
-                    const OptionKernel& kernel =
-                        calc.option_kernel(state, operator_index);
-                    for (const OutcomeEntry& exit : kernel.exits) {
-                        if (!result.policy_reachable[exit.state]) {
-                            walk.push_back(exit.state);
-                        }
-                    }
-                    continue;
-                }
-                const OutcomeDistribution& distribution = calc.outcomes(
-                    state, planner.primitive_action);
-                for (const OutcomeEntry& entry : distribution.entries) {
-                    if (!result.policy_reachable[entry.state]) {
-                        walk.push_back(entry.state);
+                const StateRowSpan& span = state_rows.at(state);
+                const SparseRow* selected = nullptr;
+                for (std::uint32_t i = 0; i < span.count; ++i) {
+                    const SparseRow& row = sparse_rows.at(span.offset + i);
+                    if (row.operator_index == operator_index) {
+                        selected = &row;
+                        break;
                     }
                 }
-                for (const OutcomeChoiceGroup& group :
-                     distribution.choice_groups) {
-                    for (std::uint32_t successor : group.states) {
+                if (selected == nullptr) continue;
+                for (std::uint32_t i = 0;
+                     i < selected->transition_count; ++i) {
+                    const std::uint32_t successor = sparse_successors.at(
+                        selected->transition_offset + i);
+                    if (!result.policy_reachable[successor]) {
+                        walk.push_back(successor);
+                    }
+                }
+                for (std::uint32_t i = 0; i < selected->choice_count; ++i) {
+                    const SparseChoiceGroup& group = sparse_choices.at(
+                        selected->choice_offset + i);
+                    for (std::uint32_t s = 0; s < group.successor_count; ++s) {
+                        const std::uint32_t successor =
+                            sparse_choice_successors.at(
+                                group.successor_offset + s);
                         if (!result.policy_reachable[successor]) {
                             walk.push_back(successor);
                         }
@@ -528,6 +975,7 @@ struct SolveWork::Impl {
         }
 
         result.converged = !result.diagnostics.state_cap_hit &&
+                           !result.diagnostics.resource_cap_hit &&
                            residual <= options.epsilon &&
                            result.start_state < state_count &&
                            result.values[result.start_state] < kValueCeiling;
@@ -536,7 +984,7 @@ struct SolveWork::Impl {
                 std::chrono::steady_clock::now() - extraction_started)
                 .count());
         result.diagnostics.solver_owned_bytes_estimate =
-            estimated_owned_bytes();
+            std::max(peak_owned_bytes, estimated_owned_bytes());
         consumed = true;
         return std::move(result);
     }
@@ -549,6 +997,23 @@ struct SolveWork::Impl {
         bytes += queued.capacity() * sizeof(std::uint8_t);
         bytes += static_cast<std::uint64_t>(peak_queue_size) *
                  sizeof(std::uint32_t);
+        bytes += state_rows.capacity() * sizeof(StateRowSpan);
+        bytes += sparse_rows.capacity() * sizeof(SparseRow);
+        bytes += sparse_successors.capacity() * sizeof(std::uint32_t);
+        bytes += sparse_probabilities.capacity() * sizeof(double);
+        bytes += sparse_choices.capacity() * sizeof(SparseChoiceGroup);
+        bytes += sparse_choice_successors.capacity() * sizeof(std::uint32_t);
+        bytes += sparse_choice_options.capacity() *
+                 sizeof(OutcomeChoiceOption);
+        bytes += kernel_rows_by_hash.bucket_count() * sizeof(void*);
+        bytes += kernel_rows_by_hash.size() *
+                 (sizeof(std::pair<const std::size_t,
+                                   std::vector<std::uint64_t>>) +
+                  2 * sizeof(void*));
+        for (const auto& [unused, rows] : kernel_rows_by_hash) {
+            (void)unused;
+            bytes += rows.capacity() * sizeof(std::uint64_t);
+        }
         bytes += result.values.capacity() * sizeof(double);
         bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
         bytes += result.expanded.capacity() * sizeof(std::uint8_t);
@@ -570,6 +1035,9 @@ struct SolveWork::Impl {
         bytes += string_vector_bytes(
             result.diagnostics.skipped_missing_price);
         bytes += string_vector_bytes(result.diagnostics.skipped_unsupported);
+        bytes += string_vector_bytes(
+            result.diagnostics.action_inclusion_reasons);
+        bytes += string_vector_bytes(result.diagnostics.cap_hits);
         return bytes;
     }
 };
@@ -689,9 +1157,9 @@ std::string serialize_solver_telemetry(
 
     std::string json = "{\"version\":\"solver_telemetry_v1\"";
     json += ",\"availability\":{";
-    json += "\"evaluator_support\":\"diagnostic_not_applied_filter\"";
-    json += ",\"relevance_filter\":\"not_implemented\"";
-    json += ",\"dominance_filter\":\"not_implemented\"";
+    json += "\"evaluator_support\":\"applied_before_expansion\"";
+    json += ",\"relevance_filter\":\"explicit_envelope_or_conservative_include\"";
+    json += ",\"dominance_filter\":\"certified_abstract_kernel_equivalence\"";
     json += ",\"policy_improvement_rounds\":\"not_applicable\"";
     json += ",\"optimality_gap\":\"not_available\"";
     json += ",\"verification\":\"external_harness\"}";
@@ -722,12 +1190,15 @@ std::string serialize_solver_telemetry(
                                : diagnostics->candidate_actions;
     json += ",\"actions\":{\"registry\":" +
             std::to_string(registry_actions);
+    json += ",\"registry_before_lazy\":" + std::to_string(
+        registry_actions + calc.registry().fossil_loadouts_deferred);
     json += ",\"candidate\":" + std::to_string(candidate_actions);
     if (diagnostics == nullptr) {
         json += ",\"evaluator_supported\":null";
         json += ",\"priced_scanned\":null,\"supported_priced\":null";
         json += ",\"unsupported_requested\":null";
         json += ",\"relevance_reduced\":null,\"dominance_reduced\":null";
+        json += ",\"deferred\":null,\"equivalent_price_ties\":null";
         json += ",\"missing_price\":null,\"unsupported_observed\":null";
     } else {
         json += ",\"evaluator_supported\":" +
@@ -739,13 +1210,49 @@ std::string serialize_solver_telemetry(
         json += ",\"unsupported_requested\":" +
                 std::to_string(diagnostics->candidate_actions -
                                diagnostics->evaluator_supported_actions);
-        json += ",\"relevance_reduced\":null,\"dominance_reduced\":null";
+        json += ",\"relevance_reduced\":" + std::to_string(
+                    diagnostics->relevance_reduced_actions);
+        json += ",\"dominance_reduced\":" + std::to_string(
+                    diagnostics->equivalent_actions_collapsed);
+        json += ",\"deferred\":" + std::to_string(
+                    diagnostics->deferred_actions);
+        json += ",\"equivalent_price_ties\":" + std::to_string(
+                    diagnostics->equivalent_price_ties);
         json += ",\"missing_price\":" + std::to_string(
                     diagnostics->skipped_missing_price.size());
         json += ",\"unsupported_observed\":" + std::to_string(
                     diagnostics->skipped_unsupported.size());
     }
     json += "}";
+
+    json += ",\"action_control\":{";
+    json += "\"explicit_envelope\":" + std::string(bool_json(
+        calc.action_control().explicit_envelope));
+    json += ",\"dependency_primitives\":" + std::to_string(
+        calc.action_control().dependency_primitives);
+    json += ",\"fossil_loadouts\":{";
+    json += "\"possible\":" + std::to_string(
+        calc.registry().fossil_loadouts_possible);
+    json += ",\"generated\":" + std::to_string(
+        calc.registry().fossil_loadouts_generated);
+    json += ",\"deferred\":" + std::to_string(
+        calc.registry().fossil_loadouts_deferred);
+    json += ",\"lazy\":" + std::string(bool_json(
+        calc.registry().fossil_generation_lazy)) + "}";
+    json += ",\"reasons\":[";
+    if (diagnostics != nullptr) {
+        for (std::size_t i = 0;
+             i < diagnostics->action_inclusion_reasons.size(); ++i) {
+            if (i != 0) json += ',';
+            json += '"';
+            for (const char c : diagnostics->action_inclusion_reasons[i]) {
+                if (c == '"' || c == '\\') json += '\\';
+                json += c;
+            }
+            json += '"';
+        }
+    }
+    json += "]}";
 
     json += ",\"planner\":{\"registry\":" +
             std::to_string(calc.operators().size());
@@ -784,9 +1291,13 @@ std::string serialize_solver_telemetry(
     json += "}";
 
     json += ",\"work\":{\"state_action_rows\":" +
-            std::to_string(cache.state_action_rows);
+            std::to_string(diagnostics == nullptr
+                               ? cache.state_action_rows
+                               : diagnostics->sparse_rows);
     json += ",\"transition_entries\":" +
-            std::to_string(cache.transition_entries);
+            std::to_string(diagnostics == nullptr
+                               ? cache.transition_entries
+                               : diagnostics->sparse_transitions);
     json += ",\"outcome_entries\":" +
             std::to_string(cache.outcome_entries);
     json += ",\"choice_groups\":" +
@@ -797,6 +1308,8 @@ std::string serialize_solver_telemetry(
         json += ",\"bellman_backups\":null";
         json += ",\"bellman_action_evaluations\":null";
         json += ",\"extraction_action_evaluations\":null";
+        json += ",\"bellman_work_units\":null";
+        json += ",\"max_bellman_unit_transitions\":null";
     } else {
         json += ",\"bellman_backups\":" +
                 std::to_string(diagnostics->bellman_backups);
@@ -804,6 +1317,11 @@ std::string serialize_solver_telemetry(
                 std::to_string(diagnostics->bellman_action_evaluations);
         json += ",\"extraction_action_evaluations\":" +
                 std::to_string(diagnostics->extraction_action_evaluations);
+        json += ",\"bellman_work_units\":" +
+                std::to_string(diagnostics->bellman_work_units);
+        json += ",\"max_bellman_unit_transitions\":" +
+                std::to_string(
+                    diagnostics->max_bellman_unit_transitions);
     }
     json += "}";
 
@@ -814,7 +1332,9 @@ std::string serialize_solver_telemetry(
     json += ",\"entries\":" +
             std::to_string(calc.cached_distribution_count());
     json += ",\"build_ns\":" +
-            std::to_string(cache.distribution_build_ns) + "}";
+            std::to_string(cache.distribution_build_ns);
+    json += ",\"released_after_sparse_copy\":" +
+            std::string(bool_json(diagnostics != nullptr)) + "}";
     json += ",\"reforge\":{\"requests\":" +
             std::to_string(cache.reforge_requests);
     json += ",\"hits\":" + std::to_string(cache.reforge_hits);
@@ -822,7 +1342,9 @@ std::string serialize_solver_telemetry(
     json += ",\"entries\":" +
             std::to_string(calc.cached_reforge_count());
     json += ",\"build_ns\":" +
-            std::to_string(cache.reforge_build_ns) + "}}";
+            std::to_string(cache.reforge_build_ns);
+    json += ",\"frontier_work\":" +
+            std::to_string(cache.reforge_frontier_work) + "}}";
 
     json += ",\"optimization\":{";
     json += "\"method\":\"value_iteration\"";
@@ -831,6 +1353,7 @@ std::string serialize_solver_telemetry(
         json += ",\"sweeps\":null,\"policy_improvement_rounds\":null";
         json += ",\"residual\":null,\"optimality_gap\":null";
         json += ",\"state_cap_hit\":null";
+        json += ",\"resource_cap_hit\":null,\"cap_hits\":[]";
         json += ",\"full_request_status\":\"not_run\"";
     } else if (result == nullptr) {
         json += ",\"status\":\"";
@@ -842,15 +1365,20 @@ std::string serialize_solver_telemetry(
         json += ",\"optimality_gap\":null";
         json += ",\"state_cap_hit\":" +
                 std::string(bool_json(diagnostics->state_cap_hit));
+        json += ",\"resource_cap_hit\":" +
+                std::string(bool_json(diagnostics->resource_cap_hit));
+        json += ",\"cap_hits\":[]";
         json += ",\"full_request_status\":\"incomplete_not_finished\"";
     } else {
         const char* status = result->converged
                                  ? (qualified_action_subset
                                         ? "exact_supported_priced_subset"
                                         : "exact_abstract")
-                                 : (diagnostics->state_cap_hit
-                                        ? "incomplete_state_cap"
-                                        : "not_converged");
+                                 : (diagnostics->resource_cap_hit
+                                        ? "incomplete_resource_cap"
+                                        : (diagnostics->state_cap_hit
+                                               ? "incomplete_state_cap"
+                                               : "not_converged"));
         json += ",\"status\":\"" + std::string(status) + "\"";
         json += ",\"converged\":" +
                 std::string(bool_json(result->converged));
@@ -860,8 +1388,18 @@ std::string serialize_solver_telemetry(
         json += ",\"optimality_gap\":null";
         json += ",\"state_cap_hit\":" +
                 std::string(bool_json(diagnostics->state_cap_hit));
+        json += ",\"resource_cap_hit\":" +
+                std::string(bool_json(diagnostics->resource_cap_hit));
+        json += ",\"cap_hits\":[";
+        for (std::size_t i = 0; i < diagnostics->cap_hits.size(); ++i) {
+            if (i != 0) json += ',';
+            json += "\"" + diagnostics->cap_hits[i] + "\"";
+        }
+        json += "]";
         json += ",\"full_request_status\":\"";
-        if (!result->converged) {
+        if (diagnostics->resource_cap_hit) {
+            json += "incomplete_resource_cap";
+        } else if (!result->converged) {
             json += "incomplete_solve";
         } else if (qualified_action_subset) {
             json += "incomplete_action_subset";
@@ -906,13 +1444,17 @@ std::string serialize_solver_telemetry(
             std::to_string(diagnostics == nullptr
                                ? current_bytes
                                : diagnostics->solver_owned_bytes_estimate);
-    json += ",\"estimate_kind\":\"selected_allocations_not_process_heap\"}";
+    json += ",\"estimate_kind\":\"selected_allocations_not_process_heap\"";
+    json += ",\"abstract_state_bytes\":" +
+            std::to_string(sizeof(AbstractState));
+    json += ",\"state_payload\":\"inline_sparse_junk_counts\"}";
 
     json += ",\"compilation\":{";
     if (compilation == nullptr) {
         json += "\"available\":false,\"working_states\":null";
         json += ",\"nodes\":null,\"edges\":null";
         json += ",\"strategy_json_bytes\":null";
+        json += ",\"cap_hit\":null";
     } else {
         json += "\"available\":true,\"working_states\":" +
                 std::to_string(compilation->working_states);
@@ -920,6 +1462,12 @@ std::string serialize_solver_telemetry(
         json += ",\"edges\":" + std::to_string(compilation->edges);
         json += ",\"strategy_json_bytes\":" +
                 std::to_string(compilation->strategy_json_bytes);
+        json += ",\"cap_hit\":";
+        if (compilation->cap_hit.empty()) {
+            json += "null";
+        } else {
+            json += "\"" + compilation->cap_hit + "\"";
+        }
     }
     json += "}";
 

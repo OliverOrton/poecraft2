@@ -326,11 +326,11 @@ async function solveSolver(
             if (cancelled.has(id)) {
                 return { cancelled: true, progress, worker };
             }
-            /* One full Bellman sweep can already be substantial. Expansion
-             * chunks adapt toward a 16 ms worker slice; iteration stays at a
-             * single sweep so cancellation is serviced between sweeps. */
-            const stepWorkItems =
-                observedPhase === "iterating" ? 1 : workItems;
+            /* S7.2 splits Bellman sweeps into bounded sparse-row units.
+             * Expansion and iteration both adapt toward a 12 ms worker slice,
+             * so cancellation is serviced inside a large sweep rather than
+             * only between whole-table sweeps. */
+            const stepWorkItems = workItems;
             const started = performance.now();
             progress = bindings.stepSolverSolve(solver, stepWorkItems);
             const measuredMs = Math.max(0, performance.now() - started);
@@ -341,8 +341,8 @@ async function solveSolver(
             const phaseChanged = progress.phase !== observedPhase;
             if (phaseChanged) {
                 workItems = 1;
-            } else if (progress.phase === "expanding") {
-                const scale = Math.min(4, Math.max(0.5, 16 / elapsedMs));
+            } else {
+                const scale = Math.min(2, Math.max(0.5, 12 / elapsedMs));
                 workItems = Math.min(
                     4096,
                     Math.max(1, Math.round(stepWorkItems * scale)),

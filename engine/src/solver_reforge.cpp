@@ -727,6 +727,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                    bucket.multiplicity;
         };
         double total = 0.0;
+        consume_reforge_work(buckets.size());
         for (std::uint16_t b = 0;
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
             total += guaranteed_remaining(b);
@@ -761,6 +762,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         const double deeper = target_suffix(depth);
         std::unordered_map<RollState, double, RollStateHash> next;
         for (const auto& [roll, probability] : frontier) {
+            consume_reforge_work(1 + buckets.size());
             if (stop_here > 0.0) {
                 commit_outcome(roll, probability * stop_here);
             }

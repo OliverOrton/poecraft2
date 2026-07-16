@@ -31,6 +31,8 @@ namespace solver {
 inline constexpr std::uint32_t kNoId = std::numeric_limits<std::uint32_t>::max();
 inline constexpr std::uint32_t kMaxGoalSlots = 8;
 inline constexpr std::uint32_t kMaxDiscriminatingTags = 64;
+inline constexpr std::size_t kMaxExplicitAffixes =
+    PC_MAX_PREFIXES + PC_MAX_SUFFIXES;
 
 // --- goal specification ------------------------------------------------------
 
@@ -157,6 +159,17 @@ struct ActionDescriptor {
 struct ActionRegistry {
     std::vector<ActionDescriptor> actions;
     std::unordered_map<std::string, std::uint32_t> index_by_id;
+    std::uint32_t fossil_loadouts_possible = 0;
+    std::uint32_t fossil_loadouts_generated = 0;
+    std::uint32_t fossil_loadouts_deferred = 0;
+    bool fossil_generation_lazy = false;
+};
+
+struct ActionRegistryBuildOptions {
+    /* Full enumeration remains available for explicit exhaustive diagnostics.
+     * Normal goal-selected solves provide only the fossil ids they request. */
+    bool exhaustive_fossils = true;
+    std::vector<std::string> requested_fossil_action_ids;
 };
 
 // --- solver-only planner operators -------------------------------------------
@@ -215,7 +228,9 @@ struct PolicyOperatorRef {
  * influenced exalts, fracture, and the synthetic restart action. Mechanics
  * the engine build does not support for this session are simply absent.
  */
-ActionRegistry build_action_registry(const SessionImpl& session);
+ActionRegistry build_action_registry(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options = {});
 
 /* Resolve the goal's explicitly selected fixed options. The returned vector
  * begins with one primitive wrapper per registry action at the same index. */
@@ -292,6 +307,157 @@ AbstractLayout build_abstract_layout(
 
 // --- abstract state -----------------------------------------------------------
 
+/*
+ * Logical byte vector whose non-zero entries are stored inline. An item can
+ * carry at most six explicit affixes, so a junk-count vector can never have
+ * more than six non-zero classes even when the abstract layout contains more
+ * than one hundred classes. This keeps AbstractState trivially self-contained
+ * and removes four heap allocations per interned state while retaining the
+ * vector-like indexing used by the exact evaluators.
+ */
+class CompactCountVector {
+  public:
+    class Reference {
+      public:
+        Reference(CompactCountVector& owner, std::size_t index)
+            : owner_(owner), index_(index) {}
+        operator std::uint8_t() const { return owner_.get(index_); }
+        Reference& operator=(std::uint8_t value) {
+            owner_.set(index_, value);
+            return *this;
+        }
+        Reference& operator+=(std::uint8_t value) {
+            owner_.set(index_, static_cast<std::uint8_t>(
+                owner_.get(index_) + value));
+            return *this;
+        }
+        Reference& operator++() {
+            *this += 1;
+            return *this;
+        }
+
+      private:
+        CompactCountVector& owner_;
+        std::size_t index_;
+    };
+
+    class ConstIterator {
+      public:
+        ConstIterator(const CompactCountVector& owner, std::size_t index)
+            : owner_(&owner), index_(index) {}
+        std::uint8_t operator*() const { return owner_->get(index_); }
+        ConstIterator& operator++() {
+            ++index_;
+            return *this;
+        }
+        bool operator!=(const ConstIterator& other) const {
+            return index_ != other.index_;
+        }
+
+      private:
+        const CompactCountVector* owner_;
+        std::size_t index_;
+    };
+
+    void assign(std::size_t size, std::uint8_t value) {
+        if (size > std::numeric_limits<std::uint16_t>::max()) {
+            throw std::length_error("solver junk-class vector is too large");
+        }
+        logical_size_ = static_cast<std::uint16_t>(size);
+        entry_count_ = 0;
+        entries_ = {};
+        if (value != 0) {
+            if (size > entries_.size()) {
+                throw std::length_error(
+                    "dense non-zero junk payload exceeds affix capacity");
+            }
+            for (std::size_t i = 0; i < size; ++i) {
+                entries_[entry_count_++] = {
+                    static_cast<std::uint16_t>(i), value};
+            }
+        }
+    }
+
+    std::size_t size() const { return logical_size_; }
+    std::size_t capacity() const { return 0; }
+    Reference operator[](std::size_t index) {
+        return Reference(*this, index);
+    }
+    std::uint8_t operator[](std::size_t index) const { return get(index); }
+    ConstIterator begin() const { return ConstIterator(*this, 0); }
+    ConstIterator end() const { return ConstIterator(*this, logical_size_); }
+
+    bool operator==(const CompactCountVector& other) const {
+        if (logical_size_ != other.logical_size_ ||
+            entry_count_ != other.entry_count_) {
+            return false;
+        }
+        for (std::size_t i = 0; i < entry_count_; ++i) {
+            if (entries_[i].index != other.entries_[i].index ||
+                entries_[i].value != other.entries_[i].value) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool operator==(const std::vector<std::uint8_t>& other) const {
+        if (other.size() != logical_size_) return false;
+        for (std::size_t i = 0; i < other.size(); ++i) {
+            if (get(i) != other[i]) return false;
+        }
+        return true;
+    }
+
+  private:
+    struct Entry {
+        std::uint16_t index = 0;
+        std::uint8_t value = 0;
+    };
+
+    std::uint8_t get(std::size_t index) const {
+        if (index >= logical_size_) throw std::out_of_range("junk count");
+        for (std::size_t i = 0; i < entry_count_; ++i) {
+            if (entries_[i].index == index) return entries_[i].value;
+            if (entries_[i].index > index) break;
+        }
+        return 0;
+    }
+
+    void set(std::size_t index, std::uint8_t value) {
+        if (index >= logical_size_) throw std::out_of_range("junk count");
+        std::size_t position = 0;
+        while (position < entry_count_ && entries_[position].index < index) {
+            ++position;
+        }
+        if (position < entry_count_ && entries_[position].index == index) {
+            if (value != 0) {
+                entries_[position].value = value;
+                return;
+            }
+            for (std::size_t i = position + 1; i < entry_count_; ++i) {
+                entries_[i - 1] = entries_[i];
+            }
+            entries_[--entry_count_] = {};
+            return;
+        }
+        if (value == 0) return;
+        if (entry_count_ >= entries_.size()) {
+            throw std::length_error(
+                "sparse junk payload exceeds explicit-affix capacity");
+        }
+        for (std::size_t i = entry_count_; i > position; --i) {
+            entries_[i] = entries_[i - 1];
+        }
+        entries_[position] = {
+            static_cast<std::uint16_t>(index), value};
+        ++entry_count_;
+    }
+
+    std::array<Entry, kMaxExplicitAffixes> entries_{};
+    std::uint16_t logical_size_ = 0;
+    std::uint8_t entry_count_ = 0;
+};
+
 struct AbstractState {
     std::array<std::uint8_t, kMaxGoalSlots> slot_status{}; /* GoalSlotStatus */
     /* Exact carrier identity for slot-local mechanics. Bit i means the
@@ -311,12 +477,12 @@ struct AbstractState {
     std::uint8_t searing_exarch_tier = 0;
     std::uint8_t eater_of_worlds_tier = 0;
     std::uint32_t flags = 0; /* AbstractFlag bits */
-    std::vector<std::uint8_t> junk_counts; /* parallel to layout.junk_classes */
-    std::vector<std::uint8_t> fractured_junk_counts;
-    std::vector<std::uint8_t> crafted_junk_counts;
+    CompactCountVector junk_counts; /* logical size: layout.junk_classes */
+    CompactCountVector fractured_junk_counts;
+    CompactCountVector crafted_junk_counts;
     /* Required only for exact reconstruction when one carrier has both
      * flags; always bounded by both corresponding per-class counts. */
-    std::vector<std::uint8_t> fractured_crafted_junk_counts;
+    CompactCountVector fractured_crafted_junk_counts;
 
     bool operator==(const AbstractState& other) const = default;
 };
@@ -405,6 +571,29 @@ struct CalcTelemetry {
     std::uint64_t reforge_hits = 0;
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
+    std::uint64_t reforge_frontier_work = 0;
+};
+
+class SolverResourceLimit : public std::length_error {
+  public:
+    SolverResourceLimit(std::string cap_name, std::uint64_t limit)
+        : std::length_error(
+              "solver exceeded " + cap_name + " (" +
+              std::to_string(limit) + ")"),
+          cap_name_(std::move(cap_name)) {}
+    const std::string& cap_name() const { return cap_name_; }
+
+  private:
+    std::string cap_name_;
+};
+
+struct ActionControlSummary {
+    bool explicit_envelope = false;
+    std::uint32_t registry_actions = 0;
+    std::uint32_t included_primitives = 0;
+    std::uint32_t dependency_primitives = 0;
+    std::uint32_t pruned_outside_envelope = 0;
+    std::uint32_t deferred_fossil_loadouts = 0;
 };
 
 /* True when CalcContext has an exact evaluator dispatch for this descriptor,
@@ -478,7 +667,21 @@ class CalcContext {
         std::uint32_t operator_index);
 
     void reset_solve_telemetry();
+    void set_solve_resource_caps(
+        std::uint32_t max_discovered_states,
+        std::uint64_t max_reforge_work);
+    void consume_reforge_work(std::uint64_t amount);
+    void release_solve_transition_caches();
+    void release_outcome(
+        std::uint32_t state_id,
+        std::uint32_t action_index);
+    void release_option_kernel(
+        std::uint32_t state_id,
+        std::uint32_t operator_index);
     const CalcTelemetry& telemetry() const { return telemetry_; }
+    const ActionControlSummary& action_control() const {
+        return action_control_;
+    }
     std::uint64_t layout_build_ns() const { return layout_build_ns_; }
     std::uint64_t estimated_owned_bytes() const;
     std::uint64_t cached_distribution_count() const {
@@ -499,6 +702,8 @@ class CalcContext {
     ActionContextImpl context_;
     std::vector<AbstractState> states_;
     std::optional<std::uint32_t> state_cap_;
+    std::optional<std::uint32_t> solve_discovered_state_cap_;
+    std::optional<std::uint64_t> solve_reforge_work_cap_;
     std::unordered_map<std::size_t, std::vector<std::uint32_t>>
         state_ids_by_hash_;
     std::unordered_map<
@@ -514,6 +719,7 @@ class CalcContext {
         std::pair<std::uint32_t, std::uint64_t>,
         std::shared_ptr<const OutcomeDistribution>> reforge_cache_;
     CalcTelemetry telemetry_;
+    ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::uint64_t layout_build_ns_ = 0;
 
@@ -680,6 +886,15 @@ struct SolveOptions {
     double epsilon = 1e-9;          /* max Bellman residual, cost units */
     std::uint32_t max_states = 100000;
     std::uint32_t max_sweeps = 100000;
+    std::uint32_t max_discovered_states = 100000;
+    std::uint32_t max_expanded_states = 100000;
+    std::uint64_t max_state_action_rows = 1000000;
+    std::uint64_t max_transitions = 10000000;
+    std::uint64_t max_reforge_work = 10000000;
+    std::uint64_t max_solver_owned_bytes = 1073741824;
+    std::uint32_t max_compiled_nodes = 100000;
+    std::uint32_t max_compiled_edges = 400000;
+    std::uint64_t max_strategy_json_bytes = 67108864;
 };
 
 struct SolveDiagnostics {
@@ -690,11 +905,19 @@ struct SolveDiagnostics {
     std::uint32_t sweeps = 0;
     double residual = 0.0;
     bool state_cap_hit = false;
+    bool resource_cap_hit = false;
+    std::vector<std::string> cap_hits;
     std::uint32_t registry_actions = 0;
     std::uint32_t candidate_actions = 0;
     std::uint32_t evaluator_supported_actions = 0;
     std::uint32_t priced_scanned_actions = 0;
     std::uint32_t supported_priced_actions = 0;
+    std::uint32_t relevance_reduced_actions = 0;
+    std::uint32_t dependency_actions = 0;
+    std::uint32_t deferred_actions = 0;
+    std::uint32_t equivalent_actions_collapsed = 0;
+    std::uint32_t equivalent_price_ties = 0;
+    std::vector<std::string> action_inclusion_reasons;
     std::uint32_t discovered_states = 0;
     std::uint32_t frontier_states = 0;
     std::uint32_t goal_states = 0;
@@ -702,6 +925,11 @@ struct SolveDiagnostics {
     std::uint64_t bellman_backups = 0;
     std::uint64_t bellman_action_evaluations = 0;
     std::uint64_t extraction_action_evaluations = 0;
+    std::uint64_t sparse_rows = 0;
+    std::uint64_t sparse_transitions = 0;
+    std::uint64_t reforge_frontier_work = 0;
+    std::uint64_t bellman_work_units = 0;
+    std::uint32_t max_bellman_unit_transitions = 0;
     std::uint64_t solve_setup_ns = 0;
     std::uint64_t expansion_ns = 0;
     std::uint64_t optimization_ns = 0;
@@ -728,6 +956,7 @@ struct SolveResult {
      * Bellman-optimal preference order, parallel to the state table. */
     std::vector<std::vector<std::uint32_t>> unveil_preferences;
     SolveDiagnostics diagnostics;
+    SolveOptions options;
 };
 
 enum class SolvePhase {
@@ -755,9 +984,9 @@ struct SolveTelemetrySnapshot {
 };
 
 /* Stateful counterpart of solve(). Each expansion work item processes one
- * reachable abstract state; each iteration work item performs one complete,
- * deterministic Bellman sweep. finish() extracts the policy only after the
- * stepped work reports done. */
+ * reachable abstract state; each iteration work item processes a bounded
+ * sparse-row/transition unit within a deterministic Bellman sweep. finish()
+ * extracts the policy only after the stepped work reports done. */
 class SolveWork {
   public:
     SolveWork(
@@ -810,6 +1039,7 @@ struct PolicyCompilationTelemetry {
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;
+    std::string cap_hit;
 };
 
 std::string serialize_solver_telemetry(

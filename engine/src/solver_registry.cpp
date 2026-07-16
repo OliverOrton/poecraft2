@@ -159,7 +159,10 @@ void add_essences(const SessionImpl& session, ActionRegistry& registry) {
     }
 }
 
-void add_fossils(const SessionImpl& session, ActionRegistry& registry) {
+void add_fossils(
+    const SessionImpl& session,
+    ActionRegistry& registry,
+    const ActionRegistryBuildOptions& options) {
     const DataImpl& data = *session.data;
     /* Real socketable fossils carry display names; the nameless
      * RandomFossilOutcome rows are Tangled Fossil internals, not player
@@ -171,7 +174,24 @@ void add_fossils(const SessionImpl& session, ActionRegistry& registry) {
         }
     }
 
-    /* Every 1-4 fossil resonator loadout is a distinct plannable action. */
+    const auto choose = [](std::size_t n, std::size_t k) {
+        if (k > n) return std::size_t{0};
+        std::size_t value = 1;
+        for (std::size_t i = 1; i <= k; ++i) {
+            value = value * (n - (k - i)) / i;
+        }
+        return value;
+    };
+    const std::size_t possible =
+        choose(fossils.size(), 1) + choose(fossils.size(), 2) +
+        choose(fossils.size(), 3) + choose(fossils.size(), 4);
+    registry.fossil_loadouts_possible = static_cast<std::uint32_t>(possible);
+    registry.fossil_generation_lazy = !options.exhaustive_fossils;
+
+    /* Every emitted 1-4 fossil resonator loadout is a distinct action. In
+     * reduced mode only explicitly requested signatures are materialized;
+     * the remaining combinations stay diagnostic deferred actions rather
+     * than allocating 15k descriptors before layout construction. */
     const auto emit = [&](const std::vector<std::uint32_t>& combo) {
         ActionDescriptor d;
         d.params.type = ActionType::Fossil;
@@ -210,9 +230,52 @@ void add_fossils(const SessionImpl& session, ActionRegistry& registry) {
                         d.discriminating_tag_ids.end()),
             d.discriminating_tag_ids.end());
         add(registry, std::move(d));
+        ++registry.fossil_loadouts_generated;
     };
 
     static_assert(PC_MAX_FOSSILS_PER_ACTION == 4);
+    if (!options.exhaustive_fossils) {
+        std::unordered_map<std::string, std::uint32_t> fossil_by_key;
+        for (std::uint32_t fossil : fossils) {
+            fossil_by_key.emplace(
+                data.string_at(data.fossil_key_sids[fossil]), fossil);
+        }
+        std::vector<std::string> requested =
+            options.requested_fossil_action_ids;
+        std::sort(requested.begin(), requested.end());
+        requested.erase(std::unique(requested.begin(), requested.end()),
+                        requested.end());
+        for (const std::string& id : requested) {
+            if (!id.starts_with("fossil:")) continue;
+            std::vector<std::uint32_t> combo;
+            std::size_t begin = 7;
+            while (begin <= id.size()) {
+                const std::size_t end = id.find('+', begin);
+                const std::string key = id.substr(
+                    begin, end == std::string::npos
+                               ? std::string::npos
+                               : end - begin);
+                const auto found = fossil_by_key.find(key);
+                if (found == fossil_by_key.end()) break;
+                combo.push_back(found->second);
+                if (end == std::string::npos) {
+                    begin = id.size() + 1;
+                    break;
+                }
+                begin = end + 1;
+            }
+            if (!combo.empty() && combo.size() <= PC_MAX_FOSSILS_PER_ACTION) {
+                std::sort(combo.begin(), combo.end());
+                combo.erase(std::unique(combo.begin(), combo.end()),
+                            combo.end());
+                emit(combo);
+            }
+        }
+        registry.fossil_loadouts_deferred =
+            registry.fossil_loadouts_possible -
+            registry.fossil_loadouts_generated;
+        return;
+    }
     const std::size_t count = fossils.size();
     for (std::size_t a = 0; a < count; ++a) {
         emit({fossils[a]});
@@ -226,6 +289,7 @@ void add_fossils(const SessionImpl& session, ActionRegistry& registry) {
             }
         }
     }
+    registry.fossil_loadouts_deferred = 0;
 }
 
 void add_bench(const SessionImpl& session, ActionRegistry& registry) {
@@ -512,11 +576,13 @@ void add_structural(ActionRegistry& registry) {
 
 } // namespace
 
-ActionRegistry build_action_registry(const SessionImpl& session) {
+ActionRegistry build_action_registry(
+    const SessionImpl& session,
+    const ActionRegistryBuildOptions& options) {
     ActionRegistry registry;
     add_basic_currency(registry);
     add_essences(session, registry);
-    add_fossils(session, registry);
+    add_fossils(session, registry, options);
     add_bench(session, registry);
     add_veiled(session, registry);
     add_harvest(session, registry);

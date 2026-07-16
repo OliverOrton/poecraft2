@@ -75,6 +75,7 @@ $EmccArgs += @(
     "-sENVIRONMENT=web,worker,node",
     "-sALLOW_MEMORY_GROWTH=1",
     "-sMAXIMUM_MEMORY=4GB",
+    "-sSTACK_SIZE=4194304",
     "-sEXIT_RUNTIME=0",
     "-sEXPORTED_FUNCTIONS=$Exported",
     "-sEXPORTED_RUNTIME_METHODS=$RuntimeMethods",

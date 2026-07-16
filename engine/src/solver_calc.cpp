@@ -170,6 +170,21 @@ CalcContext::CalcContext(
         }
     }
     operators_ = build_planner_operators(*session_, goal_, registry_);
+    action_control_.explicit_envelope = goal_.primitive_actions_explicit;
+    action_control_.registry_actions = static_cast<std::uint32_t>(
+        registry_.actions.size());
+    action_control_.included_primitives = static_cast<std::uint32_t>(
+        candidates_.size());
+    action_control_.pruned_outside_envelope =
+        goal_.primitive_actions_explicit
+            ? static_cast<std::uint32_t>(
+                  registry_.actions.size() - candidates_.size() +
+                  registry_.fossil_loadouts_deferred)
+            : 0;
+    action_control_.deferred_fossil_loadouts =
+        goal_.primitive_actions_explicit
+            ? 0
+            : registry_.fossil_loadouts_deferred;
     /* Option dependencies participate in abstraction without silently widening
      * an explicit primitive candidate subset. Callers can select the option
      * alone, or list any dependency in actions when it should also remain an
@@ -183,6 +198,7 @@ CalcContext::CalcContext(
             if (std::find(layout_actions.begin(), layout_actions.end(),
                           dependency) == layout_actions.end()) {
                 layout_actions.push_back(dependency);
+                ++action_control_.dependency_primitives;
             }
         }
     }
@@ -277,6 +293,11 @@ std::uint32_t CalcContext::intern_state(const AbstractState& state) {
         throw std::length_error(
             "calculation context exceeded max_states (" +
             std::to_string(*state_cap_) + ")");
+    }
+    if (solve_discovered_state_cap_.has_value() &&
+        states_.size() >= *solve_discovered_state_cap_) {
+        throw SolverResourceLimit(
+            "max_discovered_states", *solve_discovered_state_cap_);
     }
     if (states_.size() >= std::numeric_limits<std::uint32_t>::max()) {
         throw std::length_error("calculation context state id space exhausted");
@@ -564,6 +585,48 @@ void CalcContext::reset_solve_telemetry() {
     telemetry_rows_.clear();
 }
 
+void CalcContext::set_solve_resource_caps(
+    const std::uint32_t max_discovered_states,
+    const std::uint64_t max_reforge_work) {
+    solve_discovered_state_cap_ = max_discovered_states;
+    solve_reforge_work_cap_ = max_reforge_work;
+}
+
+void CalcContext::consume_reforge_work(const std::uint64_t amount) {
+    if (solve_reforge_work_cap_.has_value() &&
+        amount > *solve_reforge_work_cap_ -
+                     std::min(telemetry_.reforge_frontier_work,
+                              *solve_reforge_work_cap_)) {
+        telemetry_.reforge_frontier_work = *solve_reforge_work_cap_;
+        throw SolverResourceLimit(
+            "max_reforge_work", *solve_reforge_work_cap_);
+    }
+    telemetry_.reforge_frontier_work += amount;
+}
+
+void CalcContext::release_solve_transition_caches() {
+    distribution_cache_.clear();
+    option_kernel_cache_.clear();
+    reforge_cache_.clear();
+    telemetry_rows_.clear();
+}
+
+void CalcContext::release_outcome(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index) {
+    const std::uint64_t key =
+        (static_cast<std::uint64_t>(state_id) << 32) | action_index;
+    distribution_cache_.erase(key);
+}
+
+void CalcContext::release_option_kernel(
+    const std::uint32_t state_id,
+    const std::uint32_t operator_index) {
+    const std::uint64_t key =
+        (static_cast<std::uint64_t>(state_id) << 32) | operator_index;
+    option_kernel_cache_.erase(key);
+}
+
 std::uint64_t CalcContext::estimated_owned_bytes() const {
     /* This deliberately reports a conservative selected-allocation estimate.
      * Standard-library node overhead, allocator metadata, and pool-cache
@@ -621,15 +684,6 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     }
     bytes += layout_.junk_class_by_mod.capacity() * sizeof(std::uint32_t);
     bytes += states_.capacity() * sizeof(AbstractState);
-    for (const AbstractState& state : states_) {
-        bytes += state.junk_counts.capacity() * sizeof(std::uint8_t);
-        bytes += state.fractured_junk_counts.capacity() *
-                 sizeof(std::uint8_t);
-        bytes += state.crafted_junk_counts.capacity() *
-                 sizeof(std::uint8_t);
-        bytes += state.fractured_crafted_junk_counts.capacity() *
-                 sizeof(std::uint8_t);
-    }
     bytes += state_ids_by_hash_.bucket_count() * sizeof(void*);
     bytes += state_ids_by_hash_.size() *
              (sizeof(std::pair<const std::size_t,
@@ -644,19 +698,24 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
              (sizeof(std::pair<
                   const std::uint64_t,
                   std::shared_ptr<const OutcomeDistribution>>) +
-              2 * sizeof(void*));
+                  2 * sizeof(void*));
+    std::unordered_set<const OutcomeDistribution*> counted_distributions;
+    const auto distribution_bytes = [](const OutcomeDistribution& value) {
+        std::uint64_t total = sizeof(OutcomeDistribution);
+        total += value.entries.capacity() * sizeof(OutcomeEntry);
+        total += value.choice_groups.capacity() * sizeof(OutcomeChoiceGroup);
+        for (const OutcomeChoiceGroup& group : value.choice_groups) {
+            total += group.states.capacity() * sizeof(std::uint32_t);
+        }
+        total += value.choice_options.capacity() *
+                 sizeof(OutcomeChoiceOption);
+        return total;
+    };
     for (const auto& [unused, distribution] : distribution_cache_) {
         (void)unused;
-        bytes += sizeof(OutcomeDistribution);
-        bytes += distribution->entries.capacity() * sizeof(OutcomeEntry);
-        bytes += distribution->choice_groups.capacity() *
-                 sizeof(OutcomeChoiceGroup);
-        for (const OutcomeChoiceGroup& group :
-             distribution->choice_groups) {
-            bytes += group.states.capacity() * sizeof(std::uint32_t);
+        if (counted_distributions.insert(distribution.get()).second) {
+            bytes += distribution_bytes(*distribution);
         }
-        bytes += distribution->choice_options.capacity() *
-                 sizeof(OutcomeChoiceOption);
     }
     bytes += option_kernel_cache_.bucket_count() * sizeof(void*);
     bytes += option_kernel_cache_.size() *
@@ -686,6 +745,12 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
                   const std::pair<std::uint32_t, std::uint64_t>,
                   std::shared_ptr<const OutcomeDistribution>>) +
               3 * sizeof(void*));
+    for (const auto& [unused, distribution] : reforge_cache_) {
+        (void)unused;
+        if (counted_distributions.insert(distribution.get()).second) {
+            bytes += distribution_bytes(*distribution);
+        }
+    }
     bytes += telemetry_rows_.bucket_count() * sizeof(void*);
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +

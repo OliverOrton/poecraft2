@@ -240,6 +240,15 @@ typedef struct pc_solve_options {
     double epsilon;       /* <= 0 uses the default 1e-9 */
     uint32_t max_states;  /* 0 uses the default 100000 */
     uint32_t max_sweeps;  /* 0 uses the default 100000 */
+    uint32_t max_discovered_states;
+    uint32_t max_expanded_states;
+    uint64_t max_state_action_rows;
+    uint64_t max_transitions;
+    uint64_t max_reforge_work;
+    uint64_t max_solver_owned_bytes;
+    uint32_t max_compiled_nodes;
+    uint32_t max_compiled_edges;
+    uint64_t max_strategy_json_bytes;
 } pc_solve_options;
 
 typedef struct pc_solve_summary {
@@ -299,8 +308,9 @@ void pc_solver_solve_abandon(pc_solver_handle solver);
  * Synchronous value iteration from the start item. The economy supplies
  * the price table (a null economy is invalid: costs are required).
  * Results are stored on the solver for the query calls below; a new solve
- * replaces them. Distribution caches are reused across solves, so a price
- * edit re-solves cheaply.
+ * replaces them. S7.2 stores one compact sparse transition graph for the
+ * active solve. Cross-solve price-only cache retention is the later S7.5
+ * cache-reuse checkpoint.
  */
 pc_result pc_solver_solve(
     pc_solver_handle solver,

@@ -414,8 +414,10 @@ bool expectation_matches(const std::string& expected,
                          const std::string& actual) {
     if (expected == actual) return true;
     if (expected == "baseline_cap_or_compile_refusal_allowed") {
-        return actual == "converged" || actual == "state_cap" ||
-               actual == "compile_refused" || actual == "unreachable_goal";
+        return actual == "converged" || actual == "refused_state_cap" ||
+               actual == "refused_resource_cap" ||
+               actual == "not_converged" || actual == "compile_refused" ||
+               actual == "refused_unreachable_goal";
     }
     if (expected == "refused_state_cap_with_filtered_actions") {
         return actual == "refused_state_cap";
@@ -463,6 +465,9 @@ void evaluate_cap_checks(const Value& specification, CaseResult& report) {
                       "max_state_action_rows");
         add_cap_check(report, telemetry, {"work", "transition_entries"}, caps,
                       "max_transitions");
+        add_cap_check(report, telemetry,
+                      {"cache", "reforge", "frontier_work"}, caps,
+                      "max_reforge_work");
         add_cap_check(report, telemetry,
                       {"memory", "solver_owned_bytes_estimate"}, caps,
                       "max_solver_owned_bytes");
@@ -570,6 +575,12 @@ std::string classify_completed_solve(
     if (state_cap != nullptr && state_cap->type == Type::Bool &&
         state_cap->boolean) {
         return "refused_state_cap";
+    }
+    const Value* resource_cap = nested_member(
+        telemetry, {"optimization", "resource_cap_hit"});
+    if (resource_cap != nullptr && resource_cap->type == Type::Bool &&
+        resource_cap->boolean) {
+        return "refused_resource_cap";
     }
     const Value* missing_price = nested_member(
         telemetry, {"actions", "missing_price"});
@@ -718,6 +729,24 @@ CaseResult run_case(pc_data_handle data, const Value& specification) {
         solve_options.abi_version = PC_ABI_VERSION;
         solve_options.max_states = optional_u32(caps, "max_states", 100000);
         solve_options.max_sweeps = optional_u32(caps, "max_sweeps", 100000);
+        solve_options.max_discovered_states = optional_u32(
+            caps, "max_discovered_states", solve_options.max_states);
+        solve_options.max_expanded_states = optional_u32(
+            caps, "max_expanded_states", solve_options.max_states);
+        solve_options.max_state_action_rows = optional_u64(
+            caps, "max_state_action_rows", 1000000);
+        solve_options.max_transitions = optional_u64(
+            caps, "max_transitions", 10000000);
+        solve_options.max_reforge_work = optional_u64(
+            caps, "max_reforge_work", solve_options.max_transitions);
+        solve_options.max_solver_owned_bytes = optional_u64(
+            caps, "max_solver_owned_bytes", 1073741824);
+        solve_options.max_compiled_nodes = optional_u32(
+            caps, "max_compiled_nodes", 100000);
+        solve_options.max_compiled_edges = optional_u32(
+            caps, "max_compiled_edges", 400000);
+        solve_options.max_strategy_json_bytes = optional_u64(
+            caps, "max_strategy_json_bytes", 67108864);
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;

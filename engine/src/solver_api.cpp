@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <memory>
@@ -44,6 +45,52 @@ std::string string_member(const Value& value, const char* key) {
     const Value* found = value.find(key);
     return found != nullptr && found->type == Type::String ? found->string
                                                            : std::string();
+}
+
+solver::ActionRegistryBuildOptions registry_build_options(
+    const char* goal_json,
+    std::size_t goal_json_size) {
+    const Value root = Parser(goal_json, goal_json_size).parse();
+    if (root.type != Type::Object) {
+        throw std::runtime_error("goal: root must be an object");
+    }
+    solver::ActionRegistryBuildOptions options;
+    const Value* actions = root.find("actions");
+    if (actions == nullptr) return options;
+    if (actions->type != Type::Array) {
+        throw std::runtime_error("goal: actions must be an array");
+    }
+    options.exhaustive_fossils = false;
+    for (const Value& entry : actions->array) {
+        if (entry.type == Type::String &&
+            entry.string.starts_with("fossil:")) {
+            options.requested_fossil_action_ids.push_back(entry.string);
+        }
+    }
+    const Value* fixed_options = root.find("options");
+    if (fixed_options != nullptr && fixed_options->type == Type::Array) {
+        for (const Value& option : fixed_options->array) {
+            if (option.type != Type::Object) continue;
+            const std::string action = string_member(option, "action");
+            if (action.starts_with("fossil:")) {
+                options.requested_fossil_action_ids.push_back(action);
+            }
+            for (const char* key : {"setup", "bench_crafts"}) {
+                const Value* program = option.find(key);
+                if (program == nullptr || program->type != Type::Array) {
+                    continue;
+                }
+                for (const Value& step : program->array) {
+                    if (step.type == Type::String &&
+                        step.string.starts_with("fossil:")) {
+                        options.requested_fossil_action_ids.push_back(
+                            step.string);
+                    }
+                }
+            }
+        }
+    }
+    return options;
 }
 
 solver::GoalSpec parse_goal(
@@ -259,10 +306,60 @@ namespace {
 solver::SolveOptions solve_options(const pc_solve_options* options) {
     solver::SolveOptions value;
     if (options == nullptr) return value;
+    if (options->abi_version != PC_ABI_VERSION ||
+        options->struct_size <
+            offsetof(pc_solve_options, max_sweeps) +
+                sizeof(options->max_sweeps)) {
+        throw std::invalid_argument("invalid solve options ABI");
+    }
+#define PC_SOLVE_OPTION_HAS(field)                                      \
+    (options->struct_size >=                                            \
+     offsetof(pc_solve_options, field) + sizeof(options->field))
     if (options->epsilon > 0.0) value.epsilon = options->epsilon;
     if (options->max_states != 0) value.max_states = options->max_states;
     if (options->max_sweeps != 0) value.max_sweeps = options->max_sweeps;
+    if (PC_SOLVE_OPTION_HAS(max_discovered_states) &&
+        options->max_discovered_states != 0) {
+        value.max_discovered_states = options->max_discovered_states;
+    } else if (options->max_states != 0) {
+        value.max_discovered_states = options->max_states;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_expanded_states) &&
+        options->max_expanded_states != 0) {
+        value.max_expanded_states = options->max_expanded_states;
+    } else if (options->max_states != 0) {
+        value.max_expanded_states = options->max_states;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_state_action_rows) &&
+        options->max_state_action_rows != 0) {
+        value.max_state_action_rows = options->max_state_action_rows;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_transitions) &&
+        options->max_transitions != 0) {
+        value.max_transitions = options->max_transitions;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_reforge_work) &&
+        options->max_reforge_work != 0) {
+        value.max_reforge_work = options->max_reforge_work;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_solver_owned_bytes) &&
+        options->max_solver_owned_bytes != 0) {
+        value.max_solver_owned_bytes = options->max_solver_owned_bytes;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_compiled_nodes) &&
+        options->max_compiled_nodes != 0) {
+        value.max_compiled_nodes = options->max_compiled_nodes;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_compiled_edges) &&
+        options->max_compiled_edges != 0) {
+        value.max_compiled_edges = options->max_compiled_edges;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_strategy_json_bytes) &&
+        options->max_strategy_json_bytes != 0) {
+        value.max_strategy_json_bytes = options->max_strategy_json_bytes;
+    }
     return value;
+#undef PC_SOLVE_OPTION_HAS
 }
 
 std::unordered_map<std::string, double> economy_prices(
@@ -337,8 +434,10 @@ pc_result pc_solver_create(
         auto holder = std::make_unique<pc_solver>();
         holder->session = session->impl;
         const auto registry_started = std::chrono::steady_clock::now();
+        const solver::ActionRegistryBuildOptions registry_options =
+            registry_build_options(goal_json, goal_json_size);
         solver::ActionRegistry registry =
-            solver::build_action_registry(*holder->session);
+            solver::build_action_registry(*holder->session, registry_options);
         holder->registry_generation_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - registry_started)
@@ -805,7 +904,9 @@ pc_result pc_solver_compile_strategy(
     try {
         if (solver->compiled_strategy.empty()) {
             const auto started = std::chrono::steady_clock::now();
-            solver::PolicyCompilationTelemetry telemetry;
+            solver->compilation.emplace();
+            solver::PolicyCompilationTelemetry& telemetry =
+                *solver->compilation;
             solver->compiled_strategy =
                 solver::compile_policy_strategy_json(
                     *solver->calc, *solver->solved, "solved policy",
@@ -814,7 +915,6 @@ pc_result pc_solver_compile_strategy(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - started)
                     .count());
-            solver->compilation = telemetry;
         }
         return copy_text(solver->compiled_strategy, buffer, capacity,
                          out_length, out_error);

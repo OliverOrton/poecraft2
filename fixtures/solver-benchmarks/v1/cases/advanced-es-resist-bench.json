@@ -73,6 +73,7 @@
     "max_expanded_states": 150000,
     "max_state_action_rows": 3000000,
     "max_transitions": 30000000,
+    "max_reforge_work": 30000000,
     "max_solver_owned_bytes": 3221225472,
     "max_compiled_nodes": 250000,
     "max_compiled_edges": 1000000,

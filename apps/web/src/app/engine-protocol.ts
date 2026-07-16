@@ -375,6 +375,15 @@ export interface SolveOptions {
     epsilon?: number;
     max_states?: number;
     max_sweeps?: number;
+    max_discovered_states?: number;
+    max_expanded_states?: number;
+    max_state_action_rows?: number;
+    max_transitions?: number;
+    max_reforge_work?: number;
+    max_solver_owned_bytes?: number;
+    max_compiled_nodes?: number;
+    max_compiled_edges?: number;
+    max_strategy_json_bytes?: number;
 }
 
 export interface SolveProgress {

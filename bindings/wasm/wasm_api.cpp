@@ -460,6 +460,16 @@ bool parse_solve_options(
     options.epsilon = obj_double(spec, "epsilon");
     options.max_states = obj_u32(spec, "max_states");
     options.max_sweeps = obj_u32(spec, "max_sweeps");
+    options.max_discovered_states = obj_u32(spec, "max_discovered_states");
+    options.max_expanded_states = obj_u32(spec, "max_expanded_states");
+    options.max_state_action_rows = obj_u64(spec, "max_state_action_rows");
+    options.max_transitions = obj_u64(spec, "max_transitions");
+    options.max_reforge_work = obj_u64(spec, "max_reforge_work");
+    options.max_solver_owned_bytes = obj_u64(spec, "max_solver_owned_bytes");
+    options.max_compiled_nodes = obj_u32(spec, "max_compiled_nodes");
+    options.max_compiled_edges = obj_u32(spec, "max_compiled_edges");
+    options.max_strategy_json_bytes = obj_u64(
+        spec, "max_strategy_json_bytes");
     return true;
 }
 

@@ -132,7 +132,13 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
         throw new Error(`${path}.goal.slots must be a non-empty array`);
     }
     const caps = spec.caps as Record<string, unknown>;
-    for (const key of ["max_states", "max_sweeps", "solve_step_work_items", "worker_step_ms", "cancel_ack_ms"]) {
+    for (const key of [
+        "max_states", "max_sweeps", "solve_step_work_items",
+        "max_discovered_states", "max_expanded_states",
+        "max_state_action_rows", "max_transitions", "max_reforge_work",
+        "max_solver_owned_bytes", "max_compiled_nodes", "max_compiled_edges",
+        "max_strategy_json_bytes", "worker_step_ms", "cancel_ack_ms",
+    ]) {
         if (typeof caps[key] !== "number" || (caps[key] as number) < 0) {
             throw new Error(`${path}.caps.${key} must be a non-negative number`);
         }

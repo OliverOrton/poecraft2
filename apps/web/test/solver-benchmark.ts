@@ -235,6 +235,11 @@ function statusFrom(
 ): string {
     if (solve?.cancelled) return "cancelled";
     const stateCapHit = nestedBoolean(telemetry, "optimization", "state_cap_hit");
+    const resourceCapHit = nestedBoolean(
+        telemetry,
+        "optimization",
+        "resource_cap_hit",
+    );
     const missingPrice = nestedNumber(telemetry, "actions", "missing_price") ?? 0;
     const unsupported = Math.max(
         nestedNumber(telemetry, "actions", "unsupported_observed") ?? 0,
@@ -246,6 +251,7 @@ function statusFrom(
         "full_request_status",
     );
     if (stateCapHit) return "refused_state_cap";
+    if (resourceCapHit) return "refused_resource_cap";
     if (missingPrice > 0 && unsupported > 0) {
         return "refused_missing_price_and_unsupported_action";
     }
@@ -283,7 +289,12 @@ function expectationMet(expected: string, actual: string): boolean {
         return actual === "refused_state_cap";
     }
     if (expected === "baseline_cap_or_compile_refusal_allowed") {
-        return ["converged", "refused_state_cap", "not_converged"].includes(actual);
+        return [
+            "converged",
+            "refused_state_cap",
+            "refused_resource_cap",
+            "not_converged",
+        ].includes(actual);
     }
     return false;
 }
@@ -324,6 +335,7 @@ function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseRepo
     check("max_expanded_states", nestedNumber(report.solver_telemetry, "states", "expanded"), spec.caps.max_expanded_states);
     check("max_state_action_rows", nestedNumber(report.solver_telemetry, "work", "state_action_rows"), spec.caps.max_state_action_rows);
     check("max_transitions", nestedNumber(report.solver_telemetry, "work", "transition_entries"), spec.caps.max_transitions);
+    check("max_reforge_work", nestedNumber(report.solver_telemetry, "cache", "reforge", "frontier_work"), spec.caps.max_reforge_work);
     check("max_solver_owned_bytes", nestedNumber(report.solver_telemetry, "memory", "solver_owned_bytes_estimate"), spec.caps.max_solver_owned_bytes);
     check("max_compiled_nodes", report.compiled_graph?.nodes ?? null, spec.caps.max_compiled_nodes);
     check("max_compiled_edges", report.compiled_graph?.edges ?? null, spec.caps.max_compiled_edges);
@@ -462,6 +474,15 @@ async function runCase(
                     {
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
+                        max_discovered_states: spec.caps.max_discovered_states,
+                        max_expanded_states: spec.caps.max_expanded_states,
+                        max_state_action_rows: spec.caps.max_state_action_rows,
+                        max_transitions: spec.caps.max_transitions,
+                        max_reforge_work: spec.caps.max_reforge_work,
+                        max_solver_owned_bytes: spec.caps.max_solver_owned_bytes,
+                        max_compiled_nodes: spec.caps.max_compiled_nodes,
+                        max_compiled_edges: spec.caps.max_compiled_edges,
+                        max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -485,6 +506,15 @@ async function runCase(
                     {
                         max_states: spec.caps.max_states,
                         max_sweeps: spec.caps.max_sweeps,
+                        max_discovered_states: spec.caps.max_discovered_states,
+                        max_expanded_states: spec.caps.max_expanded_states,
+                        max_state_action_rows: spec.caps.max_state_action_rows,
+                        max_transitions: spec.caps.max_transitions,
+                        max_reforge_work: spec.caps.max_reforge_work,
+                        max_solver_owned_bytes: spec.caps.max_solver_owned_bytes,
+                        max_compiled_nodes: spec.caps.max_compiled_nodes,
+                        max_compiled_edges: spec.caps.max_compiled_edges,
+                        max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
                     },
                     { chunkSize: spec.caps.solve_step_work_items },
                 );
@@ -704,9 +734,8 @@ try {
     const dataLoadMs = roundMs(performance.now() - dataLoadStarted);
     const reports: CaseReport[] = [];
     for (const spec of corpus.cases) {
-        if (options.caseId && spec.id !== options.caseId) {
-            reports.push(disabledReport(spec, "not_selected"));
-        } else if (!spec.benchmark_enabled) {
+        if (options.caseId && spec.id !== options.caseId) continue;
+        if (!spec.benchmark_enabled) {
             reports.push(disabledReport(spec));
         } else {
             process.stdout.write(`solver benchmark: ${spec.id}\n`);

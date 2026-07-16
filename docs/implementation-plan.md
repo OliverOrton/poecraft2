@@ -914,14 +914,17 @@ responsiveness budgets, per-case caps, existing tolerances, and a universal
 10,000-run compiled-strategy verification count on 2026-07-15. S7.1 is
 complete: the approved Eldritch fallback fixture, one-Scour crafted-modifier
 removal, exact Harvest resistance/Fracture calculation, and carrier-specific
-state/compiler substrate are present. S7.2 is next. Routine test suites are
-deferred until the end of the complete S7 plan, and visual UI review belongs to
-Oliver unless he explicitly requests it. Do not begin the parked mechanic track
-until S7 passes.
+state/compiler substrate are present. S7.2 action control/storage and the
+out-of-sequence S7.3 fixed-option checkpoint are also complete; S7.4 renewal
+and observation-aware options are next. Routine test suites are deferred until
+the end of the complete S7 plan, and visual UI review belongs to Oliver unless
+he explicitly requests it. Do not begin the parked mechanic track until S7
+passes.
 
-The approved T1/T1 second oracle replaced the pre-approval any-tier row. Capture
-its fresh unoptimized native/WASM baseline, plus first baselines for the newly
-enabled real cases, before S7.2 performs optimization. This benchmark capture is
+The approved T1/T1 second oracle replaced the pre-approval any-tier row. The
+requested fresh pre-S7.2 full-corpus run was recorded as an owner-stopped
+timeout after the native runner failed to finish a report in roughly 49
+minutes; existing S7.0 evidence remains preserved. Benchmark capture is
 measurement, not an intermediate test-suite gate.
 
 ## Parallel Track E: Economy Ingest And League Switching (Complete)
