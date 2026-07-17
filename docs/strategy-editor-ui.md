@@ -548,6 +548,11 @@ show why an edge matched or failed
 
 ### Aggregate Result Overlay
 
+**Status: specified, not yet complete.** Exact Calculator annotations already
+use evaluator node/edge flows. The native Simulator currently aggregates
+operation counts rather than every visited node and traversed edge; S8.5 adds
+those counters before simulator visitation can drive focus/trim output.
+
 After a multi-run simulation, the board replaces the plain visited-node
 marking with an aggregate overlay driven by the run's statistics:
 
@@ -574,8 +579,8 @@ warn when a graph has no reachable success or non-success terminal
 
 ## Recombinator Blocks And Item Flow
 
-**Status: parked future mechanic work (M4-M5).** This section is retained as
-architecture only; do not implement it during active S7 solver work.
+**Status: parked future recombinator work (R1-R2).** This section is retained as
+architecture only; do not implement it during active B1/S8 work.
 
 The editor model above is control flow: one implicit item walks guarded
 edges. Recombinators add item flow: items as values that merge at blocks

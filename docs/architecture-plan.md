@@ -258,8 +258,9 @@ Because this infrastructure is private and household-scoped, simple auth is acce
 
 This architecture no longer owns sequencing. The original vertical slice,
 native/WASM engine, workspace, strategy simulator/editor, mechanic expansion,
-public-engine throughput pass, and solver S1-S6 are complete. Accounts remain
-deferred and the active milestone is solver S7 depth/performance. See
+public-engine throughput pass, and solver S1-S7 are complete. Accounts remain
+deferred and the active milestone is owner-selected Bestiary expansion followed
+by the S8 one-item solver capability/reviewability pass. See
 [implementation-plan.md](implementation-plan.md) for portfolio status and
 [HANDOFF](../HANDOFF.md) for the sole current next-work pointer.
 

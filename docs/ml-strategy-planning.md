@@ -1,12 +1,14 @@
 # ML Strategy Planning Architecture
 
 **Status:** research-backed future direction, not an implementation phase.
-The exact S1-S6 solver, goal slots, action registry, transition provider,
+The exact S1-S7 solver, goal slots, action registry, transition provider,
 compiled policy graph, and simulation gate now exist. Current classical
-planner scaling, reusable options, and real benchmark work belongs to
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md),
-not ML-0/ML-1 below. Treat those sections as research history where the active
-plan has superseded them.
+planner capability, accounting, and reviewability work belongs to the active
+[B1/S8 plan](bestiary-and-solver-capability-plan.md), not ML-0/ML-1 below.
+Completed S7 scaling history is
+[archived](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
+Treat the sections below as research history where an active plan supersedes
+them.
 
 **Date:** 2026-06-30
 

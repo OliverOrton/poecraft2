@@ -6,121 +6,95 @@ going. Details live in the linked docs; this page only sets the direction.
 ## Vision
 
 A fast, trustworthy Path of Exile 1 crafting simulator that runs entirely
-client-side, plus a solver that turns a goal item into an optimal crafting
-strategy. The same native engine powers manual crafting (Emulator),
-strategy simulation (Simulator), exact odds queries (Calculator), optimal
-planning (the DP solver), and — eventually — ML strategy tooling built on
-the solver's output.
+client-side, plus a solver that turns a goal item into the cheapest expected-cost
+crafting strategy. The same native engine powers manual crafting (Emulator),
+strategy simulation (Simulator), exact odds and graph evaluation (Calculator),
+optimal planning (the DP solver), and eventually recombinator and ML tooling.
 
 ```text
 engine correctness -> simulator -> calculator/solver -> recombinators
                                               -> ML on top of the solver
 ```
 
-The solver is exact dynamic programming over known transition
-probabilities, never a black box: every generated strategy compiles to an
-ordinary editable strategy graph, is annotated with expected remaining
-cost, and is verified by simulating it in the same engine.
+The solver is dynamic programming over engine-owned transitions, never a black
+box. Generated policies compile to ordinary editable strategy graphs, carry
+expected-cost annotations and action/material accounting, and verify through
+the same native simulator.
 
 ## Where Things Stand
 
-Engine phases 0-11, 13, and 14 are complete: data pipeline, native C++ engine with
-Python and WASM bindings, compact item state and weighted pools, the
-compiled strategy graph simulator, the Dockview workspace with Emulator,
-Calculator, Strategy Builder, and Stash (the Strategy Builder owns the
-Simulator runner mode), and the Phase 13 mechanic
-expansion (bench, metamods, veiled, harvest, eldritch, influenced exalts),
-plus the public-engine throughput pass. Phase 12 accounts remains deferred.
-See [implementation-plan.md](implementation-plan.md) for phase detail and
-the current next task. Solver S1-S6 is a complete vertical slice: Calculator
-can solve into an annotated Strategy Board, long solves report progress and
-cancel, veiled/eldritch transitions are exact, policies compile to the ordinary
-strategy vocabulary, and the compiled graph is simulation-verified. Oliver
-skipped S6 Phase 3 ambient Emulator odds entirely; it is not deferred work.
-Completed S6-era execution plans are preserved under [archive](archive/).
+Engine phases 0-11, 13, and 14 are complete: canonical ingest and compiled
+data, the native C++ engine with Python/WASM bindings, one-item mechanic
+coverage through the Phase 13 expansion, the compiled strategy simulator, and
+the Dockview workspace with Emulator, Calculator, Strategy Builder/Simulator,
+and Stash. Phase 12 accounts remains deferred.
 
-The active milestone is S7: make the one-item solver handle realistic,
-multi-stage end-to-end crafts and complete a dedicated native/WASM solver
-performance pass. S7.0 is complete: versioned native/worker-WASM benchmarks,
-read-only solver telemetry, an unoptimized baseline, and structural comparison
-reports now quantify the current full-closure/value-iteration behavior. S7.1 is
-complete: the tied/no-dominance rule is permanently fixtured, one-Scour crafted
-modifier removal is a primitive operation, Harvest resistance conversion and
-Fracture have exact calculation paths, and crafted/fractured carriers compile
-through ordinary strategy conditions and explicit start state. S7.2 is
-complete: explicit action envelopes and dependency diagnostics, lazy fossil
-materialization, exact-kernel action collapsing, independent resource caps,
-compact states, interned sparse transition rows, and bounded Bellman work now
-control the first performance pass. At Oliver's direction, S7.3 was implemented
-ahead of S7.2: explicitly selected fixed Scour/Alchemy, Eldritch side-intent,
-protected-side, and deterministic Multimod options use price-independent exact
-kernels and compile into ordinary primitive Strategy Board subgraphs. S7.2R is
-complete: Calculator uses bounded engine-owned goal-relevant fossil generation,
-Harvest crafts share the real economy-recipe allowlist, and genuinely unquoted
-engine actions can use a visible pinned non-zero fallback. S7.4 is complete:
-fixed-exit renewal and protected-repeat kernels collapse only certified
-same-carrier failures, Unveil offers remain observed choices, and exact-carrier
-Fracture preparation expands to primitive retry/exit routes. S7.5 is complete:
-direct self-loops are solved algebraically, SCC policy iteration replaces long
-residual sweeps on the measured matrix, compatible transition closures survive
-price-only solves, bounded focused expansion is available for hard partial
-closures, and exact policy regions compile with canonical native/WASM ordering.
-S7.6 acceptance is next.
-Oliver approved the permanent real craft corpus and the performance, safety,
-responsiveness, and simulator-verification criteria on 2026-07-15. The old
-any-tier two-mod row remains historical. The requested fresh pre-S7.2 full-corpus
-run was recorded as unusable after it failed to finish the native report in
-roughly 49 minutes; Oliver directed the work to proceed to optimization.
-Macro/sub-policy operators, safe action control, cycle acceleration, memory
-bounds, and real craft gates are specified in
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
-Benchmarks measure and report gains; Oliver sets or approves the performance
-targets, operational caps, responsiveness budgets, and simulation tolerances,
-then evaluates whether the gains are sufficient. S7 correctness is accepted by
-compiling the produced strategies and running each one exactly 10,000 times in
-the native simulator at the end of the complete plan. The approved directional
-minimums are 5x solve speed and 2x lower peak memory where feasible, but the
-solver should be pushed as fast as practical beyond them. Intermediate S7
-phases do not carry routine test or visual-browser gates.
-The parallel live-economy track in
-[economy-ingest-plan.md](economy-ingest-plan.md) is implemented: the separate
-canonical ingest/publisher, immutable league snapshots, browser cache and
-selector, per-league overrides, and pinned cost identities are in place.
-Production activation only needs the documented R2 resources and repository
-secrets.
+Solver S1-S7 is complete. S1-S6 delivered the exact calculation/solve/compile/
+simulate vertical slice. S7 added the approved real craft corpus, exact
+Fracture and Harvest support, action-envelope diagnostics and lazy Fossils,
+fixed and renewal options, compact sparse transitions, SCC policy iteration,
+focused expansion, cache reuse, policy compression, deterministic native/WASM
+parity, responsive worker execution, exact whole-graph evaluation, and much
+faster compiled simulation. Final native/WASM reports agreed across the corpus
+and the complete automated suite passed.
+
+Oliver closed S7 on 2026-07-17 and directed work to move forward. The final
+endgame simulator sample remains recorded at `0.9942` success against the
+former `0.995` target; the miss was not relabelled as a numeric pass and no
+replacement sample was run. The completed plan and evidence are preserved in
+[the S7 archive](archive/2026-07-solver-s7/).
+
+The active product chunk is now:
+
+```text
+B1  owner-selected Bestiary expansion
+S8  one-item solver capability, exact accounting, review, and trimming
+then recombinators
+```
+
+The authoritative execution plan is
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+B1.0 is the immediate boundary: Oliver must pin the selected Bestiary recipe
+list and exact behavior before implementation. Mechanic rules are never
+researched or inferred by agents.
+
+The parallel economy track is implemented: canonical ingest/publishing,
+immutable league snapshots, browser cache and selector, per-league overrides,
+and pinned cost identities are present. Production activation only needs the
+documented R2 resources and repository secrets. A Beast stash category exists,
+but B1 still needs owner-approved recipe identities and price mappings.
 
 ## Direction Of Travel
 
-1. S7 solver depth and performance: real craft benchmarks, existing one-item
-   correctness gaps, safe action generation/pruning, exact macro/sub-policy
-   operators, compact transition storage, cycle-aware optimization, policy
-   compression, and a final native/WASM benchmark plus compiled-strategy
-   simulator gate. S7.0 baseline/telemetry, S7.1 correctness/state substrate,
-   S7.2 action control/storage/first performance work, and the out-of-sequence
-   S7.3 fixed-option layer and the S7.2R product action/price repair are
-   complete. S7.4 renewal and observation-aware options and S7.5 cycle
-   optimization, cache reuse, focused expansion, and policy compression are
-   complete. S7.6 end-to-end acceptance is next.
-   [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
-2. Parked mechanic track M1-M5 after S7: trade leaves/corruption/finishers,
-   Hinekora's Lock, beast imprint, and recombinators as spec pyramids with an
-   auto-planner. These are not active work.
+1. **B1 Bestiary expansion.** Pin the selected recipes, then carry them through
+   canonical data/prices, native actions, exact calculation, strategy
+   execution, solver descriptors where appropriate, Python/WASM, and the shared
+   product action surfaces. Stateful or multi-output recipes receive an exact
+   selected representation or remain explicitly unsupported.
+   [bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md)
+2. **S8 practical one-item solver capability.** Keep minimum expected cost as
+   the sole objective while making the action space carrier-aware, considering
+   relevant Fracture/bench/metamod routes automatically, extending exact
+   action/material accounting, deriving a compact review projection, and
+   offering optional simulator-informed trimming with disclosed impact.
+   [bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md)
+3. **Recombinators after S8.** First add exact two-item outcomes and hand-authored
+   recomb/feeder item-flow graphs, then automatic spec-pyramid planning. The
+   minimum trade-leaf support needed to value feeders belongs with this work,
+   not in a preceding M1 bundle. Hinekora's Lock, corruption/tainted currency,
+   and finishing-cost items remain independently parked.
    [solver-mechanic-extensions.md](solver-mechanic-extensions.md)
-3. Workspace fluency: the live economy service, league snapshot cache,
-   overrides, and pinned cost identities are complete. Remaining work includes
-   craft history, cost distributions and materials/shopping lists, aggregate
-   board overlays, and recomb/feeder blocks with item-flow wiring. Ambient
-   watched-mod odds in the Emulator were skipped entirely.
+4. **Workspace fluency remains later or parallel.** Remaining product work
+   includes craft history, richer materials/shopping views, aggregate board
+   overlays, and eventually recomb/feeder blocks. Ambient watched-mod odds in
+   Emulator were skipped entirely.
    [desktop-workspace-ui.md](desktop-workspace-ui.md),
    [strategy-editor-ui.md](strategy-editor-ui.md),
    [economy-ingest-plan.md](economy-ingest-plan.md)
-4. Product infrastructure remains later or parallel: economy production
-   activation is an external operational step; accounts Phase 12 is deferred,
-   so publishing Phases 15-16 stay blocked; recombinator engine Phase 18
-   remains parked for M4-M5.
-5. ML last, on purpose (Phase 17): value-distillation and search
-   guidance trained on the solver's logged (state, value, action)
-   corpus, with the exact solver as ground truth.
+5. **Infrastructure and ML remain later.** Economy production activation is an
+   external operational step. Accounts Phase 12 is deferred, so publishing
+   Phases 15-16 remain blocked. ML stays last, using the exact solver's logged
+   state/value/action corpus as ground truth.
 
 ## Doc Map
 
@@ -137,9 +111,9 @@ Data and engine internals:
 [item-state-flow.md](item-state-flow.md),
 [engine-bitsets.md](engine-bitsets.md)
 
-Solver:
+Solver and active execution:
 [crafting-solver-plan.md](crafting-solver-plan.md),
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md),
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md),
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md),
 [ml-strategy-planning.md](ml-strategy-planning.md)
 
@@ -150,5 +124,5 @@ UI and workspace:
 Community (later):
 [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md)
 
-Completed execution plans:
+Completed execution plans and historical evidence:
 [archive/README.md](archive/README.md)

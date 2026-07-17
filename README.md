@@ -122,7 +122,7 @@ Start with:
 - [docs/architecture-plan.md](docs/architecture-plan.md)
 - [docs/codebase-structure.md](docs/codebase-structure.md)
 - [docs/crafting-solver-plan.md](docs/crafting-solver-plan.md)
-- [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md)
+- [docs/bestiary-and-solver-capability-plan.md](docs/bestiary-and-solver-capability-plan.md)
 - [docs/data-shapes-and-ingest.md](docs/data-shapes-and-ingest.md)
 - [docs/desktop-workspace-ui.md](docs/desktop-workspace-ui.md)
 - [docs/engine-bitsets.md](docs/engine-bitsets.md)
@@ -130,7 +130,7 @@ Start with:
 - [docs/item-state-flow.md](docs/item-state-flow.md)
 - [docs/ml-strategy-planning.md](docs/ml-strategy-planning.md)
 - [docs/mod-data-and-pool-semantics.md](docs/mod-data-and-pool-semantics.md)
-- [docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md)
+- [docs/solver-mechanic-extensions.md](docs/solver-mechanic-extensions.md) — parked recombinator and mechanic extensions
 - [docs/strategy-editor-ui.md](docs/strategy-editor-ui.md)
 - [docs/weight-calculation-flow.md](docs/weight-calculation-flow.md)
 - [docs/archive/README.md](docs/archive/README.md) — completed execution plans

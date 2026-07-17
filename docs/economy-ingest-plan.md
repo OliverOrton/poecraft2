@@ -137,7 +137,7 @@ catalog for every discovered league. The minimum useful set is:
 
 ```text
 exchange: Currency, Fossil, Resonator, Essence
-future:   Beast when imprint actions enter the solver
+active dependency when selected by B1: Beast and approved recipe price mapping
 future:   BaseType only when bought-base/trade-leaf semantics are approved
 ```
 
@@ -590,7 +590,8 @@ All existing consumers migrate to the shared effective economy:
 - Simulator limits, summaries, distributions, materials, and missing-price
   output;
 - Emulator spend counters and future ambient cost display;
-- future trade-leaf, Beast/imprint, recombinator feeder, and ML datasets.
+- active selected-Bestiary prices plus future trade-leaf, recombinator feeder,
+  and ML datasets.
 
 No component may independently fetch prices or maintain a second price map.
 Price-key coverage and missing-price diagnostics remain engine-backed.

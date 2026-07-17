@@ -1,10 +1,19 @@
 # S7 Solver Depth And Performance Plan
 
+> **Archived 2026-07-17.** This is the completed historical S7 execution plan,
+> not current sequencing authority. Oliver directed work to move forward after
+> the final endgame sample recorded `0.9942` against the former `0.995` target;
+> the miss remains part of the record. See
+> [Project Direction](../../direction.md), the current
+> [HANDOFF](../../../HANDOFF.md), and the active
+> [B1/S8 plan](../../bestiary-and-solver-capability-plan.md).
+
 Active execution plan for making the existing one-item solver capable of
 realistic end-to-end crafts before adding more mechanic families. Read
-[AGENTS.md](../AGENTS.md), [direction.md](direction.md), and
-[HANDOFF.md](../HANDOFF.md) first. Stable solver architecture remains in
-[crafting-solver-plan.md](crafting-solver-plan.md); this file owns S7
+[AGENTS.md](../../../AGENTS.md), [direction.md](../../direction.md), and the
+[archived final S7 handoff](HANDOFF-s7.6-final.md) first. Stable solver
+architecture remains in
+[crafting-solver-plan.md](../../crafting-solver-plan.md); this file owned S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
 Status 2026-07-16: S7.0-S7.5 are implemented; S7.3 landed ahead of S7.2 and
@@ -27,7 +36,7 @@ renewal/observation-aware option checkpoint, and S7.5 deep optimization/cache
 checkpoint are complete; S7.6 acceptance is next. Trade
 leaves, corruption, Hinekora's Lock,
 imprints, recombinators, and other mechanic expansion remain parked in
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+[solver-mechanic-extensions.md](../../solver-mechanic-extensions.md).
 
 ## Outcome
 

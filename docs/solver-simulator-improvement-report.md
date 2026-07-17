@@ -1,12 +1,13 @@
 # Solver And Simulator Improvement Report
 
-**Status:** point-in-time engineering report, written 2026-07-16 at Oliver's
-request during S7.6. It surveys how the optimal solver and the native
+**Status:** historical point-in-time engineering report, written 2026-07-16 at
+Oliver's request during S7.6. It surveys how the optimal solver and the native
 simulator can be improved for complicated multi-step crafts — faster and
 lighter while keeping or improving exactness. It is not an execution plan,
 changes no code, sets no acceptance criteria, and does not reopen owner
-decisions. Active sequencing authority stays with
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md);
+decisions. Active sequencing authority is now the
+[B1/S8 plan](bestiary-and-solver-capability-plan.md); completed S7 sequencing is
+[archived](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md), and
 stable architecture stays with
 [crafting-solver-plan.md](crafting-solver-plan.md).
 
@@ -28,11 +29,13 @@ and measured in the final S7.6 reports:
   delta to 0.670420% without changing the sampled primitive behavior;
 - the single fresh endgame 10,000-run sample finished in 25.58 minutes with a
   1.230854% mean-cost delta, but its 0.9942 success rate missed the approved
-  0.995 gate. S7.6 therefore remains open for an owner decision; the sample
-  was not repeated or combined.
+  0.995 gate. Oliver closed S7 on 2026-07-17 and directed work to move forward;
+  the sample was not repeated or combined and the numeric miss remains part of
+  the record.
 
-See [HANDOFF.md](../HANDOFF.md) for exact report names, caps, memory, material
-totals, acceptance evidence, and the remaining boundary.
+See the [archived final S7 handoff](archive/2026-07-solver-s7/HANDOFF-s7.6-final.md)
+for exact report names, caps, memory, material totals, acceptance evidence, and
+the pre-closure boundary.
 
 The analysis treats the working-tree fixed-policy improvements (exact
 policy-kernel quotient, warm-started BiCGSTAB, tighter fixed-policy
@@ -469,6 +472,9 @@ Guardrails already recorded that this report deliberately re-affirms:
 
 ## Suggested Sequencing
 
+> Historical S7.6 recommendation order. Implemented items and remaining ideas
+> do not override the active B1/S8 plan.
+
 Three tiers, cheapest-exact first. Every tier is measured against the
 pinned corpus with the existing report tooling; plan-level correctness
 remains the compiled-strategy simulator gate.
@@ -505,6 +511,9 @@ remains the compiled-strategy simulator gate.
     product decision.
 
 ## Open Questions For Oliver
+
+> Historical S7.6 questions. They are not active blockers unless a future plan
+> explicitly revives one.
 
 1. May verification adopt per-run derived seeds (order- and
    thread-independent runs), accepting one re-baseline of the pinned

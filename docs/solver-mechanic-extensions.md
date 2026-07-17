@@ -1,13 +1,16 @@
-# Solver Mechanic Extensions
+# Parked Mechanic And Recombinator Extensions
 
-**Status: parked future track.** S7 solver depth and performance comes first;
-do not begin any phase in this file until
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md)
-is complete and Oliver explicitly selects the next mechanic milestone.
+**Status: parked future work.** Bestiary expansion and the focused one-item
+solver capability/reviewability pass are active in
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+Do not begin recombinators or the independent mechanic backlog in this file
+until Oliver accepts S8 and explicitly selects the next milestone.
 
 This is a future companion to
 [crafting-solver-plan.md](crafting-solver-plan.md). It covers trade leaves,
-corruption/finishing work, Hinekora's Lock, beast imprint, and recombinators.
+corruption/finishing work, Hinekora's Lock, and recombinators. Selected
+Bestiary mechanics, including any approved imprint work, now belong to the
+active B1 plan rather than an M phase here.
 Vocabulary defers to
 [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). Mechanic
 rules come from Oliver; agents must not research or infer them.
@@ -133,16 +136,15 @@ cached outcome distribution. Locked variants are auto-generated for
 eligible actions rather than hand-registered. Foresight massively changes
 optimal play for slam/annul decisions, so this is high value for its size.
 
-## Beast Imprint (Checkpoint/Restore)
+## Bestiary Ownership Moved To B1
 
-Imprint copies a magic item; restoring returns to the copy. Rather than
-storing a snapshot in state, model the known techniques as macro-actions
-with closed-form expected cost, e.g. "imprint, regal, restore-and-repeat
-until the regal hits" folds the geometric retry loop into a single
-descriptor cost/distribution. Avoids snapshot references in the abstract
-state entirely. If a technique ever needs arbitrary checkpointing, revisit
-with the companion-state slot; do not build general snapshot state for the
-known use cases.
+The earlier draft treated Beast Imprint as one future macro. That is too narrow
+to define the selected Bestiary expansion and is no longer sequencing
+authority. B1.0 first classifies Oliver's requested recipes as ordinary
+one-item, checkpoint/restore, multi-output/multi-item, or unsupported. The
+approved contract then decides whether a selected imprint technique uses a
+specific fixed option or requires explicit checkpoint state. Do not infer that
+choice from this historical sketch.
 
 ## Corruption Endgames
 
@@ -170,35 +172,26 @@ segment, but not in the abstract state.
 Mirror/reflecting-mist copies, synthesis implicit crafting, and removed
 league mechanics (e.g. Necropolis corpse crafting) are not planned.
 
-## Parked Phasing
+## Future Sequencing
 
-This track uses `M` numbers so it does not compete with the active solver
-sequence. None is scheduled.
+The former M1-M5 bundle is retired. Trade leaves, corruption/tainted actions,
+finishing-cost reporting, and Hinekora's Lock remain independent backlog items;
+none is scheduled. The minimum trade-leaf acquisition contract needed to price
+recombinator feeders lands with recombinator foundations instead of preceding
+them as a general product phase.
 
 ```text
-M1  trade-leaf actions; corruption/tainted descriptors; finishing-cost
-    reporting (blessed/anoint/catalyst)
-    gate: solver prefers buying an intermediate when the price table
-          makes crafting it dominated
-
-M2  Hinekora's Lock evaluation mode, auto-generated locked variants
-    gate: locked-exalt fixture matches hand-computed E[min(...)] values;
-          policy flips on a slam decision when lock price crosses the
-          analytic break-even
-
-M3  beast imprint macro-actions
-    gate: imprint-regal loop cost matches the closed-form geometric
-          expectation
-
-M4  recomb foundations: outcome enumerator + owner-approved fixtures;
+R1  minimum feeder acquisition contract; recomb outcome enumerator and
+    owner-approved fixtures;
     recomb/feeder blocks in the strategy model; item-flow simulation
     with summary-cost feeders, condition-gated recycling edges, and
     nested-execution verification mode; Calculator two-item support
     gate: enumerator matches MC and owner-approved outcome tables;
-          a hand-authored pyramid simulates end to end with recycling,
-          and summary-mode cost agrees with nested-mode within tolerance
+          a hand-authored pyramid simulates end to end with recycling;
+          summary-mode cost agrees with nested-mode within tolerance;
+          feed acquisition chooses craft or buy from pinned costs
 
-M5  pyramid auto-planner: spec enumeration + dominance pruning,
+R2  pyramid auto-planner: spec enumeration + dominance pruning,
     fixed-point spec-level DP with salvage credits over cached
     craft/buy sub-costs, emit pyramid as recomb/feeder block graph;
     "re-cost" of user-edited pyramids ships alongside as the
@@ -207,3 +200,11 @@ M5  pyramid auto-planner: spec enumeration + dominance pruning,
           cost matches C(goal spec) within tolerance and does not lose
           to a hand-authored reference pyramid
 ```
+
+Possible independent later milestones retain their existing design notes above:
+
+- Hinekora's Lock observe-then-decide evaluation;
+- corruption and tainted-currency endgames; and
+- blessed/anoint/catalyst finishing-cost reporting.
+
+They do not block R1/R2 unless Oliver explicitly makes one a prerequisite.

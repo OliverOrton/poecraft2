@@ -1,8 +1,11 @@
 # Crafting Solver And Calculation Engine Plan
 
-**Status:** S1-S6 are implemented. This file is the stable architecture and
-baseline record; active scalability, macro-action, and performance execution is
-owned by [solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
+**Status:** S1-S7 are implemented. This file is the stable architecture and
+baseline record; active Bestiary and focused one-item solver capability work is
+owned by
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+The completed S7 execution record is
+[archived](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
 
 Modifier vocabulary, pool semantics, and weight rules in this plan defer to
 [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md) and
@@ -198,18 +201,20 @@ engine + solver:   transmute/aug/alt/regal/alch/chaos/exalt/annul/scour,
                    harvest resistance conversion, eldritch implicits/currency,
                    influenced exalts, Fracture, remove-crafted-modifiers
 S7 operators:      solver-only scour/Alchemy and macro/sub-policy operators
-later:             corruption, beastcrafting, recombinators (implementation plan
-                   Phase 18; session-universe implications already
-                   handled by the bitset plan)
+active B1:         owner-selected Bestiary recipe set after rule fixtures
+later:             corruption and recombinators (implementation plan Phase 18;
+                   session-universe implications already handled by the bitset
+                   plan)
 ```
 
-The deferred mechanics, plus trade-leaf actions, Hinekora's Lock,
-corruption endgames, and finishing-cost items, are planned in
+The parked mechanics, plus trade-leaf actions, Hinekora's Lock, corruption
+endgames, finishing-cost items, and recombinators, are described in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
-Recombinators and beast imprints stress the single-item state assumption
-(they involve a second item or a saved copy). Recombinators resolve this
-outside the item-level DP: a spec-level pyramid solver plus recomb/feeder
+Recombinators and any selected checkpoint/restore Bestiary recipe stress the
+single-item state assumption (they involve a second item or a saved copy). B1.0
+must select an exact representation or park the recipe. Recombinators resolve
+this outside the item-level DP: a spec-level pyramid solver plus recomb/feeder
 strategy blocks, per the extensions doc. The registry schema still
 reserves a `companion state` slot in the descriptor for any future
 technique that must track a second live item inside the item-level solver
@@ -335,11 +340,10 @@ demands it.
 
 ### Action Pruning
 
-The implemented S1-S6 solver accepts an explicit action subset, but does not
-automatically perform the goal-relevance pruning described below. Calculator
-Solve currently includes every priced registry action. S7 implements the safe
-version of this contract before abstraction, because the candidate set defines
-the junk classes:
+The S7 solver implements goal-relevant product envelopes, explicit inclusion
+diagnostics, lazy Fossil materialization, exact-kernel collapse, and bounded
+deferred work before abstraction, because the candidate set defines the junk
+classes:
 
 - keep actions that can produce, remove, or protect a goal slot, plus
   structural actions (scour, restart, rarity changes, metamods that gate
@@ -350,11 +354,13 @@ the junk classes:
 
 Every action receives an included, deferred, pruned, unpriced, or unsupported
 diagnostic reason. Exhaustive-oracle mode verifies certified pruning on small
-fixtures. The detailed contract is in the active S7 plan.
+fixtures. S8 extends this substrate with preservation-aware, state-dependent
+destructive-action control and automatic targeted option generation; its
+contract is in the active B1/S8 plan.
 
 ### Solver Options And Macro Actions
 
-S7 adds a solver-only operator layer above primitive actions. A fixed option is
+S7 added a solver-only operator layer above primitive actions. A fixed option is
 an internally exact primitive strategy fragment with an initiation predicate,
 expected resource vector, finite exit-state distribution, observation-owned
 choice groups, and an expansion recipe. Its Bellman value is the resource
@@ -407,10 +413,10 @@ gates; a narrowly targeted internal test may be used only when something is
 broken and it is needed to diagnose or fix it. Rendered or visual UI checking
 is left to Oliver unless he explicitly asks for it.
 
-Exact policy compression may merge equivalent regions. A later, owner-controlled
-readability mode may also trim choices with negligible value impact, but must
-report the discarded delta and honest bounded/heuristic status; it is not part
-of S7.1 or the core S7 acceptance gate.
+Exact policy compression may merge equivalent regions. S8 adds an
+owner-controlled focus/trim mode for low-visit regions. Focus is presentation
+only; a trimmed copy reports exact and sampled impact and carries an honest
+empirical/heuristic status.
 
 ## ML Data Logging
 
@@ -596,16 +602,22 @@ S6  simulator/workspace integration, diagnostics UI, WASM validation
     gate: browser solve of a representative goal completes within
           budget in a worker with live progress
 
-S7  realistic end-to-end one-item capability and solver performance
+S7  realistic end-to-end one-item capability and solver performance (complete)
     gate at the end of the full plan: approved real multi-stage crafts solve,
           compile, and run in the simulator after native/WASM gains are
           reported for Oliver to evaluate against owner-set criteria
+
+S8  preservation-aware action control, automatic targeted options,
+    exact action/material accounting, review projection, and optional trim
+    gate: cheapest exact policies retain simulator parity; review/accounting
+          agrees with exact evaluation; trimmed copies disclose their impact
 ```
 
-New engine mechanics (bench, metamods, harvest, ...) land as registry
+New engine mechanics (bench, metamods, harvest, Bestiary, ...) land as registry
 descriptors plus engine actions and exact calculation evaluators, gated by
-S3-style distribution fixtures per mechanic. Parked future mechanics use the
-M1-M5 sequence in [solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+S3-style distribution fixtures per mechanic. B1 owns the selected Bestiary
+vertical slice; later recombinator and independent mechanic notes remain in
+[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
 
 ## Risks
 
@@ -613,11 +625,10 @@ M1-M5 sequence in [solver-mechanic-extensions.md](solver-mechanic-extensions.md)
   the S5 gate; refine features when a goal shows material error.
 - Sequential-roll DP correctness under group removal and tag-weight
   updates mid-roll: mitigated by the mandatory MC cross-check in S3.
-- State explosion on all-T1 goals with many tier-tracked slots: the current
-  solver expands the full reachable closure; policy reachability only reduces
-  compilation afterward. S7 addresses action generation, compact storage,
-  exact macro kernels, cycle-aware policy optimization, and—only if still
-  required—bounded LAO*-style focused expansion.
+- State explosion on all-T1 goals with many tier-tracked slots: S7 added action
+  envelopes, compact storage, exact option kernels, cycle-aware policy
+  optimization, and bounded focused expansion. S8 must preserve those bounds
+  while making destructive-action generation carrier-aware.
 - Metamod/flag interactions multiply legality edge cases: legality lives
   in one predicate per descriptor, tested per mechanic, never inline in
   solver code.

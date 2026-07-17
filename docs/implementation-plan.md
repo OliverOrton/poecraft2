@@ -30,13 +30,14 @@ Once that slice is correct, mechanics and UI surfaces can expand safely.
 ## Portfolio Status
 
 ```text
-complete:  phases 0-11, 13, 14; pre-S6 polish; solver S1-S6
-active:    solver S7 depth and performance
-parallel:  Economy E0-E4 may proceed independently
+complete:  phases 0-11, 13, 14; pre-S6 polish; solver S1-S7
+active:    B1 owner-selected Bestiary expansion
+next:      S8 one-item solver capability, accounting, review, and trimming
+parallel:  Economy E0-E7 is implemented; production activation is external
 deferred:  Phase 12 accounts/sync
 blocked:   Phases 15-16 publishing/community depend on Phase 12
-parked:    mechanic track M1-M5 and Phase 18 recombinators
-later:     Phase 17 ML, after S7 produces realistic exact baselines
+parked:    recombinators; trade/Lock/corruption/finishing mechanics
+later:     Phase 17 ML, after the one-item solver and recombinators
 ```
 
 ## Build Principles
@@ -892,22 +893,22 @@ remain backed by the same native action registry and exact transition provider.
 The earlier multi-goal/OR contract and shared predicate-editor work are not
 scheduled.
 
-## Solver S7: End-To-End Capability And Performance (Active)
+## Solver S7: End-To-End Capability And Performance (Complete)
 
 S1-S6 completed the exact calculation, DP solve, policy compilation,
 workspace, progress/cancellation, and simulation-verification vertical slice.
-S7 now takes priority over new mechanic breadth. Its goal is realistic
+S7 took priority over new mechanic breadth. Its goal was realistic
 multi-stage one-item crafting plus a dedicated solver search/memory performance
 pass; the completed Phase 14 throughput pass did not benchmark optimal solving.
 
-The authoritative execution plan is
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md).
+The completed execution plan is archived at
+[archive/2026-07-solver-s7/solver-depth-and-performance-plan.md](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
 It covers a real craft benchmark corpus, one-item correctness gaps, safe action
 generation and pruning, exact solver-only macro/sub-policy operators, compact
 transition storage, cycle-aware optimization, policy compression, and native/
 WASM performance measurement followed by a final compiled-strategy simulator
 gate. Oliver sets or approves the comparison targets and safety limits and
-evaluates the gains. Status 2026-07-15: S7.0 benchmark/telemetry and the
+evaluates the gains. S7.0 benchmark/telemetry and the
 original unoptimized native/WASM baseline are complete. Oliver approved the
 permanent craft corpus, 5x/2x directional performance minimums, 50 ms/250 ms
 responsiveness budgets, per-case caps, existing tolerances, and a universal
@@ -919,16 +920,33 @@ out-of-sequence S7.3 fixed-option checkpoint are also complete. S7.2R completed
 bounded product fossil selection, removal of fake Harvest actions, and the
 pinned missing-price fallback. S7.4 completed exact-equivalent renewal,
 protected repeats, observed Unveil choices, and carrier-exact Fracture
-preparation. S7.5 deep optimization and cache reuse are next. Routine test
-suites are deferred until the end of the complete S7 plan,
-and visual UI review belongs to Oliver unless he explicitly requests it. Do not
-begin the parked mechanic track until S7 passes.
+preparation. S7.5 deep optimization/cache reuse and S7.6 end-to-end acceptance
+are complete. The final native/WASM comparison agreed across the permanent
+corpus and the complete automated suite passed. Oliver closed S7 on 2026-07-17
+and directed work to move forward. The final endgame sample remains recorded at
+`0.9942` against the former `0.995` success target; this is a disclosed numeric
+miss, not a retroactive pass.
 
 The approved T1/T1 second oracle replaced the pre-approval any-tier row. The
 requested fresh pre-S7.2 full-corpus run was recorded as an owner-stopped
 timeout after the native runner failed to finish a report in roughly 49
 minutes; existing S7.0 evidence remains preserved. Benchmark capture is
 measurement, not an intermediate test-suite gate.
+
+## B1 Bestiary And Solver S8 (Active / Next)
+
+The authoritative execution plan is
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+B1 carries an Oliver-selected Bestiary recipe set through canonical identities
+and prices, native actions, exact calculation, strategy execution, solver
+descriptors where appropriate, Python/WASM, and shared workspace surfaces.
+
+S8 follows B1. It keeps minimum expected cost as the sole optimization
+objective while improving preservation-aware action control, automatic
+Fracture/bench/metamod consideration, exact action/material accounting, compact
+review projection, and optional empirically trimmed derived strategies. The
+exact editable graph remains authoritative. Recombinators begin only after
+Oliver accepts the S8 one-item result.
 
 ## Parallel Track E: Economy Ingest And League Switching (Complete)
 
@@ -1154,9 +1172,9 @@ The solver/editor side of recombinators — the spec-pyramid model,
 recomb/feeder strategy blocks, recycling wires, and the pyramid
 auto-planner — is specified in
 [solver-mechanic-extensions.md](solver-mechanic-extensions.md) (solver
-mechanic phases M4-M5) and [strategy-editor-ui.md](strategy-editor-ui.md). This
+recombinator phases R1-R2) and [strategy-editor-ui.md](strategy-editor-ui.md). This
 phase provides the engine substrate those phases consume; the exact
-outcome enumerator here and mechanic phase M4 are the same effort viewed
+outcome enumerator here and recombinator phase R1 are the same effort viewed
 from the engine and solver sides.
 
 Acceptance gate:
@@ -1168,18 +1186,17 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Implement **S7.5 only** from
-[solver-depth-and-performance-plan.md](solver-depth-and-performance-plan.md):
-eliminate direct self-loops algebraically, benchmark residual-prioritized
-backups and SCC/policy iteration, retain compatible transition caches for
-price-only solves, add bounded focused expansion only if the preceding work
-still misses the hard corpus, and compress policy regions before compilation.
-Stop before S7.6. Do not run routine native, bindings, WASM, web, simulator, or
-visual-browser gates for the intermediate phase. Oliver skipped S6 Phase 3
-entirely; do not revive it. Economy E0-E7 is implemented and locally accepted;
-only external R2 and custom-domain activation remains. Phase 12, publishing,
-mechanic track M1-M5, and Phase 18 recombinators remain deferred, blocked, or
-parked as recorded above.
+Implement **B1.0 only** from
+[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md):
+obtain Oliver's selected Bestiary recipe list and pin the exact legality,
+outcome, state-effect, price-input, output-count, and product-surface contract
+for every row. Do not implement or research mechanic behavior before that
+contract is approved. Stop at the B1.0 checkpoint and rewrite `HANDOFF.md`.
+
+Oliver skipped S6 Phase 3 entirely; do not revive it. Economy E0-E7 is
+implemented and locally accepted; only external R2 and custom-domain activation
+remain. Phase 12, publishing, trade/Lock/corruption/finishing mechanics,
+recombinators, and ML remain deferred, blocked, or parked as recorded above.
 
 ## Definition Of Done For MVP
 
