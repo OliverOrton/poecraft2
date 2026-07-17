@@ -174,8 +174,7 @@ void run_registry_tests(const SessionImpl& session) {
     PC_CHECK(combo.cost_keys ==
              (std::vector<std::string>{"fossil:fossil_a", "fossil:fossil_b",
                                        "resonator:2"}));
-    PC_CHECK(combo.discriminating_tag_ids ==
-             (std::vector<std::uint32_t>{kTagAttack, kTagFire}));
+    PC_CHECK(combo.discriminating_tag_ids.empty());
     PC_CHECK(combo.display_name == "Fossil A + Fossil B");
 
     const ActionDescriptor& restart =
@@ -593,9 +592,9 @@ void run_artifact_registry_tests(const char* artifact_dir) {
     PC_CHECK(harvest > 0);
     PC_CHECK(registry.index_by_id.count("harvest_reforge:resistance") == 0);
     PC_CHECK(registry.index_by_id.count("harvest_augment:resistance") == 0);
-    /* Most fossils bias tags; specials (lucky rolls, mirrors, sockets)
-     * legitimately discriminate on nothing. */
-    PC_CHECK(discriminating_fossils > 0);
+    /* Fossil weight tags affect the current reforge pool, not later-state
+     * predicates, so they intentionally do not widen junk classes. */
+    PC_CHECK(discriminating_fossils == 0);
     /* Every 1-4 loadout over the named fossils enumerates. */
     const std::size_t n = fossil_singles;
     PC_CHECK(n > 0);

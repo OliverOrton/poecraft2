@@ -44,9 +44,11 @@ struct Arguments {
     fs::path artifact;
     fs::path corpus;
     fs::path output;
+    fs::path strategy_output;
     std::string case_id;
     bool validate_only = false;
     bool skip_verification = false;
+    bool emit_progress = false;
 };
 
 struct NativeHandles {
@@ -66,6 +68,11 @@ struct NativeHandles {
 };
 
 struct CaseResult {
+    struct ActionCount {
+        std::string node_id;
+        std::int32_t action_type = -1;
+        std::uint64_t count = 0;
+    };
     std::string actual_status = "not_run";
     bool expectation_met = false;
     bool verification_skipped = false;
@@ -84,6 +91,7 @@ struct CaseResult {
     pc_solve_summary solve_summary{};
     std::string telemetry_json;
     std::size_t strategy_json_bytes = 0;
+    std::string strategy_output_path;
     std::uint64_t compiled_nodes = 0;
     std::uint64_t compiled_edges = 0;
     bool has_compiled_graph = false;
@@ -92,6 +100,7 @@ struct CaseResult {
     double verification_mean_cost = 0.0;
     double cost_delta_absolute = 0.0;
     double cost_delta_relative = 0.0;
+    std::vector<ActionCount> action_distribution;
     std::vector<std::pair<std::string, bool>> cap_checks;
     std::vector<std::string> errors;
 };
@@ -535,7 +544,13 @@ bool evaluate_expectation(
         return false;
     }
     if (skip_verification) return true;
-    if (required_string(expected, "verification_status") != "run") {
+    const std::string verification_status =
+        required_string(expected, "verification_status");
+    const bool verification_required =
+        verification_status == "run" ||
+        (verification_status == "run_if_compiled" &&
+         report.strategy_json_bytes != 0);
+    if (!verification_required) {
         return true;
     }
     if (!report.has_verification || report.verification.completed_runs == 0) {
@@ -701,7 +716,8 @@ void create_case_objects(
 
 CaseResult run_case(
     pc_data_handle data, const Value& specification,
-    const bool skip_verification) {
+    const bool skip_verification, const fs::path& strategy_output,
+    const bool emit_progress) {
     CaseResult report;
     report.verification_skipped = skip_verification;
     const auto total_begin = Clock::now();
@@ -770,6 +786,7 @@ CaseResult run_case(
             optional_string(specification, "benchmark_mode") ==
             "cancel_after_first_step";
         pc_solve_progress progress{};
+        auto next_progress = Clock::now() + std::chrono::seconds(10);
         do {
             const auto step_begin = Clock::now();
             result = pc_solver_solve_step(
@@ -781,6 +798,16 @@ CaseResult run_case(
             if (result != PC_RESULT_OK) {
                 throw std::runtime_error(api_error("pc_solver_solve_step", result,
                                                    error));
+            }
+            if (emit_progress && Clock::now() >= next_progress) {
+                std::cout << required_string(specification, "id")
+                          << ": progress phase=" << progress.phase
+                          << " expanded=" << progress.expanded_states
+                          << " sweeps=" << progress.sweeps
+                          << " residual=" << progress.residual
+                          << " start_bound=" << progress.start_value_bound
+                          << std::endl;
+                next_progress = Clock::now() + std::chrono::seconds(10);
             }
             if (cancel_after_first) {
                 const auto cancel_begin = Clock::now();
@@ -830,6 +857,24 @@ CaseResult run_case(
                 if (result == PC_RESULT_OK) {
                     strategy_json.resize(strategy_length);
                     report.strategy_json_bytes = strategy_length;
+                    if (!strategy_output.empty()) {
+                        std::string file_id =
+                            required_string(specification, "id");
+                        for (char& c : file_id) {
+                            const bool safe =
+                                (c >= 'a' && c <= 'z') ||
+                                (c >= 'A' && c <= 'Z') ||
+                                (c >= '0' && c <= '9') || c == '-' ||
+                                c == '_' || c == '.';
+                            if (!safe) c = '_';
+                        }
+                        const fs::path strategy_path = fs::absolute(
+                            strategy_output /
+                            (file_id + ".strategy.json"));
+                        write_file(strategy_path, strategy_json);
+                        report.strategy_output_path =
+                            strategy_path.string();
+                    }
                     result = pc_strategy_compile_json(
                         handles.session, strategy_json.data(), strategy_json.size(),
                         &handles.strategy, &error);
@@ -895,6 +940,35 @@ CaseResult run_case(
                                                 ? report.cost_delta_absolute /
                                                       std::fabs(report.solve_summary.start_value)
                                                 : 0.0;
+                                    }
+                                    std::uint32_t action_count = 0;
+                                    result =
+                                        pc_simulator_action_distribution_query(
+                                            handles.simulator, nullptr, 0,
+                                            &action_count, &error);
+                                    if (result == PC_RESULT_OK ||
+                                        result == PC_RESULT_BUFFER_TOO_SMALL) {
+                                        std::vector<
+                                            pc_action_distribution_entry>
+                                            entries(action_count);
+                                        result =
+                                            pc_simulator_action_distribution_query(
+                                                handles.simulator,
+                                                entries.data(), action_count,
+                                                &action_count, &error);
+                                        if (result == PC_RESULT_OK) {
+                                            report.action_distribution.reserve(
+                                                action_count);
+                                            for (std::uint32_t i = 0;
+                                                 i < action_count; ++i) {
+                                                report.action_distribution.push_back({
+                                                    entries[i].node_id == nullptr
+                                                        ? std::string()
+                                                        : entries[i].node_id,
+                                                    entries[i].action_type,
+                                                    entries[i].count});
+                                            }
+                                        }
                                     }
                                 } else {
                                     report.errors.push_back(api_error(
@@ -1039,6 +1113,10 @@ void append_case_report(
         out << "{\"nodes\":" << result.compiled_nodes
             << ",\"edges\":" << result.compiled_edges
             << ",\"strategy_json_bytes\":" << result.strategy_json_bytes
+            << ",\"strategy_output_path\":";
+        if (result.strategy_output_path.empty()) out << "null";
+        else out << escape_json(result.strategy_output_path);
+        out
             << '}';
     }
     out << ",\n";
@@ -1090,6 +1168,16 @@ void append_case_report(
             << "\"cost_delta_absolute\":" << result.cost_delta_absolute << ','
             << "\"cost_delta_relative\":" << result.cost_delta_relative << ','
             << "\"success_rate\":" << success_rate << ','
+            << "\"action_distribution\":[";
+        for (std::size_t i = 0;
+             i < result.action_distribution.size(); ++i) {
+            if (i != 0) out << ',';
+            const auto& action = result.action_distribution[i];
+            out << "{\"node_id\":" << escape_json(action.node_id)
+                << ",\"action_type\":" << action.action_type
+                << ",\"count\":" << action.count << '}';
+        }
+        out << "],"
             << "\"mean_cost_within_tolerance\":";
         if (!has_mean_tolerance) out << "null";
         else out << (mean_within_tolerance ? "true" : "false");
@@ -1130,8 +1218,12 @@ Arguments parse_arguments(int argc, char** argv) {
         if (argument == "--artifact") args.artifact = value("--artifact");
         else if (argument == "--corpus") args.corpus = value("--corpus");
         else if (argument == "--output") args.output = value("--output");
+        else if (argument == "--strategy-output") {
+            args.strategy_output = value("--strategy-output");
+        }
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
+        else if (argument == "--progress") args.emit_progress = true;
         else if (argument == "--skip-verification") {
             args.skip_verification = true;
         }
@@ -1269,7 +1361,8 @@ int main(int argc, char** argv) {
             bool all_expected = true;
             for (const Value& specification : specifications) {
                 const CaseResult result = run_case(
-                    data, specification, args.skip_verification);
+                    data, specification, args.skip_verification,
+                    args.strategy_output, args.emit_progress);
                 if (!first) output << ",\n";
                 first = false;
                 append_case_report(output, specification, result);

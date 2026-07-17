@@ -28,13 +28,13 @@ test("S7 solver benchmark corpus is versioned, unique, and explicitly gated", ()
     }
 });
 
-test("approval-pending real crafts cannot execute accidentally", () => {
+test("owner-approved real crafts are benchmark-enabled", () => {
     const corpus = loadSolverBenchmarkCorpus(fileURLToPath(MANIFEST));
     const proposedRealCrafts = corpus.cases.filter((entry) =>
         ["ordinary", "advanced", "endgame"].includes(entry.category),
     );
     assert.ok(proposedRealCrafts.length >= 3);
-    assert.ok(proposedRealCrafts.every((entry) => !entry.benchmark_enabled));
+    assert.ok(proposedRealCrafts.every((entry) => entry.benchmark_enabled));
 });
 
 test("corpus artifact pins reject stale WASM/data combinations", () => {

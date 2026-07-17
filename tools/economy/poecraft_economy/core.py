@@ -1388,6 +1388,7 @@ def validate_database(database: Path = DEFAULT_DATABASE) -> dict[str, Any]:
                 artifact.get("prices", {}),
                 metadata.get("missing_keys", []),
                 metadata.get("low_confidence_keys", []),
+                artifact.get("sources"),
             )
             content_hash = sha256_bytes(canonical_json(content).encode("utf-8"))
             if content_hash != row["content_sha256"]:

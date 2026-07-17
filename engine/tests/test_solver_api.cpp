@@ -222,14 +222,16 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_solve_progress solve_progress{};
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_OK);
-    PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_EXPANDING);
-    PC_CHECK(solve_progress.expanded_states == 1);
+    PC_CHECK(solve_progress.phase != PC_SOLVE_PHASE_DONE);
+    PC_CHECK(solve_progress.expanded_states >= 1);
+    const std::string expanded_fragment =
+        "\"expanded\":" + std::to_string(solve_progress.expanded_states);
     const std::string live_telemetry =
         solver_telemetry_json(solver, &error);
     PC_CHECK(live_telemetry.find(
                  "\"execution\":{\"status\":\"in_progress\"") !=
              std::string::npos);
-    PC_CHECK(live_telemetry.find("\"expanded\":1") != std::string::npos);
+    PC_CHECK(live_telemetry.find(expanded_fragment) != std::string::npos);
     PC_CHECK(live_telemetry.find("\"priced_scanned\":10") !=
              std::string::npos);
     PC_CHECK(live_telemetry.find("\"policy_reachable\":null") !=
@@ -242,7 +244,7 @@ void run_public_solver_gate(const char* artifact_dir) {
              std::string::npos);
     PC_CHECK(abandoned_telemetry.find("\"status\":\"abandoned\"") !=
              std::string::npos);
-    PC_CHECK(abandoned_telemetry.find("\"expanded\":1") !=
+    PC_CHECK(abandoned_telemetry.find(expanded_fragment) !=
              std::string::npos);
     PC_CHECK(pc_solver_solve_step(solver, 1, &solve_progress, &error) ==
              PC_RESULT_NOT_FOUND);

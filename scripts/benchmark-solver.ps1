@@ -5,6 +5,8 @@ param(
     [string]$Case = "",
     [ValidatePattern("^[A-Za-z0-9._-]+$")]
     [string]$Label = "s7.0-unoptimized",
+    [string]$StrategyOutput = "",
+    [switch]$Progress,
     [switch]$SkipBuild,
     [switch]$SkipVerification
 )
@@ -48,7 +50,11 @@ if ($Runner -in @("all", "native")) {
         "--output", $NativeReport
     )
     if ($Case) { $NativeArgs += @("--case", $Case) }
+    if ($StrategyOutput) {
+        $NativeArgs += @("--strategy-output", $StrategyOutput)
+    }
     if ($SkipVerification) { $NativeArgs += "--skip-verification" }
+    if ($Progress) { $NativeArgs += "--progress" }
     & $Native.FullName @NativeArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Native solver benchmark failed with exit code $LASTEXITCODE."

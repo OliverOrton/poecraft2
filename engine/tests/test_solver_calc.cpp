@@ -953,8 +953,7 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             }
             if (fossil_index == kNoId &&
                 action.params.type == ActionType::Fossil &&
-                action.params.fossil_indices.size() == 1 &&
-                !action.discriminating_tag_ids.empty()) {
+                action.params.fossil_indices.size() == 1) {
                 fossil_index = i;
             }
         }

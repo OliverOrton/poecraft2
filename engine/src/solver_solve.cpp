@@ -39,6 +39,10 @@ constexpr double kInfinity = std::numeric_limits<double>::infinity();
  * start would never lift off: a backup is only finite once every
  * successor is, and no such state exists initially. */
 constexpr double kValueCeiling = 1e12;
+/* Pivoted elimination becomes cubic and dominates focused endgame solves
+ * well before the old 1,024-state cutoff. Medium and large SCCs use the
+ * sparse solver below, which accepts values only after its residual check. */
+constexpr std::size_t kDensePolicyComponentLimit = 512;
 
 struct PricedOperator {
     std::uint32_t index = kNoId;
@@ -187,6 +191,7 @@ struct SolveWork::Impl {
     bool cache_pending = false;
     std::vector<std::uint64_t> policy_rows;
     bool policy_initialized = false;
+    bool policy_stable = false;
     bool policy_iteration_failed = false;
     std::uint64_t peak_policy_scratch_bytes = 0;
     std::vector<std::uint32_t> improper_policy_states;
@@ -343,6 +348,29 @@ struct SolveWork::Impl {
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)
                 .count());
+    }
+
+    double acceptable_residual() const {
+        /* Preserve the measured absolute residual, but terminate a stable
+         * policy using epsilon as a relative tolerance at V(start)'s scale.
+         * Large endgame values otherwise repeat the identical fixed policy
+         * indefinitely on last-bit double-precision noise. */
+        double scale = 1.0;
+        if (result.start_state < result.values.size()) {
+            const double start = result.values[result.start_state];
+            if (std::isfinite(start) && start < kValueCeiling) {
+                scale = std::max(1.0, std::abs(start));
+            }
+        }
+        return options.epsilon * scale;
+    }
+
+    bool optimization_converged() const {
+        if (policy_iteration_failed) {
+            return residual <= options.epsilon;
+        }
+        return policy_initialized && policy_stable &&
+               residual <= acceptable_residual();
     }
 
     void enqueue(const std::uint32_t state) {
@@ -1301,7 +1329,7 @@ struct SolveWork::Impl {
             }
 
             std::vector<double> solved(n, 0.0);
-            if (n <= 1024) {
+            if (n <= kDensePolicyComponentLimit) {
                 peak_policy_scratch_bytes = std::max(
                     peak_policy_scratch_bytes,
                     policy_scratch + n * (n + 1) * sizeof(double));
@@ -1459,10 +1487,11 @@ struct SolveWork::Impl {
         for (const std::uint32_t state : improper_policy_states) {
             in_component[state] = 1;
         }
-        double best_q = kInfinity;
-        std::uint32_t best_state = kNoId;
-        std::uint64_t best_row = std::numeric_limits<std::uint64_t>::max();
+        bool repaired = false;
         for (const std::uint32_t state : improper_policy_states) {
+            double best_q = kInfinity;
+            std::uint64_t best_row =
+                std::numeric_limits<std::uint64_t>::max();
             const StateRowSpan& span = transition_cache->state_rows.at(state);
             for (std::uint32_t i = 0; i < span.count; ++i) {
                 const std::uint64_t row_index = span.offset + i;
@@ -1514,13 +1543,19 @@ struct SolveWork::Impl {
                 const double q = sparse_row_q(row_index, work);
                 if (q < best_q - options.epsilon) {
                     best_q = q;
-                    best_state = state;
                     best_row = row_index;
                 }
             }
+            if (best_row != std::numeric_limits<std::uint64_t>::max()) {
+                /* Every selected row has a certified exit from the closed
+                 * component. Repair them together; the next fixed-policy
+                 * evaluation proves properness and ordinary Howard
+                 * improvement is still responsible for optimality. */
+                policy_rows[state] = best_row;
+                repaired = true;
+            }
         }
-        if (best_state == kNoId) return false;
-        policy_rows[best_state] = best_row;
+        if (!repaired) return false;
         improper_policy_states.clear();
         return true;
     }
@@ -1554,9 +1589,11 @@ struct SolveWork::Impl {
             }
             select_policy_rows();
             policy_initialized = true;
+            policy_stable = false;
         }
         if (!evaluate_fixed_policy()) {
             if (repair_improper_policy()) {
+                policy_stable = false;
                 ++sweeps;
                 result.diagnostics.sweeps = sweeps;
                 result.diagnostics.policy_improvement_rounds = sweeps;
@@ -1569,6 +1606,7 @@ struct SolveWork::Impl {
                 return true;
             }
             policy_iteration_failed = true;
+            policy_stable = false;
             result.diagnostics.policy_iteration_fallback = true;
             backup_active = false;
             result.diagnostics.optimization_ns += static_cast<std::uint64_t>(
@@ -1578,6 +1616,7 @@ struct SolveWork::Impl {
             return false;
         }
         const bool improved = select_policy_rows();
+        policy_stable = !improved;
         ++sweeps;
         result.diagnostics.sweeps = sweeps;
         result.diagnostics.policy_improvement_rounds = sweeps;
@@ -1586,7 +1625,7 @@ struct SolveWork::Impl {
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
-        if ((!improved && residual <= options.epsilon) ||
+        if ((policy_stable && residual <= acceptable_residual()) ||
             sweeps >= options.max_sweeps) {
             backup_active = false;
         } else {
@@ -1602,7 +1641,20 @@ struct SolveWork::Impl {
         result.diagnostics.focused_expansion = true;
         const std::uint32_t state_count = calc.state_count();
         transition_cache->state_rows.resize(state_count);
+        std::vector<double> previous_values = std::move(result.values);
         result.values.assign(state_count, 0.0);
+        /* Expanding a previously zero-valued frontier can only raise the
+         * focused lower bound. Preserve the last round's admissible values
+         * for already-known states instead of restarting every exact policy
+         * evaluation from zero. */
+        const std::size_t retained = std::min<std::size_t>(
+            previous_values.size(), result.values.size());
+        for (std::size_t state = 0; state < retained; ++state) {
+            if (std::isfinite(previous_values[state]) &&
+                previous_values[state] >= 0.0) {
+                result.values[state] = previous_values[state];
+            }
+        }
         result.expanded = expanded;
         result.expanded.resize(state_count, 0);
         result.goal_states.assign(state_count, 0);
@@ -1615,6 +1667,7 @@ struct SolveWork::Impl {
         policy_rows.clear();
         improper_policy_states.clear();
         policy_initialized = false;
+        policy_stable = false;
         policy_iteration_failed = false;
         backup_active = false;
         sweeps = 0;
@@ -1714,6 +1767,7 @@ struct SolveWork::Impl {
         policy_rows.clear();
         improper_policy_states.clear();
         policy_initialized = false;
+        policy_stable = false;
         policy_iteration_failed = false;
         backup_active = false;
         sweeps = 0;
@@ -1738,11 +1792,11 @@ struct SolveWork::Impl {
                 focused_mode = false;
                 policy_iteration_failed = false;
                 policy_initialized = false;
+                policy_stable = false;
                 return;
             }
         }
-        if (!backup_active && policy_initialized &&
-            residual <= options.epsilon) {
+        if (!backup_active && optimization_converged()) {
             finish_focused_lower_solve();
         }
     }
@@ -1902,8 +1956,8 @@ struct SolveWork::Impl {
                 continue;
             }
 
-            if (!backup_active && policy_initialized &&
-                (residual <= options.epsilon ||
+            if (!backup_active &&
+                (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {
                 phase = SolvePhase::Done;
                 break;
@@ -1917,7 +1971,7 @@ struct SolveWork::Impl {
             }
             --remaining;
             if (!backup_active &&
-                (residual <= options.epsilon ||
+                (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {
                 phase = SolvePhase::Done;
             }
@@ -2121,6 +2175,7 @@ struct SolveWork::Impl {
         }
 
         result.policy_reachable.assign(state_count, 0);
+        bool reachable_policy_complete = true;
         if (result.start_state < state_count) {
             std::deque<std::uint32_t> walk{result.start_state};
             while (!walk.empty()) {
@@ -2129,8 +2184,12 @@ struct SolveWork::Impl {
                 if (result.policy_reachable[state]) continue;
                 result.policy_reachable[state] = 1;
                 ++result.diagnostics.policy_reachable_states;
+                if (result.goal_states[state]) continue;
                 const std::uint32_t operator_index = result.policy[state];
-                if (operator_index == kNoId) continue;
+                if (operator_index == kNoId) {
+                    reachable_policy_complete = false;
+                    continue;
+                }
                 const StateRowSpan& span =
                     transition_cache->state_rows.at(state);
                 const SparseRow* selected = nullptr;
@@ -2143,7 +2202,10 @@ struct SolveWork::Impl {
                         break;
                     }
                 }
-                if (selected == nullptr) continue;
+                if (selected == nullptr) {
+                    reachable_policy_complete = false;
+                    continue;
+                }
                 for (std::uint32_t i = 0;
                      i < selected->transition_count; ++i) {
                     const std::uint32_t successor =
@@ -2157,13 +2219,28 @@ struct SolveWork::Impl {
                     const SparseChoiceGroup& group =
                         transition_cache->choices.at(
                             selected->choice_offset + i);
+                    std::uint32_t chosen = group.has_self ? state : kNoId;
+                    double chosen_value =
+                        group.has_self ? result.values[state] : kInfinity;
                     for (std::uint32_t s = 0; s < group.successor_count; ++s) {
                         const std::uint32_t successor =
                             transition_cache->choice_successors.at(
                                 group.successor_offset + s);
-                        if (!result.policy_reachable[successor]) {
-                            walk.push_back(successor);
+                        const double successor_value = result.values[successor];
+                        if (successor_value < chosen_value - options.epsilon ||
+                            (std::abs(successor_value - chosen_value) <=
+                                 options.epsilon &&
+                             successor < chosen)) {
+                            chosen = successor;
+                            chosen_value = successor_value;
                         }
+                    }
+                    /* An observation choice follows only the policy-selected
+                     * successor. Unselected unveil alternatives are not
+                     * policy-reachable and may intentionally have no action. */
+                    if (chosen != kNoId && chosen != state &&
+                        !result.policy_reachable[chosen]) {
+                        walk.push_back(chosen);
                     }
                 }
             }
@@ -2187,7 +2264,8 @@ struct SolveWork::Impl {
         result.converged = focused_exact &&
                            !result.diagnostics.state_cap_hit &&
                            !result.diagnostics.resource_cap_hit &&
-                           residual <= options.epsilon &&
+                           optimization_converged() &&
+                           reachable_policy_complete &&
                            result.start_state < state_count &&
                            result.values[result.start_state] < kValueCeiling;
         result.diagnostics.extraction_ns = static_cast<std::uint64_t>(
@@ -2673,10 +2751,10 @@ std::string serialize_solver_telemetry(
                                  ? (qualified_action_subset
                                         ? "exact_supported_priced_subset"
                                         : "exact_abstract")
-                                 : (diagnostics->resource_cap_hit
-                                        ? "incomplete_resource_cap"
-                                        : (diagnostics->state_cap_hit
-                                               ? "incomplete_state_cap"
+                                 : (diagnostics->state_cap_hit
+                                        ? "incomplete_state_cap"
+                                        : (diagnostics->resource_cap_hit
+                                               ? "incomplete_resource_cap"
                                                : "not_converged"));
         json += ",\"status\":\"" + std::string(status) + "\"";
         json += ",\"converged\":" +
@@ -2707,7 +2785,9 @@ std::string serialize_solver_telemetry(
         }
         json += "]";
         json += ",\"full_request_status\":\"";
-        if (diagnostics->resource_cap_hit) {
+        if (diagnostics->state_cap_hit) {
+            json += "incomplete_state_cap";
+        } else if (diagnostics->resource_cap_hit) {
             json += "incomplete_resource_cap";
         } else if (!result->converged) {
             json += "incomplete_solve";

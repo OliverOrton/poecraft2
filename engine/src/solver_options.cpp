@@ -674,6 +674,20 @@ const OptionKernel& CalcContext::option_kernel(
             result->terminates_almost_surely = false;
             return finish();
         }
+        const OutcomeDistribution* entry_reforge_kernel = nullptr;
+        std::uint32_t entry_reforge_action = kNoId;
+        if (option.primitive_program.size() == 1) {
+            entry_reforge_action = option.primitive_program.front();
+            const ActionDescriptor& action =
+                registry_.actions.at(entry_reforge_action);
+            if (approved_renewal_roll(action)) {
+                /* The reforge cache owns immutable shared distributions keyed
+                 * by action and preserved base. Pointer identity is therefore
+                 * an exact same-kernel certificate for a one-action renewal. */
+                entry_reforge_kernel =
+                    &outcomes(state_id, entry_reforge_action);
+            }
+        }
         std::map<std::uint32_t, AttemptKernel> retry_attempts;
         const auto retry_equivalent = [&](const std::uint32_t candidate) {
             if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
@@ -684,6 +698,14 @@ const OptionKernel& CalcContext::option_kernel(
                 if ((state(candidate).flags & lock_flag) != 0) return false;
             }
             if (candidate == state_id) return true;
+            if (entry_reforge_kernel != nullptr &&
+                action_legal(
+                    *session_, registry_.actions.at(entry_reforge_action),
+                    state(candidate)) &&
+                &outcomes(candidate, entry_reforge_action) ==
+                    entry_reforge_kernel) {
+                return true;
+            }
             auto found = retry_attempts.find(candidate);
             if (found == retry_attempts.end()) {
                 found = retry_attempts.emplace(

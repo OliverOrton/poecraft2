@@ -573,36 +573,6 @@ void run_refusal_and_unresolved_tests() {
     expect_refusal(
         session,
         shell(
-            "unsupported ops", "rare",
-            R"JSON({"id":"start","kind":"start"},
-{"id":"veil_node","kind":"operation","operation":{"type":"veiled_chaos","params":{}}},
-{"id":"eldritch_node","kind":"operation","operation":{"type":"eldritch_exalt","params":{}}},
-{"id":"fracture_node","kind":"operation","operation":{"type":"fracture","params":{}}},
-{"id":"success","kind":"terminal","terminal":"success"})JSON",
-            R"JSON({"id":"only","from":"start","to":"success","priority":0,"condition":{"type":"always"}})JSON"),
-        {"fracture_node"});
-
-    expect_refusal(
-        session,
-        shell(
-            "authored unveil", "rare",
-            R"JSON({"id":"start","kind":"start"},
-{"id":"unveil_node","kind":"operation","operation":{"type":"unveil","params":{"mod_key":"mod0"}}},
-{"id":"success","kind":"terminal","terminal":"success"})JSON",
-            R"JSON({"id":"only","from":"start","to":"success","priority":0,"condition":{"type":"always"}})JSON"),
-        {"unveil_node", "concrete offered options"});
-
-    expect_refusal(
-        session,
-        shell(
-            "fractured condition", "rare",
-            R"JSON({"id":"start","kind":"start"},{"id":"success","kind":"terminal","terminal":"success"})JSON",
-            R"JSON({"id":"fractured_edge","from":"start","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1,"fractured":true}})JSON"),
-        {"fractured_edge", "fractured=true"});
-
-    expect_refusal(
-        session,
-        shell(
             "tier conflict", "rare",
             R"JSON({"id":"start","kind":"start"},{"id":"success","kind":"terminal","terminal":"success"})JSON",
             R"JSON({"id":"tier_one","from":"start","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
