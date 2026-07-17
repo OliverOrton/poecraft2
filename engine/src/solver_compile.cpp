@@ -536,7 +536,8 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
              planner.option_kind == FixedOptionKind::ProtectedRepeat ||
-             planner.option_kind == FixedOptionKind::FracturePrepare);
+             planner.option_kind == FixedOptionKind::FracturePrepare ||
+             planner.option_kind == FixedOptionKind::ImprintRetry);
         std::uint32_t leader = state_id;
         if (!primitive_unveil && !state_local_option) {
             const std::string key =
@@ -561,7 +562,8 @@ std::string compile_policy_strategy_json(
         if (planner.kind != PlannerOperatorKind::FixedOption ||
             (planner.option_kind != FixedOptionKind::Renewal &&
              planner.option_kind != FixedOptionKind::ProtectedRepeat &&
-             planner.option_kind != FixedOptionKind::FracturePrepare)) {
+             planner.option_kind != FixedOptionKind::FracturePrepare &&
+             planner.option_kind != FixedOptionKind::ImprintRetry)) {
             continue;
         }
         const OptionKernel& kernel = calc.option_kernel(
@@ -673,6 +675,36 @@ std::string compile_policy_strategy_json(
                 ++node_count;
                 check_node_cap();
             }
+            continue;
+        }
+        if (planner.kind == PlannerOperatorKind::FixedOption &&
+            planner.option_kind == FixedOptionKind::ImprintRetry) {
+            if (planner.primitive_program.empty()) {
+                gap("imprint retry option has no attempt program");
+            }
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "\",\"kind\":\"operation\",\"expected_cost\":" +
+                    number(result.values[state_id]) +
+                    ",\"operation\":{\"type\":\"bestiary:imprint\"}}";
+            ++node_count;
+            for (std::size_t step = 0;
+                 step < planner.primitive_program.size(); ++step) {
+                json += ",{\"id\":\"" + state_node(state_id) + "_o" +
+                        std::to_string(step) +
+                        "\",\"kind\":\"operation\",\"operation\":" +
+                        operation_json(
+                            session, calc.registry().actions.at(
+                                         planner.primitive_program[step])) +
+                        "}";
+                ++node_count;
+            }
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "_imprint_route\",\"kind\":\"router\"}";
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "_restore\",\"kind\":\"operation\",\"operation\":"
+                    "{\"type\":\"bestiary:restore_imprint\"}}";
+            node_count += 2;
+            check_node_cap();
             continue;
         }
         if (planner.kind == PlannerOperatorKind::FixedOption &&
@@ -879,6 +911,37 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::Primitive &&
             calc.registry().actions[planner.primitive_action].params.type ==
                 ActionType::Unveil;
+        if (planner.kind == PlannerOperatorKind::FixedOption &&
+            planner.option_kind == FixedOptionKind::ImprintRetry) {
+            const std::string base = state_node(state_id);
+            edge(base, base + "_o0", 0, "", true);
+            for (std::size_t step = 0;
+                 step < planner.primitive_program.size(); ++step) {
+                const std::string from =
+                    base + "_o" + std::to_string(step);
+                const std::string to =
+                    step + 1 < planner.primitive_program.size()
+                        ? base + "_o" + std::to_string(step + 1)
+                        : base + "_imprint_route";
+                edge(from, to, 0, "", true);
+            }
+            const OptionKernel& kernel =
+                compiled_option_kernels.at(state_id);
+            const std::string route = base + "_imprint_route";
+            for (std::size_t i = 0; i < kernel.retry_states.size(); ++i) {
+                edge(
+                    route, base + "_restore", static_cast<int>(i),
+                    abstract_state_condition(
+                        session, layout, vocabulary,
+                        calc.state(kernel.retry_states[i])),
+                    false);
+            }
+            edge(
+                route, "router",
+                static_cast<int>(kernel.retry_states.size()), "", true);
+            edge(base + "_restore", base, 0, "", true);
+            continue;
+        }
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
              planner.option_kind == FixedOptionKind::ProtectedRepeat)) {

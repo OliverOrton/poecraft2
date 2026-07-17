@@ -1070,6 +1070,19 @@ void compile_operation(
         node.price_keys = {"base"};
         return;
     }
+    const DataImpl& data = *session.data;
+    const auto bestiary = data.bestiary_action_by_id.find(type);
+    if (bestiary != data.bestiary_action_by_id.end()) {
+        node.bestiary_action_index = bestiary->second;
+        const BestiaryActionDescriptor& descriptor =
+            data.bestiary_actions.at(bestiary->second);
+        node.action_type =
+            descriptor.operation == BestiaryOperationKind::Create
+                ? kStrategyBestiaryImprintOperation
+                : kStrategyBestiaryRestoreImprintOperation;
+        node.price_keys = descriptor.cost_keys;
+        return;
+    }
     ActionType action_type;
     if (!action_type_from_name(type, action_type)) {
         invalid("unknown operation type: " + type);
@@ -1081,7 +1094,6 @@ void compile_operation(
     const Value* params = operation.find("params");
     const Value& source =
         params != nullptr && params->type == Type::Object ? *params : operation;
-    const DataImpl& data = *session.data;
     if (action_type == ActionType::Essence) {
         std::string key = string_member(source, "essence_key");
         if (key.empty()) key = string_member(source, "essence");
@@ -1793,6 +1805,9 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
 
     RunResult result;
     result.item = strategy.start_item;
+    BestiaryCraftState bestiary_state;
+    bestiary_state.item = result.item;
+    bestiary_state.live_item_identity = 1;
     std::uint32_t node_index = strategy.start_node;
     std::uint64_t graph_steps = 0;
     bool run_missing_price = false;
@@ -1906,6 +1921,22 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 }
                 outcome.applied = true;
                 outcome.removed = removed;
+                bestiary_state.item = result.item;
+                ++bestiary_state.live_item_identity;
+                bestiary_state.checkpoint_active = false;
+                bestiary_state.checkpoint_bound_identity = 0;
+                bestiary_state.checkpoint = {};
+            } else if (
+                node.action_type == kStrategyBestiaryImprintOperation ||
+                node.action_type ==
+                    kStrategyBestiaryRestoreImprintOperation) {
+                bestiary_state.item = result.item;
+                const BestiaryActionOutcome bestiary_outcome =
+                    apply_bestiary_action(
+                        *session.data, bestiary_state,
+                        node.bestiary_action_index);
+                result.item = bestiary_state.item;
+                outcome.applied = bestiary_outcome.applied;
             } else {
                 pc_item_state rollback;
                 const bool needs_rollback =

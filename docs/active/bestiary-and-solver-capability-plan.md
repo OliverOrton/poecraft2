@@ -239,6 +239,8 @@ native build passed. B1.3 is the sole next boundary.
 
 ### B1.3 - Solver And Strategy Integration
 
+Status: complete 2026-07-17.
+
 - Register solver descriptors only for recipes with complete engine,
   calculation, legality, and pricing support.
 - Add goal-relevance and preservation metadata needed by the S8 action-space
@@ -251,6 +253,20 @@ native build passed. B1.3 is the sole next boundary.
 
 Checkpoint: selected solver-visible recipes participate in a small exact solve,
 compile into an ordinary strategy, and have no unsupported or unmatched route.
+
+Checkpoint passed: strategy JSON accepts only the two compiled Imprint action
+ids and each simulator run owns the compound checkpoint lifecycle; restart
+discards the bound snapshot. The solver exposes no raw checkpoint primitive.
+Instead, the exact `imprint_retry` S7 fixed option snapshots a magic carrier,
+runs one to three selected exact ordinary primitives, exits only on the
+complete magic-item solve goal, and maps every other outcome through explicit
+free restoration to the entry state. Its Bellman row charges one Craicic
+Chimeral, three rare beasts, and the attempt program on every retry. The policy
+compiler emits ordinary create, attempt, route, restore, and retry nodes.
+Focused native tests passed 42/42 checks; the solver/compiler layer passed
+134/134 checks, including the small exact solve and simulator execution with
+zero unsupported, unapplied, or unmatched routes. B1.4 is the sole next
+boundary.
 
 ### B1.4 - Bindings And Workspace Surfaces
 

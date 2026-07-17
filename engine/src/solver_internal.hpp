@@ -56,6 +56,7 @@ enum class FixedOptionKind : std::uint8_t {
     Renewal = 4,
     ProtectedRepeat = 5,
     FracturePrepare = 6,
+    ImprintRetry = 7,
 };
 
 /*
@@ -220,6 +221,8 @@ struct PlannerOperator {
     std::uint32_t exit_min_satisfied = 0;
     std::uint32_t carrier_goal_slot = kNoId;
     std::uint32_t conditional_action = kNoId; /* Fracture after preparation */
+    std::uint32_t bestiary_create_action = kNoId;
+    std::uint32_t bestiary_restore_action = kNoId;
     /* Sorted dependency quantities. S7.3 fixed programs execute each entry
      * exactly once; S7.4 kernels return the exact state-dependent expected
      * quantities used for pricing conditional and observed paths. */

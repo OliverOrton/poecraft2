@@ -1,69 +1,82 @@
-# Session Handoff - B1.3 Solver And Strategy Integration Is Next
+# Session Handoff - B1.4 Bindings And Workspace Surfaces Is Next
 
-Updated 2026-07-17 after B1.2. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-17 after B1.3. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.2 are complete. The only selected recipe is the checkpoint/restore
-`bestiary:imprint`; Prefix to Suffix and Suffix to Prefix remain explicit
-unsupported recipe rows with no actions.
+B1.0-B1.3 are complete. Only `bestiary:imprint` is selected, classified as
+checkpoint/restore. Prefix to Suffix and Suffix to Prefix remain explicit
+unsupported B1 recipe rows and have no action descriptors or behavior.
 
-Schema-v2 SQLite and artifact-schema-v4 data provide two descriptors with the
-approved stable ids, legality, checkpoint effects, and cost vectors. The
-economy maps Craicic Chimeral through the Beast provider and leaves the three
-rare beasts as an explicit manual price key.
+The data path is canonical SQLite schema 2 to derived artifact schema 4.
+Recipe/action descriptors preserve approved legality, checkpoint effects, and
+the exact repeated price-key vector. Craicic Chimeral resolves through the
+existing Beast provider; `beast:rare` is explicit manual-only pricing.
 
-Native `BestiaryCraftState` contains one live `pc_item_state`, a stable live
-identity, and at most one saved full-state checkpoint bound to that identity.
-`apply_bestiary_action` implements atomic creation/restoration and stable
-refusal reasons. `calculate_bestiary_action` copies the compound state and
-uses that same transition, giving deterministic action/calculation parity.
-No checkpoint was added to `pc_item_state` and no second live item exists.
+Native `BestiaryCraftState` is one live item plus an optional full-state saved
+copy bound to a stable live identity. Creation/restoration and deterministic
+calculation share one atomic transition implementation. Strategy execution
+supports the exact two action ids and keeps checkpoint state per run; restart
+discards the old item and its checkpoint.
+
+Solver support is the specific `imprint_retry` fixed option. It accepts one to
+three exact ordinary primitive actions, only for a complete magic-item goal.
+Every attempt pays the four beast keys plus program costs. Non-goal outcomes
+compile through explicit free restore and retry; goal outcomes terminate with
+the active checkpoint still bound to the successful item. Raw create/restore
+are not ordinary one-item DP primitives.
+
+Local checkpoint commits:
+
+- `f0c4461` - B1.0 authoritative Imprint contract.
+- `534dac4` - B1.1 data, price, and registry substrate.
+- `a6adfb7` - B1.2 native checkpoint state and deterministic calculation.
+- The B1.3 checkpoint commit is the immediate parent of the next session.
 
 ## Exact Next Boundary
 
-Implement **B1.3 only - Solver And Strategy Integration**:
+Implement **B1.4 only - Bindings And Workspace Surfaces**:
 
-1. Extend strategy operation compilation/execution for exactly
-   `bestiary:imprint` and `bestiary:restore_imprint`. Each simulator run owns
-   compound checkpoint state; restart discards the old bound checkpoint.
-2. Use the descriptor-provided repeated creation cost and zero restoration
-   cost. Inapplicable operations retain ordinary action-not-applied failure
-   behavior.
-3. Add one specific fixed solver option, `imprint_retry`, through the existing
-   S7 operator contract. Its user-selected ordinary action program runs from a
-   magic entry state; each attempt creates an Imprint, executes the exact
-   program, exits on the configured goal threshold, or restores the entry
-   checkpoint and retries. Do not add a generic macro language.
-4. Keep raw create/restore out of the ordinary one-item solver primitives.
-   Only the fixed option may collapse failed attempt outcomes back to the
-   exact entry state because native restore guarantees it.
-5. Compile a selected Imprint policy into ordinary strategy nodes containing
-   explicit create, attempt, route, restore, and retry operations. Prove a
-   small exact solve compiles and executes without unsupported or unmatched
-   routes.
+1. Define the public C ABI compound-state/action/calculation surface without
+   widening `pc_item_state` or pretending the checkpoint is a second item.
+   Carry stable action ids, refusal reasons, costs, checkpoint presence, and
+   success output through Python and WASM bindings.
+2. Add the selected Bestiary family to the engine-owned shared action
+   presentation used by Emulator and Calculator. Strategy Builder emits the
+   same ordinary `bestiary:imprint` and `bestiary:restore_imprint` operations
+   already accepted by the native strategy compiler.
+3. Expose the specific `imprint_retry` solver option and its complete-magic-goal
+   restriction honestly. Do not invent a generic macro editor.
+4. Rebuild release WASM because the public ABI/binding surface changes, then
+   run only the B1.4 binding/web automated checks required by the active plan.
 
-Stop after the B1.3 checkpoint. Do not add public bindings, C ABI product
-surfaces, WASM rebuilds, workspace UI, or begin B1.4. Rewrite this handoff so
-B1.4 is the sole exact next boundary.
+Stop after B1.4. Do not begin B1.5 acceptance or S8. Rewrite this handoff so
+B1.5 is the sole exact next boundary.
 
 ## Gotchas
 
-- The option pays one Craicic Chimeral and three rare beasts on every attempt;
-  restoration is free.
-- The attempt program contains existing exact ordinary solver actions only.
-- Success can leave the active checkpoint attached to the live item. Retry
-  must restore and consume it before creating the next one.
-- Simulator routers still inspect the live item only; the generated option
-  controls checkpoint lifecycle structurally and needs no generic checkpoint
-  condition language.
-- Do not expose the parked conversions or infer their behavior.
-- No routine full test suite, WASM/web rebuild, rendered review, or 10,000-run
-  verification in B1.3.
+- Simulator trace/action-distribution values for the two Bestiary operations
+  currently use internal operation codes outside `pc_action_type`; B1.4 must
+  give bindings an explicit stable presentation rather than assuming those
+  are ordinary public action enum values.
+- Refusals preserve item, checkpoint, and costs. Identical-state restore still
+  applies and consumes the checkpoint.
+- UI has no mechanic authority and must not reimplement legality or checkpoint
+  rules in TypeScript.
+- `beast:rare` may be missing until the user supplies a manual price; never
+  treat that as free.
+- Do not expose parked conversions or infer mechanics.
+- Oliver owns rendered/visual review; no screenshots or browser visual smoke.
 
-## Later Sequence
+## Validation At B1.3
 
-B1.4 carries C ABI/Python/WASM bindings and product workspace surfaces. B1.5
-is final Bestiary acceptance. S8 begins only after B1 is accepted.
+- Canonical ingest and artifact validation: passed.
+- Focused economy Beast fixture: passed.
+- Native fallback build: passed.
+- Focused Imprint action/calculation tests: 42 checks, 0 failures.
+- Solver/compiler layer: 134 checks, 0 failures. The Imprint exact policy
+  compiled and simulated with no unsupported, unapplied, or unmatched route.
+
+B1.5 remains final Bestiary acceptance. S8 follows only after B1 closes.

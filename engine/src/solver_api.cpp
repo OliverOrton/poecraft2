@@ -431,6 +431,8 @@ solver::GoalSpec parse_goal(
                 option.kind = solver::FixedOptionKind::ProtectedRepeat;
             } else if (type == "fracture_prepare") {
                 option.kind = solver::FixedOptionKind::FracturePrepare;
+            } else if (type == "imprint_retry") {
+                option.kind = solver::FixedOptionKind::ImprintRetry;
             } else {
                 throw std::runtime_error(
                     "goal: unknown fixed option type: " + type);
@@ -485,6 +487,11 @@ solver::GoalSpec parse_goal(
                 }
                 option.carrier_goal_slot =
                     static_cast<std::uint32_t>(carrier->number);
+            } else if (option.kind ==
+                       solver::FixedOptionKind::ImprintRetry) {
+                option.program_action_ids =
+                    string_array(entry, "actions", true);
+                parse_exit(entry, option);
             }
             goal.fixed_options.push_back(std::move(option));
         }

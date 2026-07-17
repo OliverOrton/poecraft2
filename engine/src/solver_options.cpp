@@ -199,6 +199,40 @@ void resolve_renewal_program(
     }
 }
 
+void resolve_imprint_program(
+    const ActionRegistry& registry,
+    const FixedOptionSpec& spec,
+    std::vector<std::uint32_t>& out) {
+    if (spec.program_action_ids.empty() ||
+        spec.program_action_ids.size() > 3) {
+        throw std::runtime_error(
+            "fixed option: imprint retry program must contain 1-3 actions");
+    }
+    for (const std::string& id : spec.program_action_ids) {
+        std::uint32_t index = kNoId;
+        const ActionDescriptor& action = require_action(registry, id, index);
+        if (action.synthetic || action.uses_companion_state ||
+            action.params.type == ActionType::Unveil ||
+            !calc_supports(action)) {
+            throw std::runtime_error(
+                "fixed option: imprint retry action is not an exact ordinary "
+                "primitive: " + id);
+        }
+        out.push_back(index);
+    }
+}
+
+std::uint32_t require_bestiary_action(
+    const SessionImpl& session,
+    const char* id) {
+    const auto found = session.data->bestiary_action_by_id.find(id);
+    if (found == session.data->bestiary_action_by_id.end()) {
+        throw std::runtime_error(
+            std::string("fixed option: missing native Bestiary action: ") + id);
+    }
+    return found->second;
+}
+
 bool option_exit_matches(
     const AbstractState& state,
     const PlannerOperator& option) {
@@ -527,6 +561,47 @@ std::vector<PlannerOperator> build_planner_operators(
             option.display_name = "Prepare and Fracture exact goal carrier";
             break;
         }
+        case FixedOptionKind::ImprintRetry: {
+            if (goal.rarity != PC_RARITY_MAGIC ||
+                spec.exit_goal_slots.size() != goal.slots.size() ||
+                spec.exit_min_satisfied != goal.required_satisfied_slots()) {
+                throw std::runtime_error(
+                    "fixed option: imprint retry exit must be the complete "
+                    "magic-item solve goal");
+            }
+            for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+                if (spec.exit_goal_slots[slot] != slot) {
+                    throw std::runtime_error(
+                        "fixed option: imprint retry must name every goal "
+                        "slot in order");
+                }
+            }
+            resolve_imprint_program(
+                registry, spec, option.primitive_program);
+            option.bestiary_create_action = require_bestiary_action(
+                session, "bestiary:imprint");
+            option.bestiary_restore_action = require_bestiary_action(
+                session, "bestiary:restore_imprint");
+            const BestiaryActionDescriptor& create =
+                session.data->bestiary_actions.at(
+                    option.bestiary_create_action);
+            const BestiaryActionDescriptor& restore =
+                session.data->bestiary_actions.at(
+                    option.bestiary_restore_action);
+            if (create.operation != BestiaryOperationKind::Create ||
+                restore.operation != BestiaryOperationKind::Restore ||
+                !restore.cost_keys.empty()) {
+                throw std::runtime_error(
+                    "fixed option: native Imprint descriptors are inconsistent");
+            }
+            option.id = "option:imprint_retry:" +
+                        join_ids(registry, option.primitive_program) +
+                        exit_suffix(spec);
+            option.display_name = "Imprint and retry " +
+                                  join_ids(registry,
+                                           option.primitive_program);
+            break;
+        }
         }
 
         if (!option_ids.insert(option.id).second) {
@@ -557,6 +632,18 @@ std::vector<PlannerOperator> build_planner_operators(
         }
         option.resource_quantities =
             aggregate_resources(registry, option.primitive_program);
+        if (option.option_kind == FixedOptionKind::ImprintRetry) {
+            std::map<std::string, double> quantities(
+                option.resource_quantities.begin(),
+                option.resource_quantities.end());
+            for (const std::string& key :
+                 session.data->bestiary_actions.at(
+                     option.bestiary_create_action).cost_keys) {
+                quantities[key] += 1.0;
+            }
+            option.resource_quantities.assign(
+                quantities.begin(), quantities.end());
+        }
         if (option.conditional_action != kNoId) {
             option.primitive_program.pop_back();
         }
@@ -584,7 +671,8 @@ const OptionKernel& CalcContext::option_kernel(
 
     if (option.option_kind == FixedOptionKind::Renewal ||
         option.option_kind == FixedOptionKind::ProtectedRepeat ||
-        option.option_kind == FixedOptionKind::FracturePrepare) {
+        option.option_kind == FixedOptionKind::FracturePrepare ||
+        option.option_kind == FixedOptionKind::ImprintRetry) {
         const auto finish = [&]() -> const OptionKernel& {
             std::sort(result->retry_states.begin(),
                       result->retry_states.end());
@@ -611,6 +699,26 @@ const OptionKernel& CalcContext::option_kernel(
             result->legal = false;
             result->terminates_almost_surely = false;
             return finish();
+        }
+        if (option.option_kind == FixedOptionKind::ImprintRetry) {
+            const AbstractState& entry = state(state_id);
+            const BestiaryActionDescriptor& create =
+                session_->data->bestiary_actions.at(
+                    option.bestiary_create_action);
+            const std::uint8_t rarity_bit =
+                entry.rarity < 8
+                    ? static_cast<std::uint8_t>(1u << entry.rarity)
+                    : 0;
+            const bool forbidden =
+                ((create.forbidden_item_flags & PC_ITEM_CORRUPTED) != 0 &&
+                 (entry.flags & kFlagCorrupted) != 0) ||
+                ((create.forbidden_item_flags & PC_ITEM_MIRRORED) != 0 &&
+                 (entry.flags & kFlagMirrored) != 0);
+            if ((create.rarity_mask & rarity_bit) == 0 || forbidden) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                return finish();
+            }
         }
         if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
             const std::uint32_t lock_flag =
@@ -720,6 +828,46 @@ const OptionKernel& CalcContext::option_kernel(
         add_scaled_resources(resources, attempt.expected_resources);
         result->expected_primitive_actions =
             attempt.expected_primitive_actions;
+
+        if (option.option_kind == FixedOptionKind::ImprintRetry) {
+            if (!attempt.choice_groups.empty() ||
+                !attempt.choice_options.empty()) {
+                result->supported = false;
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                return finish();
+            }
+            const BestiaryActionDescriptor& create =
+                session_->data->bestiary_actions.at(
+                    option.bestiary_create_action);
+            for (const std::string& price_key : create.cost_keys) {
+                resources[price_key] += 1.0;
+            }
+            result->expected_primitive_actions += 1.0;
+            std::map<std::uint32_t, double> exits;
+            double retry_probability = 0.0;
+            for (const OutcomeEntry& outcome : attempt.entries) {
+                if (is_goal_state(state(outcome.state))) {
+                    exits[outcome.state] += outcome.probability;
+                } else {
+                    exits[state_id] += outcome.probability;
+                    retry_probability += outcome.probability;
+                    result->expected_primitive_actions += outcome.probability;
+                    result->retry_states.push_back(outcome.state);
+                }
+            }
+            result->expected_resources.assign(
+                resources.begin(), resources.end());
+            for (const auto& [exit, probability] : exits) {
+                result->exits.push_back({exit, probability});
+            }
+            result->terminates_almost_surely =
+                retry_probability < 1.0 - 1e-15;
+            result->legal = result->supported &&
+                            result->terminates_almost_surely &&
+                            !result->exits.empty();
+            return finish();
+        }
 
         if (option.option_kind == FixedOptionKind::FracturePrepare) {
             const ActionDescriptor& fracture =

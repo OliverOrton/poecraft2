@@ -1,11 +1,25 @@
 #include "tests.hpp"
 
+#include <string>
+
 namespace pctest {
 int g_checks = 0;
 int g_failures = 0;
 } // namespace pctest
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::string(argv[1]) == "--bestiary-only") {
+        run_bestiary_tests();
+        std::printf("bestiary tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 2 && std::string(argv[1]) == "--solver-compile-only") {
+        run_solver_compile_tests(argv[2]);
+        std::printf("solver compile tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     run_bitset_tests();
     run_rng_tests();
     run_item_state_tests();

@@ -618,6 +618,114 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(strategy.find("_retry") != std::string::npos);
     }
 
+    /* B1.3 Imprint retry is a state-local fixed option, not a raw one-item
+     * primitive. It snapshots a valuable magic carrier, Augments once, and
+     * restores every non-goal result before the next attempt. */
+    {
+        std::uint32_t carrier_mod = kNoId;
+        std::uint32_t target_mod = kNoId;
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (!pc_bitset_test(
+                    session->normal_random_roll_mask.data(), mod) ||
+                !pc_bitset_test(
+                    session->positive_base_weight_mask.data(), mod)) {
+                continue;
+            }
+            if (session->gen_type[mod] == PC_SIDE_PREFIX &&
+                carrier_mod == kNoId) {
+                carrier_mod = mod;
+            } else if (session->gen_type[mod] == PC_SIDE_SUFFIX &&
+                       target_mod == kNoId) {
+                target_mod = mod;
+            }
+            if (carrier_mod != kNoId && target_mod != kNoId) break;
+        }
+        PC_CHECK(carrier_mod != kNoId);
+        PC_CHECK(target_mod != kNoId);
+        if (carrier_mod != kNoId && target_mod != kNoId) {
+            GoalSpec imprint_goal;
+            imprint_goal.rarity = PC_RARITY_MAGIC;
+            GoalSlot carrier;
+            carrier.group_id = session->primary_group[carrier_mod];
+            GoalSlot target;
+            target.group_id = session->primary_group[target_mod];
+            imprint_goal.slots = {carrier, target};
+            FixedOptionSpec option;
+            option.kind = FixedOptionKind::ImprintRetry;
+            option.program_action_ids = {"augment"};
+            option.exit_goal_slots = {0, 1};
+            option.exit_min_satisfied = 2;
+            imprint_goal.fixed_options.push_back(option);
+
+            CalcContext option_calc(
+                session, imprint_goal, registry, {}, false, false);
+            pc_item_state magic;
+            pc_item_clear(&magic);
+            magic.rarity = PC_RARITY_MAGIC;
+            PC_CHECK(pc_item_add_mod(
+                         &magic, PC_SIDE_PREFIX, carrier_mod,
+                         static_cast<std::uint16_t>(
+                             session->primary_group[carrier_mod]),
+                         0, nullptr) == PC_RESULT_OK);
+            const std::uint32_t state = option_calc.intern_item(magic);
+            const std::uint32_t op =
+                static_cast<std::uint32_t>(registry.actions.size());
+            const OptionKernel& kernel =
+                option_calc.option_kernel(state, op);
+            PC_CHECK(kernel.supported);
+            PC_CHECK(kernel.legal);
+            PC_CHECK(kernel.terminates_almost_surely);
+            PC_CHECK(!kernel.retry_states.empty());
+            PC_CHECK(kernel.expected_primitive_actions > 2.0);
+            const auto quantity = [&](const char* key) {
+                for (const auto& [resource, amount] :
+                     kernel.expected_resources) {
+                    if (resource == key) return amount;
+                }
+                return 0.0;
+            };
+            PC_CHECK(quantity("beast:craicic-chimeral") == 1.0);
+            PC_CHECK(quantity("beast:rare") == 3.0);
+
+            const SolveResult solved = solve(
+                option_calc, magic,
+                {{"augment", 0.1},
+                 {"beast:craicic-chimeral", 10.0},
+                 {"beast:rare", 2.0}});
+            PC_CHECK(solved.converged);
+            PC_CHECK(solved.policy[solved.start_state] == op);
+            const std::string strategy = compile_policy_strategy_json(
+                option_calc, solved, "imprint-augment-retry");
+            PC_CHECK(strategy.find("\"type\":\"bestiary:imprint\"") !=
+                     std::string::npos);
+            PC_CHECK(strategy.find(
+                         "\"type\":\"bestiary:restore_imprint\"") !=
+                     std::string::npos);
+            PC_CHECK(strategy.find("_imprint_route") != std::string::npos);
+
+            std::shared_ptr<StrategyImpl> compiled = compile_strategy_json(
+                session, strategy.data(), strategy.size());
+            const std::string economy_json =
+                "{\"version\":\"v1\",\"prices\":{\"augment\":0.1,"
+                "\"beast:craicic-chimeral\":10,\"beast:rare\":2}}";
+            std::shared_ptr<EconomyImpl> economy = load_economy_json(
+                economy_json.data(), economy_json.size());
+            SimulatorImpl simulator;
+            simulator.session = session;
+            simulator.strategy = compiled;
+            simulator.economy = economy;
+            prepare_simulator_runtime(simulator);
+            SimulationOptionsInternal simulation_options;
+            simulation_options.target_runs = 1;
+            simulation_options.seed = 17;
+            simulation_options.max_actions_per_run = 100000;
+            run_simulator_chunk(simulator, simulation_options, 1);
+            PC_CHECK(simulator.summary.success_count == 1);
+            PC_CHECK(simulator.summary.action_not_applied_count == 0);
+            PC_CHECK(simulator.summary.no_matching_edge_count == 0);
+        }
+    }
+
     /* Validate the real-artifact ProtectedRepeat vocabulary without expanding
      * the unbounded full-pool lock-plus-chaos kernel in a contract unit. The
      * performance corpus owns full reforge expansion and resource caps. */

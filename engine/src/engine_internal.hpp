@@ -853,12 +853,16 @@ struct StrategyDirectDispatchSignature {
  * the item away and continue on a fresh base (price key "base"). Outside
  * the pc_action_type range on purpose; apply_action never sees it. */
 inline constexpr int kStrategyRestartOperation = 1000;
+inline constexpr int kStrategyBestiaryImprintOperation = 1001;
+inline constexpr int kStrategyBestiaryRestoreImprintOperation = 1002;
 
 struct StrategyNode {
     std::string id;
     StrategyNodeKind kind = StrategyNodeKind::Start;
     ActionParameters action;
     int action_type = -1;
+    std::uint32_t bestiary_action_index =
+        std::numeric_limits<std::uint32_t>::max();
     std::vector<std::string> price_keys;
     int terminal_kind = -1;
     std::string reason;
