@@ -16,7 +16,7 @@
 
 /*
  * Solver S2: the calculation engine's exact deterministic and single-slot
- * transition paths (docs/crafting-solver-plan.md, Calculation Engine).
+ * transition paths (docs/solver/crafting-solver-plan.md, Calculation Engine).
  *
  * Exactness strategy: materialize one representative concrete item for the
  * abstract state, then either apply the engine action directly (RNG-free

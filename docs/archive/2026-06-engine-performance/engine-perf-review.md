@@ -1,5 +1,8 @@
 # Engine Performance Review — Follow-up (current working tree)
 
+> **Archived 2026-07-17.** Historical follow-up audit from 2026-06-30. It does
+> not describe the current working tree and does not own sequencing.
+
 **Date:** 2026-06-30 · **Reviewer:** Claude (read-only) · **Audience:** codex (decide + implement)
 
 **Scope:** Same workload as the original audit — 100k-run chaos/alchemy/reforge sims on a
@@ -27,16 +30,16 @@ Verified by reading the current source. The original work-order items map as fol
 
 | Orig item | Status | Evidence (current source) |
 |---|---|---|
-| **P1** guard per-step trace entry + 1.1 KB item copy | ✅ done | Trace entry build now wrapped in `if (trace != nullptr && options.max_trace_entries != 0)` at [simulator.cpp:702](engine/src/simulator.cpp:702), [:737](engine/src/simulator.cpp:737), [:824](engine/src/simulator.cpp:824). `entry.item = result.item` only inside the guard. |
-| **P2** skip `SimulationExample` build when caps full | ✅ done | Build gated by `retain_success || retain_failure` at [simulator.cpp:1095-1117](engine/src/simulator.cpp:1095); `example.item = result.item` only inside ([:1111](engine/src/simulator.cpp:1111)). |
-| **P3** reserve pool vectors; drop dead zero-fills | ✅ done | `pool.entries.reserve(candidate_count)` / `prefix_sums.reserve` at [session_builder.cpp:1263](engine/src/session_builder.cpp:1263). Candidate scratch is now a direct copy-assign (`candidate = session.normal_random_roll_mask`, [:1158](engine/src/session_builder.cpp:1158)) with no preceding `assign(words,0)`. |
-| **P4.1** flatten `group_masks` from hash map → vector | ✅ done | `session.group_masks` is now indexed by dense group id: `if (group < session.group_masks.size()) … group_masks[group]` ([actions_basic.cpp:225](engine/src/actions_basic.cpp:225), [session_builder.cpp:151](engine/src/session_builder.cpp:151)). Same for `implicit_tag_masks`. No `unordered_map` lookup in the per-pick block-mask build. |
-| **P4.2 / P5** incremental refill (avoid full pool rebuild per pick) | ✅ done (different design) | Two mechanisms: (a) a **refill pool cache** keyed on the group-block mask + signature + side + influence + metamod hints (`RefillPoolCacheKey`, [engine_internal.hpp:397](engine/src/engine_internal.hpp:397); lookup at [session_builder.cpp:1088-1119](engine/src/session_builder.cpp:1088)), with a single-entry `last_refill_pool` fast path; (b) a **rejection sampler over a once-built superset** (`add_random_mod_from_superset`, [actions_basic.cpp:352](engine/src/actions_basic.cpp:352)), used for headless fills of 2+ mods. So a 4–6 mod chaos/alch builds the weighted pool ~**once** (cache-warm) instead of 4–6×. |
-| **P6** structural pre-key so a hit skips candidate build | ◑ partial / largely moot | The refill cache hit at [:1102-1118](engine/src/session_builder.cpp:1102) returns **before** the candidate-mask passes for the refill loop. The *first* pool build per signature still builds the full mask (acceptable — once per run, then cached). The full P6 "cheap structural key for the general `pool_cache`" was not done, but the refill cache covers the hot loop. |
-| **D1** elide double item copy per action | ✅ done for hot path | Single rollback snapshot, only when needed: `action_needs_rollback(type)` returns **false** for Transmute/Alteration/Alchemy/Chaos ([simulator.cpp:633-646](engine/src/simulator.cpp:633)); no copy-back on success. The old `working` + copy-back pair is gone. |
+| **P1** guard per-step trace entry + 1.1 KB item copy | ✅ done | Trace entry build now wrapped in `if (trace != nullptr && options.max_trace_entries != 0)` at [simulator.cpp:702](../../../engine/src/simulator.cpp:702), [:737](../../../engine/src/simulator.cpp:737), [:824](../../../engine/src/simulator.cpp:824). `entry.item = result.item` only inside the guard. |
+| **P2** skip `SimulationExample` build when caps full | ✅ done | Build gated by `retain_success || retain_failure` at [simulator.cpp:1095-1117](../../../engine/src/simulator.cpp:1095); `example.item = result.item` only inside ([:1111](../../../engine/src/simulator.cpp:1111)). |
+| **P3** reserve pool vectors; drop dead zero-fills | ✅ done | `pool.entries.reserve(candidate_count)` / `prefix_sums.reserve` at [session_builder.cpp:1263](../../../engine/src/session_builder.cpp:1263). Candidate scratch is now a direct copy-assign (`candidate = session.normal_random_roll_mask`, [:1158](../../../engine/src/session_builder.cpp:1158)) with no preceding `assign(words,0)`. |
+| **P4.1** flatten `group_masks` from hash map → vector | ✅ done | `session.group_masks` is now indexed by dense group id: `if (group < session.group_masks.size()) … group_masks[group]` ([actions_basic.cpp:225](../../../engine/src/actions_basic.cpp:225), [session_builder.cpp:151](../../../engine/src/session_builder.cpp:151)). Same for `implicit_tag_masks`. No `unordered_map` lookup in the per-pick block-mask build. |
+| **P4.2 / P5** incremental refill (avoid full pool rebuild per pick) | ✅ done (different design) | Two mechanisms: (a) a **refill pool cache** keyed on the group-block mask + signature + side + influence + metamod hints (`RefillPoolCacheKey`, [engine_internal.hpp:397](../../../engine/src/engine_internal.hpp:397); lookup at [session_builder.cpp:1088-1119](../../../engine/src/session_builder.cpp:1088)), with a single-entry `last_refill_pool` fast path; (b) a **rejection sampler over a once-built superset** (`add_random_mod_from_superset`, [actions_basic.cpp:352](../../../engine/src/actions_basic.cpp:352)), used for headless fills of 2+ mods. So a 4–6 mod chaos/alch builds the weighted pool ~**once** (cache-warm) instead of 4–6×. |
+| **P6** structural pre-key so a hit skips candidate build | ◑ partial / largely moot | The refill cache hit at [:1102-1118](../../../engine/src/session_builder.cpp:1102) returns **before** the candidate-mask passes for the refill loop. The *first* pool build per signature still builds the full mask (acceptable — once per run, then cached). The full P6 "cheap structural key for the general `pool_cache`" was not done, but the refill cache covers the hot loop. |
+| **D1** elide double item copy per action | ✅ done for hot path | Single rollback snapshot, only when needed: `action_needs_rollback(type)` returns **false** for Transmute/Alteration/Alchemy/Chaos ([simulator.cpp:633-646](../../../engine/src/simulator.cpp:633)); no copy-back on success. The old `working` + copy-back pair is gone. |
 
 The original §4 non-issues still hold; in particular `active_spawn_weight`'s per-call
-`unordered_set` rebuild ([actions_basic.cpp:111-114](engine/src/actions_basic.cpp:111)) is still
+`unordered_set` rebuild ([actions_basic.cpp:111-114](../../../engine/src/actions_basic.cpp:111)) is still
 there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloodstained call it).
 
 ---
@@ -47,18 +50,18 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
 - The original Constraint 0.1 required a **seeded golden-sequence test before any draw-order
   change**. That change has now shipped (rejection sampler) and **the test still does not
   exist** — `grep` for golden/seeded-sequence/`next_below` assertions in
-  [test_actions.cpp](engine/tests/test_actions.cpp) finds nothing. A draw-order regression
+  [test_actions.cpp](../../../engine/tests/test_actions.cpp) finds nothing. A draw-order regression
   would pass CI silently.
 - Two code paths now consume RNG differently for the *same* item+seed:
-  - **Simulator** (`capture_action_trace = false`, set at [simulator.cpp:1037](engine/src/simulator.cpp:1037))
+  - **Simulator** (`capture_action_trace = false`, set at [simulator.cpp:1037](../../../engine/src/simulator.cpp:1037))
     → rejection sampler (`add_random_mod_from_superset`).
   - **Emulator / single actions** (`capture_action_trace = true`, the struct default at
-    [engine_internal.hpp:530](engine/src/engine_internal.hpp:530)) → exact per-pick
+    [engine_internal.hpp:530](../../../engine/src/engine_internal.hpp:530)) → exact per-pick
     `add_random_mod` (which, with the incremental block-mask hint, reproduces the legacy
     filtered pool).
   By construction the rejection sampler is an **unbiased** draw from the same weighted
   distribution (accept iff side+group+metamod filters pass; bounded fallback to the exact
-  sampler at [actions_basic.cpp:425](engine/src/actions_basic.cpp:425)), so **aggregate
+  sampler at [actions_basic.cpp:425](../../../engine/src/actions_basic.cpp:425)), so **aggregate
   probabilities are unaffected** — but a given seed no longer produces the same item in the
   emulator and the simulator.
 - **Recommendation for codex:** before any further sampler change, land (a) a **golden seeded
@@ -67,14 +70,14 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
   unbiased rather than asserting it. This unblocks the Fenwick option (F2) safely.
 
 ### F2 — Rejection efficiency degrades late in a fill, and is unmeasured · **impact: MEDIUM** · risk: low
-- `add_random_mod_from_superset` retries up to `max_rejections = 4` (5 attempts, [actions_basic.cpp:463](engine/src/actions_basic.cpp:463)) then falls back to `add_random_mod`
-  ([:425](engine/src/actions_basic.cpp:425)), which calls `get_weighted_pool` with the *current*
+- `add_random_mod_from_superset` retries up to `max_rejections = 4` (5 attempts, [actions_basic.cpp:463](../../../engine/src/actions_basic.cpp:463)) then falls back to `add_random_mod`
+  ([:425](../../../engine/src/actions_basic.cpp:425)), which calls `get_weighted_pool` with the *current*
   block mask → a refill-cache **miss** (group mask changed) → a full candidate rebuild for that
   pick. Acceptance probability falls as groups fill and a side closes (5th/6th mod), so the tail
   of each reforge is where rejections + fallback rebuilds concentrate.
 - For a body armour (hundreds of candidates, few blocked groups) this is likely cheap, **but
   there is no counter for it** — the perf block tracks `candidate_build_ns` / `sampling_ns` /
-  cache hits ([engine_internal.hpp:522-527](engine/src/engine_internal.hpp:522)) but **not**
+  cache hits ([engine_internal.hpp:522-527](../../../engine/src/engine_internal.hpp:522)) but **not**
   rejection attempts or superset-fallback count.
 - **Recommendation:** add a `rejection_attempts` / `superset_fallbacks` counter, measure on the
   chaos benchmark, and only then decide whether the original P5 **Fenwick/segment-tree
@@ -83,10 +86,10 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
 
 ### F3 — Dead metamod re-check inside the rejection loop · **impact: LOW (free)** · risk: none
 - The superset is built with `block_attack`/`block_caster` already applied: `get_weighted_pool`
-  runs `apply_metamod_pool_blocks(...)` at [session_builder.cpp:1212](engine/src/session_builder.cpp:1212)
+  runs `apply_metamod_pool_blocks(...)` at [session_builder.cpp:1212](../../../engine/src/session_builder.cpp:1212)
   using `session.implicit_tag_masks["attack"/"caster"]`. The rejection loop's `metamod_allowed`
-  check ([actions_basic.cpp:395-401](engine/src/actions_basic.cpp:395)) uses the **same** masks
-  via its `tag_mask` lambda ([:360-374](engine/src/actions_basic.cpp:360)). So any metamod-blocked
+  check ([actions_basic.cpp:395-401](../../../engine/src/actions_basic.cpp:395)) uses the **same** masks
+  via its `tag_mask` lambda ([:360-374](../../../engine/src/actions_basic.cpp:360)). So any metamod-blocked
   mod is already absent from the superset → `metamod_allowed` can never reject → the check (and
   the two `tag_mask` lookups per fill) is **dead work**.
 - **Recommendation:** drop the `metamod_allowed` term and the `attack_mask`/`caster_mask` setup
@@ -96,19 +99,19 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
 
 ### F4 — Per-reforge fixed overhead · **impact: LOW** · risk: very low
 - `build_refill_group_block_mask` does `block_mask.assign(session.words, 0)` every reforge
-  ([actions_basic.cpp:240](engine/src/actions_basic.cpp:240)) — a full-width zero-fill even when
+  ([actions_basic.cpp:240](../../../engine/src/actions_basic.cpp:240)) — a full-width zero-fill even when
   nothing is preserved (the common chaos case: no fractured/locked slots ⇒ the loop ORs nothing).
   Similarly `collect_preserved` + `restore_slots` clear and rebuild both sides each reforge
-  ([:577-578](engine/src/actions_basic.cpp:577)).
+  ([:577-578](../../../engine/src/actions_basic.cpp:577)).
 - These are O(words) / O(slots), tiny next to a pool build, but they're paid once per *run*.
   Low ROI; only worth touching if F2's measurement shows per-reforge fixed cost is material.
 
 ### F5 — Strategy-graph traversal is unprofiled and uses linear scans · **impact: LOW–MEDIUM, data-dependent** · risk: low
 - The original audit only covered mod-picking. The *other* half of per-run cost is the graph
   walk: every step calls `select_edge` → `evaluate_condition` for each edge until one matches
-  ([simulator.cpp:579-592](engine/src/simulator.cpp:579)). `HasModGroup`/`HasModFamily` are
-  linear scans over occupied slots × group offsets (`has_group` [:471](engine/src/simulator.cpp:471),
-  `has_family` [:490](engine/src/simulator.cpp:490)).
+  ([simulator.cpp:579-592](../../../engine/src/simulator.cpp:579)). `HasModGroup`/`HasModFamily` are
+  linear scans over occupied slots × group offsets (`has_group` [:471](../../../engine/src/simulator.cpp:471),
+  `has_family` [:490](../../../engine/src/simulator.cpp:490)).
 - For a simple chaos-spam strategy this is negligible (few edges, `Always` conditions). For a
   realistic editor strategy (many nodes, `All`/`Any`/`AtLeast` composites, repeated `has_mod_group`
   checks) it runs every step of every run and can rival mod-picking.
@@ -117,10 +120,10 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
   per-item occupied-group bitset so `has_group` is an O(1) bit test. Defer until measured.
 
 ### F6 — `pc_item_state` is still ~1.1 KB, ~94% cold (orig D2) · **impact: LOW now** · risk: ABI
-- Layout unchanged ([item_state.h:58-94](engine/include/poecraft/item_state.h:58)): `rolls[8]`
+- Layout unchanged ([item_state.h:58-94](../../../engine/include/poecraft/item_state.h:58)): `rolls[8]`
   per slot, `implicits[8]`, `enchantments[4]`, sockets — none written on the chaos/alch path.
   Now that P1/P2/D1 removed most discarded copies, the main remaining copies are the **per-run
-  start-item copy** (`result.item = strategy.start_item`, [simulator.cpp:689](engine/src/simulator.cpp:689))
+  start-item copy** (`result.item = strategy.start_item`, [simulator.cpp:689](../../../engine/src/simulator.cpp:689))
   and the rollback snapshot for non-reforge actions. Slimming the struct (split a lean hot state
   from the cold `rolls`/sockets tail) would roughly halve those.
 - Changes the ABI and `pc_data_check_capacities` contract → re-validate Python/WASM/UI readers.
@@ -133,13 +136,13 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
 - **Refill cache ↔ pool cache pointer coupling.** `refill_pool_cache` stores raw
   `const WeightedPool*` into `pool_cache`'s mapped values. `std::unordered_map` does not
   invalidate element pointers on insert, and the overflow path clears **both** together
-  ([session_builder.cpp:1324-1329](engine/src/session_builder.cpp:1324)) while the refill-only
-  overflow ([:1122-1126](engine/src/session_builder.cpp:1122)) leaves pool_cache intact. Safe.
+  ([session_builder.cpp:1324-1329](../../../engine/src/session_builder.cpp:1324)) while the refill-only
+  overflow ([:1122-1126](../../../engine/src/session_builder.cpp:1122)) leaves pool_cache intact. Safe.
   (Worth a comment so a future edit doesn't clear `pool_cache` alone.)
 - **`intern_item_tag_signature` per `get_weighted_pool` call** is an array lookup that returns
   immediately for the common (non-influenced) item: `signature_by_influence_bits[bits]`
-  ([session_builder.cpp:1042-1043](engine/src/session_builder.cpp:1042)). Not a hotspot.
-- **`kMaxPoolCacheEntries = 4096`** ([:29](engine/src/session_builder.cpp:29)) is far above the
+  ([session_builder.cpp:1042-1043](../../../engine/src/session_builder.cpp:1042)). Not a hotspot.
+- **`kMaxPoolCacheEntries = 4096`** ([:29](../../../engine/src/session_builder.cpp:29)) is far above the
   handful of distinct keys a single-action workload generates; eviction never triggers here.
 
 ---
@@ -147,9 +150,9 @@ there but remains **off** the chaos/alch/reforge path (only unveil/eldritch/bloo
 ## D. Measurement & build state (read before benchmarking)
 
 - **Counters are reachable:** `pc_action_context_perf_timing_set` + a stats query
-  ([api.cpp:1281-1308](engine/src/api.cpp:1281)) expose cache hits/misses, `candidate_build_ns`,
+  ([api.cpp:1281-1308](../../../engine/src/api.cpp:1281)) expose cache hits/misses, `candidate_build_ns`,
   `weighted_pool_build_ns`, `sampling_ns`. Enable on a chaos/reforge run to size each item.
-- **Harness exists:** [`apps/web/test/performance-benchmark.ts`](apps/web/test/performance-benchmark.ts)
+- **Harness exists:** [`apps/web/test/performance-benchmark.ts`](../../../apps/web/test/performance-benchmark.ts)
   (chaos on BodyInt17, 100k runs, env-configurable), plus `tools/benchmark_engine.py` and
   `tools/benchmark_wasm_module.mjs`.
 - **Build-state caveat:** these engine `.cpp` changes are uncommitted and **no `.wasm` artifact is
@@ -209,12 +212,12 @@ of the ~346 ns/action). If you want a real mod-pool speedup, target the sampler 
 ## §G — O(1) alias-table sampling cached with the pool · **impact: MEDIUM–HIGH (the real lever)** · risk: medium (determinism)
 - Today each pick is `rng.next_below(total)` + `std::lower_bound` over `prefix_sums` — **O(log n)**
   with a cache-unfriendly binary search over hundreds–thousands of entries
-  ([actions_basic.cpp:309-312](engine/src/actions_basic.cpp:309), and the superset variant
-  [:377-381](engine/src/actions_basic.cpp:377)). The rejection-superset path makes this *worse*
+  ([actions_basic.cpp:309-312](../../../engine/src/actions_basic.cpp:309), and the superset variant
+  [:377-381](../../../engine/src/actions_basic.cpp:377)). The rejection-superset path makes this *worse*
   per draw: it searches the **larger unfiltered** superset array and may draw several times
   (rejections) per accepted mod.
 - **Fix:** add a **Walker/Vose alias table** to `WeightedPool` (built once in `get_weighted_pool`
-  alongside `entries`/`prefix_sums`, [session_builder.cpp:1260-1313](engine/src/session_builder.cpp:1260)).
+  alongside `entries`/`prefix_sums`, [session_builder.cpp:1260-1313](../../../engine/src/session_builder.cpp:1260)).
   Each draw becomes **O(1)**: one rng for the bin, one for the coin. Because the pool is cached at
   99% hit, the table is built ~once and reused for all 100k runs — it fits the existing cache
   architecture exactly. Expect a meaningful cut to the ~280 ns/action sampling component.
@@ -224,13 +227,13 @@ of the ~346 ns/action). If you want a real mod-pool speedup, target the sampler 
 - **Bonus measurement:** since pool builds are now known-cheap (1.1 µs) and rare (1% miss), it is
   worth re-testing whether the **rejection-superset is still a net win** vs. sampling the exact
   (smaller) per-pick pool with an alias table. Add a `rejection_attempts` counter
-  ([engine_internal.hpp:522](engine/src/engine_internal.hpp:522) area) and compare.
+  ([engine_internal.hpp:522](../../../engine/src/engine_internal.hpp:522) area) and compare.
 
 ## §H — The emulator / `apply_batch` / direct-action path never gets the fast sampler · **impact: MEDIUM (UX/tools), HIGH clarity** · risk: low
 - The rejection-superset fast path is gated on `!context.capture_action_trace`
-  ([actions_basic.cpp:446](engine/src/actions_basic.cpp:446)), and `capture_action_trace`
-  **defaults true** ([engine_internal.hpp:530](engine/src/engine_internal.hpp:530)). Only the
-  *simulator* flips it false ([simulator.cpp:1037](engine/src/simulator.cpp:1037)). So every
+  ([actions_basic.cpp:446](../../../engine/src/actions_basic.cpp:446)), and `capture_action_trace`
+  **defaults true** ([engine_internal.hpp:530](../../../engine/src/engine_internal.hpp:530)). Only the
+  *simulator* flips it false ([simulator.cpp:1037](../../../engine/src/simulator.cpp:1037)). So every
   emulator action, Python `apply_batch`, and debug-pool call runs the **slow per-pick
   `add_random_mod`** path. Measured: ~9× slower per action than the sim (also inflated by ctypes
   marshalling, but the gating is real).
@@ -246,12 +249,12 @@ of the ~346 ns/action). If you want a real mod-pool speedup, target the sampler 
 
 | Site | When | Allocates? |
 |---|---|---|
-| `collect_preserved` → `vector<KeptSlot>` ([actions_basic.cpp:536](engine/src/actions_basic.cpp:536)) | per reforge | No (empty unless fractured/locked present) |
+| `collect_preserved` → `vector<KeptSlot>` ([actions_basic.cpp:536](../../../engine/src/actions_basic.cpp:536)) | per reforge | No (empty unless fractured/locked present) |
 | `candidate_mask_scratch` / `block_mask_scratch` / `empty_group_mask` | per pool build / per reforge | No after warmup (context-owned, `.assign` reuses capacity) |
 | `PoolCacheLookup` / `RefillPoolCacheLookup` | every lookup | No (pointer-based, transparent keys) |
 | `pool.entries` + `pool.prefix_sums` (reserved) | **miss only (~1%)** | Yes — but reserved to exact size, then cached |
 | `PoolCacheKey.candidate_mask` / `RefillPoolCacheKey.group_block_mask` copy | **miss only (~1%)** | Yes — full bitset copy into the key on insert |
-| `PoolBuildRequest request = base_request` ([:295](engine/src/actions_basic.cpp:295), [:452](engine/src/actions_basic.cpp:452)) | per pick / per reforge | No for chaos (`fossil_indices` empty); **yes for fossil** |
+| `PoolBuildRequest request = base_request` ([:295](../../../engine/src/actions_basic.cpp:295), [:452](../../../engine/src/actions_basic.cpp:452)) | per pick / per reforge | No for chaos (`fossil_indices` empty); **yes for fossil** |
 | `pick_weighted_id` `candidates` + `active_spawn_weight` `unordered_set` | unveil/eldritch/bloodstained only | Yes — **off the chaos path** |
 
 Only the 1%-miss rows and the off-path rows allocate. If fossil reforges become hot, hoist the

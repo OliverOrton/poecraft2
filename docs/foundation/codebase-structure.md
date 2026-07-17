@@ -1,11 +1,14 @@
 # Codebase Structure
 
+**Status: stable repository and layer-ownership reference.** The live tree and
+public headers remain authoritative for exact symbols.
+
 ## Purpose
 
 This document records layer ownership and the repository shape established by
 the implemented vertical slice. It is an architectural guide, not an exact file
 inventory or roadmap; the live tree and public headers are authoritative for
-current symbols, and [HANDOFF](../HANDOFF.md) owns next-work sequencing.
+current symbols, and [HANDOFF](../../HANDOFF.md) owns next-work sequencing.
 
 The project stays split into clear layers:
 
@@ -105,7 +108,7 @@ Path of Exile OAuth 2.1
 
 Use shared TypeScript contracts for resource schemas and API payloads. Path of Exile authentication, account sync, publishing, discovery, and social features belong in the backend; crafting simulation remains in the browser/native engine initially.
 
-See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
+See [accounts-publishing-and-discovery.md](../future/accounts-publishing-and-discovery.md).
 
 ### Frontend State
 
@@ -197,16 +200,17 @@ Implemented baseline layout (verify additions against the live tree):
 poecraft2/
   README.md
   docs/
-    accounts-publishing-and-discovery.md
-    architecture-plan.md
-    codebase-structure.md
-    data-shapes-and-ingest.md
-    desktop-workspace-ui.md
-    engine-bitsets.md
+    README.md
+    direction.md
     implementation-plan.md
-    item-state-flow.md
-    strategy-editor-ui.md
-    weight-calculation-flow.md
+    active/
+    foundation/
+    engine/
+    solver/
+    product/
+    economy/
+    future/
+    archive/
 
   data/
     raw/
@@ -405,9 +409,9 @@ Responsibilities:
 
 The web app should not reimplement mod pool rules. If it needs pool details, it asks the engine for debug data.
 
-The strategy editor should be a Blueprint-style graph UI backed by deterministic simulator semantics. See [strategy-editor-ui.md](strategy-editor-ui.md).
+The strategy editor should be a Blueprint-style graph UI backed by deterministic simulator semantics. See [strategy-editor-ui.md](../product/strategy-editor-ui.md).
 
-The workspace should support multiple Emulator/Simulator/Strategy Builder tabs, resizable splits, a Stash tab, manual resource saves, and layout restoration. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+The workspace should support multiple Emulator/Simulator/Strategy Builder tabs, resizable splits, a Stash tab, manual resource saves, and layout restoration. See [desktop-workspace-ui.md](../product/desktop-workspace-ui.md).
 
 ### `apps/api` (Later Phase)
 

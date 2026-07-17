@@ -1,5 +1,8 @@
 # Desktop Workspace UI
 
+**Status: implemented product reference with explicitly marked later work.** It
+does not own current sequencing.
+
 ## Product Shape
 
 The app has four core areas:
@@ -307,7 +310,7 @@ Every cost surface reads the active economy and reacts live: Emulator
 spend counters, Simulator summaries and materials lists, solver costs and
 strategy-board annotations. Solver re-costing after a price change is
 cheap by design — transition caches are price-independent
-(see [crafting-solver-plan.md](crafting-solver-plan.md)) — so a price edit
+(see [crafting-solver-plan.md](../solver/crafting-solver-plan.md)) — so a price edit
 updates cost displays without recomputing distributions.
 
 ## Background Work

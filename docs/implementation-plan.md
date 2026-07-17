@@ -1,6 +1,11 @@
 # Implementation Plan
 
-Modifier vocabulary and action-selection semantics in this plan defer to [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md).
+**Status: current portfolio roadmap.** `HANDOFF.md` and the active plan own the
+exact next implementation boundary; completed phase detail remains here as
+historical context.
+
+Modifier vocabulary and action-selection semantics in this plan defer to
+[mod-data-and-pool-semantics.md](engine/mod-data-and-pool-semantics.md).
 
 ## Purpose
 
@@ -936,7 +941,7 @@ measurement, not an intermediate test-suite gate.
 ## B1 Bestiary And Solver S8 (Active / Next)
 
 The authoritative execution plan is
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md).
 B1 carries an Oliver-selected Bestiary recipe set through canonical identities
 and prices, native actions, exact calculation, strategy execution, solver
 descriptors where appropriate, Python/WASM, and shared workspace surfaces.
@@ -951,7 +956,7 @@ Oliver accepts the S8 one-item result.
 ## Parallel Track E: Economy Ingest And League Switching (Complete)
 
 The complete economy subsystem is specified in
-[economy-ingest-plan.md](economy-ingest-plan.md). It is a parallel
+[economy-ingest-plan.md](economy/economy-ingest-plan.md). It is a parallel
 workspace-fluency track, not a continuation of the original RePoE phases and
 not a reason to mix volatile league prices into `data/sqlite/poecraft.db`.
 
@@ -967,7 +972,7 @@ tooling are present, and production-sized snapshots load through native,
 Python, and WASM. The live acceptance smoke completed all six provider leagues
 then available. Operational deployment remains an external configuration step:
 provision the two R2 buckets/custom domain and set the secrets in
-[economy-deployment.md](economy-deployment.md).
+[economy-deployment.md](economy/economy-deployment.md).
 
 ## Phase 14: Performance And Public-Engine Readiness
 
@@ -1124,8 +1129,8 @@ Acceptance gate:
 
 Goal: add ML tooling after simulator correctness and throughput are stable.
 
-Before any learned model, the exact DP crafting solver
-([crafting-solver-plan.md](crafting-solver-plan.md), phases S1-S6) must
+Before any learned model, the exact one-item DP crafting solver
+([crafting-solver-plan.md](solver/crafting-solver-plan.md), phases S1-S8) must
 exist: it computes optimal strategies from known transition
 probabilities, and its logged (state, value, action) corpus is the
 training data and evaluation baseline for everything in this phase.
@@ -1163,7 +1168,8 @@ focused recombination fixtures
 ```
 
 Use the existing recombinator architecture notes in
-`architecture-plan.md`, `data-shapes-and-ingest.md`, and `engine-bitsets.md` as
+`foundation/architecture-plan.md`, `engine/data-shapes-and-ingest.md`, and
+`engine/engine-bitsets.md` as
 the starting architecture. When this phase begins, Oliver must pin the
 supported PoE1 mechanic rules and focused fixtures; agents must not research,
 guess, or infer recombination behavior from ordinary one-item rolling.
@@ -1171,8 +1177,9 @@ guess, or infer recombination behavior from ordinary one-item rolling.
 The solver/editor side of recombinators — the spec-pyramid model,
 recomb/feeder strategy blocks, recycling wires, and the pyramid
 auto-planner — is specified in
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md) (solver
-recombinator phases R1-R2) and [strategy-editor-ui.md](strategy-editor-ui.md). This
+[solver-mechanic-extensions.md](future/solver-mechanic-extensions.md) (solver
+recombinator phases R1-R2) and
+[strategy-editor-ui.md](product/strategy-editor-ui.md). This
 phase provides the engine substrate those phases consume; the exact
 outcome enumerator here and recombinator phase R1 are the same effort viewed
 from the engine and solver sides.
@@ -1187,7 +1194,7 @@ Acceptance gate:
 ## Immediate Next Task
 
 Implement **B1.0 only** from
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md):
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md):
 obtain Oliver's selected Bestiary recipe list and pin the exact legality,
 outcome, state-effect, price-input, output-count, and product-surface contract
 for every row. Do not implement or research mechanic behavior before that

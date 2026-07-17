@@ -1,5 +1,8 @@
 # Path of Exile Crafting Simulator Architecture Plan
 
+**Status: stable architecture reference.** This document does not own current
+sequencing; see [HANDOFF](../../HANDOFF.md).
+
 ## Goals
 
 1. Build a fast Path of Exile 1 crafting simulator suitable for public use.
@@ -41,11 +44,11 @@ The public app should expose two main crafting workflows:
 - Emulator: user performs crafting operations one by one against a live item.
 - Strategy simulator: user builds or loads a strategy graph and runs one or many simulations.
 
-The strategy editor should use a Blueprint-style visual graph. Operation nodes mutate the item, and guarded edges decide the next state based on item/simulation conditions. The graph should compile down to deterministic simulator semantics similar to the old `Step` runner rather than becoming a general-purpose visual programming language. See [strategy-editor-ui.md](strategy-editor-ui.md).
+The strategy editor should use a Blueprint-style visual graph. Operation nodes mutate the item, and guarded edges decide the next state based on item/simulation conditions. The graph should compile down to deterministic simulator semantics similar to the old `Step` runner rather than becoming a general-purpose visual programming language. See [strategy-editor-ui.md](../product/strategy-editor-ui.md).
 
-Emulator, Simulator, Strategy Builder, and Stash should live inside a desktop-like workspace. Users can open multiple items/strategies in tab groups and resizable splits. Item and strategy content saves manually; layout restoration is only a UI preference. See [desktop-workspace-ui.md](desktop-workspace-ui.md).
+Emulator, Simulator, Strategy Builder, and Stash should live inside a desktop-like workspace. Users can open multiple items/strategies in tab groups and resizable splits. Item and strategy content saves manually; layout restoration is only a UI preference. See [desktop-workspace-ui.md](../product/desktop-workspace-ui.md).
 
-Saved resources should use stable IDs/schema versions from the beginning. Account login and Stash sync may be added after the local app is stable. Public publishing waits until the intended launch mechanics are implemented, native/Python/WASM behavior is validated, and representative browser simulation workloads pass the performance/readiness gate. See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
+Saved resources should use stable IDs/schema versions from the beginning. Account login and Stash sync may be added after the local app is stable. Public publishing waits until the intended launch mechanics are implemented, native/Python/WASM behavior is validated, and representative browser simulation workloads pass the performance/readiness gate. See [accounts-publishing-and-discovery.md](../future/accounts-publishing-and-discovery.md).
 
 ## Engine
 
@@ -97,7 +100,7 @@ Each generated artifact should carry version metadata:
 
 ## Runtime Data Loading
 
-The authoritative definitions of mod rows, tag channels, groups, families, session universes, and action candidate sets are in [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). This architecture document uses those terms without redefining them.
+The authoritative definitions of mod rows, tag channels, groups, families, session universes, and action candidate sets are in [mod-data-and-pool-semantics.md](../engine/mod-data-and-pool-semantics.md). This architecture document uses those terms without redefining them.
 
 At startup, load the complete compiled runtime artifact into engine memory. It contains all released bases, the normalized global mod catalog, ordered weight/tag/stat rows, and special-mechanic lookup tables. For a crafting session, select the relevant subset:
 
@@ -199,10 +202,10 @@ ML is intentionally deferred until the simulator core is stable. Before any
 learned model, an exact dynamic-programming solver computes optimal
 strategies from the engine's known transition probabilities and doubles as
 the training-data generator and evaluation baseline for later ML work. See
-[crafting-solver-plan.md](crafting-solver-plan.md).
+[crafting-solver-plan.md](../solver/crafting-solver-plan.md).
 
 The research-backed target architecture is specified in
-[ml-strategy-planning.md](ml-strategy-planning.md). The model should guide a
+[ml-strategy-planning.md](../future/ml-strategy-planning.md). The model should guide a
 symbolic, cyclic stochastic planner and a separate Strategy Builder graph
 compiler rather than directly replacing mechanics or emitting unverified graph
 JSON.
@@ -261,8 +264,8 @@ native/WASM engine, workspace, strategy simulator/editor, mechanic expansion,
 public-engine throughput pass, and solver S1-S7 are complete. Accounts remain
 deferred and the active milestone is owner-selected Bestiary expansion followed
 by the S8 one-item solver capability/reviewability pass. See
-[implementation-plan.md](implementation-plan.md) for portfolio status and
-[HANDOFF](../HANDOFF.md) for the sole current next-work pointer.
+[implementation-plan.md](../implementation-plan.md) for portfolio status and
+[HANDOFF](../../HANDOFF.md) for the sole current next-work pointer.
 
 ## Open Questions
 

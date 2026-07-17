@@ -4,7 +4,7 @@
 /*
  * Word-based bitset helpers over caller-owned uint64_t storage. The engine
  * keeps masks as dense uint64_t arrays indexed by session mod id; see
- * docs/engine-bitsets.md. These helpers operate on raw word spans so masks can
+ * docs/engine/engine-bitsets.md. These helpers operate on raw word spans so masks can
  * live in arenas, scratch, or session data without an owning container.
  *
  * Bit k corresponds to session mod id k. Word i holds bits [64*i, 64*i+63].

@@ -18,7 +18,7 @@
 
 /*
  * Solver S4: value iteration over the reachable abstract state set
- * (docs/crafting-solver-plan.md, DP Solver).
+ * (docs/solver/crafting-solver-plan.md, DP Solver).
  *
  *   V(goal) = 0
  *   V(s)    = min over legal actions a of cost(a) + sum P(s'|s,a) V(s')

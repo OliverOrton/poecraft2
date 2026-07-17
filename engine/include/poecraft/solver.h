@@ -357,7 +357,7 @@ pc_result pc_solver_project_item(
 
 /*
  * Compile the latest solve's policy into ordinary strategy JSON (see
- * docs/crafting-solver-plan.md, Policy To Strategy Graph). Query-required-
+ * docs/solver/crafting-solver-plan.md, Policy To Strategy Graph). Query-required-
  * count buffer pattern: out_length always receives the full length.
  * Returns PC_RESULT_UNSUPPORTED_FEATURE when the policy needs condition
  * types the strategy vocabulary does not have yet.

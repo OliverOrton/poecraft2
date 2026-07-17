@@ -1,5 +1,10 @@
 # Project Direction
 
+**Status: current orientation and sequencing summary.** `HANDOFF.md` remains
+the sole exact next-work pointer.
+
+The complete subject/lifecycle index is [docs/README.md](README.md).
+
 One-page orientation: what poecraft2 is, where it stands, and where it is
 going. Details live in the linked docs; this page only sets the direction.
 
@@ -53,7 +58,7 @@ then recombinators
 ```
 
 The authoritative execution plan is
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md).
 B1.0 is the immediate boundary: Oliver must pin the selected Bestiary recipe
 list and exact behavior before implementation. Mechanic rules are never
 researched or inferred by agents.
@@ -71,26 +76,26 @@ but B1 still needs owner-approved recipe identities and price mappings.
    execution, solver descriptors where appropriate, Python/WASM, and the shared
    product action surfaces. Stateful or multi-output recipes receive an exact
    selected representation or remain explicitly unsupported.
-   [bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md)
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md)
 2. **S8 practical one-item solver capability.** Keep minimum expected cost as
    the sole objective while making the action space carrier-aware, considering
    relevant Fracture/bench/metamod routes automatically, extending exact
    action/material accounting, deriving a compact review projection, and
    offering optional simulator-informed trimming with disclosed impact.
-   [bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md)
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md)
 3. **Recombinators after S8.** First add exact two-item outcomes and hand-authored
    recomb/feeder item-flow graphs, then automatic spec-pyramid planning. The
    minimum trade-leaf support needed to value feeders belongs with this work,
    not in a preceding M1 bundle. Hinekora's Lock, corruption/tainted currency,
    and finishing-cost items remain independently parked.
-   [solver-mechanic-extensions.md](solver-mechanic-extensions.md)
+   [solver-mechanic-extensions.md](future/solver-mechanic-extensions.md)
 4. **Workspace fluency remains later or parallel.** Remaining product work
    includes craft history, richer materials/shopping views, aggregate board
    overlays, and eventually recomb/feeder blocks. Ambient watched-mod odds in
    Emulator were skipped entirely.
-   [desktop-workspace-ui.md](desktop-workspace-ui.md),
-   [strategy-editor-ui.md](strategy-editor-ui.md),
-   [economy-ingest-plan.md](economy-ingest-plan.md)
+   [desktop-workspace-ui.md](product/desktop-workspace-ui.md),
+   [strategy-editor-ui.md](product/strategy-editor-ui.md),
+   [economy-ingest-plan.md](economy/economy-ingest-plan.md)
 5. **Infrastructure and ML remain later.** Economy production activation is an
    external operational step. Accounts Phase 12 is deferred, so publishing
    Phases 15-16 remain blocked. ML stays last, using the exact solver's logged
@@ -99,30 +104,30 @@ but B1 still needs owner-approved recipe identities and price mappings.
 ## Doc Map
 
 Foundations:
-[architecture-plan.md](architecture-plan.md),
-[codebase-structure.md](codebase-structure.md),
+[architecture-plan.md](foundation/architecture-plan.md),
+[codebase-structure.md](foundation/codebase-structure.md),
 [implementation-plan.md](implementation-plan.md)
 
 Data and engine internals:
-[data-shapes-and-ingest.md](data-shapes-and-ingest.md),
-[economy-ingest-plan.md](economy-ingest-plan.md),
-[mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md),
-[weight-calculation-flow.md](weight-calculation-flow.md),
-[item-state-flow.md](item-state-flow.md),
-[engine-bitsets.md](engine-bitsets.md)
+[data-shapes-and-ingest.md](engine/data-shapes-and-ingest.md),
+[economy-ingest-plan.md](economy/economy-ingest-plan.md),
+[mod-data-and-pool-semantics.md](engine/mod-data-and-pool-semantics.md),
+[weight-calculation-flow.md](engine/weight-calculation-flow.md),
+[item-state-flow.md](engine/item-state-flow.md),
+[engine-bitsets.md](engine/engine-bitsets.md)
 
 Solver and active execution:
-[crafting-solver-plan.md](crafting-solver-plan.md),
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md),
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md),
-[ml-strategy-planning.md](ml-strategy-planning.md)
+[crafting-solver-plan.md](solver/crafting-solver-plan.md),
+[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md),
+[solver-mechanic-extensions.md](future/solver-mechanic-extensions.md),
+[ml-strategy-planning.md](future/ml-strategy-planning.md)
 
 UI and workspace:
-[desktop-workspace-ui.md](desktop-workspace-ui.md),
-[strategy-editor-ui.md](strategy-editor-ui.md)
+[desktop-workspace-ui.md](product/desktop-workspace-ui.md),
+[strategy-editor-ui.md](product/strategy-editor-ui.md)
 
 Community (later):
-[accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md)
+[accounts-publishing-and-discovery.md](future/accounts-publishing-and-discovery.md)
 
 Completed execution plans and historical evidence:
 [archive/README.md](archive/README.md)

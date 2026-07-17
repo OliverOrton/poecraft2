@@ -96,7 +96,7 @@ pc_result pc_item_remove_at(pc_item_state* item, int side, uint32_t index) {
         return PC_RESULT_INVALID_ARGUMENT;
     }
     /* Swap the last live slot into the hole; affix order is not significant for
-     * simulation (see docs/item-state-flow.md). */
+     * simulation (see docs/engine/item-state-flow.md). */
     const uint8_t last = static_cast<uint8_t>(*view.count - 1);
     if (index != last) {
         view.slots[index] = view.slots[last];

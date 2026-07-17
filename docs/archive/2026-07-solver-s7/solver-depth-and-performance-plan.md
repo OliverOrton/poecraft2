@@ -6,14 +6,14 @@
 > the miss remains part of the record. See
 > [Project Direction](../../direction.md), the current
 > [HANDOFF](../../../HANDOFF.md), and the active
-> [B1/S8 plan](../../bestiary-and-solver-capability-plan.md).
+> [B1/S8 plan](../../active/bestiary-and-solver-capability-plan.md).
 
 Active execution plan for making the existing one-item solver capable of
 realistic end-to-end crafts before adding more mechanic families. Read
 [AGENTS.md](../../../AGENTS.md), [direction.md](../../direction.md), and the
 [archived final S7 handoff](HANDOFF-s7.6-final.md) first. Stable solver
 architecture remains in
-[crafting-solver-plan.md](../../crafting-solver-plan.md); this file owned S7
+[crafting-solver-plan.md](../../solver/crafting-solver-plan.md); this file owned S7
 sequencing, performance measurement, owner-set acceptance, and stop boundaries.
 
 Status 2026-07-16: S7.0-S7.5 are implemented; S7.3 landed ahead of S7.2 and
@@ -36,7 +36,7 @@ renewal/observation-aware option checkpoint, and S7.5 deep optimization/cache
 checkpoint are complete; S7.6 acceptance is next. Trade
 leaves, corruption, Hinekora's Lock,
 imprints, recombinators, and other mechanic expansion remain parked in
-[solver-mechanic-extensions.md](../../solver-mechanic-extensions.md).
+[solver-mechanic-extensions.md](../../future/solver-mechanic-extensions.md).
 
 ## Outcome
 

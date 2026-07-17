@@ -7,8 +7,8 @@
 Execution plan for the remaining solver S6 work, written 2026-07-12 as a
 handoff to Codex. Read [AGENTS.md](../../../AGENTS.md) and [HANDOFF.md](../../../HANDOFF.md)
 first; design authority for the solver is
-[crafting-solver-plan.md](../../crafting-solver-plan.md) and for the workspace
-[desktop-workspace-ui.md](../../desktop-workspace-ui.md). Phases are in priority
+[crafting-solver-plan.md](../../solver/crafting-solver-plan.md) and for the workspace
+[desktop-workspace-ui.md](../../product/desktop-workspace-ui.md). Phases are in priority
 order; each ends test-green with one commit and an updated HANDOFF.md.
 
 Status 2026-07-13: Phase 0 is complete. Oliver approved Calculator Variant E,
@@ -161,7 +161,7 @@ takes the price map from `apps/web/src/app/workspace/prices.ts`.
 
 **Placement.** Recommended: a "Solve" section in the Calculator tab — it
 already owns the goal editor, the item, the solver handle, and the price
-table. [crafting-solver-plan.md](../../crafting-solver-plan.md) §Workspace
+table. [crafting-solver-plan.md](../../solver/crafting-solver-plan.md) §Workspace
 Integration frames this as Simulator integration instead; put the
 placement question in the Phase 1 design brief and let Oliver decide on
 the mock. Design the solve panel (price checklist, solve button,
@@ -317,7 +317,7 @@ WASM, web, build, and full repository gates passed.
 **Final status:** skipped entirely by Oliver on 2026-07-15. The material below
 is retained only as historical planning context; it is not scheduled work.
 
-**Goal.** Per [desktop-workspace-ui.md](../../desktop-workspace-ui.md)
+**Goal.** Per [desktop-workspace-ui.md](../../product/desktop-workspace-ui.md)
 §"Watched Modifiers And Action Odds": the Emulator gets a watched-
 modifier tray (families + tier thresholds); once non-empty, craft
 controls show the chance that action hits the watched mods on the
@@ -410,7 +410,7 @@ influenced, eldritch), and a `min_tier` extension for `has_mod_group`.
   evaluation), `strategy-model.ts` (`LEAF_CONDITION_TYPES` + the
   condition editor if user-authorable — flag conditions probably should
   be; junk-class conditions can stay compiler-only/advanced),
-[strategy-editor-ui.md](../../strategy-editor-ui.md) (the vocabulary is a
+[strategy-editor-ui.md](../../product/strategy-editor-ui.md) (the vocabulary is a
   documented spec), and — because strategy vocabulary changed — a **WASM
   rebuild** plus web tests.
 - Gate: goals that previously threw vocabulary-gap errors now compile

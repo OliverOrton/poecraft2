@@ -3,15 +3,15 @@
 **Status:** S1-S7 are implemented. This file is the stable architecture and
 baseline record; active Bestiary and focused one-item solver capability work is
 owned by
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+[bestiary-and-solver-capability-plan.md](../active/bestiary-and-solver-capability-plan.md).
 The completed S7 execution record is
-[archived](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
+[archived](../archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
 
 Modifier vocabulary, pool semantics, and weight rules in this plan defer to
-[mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md) and
-[weight-calculation-flow.md](weight-calculation-flow.md). Item state layout
-defers to [item-state-flow.md](item-state-flow.md). Strategy graph vocabulary
-defers to [strategy-editor-ui.md](strategy-editor-ui.md).
+[mod-data-and-pool-semantics.md](../engine/mod-data-and-pool-semantics.md) and
+[weight-calculation-flow.md](../engine/weight-calculation-flow.md). Item state layout
+defers to [item-state-flow.md](../engine/item-state-flow.md). Strategy graph vocabulary
+defers to [strategy-editor-ui.md](../product/strategy-editor-ui.md).
 
 ## Purpose
 
@@ -209,7 +209,7 @@ later:             corruption and recombinators (implementation plan Phase 18;
 
 The parked mechanics, plus trade-leaf actions, Hinekora's Lock, corruption
 endgames, finishing-cost items, and recombinators, are described in
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+[solver-mechanic-extensions.md](../future/solver-mechanic-extensions.md).
 
 Recombinators and any selected checkpoint/restore Bestiary recipe stress the
 single-item state assumption (they involve a second item or a saved copy). B1.0
@@ -617,7 +617,7 @@ New engine mechanics (bench, metamods, harvest, Bestiary, ...) land as registry
 descriptors plus engine actions and exact calculation evaluators, gated by
 S3-style distribution fixtures per mechanic. B1 owns the selected Bestiary
 vertical slice; later recombinator and independent mechanic notes remain in
-[solver-mechanic-extensions.md](solver-mechanic-extensions.md).
+[solver-mechanic-extensions.md](../future/solver-mechanic-extensions.md).
 
 ## Risks
 

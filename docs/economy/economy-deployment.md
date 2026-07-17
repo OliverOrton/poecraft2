@@ -1,5 +1,8 @@
 # Economy Refresh Deployment
 
+**Status: operational production-activation runbook.** The code path is
+implemented; external resources and secrets still control activation.
+
 The economy publisher runs in `.github/workflows/economy-refresh.yml` every six
 hours and on `workflow_dispatch`. It rebuilds the current canonical game-data
 database, restores and verifies the latest private economy checkpoint, refreshes

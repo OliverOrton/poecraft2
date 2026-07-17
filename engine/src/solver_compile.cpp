@@ -11,7 +11,7 @@
 
 /*
  * Solver S5: compile a policy into the ordinary strategy graph format
- * (docs/crafting-solver-plan.md, Policy To Strategy Graph).
+ * (docs/solver/crafting-solver-plan.md, Policy To Strategy Graph).
  *
  * Shape: start -> master router. The router's prioritized edges are, in
  * order, the goal test (success terminal), one membership test per

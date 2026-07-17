@@ -1,5 +1,7 @@
 # Weight Calculation Flow
 
+**Status: implemented weighted-selection reference.**
+
 ## Purpose
 
 The engine should treat mod selection as two separate phases:

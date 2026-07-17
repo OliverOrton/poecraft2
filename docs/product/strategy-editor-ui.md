@@ -1,5 +1,8 @@
 # Strategy Editor UI
 
+**Status: implemented strategy-model/product reference with parked
+recombinator sections.** It does not own current sequencing.
+
 ## Purpose
 
 The project has two related user-facing workflows:
@@ -584,7 +587,7 @@ architecture only; do not implement it during active B1/S8 work.
 
 The editor model above is control flow: one implicit item walks guarded
 edges. Recombinators add item flow: items as values that merge at blocks
-(see [solver-mechanic-extensions.md](solver-mechanic-extensions.md) for
+(see [solver-mechanic-extensions.md](../future/solver-mechanic-extensions.md) for
 the underlying spec-pyramid model). The two flavors must stay visually
 and semantically distinct so existing strategies are unaffected:
 
@@ -775,7 +778,7 @@ Reaching a success terminal determines success. Restart transitions affect the r
 
 Publishing is unavailable until the full public engine mechanic, validation, packaging, and performance/readiness gates pass.
 
-See [accounts-publishing-and-discovery.md](accounts-publishing-and-discovery.md).
+See [accounts-publishing-and-discovery.md](../future/accounts-publishing-and-discovery.md).
 
 ## Strategy JSON Shape
 

@@ -9,8 +9,8 @@ Execution plan for the Strategy Builder simulator/calculator mode switch,
 written 2026-07-14 as a handoff for implementation. Read
 [AGENTS.md](../../../AGENTS.md) and [HANDOFF.md](../../../HANDOFF.md) first; design
 authority for the solver machinery is
-[crafting-solver-plan.md](../../crafting-solver-plan.md) and for the workspace
-[desktop-workspace-ui.md](../../desktop-workspace-ui.md). **This work is scheduled
+[crafting-solver-plan.md](../../solver/crafting-solver-plan.md) and for the workspace
+[desktop-workspace-ui.md](../../product/desktop-workspace-ui.md). **This work is scheduled
 before [s6-plan.md](s6-plan.md) Phase 1** (Oliver's call, 2026-07-14); the
 s6 phases resume afterwards and are renumbered only in prose, not in files.
 
@@ -605,7 +605,7 @@ Rewrite `HANDOFF.md`, make one local commit, and do not push.
 - Commits: one per phase, local-only unless Oliver says push, agent
   co-author line at the end. Rewrite HANDOFF.md at each phase boundary.
 - Doc updates at the end of Phase C: add calculator mode to
-  [desktop-workspace-ui.md](../../desktop-workspace-ui.md) §Strategy Builder and
+  [desktop-workspace-ui.md](../../product/desktop-workspace-ui.md) §Strategy Builder and
   a §Strategy Evaluation summary to
-  [crafting-solver-plan.md](../../crafting-solver-plan.md); run the doc-drift
+  [crafting-solver-plan.md](../../solver/crafting-solver-plan.md); run the doc-drift
   agent before editing.

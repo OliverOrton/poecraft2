@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 /*
- * Compact, value-copyable item state. See docs/item-state-flow.md.
+ * Compact, value-copyable item state. See docs/engine/item-state-flow.md.
  *
  * These fixed capacities are provisional implementation limits, not assumed
  * game rules. pc_data_check_capacities() validates them against the current
@@ -26,7 +26,7 @@ extern "C" {
 #define PC_MAX_SOCKETS 6
 #define PC_MOD_NONE UINT32_MAX
 
-/* Mod-slot flags. Mirror docs/item-state-flow.md ModSlotFlags. */
+/* Mod-slot flags. Mirror docs/engine/item-state-flow.md ModSlotFlags. */
 typedef enum pc_mod_slot_flags {
     PC_MOD_SLOT_FRACTURED = 1 << 0,
     PC_MOD_SLOT_CRAFTED = 1 << 1,
@@ -35,7 +35,7 @@ typedef enum pc_mod_slot_flags {
     PC_MOD_SLOT_SYNTH = 1 << 4
 } pc_mod_slot_flags;
 
-/* Item-wide flags. Mirror docs/item-state-flow.md ItemFlags. */
+/* Item-wide flags. Mirror docs/engine/item-state-flow.md ItemFlags. */
 typedef enum pc_item_flags {
     PC_ITEM_CORRUPTED = 1 << 0,
     PC_ITEM_MIRRORED = 1 << 1,

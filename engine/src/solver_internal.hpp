@@ -15,7 +15,7 @@
 #include "engine_internal.hpp"
 
 /*
- * Solver phase S1 (docs/crafting-solver-plan.md): action registry schema,
+ * Solver phase S1 (docs/solver/crafting-solver-plan.md): action registry schema,
  * goal specification, abstract state layout, and junk-class derivation.
  *
  * Nothing here executes crafting actions. The registry describes the actions
@@ -1133,7 +1133,7 @@ SolveResult solve(
     const SolveOptions& options = {});
 
 /*
- * ML corpus line format (docs/crafting-solver-plan.md, ML Data Logging):
+ * ML corpus line format (docs/solver/crafting-solver-plan.md, ML Data Logging):
  * one JSON object per state with features, value, policy action, and
  * policy reachability. Durable formatting/versioning happens at the
  * tooling layer; this provides the canonical per-solve records.

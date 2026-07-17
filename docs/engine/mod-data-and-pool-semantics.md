@@ -1,5 +1,8 @@
 # Mod Data And Pool Semantics
 
+**Status: authoritative implemented mechanic vocabulary and pool-semantics
+reference.**
+
 ## Purpose
 
 This is the authoritative vocabulary and filtering specification for modifier data.

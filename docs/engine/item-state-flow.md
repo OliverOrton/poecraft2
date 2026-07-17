@@ -1,5 +1,8 @@
 # Item State Flow
 
+**Status: implemented item-state reference.** Future two-item extensions are
+explicitly labelled and are not active sequencing.
+
 Modifier vocabulary and weighted-selection rules in this document defer to [mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md).
 
 ## Purpose

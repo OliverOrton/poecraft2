@@ -40,7 +40,7 @@ crafting legality or rewriting historical results.
 ## Placement In The Roadmap
 
 This work is the live-economy part of "Workspace fluency" in
-[direction.md](direction.md), not a continuation of the RePoE ingest phases and
+[direction.md](../direction.md), not a continuation of the RePoE ingest phases and
 not part of publishing/accounts.
 
 - RePoE ingest owns relatively stable crafting-rule data in
@@ -713,7 +713,7 @@ required for the normal path.
 Safe laptop ownership through E4:
 
 ```text
-docs/economy-ingest-plan.md
+docs/economy/economy-ingest-plan.md
 tools/economy/**
 schemas/economy/**
 fixtures/economy/**

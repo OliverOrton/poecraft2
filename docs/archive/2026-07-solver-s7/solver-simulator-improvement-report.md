@@ -6,10 +6,10 @@ simulator can be improved for complicated multi-step crafts — faster and
 lighter while keeping or improving exactness. It is not an execution plan,
 changes no code, sets no acceptance criteria, and does not reopen owner
 decisions. Active sequencing authority is now the
-[B1/S8 plan](bestiary-and-solver-capability-plan.md); completed S7 sequencing is
-[archived](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md), and
+[B1/S8 plan](../../active/bestiary-and-solver-capability-plan.md); completed S7 sequencing is
+[archived](solver-depth-and-performance-plan.md), and
 stable architecture stays with
-[crafting-solver-plan.md](crafting-solver-plan.md).
+[crafting-solver-plan.md](../../solver/crafting-solver-plan.md).
 
 ## S7.6 Outcome Addendum
 
@@ -33,7 +33,7 @@ and measured in the final S7.6 reports:
   the sample was not repeated or combined and the numeric miss remains part of
   the record.
 
-See the [archived final S7 handoff](archive/2026-07-solver-s7/HANDOFF-s7.6-final.md)
+See the [archived final S7 handoff](HANDOFF-s7.6-final.md)
 for exact report names, caps, memory, material totals, acceptance evidence, and
 the pre-closure boundary.
 
@@ -75,7 +75,7 @@ Three structural facts drive most of what follows:
 2. **The optimization unit is indivisible.** One
    `run_policy_iteration_unit` = one full fixed-policy SCC evaluation plus
    one full Q-scan. The WASM worker's adaptive slicing
-   ([engine-worker.ts:313](../apps/web/src/app/engine-worker.ts) targets
+   ([engine-worker.ts:313](../../../apps/web/src/app/engine-worker.ts) targets
    12 ms) cannot subdivide it: endgame WASM recorded one 2,248 ms slice
    against the approved 50 ms budget, and even native with
    `solve_step_work_items = 1` recorded a 266 ms step.
@@ -252,9 +252,9 @@ not remove the mechanism.
 ### 1.8 Toolchain and build flags (measure-first)
 
 The native benchmark harness builds with `g++ -O2`, no LTO, no
-architecture flags ([build.ps1](../scripts/build.ps1)); the WASM engine
+architecture flags ([build.ps1](../../../scripts/build.ps1)); the WASM engine
 builds `-O2 -fexceptions` without SIMD
-([build-wasm.ps1:74](../scripts/build-wasm.ps1)). Candidate levers, each
+([build-wasm.ps1:74](../../../scripts/build-wasm.ps1)). Candidate levers, each
 subject to invariant 7 (optimize what the benchmark identifies):
 
 - Native: `-O3`, LTO, and a baseline like `-march=x86-64-v2/v3` for the
@@ -283,7 +283,7 @@ here are the whole game.
 
 **Problem.** Every executed operation re-resolves `node.price_keys`
 against the economy with per-key `std::string` hash lookups
-([simulator.cpp:1051](../engine/src/simulator.cpp)) — several string
+([simulator.cpp:1051](../../../engine/src/simulator.cpp)) — several string
 hashes per action, ~10^9 times.
 
 **Change.** At `pc_simulator_create` (economy and strategy are both
@@ -381,7 +381,7 @@ diagnostic, per invariant 8.
 
 The harness computes per-run cost variance only when
 `verification_chunk_runs == 1`
-([solver_benchmark.cpp:972](../engine/benchmarks/solver_benchmark.cpp)).
+([solver_benchmark.cpp:972](../../../engine/benchmarks/solver_benchmark.cpp)).
 Streaming mean/variance per run costs nothing at any chunk size.
 Reporting the empirical standard error next to the fixed tolerance lets a
 reader separate statistical misses from systematic ones at a glance
@@ -398,7 +398,7 @@ in simulation than forecast — is the expected signature of the
 documented approximately-sound abstraction: junk collapsing and
 single-representative materialization perturb pool weights, and the plan
 explicitly accepts this and prescribes refinement when a goal shows
-material drift ([crafting-solver-plan.md](crafting-solver-plan.md),
+material drift ([crafting-solver-plan.md](../../solver/crafting-solver-plan.md),
 Soundness Check). For complicated multi-step crafts this is the accuracy
 frontier; the fix sequence should be:
 
@@ -438,7 +438,7 @@ region compression; advanced 4.84 MB). Two levers, both exactness-free:
 
 1. **Region cap tuning.** Region grouping splits equal
    `(operator, cost)` groups at 8 states
-   ([solver_compile.cpp:516](../engine/src/solver_compile.cpp)). The cap
+   ([solver_compile.cpp:516](../../../engine/src/solver_compile.cpp)). The cap
    bounds one router condition's width; measuring compile/simulate cost
    against cap 16/32 is cheap and directly shrinks router width and JSON
    size.

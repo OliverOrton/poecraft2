@@ -2,17 +2,17 @@
 
 **Status: parked future work.** Bestiary expansion and the focused one-item
 solver capability/reviewability pass are active in
-[bestiary-and-solver-capability-plan.md](bestiary-and-solver-capability-plan.md).
+[bestiary-and-solver-capability-plan.md](../active/bestiary-and-solver-capability-plan.md).
 Do not begin recombinators or the independent mechanic backlog in this file
 until Oliver accepts S8 and explicitly selects the next milestone.
 
 This is a future companion to
-[crafting-solver-plan.md](crafting-solver-plan.md). It covers trade leaves,
+[crafting-solver-plan.md](../solver/crafting-solver-plan.md). It covers trade leaves,
 corruption/finishing work, Hinekora's Lock, and recombinators. Selected
 Bestiary mechanics, including any approved imprint work, now belong to the
 active B1 plan rather than an M phase here.
 Vocabulary defers to
-[mod-data-and-pool-semantics.md](mod-data-and-pool-semantics.md). Mechanic
+[mod-data-and-pool-semantics.md](../engine/mod-data-and-pool-semantics.md). Mechanic
 rules come from Oliver; agents must not research or infer them.
 
 ## Recombinators
@@ -90,7 +90,7 @@ actually simulated, not summarized — to bound the approximation error.
 Editor UX for these blocks — item ports and wires, live enumerator
 badges, recycling gestures, feeder summaries and staleness, the recomb
 pair template, lineage tracing, and item-flow validation — is specified
-in [strategy-editor-ui.md](strategy-editor-ui.md).
+in [strategy-editor-ui.md](../product/strategy-editor-ui.md).
 
 ### Engine Work
 

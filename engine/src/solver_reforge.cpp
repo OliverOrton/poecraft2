@@ -14,7 +14,7 @@
 #include "poecraft/item_state.h"
 
 /*
- * Solver S3: exact reforge evaluator (docs/crafting-solver-plan.md,
+ * Solver S3: exact reforge evaluator (docs/solver/crafting-solver-plan.md,
  * Calculation Engine, evaluation path 3).
  *
  * A reforge is: preserve fractured/locked slots, set rarity, add direct

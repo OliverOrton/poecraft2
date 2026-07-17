@@ -1,11 +1,14 @@
 # B1 Bestiary And S8 Solver Capability Plan
 
+**Status: active execution plan.** [HANDOFF](../../HANDOFF.md) names the exact
+phase boundary.
+
 Active execution plan for the next product chunk after S7. Bestiary breadth
 lands first. A focused one-item solver capability and reviewability pass follows
 before recombinators. Stable solver architecture remains in
-[crafting-solver-plan.md](crafting-solver-plan.md); completed S7 depth and
+[crafting-solver-plan.md](../solver/crafting-solver-plan.md); completed S7 depth and
 performance history is archived under
-[archive/2026-07-solver-s7](archive/2026-07-solver-s7/).
+[archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
 Status 2026-07-17: Oliver closed S7 and directed work to move forward. The
 recorded endgame sample remains `0.9942` against the former `0.995` target; the

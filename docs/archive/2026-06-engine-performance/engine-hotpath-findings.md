@@ -1,5 +1,8 @@
 # Engine Hot-Path Efficiency Findings — Run Start & Mod Selection
 
+> **Archived 2026-07-17.** Historical read-only performance audit from
+> 2026-06-30. It does not own current sequencing.
+
 **Scope:** Runtime efficiency of the poecraft C++ engine for a 100,000-run strategy
 simulation whose actions are chaos / alchemy / reforges (each reforge picks 4–6 mods)
 on a rare body armour at item level 86. Focus: where runs start, and how modifiers are

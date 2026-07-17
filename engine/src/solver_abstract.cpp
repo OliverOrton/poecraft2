@@ -14,7 +14,7 @@
 /*
  * Solver S1: goal resolution, junk-class derivation, and item projection.
  *
- * The junk equivalence rule (docs/crafting-solver-plan.md): two non-goal mods
+ * The junk equivalence rule (docs/solver/crafting-solver-plan.md): two non-goal mods
  * collapse into one class iff every candidate action treats them identically.
  * Only three features break equivalence: generation side, the restricted tag
  * signature (classification tags some candidate action discriminates on),

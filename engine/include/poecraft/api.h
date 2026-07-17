@@ -13,7 +13,7 @@ extern "C" {
 #define PC_ABI_VERSION 1u
 
 /*
- * Opaque handles. Lifetime/threading rules (see docs/codebase-structure.md):
+ * Opaque handles. Lifetime/threading rules (see docs/foundation/codebase-structure.md):
  *  - data and session handles are immutable after construction and shareable
  *    across threads.
  *  - an action context owns random state and scratch space and belongs to one

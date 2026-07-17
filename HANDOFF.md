@@ -4,7 +4,7 @@ Updated 2026-07-17 after Oliver closed S7 and selected the next roadmap:
 owner-selected Bestiary expansion, then a focused one-item solver capability and
 reviewability pass, then recombinators. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
-[docs/bestiary-and-solver-capability-plan.md](docs/bestiary-and-solver-capability-plan.md).
+[docs/active/bestiary-and-solver-capability-plan.md](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
