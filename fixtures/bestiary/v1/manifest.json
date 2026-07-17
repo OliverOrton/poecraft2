@@ -1,0 +1,52 @@
+{
+  "schema_version": "bestiary_contract_manifest_v1",
+  "contract_version": 1,
+  "contract_id": "poecraft2-b1-bestiary-v1",
+  "phase": "B1.0",
+  "approval": {
+    "status": "approved_owner_2026-07-17",
+    "owner": "Oliver",
+    "mechanic_authority": "owner_decisions_only"
+  },
+  "selected_recipes": [
+    {
+      "recipe_id": "bestiary:imprint",
+      "display_name": "Imprint",
+      "classification": "checkpoint/restore",
+      "contract_file": "recipes/imprint.json",
+      "expected_outcomes_file": "expected-outcomes/imprint.json"
+    }
+  ],
+  "parked_recipes": [
+    {
+      "recipe_id": "bestiary:prefix_to_suffix",
+      "display_name": "Prefix to Suffix",
+      "classification": "explicitly unsupported in B1",
+      "reason": "Owner removed the recipe from B1 during B1.0; no mechanic behavior is contracted."
+    },
+    {
+      "recipe_id": "bestiary:suffix_to_prefix",
+      "display_name": "Suffix to Prefix",
+      "classification": "explicitly unsupported in B1",
+      "reason": "Owner removed the recipe from B1 during B1.0; no mechanic behavior is contracted."
+    }
+  ],
+  "stable_id_conventions": {
+    "recipe_action_id": "bestiary:<snake_case_recipe_id>",
+    "beast_price_key": "beast:<kebab-case-beast-id>",
+    "cost_vector": "One price key per consumed beast; repeated keys encode quantity."
+  },
+  "files": [
+    "recipes/imprint.json",
+    "expected-outcomes/imprint.json"
+  ],
+  "scope_exclusions": [
+    "Bestiary engine behavior",
+    "production ingest",
+    "economy source mappings",
+    "bindings",
+    "workspace UI",
+    "strategy vocabulary",
+    "solver implementation"
+  ]
+}

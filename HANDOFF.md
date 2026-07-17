@@ -1,101 +1,91 @@
-# Session Handoff - B1.0 Bestiary Contract Is Next
+# Session Handoff - B1.1 Data, Price, And Registry Substrate Is Next
 
-Updated 2026-07-17 after Oliver closed S7 and selected the next roadmap:
-owner-selected Bestiary expansion, then a focused one-item solver capability and
-reviewability pass, then recombinators. Read [AGENTS.md](AGENTS.md),
-[docs/direction.md](docs/direction.md), this file, then
-[docs/active/bestiary-and-solver-capability-plan.md](docs/active/bestiary-and-solver-capability-plan.md).
+Updated 2026-07-17 after Oliver approved and closed B1.0. Read
+[AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
+[the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-S7.0-S7.6 and S7.2R are closed. Oliver explicitly directed work to move
-forward. The final endgame sample remains recorded honestly at `0.9942` success
-against the former `0.995` target; the numeric gate was not retroactively
-called passing and no replacement sample was run. The completed plan and full
-final handoff are preserved under
-[docs/archive/2026-07-solver-s7](docs/archive/2026-07-solver-s7/).
+B1.0 is complete. Its sole selected recipe is Imprint. The authoritative
+versioned contract and focused expected outcomes are:
 
-The active plan is B1 followed by S8:
+- [manifest](fixtures/bestiary/v1/manifest.json)
+- [Imprint recipe contract](fixtures/bestiary/v1/recipes/imprint.json)
+- [Imprint expected outcomes](fixtures/bestiary/v1/expected-outcomes/imprint.json)
 
-```text
-B1  selected Bestiary mechanics, exact engine-to-product vertical slice
-S8  cheapest-policy action control, accounting, review projection, trimming
-```
+Prefix to Suffix and Suffix to Prefix were removed from the selected set and
+are explicitly unsupported in B1. Their incomplete discussion is not mechanic
+authority and must not be implemented or inferred.
 
-The old M1-M5 ordering is retired. Trade leaves, Hinekora's Lock, corruption,
-tainted currency, and finishing-cost work remain independently parked.
-Recombinator foundations and pyramid planning wait until Oliver accepts S8.
+S7 remains closed. Its final endgame sample is still recorded honestly at
+`0.9942` success against the former `0.995` target; no replacement sample was
+run and the miss was not relabelled as a numeric pass. The completed S7 record
+lives under [docs/archive/2026-07-solver-s7](docs/archive/2026-07-solver-s7/).
+
+## Approved Imprint Contract
+
+- Recipe id: `bestiary:imprint`; classification: checkpoint/restore.
+- Creation consumes `beast:craicic-chimeral` once and `beast:rare` three times.
+- Any engine-supported magic item is eligible except corrupted or mirrored
+  items. Crafted, fractured, influenced, split, synthesised, and implicit state
+  is allowed.
+- Creation leaves the live item unchanged and creates one exact full mutable
+  state checkpoint bound to that same item. Only one active checkpoint is
+  allowed per item.
+- Restoration is beast-free, restores the entire saved mutable state into the
+  same live item, and consumes the checkpoint. Restoring an already-identical
+  state still succeeds and consumes it.
+- Restoration refuses a missing or different-item checkpoint and refuses when
+  the current live item is corrupted or mirrored. Refusal preserves item and
+  checkpoint and consumes nothing.
+- Emulator, Calculator, Strategy Builder, and solver availability are all
+  required.
+- The representation is one live item plus an optional saved checkpoint. Do
+  not force it into an ordinary one-item action over the live item alone, do
+  not introduce a second live item, and do not generalize it into a macro
+  language.
 
 ## Exact Next Boundary
 
-Implement **B1.0 only**. No Bestiary mechanic implementation begins until
-Oliver supplies and approves the selected recipe contract. Do not research PoE
-mechanics online or infer them from memory/data strings.
+Implement **B1.1 only - Data, Price, And Registry Substrate** from the approved
+contract:
 
-For every requested recipe, record:
+1. Add production manifest loading and validation for the selected and parked
+   recipe identities without turning display text or tags into rules.
+2. Register `beast:craicic-chimeral` and `beast:rare` through the existing
+   economy model and Beast provider surface. Preserve the repeated price-key
+   cost vector; do not silently drop the three rare beasts or assume they are
+   free.
+3. Add native action descriptors for Imprint creation and restoration with the
+   approved legality, costs, checkpoint requirement, and state effects.
+4. Keep both parked conversion ids explicitly unsupported and out of product
+   action envelopes.
 
-- stable id/name and beast price inputs;
-- item eligibility and legality;
-- exact deterministic mutation or random outcome law;
-- crafted/fractured/influenced/split/corrupted/mirrored/implicit behavior;
-- no-op, refusal, failure, and beast-consumption behavior;
-- output count and whether a saved copy or second live item is involved; and
-- Emulator, Calculator, Strategy Builder, and solver availability.
+Stop after the B1.1 checkpoint. Do not implement the checkpoint mutation,
+restoration engine behavior, exact calculation, bindings, workspace surfaces,
+strategy execution, or solver support; those begin in B1.2 and later phases.
+Rewrite this handoff so B1.2 is the sole exact next boundary.
 
-Classify each row as ordinary deterministic one-item, ordinary stochastic
-one-item, checkpoint/restore, multi-output/multi-item, or explicitly unsupported
-for B1. Stop after the approved fixture/manifest, make the local checkpoint
-commit, and rewrite this handoff for B1.1.
+## B1.1 Gotchas
 
-## Recorded S8 Product Direction
+- SQLite and the compiled artifact remain canonical/derived respectively; do
+  not hand-edit either.
+- The existing economy provider recognizes the `Beast` stash category but has
+  no Beast mappings. Source mappings must be explicit and stable.
+- `pc_item_state` is value-copyable, but an Imprint checkpoint is additional
+  state with a different lifecycle. A reserved companion-state flag is not a
+  license to model the checkpoint as a second live item.
+- Creation and restoration are separate deterministic operations. Restoration
+  has no beast cost and successful restoration consumes the checkpoint.
+- Oliver's fixture is the mechanic authority. Do not research or infer
+  additional Bestiary rules.
+- Follow milestone test cadence: no routine full suite, WASM rebuild, web test,
+  rendered smoke, screenshot, or 10,000-run strategy verification in B1.1.
 
-- Continue optimizing only minimum expected cost; do not add alternative-policy
-  or risk objectives.
-- Improve action control from exact carrier preservation/dominance facts. Do
-  not hard-ban Fossils/reforges by graph depth or a display-stage label.
-- Automatically consider relevant carrier-exact Fracture routes, temporary
-  bench blockers, permanent bench finishes, and existing protected metamod
-  options through the ordinary S7 option/compiler vocabulary.
-- Extend the existing exact strategy evaluator for per-action and review-section
-  action/material accounting; do not build a second occupancy engine.
-- Derive compact review sections without changing execution semantics.
-- Keep the exact graph, add a presentation-only focus mode, and create optional
-  empirically trimmed copies with exact and independently simulated impact
-  reports.
+## Later Sequence And Parked Scope
 
-## Existing Substrate And Gotchas
-
-- There is no Bestiary action in the engine, solver, bindings, strategy
-  vocabulary, or product UI. The economy provider recognizes the `Beast` stash
-  category but has no canonical Bestiary recipe/action price mapping.
-- Fracture calculation, carrier distinctions, preparation/retry options,
-  protected-side options, Multimod finishes, lazy Fossil generation, and action
-  diagnostics already exist. Product solves currently create the special
-  options only when explicitly requested; S8 makes selected ones automatic.
-- `pc_strategy_evaluate` already returns exact success/failure mass, expected
-  actions, price-key consumption, node visits, and edge traversals. Strategy
-  Builder Calculator mode already renders much of it.
-- The native Simulator currently aggregates operation counts, not every visited
-  router/terminal and traversed edge. S8 trimming requires those counters across
-  native/C ABI/Python/WASM/TypeScript before simulator visitation can drive a
-  derived graph.
-- Action-space reduction must retain the cheapest-policy guarantee: certify
-  dominance/equivalence, use a valid defer bound, or keep the candidate.
-- Rebuild release WASM after engine C ABI, action vocabulary, solver option, or
-  strategy vocabulary changes.
-- Oliver owns rendered and visual review. Agents do not run screenshots or
-  browser visual smoke unless explicitly asked.
-
-## Documentation State
-
-The active roadmap, implementation plan, stable solver plan, future mechanic
-notes, archive index, and README now point to B1/S8. The point-in-time
-S7 simulator/solver improvement report remains historical evidence rather than
-sequencing authority.
-
-## Parked Scope
-
-S6 Phase 3 ambient Emulator odds remains skipped. Economy E0-E7 is complete
-except external production activation. Accounts, publishing/community,
-trade-leaf expansion, Hinekora's Lock, corruption/tainted/finishing work,
-recombinators, and ML remain outside the active boundary.
+B1.2-B1.5 carry native mutation/calculation, solver/strategy integration,
+bindings/product surfaces, and final acceptance. S8 follows only after B1 is
+accepted. Trade leaves, Hinekora's Lock, corruption/tainted/finishing work,
+recombinators, accounts/publishing, ML, and ambient Emulator odds remain
+outside the current boundary.

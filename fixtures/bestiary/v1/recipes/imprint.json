@@ -1,0 +1,124 @@
+{
+  "schema_version": "bestiary_recipe_contract_v1",
+  "contract_version": 1,
+  "approval_status": "approved_owner_2026-07-17",
+  "recipe_id": "bestiary:imprint",
+  "display_name": "Imprint",
+  "classification": "checkpoint/restore",
+  "operations": {
+    "create": {
+      "action_id": "bestiary:imprint",
+      "display_name": "Create Imprint",
+      "transition_law": "deterministic"
+    },
+    "restore": {
+      "action_id": "bestiary:restore_imprint",
+      "display_name": "Restore Imprint",
+      "transition_law": "deterministic"
+    }
+  },
+  "beast_inputs": [
+    {
+      "beast_id": "craicic-chimeral",
+      "display_name": "Craicic Chimeral",
+      "quantity": 1,
+      "price_key": "beast:craicic-chimeral"
+    },
+    {
+      "beast_id": "rare",
+      "display_name": "Rare Beast",
+      "quantity": 3,
+      "price_key": "beast:rare"
+    }
+  ],
+  "create_cost_price_keys": [
+    "beast:craicic-chimeral",
+    "beast:rare",
+    "beast:rare",
+    "beast:rare"
+  ],
+  "restore_cost_price_keys": [],
+  "eligibility": {
+    "item_classes": "all item classes supported by the engine",
+    "rarities": [
+      "magic"
+    ],
+    "generic_influence": "allowed",
+    "eldritch_influence": "allowed",
+    "crafted_modifiers": "allowed",
+    "fractured_modifiers": "allowed",
+    "split": "allowed",
+    "synthesised": "allowed",
+    "corrupted": "refused",
+    "mirrored": "refused",
+    "implicits": "allowed",
+    "existing_checkpoint": "refused"
+  },
+  "checkpoint_model": {
+    "max_active_per_item": 1,
+    "bound_to_original_item": true,
+    "transferable_to_another_item": false,
+    "second_live_item_required": false,
+    "snapshot_scope": "entire mutable item state",
+    "restored_properties": [
+      "rarity",
+      "quality",
+      "all item flags",
+      "all explicit modifier identities, sides, rolls, and flags",
+      "crafted state",
+      "fractured state",
+      "veiled state and options",
+      "generic influence",
+      "Eldritch influence tiers",
+      "all implicits and their rolls and flags",
+      "all enchantments and their rolls and flags",
+      "socket count",
+      "socket colours",
+      "links"
+    ],
+    "immutable_identity_behavior": "The checkpoint is bound to the same live item. Creation and restoration preserve that item's identity, base identity, and item level."
+  },
+  "mutation_contract": {
+    "create": {
+      "live_item": "unchanged",
+      "checkpoint": "create an exact snapshot of the entire mutable item state and bind it to the live item",
+      "output_item_count": 1,
+      "output_checkpoint_count": 1
+    },
+    "restore": {
+      "live_item": "replace the entire mutable state of the same live item with the bound checkpoint snapshot",
+      "checkpoint": "consumed after successful restoration",
+      "output_item_count": 1,
+      "output_checkpoint_count": 0,
+      "identical_state": "successful restoration; consume the checkpoint even though the live item state remains equal"
+    },
+    "stochastic_outcomes": "none"
+  },
+  "refusal_failure_and_consumption": {
+    "create_refusals": [
+      "item rarity is not magic",
+      "item is corrupted",
+      "item is mirrored",
+      "an active checkpoint already exists for the item"
+    ],
+    "create_refusal_effect": "leave the item and any existing checkpoint unchanged and consume no beasts",
+    "create_success_consumption": "consume the complete create_cost_price_keys vector",
+    "restore_refusals": [
+      "no active checkpoint exists",
+      "checkpoint is bound to a different item",
+      "current live item is corrupted",
+      "current live item is mirrored"
+    ],
+    "restore_refusal_effect": "leave the live item and checkpoint unchanged and consume no beasts or checkpoint",
+    "restore_success_consumption": "consume the checkpoint and no beasts",
+    "no_op_outcome": "none; creating a checkpoint changes checkpoint state, and restoring an identical state is still a successful checkpoint-consuming operation",
+    "random_failure_outcome": "none"
+  },
+  "availability": {
+    "emulator": true,
+    "calculator": true,
+    "strategy_builder": true,
+    "solver": true
+  },
+  "representation_requirement": "This recipe requires explicit live-item plus optional saved-checkpoint state. It must not be represented as an ordinary one-item action over the live item alone."
+}

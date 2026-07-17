@@ -59,15 +59,17 @@ then recombinators
 
 The authoritative execution plan is
 [bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md).
-B1.0 is the immediate boundary: Oliver must pin the selected Bestiary recipe
-list and exact behavior before implementation. Mechanic rules are never
-researched or inferred by agents.
+B1.0 is complete: Oliver selected Imprint, approved its exact
+checkpoint/restore contract, and parked both prefix/suffix conversion recipes.
+B1.1 data, price, and registry substrate is the immediate boundary. Mechanic
+rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,
 and pinned cost identities are present. Production activation only needs the
-documented R2 resources and repository secrets. A Beast stash category exists,
-but B1 still needs owner-approved recipe identities and price mappings.
+documented R2 resources and repository secrets. A Beast stash category exists;
+B1.0 now supplies the approved Imprint and beast price identities, while B1.1
+must add their production mappings.
 
 ## Direction Of Travel
 

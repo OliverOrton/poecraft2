@@ -10,11 +10,13 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: Oliver closed S7 and directed work to move forward. The
-recorded endgame sample remains `0.9942` against the former `0.995` target; the
-number is retained as a disclosed miss, not rewritten as a passing numeric
-gate. The next implementation boundary is **B1.0 only**: pin the selected
-Bestiary recipe contract with Oliver before implementing mechanic behavior.
+Status 2026-07-17: B1.0 is complete. Oliver selected Imprint as the sole B1
+recipe, approved its exact checkpoint/restore contract and focused outcomes,
+and explicitly parked Prefix to Suffix and Suffix to Prefix. The authoritative
+contract is [fixtures/bestiary/v1](../../fixtures/bestiary/v1/). The next
+implementation boundary is **B1.1 only**. The recorded S7 endgame sample remains
+`0.9942` against the former `0.995` target; the number is retained as a
+disclosed miss, not rewritten as a passing numeric gate.
 
 ## Outcome And Sequence
 
@@ -27,8 +29,8 @@ S8  minimum-expected-cost solver capability, accounting, review, and trimming
 
 B1 is complete when every selected recipe has an owner-approved rule fixture,
 a native engine action, exact Calculator support where stochastic outcomes
-exist, ordinary strategy execution, price identity, Python/WASM exposure, and
-the requested workspace surface.
+exist, its approved strategy execution representation, price identity,
+Python/WASM exposure, and the requested workspace surface.
 
 S8 is complete when the one-item solver still minimizes expected cost while it:
 
@@ -134,7 +136,20 @@ This is an extension pass, not a replacement architecture:
 
 ### B1.0 - Authoritative Recipe Contract
 
-Status: immediate next task. No mechanic implementation belongs in this phase.
+Status: complete 2026-07-17. No mechanic implementation landed in this phase.
+
+The approved manifest selects only `bestiary:imprint`, classified as
+checkpoint/restore and available in Emulator, Calculator, Strategy Builder,
+and the solver. It requires one live item plus at most one saved checkpoint
+bound to that same item; it must not be flattened into the ordinary one-item
+action shape. Creation consumes one `beast:craicic-chimeral` and three
+`beast:rare` price keys. Restoration consumes the checkpoint and no beasts.
+The complete contract and focused relational outcomes are versioned under
+[fixtures/bestiary/v1](../../fixtures/bestiary/v1/).
+
+`bestiary:prefix_to_suffix` and `bestiary:suffix_to_prefix` are classified as
+explicitly unsupported in B1. Their partial discussion did not become mechanic
+authority and no behavior may be inferred for them.
 
 Oliver supplies the supported recipe list and resolves behavior through a
 versioned fixture/manifest. Each selected recipe records:
@@ -163,9 +178,10 @@ Do not force checkpoint or multi-output recipes through the ordinary one-item
 shape. The contract either selects an exact representation for them or parks
 them explicitly.
 
-Checkpoint: Oliver approves the recipe matrix and focused expected-outcome
-fixtures. Every selected behavior is answerable from the matrix without online
-research or agent inference. Stop at this boundary and rewrite `HANDOFF.md`.
+Checkpoint passed: Oliver approved the recipe matrix and focused
+expected-outcome fixtures. Every selected behavior is answerable from the
+contract without online research or agent inference. `HANDOFF.md` now points
+solely to B1.1.
 
 ### B1.1 - Data, Price, And Registry Substrate
 
@@ -405,11 +421,13 @@ when needed to diagnose or fix current work. Run the appropriate complete suite
 once at B1.5 and once at S8.6. Do not perform screenshots, rendered browser
 smoke, or visual acceptance unless Oliver explicitly asks.
 
-## Immediate Owner Input
+## Approved B1.0 Owner Contract
 
-Before B1.1 can start, Oliver must provide the B1.0 Bestiary recipe list and
-mechanic decisions. The repository currently contains no authoritative
-Bestiary rule source. Agents must not fill this gap from web research or memory.
+The versioned [B1 Bestiary manifest](../../fixtures/bestiary/v1/manifest.json)
+and its referenced recipe/outcome files are the sole Bestiary mechanic
+authority for implementation. B1.1 begins from those files. Agents must not
+expand the recipe set, infer behavior for the parked conversions, or supplement
+the Imprint rules from web research or memory.
 
 ## Stop Boundary
 

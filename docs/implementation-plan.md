@@ -1193,12 +1193,14 @@ Acceptance gate:
 
 ## Immediate Next Task
 
-Implement **B1.0 only** from
+Implement **B1.1 only** from
 [bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md):
-obtain Oliver's selected Bestiary recipe list and pin the exact legality,
-outcome, state-effect, price-input, output-count, and product-surface contract
-for every row. Do not implement or research mechanic behavior before that
-contract is approved. Stop at the B1.0 checkpoint and rewrite `HANDOFF.md`.
+load and validate the approved Imprint identity, map its Craicic Chimeral and
+three rare-beast price inputs through the existing economy model, add the
+creation/restoration registry descriptors, and keep both prefix/suffix
+conversion ids explicitly unsupported. Do not implement checkpoint mutation,
+calculation, bindings, product surfaces, strategy execution, or solver support
+before B1.2. Stop at the B1.1 checkpoint and rewrite `HANDOFF.md`.
 
 Oliver skipped S6 Phase 3 entirely; do not revive it. Economy E0-E7 is
 implemented and locally accepted; only external R2 and custom-domain activation

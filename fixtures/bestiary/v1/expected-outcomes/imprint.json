@@ -1,0 +1,207 @@
+{
+  "schema_version": "bestiary_expected_outcomes_v1",
+  "fixture_version": 1,
+  "approval_status": "approved_owner_2026-07-17",
+  "fixture_id": "bestiary-imprint-focused-outcomes",
+  "recipe_id": "bestiary:imprint",
+  "oracle": "owner_approved_b1_contract",
+  "state_symbols": {
+    "item_a_checkpoint_state": "A supported magic, non-corrupted, non-mirrored item state with representative non-default explicit rolls and flags, influence, implicits, enchantments, quality, sockets, and links.",
+    "item_a_changed_state": "The same item identity with a different legal mutable state, including a different rarity and different explicit and auxiliary properties.",
+    "item_b_state": "A different live item identity."
+  },
+  "cases": [
+    {
+      "case_id": "create_checkpoint_preserves_full_state",
+      "operation": "bestiary:imprint",
+      "given": {
+        "live_item_identity": "item-a",
+        "live_item_state": "item_a_checkpoint_state",
+        "active_checkpoint": null
+      },
+      "expected": {
+        "status": "applied",
+        "live_item_identity": "item-a",
+        "live_item_state": "exactly_equals:item_a_checkpoint_state",
+        "checkpoint_bound_to": "item-a",
+        "checkpoint_state": "exactly_equals:item_a_checkpoint_state",
+        "consumed_price_keys": [
+          "beast:craicic-chimeral",
+          "beast:rare",
+          "beast:rare",
+          "beast:rare"
+        ],
+        "output_item_count": 1,
+        "output_checkpoint_count": 1
+      }
+    },
+    {
+      "case_id": "create_accepts_each_approved_special_property",
+      "operation": "bestiary:imprint",
+      "given_variants": [
+        "crafted explicit modifier",
+        "fractured explicit modifier",
+        "generic influence",
+        "Eldritch influence",
+        "split item flag",
+        "synthesised item flag",
+        "non-empty implicit state"
+      ],
+      "common_preconditions": {
+        "rarity": "magic",
+        "corrupted": false,
+        "mirrored": false,
+        "active_checkpoint": null
+      },
+      "expected": {
+        "status_for_every_variant": "applied",
+        "live_item_state": "unchanged",
+        "checkpoint_state": "exactly_equals:input_live_item_state",
+        "consumption": "complete create cost"
+      }
+    },
+    {
+      "case_id": "create_refuses_non_magic",
+      "operation": "bestiary:imprint",
+      "given_rarities": [
+        "normal",
+        "rare"
+      ],
+      "expected": {
+        "status": "refused",
+        "reason": "requires_magic_item",
+        "live_item_state": "unchanged",
+        "active_checkpoint": null,
+        "consumed_price_keys": []
+      }
+    },
+    {
+      "case_id": "create_refuses_corrupted_or_mirrored",
+      "operation": "bestiary:imprint",
+      "given_variants": [
+        "magic corrupted item",
+        "magic mirrored item"
+      ],
+      "expected": {
+        "status": "refused",
+        "reason_by_variant": {
+          "magic corrupted item": "item_corrupted",
+          "magic mirrored item": "item_mirrored"
+        },
+        "live_item_state": "unchanged",
+        "active_checkpoint": null,
+        "consumed_price_keys": []
+      }
+    },
+    {
+      "case_id": "create_refuses_second_checkpoint",
+      "operation": "bestiary:imprint",
+      "given": {
+        "live_item_identity": "item-a",
+        "live_item_state": "item_a_checkpoint_state",
+        "active_checkpoint_bound_to": "item-a"
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "checkpoint_already_exists",
+        "live_item_state": "unchanged",
+        "checkpoint_state": "unchanged",
+        "consumed_price_keys": []
+      }
+    },
+    {
+      "case_id": "restore_replaces_entire_mutable_state",
+      "operation": "bestiary:restore_imprint",
+      "given": {
+        "live_item_identity": "item-a",
+        "live_item_state": "item_a_changed_state",
+        "corrupted": false,
+        "mirrored": false,
+        "active_checkpoint_bound_to": "item-a",
+        "checkpoint_state": "item_a_checkpoint_state"
+      },
+      "expected": {
+        "status": "applied",
+        "live_item_identity": "item-a",
+        "live_item_state": "exactly_equals:item_a_checkpoint_state",
+        "active_checkpoint": null,
+        "consumed_price_keys": [],
+        "consumed_checkpoint_count": 1,
+        "output_item_count": 1,
+        "output_checkpoint_count": 0
+      }
+    },
+    {
+      "case_id": "restore_identical_state_consumes_checkpoint",
+      "operation": "bestiary:restore_imprint",
+      "given": {
+        "live_item_identity": "item-a",
+        "live_item_state": "item_a_checkpoint_state",
+        "active_checkpoint_bound_to": "item-a",
+        "checkpoint_state": "item_a_checkpoint_state"
+      },
+      "expected": {
+        "status": "applied",
+        "live_item_state": "exactly_equals:item_a_checkpoint_state",
+        "active_checkpoint": null,
+        "consumed_price_keys": [],
+        "consumed_checkpoint_count": 1
+      }
+    },
+    {
+      "case_id": "restore_refuses_corrupted_or_mirrored_live_item",
+      "operation": "bestiary:restore_imprint",
+      "given_variants": [
+        "current live item is corrupted",
+        "current live item is mirrored"
+      ],
+      "common_preconditions": {
+        "live_item_identity": "item-a",
+        "active_checkpoint_bound_to": "item-a"
+      },
+      "expected": {
+        "status": "refused",
+        "reason_by_variant": {
+          "current live item is corrupted": "item_corrupted",
+          "current live item is mirrored": "item_mirrored"
+        },
+        "live_item_state": "unchanged",
+        "checkpoint_state": "unchanged",
+        "consumed_price_keys": [],
+        "consumed_checkpoint_count": 0
+      }
+    },
+    {
+      "case_id": "restore_refuses_missing_checkpoint",
+      "operation": "bestiary:restore_imprint",
+      "given": {
+        "live_item_identity": "item-a",
+        "active_checkpoint": null
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "checkpoint_missing",
+        "live_item_state": "unchanged",
+        "consumed_price_keys": []
+      }
+    },
+    {
+      "case_id": "restore_refuses_checkpoint_bound_to_different_item",
+      "operation": "bestiary:restore_imprint",
+      "given": {
+        "live_item_identity": "item-b",
+        "live_item_state": "item_b_state",
+        "active_checkpoint_bound_to": "item-a",
+        "checkpoint_state": "item_a_checkpoint_state"
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "checkpoint_bound_to_different_item",
+        "live_item_state": "unchanged",
+        "checkpoint_state": "unchanged",
+        "consumed_price_keys": [],
+        "consumed_checkpoint_count": 0
+      }
+    }
+  ]
+}
