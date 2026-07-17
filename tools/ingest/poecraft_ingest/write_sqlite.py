@@ -21,7 +21,13 @@ from .normalize_fossils import (
     iter_fossil_weights,
 )
 from .normalize_mods import canonical_json, normalized_mod
+from .normalize_bestiary import load_bestiary_contract
 from .repo_loader import SourceSnapshot
+
+
+DEFAULT_BESTIARY_CONTRACT = (
+    Path(__file__).resolve().parents[3] / "fixtures" / "bestiary" / "v1"
+)
 
 
 def _iter_object_rows(value: dict[str, Any]) -> Iterable[tuple[str, Any]]:
@@ -950,10 +956,120 @@ def _compute_data_hash(connection: sqlite3.Connection) -> str:
     return digest.hexdigest()
 
 
+def _insert_bestiary_contract(
+    connection: sqlite3.Connection,
+    contract_root: Path,
+) -> None:
+    loaded = load_bestiary_contract(contract_root)
+    manifest = loaded["manifest"]
+    approval = manifest["approval"]
+    connection.execute(
+        """
+        INSERT INTO bestiary_contract_manifest(
+            id, contract_id, schema_version, contract_version, phase,
+            approval_status, owner, mechanic_authority, content_hash
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            manifest["contract_id"],
+            manifest["schema_version"],
+            int(manifest["contract_version"]),
+            manifest["phase"],
+            approval["status"],
+            approval["owner"],
+            approval["mechanic_authority"],
+            loaded["content_hash"],
+        ),
+    )
+    action_id = 1
+    for recipe_id, recipe in enumerate(loaded["recipes"], start=1):
+        availability = recipe["availability"]
+        connection.execute(
+            """
+            INSERT INTO bestiary_recipe(
+                bestiary_recipe_id, recipe_key, display_name, classification,
+                support_status, unsupported_reason, emulator_available,
+                calculator_available, strategy_builder_available,
+                solver_available, contract_json, expected_outcomes_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                recipe_id,
+                recipe["recipe_key"],
+                recipe["display_name"],
+                recipe["classification"],
+                recipe["support_status"],
+                recipe["unsupported_reason"],
+                int(availability["emulator"]),
+                int(availability["calculator"]),
+                int(availability["strategy_builder"]),
+                int(availability["solver"]),
+                recipe["contract_json"],
+                recipe["expected_outcomes_json"],
+            ),
+        )
+        for ordinal, beast in enumerate(recipe["beast_inputs"]):
+            connection.execute(
+                """
+                INSERT INTO bestiary_beast_input(
+                    bestiary_recipe_id, ordinal, beast_key, display_name,
+                    quantity, price_key
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    recipe_id,
+                    ordinal,
+                    beast["beast_id"],
+                    beast["display_name"],
+                    int(beast["quantity"]),
+                    beast["price_key"],
+                ),
+            )
+        for action in recipe["actions"]:
+            connection.execute(
+                """
+                INSERT INTO bestiary_action(
+                    bestiary_action_id, bestiary_recipe_id,
+                    operation_ordinal, action_key, display_name,
+                    operation_kind, transition_kind, rarity_mask,
+                    forbidden_item_flags, checkpoint_requirement,
+                    checkpoint_effect, identity_requirement
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    action_id,
+                    recipe_id,
+                    action["operation_ordinal"],
+                    action["action_key"],
+                    action["display_name"],
+                    action["operation_kind"],
+                    action["transition_kind"],
+                    action["rarity_mask"],
+                    action["forbidden_item_flags"],
+                    action["checkpoint_requirement"],
+                    action["checkpoint_effect"],
+                    action["identity_requirement"],
+                ),
+            )
+            connection.executemany(
+                """
+                INSERT INTO bestiary_action_cost(
+                    bestiary_action_id, ordinal, price_key
+                ) VALUES (?, ?, ?)
+                """,
+                (
+                    (action_id, ordinal, price_key)
+                    for ordinal, price_key in enumerate(action["cost_keys"])
+                ),
+            )
+            action_id += 1
+
+
 def build_database(
     snapshot: SourceSnapshot,
     database_path: Path,
     schema_path: Path,
+    bestiary_contract_root: Path = DEFAULT_BESTIARY_CONTRACT,
 ) -> dict[str, Any]:
     database_path = database_path.resolve()
     schema_path = schema_path.resolve()
@@ -1038,6 +1154,7 @@ def build_database(
                 tag_ids,
             )
             _insert_auxiliary_catalogs(connection, snapshot, source_ids)
+            _insert_bestiary_contract(connection, bestiary_contract_root)
 
             foreign_key_errors = list(
                 connection.execute("PRAGMA foreign_key_check")

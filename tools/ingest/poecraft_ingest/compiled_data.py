@@ -12,7 +12,7 @@ from .engine_selection import database_manifest
 from .stat_translator import StatTranslator
 
 
-ARTIFACT_SCHEMA_VERSION = 3
+ARTIFACT_SCHEMA_VERSION = 4
 
 FLAG_ESSENCE_ONLY = 1 << 0
 FLAG_CRAFTED = 1 << 1
@@ -34,6 +34,20 @@ SESSION_SUPPORT = {
     "unsupported_domain": 2,
 }
 ORDINARY_DOMAINS = {"item", "misc", "abyss_jewel"}
+
+BESTIARY_CLASSIFICATION = {
+    "ordinary one-item deterministic": 0,
+    "ordinary one-item stochastic": 1,
+    "checkpoint/restore": 2,
+    "multi-output or multi-item": 3,
+    "explicitly unsupported in B1": 4,
+}
+BESTIARY_SUPPORT = {"selected": 0, "unsupported": 1}
+BESTIARY_OPERATION = {"create": 0, "restore": 1}
+BESTIARY_TRANSITION = {"deterministic": 0}
+BESTIARY_CHECKPOINT_REQUIREMENT = {"absent": 0, "present": 1}
+BESTIARY_CHECKPOINT_EFFECT = {"create": 0, "consume": 1}
+BESTIARY_IDENTITY_REQUIREMENT = {"current_item": 0, "same_item": 1}
 
 
 def _utc_now() -> str:
@@ -344,6 +358,41 @@ def _build_full_payloads(
         FROM cluster_notable ORDER BY cluster_notable_id
         """,
     )
+    bestiary_recipes = _query(
+        connection,
+        """
+        SELECT bestiary_recipe_id, recipe_key, display_name, classification,
+               support_status, unsupported_reason, emulator_available,
+               calculator_available, strategy_builder_available,
+               solver_available, contract_json, expected_outcomes_json
+        FROM bestiary_recipe ORDER BY bestiary_recipe_id
+        """,
+    )
+    bestiary_inputs = _query(
+        connection,
+        """
+        SELECT bestiary_recipe_id, ordinal, beast_key, display_name,
+               quantity, price_key
+        FROM bestiary_beast_input ORDER BY bestiary_recipe_id, ordinal
+        """,
+    )
+    bestiary_actions = _query(
+        connection,
+        """
+        SELECT bestiary_action_id, bestiary_recipe_id, operation_ordinal,
+               action_key, display_name, operation_kind, transition_kind,
+               rarity_mask, forbidden_item_flags, checkpoint_requirement,
+               checkpoint_effect, identity_requirement
+        FROM bestiary_action ORDER BY bestiary_action_id
+        """,
+    )
+    bestiary_costs = _query(
+        connection,
+        """
+        SELECT bestiary_action_id, ordinal, price_key
+        FROM bestiary_action_cost ORDER BY bestiary_action_id, ordinal
+        """,
+    )
 
     domain_codes = _enum_map(
         [str(row["domain"]) for row in bases + mods]
@@ -440,6 +489,22 @@ def _build_full_payloads(
         )
     for row in cluster_notables:
         add_strings(row["key"], row["name"], row["jewel_stat_key"])
+    for row in bestiary_recipes:
+        add_strings(
+            row["recipe_key"],
+            row["display_name"],
+            row["unsupported_reason"],
+            row["contract_json"],
+            row["expected_outcomes_json"],
+        )
+    for row in bestiary_inputs:
+        add_strings(
+            row["beast_key"], row["display_name"], row["price_key"]
+        )
+    for row in bestiary_actions:
+        add_strings(row["action_key"], row["display_name"])
+    for row in bestiary_costs:
+        add_strings(row["price_key"])
 
     translator = StatTranslator()
     translator.load(_load_translation_entries(stat_translation_rows))
@@ -563,6 +628,18 @@ def _build_full_payloads(
         cluster_passives,
         "cluster_jewel_id",
     )
+    bestiary_recipe_ids = [
+        int(row["bestiary_recipe_id"]) for row in bestiary_recipes
+    ]
+    bestiary_input_offsets, flat_bestiary_inputs = _offsets_for(
+        bestiary_recipe_ids, bestiary_inputs, "bestiary_recipe_id"
+    )
+    bestiary_action_ids = [
+        int(row["bestiary_action_id"]) for row in bestiary_actions
+    ]
+    bestiary_cost_offsets, flat_bestiary_costs = _offsets_for(
+        bestiary_action_ids, bestiary_costs, "bestiary_action_id"
+    )
 
     enums = {
         "domain": domain_codes,
@@ -574,6 +651,13 @@ def _build_full_payloads(
         "fossil_weight_kind": fossil_weight_kind_codes,
         "fossil_mod_kind": fossil_mod_kind_codes,
         "fossil_tag_kind": fossil_tag_kind_codes,
+        "bestiary_classification": BESTIARY_CLASSIFICATION,
+        "bestiary_support": BESTIARY_SUPPORT,
+        "bestiary_operation": BESTIARY_OPERATION,
+        "bestiary_transition": BESTIARY_TRANSITION,
+        "bestiary_checkpoint_requirement": BESTIARY_CHECKPOINT_REQUIREMENT,
+        "bestiary_checkpoint_effect": BESTIARY_CHECKPOINT_EFFECT,
+        "bestiary_identity_requirement": BESTIARY_IDENTITY_REQUIREMENT,
         "flags": {
             "essence_only": FLAG_ESSENCE_ONLY,
             "crafted": FLAG_CRAFTED,
@@ -594,7 +678,7 @@ def _build_full_payloads(
 
     game_data = {
         "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
-        "layout": "complete_parallel_arrays_v2",
+        "layout": "complete_parallel_arrays_v3",
         "tags": {
             "count": len(tags),
             "global_tag_ids": [int(row["tag_id"]) for row in tags],
@@ -943,6 +1027,102 @@ def _build_full_payloads(
                 sid(row["jewel_stat_key"]) for row in cluster_notables
             ],
         },
+        "bestiary_recipes": {
+            "count": len(bestiary_recipes),
+            "global_recipe_ids": bestiary_recipe_ids,
+            "key_string_ids": [sid(row["recipe_key"]) for row in bestiary_recipes],
+            "display_name_string_ids": [
+                sid(row["display_name"]) for row in bestiary_recipes
+            ],
+            "classification_codes": [
+                BESTIARY_CLASSIFICATION[str(row["classification"])]
+                for row in bestiary_recipes
+            ],
+            "support_codes": [
+                BESTIARY_SUPPORT[str(row["support_status"])]
+                for row in bestiary_recipes
+            ],
+            "unsupported_reason_string_ids": [
+                sid(row["unsupported_reason"]) for row in bestiary_recipes
+            ],
+            "emulator_available": [
+                int(row["emulator_available"]) for row in bestiary_recipes
+            ],
+            "calculator_available": [
+                int(row["calculator_available"]) for row in bestiary_recipes
+            ],
+            "strategy_builder_available": [
+                int(row["strategy_builder_available"])
+                for row in bestiary_recipes
+            ],
+            "solver_available": [
+                int(row["solver_available"]) for row in bestiary_recipes
+            ],
+            "contract_json_string_ids": [
+                sid(row["contract_json"]) for row in bestiary_recipes
+            ],
+            "expected_outcomes_json_string_ids": [
+                sid(row["expected_outcomes_json"])
+                for row in bestiary_recipes
+            ],
+            "beast_input_offsets": bestiary_input_offsets,
+            "beast_key_string_ids": [
+                sid(row["beast_key"]) for row in flat_bestiary_inputs
+            ],
+            "beast_display_name_string_ids": [
+                sid(row["display_name"]) for row in flat_bestiary_inputs
+            ],
+            "beast_quantities": [
+                int(row["quantity"]) for row in flat_bestiary_inputs
+            ],
+            "beast_price_key_string_ids": [
+                sid(row["price_key"]) for row in flat_bestiary_inputs
+            ],
+        },
+        "bestiary_actions": {
+            "count": len(bestiary_actions),
+            "global_action_ids": bestiary_action_ids,
+            "global_recipe_ids": [
+                int(row["bestiary_recipe_id"]) for row in bestiary_actions
+            ],
+            "operation_ordinals": [
+                int(row["operation_ordinal"]) for row in bestiary_actions
+            ],
+            "key_string_ids": [sid(row["action_key"]) for row in bestiary_actions],
+            "display_name_string_ids": [
+                sid(row["display_name"]) for row in bestiary_actions
+            ],
+            "operation_codes": [
+                BESTIARY_OPERATION[str(row["operation_kind"])]
+                for row in bestiary_actions
+            ],
+            "transition_codes": [
+                BESTIARY_TRANSITION[str(row["transition_kind"])]
+                for row in bestiary_actions
+            ],
+            "rarity_masks": [int(row["rarity_mask"]) for row in bestiary_actions],
+            "forbidden_item_flags": [
+                int(row["forbidden_item_flags"]) for row in bestiary_actions
+            ],
+            "checkpoint_requirement_codes": [
+                BESTIARY_CHECKPOINT_REQUIREMENT[
+                    str(row["checkpoint_requirement"])
+                ]
+                for row in bestiary_actions
+            ],
+            "checkpoint_effect_codes": [
+                BESTIARY_CHECKPOINT_EFFECT[str(row["checkpoint_effect"])]
+                for row in bestiary_actions
+            ],
+            "identity_requirement_codes": [
+                BESTIARY_IDENTITY_REQUIREMENT[str(row["identity_requirement"])]
+                for row in bestiary_actions
+            ],
+            "cost_offsets": bestiary_cost_offsets,
+            "cost_price_key_string_ids": [
+                sid(row["price_key"]) for row in flat_bestiary_costs
+            ],
+        },
     }
 
     strings_payload = {
@@ -978,6 +1158,16 @@ def _build_full_payloads(
         "cluster_jewels": len(clusters),
         "cluster_passives": len(cluster_passives),
         "cluster_notables": len(cluster_notables),
+        "bestiary_recipes": len(bestiary_recipes),
+        "bestiary_selected_recipes": sum(
+            row["support_status"] == "selected" for row in bestiary_recipes
+        ),
+        "bestiary_unsupported_recipes": sum(
+            row["support_status"] == "unsupported" for row in bestiary_recipes
+        ),
+        "bestiary_beast_inputs": len(bestiary_inputs),
+        "bestiary_actions": len(bestiary_actions),
+        "bestiary_action_cost_rows": len(bestiary_costs),
         "ordinary_session_bases": sum(
             support == "ordinary" for support, _ in base_support
         ),
@@ -1198,6 +1388,34 @@ def _validate_parallel_arrays(
             "name_string_ids",
             "jewel_stat_key_string_ids",
         ),
+        "bestiary_recipes": (
+            "global_recipe_ids",
+            "key_string_ids",
+            "display_name_string_ids",
+            "classification_codes",
+            "support_codes",
+            "unsupported_reason_string_ids",
+            "emulator_available",
+            "calculator_available",
+            "strategy_builder_available",
+            "solver_available",
+            "contract_json_string_ids",
+            "expected_outcomes_json_string_ids",
+        ),
+        "bestiary_actions": (
+            "global_action_ids",
+            "global_recipe_ids",
+            "operation_ordinals",
+            "key_string_ids",
+            "display_name_string_ids",
+            "operation_codes",
+            "transition_codes",
+            "rarity_masks",
+            "forbidden_item_flags",
+            "checkpoint_requirement_codes",
+            "checkpoint_effect_codes",
+            "identity_requirement_codes",
+        ),
     }
     for section, fields in counted_sections.items():
         errors.extend(_validate_counted_section(game_data, section, fields))
@@ -1208,6 +1426,12 @@ def _validate_parallel_arrays(
     fossil_count = game_data.get("fossils", {}).get("count", 0)
     essence_count = game_data.get("essences", {}).get("count", 0)
     cluster_count = game_data.get("cluster_jewels", {}).get("count", 0)
+    bestiary_recipe_count = game_data.get("bestiary_recipes", {}).get(
+        "count", 0
+    )
+    bestiary_action_count = game_data.get("bestiary_actions", {}).get(
+        "count", 0
+    )
     errors.extend(
         _validate_offsets(
             game_data,
@@ -1215,6 +1439,29 @@ def _validate_parallel_arrays(
             base_count,
             "tag_offsets",
             ("tag_ids",),
+        )
+    )
+    errors.extend(
+        _validate_offsets(
+            game_data,
+            "bestiary_recipes",
+            bestiary_recipe_count,
+            "beast_input_offsets",
+            (
+                "beast_key_string_ids",
+                "beast_display_name_string_ids",
+                "beast_quantities",
+                "beast_price_key_string_ids",
+            ),
+        )
+    )
+    errors.extend(
+        _validate_offsets(
+            game_data,
+            "bestiary_actions",
+            bestiary_action_count,
+            "cost_offsets",
+            ("cost_price_key_string_ids",),
         )
     )
     errors.extend(

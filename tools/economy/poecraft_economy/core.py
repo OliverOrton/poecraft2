@@ -215,6 +215,11 @@ def _seed_catalog(
         _upsert_mapping(
             connection, "Resonator", source_item_id, key, "catalog", version
         )
+    for source_item_id, key in catalog.get("beasts", {}).items():
+        _upsert_price_key(connection, key, "market_quote")
+        _upsert_mapping(
+            connection, "Beast", source_item_id, key, "catalog", version
+        )
 
     # Bench-only market components are not active runtime keys themselves.
     for component, source_item_id in {

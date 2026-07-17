@@ -5,9 +5,9 @@
     "manifest_relative_path": "data/compiled/current/manifest.json",
     "canonical_source": "data/sqlite/poecraft.db",
     "engine_abi_version": 1,
-    "artifact_schema_version": 3,
+    "artifact_schema_version": 4,
     "source_version": "repoe-e4eaf06c20e1ddb4",
-    "source_data_hash": "c459d0b9b774973ee165b8390dde226b5422b09b3250dda0b38feed16bdc0eba",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
     "game_data_sha256": "9776797b31345f3ac3f8b911e717b5583c72da255b5f6d72ccb4128f149a64c0",
     "strings_sha256": "6ba72d7139349c4e5db6fddb21d443304ac4881062ded48322c139d01fe37a9b"
   },

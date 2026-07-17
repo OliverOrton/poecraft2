@@ -287,6 +287,17 @@ class IngestTests(unittest.TestCase):
                 1,
             )
             self.assertEqual(report["cluster"]["runtime_support"], "unsupported")
+            self.assertEqual(
+                report["bestiary"],
+                {
+                    "selected_recipes": 1,
+                    "unsupported_recipes": 2,
+                    "actions": [
+                        "bestiary:imprint",
+                        "bestiary:restore_imprint",
+                    ],
+                },
+            )
 
             pool = query_normal_rollable_mods(first, "Test Armour", 86)
             self.assertEqual(

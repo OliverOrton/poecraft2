@@ -185,6 +185,8 @@ solely to B1.1.
 
 ### B1.1 - Data, Price, And Registry Substrate
 
+Status: complete 2026-07-17.
+
 - Add versioned manifest-backed recipe identities and validation.
 - Map each consumed beast or recipe bundle to stable economy price keys; reuse
   the existing Beast provider surface rather than deriving fake recipes from
@@ -197,6 +199,16 @@ solely to B1.1.
 Checkpoint: canonical source data produces deterministic artifact and registry
 identities, selected prices resolve through the ordinary economy path, and
 unsupported rows are named rather than silently approximated.
+
+Checkpoint passed: the approved B1.0 files are validated into schema-v2
+canonical Bestiary tables and compiled artifact-schema-v4 recipe/action
+descriptors. `bestiary:imprint` and `bestiary:restore_imprint` preserve their
+distinct checkpoint requirements and exact cost vectors; both parked
+conversion ids remain explicit unsupported recipe rows with no actions.
+`beast:craicic-chimeral` resolves through the existing Beast stash provider,
+while `beast:rare` is an explicit manual price rather than zero cost. Narrow
+ingest, artifact, economy, and native build validation passed. B1.2 is the
+sole next boundary.
 
 ### B1.2 - Native Actions And Exact Calculation
 

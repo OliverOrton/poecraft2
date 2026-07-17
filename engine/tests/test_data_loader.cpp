@@ -1,5 +1,7 @@
 #include "tests.hpp"
 
+#include "../src/handles_internal.hpp"
+
 #include "poecraft/api.h"
 #include "poecraft/session.h"
 
@@ -47,6 +49,14 @@ void run_data_loader_tests(const char* artifact_dir) {
     PC_CHECK(summary.base_item_count > 0);
     PC_CHECK(summary.mod_count > 0);
     PC_CHECK(summary.ordinary_session_base_count > 0);
+    const auto& native = *data->impl;
+    PC_CHECK(native.bestiary_recipes.size() == 3);
+    PC_CHECK(native.bestiary_actions.size() == 2);
+    PC_CHECK(native.bestiary_action_by_id.count("bestiary:imprint") == 1);
+    if (native.bestiary_actions.size() == 2) {
+        PC_CHECK(native.bestiary_actions[0].cost_keys.size() == 4);
+        PC_CHECK(native.bestiary_actions[1].cost_keys.empty());
+    }
     std::printf("loaded %u bases (%u ordinary), %u mods, %u strings\n",
                 summary.base_item_count, summary.ordinary_session_base_count,
                 summary.mod_count, summary.string_count);

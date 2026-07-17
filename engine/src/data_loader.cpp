@@ -58,6 +58,8 @@ static std::shared_ptr<DataImpl> build_data_impl(
     data->count_ordinary_bases = count("ordinary_session_bases");
     data->count_cluster_bases = count("cluster_unsupported_bases");
     data->count_unsupported_domain_bases = count("unsupported_domain_bases");
+    data->count_bestiary_recipes = count("bestiary_recipes");
+    data->count_bestiary_actions = count("bestiary_actions");
 
     // domain enum reverse map (name -> code  =>  code -> name)
     const Value& enums = manifest.at("enums");
@@ -376,11 +378,170 @@ static std::shared_ptr<DataImpl> build_data_impl(
         }
     }
 
+    // --- manifest-backed Bestiary contract --------------------------------
+    const Value* bestiary_recipes = game.find("bestiary_recipes");
+    if (bestiary_recipes != nullptr) {
+        const std::uint32_t recipe_count = read_count(*bestiary_recipes);
+        std::vector<std::uint32_t> ids;
+        std::vector<std::uint32_t> key_sids;
+        std::vector<std::uint32_t> name_sids;
+        std::vector<std::int32_t> classifications;
+        std::vector<std::int32_t> support;
+        std::vector<std::int32_t> unsupported_sids;
+        std::vector<std::int32_t> emulator;
+        std::vector<std::int32_t> calculator;
+        std::vector<std::int32_t> strategy_builder;
+        std::vector<std::int32_t> solver;
+        std::vector<std::uint32_t> input_offsets;
+        std::vector<std::uint32_t> beast_key_sids;
+        std::vector<std::uint32_t> beast_name_sids;
+        std::vector<std::uint32_t> beast_quantities;
+        std::vector<std::uint32_t> beast_price_sids;
+        read_u32(*bestiary_recipes, "global_recipe_ids", ids);
+        read_u32(*bestiary_recipes, "key_string_ids", key_sids);
+        read_u32(*bestiary_recipes, "display_name_string_ids", name_sids);
+        read_i32(*bestiary_recipes, "classification_codes", classifications);
+        read_i32(*bestiary_recipes, "support_codes", support);
+        read_i32(*bestiary_recipes, "unsupported_reason_string_ids", unsupported_sids);
+        read_i32(*bestiary_recipes, "emulator_available", emulator);
+        read_i32(*bestiary_recipes, "calculator_available", calculator);
+        read_i32(*bestiary_recipes, "strategy_builder_available", strategy_builder);
+        read_i32(*bestiary_recipes, "solver_available", solver);
+        read_u32(*bestiary_recipes, "beast_input_offsets", input_offsets);
+        read_u32(*bestiary_recipes, "beast_key_string_ids", beast_key_sids);
+        read_u32(*bestiary_recipes, "beast_display_name_string_ids", beast_name_sids);
+        read_u32(*bestiary_recipes, "beast_quantities", beast_quantities);
+        read_u32(*bestiary_recipes, "beast_price_key_string_ids", beast_price_sids);
+        require(ids.size() == recipe_count && key_sids.size() == recipe_count &&
+                    name_sids.size() == recipe_count &&
+                    classifications.size() == recipe_count &&
+                    support.size() == recipe_count &&
+                    unsupported_sids.size() == recipe_count &&
+                    emulator.size() == recipe_count &&
+                    calculator.size() == recipe_count &&
+                    strategy_builder.size() == recipe_count &&
+                    solver.size() == recipe_count &&
+                    input_offsets.size() == recipe_count + 1,
+                "bestiary recipe arrays inconsistent");
+        require(beast_key_sids.size() == input_offsets.back() &&
+                    beast_name_sids.size() == input_offsets.back() &&
+                    beast_quantities.size() == input_offsets.back() &&
+                    beast_price_sids.size() == input_offsets.back(),
+                "bestiary beast input arrays inconsistent");
+        data->bestiary_recipes.reserve(recipe_count);
+        for (std::uint32_t i = 0; i < recipe_count; ++i) {
+            BestiaryRecipeDescriptor descriptor;
+            descriptor.global_recipe_id = ids[i];
+            descriptor.id = data->string_at(key_sids[i]);
+            descriptor.display_name = data->string_at(name_sids[i]);
+            descriptor.classification = static_cast<std::uint8_t>(classifications[i]);
+            descriptor.support = static_cast<std::uint8_t>(support[i]);
+            if (unsupported_sids[i] >= 0) {
+                descriptor.unsupported_reason = data->string_at(
+                    static_cast<std::uint32_t>(unsupported_sids[i]));
+            }
+            descriptor.emulator_available = emulator[i] != 0;
+            descriptor.calculator_available = calculator[i] != 0;
+            descriptor.strategy_builder_available = strategy_builder[i] != 0;
+            descriptor.solver_available = solver[i] != 0;
+            for (std::uint32_t j = input_offsets[i];
+                 j < input_offsets[i + 1]; ++j) {
+                descriptor.beast_inputs.push_back({
+                    data->string_at(beast_key_sids[j]),
+                    data->string_at(beast_name_sids[j]),
+                    beast_quantities[j],
+                    data->string_at(beast_price_sids[j]),
+                });
+            }
+            data->bestiary_recipe_by_id.emplace(
+                descriptor.id, static_cast<std::uint32_t>(
+                                   data->bestiary_recipes.size()));
+            data->bestiary_recipes.push_back(std::move(descriptor));
+        }
+    }
+
+    const Value* bestiary_actions = game.find("bestiary_actions");
+    if (bestiary_actions != nullptr) {
+        const std::uint32_t action_count = read_count(*bestiary_actions);
+        std::vector<std::uint32_t> ids;
+        std::vector<std::uint32_t> recipe_ids;
+        std::vector<std::uint32_t> ordinals;
+        std::vector<std::uint32_t> key_sids;
+        std::vector<std::uint32_t> name_sids;
+        std::vector<std::int32_t> operation;
+        std::vector<std::int32_t> transition;
+        std::vector<std::int32_t> rarity_masks;
+        std::vector<std::int32_t> forbidden_flags;
+        std::vector<std::int32_t> checkpoint_requirement;
+        std::vector<std::int32_t> checkpoint_effect;
+        std::vector<std::int32_t> identity_requirement;
+        std::vector<std::uint32_t> cost_offsets;
+        std::vector<std::uint32_t> cost_sids;
+        read_u32(*bestiary_actions, "global_action_ids", ids);
+        read_u32(*bestiary_actions, "global_recipe_ids", recipe_ids);
+        read_u32(*bestiary_actions, "operation_ordinals", ordinals);
+        read_u32(*bestiary_actions, "key_string_ids", key_sids);
+        read_u32(*bestiary_actions, "display_name_string_ids", name_sids);
+        read_i32(*bestiary_actions, "operation_codes", operation);
+        read_i32(*bestiary_actions, "transition_codes", transition);
+        read_i32(*bestiary_actions, "rarity_masks", rarity_masks);
+        read_i32(*bestiary_actions, "forbidden_item_flags", forbidden_flags);
+        read_i32(*bestiary_actions, "checkpoint_requirement_codes", checkpoint_requirement);
+        read_i32(*bestiary_actions, "checkpoint_effect_codes", checkpoint_effect);
+        read_i32(*bestiary_actions, "identity_requirement_codes", identity_requirement);
+        read_u32(*bestiary_actions, "cost_offsets", cost_offsets);
+        read_u32(*bestiary_actions, "cost_price_key_string_ids", cost_sids);
+        require(ids.size() == action_count && recipe_ids.size() == action_count &&
+                    ordinals.size() == action_count && key_sids.size() == action_count &&
+                    name_sids.size() == action_count && operation.size() == action_count &&
+                    transition.size() == action_count && rarity_masks.size() == action_count &&
+                    forbidden_flags.size() == action_count &&
+                    checkpoint_requirement.size() == action_count &&
+                    checkpoint_effect.size() == action_count &&
+                    identity_requirement.size() == action_count &&
+                    cost_offsets.size() == action_count + 1 &&
+                    cost_sids.size() == cost_offsets.back(),
+                "bestiary action arrays inconsistent");
+        data->bestiary_actions.reserve(action_count);
+        for (std::uint32_t i = 0; i < action_count; ++i) {
+            BestiaryActionDescriptor descriptor;
+            descriptor.global_action_id = ids[i];
+            descriptor.global_recipe_id = recipe_ids[i];
+            descriptor.operation_ordinal = ordinals[i];
+            descriptor.id = data->string_at(key_sids[i]);
+            descriptor.display_name = data->string_at(name_sids[i]);
+            descriptor.operation = static_cast<BestiaryOperationKind>(operation[i]);
+            descriptor.transition = static_cast<std::uint8_t>(transition[i]);
+            descriptor.rarity_mask = static_cast<std::uint8_t>(rarity_masks[i]);
+            descriptor.forbidden_item_flags =
+                static_cast<std::uint8_t>(forbidden_flags[i]);
+            descriptor.checkpoint_requirement =
+                static_cast<BestiaryCheckpointRequirement>(
+                    checkpoint_requirement[i]);
+            descriptor.checkpoint_effect =
+                static_cast<BestiaryCheckpointEffect>(checkpoint_effect[i]);
+            descriptor.identity_requirement =
+                static_cast<BestiaryIdentityRequirement>(identity_requirement[i]);
+            for (std::uint32_t j = cost_offsets[i];
+                 j < cost_offsets[i + 1]; ++j) {
+                descriptor.cost_keys.push_back(data->string_at(cost_sids[j]));
+            }
+            data->bestiary_action_by_id.emplace(
+                descriptor.id, static_cast<std::uint32_t>(
+                                   data->bestiary_actions.size()));
+            data->bestiary_actions.push_back(std::move(descriptor));
+        }
+    }
+
     // sanity: manifest counts agree with game-data section counts
     require(data->base_count == data->count_base_items,
             "base_items count disagrees with manifest");
     require(data->mod_count == data->count_mods,
             "mods count disagrees with manifest");
+    require(data->bestiary_recipes.size() == data->count_bestiary_recipes,
+            "bestiary recipe count disagrees with manifest");
+    require(data->bestiary_actions.size() == data->count_bestiary_actions,
+            "bestiary action count disagrees with manifest");
 
     // Build stable c_str() pointer arrays for mod text lines. Strings are
     // never reassigned after this point so the pointers stay valid for the

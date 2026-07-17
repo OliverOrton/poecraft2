@@ -33,6 +33,11 @@ REQUIRED_TABLES = {
     "cluster_jewel",
     "cluster_jewel_passive",
     "cluster_notable",
+    "bestiary_contract_manifest",
+    "bestiary_recipe",
+    "bestiary_beast_input",
+    "bestiary_action",
+    "bestiary_action_cost",
 }
 
 
@@ -172,6 +177,31 @@ def validate_database(database_path: Path) -> dict[str, Any]:
                 f"cluster-jewel data has {cluster_orphans} orphan rows"
             )
 
+        selected_bestiary = connection.execute(
+            """
+            SELECT COUNT(*) FROM bestiary_recipe
+            WHERE support_status = 'selected'
+            """
+        ).fetchone()[0]
+        unsupported_bestiary = connection.execute(
+            """
+            SELECT COUNT(*) FROM bestiary_recipe
+            WHERE support_status = 'unsupported'
+            """
+        ).fetchone()[0]
+        bestiary_actions = [
+            str(row[0])
+            for row in connection.execute(
+                "SELECT action_key FROM bestiary_action ORDER BY bestiary_action_id"
+            )
+        ]
+        if selected_bestiary != 1:
+            errors.append("B1 must contain exactly one selected Bestiary recipe")
+        if unsupported_bestiary != 2:
+            errors.append("B1 must retain exactly two unsupported Bestiary recipes")
+        if bestiary_actions != ["bestiary:imprint", "bestiary:restore_imprint"]:
+            errors.append("B1 Bestiary action registry differs from approved contract")
+
         skip_reasons = {
             row["reason_code"]: row["count"]
             for row in connection.execute(
@@ -197,6 +227,11 @@ def validate_database(database_path: Path) -> dict[str, Any]:
                 "notables": notable_count,
                 "orphans": cluster_orphans,
                 "runtime_support": "unsupported",
+            },
+            "bestiary": {
+                "selected_recipes": selected_bestiary,
+                "unsupported_recipes": unsupported_bestiary,
+                "actions": bestiary_actions,
             },
             "warnings": warnings,
             "reference_issue_count": len(reference_issues),

@@ -53,6 +53,8 @@ class CompiledDataTests(unittest.TestCase):
                 1,
             )
             self.assertIn("domain", manifest["enums"])
+            self.assertEqual(manifest["row_counts"]["bestiary_recipes"], 3)
+            self.assertEqual(manifest["row_counts"]["bestiary_actions"], 2)
 
             report = validate_engine_data(database, artifact)
             self.assertTrue(report["ok"], report["errors"])
@@ -63,6 +65,9 @@ class CompiledDataTests(unittest.TestCase):
             )
             self.assertEqual(payload["mods"]["count"], 5)
             self.assertEqual(payload["base_items"]["count"], 2)
+            self.assertEqual(
+                payload["bestiary_actions"]["cost_offsets"], [0, 4, 4]
+            )
             self.assertEqual(
                 len(payload["mods"]["global_mod_ids"]),
                 payload["mods"]["count"],

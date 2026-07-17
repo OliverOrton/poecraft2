@@ -304,6 +304,83 @@ CREATE TABLE stat_translation (
     source_json TEXT NOT NULL
 );
 
+CREATE TABLE bestiary_contract_manifest (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    contract_id TEXT NOT NULL UNIQUE,
+    schema_version TEXT NOT NULL,
+    contract_version INTEGER NOT NULL,
+    phase TEXT NOT NULL,
+    approval_status TEXT NOT NULL,
+    owner TEXT NOT NULL,
+    mechanic_authority TEXT NOT NULL,
+    content_hash TEXT NOT NULL
+);
+
+CREATE TABLE bestiary_recipe (
+    bestiary_recipe_id INTEGER PRIMARY KEY,
+    recipe_key TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    classification TEXT NOT NULL CHECK (classification IN (
+        'ordinary one-item deterministic',
+        'ordinary one-item stochastic',
+        'checkpoint/restore',
+        'multi-output or multi-item',
+        'explicitly unsupported in B1'
+    )),
+    support_status TEXT NOT NULL CHECK (support_status IN (
+        'selected', 'unsupported'
+    )),
+    unsupported_reason TEXT,
+    emulator_available INTEGER NOT NULL CHECK (emulator_available IN (0, 1)),
+    calculator_available INTEGER NOT NULL CHECK (calculator_available IN (0, 1)),
+    strategy_builder_available INTEGER NOT NULL CHECK (strategy_builder_available IN (0, 1)),
+    solver_available INTEGER NOT NULL CHECK (solver_available IN (0, 1)),
+    contract_json TEXT,
+    expected_outcomes_json TEXT
+);
+
+CREATE TABLE bestiary_beast_input (
+    bestiary_recipe_id INTEGER NOT NULL
+        REFERENCES bestiary_recipe(bestiary_recipe_id) ON DELETE CASCADE,
+    ordinal INTEGER NOT NULL,
+    beast_key TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    price_key TEXT NOT NULL,
+    PRIMARY KEY (bestiary_recipe_id, ordinal)
+);
+
+CREATE TABLE bestiary_action (
+    bestiary_action_id INTEGER PRIMARY KEY,
+    bestiary_recipe_id INTEGER NOT NULL
+        REFERENCES bestiary_recipe(bestiary_recipe_id) ON DELETE CASCADE,
+    operation_ordinal INTEGER NOT NULL,
+    action_key TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    operation_kind TEXT NOT NULL CHECK (operation_kind IN ('create', 'restore')),
+    transition_kind TEXT NOT NULL CHECK (transition_kind = 'deterministic'),
+    rarity_mask INTEGER NOT NULL,
+    forbidden_item_flags INTEGER NOT NULL,
+    checkpoint_requirement TEXT NOT NULL CHECK (checkpoint_requirement IN (
+        'absent', 'present'
+    )),
+    checkpoint_effect TEXT NOT NULL CHECK (checkpoint_effect IN (
+        'create', 'consume'
+    )),
+    identity_requirement TEXT NOT NULL CHECK (identity_requirement IN (
+        'current_item', 'same_item'
+    )),
+    UNIQUE (bestiary_recipe_id, operation_ordinal)
+);
+
+CREATE TABLE bestiary_action_cost (
+    bestiary_action_id INTEGER NOT NULL
+        REFERENCES bestiary_action(bestiary_action_id) ON DELETE CASCADE,
+    ordinal INTEGER NOT NULL,
+    price_key TEXT NOT NULL,
+    PRIMARY KEY (bestiary_action_id, ordinal)
+);
+
 CREATE VIEW normal_rollable_mod AS
 SELECT
     m.mod_id,

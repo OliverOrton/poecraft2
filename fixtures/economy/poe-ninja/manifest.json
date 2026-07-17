@@ -3,25 +3,28 @@
   "source": "poe-ninja",
   "captured_at_utc": "2026-07-15T00:00:00Z",
   "leagues": "leagues.json",
-  "categories": ["Currency", "Fossil", "Resonator", "Essence"],
+  "categories": ["Currency", "Fossil", "Resonator", "Essence", "Beast"],
   "responses": {
     "Mirage": {
       "Currency": "mirage/currency.json",
       "Fossil": "mirage/fossil.json",
       "Resonator": "mirage/resonator.json",
-      "Essence": "mirage/essence.json"
+      "Essence": "mirage/essence.json",
+      "Beast": "mirage/beast.json"
     },
     "Hardcore Mirage": {
       "Currency": "hardcore-mirage/currency.json",
       "Fossil": "hardcore-mirage/fossil.json",
       "Resonator": "hardcore-mirage/resonator.json",
-      "Essence": "hardcore-mirage/essence.json"
+      "Essence": "hardcore-mirage/essence.json",
+      "Beast": "hardcore-mirage/beast.json"
     },
     "Standard": {
       "Currency": "standard/currency.json",
       "Fossil": "standard/fossil.json",
       "Resonator": "standard/resonator.json",
-      "Essence": "standard/essence.json"
+      "Essence": "standard/essence.json",
+      "Beast": "standard/beast.json"
     }
   }
 }

@@ -21,6 +21,66 @@
  */
 namespace poecraft {
 
+enum class BestiaryOperationKind : std::uint8_t {
+    Create = 0,
+    Restore = 1,
+};
+
+enum class BestiaryCheckpointRequirement : std::uint8_t {
+    Absent = 0,
+    Present = 1,
+};
+
+enum class BestiaryCheckpointEffect : std::uint8_t {
+    Create = 0,
+    Consume = 1,
+};
+
+enum class BestiaryIdentityRequirement : std::uint8_t {
+    CurrentItem = 0,
+    SameItem = 1,
+};
+
+struct BestiaryBeastInputDescriptor {
+    std::string beast_key;
+    std::string display_name;
+    std::uint32_t quantity = 0;
+    std::string price_key;
+};
+
+struct BestiaryRecipeDescriptor {
+    std::uint32_t global_recipe_id = 0;
+    std::string id;
+    std::string display_name;
+    std::uint8_t classification = 0;
+    std::uint8_t support = 0;
+    std::string unsupported_reason;
+    bool emulator_available = false;
+    bool calculator_available = false;
+    bool strategy_builder_available = false;
+    bool solver_available = false;
+    std::vector<BestiaryBeastInputDescriptor> beast_inputs;
+};
+
+struct BestiaryActionDescriptor {
+    std::uint32_t global_action_id = 0;
+    std::uint32_t global_recipe_id = 0;
+    std::uint32_t operation_ordinal = 0;
+    std::string id;
+    std::string display_name;
+    BestiaryOperationKind operation = BestiaryOperationKind::Create;
+    std::uint8_t transition = 0;
+    std::uint8_t rarity_mask = 0;
+    std::uint8_t forbidden_item_flags = 0;
+    BestiaryCheckpointRequirement checkpoint_requirement =
+        BestiaryCheckpointRequirement::Absent;
+    BestiaryCheckpointEffect checkpoint_effect =
+        BestiaryCheckpointEffect::Create;
+    BestiaryIdentityRequirement identity_requirement =
+        BestiaryIdentityRequirement::CurrentItem;
+    std::vector<std::string> cost_keys;
+};
+
 struct DataImpl {
     std::vector<std::string> strings;
 
@@ -36,6 +96,15 @@ struct DataImpl {
     std::uint32_t count_ordinary_bases = 0;
     std::uint32_t count_cluster_bases = 0;
     std::uint32_t count_unsupported_domain_bases = 0;
+    std::uint32_t count_bestiary_recipes = 0;
+    std::uint32_t count_bestiary_actions = 0;
+
+    // Manifest-backed B1 Bestiary contract. Unsupported recipes are retained
+    // in recipes and deliberately have no action descriptors.
+    std::vector<BestiaryRecipeDescriptor> bestiary_recipes;
+    std::vector<BestiaryActionDescriptor> bestiary_actions;
+    std::unordered_map<std::string, std::uint32_t> bestiary_recipe_by_id;
+    std::unordered_map<std::string, std::uint32_t> bestiary_action_by_id;
 
     // base items (parallel arrays, length base_count)
     std::uint32_t base_count = 0;

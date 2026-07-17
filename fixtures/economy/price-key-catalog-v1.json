@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "2026-07-15.1",
+  "catalog_version": "2026-07-17.1",
   "source": "poe-ninja",
   "direct": {
     "transmute": "transmute",
@@ -37,14 +37,17 @@
     "lifeforce:rancour": "sandswept-lifeforce"
   },
   "zero_cost": ["unveil"],
-  "manual_only": ["base"],
+  "manual_only": ["base", "beast:rare"],
   "derived_prefixes": ["bench:", "harvest_reforge:", "harvest_augment:", "harvest_resist:"],
-  "market_prefixes": ["essence:", "fossil:", "resonator:"],
+  "market_prefixes": ["essence:", "fossil:", "resonator:", "beast:"],
   "unsupported_prefixes": [],
   "resonators": {
     "primitive-chaotic-resonator": "resonator:1",
     "potent-chaotic-resonator": "resonator:2",
     "powerful-chaotic-resonator": "resonator:3",
     "prime-chaotic-resonator": "resonator:4"
+  },
+  "beasts": {
+    "craicic-chimeral": "beast:craicic-chimeral"
   }
 }

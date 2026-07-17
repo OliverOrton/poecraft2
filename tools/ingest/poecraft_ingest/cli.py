@@ -25,6 +25,7 @@ DEFAULT_SOURCE = REPO_ROOT / "data" / "raw" / "repoe"
 DEFAULT_DATABASE = REPO_ROOT / "data" / "sqlite" / "poecraft.db"
 DEFAULT_SCHEMA = REPO_ROOT / "schemas" / "sqlite" / "001_initial.sql"
 DEFAULT_REPORT = REPO_ROOT / "data" / "sqlite" / "validation-report.json"
+DEFAULT_BESTIARY_CONTRACT = REPO_ROOT / "fixtures" / "bestiary" / "v1"
 
 
 def _path(value: str) -> Path:
@@ -36,6 +37,11 @@ def _add_ingest_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--database", type=_path, default=DEFAULT_DATABASE)
     parser.add_argument("--schema", type=_path, default=DEFAULT_SCHEMA)
     parser.add_argument("--report", type=_path, default=DEFAULT_REPORT)
+    parser.add_argument(
+        "--bestiary-contract",
+        type=_path,
+        default=DEFAULT_BESTIARY_CONTRACT,
+    )
 
 
 def _print_validation(report: dict) -> None:
@@ -66,7 +72,12 @@ def _print_validation(report: dict) -> None:
 
 def _run_ingest(args: argparse.Namespace) -> int:
     snapshot = load_source_snapshot(args.source)
-    result = build_database(snapshot, args.database, args.schema)
+    result = build_database(
+        snapshot,
+        args.database,
+        args.schema,
+        args.bestiary_contract,
+    )
     print(
         f"built {result['database']} "
         f"schema={result['schema_version']} "

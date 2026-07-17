@@ -169,6 +169,10 @@ class EconomyPipelineTests(unittest.TestCase):
             )
             self.assertEqual(artifact["prices"]["harvest_resist:fire"], 10.0)
             self.assertEqual(artifact["prices"]["bench:CraftedLife"], 2.0)
+            self.assertEqual(
+                artifact["prices"]["beast:craicic-chimeral"], 42.0
+            )
+            self.assertIn("beast:rare", artifact["metadata"]["missing_keys"])
             with self.assertRaises(sqlite3.IntegrityError):
                 connection.execute(
                     "UPDATE economy_snapshot SET artifact_json = '{}' WHERE snapshot_id = ?",

@@ -1,91 +1,69 @@
-# Session Handoff - B1.1 Data, Price, And Registry Substrate Is Next
+# Session Handoff - B1.2 Native Actions And Exact Calculation Is Next
 
-Updated 2026-07-17 after Oliver approved and closed B1.0. Read
-[AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
+Updated 2026-07-17 after B1.1. Read [AGENTS.md](AGENTS.md),
+[docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0 is complete. Its sole selected recipe is Imprint. The authoritative
-versioned contract and focused expected outcomes are:
+B1.0 and B1.1 are complete. The sole selected recipe remains
+`bestiary:imprint`, classified as checkpoint/restore. Prefix to Suffix and
+Suffix to Prefix remain explicit unsupported B1 rows and have no actions.
+The authoritative mechanic files remain under
+[fixtures/bestiary/v1](fixtures/bestiary/v1/).
 
-- [manifest](fixtures/bestiary/v1/manifest.json)
-- [Imprint recipe contract](fixtures/bestiary/v1/recipes/imprint.json)
-- [Imprint expected outcomes](fixtures/bestiary/v1/expected-outcomes/imprint.json)
+Canonical SQLite schema version 2 now contains manifest, recipe, beast-input,
+action, and action-cost tables. Artifact schema version 4 compiles three
+recipe descriptors (one selected, two unsupported) and exactly two actions:
 
-Prefix to Suffix and Suffix to Prefix were removed from the selected set and
-are explicitly unsupported in B1. Their incomplete discussion is not mechanic
-authority and must not be implemented or inferred.
+- `bestiary:imprint`: magic-only; corrupted/mirrored forbidden; checkpoint
+  must be absent; create one checkpoint; cost one
+  `beast:craicic-chimeral` plus three `beast:rare` keys.
+- `bestiary:restore_imprint`: any rarity; corrupted/mirrored forbidden;
+  same-item checkpoint must be present; consume it; zero beast cost.
 
-S7 remains closed. Its final endgame sample is still recorded honestly at
-`0.9942` success against the former `0.995` target; no replacement sample was
-run and the miss was not relabelled as a numeric pass. The completed S7 record
-lives under [docs/archive/2026-07-solver-s7](docs/archive/2026-07-solver-s7/).
-
-## Approved Imprint Contract
-
-- Recipe id: `bestiary:imprint`; classification: checkpoint/restore.
-- Creation consumes `beast:craicic-chimeral` once and `beast:rare` three times.
-- Any engine-supported magic item is eligible except corrupted or mirrored
-  items. Crafted, fractured, influenced, split, synthesised, and implicit state
-  is allowed.
-- Creation leaves the live item unchanged and creates one exact full mutable
-  state checkpoint bound to that same item. Only one active checkpoint is
-  allowed per item.
-- Restoration is beast-free, restores the entire saved mutable state into the
-  same live item, and consumes the checkpoint. Restoring an already-identical
-  state still succeeds and consumes it.
-- Restoration refuses a missing or different-item checkpoint and refuses when
-  the current live item is corrupted or mirrored. Refusal preserves item and
-  checkpoint and consumes nothing.
-- Emulator, Calculator, Strategy Builder, and solver availability are all
-  required.
-- The representation is one live item plus an optional saved checkpoint. Do
-  not force it into an ordinary one-item action over the live item alone, do
-  not introduce a second live item, and do not generalize it into a macro
-  language.
+The economy catalog maps `craicic-chimeral` through the existing Beast stash
+provider to `beast:craicic-chimeral`. `beast:rare` is deliberately manual-only,
+not zero-cost. The canonical local rebuild hash is
+`93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615`.
 
 ## Exact Next Boundary
 
-Implement **B1.1 only - Data, Price, And Registry Substrate** from the approved
-contract:
+Implement **B1.2 only - Native Actions And Exact Calculation**:
 
-1. Add production manifest loading and validation for the selected and parked
-   recipe identities without turning display text or tags into rules.
-2. Register `beast:craicic-chimeral` and `beast:rare` through the existing
-   economy model and Beast provider surface. Preserve the repeated price-key
-   cost vector; do not silently drop the three rare beasts or assume they are
-   free.
-3. Add native action descriptors for Imprint creation and restoration with the
-   approved legality, costs, checkpoint requirement, and state effects.
-4. Keep both parked conversion ids explicitly unsupported and out of product
-   action envelopes.
+1. Add explicit compound craft state: one live `pc_item_state`, stable live
+   item identity, and at most one saved full-state checkpoint bound to that
+   identity. This is not a second live item and must not enter
+   `pc_item_state`.
+2. Execute the two compiled native descriptors exactly. Creation snapshots
+   the entire value-copyable item without changing it. Restoration overwrites
+   the full mutable state and consumes the checkpoint, including when the
+   state was already identical.
+3. Return stable refusal reasons for wrong rarity, corrupted, mirrored,
+   checkpoint-present, checkpoint-missing, and different-item binding. Every
+   refusal preserves both item and checkpoint and consumes no cost.
+4. Add the deterministic exact-calculation path over the same compound state
+   and prove direct action/calculation agreement with the approved focused
+   outcomes.
 
-Stop after the B1.1 checkpoint. Do not implement the checkpoint mutation,
-restoration engine behavior, exact calculation, bindings, workspace surfaces,
-strategy execution, or solver support; those begin in B1.2 and later phases.
-Rewrite this handoff so B1.2 is the sole exact next boundary.
+Stop after the B1.2 checkpoint. Do not add strategy vocabulary, simulator
+checkpoint execution, solver options, bindings, workspace UI, or begin B1.3.
+Rewrite this handoff so B1.3 is the sole exact next boundary.
 
-## B1.1 Gotchas
+## Gotchas
 
-- SQLite and the compiled artifact remain canonical/derived respectively; do
-  not hand-edit either.
-- The existing economy provider recognizes the `Beast` stash category but has
-  no Beast mappings. Source mappings must be explicit and stable.
-- `pc_item_state` is value-copyable, but an Imprint checkpoint is additional
-  state with a different lifecycle. A reserved companion-state flag is not a
-  license to model the checkpoint as a second live item.
-- Creation and restoration are separate deterministic operations. Restoration
-  has no beast cost and successful restoration consumes the checkpoint.
-- Oliver's fixture is the mechanic authority. Do not research or infer
-  additional Bestiary rules.
-- Follow milestone test cadence: no routine full suite, WASM rebuild, web test,
-  rendered smoke, screenshot, or 10,000-run strategy verification in B1.1.
+- The compiled descriptors, not display strings, own legality and costs.
+- Preserve all fields of `pc_item_state`; do not reconstruct only explicit
+  modifiers.
+- A different live identity must refuse restoration even if item bytes match.
+- Creation with an existing checkpoint refuses without replacing it.
+- Restoration is free, single-use, and an identical-state restore still
+  applies and consumes the checkpoint.
+- No online mechanic research or inference. No routine full suite, WASM/web
+  rebuild, rendered review, or 10,000-run verification in B1.2.
 
-## Later Sequence And Parked Scope
+## Later Sequence
 
-B1.2-B1.5 carry native mutation/calculation, solver/strategy integration,
-bindings/product surfaces, and final acceptance. S8 follows only after B1 is
-accepted. Trade leaves, Hinekora's Lock, corruption/tainted/finishing work,
-recombinators, accounts/publishing, ML, and ambient Emulator odds remain
-outside the current boundary.
+B1.3 adds the specific exact Imprint retry solver option and ordinary strategy
+execution. B1.4 carries bindings and product surfaces; B1.5 is acceptance. S8
+follows only after B1 is accepted.
