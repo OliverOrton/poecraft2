@@ -212,6 +212,8 @@ sole next boundary.
 
 ### B1.2 - Native Actions And Exact Calculation
 
+Status: complete 2026-07-17.
+
 - Implement selected item mutations in the native action engine.
 - Implement exact calculation evaluators for stochastic selected recipes.
 - Add only the item-state or companion-state distinctions required by the
@@ -223,6 +225,17 @@ sole next boundary.
 
 Checkpoint: action application and calculation agree on legality, state
 effects, outcome support, and probabilities for every selected B1 recipe.
+
+Checkpoint passed: `BestiaryCraftState` carries one live item identity plus an
+optional full `pc_item_state` checkpoint bound to it. The compiled creation
+and restoration descriptors execute atomically with stable refusal reasons;
+successful restoration is beast-free and consumes the checkpoint even when
+the item bytes were already identical. The deterministic calculation path
+copies the compound input and invokes the same native transition, so legality,
+consumption, and successor state cannot drift. Focused direct fixtures cover
+full-state preservation/restoration, special approved properties, all
+contracted refusals, different-item binding, and identical-state restore. The
+native build passed. B1.3 is the sole next boundary.
 
 ### B1.3 - Solver And Strategy Integration
 

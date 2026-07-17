@@ -81,6 +81,41 @@ struct BestiaryActionDescriptor {
     std::vector<std::string> cost_keys;
 };
 
+enum class BestiaryRefusalReason : std::uint8_t {
+    None = 0,
+    UnknownAction = 1,
+    RequiresMagicItem = 2,
+    ItemCorrupted = 3,
+    ItemMirrored = 4,
+    CheckpointAlreadyExists = 5,
+    CheckpointMissing = 6,
+    CheckpointBoundToDifferentItem = 7,
+};
+
+/* One live item plus an optional saved copy. The checkpoint is not a second
+ * live item and deliberately does not widen the public pc_item_state ABI. */
+struct BestiaryCraftState {
+    pc_item_state item{};
+    std::uint64_t live_item_identity = 0;
+    bool checkpoint_active = false;
+    std::uint64_t checkpoint_bound_identity = 0;
+    pc_item_state checkpoint{};
+};
+
+struct BestiaryActionOutcome {
+    bool applied = false;
+    BestiaryRefusalReason refusal = BestiaryRefusalReason::None;
+    std::vector<std::string> consumed_price_keys;
+    std::uint8_t output_item_count = 1;
+    std::uint8_t output_checkpoint_count = 0;
+    std::uint8_t consumed_checkpoint_count = 0;
+};
+
+struct BestiaryCalculation {
+    BestiaryCraftState successor{};
+    BestiaryActionOutcome outcome{};
+};
+
 struct DataImpl {
     std::vector<std::string> strings;
 
@@ -710,6 +745,16 @@ ActionOutcome apply_action(
     ActionContextImpl& context,
     pc_item_state* item,
     const ActionParameters& action);
+
+BestiaryActionOutcome apply_bestiary_action(
+    const DataImpl& data,
+    BestiaryCraftState& state,
+    std::uint32_t action_index);
+
+BestiaryCalculation calculate_bestiary_action(
+    const DataImpl& data,
+    const BestiaryCraftState& state,
+    std::uint32_t action_index);
 
 // --- compiled strategy simulator -------------------------------------------
 

@@ -85,6 +85,7 @@ else {
             "$Root/engine/tests/test_data_loader.cpp",
             "$Root/engine/tests/test_session_builder.cpp",
             "$Root/engine/tests/test_actions.cpp",
+            "$Root/engine/tests/test_bestiary.cpp",
             "$Root/engine/tests/test_simulator.cpp",
             "$Root/engine/tests/test_solver_abstract.cpp",
             "$Root/engine/tests/test_solver_calc.cpp",

@@ -55,6 +55,7 @@ add_library(poecraft_engine_objects OBJECT
     src/rng.cpp
     src/session_builder.cpp
     src/actions_basic.cpp
+    src/actions_bestiary.cpp
     src/simulator.cpp
     src/solver_registry.cpp
     src/solver_abstract.cpp
@@ -123,6 +124,7 @@ if(BUILD_TESTING)
         tests/test_data_loader.cpp
         tests/test_session_builder.cpp
         tests/test_actions.cpp
+        tests/test_bestiary.cpp
         tests/test_simulator.cpp
         tests/test_solver_abstract.cpp
         tests/test_solver_calc.cpp

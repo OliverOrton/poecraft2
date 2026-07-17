@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     run_data_loader_tests(artifact_dir);
     run_session_builder_tests(artifact_dir, fixtures_dir);
     run_action_tests(artifact_dir);
+    run_bestiary_tests();
     run_simulator_tests(artifact_dir);
     run_solver_abstract_tests(artifact_dir);
     run_solver_calc_tests(artifact_dir);

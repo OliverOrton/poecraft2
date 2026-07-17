@@ -29,6 +29,7 @@ void run_data_loader_tests(const char* artifact_dir);
 void run_session_builder_tests(const char* artifact_dir,
                                const char* fixtures_dir);
 void run_action_tests(const char* artifact_dir);
+void run_bestiary_tests();
 void run_simulator_tests(const char* artifact_dir);
 
 /* Solver phase S1-S5 suites. */
