@@ -200,6 +200,12 @@ import type { Catalog } from "../src/app/engine-protocol";
             { type: "item_flag", flag: "prefixes_locked" },
             { type: "eldritch_tier", side: "searing", min: 1, max: 4 },
             { type: "mod_count", mod_keys: ["Metadata/Mods/Test"], min: 1, max: 1 },
+            {
+                type: "mod_family_count",
+                family_mod_keys: ["Metadata/Mods/TestFamilyTier1"],
+                min: 1,
+                max: 1,
+            },
             { type: "influence_bits", value: 0 },
             { type: "has_unveil_option", mod_key: "Metadata/Mods/Unveiled" },
         ],
@@ -209,6 +215,12 @@ import type { Catalog } from "../src/app/engine-protocol";
         [],
     );
     assert.match(conditionLabel(strategy.edges[1].condition), /prefixes locked/);
+    strategy.edges[1].condition.conditions![4].family_mod_keys = [];
+    assert.ok(
+        validateStrategy(strategy).some(
+            (issue) => issue.code === "condition-mod-keys",
+        ),
+    );
     console.log("  ok - S6 Phase 4 condition vocabulary validates and labels");
 }
 

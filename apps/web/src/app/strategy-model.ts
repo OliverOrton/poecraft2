@@ -57,6 +57,7 @@ export type StrategyCondition = {
     group?: string;
     mod_key?: string;
     mod_keys?: string[];
+    family_mod_keys?: string[];
     family_mod_key?: string;
     family_label?: string;
     min_tier?: number;
@@ -623,6 +624,7 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
         case "eldritch_tier":
             return rangeLabel(`${condition.side ?? "searing"} tier`, condition);
         case "mod_count":
+        case "mod_family_count":
             return rangeLabel("matching mods", condition);
         case "has_unveil_option":
             return condition.mod_key ? "has preferred unveil option" : "has unveil option";
@@ -1081,6 +1083,7 @@ function validateCondition(
         "has_mod_group",
         "has_mod_family",
         "mod_count",
+        "mod_family_count",
         "item_flag",
         "influence_bits",
         "eldritch_tier",
@@ -1172,6 +1175,17 @@ function validateCondition(
             severity: "error",
             code: "condition-mod-keys",
             message: `${edge.id} needs modifier keys to count.`,
+            edgeId: edge.id,
+        });
+    }
+    if (
+        condition.type === "mod_family_count" &&
+        !condition.family_mod_keys?.length
+    ) {
+        issues.push({
+            severity: "error",
+            code: "condition-mod-keys",
+            message: `${edge.id} needs modifier family keys to count.`,
             edgeId: edge.id,
         });
     }

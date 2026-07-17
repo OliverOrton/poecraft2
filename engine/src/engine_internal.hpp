@@ -661,7 +661,8 @@ enum class ConditionKind : std::uint8_t {
       ItemFlag = 13,
       InfluenceBits = 14,
       EldritchTier = 15,
-      HasUnveilOption = 16
+      HasUnveilOption = 16,
+      ModFamilyCount = 17
   };
 
 enum class ItemFlagKind : std::uint8_t {
@@ -693,7 +694,12 @@ struct CompiledCondition {
     int min_value = 0;
     int max_value = 0;
     std::vector<std::uint32_t> mod_ids;
+    std::vector<std::uint32_t> family_ids;
     std::vector<CompiledCondition> children;
+    /* Structurally identical predicates share a per-strategy memo slot. */
+    std::uint32_t memo_slot = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t count_memo_slot =
+        std::numeric_limits<std::uint32_t>::max();
 };
 
 enum class StrategyNodeKind : std::uint8_t {
@@ -712,6 +718,23 @@ struct StrategyEdge {
     CompiledCondition condition;
 };
 
+struct StrategyDispatchNode {
+    std::uint32_t condition = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t when_true = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t when_false = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t edge = std::numeric_limits<std::uint32_t>::max();
+};
+
+struct StrategyDispatchSignature {
+    std::vector<std::uint32_t> true_conditions;
+    std::uint32_t edge = std::numeric_limits<std::uint32_t>::max();
+};
+
+struct StrategyDirectDispatchSignature {
+    std::vector<std::int16_t> values;
+    std::uint32_t edge = std::numeric_limits<std::uint32_t>::max();
+};
+
 /* Operation-node action_type for the synthetic "restart" operation: throw
  * the item away and continue on a fresh base (price key "base"). Outside
  * the pc_action_type range on purpose; apply_action never sees it. */
@@ -726,6 +749,18 @@ struct StrategyNode {
     int terminal_kind = -1;
     std::string reason;
     std::vector<StrategyEdge> edges;
+    /* Exact decision DAG for conjunction-only routing nodes. It preserves
+     * ordinary edge priority while avoiding a linear scan of hundreds of
+     * solver-emitted abstract-state predicates after every primitive action. */
+    std::vector<CompiledCondition> dispatch_conditions;
+    std::vector<StrategyDispatchNode> dispatch_nodes;
+    std::unordered_map<
+        std::size_t, std::vector<StrategyDispatchSignature>>
+        dispatch_signatures;
+    std::vector<CompiledCondition> direct_dispatch_features;
+    std::unordered_map<
+        std::size_t, std::vector<StrategyDirectDispatchSignature>>
+        direct_dispatch_signatures;
 };
 
 struct StrategyImpl {
@@ -735,6 +770,8 @@ struct StrategyImpl {
     std::uint32_t start_node = 0;
     std::vector<StrategyNode> nodes;
     std::unordered_map<std::string, std::uint32_t> node_by_id;
+    std::uint32_t condition_memo_slots = 0;
+    std::uint32_t count_memo_slots = 0;
 };
 
 /* Simulator-authoritative condition predicate, exposed internally for exact
@@ -828,6 +865,16 @@ struct SimulatorImpl {
     std::vector<FailureSummaryInternal> failure_summaries;
     std::vector<std::uint64_t> action_counts;
     std::unordered_map<std::string, std::uint64_t> missing_prices;
+    std::vector<double> node_prices;
+    std::vector<std::uint8_t> node_prices_known;
+    std::vector<std::vector<std::string>> node_missing_price_keys;
+    std::vector<std::uint32_t> condition_cache_generation;
+    std::vector<std::uint8_t> condition_cache_values;
+    std::vector<std::uint32_t> count_cache_generation;
+    std::vector<std::int8_t> count_cache_values;
+    std::vector<std::int16_t> direct_dispatch_values_scratch;
+    std::vector<std::uint32_t> true_conditions_scratch;
+    std::uint32_t current_condition_generation = 0;
 };
 
 std::shared_ptr<StrategyImpl> compile_strategy_json(
@@ -838,6 +885,8 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
 std::shared_ptr<EconomyImpl> load_economy_json(
     const char* economy_json,
     std::size_t economy_json_size);
+
+void prepare_simulator_runtime(SimulatorImpl& simulator);
 
 void run_simulator_chunk(
     SimulatorImpl& simulator,

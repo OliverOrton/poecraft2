@@ -33,17 +33,14 @@
  *                  a bucket are interchangeable by construction.
  *
  * Frontier states record per-bucket pick counts, so remaining weights are
- * derived exactly. Low-probability states are truncated (bounded, and
- * asserted small by the S3 gate); the engine's Monte Carlo path is the
- * ground truth the gate compares against.
+ * derived exactly. Every positive-probability path is retained; operational
+ * reforge-work and solver-memory caps refuse oversized requests explicitly
+ * instead of silently changing the transition distribution.
  */
 namespace poecraft {
 namespace solver {
 
 namespace {
-
-constexpr double kPathEpsilon = 1e-9;
-constexpr std::size_t kMaxFrontier = 400000;
 
 struct ReforgeBuildTimer {
     CalcTelemetry& telemetry;
@@ -151,6 +148,9 @@ struct RollBucket {
      * reforge: spawn-only weights restricted to the target tag). */
     std::uint64_t guaranteed = 0;
     std::uint32_t multiplicity = 1;
+    /* Complete generation-group signature. Any overlap with a previously
+     * picked bucket makes this family unavailable, matching pool blocking. */
+    std::vector<std::uint32_t> exclusion_groups;
 };
 
 struct RollState {
@@ -164,6 +164,16 @@ struct RollState {
     std::array<std::pair<std::uint16_t, std::uint8_t>, 6> picks{};
 
     bool operator==(const RollState& other) const = default;
+
+    bool operator<(const RollState& other) const {
+        return std::tie(
+                   sat_mask, below_mask, blocked_mask, prefix_picks,
+                   suffix_picks, pick_count, picks) <
+               std::tie(
+                   other.sat_mask, other.below_mask, other.blocked_mask,
+                   other.prefix_picks, other.suffix_picks,
+                   other.pick_count, other.picks);
+    }
 
     std::uint8_t picks_of(std::uint16_t bucket) const {
         for (std::uint8_t i = 0; i < pick_count; ++i) {
@@ -186,10 +196,10 @@ struct RollState {
 
 struct RollStateHash {
     std::size_t operator()(const RollState& state) const {
-        std::uint64_t hash = 1469598103934665603ull;
-        const auto mix = [&hash](std::uint64_t value) {
+        std::uint32_t hash = 2166136261u;
+        const auto mix = [&hash](std::uint32_t value) {
             hash ^= value;
-            hash *= 1099511628211ull;
+            hash *= 16777619u;
         };
         mix(state.sat_mask);
         mix(state.below_mask);
@@ -200,7 +210,7 @@ struct RollStateHash {
             mix((static_cast<std::uint64_t>(state.picks[i].first) << 8) |
                 state.picks[i].second);
         }
-        return static_cast<std::size_t>(hash);
+        return hash;
     }
 };
 
@@ -311,22 +321,28 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     ++telemetry_.reforge_misses;
     telemetry_timer.miss = true;
 
-    std::map<std::uint32_t, double> outcome_acc;
+    std::unordered_map<std::uint32_t, double> outcome_acc;
+    outcome_acc.reserve(65536);
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
     bool state_dependent = false;
     const auto finalize = [&]() -> std::shared_ptr<const OutcomeDistribution> {
+        std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
+            outcome_acc.begin(), outcome_acc.end());
+        std::sort(ordered_outcomes.begin(), ordered_outcomes.end());
         double committed = 0.0;
-        for (const auto& [successor, probability] : outcome_acc) {
+        for (const auto& [successor, probability] : ordered_outcomes) {
+            (void)successor;
             committed += probability;
         }
         if (committed <= 0.0) {
             outcome_acc.clear();
             outcome_acc[state_id] = 1.0;
+            ordered_outcomes.assign({{state_id, 1.0}});
             committed = 1.0;
             state_dependent = true;
         }
-        for (const auto& [successor, probability] : outcome_acc) {
+        for (const auto& [successor, probability] : ordered_outcomes) {
             result.entries.push_back({successor, probability / committed});
         }
         for (const OutcomeEntry& entry : result.entries) {
@@ -410,8 +426,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     }
     const WeightedPool& pool = get_weighted_pool(context_, &base, request);
 
-    /* Aggregate pool weights per (side, family) with goal classification,
-     * then collapse families into buckets. Harvest reforge overlays a
+    /* Aggregate pool weights per complete (side, exclusion-group family)
+     * with goal classification. Harvest reforge overlays a
      * second weight per family: the guaranteed first pick's spawn-only
      * tag pool. A family can be guaranteed-only (positive spawn weight,
      * zero normal fill weight). */
@@ -426,11 +442,26 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         std::map<std::pair<std::uint32_t, std::uint32_t>, WeightPair>
             junk; /* (class, block mask) -> weights */
     };
-    std::map<std::pair<std::int8_t, std::uint32_t>, FamilyAgg> families;
+    using FamilyKey =
+        std::pair<std::int8_t, std::vector<std::uint32_t>>;
+    std::map<FamilyKey, FamilyAgg> families;
     std::vector<std::uint32_t> scratch_groups;
     const auto classify = [&](const PoolEntry& entry, bool guaranteed) {
         const std::uint32_t mod = entry.session_mod_id;
-        FamilyAgg& family = families[{entry.gen_type, entry.primary_group}];
+        std::vector<std::uint32_t> exclusion_groups;
+        exclusion_groups.reserve(
+            session.group_offsets[mod + 1] - session.group_offsets[mod]);
+        for (std::uint32_t group = session.group_offsets[mod];
+             group < session.group_offsets[mod + 1]; ++group) {
+            exclusion_groups.push_back(session.group_ids[group]);
+        }
+        std::sort(exclusion_groups.begin(), exclusion_groups.end());
+        exclusion_groups.erase(
+            std::unique(
+                exclusion_groups.begin(), exclusion_groups.end()),
+            exclusion_groups.end());
+        FamilyAgg& family =
+            families[{entry.gen_type, std::move(exclusion_groups)}];
         const auto credit = [&](WeightPair& pair) {
             if (guaranteed) {
                 pair.guaranteed += entry.final_weight;
@@ -490,64 +521,70 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     }
 
     std::vector<RollBucket> buckets;
-    std::array<WeightPair, kMaxGoalSlots> slot_sat_weight{};
-    std::array<WeightPair, kMaxGoalSlots> slot_below_weight{};
-    std::array<std::int8_t, kMaxGoalSlots> slot_side{};
-    slot_side.fill(-1);
-    std::map<std::tuple<std::int8_t, std::uint32_t, std::uint32_t,
-                        std::uint64_t, std::uint64_t>,
-             std::uint32_t>
-        junk_multiplicity;
     for (const auto& [key, family] : families) {
         for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
-            if (family.sat[s].normal > 0 || family.sat[s].guaranteed > 0 ||
-                family.below[s].normal > 0 ||
+            if (family.sat[s].normal > 0 ||
+                family.sat[s].guaranteed > 0) {
+                RollBucket bucket;
+                bucket.side = key.first;
+                bucket.kind = BucketKind::GoalSat;
+                bucket.slot = static_cast<std::uint8_t>(s);
+                bucket.weight = family.sat[s].normal;
+                bucket.guaranteed = family.sat[s].guaranteed;
+                bucket.exclusion_groups = key.second;
+                buckets.push_back(std::move(bucket));
+            }
+            if (family.below[s].normal > 0 ||
                 family.below[s].guaranteed > 0) {
-                slot_sat_weight[s].normal += family.sat[s].normal;
-                slot_sat_weight[s].guaranteed += family.sat[s].guaranteed;
-                slot_below_weight[s].normal += family.below[s].normal;
-                slot_below_weight[s].guaranteed +=
-                    family.below[s].guaranteed;
-                slot_side[s] = key.first;
+                RollBucket bucket;
+                bucket.side = key.first;
+                bucket.kind = BucketKind::GoalBelow;
+                bucket.slot = static_cast<std::uint8_t>(s);
+                bucket.weight = family.below[s].normal;
+                bucket.guaranteed = family.below[s].guaranteed;
+                bucket.exclusion_groups = key.second;
+                buckets.push_back(std::move(bucket));
             }
         }
         for (const auto& [junk_key, weights] : family.junk) {
-            ++junk_multiplicity[{key.first, junk_key.first, junk_key.second,
-                                 weights.normal, weights.guaranteed}];
+            RollBucket bucket;
+            bucket.side = key.first;
+            bucket.kind = BucketKind::Junk;
+            bucket.junk_class = junk_key.first;
+            bucket.block_mask = junk_key.second;
+            bucket.weight = weights.normal;
+            bucket.guaranteed = weights.guaranteed;
+            bucket.exclusion_groups = key.second;
+            buckets.push_back(std::move(bucket));
         }
     }
-    for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
-        if (slot_sat_weight[s].normal > 0 ||
-            slot_sat_weight[s].guaranteed > 0) {
-            RollBucket bucket;
-            bucket.side = slot_side[s];
-            bucket.kind = BucketKind::GoalSat;
-            bucket.slot = static_cast<std::uint8_t>(s);
-            bucket.weight = slot_sat_weight[s].normal;
-            bucket.guaranteed = slot_sat_weight[s].guaranteed;
-            buckets.push_back(bucket);
+    /* Group exclusion is immutable for this roll. Precompute the exact
+     * pairwise relation once instead of repeatedly intersecting sorted group
+     * vectors in every frontier state and candidate-bucket visit. */
+    const std::size_t bucket_count = buckets.size();
+    std::vector<std::uint8_t> buckets_conflict(
+        bucket_count * bucket_count, 0);
+    for (std::size_t left = 0; left < bucket_count; ++left) {
+        for (std::size_t right = left; right < bucket_count; ++right) {
+            const auto& a = buckets[left].exclusion_groups;
+            const auto& b = buckets[right].exclusion_groups;
+            std::size_t ai = 0;
+            std::size_t bi = 0;
+            bool conflict = false;
+            while (ai < a.size() && bi < b.size()) {
+                if (a[ai] == b[bi]) {
+                    conflict = true;
+                    break;
+                }
+                if (a[ai] < b[bi]) {
+                    ++ai;
+                } else {
+                    ++bi;
+                }
+            }
+            buckets_conflict[left * bucket_count + right] = conflict;
+            buckets_conflict[right * bucket_count + left] = conflict;
         }
-        if (slot_below_weight[s].normal > 0 ||
-            slot_below_weight[s].guaranteed > 0) {
-            RollBucket bucket;
-            bucket.side = slot_side[s];
-            bucket.kind = BucketKind::GoalBelow;
-            bucket.slot = static_cast<std::uint8_t>(s);
-            bucket.weight = slot_below_weight[s].normal;
-            bucket.guaranteed = slot_below_weight[s].guaranteed;
-            buckets.push_back(bucket);
-        }
-    }
-    for (const auto& [key, multiplicity] : junk_multiplicity) {
-        RollBucket bucket;
-        bucket.side = std::get<0>(key);
-        bucket.kind = BucketKind::Junk;
-        bucket.junk_class = std::get<1>(key);
-        bucket.block_mask = std::get<2>(key);
-        bucket.weight = std::get<3>(key);
-        bucket.guaranteed = std::get<4>(key);
-        bucket.multiplicity = multiplicity;
-        buckets.push_back(bucket);
     }
 
     /* --- base abstract features -------------------------------------------- */
@@ -695,9 +732,16 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         if (side_count >= cap) return 0.0;
         if (bucket.kind != BucketKind::Junk) {
             if (occupied & (1u << bucket.slot)) return 0.0;
-            return static_cast<double>(bucket.weight);
+        } else {
+            if (bucket.block_mask & occupied) return 0.0;
         }
-        if (bucket.block_mask & occupied) return 0.0;
+        for (std::uint8_t pick = 0; pick < roll.pick_count; ++pick) {
+            if (buckets_conflict[
+                    static_cast<std::size_t>(b) * bucket_count +
+                    roll.picks[pick].first]) {
+                return 0.0;
+            }
+        }
         const std::uint32_t used = roll.picks_of(b);
         if (used >= bucket.multiplicity) return 0.0;
         return static_cast<double>(bucket.weight) *
@@ -705,6 +749,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     };
 
     std::unordered_map<RollState, double, RollStateHash> frontier;
+    std::vector<std::pair<RollState, double>> ordered_frontier;
+    std::vector<double> remaining_by_bucket(bucket_count, 0.0);
     if (!harvest) {
         frontier.emplace(RollState{}, 1.0);
     } else {
@@ -761,7 +807,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             exact != targets.end() ? exact->second : 0.0;
         const double deeper = target_suffix(depth);
         std::unordered_map<RollState, double, RollStateHash> next;
-        for (const auto& [roll, probability] : frontier) {
+        next.reserve(frontier.size() * 2);
+        ordered_frontier.assign(frontier.begin(), frontier.end());
+        std::sort(
+            ordered_frontier.begin(), ordered_frontier.end(),
+            [](const auto& left, const auto& right) {
+                return left.first < right.first;
+            });
+        for (const auto& [roll, probability] : ordered_frontier) {
             consume_reforge_work(1 + buckets.size());
             if (stop_here > 0.0) {
                 commit_outcome(roll, probability * stop_here);
@@ -771,7 +824,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             double total = 0.0;
             for (std::uint16_t b = 0;
                  b < static_cast<std::uint16_t>(buckets.size()); ++b) {
-                total += bucket_remaining(roll, b, occupied);
+                remaining_by_bucket[b] =
+                    bucket_remaining(roll, b, occupied);
+                total += remaining_by_bucket[b];
             }
             if (total <= 0.0) {
                 commit_outcome(roll, probability * deeper);
@@ -779,10 +834,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
             for (std::uint16_t b = 0;
                  b < static_cast<std::uint16_t>(buckets.size()); ++b) {
-                const double remaining = bucket_remaining(roll, b, occupied);
+                const double remaining = remaining_by_bucket[b];
                 if (remaining <= 0.0) continue;
                 const double p = probability * (remaining / total);
-                if (p < kPathEpsilon) continue;
                 const RollBucket& bucket = buckets[b];
                 RollState child = roll;
                 if (bucket.side == 0) {
@@ -801,30 +855,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 next[child] += p;
             }
         }
-        if (next.size() > kMaxFrontier) {
-            std::vector<std::pair<double, RollState>> ordered;
-            ordered.reserve(next.size());
-            for (const auto& [roll, probability] : next) {
-                ordered.push_back({probability, roll});
-            }
-            std::nth_element(
-                ordered.begin(), ordered.begin() + kMaxFrontier,
-                ordered.end(),
-                [](const auto& a, const auto& b) {
-                    return a.first > b.first;
-                });
-            ordered.resize(kMaxFrontier);
-            std::unordered_map<RollState, double, RollStateHash> kept;
-            for (const auto& [probability, roll] : ordered) {
-                kept.emplace(roll, probability);
-            }
-            next = std::move(kept);
-        }
         frontier = std::move(next);
     }
 
-    /* Dropped paths (epsilon/frontier truncation) leave the committed mass
-     * slightly under 1; finalize renormalizes. */
+    result.stable_shared_kernel = !state_dependent;
     std::shared_ptr<const OutcomeDistribution> finalized = finalize();
     if (!state_dependent) {
         reforge_cache_.emplace(memo_key, finalized);

@@ -14,6 +14,7 @@
  */
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <unordered_map>
@@ -513,6 +514,12 @@ const char* solve_phase_name(const int32_t phase) {
     }
 }
 
+void append_precise_double(std::string& out, const double value) {
+    char buffer[64];
+    std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+    out += buffer;
+}
+
 void append_solve_progress(
     std::string& out,
     const pc_solve_progress& progress) {
@@ -523,9 +530,11 @@ void append_solve_progress(
     out += ",\"expanded_states\":" +
            std::to_string(progress.expanded_states);
     out += ",\"sweeps\":" + std::to_string(progress.sweeps);
-    out += ",\"residual\":" + std::to_string(progress.residual);
-    out += ",\"start_value_bound\":" +
-           std::to_string(progress.start_value_bound) + '}';
+    out += ",\"residual\":";
+    append_precise_double(out, progress.residual);
+    out += ",\"start_value_bound\":";
+    append_precise_double(out, progress.start_value_bound);
+    out.push_back('}');
 }
 
 void append_solve_summary(
@@ -534,11 +543,13 @@ void append_solve_summary(
     out += "\"converged\":";
     out += summary.converged ? "true" : "false";
     out += ",\"start_state\":" + std::to_string(summary.start_state);
-    out += ",\"start_value\":" + std::to_string(summary.start_value);
+    out += ",\"start_value\":";
+    append_precise_double(out, summary.start_value);
     out += ",\"expanded_states\":" +
            std::to_string(summary.expanded_states);
     out += ",\"sweeps\":" + std::to_string(summary.sweeps);
-    out += ",\"residual\":" + std::to_string(summary.residual);
+    out += ",\"residual\":";
+    append_precise_double(out, summary.residual);
     out += ",\"skipped_actions\":" +
            std::to_string(summary.skipped_action_count);
 }
@@ -1963,7 +1974,8 @@ const char* pcw_solver_state_value(uint32_t solver_id, uint32_t state_id) {
     pc_result rc = pc_solver_state_value(*solver, state_id, &value,
                                          &action_id, &error);
     if (rc != PC_RESULT_OK) return fail(error);
-    std::string out = "{\"ok\":true,\"value\":" + std::to_string(value);
+    std::string out = "{\"ok\":true,\"value\":";
+    append_precise_double(out, value);
     out += ",\"action\":";
     if (action_id == nullptr) {
         out += "null";

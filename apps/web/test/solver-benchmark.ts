@@ -11,6 +11,7 @@ import {
     type SolverTelemetry,
 } from "../src/app/engine-protocol";
 import { prepareSolverStrategy } from "../src/app/solve-workspace";
+import { isStrategyDocument } from "../src/app/strategy-model";
 import {
     loadSolverBenchmarkCorpus,
     validateCorpusArtifactPins,
@@ -247,10 +248,12 @@ function statusFrom(
         "resource_cap_hit",
     );
     const missingPrice = nestedNumber(telemetry, "actions", "missing_price") ?? 0;
-    const unsupported = Math.max(
-        nestedNumber(telemetry, "actions", "unsupported_observed") ?? 0,
-        nestedNumber(telemetry, "actions", "unsupported_requested") ?? 0,
-    );
+    /* Match the native harness: requested-action refusal is authoritative
+     * when present; unsupported observed exits remain diagnostic. */
+    const unsupported =
+        nestedNumber(telemetry, "actions", "unsupported_requested") ??
+        nestedNumber(telemetry, "actions", "unsupported_observed") ??
+        0;
     const fullRequestStatus = nestedString(
         telemetry,
         "optimization",
@@ -281,7 +284,13 @@ function statusFrom(
         const optimization = nestedString(telemetry, "optimization", "status");
         const rawStart = nestedNumber(telemetry, "value", "raw_start_bound");
         const goalStates = nestedNumber(telemetry, "states", "goal");
-        if (optimization === "not_converged" && rawStart === 1e12 && goalStates === 0) {
+        if (
+            optimization === "not_converged" &&
+            rawStart !== null &&
+            rawStart >= 1e12 &&
+            solve.residual === 0 &&
+            goalStates === 0
+        ) {
             return "refused_unreachable_goal";
         }
         return "not_converged";
@@ -498,6 +507,7 @@ async function runCase(
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
+                        yieldEveryStep: true,
                         signal: controller.signal,
                         onProgress: (progress) => {
                             if (abortStarted === null && !progress.done) {
@@ -538,18 +548,31 @@ async function runCase(
         solveMs = roundMs(performance.now() - solveStarted);
         telemetry = await safeTelemetry(client, solver, errors);
 
-        if (solve && !solve.cancelled && solve.converged) {
+        if (
+            solve &&
+            !solve.cancelled &&
+            solve.converged &&
+            statusFrom(solve, solveError, telemetry) === "converged"
+        ) {
             const compileStarted = performance.now();
             try {
                 const raw = await client.solverCompileStrategy(solver);
-                const strategy = prepareSolverStrategy(raw);
+                if (!isStrategyDocument(raw)) {
+                    throw new Error(
+                        "The solver returned an invalid strategy document.",
+                    );
+                }
                 const strategyJson = JSON.stringify(raw);
                 compiledGraph = {
-                    nodes: strategy.nodes.length,
-                    edges: strategy.edges.length,
+                    nodes: raw.nodes.length,
+                    edges: raw.edges.length,
                     strategy_json_bytes: Buffer.byteLength(strategyJson),
                 };
-                strategyHandle = await client.compileStrategy(session, strategy);
+                if (!skipVerification) {
+                    const strategy = prepareSolverStrategy(raw);
+                    strategyHandle = await client.compileStrategy(
+                        session, strategy);
+                }
                 telemetry = await safeTelemetry(client, solver, errors);
                 const engineStrategyBytes = nestedNumber(
                     telemetry, "compilation", "strategy_json_bytes");

@@ -1,194 +1,175 @@
-# Session Handoff - S7.6 Exercised, Three Product Gates Remain Open
+# Session Handoff - S7.6 Has One Open Endgame Success Gate
 
-Updated 2026-07-16 after the S7.6 acceptance and final benchmark pass. Read
-[AGENTS.md](AGENTS.md), [docs/direction.md](docs/direction.md), this file, then
+Updated 2026-07-16 after the final S7.6 native/WASM corpus and the one
+authorized fresh endgame simulator sample. Read [AGENTS.md](AGENTS.md),
+[docs/direction.md](docs/direction.md), this file, then
 [docs/solver-depth-and-performance-plan.md](docs/solver-depth-and-performance-plan.md).
 
-S7.0-S7.5 and S7.2R remain complete. S7.3 remains the earlier out-of-sequence
-fixed-option commit. S7.6 was implemented and exercised, but it must not be
-called complete: four native 10,000-run samples finished, the endgame sample
-was owner-authorized to be cancelled after more than 30 minutes, the advanced
-sample missed its stored tolerance, and the endgame WASM result missed two
-approved cross-backend/responsiveness limits.
+S7.0-S7.5 and S7.2R remain complete. Stay in **S7.6 only**: the solver,
+compiler, WASM responsiveness/parity, advanced forecast, and simulator
+throughput work are complete, but S7.6 must not be called complete because the
+single final endgame sample recorded `0.9942` success against the approved
+`0.995` minimum.
 
 ## Exact next boundary
 
-Continue **S7.6 only**. Do not start any parked post-S7 scope.
+Do not start post-S7 work and do not launch another endgame 10,000-run sample
+without Oliver explicitly authorizing it. The one fresh pinned sample requested
+for this pass has been consumed and must not be combined with any partial or
+duplicate sample.
 
-1. Make endgame compiled-strategy simulation practical or at least externally
-   progress-reporting/cancellable, then run one fresh pinned sample of exactly
-   10,000 native runs. Do not combine partial or duplicate runs.
-2. Investigate the advanced sample's 8.743745% mean-cost delta against its 8%
-   approved tolerance. Do not widen the fixture tolerance without Oliver.
-3. Bring the endgame WASM solve within the approved 50 ms worker-step budget
-   and its native/WASM start value within the approved `1e-7` absolute delta.
-   The final measurements were 2,248.229 ms and `1.86154e-6` respectively.
-4. Re-run only the acceptance layers invalidated by those fixes, regenerate
-   the affected native/WASM reports and strategies, and present the remaining
-   gates to Oliver. No rendered or browser visual checks unless requested.
+Oliver needs to choose the remaining S7.6 boundary:
 
-The complete repository suite is currently green. The three items above are
-performance/statistical product-gate failures, not vocabulary gaps or automated
-test failures.
+1. keep the approved `0.995` success gate and authorize a replacement sample
+   only after a concrete run-tail change, most plausibly raising the
+   `500000` per-run action safety cap; or
+2. explicitly accept the recorded `0.9942` result/change the product gate.
 
-## S7.6 implementation result
+Before any authorized replacement, extend the native report to serialize the
+simulator's action-limit, explicit-terminal, step-limit, no-edge, and
+action-not-applied counters. The completed report has 58 failures and an
+aggregate `off_policy_failures: 0`, but its schema did not preserve
+enough failure-reason detail to prove whether all 58 were action-cap tails.
+Use bounded probes before another expensive command. A cap change is an
+operational guardrail decision, not a mechanic approximation; do not change it
+or the success tolerance silently.
 
-- The documented endgame solve blocker is removed. Equivalent one-action
-  renewal kernels now use the immutable reforge cache's pointer identity
-  instead of repeatedly copying/comparing distributions. Fixed-policy SCCs
-  switch from cubic dense elimination to the residual-checked sparse solver
-  above 512 states, focused lower solves retain their previous admissible
-  values, and improper policy components repair all certified exits together.
-- Stable Howard policies use a scale-aware termination residual while the
-  fallback retains the absolute epsilon. Convergence additionally requires a
-  complete reachable policy. Observation-choice reachability follows only the
-  Bellman-selected successor; unselected Unveil offers no longer cause a false
-  `policy-reachable state has no action` compiler refusal.
-- The native harness can save ordinary editable strategy JSON, print 10-second
-  solve progress, enforce `run_if_compiled` verification expectations, and
-  report the simulator action distribution. `scripts/benchmark-solver.ps1`
-  exposes those controls.
-- Acceptance found and fixed a stale economy snapshot hash check: `sources`
-  is now included in the reconstructed canonical content. Stale tests were
-  aligned with approved fossil abstraction, currently supported solver-eval
-  vocabulary, cache reuse, compiler region deduplication, and approved corpus
-  enablement. Full-pool option behavior remains owned by the permanent
-  performance corpus; bounded synthetic pools retain the exact observation and
-  fracture contract tests without multi-gigabyte unit-test allocations.
-- The release WASM engine was rebuilt. No visual check was performed.
+## What changed
 
-All five approved real crafts now solve and compile from their declared start,
-with no hand-authored intermediate stage or vocabulary refusal. Delivered
-ignored strategy artifacts are under
-`build/performance/strategies/s7.6-final/`:
+- The advanced discrepancy was a real abstraction-fidelity defect. Junk mods
+  with different complete generation/exclusion-group effects had been merged,
+  making reforge outcomes non-lumpable. Reforge families now retain their full
+  sorted exclusion-group signature, conflicting families are blocked exactly,
+  and all positive-probability paths are retained. The former epsilon/frontier
+  truncation is gone; explicit work/memory caps refuse instead of approximating.
+- Exact expansion and policy evaluation are persistent/resumable at action,
+  kernel-group, quotient, Tarjan-component, component-batch, and BiCGSTAB work
+  boundaries. Immutable absolute transition kernels and exact shared reforge
+  identities remove repeated billion-outcome routing/scans.
+- Recurrent policy aggregation/solves use deterministic double-double
+  arithmetic with FP contraction disabled in native and WASM. Native and WASM
+  now select identical policies and produce identical start values in the
+  final reports.
+- The compiled simulator pre-resolves node prices, memoizes exact conditions
+  and counts, and uses exact collision-checked direct-signature/decision-DAG
+  routing with priority-preserving fallback. It still executes every primitive
+  mechanic through the engine.
+- Solver-emitted junk counts use the compact editable
+  `mod_family_count` condition only when the selected families exactly cover
+  the old concrete-mod union; otherwise the compiler retains `mod_count`.
+- Native verification is one-run chunked, reports progress every 10 seconds,
+  projects total/remaining time, records variance, and can stop between runs.
+  Partial/time-limited diagnostics never count as acceptance.
+- The WASM worker aggregates small exact engine steps for throughput but caps
+  adaptive work at four items and yields after roughly 8 ms. A one-step-yield
+  instrumentation mode keeps the cancellation fixture meaningful even when a
+  small solve finishes before the normal yield interval.
+- Solve-only WASM benchmarking no longer clones and recompiles a 130-156 MB
+  strategy merely to discard the simulator handle. Verification runs still do
+  the required second compile.
 
-| Strategy | JSON bytes |
-| --- | ---: |
-| `oracle-real-one-mod.strategy.json` | 76,723 |
-| `oracle-real-two-mod.strategy.json` | 187,527 |
-| `ordinary-es-bench.strategy.json` | 1,650,569 |
-| `advanced-es-resist-bench.strategy.json` | 4,844,538 |
-| `endgame-fractured-es.strategy.json` | 6,630,717 |
+No mechanic behavior, carrier/state distinction, observation choice, legal
+action, transition probability, policy branch, tolerance, or optimality
+guarantee was weakened for speed.
 
-## Final native and WASM solve/compile evidence
+## Final solve, compile, parity, and responsiveness evidence
 
-Final ignored reports are named
-`build/performance/{native-solver,wasm-worker-solver}-s7.6-final-case-<id>-v1.json`.
-The native endgame report is the final solve-only rerun made after cancelling
-its long simulator process; it intentionally says verification skipped.
+Primary ignored reports:
 
-| Case | Native solve / compile | WASM solve / compile | Discovered / expanded | Nodes / edges | Start value native / WASM | WASM max slice | Caps native / WASM |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `oracle-real-one-mod` | 0.135 / 2.627 ms | 16.222 / 16.887 ms | 8 / 8 | 6 / 11 | 8.020144284129 / 8.020144284129 | 5.870 ms | pass / pass |
-| `oracle-real-two-mod` | 0.185 / 4.133 ms | 22.256 / 26.841 ms | 16 / 16 | 9 / 23 | 356.459177852551 / 356.459177852432 | 6.388 ms | pass / pass |
-| `ordinary-es-bench` | 11.977 / 22.838 ms | 96.397 / 145.309 ms | 241 / 241 | 45 / 179 | 780.177791245363 / 780.177791245069 | 14.328 ms | pass / pass |
-| `advanced-es-resist-bench` | 51.528 / 64.830 ms | 163.905 / 388.533 ms | 577 / 577 | 137 / 538 | 5345.975710412209 / 5345.975710408555 | 21.142 ms | pass / pass |
-| `endgame-fractured-es` | 3,554.145 / 99.912 ms | 5,710.394 / 576.934 ms | 3,727 / 3,725 | 104 / 714 | 132889.41981577268 / 132889.41981391114 | 2,248.229 ms | pass / **fail: worker step** |
+- `build/performance/native-solver-s7.6-final-solve-v1.json`
+- `build/performance/wasm-worker-solver-s7.6-final-solve-v1.json`
+- `build/performance/solver-s7.6-final-solve-v1-comparison.json`
+- `build/performance/native-solver-s7.6-final-advanced-case-advanced-es-resist-bench-v1.json`
+- `build/performance/native-solver-s7.6-final-endgame-case-endgame-fractured-es-v1.json`
 
-The first four native/WASM values and structural counts are within the corpus
-contract. Endgame structure also matches, but its start-value delta is
-`1.86154e-6`, so the generated comparison fails the approved `1e-7` absolute
-tolerance in addition to the worker-step cap. Endgame's native solve reports
-9 focused rounds, equal lower/upper bounds of `132889.41981577268`, zero proof
-gap, 612 policy-reachable states, 7 policy-improvement rounds, a
-`1.72295e-8` measured residual, and exact-abstract status.
+The final comparison passed 698 checks across all 11 shared native/WASM cases
+with zero mismatches. All state/row/transition/reforge/memory/compiled-output
+caps passed.
 
-Native solver-owned estimates are 0.299, 0.315, 1.452, 6.724, and 373.619 MB;
-WASM estimates are 0.210, 0.225, 1.335, 6.572, and 372.454 MB. The endgame
-worker grew the WASM heap by 421.134 MB and peaked at 708.841 MB process RSS.
+| Case | Native solve / compile | WASM solve / compile | Start value N / W | WASM max step | Exact structure |
+| --- | ---: | ---: | ---: | ---: | --- |
+| advanced | 1,184.961 / 4,402.892 ms | 4,695.330 / 6,957.718 ms | 4911.464629420442 / same | 18.073 ms | 24,169 expanded; 2,917 nodes / 22,465 edges |
+| endgame | 4,643.110 / 876.696 ms | 19,801.271 / 1,526.729 ms | 132353.19529787666 / same | 29.006 ms | 48,945 discovered; 48,943 expanded; 619 nodes / 5,124 edges |
 
-The retained S7.2 native solve baselines for the first four cases were 0.365,
-33.051, 688.372, and 12,671.034 ms. The final native speedups are 2.70x,
-178.65x, 57.47x, and 245.91x, a 51.12x geometric mean. No completed pre-S7.2
-endgame report exists, so no endgame speedup is claimed. The S7.2 WASM reports
-that exist moved from 83.570 to 16.222 ms for one-mod and from 1,193.949 to
-96.397 ms for ordinary; later cases did not have a completed comparable WASM
-baseline.
+The endgame value delta is exactly zero at binary64 report precision, well
+inside `1e-7`; its worker step is below 50 ms. Native endgame reports
+`exact_abstract`, zero proof gap, 4,507 policy-reachable states, 296,239 rows,
+599,362 stored transitions, 3,137,365,681 logical outcome entries, and no state
+or resource cap. The solve-only cancellation fixture acknowledged in 13.071
+ms against the 250 ms budget.
 
-## Native compiled-strategy verification
+Solver-owned estimates are 58,748,184 native / 52,107,796 WASM bytes for
+advanced and 151,357,398 native / 139,068,543 WASM bytes for endgame. During
+the one-worker full WASM corpus, exact strategy serialization grew the heap to
+1,050,083,328 bytes and process RSS peaked at 2,319,425,536 bytes; memory has
+no owner ceiling and all approved caps passed. The editable strategies are
+155,798,869 bytes (advanced) and 34,174,515 bytes (endgame).
 
-Each completed report is one corpus-pinned invocation requesting exactly
-10,000 runs. All completed runs succeeded with zero unmatched/off-policy
-routes. WASM verification was deliberately skipped because the S7.6
-correctness gate specifies the native simulator.
+## Final native simulator evidence
 
-| Case | Runs | Forecast | Empirical mean | Relative delta | Success / off-policy | Result |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| `oracle-real-one-mod` | 10,000 | 8.020144 | 8.140470 | 1.500294% | 100% / 0 | pass |
-| `oracle-real-two-mod` | 10,000 | 356.459178 | 357.114030 | 0.183710% | 100% / 0 | pass |
-| `ordinary-es-bench` | 10,000 | 780.177791 | 756.540375 | 3.029747% | 100% / 0 | pass |
-| `advanced-es-resist-bench` | 10,000 | 5345.975710 | 4878.537200 | 8.743745% | 100% / 0 | **fail: 8% tolerance** |
-| `endgame-fractured-es` | incomplete | 132889.419816 | unavailable | unavailable | unavailable | **cancelled after >30 min** |
+Advanced used one fresh pinned `2026071520` invocation with exactly 10,000
+runs:
 
-The endgame native process continued consuming one core with a stable roughly
-176 MB working set and emitted no completed report after more than 30 minutes.
-Oliver had explicitly authorized cancelling work that did not appear likely to
-finish, so it was terminated and was not restarted. Do not infer a completed
-run count from that attempt.
+- 10,000 successes, 0 failures, 0 reported off-policy routes;
+- forecast `4911.464629420442`, empirical mean `4878.5372`;
+- absolute/relative delta `32.92742942044242` / `0.006704197608021437`
+  (0.670420%), inside 8%;
+- standard deviation/error `4824.002367039209` / `48.24002367039209`;
+- 74.063 s verification wall time.
 
-The empirical per-run material/action totals captured for the completed
-strategies are:
+The old and new advanced samples use the same pinned seed and have identical
+45,273,419 primitive-action totals: 4,393.2315 Chaos, 30.1433 Exalts,
+87.9261 Annuls, and 16.0410 bench crafts per run. Concrete strategy behavior
+and sampled materials therefore did not change; the exact forecast changed
+from `5345.975710412209` to `4911.464629420442` (-8.127816%).
 
-- one-mod: 1.0000 Transmute and 80.9047 Alterations;
-- two-mod: 1.0000 Transmute, 29.8164 Augments, and 3,555.7321 Alterations;
-- ordinary: 707.2173 Alchemies, 707.2173 Scours, 16.6066 Exalts, 27.0810
-  Annuls, and 11.7988 bench crafts;
-- advanced: 4,393.2315 Chaos, 30.1433 Exalts, 87.9261 Annuls, and 16.0410
-  bench crafts.
+Endgame used exactly one fresh pinned `2026071530` invocation with exactly
+10,000 completed runs. It was never restarted or combined:
 
-## Action control, caps, and optimality
+- 9,942 successes / 58 failures = `0.9942`, below the approved `0.995`;
+- forecast `132353.19529787666`, empirical mean `130724.1208`;
+- relative mean-cost delta `0.012308539240100952` (1.230854%), inside 10%;
+- report says aggregate `off_policy_failures: 0`, but see the
+  failure-reason reporting limitation above;
+- standard deviation/error `126478.99525383864` / `1264.7899525383864`;
+- 984,077,152 primitive actions in 1,523.755 s = 1.5484 microseconds/action;
+- 25.58 minutes verification wall time, versus a bounded probe projection of
+  roughly 32 minutes;
+- sampled per-run materials/actions: 612.1873 Exalts, 3,527.8543 Annuls,
+  93,883.6032 Dense Fossil operations, and 384.0704 bench crafts.
 
-The five cases admitted 3/4/7/5/7 priced supported candidates from the explicit
-goal envelopes. They pruned 15,549/15,548/15,545/15,547/15,545 non-permitted
-registry entries; ordinary also recorded 234 certified equivalent-kernel
-dominance reductions. No case had a missing price, unsupported requested
-action, or unsupported observed action. Fossil generation remained lazy:
-15,275 loadouts were deferred in the first four cases; endgame generated its
-one requested Dense loadout and deferred 15,274 others.
-
-Every native solve reports `exact_abstract_within_tolerance` with no state or
-resource cap. The first four WASM solves pass every per-case cap. Endgame WASM
-passes its state, row, transition, reforge, memory, and compiled-output caps;
-only the 50 ms worker-step check fails. Cancellation acknowledgement was not
-remeasured for these ordinary solve cases.
+The endgame forecast changed from `132889.41981577268` to
+`132353.19529787666` (-0.403512%), and the exact editable policy expanded from
+104/714 nodes/edges to 619/5,124. No pre-change endgame sample completed, so
+do not claim an empirical material delta.
 
 ## Acceptance performed
 
-`powershell -File scripts/test.ps1` completed green after fixing the failures
-it exposed:
+- `powershell -File scripts/build.ps1` passed.
+- `powershell -File scripts/build-wasm.ps1` rebuilt the release WASM module.
+- `powershell -File scripts/test.ps1` passed: ingest 4, economy 8, Python
+  bindings 14, native engine 372,493 checks/0 failures, and all Web/WASM suites.
+- Final `npm test` passed, including 25/25 main WASM tests and 3/3 corpus tests.
+- Final `npx tsc --noEmit` passed.
+- The final native/WASM solve comparison passed 698 checks over 11 cases.
+- No browser, screenshot, rendered UI, or other visual check was performed.
 
-- ingest: 4 tests;
-- economy: 8 tests;
-- Python bindings: 14 tests;
-- native engine: 370,185 checks, 0 failures;
-- web/WASM: all suites green, including 25/25 main tests and 3/3 benchmark
-  corpus tests.
+## Cautions
 
-Artifact validation/compilation and binding builds also passed inside the
-pipeline. The final release WASM module was rebuilt before that green run. No
-browser, screenshot, rendered UI, or other visual check was performed.
+- Reforge sharing is exact only for immutable cached absolute kernels; do not
+  generalize identity sharing to mutable or query-state-dependent outcomes.
+- `mod_family_count` is exact only under the compiler's full-family-cover
+  proof. Keep the concrete `mod_count` fallback.
+- Deterministic wide aggregation and `-ffp-contract=off` are parity
+  requirements, not optional tuning.
+- Do not treat the 58 endgame failures as proven action-limit tails. The
+  throughput/tail shape strongly suggests that explanation, but the completed
+  report did not serialize the necessary reason counters.
+- Do not rerun the expensive sample merely to improve a stochastic result.
 
-## Implementation cautions
+## Parked scope
 
-- The reforge pointer-identity shortcut is exact only because the reforge cache
-  owns immutable shared distributions keyed by action and preserved base. Do
-  not generalize it to ephemeral or mutable distributions.
-- Stable-policy scale-aware convergence is intentionally not used by the
-  residual-prioritized fallback. The endgame native/WASM value mismatch is
-  still open; do not hide it by loosening the comparison tolerance.
-- Policy reachability through an observation choice follows its selected
-  successor. Compiling every unselected offer alternative reintroduces false
-  missing-action failures.
-- Full canonical protected-repeat, Veiled Chaos, and fracture pools can allocate
-  10-28 GB when forced through a unit-test contract. Keep exact bounded tests
-  for semantics and the approved corpus for full-pool performance/caps.
-- Final benchmark comparison reports for completed native verification versus
-  solve-only WASM naturally list verification-field mismatches. Use the native
-  report as the correctness sample and compare solve structure/value separately.
-
-## Scope that remains parked
-
-S6 Phase 3 ambient Emulator odds was skipped entirely and must not reappear.
-Economy E0-E7 is complete except external production activation. Phase 12
-accounts, publishing/community, mechanic track M1-M5, Phase 18 recombinators,
-and ML remain deferred, blocked, parked, or later as documented.
+S6 Phase 3 ambient Emulator odds remains skipped. Economy E0-E7 is complete
+except external production activation. Accounts, publishing/community,
+mechanic track M1-M5, recombinators, ML, and all other post-S7 work remain
+parked as documented.

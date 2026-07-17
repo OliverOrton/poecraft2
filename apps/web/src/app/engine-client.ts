@@ -66,6 +66,9 @@ export interface StrategyEvaluationRunOptions {
 
 export interface SolverRunOptions {
     chunkSize?: number;
+    /** Instrumentation/control mode for callers that need cancellation
+     * acknowledgement after each exact engine work unit. */
+    yieldEveryStep?: boolean;
     onProgress?: (progress: SolveProgress) => void;
     signal?: AbortSignal;
 }
@@ -505,6 +508,7 @@ export class EngineClient {
                 economy,
                 options,
                 chunkSize: runOptions?.chunkSize,
+                yieldEveryStep: runOptions?.yieldEveryStep,
             },
             {
                 onSolveProgress: runOptions?.onProgress,

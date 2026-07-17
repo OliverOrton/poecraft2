@@ -140,20 +140,49 @@ std::string mod_count_condition(
     const JunkClass& junk,
     std::uint8_t count,
     std::uint8_t required_flags = 0) {
-    std::string out = "{\"type\":\"mod_count\",\"mod_keys\":[";
-    bool first = true;
+    std::map<std::uint32_t, std::uint32_t> representative_by_family;
     pc_bitset_for_each(
         junk.member_mask.data(), session.words, [&](std::size_t bit) {
+            const std::uint32_t mod = static_cast<std::uint32_t>(bit);
+            representative_by_family.emplace(session.family_id[mod], mod);
+        });
+    bool exact_family_cover = !representative_by_family.empty();
+    for (std::uint32_t mod = 0;
+         exact_family_cover && mod < session.mod_count; ++mod) {
+        const bool family_selected =
+            representative_by_family.count(session.family_id[mod]) != 0;
+        const bool class_selected =
+            pc_bitset_test(junk.member_mask.data(), mod);
+        if (family_selected != class_selected) exact_family_cover = false;
+    }
+
+    std::string out = exact_family_cover
+                          ? "{\"type\":\"mod_family_count\",\"family_mod_keys\":["
+                          : "{\"type\":\"mod_count\",\"mod_keys\":[";
+    bool first = true;
+    const auto append_key = [&](const std::uint32_t mod) {
             const std::string key =
-                mod_key_of(session, static_cast<std::uint32_t>(bit));
+                mod_key_of(session, mod);
             if (key.empty()) {
-                gap("junk class member " + std::to_string(bit) +
+                gap("junk class member " + std::to_string(mod) +
                     " has no stable modifier key");
             }
             if (!first) out += ',';
             first = false;
             out += "\"" + json_escape(key) + "\"";
-        });
+    };
+    if (exact_family_cover) {
+        for (const auto& [unused_family, representative] :
+             representative_by_family) {
+            (void)unused_family;
+            append_key(representative);
+        }
+    } else {
+        pc_bitset_for_each(
+            junk.member_mask.data(), session.words, [&](std::size_t bit) {
+                append_key(static_cast<std::uint32_t>(bit));
+            });
+    }
     if (first) gap("junk class has no members");
     out += "]";
     if ((required_flags & PC_MOD_SLOT_FRACTURED) != 0) {

@@ -98,7 +98,7 @@ else {
         # exception-bearing COMDAT sections. They also make the test binary
         # self-contained. CMake/MSVC builds do not need this.
         & $Compiler.Source `
-            -std=c++20 -O2 `
+            -std=c++20 -O2 -ffp-contract=off `
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
             "-I$HarvestGeneratedDirectory" `
@@ -110,7 +110,7 @@ else {
         }
 
         & $Compiler.Source `
-            -std=c++20 -O2 -shared `
+            -std=c++20 -O2 -ffp-contract=off -shared `
             -static-libstdc++ -static-libgcc `
             "-Wl,--export-all-symbols" `
             "-I$Root/engine/include" `
@@ -130,7 +130,7 @@ else {
             $BenchmarkSystemLibraries += "-lpsapi"
         }
         & $Compiler.Source `
-            -std=c++20 -O2 `
+            -std=c++20 -O2 -ffp-contract=off `
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
             "-I$Root/engine/src" `

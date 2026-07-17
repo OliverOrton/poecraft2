@@ -327,7 +327,7 @@ void run_synthetic_gate() {
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             tagged_calc, solved, "tag-discriminating transmute");
-        PC_CHECK(json.find("\"type\":\"mod_count\"") !=
+        PC_CHECK(json.find("\"type\":\"mod_family_count\"") !=
                  std::string::npos);
         const SimulationSummaryInternal summary =
             run_compiled(session, json, prices, 10000, 8675310);
@@ -365,7 +365,7 @@ void run_synthetic_gate() {
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             perfect_calc, solved, "six-slot all-T1 perfect item");
-        PC_CHECK(json.find("\"type\":\"mod_count\"") !=
+        PC_CHECK(json.find("\"type\":\"mod_family_count\"") !=
                  std::string::npos);
         PC_CHECK(json.find("\"type\":\"has_mod_group\"") !=
                  std::string::npos);

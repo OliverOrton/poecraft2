@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -308,6 +309,40 @@ CompiledCondition compile_condition(
         }
         return out;
     }
+    if (type == "mod_family_count") {
+        const Value* keys = value.find("family_mod_keys");
+        if (keys == nullptr || keys->type != Type::Array ||
+            keys->array.empty()) {
+            invalid(
+                "mod_family_count requires a non-empty family_mod_keys array");
+        }
+        out.kind = ConditionKind::ModFamilyCount;
+        for (const Value& key : keys->array) {
+            if (key.type != Type::String) {
+                invalid("mod_family_count family_mod_keys must be strings");
+            }
+            const std::uint32_t mod_id =
+                resolve_mod_key(key.string, "modifier family");
+            out.family_ids.push_back(session.family_id[mod_id]);
+        }
+        std::sort(out.family_ids.begin(), out.family_ids.end());
+        out.family_ids.erase(
+            std::unique(out.family_ids.begin(), out.family_ids.end()),
+            out.family_ids.end());
+        out.min_value = int_member(value, "min", 0);
+        out.max_value = int_member(
+            value, "max", PC_MAX_PREFIXES + PC_MAX_SUFFIXES);
+        if (bool_member(value, "fractured", false)) {
+            out.required_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        if (bool_member(value, "crafted", false)) {
+            out.required_flags |= PC_MOD_SLOT_CRAFTED;
+        }
+        if (out.min_value < 0 || out.max_value < out.min_value) {
+            invalid("mod_family_count range is invalid");
+        }
+        return out;
+    }
     if (type == "item_flag") {
         static const std::pair<const char*, ItemFlagKind> flags[] = {
             {"corrupted", ItemFlagKind::Corrupted},
@@ -435,6 +470,549 @@ CompiledCondition compile_condition(
         return out;
     }
     invalid("unknown condition type: " + type);
+}
+
+std::size_t condition_hash(const CompiledCondition& condition) {
+    std::size_t hash = static_cast<std::size_t>(1469598103934665603ULL);
+    const auto combine = [&](const std::uint64_t value) {
+        hash ^= static_cast<std::size_t>(value) +
+                static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                (hash << 6) + (hash >> 2);
+    };
+    combine(static_cast<std::uint8_t>(condition.kind));
+    combine(condition.group_id);
+    combine(condition.family_id);
+    combine(condition.required_flags);
+    combine(static_cast<std::uint8_t>(condition.item_flag));
+    combine(condition.eldritch_side);
+    combine(static_cast<std::uint32_t>(condition.min_value));
+    combine(static_cast<std::uint32_t>(condition.max_value));
+    combine(condition.mod_ids.size());
+    for (const std::uint32_t mod_id : condition.mod_ids) combine(mod_id);
+    combine(condition.family_ids.size());
+    for (const std::uint32_t family_id : condition.family_ids) {
+        combine(family_id);
+    }
+    combine(condition.children.size());
+    for (const CompiledCondition& child : condition.children) {
+        combine(condition_hash(child));
+    }
+    return hash;
+}
+
+bool condition_equal(
+    const CompiledCondition& left,
+    const CompiledCondition& right) {
+    if (left.kind != right.kind || left.group_id != right.group_id ||
+        left.family_id != right.family_id ||
+        left.required_flags != right.required_flags ||
+        left.item_flag != right.item_flag ||
+        left.eldritch_side != right.eldritch_side ||
+        left.min_value != right.min_value ||
+        left.max_value != right.max_value ||
+        left.mod_ids != right.mod_ids ||
+        left.family_ids != right.family_ids ||
+        left.children.size() != right.children.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < left.children.size(); ++i) {
+        if (!condition_equal(left.children[i], right.children[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void assign_condition_memo_slots(
+    CompiledCondition& condition,
+    std::unordered_map<
+        std::size_t, std::vector<const CompiledCondition*>>& by_hash,
+    std::uint32_t& next_slot,
+    std::unordered_map<
+        std::size_t, std::vector<const CompiledCondition*>>& count_by_hash,
+    std::uint32_t& next_count_slot) {
+    for (CompiledCondition& child : condition.children) {
+        assign_condition_memo_slots(
+            child, by_hash, next_slot, count_by_hash, next_count_slot);
+    }
+    if (condition.kind == ConditionKind::ModCount ||
+        condition.kind == ConditionKind::ModFamilyCount) {
+        std::size_t count_hash =
+            static_cast<std::size_t>(1469598103934665603ULL);
+        const auto combine = [&](const std::uint64_t value) {
+            count_hash ^= static_cast<std::size_t>(value) +
+                          static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                          (count_hash << 6) + (count_hash >> 2);
+        };
+        combine(static_cast<std::uint8_t>(condition.kind));
+        combine(condition.required_flags);
+        for (const std::uint32_t mod : condition.mod_ids) combine(mod);
+        for (const std::uint32_t family : condition.family_ids) {
+            combine(family);
+        }
+        for (const CompiledCondition* existing :
+             count_by_hash[count_hash]) {
+            if (existing->kind == condition.kind &&
+                existing->required_flags == condition.required_flags &&
+                existing->mod_ids == condition.mod_ids &&
+                existing->family_ids == condition.family_ids) {
+                condition.count_memo_slot = existing->count_memo_slot;
+                break;
+            }
+        }
+        if (condition.count_memo_slot ==
+            std::numeric_limits<std::uint32_t>::max()) {
+            condition.count_memo_slot = next_count_slot++;
+            count_by_hash[count_hash].push_back(&condition);
+        }
+    }
+    const std::size_t hash = condition_hash(condition);
+    for (const CompiledCondition* existing : by_hash[hash]) {
+        if (condition_equal(*existing, condition)) {
+            condition.memo_slot = existing->memo_slot;
+            return;
+        }
+    }
+    condition.memo_slot = next_slot++;
+    by_hash[hash].push_back(&condition);
+}
+
+struct DispatchClause {
+    std::uint32_t condition = 0;
+    bool expected = true;
+};
+
+struct DispatchCandidate {
+    std::uint32_t edge = 0;
+    std::vector<DispatchClause> clauses;
+};
+
+std::size_t direct_feature_hash(const CompiledCondition& condition) {
+    std::size_t hash = static_cast<std::size_t>(1469598103934665603ULL);
+    const auto combine = [&](const std::uint64_t value) {
+        hash ^= static_cast<std::size_t>(value) +
+                static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                (hash << 6) + (hash >> 2);
+    };
+    combine(static_cast<std::uint8_t>(condition.kind));
+    switch (condition.kind) {
+    case ConditionKind::HasModGroup:
+        combine(condition.group_id);
+        combine(condition.required_flags);
+        combine(static_cast<std::uint32_t>(condition.min_value));
+        break;
+    case ConditionKind::HasModFamily:
+        combine(condition.family_id);
+        combine(condition.required_flags);
+        combine(static_cast<std::uint32_t>(condition.min_value));
+        break;
+    case ConditionKind::ModCount:
+        combine(condition.required_flags);
+        for (const std::uint32_t mod : condition.mod_ids) combine(mod);
+        break;
+    case ConditionKind::ModFamilyCount:
+        combine(condition.required_flags);
+        for (const std::uint32_t family : condition.family_ids) {
+            combine(family);
+        }
+        break;
+    case ConditionKind::ItemFlag:
+        combine(static_cast<std::uint8_t>(condition.item_flag));
+        break;
+    case ConditionKind::EldritchTier:
+        combine(condition.eldritch_side);
+        break;
+    case ConditionKind::HasUnveilOption:
+        for (const std::uint32_t mod : condition.mod_ids) combine(mod);
+        break;
+    default:
+        break;
+    }
+    return hash;
+}
+
+bool direct_feature_equal(
+    const CompiledCondition& left,
+    const CompiledCondition& right) {
+    if (left.kind != right.kind) return false;
+    switch (left.kind) {
+    case ConditionKind::HasModGroup:
+        return left.group_id == right.group_id &&
+               left.required_flags == right.required_flags &&
+               left.min_value == right.min_value;
+    case ConditionKind::HasModFamily:
+        return left.family_id == right.family_id &&
+               left.required_flags == right.required_flags &&
+               left.min_value == right.min_value;
+    case ConditionKind::ModCount:
+        return left.required_flags == right.required_flags &&
+               left.mod_ids == right.mod_ids;
+    case ConditionKind::ModFamilyCount:
+        return left.required_flags == right.required_flags &&
+               left.family_ids == right.family_ids;
+    case ConditionKind::ItemFlag:
+        return left.item_flag == right.item_flag;
+    case ConditionKind::EldritchTier:
+        return left.eldritch_side == right.eldritch_side;
+    case ConditionKind::HasUnveilOption:
+        return left.mod_ids == right.mod_ids;
+    default:
+        return true;
+    }
+}
+
+bool direct_required_value(
+    const CompiledCondition& condition,
+    const bool expected,
+    std::int16_t& value) {
+    switch (condition.kind) {
+    case ConditionKind::Always:
+    case ConditionKind::HasModGroup:
+    case ConditionKind::HasModFamily:
+    case ConditionKind::ItemFlag:
+    case ConditionKind::HasUnveilOption:
+        value = expected ? 1 : 0;
+        return true;
+    case ConditionKind::RarityIs:
+    case ConditionKind::InfluenceBits:
+        if (!expected) return false;
+        value = static_cast<std::int16_t>(condition.min_value);
+        return true;
+    case ConditionKind::OpenPrefixCount:
+    case ConditionKind::OpenSuffixCount:
+    case ConditionKind::PrefixCountRange:
+    case ConditionKind::SuffixCountRange:
+    case ConditionKind::ModCount:
+    case ConditionKind::ModFamilyCount:
+    case ConditionKind::EldritchTier:
+        if (!expected || condition.min_value != condition.max_value) {
+            return false;
+        }
+        value = static_cast<std::int16_t>(condition.min_value);
+        return true;
+    case ConditionKind::All:
+    case ConditionKind::Any:
+    case ConditionKind::Not:
+    case ConditionKind::AtLeast:
+        return false;
+    }
+    return false;
+}
+
+std::size_t direct_signature_hash(const std::vector<std::int16_t>& values) {
+    std::size_t hash = static_cast<std::size_t>(1469598103934665603ULL);
+    for (const std::int16_t value : values) {
+        hash ^= static_cast<std::size_t>(
+                    static_cast<std::uint16_t>(value)) +
+                static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                (hash << 6) + (hash >> 2);
+    }
+    hash ^= values.size() + static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+            (hash << 6) + (hash >> 2);
+    return hash;
+}
+
+bool flatten_dispatch_condition(
+    const CompiledCondition& condition,
+    bool expected,
+    StrategyNode& node,
+    std::unordered_map<std::uint32_t, std::uint32_t>& local_by_memo,
+    std::vector<DispatchClause>& clauses) {
+    if (condition.kind == ConditionKind::All && expected) {
+        for (const CompiledCondition& child : condition.children) {
+            if (!flatten_dispatch_condition(
+                    child, true, node, local_by_memo, clauses)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (condition.kind == ConditionKind::Not &&
+        condition.children.size() == 1) {
+        return flatten_dispatch_condition(
+            condition.children.front(), !expected, node, local_by_memo,
+            clauses);
+    }
+    if (condition.kind == ConditionKind::Any ||
+        condition.kind == ConditionKind::AtLeast ||
+        condition.kind == ConditionKind::All ||
+        condition.kind == ConditionKind::Not) {
+        return false;
+    }
+    const auto [found, inserted] = local_by_memo.emplace(
+        condition.memo_slot,
+        static_cast<std::uint32_t>(node.dispatch_conditions.size()));
+    if (inserted) node.dispatch_conditions.push_back(condition);
+    const std::uint32_t local = found->second;
+    for (const DispatchClause& clause : clauses) {
+        if (clause.condition == local) {
+            return clause.expected == expected;
+        }
+    }
+    clauses.push_back({local, expected});
+    return true;
+}
+
+void build_dispatch(StrategyNode& node) {
+    node.dispatch_conditions.clear();
+    node.dispatch_nodes.clear();
+    node.dispatch_signatures.clear();
+    node.direct_dispatch_features.clear();
+    node.direct_dispatch_signatures.clear();
+    if (node.edges.size() < 8) return;
+
+    std::unordered_map<std::uint32_t, std::uint32_t> local_by_memo;
+    std::vector<DispatchCandidate> candidates;
+    candidates.reserve(node.edges.size());
+    for (std::uint32_t edge = 0; edge < node.edges.size(); ++edge) {
+        DispatchCandidate candidate;
+        candidate.edge = edge;
+        if (!node.edges[edge].is_default &&
+            !flatten_dispatch_condition(
+                node.edges[edge].condition, true, node, local_by_memo,
+                candidate.clauses)) {
+            node.dispatch_conditions.clear();
+            return;
+        }
+        candidates.push_back(std::move(candidate));
+    }
+
+    std::unordered_map<std::size_t, std::vector<std::uint32_t>>
+        direct_features_by_hash;
+    for (const DispatchCandidate& candidate : candidates) {
+        for (const DispatchClause& clause : candidate.clauses) {
+            const CompiledCondition& condition =
+                node.dispatch_conditions[clause.condition];
+            const std::size_t hash = direct_feature_hash(condition);
+            bool found = false;
+            for (const std::uint32_t feature :
+                 direct_features_by_hash[hash]) {
+                if (direct_feature_equal(
+                        node.direct_dispatch_features[feature], condition)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                direct_features_by_hash[hash].push_back(
+                    static_cast<std::uint32_t>(
+                        node.direct_dispatch_features.size()));
+                node.direct_dispatch_features.push_back(condition);
+            }
+        }
+    }
+    constexpr std::int16_t kUnassigned =
+        std::numeric_limits<std::int16_t>::min();
+    for (const DispatchCandidate& candidate : candidates) {
+        if (node.edges[candidate.edge].is_default) continue;
+        StrategyDirectDispatchSignature signature;
+        signature.edge = candidate.edge;
+        signature.values.assign(
+            node.direct_dispatch_features.size(), kUnassigned);
+        bool supported = true;
+        for (const DispatchClause& clause : candidate.clauses) {
+            const CompiledCondition& condition =
+                node.dispatch_conditions[clause.condition];
+            const std::size_t hash = direct_feature_hash(condition);
+            std::uint32_t feature = std::numeric_limits<std::uint32_t>::max();
+            for (const std::uint32_t possible :
+                 direct_features_by_hash[hash]) {
+                if (direct_feature_equal(
+                        node.direct_dispatch_features[possible], condition)) {
+                    feature = possible;
+                    break;
+                }
+            }
+            std::int16_t required = 0;
+            if (feature == std::numeric_limits<std::uint32_t>::max() ||
+                !direct_required_value(
+                    condition, clause.expected, required) ||
+                (signature.values[feature] != kUnassigned &&
+                 signature.values[feature] != required)) {
+                supported = false;
+                break;
+            }
+            signature.values[feature] = required;
+        }
+        if (!supported) continue;
+
+        /* Absence of a family/group at a looser threshold also proves every
+         * stricter-tier and required-flag variant false. This fills the
+         * predicates omitted as logically redundant by the policy compiler. */
+        for (std::uint32_t target = 0;
+             target < signature.values.size(); ++target) {
+            if (signature.values[target] != kUnassigned) continue;
+            const CompiledCondition& wanted =
+                node.direct_dispatch_features[target];
+            if (wanted.kind != ConditionKind::HasModFamily &&
+                wanted.kind != ConditionKind::HasModGroup) {
+                continue;
+            }
+            for (std::uint32_t source = 0;
+                 source < signature.values.size(); ++source) {
+                const CompiledCondition& known =
+                    node.direct_dispatch_features[source];
+                if (known.kind != wanted.kind) continue;
+                const bool same_target =
+                    wanted.kind == ConditionKind::HasModFamily
+                        ? known.family_id == wanted.family_id
+                        : known.group_id == wanted.group_id;
+                const bool false_implies_target =
+                    signature.values[source] == 0 &&
+                    (known.required_flags & wanted.required_flags) ==
+                        known.required_flags &&
+                    (known.min_value == 0 ||
+                     (wanted.min_value != 0 &&
+                      known.min_value >= wanted.min_value));
+                const bool true_implies_target =
+                    signature.values[source] == 1 &&
+                    (wanted.required_flags & known.required_flags) ==
+                        wanted.required_flags &&
+                    (wanted.min_value == 0 ||
+                     (known.min_value != 0 &&
+                      wanted.min_value >= known.min_value));
+                if (same_target &&
+                    (false_implies_target || true_implies_target)) {
+                    signature.values[target] =
+                        true_implies_target ? 1 : 0;
+                    break;
+                }
+            }
+        }
+        if (std::find(
+                signature.values.begin(), signature.values.end(),
+                kUnassigned) != signature.values.end()) {
+            continue;
+        }
+        auto& collisions = node.direct_dispatch_signatures[
+            direct_signature_hash(signature.values)];
+        const bool duplicate = std::any_of(
+            collisions.begin(), collisions.end(),
+            [&](const StrategyDirectDispatchSignature& existing) {
+                return existing.values == signature.values;
+            });
+        if (!duplicate) collisions.push_back(std::move(signature));
+    }
+
+    const auto signature_hash = [](const std::vector<std::uint32_t>& values) {
+        std::size_t hash =
+            static_cast<std::size_t>(1469598103934665603ULL);
+        for (const std::uint32_t value : values) {
+            hash ^= static_cast<std::size_t>(value) +
+                    static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                    (hash << 6) + (hash >> 2);
+        }
+        hash ^= values.size() + static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                (hash << 6) + (hash >> 2);
+        return hash;
+    };
+    for (const DispatchCandidate& candidate : candidates) {
+        if (node.edges[candidate.edge].is_default) continue;
+        StrategyDispatchSignature signature;
+        signature.edge = candidate.edge;
+        for (const DispatchClause& clause : candidate.clauses) {
+            if (clause.expected) {
+                signature.true_conditions.push_back(clause.condition);
+            }
+        }
+        std::sort(
+            signature.true_conditions.begin(),
+            signature.true_conditions.end());
+        auto& collisions =
+            node.dispatch_signatures[signature_hash(
+                signature.true_conditions)];
+        const bool duplicate = std::any_of(
+            collisions.begin(), collisions.end(),
+            [&](const StrategyDispatchSignature& existing) {
+                return existing.true_conditions ==
+                       signature.true_conditions;
+            });
+        if (!duplicate) collisions.push_back(std::move(signature));
+    }
+    if (candidates.size() > 1024 && !node.dispatch_signatures.empty()) {
+        return;
+    }
+
+    constexpr std::size_t kMaxDispatchNodes = 200000;
+    const auto build = [&](const auto& self,
+                           const std::vector<DispatchCandidate>& active)
+        -> std::uint32_t {
+        if (active.empty()) {
+            throw std::length_error("empty strategy dispatch branch");
+        }
+        if (node.dispatch_nodes.size() >= kMaxDispatchNodes) {
+            throw std::length_error("strategy dispatch DAG exceeded cap");
+        }
+        const std::uint32_t index = static_cast<std::uint32_t>(
+            node.dispatch_nodes.size());
+        node.dispatch_nodes.emplace_back();
+        if (active.front().clauses.empty()) {
+            node.dispatch_nodes[index].edge = active.front().edge;
+            return index;
+        }
+
+        struct Counts {
+            std::uint32_t when_true = 0;
+            std::uint32_t when_false = 0;
+        };
+        std::unordered_map<std::uint32_t, Counts> counts;
+        for (const DispatchCandidate& candidate : active) {
+            for (const DispatchClause& clause : candidate.clauses) {
+                Counts& value = counts[clause.condition];
+                if (clause.expected) ++value.when_true;
+                else ++value.when_false;
+            }
+        }
+        std::uint32_t selected = active.front().clauses.front().condition;
+        std::size_t selected_worst = active.size();
+        std::size_t selected_constrained = 0;
+        for (const auto& [condition, value] : counts) {
+            const std::size_t constrained =
+                value.when_true + value.when_false;
+            const std::size_t wild = active.size() - constrained;
+            const std::size_t worst = wild + std::max(
+                value.when_true, value.when_false);
+            if (worst < selected_worst ||
+                (worst == selected_worst &&
+                 constrained > selected_constrained)) {
+                selected = condition;
+                selected_worst = worst;
+                selected_constrained = constrained;
+            }
+        }
+
+        const auto branch = [&](const bool value) {
+            std::vector<DispatchCandidate> next;
+            next.reserve(active.size());
+            for (const DispatchCandidate& candidate : active) {
+                DispatchCandidate copy = candidate;
+                const auto clause = std::find_if(
+                    copy.clauses.begin(), copy.clauses.end(),
+                    [&](const DispatchClause& entry) {
+                        return entry.condition == selected;
+                    });
+                if (clause != copy.clauses.end()) {
+                    if (clause->expected != value) continue;
+                    copy.clauses.erase(clause);
+                }
+                next.push_back(std::move(copy));
+            }
+            return next;
+        };
+        const std::vector<DispatchCandidate> when_true = branch(true);
+        const std::vector<DispatchCandidate> when_false = branch(false);
+        const std::uint32_t true_index = self(self, when_true);
+        const std::uint32_t false_index = self(self, when_false);
+        node.dispatch_nodes[index].condition = selected;
+        node.dispatch_nodes[index].when_true = true_index;
+        node.dispatch_nodes[index].when_false = false_index;
+        return index;
+    };
+    try {
+        (void)build(build, candidates);
+    } catch (const std::length_error&) {
+        node.dispatch_nodes.clear();
+    }
 }
 
 bool action_type_from_name(const std::string& name, ActionType& out) {
@@ -653,6 +1231,57 @@ int count_mods(
     return count;
 }
 
+int count_mod_families(
+    const SessionImpl& session,
+    const pc_item_state& item,
+    const std::vector<std::uint32_t>& family_ids,
+    std::uint8_t required_flags) {
+    int count = 0;
+    const auto visit = [&](const pc_mod_slot* slots, std::uint8_t size) {
+        for (std::uint8_t i = 0; i < size; ++i) {
+            const std::uint32_t mod_id = slots[i].mod_id;
+            if (mod_id < session.family_id.size() &&
+                std::binary_search(
+                    family_ids.begin(), family_ids.end(),
+                    session.family_id[mod_id]) &&
+                (slots[i].flags & required_flags) == required_flags) {
+                ++count;
+            }
+        }
+    };
+    visit(item.prefixes, item.prefix_count);
+    visit(item.suffixes, item.suffix_count);
+    return count;
+}
+
+int count_condition_value(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item,
+    SimulatorImpl* simulator) {
+    if (simulator != nullptr &&
+        condition.count_memo_slot < simulator->count_cache_generation.size() &&
+        simulator->count_cache_generation[condition.count_memo_slot] ==
+            simulator->current_condition_generation) {
+        return simulator->count_cache_values[condition.count_memo_slot];
+    }
+    const int count = condition.kind == ConditionKind::ModFamilyCount
+                          ? count_mod_families(
+                                session, item, condition.family_ids,
+                                condition.required_flags)
+                          : count_mods(
+                                item, condition.mod_ids,
+                                condition.required_flags);
+    if (simulator != nullptr &&
+        condition.count_memo_slot < simulator->count_cache_generation.size()) {
+        simulator->count_cache_generation[condition.count_memo_slot] =
+            simulator->current_condition_generation;
+        simulator->count_cache_values[condition.count_memo_slot] =
+            static_cast<std::int8_t>(count);
+    }
+    return count;
+}
+
 bool item_has_slot_flag(
     const pc_item_state& item,
     std::uint8_t flag,
@@ -783,10 +1412,17 @@ bool has_family(
            side_has(item.suffixes, item.suffix_count);
 }
 
-bool evaluate_condition(
+bool evaluate_condition_cached(
     const CompiledCondition& condition,
     const SessionImpl& session,
-    const pc_item_state& item) {
+    const pc_item_state& item,
+    SimulatorImpl* simulator);
+
+bool evaluate_condition_impl(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item,
+    SimulatorImpl* simulator) {
     switch (condition.kind) {
     case ConditionKind::Always:
         return true;
@@ -822,8 +1458,13 @@ bool evaluate_condition(
         return item.suffix_count >= condition.min_value &&
                item.suffix_count <= condition.max_value;
     case ConditionKind::ModCount: {
-        const int count = count_mods(
-            item, condition.mod_ids, condition.required_flags);
+        const int count = count_condition_value(
+            condition, session, item, simulator);
+        return count >= condition.min_value && count <= condition.max_value;
+    }
+    case ConditionKind::ModFamilyCount: {
+        const int count = count_condition_value(
+            condition, session, item, simulator);
         return count >= condition.min_value && count <= condition.max_value;
     }
     case ConditionKind::ItemFlag:
@@ -844,21 +1485,26 @@ bool evaluate_condition(
             condition.children.begin(),
             condition.children.end(),
             [&](const CompiledCondition& child) {
-                return evaluate_condition(child, session, item);
+                return evaluate_condition_cached(
+                    child, session, item, simulator);
             });
     case ConditionKind::Any:
         return std::any_of(
             condition.children.begin(),
             condition.children.end(),
             [&](const CompiledCondition& child) {
-                return evaluate_condition(child, session, item);
+                return evaluate_condition_cached(
+                    child, session, item, simulator);
             });
     case ConditionKind::Not:
-        return !evaluate_condition(condition.children.front(), session, item);
+        return !evaluate_condition_cached(
+            condition.children.front(), session, item, simulator);
     case ConditionKind::AtLeast: {
         int matches = 0;
         for (const auto& child : condition.children) {
-            if (evaluate_condition(child, session, item)) ++matches;
+            if (evaluate_condition_cached(child, session, item, simulator)) {
+                ++matches;
+            }
         }
         return matches >= condition.min_value;
     }
@@ -866,15 +1512,185 @@ bool evaluate_condition(
     return false;
 }
 
+bool evaluate_condition_cached(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item,
+    SimulatorImpl* simulator) {
+    const std::uint32_t no_slot =
+        std::numeric_limits<std::uint32_t>::max();
+    if (simulator != nullptr && condition.memo_slot != no_slot &&
+        condition.memo_slot < simulator->condition_cache_generation.size() &&
+        simulator->condition_cache_generation[condition.memo_slot] ==
+            simulator->current_condition_generation) {
+        return simulator->condition_cache_values[condition.memo_slot] != 0;
+    }
+    const bool value =
+        evaluate_condition_impl(condition, session, item, simulator);
+    if (simulator != nullptr && condition.memo_slot != no_slot &&
+        condition.memo_slot < simulator->condition_cache_generation.size()) {
+        simulator->condition_cache_generation[condition.memo_slot] =
+            simulator->current_condition_generation;
+        simulator->condition_cache_values[condition.memo_slot] = value ? 1 : 0;
+    }
+    return value;
+}
+
+bool evaluate_condition(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item) {
+    return evaluate_condition_cached(condition, session, item, nullptr);
+}
+
+std::int16_t direct_dispatch_feature_value(
+    const CompiledCondition& condition,
+    const SessionImpl& session,
+    const pc_item_state& item,
+    SimulatorImpl& simulator) {
+    switch (condition.kind) {
+    case ConditionKind::Always:
+        return 1;
+    case ConditionKind::HasModGroup:
+    case ConditionKind::HasModFamily:
+    case ConditionKind::ItemFlag:
+    case ConditionKind::HasUnveilOption:
+        return evaluate_condition_cached(
+                   condition, session, item, &simulator)
+                   ? 1
+                   : 0;
+    case ConditionKind::RarityIs:
+        return item.rarity;
+    case ConditionKind::OpenPrefixCount:
+        return static_cast<std::int16_t>(std::max(
+            0, static_cast<int>(side_cap(session, item)) -
+                   static_cast<int>(item.prefix_count)));
+    case ConditionKind::OpenSuffixCount:
+        return static_cast<std::int16_t>(std::max(
+            0, static_cast<int>(side_cap(session, item)) -
+                   static_cast<int>(item.suffix_count)));
+    case ConditionKind::PrefixCountRange:
+        return item.prefix_count;
+    case ConditionKind::SuffixCountRange:
+        return item.suffix_count;
+    case ConditionKind::ModCount:
+    case ConditionKind::ModFamilyCount:
+        return static_cast<std::int16_t>(count_condition_value(
+            condition, session, item, &simulator));
+    case ConditionKind::InfluenceBits:
+        return item.generic_influence_bits;
+    case ConditionKind::EldritchTier:
+        return condition.eldritch_side == 0
+                   ? item.searing_exarch_tier
+                   : item.eater_of_worlds_tier;
+    case ConditionKind::All:
+    case ConditionKind::Any:
+    case ConditionKind::Not:
+    case ConditionKind::AtLeast:
+        return 0;
+    }
+    return 0;
+}
+
 const StrategyEdge* select_edge(
     const StrategyNode& node,
     const SessionImpl& session,
-    const pc_item_state& item) {
+    const pc_item_state& item,
+    SimulatorImpl& simulator) {
+    if (++simulator.current_condition_generation == 0) {
+        std::fill(
+            simulator.condition_cache_generation.begin(),
+            simulator.condition_cache_generation.end(), 0);
+        std::fill(
+            simulator.count_cache_generation.begin(),
+            simulator.count_cache_generation.end(), 0);
+        simulator.current_condition_generation = 1;
+    }
+    if (!node.direct_dispatch_signatures.empty()) {
+        std::vector<std::int16_t>& values =
+            simulator.direct_dispatch_values_scratch;
+        values.clear();
+        values.reserve(node.direct_dispatch_features.size());
+        for (const CompiledCondition& feature :
+             node.direct_dispatch_features) {
+            values.push_back(direct_dispatch_feature_value(
+                feature, session, item, simulator));
+        }
+        const auto found = node.direct_dispatch_signatures.find(
+            direct_signature_hash(values));
+        if (found != node.direct_dispatch_signatures.end()) {
+            for (const StrategyDirectDispatchSignature& signature :
+                 found->second) {
+                if (signature.values == values &&
+                    signature.edge < node.edges.size()) {
+                    return &node.edges[signature.edge];
+                }
+            }
+        }
+        /* A miss falls through to the verified condition dispatcher. */
+    }
+    if (!node.dispatch_signatures.empty()) {
+        std::vector<std::uint32_t>& true_conditions =
+            simulator.true_conditions_scratch;
+        true_conditions.clear();
+        true_conditions.reserve(node.dispatch_conditions.size());
+        std::size_t hash =
+            static_cast<std::size_t>(1469598103934665603ULL);
+        for (std::uint32_t condition = 0;
+             condition < node.dispatch_conditions.size(); ++condition) {
+            if (!evaluate_condition_cached(
+                    node.dispatch_conditions[condition], session, item,
+                    &simulator)) {
+                continue;
+            }
+            true_conditions.push_back(condition);
+            hash ^= static_cast<std::size_t>(condition) +
+                    static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                    (hash << 6) + (hash >> 2);
+        }
+        hash ^= true_conditions.size() +
+                static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                (hash << 6) + (hash >> 2);
+        const auto found = node.dispatch_signatures.find(hash);
+        if (found != node.dispatch_signatures.end()) {
+            for (const StrategyDispatchSignature& signature :
+                 found->second) {
+                if (signature.true_conditions == true_conditions &&
+                    signature.edge < node.edges.size()) {
+                    return &node.edges[signature.edge];
+                }
+            }
+        }
+        /* A signature miss is legal for hand-authored wildcard conditions.
+         * Fall through to the exact priority-preserving dispatch below. */
+    }
+    if (!node.dispatch_nodes.empty()) {
+        std::uint32_t dispatch = 0;
+        while (dispatch < node.dispatch_nodes.size()) {
+            const StrategyDispatchNode& decision =
+                node.dispatch_nodes[dispatch];
+            if (decision.edge !=
+                std::numeric_limits<std::uint32_t>::max()) {
+                return decision.edge < node.edges.size()
+                           ? &node.edges[decision.edge]
+                           : nullptr;
+            }
+            if (decision.condition >= node.dispatch_conditions.size()) {
+                return nullptr;
+            }
+            const bool value = evaluate_condition_cached(
+                node.dispatch_conditions[decision.condition], session, item,
+                &simulator);
+            dispatch = value ? decision.when_true : decision.when_false;
+        }
+        return nullptr;
+    }
     const StrategyEdge* fallback = nullptr;
     for (const auto& edge : node.edges) {
         if (edge.is_default) {
             fallback = &edge;
-        } else if (evaluate_condition(edge.condition, session, item)) {
+        } else if (evaluate_condition_cached(
+                       edge.condition, session, item, &simulator)) {
             return &edge;
         }
     }
@@ -1048,22 +1864,11 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
                 break;
             }
 
-            bool price_known = simulator.economy == nullptr;
-            double price = 0.0;
-            std::vector<std::string> missing_keys;
-            if (simulator.economy != nullptr) {
-                price_known = true;
-                for (const auto& price_key : node.price_keys) {
-                    const auto price_it =
-                        simulator.economy->prices.find(price_key);
-                    if (price_it != simulator.economy->prices.end()) {
-                        price += price_it->second;
-                    } else {
-                        price_known = false;
-                        missing_keys.push_back(price_key);
-                    }
-                }
-            }
+            const bool price_known =
+                simulator.node_prices_known[node_index] != 0;
+            const double price = simulator.node_prices[node_index];
+            const std::vector<std::string>& missing_keys =
+                simulator.node_missing_price_keys[node_index];
 
             if (!price_known && options.max_cost_per_run > 0.0) {
                 for (const auto& price_key : missing_keys) {
@@ -1133,7 +1938,8 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             }
         }
 
-        const StrategyEdge* edge = select_edge(node, session, result.item);
+        const StrategyEdge* edge =
+            select_edge(node, session, result.item, simulator);
         if (trace != nullptr && options.max_trace_entries != 0) {
             TraceEntryInternal entry;
             entry.step_index = static_cast<std::uint32_t>(graph_steps - 1);
@@ -1301,6 +2107,27 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
                 return a.source_order < b.source_order;
             });
     }
+    std::unordered_map<
+        std::size_t, std::vector<const CompiledCondition*>>
+        conditions_by_hash;
+    std::unordered_map<
+        std::size_t, std::vector<const CompiledCondition*>>
+        count_conditions_by_hash;
+    std::uint32_t next_condition_slot = 0;
+    std::uint32_t next_count_slot = 0;
+    for (StrategyNode& node : strategy->nodes) {
+        for (StrategyEdge& edge : node.edges) {
+            if (!edge.is_default) {
+                assign_condition_memo_slots(
+                    edge.condition, conditions_by_hash,
+                    next_condition_slot, count_conditions_by_hash,
+                    next_count_slot);
+            }
+        }
+        build_dispatch(node);
+    }
+    strategy->condition_memo_slots = next_condition_slot;
+    strategy->count_memo_slots = next_count_slot;
     return strategy;
 }
 
@@ -1345,10 +2172,52 @@ std::shared_ptr<EconomyImpl> load_economy_json(
     return economy;
 }
 
+void prepare_simulator_runtime(SimulatorImpl& simulator) {
+    if (simulator.strategy == nullptr) {
+        throw std::runtime_error("simulator strategy is not initialized");
+    }
+    const std::size_t node_count = simulator.strategy->nodes.size();
+    if (simulator.node_prices.size() == node_count) return;
+    if (simulator.summary.completed_runs != 0) {
+        throw std::runtime_error(
+            "simulator runtime cache changed after simulation started");
+    }
+
+    simulator.action_counts.assign(node_count, 0);
+    simulator.node_prices.assign(node_count, 0.0);
+    simulator.node_prices_known.assign(node_count, 1);
+    simulator.node_missing_price_keys.assign(node_count, {});
+    if (simulator.economy != nullptr) {
+        for (std::size_t node_index = 0; node_index < node_count;
+             ++node_index) {
+            const StrategyNode& node = simulator.strategy->nodes[node_index];
+            for (const std::string& key : node.price_keys) {
+                const auto price = simulator.economy->prices.find(key);
+                if (price == simulator.economy->prices.end()) {
+                    simulator.node_prices_known[node_index] = 0;
+                    simulator.node_missing_price_keys[node_index].push_back(
+                        key);
+                } else {
+                    simulator.node_prices[node_index] += price->second;
+                }
+            }
+        }
+    }
+    simulator.condition_cache_generation.assign(
+        simulator.strategy->condition_memo_slots, 0);
+    simulator.condition_cache_values.assign(
+        simulator.strategy->condition_memo_slots, 0);
+    simulator.count_cache_generation.assign(
+        simulator.strategy->count_memo_slots, 0);
+    simulator.count_cache_values.assign(
+        simulator.strategy->count_memo_slots, 0);
+}
+
 void run_simulator_chunk(
     SimulatorImpl& simulator,
     const SimulationOptionsInternal& options,
     std::uint32_t max_completed_runs) {
+    prepare_simulator_runtime(simulator);
     if (!simulator.options_set) {
         simulator.options = options;
         simulator.options_set = true;

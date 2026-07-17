@@ -295,7 +295,10 @@ std::uint32_t CalcContext::intern_state(const AbstractState& state) {
     const std::size_t hash = abstract_state_hash(state);
     const auto found = state_ids_by_hash_.find(hash);
     if (found != state_ids_by_hash_.end()) {
-        for (std::uint32_t id : found->second) {
+        if (states_[found->second.first] == state) {
+            return found->second.first;
+        }
+        for (std::uint32_t id : found->second.collisions) {
             if (states_[id] == state) return id;
         }
     }
@@ -314,7 +317,12 @@ std::uint32_t CalcContext::intern_state(const AbstractState& state) {
     }
     const std::uint32_t id = static_cast<std::uint32_t>(states_.size());
     states_.push_back(state);
-    state_ids_by_hash_[hash].push_back(id);
+    auto [bucket, inserted] = state_ids_by_hash_.try_emplace(hash);
+    if (inserted) {
+        bucket->second.first = id;
+    } else {
+        bucket->second.collisions.push_back(id);
+    }
     return id;
 }
 
@@ -565,10 +573,11 @@ const OutcomeDistribution& CalcContext::outcomes(
         const auto started = std::chrono::steady_clock::now();
         std::shared_ptr<const OutcomeDistribution> distribution =
             evaluate(state_id, action_index);
-        telemetry_.distribution_build_ns += static_cast<std::uint64_t>(
+        const auto build_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
+        telemetry_.distribution_build_ns += build_ns;
         result = distribution_cache_.emplace(key, std::move(distribution))
                      .first->second.get();
     }
@@ -600,6 +609,10 @@ void CalcContext::set_solve_resource_caps(
     const std::uint64_t max_reforge_work) {
     solve_discovered_state_cap_ = max_discovered_states;
     solve_reforge_work_cap_ = max_reforge_work;
+    const std::size_t practical_reserve = std::min<std::size_t>(
+        max_discovered_states, 65536);
+    states_.reserve(std::max(states_.size(), practical_reserve));
+    state_ids_by_hash_.reserve(practical_reserve);
 }
 
 void CalcContext::consume_reforge_work(const std::uint64_t amount) {
@@ -697,12 +710,11 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     bytes += states_.capacity() * sizeof(AbstractState);
     bytes += state_ids_by_hash_.bucket_count() * sizeof(void*);
     bytes += state_ids_by_hash_.size() *
-             (sizeof(std::pair<const std::size_t,
-                               std::vector<std::uint32_t>>) +
+             (sizeof(std::pair<const std::size_t, StateHashBucket>) +
               2 * sizeof(void*));
-    for (const auto& [unused, ids] : state_ids_by_hash_) {
+    for (const auto& [unused, bucket] : state_ids_by_hash_) {
         (void)unused;
-        bytes += ids.capacity() * sizeof(std::uint32_t);
+        bytes += bucket.collisions.capacity() * sizeof(std::uint32_t);
     }
     bytes += distribution_cache_.bucket_count() * sizeof(void*);
     bytes += distribution_cache_.size() *

@@ -278,6 +278,7 @@ async function solveSolver(
     let emittedProgress = false;
     let lastProgressAt = -Infinity;
     let yieldCount = 0;
+    let unyieldedStepMs = 0;
     const worker: SolverWorkerMetrics = {
         step_count: 0,
         yield_count: 0,
@@ -322,13 +323,14 @@ async function solveSolver(
             worker.step_count += 1;
             worker.max_step_ms = Math.max(worker.max_step_ms, measuredMs);
             worker.total_step_ms += measuredMs;
+            unyieldedStepMs += measuredMs;
             const phaseChanged = progress.phase !== observedPhase;
             if (phaseChanged) {
                 workItems = 1;
             } else {
                 const scale = Math.min(2, Math.max(0.5, 12 / elapsedMs));
                 workItems = Math.min(
-                    4096,
+                    4,
                     Math.max(1, Math.round(stepWorkItems * scale)),
                 );
             }
@@ -353,9 +355,13 @@ async function solveSolver(
                 lastProgressAt = now;
             }
 
-            if (!progress.done) {
+            if (
+                !progress.done &&
+                (params.yieldEveryStep === true || unyieldedStepMs >= 8)
+            ) {
                 ++yieldCount;
                 worker.yield_count = yieldCount;
+                unyieldedStepMs = 0;
                 // Give an external AbortSignal a timer-task turn immediately.
                 await (yieldCount % 2 === 1
                     ? yieldToTimerTask()

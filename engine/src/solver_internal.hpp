@@ -572,6 +572,10 @@ struct OutcomeDistribution {
     /* True when an exact evaluator exists for this action. Unsupported
      * mechanics report false so callers can skip or surface the gap. */
     bool supported = false;
+    /* Reforge memo entries with no query-state-dependent fallback keep one
+     * immutable absolute successor kernel alive for the solve. Consumers may
+     * share storage and route its fringe once by object identity. */
+    bool stable_shared_kernel = false;
     std::vector<OutcomeEntry> entries; /* sorted by state id, sums to 1 */
     std::vector<OutcomeChoiceGroup> choice_groups;
     std::vector<OutcomeChoiceOption> choice_options;
@@ -781,8 +785,11 @@ class CalcContext {
     std::optional<std::uint32_t> state_cap_;
     std::optional<std::uint32_t> solve_discovered_state_cap_;
     std::optional<std::uint64_t> solve_reforge_work_cap_;
-    std::unordered_map<std::size_t, std::vector<std::uint32_t>>
-        state_ids_by_hash_;
+    struct StateHashBucket {
+        std::uint32_t first = kNoId;
+        std::vector<std::uint32_t> collisions;
+    };
+    std::unordered_map<std::size_t, StateHashBucket> state_ids_by_hash_;
     std::unordered_map<
         std::uint64_t,
         std::shared_ptr<const OutcomeDistribution>> distribution_cache_;
@@ -984,6 +991,12 @@ struct SolveDiagnostics {
     std::uint32_t policy_improvement_rounds = 0;
     bool policy_iteration_fallback = false;
     std::string policy_evaluation_failure;
+    std::uint32_t policy_evaluation_calls = 0;
+    std::uint32_t largest_policy_component = 0;
+    std::uint64_t sparse_policy_iterations = 0;
+    std::uint32_t max_sparse_policy_iterations = 0;
+    std::uint32_t policy_kernel_groups = 0;
+    std::uint32_t policy_states_collapsed = 0;
     double residual = 0.0;
     bool state_cap_hit = false;
     bool resource_cap_hit = false;
@@ -1008,6 +1021,8 @@ struct SolveDiagnostics {
     std::uint64_t extraction_action_evaluations = 0;
     std::uint64_t sparse_rows = 0;
     std::uint64_t sparse_transitions = 0;
+    std::uint64_t transition_bits_hash = 0;
+    std::uint64_t policy_bits_hash = 0;
     std::uint64_t algebraic_self_loops = 0;
     bool transition_cache_reused = false;
     bool focused_expansion = false;

@@ -6,6 +6,15 @@ param(
     [ValidatePattern("^[A-Za-z0-9._-]+$")]
     [string]$Label = "s7.0-unoptimized",
     [string]$StrategyOutput = "",
+    [UInt64]$VerificationRuns = 0,
+    [UInt64]$VerificationSeed = 0,
+    [ValidateRange(1, 10000)]
+    [UInt32]$VerificationChunkRuns = 32,
+    [ValidateRange(0, 86400)]
+    [double]$VerificationTimeLimitSeconds = 0,
+    [switch]$ExactStrategyEvaluation,
+    [ValidateRange(0, 86400)]
+    [double]$ExactStrategyEvaluationTimeLimitSeconds = 0,
     [switch]$Progress,
     [switch]$SkipBuild,
     [switch]$SkipVerification
@@ -55,6 +64,28 @@ if ($Runner -in @("all", "native")) {
     }
     if ($SkipVerification) { $NativeArgs += "--skip-verification" }
     if ($Progress) { $NativeArgs += "--progress" }
+    if ($VerificationRuns -gt 0) {
+        $NativeArgs += @("--verification-runs", $VerificationRuns)
+    }
+    if ($VerificationSeed -gt 0) {
+        $NativeArgs += @("--verification-seed", $VerificationSeed)
+    }
+    $NativeArgs += @("--verification-chunk-runs", $VerificationChunkRuns)
+    if ($VerificationTimeLimitSeconds -gt 0) {
+        $NativeArgs += @(
+            "--verification-time-limit-seconds",
+            $VerificationTimeLimitSeconds
+        )
+    }
+    if ($ExactStrategyEvaluation) {
+        $NativeArgs += "--exact-strategy-evaluation"
+    }
+    if ($ExactStrategyEvaluationTimeLimitSeconds -gt 0) {
+        $NativeArgs += @(
+            "--exact-strategy-evaluation-time-limit-seconds",
+            $ExactStrategyEvaluationTimeLimitSeconds
+        )
+    }
     & $Native.FullName @NativeArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Native solver benchmark failed with exit code $LASTEXITCODE."

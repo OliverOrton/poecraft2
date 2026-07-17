@@ -74,6 +74,9 @@ target_include_directories(poecraft_engine_objects
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         "${HARVEST_GENERATED_DIR}")
 target_compile_features(poecraft_engine_objects PUBLIC cxx_std_20)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(poecraft_engine_objects PRIVATE -ffp-contract=off)
+endif()
 
 add_library(poecraft_engine STATIC
     $<TARGET_OBJECTS:poecraft_engine_objects>)

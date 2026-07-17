@@ -178,7 +178,8 @@ void collect_condition_targets(
                 found->slot.min_tier = threshold;
             }
         }
-    } else if (condition.kind == ConditionKind::ModCount) {
+    } else if (condition.kind == ConditionKind::ModCount ||
+               condition.kind == ConditionKind::ModFamilyCount) {
         add_gap(
             gaps,
             "edge '" + edge_id +
@@ -535,6 +536,7 @@ bool evaluate_abstract_condition(
         return tier >= condition.min_value && tier <= condition.max_value;
     }
     case ConditionKind::ModCount:
+    case ConditionKind::ModFamilyCount:
     case ConditionKind::HasUnveilOption:
         return false; /* rejected during model derivation */
     case ConditionKind::All:

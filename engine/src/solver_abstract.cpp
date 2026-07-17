@@ -519,10 +519,14 @@ AbstractState project_item(
 }
 
 std::size_t abstract_state_hash(const AbstractState& state) {
-    std::uint64_t hash = 1469598103934665603ull; /* FNV-1a */
-    const auto mix = [&hash](std::uint64_t value) {
+    /* A 32-bit FNV-1a key is materially cheaper in wasm32. Equality remains
+     * authoritative through the inline collision bucket, so hash width has
+     * no semantic effect. Using the same key width on native and WASM also
+     * keeps table behavior reproducible across the two runtimes. */
+    std::uint32_t hash = 2166136261u;
+    const auto mix = [&hash](std::uint32_t value) {
         hash ^= value;
-        hash *= 1099511628211ull;
+        hash *= 16777619u;
     };
     for (std::uint8_t status : state.slot_status) mix(status);
     mix(state.fractured_goal_mask);
@@ -540,7 +544,7 @@ std::size_t abstract_state_hash(const AbstractState& state) {
     for (std::uint8_t count : state.fractured_junk_counts) mix(count);
     for (std::uint8_t count : state.crafted_junk_counts) mix(count);
     for (std::uint8_t count : state.fractured_crafted_junk_counts) mix(count);
-    return static_cast<std::size_t>(hash);
+    return hash;
 }
 
 bool action_legal(

@@ -309,6 +309,7 @@ stored JSON but deliberately stay out of the ordinary leaf picker:
 
 ```text
 mod_count          exact count across a compiler-supplied set of mod keys
+mod_family_count   exact count across compiler-supplied modifier families
 influence_bits     exact generic influence bitset
 has_unveil_option  whether a currently veiled slot offers one stable mod key
 ```

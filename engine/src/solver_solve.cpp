@@ -1,6 +1,7 @@
 #include "solver_internal.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -9,7 +10,9 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -42,7 +45,7 @@ constexpr double kValueCeiling = 1e12;
 /* Pivoted elimination becomes cubic and dominates focused endgame solves
  * well before the old 1,024-state cutoff. Medium and large SCCs use the
  * sparse solver below, which accepts values only after its residual check. */
-constexpr std::size_t kDensePolicyComponentLimit = 512;
+constexpr std::size_t kDensePolicyComponentLimit = 96;
 
 struct PricedOperator {
     std::uint32_t index = kNoId;
@@ -66,6 +69,7 @@ struct SparseVariant {
 };
 
 struct SparseRow {
+    std::uint32_t owner_state = kNoId;
     std::uint64_t variant_offset = 0;
     std::uint32_t variant_count = 0;
     std::uint64_t transition_offset = 0;
@@ -87,6 +91,7 @@ struct PendingSparseRow {
     const std::vector<OutcomeEntry>* transitions = nullptr;
     const std::vector<OutcomeChoiceGroup>* choices = nullptr;
     const std::vector<OutcomeChoiceOption>* choice_options = nullptr;
+    const OutcomeDistribution* shared_kernel_identity = nullptr;
 };
 
 struct PricedSparseRow {
@@ -95,6 +100,109 @@ struct PricedSparseRow {
     std::uint64_t choice_option_offset = 0;
     std::uint32_t choice_option_count = 0;
 };
+
+struct PolicyEdge {
+    std::uint32_t target = kNoId;
+    double probability = 0.0;
+};
+
+struct PolicyRow {
+    std::uint64_t edge_offset = 0;
+    std::uint32_t edge_count = 0;
+    double cost = 0.0;
+};
+
+struct PolicyTarjanFrame {
+    std::uint32_t state = kNoId;
+    std::uint32_t next_edge = 0;
+};
+
+/* Deterministic double-double arithmetic for the ill-conditioned recurrent
+ * policy systems. Every transition coefficient remains its exact stored
+ * double; the wider accumulator prevents platform-specific last-bit noise
+ * from being amplified into visible native/WASM value drift. */
+struct WideFloat {
+    double high = 0.0;
+    double low = 0.0;
+
+    WideFloat() = default;
+    WideFloat(const double value) : high(value) {}
+    WideFloat(const double high_value, const double low_value)
+        : high(high_value), low(low_value) {}
+    bool operator==(const WideFloat&) const = default;
+    double value() const { return high + low; }
+};
+
+std::pair<double, double> exact_sum(const double a, const double b) {
+    const double sum = a + b;
+    const double b_virtual = sum - a;
+    const double error =
+        (a - (sum - b_virtual)) + (b - b_virtual);
+    return {sum, error};
+}
+
+WideFloat wide_normalize(const double high, const double low) {
+    const auto [sum, error] = exact_sum(high, low);
+    return {sum, error};
+}
+
+WideFloat operator+(const WideFloat a, const WideFloat b) {
+    const auto [sum, error] = exact_sum(a.high, b.high);
+    return wide_normalize(sum, error + a.low + b.low);
+}
+
+WideFloat operator-(const WideFloat value) {
+    return {-value.high, -value.low};
+}
+
+WideFloat operator-(const WideFloat a, const WideFloat b) {
+    return a + (-b);
+}
+
+WideFloat& operator+=(WideFloat& target, const WideFloat value) {
+    target = target + value;
+    return target;
+}
+
+WideFloat& operator-=(WideFloat& target, const WideFloat value) {
+    target = target - value;
+    return target;
+}
+
+WideFloat operator*(const WideFloat a, const WideFloat b) {
+    const double product = a.high * b.high;
+    constexpr double split = 134217729.0; /* 2^27 + 1 */
+    const double a_split = split * a.high;
+    const double a_high = a_split - (a_split - a.high);
+    const double a_low = a.high - a_high;
+    const double b_split = split * b.high;
+    const double b_high = b_split - (b_split - b.high);
+    const double b_low = b.high - b_high;
+    const double product_error =
+        ((a_high * b_high - product) + a_high * b_low +
+         a_low * b_high) +
+        a_low * b_low;
+    const double error = product_error + a.high * b.low +
+                         a.low * b.high + a.low * b.low;
+    return wide_normalize(product, error);
+}
+
+WideFloat operator*(const double a, const WideFloat b) {
+    return WideFloat{a} * b;
+}
+
+WideFloat operator*(const WideFloat a, const double b) {
+    return a * WideFloat{b};
+}
+
+WideFloat operator/(const WideFloat numerator, const WideFloat denominator) {
+    const double first = numerator.high / denominator.high;
+    const WideFloat remainder = numerator - denominator * first;
+    const double second = remainder.value() / denominator.high;
+    const WideFloat partial = WideFloat{first} + WideFloat{second};
+    const WideFloat final_remainder = numerator - denominator * partial;
+    return partial + WideFloat{final_remainder.value() / denominator.high};
+}
 
 } // namespace
 
@@ -174,14 +282,24 @@ struct SolveWork::Impl {
     std::vector<std::uint8_t> queued;
     std::deque<std::uint32_t> queue;
     std::uint32_t expanded_count = 0;
+    bool expansion_active = false;
+    std::uint32_t expansion_state = kNoId;
+    std::uint32_t expansion_operator_cursor = 0;
     std::uint32_t peak_queue_size = 0;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
     std::shared_ptr<SolveTransitionCache> transition_cache;
     std::vector<PricedSparseRow> priced_rows;
+    std::size_t pricing_diagnostics_cursor = 0;
     std::vector<std::int32_t> priced_operator_position;
     std::unordered_map<std::size_t, std::vector<std::uint64_t>>
         kernel_rows_by_hash;
+    struct SharedKernelMemo {
+        std::uint64_t row_index = 0;
+        bool fringe_enqueued = false;
+    };
+    std::unordered_map<const OutcomeDistribution*, SharedKernelMemo>
+        shared_kernel_rows;
     enum class BackupStage : std::uint8_t { Measure, Apply };
     BackupStage backup_stage = BackupStage::Measure;
     std::uint32_t backup_cursor = 0;
@@ -193,12 +311,83 @@ struct SolveWork::Impl {
     bool policy_initialized = false;
     bool policy_stable = false;
     bool policy_iteration_failed = false;
+    bool policy_evaluation_incomplete = false;
+    struct SparsePolicyResume {
+        std::vector<std::uint32_t> members;
+        std::vector<WideFloat> b;
+        std::vector<WideFloat> x;
+        std::vector<WideFloat> r;
+        std::vector<WideFloat> r0;
+        std::vector<WideFloat> p;
+        std::vector<WideFloat> v;
+        std::vector<WideFloat> s;
+        std::vector<WideFloat> t;
+        WideFloat rho_previous = 1.0;
+        WideFloat alpha = 1.0;
+        WideFloat omega = 1.0;
+        std::uint32_t iterations = 0;
+        std::uint32_t refinement_count = 0;
+    };
+    std::unique_ptr<SparsePolicyResume> sparse_policy_resume;
+    struct PolicyKernelPreparation {
+        std::size_t state_count = 0;
+        std::uint32_t cursor = 0;
+        std::vector<std::uint32_t> kernel_owner;
+        std::vector<std::vector<PolicyEdge>> full_kernel;
+        std::unordered_map<std::size_t, std::vector<std::uint32_t>>
+            representatives_by_hash;
+        std::unordered_map<std::size_t, std::vector<std::uint32_t>>
+            shared_transition_representatives;
+        std::vector<std::uint32_t> representative;
+        std::vector<std::vector<std::uint32_t>> group_members;
+        std::vector<PolicyRow> rows;
+        std::vector<PolicyEdge> edges;
+        std::uint32_t grouping_cursor = 0;
+        std::uint32_t quotient_cursor = 0;
+        bool components_ready = false;
+        std::vector<std::vector<std::uint32_t>> components;
+        std::vector<std::uint32_t> component_by_state;
+        std::vector<std::int32_t> local;
+        std::uint32_t component_cursor = 0;
+        std::vector<std::uint32_t> tarjan_index;
+        std::vector<std::uint32_t> tarjan_lowlink;
+        std::vector<std::uint8_t> tarjan_on_stack;
+        std::vector<std::uint32_t> tarjan_stack;
+        std::vector<PolicyTarjanFrame> tarjan_dfs;
+        std::uint32_t tarjan_next_index = 0;
+        std::uint32_t tarjan_root_cursor = 0;
+    };
+    std::unique_ptr<PolicyKernelPreparation> policy_kernel_preparation;
+    enum class PolicyUnitStage : std::uint8_t {
+        Seed,
+        InitialSelect,
+        Evaluate,
+        ImproveSelect,
+    };
+    PolicyUnitStage policy_unit_stage = PolicyUnitStage::Seed;
+    std::uint32_t policy_seed_pass = 0;
+    std::uint32_t policy_seed_cursor = 0;
+    bool policy_selection_active = false;
+    std::uint32_t policy_selection_cursor = 0;
+    bool policy_selection_improved = false;
+    double policy_selection_residual = 0.0;
     std::uint64_t peak_policy_scratch_bytes = 0;
     std::vector<std::uint32_t> improper_policy_states;
+    struct KernelValueCache {
+        std::uint64_t transition_offset = 0;
+        std::uint32_t transition_count = 0;
+        double finite_sum = 0.0;
+        std::uint32_t infinite_count = 0;
+        std::vector<double> probability_by_state;
+    };
+    bool kernel_value_cache_active = false;
+    std::vector<KernelValueCache> kernel_value_caches;
+    std::unordered_map<std::uint64_t, std::size_t> kernel_value_cache_by_offset;
     bool focused_mode = false;
     bool focus_optimizing = false;
     bool focused_lower_mode = false;
     bool focused_closure_proved = false;
+    bool full_closure_after_focused_fallback = false;
     std::uint32_t next_focus_checkpoint = 32;
     std::uint64_t peak_owned_bytes = 0;
     SolvePhase phase = SolvePhase::Expanding;
@@ -385,29 +574,17 @@ struct SolveWork::Impl {
     bool same_kernel(
         const SparseRow& stored,
         const PendingSparseRow& pending) const {
-        const auto transition_count = [&]() {
-            std::size_t count = 0;
-            if (pending.transitions != nullptr) {
-                for (const OutcomeEntry& entry : *pending.transitions) {
-                    if (entry.state != pending.state) ++count;
-                }
-            }
-            return count;
-        }();
+        const std::size_t transition_count =
+            pending.transitions == nullptr ? 0 : pending.transitions->size();
         const std::size_t choice_count =
             pending.choices == nullptr ? 0 : pending.choices->size();
         if (stored.transition_count != transition_count ||
             stored.choice_count != choice_count) {
             return false;
         }
-        double self_probability = 0.0;
         std::size_t stored_transition = 0;
         if (pending.transitions != nullptr) {
             for (const OutcomeEntry& right : *pending.transitions) {
-                if (right.state == pending.state) {
-                    self_probability += right.probability;
-                    continue;
-                }
                 const std::uint64_t offset =
                     stored.transition_offset + stored_transition++;
                 if (transition_cache->successors.at(offset) != right.state ||
@@ -416,9 +593,6 @@ struct SolveWork::Impl {
                     return false;
                 }
             }
-        }
-        if (stored.self_probability != self_probability) {
-            return false;
         }
         for (std::size_t i = 0; i < choice_count; ++i) {
             const SparseChoiceGroup& left = transition_cache->choices.at(
@@ -454,19 +628,11 @@ struct SolveWork::Impl {
         };
         std::size_t hash = 2166136261u;
         if (pending.transitions != nullptr) {
-            std::size_t non_self = 0;
-            double self_probability = 0.0;
             for (const OutcomeEntry& entry : *pending.transitions) {
-                if (entry.state == pending.state) {
-                    self_probability += entry.probability;
-                    continue;
-                }
-                ++non_self;
                 mix(hash, entry.state);
                 mix(hash, std::hash<double>{}(entry.probability));
             }
-            mix(hash, non_self);
-            mix(hash, std::hash<double>{}(self_probability));
+            mix(hash, pending.transitions->size());
         }
         if (pending.choices != nullptr) {
             mix(hash, pending.choices->size());
@@ -527,6 +693,10 @@ struct SolveWork::Impl {
         const auto& choice_options = pending.choice_options == nullptr
                                          ? empty_choice_options
                                          : *pending.choice_options;
+        const auto identity_found =
+            pending.shared_kernel_identity == nullptr
+                ? shared_kernel_rows.end()
+                : shared_kernel_rows.find(pending.shared_kernel_identity);
         pending.state = state;
         if (state >= transition_cache->state_rows.size()) {
             transition_cache->state_rows.resize(state + 1);
@@ -542,11 +712,21 @@ struct SolveWork::Impl {
 
         std::uint64_t transition_count = 0;
         double self_probability = 0.0;
-        for (const OutcomeEntry& entry : transitions) {
-            if (entry.state == state) {
-                self_probability += entry.probability;
-            } else {
-                ++transition_count;
+        transition_count = transitions.size();
+        if (pending.shared_kernel_identity != nullptr) {
+            const auto self = std::lower_bound(
+                transitions.begin(), transitions.end(), state,
+                [](const OutcomeEntry& entry, const std::uint32_t value) {
+                    return entry.state < value;
+                });
+            if (self != transitions.end() && self->state == state) {
+                self_probability = self->probability;
+            }
+        } else {
+            for (const OutcomeEntry& entry : transitions) {
+                if (entry.state == state) {
+                    self_probability += entry.probability;
+                }
             }
         }
         for (const OutcomeChoiceGroup& group : choices) {
@@ -563,18 +743,27 @@ struct SolveWork::Impl {
         SparseRow* stored_row = equivalent;
         if (stored_row == nullptr) {
             SparseRow row;
+            row.owner_state = state;
             row.variant_offset = transition_cache->row_variant_indices.size();
             row.self_probability = self_probability;
-            const std::size_t hash = kernel_hash(pending);
+            const std::size_t hash =
+                identity_found == shared_kernel_rows.end()
+                    ? kernel_hash(pending)
+                    : 0;
             const SparseRow* shared_kernel = nullptr;
-            const auto found = kernel_rows_by_hash.find(hash);
-            if (found != kernel_rows_by_hash.end()) {
-                for (const std::uint64_t row_index : found->second) {
-                    const SparseRow& candidate =
-                        transition_cache->rows.at(row_index);
-                    if (same_kernel(candidate, pending)) {
-                        shared_kernel = &candidate;
-                        break;
+            if (identity_found != shared_kernel_rows.end()) {
+                shared_kernel = &transition_cache->rows.at(
+                    identity_found->second.row_index);
+            } else {
+                const auto found = kernel_rows_by_hash.find(hash);
+                if (found != kernel_rows_by_hash.end()) {
+                    for (const std::uint64_t row_index : found->second) {
+                        const SparseRow& candidate =
+                            transition_cache->rows.at(row_index);
+                        if (same_kernel(candidate, pending)) {
+                            shared_kernel = &candidate;
+                            break;
+                        }
                     }
                 }
             }
@@ -592,7 +781,6 @@ struct SolveWork::Impl {
                 }
                 row.transition_offset = transition_cache->successors.size();
                 for (const OutcomeEntry& entry : transitions) {
-                    if (entry.state == state) continue;
                     transition_cache->successors.push_back(entry.state);
                     transition_cache->probabilities.push_back(
                         entry.probability);
@@ -636,8 +824,24 @@ struct SolveWork::Impl {
             if (shared_kernel == nullptr) {
                 kernel_rows_by_hash[hash].push_back(
                     transition_cache->rows.size() - 1);
+                if (pending.shared_kernel_identity != nullptr) {
+                    shared_kernel_rows.emplace(
+                        pending.shared_kernel_identity,
+                        SharedKernelMemo{
+                            transition_cache->rows.size() - 1, false});
+                }
             }
             ++span.count;
+        }
+        if (pending.shared_kernel_identity != nullptr &&
+            shared_kernel_rows.find(pending.shared_kernel_identity) ==
+                shared_kernel_rows.end()) {
+            shared_kernel_rows.emplace(
+                pending.shared_kernel_identity,
+                SharedKernelMemo{
+                    static_cast<std::uint64_t>(
+                        stored_row - transition_cache->rows.data()),
+                    false});
         }
 
         SparseVariant variant;
@@ -690,8 +894,21 @@ struct SolveWork::Impl {
         result.diagnostics.sparse_transitions =
             transition_cache->successors.size() +
             transition_cache->choice_successors.size();
+        const std::size_t stored_row_index = static_cast<std::size_t>(
+            stored_row - transition_cache->rows.data());
+        if (priced_rows.size() < transition_cache->rows.size()) {
+            priced_rows.resize(transition_cache->rows.size());
+        }
+        update_priced_row(stored_row_index);
 
-        if (!focused_mode) {
+        bool enqueue_fringe = !focused_mode;
+        if (enqueue_fringe && pending.shared_kernel_identity != nullptr) {
+            SharedKernelMemo& memo =
+                shared_kernel_rows.at(pending.shared_kernel_identity);
+            enqueue_fringe = !memo.fringe_enqueued;
+            memo.fringe_enqueued = true;
+        }
+        if (enqueue_fringe) {
             for (const OutcomeEntry& entry : transitions) {
                 if (entry.state != state) enqueue(entry.state);
             }
@@ -703,29 +920,40 @@ struct SolveWork::Impl {
         }
     }
 
-    void expand_one() {
+    bool expand_one_unit() {
         const auto started = std::chrono::steady_clock::now();
-        const std::uint32_t state = queue.front();
-        queue.pop_front();
-        if (state >= expanded.size()) expanded.resize(state + 1, 0);
-        expanded[state] = 1;
-        ++expanded_count;
+        if (!expansion_active) {
+            expansion_state = queue.front();
+            queue.pop_front();
+            if (expansion_state >= expanded.size()) {
+                expanded.resize(expansion_state + 1, 0);
+            }
+            expanded[expansion_state] = 1;
+            ++expanded_count;
+            expansion_operator_cursor = 0;
+            expansion_active = true;
+        }
+        const std::uint32_t state = expansion_state;
         if (calc.is_goal_state(calc.state(state))) {
+            expansion_active = false;
             result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - started)
                     .count());
-            return;
+            return true;
         }
 
         try {
-            for (const PricedOperator& priced : operators) {
+            if (expansion_operator_cursor < operators.size()) {
+                const PricedOperator& priced =
+                    operators[expansion_operator_cursor++];
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
                 PendingSparseRow pending;
                 pending.state = state;
                 pending.operator_index = priced.index;
                 pending.resources = &planner.resource_quantities;
+                bool append = true;
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
                     const OptionKernel& kernel =
                         calc.option_kernel(state, priced.index);
@@ -738,46 +966,53 @@ struct SolveWork::Impl {
                                 "unsupported", planner.id,
                                 "fixed_option_kernel_unavailable");
                         }
-                        continue;
+                        append = false;
+                    } else if (!kernel.legal) {
+                        append = false;
+                    } else {
+                        pending.transitions = &kernel.exits;
+                        pending.choices =
+                            &kernel.observation_choice_groups;
+                        pending.choice_options =
+                            &kernel.observation_choice_options;
+                        pending.resources = &kernel.expected_resources;
                     }
-                    if (!kernel.legal) continue;
-                    pending.transitions = &kernel.exits;
-                    pending.choices =
-                        &kernel.observation_choice_groups;
-                    pending.choice_options =
-                        &kernel.observation_choice_options;
-                    pending.resources = &kernel.expected_resources;
                 } else {
                     const std::uint32_t action_index =
                         planner.primitive_action;
                     if (!action_legal(
                             session, calc.registry().actions[action_index],
                             calc.state(state))) {
-                        continue;
-                    }
-                    const OutcomeDistribution& distribution =
-                        calc.outcomes(state, action_index);
-                    if (!distribution.supported) {
-                        if (!reported_unsupported[priced.index]) {
-                            reported_unsupported[priced.index] = true;
-                            result.diagnostics.skipped_unsupported.push_back(
-                                planner.id);
-                            add_action_reason(
-                                "unsupported", planner.id,
-                                "exact_evaluator_unavailable");
-                        }
-                        continue;
-                    }
-                    if (distribution.choice_groups.empty()) {
-                        pending.transitions = &distribution.entries;
+                        append = false;
                     } else {
-                        pending.choices = &distribution.choice_groups;
-                        pending.choice_options =
-                            &distribution.choice_options;
+                        const OutcomeDistribution& distribution =
+                            calc.outcomes(state, action_index);
+                        if (!distribution.supported) {
+                            if (!reported_unsupported[priced.index]) {
+                                reported_unsupported[priced.index] = true;
+                                result.diagnostics.skipped_unsupported.push_back(
+                                    planner.id);
+                                add_action_reason(
+                                    "unsupported", planner.id,
+                                    "exact_evaluator_unavailable");
+                            }
+                            append = false;
+                        } else if (distribution.choice_groups.empty()) {
+                            pending.transitions = &distribution.entries;
+                            if (distribution.stable_shared_kernel) {
+                                pending.shared_kernel_identity = &distribution;
+                            }
+                        } else {
+                            pending.choices = &distribution.choice_groups;
+                            pending.choice_options =
+                                &distribution.choice_options;
+                        }
                     }
                 }
                 try {
-                    append_sparse_row(state, std::move(pending));
+                    if (append) {
+                        append_sparse_row(state, std::move(pending));
+                    }
                 } catch (...) {
                     if (planner.kind == PlannerOperatorKind::FixedOption) {
                         calc.release_option_kernel(state, priced.index);
@@ -798,62 +1033,98 @@ struct SolveWork::Impl {
                 limit.cap_name(),
                 limit.cap_name() == "max_discovered_states");
         }
+        const bool completed = result.diagnostics.resource_cap_hit ||
+                               expansion_operator_cursor >= operators.size();
+        if (completed) expansion_active = false;
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
-        if (!result.diagnostics.resource_cap_hit &&
+        if (completed && !result.diagnostics.resource_cap_hit &&
             expanded_count % 64 == 0) {
             check_solver_byte_cap();
         }
+        return completed;
+    }
+
+    bool priced_variant_cost(
+        const SparseVariant& variant,
+        double& cost) const {
+        const std::int32_t priced_position =
+            priced_operator_position.at(variant.operator_index);
+        if (priced_position < 0) return false;
+        const PricedOperator& priced =
+            operators.at(static_cast<std::size_t>(priced_position));
+        if (variant.quantity_count != priced.resource_prices.size()) {
+            throw std::logic_error(
+                "cached solver resource vector is incompatible");
+        }
+        cost = 0.0;
+        for (std::uint32_t quantity = 0;
+             quantity < variant.quantity_count; ++quantity) {
+            cost += transition_cache->variant_quantities.at(
+                        variant.quantity_offset + quantity) *
+                    priced.resource_prices[quantity].second;
+        }
+        return true;
+    }
+
+    void update_priced_row(const std::size_t row_index) {
+        const SparseRow& row = transition_cache->rows.at(row_index);
+        PricedSparseRow selected;
+        for (std::uint32_t i = 0; i < row.variant_count; ++i) {
+            const SparseVariant& variant = transition_cache->variants.at(
+                transition_cache->row_variant_indices.at(
+                    row.variant_offset + i));
+            double cost = 0.0;
+            if (!priced_variant_cost(variant, cost)) continue;
+            if (cost < selected.cost - 1e-12 ||
+                (std::abs(cost - selected.cost) <= 1e-12 &&
+                 variant.operator_index < selected.operator_index)) {
+                selected.operator_index = variant.operator_index;
+                selected.cost = cost;
+                selected.choice_option_offset =
+                    variant.choice_option_offset;
+                selected.choice_option_count =
+                    variant.choice_option_count;
+            }
+        }
+        priced_rows.at(row_index) = selected;
     }
 
     void prepare_priced_rows() {
-        priced_rows.assign(transition_cache->rows.size(), {});
-        for (std::size_t row_index = 0;
+        const std::size_t first_unpriced = priced_rows.size();
+        priced_rows.resize(transition_cache->rows.size());
+        for (std::size_t row_index = first_unpriced;
+             row_index < transition_cache->rows.size(); ++row_index) {
+            update_priced_row(row_index);
+        }
+        for (std::size_t row_index = pricing_diagnostics_cursor;
              row_index < transition_cache->rows.size(); ++row_index) {
             const SparseRow& row = transition_cache->rows[row_index];
-            PricedSparseRow& selected = priced_rows[row_index];
-            std::vector<std::pair<double, std::uint32_t>> variants;
-            variants.reserve(row.variant_count);
+            const PricedSparseRow& selected = priced_rows[row_index];
+            std::uint32_t priced_variant_count = 0;
             for (std::uint32_t i = 0; i < row.variant_count; ++i) {
                 const SparseVariant& variant = transition_cache->variants.at(
                     transition_cache->row_variant_indices.at(
                         row.variant_offset + i));
-                const std::int32_t priced_position =
-                    priced_operator_position.at(variant.operator_index);
-                if (priced_position < 0) continue;
-                const PricedOperator& priced =
-                    operators.at(static_cast<std::size_t>(priced_position));
-                if (variant.quantity_count != priced.resource_prices.size()) {
-                    throw std::logic_error(
-                        "cached solver resource vector is incompatible");
-                }
-                double cost = 0.0;
-                for (std::uint32_t quantity = 0;
-                     quantity < variant.quantity_count; ++quantity) {
-                    cost += transition_cache->variant_quantities.at(
-                                variant.quantity_offset + quantity) *
-                            priced.resource_prices[quantity].second;
-                }
-                variants.push_back({cost, variant.operator_index});
-                if (cost < selected.cost - 1e-12 ||
-                    (std::abs(cost - selected.cost) <= 1e-12 &&
-                     variant.operator_index < selected.operator_index)) {
-                    selected.operator_index = variant.operator_index;
-                    selected.cost = cost;
-                    selected.choice_option_offset =
-                        variant.choice_option_offset;
-                    selected.choice_option_count =
-                        variant.choice_option_count;
+                double unused_cost = 0.0;
+                if (priced_variant_cost(variant, unused_cost)) {
+                    ++priced_variant_count;
                 }
             }
-            if (variants.size() <= 1) continue;
+            if (priced_variant_count <= 1) continue;
             result.diagnostics.equivalent_actions_collapsed +=
-                static_cast<std::uint32_t>(variants.size() - 1);
+                priced_variant_count - 1;
             const std::string& representative = calc.operators().at(
                 selected.operator_index).id;
-            for (const auto& [cost, operator_index] : variants) {
+            for (std::uint32_t i = 0; i < row.variant_count; ++i) {
+                const SparseVariant& variant = transition_cache->variants.at(
+                    transition_cache->row_variant_indices.at(
+                        row.variant_offset + i));
+                double cost = 0.0;
+                if (!priced_variant_cost(variant, cost)) continue;
+                const std::uint32_t operator_index = variant.operator_index;
                 if (operator_index == selected.operator_index) continue;
                 const std::string& candidate =
                     calc.operators().at(operator_index).id;
@@ -871,6 +1142,7 @@ struct SolveWork::Impl {
                 }
             }
         }
+        pricing_diagnostics_cursor = transition_cache->rows.size();
     }
 
     void prepare_iteration() {
@@ -937,6 +1209,8 @@ struct SolveWork::Impl {
         }
         kernel_rows_by_hash.clear();
         kernel_rows_by_hash.rehash(0);
+        shared_kernel_rows.clear();
+        shared_kernel_rows.rehash(0);
         cache_pending = false;
         peak_owned_bytes = std::max(
             peak_owned_bytes, estimated_owned_bytes());
@@ -1008,19 +1282,99 @@ struct SolveWork::Impl {
         return expected;
     }
 
+    void reset_kernel_value_cache(bool active = false) {
+        kernel_value_cache_active = active;
+        kernel_value_caches.clear();
+        kernel_value_cache_by_offset.clear();
+    }
+
+    KernelValueCache& value_cache_for(const SparseRow& row) {
+        const auto found =
+            kernel_value_cache_by_offset.find(row.transition_offset);
+        if (found != kernel_value_cache_by_offset.end()) {
+            return kernel_value_caches.at(found->second);
+        }
+        KernelValueCache cache;
+        cache.transition_offset = row.transition_offset;
+        cache.transition_count = row.transition_count;
+        cache.probability_by_state.assign(result.values.size(), 0.0);
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            const std::uint32_t successor =
+                transition_cache->successors.at(offset);
+            const double probability =
+                transition_cache->probabilities.at(offset);
+            cache.probability_by_state.at(successor) += probability;
+        }
+        for (std::uint32_t state = 0;
+             state < cache.probability_by_state.size(); ++state) {
+            const double probability = cache.probability_by_state[state];
+            if (probability == 0.0) continue;
+            const double value = result.values.at(state);
+            if (value == kInfinity) ++cache.infinite_count;
+            else cache.finite_sum += probability * value;
+        }
+        const std::size_t index = kernel_value_caches.size();
+        kernel_value_caches.push_back(std::move(cache));
+        kernel_value_cache_by_offset.emplace(row.transition_offset, index);
+        return kernel_value_caches.back();
+    }
+
+    void update_kernel_value_cache(
+        const std::uint32_t state,
+        const double before,
+        const double after) {
+        if (!kernel_value_cache_active || before == after) return;
+        for (KernelValueCache& cache : kernel_value_caches) {
+            const double probability = cache.probability_by_state.at(state);
+            if (probability == 0.0) continue;
+            if (before == kInfinity) {
+                --cache.infinite_count;
+            } else {
+                cache.finite_sum -= probability * before;
+            }
+            if (after == kInfinity) {
+                ++cache.infinite_count;
+            } else {
+                cache.finite_sum += probability * after;
+            }
+        }
+    }
+
     double sparse_row_q(
         const std::size_t row_index,
-        std::uint32_t& transition_work) const {
+        std::uint32_t& transition_work) {
         const SparseRow& row = transition_cache->rows.at(row_index);
         double constant = priced_rows.at(row_index).cost;
         transition_work = 0;
-        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
-            const std::uint64_t offset = row.transition_offset + i;
-            const double value = result.values[
-                transition_cache->successors.at(offset)];
-            ++transition_work;
-            if (value == kInfinity) return kInfinity;
-            constant += transition_cache->probabilities.at(offset) * value;
+        if (kernel_value_cache_active && row.choice_count == 0 &&
+            row.transition_count >= 1024) {
+            KernelValueCache& cache = value_cache_for(row);
+            const double self_value = result.values.at(row.owner_state);
+            const bool infinite_self =
+                row.self_probability > 0.0 && self_value == kInfinity;
+            const std::uint32_t non_self_infinite =
+                cache.infinite_count - (infinite_self ? 1u : 0u);
+            transition_work += row.transition_count;
+            if (non_self_infinite != 0) return kInfinity;
+            constant += cache.finite_sum;
+            if (!infinite_self) {
+                constant -= row.self_probability * self_value;
+            }
+        } else {
+            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                const std::uint64_t offset = row.transition_offset + i;
+                if (transition_cache->successors.at(offset) ==
+                    row.owner_state) {
+                    continue;
+                }
+                const double value = result.values[
+                    transition_cache->successors.at(offset)];
+                ++transition_work;
+                if (value == kInfinity) return kInfinity;
+                constant += transition_cache->probabilities.at(offset) *
+                            value;
+            }
         }
         std::vector<std::pair<double, double>> self_choices;
         for (std::uint32_t i = 0; i < row.choice_count; ++i) {
@@ -1075,26 +1429,29 @@ struct SolveWork::Impl {
         }
     }
 
-    struct PolicyEdge {
-        std::uint32_t target = kNoId;
-        double probability = 0.0;
-    };
-
-    struct PolicyRow {
-        std::uint64_t edge_offset = 0;
-        std::uint32_t edge_count = 0;
-        double cost = 0.0;
-    };
-
-    bool select_policy_rows() {
+    void begin_policy_selection() {
+        reset_kernel_value_cache(true);
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         if (policy_rows.size() != result.values.size()) {
             policy_rows.assign(result.values.size(), no_row);
         }
-        bool improved = false;
-        residual = 0.0;
-        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+        policy_selection_active = true;
+        policy_selection_cursor = 0;
+        policy_selection_improved = false;
+        policy_selection_residual = 0.0;
+    }
+
+    bool advance_policy_selection(bool& improved) {
+        if (!policy_selection_active) begin_policy_selection();
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        constexpr std::uint32_t kStatesPerSelectionUnit = 128;
+        const std::uint32_t end = std::min<std::uint32_t>(
+            static_cast<std::uint32_t>(result.values.size()),
+            policy_selection_cursor + kStatesPerSelectionUnit);
+        for (std::uint32_t state = policy_selection_cursor;
+             state < end; ++state) {
             if (!result.expanded[state] || result.goal_states[state]) continue;
             const StateRowSpan& span = transition_cache->state_rows.at(state);
             double best = kInfinity;
@@ -1111,45 +1468,153 @@ struct SolveWork::Impl {
             }
             ++result.diagnostics.bellman_backups;
             if (std::isfinite(best)) {
-                residual = std::max(
-                    residual, std::abs(result.values[state] - best));
+                policy_selection_residual = std::max(
+                    policy_selection_residual,
+                    std::abs(result.values[state] - best));
             }
             if (best_row != no_row && policy_rows[state] != best_row) {
                 policy_rows[state] = best_row;
-                improved = true;
+                policy_selection_improved = true;
             }
         }
+        policy_selection_cursor = end;
+        if (policy_selection_cursor < result.values.size()) return false;
+        residual = policy_selection_residual;
         result.diagnostics.residual = residual;
-        return improved;
+        improved = policy_selection_improved;
+        policy_selection_active = false;
+        return true;
+    }
+
+    void reset_policy_iteration_units() {
+        policy_unit_stage = PolicyUnitStage::Seed;
+        policy_seed_pass = 0;
+        policy_seed_cursor = 0;
+        policy_selection_active = false;
+        policy_selection_cursor = 0;
+        policy_selection_improved = false;
+        policy_selection_residual = 0.0;
+        sparse_policy_resume.reset();
+        policy_kernel_preparation.reset();
+        reset_kernel_value_cache();
     }
 
     bool evaluate_fixed_policy() {
+        reset_kernel_value_cache();
+        policy_evaluation_incomplete = false;
         improper_policy_states.clear();
         result.diagnostics.policy_evaluation_failure.clear();
         const auto fail = [&](const char* reason) {
             result.diagnostics.policy_evaluation_failure = reason;
+            policy_kernel_preparation.reset();
+            sparse_policy_resume.reset();
             return false;
         };
         const std::size_t state_count = result.values.size();
-        std::vector<PolicyRow> rows(state_count);
-        std::vector<PolicyEdge> edges;
-        edges.reserve(transition_cache->successors.size());
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
-        for (std::uint32_t state = 0; state < state_count; ++state) {
+
+        /* Exact fixed-policy quotient. A policy state's value equation is
+         * determined entirely by its immediate cost and full transition row.
+         * States with byte-identical equations therefore have identical
+         * values and can share one variable. Reforge-heavy policies contain
+         * thousands of such states; quotienting them turns the giant retry
+         * SCC into the small exact system it represents without changing a
+         * probability, carrier distinction, action, or policy choice. */
+        if (policy_kernel_preparation == nullptr ||
+            policy_kernel_preparation->state_count != state_count) {
+            policy_kernel_preparation =
+                std::make_unique<PolicyKernelPreparation>();
+            policy_kernel_preparation->state_count = state_count;
+            policy_kernel_preparation->kernel_owner.assign(
+                state_count, kNoId);
+            policy_kernel_preparation->full_kernel.resize(state_count);
+            ++result.diagnostics.policy_evaluation_calls;
+        }
+        PolicyKernelPreparation& preparation =
+            *policy_kernel_preparation;
+        std::vector<std::uint32_t>& kernel_owner =
+            preparation.kernel_owner;
+        std::vector<std::vector<PolicyEdge>>& full_kernel =
+            preparation.full_kernel;
+        auto& representatives_by_hash =
+            preparation.representatives_by_hash;
+        auto& shared_transition_representatives =
+            preparation.shared_transition_representatives;
+        const auto hash_combine = [](std::size_t& hash, std::uint64_t value) {
+            hash ^= static_cast<std::size_t>(value) +
+                    static_cast<std::size_t>(0x9e3779b97f4a7c15ULL) +
+                    (hash << 6) + (hash >> 2);
+        };
+        const auto kernels_equal = [&](const std::uint32_t left,
+                                       const std::uint32_t right,
+                                       const std::vector<PolicyEdge>& candidate) {
+            if (priced_rows.at(policy_rows[left]).cost !=
+                priced_rows.at(policy_rows[right]).cost) {
+                return false;
+            }
+            const std::vector<PolicyEdge>& stored = full_kernel[left];
+            if (stored.size() != candidate.size()) return false;
+            for (std::size_t i = 0; i < stored.size(); ++i) {
+                if (stored[i].target != candidate[i].target ||
+                    stored[i].probability != candidate[i].probability) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        constexpr std::uint32_t kKernelStatesPerWorkUnit = 64;
+        const std::uint32_t kernel_end = std::min<std::uint32_t>(
+            static_cast<std::uint32_t>(state_count),
+            preparation.cursor + kKernelStatesPerWorkUnit);
+        for (std::uint32_t state = preparation.cursor;
+             state < kernel_end; ++state) {
             if (!result.expanded[state] || result.goal_states[state]) continue;
             if (policy_rows[state] == no_row) continue;
             const std::uint64_t row_index = policy_rows[state];
             const SparseRow& sparse = transition_cache->rows.at(row_index);
-            PolicyRow& row = rows[state];
-            row.edge_offset = edges.size();
-            row.cost = priced_rows.at(row_index).cost;
-            double self_probability = sparse.self_probability;
+            if (sparse.choice_count == 0) {
+                std::size_t shared_hash = static_cast<std::size_t>(
+                    1469598103934665603ULL);
+                hash_combine(
+                    shared_hash, std::bit_cast<std::uint64_t>(
+                                     priced_rows.at(row_index).cost));
+                hash_combine(shared_hash, sparse.transition_offset);
+                hash_combine(shared_hash, sparse.transition_count);
+                std::uint32_t shared_owner = kNoId;
+                for (const std::uint32_t possible :
+                     shared_transition_representatives[shared_hash]) {
+                    const SparseRow& other = transition_cache->rows.at(
+                        policy_rows[possible]);
+                    if (other.transition_offset == sparse.transition_offset &&
+                        other.transition_count == sparse.transition_count &&
+                        priced_rows.at(policy_rows[possible]).cost ==
+                            priced_rows.at(row_index).cost) {
+                        shared_owner = possible;
+                        break;
+                    }
+                }
+                if (shared_owner != kNoId) {
+                    kernel_owner[state] = shared_owner;
+                    continue;
+                }
+                shared_transition_representatives[shared_hash].push_back(
+                    state);
+            }
+            std::vector<PolicyEdge> candidate;
+            candidate.reserve(
+                sparse.transition_count + sparse.choice_count + 1);
             for (std::uint32_t i = 0; i < sparse.transition_count; ++i) {
                 const std::uint64_t offset = sparse.transition_offset + i;
-                edges.push_back({
+                if (transition_cache->successors.at(offset) == state) {
+                    continue;
+                }
+                candidate.push_back({
                     transition_cache->successors.at(offset),
                     transition_cache->probabilities.at(offset)});
+            }
+            if (sparse.self_probability > 0.0) {
+                candidate.push_back({state, sparse.self_probability});
             }
             for (std::uint32_t i = 0; i < sparse.choice_count; ++i) {
                 const SparseChoiceGroup& choice =
@@ -1173,81 +1638,224 @@ struct SolveWork::Impl {
                     }
                 }
                 if (selected == kNoId) return fail("empty_observation_choice");
-                if (selected == state) {
-                    self_probability += choice.probability;
+                candidate.push_back({selected, choice.probability});
+            }
+            std::sort(
+                candidate.begin(), candidate.end(),
+                [](const PolicyEdge& left, const PolicyEdge& right) {
+                    return left.target < right.target;
+                });
+            std::size_t merged = 0;
+            for (const PolicyEdge& entry : candidate) {
+                if (entry.probability == 0.0) continue;
+                if (merged != 0 &&
+                    candidate[merged - 1].target == entry.target) {
+                    candidate[merged - 1].probability += entry.probability;
                 } else {
-                    edges.push_back({selected, choice.probability});
+                    candidate[merged++] = entry;
                 }
             }
-            const double denominator = 1.0 - self_probability;
-            if (!(denominator > 1e-15)) {
-                return fail("algebraic_self_loop_does_not_exit");
+            candidate.resize(merged);
+
+            std::size_t hash =
+                static_cast<std::size_t>(1469598103934665603ULL);
+            hash_combine(
+                hash, std::bit_cast<std::uint64_t>(
+                          priced_rows.at(row_index).cost));
+            for (const PolicyEdge& entry : candidate) {
+                hash_combine(hash, entry.target);
+                hash_combine(
+                    hash, std::bit_cast<std::uint64_t>(entry.probability));
             }
-            row.cost /= denominator;
-            for (std::size_t edge = row.edge_offset;
-                 edge < edges.size(); ++edge) {
-                edges[edge].probability /= denominator;
+            std::uint32_t owner = kNoId;
+            for (const std::uint32_t possible :
+                 representatives_by_hash[hash]) {
+                if (kernels_equal(possible, state, candidate)) {
+                    owner = possible;
+                    break;
+                }
+            }
+            if (owner == kNoId) {
+                owner = state;
+                representatives_by_hash[hash].push_back(state);
+                full_kernel[state] = std::move(candidate);
+            }
+            kernel_owner[state] = owner;
+        }
+        preparation.cursor = kernel_end;
+        if (preparation.cursor < state_count) {
+            policy_evaluation_incomplete = true;
+            return false;
+        }
+
+        if (preparation.representative.empty()) {
+            preparation.representative = kernel_owner;
+            preparation.group_members.resize(state_count);
+            preparation.rows.resize(state_count);
+            preparation.edges.reserve(transition_cache->successors.size());
+        }
+        std::vector<std::uint32_t>& representative =
+            preparation.representative;
+        std::vector<std::vector<std::uint32_t>>& group_members =
+            preparation.group_members;
+        std::vector<PolicyRow>& rows = preparation.rows;
+        std::vector<PolicyEdge>& edges = preparation.edges;
+        constexpr std::uint32_t kGroupingStatesPerWorkUnit = 256;
+        const std::uint32_t grouping_end = std::min<std::uint32_t>(
+            static_cast<std::uint32_t>(state_count),
+            preparation.grouping_cursor + kGroupingStatesPerWorkUnit);
+        for (std::uint32_t state = preparation.grouping_cursor;
+             state < grouping_end; ++state) {
+            if (representative[state] != kNoId) {
+                group_members[representative[state]].push_back(state);
+            }
+            if (representative[state] == state) {
+                ++result.diagnostics.policy_kernel_groups;
+            } else if (representative[state] != kNoId) {
+                ++result.diagnostics.policy_states_collapsed;
+            }
+        }
+        preparation.grouping_cursor = grouping_end;
+        if (preparation.grouping_cursor < state_count) {
+            policy_evaluation_incomplete = true;
+            return false;
+        }
+        constexpr std::uint32_t kQuotientStatesPerWorkUnit = 64;
+        const std::uint32_t quotient_end = std::min<std::uint32_t>(
+            static_cast<std::uint32_t>(state_count),
+            preparation.quotient_cursor + kQuotientStatesPerWorkUnit);
+        for (std::uint32_t state = preparation.quotient_cursor;
+             state < quotient_end; ++state) {
+            if (representative[state] != state) continue;
+            PolicyRow& row = rows[state];
+            row.edge_offset = edges.size();
+            row.cost = priced_rows.at(policy_rows[state]).cost;
+            std::vector<PolicyEdge> quotient;
+            quotient.reserve(full_kernel[kernel_owner[state]].size());
+            for (PolicyEdge entry : full_kernel[kernel_owner[state]]) {
+                if (entry.target < representative.size() &&
+                    representative[entry.target] != kNoId) {
+                    entry.target = representative[entry.target];
+                }
+                quotient.push_back(entry);
+            }
+            std::sort(
+                quotient.begin(), quotient.end(),
+                [](const PolicyEdge& left, const PolicyEdge& right) {
+                    return left.target < right.target;
+                });
+            WideFloat self_probability = 0.0;
+            for (std::size_t begin = 0; begin < quotient.size();) {
+                const std::uint32_t target = quotient[begin].target;
+                WideFloat probability = 0.0;
+                std::size_t end = begin;
+                while (end < quotient.size() &&
+                       quotient[end].target == target) {
+                    probability = probability +
+                                  WideFloat{quotient[end].probability};
+                    ++end;
+                }
+                if (target == state) {
+                    self_probability = self_probability + probability;
+                } else {
+                    edges.push_back({target, probability.value()});
+                }
+                begin = end;
+            }
+            const WideFloat denominator =
+                WideFloat{1.0} - self_probability;
+            if (denominator.value() > 1e-15) {
+                const double divisor = denominator.value();
+                row.cost /= divisor;
+                for (std::size_t edge = row.edge_offset;
+                     edge < edges.size(); ++edge) {
+                    edges[edge].probability /= divisor;
+                }
             }
             row.edge_count = static_cast<std::uint32_t>(
                 edges.size() - row.edge_offset);
         }
+        preparation.quotient_cursor = quotient_end;
+        if (preparation.quotient_cursor < state_count) {
+            policy_evaluation_incomplete = true;
+            return false;
+        }
 
-        struct Frame {
-            std::uint32_t state = kNoId;
-            std::uint32_t next_edge = 0;
-        };
-        std::vector<std::uint32_t> index(state_count, kNoId);
-        std::vector<std::uint32_t> lowlink(state_count, kNoId);
-        std::vector<std::uint8_t> on_stack(state_count, 0);
-        std::vector<std::uint32_t> stack;
-        std::vector<std::vector<std::uint32_t>> components;
-        std::uint32_t next_index = 0;
-        const auto push = [&](const std::uint32_t state,
-                              std::vector<Frame>& dfs) {
-            index[state] = lowlink[state] = next_index++;
-            stack.push_back(state);
-            on_stack[state] = 1;
-            dfs.push_back({state, 0});
-        };
-        for (std::uint32_t root = 0; root < state_count; ++root) {
-            if (!result.expanded[root] || result.goal_states[root] ||
-                policy_rows[root] == no_row ||
-                index[root] != kNoId) {
-                continue;
+        std::vector<std::vector<std::uint32_t>>& components =
+            preparation.components;
+        if (!preparation.components_ready) {
+            if (preparation.tarjan_index.empty()) {
+                preparation.tarjan_index.assign(state_count, kNoId);
+                preparation.tarjan_lowlink.assign(state_count, kNoId);
+                preparation.tarjan_on_stack.assign(state_count, 0);
             }
-            std::vector<Frame> dfs;
-            push(root, dfs);
-            while (!dfs.empty()) {
-                Frame& frame = dfs.back();
+            const auto push = [&](const std::uint32_t state) {
+                preparation.tarjan_index[state] =
+                    preparation.tarjan_lowlink[state] =
+                        preparation.tarjan_next_index++;
+                preparation.tarjan_stack.push_back(state);
+                preparation.tarjan_on_stack[state] = 1;
+                preparation.tarjan_dfs.push_back({state, 0});
+            };
+            constexpr std::uint32_t kTarjanWorkPerUnit = 4096;
+            std::uint32_t tarjan_work = 0;
+            while (tarjan_work < kTarjanWorkPerUnit) {
+                if (preparation.tarjan_dfs.empty()) {
+                    while (preparation.tarjan_root_cursor < state_count &&
+                           tarjan_work < kTarjanWorkPerUnit) {
+                        const std::uint32_t root =
+                            preparation.tarjan_root_cursor++;
+                        ++tarjan_work;
+                        if (!result.expanded[root] ||
+                            result.goal_states[root] ||
+                            policy_rows[root] == no_row ||
+                            representative[root] != root ||
+                            preparation.tarjan_index[root] != kNoId) {
+                            continue;
+                        }
+                        push(root);
+                        break;
+                    }
+                    if (preparation.tarjan_dfs.empty()) break;
+                }
+                PolicyTarjanFrame& frame = preparation.tarjan_dfs.back();
                 const PolicyRow& row = rows[frame.state];
                 if (frame.next_edge < row.edge_count) {
                     const std::uint32_t target = edges.at(
                         row.edge_offset + frame.next_edge++).target;
+                    ++tarjan_work;
                     if (target >= state_count || !result.expanded[target] ||
                         result.goal_states[target] ||
                         policy_rows[target] == no_row) {
                         continue;
                     }
-                    if (index[target] == kNoId) {
-                        push(target, dfs);
-                    } else if (on_stack[target]) {
-                        lowlink[frame.state] = std::min(
-                            lowlink[frame.state], index[target]);
+                    if (preparation.tarjan_index[target] == kNoId) {
+                        push(target);
+                    } else if (preparation.tarjan_on_stack[target]) {
+                        preparation.tarjan_lowlink[frame.state] = std::min(
+                            preparation.tarjan_lowlink[frame.state],
+                            preparation.tarjan_index[target]);
                     }
                     continue;
                 }
                 const std::uint32_t completed = frame.state;
-                dfs.pop_back();
-                if (!dfs.empty()) {
-                    lowlink[dfs.back().state] = std::min(
-                        lowlink[dfs.back().state], lowlink[completed]);
+                preparation.tarjan_dfs.pop_back();
+                ++tarjan_work;
+                if (!preparation.tarjan_dfs.empty()) {
+                    const std::uint32_t parent =
+                        preparation.tarjan_dfs.back().state;
+                    preparation.tarjan_lowlink[parent] = std::min(
+                        preparation.tarjan_lowlink[parent],
+                        preparation.tarjan_lowlink[completed]);
                 }
-                if (lowlink[completed] == index[completed]) {
+                if (preparation.tarjan_lowlink[completed] ==
+                    preparation.tarjan_index[completed]) {
                     components.emplace_back();
                     while (true) {
-                        const std::uint32_t member = stack.back();
-                        stack.pop_back();
-                        on_stack[member] = 0;
+                        const std::uint32_t member =
+                            preparation.tarjan_stack.back();
+                        preparation.tarjan_stack.pop_back();
+                        preparation.tarjan_on_stack[member] = 0;
                         components.back().push_back(member);
                         if (member == completed) break;
                     }
@@ -1255,35 +1863,81 @@ struct SolveWork::Impl {
                         components.back().begin(), components.back().end());
                 }
             }
-        }
 
-        std::vector<std::uint32_t> component_by_state(state_count, kNoId);
-        for (std::uint32_t component = 0;
-             component < components.size(); ++component) {
-            for (const std::uint32_t state : components[component]) {
-                component_by_state[state] = component;
+            if (preparation.tarjan_root_cursor >= state_count &&
+                preparation.tarjan_dfs.empty()) {
+                preparation.component_by_state.assign(state_count, kNoId);
+                for (std::uint32_t component = 0;
+                     component < components.size(); ++component) {
+                    for (const std::uint32_t state : components[component]) {
+                        preparation.component_by_state[state] = component;
+                    }
+                }
+                preparation.local.assign(state_count, -1);
+                preparation.components_ready = true;
+            }
+            if (!preparation.components_ready) {
+                policy_evaluation_incomplete = true;
+                return false;
             }
         }
-        std::vector<std::int32_t> local(state_count, -1);
+        std::vector<std::uint32_t>& component_by_state =
+            preparation.component_by_state;
+        std::vector<std::int32_t>& local = preparation.local;
         std::uint64_t policy_scratch =
+            preparation.kernel_owner.capacity() * sizeof(std::uint32_t) +
+            preparation.full_kernel.capacity() *
+                sizeof(std::vector<PolicyEdge>) +
+            preparation.representative.capacity() * sizeof(std::uint32_t) +
+            preparation.group_members.capacity() *
+                sizeof(std::vector<std::uint32_t>) +
             rows.capacity() * sizeof(PolicyRow) +
             edges.capacity() * sizeof(PolicyEdge) +
-            index.capacity() * sizeof(std::uint32_t) +
-            lowlink.capacity() * sizeof(std::uint32_t) +
-            on_stack.capacity() * sizeof(std::uint8_t) +
-            stack.capacity() * sizeof(std::uint32_t) +
             component_by_state.capacity() * sizeof(std::uint32_t) +
             local.capacity() * sizeof(std::int32_t) +
-            components.capacity() * sizeof(std::vector<std::uint32_t>);
+            components.capacity() * sizeof(std::vector<std::uint32_t>) +
+            preparation.tarjan_index.capacity() * sizeof(std::uint32_t) +
+            preparation.tarjan_lowlink.capacity() * sizeof(std::uint32_t) +
+            preparation.tarjan_on_stack.capacity() * sizeof(std::uint8_t) +
+            preparation.tarjan_stack.capacity() * sizeof(std::uint32_t) +
+            preparation.tarjan_dfs.capacity() * sizeof(PolicyTarjanFrame);
+        for (const auto& kernel : preparation.full_kernel) {
+            policy_scratch += kernel.capacity() * sizeof(PolicyEdge);
+        }
+        for (const auto& members : preparation.group_members) {
+            policy_scratch += members.capacity() * sizeof(std::uint32_t);
+        }
         for (const auto& component : components) {
             policy_scratch += component.capacity() * sizeof(std::uint32_t);
         }
+        const auto map_vectors_bytes = [](const auto& values) {
+            std::uint64_t bytes = values.bucket_count() * sizeof(void*);
+            bytes += values.size() *
+                     (sizeof(typename std::decay_t<decltype(values)>::value_type) +
+                      2 * sizeof(void*));
+            for (const auto& [unused, entries] : values) {
+                (void)unused;
+                bytes += entries.capacity() * sizeof(std::uint32_t);
+            }
+            return bytes;
+        };
+        policy_scratch += map_vectors_bytes(
+            preparation.representatives_by_hash);
+        policy_scratch += map_vectors_bytes(
+            preparation.shared_transition_representatives);
         peak_policy_scratch_bytes = std::max(
             peak_policy_scratch_bytes, policy_scratch);
-        for (std::uint32_t component = 0;
-             component < components.size(); ++component) {
+        constexpr std::uint32_t kComponentsPerWorkUnit = 64;
+        const std::uint32_t component_end = std::min<std::uint32_t>(
+            static_cast<std::uint32_t>(components.size()),
+            preparation.component_cursor + kComponentsPerWorkUnit);
+        for (std::uint32_t component = preparation.component_cursor;
+             component < component_end; ++component) {
             const std::vector<std::uint32_t>& members = components[component];
             const std::size_t n = members.size();
+            result.diagnostics.largest_policy_component = std::max(
+                result.diagnostics.largest_policy_component,
+                static_cast<std::uint32_t>(n));
             bool has_exit = false;
             for (const std::uint32_t state : members) {
                 const PolicyRow& row = rows[state];
@@ -1298,15 +1952,26 @@ struct SolveWork::Impl {
                 if (has_exit) break;
             }
             if (!has_exit) {
-                improper_policy_states = members;
+                improper_policy_states.clear();
+                for (const std::uint32_t state : members) {
+                    improper_policy_states.insert(
+                        improper_policy_states.end(),
+                        group_members[state].begin(),
+                        group_members[state].end());
+                }
                 return fail("improper_closed_component");
             }
             for (std::size_t i = 0; i < n; ++i) local[members[i]] =
                 static_cast<std::int32_t>(i);
-            std::vector<long double> rhs(n, 0.0L);
+            /* Keep policy numerics identical on native and wasm32. On x86,
+             * long double uses an 80-bit accumulator while WebAssembly maps
+             * it to 64-bit double, which made otherwise identical fixed
+             * policies diverge beyond the approved start-value tolerance. */
+            std::vector<double> rhs(n, 0.0);
             for (std::size_t i = 0; i < n; ++i) {
                 const std::uint32_t state = members[i];
-                rhs[i] = rows[state].cost;
+                double external_sum = 0.0;
+                double external_correction = 0.0;
                 const PolicyRow& row = rows[state];
                 for (std::uint32_t e = 0; e < row.edge_count; ++e) {
                     const PolicyEdge& edge = edges.at(row.edge_offset + e);
@@ -1322,44 +1987,52 @@ struct SolveWork::Impl {
                         return fail("policy_reaches_unexpanded_frontier");
                     }
                     if (component_by_state[edge.target] != component) {
-                        rhs[i] += static_cast<long double>(edge.probability) *
-                                  result.values[edge.target];
+                        const double product =
+                            edge.probability * result.values[edge.target];
+                        const double adjusted =
+                            product - external_correction;
+                        const double updated = external_sum + adjusted;
+                        external_correction =
+                            (updated - external_sum) - adjusted;
+                        external_sum = updated;
                     }
                 }
+                rhs[i] = rows[state].cost + external_sum;
             }
 
             std::vector<double> solved(n, 0.0);
             if (n <= kDensePolicyComponentLimit) {
                 peak_policy_scratch_bytes = std::max(
                     peak_policy_scratch_bytes,
-                    policy_scratch + n * (n + 1) * sizeof(double));
+                    policy_scratch + n * (n + 1) * sizeof(WideFloat));
                 const std::size_t stride = n + 1;
-                std::vector<double> matrix(n * stride, 0.0);
+                std::vector<WideFloat> matrix(n * stride, 0.0);
                 const auto cell = [&](const std::size_t row,
-                                      const std::size_t column) -> double& {
+                                      const std::size_t column) -> WideFloat& {
                     return matrix[row * stride + column];
                 };
                 for (std::size_t i = 0; i < n; ++i) {
                     cell(i, i) = 1.0;
-                    cell(i, n) = static_cast<double>(rhs[i]);
+                    cell(i, n) = rhs[i];
                     const PolicyRow& row = rows[members[i]];
                     for (std::uint32_t e = 0; e < row.edge_count; ++e) {
                         const PolicyEdge& edge = edges.at(row.edge_offset + e);
                         if (component_by_state[edge.target] == component) {
                             cell(i, static_cast<std::size_t>(
-                                local[edge.target])) -= edge.probability;
+                                local[edge.target])) -=
+                                WideFloat{edge.probability};
                         }
                     }
                 }
                 for (std::size_t column = 0; column < n; ++column) {
                     std::size_t pivot = column;
                     for (std::size_t row = column + 1; row < n; ++row) {
-                        if (std::fabs(cell(row, column)) >
-                            std::fabs(cell(pivot, column))) {
+                        if (std::fabs(cell(row, column).value()) >
+                            std::fabs(cell(pivot, column).value())) {
                             pivot = row;
                         }
                     }
-                    if (std::fabs(cell(pivot, column)) <= 1e-15) {
+                    if (std::fabs(cell(pivot, column).value()) <= 1e-15) {
                         return fail("dense_policy_component_is_singular");
                     }
                     if (pivot != column) {
@@ -1368,85 +2041,142 @@ struct SolveWork::Impl {
                         }
                     }
                     for (std::size_t row = column + 1; row < n; ++row) {
-                        const double factor =
+                        const WideFloat factor =
                             cell(row, column) / cell(column, column);
-                        if (factor == 0.0) continue;
+                        if (factor.value() == 0.0) continue;
                         for (std::size_t k = column; k <= n; ++k) {
                             cell(row, k) -= factor * cell(column, k);
                         }
                     }
                 }
                 for (std::size_t back = n; back-- > 0;) {
-                    double value = cell(back, n);
+                    WideFloat value = cell(back, n);
                     for (std::size_t column = back + 1; column < n; ++column) {
                         value -= cell(back, column) * solved[column];
                     }
-                    solved[back] = value / cell(back, back);
+                    solved[back] =
+                        (value / cell(back, back)).value();
                 }
             } else {
                 peak_policy_scratch_bytes = std::max(
                     peak_policy_scratch_bytes,
-                    policy_scratch + n * 8 * sizeof(double));
+                    policy_scratch + n * 8 * sizeof(WideFloat));
                 /* Large fixed-policy components use BiCGSTAB on the sparse
                  * M-matrix (I-P). It avoids quadratic storage while retaining
                  * an explicit residual check before values are accepted. */
-                std::vector<double> b(n), x(n, 0.0), r(n), r0(n), p(n, 0.0),
-                    v(n, 0.0), s(n), t(n);
+                std::vector<WideFloat> b(n);
                 for (std::size_t i = 0; i < n; ++i) {
-                    b[i] = static_cast<double>(rhs[i]);
-                    r[i] = r0[i] = b[i];
+                    b[i] = rhs[i];
+                }
+                const bool can_resume =
+                    sparse_policy_resume != nullptr &&
+                    sparse_policy_resume->members == members &&
+                    sparse_policy_resume->b == b;
+                std::vector<WideFloat> x(n), r(n), r0(n), p(n, 0.0),
+                    v(n, 0.0), s(n), t(n);
+                WideFloat rho_previous = 1.0;
+                WideFloat alpha = 1.0;
+                WideFloat omega = 1.0;
+                std::uint32_t resumed_iterations = 0;
+                std::uint32_t refinement_count = 0;
+                if (can_resume) {
+                    x = std::move(sparse_policy_resume->x);
+                    r = std::move(sparse_policy_resume->r);
+                    r0 = std::move(sparse_policy_resume->r0);
+                    p = std::move(sparse_policy_resume->p);
+                    v = std::move(sparse_policy_resume->v);
+                    s = std::move(sparse_policy_resume->s);
+                    t = std::move(sparse_policy_resume->t);
+                    rho_previous = sparse_policy_resume->rho_previous;
+                    alpha = sparse_policy_resume->alpha;
+                    omega = sparse_policy_resume->omega;
+                    resumed_iterations = sparse_policy_resume->iterations;
+                    refinement_count =
+                        sparse_policy_resume->refinement_count;
+                    sparse_policy_resume.reset();
+                } else {
+                    for (std::size_t i = 0; i < n; ++i) {
+                        const double previous = result.values[members[i]];
+                        x[i] = std::isfinite(previous) && previous >= 0.0 &&
+                                       previous < kValueCeiling
+                                   ? previous
+                                   : 0.0;
+                    }
                 }
                 const auto dot = [](const auto& left, const auto& right) {
-                    long double value = 0.0L;
+                    WideFloat value = 0.0;
                     for (std::size_t i = 0; i < left.size(); ++i) {
-                        value += static_cast<long double>(left[i]) * right[i];
+                        value = value + left[i] * right[i];
                     }
-                    return static_cast<double>(value);
+                    return value;
                 };
-                const auto multiply = [&](const std::vector<double>& input,
-                                          std::vector<double>& output) {
+                const auto multiply = [&](
+                    const std::vector<WideFloat>& input,
+                    std::vector<WideFloat>& output) {
                     for (std::size_t i = 0; i < n; ++i) {
-                        double value = input[i];
+                        WideFloat internal_sum = 0.0;
                         const PolicyRow& row = rows[members[i]];
                         for (std::uint32_t e = 0; e < row.edge_count; ++e) {
                             const PolicyEdge& edge = edges.at(
                                 row.edge_offset + e);
                             if (component_by_state[edge.target] == component) {
-                                value -= edge.probability * input[
+                                const WideFloat product =
+                                    edge.probability * input[
                                     static_cast<std::size_t>(
                                         local[edge.target])];
+                                internal_sum = internal_sum + product;
                             }
                         }
-                        output[i] = value;
+                        output[i] = input[i] - internal_sum;
                     }
                 };
-                const double tolerance = options.epsilon * std::max(
-                    1.0, std::sqrt(std::max(0.0, dot(b, b))));
-                double rho_previous = 1.0;
-                double alpha = 1.0;
-                double omega = 1.0;
-                bool converged = std::sqrt(std::max(0.0, dot(r, r))) <=
-                                 tolerance;
+                const auto norm = [&](const auto& values) {
+                    return std::sqrt(std::max(
+                        0.0, dot(values, values).value()));
+                };
+                /* Fixed-policy evaluation is the numerical ground truth used
+                 * by policy improvement. Solve it substantially tighter than
+                 * the outer Bellman stopping tolerance so independently
+                 * rounded native/WASM iterates agree at endgame value scales.
+                 * Warm-starting from the preceding exact policy values makes
+                 * the tighter solve cheaper than restarting BiCGSTAB at zero. */
+                if (!can_resume) {
+                    multiply(x, v);
+                    for (std::size_t i = 0; i < n; ++i) {
+                        r[i] = r0[i] = b[i] - v[i];
+                    }
+                }
+                const double fixed_policy_relative_tolerance = 1e-18;
+                const double tolerance =
+                    fixed_policy_relative_tolerance * std::max(
+                        1.0, norm(b));
+                bool converged = norm(r) <= tolerance;
                 const std::size_t max_iterations = std::min<std::size_t>(
                     100000, std::max<std::size_t>(1000, n * 10));
-                for (std::size_t iteration = 0;
-                     !converged && iteration < max_iterations; ++iteration) {
-                    const double rho = dot(r0, r);
-                    if (std::abs(rho) <= 1e-30 ||
-                        std::abs(omega) <= 1e-30) break;
-                    const double beta =
+                constexpr std::size_t kIterationsPerWorkUnit = 4;
+                const std::size_t work_unit_iterations =
+                    std::min(max_iterations, kIterationsPerWorkUnit);
+                std::size_t iterations = 0;
+                for (; !converged && iterations < work_unit_iterations;
+                     ++iterations) {
+                    const WideFloat rho = dot(r0, r);
+                    if (rho.value() == 0.0 || omega.value() == 0.0 ||
+                        !std::isfinite(rho.value()) ||
+                        !std::isfinite(omega.value())) break;
+                    const WideFloat beta =
                         (rho / rho_previous) * (alpha / omega);
                     for (std::size_t i = 0; i < n; ++i) {
                         p[i] = r[i] + beta * (p[i] - omega * v[i]);
                     }
                     multiply(p, v);
-                    const double denominator = dot(r0, v);
-                    if (std::abs(denominator) <= 1e-30) break;
+                    const WideFloat denominator = dot(r0, v);
+                    if (denominator.value() == 0.0 ||
+                        !std::isfinite(denominator.value())) break;
                     alpha = rho / denominator;
                     for (std::size_t i = 0; i < n; ++i) {
                         s[i] = r[i] - alpha * v[i];
                     }
-                    if (std::sqrt(std::max(0.0, dot(s, s))) <= tolerance) {
+                    if (norm(s) <= tolerance) {
                         for (std::size_t i = 0; i < n; ++i) {
                             x[i] += alpha * p[i];
                         }
@@ -1454,30 +2184,100 @@ struct SolveWork::Impl {
                         break;
                     }
                     multiply(s, t);
-                    const double tt = dot(t, t);
-                    if (std::abs(tt) <= 1e-30) break;
+                    const WideFloat tt = dot(t, t);
+                    if (tt.value() == 0.0 ||
+                        !std::isfinite(tt.value())) break;
                     omega = dot(t, s) / tt;
                     for (std::size_t i = 0; i < n; ++i) {
                         x[i] += alpha * p[i] + omega * s[i];
                         r[i] = s[i] - omega * t[i];
                     }
-                    converged =
-                        std::sqrt(std::max(0.0, dot(r, r))) <= tolerance;
+                    converged = norm(r) <= tolerance;
                     rho_previous = rho;
                 }
+                bool refinement_restart = false;
+                if (converged && refinement_count < 10) {
+                    /* BiCGSTAB's recursively updated residual can look
+                     * converged before b-Ax is equally small on a highly
+                     * recurrent policy. Recompute the true residual and use
+                     * it as an exact iterative-refinement restart. This keeps
+                     * forward error, not only recurrence error, stable across
+                     * native and WebAssembly floating-point implementations. */
+                    multiply(x, t);
+                    for (std::size_t i = 0; i < n; ++i) {
+                        r[i] = b[i] - t[i];
+                    }
+                    ++refinement_count;
+                    converged = norm(r) <= tolerance;
+                    if (!converged) {
+                        r0 = r;
+                        std::fill(p.begin(), p.end(), 0.0);
+                        std::fill(v.begin(), v.end(), 0.0);
+                        rho_previous = 1.0;
+                        alpha = 1.0;
+                        omega = 1.0;
+                        refinement_restart = true;
+                    }
+                }
+                result.diagnostics.sparse_policy_iterations += iterations;
+                const std::size_t total_iterations =
+                    resumed_iterations + iterations;
+                if (!converged &&
+                    (iterations >= work_unit_iterations ||
+                     refinement_restart) &&
+                    total_iterations < max_iterations) {
+                    sparse_policy_resume =
+                        std::make_unique<SparsePolicyResume>();
+                    sparse_policy_resume->members = members;
+                    sparse_policy_resume->b = std::move(b);
+                    sparse_policy_resume->x = std::move(x);
+                    sparse_policy_resume->r = std::move(r);
+                    sparse_policy_resume->r0 = std::move(r0);
+                    sparse_policy_resume->p = std::move(p);
+                    sparse_policy_resume->v = std::move(v);
+                    sparse_policy_resume->s = std::move(s);
+                    sparse_policy_resume->t = std::move(t);
+                    sparse_policy_resume->rho_previous = rho_previous;
+                    sparse_policy_resume->alpha = alpha;
+                    sparse_policy_resume->omega = omega;
+                    sparse_policy_resume->iterations =
+                        static_cast<std::uint32_t>(total_iterations);
+                    sparse_policy_resume->refinement_count =
+                        refinement_count;
+                    policy_evaluation_incomplete = true;
+                    return false;
+                }
                 if (!converged) {
+                    sparse_policy_resume.reset();
                     return fail("sparse_policy_component_did_not_converge");
                 }
-                solved = std::move(x);
+                result.diagnostics.max_sparse_policy_iterations = std::max(
+                    result.diagnostics.max_sparse_policy_iterations,
+                    resumed_iterations +
+                        static_cast<std::uint32_t>(iterations));
+                for (std::size_t i = 0; i < n; ++i) {
+                    solved[i] = x[i].value();
+                }
             }
             for (std::size_t i = 0; i < n; ++i) {
                 if (!std::isfinite(solved[i]) || solved[i] < -1e-8) {
                     return fail("fixed_policy_value_is_invalid");
                 }
                 result.values[members[i]] = std::max(0.0, solved[i]);
+                for (const std::uint32_t member :
+                     group_members[members[i]]) {
+                    result.values[member] = result.values[members[i]];
+                }
                 local[members[i]] = -1;
             }
+            preparation.component_cursor = component + 1;
         }
+        if (preparation.component_cursor < components.size()) {
+            policy_evaluation_incomplete = true;
+            return false;
+        }
+        policy_kernel_preparation.reset();
+        sparse_policy_resume.reset();
         return true;
     }
 
@@ -1503,6 +2303,7 @@ struct SolveWork::Impl {
                     const std::uint32_t successor =
                         transition_cache->successors.at(
                             row.transition_offset + transition);
+                    if (successor == state) continue;
                     if (result.goal_states[successor] ||
                         !in_component[successor]) {
                         exits = true;
@@ -1562,46 +2363,84 @@ struct SolveWork::Impl {
 
     bool run_policy_iteration_unit() {
         const auto started = std::chrono::steady_clock::now();
-        if (!policy_initialized) {
+        const auto finish_unit = [&]() {
+            result.diagnostics.optimization_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - started)
+                        .count());
+        };
+        if (policy_unit_stage == PolicyUnitStage::Seed) {
             /* A few alternating algebraic Gauss-Seidel passes propagate the
              * proper restart/goal bound before Howard initialization. Starting
              * directly from the finite ceiling can otherwise choose a closed
              * cross-state cycle whose one-step Q is finite but whose fixed
              * policy is improper. This is a bounded seed, not the convergence
              * algorithm. */
-            for (std::uint32_t pass = 0; pass < 4; ++pass) {
-                for (std::uint32_t offset = 0;
-                     offset < result.values.size(); ++offset) {
-                    const std::uint32_t state =
-                        pass % 2 == 0
+            if (policy_seed_cursor == 0) {
+                reset_kernel_value_cache(true);
+            }
+            constexpr std::uint32_t kStatesPerSeedUnit = 128;
+            const std::uint32_t end = std::min<std::uint32_t>(
+                static_cast<std::uint32_t>(result.values.size()),
+                policy_seed_cursor + kStatesPerSeedUnit);
+            for (std::uint32_t offset = policy_seed_cursor;
+                 offset < end; ++offset) {
+                const std::uint32_t state =
+                        policy_seed_pass % 2 == 0
                             ? static_cast<std::uint32_t>(
                                   result.values.size() - 1 - offset)
                             : offset;
-                    if (!result.expanded[state] || result.goal_states[state]) {
-                        continue;
-                    }
-                    std::uint32_t work = 0;
-                    const double best = backup_state(state, work);
-                    if (best < result.values[state]) {
-                        result.values[state] = best;
-                    }
+                if (!result.expanded[state] || result.goal_states[state]) {
+                    continue;
+                }
+                std::uint32_t work = 0;
+                const double best = backup_state(state, work);
+                if (best < result.values[state]) {
+                    update_kernel_value_cache(
+                        state, result.values[state], best);
+                    result.values[state] = best;
                 }
             }
-            select_policy_rows();
+            policy_seed_cursor = end;
+            if (policy_seed_cursor >= result.values.size()) {
+                policy_seed_cursor = 0;
+                if (++policy_seed_pass >= 4) {
+                    policy_unit_stage = PolicyUnitStage::InitialSelect;
+                }
+            }
+            backup_active = true;
+            finish_unit();
+            return true;
+        }
+        if (policy_unit_stage == PolicyUnitStage::InitialSelect) {
+            bool unused_improved = false;
+            if (!advance_policy_selection(unused_improved)) {
+                backup_active = true;
+                finish_unit();
+                return true;
+            }
             policy_initialized = true;
             policy_stable = false;
+            policy_unit_stage = PolicyUnitStage::Evaluate;
+            backup_active = true;
+            finish_unit();
+            return true;
         }
-        if (!evaluate_fixed_policy()) {
+        if (policy_unit_stage == PolicyUnitStage::Evaluate &&
+            !evaluate_fixed_policy()) {
+            if (policy_evaluation_incomplete) {
+                backup_active = true;
+                finish_unit();
+                return true;
+            }
             if (repair_improper_policy()) {
                 policy_stable = false;
                 ++sweeps;
                 result.diagnostics.sweeps = sweeps;
                 result.diagnostics.policy_improvement_rounds = sweeps;
-                result.diagnostics.optimization_ns +=
-                    static_cast<std::uint64_t>(
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::steady_clock::now() - started)
-                            .count());
+                policy_unit_stage = PolicyUnitStage::Evaluate;
+                finish_unit();
                 backup_active = true;
                 return true;
             }
@@ -1609,22 +2448,28 @@ struct SolveWork::Impl {
             policy_stable = false;
             result.diagnostics.policy_iteration_fallback = true;
             backup_active = false;
-            result.diagnostics.optimization_ns += static_cast<std::uint64_t>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() - started)
-                    .count());
+            finish_unit();
             return false;
         }
-        const bool improved = select_policy_rows();
+        if (policy_unit_stage == PolicyUnitStage::Evaluate) {
+            policy_unit_stage = PolicyUnitStage::ImproveSelect;
+            backup_active = true;
+            finish_unit();
+            return true;
+        }
+        bool improved = false;
+        if (!advance_policy_selection(improved)) {
+            backup_active = true;
+            finish_unit();
+            return true;
+        }
         policy_stable = !improved;
         ++sweeps;
         result.diagnostics.sweeps = sweeps;
         result.diagnostics.policy_improvement_rounds = sweeps;
         ++result.diagnostics.bellman_work_units;
-        result.diagnostics.optimization_ns += static_cast<std::uint64_t>(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now() - started)
-                .count());
+        policy_unit_stage = PolicyUnitStage::Evaluate;
+        finish_unit();
         if ((policy_stable && residual <= acceptable_residual()) ||
             sweeps >= options.max_sweeps) {
             backup_active = false;
@@ -1669,6 +2514,7 @@ struct SolveWork::Impl {
         policy_initialized = false;
         policy_stable = false;
         policy_iteration_failed = false;
+        reset_policy_iteration_units();
         backup_active = false;
         sweeps = 0;
         residual = kValueCeiling;
@@ -1681,6 +2527,7 @@ struct SolveWork::Impl {
         if (result.start_state >= result.values.size()) return false;
         std::vector<std::uint8_t> visited(result.values.size(), 0);
         std::vector<std::uint8_t> queued_fringe(result.values.size(), 0);
+        std::unordered_set<std::uint64_t> routed_transition_kernels;
         std::deque<std::uint32_t> walk{result.start_state};
         const auto route = [&](const std::uint32_t successor) {
             if (result.goal_states[successor]) return;
@@ -1704,9 +2551,17 @@ struct SolveWork::Impl {
             }
             const SparseRow& row = transition_cache->rows.at(
                 policy_rows[state]);
-            for (std::uint32_t i = 0; i < row.transition_count; ++i) {
-                route(transition_cache->successors.at(
-                    row.transition_offset + i));
+            const bool route_transitions =
+                row.choice_count != 0 || row.transition_count == 0 ||
+                routed_transition_kernels.insert(row.transition_offset)
+                    .second;
+            if (route_transitions) {
+                for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                    const std::uint32_t successor =
+                        transition_cache->successors.at(
+                            row.transition_offset + i);
+                    if (successor != state) route(successor);
+                }
             }
             for (std::uint32_t i = 0; i < row.choice_count; ++i) {
                 const SparseChoiceGroup& choice =
@@ -1759,6 +2614,14 @@ struct SolveWork::Impl {
             }
             for (const std::uint32_t state : fringe) enqueue(state);
         }
+        /* With every discovered state already expanded, an incomplete
+         * focused proof has no remaining fringe to refine. Continue with the
+         * ordinary full-closure solve instead of repeating the same lower
+         * solve indefinitely. */
+        if (!focused_closure_proved && queue.empty()) {
+            focused_mode = false;
+            full_closure_after_focused_fallback = true;
+        }
         peak_queue_size = std::max<std::uint32_t>(
             peak_queue_size, static_cast<std::uint32_t>(queue.size()));
 
@@ -1769,6 +2632,7 @@ struct SolveWork::Impl {
         policy_initialized = false;
         policy_stable = false;
         policy_iteration_failed = false;
+        reset_policy_iteration_units();
         backup_active = false;
         sweeps = 0;
         residual = kValueCeiling;
@@ -1793,6 +2657,7 @@ struct SolveWork::Impl {
                 policy_iteration_failed = false;
                 policy_initialized = false;
                 policy_stable = false;
+                reset_policy_iteration_units();
                 return;
             }
         }
@@ -1819,6 +2684,7 @@ struct SolveWork::Impl {
     }
 
     void begin_priority_measurement() {
+        reset_kernel_value_cache();
         backup_active = true;
         backup_stage = BackupStage::Measure;
         backup_cursor = 0;
@@ -1910,15 +2776,16 @@ struct SolveWork::Impl {
                     --remaining;
                     continue;
                 }
-                if (queue.empty() && focused_mode &&
+                if (!expansion_active && queue.empty() && focused_mode &&
                     !focused_closure_proved &&
                     expanded_count < options.max_expanded_states) {
                     begin_focused_lower_solve();
                     --remaining;
                     continue;
                 }
-                if (queue.empty() ||
-                    expanded_count >= options.max_expanded_states ||
+                if ((!expansion_active && queue.empty()) ||
+                    (!expansion_active &&
+                     expanded_count >= options.max_expanded_states) ||
                     focused_closure_proved) {
                     prepare_iteration();
                     if (result.diagnostics.resource_cap_hit) {
@@ -1926,23 +2793,25 @@ struct SolveWork::Impl {
                     }
                     break; /* expose the phase boundary to callers */
                 }
-                expand_one();
+                const bool completed_state = expand_one_unit();
                 --remaining;
-                if (!focused_mode && expanded_count >= next_focus_checkpoint &&
+                if (completed_state && !focused_mode &&
+                    expanded_count >= next_focus_checkpoint &&
                     queue.size() > 1024 &&
                     expanded_count < options.max_expanded_states) {
                     begin_focused_lower_solve();
                     continue;
                 }
                 if (result.diagnostics.resource_cap_hit ||
-                    expanded_count >= options.max_expanded_states) {
+                    (completed_state &&
+                     expanded_count >= options.max_expanded_states)) {
                     prepare_iteration();
                     if (result.diagnostics.resource_cap_hit) {
                         phase = SolvePhase::Done;
                     }
                     break;
                 }
-                if (queue.empty()) {
+                if (completed_state && !expansion_active && queue.empty()) {
                     if (focused_mode && !focused_closure_proved) {
                         begin_focused_lower_solve();
                     } else {
@@ -2056,6 +2925,9 @@ struct SolveWork::Impl {
                      i < row.transition_count; ++i) {
                     const std::uint64_t offset =
                         row.transition_offset + i;
+                    if (transition_cache->successors.at(offset) == state) {
+                        continue;
+                    }
                     random_values.push_back(
                         {transition_cache->probabilities.at(offset),
                          result.values[
@@ -2211,6 +3083,7 @@ struct SolveWork::Impl {
                     const std::uint32_t successor =
                         transition_cache->successors.at(
                             selected->transition_offset + i);
+                    if (successor == state) continue;
                     if (!result.policy_reachable[successor]) {
                         walk.push_back(successor);
                     }
@@ -2246,18 +3119,34 @@ struct SolveWork::Impl {
             }
         }
 
+        bool full_non_goal_closure = true;
+        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            if (!result.expanded[state] && !result.goal_states[state]) {
+                full_non_goal_closure = false;
+                break;
+            }
+        }
         if (result.diagnostics.focused_expansion &&
             result.start_state < result.values.size()) {
             result.diagnostics.focused_upper_bound =
                 result.values[result.start_state];
-            result.diagnostics.focused_optimality_gap =
-                std::max(
-                    0.0,
-                    result.diagnostics.focused_upper_bound -
-                        result.diagnostics.focused_lower_bound);
+            if (full_closure_after_focused_fallback ||
+                full_non_goal_closure) {
+                result.diagnostics.focused_lower_bound =
+                    result.diagnostics.focused_upper_bound;
+                result.diagnostics.focused_optimality_gap = 0.0;
+            } else {
+                result.diagnostics.focused_optimality_gap =
+                    std::max(
+                        0.0,
+                        result.diagnostics.focused_upper_bound -
+                            result.diagnostics.focused_lower_bound);
+            }
         }
         const bool focused_exact =
             !result.diagnostics.focused_expansion ||
+            full_closure_after_focused_fallback ||
+            full_non_goal_closure ||
             (focused_closure_proved &&
              result.diagnostics.focused_optimality_gap <=
                  options.epsilon * 10.0);
@@ -2268,6 +3157,42 @@ struct SolveWork::Impl {
                            reachable_policy_complete &&
                            result.start_state < state_count &&
                            result.values[result.start_state] < kValueCeiling;
+        {
+            std::uint64_t hash = 1469598103934665603ULL;
+            const auto mix = [&hash](const std::uint64_t value) {
+                hash ^= value;
+                hash *= 1099511628211ULL;
+            };
+            for (std::size_t i = 0;
+                 i < transition_cache->successors.size(); ++i) {
+                mix(transition_cache->successors[i]);
+                mix(std::bit_cast<std::uint64_t>(
+                    transition_cache->probabilities[i]));
+            }
+            for (const SparseRow& row : transition_cache->rows) {
+                mix(row.owner_state);
+                mix(row.transition_offset);
+                mix(row.transition_count);
+                mix(std::bit_cast<std::uint64_t>(row.self_probability));
+            }
+            result.diagnostics.transition_bits_hash = hash;
+            hash = 1469598103934665603ULL;
+            for (std::size_t state = 0; state < result.policy.size(); ++state) {
+                mix(state);
+                mix(result.policy[state].index);
+                mix(result.policy[state].kind == PlannerOperatorKind::Primitive
+                        ? 0u
+                        : 1u);
+                mix(state < policy_rows.size() ? policy_rows[state]
+                                               : std::uint64_t{0});
+                if (state < policy_rows.size() &&
+                    policy_rows[state] < priced_rows.size()) {
+                    mix(std::bit_cast<std::uint64_t>(
+                        priced_rows[policy_rows[state]].cost));
+                }
+            }
+            result.diagnostics.policy_bits_hash = hash;
+        }
         result.diagnostics.extraction_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - extraction_started)
@@ -2672,6 +3597,21 @@ std::string serialize_solver_telemetry(
                     diagnostics->max_bellman_unit_transitions);
         json += ",\"algebraic_self_loops\":" +
                 std::to_string(diagnostics->algebraic_self_loops);
+        char hash_buffer[17];
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(
+                diagnostics->transition_bits_hash));
+        json += ",\"transition_bits_hash\":\"";
+        json += hash_buffer;
+        json += '"';
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(
+                diagnostics->policy_bits_hash));
+        json += ",\"policy_bits_hash\":\"";
+        json += hash_buffer;
+        json += '"';
     }
     json += "}";
 
@@ -2707,6 +3647,19 @@ std::string serialize_solver_telemetry(
                 ? "policy_iteration_scc_with_prioritized_fallback"
                 : "policy_iteration_scc";
     json += "\"";
+    json += ",\"policy_evaluation_calls\":" + std::to_string(
+        diagnostics == nullptr ? 0 : diagnostics->policy_evaluation_calls);
+    json += ",\"largest_policy_component\":" + std::to_string(
+        diagnostics == nullptr ? 0 : diagnostics->largest_policy_component);
+    json += ",\"sparse_policy_iterations\":" + std::to_string(
+        diagnostics == nullptr ? 0 : diagnostics->sparse_policy_iterations);
+    json += ",\"max_sparse_policy_iterations\":" + std::to_string(
+        diagnostics == nullptr ? 0
+                               : diagnostics->max_sparse_policy_iterations);
+    json += ",\"policy_kernel_groups\":" + std::to_string(
+        diagnostics == nullptr ? 0 : diagnostics->policy_kernel_groups);
+    json += ",\"policy_states_collapsed\":" + std::to_string(
+        diagnostics == nullptr ? 0 : diagnostics->policy_states_collapsed);
     json += ",\"policy_evaluation_failure\":";
     if (diagnostics == nullptr ||
         diagnostics->policy_evaluation_failure.empty()) {

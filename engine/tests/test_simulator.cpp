@@ -121,6 +121,38 @@ std::string family_tier_strategy(
 })JSON";
 }
 
+std::string family_count_strategy(
+    const std::string& family_key,
+    const std::string& item_mod_key,
+    int generation_type) {
+    const char* side = generation_type == PC_SIDE_PREFIX ? "prefixes" : "suffixes";
+    return std::string(R"JSON({
+  "version":"v1",
+  "name":"Modifier family count",
+  "start_node_id":"start",
+  "base_state":{
+    "base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "item_level":86,
+    "rarity":"rare",
+    ")JSON") +
+           side + R"JSON(": [{"mod_key":")JSON" + item_mod_key +
+           R"JSON("}]
+  },
+  "nodes":[
+    {"id":"start","kind":"start"},
+    {"id":"success","kind":"terminal","terminal":"success"},
+    {"id":"failure","kind":"terminal","terminal":"failure"}
+  ],
+  "edges":[
+    {"id":"match","from":"start","to":"success","priority":0,
+     "condition":{"type":"mod_family_count","family_mod_keys":[")JSON" +
+           family_key + R"JSON("],"min":1,"max":1}},
+    {"id":"fallback","from":"start","to":"failure","priority":999,
+     "is_default":true}
+  ]
+})JSON";
+}
+
 pc_simulation_options options(std::uint64_t runs) {
     pc_simulation_options value{};
     value.struct_size = sizeof(value);
@@ -467,6 +499,36 @@ void run_simulator_tests(const char* artifact_dir) {
             pc_simulator_destroy(fractured_simulator);
             pc_strategy_destroy(fractured_strategy);
         }
+        const std::string family_count_json = family_count_strategy(
+            tier_one_key, tier_two_key, selected_side);
+        pc_strategy_handle family_count_graph = nullptr;
+        PC_CHECK(pc_strategy_compile_json(
+                     session,
+                     family_count_json.data(),
+                     family_count_json.size(),
+                     &family_count_graph,
+                     &error) == PC_RESULT_OK);
+        pc_simulator_handle family_count_simulator = nullptr;
+        PC_CHECK(pc_simulator_create(
+                     session,
+                     family_count_graph,
+                     nullptr,
+                     &family_count_simulator,
+                     &error) == PC_RESULT_OK);
+        auto family_count_options = options(1);
+        PC_CHECK(pc_simulator_run_chunk(
+                     family_count_simulator,
+                     &family_count_options,
+                     1,
+                     &progress,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(pc_simulator_get_summary(
+                     family_count_simulator,
+                     &summary,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(summary.success_count == 1);
+        pc_simulator_destroy(family_count_simulator);
+        pc_strategy_destroy(family_count_graph);
     }
 
     pc_economy_destroy(economy);

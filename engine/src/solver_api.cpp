@@ -654,7 +654,7 @@ pc_result pc_solver_create(
             registry);
         holder->calc = std::make_unique<solver::CalcContext>(
             holder->session, goal, std::move(registry), candidates, false,
-            !goal.primitive_actions_explicit);
+            !goal.primitive_actions_explicit, true);
         *out_solver = holder.release();
         clear_error(out_error);
         return PC_RESULT_OK;

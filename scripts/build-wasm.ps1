@@ -71,7 +71,7 @@ $Exported = @(
 $RuntimeMethods = @("ccall", "cwrap", "UTF8ToString", "HEAPU8") -join ","
 
 $EmccArgs = @(
-    "-std=c++20", "-O2", "-fexceptions",
+    "-std=c++20", "-O3", "-ffp-contract=off", "-fexceptions",
     "-I$Root/engine/include", "-I$Root/engine/src", "-I$GeneratedDirectory"
 )
 if ($Diagnostics) {
@@ -90,11 +90,11 @@ $EmccArgs += @(
     "-sEXPORT_NAME=createPoecraftEngine",
     "-sENVIRONMENT=web,worker,node",
     "-sALLOW_MEMORY_GROWTH=1",
-    "-sINITIAL_MEMORY=33554432",
+    "-sINITIAL_MEMORY=134217728",
     "-sMAXIMUM_MEMORY=4GB",
     # Large compiled policy conditions are constructed and parsed recursively;
     # the advanced S7 corpus exceeds Emscripten's 4 MiB default-safe stack.
-    "-sSTACK_SIZE=16777216",
+    "-sSTACK_SIZE=67108864",
     "-sEXIT_RUNTIME=0",
     "-sEXPORTED_FUNCTIONS=$Exported",
     "-sEXPORTED_RUNTIME_METHODS=$RuntimeMethods",

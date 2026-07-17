@@ -1483,8 +1483,8 @@ pc_result pc_simulator_create(
     holder->impl = std::make_unique<poecraft::SimulatorImpl>();
     holder->impl->session = session->impl;
     holder->impl->strategy = strategy->impl;
-    holder->impl->action_counts.assign(strategy->impl->nodes.size(), 0);
     if (economy != nullptr) holder->impl->economy = economy->impl;
+    prepare_simulator_runtime(*holder->impl);
     *out_simulator = holder.release();
     clear_error(out_error);
     return PC_RESULT_OK;

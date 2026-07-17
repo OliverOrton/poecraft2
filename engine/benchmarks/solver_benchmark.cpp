@@ -49,6 +49,12 @@ struct Arguments {
     bool validate_only = false;
     bool skip_verification = false;
     bool emit_progress = false;
+    std::uint64_t verification_runs = 0;
+    std::uint64_t verification_seed = 0;
+    std::uint32_t verification_chunk_runs = 32;
+    double verification_time_limit_seconds = 0.0;
+    bool exact_strategy_evaluation = false;
+    double exact_strategy_evaluation_time_limit_seconds = 0.0;
 };
 
 struct NativeHandles {
@@ -57,8 +63,10 @@ struct NativeHandles {
     pc_economy_handle economy = nullptr;
     pc_strategy_handle strategy = nullptr;
     pc_simulator_handle simulator = nullptr;
+    pc_strategy_eval_work_handle strategy_evaluation = nullptr;
 
     ~NativeHandles() {
+        pc_strategy_eval_destroy(strategy_evaluation);
         pc_simulator_destroy(simulator);
         pc_strategy_destroy(strategy);
         pc_economy_destroy(economy);
@@ -83,6 +91,9 @@ struct CaseResult {
     double total_ms = 0.0;
     std::uint64_t solve_steps = 0;
     double max_solve_step_ms = 0.0;
+    std::uint32_t max_solve_step_phase = 0;
+    std::uint32_t max_solve_step_expanded_states = 0;
+    std::uint32_t max_solve_step_sweeps = 0;
     double cooperative_abandon_ms = 0.0;
     bool has_cooperative_abandon = false;
     std::uint64_t working_set_before = 0;
@@ -96,6 +107,18 @@ struct CaseResult {
     std::uint64_t compiled_edges = 0;
     bool has_compiled_graph = false;
     bool has_verification = false;
+    bool verification_diagnostic = false;
+    bool verification_finished = false;
+    bool verification_time_limited = false;
+    std::uint64_t verification_requested_runs = 0;
+    double verification_projected_ms = 0.0;
+    double verification_cost_standard_deviation = 0.0;
+    double verification_cost_standard_error = 0.0;
+    bool has_verification_cost_variance = false;
+    bool has_exact_strategy_evaluation = false;
+    bool exact_strategy_evaluation_time_limited = false;
+    double exact_strategy_evaluation_ms = 0.0;
+    std::string exact_strategy_evaluation_json;
     pc_simulation_summary verification{};
     double verification_mean_cost = 0.0;
     double cost_delta_absolute = 0.0;
@@ -717,7 +740,12 @@ void create_case_objects(
 CaseResult run_case(
     pc_data_handle data, const Value& specification,
     const bool skip_verification, const fs::path& strategy_output,
-    const bool emit_progress) {
+    const bool emit_progress, const std::uint64_t verification_runs_override,
+    const std::uint64_t verification_seed_override,
+    const std::uint32_t verification_chunk_runs,
+    const double verification_time_limit_seconds,
+    const bool exact_strategy_evaluation,
+    const double exact_strategy_evaluation_time_limit_seconds) {
     CaseResult report;
     report.verification_skipped = skip_verification;
     const auto total_begin = Clock::now();
@@ -792,8 +820,13 @@ CaseResult run_case(
             result = pc_solver_solve_step(
                 handles.solver, work_items, &progress, &error);
             const double step_ms = milliseconds(step_begin, Clock::now());
-            report.max_solve_step_ms =
-                std::max(report.max_solve_step_ms, step_ms);
+            if (step_ms > report.max_solve_step_ms) {
+                report.max_solve_step_ms = step_ms;
+                report.max_solve_step_phase = progress.phase;
+                report.max_solve_step_expanded_states =
+                    progress.expanded_states;
+                report.max_solve_step_sweeps = progress.sweeps;
+            }
             ++report.solve_steps;
             if (result != PC_RESULT_OK) {
                 throw std::runtime_error(api_error("pc_solver_solve_step", result,
@@ -885,10 +918,122 @@ CaseResult run_case(
                             "pc_strategy_compile_json", result, error));
                         report.actual_status = "compile_refused";
                     } else {
+                        if (exact_strategy_evaluation) {
+                            const auto evaluation_started = Clock::now();
+                            pc_strategy_eval_options evaluation_options{};
+                            evaluation_options.struct_size =
+                                sizeof(evaluation_options);
+                            evaluation_options.abi_version = PC_ABI_VERSION;
+                            evaluation_options.epsilon = 1e-12;
+                            evaluation_options.max_sweeps = 100000;
+                            evaluation_options.max_states = optional_u32(
+                                caps, "max_discovered_states", 300000);
+                            evaluation_options.max_pairs = static_cast<
+                                std::uint32_t>(std::min<std::uint64_t>(
+                                optional_u64(
+                                    caps, "max_state_action_rows", 3000000),
+                                std::numeric_limits<std::uint32_t>::max()));
+                            evaluation_options.max_transitions = static_cast<
+                                std::uint32_t>(std::min<std::uint64_t>(
+                                optional_u64(
+                                    caps, "max_transitions", 30000000),
+                                std::numeric_limits<std::uint32_t>::max()));
+                            result = pc_strategy_eval_begin(
+                                handles.strategy, &evaluation_options,
+                                &handles.strategy_evaluation, &error);
+                            if (result == PC_RESULT_OK) {
+                                pc_strategy_eval_progress evaluation_progress{};
+                                const auto evaluation_deadline =
+                                    exact_strategy_evaluation_time_limit_seconds > 0.0
+                                        ? evaluation_started +
+                                              std::chrono::duration_cast<
+                                                  Clock::duration>(
+                                                  std::chrono::duration<double>(
+                                                      exact_strategy_evaluation_time_limit_seconds))
+                                        : Clock::time_point::max();
+                                auto next_evaluation_progress =
+                                    evaluation_started +
+                                    std::chrono::seconds(10);
+                                while (!evaluation_progress.done) {
+                                    result = pc_strategy_eval_step(
+                                        handles.strategy_evaluation, 1,
+                                        &evaluation_progress, &error);
+                                    if (result != PC_RESULT_OK) break;
+                                    const auto now = Clock::now();
+                                    if (emit_progress &&
+                                        now >= next_evaluation_progress) {
+                                        std::cout
+                                            << required_string(
+                                                   specification, "id")
+                                            << ": exact evaluation phase="
+                                            << evaluation_progress.phase
+                                            << " pairs="
+                                            << evaluation_progress.discovered_pairs
+                                            << " pending="
+                                            << evaluation_progress.pending_pairs
+                                            << " sccs="
+                                            << evaluation_progress.solved_sccs
+                                            << '/'
+                                            << evaluation_progress.total_sccs
+                                            << std::endl;
+                                        next_evaluation_progress =
+                                            now + std::chrono::seconds(10);
+                                    }
+                                    if (!evaluation_progress.done &&
+                                        now >= evaluation_deadline) {
+                                        report.exact_strategy_evaluation_time_limited =
+                                            true;
+                                        break;
+                                    }
+                                }
+                                if (result == PC_RESULT_OK &&
+                                    evaluation_progress.done) {
+                                    std::size_t length = 0;
+                                    result = pc_strategy_eval_finish(
+                                        handles.strategy_evaluation, nullptr, 0,
+                                        &length, &error);
+                                    if (result == PC_RESULT_OK ||
+                                        result == PC_RESULT_BUFFER_TOO_SMALL) {
+                                        std::string json(length + 1, '\0');
+                                        result = pc_strategy_eval_finish(
+                                            handles.strategy_evaluation,
+                                            json.data(), json.size(), &length,
+                                            &error);
+                                        if (result == PC_RESULT_OK) {
+                                            json.resize(length);
+                                            report.has_exact_strategy_evaluation =
+                                                true;
+                                            report.exact_strategy_evaluation_json =
+                                                std::move(json);
+                                        }
+                                    }
+                                }
+                            }
+                            if (result != PC_RESULT_OK) {
+                                report.errors.push_back(api_error(
+                                    "exact strategy evaluation", result,
+                                    error));
+                            }
+                            report.exact_strategy_evaluation_ms = milliseconds(
+                                evaluation_started, Clock::now());
+                            pc_strategy_eval_destroy(
+                                handles.strategy_evaluation);
+                            handles.strategy_evaluation = nullptr;
+                            result = PC_RESULT_OK;
+                        }
                         const Value& verification = required(
                             specification, "verification", Type::Object);
-                        const std::uint64_t runs =
+                        const std::uint64_t corpus_runs =
                             optional_u64(verification, "runs", 0);
+                        const std::uint64_t runs =
+                            verification_runs_override != 0
+                                ? verification_runs_override
+                                : corpus_runs;
+                        report.verification_diagnostic =
+                            verification_runs_override != 0 ||
+                            verification_seed_override != 0 ||
+                            verification_time_limit_seconds > 0.0;
+                        report.verification_requested_runs = runs;
                         if (runs > 0 && !skip_verification) {
                             const auto verification_begin = Clock::now();
                             result = pc_simulator_create(
@@ -903,22 +1048,96 @@ CaseResult run_case(
                                     sizeof(simulation_options);
                                 simulation_options.abi_version = PC_ABI_VERSION;
                                 simulation_options.target_runs = runs;
-                                simulation_options.seed = optional_u64(
-                                    verification, "seed", 20260715);
+                                simulation_options.seed =
+                                    verification_seed_override != 0
+                                        ? verification_seed_override
+                                        : optional_u64(
+                                              verification, "seed", 20260715);
                                 simulation_options.max_actions_per_run =
                                     optional_u32(verification,
                                                  "max_actions_per_run", 100000);
                                 pc_simulation_progress simulation_progress{};
+                                const auto simulation_started = Clock::now();
+                                const auto simulation_deadline =
+                                    verification_time_limit_seconds > 0.0
+                                        ? simulation_started +
+                                              std::chrono::duration_cast<
+                                                  Clock::duration>(
+                                                  std::chrono::duration<double>(
+                                                      verification_time_limit_seconds))
+                                        : Clock::time_point::max();
+                                auto next_simulation_progress =
+                                    simulation_started +
+                                    std::chrono::seconds(10);
+                                double variance_mean = 0.0;
+                                double variance_m2 = 0.0;
+                                std::uint64_t variance_count = 0;
+                                double previous_total_cost = 0.0;
                                 while (!simulation_progress.finished) {
                                     const std::uint64_t left =
                                         runs - simulation_progress.completed_runs;
                                     const std::uint32_t chunk =
                                         static_cast<std::uint32_t>(
-                                            std::min<std::uint64_t>(left, 10000));
+                                            std::min<std::uint64_t>(
+                                                left,
+                                                std::max<std::uint32_t>(
+                                                    1, verification_chunk_runs)));
                                     result = pc_simulator_run_chunk(
                                         handles.simulator, &simulation_options,
                                         chunk, &simulation_progress, &error);
                                     if (result != PC_RESULT_OK) break;
+                                    pc_simulation_summary partial{};
+                                    result = pc_simulator_get_summary(
+                                        handles.simulator, &partial, &error);
+                                    if (result != PC_RESULT_OK) break;
+                                    if (chunk == 1 &&
+                                        partial.completed_runs ==
+                                            variance_count + 1) {
+                                        const double sample =
+                                            partial.known_total_cost -
+                                            previous_total_cost;
+                                        previous_total_cost =
+                                            partial.known_total_cost;
+                                        ++variance_count;
+                                        const double delta =
+                                            sample - variance_mean;
+                                        variance_mean +=
+                                            delta / variance_count;
+                                        variance_m2 +=
+                                            delta * (sample - variance_mean);
+                                    }
+                                    const auto now = Clock::now();
+                                    const double elapsed_ms = milliseconds(
+                                        simulation_started, now);
+                                    if (partial.completed_runs > 0) {
+                                        report.verification_projected_ms =
+                                            elapsed_ms *
+                                            static_cast<double>(runs) /
+                                            static_cast<double>(
+                                                partial.completed_runs);
+                                    }
+                                    if (emit_progress &&
+                                        now >= next_simulation_progress) {
+                                        const double remaining_ms = std::max(
+                                            0.0,
+                                            report.verification_projected_ms -
+                                                elapsed_ms);
+                                        std::cout
+                                            << required_string(
+                                                   specification, "id")
+                                            << ": verification progress "
+                                            << partial.completed_runs << '/'
+                                            << runs << " elapsed_ms="
+                                            << elapsed_ms << " eta_ms="
+                                            << remaining_ms << std::endl;
+                                        next_simulation_progress =
+                                            now + std::chrono::seconds(10);
+                                    }
+                                    if (!simulation_progress.finished &&
+                                        now >= simulation_deadline) {
+                                        report.verification_time_limited = true;
+                                        break;
+                                    }
                                 }
                                 if (result == PC_RESULT_OK) {
                                     result = pc_simulator_get_summary(
@@ -927,6 +1146,22 @@ CaseResult run_case(
                                 }
                                 if (result == PC_RESULT_OK) {
                                     report.has_verification = true;
+                                    report.verification_finished =
+                                        report.verification.completed_runs ==
+                                        runs;
+                                    if (variance_count > 1) {
+                                        report.has_verification_cost_variance =
+                                            true;
+                                        report.verification_cost_standard_deviation =
+                                            std::sqrt(
+                                                variance_m2 /
+                                                static_cast<double>(
+                                                    variance_count - 1));
+                                        report.verification_cost_standard_error =
+                                            report.verification_cost_standard_deviation /
+                                            std::sqrt(static_cast<double>(
+                                                variance_count));
+                                    }
                                     if (report.verification.completed_runs > 0) {
                                         report.verification_mean_cost =
                                             report.verification.known_total_cost /
@@ -1002,7 +1237,8 @@ CaseResult run_case(
 
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
-        specification, report, skip_verification);
+        specification, report,
+        skip_verification || report.verification_diagnostic);
     report.working_set_after = process_working_set();
     report.total_ms = milliseconds(total_begin, Clock::now());
     return report;
@@ -1052,12 +1288,37 @@ void append_case_report(
     out << ",\"total\":";
     append_nullable_number(out, measured, result.total_ms);
     out << "},\n";
+    out << "  \"exact_strategy_evaluation\":";
+    if (!result.has_exact_strategy_evaluation) {
+        out << "{\"completed\":false,\"time_limited\":"
+            << (result.exact_strategy_evaluation_time_limited
+                    ? "true" : "false")
+            << ",\"wall_ms\":";
+        append_nullable_number(
+            out, result.exact_strategy_evaluation_ms > 0.0,
+            result.exact_strategy_evaluation_ms);
+        out << "},\n";
+    } else {
+        out << "{\"completed\":true,\"time_limited\":false,\"wall_ms\":";
+        append_nullable_number(out, true, result.exact_strategy_evaluation_ms);
+        out << ",\"result\":" << result.exact_strategy_evaluation_json
+            << "},\n";
+    }
     out << "  \"execution\":{\"solve_steps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.solve_steps;
     out << ",\"max_solve_step_ms\":";
     append_nullable_number(out, measured && result.solve_steps > 0,
                            result.max_solve_step_ms);
+    out << ",\"max_solve_step_phase\":";
+    if (!measured || result.solve_steps == 0) out << "null";
+    else out << result.max_solve_step_phase;
+    out << ",\"max_solve_step_expanded_states\":";
+    if (!measured || result.solve_steps == 0) out << "null";
+    else out << result.max_solve_step_expanded_states;
+    out << ",\"max_solve_step_sweeps\":";
+    if (!measured || result.solve_steps == 0) out << "null";
+    else out << result.max_solve_step_sweeps;
     out << ','
         << "\"worker_max_slice_ms\":null,\"cancellation_ack_ms\":null,"
         << "\"cancellation_mode\":"
@@ -1161,6 +1422,27 @@ void append_case_report(
             off_policy == 0 && mean_within_tolerance && success_within_tolerance;
         out << '{'
             << "\"runs\":" << result.verification.completed_runs << ','
+            << "\"requested_runs\":"
+            << result.verification_requested_runs << ','
+            << "\"finished\":"
+            << (result.verification_finished ? "true" : "false") << ','
+            << "\"diagnostic\":"
+            << (result.verification_diagnostic ? "true" : "false") << ','
+            << "\"time_limited\":"
+            << (result.verification_time_limited ? "true" : "false") << ','
+            << "\"projected_total_ms\":";
+        append_nullable_number(
+            out, result.verification_projected_ms > 0.0,
+            result.verification_projected_ms);
+        out << ",\"cost_standard_deviation\":";
+        append_nullable_number(
+            out, result.has_verification_cost_variance,
+            result.verification_cost_standard_deviation);
+        out << ",\"cost_standard_error\":";
+        append_nullable_number(
+            out, result.has_verification_cost_variance,
+            result.verification_cost_standard_error);
+        out << ','
             << "\"success_count\":" << result.verification.success_count << ','
             << "\"failure_count\":" << result.verification.failure_count << ','
             << "\"mean_cost\":" << result.verification_mean_cost << ','
@@ -1224,6 +1506,40 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--progress") args.emit_progress = true;
+        else if (argument == "--verification-runs") {
+            args.verification_runs = std::stoull(value("--verification-runs"));
+        }
+        else if (argument == "--verification-seed") {
+            args.verification_seed = std::stoull(value("--verification-seed"));
+        }
+        else if (argument == "--verification-chunk-runs") {
+            args.verification_chunk_runs = static_cast<std::uint32_t>(
+                std::stoul(value("--verification-chunk-runs")));
+            if (args.verification_chunk_runs == 0) {
+                throw std::runtime_error(
+                    "--verification-chunk-runs must be positive");
+            }
+        }
+        else if (argument == "--verification-time-limit-seconds") {
+            args.verification_time_limit_seconds = std::stod(
+                value("--verification-time-limit-seconds"));
+            if (!(args.verification_time_limit_seconds > 0.0)) {
+                throw std::runtime_error(
+                    "--verification-time-limit-seconds must be positive");
+            }
+        }
+        else if (argument == "--exact-strategy-evaluation") {
+            args.exact_strategy_evaluation = true;
+        }
+        else if (argument ==
+                 "--exact-strategy-evaluation-time-limit-seconds") {
+            args.exact_strategy_evaluation_time_limit_seconds = std::stod(
+                value("--exact-strategy-evaluation-time-limit-seconds"));
+            if (!(args.exact_strategy_evaluation_time_limit_seconds > 0.0)) {
+                throw std::runtime_error(
+                    "--exact-strategy-evaluation-time-limit-seconds must be positive");
+            }
+        }
         else if (argument == "--skip-verification") {
             args.skip_verification = true;
         }
@@ -1362,7 +1678,12 @@ int main(int argc, char** argv) {
             for (const Value& specification : specifications) {
                 const CaseResult result = run_case(
                     data, specification, args.skip_verification,
-                    args.strategy_output, args.emit_progress);
+                    args.strategy_output, args.emit_progress,
+                    args.verification_runs, args.verification_seed,
+                    args.verification_chunk_runs,
+                    args.verification_time_limit_seconds,
+                    args.exact_strategy_evaluation,
+                    args.exact_strategy_evaluation_time_limit_seconds);
                 if (!first) output << ",\n";
                 first = false;
                 append_case_report(output, specification, result);
