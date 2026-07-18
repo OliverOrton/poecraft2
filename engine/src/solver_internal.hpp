@@ -929,6 +929,8 @@ struct StrategyEvalOptions {
     std::shared_ptr<const EconomyImpl> economy;
     std::string review_projection_json;
     bool include_success_normalized = false;
+    std::uint64_t max_owned_bytes = 536870912;
+    std::uint64_t max_output_json_bytes = 67108864;
 };
 
 enum class StrategyEvalPhase {
@@ -1062,6 +1064,10 @@ struct StrategyEvalResult {
     std::vector<StrategyEvalEdge> edges;
     /* White-box diagnostic for the per-sweep conservation property. */
     double max_mass_conservation_error = 0.0;
+    std::uint64_t owned_bytes_estimate = 0;
+    std::uint64_t peak_owned_bytes_estimate = 0;
+    std::uint64_t max_owned_bytes = 0;
+    std::uint64_t max_output_json_bytes = 0;
 };
 
 class StrategyEvalUnsupported : public std::runtime_error {
@@ -1084,6 +1090,8 @@ class StrategyEvalWork {
     void step(std::uint32_t max_work_items);
     StrategyEvalProgress progress() const;
     const StrategyEvalResult& result() const;
+    std::uint64_t live_owned_bytes() const;
+    std::uint64_t peak_owned_bytes() const;
 
   private:
     struct Impl;
@@ -1136,6 +1144,8 @@ struct SolveOptions {
     std::uint32_t max_compiled_nodes = 100000;
     std::uint32_t max_compiled_edges = 400000;
     std::uint64_t max_strategy_json_bytes = 67108864;
+    std::uint32_t max_diagnostic_samples = 32;
+    std::uint64_t max_telemetry_json_bytes = 1048576;
     /* White-box oracle comparison switch. Product/API solves leave exact
      * preservation control enabled. */
     bool preservation_control = true;
@@ -1145,6 +1155,8 @@ struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
     std::vector<std::string> skipped_unsupported;
+    std::uint64_t skipped_missing_price_count = 0;
+    std::uint64_t skipped_unsupported_count = 0;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;
     std::uint32_t policy_improvement_rounds = 0;
@@ -1171,6 +1183,7 @@ struct SolveDiagnostics {
     std::uint32_t equivalent_actions_collapsed = 0;
     std::uint32_t equivalent_price_ties = 0;
     std::vector<std::string> action_inclusion_reasons;
+    std::uint64_t action_inclusion_reasons_omitted = 0;
     std::uint32_t preservation_rows_considered = 0;
     std::uint32_t preservation_rows_pruned = 0;
     std::uint32_t preservation_rows_retained = 0;
@@ -1178,6 +1191,7 @@ struct SolveDiagnostics {
     /* Each entry is one complete JSON object. Kept separately from the
      * legacy reason strings so exact carrier/control evidence stays typed. */
     std::vector<std::string> preservation_witnesses;
+    std::uint64_t preservation_witnesses_omitted = 0;
     std::uint32_t automatic_rows_considered = 0;
     std::uint32_t automatic_rows_eligible = 0;
     std::uint32_t automatic_rows_rejected = 0;
@@ -1185,6 +1199,7 @@ struct SolveDiagnostics {
     std::uint32_t automatic_rows_selected = 0;
     std::uint32_t automatic_rows_deferred = 0;
     std::vector<std::string> automatic_candidate_witnesses;
+    std::uint64_t automatic_candidate_witnesses_omitted = 0;
     std::uint32_t discovered_states = 0;
     std::uint32_t frontier_states = 0;
     std::uint32_t goal_states = 0;
@@ -1212,6 +1227,10 @@ struct SolveDiagnostics {
     std::uint64_t optimization_ns = 0;
     std::uint64_t extraction_ns = 0;
     std::uint64_t solver_owned_bytes_estimate = 0;
+    std::uint64_t solver_live_owned_bytes_estimate = 0;
+    std::uint64_t diagnostics_retained_bytes_estimate = 0;
+    std::uint32_t diagnostic_sample_limit = 0;
+    std::uint64_t telemetry_json_byte_limit = 0;
 };
 
 /*
@@ -1286,6 +1305,8 @@ class SolveWork {
     SolveProgress progress() const;
     SolveTelemetrySnapshot telemetry_snapshot(bool abandoned = false) const;
     SolveResult finish();
+    std::uint64_t live_owned_bytes() const;
+    std::uint64_t peak_owned_bytes() const;
 
   private:
     struct Impl;
@@ -1331,6 +1352,10 @@ std::string serialize_solver_telemetry(
     const SolveTelemetrySnapshot* snapshot,
     const std::optional<std::uint64_t>& registry_generation_ns,
     const PolicyCompilationTelemetry* compilation);
+
+std::uint64_t estimated_retained_solver_bytes(
+    const CalcContext& calc,
+    const SolveResult* result);
 
 // --- policy -> strategy graph compiler (S5) --------------------------------------
 

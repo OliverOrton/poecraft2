@@ -1059,6 +1059,17 @@ void run_scale_and_fallback_tests() {
             std::string(ex.what()).find("max_transitions") != std::string::npos;
     }
     PC_CHECK(failed);
+
+    StrategyEvalOptions memory_guard;
+    memory_guard.max_owned_bytes = 1;
+    failed = false;
+    try {
+        (void)evaluate_strategy(*pair_guard, memory_guard);
+    } catch (const std::length_error& ex) {
+        failed =
+            std::string(ex.what()).find("max_owned_bytes") != std::string::npos;
+    }
+    PC_CHECK(failed);
 }
 
 void run_c_abi_tests() {
@@ -1129,6 +1140,12 @@ void run_c_abi_tests() {
     PC_CHECK(!phases.empty());
     PC_CHECK(phases.front() == PC_STRATEGY_EVAL_PHASE_DISCOVERY);
     PC_CHECK(phases.back() == PC_STRATEGY_EVAL_PHASE_DONE);
+    pc_native_memory_stats memory_before_finish{};
+    PC_CHECK(pc_strategy_eval_memory_stats(
+                 work, &memory_before_finish, &error) == PC_RESULT_OK);
+    PC_CHECK(memory_before_finish.live_owned_bytes > 0);
+    PC_CHECK(memory_before_finish.peak_owned_bytes >=
+             memory_before_finish.live_owned_bytes);
     std::size_t stepped_length = 0;
     PC_CHECK(pc_strategy_eval_finish(
                  work, nullptr, 0, &stepped_length, &error) == PC_RESULT_OK);
@@ -1139,7 +1156,25 @@ void run_c_abi_tests() {
     stepped.resize(stepped_length);
     json.resize(unpriced_length);
     PC_CHECK(stepped == json);
+    pc_native_memory_stats memory_after_finish{};
+    PC_CHECK(pc_strategy_eval_memory_stats(
+                 work, &memory_after_finish, &error) == PC_RESULT_OK);
+    PC_CHECK(memory_after_finish.serialized_output_bytes >= stepped_length);
+    PC_CHECK(memory_after_finish.live_owned_bytes >=
+             memory_before_finish.live_owned_bytes);
     pc_strategy_eval_destroy(work);
+
+    pc_strategy_eval_options output_limit{};
+    output_limit.struct_size = sizeof(output_limit);
+    output_limit.abi_version = PC_ABI_VERSION;
+    output_limit.max_output_json_bytes = 64;
+    length = 0;
+    PC_CHECK(pc_strategy_evaluate(
+                 &strategy, &output_limit, nullptr, 0, &length, &error) ==
+             PC_RESULT_CAPACITY_EXCEEDED);
+    PC_CHECK(
+        std::string(error.message).find("max_output_json_bytes") !=
+        std::string::npos);
 
     pc_strategy_eval_options pair_limit{};
     pair_limit.struct_size = sizeof(pair_limit);

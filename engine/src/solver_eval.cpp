@@ -11,7 +11,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -413,7 +415,51 @@ std::string json_escape(const std::string& text) {
     return out;
 }
 
-void append_number(std::string& out, double value) {
+class BoundedJson {
+  public:
+    explicit BoundedJson(std::uint64_t limit) : limit_(limit) {}
+
+    BoundedJson& operator+=(const std::string& text) {
+        append(text);
+        return *this;
+    }
+
+    BoundedJson& operator+=(const char* text) {
+        append(text == nullptr ? std::string_view{} : std::string_view(text));
+        return *this;
+    }
+
+    BoundedJson& operator+=(char value) {
+        push_back(value);
+        return *this;
+    }
+
+    void push_back(char value) {
+        ensure(1);
+        value_.push_back(value);
+    }
+
+    std::string take() && { return std::move(value_); }
+
+  private:
+    void append(std::string_view text) {
+        ensure(text.size());
+        value_.append(text.data(), text.size());
+    }
+
+    void ensure(std::size_t additional) const {
+        if (value_.size() > limit_ || additional > limit_ - value_.size()) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_output_json_bytes (" +
+                std::to_string(limit_) + ")");
+        }
+    }
+
+    std::string value_;
+    std::uint64_t limit_;
+};
+
+void append_number(BoundedJson& out, double value) {
     if (value == 0.0) value = 0.0; /* canonicalize negative zero */
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
@@ -862,6 +908,208 @@ struct StrategyEvalWork::Impl {
     std::vector<std::map<std::uint32_t, double>> terminal_incoming;
     std::map<std::string, std::uint32_t> edge_index_by_id;
     std::vector<double> edge_traversals;
+    std::uint64_t peak_owned_bytes_value = 0;
+
+    static std::uint64_t string_bytes(const std::string& value) {
+        return sizeof(std::string) + value.capacity() + 1;
+    }
+
+    static std::uint64_t string_vector_bytes(
+        const std::vector<std::string>& values) {
+        std::uint64_t bytes = values.capacity() * sizeof(std::string);
+        for (const std::string& value : values) {
+            bytes += value.capacity() + 1;
+        }
+        return bytes;
+    }
+
+    static std::uint64_t action_total_bytes(
+        const StrategyEvalActionTotal& action) {
+        std::uint64_t bytes = sizeof(action);
+        bytes += action.id.capacity() + action.display_name.capacity() + 2;
+        bytes += string_vector_bytes(action.price_keys);
+        bytes += string_vector_bytes(action.classifications);
+        bytes += action.nodes.capacity() * sizeof(StrategyEvalActionNode);
+        for (const StrategyEvalActionNode& node : action.nodes) {
+            bytes += node.node_id.capacity() + 1;
+        }
+        return bytes;
+    }
+
+    std::uint64_t output_owned_bytes() const {
+        std::uint64_t bytes = sizeof(output);
+        bytes += output.economy_id.capacity() + 1;
+        bytes += output.targets.capacity() * sizeof(GoalSlot);
+        bytes += output.terminal_nodes.capacity() *
+                 sizeof(StrategyEvalTerminalNode);
+        for (const auto& node : output.terminal_nodes) {
+            bytes += node.node_id.capacity() + 1;
+        }
+        bytes += output.unresolved_by_node.capacity() *
+                 sizeof(StrategyEvalNodeMass);
+        for (const auto& node : output.unresolved_by_node) {
+            bytes += node.node_id.capacity() + 1;
+        }
+        bytes += output.failures_by_node.capacity() * sizeof(StrategyEvalFailure);
+        for (const auto& failure : output.failures_by_node) {
+            bytes += failure.node_id.capacity() + failure.reason.capacity() + 2;
+        }
+        bytes += output.nodes.capacity() * sizeof(StrategyEvalNode);
+        for (const StrategyEvalNode& node : output.nodes) {
+            bytes += node.id.capacity() + 1;
+            bytes += node.classes.capacity() * sizeof(StrategyEvalClass);
+        }
+        bytes += output.edges.capacity() * sizeof(StrategyEvalEdge);
+        for (const StrategyEvalEdge& edge : output.edges) {
+            bytes += edge.id.capacity() + 1;
+        }
+        bytes += output.action_totals.capacity() * sizeof(StrategyEvalActionTotal);
+        for (const auto& action : output.action_totals) {
+            bytes += action_total_bytes(action) - sizeof(action);
+        }
+        bytes += output.material_totals.capacity() *
+                 sizeof(StrategyEvalMaterialTotal);
+        for (const auto& material : output.material_totals) {
+            bytes += material.price_key.capacity() + 1;
+        }
+        bytes += output.review_sections.capacity() *
+                 sizeof(StrategyEvalReviewSection);
+        for (const StrategyEvalReviewSection& section : output.review_sections) {
+            bytes += section.id.capacity() + section.label.capacity() +
+                     section.role.capacity() + 3;
+            bytes += string_vector_bytes(section.raw_node_ids);
+            bytes += string_vector_bytes(section.raw_edge_ids);
+            bytes += section.actions.capacity() * sizeof(StrategyEvalActionTotal);
+            for (const auto& action : section.actions) {
+                bytes += action_total_bytes(action) - sizeof(action);
+            }
+            bytes += section.materials.capacity() *
+                     sizeof(StrategyEvalMaterialTotal);
+            for (const auto& material : section.materials) {
+                bytes += material.price_key.capacity() + 1;
+            }
+            bytes += section.techniques.size() *
+                     (sizeof(std::pair<const std::string, double>) +
+                      3 * sizeof(void*));
+            for (const auto& [key, unused] : section.techniques) {
+                (void)unused;
+                bytes += key.capacity() + 1;
+            }
+        }
+        const auto add_string_map = [&](const auto& values) {
+            std::uint64_t map_bytes = values.size() *
+                (sizeof(typename std::decay_t<decltype(values)>::value_type) +
+                 3 * sizeof(void*));
+            for (const auto& [key, unused] : values) {
+                (void)unused;
+                map_bytes += key.capacity() + 1;
+            }
+            return map_bytes;
+        };
+        bytes += add_string_map(output.expected_consumption);
+        bytes += add_string_map(output.technique_totals);
+        bytes += add_string_map(output.material_quantity_differences);
+        bytes += add_string_map(output.section_material_differences);
+        return bytes;
+    }
+
+    std::uint64_t estimated_owned_bytes() const {
+        std::uint64_t bytes = sizeof(*this);
+        if (model.calc != nullptr) bytes += model.calc->estimated_owned_bytes();
+        bytes += model.action_by_node.capacity() * sizeof(std::uint32_t);
+        bytes += model.targets.capacity() * sizeof(GoalSlot);
+        bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
+        for (const ReviewSectionSpec& section : review_sections) {
+            bytes += section.id.capacity() + section.label.capacity() +
+                     section.role.capacity() + 3;
+            bytes += section.nodes.capacity() * sizeof(std::uint32_t);
+            bytes += string_vector_bytes(section.edges);
+        }
+        bytes += pair_by_key.size() *
+                 (sizeof(decltype(pair_by_key)::value_type) + 3 * sizeof(void*));
+        bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += rows.capacity() * sizeof(EvalRow);
+        for (const EvalRow& row : rows) {
+            bytes += row.transitions.capacity() * sizeof(EvalTransition);
+            bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
+        }
+        bytes += row_by_distribution.size() *
+                 (sizeof(decltype(row_by_distribution)::value_type) +
+                  3 * sizeof(void*));
+        bytes += components.capacity() * sizeof(std::vector<std::uint32_t>);
+        for (const auto& component : components) {
+            bytes += component.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += component_by_pair.capacity() * sizeof(std::uint32_t);
+        bytes += external_incoming.capacity() * sizeof(double);
+        bytes += pair_visits.capacity() * sizeof(double);
+        bytes += unresolved_pair.capacity() * sizeof(double);
+        bytes += pair_contracted.capacity() * sizeof(std::uint8_t);
+        bytes += chain_next.capacity() * sizeof(std::uint32_t);
+        bytes += chain_edge.capacity() * sizeof(std::uint32_t);
+        bytes += chain_terminal.capacity() * sizeof(std::uint32_t);
+        bytes += chain_inflow.capacity() * sizeof(double);
+        if (fallback != nullptr) {
+            bytes += sizeof(FallbackState);
+            bytes += fallback->members.capacity() * sizeof(std::uint32_t);
+            bytes += fallback->local_index.size() *
+                     (sizeof(decltype(fallback->local_index)::value_type) +
+                      3 * sizeof(void*));
+            bytes += fallback->wave.capacity() * sizeof(double);
+            bytes += fallback->visits.capacity() * sizeof(double);
+        }
+        bytes += terminal_mass.capacity() * sizeof(double);
+        bytes += action_not_applied.capacity() * sizeof(double);
+        bytes += no_matching_edge.capacity() * sizeof(double);
+        bytes += terminal_incoming.capacity() *
+                 sizeof(std::map<std::uint32_t, double>);
+        for (const auto& incoming : terminal_incoming) {
+            bytes += incoming.size() *
+                     (sizeof(std::decay_t<decltype(incoming)>::value_type) +
+                      3 * sizeof(void*));
+        }
+        bytes += edge_index_by_id.size() *
+                 (sizeof(decltype(edge_index_by_id)::value_type) +
+                  3 * sizeof(void*));
+        for (const auto& [id, unused] : edge_index_by_id) {
+            (void)unused;
+            bytes += id.capacity() + 1;
+        }
+        bytes += edge_traversals.capacity() * sizeof(double);
+        bytes += output_owned_bytes();
+        return bytes;
+    }
+
+    void check_owned_cap(std::uint64_t transient_bytes = 0) {
+        const std::uint64_t owned = estimated_owned_bytes();
+        const std::uint64_t live =
+            transient_bytes > std::numeric_limits<std::uint64_t>::max() - owned
+                ? std::numeric_limits<std::uint64_t>::max()
+                : owned + transient_bytes;
+        peak_owned_bytes_value = std::max(peak_owned_bytes_value, live);
+        output.owned_bytes_estimate = owned;
+        output.peak_owned_bytes_estimate = peak_owned_bytes_value;
+        if (live > options.max_owned_bytes) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_owned_bytes (" +
+                std::to_string(options.max_owned_bytes) + ")");
+        }
+    }
+
+    void check_owned_projection(
+        std::uint64_t owned,
+        std::uint64_t transient_bytes) {
+        const std::uint64_t live =
+            transient_bytes > std::numeric_limits<std::uint64_t>::max() - owned
+                ? std::numeric_limits<std::uint64_t>::max()
+                : owned + transient_bytes;
+        peak_owned_bytes_value = std::max(peak_owned_bytes_value, live);
+        if (live > options.max_owned_bytes) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_owned_bytes (" +
+                std::to_string(options.max_owned_bytes) + ")");
+        }
+    }
 
     Impl(
         std::shared_ptr<const StrategyImpl> strategy_in,
@@ -877,9 +1125,13 @@ struct StrategyEvalWork::Impl {
         }
         if (!std::isfinite(options.epsilon) || options.epsilon <= 0.0 ||
             options.max_sweeps == 0 || options.max_states == 0 ||
-            options.max_pairs == 0 || options.max_transitions == 0) {
+            options.max_pairs == 0 || options.max_transitions == 0 ||
+            options.max_owned_bytes == 0 ||
+            options.max_output_json_bytes == 0) {
             throw std::invalid_argument("invalid strategy evaluation options");
         }
+        output.max_owned_bytes = options.max_owned_bytes;
+        output.max_output_json_bytes = options.max_output_json_bytes;
         output.targets = model.targets;
         const std::size_t node_count = strategy->nodes.size();
         terminal_mass.assign(node_count, 0.0);
@@ -909,6 +1161,7 @@ struct StrategyEvalWork::Impl {
         } else {
             start_pair = intern_pair(strategy->start_node, start_state);
         }
+        check_owned_cap();
     }
 
     void ensure_state_limit() const {
@@ -969,6 +1222,7 @@ struct StrategyEvalWork::Impl {
     }
 
     void expand_pair(std::uint32_t pair_id) {
+        const std::uint64_t owned_before_expansion = estimated_owned_bytes();
         const std::uint32_t node_index = pairs.at(pair_id).node;
         const std::uint32_t state_id = pairs.at(pair_id).state;
         const StrategyNode& node = strategy->nodes.at(node_index);
@@ -989,6 +1243,9 @@ struct StrategyEvalWork::Impl {
             if (found == transitions.end()) {
                 ensure_transition_budget(
                     transitions.size() + absorptions.size() + 1);
+                check_owned_projection(
+                    owned_before_expansion,
+                    (transitions.size() + absorptions.size() + 1) * 96ull);
                 transitions.emplace(key, probability);
             } else {
                 found->second += probability;
@@ -1004,6 +1261,9 @@ struct StrategyEvalWork::Impl {
             if (found == absorptions.end()) {
                 ensure_transition_budget(
                     transitions.size() + absorptions.size() + 1);
+                check_owned_projection(
+                    owned_before_expansion,
+                    (transitions.size() + absorptions.size() + 1) * 112ull);
                 absorptions.emplace(key, probability);
             } else {
                 found->second += probability;
@@ -1749,6 +2009,14 @@ struct StrategyEvalWork::Impl {
         propagate_chain_inflow();
         CalcContext& calc = *model.calc;
         const std::size_t node_count = strategy->nodes.size();
+        const std::uint64_t finalization_transient_floor =
+            node_count *
+                (4ull * sizeof(double) +
+                 sizeof(std::map<std::uint32_t, double>)) +
+            pairs.size() *
+                (sizeof(std::pair<const std::uint32_t, double>) +
+                 3ull * sizeof(void*));
+        check_owned_cap(finalization_transient_floor);
         std::vector<double> node_visits(node_count, 0.0);
         std::vector<double> operation_visits(node_count, 0.0);
         std::vector<double> operation_applied(node_count, 0.0);
@@ -1773,6 +2041,9 @@ struct StrategyEvalWork::Impl {
                         output.expected_consumption[key] += visits;
                     }
                 }
+            }
+            if ((pair & 255u) == 255u) {
+                check_owned_cap(finalization_transient_floor);
             }
         }
         for (std::size_t node = 0; node < node_count; ++node) {
@@ -1843,6 +2114,9 @@ struct StrategyEvalWork::Impl {
             for (const StrategyEdge& edge : source.edges) {
                 output.edges.push_back(
                     {edge.id, edge_traversals.at(edge_index_by_id.at(edge.id))});
+            }
+            if ((node & 255u) == 255u) {
+                check_owned_cap(finalization_transient_floor);
             }
         }
 
@@ -1922,6 +2196,9 @@ struct StrategyEvalWork::Impl {
                     node_techniques[node_index], role,
                     operation_visits[node_index],
                     operation_applied[node_index]);
+            }
+            if ((node_index & 255u) == 255u) {
+                check_owned_cap(finalization_transient_floor);
             }
         }
         for (const auto& [unused, action] : actions_by_id) {
@@ -2075,6 +2352,7 @@ struct StrategyEvalWork::Impl {
                 if (target.cost_complete) {
                     target.total_expected_cost = target.known_expected_cost;
                 }
+                check_owned_cap(finalization_transient_floor);
             }
             double section_actions_sum = 0.0;
             std::map<std::string, double> section_material_sum;
@@ -2113,6 +2391,7 @@ struct StrategyEvalWork::Impl {
             throw std::runtime_error(
                 "strategy evaluation mass conservation failed");
         }
+        check_owned_cap();
         phase = StrategyEvalPhase::Done;
     }
 
@@ -2211,6 +2490,7 @@ struct StrategyEvalWork::Impl {
             case StrategyEvalPhase::Done:
                 break;
             }
+            check_owned_cap();
         }
     }
 
@@ -2257,6 +2537,15 @@ const StrategyEvalResult& StrategyEvalWork::result() const {
     return impl_->output;
 }
 
+std::uint64_t StrategyEvalWork::live_owned_bytes() const {
+    return impl_->estimated_owned_bytes();
+}
+
+std::uint64_t StrategyEvalWork::peak_owned_bytes() const {
+    return std::max(
+        impl_->peak_owned_bytes_value, impl_->estimated_owned_bytes());
+}
+
 StrategyEvalResult evaluate_strategy(
     const StrategyImpl& strategy,
     const StrategyEvalOptions& options) {
@@ -2282,7 +2571,7 @@ StrategyEvalResult evaluate_strategy_forward_reference_for_test(
 namespace {
 
 void append_material_totals_json(
-    std::string& out,
+    BoundedJson& out,
     const std::vector<StrategyEvalMaterialTotal>& materials,
     double divisor = 1.0) {
     out.push_back('[');
@@ -2312,7 +2601,7 @@ void append_material_totals_json(
 }
 
 void append_techniques_json(
-    std::string& out,
+    BoundedJson& out,
     const std::map<std::string, double>& techniques,
     double divisor = 1.0) {
     out.push_back('{');
@@ -2326,7 +2615,7 @@ void append_techniques_json(
 }
 
 void append_action_totals_json(
-    std::string& out,
+    BoundedJson& out,
     const std::vector<StrategyEvalActionTotal>& actions,
     const std::vector<StrategyEvalMaterialTotal>& priced_materials,
     double divisor = 1.0) {
@@ -2399,7 +2688,7 @@ void append_action_totals_json(
 }
 
 void append_cost_totals_json(
-    std::string& out,
+    BoundedJson& out,
     double expected_actions,
     double known_cost,
     bool complete,
@@ -2423,7 +2712,8 @@ void append_cost_totals_json(
 } // namespace
 
 std::string serialize_strategy_eval(const StrategyEvalResult& result) {
-    std::string out = "{\"version\":\"v1\",\"converged\":";
+    BoundedJson out(result.max_output_json_bytes);
+    out += "{\"version\":\"v1\",\"converged\":";
     out += result.converged ? "true" : "false";
     out += ",\"sweeps\":" + std::to_string(result.sweeps);
     out += ",\"residual_mass\":";
@@ -2658,6 +2948,15 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
     }
     out += "}}}";
 
+    out += ",\"memory\":{\"owned_bytes_estimate\":" +
+           std::to_string(result.owned_bytes_estimate) +
+           ",\"peak_owned_bytes_estimate\":" +
+           std::to_string(result.peak_owned_bytes_estimate) +
+           ",\"max_owned_bytes\":" +
+           std::to_string(result.max_owned_bytes) +
+           ",\"max_output_json_bytes\":" +
+           std::to_string(result.max_output_json_bytes) + "}";
+
     out += ",\"targets\":[";
     for (std::size_t i = 0; i < result.targets.size(); ++i) {
         if (i != 0) out += ',';
@@ -2718,7 +3017,7 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
         out += '}';
     }
     out += "]}";
-    return out;
+    return std::move(out).take();
 }
 
 } // namespace solver

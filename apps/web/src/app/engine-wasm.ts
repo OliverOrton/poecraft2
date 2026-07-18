@@ -17,6 +17,7 @@ import {
     BatchSummary,
     CalcResult,
     CraftAction,
+    EngineMemoryStats,
     EngineError,
     ModInfo,
     PoolDebug,
@@ -187,15 +188,15 @@ export class EngineBindings {
         this.module.ccall("pcw_context_close", null, ["number"], [context]);
     }
 
-    memoryStats(): { wasm_memory_bytes: number; live_handles: number } {
+    memoryStats(): EngineMemoryStats {
+        const native = this.callJson(
+            "pcw_memory_stats",
+            [],
+            [],
+        ) as unknown as Omit<EngineMemoryStats, "wasm_memory_bytes">;
         return {
+            ...native,
             wasm_memory_bytes: this.module.HEAPU8.byteLength,
-            live_handles: this.module.ccall(
-                "pcw_live_handle_count",
-                "number",
-                [],
-                [],
-            ) as number,
         };
     }
 

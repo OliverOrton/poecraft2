@@ -284,6 +284,8 @@ export interface StrategyEvalOptions {
     max_transitions?: number;
     top_classes_per_node?: number;
     include_success_normalized?: boolean;
+    max_owned_bytes?: number;
+    max_output_json_bytes?: number;
 }
 
 export interface StrategyAccountingMaterial {
@@ -432,6 +434,12 @@ export interface StrategyEvalResult {
             section_actions_difference: number;
             section_material_differences: Record<string, number>;
         };
+    };
+    memory: {
+        owned_bytes_estimate: number;
+        peak_owned_bytes_estimate: number;
+        max_owned_bytes: number;
+        max_output_json_bytes: number;
     };
     targets: Array<
         | { kind: "family"; family_id: number; min_tier: number }
@@ -639,6 +647,17 @@ export interface SolveOptions {
     max_compiled_nodes?: number;
     max_compiled_edges?: number;
     max_strategy_json_bytes?: number;
+    max_diagnostic_samples?: number;
+    max_telemetry_json_bytes?: number;
+}
+
+export interface EngineMemoryStats {
+    wasm_memory_bytes: number;
+    live_handles: number;
+    native_live_owned_bytes: number;
+    native_peak_owned_bytes: number;
+    native_serialized_output_bytes: number;
+    scope: "facade_registries_plus_solver_and_evaluator_owned_allocations";
 }
 
 export interface SolveProgress {

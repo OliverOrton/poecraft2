@@ -90,6 +90,10 @@ struct CaseResult {
     double verification_ms = 0.0;
     double total_ms = 0.0;
     std::uint64_t solve_steps = 0;
+    std::uint64_t diagnostic_work_limit = 0;
+    double diagnostic_time_limit_seconds = 0.0;
+    std::string diagnostic_stop_reason;
+    std::vector<std::string> product_action_ids;
     double max_solve_step_ms = 0.0;
     std::uint32_t max_solve_step_phase = 0;
     std::uint32_t max_solve_step_expanded_states = 0;
@@ -98,6 +102,8 @@ struct CaseResult {
     bool has_cooperative_abandon = false;
     std::uint64_t working_set_before = 0;
     std::uint64_t working_set_after = 0;
+    bool has_native_memory = false;
+    pc_native_memory_stats native_memory{};
     bool has_solve_summary = false;
     pc_solve_summary solve_summary{};
     std::string telemetry_json;
@@ -156,6 +162,7 @@ Value parse_json(const std::string& text, const fs::path& path) {
     } catch (const std::exception& ex) {
         throw std::runtime_error(path.string() + ": " + ex.what());
     }
+
 }
 
 std::string escape_json(std::string_view value) {
@@ -220,6 +227,133 @@ std::string json_of(const Value& value) {
     std::ostringstream out;
     append_json(out, value);
     return out.str();
+}
+
+const Value& required(const Value& object, const char* key, Type type);
+const Value* optional(const Value& object, const char* key, Type type);
+std::string required_string(const Value& object, const char* key);
+std::string api_error(
+    const char* operation, pc_result result, const pc_error_info& error);
+
+std::string load_case_economy_json(const Value& specification) {
+    const Value& economy = required(specification, "economy", Type::Object);
+    const Value* snapshot_path =
+        optional(economy, "snapshot_path", Type::String);
+    if (snapshot_path == nullptr) return json_of(economy);
+
+    const fs::path path = fs::absolute(snapshot_path->string);
+    const std::string text = read_file(path);
+    const Value snapshot = parse_json(text, path);
+    if (required_string(snapshot, "id") != required_string(economy, "id")) {
+        throw std::runtime_error("pinned economy snapshot id mismatch");
+    }
+    const Value& metadata = required(snapshot, "metadata", Type::Object);
+    if (required_string(metadata, "content_sha256") !=
+        required_string(economy, "content_sha256")) {
+        throw std::runtime_error("pinned economy content hash mismatch");
+    }
+    if (required_string(metadata, "source_cutoff_at_utc") !=
+        required_string(economy, "source_cutoff_at_utc")) {
+        throw std::runtime_error("pinned economy cutoff mismatch");
+    }
+    const Value& prices = required(snapshot, "prices", Type::Object);
+    if (prices.find("base") != nullptr) {
+        throw std::runtime_error(
+            "pinned regression requires Restart/base to remain unpriced");
+    }
+    const Value& overrides = required(economy, "manual_overrides", Type::Object);
+    if (!overrides.object.empty()) {
+        throw std::runtime_error(
+            "pinned regression does not permit manual price overrides");
+    }
+    const Value* fallback = economy.find("fallback_price");
+    if (fallback == nullptr || fallback->type != Type::Null) {
+        throw std::runtime_error(
+            "pinned regression requires a null price fallback");
+    }
+    return text;
+}
+
+std::vector<std::string> priced_product_action_ids(
+    pc_session_handle session, const Value& specification,
+    const std::string& economy_json) {
+    const Value* product =
+        optional(specification, "product_action_envelope", Type::Object);
+    if (product == nullptr) return {};
+    if (required_string(*product, "mode") !=
+        "calculator_goal_relevant_priced_v1") {
+        throw std::runtime_error("unsupported product action-envelope mode");
+    }
+    const std::string envelope_goal =
+        json_of(required(*product, "envelope_goal", Type::Object));
+    pc_error_info error;
+    pc_error_info_init(&error);
+    pc_solver_handle envelope_solver = nullptr;
+    pc_result result = pc_solver_create(
+        session, envelope_goal.data(), envelope_goal.size(),
+        &envelope_solver, &error);
+    if (result != PC_RESULT_OK) {
+        throw std::runtime_error(api_error(
+            "pc_solver_create(product envelope)", result, error));
+    }
+    struct SolverCleanup {
+        pc_solver_handle value;
+        ~SolverCleanup() { pc_solver_destroy(value); }
+    } cleanup{envelope_solver};
+
+    const Value economy = Parser(
+        economy_json.data(), economy_json.size()).parse();
+    const Value& prices = required(economy, "prices", Type::Object);
+    std::uint32_t count = 0;
+    result = pc_solver_candidates(
+        envelope_solver, nullptr, 0, &count, &error);
+    if (result != PC_RESULT_OK) {
+        throw std::runtime_error(api_error(
+            "pc_solver_candidates(product envelope size)", result, error));
+    }
+    std::vector<std::uint32_t> indices(count);
+    result = pc_solver_candidates(
+        envelope_solver, indices.data(), count, &count, &error);
+    if (result != PC_RESULT_OK) {
+        throw std::runtime_error(api_error(
+            "pc_solver_candidates(product envelope)", result, error));
+    }
+    std::vector<std::string> ids;
+    for (const std::uint32_t index : indices) {
+        pc_solver_action_info info{};
+        info.struct_size = sizeof(info);
+        info.abi_version = PC_ABI_VERSION;
+        result = pc_solver_get_action_info(
+            envelope_solver, index, &info, &error);
+        if (result != PC_RESULT_OK) {
+            throw std::runtime_error(api_error(
+                "pc_solver_get_action_info(product envelope)", result,
+                error));
+        }
+        bool priced = true;
+        for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
+            priced &= prices.find(info.cost_keys[key]) != nullptr;
+        }
+        if (priced) ids.emplace_back(info.id);
+    }
+    return ids;
+}
+
+std::string goal_with_actions(
+    const Value& goal, const std::vector<std::string>& action_ids) {
+    std::string json = json_of(goal);
+    if (action_ids.empty()) return json;
+    if (json.empty() || json.back() != '}') {
+        throw std::logic_error("solver goal did not serialize as an object");
+    }
+    json.pop_back();
+    json += ",\"actions\":[";
+    for (std::size_t i = 0; i < action_ids.size(); ++i) {
+        if (i != 0) json.push_back(',');
+        json += escape_json(action_ids[i]);
+    }
+    json += "]}";
+    return json;
 }
 
 const Value& required(const Value& object, const char* key, Type type) {
@@ -447,6 +581,13 @@ std::string expected_solve_status(const Value& specification) {
 bool expectation_matches(const std::string& expected,
                          const std::string& actual) {
     if (expected == actual) return true;
+    if (expected == "bounded_diagnostic") {
+        return actual == "bounded_first_expansion_complete" ||
+               actual == "diagnostic_time_cap" ||
+               actual == "diagnostic_work_cap" ||
+               actual == "refused_state_cap" ||
+               actual == "refused_resource_cap";
+    }
     if (expected == "baseline_cap_or_compile_refusal_allowed") {
         return actual == "converged" || actual == "refused_state_cap" ||
                actual == "refused_resource_cap" ||
@@ -704,7 +845,8 @@ void validate_case_shape(const Value& specification) {
 
 void create_case_objects(
     pc_data_handle data, const Value& specification, NativeHandles& handles,
-    pc_item_state& start_item) {
+    pc_item_state& start_item,
+    std::vector<std::string>* product_action_ids = nullptr) {
     const Value& session_spec = required(specification, "session", Type::Object);
     const std::string base = required_string(session_spec, "base_metadata_path");
     pc_session_options session_options{};
@@ -721,15 +863,36 @@ void create_case_objects(
     }
     start_item = build_start_item(
         handles.session, required(specification, "start", Type::Object));
-    const std::string goal =
-        json_of(required(specification, "goal", Type::Object));
+    const std::string economy = load_case_economy_json(specification);
+    const std::vector<std::string> derived_actions =
+        priced_product_action_ids(handles.session, specification, economy);
+    if (product_action_ids != nullptr) *product_action_ids = derived_actions;
+    if (const Value* product = optional(
+            specification, "product_action_envelope", Type::Object)) {
+        const Value& expected = required(
+            *product, "expected_priced_action_ids", Type::Array);
+        if (!expected.array.empty()) {
+            std::vector<std::string> pinned;
+            for (const Value& entry : expected.array) {
+                if (entry.type != Type::String) {
+                    throw std::runtime_error(
+                        "pinned product action ids must be strings");
+                }
+                pinned.push_back(entry.string);
+            }
+            if (pinned != derived_actions) {
+                throw std::runtime_error(
+                    "derived Calculator product action envelope changed");
+            }
+        }
+    }
+    const std::string goal = goal_with_actions(
+        required(specification, "goal", Type::Object), derived_actions);
     result = pc_solver_create(handles.session, goal.data(), goal.size(),
                               &handles.solver, &error);
     if (result != PC_RESULT_OK) {
         throw std::runtime_error(api_error("pc_solver_create", result, error));
     }
-    const std::string economy =
-        json_of(required(specification, "economy", Type::Object));
     result = pc_economy_load_json(economy.data(), economy.size(),
                                   &handles.economy, &error);
     if (result != PC_RESULT_OK) {
@@ -767,11 +930,13 @@ CaseResult run_case(
         return report;
     }
 
+    NativeHandles handles;
     try {
-        NativeHandles handles;
         pc_item_state start_item{};
         const auto create_begin = Clock::now();
-        create_case_objects(data, specification, handles, start_item);
+        create_case_objects(
+            data, specification, handles, start_item,
+            &report.product_action_ids);
         report.registry_layout_ms = milliseconds(create_begin, Clock::now());
 
         const Value& caps = required(specification, "caps", Type::Object);
@@ -798,6 +963,10 @@ CaseResult run_case(
             caps, "max_compiled_edges", 400000);
         solve_options.max_strategy_json_bytes = optional_u64(
             caps, "max_strategy_json_bytes", 67108864);
+        solve_options.max_diagnostic_samples = optional_u32(
+            caps, "max_diagnostic_samples", 32);
+        solve_options.max_telemetry_json_bytes = optional_u64(
+            caps, "max_telemetry_json_bytes", 1048576);
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;
@@ -813,6 +982,21 @@ CaseResult run_case(
         const bool cancel_after_first =
             optional_string(specification, "benchmark_mode") ==
             "cancel_after_first_step";
+        const bool bounded_first_expansion =
+            optional_string(specification, "benchmark_mode") ==
+            "bounded_first_expansion";
+        report.diagnostic_work_limit = optional_u64(
+            caps, "max_diagnostic_work_items", 0);
+        if (const Value* time_limit = optional(
+                caps, "diagnostic_time_limit_seconds", Type::Number)) {
+            report.diagnostic_time_limit_seconds = time_limit->number;
+        }
+        const auto diagnostic_deadline =
+            report.diagnostic_time_limit_seconds > 0.0
+                ? solve_begin + std::chrono::duration_cast<Clock::duration>(
+                      std::chrono::duration<double>(
+                          report.diagnostic_time_limit_seconds))
+                : Clock::time_point::max();
         pc_solve_progress progress{};
         auto next_progress = Clock::now() + std::chrono::seconds(10);
         do {
@@ -851,10 +1035,29 @@ CaseResult run_case(
                 report.actual_status = "cancelled";
                 break;
             }
+            if (bounded_first_expansion && !progress.done &&
+                report.diagnostic_work_limit != 0 &&
+                report.solve_steps >= report.diagnostic_work_limit) {
+                pc_solver_solve_abandon(handles.solver);
+                report.actual_status = "diagnostic_work_cap";
+                report.diagnostic_stop_reason =
+                    "max_diagnostic_work_items";
+                break;
+            }
+            if (bounded_first_expansion && !progress.done &&
+                Clock::now() >= diagnostic_deadline) {
+                pc_solver_solve_abandon(handles.solver);
+                report.actual_status = "diagnostic_time_cap";
+                report.diagnostic_stop_reason =
+                    "diagnostic_time_limit_seconds";
+                break;
+            }
         } while (!progress.done);
         report.solve_ms = milliseconds(solve_begin, Clock::now());
 
-        if (!cancel_after_first) {
+        const bool diagnostic_abandoned =
+            bounded_first_expansion && !progress.done;
+        if (!cancel_after_first && !diagnostic_abandoned) {
             report.solve_summary = {};
             result = pc_solver_solve_finish(
                 handles.solver, &report.solve_summary, &error);
@@ -867,6 +1070,13 @@ CaseResult run_case(
                 query_telemetry(handles.solver, report.errors);
             report.actual_status = classify_completed_solve(
                 specification, report.solve_summary, report.telemetry_json);
+            if (bounded_first_expansion) {
+                report.diagnostic_stop_reason = report.actual_status;
+                report.actual_status =
+                    report.solve_summary.expanded_states <= 1
+                        ? "bounded_first_expansion_complete"
+                        : "harness_error";
+            }
         } else {
             report.telemetry_json =
                 query_telemetry(handles.solver, report.errors);
@@ -875,7 +1085,7 @@ CaseResult run_case(
         const std::string expected_compile = required_string(
             required(specification, "expected", Type::Object),
             "compile_status");
-        if (report.actual_status == "converged" &&
+        if (!bounded_first_expansion && report.actual_status == "converged" &&
             expected_compile != "not_required" &&
             expected_compile != "not_expected_in_s7_0") {
             const auto compile_begin = Clock::now();
@@ -1235,6 +1445,20 @@ CaseResult run_case(
         if (report.actual_status == "not_run") report.actual_status = "harness_error";
     }
 
+    if (handles.solver != nullptr) {
+        pc_error_info memory_error{};
+        memory_error.struct_size = sizeof(memory_error);
+        memory_error.abi_version = PC_ABI_VERSION;
+        const pc_result memory_result = pc_solver_memory_stats(
+            handles.solver, &report.native_memory, &memory_error);
+        if (memory_result == PC_RESULT_OK) {
+            report.has_native_memory = true;
+        } else {
+            report.errors.push_back(api_error(
+                "pc_solver_memory_stats", memory_result, memory_error));
+        }
+    }
+
     evaluate_cap_checks(specification, report);
     report.expectation_met = evaluate_expectation(
         specification, report,
@@ -1268,7 +1492,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "session", "start", "goal", "allowed_mechanic_families", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "session", "start", "goal", "product_action_envelope", "allowed_mechanic_families", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';
@@ -1304,6 +1528,12 @@ void append_case_report(
         out << ",\"result\":" << result.exact_strategy_evaluation_json
             << "},\n";
     }
+    out << "  \"product_action_ids\":[";
+    for (std::size_t i = 0; i < result.product_action_ids.size(); ++i) {
+        if (i != 0) out << ',';
+        out << escape_json(result.product_action_ids[i]);
+    }
+    out << "],\n";
     out << "  \"execution\":{\"solve_steps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.solve_steps;
@@ -1319,6 +1549,16 @@ void append_case_report(
     out << ",\"max_solve_step_sweeps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.max_solve_step_sweeps;
+    out << ",\"diagnostic_work_limit\":";
+    if (result.diagnostic_work_limit == 0) out << "null";
+    else out << result.diagnostic_work_limit;
+    out << ",\"diagnostic_time_limit_seconds\":";
+    append_nullable_number(
+        out, result.diagnostic_time_limit_seconds > 0.0,
+        result.diagnostic_time_limit_seconds);
+    out << ",\"diagnostic_stop_reason\":";
+    if (result.diagnostic_stop_reason.empty()) out << "null";
+    else out << escape_json(result.diagnostic_stop_reason);
     out << ','
         << "\"worker_max_slice_ms\":null,\"cancellation_ack_ms\":null,"
         << "\"cancellation_mode\":"
@@ -1347,7 +1587,22 @@ void append_case_report(
     out << ','
         << "\"process_working_set_peak_bytes\":null,"
         << "\"wasm_heap_before_bytes\":null,\"wasm_heap_after_bytes\":null,"
-        << "\"wasm_heap_growth_bytes\":null},\n";
+        << "\"wasm_heap_growth_bytes\":null,"
+        << "\"native_live_owned_bytes\":";
+    if (result.has_native_memory) out << result.native_memory.live_owned_bytes;
+    else out << "null";
+    out << ",\"native_peak_owned_bytes\":";
+    if (result.has_native_memory) out << result.native_memory.peak_owned_bytes;
+    else out << "null";
+    out << ",\"native_serialized_output_bytes\":";
+    if (result.has_native_memory) {
+        out << result.native_memory.serialized_output_bytes;
+    } else {
+        out << "null";
+    }
+    out << ','
+        << "\"solver_telemetry_json_bytes\":"
+        << result.telemetry_json.size() << "},\n";
     out << "  \"solve_summary\":";
     if (!result.has_solve_summary) {
         out << "null";
@@ -1648,7 +1903,8 @@ int main(int argc, char** argv) {
                     }
                     NativeHandles handles;
                     pc_item_state start_item{};
-                    create_case_objects(data, specification, handles, start_item);
+                    create_case_objects(
+                        data, specification, handles, start_item);
                 }
                 std::cout << "Validated " << specifications.size()
                           << " solver benchmark specifications.\n";

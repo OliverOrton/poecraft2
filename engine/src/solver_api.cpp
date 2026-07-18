@@ -538,6 +538,9 @@ struct pc_solver {
     std::string compiled_strategy; /* scratch for the buffer queries */
     std::string solve_log;
     std::string abandoned_telemetry;
+    bool abandoned_telemetry_capped = false;
+    std::uint64_t abandoned_telemetry_limit = 0;
+    std::uint64_t peak_owned_bytes = 0;
 };
 
 namespace {
@@ -597,6 +600,14 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         options->max_strategy_json_bytes != 0) {
         value.max_strategy_json_bytes = options->max_strategy_json_bytes;
     }
+    if (PC_SOLVE_OPTION_HAS(max_diagnostic_samples) &&
+        options->max_diagnostic_samples != 0) {
+        value.max_diagnostic_samples = options->max_diagnostic_samples;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_telemetry_json_bytes) &&
+        options->max_telemetry_json_bytes != 0) {
+        value.max_telemetry_json_bytes = options->max_telemetry_json_bytes;
+    }
     return value;
 #undef PC_SOLVE_OPTION_HAS
 }
@@ -644,8 +655,8 @@ void copy_solve_summary(
     out_summary->sweeps = result.diagnostics.sweeps;
     out_summary->residual = result.diagnostics.residual;
     out_summary->skipped_action_count = static_cast<uint32_t>(
-        result.diagnostics.skipped_missing_price.size() +
-        result.diagnostics.skipped_unsupported.size());
+        result.diagnostics.skipped_missing_price_count +
+        result.diagnostics.skipped_unsupported_count);
 }
 
 void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
@@ -654,6 +665,8 @@ void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
     solver->compiled_strategy.clear();
     solver->solve_log.clear();
     solver->abandoned_telemetry.clear();
+    solver->abandoned_telemetry_capped = false;
+    solver->abandoned_telemetry_limit = 0;
 }
 
 } // namespace
@@ -904,10 +917,15 @@ pc_result pc_solver_solve(
     try {
         solver->solve_work.reset();
         solver->abandoned_telemetry.clear();
+        solver->abandoned_telemetry_capped = false;
+        solver->abandoned_telemetry_limit = 0;
         solver::SolveWork work(
             *solver->calc, *start_item, economy_prices(economy),
             solve_options(options));
         while (!work.progress().done) work.step(4096);
+        solver->peak_owned_bytes = std::max(
+            solver->peak_owned_bytes,
+            sizeof(*solver) + work.peak_owned_bytes());
         commit_solve(solver, work.finish());
         copy_solve_summary(*solver->solved, out_summary);
         clear_error(out_error);
@@ -939,6 +957,8 @@ pc_result pc_solver_solve_begin(
         solver->compiled_strategy.clear();
         solver->solve_log.clear();
         solver->abandoned_telemetry.clear();
+        solver->abandoned_telemetry_capped = false;
+        solver->abandoned_telemetry_limit = 0;
         clear_error(out_error);
         return PC_RESULT_OK;
     } catch (const std::exception& ex) {
@@ -991,6 +1011,9 @@ pc_result pc_solver_solve_finish(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        solver->peak_owned_bytes = std::max(
+            solver->peak_owned_bytes,
+            sizeof(*solver) + solver->solve_work->peak_owned_bytes());
         commit_solve(solver, solver->solve_work->finish());
         solver->solve_work.reset();
         copy_solve_summary(*solver->solved, out_summary);
@@ -1004,12 +1027,22 @@ pc_result pc_solver_solve_finish(
 
 void pc_solver_solve_abandon(pc_solver_handle solver) {
     if (solver == nullptr || !solver->solve_work) return;
+    solver->abandoned_telemetry_capped = false;
+    solver->abandoned_telemetry_limit = 0;
     try {
+        solver->peak_owned_bytes = std::max(
+            solver->peak_owned_bytes,
+            sizeof(*solver) + solver->solve_work->peak_owned_bytes());
         const solver::SolveTelemetrySnapshot snapshot =
             solver->solve_work->telemetry_snapshot(true);
+        solver->abandoned_telemetry_limit =
+            snapshot.diagnostics.telemetry_json_byte_limit;
         solver->abandoned_telemetry = solver::serialize_solver_telemetry(
             *solver->calc, nullptr, &snapshot,
             solver->registry_generation_ns, nullptr);
+    } catch (const std::length_error&) {
+        solver->abandoned_telemetry.clear();
+        solver->abandoned_telemetry_capped = true;
     } catch (const std::exception&) {
         solver->abandoned_telemetry.clear();
     }
@@ -1104,10 +1137,15 @@ solver::StrategyEvalOptions strategy_eval_options(
     if (options->top_classes_per_node != 0) {
         result.top_classes_per_node = options->top_classes_per_node;
     }
-    if (options->struct_size >= sizeof(pc_strategy_eval_options)) {
+    #define PC_EVAL_OPTION_HAS(field)                                    \
+        (options->struct_size >=                                        \
+         offsetof(pc_strategy_eval_options, field) + sizeof(options->field))
+    if (PC_EVAL_OPTION_HAS(economy)) {
         if (options->economy != nullptr) {
             result.economy = options->economy->impl;
         }
+    }
+    if (PC_EVAL_OPTION_HAS(review_projection_json_size)) {
         if (options->review_projection_json_size != 0) {
             if (options->review_projection_json == nullptr) {
                 throw std::invalid_argument(
@@ -1117,9 +1155,20 @@ solver::StrategyEvalOptions strategy_eval_options(
                 options->review_projection_json,
                 options->review_projection_json_size);
         }
+    }
+    if (PC_EVAL_OPTION_HAS(include_success_normalized)) {
         result.include_success_normalized =
             options->include_success_normalized != 0;
     }
+    if (PC_EVAL_OPTION_HAS(max_owned_bytes) &&
+        options->max_owned_bytes != 0) {
+        result.max_owned_bytes = options->max_owned_bytes;
+    }
+    if (PC_EVAL_OPTION_HAS(max_output_json_bytes) &&
+        options->max_output_json_bytes != 0) {
+        result.max_output_json_bytes = options->max_output_json_bytes;
+    }
+    #undef PC_EVAL_OPTION_HAS
     return result;
 }
 
@@ -1233,6 +1282,12 @@ pc_result pc_solver_telemetry(
     }
     try {
         if (!solver->solve_work && !solver->solved.has_value() &&
+            solver->abandoned_telemetry_capped) {
+            throw std::length_error(
+                "solver telemetry exceeded max_telemetry_json_bytes (" +
+                std::to_string(solver->abandoned_telemetry_limit) + ")");
+        }
+        if (!solver->solve_work && !solver->solved.has_value() &&
             !solver->abandoned_telemetry.empty()) {
             return copy_text(solver->abandoned_telemetry, buffer, capacity,
                              out_length, out_error);
@@ -1250,10 +1305,52 @@ pc_result pc_solver_telemetry(
                                             : nullptr);
         return copy_text(
             telemetry, buffer, capacity, out_length, out_error);
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
         return PC_RESULT_INTERNAL_ERROR;
     }
+}
+
+pc_result pc_solver_memory_stats(
+    pc_solver_handle solver,
+    pc_native_memory_stats* out_stats,
+    pc_error_info* out_error) {
+    if (solver == nullptr || out_stats == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::uint64_t serialized =
+        solver->compiled_strategy.capacity() + solver->solve_log.capacity() +
+        solver->abandoned_telemetry.capacity();
+    std::uint64_t live = sizeof(*solver) + serialized;
+    std::uint64_t peak = live;
+    if (solver->solve_work) {
+        live += solver->solve_work->live_owned_bytes();
+        peak += solver->solve_work->peak_owned_bytes();
+    } else {
+        live += solver::estimated_retained_solver_bytes(
+            *solver->calc,
+            solver->solved.has_value() ? &*solver->solved : nullptr);
+        peak = live;
+        if (solver->solved.has_value()) {
+            peak = std::max(
+                peak,
+                solver->solved->diagnostics.solver_owned_bytes_estimate +
+                    sizeof(*solver) + serialized);
+        }
+    }
+    *out_stats = {};
+    out_stats->struct_size = sizeof(*out_stats);
+    out_stats->abi_version = PC_ABI_VERSION;
+    out_stats->live_owned_bytes = live;
+    solver->peak_owned_bytes = std::max(solver->peak_owned_bytes, peak);
+    out_stats->peak_owned_bytes = solver->peak_owned_bytes;
+    out_stats->serialized_output_bytes = serialized;
+    clear_error(out_error);
+    return PC_RESULT_OK;
 }
 
 pc_result pc_strategy_evaluate(
@@ -1373,6 +1470,9 @@ pc_result pc_strategy_eval_finish(
         }
         return copy_text(
             work->result_json, buffer, capacity, out_length, out_error);
+    } catch (const std::length_error& ex) {
+        set_error(out_error, PC_RESULT_CAPACITY_EXCEEDED, ex.what());
+        return PC_RESULT_CAPACITY_EXCEEDED;
     } catch (const std::exception& ex) {
         set_error(out_error, PC_RESULT_INTERNAL_ERROR, ex.what());
         return PC_RESULT_INTERNAL_ERROR;
@@ -1381,4 +1481,28 @@ pc_result pc_strategy_eval_finish(
 
 void pc_strategy_eval_destroy(pc_strategy_eval_work_handle work) {
     delete work;
+}
+
+pc_result pc_strategy_eval_memory_stats(
+    pc_strategy_eval_work_handle work,
+    pc_native_memory_stats* out_stats,
+    pc_error_info* out_error) {
+    if (work == nullptr || out_stats == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    const std::uint64_t serialized = work->result_json.capacity();
+    const std::uint64_t live = sizeof(*work) + serialized +
+                               work->impl->live_owned_bytes();
+    const std::uint64_t peak = sizeof(*work) + serialized +
+        std::max(work->impl->peak_owned_bytes(),
+                 work->impl->live_owned_bytes());
+    *out_stats = {};
+    out_stats->struct_size = sizeof(*out_stats);
+    out_stats->abi_version = PC_ABI_VERSION;
+    out_stats->live_owned_bytes = live;
+    out_stats->peak_owned_bytes = peak;
+    out_stats->serialized_output_bytes = serialized;
+    clear_error(out_error);
+    return PC_RESULT_OK;
 }

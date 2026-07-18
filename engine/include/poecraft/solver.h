@@ -198,7 +198,17 @@ typedef struct pc_strategy_eval_options {
     const char* review_projection_json;
     size_t review_projection_json_size;
     int32_t include_success_normalized;
+    uint64_t max_owned_bytes; /* 0 uses the default 512 MiB */
+    uint64_t max_output_json_bytes; /* 0 uses the default 64 MiB */
 } pc_strategy_eval_options;
+
+typedef struct pc_native_memory_stats {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    uint64_t live_owned_bytes;
+    uint64_t peak_owned_bytes;
+    uint64_t serialized_output_bytes;
+} pc_native_memory_stats;
 
 typedef struct pc_strategy_eval_work* pc_strategy_eval_work_handle;
 
@@ -250,6 +260,11 @@ pc_result pc_strategy_eval_finish(
 
 void pc_strategy_eval_destroy(pc_strategy_eval_work_handle work);
 
+pc_result pc_strategy_eval_memory_stats(
+    pc_strategy_eval_work_handle work,
+    pc_native_memory_stats* out_stats,
+    pc_error_info* out_error);
+
 /*
  * Evaluate a compiled strategy as an exact absorbing Markov chain over
  * (graph node, abstract item state). The result is JSON v1 and uses the
@@ -283,6 +298,8 @@ typedef struct pc_solve_options {
     uint32_t max_compiled_nodes;
     uint32_t max_compiled_edges;
     uint64_t max_strategy_json_bytes;
+    uint32_t max_diagnostic_samples;
+    uint64_t max_telemetry_json_bytes;
 } pc_solve_options;
 
 typedef struct pc_solve_summary {
@@ -409,6 +426,14 @@ pc_result pc_solver_telemetry(
     char* buffer,
     size_t capacity,
     size_t* out_length,
+    pc_error_info* out_error);
+
+/* Selected retained allocations owned by this solver handle. Unlike process
+ * RSS or the Emscripten heap size, live_owned_bytes falls when solve work and
+ * retained result/output owners are released. */
+pc_result pc_solver_memory_stats(
+    pc_solver_handle solver,
+    pc_native_memory_stats* out_stats,
     pc_error_info* out_error);
 
 #ifdef __cplusplus

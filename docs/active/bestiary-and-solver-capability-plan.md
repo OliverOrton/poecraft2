@@ -10,11 +10,15 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-18: B1.0-B1.4 and S8.0-S8.4 are complete. Oliver explicitly waived
-B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
-validation already completed; B1.5 is recorded as waived/deferred, not
-complete. Its full acceptance suite, 10,000-run Imprint verification, and
-rendered Bestiary review were not backfilled. Imprint is the sole B1 recipe;
+Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1 are complete, but the
+post-S8.4 regression audit below found further blocking correctness, scaling,
+and product-delivery failures. **S8.4R.2 is the sole next implementation
+boundary and S8.5 is blocked until all of S8.4R passes.** Oliver explicitly
+waived B1.5 as a separate acceptance checkpoint
+based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
+as waived/deferred, not complete. Its full acceptance suite, 10,000-run
+Imprint verification, and rendered Bestiary review were not backfilled.
+Imprint is the sole B1 recipe;
 Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
 the engine and workspace action envelopes. The authoritative contract is
 [fixtures/bestiary/v1](../../fixtures/bestiary/v1/). S8.1 added deterministic,
@@ -27,7 +31,7 @@ generation with complete-kernel evidence and primitive execution. S8.4 extends
 the existing exact evaluator occupancy result with descriptor/material,
 native-priced, technique, review-section, and opt-in success-normalized
 accounting, while keeping Simulator comparisons as separately labelled sampled
-evidence. The next implementation boundary is **S8.5 only**. The recorded S7 endgame sample remains `0.9942`
+evidence. The next implementation boundary is **S8.4R only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -306,6 +310,13 @@ Craicic Chimeral plus three rare beasts and incomplete missing-beast pricing.
 Release WASM and the focused native, Python, WASM-worker, and non-visual web
 checks passed. B1.5 was the next planned boundary at B1.4; Oliver subsequently
 waived it as the separate checkpoint described below.
+
+Audit correction 2026-07-18: the “complete magic-item goal” restriction above
+records what B1.3/B1.4 implemented, but it is not an approved mechanic rule.
+The owner-approved contract requires a magic item when the checkpoint is
+created; it does not require the overall craft to finish magic or require the
+checkpointed attempt to satisfy the complete final solve goal. S8.4R must
+correct this drift before the restriction is described as product authority.
 
 ### B1.5 - Bestiary Acceptance
 
@@ -605,8 +616,315 @@ kernels, compression, and routing are unchanged.
 Release WASM and the production web bundle were rebuilt. The relevant native,
 binding, WASM, and non-visual web acceptance is recorded in the S8.4 evidence.
 The archived S7 pre-B1.4 web pin remains excluded and unchanged. The six
-historical mismatches and all S8.5/S8.6 work remain deferred. S8.5 is the sole
-next boundary.
+historical mismatches and all S8.5/S8.6 work remain deferred. The post-S8.4
+audit below supersedes the former S8.5 handoff.
+
+### S8.4R - Solver And Web Regression Repair
+
+Status: audit complete 2026-07-18; R1 complete 2026-07-18; R2 is next. This
+phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
+until every required gate below passes. The audit covers B1.3/B1.4 Imprint
+integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
+product paths.
+
+#### Execution sequence
+
+S8.4R is intentionally split into session-sized implementation checkpoints.
+They are ordered dependencies, not routine full-suite test gates. Run focused
+checks only when needed inside R1-R5, then run the appropriate complete
+acceptance once in R6 as required by `AGENTS.md`.
+
+1. **S8.4R.1 - Diagnostic Ownership And Cap Correctness (complete
+   2026-07-18).** Added a versioned definition of the exact Conquest
+   Lamellar/Mirage product case and a small runner that can record construction
+   counts, a strictly capped first expansion, economy identity, report bytes,
+   and live/estimated memory without requiring a successful solve. The
+   implementation replaces unbounded preservation/automatic per-row JSON
+   retention with counters and bounded typed samples, accounts selected
+   retained/finalized owners, enforces caps through finalization/serialization,
+   protects evaluator/accounting output, and adds usable native/WASM selected
+   live-byte telemetry. Exact commands and outputs are separate from immutable
+   S8.0-S8.4 evidence. The pre-fix runner build missed its 124-second safe timeout, so no
+   pre-fix solve was launched and that baseline is recorded as skipped under
+   Oliver's direction. The repeated post-fix bounded run pinned 17 priced
+   actions, expanded exactly one state, stopped at 70,000 discovered states,
+   retained 16 action-reason samples plus 245 omitted events, produced a
+   24,756-byte telemetry document, and reported 31,252,333 live / 39,093,816
+   peak selected native bytes. Preservation and automatic diagnostics now use
+   aggregate counters plus bounded typed samples; solve/evaluator finalization,
+   telemetry/accounting serialization, and selected owned-memory estimates are
+   capped. Native C ABI and release WASM expose live/peak/serialized selected
+   allocation telemetry. Full evidence and commands are under
+   [fixtures/solver-regressions/s8.4r/v1](../../fixtures/solver-regressions/s8.4r/v1/).
+2. **S8.4R.2 - State-Local Automatic Candidate Generation.** This is the sole
+   next boundary. Replace the eager
+   global Fracture/bench/blocker/metamod cross products with lazy/state-local,
+   kernel-deduplicated admission before abstraction widening. Preserve exact
+   dependencies, primitive compilation, and the existing analytic price
+   boundaries. Use the pinned regression case plus ordinary/advanced product construction and
+   solve diagnostics; do not begin Imprint discovery in this checkpoint.
+3. **S8.4R.3 - Automatic Imprint Discovery.** Correct entry/exit semantics and
+   build automatic state-local Imprint stage/program discovery on the bounded
+   R2 candidate substrate. Remove user-authored retry controls and the false
+   final-magic/complete-goal restriction across every binding and product
+   surface. Add the non-magic-final-goal compiled strategy fixture; defer its
+   final 10,000-run acceptance to R6.
+4. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** Remove giant
+   JSON-inside-JSON transfer and unnecessary full clones, preflight or align
+   compilation caps, release the solved native handle/transition closure after
+   successful transfer, and rebuild on repricing. Do not add retained-cache
+   mode. Add live-byte lifecycle checks without rendered browser review.
+5. **S8.4R.5 - Verification And Forecast Truth.** Add a synthetic contract
+   fixture proving failed, stopped, limited, unmatched, or otherwise off-policy
+   runs cannot qualify as a solver-cost verification. Make Calculator display and
+   gate success/failure/stop/limit/off-policy counters, economy identity, and
+   sampled confidence. Fix exact evaluation of compiler-emitted conditions such
+   as `mod_count`, distinguish per-run from success-normalized cost, and
+   reconcile Bellman, exact compiled-graph, and sampled values on the pinned
+   regression case.
+6. **S8.4R.6 - Integrated Acceptance And Evidence.** Run the exact product
+   `goal_relevant` path with automatic candidates enabled on the required real
+   cases, execute the required 10,000-run compiled-strategy verifications,
+   rebuild release WASM, run the appropriate complete non-visual acceptance
+   once, record final before/after evidence, update this plan, and rewrite
+   `HANDOFF.md`. Only R6 may hand off to S8.5.
+
+#### Audit findings
+
+1. **The Imprint solver restriction is mechanically wrong.** The approved
+   recipe contract restricts creation to a magic live item. Native option
+   parsing instead rejects every `imprint_retry` unless the final solver rarity
+   is magic, its exit names every goal slot, and its threshold is the complete
+   goal. Option evaluation then tests `is_goal_state` rather than the option's
+   authored exit subset, while Calculator duplicates the final-rarity and
+   complete-goal checks. This prevents the valid lifecycle in which a craft
+   reaches a magic checkpoint, uses and restores an Imprint retry technique,
+   exits that technique on an intermediate result, and continues toward a rare
+   final item. The native Imprint create/restore primitive itself still follows
+   the approved checkpoint contract; the drift is in solver-option semantics
+   and its product presentation.
+
+2. **S8.3 automatic generation explodes before state-specific legality can
+   prune it.** `goal_relevant` is the Calculator product mode and implicitly
+   enables automatic candidates. At solver construction, the current code
+   forms every approved Fracture renewal by goal slot, every eligible goal-bench
+   pair, every ordinary blocker by follow-up by goal slot, and every protected
+   side/follow-up/target combination. Every resulting option is added to the
+   candidate-operator list, and every primitive dependency widens one global
+   abstract layout even when the option is illegal in nearly all states.
+   Fracture/remove-crafted dependencies also force exact group effects across
+   the whole solve.
+
+   A focused current-artifact diagnostic using the exact web product primitive
+   envelope for `ordinary-es-bench` found 29 presented primitives but 1,361
+   native candidate operators, including 1,333 automatic operators and 146
+   option-only dependency primitives, with 46 junk classes in the shared
+   layout. Expanding only the start state took 29.976 seconds, discovered
+   63,479 states, left 63,478 on the frontier, performed 319,043 transition
+   cache requests and 1,539,918 frontier-work units, and already retained an
+   estimated 40,579,320 solver-owned bytes. The normal product discovered-state
+   cap is 100,000, so one expansion consumes nearly two thirds of it. Of 1,333
+   automatic rows considered at that state, only 156 were eligible, 1,177 were
+   rejected, 124 collapsed, and none was selected. This explains the observed
+   web hangs, memory growth, and cap failures.
+
+3. **The acceptance evidence skipped the failing product path.** All three
+   S8.3/S8.4 real-case comparisons explicitly used
+   `automatic_candidates=false`. Native automatic tests use small analytic
+   registries, and the release-WASM automatic smoke prices and selects only a
+   nearly finished permanent bench. No real-artifact comparison exercised the
+   `goal_relevant` path that Calculator enables. S8.4 then preserved the same
+   comparison configuration, so byte-identical disabled-path strategies did
+   not establish product-path non-regression.
+
+4. **S8.2/S8.3 diagnostics are retained as unbounded per-row JSON.** S8.2
+   finalization stores a large preservation witness string for every applicable
+   state/action row. The current `ordinary-es-bench` report contains 18,817
+   such witnesses and is 36,909,966 bytes. For the same 18,817 expanded states
+   and byte-identical 130,180,718-byte strategy, the solver-owned estimate rose
+   from 55,512,880 bytes in the S7.6 baseline to 100,050,763 bytes after S8.2,
+   an approximately 80% retained-memory regression. The S8.2 evidence checked
+   policy/value/hash identity but did not gate report size or memory.
+
+   S8.3 additionally records one typed automatic-candidate object for every
+   automatic option/state considered, including rejected rows, then expands
+   every object into another full JSON witness string at solve finalization.
+   The focused one-state product diagnostic produced 1,333 witness objects and
+   a 1,249,143-byte telemetry document. Automatic witness strings are omitted
+   from `estimated_owned_bytes`; both automatic and preservation finalization
+   occur after the last byte-cap checks, so a solve may exceed its cap while
+   finishing diagnostics and still under-report retained memory.
+
+5. **The browser still cannot safely carry the large exact graphs S7/S8 call
+   supported.** This is partly inherited rather than newly introduced by S8:
+   S7 already recorded an endgame native estimate near 151 MB and a full-corpus
+   WASM run that grew the heap to 1,050,083,328 bytes with process RSS
+   2,319,425,536 bytes. Current ordinary and advanced strategy documents are
+   130,180,718 and 155,798,869 bytes, but the product default
+   `max_strategy_json_bytes` is 64 MiB. Those solves can finish and then fail
+   compilation under the actual product default.
+
+   Compilation retains the native strategy string, copies it into a WASM
+   buffer, JSON-escapes it into a second response, parses both the envelope and
+   embedded strategy, then structured-clones the parsed graph for workspace
+   preparation. Calculator deliberately keeps the solved native handle and
+   transition closure for repricing while also retaining the JavaScript graph;
+   opening, automatic exact evaluation, persistence, and verification create
+   further full structured clones. Closing handles releases native owners but
+   Emscripten heap high-water does not shrink. The existing web memory API
+   reports only heap `byteLength` and live handle count, so cancellation tests
+   cannot detect live retained-byte regressions.
+
+6. **Product diagnostics hide or mislabel the failure.** Calculator never
+   requests solver telemetry. On non-convergence it always recommends changing
+   the goal or prices, without showing the resource cap, discovered/frontier
+   counts, native retained-byte estimate, or automatic-candidate counts. Its
+   displayed denominator is the small presented primitive envelope, while
+   native `skipped_actions` also includes fixed automatic operators, so text
+   such as “1,330 of 29 priced candidates skipped” is possible. Primitive,
+   dependency-only, and automatic-option counts need separate labels.
+
+7. **S8.4 accounting arithmetic did not show a new rule error, but its product
+   path adds pressure and lacks byte gates.** The inspected exact accounting
+   remains downstream of the existing occupancy result and preserves its
+   explicit missing-price and retry-normalization semantics. The exact
+   evaluator has state/pair/transition caps but no owned-byte or output-size
+   cap. Strategy Editor clones the whole graph for automatic evaluation, and no
+   product caller currently supplies the optional S8.1 review projection, so
+   the compact 2,593,172-byte ordinary projection is not yet reducing or
+   replacing any live raw-graph burden.
+
+8. **S8.0/S8.1 fixture size is not the direct live-memory cause.** The frozen
+   compressed strategies and derived projections are large repository
+   artifacts, but the web app does not load them during a normal solve. They
+   expose the scale that product acceptance needed to cover; they do not
+   explain the immediate automatic-candidate state explosion.
+
+9. **Calculator's “Verify 5,000 runs” comparison is not a valid policy
+   verification when any run fails or stops.** The product checks only that
+   5,000 runs completed and every executed action had a price. It then divides
+   `known_total_cost` by all completed runs without checking or displaying
+   success, failure, stop, action-limit, step-limit, unmatched-edge, or
+   action-not-applied counts. A compiled policy that exits early on many cheap
+   failures can therefore be presented as several times cheaper than the
+   solver value. The native/WASM result already exposes all of these counters;
+   the benchmark harness correctly gates success rate and off-policy failures,
+   but Calculator discards them. Solve and verification reuse the same pinned
+   economy, and Simulator prices Restart as `base`, so the inspected product
+   path does not show a second price-table explanation. The closest frozen
+   four-condition body-armour case verified at 100% success and had solver
+   `4911.4646` versus sampled `4878.5372`; a fivefold gap is not ordinary Monte
+   Carlo error and must be treated as failed verification until its terminal
+   counts are known.
+
+#### Required repair work
+
+1. Correct `imprint_retry` so magic rarity is an entry/checkpoint-creation
+   condition, not a final-goal condition. An attempt that reaches its authored
+   intermediate exit must continue from that actual successor through the
+   ordinary Bellman solve; non-exit outcomes restore the checkpoint and retry.
+   Remove the duplicated incorrect restriction from C ABI metadata, bindings,
+   types, Calculator eligibility, tests, and docs. Preserve exact checkpoint
+   creation/restoration, consumption, and primitive compilation.
+2. **Owner decision 2026-07-18: the solver must discover useful Imprint stages
+   automatically.** Do not require the user to author an attempt program or
+   intermediate exit. Discover candidates state-locally only at reachable
+   magic carriers where checkpoint creation is legal; generate bounded exact
+   attempt programs from goal-relevant primitives, deduplicate them by complete
+   outcome kernel before admission, and let successful intermediate exits
+   continue through ordinary Bellman values. The old one-to-three action UI
+   limit is not mechanic authority. Any internal program-depth/work bound must
+   be an explicit reported solver resource boundary, not a claim that longer
+   Imprint techniques are invalid.
+3. Rework S8.3 generation so candidates are bounded and deduplicated before
+   they widen global abstraction. Prefer carrier/state-local eligibility and
+   lazy kernel creation, with exact-kernel deduplication and only the minimal
+   dependencies needed for admitted candidates. Do not create every
+   cross-product option and then prove almost all of them illegal per state.
+   Dependency-only primitives must remain non-selectable as standalone product
+   actions.
+4. Replace unbounded per-row diagnostic JSON retention with aggregate counters
+   plus bounded samples or explicit on-demand detail. Avoid duplicating typed
+   records as stored JSON strings. Account every retained allocation, including
+   finalized automatic witnesses and serialized telemetry, enforce byte caps
+   during/following finalization, and give evaluator/accounting output its own
+   owned-byte/output-size protection.
+5. Make the supported browser lifecycle explicit. Avoid JSON-escaping and
+   reparsing a giant strategy inside another JSON document, eliminate
+   unnecessary full structured clones, and do not retain both a large
+   transition closure and multiple raw graph copies merely for optional
+   repricing. **Owner-delegated decision 2026-07-18: release the solved native
+   handle/transition closure after successful strategy transfer and rebuild on
+   repricing by default.** Do not add an opt-in retained-cache mode in S8.4R;
+   reconsider one later only if live-byte telemetry can enforce a product
+   memory budget. Align product compile limits with the supported corpus or
+   refuse before the expensive solve with a truthful size boundary.
+6. Expose bounded solve diagnostics in the normal product result: cap name,
+   discovered/expanded/frontier counts, live/peak owned-byte estimates, and
+   separate primitive, dependency, fixed-option, automatic-considered,
+   eligible, collapsed, selected, rejected, and missing-price counts. Error
+   text must identify the actual cap or unsupported boundary.
+7. Add live native/WASM allocation telemetry suitable for before/after tests;
+   heap high-water and handle count alone are insufficient. Establish native
+   and WASM memory/report-size baselines for the real product envelope and
+   reject material regressions explicitly.
+8. Make compiled-policy verification truthful. Display success/failure/stop
+   and every limit/off-policy counter, sampled cost variance/confidence, and
+   the exact pinned economy identity. Compare sampled mean cost with
+   `V(start)` only when the configured success gate passes, off-policy and
+   unapplied counts are zero, and truncation is below the disclosed tolerance;
+   otherwise label the result not verified. Keep per-run cost and any opt-in
+   independent-retry success-normalized cost separate. Extend exact strategy
+   evaluation to the compiler-emitted condition vocabulary, including the
+   current `mod_count` gap, so compiled graph value/success can be checked
+   before relying on sampling.
+
+#### Repair acceptance gate
+
+- Exercise the same `action_mode:"goal_relevant"` and automatic-candidate
+  configuration Calculator uses on real-artifact ordinary and advanced
+  representatives. Record construction counts, first-expansion fan-out,
+  convergence/cap outcome, retained bytes, telemetry bytes, compilation size,
+  WASM heap/live bytes, and worker responsiveness. Do not substitute
+  `automatic_candidates=false` comparisons for this gate.
+- Retain the analytic S8.3 price boundaries and compare automatically admitted
+  techniques with their manual/exhaustive exact oracles. Selected candidates
+  must still compile to ordinary primitives with complete routes.
+- Add a non-magic final-goal Imprint fixture that reaches a magic checkpoint,
+  has the solver automatically discover the retry program and intermediate
+  exit, continues to the final goal, and compiles/simulates with exact restore
+  and resource accounting. The product solve must not contain a user-authored
+  Imprint program. Run the required compiled-strategy verification with 10,000
+  Simulator runs unless Oliver explicitly changes the count.
+- Add Oliver's reported Conquest Lamellar goal as a pinned product regression.
+  Canonical target: base
+  `Metadata/Items/Armours/BodyArmours/BodyStrDex20`, item level at least 86,
+  rare rarity, all four slots required: T1 flat Armour/Evasion
+  `LocalBaseArmourAndEvasionRating8`, T1 percent Armour/Evasion
+  `LocalIncreasedArmourAndEvasion8`, T1 hybrid percent Armour/Evasion plus Stun
+  Recovery `LocalIncreasedArmourAndEvasionAndStunRecovery6`, and T1 Spell
+  Suppression `ChanceToSuppressSpellsHigh5___`. Use Calculator's default empty
+  rare item as the start and the exact product `goal_relevant` action envelope.
+  Oliver identified the Mirage economy source; the repository's selected
+  snapshot is
+  `economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f`
+  with source cutoff `2026-07-15T21:18:29Z`. Recreate the regression with no
+  manual overrides or fallback unless a persisted historical draft proves
+  otherwise; the source snapshot has no `base` quote, so Restart must remain
+  explicitly unpriced in that configuration rather than acquire a made-up
+  cost. Require Bellman value, exact
+  compiled-graph value, and Simulator mean/confidence to reconcile, with the
+  Simulator success gate passing and zero off-policy/unapplied routes. A cheap
+  mean produced by failed, stopped, or truncated runs is a test failure, not a
+  better strategy.
+- Prove every configured byte cap covers solve work, cached closure, finalized
+  diagnostics, telemetry serialization, compilation scratch, and the retained
+  result it is meant to bound. Product errors must name the exact exceeded cap.
+- Run the appropriate complete native, binding, release-WASM, worker, and
+  non-visual web acceptance once at the end of S8.4R. Oliver retains rendered
+  and visual review ownership.
+- Record before/after evidence separately from immutable S8.0-S8.4 fixtures,
+  update this phase and `HANDOFF.md`, and only then hand off to S8.5.
 
 ### S8.5 - Compact Review And Optional Empirical Trim
 

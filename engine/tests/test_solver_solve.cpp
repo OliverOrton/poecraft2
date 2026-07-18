@@ -264,6 +264,31 @@ void run_alt_spam_tests() {
             PC_CHECK(stepped.diagnostics.preservation_witnesses ==
                      result.diagnostics.preservation_witnesses);
         }
+
+        SolveOptions diagnostic_caps;
+        diagnostic_caps.max_diagnostic_samples = 1;
+        diagnostic_caps.max_telemetry_json_bytes = 64;
+        const SolveResult diagnostic_capped =
+            solve(calc, start, prices, diagnostic_caps);
+        PC_CHECK(diagnostic_capped.diagnostics.action_inclusion_reasons.size() <=
+                 1);
+        PC_CHECK(diagnostic_capped.diagnostics.preservation_witnesses.size() <=
+                 1);
+        PC_CHECK(
+            diagnostic_capped.diagnostics.preservation_witnesses_omitted > 0);
+        PC_CHECK(
+            diagnostic_capped.diagnostics.diagnostics_retained_bytes_estimate >
+            0);
+        bool telemetry_capped = false;
+        try {
+            (void)serialize_solver_telemetry(
+                calc, &diagnostic_capped, nullptr, std::nullopt, nullptr);
+        } catch (const std::length_error& ex) {
+            telemetry_capped = std::string(ex.what()).find(
+                                   "max_telemetry_json_bytes") !=
+                               std::string::npos;
+        }
+        PC_CHECK(telemetry_capped);
     }
 
     /* Evaluator support is diagnostic, not an applied filter: a priced

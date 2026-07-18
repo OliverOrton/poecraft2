@@ -1,0 +1,22 @@
+{
+  "schema_version": "s8.4r.1_bounded_measurement_v1",
+  "case_id": "conquest-lamellar-mirage-product",
+  "measurement": "before",
+  "status": "skipped_after_safe_build_timeout",
+  "attempt": {
+    "command": "powershell -File scripts/build.ps1",
+    "timeout_seconds": 124,
+    "runner_started": false,
+    "unbounded_solve_started": false,
+    "report_available": false
+  },
+  "reason": "The pre-fix harness build produced no output before the safe timeout. Oliver directed that baseline/benchmark issues be skipped in favor of fixing the issue.",
+  "code_audit_before": {
+    "preservation_diagnostics": "one retained JSON witness string per applicable state/action row",
+    "automatic_diagnostics": "one retained typed record per automatic option/state followed by a second JSON witness at finalization",
+    "memory_accounting": "omitted finalized automatic witness strings",
+    "finalization_caps": "diagnostic finalization occurred after the last owned-byte check",
+    "evaluator_output_caps": false,
+    "wasm_live_owned_byte_telemetry": false
+  }
+}

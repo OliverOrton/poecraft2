@@ -59,7 +59,7 @@ $Exported = @(
     "_pcw_strategy_compile", "_pcw_strategy_close", "_pcw_strategy_evaluate",
     "_pcw_strategy_eval_begin", "_pcw_strategy_eval_step",
     "_pcw_strategy_eval_finish", "_pcw_strategy_eval_close",
-    "_pcw_live_handle_count",
+    "_pcw_live_handle_count", "_pcw_memory_stats",
     "_pcw_economy_open", "_pcw_economy_close",
     "_pcw_simulator_open", "_pcw_simulator_close",
     "_pcw_simulator_run_chunk", "_pcw_simulator_result",

@@ -239,6 +239,12 @@ function cannedResult(): StrategyEvalResult {
                 section_material_differences: {},
             },
         },
+        memory: {
+            owned_bytes_estimate: 4096,
+            peak_owned_bytes_estimate: 8192,
+            max_owned_bytes: 536870912,
+            max_output_json_bytes: 67108864,
+        },
         targets: [{ kind: "group", group_id: 1 }],
         nodes: [
             {

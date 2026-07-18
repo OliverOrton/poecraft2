@@ -19,6 +19,7 @@ import {
     Catalog,
     ClientMessage,
     CraftAction,
+    EngineMemoryStats,
     EngineError,
     ModInfo,
     PoolDebug,
@@ -297,7 +298,7 @@ export class EngineClient {
         return this.call<void>("closeContext", { context });
     }
 
-    memoryStats(): Promise<{ wasm_memory_bytes: number; live_handles: number }> {
+    memoryStats(): Promise<EngineMemoryStats> {
         return this.call("memoryStats", {});
     }
 

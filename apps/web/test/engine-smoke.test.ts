@@ -979,6 +979,15 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
     const family = await lowWeightAlterationFamily();
     const graph = alterationLoopStrategy(family);
     const baseline = await client.memoryStats();
+    assert.ok(baseline.wasm_memory_bytes > 0);
+    assert.ok(baseline.native_live_owned_bytes > 0);
+    assert.ok(
+        baseline.native_peak_owned_bytes >= baseline.native_live_owned_bytes,
+    );
+    assert.equal(
+        baseline.scope,
+        "facade_registries_plus_solver_and_evaluator_owned_allocations",
+    );
     for (let attempt = 0; attempt < 6; attempt += 1) {
         const controller = new AbortController();
         const started = performance.now();
@@ -997,6 +1006,9 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
     }
     const after = await client.memoryStats();
     assert.equal(after.live_handles, baseline.live_handles);
+    assert.ok(after.native_live_owned_bytes > 0);
+    assert.ok(after.native_peak_owned_bytes >= after.native_live_owned_bytes);
+    assert.ok(after.native_serialized_output_bytes >= 0);
 });
 
 test("fallback-phase evaluation reports progress and cancels promptly", async () => {

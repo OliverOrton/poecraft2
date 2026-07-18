@@ -1,0 +1,61 @@
+{
+  "schema_version": "s8.4r.1_bounded_measurement_v1",
+  "case_id": "conquest-lamellar-mirage-product",
+  "measurement": "after",
+  "status": "bounded_first_expansion_complete",
+  "command": "build\\engine\\poecraft_solver_benchmark.exe --artifact data\\compiled\\current --corpus fixtures\\solver-regressions\\s8.4r\\v1\\manifest.json --case conquest-lamellar-mirage-product --output fixtures\\solver-regressions\\s8.4r\\v1\\evidence\\r1-after-report.json --skip-verification",
+  "pins": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyStrDex20",
+    "item_level": 86,
+    "economy_id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+    "priced_product_action_count": 17,
+    "base_price_status": "missing"
+  },
+  "bounds": {
+    "expanded_states": 1,
+    "discovered_states": 70000,
+    "frontier_states": 69999,
+    "solve_work_items": 19,
+    "state_action_rows": 11,
+    "transition_entries": 55804,
+    "max_diagnostic_samples": 16,
+    "max_telemetry_json_bytes": 262144,
+    "unbounded_solve_started": false,
+    "compile_started": false,
+    "verification_runs": 0
+  },
+  "diagnostic_retention": {
+    "action_reason_samples": 16,
+    "action_reasons_omitted": 245,
+    "preservation_rows_considered": 9,
+    "preservation_witness_samples": 9,
+    "automatic_rows_considered": 2,
+    "automatic_witness_samples": 2,
+    "diagnostics_retained_bytes_estimate": 39733,
+    "telemetry_json_bytes": 24756
+  },
+  "memory": {
+    "solver_live_owned_bytes_estimate": 31251192,
+    "native_live_owned_bytes": 31252333,
+    "native_peak_owned_bytes": 39093816,
+    "process_working_set_before_bytes": 33660928,
+    "process_working_set_after_bytes": 63283200,
+    "process_working_set_kind": "snapshots_not_peak"
+  },
+  "release_wasm_telemetry_smoke": {
+    "wasm_memory_bytes": 134217728,
+    "live_handles": 0,
+    "native_live_owned_bytes": 11,
+    "native_peak_owned_bytes": 11,
+    "native_serialized_output_bytes": 10,
+    "scope": "facade_registries_plus_solver_and_evaluator_owned_allocations",
+    "note": "empty-handle facade smoke; the bounded product measurement above is native"
+  },
+  "timing_ms": {
+    "registry_layout": 19.2415,
+    "solve": 116.9407,
+    "total": 154.1663
+  },
+  "errors": []
+}

@@ -13,10 +13,12 @@
  * call runs, so reusing one static response buffer per call is safe.
  */
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -509,6 +511,9 @@ bool parse_strategy_eval_options(
     options.max_transitions = obj_u32(spec, "max_transitions");
     options.top_classes_per_node =
         obj_u32(spec, "top_classes_per_node");
+    options.max_owned_bytes = obj_u64(spec, "max_owned_bytes");
+    options.max_output_json_bytes =
+        obj_u64(spec, "max_output_json_bytes");
     const std::uint32_t economy_id = obj_u32(spec, "economy_id");
     if (economy_id != 0) {
         pc_economy_handle* economy = find(g_economies, economy_id);
@@ -572,6 +577,10 @@ bool parse_solve_options(
     options.max_compiled_edges = obj_u32(spec, "max_compiled_edges");
     options.max_strategy_json_bytes = obj_u64(
         spec, "max_strategy_json_bytes");
+    options.max_diagnostic_samples =
+        obj_u32(spec, "max_diagnostic_samples");
+    options.max_telemetry_json_bytes = obj_u64(
+        spec, "max_telemetry_json_bytes");
     return true;
 }
 
@@ -1768,6 +1777,63 @@ uint32_t pcw_live_handle_count() {
         g_data.size() + g_sessions.size() + g_contexts.size() +
         g_items.size() + g_strategies.size() + g_economies.size() +
         g_simulators.size() + g_solvers.size() + g_evaluations.size());
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_memory_stats() {
+    const auto registry_bytes = [](const auto& registry) {
+        return static_cast<std::uint64_t>(
+            registry.bucket_count() * sizeof(void*) +
+            registry.size() *
+                (sizeof(typename std::decay_t<decltype(registry)>::value_type) +
+                 2 * sizeof(void*)));
+    };
+    std::uint64_t registry_owned = g_response.capacity() + 1;
+    registry_owned += registry_bytes(g_data);
+    registry_owned += registry_bytes(g_sessions);
+    registry_owned += registry_bytes(g_contexts);
+    registry_owned += registry_bytes(g_items);
+    registry_owned += registry_bytes(g_bestiary_states);
+    registry_owned += registry_bytes(g_strategies);
+    registry_owned += registry_bytes(g_economies);
+    registry_owned += registry_bytes(g_simulators);
+    registry_owned += registry_bytes(g_solvers);
+    registry_owned += registry_bytes(g_evaluations);
+
+    std::uint64_t live = registry_owned;
+    std::uint64_t peak = registry_owned;
+    std::uint64_t serialized = g_response.capacity();
+    pc_error_info error = make_error();
+    for (const auto& [unused, solver] : g_solvers) {
+        (void)unused;
+        pc_native_memory_stats stats{};
+        if (pc_solver_memory_stats(solver, &stats, &error) == PC_RESULT_OK) {
+            live += stats.live_owned_bytes;
+            peak += stats.peak_owned_bytes;
+            serialized += stats.serialized_output_bytes;
+        }
+    }
+    for (const auto& [unused, evaluation] : g_evaluations) {
+        (void)unused;
+        pc_native_memory_stats stats{};
+        if (pc_strategy_eval_memory_stats(
+                evaluation, &stats, &error) == PC_RESULT_OK) {
+            live += stats.live_owned_bytes;
+            peak += stats.peak_owned_bytes;
+            serialized += stats.serialized_output_bytes;
+        }
+    }
+
+    std::string out = "{\"ok\":true,\"live_handles\":";
+    append_u64(out, pcw_live_handle_count());
+    out += ",\"native_live_owned_bytes\":";
+    append_u64(out, live);
+    out += ",\"native_peak_owned_bytes\":";
+    append_u64(out, std::max(live, peak));
+    out += ",\"native_serialized_output_bytes\":";
+    append_u64(out, serialized);
+    out += ",\"scope\":\"facade_registries_plus_solver_and_evaluator_owned_allocations\"}";
+    return respond(std::move(out));
 }
 
 EMSCRIPTEN_KEEPALIVE

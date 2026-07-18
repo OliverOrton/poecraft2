@@ -10,6 +10,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -532,6 +533,7 @@ struct SolveTransitionCache {
     std::uint64_t max_state_action_rows = 0;
     std::uint64_t max_transitions = 0;
     std::uint64_t max_reforge_work = 0;
+    std::uint32_t max_diagnostic_samples = 0;
     std::uint32_t discovered_states = 0;
     std::uint32_t expanded_states = 0;
     std::vector<std::uint8_t> expanded;
@@ -545,7 +547,12 @@ struct SolveTransitionCache {
     std::vector<SparseChoiceGroup> choices;
     std::vector<std::uint32_t> choice_successors;
     std::vector<OutcomeChoiceOption> choice_options;
-    std::vector<AutomaticCandidateRecord> automatic_candidates;
+    std::uint32_t automatic_rows_considered = 0;
+    std::uint32_t automatic_rows_eligible = 0;
+    std::uint32_t automatic_rows_rejected = 0;
+    std::uint32_t automatic_rows_collapsed = 0;
+    std::uint32_t automatic_rows_deferred = 0;
+    std::vector<AutomaticCandidateRecord> automatic_candidate_samples;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
 
@@ -559,6 +566,7 @@ struct SolveTransitionCache {
             max_state_action_rows != options.max_state_action_rows ||
             max_transitions != options.max_transitions ||
             max_reforge_work != options.max_reforge_work ||
+            max_diagnostic_samples != options.max_diagnostic_samples ||
             operator_indices.size() != priced.size()) {
             return false;
         }
@@ -582,15 +590,64 @@ struct SolveTransitionCache {
         bytes += choices.capacity() * sizeof(SparseChoiceGroup);
         bytes += choice_successors.capacity() * sizeof(std::uint32_t);
         bytes += choice_options.capacity() * sizeof(OutcomeChoiceOption);
-        bytes += automatic_candidates.capacity() *
+        bytes += automatic_candidate_samples.capacity() *
                  sizeof(AutomaticCandidateRecord);
-        for (const AutomaticCandidateRecord& record : automatic_candidates) {
+        for (const AutomaticCandidateRecord& record :
+             automatic_candidate_samples) {
             bytes += record.evidence.legality_result.capacity() +
                      record.evidence.reason.capacity();
         }
         return bytes;
     }
 };
+
+namespace {
+
+std::uint64_t string_vector_owned_bytes(
+    const std::vector<std::string>& values) {
+    std::uint64_t total = values.capacity() * sizeof(std::string);
+    for (const std::string& value : values) total += value.capacity() + 1;
+    return total;
+}
+
+std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
+    return string_vector_owned_bytes(diagnostics.skipped_missing_price) +
+           string_vector_owned_bytes(diagnostics.skipped_unsupported) +
+           string_vector_owned_bytes(diagnostics.cap_hits) +
+           string_vector_owned_bytes(
+               diagnostics.action_inclusion_reasons) +
+           string_vector_owned_bytes(diagnostics.preservation_witnesses) +
+           string_vector_owned_bytes(
+               diagnostics.automatic_candidate_witnesses) +
+           diagnostics.policy_evaluation_failure.capacity() + 1;
+}
+
+std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
+    std::uint64_t bytes = sizeof(result);
+    bytes += result.values.capacity() * sizeof(double);
+    bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
+    bytes += result.expanded.capacity() * sizeof(std::uint8_t);
+    bytes += result.goal_states.capacity() * sizeof(std::uint8_t);
+    bytes += result.policy_reachable.capacity() * sizeof(std::uint8_t);
+    bytes += result.unveil_preferences.capacity() *
+             sizeof(std::vector<std::uint32_t>);
+    for (const auto& preferences : result.unveil_preferences) {
+        bytes += preferences.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += result.option_unveil_preferences.capacity() *
+             sizeof(std::vector<ObservedUnveilPreference>);
+    for (const auto& preferences : result.option_unveil_preferences) {
+        bytes += preferences.capacity() * sizeof(ObservedUnveilPreference);
+        for (const ObservedUnveilPreference& preference : preferences) {
+            bytes += preference.choices.capacity() *
+                     sizeof(ObservedUnveilChoice);
+        }
+    }
+    bytes += diagnostics_owned_bytes(result.diagnostics);
+    return bytes;
+}
+
+} // namespace
 
 struct SolveWork::Impl {
     CalcContext& calc;
@@ -717,6 +774,16 @@ struct SolveWork::Impl {
     SolvePhase phase = SolvePhase::Expanding;
     bool consumed = false;
 
+    void retain_action_reason(std::string reason) {
+        if (result.diagnostics.action_inclusion_reasons.size() <
+            options.max_diagnostic_samples) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                std::move(reason));
+        } else {
+            ++result.diagnostics.action_inclusion_reasons_omitted;
+        }
+    }
+
     Impl(
         CalcContext& context,
         const pc_item_state& start_item,
@@ -731,6 +798,10 @@ struct SolveWork::Impl {
         calc.set_solve_resource_caps(
             options.max_discovered_states, options.max_reforge_work);
         result.options = options;
+        result.diagnostics.diagnostic_sample_limit =
+            options.max_diagnostic_samples;
+        result.diagnostics.telemetry_json_byte_limit =
+            options.max_telemetry_json_bytes;
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
@@ -743,7 +814,7 @@ struct SolveWork::Impl {
             control.dependency_primitives;
         result.diagnostics.deferred_actions =
             control.deferred_fossil_loadouts;
-        result.diagnostics.action_inclusion_reasons.push_back(
+        retain_action_reason(
             std::string(
                 control.explicit_envelope
                     ? "included:explicit_goal_envelope:"
@@ -752,23 +823,23 @@ struct SolveWork::Impl {
                           : "included:conservative_exhaustive_envelope:") +
             std::to_string(control.included_primitives));
         if (control.pruned_outside_envelope != 0) {
-            result.diagnostics.action_inclusion_reasons.push_back(
+            retain_action_reason(
                 "pruned:not_permitted_by_explicit_goal_envelope:" +
                 std::to_string(control.pruned_outside_envelope));
         }
         if (control.pruned_outside_goal_relevance != 0) {
-            result.diagnostics.action_inclusion_reasons.push_back(
+            retain_action_reason(
                 "pruned:outside_product_goal_relevance:" +
                 std::to_string(
                     control.pruned_outside_goal_relevance));
         }
         if (control.dependency_primitives != 0) {
-            result.diagnostics.action_inclusion_reasons.push_back(
+            retain_action_reason(
                 "included:fixed_option_structural_dependency:" +
                 std::to_string(control.dependency_primitives));
         }
         if (control.deferred_fossil_loadouts != 0) {
-            result.diagnostics.action_inclusion_reasons.push_back(
+            retain_action_reason(
                 std::string(
                     calc.registry().fossil_generation_goal_relevant
                         ? "deferred:outside_bounded_goal_relevant_fossil_beam:"
@@ -776,7 +847,7 @@ struct SolveWork::Impl {
                 std::to_string(control.deferred_fossil_loadouts));
         }
         if (control.automatic_options != 0) {
-            result.diagnostics.action_inclusion_reasons.push_back(
+            retain_action_reason(
                 "included:native_price_independent_automatic_options:" +
                 std::to_string(control.automatic_options));
         }
@@ -806,16 +877,15 @@ struct SolveWork::Impl {
                 resource_prices.push_back({key, found->second});
             }
             if (!priced) {
-                result.diagnostics.skipped_missing_price.push_back(
-                    planner.id);
+                record_skipped_missing_price(planner.id);
                 add_action_reason(
                     "unpriced", planner.id,
                     "missing_one_or_more_resource_prices");
                 if (planner.automatic_kind !=
                     AutomaticCandidateKind::None) {
-                    result.diagnostics.action_inclusion_reasons.push_back(
-                        "rejected:automatic_candidate_missing_price:" +
-                        planner.id);
+                    add_action_reason(
+                        "rejected", planner.id,
+                        "automatic_candidate_missing_price");
                 }
                 continue;
             }
@@ -826,7 +896,7 @@ struct SolveWork::Impl {
                     planner.primitive_action));
             if (!supported) {
                 reported_unsupported[index] = true;
-                result.diagnostics.skipped_unsupported.push_back(planner.id);
+                record_skipped_unsupported(planner.id);
                 add_action_reason(
                     "unsupported", planner.id,
                     "no_exact_evaluator_for_requested_primitive");
@@ -868,6 +938,8 @@ struct SolveWork::Impl {
                 options.max_state_action_rows;
             transition_cache->max_transitions = options.max_transitions;
             transition_cache->max_reforge_work = options.max_reforge_work;
+            transition_cache->max_diagnostic_samples =
+                options.max_diagnostic_samples;
             for (const PricedOperator& priced : operators) {
                 transition_cache->operator_indices.push_back(priced.index);
             }
@@ -996,8 +1068,24 @@ struct SolveWork::Impl {
         const char* disposition,
         const std::string& action,
         const std::string& reason) {
-        result.diagnostics.action_inclusion_reasons.push_back(
+        retain_action_reason(
             std::string(disposition) + ":" + reason + ":" + action);
+    }
+
+    void record_skipped_missing_price(const std::string& action) {
+        ++result.diagnostics.skipped_missing_price_count;
+        if (result.diagnostics.skipped_missing_price.size() <
+            options.max_diagnostic_samples) {
+            result.diagnostics.skipped_missing_price.push_back(action);
+        }
+    }
+
+    void record_skipped_unsupported(const std::string& action) {
+        ++result.diagnostics.skipped_unsupported_count;
+        if (result.diagnostics.skipped_unsupported.size() <
+            options.max_diagnostic_samples) {
+            result.diagnostics.skipped_unsupported.push_back(action);
+        }
     }
 
     enum class PreservationDisposition : std::uint8_t {
@@ -1470,16 +1558,52 @@ struct SolveWork::Impl {
         return out;
     }
 
+    void retain_automatic_candidate_record(
+        SolveTransitionCache::AutomaticCandidateRecord record) {
+        ++transition_cache->automatic_rows_considered;
+        if (record.deferred) {
+            ++transition_cache->automatic_rows_deferred;
+        } else if (!record.eligible) {
+            ++transition_cache->automatic_rows_rejected;
+        } else {
+            ++transition_cache->automatic_rows_eligible;
+            if (record.collapsed) {
+                ++transition_cache->automatic_rows_collapsed;
+            }
+        }
+        if (transition_cache->automatic_candidate_samples.size() <
+            options.max_diagnostic_samples) {
+            transition_cache->automatic_candidate_samples.push_back(
+                std::move(record));
+        }
+    }
+
     void finalize_automatic_candidate_diagnostics() {
-        result.diagnostics.automatic_rows_considered = 0;
-        result.diagnostics.automatic_rows_eligible = 0;
-        result.diagnostics.automatic_rows_rejected = 0;
-        result.diagnostics.automatic_rows_collapsed = 0;
+        result.diagnostics.automatic_rows_considered =
+            transition_cache->automatic_rows_considered;
+        result.diagnostics.automatic_rows_eligible =
+            transition_cache->automatic_rows_eligible;
+        result.diagnostics.automatic_rows_rejected =
+            transition_cache->automatic_rows_rejected;
+        result.diagnostics.automatic_rows_collapsed =
+            transition_cache->automatic_rows_collapsed;
         result.diagnostics.automatic_rows_selected = 0;
-        result.diagnostics.automatic_rows_deferred = 0;
+        result.diagnostics.automatic_rows_deferred =
+            transition_cache->automatic_rows_deferred;
         result.diagnostics.automatic_candidate_witnesses.clear();
-        for (const auto& record : transition_cache->automatic_candidates) {
-            ++result.diagnostics.automatic_rows_considered;
+        result.diagnostics.automatic_candidate_witnesses_omitted =
+            result.diagnostics.automatic_rows_considered -
+            transition_cache->automatic_candidate_samples.size();
+        for (std::uint32_t state = 0; state < result.policy.size(); ++state) {
+            const std::uint32_t operator_index = result.policy[state].index;
+            if (operator_index != kNoId &&
+                calc.operators().at(operator_index).automatic_kind !=
+                    AutomaticCandidateKind::None) {
+                ++result.diagnostics.automatic_rows_selected;
+            }
+        }
+        for (const auto& record :
+             transition_cache->automatic_candidate_samples) {
             const bool selected =
                 record.state_id < result.policy.size() &&
                 result.policy[record.state_id].index == record.operator_index;
@@ -1488,22 +1612,17 @@ struct SolveWork::Impl {
             if (record.deferred) {
                 disposition = "deferred";
                 reason = "solver_resource_cap_before_exact_row_completion";
-                ++result.diagnostics.automatic_rows_deferred;
             } else if (!record.eligible) {
                 disposition = "rejected";
                 reason = "exact_invalidity_legality_or_relevance";
-                ++result.diagnostics.automatic_rows_rejected;
             } else {
-                ++result.diagnostics.automatic_rows_eligible;
                 if (record.collapsed) {
                     disposition = "collapsed";
                     reason = "exact_kernel_variant_retained_for_price_choice";
-                    ++result.diagnostics.automatic_rows_collapsed;
                 }
                 if (selected) {
                     disposition = "selected";
                     reason = "minimum_complete_expected_downstream_cost";
-                    ++result.diagnostics.automatic_rows_selected;
                 }
             }
             result.diagnostics.automatic_candidate_witnesses.push_back(
@@ -1518,6 +1637,7 @@ struct SolveWork::Impl {
         result.diagnostics.preservation_rows_retained = 0;
         result.diagnostics.certified_disposable_rows = 0;
         result.diagnostics.preservation_witnesses.clear();
+        result.diagnostics.preservation_witnesses_omitted = 0;
         if (!options.preservation_control) return;
         for (std::uint32_t state = 0;
              state < transition_cache->state_rows.size(); ++state) {
@@ -1558,8 +1678,13 @@ struct SolveWork::Impl {
                                 std::to_string(state));
                     }
                 }
-                result.diagnostics.preservation_witnesses.push_back(
-                    preservation_witness_json(row_index, decision));
+                if (result.diagnostics.preservation_witnesses.size() <
+                    options.max_diagnostic_samples) {
+                    result.diagnostics.preservation_witnesses.push_back(
+                        preservation_witness_json(row_index, decision));
+                } else {
+                    ++result.diagnostics.preservation_witnesses_omitted;
+                }
             }
         }
     }
@@ -1574,12 +1699,18 @@ struct SolveWork::Impl {
         if (state_cap) result.diagnostics.state_cap_hit = true;
     }
 
-    void check_solver_byte_cap() {
+    bool check_solver_byte_cap(std::uint64_t transient_bytes = 0) {
         const std::uint64_t current = estimated_owned_bytes();
-        peak_owned_bytes = std::max(peak_owned_bytes, current);
-        if (current > options.max_solver_owned_bytes) {
+        const std::uint64_t projected =
+            transient_bytes > std::numeric_limits<std::uint64_t>::max() - current
+                ? std::numeric_limits<std::uint64_t>::max()
+                : current + transient_bytes;
+        peak_owned_bytes = std::max(peak_owned_bytes, projected);
+        if (projected > options.max_solver_owned_bytes) {
             record_cap("max_solver_owned_bytes");
+            return true;
         }
+        return false;
     }
 
     bool append_sparse_row(
@@ -1896,8 +2027,7 @@ struct SolveWork::Impl {
                     if (!kernel.supported) {
                         if (!reported_unsupported[priced.index]) {
                             reported_unsupported[priced.index] = true;
-                            result.diagnostics.skipped_unsupported.push_back(
-                                planner.id);
+                            record_skipped_unsupported(planner.id);
                             add_action_reason(
                                 "unsupported", planner.id,
                                 "fixed_option_kernel_unavailable");
@@ -1926,8 +2056,7 @@ struct SolveWork::Impl {
                         if (!distribution.supported) {
                             if (!reported_unsupported[priced.index]) {
                                 reported_unsupported[priced.index] = true;
-                                result.diagnostics.skipped_unsupported.push_back(
-                                    planner.id);
+                                record_skipped_unsupported(planner.id);
                                 add_action_reason(
                                     "unsupported", planner.id,
                                     "exact_evaluator_unavailable");
@@ -2019,7 +2148,7 @@ struct SolveWork::Impl {
                         automatic_record->evidence.reason =
                             "native_carrier_legality_refused";
                     }
-                    transition_cache->automatic_candidates.push_back(
+                    retain_automatic_candidate_record(
                         std::move(*automatic_record));
                 }
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
@@ -2048,8 +2177,7 @@ struct SolveWork::Impl {
                         "deferred_resource_cap";
                     record.evidence.reason =
                         "price_independent_kernel_generation_resource_cap";
-                    transition_cache->automatic_candidates.push_back(
-                        std::move(record));
+                    retain_automatic_candidate_record(std::move(record));
                 }
             }
             record_cap(
@@ -3922,8 +4050,24 @@ struct SolveWork::Impl {
         }
         snapshot.diagnostics.sweeps = sweeps;
         snapshot.diagnostics.residual = residual;
+        snapshot.diagnostics.automatic_rows_considered =
+            transition_cache->automatic_rows_considered;
+        snapshot.diagnostics.automatic_rows_eligible =
+            transition_cache->automatic_rows_eligible;
+        snapshot.diagnostics.automatic_rows_rejected =
+            transition_cache->automatic_rows_rejected;
+        snapshot.diagnostics.automatic_rows_collapsed =
+            transition_cache->automatic_rows_collapsed;
+        snapshot.diagnostics.automatic_rows_deferred =
+            transition_cache->automatic_rows_deferred;
+        snapshot.diagnostics.automatic_candidate_witnesses_omitted =
+            snapshot.diagnostics.automatic_rows_considered;
+        const std::uint64_t live_bytes = estimated_owned_bytes();
         snapshot.diagnostics.solver_owned_bytes_estimate =
-            std::max(peak_owned_bytes, estimated_owned_bytes());
+            std::max(peak_owned_bytes, live_bytes);
+        snapshot.diagnostics.solver_live_owned_bytes_estimate = live_bytes;
+        snapshot.diagnostics.diagnostics_retained_bytes_estimate =
+            diagnostics_owned_bytes(snapshot.diagnostics);
         snapshot.raw_start_bound = progress().start_value_bound;
         return snapshot;
     }
@@ -3940,9 +4084,11 @@ struct SolveWork::Impl {
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
         finalize_preservation_diagnostics();
+        bool finalization_capped = check_solver_byte_cap();
         /* Deterministic argmin: cost ties break toward lower cost-to-go
          * variance, then lower action index by stable registry traversal. */
         for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (finalization_capped) break;
             if (!result.expanded[state] || result.goal_states[state]) continue;
             double best_q = kInfinity;
             double best_variance = kInfinity;
@@ -3955,6 +4101,14 @@ struct SolveWork::Impl {
                 const std::uint64_t absolute_row = span.offset + row_index;
                 if (preservation_prunes(absolute_row)) continue;
                 const SparseRow& row = transition_cache->rows.at(absolute_row);
+                const std::uint64_t variance_scratch_bytes =
+                    (static_cast<std::uint64_t>(row.transition_count) +
+                     row.choice_count + 1) *
+                    sizeof(std::pair<double, double>);
+                if (check_solver_byte_cap(variance_scratch_bytes)) {
+                    finalization_capped = true;
+                    break;
+                }
                 ++result.diagnostics.extraction_action_evaluations;
                 std::uint32_t transition_work = 0;
                 const double q = sparse_row_q(absolute_row, transition_work);
@@ -4031,6 +4185,13 @@ struct SolveWork::Impl {
                 std::vector<OutcomeChoiceOption> choice_options;
                 const PricedSparseRow& best_row = priced_rows.at(
                     best_row_index);
+                if (check_solver_byte_cap(
+                        static_cast<std::uint64_t>(
+                            best_row.choice_option_count) *
+                        sizeof(OutcomeChoiceOption))) {
+                    finalization_capped = true;
+                    break;
+                }
                 for (std::uint32_t i = 0;
                      i < best_row.choice_option_count; ++i) {
                     choice_options.push_back(
@@ -4060,6 +4221,12 @@ struct SolveWork::Impl {
                     by_observation;
                 const PricedSparseRow& best_row = priced_rows.at(
                     best_row_index);
+                if (check_solver_byte_cap(
+                        static_cast<std::uint64_t>(
+                            best_row.choice_option_count) * 128ull)) {
+                    finalization_capped = true;
+                    break;
+                }
                 for (std::uint32_t i = 0;
                      i < best_row.choice_option_count; ++i) {
                     const OutcomeChoiceOption& choice =
@@ -4091,10 +4258,22 @@ struct SolveWork::Impl {
             }
         }
         finalize_automatic_candidate_diagnostics();
+        finalization_capped =
+            check_solver_byte_cap() || finalization_capped;
 
-        result.policy_reachable.assign(state_count, 0);
+        if (!finalization_capped &&
+            check_solver_byte_cap(
+                static_cast<std::uint64_t>(state_count) *
+                (sizeof(std::uint8_t) + sizeof(std::uint32_t)))) {
+            finalization_capped = true;
+        }
+        if (!finalization_capped) {
+            result.policy_reachable.assign(state_count, 0);
+        } else {
+            result.policy_reachable.clear();
+        }
         bool reachable_policy_complete = true;
-        if (result.start_state < state_count) {
+        if (!finalization_capped && result.start_state < state_count) {
             std::deque<std::uint32_t> walk{result.start_state};
             while (!walk.empty()) {
                 const std::uint32_t state = walk.front();
@@ -4164,6 +4343,7 @@ struct SolveWork::Impl {
                 }
             }
         }
+        if (finalization_capped) reachable_policy_complete = false;
 
         bool full_non_goal_closure = true;
         for (std::uint32_t state = 0; state < result.values.size(); ++state) {
@@ -4243,8 +4423,18 @@ struct SolveWork::Impl {
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - extraction_started)
                 .count());
+        const std::uint64_t final_live_bytes = estimated_owned_bytes();
+        peak_owned_bytes = std::max(peak_owned_bytes, final_live_bytes);
+        if (final_live_bytes > options.max_solver_owned_bytes) {
+            record_cap("max_solver_owned_bytes");
+            result.converged = false;
+        }
         result.diagnostics.solver_owned_bytes_estimate =
             std::max(peak_owned_bytes, estimated_owned_bytes());
+        result.diagnostics.solver_live_owned_bytes_estimate =
+            estimated_retained_solver_bytes(calc, &result);
+        result.diagnostics.diagnostics_retained_bytes_estimate =
+            diagnostics_owned_bytes(result.diagnostics);
         consumed = true;
         return std::move(result);
     }
@@ -4304,22 +4494,7 @@ struct SolveWork::Impl {
                          sizeof(ObservedUnveilChoice);
             }
         }
-        const auto string_vector_bytes = [](const auto& values) {
-            std::uint64_t total =
-                values.capacity() * sizeof(std::string);
-            for (const std::string& value : values) {
-                total += value.capacity() + 1;
-            }
-            return total;
-        };
-        bytes += string_vector_bytes(
-            result.diagnostics.skipped_missing_price);
-        bytes += string_vector_bytes(result.diagnostics.skipped_unsupported);
-        bytes += string_vector_bytes(
-            result.diagnostics.action_inclusion_reasons);
-        bytes += string_vector_bytes(
-            result.diagnostics.preservation_witnesses);
-        bytes += string_vector_bytes(result.diagnostics.cap_hits);
+        bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;
     }
 };
@@ -4349,6 +4524,26 @@ SolveTelemetrySnapshot SolveWork::telemetry_snapshot(bool abandoned) const {
 
 SolveResult SolveWork::finish() {
     return impl_->finish();
+}
+
+std::uint64_t SolveWork::live_owned_bytes() const {
+    return impl_->estimated_owned_bytes();
+}
+
+std::uint64_t SolveWork::peak_owned_bytes() const {
+    return std::max(
+        impl_->peak_owned_bytes, impl_->estimated_owned_bytes());
+}
+
+std::uint64_t estimated_retained_solver_bytes(
+    const CalcContext& calc,
+    const SolveResult* result) {
+    std::uint64_t bytes = calc.estimated_owned_bytes();
+    if (calc.solve_transition_cache() != nullptr) {
+        bytes += calc.solve_transition_cache()->estimated_owned_bytes();
+    }
+    if (result != nullptr) bytes += solve_result_owned_bytes(*result);
+    return bytes;
 }
 
 SolveResult solve(
@@ -4408,6 +4603,45 @@ std::string serialize_solve_log(
     return log;
 }
 
+class BoundedTelemetryJson {
+  public:
+    explicit BoundedTelemetryJson(std::uint64_t limit) : limit_(limit) {}
+
+    BoundedTelemetryJson& operator+=(const std::string& text) {
+        append(text);
+        return *this;
+    }
+    BoundedTelemetryJson& operator+=(const char* text) {
+        append(text == nullptr ? std::string_view{} : std::string_view(text));
+        return *this;
+    }
+    BoundedTelemetryJson& operator+=(char value) {
+        push_back(value);
+        return *this;
+    }
+    void push_back(char value) {
+        ensure(1);
+        value_.push_back(value);
+    }
+    std::size_t size() const { return value_.size(); }
+    std::string take() && { return std::move(value_); }
+
+  private:
+    void append(std::string_view text) {
+        ensure(text.size());
+        value_.append(text.data(), text.size());
+    }
+    void ensure(std::size_t additional) const {
+        if (value_.size() > limit_ || additional > limit_ - value_.size()) {
+            throw std::length_error(
+                "solver telemetry exceeded max_telemetry_json_bytes (" +
+                std::to_string(limit_) + ")");
+        }
+    }
+    std::string value_;
+    std::uint64_t limit_;
+};
+
 std::string serialize_solver_telemetry(
     const CalcContext& calc,
     const SolveResult* result,
@@ -4421,10 +4655,10 @@ std::string serialize_solver_telemetry(
             : (snapshot == nullptr ? nullptr : &snapshot->diagnostics);
     const bool qualified_action_subset =
         diagnostics != nullptr &&
-        (!diagnostics->skipped_missing_price.empty() ||
+        (diagnostics->skipped_missing_price_count != 0 ||
          diagnostics->evaluator_supported_actions <
              diagnostics->candidate_actions ||
-         !diagnostics->skipped_unsupported.empty());
+         diagnostics->skipped_unsupported_count != 0);
     const auto count_or_null = [](const std::uint64_t* value) {
         return value == nullptr ? std::string("null")
                                 : std::to_string(*value);
@@ -4437,7 +4671,12 @@ std::string serialize_solver_telemetry(
         return value ? "true" : "false";
     };
 
-    std::string json = "{\"version\":\"solver_telemetry_v1\"";
+    const std::uint64_t output_limit =
+        diagnostics == nullptr
+            ? SolveOptions{}.max_telemetry_json_bytes
+            : diagnostics->telemetry_json_byte_limit;
+    BoundedTelemetryJson json(output_limit);
+    json += "{\"version\":\"solver_telemetry_v1\"";
     json += ",\"availability\":{";
     json += "\"evaluator_support\":\"applied_before_expansion\"";
     json += ",\"relevance_filter\":\"explicit_envelope_or_conservative_include\"";
@@ -4502,9 +4741,9 @@ std::string serialize_solver_telemetry(
         json += ",\"equivalent_price_ties\":" + std::to_string(
                     diagnostics->equivalent_price_ties);
         json += ",\"missing_price\":" + std::to_string(
-                    diagnostics->skipped_missing_price.size());
+                    diagnostics->skipped_missing_price_count);
         json += ",\"unsupported_observed\":" + std::to_string(
-                    diagnostics->skipped_unsupported.size());
+                    diagnostics->skipped_unsupported_count);
     }
     json += "}";
 
@@ -4556,7 +4795,16 @@ std::string serialize_solver_telemetry(
             json += '"';
         }
     }
-    json += "],\"preservation_witnesses\":[";
+    json += "],\"reason_samples\":{\"limit\":";
+    json += diagnostics == nullptr
+                ? "null"
+                : std::to_string(diagnostics->diagnostic_sample_limit);
+    json += ",\"omitted\":";
+    json += diagnostics == nullptr
+                ? "null"
+                : std::to_string(
+                      diagnostics->action_inclusion_reasons_omitted);
+    json += "},\"preservation_witnesses\":[";
     if (diagnostics != nullptr) {
         for (std::size_t i = 0;
              i < diagnostics->preservation_witnesses.size(); ++i) {
@@ -4564,7 +4812,17 @@ std::string serialize_solver_telemetry(
             json += diagnostics->preservation_witnesses[i];
         }
     }
-    json += "],\"automatic_candidates\":{";
+    json += "],\"preservation_witness_samples\":{\"retained\":";
+    json += diagnostics == nullptr
+                ? "null"
+                : std::to_string(
+                      diagnostics->preservation_witnesses.size());
+    json += ",\"omitted\":";
+    json += diagnostics == nullptr
+                ? "null"
+                : std::to_string(
+                      diagnostics->preservation_witnesses_omitted);
+    json += "},\"automatic_candidates\":{";
     json += "\"enabled\":" + std::string(bool_json(
         calc.goal().automatic_candidates));
     json += ",\"operators\":" + std::to_string(
@@ -4592,7 +4850,14 @@ std::string serialize_solver_telemetry(
             if (i != 0) json.push_back(',');
             json += diagnostics->automatic_candidate_witnesses[i];
         }
-        json += "]";
+        json += "],\"witness_samples\":{\"retained\":" +
+                std::to_string(
+                    diagnostics->automatic_candidate_witnesses.size()) +
+                ",\"omitted\":" +
+                std::to_string(
+                    diagnostics->automatic_candidate_witnesses_omitted) +
+                ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) + "}";
     }
     json += "}}";
 
@@ -4887,6 +5152,20 @@ std::string serialize_solver_telemetry(
             std::to_string(diagnostics == nullptr
                                ? current_bytes
                                : diagnostics->solver_owned_bytes_estimate);
+    json += ",\"solver_live_owned_bytes_estimate\":" +
+            std::to_string(diagnostics == nullptr
+                               ? current_bytes
+                               : diagnostics->solver_live_owned_bytes_estimate);
+    json += ",\"diagnostics_retained_bytes_estimate\":" +
+            std::to_string(
+                diagnostics == nullptr
+                    ? 0
+                    : diagnostics->diagnostics_retained_bytes_estimate);
+    json += ",\"telemetry_json_byte_limit\":" +
+            std::to_string(
+                diagnostics == nullptr
+                    ? SolveOptions{}.max_telemetry_json_bytes
+                    : diagnostics->telemetry_json_byte_limit);
     json += ",\"estimate_kind\":\"selected_allocations_not_process_heap\"";
     json += ",\"abstract_state_bytes\":" +
             std::to_string(sizeof(AbstractState));
@@ -4966,7 +5245,7 @@ std::string serialize_solver_telemetry(
         json += "null";
     }
     json += "},\"verification\":null}";
-    return json;
+    return std::move(json).take();
 }
 
 } // namespace solver

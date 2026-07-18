@@ -390,6 +390,8 @@ class _StrategyEvalOptions(ct.Structure):
         ("review_projection_json", ct.c_char_p),
         ("review_projection_json_size", ct.c_size_t),
         ("include_success_normalized", ct.c_int32),
+        ("max_owned_bytes", ct.c_uint64),
+        ("max_output_json_bytes", ct.c_uint64),
     ]
 
 
@@ -1687,6 +1689,8 @@ class Strategy(_OwnedHandle):
         max_pairs: int = 0,
         max_transitions: int = 0,
         top_classes_per_node: int = 0,
+        max_owned_bytes: int = 0,
+        max_output_json_bytes: int = 0,
     ) -> dict[str, Any]:
         review = (
             b""
@@ -1706,6 +1710,8 @@ class Strategy(_OwnedHandle):
             review if review else None,
             len(review),
             int(include_success_normalized),
+            max_owned_bytes,
+            max_output_json_bytes,
         )
         length = ct.c_size_t()
         error = _error()

@@ -78,9 +78,38 @@ occupancy result now reports stable action descriptors, exact material and
 native-priced contributions, technique/retry work, optional display-only review
 section totals, reconciliation, and explicitly labelled independent-retry
 success normalization. Simulator descriptor/material averages remain a
-separate sampled evidence source with run count and seed. S8.5 compact review
-and optional empirical trim is the immediate and sole boundary.
-Mechanic rules are never researched or inferred by agents.
+separate sampled evidence source with run count and seed.
+
+A post-S8.4 audit found blocking regressions in the path Calculator actually
+uses. B1.3/B1.4 incorrectly restricted Imprint retry to a complete magic final
+goal even though the approved mechanic requires magic only when the checkpoint
+is created. S8.3 `goal_relevant` automatic generation eagerly creates a large
+cross product of fixed options and widens one global abstraction for all their
+dependencies; a one-state ordinary product diagnostic discovered 63,479 states
+and took about 30 seconds. S8.2/S8.3 also retain unbounded per-row diagnostic
+JSON, omit finalized automatic witnesses from the byte estimate, and check
+caps before diagnostic finalization. The real S8.3/S8.4 comparisons disabled
+automatic candidates, so they did not cover this product path. Large strategy
+serialization, repeated browser copies, retained repricing closure, a 64 MiB
+product compile cap below current ordinary/advanced graph sizes, and
+non-actionable UI diagnostics compound the problem. Calculator's 5,000-run
+“verification” also averages costs across failed/stopped runs without checking
+or showing terminal and off-policy counts, so a broken compiled policy can look
+artificially cheaper than its solver value.
+
+The detailed findings and acceptance gates are recorded in S8.4R of the active
+plan. Oliver has pinned automatic, state-local solver discovery of useful
+Imprint stages with no user-authored retry program. For browser memory, S8.4R
+will release the solved native handle and transition closure after strategy
+transfer and rebuild on repricing; retained-cache mode stays out until live-byte
+telemetry can enforce a product budget. S8.4R is split into R1 diagnostic/cap
+ownership, R2 state-local automatic generation, R3 automatic Imprint discovery,
+R4 browser transfer/lifetime, R5 verification truth, and R6 integrated
+acceptance. R1 is complete: its exact Conquest Lamellar/Mirage case is pinned,
+diagnostic retention and final output are bounded, evaluator byte caps are in
+place, and native/release-WASM selected live-memory telemetry is available.
+**S8.4R.2 is the immediate and sole boundary; S8.5 is blocked until all of
+S8.4R passes.** Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,
