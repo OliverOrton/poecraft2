@@ -10,15 +10,17 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: B1.0-B1.4 and S8.0 are complete. Oliver explicitly waived
+Status 2026-07-17: B1.0-B1.4 and S8.0-S8.1 are complete. Oliver explicitly waived
 B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
 validation already completed; B1.5 is recorded as waived/deferred, not
 complete. Its full acceptance suite, 10,000-run Imprint verification, and
 rendered Bestiary review were not backfilled. Imprint is the sole B1 recipe;
 Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
 the engine and workspace action envelopes. The authoritative contract is
-[fixtures/bestiary/v1](../../fixtures/bestiary/v1/). The next implementation
-boundary is **S8.1 only**. The recorded S7 endgame sample remains `0.9942`
+[fixtures/bestiary/v1](../../fixtures/bestiary/v1/). S8.1 added deterministic,
+display-only review projections over the frozen S8.0 ordinary strategies while
+preserving their exact bytes and sole execution authority. The next
+implementation boundary is **S8.2 only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -359,6 +361,10 @@ or later behavior was implemented. S8.1 is the sole next boundary.
 
 ### S8.1 - Derived Review Sections
 
+Status: complete 2026-07-17. The implementation and representative documents
+are under
+[fixtures/solver-baselines/s8.0/review-projections](../../fixtures/solver-baselines/s8.0/review-projections/).
+
 Build a display-only projection over the chosen policy. Group policy regions
 using exact facts already present in the graph/evaluator, including:
 
@@ -379,6 +385,24 @@ identically because they are the same strategy. Deliver representative
 projections to Oliver before investing in further presentation polish. If the
 grouping is not useful, retain action accounting and trimming without making
 sections solver authority.
+
+Checkpoint passed: `poecraft_ingest.solver_review` verifies the exact raw file
+SHA-256 before deriving a separate schema-v1 projection. Success and incoming
+route conditions supply satisfied, crafted, fractured, protection, blocking,
+and goal-subset facts; serialized operations supply the descriptive role
+vocabulary. Raw control-flow SCCs remain atomic sections, every raw node/edge
+belongs to one section, every projected entry and cross-section route retains
+resolving raw ids, and stale hashes, unresolved references, split SCCs, or
+invalid backward boundaries are refused. The small oracle, ordinary ES bench,
+existing Fracture preparation, and archived fractured endgame strategies were
+projected without changing their raw gzip bytes or recorded hashes. Focused
+validation passed deterministic byte regeneration, 10 projection/baseline
+tests, and a native compile/execute identity check showing that projection
+ordering and labels cannot affect the unchanged raw oracle input. Existing
+`mod_count` evaluator refusal and all other S8.0 mismatches remain disclosed.
+No solver decision, candidate generation, pruning, Bellman logic, policy
+compression, raw execution, routing, legality, evaluation, or mechanic behavior
+changed. S8.2 is the sole next boundary.
 
 ### S8.2 - Preservation-Aware Action Control
 

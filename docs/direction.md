@@ -64,8 +64,10 @@ checkpoint/restore contract, and parked both prefix/suffix conversion recipes.
 Oliver waived B1.5 as a separate checkpoint based on focused B1.3/B1.4
 validation; it is waived/deferred, not complete, and its full acceptance,
 10,000-run Imprint verification, and rendered review were not backfilled. S8.0
-now versions the exact solver before-state and the review, accounting, and
-trimming contracts. S8.1 derived review sections is the immediate boundary.
+versions the exact solver before-state and the review, accounting, and trimming
+contracts. S8.1 now derives deterministic display-only review sections over
+those frozen strategies with complete raw graph traceability and no executable
+authority. S8.2 preservation-aware action control is the immediate boundary.
 Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

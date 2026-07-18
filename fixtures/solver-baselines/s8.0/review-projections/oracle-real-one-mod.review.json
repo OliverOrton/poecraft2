@@ -1,0 +1,775 @@
+{
+  "schema_version": "solver_review_projection_v1",
+  "projection_id": "s8.1-oracle-real-one-mod-review-v1",
+  "raw_strategy": {
+    "path": "fixtures/solver-baselines/s8.0/strategies/oracle-real-one-mod.strategy.json.gz",
+    "sha256": "e92108b98b2e4d8d731e04ced431d83f05ecc0b4ef25d396805fcd70bf84e379",
+    "execution_authority": "raw_strategy_only"
+  },
+  "semantics": {
+    "executable": false,
+    "can_alter_execution": false,
+    "can_alter_routing": false,
+    "can_alter_legality": false,
+    "can_alter_evaluation": false
+  },
+  "sections": [
+    {
+      "id": "section-001-setup",
+      "label": "Enter the exact raw policy",
+      "role": "setup",
+      "derived": true,
+      "raw_references": [
+        {
+          "node_id": "start"
+        },
+        {
+          "edge_id": "e0"
+        }
+      ],
+      "entries": [
+        {
+          "id": "section-001-setup-entry-001-setup",
+          "label": "Enter the exact raw policy",
+          "role": "setup",
+          "raw_references": [
+            {
+              "node_id": "start"
+            }
+          ]
+        },
+        {
+          "id": "section-001-setup-entry-002-route-e0",
+          "label": "Raw route e0 to Rolling and carrier progression retry policy",
+          "role": "rolling",
+          "raw_references": [
+            {
+              "edge_id": "e0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-002-rolling",
+      "label": "Rolling and carrier progression retry policy",
+      "role": "rolling",
+      "derived": true,
+      "raw_references": [
+        {
+          "node_id": "router"
+        },
+        {
+          "node_id": "s0"
+        },
+        {
+          "node_id": "s8"
+        },
+        {
+          "node_id": "s16"
+        },
+        {
+          "node_id": "s24"
+        },
+        {
+          "node_id": "s32"
+        },
+        {
+          "node_id": "s40"
+        },
+        {
+          "node_id": "s48"
+        },
+        {
+          "node_id": "s56"
+        },
+        {
+          "node_id": "s64"
+        },
+        {
+          "node_id": "s72"
+        },
+        {
+          "node_id": "s79"
+        },
+        {
+          "edge_id": "e1"
+        },
+        {
+          "edge_id": "e2"
+        },
+        {
+          "edge_id": "e3"
+        },
+        {
+          "edge_id": "e4"
+        },
+        {
+          "edge_id": "e5"
+        },
+        {
+          "edge_id": "e6"
+        },
+        {
+          "edge_id": "e7"
+        },
+        {
+          "edge_id": "e8"
+        },
+        {
+          "edge_id": "e9"
+        },
+        {
+          "edge_id": "e10"
+        },
+        {
+          "edge_id": "e11"
+        },
+        {
+          "edge_id": "e12"
+        },
+        {
+          "edge_id": "e13"
+        },
+        {
+          "edge_id": "e14"
+        },
+        {
+          "edge_id": "e15"
+        },
+        {
+          "edge_id": "e16"
+        },
+        {
+          "edge_id": "e17"
+        },
+        {
+          "edge_id": "e18"
+        },
+        {
+          "edge_id": "e19"
+        },
+        {
+          "edge_id": "e20"
+        },
+        {
+          "edge_id": "e21"
+        },
+        {
+          "edge_id": "e22"
+        },
+        {
+          "edge_id": "e23"
+        },
+        {
+          "edge_id": "e24"
+        },
+        {
+          "edge_id": "e25"
+        },
+        {
+          "edge_id": "e26"
+        },
+        {
+          "edge_id": "e27"
+        },
+        {
+          "edge_id": "e28"
+        },
+        {
+          "edge_id": "e29"
+        },
+        {
+          "edge_id": "e30"
+        },
+        {
+          "edge_id": "e31"
+        },
+        {
+          "edge_id": "e32"
+        },
+        {
+          "edge_id": "e33"
+        },
+        {
+          "edge_id": "e34"
+        },
+        {
+          "edge_id": "e35"
+        },
+        {
+          "edge_id": "e36"
+        },
+        {
+          "edge_id": "e37"
+        },
+        {
+          "edge_id": "e38"
+        },
+        {
+          "edge_id": "e39"
+        },
+        {
+          "edge_id": "e40"
+        },
+        {
+          "edge_id": "e41"
+        },
+        {
+          "edge_id": "e42"
+        },
+        {
+          "edge_id": "e43"
+        },
+        {
+          "edge_id": "e44"
+        },
+        {
+          "edge_id": "e45"
+        },
+        {
+          "edge_id": "e46"
+        },
+        {
+          "edge_id": "e47"
+        },
+        {
+          "edge_id": "e48"
+        },
+        {
+          "edge_id": "e49"
+        },
+        {
+          "edge_id": "e50"
+        },
+        {
+          "edge_id": "e51"
+        },
+        {
+          "edge_id": "e52"
+        },
+        {
+          "edge_id": "e53"
+        },
+        {
+          "edge_id": "e54"
+        },
+        {
+          "edge_id": "e55"
+        },
+        {
+          "edge_id": "e56"
+        },
+        {
+          "edge_id": "e57"
+        },
+        {
+          "edge_id": "e58"
+        },
+        {
+          "edge_id": "e59"
+        },
+        {
+          "edge_id": "e60"
+        },
+        {
+          "edge_id": "e61"
+        },
+        {
+          "edge_id": "e62"
+        },
+        {
+          "edge_id": "e63"
+        },
+        {
+          "edge_id": "e64"
+        },
+        {
+          "edge_id": "e65"
+        },
+        {
+          "edge_id": "e66"
+        },
+        {
+          "edge_id": "e67"
+        },
+        {
+          "edge_id": "e68"
+        },
+        {
+          "edge_id": "e69"
+        },
+        {
+          "edge_id": "e70"
+        },
+        {
+          "edge_id": "e71"
+        },
+        {
+          "edge_id": "e72"
+        },
+        {
+          "edge_id": "e73"
+        },
+        {
+          "edge_id": "e74"
+        },
+        {
+          "edge_id": "e75"
+        },
+        {
+          "edge_id": "e76"
+        },
+        {
+          "edge_id": "e77"
+        },
+        {
+          "edge_id": "e78"
+        },
+        {
+          "edge_id": "e79"
+        },
+        {
+          "edge_id": "e80"
+        },
+        {
+          "edge_id": "e81"
+        },
+        {
+          "edge_id": "e82"
+        },
+        {
+          "edge_id": "e83"
+        },
+        {
+          "edge_id": "e84"
+        },
+        {
+          "edge_id": "e85"
+        },
+        {
+          "edge_id": "e86"
+        },
+        {
+          "edge_id": "e87"
+        },
+        {
+          "edge_id": "e88"
+        },
+        {
+          "edge_id": "e89"
+        },
+        {
+          "edge_id": "e90"
+        },
+        {
+          "edge_id": "e91"
+        },
+        {
+          "edge_id": "e92"
+        },
+        {
+          "edge_id": "e93"
+        }
+      ],
+      "entries": [
+        {
+          "id": "section-002-rolling-entry-001-rolling",
+          "label": "Alteration — disposable carrier with no satisfied goal subset on routed states",
+          "role": "rolling",
+          "raw_references": [
+            {
+              "node_id": "s0"
+            },
+            {
+              "node_id": "s8"
+            },
+            {
+              "node_id": "s16"
+            },
+            {
+              "node_id": "s24"
+            },
+            {
+              "node_id": "s32"
+            },
+            {
+              "node_id": "s40"
+            },
+            {
+              "node_id": "s48"
+            },
+            {
+              "node_id": "s56"
+            },
+            {
+              "node_id": "s64"
+            },
+            {
+              "node_id": "s72"
+            },
+            {
+              "edge_id": "e2"
+            },
+            {
+              "edge_id": "e3"
+            },
+            {
+              "edge_id": "e4"
+            },
+            {
+              "edge_id": "e5"
+            },
+            {
+              "edge_id": "e6"
+            },
+            {
+              "edge_id": "e7"
+            },
+            {
+              "edge_id": "e8"
+            },
+            {
+              "edge_id": "e9"
+            },
+            {
+              "edge_id": "e10"
+            },
+            {
+              "edge_id": "e11"
+            },
+            {
+              "edge_id": "e12"
+            },
+            {
+              "edge_id": "e13"
+            },
+            {
+              "edge_id": "e14"
+            },
+            {
+              "edge_id": "e15"
+            },
+            {
+              "edge_id": "e16"
+            },
+            {
+              "edge_id": "e17"
+            },
+            {
+              "edge_id": "e18"
+            },
+            {
+              "edge_id": "e19"
+            },
+            {
+              "edge_id": "e20"
+            },
+            {
+              "edge_id": "e21"
+            },
+            {
+              "edge_id": "e22"
+            },
+            {
+              "edge_id": "e23"
+            },
+            {
+              "edge_id": "e24"
+            },
+            {
+              "edge_id": "e25"
+            },
+            {
+              "edge_id": "e26"
+            },
+            {
+              "edge_id": "e27"
+            },
+            {
+              "edge_id": "e28"
+            },
+            {
+              "edge_id": "e29"
+            },
+            {
+              "edge_id": "e30"
+            },
+            {
+              "edge_id": "e31"
+            },
+            {
+              "edge_id": "e32"
+            },
+            {
+              "edge_id": "e33"
+            },
+            {
+              "edge_id": "e34"
+            },
+            {
+              "edge_id": "e35"
+            },
+            {
+              "edge_id": "e36"
+            },
+            {
+              "edge_id": "e37"
+            },
+            {
+              "edge_id": "e38"
+            },
+            {
+              "edge_id": "e39"
+            },
+            {
+              "edge_id": "e40"
+            },
+            {
+              "edge_id": "e41"
+            },
+            {
+              "edge_id": "e42"
+            },
+            {
+              "edge_id": "e43"
+            },
+            {
+              "edge_id": "e44"
+            },
+            {
+              "edge_id": "e45"
+            },
+            {
+              "edge_id": "e46"
+            },
+            {
+              "edge_id": "e47"
+            },
+            {
+              "edge_id": "e48"
+            },
+            {
+              "edge_id": "e49"
+            },
+            {
+              "edge_id": "e50"
+            },
+            {
+              "edge_id": "e51"
+            },
+            {
+              "edge_id": "e52"
+            },
+            {
+              "edge_id": "e53"
+            },
+            {
+              "edge_id": "e54"
+            },
+            {
+              "edge_id": "e55"
+            },
+            {
+              "edge_id": "e56"
+            },
+            {
+              "edge_id": "e57"
+            },
+            {
+              "edge_id": "e58"
+            },
+            {
+              "edge_id": "e59"
+            },
+            {
+              "edge_id": "e60"
+            },
+            {
+              "edge_id": "e61"
+            },
+            {
+              "edge_id": "e62"
+            },
+            {
+              "edge_id": "e63"
+            },
+            {
+              "edge_id": "e64"
+            },
+            {
+              "edge_id": "e65"
+            },
+            {
+              "edge_id": "e66"
+            },
+            {
+              "edge_id": "e67"
+            },
+            {
+              "edge_id": "e68"
+            },
+            {
+              "edge_id": "e69"
+            },
+            {
+              "edge_id": "e70"
+            },
+            {
+              "edge_id": "e71"
+            },
+            {
+              "edge_id": "e72"
+            },
+            {
+              "edge_id": "e73"
+            },
+            {
+              "edge_id": "e74"
+            },
+            {
+              "edge_id": "e75"
+            },
+            {
+              "edge_id": "e76"
+            },
+            {
+              "edge_id": "e77"
+            },
+            {
+              "edge_id": "e78"
+            },
+            {
+              "edge_id": "e79"
+            },
+            {
+              "edge_id": "e80"
+            },
+            {
+              "edge_id": "e83"
+            },
+            {
+              "edge_id": "e84"
+            },
+            {
+              "edge_id": "e85"
+            },
+            {
+              "edge_id": "e86"
+            },
+            {
+              "edge_id": "e87"
+            },
+            {
+              "edge_id": "e88"
+            },
+            {
+              "edge_id": "e89"
+            },
+            {
+              "edge_id": "e90"
+            },
+            {
+              "edge_id": "e91"
+            },
+            {
+              "edge_id": "e92"
+            }
+          ]
+        },
+        {
+          "id": "section-002-rolling-entry-002-rolling",
+          "label": "Rolling outcome routing",
+          "role": "rolling",
+          "raw_references": [
+            {
+              "node_id": "router"
+            }
+          ]
+        },
+        {
+          "id": "section-002-rolling-entry-003-rolling",
+          "label": "Transmute — disposable carrier with no satisfied goal subset on routed states",
+          "role": "rolling",
+          "raw_references": [
+            {
+              "node_id": "s79"
+            },
+            {
+              "edge_id": "e81"
+            },
+            {
+              "edge_id": "e93"
+            }
+          ]
+        },
+        {
+          "id": "section-002-rolling-entry-004-route-e1",
+          "label": "Raw route e1 to Satisfied goal carriers (1 goal families); crafted status unconstrained by the success route; fractured status unconstrained by the success route",
+          "role": "finishing",
+          "raw_references": [
+            {
+              "edge_id": "e1"
+            }
+          ]
+        },
+        {
+          "id": "section-002-rolling-entry-005-route-e82",
+          "label": "Raw route e82 to Recovery or failure exit",
+          "role": "recovery",
+          "raw_references": [
+            {
+              "edge_id": "e82"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-003-finishing",
+      "label": "Satisfied goal carriers (1 goal families); crafted status unconstrained by the success route; fractured status unconstrained by the success route",
+      "role": "finishing",
+      "derived": true,
+      "raw_references": [
+        {
+          "node_id": "goal"
+        }
+      ],
+      "entries": [
+        {
+          "id": "section-003-finishing-entry-001-finishing",
+          "label": "Satisfied goal carriers (1 goal families); crafted status unconstrained by the success route; fractured status unconstrained by the success route",
+          "role": "finishing",
+          "raw_references": [
+            {
+              "node_id": "goal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-004-recovery",
+      "label": "Recovery or failure exit",
+      "role": "recovery",
+      "derived": true,
+      "raw_references": [
+        {
+          "node_id": "offpolicy"
+        }
+      ],
+      "entries": [
+        {
+          "id": "section-004-recovery-entry-001-recovery",
+          "label": "Failure policy exit",
+          "role": "recovery",
+          "raw_references": [
+            {
+              "node_id": "offpolicy"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

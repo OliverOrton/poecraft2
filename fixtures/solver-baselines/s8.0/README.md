@@ -115,3 +115,65 @@ and compressed ordinary graph, verifies hashes and graph identities, resolves
 every projected reference, reconciles the accounting example to the existing
 deterministic Restart evaluator totals, checks the contract classifications,
 and requires complete trimming provenance plus the explicit Restart fallback.
+
+## S8.1 derived review projections
+
+S8.1 adds deterministic display-only documents under `review-projections/`.
+They are derived over the frozen S8.0 strategy files; none of the compressed
+ordinary strategies or their recorded hashes changed. Generate them with:
+
+```text
+py -3 -m poecraft_ingest.solver_review
+py -3 -m poecraft_ingest.solver_review --check
+```
+
+The selected representatives reuse existing evidence rather than creating a
+strategy-quality corpus:
+
+- `oracle-real-one-mod` is the small exact oracle policy.
+- `ordinary-es-bench` shows ordinary Alchemy/Scour rolling, Annul recovery,
+  and a deterministic goal bench finish.
+- `s8-fracture-prepare` shows the existing exact preparation/Fracture option
+  expansion and retry routing.
+- `endgame-fractured-es` shows a fractured prefix carrier, Fossil rolling,
+  recovery actions, and deterministic bench finishing in the archived endgame
+  graph.
+
+Derivation is deliberately conservative and uses only serialized strategy
+facts plus an exact evaluator result when one is available:
+
+1. The source file's exact bytes are SHA-256 checked before decompression or
+   projection. The projection records that source path/hash and
+   `raw_strategy_only` authority.
+2. Success-route `has_mod_family` conditions define the common goal subset.
+   Incoming exact route conditions describe satisfied goal subsets, crafted or
+   fractured goal state, active item flags, and crafted non-goal blockers.
+   When a success route does not constrain crafted/fractured status, the label
+   says that it is unconstrained instead of inferring a status.
+3. Serialized operation vocabulary supplies descriptive roles: renewal rolls
+   are `rolling`; Fracture is `fracture`; Scour/Restart are `restart`; Annul and
+   restore are `recovery`; crafted-mod removal is `cleanup`; Exalt/Augment and
+   similar preparation are `setup`. Bench goal mods are `finishing`, prefix or
+   suffix locks are `protection`, cannot-roll metamods and non-goal bench mods
+   are `temporary_blocking`, and Multimod is `setup`.
+4. A goal bench operation is called deterministic-finishing-ready only when
+   every exact incoming route already satisfies all other goal families and
+   does not satisfy the bench target. Active prefix/suffix lock conditions may
+   describe the goal subset being preserved. With no goal family on any exact
+   incoming route, a rolling entry is labelled a disposable carrier.
+5. Raw control-flow strongly connected components are atomic sections. The
+   compiled policies use a central exact-state router, so the whole retry SCC
+   stays in one section while entries expose its different operation/state
+   roles. Cross-section raw routes receive their own edge reference; a backward
+   boundary is accepted only as recovery, restart, or cleanup.
+6. Every raw node and edge belongs to exactly one generated section, every
+   entry has a raw reference, every cross-section route has an edge entry, and
+   all references are re-resolved on reload. Stale hashes, unresolved ids,
+   split retry SCCs, or unlabelled backward routes are refused.
+
+Projection labels, entry order, and section order never enter the engine API.
+Focused native binding validation compiles and executes the same verified raw
+oracle bytes before and after relabelling/reordering projection metadata and
+requires byte-identical deterministic results. The existing Calculator
+`mod_count` unsupported result remains attached to the same raw strategy
+identity; S8.1 does not change or reinterpret it.

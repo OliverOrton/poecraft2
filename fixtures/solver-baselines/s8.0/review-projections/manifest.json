@@ -1,0 +1,55 @@
+{
+  "schema_version": "s8_review_projection_manifest_v1",
+  "projection_set_id": "poecraft2-s8.1-derived-review-v1",
+  "scope": "Display-only S8.1 projections over frozen S8.0 ordinary strategies",
+  "contract": {
+    "path": "fixtures/solver-baselines/s8.0/contracts/review-projection.schema.json",
+    "sha256": "265e44d0b41c7298e55e9ccb4806025e95988434f7c1fe46ff33a12a633cbb00"
+  },
+  "execution_authority": "raw_strategy_only",
+  "representatives": [
+    {
+      "case_id": "oracle-real-one-mod",
+      "purpose": "Small exact oracle policy with a single rolling retry SCC.",
+      "projection_path": "fixtures/solver-baselines/s8.0/review-projections/oracle-real-one-mod.review.json",
+      "projection_sha256": "118816171d7b564c396cb6e03cde4df8db0cb669cc4bf424bf8e654e58102574",
+      "raw_strategy_path": "fixtures/solver-baselines/s8.0/strategies/oracle-real-one-mod.strategy.json.gz",
+      "raw_strategy_sha256": "e92108b98b2e4d8d731e04ced431d83f05ecc0b4ef25d396805fcd70bf84e379",
+      "evaluator_status": "unsupported"
+    },
+    {
+      "case_id": "ordinary-es-bench",
+      "purpose": "Ordinary Alchemy/Scour rolling, deterministic goal bench finishing, and recovery actions.",
+      "projection_path": "fixtures/solver-baselines/s8.0/review-projections/ordinary-es-bench.review.json",
+      "projection_sha256": "db4c73d8a0a32cbe8bf08da6e98841d696891760a85b652edbd0f3e030aac571",
+      "raw_strategy_path": "fixtures/solver-baselines/s8.0/strategies/ordinary-es-bench.strategy.json.gz",
+      "raw_strategy_sha256": "241f682820c6756992f75bafb336795f0e7bb3b28f46ab73505a678b67a85850",
+      "evaluator_status": "unsupported"
+    },
+    {
+      "case_id": "s8-fracture-prepare",
+      "purpose": "Existing exact fracture_prepare expansion with preparation, Fracture routing, and retry behavior.",
+      "projection_path": "fixtures/solver-baselines/s8.0/review-projections/s8-fracture-prepare.review.json",
+      "projection_sha256": "703a9ce58499fdec09941fbf0a80707b1fa33de73dca1a2255bf340cbbfc28d5",
+      "raw_strategy_path": "fixtures/solver-baselines/s8.0/strategies/s8-fracture-prepare.strategy.json.gz",
+      "raw_strategy_sha256": "4b644cdcd203716466f0b8c1857597315ecf89ef81ad76d8f33d599df9451a38",
+      "evaluator_status": "unsupported"
+    },
+    {
+      "case_id": "endgame-fractured-es",
+      "purpose": "Archived fractured starting carrier with Fossil rolling, deterministic bench finishing, and recovery actions.",
+      "projection_path": "fixtures/solver-baselines/s8.0/review-projections/endgame-fractured-es.review.json",
+      "projection_sha256": "86a5d40e0829afb530555c20edf82f5bfc7b93b2d9a01b42f550e67322796d18",
+      "raw_strategy_path": "fixtures/solver-baselines/s8.0/strategies/endgame-fractured-es.strategy.json.gz",
+      "raw_strategy_sha256": "c6f63a6215ac19f9356035c7bf4b570d6f8c65b4fd0f0396840f6e338319b309",
+      "evaluator_status": "not_requested"
+    }
+  ],
+  "documented_mismatches_preserved": [
+    "Current compiled graphs contain compiler-only mod_count routing that Calculator exact evaluation refuses.",
+    "The archived endgame Simulator sample remains 0.9942 against its historical 0.995 threshold.",
+    "The temporary-blocker solve did not converge and therefore has no raw strategy to project.",
+    "Protected-reforge captures were abandoned because they ran too long and therefore have no raw strategy to project.",
+    "The archived S7 artifact pins predate the additive B1.4 artifact."
+  ]
+}

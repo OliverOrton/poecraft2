@@ -1,15 +1,26 @@
 from __future__ import annotations
 
+import copy
 import gc
 import gzip
 import hashlib
 import json
 from pathlib import Path
+import tempfile
 import unittest
+
+from poecraft_ingest.solver_review import (
+    REPRESENTATIVE_CASES,
+    ReviewProjectionError,
+    generate_projection,
+    projection_bytes,
+    validate_projection,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
 BASELINE_ROOT = ROOT / "fixtures" / "solver-baselines" / "s8.0"
+PROJECTION_ROOT = BASELINE_ROOT / "review-projections"
 
 
 def load_json(path: Path):
@@ -109,6 +120,283 @@ class SolverS8BaselineTests(unittest.TestCase):
         # Reloading the raw strategy after the projection proves the projection is
         # a separate, non-authoritative document and leaves executable bytes intact.
         self.assertEqual(strategy_bytes, strategy_path.read_bytes())
+
+    def test_s8_1_representative_projections_reload_with_complete_traceability(self):
+        projection_manifest = load_json(PROJECTION_ROOT / "manifest.json")
+        schema = load_json(BASELINE_ROOT / "contracts" / "review-projection.schema.json")
+        baseline_manifest = load_json(BASELINE_ROOT / "manifest.json")
+        baseline_by_id = {
+            entry["id"]: load_json(ROOT / entry["path"])
+            for entry in baseline_manifest["cases"]
+        }
+
+        expected_cases = [case_id for case_id, _ in REPRESENTATIVE_CASES]
+        records = projection_manifest["representatives"]
+        self.assertEqual([record["case_id"] for record in records], expected_cases)
+        self.assertEqual(projection_manifest["execution_authority"], "raw_strategy_only")
+        self.assertEqual(
+            sha256((ROOT / projection_manifest["contract"]["path"]).read_bytes()),
+            projection_manifest["contract"]["sha256"],
+        )
+
+        all_entry_roles = set()
+        for record in records:
+            path = ROOT / record["projection_path"]
+            self.assertEqual(sha256(path.read_bytes()), record["projection_sha256"])
+            projection = load_json(path)
+            validation = validate_projection(
+                projection,
+                root=ROOT,
+                schema=schema,
+                require_complete_coverage=True,
+            )
+            baseline = baseline_by_id[record["case_id"]]
+            self.assertEqual(
+                projection["raw_strategy"]["sha256"],
+                baseline["strategy"]["gzip_sha256"],
+            )
+            self.assertEqual(record["evaluator_status"], baseline["evaluator"]["status"])
+            self.assertEqual(
+                validation["raw_source_bytes"],
+                (ROOT / record["raw_strategy_path"]).read_bytes(),
+            )
+            for section in projection["sections"]:
+                self.assertTrue(section["raw_references"])
+                for entry in section["entries"]:
+                    self.assertTrue(entry["raw_references"])
+                    all_entry_roles.add(entry["role"])
+
+        self.assertTrue(
+            {"rolling", "fracture", "finishing", "recovery", "restart", "setup"}
+            .issubset(all_entry_roles)
+        )
+
+    def test_s8_1_generation_is_byte_deterministic_and_refuses_stale_identity(self):
+        record = load_json(PROJECTION_ROOT / "manifest.json")["representatives"][0]
+        strategy_path = ROOT / record["raw_strategy_path"]
+        first = generate_projection(
+            ROOT,
+            strategy_path,
+            projection_id="s8.1-determinism-test",
+            expected_sha256=record["raw_strategy_sha256"],
+        )
+        second = generate_projection(
+            ROOT,
+            strategy_path,
+            projection_id="s8.1-determinism-test",
+            expected_sha256=record["raw_strategy_sha256"],
+        )
+        self.assertEqual(projection_bytes(first), projection_bytes(second))
+
+        with self.assertRaisesRegex(ReviewProjectionError, "sha256 mismatch"):
+            generate_projection(
+                ROOT,
+                strategy_path,
+                projection_id="s8.1-stale-test",
+                expected_sha256="0" * 64,
+            )
+
+    def test_s8_1_retry_scc_stays_together_and_roles_use_only_exact_raw_facts(self):
+        schema = load_json(BASELINE_ROOT / "contracts" / "review-projection.schema.json")
+        strategy = {
+            "version": "v1",
+            "name": "Synthetic review vocabulary coverage",
+            "base_state": {
+                "base_key": "synthetic/base",
+                "item_level": 1,
+                "rarity": "rare",
+            },
+            "start_node_id": "start",
+            "nodes": [
+                {"id": "start", "kind": "start"},
+                {"id": "router", "kind": "router"},
+                {"id": "roll", "kind": "operation", "operation": {"type": "chaos"}},
+                {
+                    "id": "protect",
+                    "kind": "operation",
+                    "operation": {
+                        "type": "bench",
+                        "mod_key": "StrMasterItemGenerationCannotChangePrefixes",
+                    },
+                },
+                {
+                    "id": "block",
+                    "kind": "operation",
+                    "operation": {"type": "bench", "mod_key": "TemporaryBlocker"},
+                },
+                {"id": "fracture", "kind": "operation", "operation": {"type": "fracture"}},
+                {
+                    "id": "finish",
+                    "kind": "operation",
+                    "operation": {"type": "bench", "mod_key": "GoalB"},
+                },
+                {
+                    "id": "cleanup",
+                    "kind": "operation",
+                    "operation": {"type": "remove_crafted_mod"},
+                },
+                {"id": "recover", "kind": "operation", "operation": {"type": "annul"}},
+                {"id": "reset", "kind": "operation", "operation": {"type": "scour"}},
+                {"id": "setup", "kind": "operation", "operation": {"type": "exalt"}},
+                {"id": "success", "kind": "terminal", "terminal": "success"},
+                {"id": "failure", "kind": "terminal", "terminal": "failure"},
+            ],
+            "edges": [
+                {"id": "begin", "from": "start", "to": "router", "is_default": True},
+                {
+                    "id": "goal",
+                    "from": "router",
+                    "to": "success",
+                    "condition": {
+                        "type": "all",
+                        "conditions": [
+                            {"type": "has_mod_family", "family_mod_key": "GoalA", "min_tier": 1},
+                            {"type": "has_mod_family", "family_mod_key": "GoalB", "min_tier": 1},
+                        ],
+                    },
+                },
+                {"id": "offpolicy", "from": "router", "to": "failure", "is_default": True},
+            ],
+        }
+        routes = {
+            "roll": {
+                "type": "all",
+                "conditions": [
+                    {"type": "has_mod_family", "family_mod_key": "GoalA", "min_tier": 1},
+                    {"type": "item_flag", "flag": "prefixes_locked"},
+                ],
+            },
+            "protect": {"type": "always"},
+            "block": {"type": "always"},
+            "fracture": {
+                "type": "has_mod_family",
+                "family_mod_key": "GoalA",
+                "min_tier": 1,
+            },
+            "finish": {
+                "type": "has_mod_family",
+                "family_mod_key": "GoalA",
+                "min_tier": 1,
+            },
+            "cleanup": {"type": "always"},
+            "recover": {"type": "always"},
+            "reset": {"type": "always"},
+            "setup": {"type": "always"},
+        }
+        for node_id, condition in routes.items():
+            strategy["edges"].append(
+                {
+                    "id": f"route-{node_id}",
+                    "from": "router",
+                    "to": node_id,
+                    "condition": condition,
+                }
+            )
+            strategy["edges"].append(
+                {
+                    "id": f"retry-{node_id}",
+                    "from": node_id,
+                    "to": "router",
+                    "is_default": True,
+                }
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "review-vocabulary.strategy.json"
+            path.write_text(json.dumps(strategy), encoding="utf-8")
+            projection = generate_projection(
+                Path(directory),
+                path,
+                projection_id="s8.1-review-vocabulary-test",
+                expected_sha256=sha256(path.read_bytes()),
+            )
+            validate_projection(
+                projection,
+                root=Path(directory),
+                schema=schema,
+                require_complete_coverage=True,
+            )
+
+        main_section = next(
+            section
+            for section in projection["sections"]
+            if {"router", "roll", "protect", "block", "fracture"}.issubset(
+                {
+                    reference["node_id"]
+                    for reference in section["raw_references"]
+                    if "node_id" in reference
+                }
+            )
+        )
+        main_roles = {entry["role"] for entry in main_section["entries"]}
+        self.assertEqual(
+            main_roles,
+            {
+                "rolling",
+                "temporary_blocking",
+                "protection",
+                "fracture",
+                "finishing",
+                "cleanup",
+                "recovery",
+                "restart",
+                "setup",
+            },
+        )
+        labels = "\n".join(entry["label"] for entry in main_section["entries"])
+        self.assertIn("active protection prefixes_locked", labels)
+        self.assertIn("deterministic finishing ready", labels)
+
+    def test_s8_1_projection_order_and_labels_cannot_change_execution_identity(self):
+        schema = load_json(BASELINE_ROOT / "contracts" / "review-projection.schema.json")
+        record = load_json(PROJECTION_ROOT / "manifest.json")["representatives"][0]
+        projection = load_json(ROOT / record["projection_path"])
+        original = validate_projection(
+            projection,
+            root=ROOT,
+            schema=schema,
+            require_complete_coverage=True,
+        )
+
+        relabelled = copy.deepcopy(projection)
+        relabelled["sections"].reverse()
+        for section in relabelled["sections"]:
+            section["label"] = "Display label intentionally changed"
+            section["entries"].reverse()
+            for entry in section["entries"]:
+                entry["label"] = "Entry display label intentionally changed"
+        relabelled_result = validate_projection(
+            relabelled,
+            root=ROOT,
+            schema=schema,
+            require_complete_coverage=False,
+        )
+        self.assertEqual(
+            original["raw_strategy_json_bytes"],
+            relabelled_result["raw_strategy_json_bytes"],
+        )
+        self.assertEqual(original["raw_source_bytes"], relabelled_result["raw_source_bytes"])
+
+        baseline = load_json(BASELINE_ROOT / "baselines" / "oracle-real-one-mod.json")
+        self.assertEqual(baseline["evaluator"]["status"], "unsupported")
+        self.assertIn("mod_count", baseline["evaluator"]["error"])
+
+    def test_s8_1_malformed_hash_and_unresolved_reference_are_rejected(self):
+        schema = load_json(BASELINE_ROOT / "contracts" / "review-projection.schema.json")
+        record = load_json(PROJECTION_ROOT / "manifest.json")["representatives"][0]
+        projection = load_json(ROOT / record["projection_path"])
+
+        bad_hash = copy.deepcopy(projection)
+        bad_hash["raw_strategy"]["sha256"] = "0" * 64
+        with self.assertRaisesRegex(ReviewProjectionError, "stale projection"):
+            validate_projection(bad_hash, root=ROOT, schema=schema)
+
+        bad_reference = copy.deepcopy(projection)
+        bad_reference["sections"][0]["entries"][0]["raw_references"] = [
+            {"node_id": "missing-node"}
+        ]
+        with self.assertRaisesRegex(ReviewProjectionError, "unresolved raw node"):
+            validate_projection(bad_reference, root=ROOT, schema=schema)
 
     def test_accounting_example_reconciles_with_existing_evaluator_total(self):
         accounting = load_json(BASELINE_ROOT / "examples" / "action-accounting.example.json")
