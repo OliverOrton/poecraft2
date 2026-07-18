@@ -483,6 +483,137 @@ ActionDescriptor base_descriptor(
     return descriptor;
 }
 
+ActionPreservationMetadata derive_preservation_metadata(
+    const SessionImpl& session,
+    const ActionDescriptor& action) {
+    ActionPreservationMetadata metadata;
+    if (action.synthetic) {
+        metadata.can_destroy = kAllCarrierProperties;
+        metadata.can_make_unreachable = kAllCarrierProperties;
+        return metadata;
+    }
+
+    const ActionTransitionFacts facts =
+        action_transition_facts(action.params.type);
+    metadata.destructive_renewal = facts.renewal;
+    metadata.preserves_fractured_affixes =
+        facts.preserves_fractured_affixes;
+    metadata.respects_prefix_lock = facts.respects_metamod_side_locks;
+    metadata.respects_suffix_lock = facts.respects_metamod_side_locks;
+    metadata.respects_cannot_roll_attack =
+        facts.respects_metamod_pool_blocks;
+    metadata.respects_cannot_roll_caster =
+        facts.respects_metamod_pool_blocks;
+
+    if (facts.renewal) {
+        metadata.can_preserve = kCarrierFracturedState;
+        if (facts.respects_metamod_side_locks) {
+            metadata.can_preserve |=
+                kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+                kCarrierJunkBlockers | kCarrierCraftedState |
+                kCarrierPrefixSide | kCarrierSuffixSide |
+                kCarrierActiveProtection;
+        } else {
+            /* A fractured modifier may itself occupy either affix side or
+             * carry goal/crafted/protection identity. Its preservation is
+             * independent of metamods and is refined by the exact witness. */
+            metadata.can_preserve |=
+                kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+                kCarrierJunkBlockers | kCarrierCraftedState |
+                kCarrierPrefixSide | kCarrierSuffixSide |
+                kCarrierActiveProtection;
+        }
+        metadata.can_destroy =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierCraftedState |
+            kCarrierPrefixSide | kCarrierSuffixSide |
+            kCarrierActiveProtection;
+        metadata.can_create =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierPrefixSide | kCarrierSuffixSide;
+        if (action.params.type == ActionType::VeiledChaos) {
+            metadata.can_create |= kCarrierCraftedState;
+        }
+        metadata.can_make_unreachable = metadata.can_destroy;
+        return metadata;
+    }
+
+    metadata.can_preserve = kAllCarrierProperties;
+    switch (action.params.type) {
+    case ActionType::Augment:
+    case ActionType::Regal:
+    case ActionType::Exalt:
+    case ActionType::VeiledExalt:
+    case ActionType::HarvestAugment:
+    case ActionType::HarvestResist:
+    case ActionType::EldritchExalt:
+    case ActionType::InfluenceExalt:
+        metadata.can_create =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierPrefixSide | kCarrierSuffixSide;
+        if (action.params.type == ActionType::VeiledExalt) {
+            metadata.can_create |= kCarrierCraftedState;
+        }
+        if (action.params.type == ActionType::HarvestAugment ||
+            action.params.type == ActionType::HarvestResist) {
+            metadata.can_destroy =
+                kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+                kCarrierJunkBlockers | kCarrierPrefixSide |
+                kCarrierSuffixSide;
+            metadata.can_make_unreachable = metadata.can_destroy;
+        }
+        break;
+    case ActionType::Annul:
+    case ActionType::EldritchAnnul:
+        metadata.can_destroy =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierCraftedState |
+            kCarrierPrefixSide | kCarrierSuffixSide |
+            kCarrierActiveProtection;
+        metadata.can_make_unreachable = metadata.can_destroy;
+        break;
+    case ActionType::Scour:
+    case ActionType::RemoveCraftedModifiers:
+        metadata.can_destroy =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierCraftedState |
+            kCarrierPrefixSide | kCarrierSuffixSide |
+            kCarrierActiveProtection;
+        metadata.can_make_unreachable = metadata.can_destroy;
+        break;
+    case ActionType::Unveil:
+        metadata.can_destroy =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers | kCarrierActiveProtection;
+        metadata.can_create =
+            kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+            kCarrierJunkBlockers;
+        metadata.can_make_unreachable = metadata.can_destroy;
+        break;
+    case ActionType::Bench: {
+        metadata.can_create =
+            kCarrierCraftedState | kCarrierPrefixSide | kCarrierSuffixSide;
+        const int metamod =
+            action.params.mod_id < session.metamod_type.size()
+                ? session.metamod_type[action.params.mod_id]
+                : -1;
+        if (metamod >= 0) metadata.can_create |= kCarrierActiveProtection;
+        else {
+            metadata.can_create |=
+                kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset;
+        }
+        break;
+    }
+    case ActionType::Fracture:
+        metadata.can_create = kCarrierFracturedState;
+        metadata.preserves_fractured_affixes = true;
+        break;
+    default:
+        break;
+    }
+    return metadata;
+}
+
 void add_basic_currency(ActionRegistry& registry) {
     {
         auto d = base_descriptor("transmute", ActionType::Transmute,
@@ -1009,6 +1140,10 @@ ActionRegistry build_action_registry(
     add_eldritch(session, registry);
     add_influence_exalts(session, registry);
     add_structural(registry);
+    for (ActionDescriptor& action : registry.actions) {
+        action.preservation =
+            derive_preservation_metadata(session, action);
+    }
     retain_goal_relevant_actions(session, options, registry);
     return registry;
 }

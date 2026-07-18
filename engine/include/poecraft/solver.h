@@ -96,6 +96,19 @@ typedef struct pc_solver_action_info {
     int32_t synthetic;        /* 1 for restart */
     uint32_t cost_key_count;
     const char* const* cost_keys; /* quantity vector; repeats mean count */
+    /* S8.2 symbolic carrier-property masks. Bits: 0 goal families,
+     * 1 satisfied subset, 2 junk/blockers, 3 crafted, 4 fractured,
+     * 5 prefixes, 6 suffixes, 7 active protection. */
+    uint32_t can_preserve;
+    uint32_t can_destroy;
+    uint32_t can_create;
+    uint32_t can_make_unreachable;
+    int32_t destructive_renewal;
+    int32_t preserves_fractured_affixes;
+    int32_t respects_prefix_lock;
+    int32_t respects_suffix_lock;
+    int32_t respects_cannot_roll_attack;
+    int32_t respects_cannot_roll_caster;
 } pc_solver_action_info;
 
 pc_result pc_solver_get_action_info(

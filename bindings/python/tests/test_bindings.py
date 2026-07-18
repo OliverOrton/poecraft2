@@ -484,6 +484,55 @@ class BindingTests(unittest.TestCase):
                 elif name == "fractured":
                     self.assertTrue(item.item_flags & 2)
 
+    def test_fossil_and_essence_ignore_metamods(self):
+        fossil = "Metadata/Items/Currency/CurrencyDelveCraftingRandom"
+        essence = "Metadata/Items/Currency/CurrencyEssenceAnguish2"
+        locks = (
+            "StrMasterItemGenerationCannotChangePrefixes",
+            "DexMasterItemGenerationCannotChangeSuffixes",
+        )
+        with self.session.create_action_context(seed=20260717) as context:
+            for action in (
+                {"type": "fossil", "fossils": [fossil]},
+                {"type": "essence", "essence": essence},
+            ):
+                item = self.session.create_item(
+                    rarity="rare", with_implicits=False
+                )
+                for key in locks:
+                    item.add_mod(key)
+                lock_ids = set(item.prefix_mod_ids + item.suffix_mod_ids)
+                self.assertEqual(len(lock_ids), 2)
+                self.assertTrue(context.apply(item, action).applied)
+                live = set(item.prefix_mod_ids + item.suffix_mod_ids)
+                self.assertTrue(lock_ids.isdisjoint(live))
+
+                fractured = self.session.create_item(
+                    rarity="rare", with_implicits=False
+                )
+                fractured.add_mod(
+                    "LocalIncreasedEnergyShield11", fractured=True
+                )
+                fractured_id = fractured.fractured_mod_ids[0]
+                self.assertTrue(context.apply(fractured, action).applied)
+                self.assertIn(fractured_id, fractured.fractured_mod_ids)
+
+            respecting = self.session.create_item(
+                rarity="rare", with_implicits=False
+            )
+            for key in locks:
+                respecting.add_mod(key)
+            lock_ids = set(
+                respecting.prefix_mod_ids + respecting.suffix_mod_ids
+            )
+            self.assertTrue(
+                context.apply(respecting, {"type": "chaos"}).applied
+            )
+            live = set(
+                respecting.prefix_mod_ids + respecting.suffix_mod_ids
+            )
+            self.assertTrue(lock_ids.issubset(live))
+
     def test_phase13_strategy_operation(self):
         strategy_json = {
             "version": "v1",

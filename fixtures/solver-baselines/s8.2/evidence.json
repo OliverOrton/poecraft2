@@ -1,0 +1,101 @@
+{
+  "schema_version": "s8_2_preservation_control_evidence_v1",
+  "checkpoint": "S8.2 preservation-aware action control",
+  "historical_inputs": {
+    "s8_0_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/manifest.json",
+      "sha256": "c034a794f7f48ec919e03c2ae7d4afe6f1ebf4c2851d2c547ab2e8c6b803d1da",
+      "mutated": false
+    },
+    "s8_1_projection_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/review-projections/manifest.json",
+      "sha256": "dfa99fb9ea57c7cb18d37ed8b1cf03752f10817ffd76d279effa5f4ca46199b3",
+      "mutated": false,
+      "execution_authority": "raw_strategy_only",
+      "used_as_solver_input": false
+    }
+  },
+  "unchanged_real_cases": [
+    {
+      "id": "oracle-real-one-mod",
+      "start_value_s8_0": 8.02014428412885,
+      "start_value_s8_2": 8.02014428412885,
+      "expanded_states": 90,
+      "compiled_nodes": 15,
+      "compiled_edges": 94,
+      "raw_strategy_sha256": "072c6c25b59e34e3edc117dc285e4545175431dcf1efa8218203a278f3e0abad",
+      "raw_strategy_byte_identical": true,
+      "preservation_rows": {
+        "considered": 80,
+        "retained": 80,
+        "pruned": 0,
+        "certified_disposable": 1
+      }
+    },
+    {
+      "id": "oracle-real-two-mod",
+      "start_value_s8_0": 356.45917785234406,
+      "start_value_s8_2": 356.45917785234406,
+      "expanded_states": 99,
+      "compiled_nodes": 19,
+      "compiled_edges": 116,
+      "raw_strategy_sha256": "951a4282a48974c4ca4c338cca7e8cdc320af2570a684db70b8fbb3b40e97269",
+      "raw_strategy_byte_identical": true,
+      "preservation_rows": {
+        "considered": 98,
+        "retained": 98,
+        "pruned": 0,
+        "certified_disposable": 1
+      }
+    },
+    {
+      "id": "ordinary-es-bench",
+      "start_value_s8_0": 741.5018555381404,
+      "start_value_s8_2": 741.5018555381404,
+      "expanded_states": 18817,
+      "compiled_nodes": 3457,
+      "compiled_edges": 19437,
+      "raw_strategy_bytes": 130180718,
+      "raw_strategy_sha256": "61038f737ad5c916e314fb1070359daccfd6a0adfc52a0c6c7f62521012ff60e",
+      "raw_strategy_byte_identical": true,
+      "preservation_rows": {
+        "considered": 18817,
+        "retained": 18817,
+        "pruned": 0,
+        "certified_disposable": 1
+      }
+    }
+  ],
+  "real_action_reduction": {
+    "case": "Vaal Regalia one-goal artifact solve with the existing basic action envelope",
+    "variation": "Chaos repriced to 1000000 while Restart remains a genuine priced route",
+    "source_test": "engine/tests/test_solver_solve.cpp",
+    "controlled_equals_exhaustive_tolerance": 1e-9,
+    "selected_start_policy_equal": true,
+    "reported_start_value_6dp": 5.435072,
+    "preservation_rows": {
+      "considered": 24,
+      "retained": 12,
+      "pruned": 12
+    },
+    "proof": "Each pruned Chaos row has candidate immediate-cost lower bound strictly greater than Restart cost plus the exact feasible continuation upper bound. Ties are retained."
+  },
+  "mechanic_correction": {
+    "fossil": "Ignores every metamod side lock and pool restriction; all non-fractured explicit affixes, including metamods, are ordinary removable affixes.",
+    "essence": "Ignores every metamod side lock and pool restriction; all non-fractured explicit affixes, including metamods, are ordinary removable affixes.",
+    "fractured": "Fractured-affix survival is an independent transition fact. A fractured metamod survives as an affix but does not protect or filter the Fossil/Essence roll."
+  },
+  "capture": {
+    "benchmark_verification": "skipped",
+    "verification_runs": 0,
+    "reason": "S8.2 comparison required solve/compile identity and exact control witnesses, not a new compiled-strategy Simulator verification."
+  },
+  "preserved_mismatches": [
+    "Compiler-only mod_count routing remains unsupported by Calculator exact evaluation.",
+    "The archived endgame sample remains 0.9942 against 0.995.",
+    "The temporary-blocker solve remains non-converged.",
+    "Protected-reforge captures remain abandoned after long runs.",
+    "The archived S7 artifact pins still predate B1.4.",
+    "B1.5 remains waived/deferred, not complete."
+  ]
+}

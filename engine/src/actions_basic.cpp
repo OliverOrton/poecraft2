@@ -262,7 +262,9 @@ void build_refill_group_block_mask(
 void build_refill_metamod_hints(
     const SessionImpl& session,
     const pc_item_state* item,
+    const PoolBuildRequest& request,
     PoolBuildHints& hints) {
+    if (!request.respects_metamod_pool_blocks) return;
     const int attack_code = session.data->metamod_no_attack_code;
     const int caster_code = session.data->metamod_no_caster_code;
     auto scan = [&](const pc_mod_slot* slots, std::uint8_t count) {
@@ -439,7 +441,7 @@ void fill_random_mods(
         build_refill_group_block_mask(
             session, item, context.block_mask_scratch);
         hints.group_block_mask = &context.block_mask_scratch;
-        build_refill_metamod_hints(session, item, hints);
+        build_refill_metamod_hints(session, item, base_request, hints);
         refill_hints = &hints;
     }
     const WeightedPool* rejection_superset = nullptr;
@@ -532,10 +534,12 @@ struct KeptSlot {
 // locked side.
 std::vector<KeptSlot> collect_preserved(
     const SessionImpl& session,
-    const pc_item_state* item) {
+    const pc_item_state* item,
+    const bool respects_metamod_side_locks = true) {
     std::vector<KeptSlot> kept;
     auto scan = [&](int side, const pc_mod_slot* slots, std::uint8_t count) {
-        const bool locked = side_locked(session, item, side);
+        const bool locked =
+            respects_metamod_side_locks && side_locked(session, item, side);
         for (std::uint8_t i = 0; i < count; ++i) {
             const bool fractured = slots[i].flags & PC_MOD_SLOT_FRACTURED;
             if (fractured || locked) {
@@ -571,10 +575,12 @@ ActionOutcome reforge(
     std::uint8_t new_rarity,
     int target_total,
     const PoolBuildRequest& pool_request,
-    const std::vector<std::uint32_t>& direct_mods = {}) {
+    const std::vector<std::uint32_t>& direct_mods = {},
+    const bool respects_metamod_side_locks = true) {
     const SessionImpl& session = *context.session;
     const int before = item->prefix_count + item->suffix_count;
-    const std::vector<KeptSlot> kept = collect_preserved(session, item);
+    const std::vector<KeptSlot> kept = collect_preserved(
+        session, item, respects_metamod_side_locks);
     restore_slots(item, kept);
     item->rarity = new_rarity;
 
@@ -1259,9 +1265,15 @@ ActionOutcome apply_action(
             session.essence_guaranteed_mod_ids[action.essence_index];
         if (guaranteed == std::numeric_limits<std::uint32_t>::max()) return {};
         const int target = rare_count(context);
-        return reforge(context, item, PC_RARITY_RARE,
-                       std::min<int>(target, session.rare_affix_cap * 2),
-                       PoolBuildRequest{}, {guaranteed});
+        const ActionTransitionFacts facts =
+            action_transition_facts(ActionType::Essence);
+        PoolBuildRequest pool_request;
+        pool_request.respects_metamod_pool_blocks =
+            facts.respects_metamod_pool_blocks;
+        return reforge(
+            context, item, PC_RARITY_RARE,
+            std::min<int>(target, session.rare_affix_cap * 2), pool_request,
+            {guaranteed}, facts.respects_metamod_side_locks);
     }
     case ActionType::Fossil: {
         if (action.fossil_indices.empty()) return {};
@@ -1277,10 +1289,14 @@ ActionOutcome apply_action(
         PoolBuildRequest pool_request;
         pool_request.weight_kind = PoolWeightKind::Fossil;
         pool_request.fossil_indices = action.fossil_indices;
+        const ActionTransitionFacts facts =
+            action_transition_facts(ActionType::Fossil);
+        pool_request.respects_metamod_pool_blocks =
+            facts.respects_metamod_pool_blocks;
         ActionOutcome out = reforge(
             context, item, PC_RARITY_RARE,
             std::min<int>(rare_count(context), session.rare_affix_cap * 2),
-            pool_request, forced);
+            pool_request, forced, facts.respects_metamod_side_locks);
         if (out.applied)
             apply_fossil_specials(context, item, action.fossil_indices);
         return out;

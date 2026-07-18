@@ -443,17 +443,22 @@ AbstractState project_item(
             state.veiled_side = static_cast<std::int8_t>(side);
         }
         const std::int32_t metamod = session.metamod_type[mod];
+        std::uint32_t metamod_flag = 0;
         if (metamod >= 0) {
             if (metamod == data.metamod_multimod_code) {
-                state.flags |= kFlagMultimod;
+                metamod_flag = kFlagMultimod;
             } else if (metamod == data.metamod_no_attack_code) {
-                state.flags |= kFlagNoAttack;
+                metamod_flag = kFlagNoAttack;
             } else if (metamod == data.metamod_no_caster_code) {
-                state.flags |= kFlagNoCaster;
+                metamod_flag = kFlagNoCaster;
             } else if (metamod == data.metamod_prefixes_locked_code) {
-                state.flags |= kFlagPrefixesLocked;
+                metamod_flag = kFlagPrefixesLocked;
             } else if (metamod == data.metamod_suffixes_locked_code) {
-                state.flags |= kFlagSuffixesLocked;
+                metamod_flag = kFlagSuffixesLocked;
+            }
+            state.flags |= metamod_flag;
+            if (slot.flags & PC_MOD_SLOT_FRACTURED) {
+                state.fractured_metamod_flags |= metamod_flag;
             }
         }
 
@@ -540,6 +545,10 @@ std::size_t abstract_state_hash(const AbstractState& state) {
     mix(state.searing_exarch_tier);
     mix(state.eater_of_worlds_tier);
     mix(state.flags);
+    if (state.fractured_metamod_flags != 0) {
+        mix(0x6d657461u); /* "meta": preserve hashes for ordinary states. */
+        mix(state.fractured_metamod_flags);
+    }
     for (std::uint8_t count : state.junk_counts) mix(count);
     for (std::uint8_t count : state.fractured_junk_counts) mix(count);
     for (std::uint8_t count : state.crafted_junk_counts) mix(count);

@@ -556,6 +556,113 @@ test("catalog exposes mod groups, essences, and fossils as usable keys", async (
     await client.closeStrategy(compiled);
 });
 
+test("WASM Fossil and Essence transitions ignore metamods but keep fractures", async () => {
+    const catalog = await client.catalog(dataId);
+    const fossil = catalog.fossils.find((entry) =>
+        entry.key.endsWith("CurrencyDelveCraftingRandom"),
+    );
+    const essence = catalog.essences[0];
+    assert.ok(fossil);
+    assert.ok(essence);
+
+    const lockKeys = [
+        "StrMasterItemGenerationCannotChangePrefixes",
+        "DexMasterItemGenerationCannotChangeSuffixes",
+    ];
+    const assertRenewalRemovesLocks = async (
+        action: Parameters<typeof client.apply>[2],
+    ): Promise<void> => {
+        const item = await client.createItem(sessionId, {
+            rarity: "rare",
+            withImplicits: false,
+        });
+        try {
+            for (const key of lockKeys) {
+                await client.addMod(item, sessionId, { key });
+            }
+            const before = await client.itemInfo(item, sessionId);
+            const lockIds = [
+                ...(before.prefix_mod_ids as number[]),
+                ...(before.suffix_mod_ids as number[]),
+            ];
+            assert.equal(lockIds.length, 2);
+            assert.equal((await client.apply(contextId, item, action)).applied, true);
+            const after = await client.itemInfo(item, sessionId);
+            const live = new Set([
+                ...(after.prefix_mod_ids as number[]),
+                ...(after.suffix_mod_ids as number[]),
+            ]);
+            for (const id of lockIds) assert.equal(live.has(id), false);
+        } finally {
+            await client.closeItem(item);
+        }
+    };
+    await assertRenewalRemovesLocks({
+        type: "fossil",
+        fossils: [fossil.key],
+    });
+    await assertRenewalRemovesLocks({
+        type: "essence",
+        essence: essence.key,
+    });
+
+    for (const action of [
+        { type: "fossil" as const, fossils: [fossil.key] },
+        { type: "essence" as const, essence: essence.key },
+    ]) {
+        const item = await client.createItem(sessionId, {
+            rarity: "rare",
+            withImplicits: false,
+        });
+        try {
+            await client.addMod(item, sessionId, {
+                key: "LocalIncreasedEnergyShield11",
+                fractured: true,
+            });
+            const before = await client.itemInfo(item, sessionId);
+            const fracturedId = [
+                ...(before.fractured_prefix_mod_ids as number[]),
+                ...(before.fractured_suffix_mod_ids as number[]),
+            ][0];
+            assert.notEqual(fracturedId, undefined);
+            assert.equal((await client.apply(contextId, item, action)).applied, true);
+            const after = await client.itemInfo(item, sessionId);
+            assert.ok(
+                [
+                    ...(after.fractured_prefix_mod_ids as number[]),
+                    ...(after.fractured_suffix_mod_ids as number[]),
+                ].includes(fracturedId),
+            );
+        } finally {
+            await client.closeItem(item);
+        }
+    }
+
+    const chaosItem = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    try {
+        for (const key of lockKeys) {
+            await client.addMod(chaosItem, sessionId, { key });
+        }
+        const before = await client.itemInfo(chaosItem, sessionId);
+        const lockIds = new Set([
+            ...(before.prefix_mod_ids as number[]),
+            ...(before.suffix_mod_ids as number[]),
+        ]);
+        assert.equal((await client.apply(contextId, chaosItem, { type: "chaos" })).applied, true);
+        const after = await client.itemInfo(chaosItem, sessionId);
+        const live = new Set([
+            ...(after.prefix_mod_ids as number[]),
+            ...(after.suffix_mod_ids as number[]),
+        ]);
+        for (const id of lockIds) assert.equal(live.has(id), true);
+    } finally {
+        await client.closeItem(chaosItem);
+    }
+});
+
 test("Phase 13 mechanics run through the WASM worker boundary", async () => {
     let item = await client.createItem(sessionId, { rarity: "rare" });
     const bench = await client.apply(contextId, item, {
@@ -1370,6 +1477,28 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
         action.id.startsWith("fossil:"),
     );
     assert.ok(singles.length >= 2, "expected single-fossil actions");
+    const essence = actions.find((action) => action.id.startsWith("essence:"));
+    const chaos = actions.find((action) => action.id === "chaos");
+    assert.ok(essence);
+    assert.ok(chaos);
+    for (const action of [singles[0], essence]) {
+        assert.equal(action.preservation.destructive_renewal, true);
+        assert.equal(action.preservation.preserves_fractured_affixes, true);
+        assert.deepEqual(action.preservation.protection, {
+            prefix_lock: false,
+            suffix_lock: false,
+            cannot_roll_attack: false,
+            cannot_roll_caster: false,
+        });
+        assert.ok(action.preservation.can_destroy.includes("satisfied_goal_subset"));
+        assert.ok(action.preservation.can_preserve.includes("fractured_state"));
+    }
+    assert.deepEqual(chaos.preservation.protection, {
+        prefix_lock: true,
+        suffix_lock: true,
+        cannot_roll_attack: true,
+        cannot_roll_caster: true,
+    });
     const resistanceConversions = actions.filter((action) =>
         action.id.startsWith("harvest_resist:"),
     );

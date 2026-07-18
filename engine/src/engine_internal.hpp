@@ -444,6 +444,10 @@ struct PoolBuildRequest {
     std::uint32_t target_tag_id = std::numeric_limits<std::uint32_t>::max();
     int influence_only_code = -1;
     std::vector<std::uint32_t> fossil_indices;
+    /* Most pool actions obey Cannot Roll Attack/Caster modifiers carried by
+     * the item. Fossils and Essences are owner-defined exceptions: their
+     * complete outcome generation ignores every active metamod effect. */
+    bool respects_metamod_pool_blocks = true;
 };
 
 struct PoolBuildHints {
@@ -509,6 +513,7 @@ struct RefillPoolCacheKey {
     std::int8_t influence_only_code = -1;
     bool block_attack = false;
     bool block_caster = false;
+    bool respects_metamod_pool_blocks = true;
     std::vector<std::uint32_t> fossil_indices;
 
     bool operator==(const RefillPoolCacheKey& other) const {
@@ -521,6 +526,8 @@ struct RefillPoolCacheKey {
                influence_only_code == other.influence_only_code &&
                block_attack == other.block_attack &&
                block_caster == other.block_caster &&
+               respects_metamod_pool_blocks ==
+                   other.respects_metamod_pool_blocks &&
                fossil_indices == other.fossil_indices;
     }
 };
@@ -535,6 +542,7 @@ struct RefillPoolCacheLookup {
     std::int8_t influence_only_code = -1;
     bool block_attack = false;
     bool block_caster = false;
+    bool respects_metamod_pool_blocks = true;
     const std::vector<std::uint32_t>* fossil_indices = nullptr;
 };
 
@@ -717,6 +725,35 @@ enum class ActionType : int {
     Fracture = 24,
     RemoveCraftedModifiers = 25
 };
+
+/* Native transition facts shared by sampled application, exact calculation,
+ * and solver preservation metadata. This is the mechanic authority for
+ * whether a renewal action uses side locks or cannot-roll pool filters. */
+struct ActionTransitionFacts {
+    bool renewal = false;
+    bool preserves_fractured_affixes = false;
+    bool respects_metamod_side_locks = false;
+    bool respects_metamod_pool_blocks = false;
+};
+
+inline constexpr ActionTransitionFacts action_transition_facts(
+    const ActionType type) {
+    switch (type) {
+    case ActionType::Transmute:
+    case ActionType::Alteration:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::VeiledChaos:
+    case ActionType::HarvestReforge:
+    case ActionType::EldritchChaos:
+        return {true, true, true, true};
+    case ActionType::Essence:
+    case ActionType::Fossil:
+        return {true, true, false, false};
+    default:
+        return {};
+    }
+}
 
 struct ActionParameters {
     ActionType type = ActionType::Transmute;

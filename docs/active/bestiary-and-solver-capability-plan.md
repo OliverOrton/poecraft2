@@ -10,7 +10,7 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: B1.0-B1.4 and S8.0-S8.1 are complete. Oliver explicitly waived
+Status 2026-07-17: B1.0-B1.4 and S8.0-S8.2 are complete. Oliver explicitly waived
 B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
 validation already completed; B1.5 is recorded as waived/deferred, not
 complete. Its full acceptance suite, 10,000-run Imprint verification, and
@@ -19,8 +19,9 @@ Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
 the engine and workspace action envelopes. The authoritative contract is
 [fixtures/bestiary/v1](../../fixtures/bestiary/v1/). S8.1 added deterministic,
 display-only review projections over the frozen S8.0 ordinary strategies while
-preserving their exact bytes and sole execution authority. The next
-implementation boundary is **S8.2 only**. The recorded S7 endgame sample remains `0.9942`
+preserving their exact bytes and sole execution authority. S8.2 corrected
+Fossil/Essence metamod handling and added exact preservation-aware action
+control. The next implementation boundary is **S8.3 only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -402,7 +403,7 @@ ordering and labels cannot affect the unchanged raw oracle input. Existing
 `mod_count` evaluator refusal and all other S8.0 mismatches remain disclosed.
 No solver decision, candidate generation, pruning, Bellman logic, policy
 compression, raw execution, routing, legality, evaluation, or mechanic behavior
-changed. S8.2 is the sole next boundary.
+changed in S8.1. That checkpoint named S8.2 next; S8.2 is now complete below.
 
 ### S8.2 - Preservation-Aware Action Control
 
@@ -423,6 +424,36 @@ changed. S8.2 is the sole next boundary.
 Checkpoint: small exhaustive-oracle fixtures have the same cheapest value and
 policy cost as the controlled envelope. The real cases show the intended action
 reduction without being relabelled heuristic.
+
+Completed 2026-07-17. Native transition facts now distinguish renewals that
+respect metamods from Fossil and Essence, which ignore every metamod side lock
+and cannot-roll pool restriction. Non-fractured metamods are ordinary removable
+crafted affixes; fractured affixes survive independently, including a fractured
+metamod whose effect is ignored during the corrected roll. The same facts drive
+applied actions, exact calculation, descriptor metadata, state materialization,
+Simulator execution, C ABI/Python/WASM behavior, and solver witnesses.
+
+Action descriptors expose conservative preserve/destroy/create/unreachable
+carrier-property masks plus explicit protection-respect and independent
+fracture facts. Exact state/action rows refine them with goal/subset masks,
+junk/blocker and crafted/fractured counts, sides, active protection, exact
+successor effects, and stable state identity. Disposable certification is
+restricted to exact identity with the genuine synthetic Restart successor.
+Progressed destructive rows are pruned only when their nonnegative immediate
+cost lower bound is strictly above Restart cost plus a feasible exact
+continuation upper bound; missing proof and ties retain the action. Exact-kernel
+collapse, price identities/ties, stable ordering, Bellman/convergence behavior,
+and ordinary strategy routing are unchanged.
+
+[S8.2 comparison evidence](../../fixtures/solver-baselines/s8.2/evidence.json)
+keeps the S8.0/S8.1 manifests immutable. Both real oracle graphs and the
+ordinary ES bench graph remain byte-identical with unchanged values, states,
+nodes, and edges. Their unproved destructive rows remain included. A separate
+real-artifact price flip proves intended reduction: 24 destructive rows were
+considered, 12 retained, and 12 expensive Chaos rows pruned with strict bound
+witnesses while controlled and exhaustive values/policies matched. No S8.1
+section, role, label, or ordering became solver input. S8.3 is the sole next
+boundary.
 
 ### S8.3 - Automatic Fracture, Bench, And Metamod Candidates
 

@@ -68,6 +68,47 @@ struct SparseVariant {
     std::uint32_t choice_option_count = 0;
 };
 
+struct CarrierFacts {
+    std::uint32_t goal_family_mask = 0;
+    std::uint32_t satisfied_goal_mask = 0;
+    std::uint32_t blocked_mask = 0;
+    std::uint32_t crafted_goal_mask = 0;
+    std::uint32_t fractured_goal_mask = 0;
+    std::uint32_t active_protection = 0;
+    std::uint32_t junk_count = 0;
+    std::uint32_t crafted_junk_count = 0;
+    std::uint32_t fractured_junk_count = 0;
+    std::uint8_t prefix_count = 0;
+    std::uint8_t suffix_count = 0;
+    std::uint8_t rarity = PC_RARITY_NORMAL;
+    std::size_t state_hash = 0;
+};
+
+struct CarrierEffectSummary {
+    std::uint32_t preserved_properties = 0;
+    std::uint32_t destroyed_properties = 0;
+    std::uint32_t created_properties = 0;
+    std::uint32_t unreachable_properties = 0;
+    std::uint32_t preserved_goal_family_mask = 0;
+    std::uint32_t destroyed_goal_family_mask = 0;
+    std::uint32_t created_goal_family_mask = 0;
+    std::uint32_t unreachable_goal_family_mask = 0;
+    std::uint32_t preserved_satisfied_goal_mask = 0;
+    std::uint32_t destroyed_satisfied_goal_mask = 0;
+    std::uint32_t created_satisfied_goal_mask = 0;
+    std::uint32_t unreachable_satisfied_goal_mask = 0;
+    std::uint32_t preserved_fractured_goal_mask = 0;
+    std::uint32_t destroyed_fractured_goal_mask = 0;
+    std::uint32_t preserved_crafted_goal_mask = 0;
+    std::uint32_t destroyed_crafted_goal_mask = 0;
+    std::uint32_t preserved_protection = 0;
+    std::uint32_t destroyed_protection = 0;
+    std::uint8_t min_prefix_count = 0;
+    std::uint8_t max_prefix_count = 0;
+    std::uint8_t min_suffix_count = 0;
+    std::uint8_t max_suffix_count = 0;
+};
+
 struct SparseRow {
     std::uint32_t owner_state = kNoId;
     std::uint64_t variant_offset = 0;
@@ -77,6 +118,7 @@ struct SparseRow {
     double self_probability = 0.0;
     std::uint64_t choice_offset = 0;
     std::uint32_t choice_count = 0;
+    CarrierEffectSummary preservation_effect;
 };
 
 struct StateRowSpan {
@@ -116,6 +158,270 @@ struct PolicyTarjanFrame {
     std::uint32_t state = kNoId;
     std::uint32_t next_edge = 0;
 };
+
+constexpr std::uint32_t kProtectionFlags =
+    kFlagMultimod | kFlagNoAttack | kFlagNoCaster |
+    kFlagPrefixesLocked | kFlagSuffixesLocked;
+
+std::uint32_t compact_count_total(const CompactCountVector& counts) {
+    std::uint32_t total = 0;
+    for (const std::uint8_t count : counts) total += count;
+    return total;
+}
+
+CarrierFacts carrier_facts(const AbstractState& state) {
+    CarrierFacts facts;
+    for (std::uint32_t slot = 0; slot < kMaxGoalSlots; ++slot) {
+        if (state.slot_status[slot] !=
+            static_cast<std::uint8_t>(GoalSlotStatus::Absent)) {
+            facts.goal_family_mask |= 1u << slot;
+        }
+        if (state.slot_status[slot] ==
+            static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
+            facts.satisfied_goal_mask |= 1u << slot;
+        }
+    }
+    facts.blocked_mask = state.blocked_mask;
+    facts.crafted_goal_mask = state.crafted_goal_mask;
+    facts.fractured_goal_mask = state.fractured_goal_mask;
+    facts.active_protection = state.flags & kProtectionFlags;
+    facts.junk_count = compact_count_total(state.junk_counts);
+    facts.crafted_junk_count =
+        compact_count_total(state.crafted_junk_counts);
+    facts.fractured_junk_count =
+        compact_count_total(state.fractured_junk_counts);
+    facts.prefix_count = state.prefix_count;
+    facts.suffix_count = state.suffix_count;
+    facts.rarity = state.rarity;
+    facts.state_hash = abstract_state_hash(state);
+    return facts;
+}
+
+void classify_slot_mask(
+    const std::uint32_t source,
+    const std::uint32_t all_successors,
+    const std::uint32_t any_successor,
+    std::uint32_t& preserved,
+    std::uint32_t& destroyed,
+    std::uint32_t& created,
+    std::uint32_t& unreachable) {
+    preserved = source & all_successors;
+    destroyed = source & ~all_successors;
+    created = ~source & any_successor;
+    unreachable = source & ~any_successor;
+}
+
+CarrierEffectSummary carrier_effect(
+    const CalcContext& calc,
+    const std::uint32_t source_state,
+    std::vector<std::uint32_t> successor_ids) {
+    CarrierEffectSummary effect;
+    std::sort(successor_ids.begin(), successor_ids.end());
+    successor_ids.erase(
+        std::unique(successor_ids.begin(), successor_ids.end()),
+        successor_ids.end());
+    if (successor_ids.empty()) successor_ids.push_back(source_state);
+
+    const AbstractState& source = calc.state(source_state);
+    const CarrierFacts source_facts = carrier_facts(source);
+    std::uint32_t all_goal = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_goal = 0;
+    std::uint32_t all_satisfied = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_satisfied = 0;
+    std::uint32_t all_fractured = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_fractured = 0;
+    std::uint32_t all_crafted = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_crafted = 0;
+    std::uint32_t all_protection = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_protection = 0;
+    bool all_junk_exact = true;
+    bool any_junk_decrease = false;
+    bool any_junk_increase = false;
+    bool all_junk_zero = true;
+    bool all_blockers_exact = true;
+    bool any_blocker_lost = false;
+    bool any_blocker_created = false;
+    bool all_blockers_zero = true;
+    bool all_crafted_junk_exact = true;
+    bool any_crafted_junk_lost = false;
+    bool any_crafted_junk_created = false;
+    bool all_crafted_junk_zero = true;
+    bool all_fractured_junk_exact = true;
+    bool any_fractured_junk_lost = false;
+    bool any_fractured_junk_created = false;
+    bool all_fractured_junk_zero = true;
+    effect.min_prefix_count = std::numeric_limits<std::uint8_t>::max();
+    effect.min_suffix_count = std::numeric_limits<std::uint8_t>::max();
+
+    for (const std::uint32_t successor_id : successor_ids) {
+        const AbstractState& successor = calc.state(successor_id);
+        const CarrierFacts facts = carrier_facts(successor);
+        all_goal &= facts.goal_family_mask;
+        any_goal |= facts.goal_family_mask;
+        all_satisfied &= facts.satisfied_goal_mask;
+        any_satisfied |= facts.satisfied_goal_mask;
+        all_fractured &= facts.fractured_goal_mask;
+        any_fractured |= facts.fractured_goal_mask;
+        all_crafted &= facts.crafted_goal_mask;
+        any_crafted |= facts.crafted_goal_mask;
+        all_protection &= facts.active_protection;
+        any_protection |= facts.active_protection;
+        all_junk_exact &= successor.junk_counts == source.junk_counts;
+        any_junk_decrease |= facts.junk_count < source_facts.junk_count;
+        any_junk_increase |= facts.junk_count > source_facts.junk_count ||
+                             (source_facts.junk_count == 0 &&
+                              facts.junk_count != 0);
+        all_junk_zero &= facts.junk_count == 0;
+        all_blockers_exact &= facts.blocked_mask == source_facts.blocked_mask;
+        any_blocker_lost |=
+            (source_facts.blocked_mask & ~facts.blocked_mask) != 0;
+        any_blocker_created |=
+            (~source_facts.blocked_mask & facts.blocked_mask) != 0;
+        all_blockers_zero &= facts.blocked_mask == 0;
+        all_crafted_junk_exact &=
+            successor.crafted_junk_counts == source.crafted_junk_counts;
+        any_crafted_junk_lost |=
+            facts.crafted_junk_count < source_facts.crafted_junk_count;
+        any_crafted_junk_created |=
+            facts.crafted_junk_count > source_facts.crafted_junk_count;
+        all_crafted_junk_zero &= facts.crafted_junk_count == 0;
+        all_fractured_junk_exact &=
+            successor.fractured_junk_counts == source.fractured_junk_counts;
+        any_fractured_junk_lost |=
+            facts.fractured_junk_count < source_facts.fractured_junk_count;
+        any_fractured_junk_created |=
+            facts.fractured_junk_count > source_facts.fractured_junk_count;
+        all_fractured_junk_zero &= facts.fractured_junk_count == 0;
+        effect.min_prefix_count =
+            std::min(effect.min_prefix_count, facts.prefix_count);
+        effect.max_prefix_count =
+            std::max(effect.max_prefix_count, facts.prefix_count);
+        effect.min_suffix_count =
+            std::min(effect.min_suffix_count, facts.suffix_count);
+        effect.max_suffix_count =
+            std::max(effect.max_suffix_count, facts.suffix_count);
+    }
+
+    classify_slot_mask(
+        source_facts.goal_family_mask, all_goal, any_goal,
+        effect.preserved_goal_family_mask,
+        effect.destroyed_goal_family_mask,
+        effect.created_goal_family_mask,
+        effect.unreachable_goal_family_mask);
+    classify_slot_mask(
+        source_facts.satisfied_goal_mask, all_satisfied, any_satisfied,
+        effect.preserved_satisfied_goal_mask,
+        effect.destroyed_satisfied_goal_mask,
+        effect.created_satisfied_goal_mask,
+        effect.unreachable_satisfied_goal_mask);
+    std::uint32_t unused_created = 0;
+    std::uint32_t unused_unreachable = 0;
+    classify_slot_mask(
+        source_facts.fractured_goal_mask, all_fractured, any_fractured,
+        effect.preserved_fractured_goal_mask,
+        effect.destroyed_fractured_goal_mask,
+        unused_created, unused_unreachable);
+    classify_slot_mask(
+        source_facts.crafted_goal_mask, all_crafted, any_crafted,
+        effect.preserved_crafted_goal_mask,
+        effect.destroyed_crafted_goal_mask,
+        unused_created, unused_unreachable);
+    classify_slot_mask(
+        source_facts.active_protection, all_protection, any_protection,
+        effect.preserved_protection, effect.destroyed_protection,
+        unused_created, unused_unreachable);
+
+    const auto set_mask_effect = [&](const std::uint32_t bit,
+                                     const std::uint32_t preserved,
+                                     const std::uint32_t destroyed,
+                                     const std::uint32_t created,
+                                     const std::uint32_t unreachable) {
+        if (preserved != 0) effect.preserved_properties |= bit;
+        if (destroyed != 0) effect.destroyed_properties |= bit;
+        if (created != 0) effect.created_properties |= bit;
+        if (unreachable != 0) effect.unreachable_properties |= bit;
+    };
+    set_mask_effect(
+        kCarrierGoalFamilies, effect.preserved_goal_family_mask,
+        effect.destroyed_goal_family_mask,
+        effect.created_goal_family_mask,
+        effect.unreachable_goal_family_mask);
+    set_mask_effect(
+        kCarrierSatisfiedGoalSubset,
+        effect.preserved_satisfied_goal_mask,
+        effect.destroyed_satisfied_goal_mask,
+        effect.created_satisfied_goal_mask,
+        effect.unreachable_satisfied_goal_mask);
+    if (all_junk_exact && source_facts.junk_count != 0 ||
+        all_blockers_exact && source_facts.blocked_mask != 0) {
+        effect.preserved_properties |= kCarrierJunkBlockers;
+    }
+    if (any_junk_decrease || any_blocker_lost) {
+        effect.destroyed_properties |= kCarrierJunkBlockers;
+    }
+    if (any_junk_increase || any_blocker_created) {
+        effect.created_properties |= kCarrierJunkBlockers;
+    }
+    if ((source_facts.junk_count != 0 && all_junk_zero) ||
+        (source_facts.blocked_mask != 0 && all_blockers_zero)) {
+        effect.unreachable_properties |= kCarrierJunkBlockers;
+    }
+    if ((effect.preserved_crafted_goal_mask != 0) ||
+        (all_crafted_junk_exact && source_facts.crafted_junk_count != 0)) {
+        effect.preserved_properties |= kCarrierCraftedState;
+    }
+    if (effect.destroyed_crafted_goal_mask != 0 || any_crafted_junk_lost) {
+        effect.destroyed_properties |= kCarrierCraftedState;
+    }
+    if (any_crafted_junk_created ||
+        (any_crafted & ~source_facts.crafted_goal_mask) != 0) {
+        effect.created_properties |= kCarrierCraftedState;
+    }
+    if ((source_facts.crafted_goal_mask != 0 && any_crafted == 0) ||
+        (source_facts.crafted_junk_count != 0 && all_crafted_junk_zero)) {
+        effect.unreachable_properties |= kCarrierCraftedState;
+    }
+    if ((effect.preserved_fractured_goal_mask != 0) ||
+        (all_fractured_junk_exact && source_facts.fractured_junk_count != 0)) {
+        effect.preserved_properties |= kCarrierFracturedState;
+    }
+    if (effect.destroyed_fractured_goal_mask != 0 || any_fractured_junk_lost) {
+        effect.destroyed_properties |= kCarrierFracturedState;
+    }
+    if (any_fractured_junk_created ||
+        (any_fractured & ~source_facts.fractured_goal_mask) != 0) {
+        effect.created_properties |= kCarrierFracturedState;
+    }
+    if ((source_facts.fractured_goal_mask != 0 && any_fractured == 0) ||
+        (source_facts.fractured_junk_count != 0 && all_fractured_junk_zero)) {
+        effect.unreachable_properties |= kCarrierFracturedState;
+    }
+    const auto side_effect = [&](const std::uint32_t bit,
+                                 const std::uint8_t source_count,
+                                 const std::uint8_t min_count,
+                                 const std::uint8_t max_count) {
+        if (source_count != 0 && min_count >= source_count) {
+            effect.preserved_properties |= bit;
+        }
+        if (min_count < source_count) effect.destroyed_properties |= bit;
+        if (max_count > source_count) effect.created_properties |= bit;
+        if (source_count != 0 && max_count == 0) {
+            effect.unreachable_properties |= bit;
+        }
+    };
+    side_effect(
+        kCarrierPrefixSide, source_facts.prefix_count,
+        effect.min_prefix_count, effect.max_prefix_count);
+    side_effect(
+        kCarrierSuffixSide, source_facts.suffix_count,
+        effect.min_suffix_count, effect.max_suffix_count);
+    set_mask_effect(
+        kCarrierActiveProtection, effect.preserved_protection,
+        effect.destroyed_protection,
+        any_protection & ~source_facts.active_protection,
+        source_facts.active_protection & ~any_protection);
+    return effect;
+}
 
 /* Deterministic double-double arithmetic for the ill-conditioned recurrent
  * policy systems. Every transition coefficient remains its exact stored
@@ -292,6 +598,9 @@ struct SolveWork::Impl {
     std::vector<PricedSparseRow> priced_rows;
     std::size_t pricing_diagnostics_cursor = 0;
     std::vector<std::int32_t> priced_operator_position;
+    std::uint32_t restart_operator_index = kNoId;
+    std::uint32_t restart_state = kNoId;
+    double restart_cost = kInfinity;
     std::unordered_map<std::size_t, std::vector<std::uint64_t>>
         kernel_rows_by_hash;
     struct SharedKernelMemo {
@@ -499,6 +808,11 @@ struct SolveWork::Impl {
             }
             operators.push_back(
                 {index, cost, std::move(resource_prices)});
+            if (planner.kind == PlannerOperatorKind::Primitive &&
+                calc.registry().actions.at(planner.primitive_action).synthetic) {
+                restart_operator_index = index;
+                restart_cost = cost;
+            }
             ++result.diagnostics.supported_priced_actions;
         }
 
@@ -660,6 +974,416 @@ struct SolveWork::Impl {
             std::string(disposition) + ":" + reason + ":" + action);
     }
 
+    enum class PreservationDisposition : std::uint8_t {
+        NotApplicable,
+        RetainedDisposable,
+        RetainedPreserving,
+        RetainedUncertain,
+        PrunedByRestartBound,
+    };
+
+    struct PreservationDecision {
+        PreservationDisposition disposition =
+            PreservationDisposition::NotApplicable;
+        std::uint32_t destroyed_progress = 0;
+        double candidate_lower_bound = 0.0;
+        double restart_upper_bound = kInfinity;
+    };
+
+    PreservationDecision preservation_decision(
+        const std::uint64_t row_index) const {
+        PreservationDecision decision;
+        if (!options.preservation_control || focused_lower_mode ||
+            row_index >= transition_cache->rows.size() ||
+            row_index >= priced_rows.size()) {
+            return decision;
+        }
+        const PricedSparseRow& priced = priced_rows[row_index];
+        if (priced.operator_index == kNoId) return decision;
+        const PlannerOperator& planner =
+            calc.operators().at(priced.operator_index);
+        if (planner.kind != PlannerOperatorKind::Primitive) return decision;
+        const ActionDescriptor& action = calc.registry().actions.at(
+            planner.primitive_action);
+        if (!action.preservation.destructive_renewal) return decision;
+
+        const SparseRow& row = transition_cache->rows.at(row_index);
+        const CarrierFacts facts = carrier_facts(calc.state(row.owner_state));
+        std::uint32_t progressed = 0;
+        if (facts.goal_family_mask != 0) progressed |= kCarrierGoalFamilies;
+        if (facts.satisfied_goal_mask != 0) {
+            progressed |= kCarrierSatisfiedGoalSubset;
+        }
+        if (facts.junk_count != 0 || facts.blocked_mask != 0) {
+            progressed |= kCarrierJunkBlockers;
+        }
+        if (facts.crafted_goal_mask != 0 || facts.crafted_junk_count != 0) {
+            progressed |= kCarrierCraftedState;
+        }
+        if (facts.fractured_goal_mask != 0 ||
+            facts.fractured_junk_count != 0) {
+            progressed |= kCarrierFracturedState;
+        }
+        if (facts.prefix_count != 0) progressed |= kCarrierPrefixSide;
+        if (facts.suffix_count != 0) progressed |= kCarrierSuffixSide;
+        if (facts.active_protection != 0) {
+            progressed |= kCarrierActiveProtection;
+        }
+        decision.destroyed_progress =
+            row.preservation_effect.destroyed_properties & progressed;
+        decision.candidate_lower_bound = priced.cost;
+
+        /* Exact state identity with the synthetic Restart successor is the
+         * deliberately strict disposable-carrier certificate. No label,
+         * depth, price, or UI stage participates in this proof. */
+        if (restart_state != kNoId && row.owner_state == restart_state) {
+            decision.disposition =
+                PreservationDisposition::RetainedDisposable;
+            return decision;
+        }
+        if (decision.destroyed_progress == 0) {
+            decision.disposition =
+                PreservationDisposition::RetainedPreserving;
+            return decision;
+        }
+
+        if (restart_operator_index == kNoId || restart_state == kNoId ||
+            restart_state >= result.values.size() ||
+            !std::isfinite(result.values[restart_state]) ||
+            result.values[restart_state] >= kValueCeiling ||
+            !std::isfinite(restart_cost) || restart_cost < 0.0 ||
+            priced.cost < 0.0) {
+            decision.disposition =
+                PreservationDisposition::RetainedUncertain;
+            return decision;
+        }
+        decision.restart_upper_bound =
+            restart_cost + result.values[restart_state];
+        /* Costs and continuation values are non-negative. Therefore the
+         * candidate's immediate cost is an admissible lower bound on its
+         * complete Q value, while Restart plus the current monotone value of
+         * its exact successor is a constructive upper bound. Strict
+         * inequality preserves price/action ties. */
+        if (decision.candidate_lower_bound >
+            decision.restart_upper_bound + options.epsilon) {
+            decision.disposition =
+                PreservationDisposition::PrunedByRestartBound;
+        } else {
+            decision.disposition =
+                PreservationDisposition::RetainedUncertain;
+        }
+        return decision;
+    }
+
+    bool preservation_prunes(const std::uint64_t row_index) const {
+        return preservation_decision(row_index).disposition ==
+               PreservationDisposition::PrunedByRestartBound;
+    }
+
+    static void append_json_string(
+        std::string& out,
+        const std::string& value) {
+        out.push_back('"');
+        for (const char c : value) {
+            if (c == '"' || c == '\\') out.push_back('\\');
+            if (c == '\n') {
+                out += "\\n";
+            } else {
+                out.push_back(c);
+            }
+        }
+        out.push_back('"');
+    }
+
+    static std::string finite_json(const double value) {
+        if (!std::isfinite(value)) return "null";
+        char buffer[64];
+        std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+        return buffer;
+    }
+
+    static std::string property_mask_json(const std::uint32_t mask) {
+        std::string out = "[";
+        bool first = true;
+        const auto add = [&](const std::uint32_t bit, const char* name) {
+            if ((mask & bit) == 0) return;
+            if (!first) out.push_back(',');
+            first = false;
+            append_json_string(out, name);
+        };
+        add(kCarrierGoalFamilies, "goal_families");
+        add(kCarrierSatisfiedGoalSubset, "satisfied_goal_subset");
+        add(kCarrierJunkBlockers, "junk_blockers");
+        add(kCarrierCraftedState, "crafted_state");
+        add(kCarrierFracturedState, "fractured_state");
+        add(kCarrierPrefixSide, "prefix_side");
+        add(kCarrierSuffixSide, "suffix_side");
+        add(kCarrierActiveProtection, "active_protection");
+        out.push_back(']');
+        return out;
+    }
+
+    static std::string count_vector_json(const CompactCountVector& counts) {
+        std::string out = "[";
+        for (std::size_t i = 0; i < counts.size(); ++i) {
+            if (i != 0) out.push_back(',');
+            out += std::to_string(counts[i]);
+        }
+        out.push_back(']');
+        return out;
+    }
+
+    std::string preservation_witness_json(
+        const std::uint64_t row_index,
+        const PreservationDecision& decision) const {
+        const SparseRow& row = transition_cache->rows.at(row_index);
+        const PricedSparseRow& priced = priced_rows.at(row_index);
+        const PlannerOperator& planner =
+            calc.operators().at(priced.operator_index);
+        const ActionDescriptor& action = calc.registry().actions.at(
+            planner.primitive_action);
+        const AbstractState& state = calc.state(row.owner_state);
+        const CarrierFacts facts = carrier_facts(state);
+        const CarrierEffectSummary& effect = row.preservation_effect;
+        const bool disposable = decision.disposition ==
+                                PreservationDisposition::RetainedDisposable;
+        const bool pruned = decision.disposition ==
+                            PreservationDisposition::PrunedByRestartBound;
+        const char* disposition =
+            pruned
+                ? "pruned"
+                : decision.disposition ==
+                          PreservationDisposition::RetainedUncertain
+                      ? "included_uncertain"
+                      : "included";
+        const char* reason =
+            disposable
+                ? "certified_genuine_restart_carrier"
+                : decision.disposition ==
+                          PreservationDisposition::RetainedPreserving
+                      ? "exact_transition_preserves_current_progress"
+                      : pruned
+                            ? "candidate_lower_bound_exceeds_restart_route_upper_bound"
+                            : "no_exact_dominance_proof_retain_candidate";
+
+        std::string out = "{";
+        out += "\"state_id\":" + std::to_string(row.owner_state);
+        out += ",\"action\":";
+        append_json_string(out, planner.id);
+        out += ",\"disposition\":";
+        append_json_string(out, disposition);
+        out += ",\"reason\":";
+        append_json_string(out, reason);
+        out += ",\"carrier\":{";
+        out += "\"state_hash\":" + std::to_string(facts.state_hash);
+        out += ",\"rarity\":" + std::to_string(facts.rarity);
+        out += ",\"prefix_count\":" +
+               std::to_string(facts.prefix_count);
+        out += ",\"suffix_count\":" +
+               std::to_string(facts.suffix_count);
+        out += ",\"goal_family_mask\":" +
+               std::to_string(facts.goal_family_mask);
+        out += ",\"satisfied_goal_mask\":" +
+               std::to_string(facts.satisfied_goal_mask);
+        out += ",\"blocked_mask\":" +
+               std::to_string(facts.blocked_mask);
+        out += ",\"junk_counts\":" + count_vector_json(state.junk_counts);
+        out += ",\"crafted_goal_mask\":" +
+               std::to_string(facts.crafted_goal_mask);
+        out += ",\"crafted_junk_counts\":" +
+               count_vector_json(state.crafted_junk_counts);
+        out += ",\"fractured_goal_mask\":" +
+               std::to_string(facts.fractured_goal_mask);
+        out += ",\"fractured_junk_counts\":" +
+               count_vector_json(state.fractured_junk_counts);
+        out += ",\"fractured_metamod_flags\":" +
+               std::to_string(state.fractured_metamod_flags);
+        out += ",\"active_protection_flags\":" +
+               std::to_string(facts.active_protection) + "}";
+        out += ",\"satisfied_goal_subset\":" +
+               std::to_string(facts.satisfied_goal_mask);
+        out += ",\"effects\":{";
+        out += "\"preserved\":{";
+        out += "\"properties\":" +
+               property_mask_json(effect.preserved_properties);
+        out += ",\"goal_family_mask\":" +
+               std::to_string(effect.preserved_goal_family_mask);
+        out += ",\"satisfied_goal_mask\":" +
+               std::to_string(effect.preserved_satisfied_goal_mask);
+        out += ",\"crafted_goal_mask\":" +
+               std::to_string(effect.preserved_crafted_goal_mask);
+        out += ",\"fractured_goal_mask\":" +
+               std::to_string(effect.preserved_fractured_goal_mask) + "}";
+        out += ",\"destroyed\":{";
+        out += "\"properties\":" +
+               property_mask_json(effect.destroyed_properties);
+        out += ",\"goal_family_mask\":" +
+               std::to_string(effect.destroyed_goal_family_mask);
+        out += ",\"satisfied_goal_mask\":" +
+               std::to_string(effect.destroyed_satisfied_goal_mask);
+        out += ",\"crafted_goal_mask\":" +
+               std::to_string(effect.destroyed_crafted_goal_mask);
+        out += ",\"fractured_goal_mask\":" +
+               std::to_string(effect.destroyed_fractured_goal_mask) + "}";
+        out += ",\"created\":{";
+        out += "\"properties\":" +
+               property_mask_json(effect.created_properties);
+        out += ",\"goal_family_mask\":" +
+               std::to_string(effect.created_goal_family_mask);
+        out += ",\"satisfied_goal_mask\":" +
+               std::to_string(effect.created_satisfied_goal_mask) + "}";
+        out += ",\"made_unreachable\":{";
+        out += "\"properties\":" +
+               property_mask_json(effect.unreachable_properties);
+        out += ",\"goal_family_mask\":" +
+               std::to_string(effect.unreachable_goal_family_mask);
+        out += ",\"satisfied_goal_mask\":" +
+               std::to_string(effect.unreachable_satisfied_goal_mask) + "}";
+        out += ",\"prefix_count_range\":[" +
+               std::to_string(effect.min_prefix_count) + "," +
+               std::to_string(effect.max_prefix_count) + "]";
+        out += ",\"suffix_count_range\":[" +
+               std::to_string(effect.min_suffix_count) + "," +
+               std::to_string(effect.max_suffix_count) + "]}";
+        out += ",\"protection\":{";
+        out += "\"active_flags\":" +
+               std::to_string(facts.active_protection);
+        out += ",\"respects_prefix_lock\":" +
+               std::string(action.preservation.respects_prefix_lock
+                               ? "true"
+                               : "false");
+        out += ",\"respects_suffix_lock\":" +
+               std::string(action.preservation.respects_suffix_lock
+                               ? "true"
+                               : "false");
+        out += ",\"respects_cannot_roll_attack\":" +
+               std::string(
+                   action.preservation.respects_cannot_roll_attack
+                       ? "true"
+                       : "false");
+        out += ",\"respects_cannot_roll_caster\":" +
+               std::string(
+                   action.preservation.respects_cannot_roll_caster
+                       ? "true"
+                       : "false");
+        out += ",\"preserved_flags\":" +
+               std::to_string(effect.preserved_protection);
+        out += ",\"destroyed_flags\":" +
+               std::to_string(effect.destroyed_protection);
+        out += ",\"fractured_preservation_independent\":" +
+               std::string(
+                   action.preservation.preserves_fractured_affixes
+                       ? "true"
+                       : "false") + "}";
+        out += ",\"restart_equivalence\":{";
+        out += "\"certified\":" +
+               std::string(disposable ? "true" : "false");
+        out += ",\"kind\":";
+        if (disposable) {
+            append_json_string(out, "genuine_restart_state_identity");
+        } else {
+            out += "null";
+        }
+        out += ",\"restart_state_id\":" +
+               (restart_state == kNoId ? std::string("null")
+                                       : std::to_string(restart_state));
+        out += ",\"carrier_equals_restart_state\":" +
+               std::string(disposable ? "true" : "false") + "}";
+        out += ",\"dominance\":{";
+        out += "\"dominating_action\":";
+        if (pruned) append_json_string(out, "restart");
+        else out += "null";
+        out += ",\"candidate_lower_bound\":" +
+               finite_json(decision.candidate_lower_bound);
+        out += ",\"restart_cost\":" + finite_json(restart_cost);
+        out += ",\"continuation_state_id\":" +
+               (restart_state == kNoId ? std::string("null")
+                                       : std::to_string(restart_state));
+        const double continuation =
+            restart_state < result.values.size()
+                ? result.values[restart_state]
+                : kInfinity;
+        out += ",\"continuation_upper_bound\":" +
+               finite_json(continuation);
+        out += ",\"route_upper_bound\":" +
+               finite_json(decision.restart_upper_bound);
+        out += ",\"comparison\":";
+        append_json_string(
+            out,
+            pruned ? "candidate_lower_bound > restart_route_upper_bound"
+                   : "no_strict_dominance");
+        out += "}";
+        out += ",\"uncertain_retention\":{";
+        out += "\"retained\":" +
+               std::string(
+                   decision.disposition ==
+                           PreservationDisposition::RetainedUncertain
+                       ? "true"
+                       : "false");
+        out += ",\"reason\":";
+        if (decision.disposition ==
+            PreservationDisposition::RetainedUncertain) {
+            append_json_string(
+                out, "no_exact_dominance_or_equivalence_proof");
+        } else {
+            out += "null";
+        }
+        out += "}}";
+        return out;
+    }
+
+    void finalize_preservation_diagnostics() {
+        result.diagnostics.preservation_rows_considered = 0;
+        result.diagnostics.preservation_rows_pruned = 0;
+        result.diagnostics.preservation_rows_retained = 0;
+        result.diagnostics.certified_disposable_rows = 0;
+        result.diagnostics.preservation_witnesses.clear();
+        if (!options.preservation_control) return;
+        for (std::uint32_t state = 0;
+             state < transition_cache->state_rows.size(); ++state) {
+            const StateRowSpan& span = transition_cache->state_rows[state];
+            for (std::uint32_t i = 0; i < span.count; ++i) {
+                const std::uint64_t row_index = span.offset + i;
+                const PreservationDecision decision =
+                    preservation_decision(row_index);
+                if (decision.disposition ==
+                    PreservationDisposition::NotApplicable) {
+                    continue;
+                }
+                ++result.diagnostics.preservation_rows_considered;
+                const PricedSparseRow& priced = priced_rows[row_index];
+                const std::string& action =
+                    calc.operators().at(priced.operator_index).id;
+                if (decision.disposition ==
+                    PreservationDisposition::PrunedByRestartBound) {
+                    ++result.diagnostics.preservation_rows_pruned;
+                    add_action_reason(
+                        "pruned", action,
+                        "preservation_restart_bound_state_" +
+                            std::to_string(state));
+                } else {
+                    ++result.diagnostics.preservation_rows_retained;
+                    if (decision.disposition ==
+                        PreservationDisposition::RetainedDisposable) {
+                        ++result.diagnostics.certified_disposable_rows;
+                        add_action_reason(
+                            "included", action,
+                            "certified_genuine_restart_carrier_state_" +
+                                std::to_string(state));
+                    } else if (decision.disposition ==
+                               PreservationDisposition::RetainedUncertain) {
+                        add_action_reason(
+                            "included", action,
+                            "uncertain_preservation_retained_state_" +
+                                std::to_string(state));
+                    }
+                }
+                result.diagnostics.preservation_witnesses.push_back(
+                    preservation_witness_json(row_index, decision));
+            }
+        }
+    }
+
     void record_cap(const std::string& name, bool state_cap = false) {
         if (std::find(result.diagnostics.cap_hits.begin(),
                       result.diagnostics.cap_hits.end(), name) ==
@@ -746,6 +1470,21 @@ struct SolveWork::Impl {
             row.owner_state = state;
             row.variant_offset = transition_cache->row_variant_indices.size();
             row.self_probability = self_probability;
+            std::vector<std::uint32_t> effect_successors;
+            effect_successors.reserve(transition_count);
+            for (const OutcomeEntry& entry : transitions) {
+                if (entry.probability != 0.0) {
+                    effect_successors.push_back(entry.state);
+                }
+            }
+            for (const OutcomeChoiceGroup& group : choices) {
+                if (group.probability == 0.0) continue;
+                effect_successors.insert(
+                    effect_successors.end(), group.states.begin(),
+                    group.states.end());
+            }
+            row.preservation_effect = carrier_effect(
+                calc, state, std::move(effect_successors));
             const std::size_t hash =
                 identity_found == shared_kernel_rows.end()
                     ? kernel_hash(pending)
@@ -999,6 +1738,10 @@ struct SolveWork::Impl {
                             append = false;
                         } else if (distribution.choice_groups.empty()) {
                             pending.transitions = &distribution.entries;
+                            if (calc.registry().actions[action_index].synthetic &&
+                                distribution.entries.size() == 1) {
+                                restart_state = distribution.entries[0].state;
+                            }
                             if (distribution.stable_shared_kernel) {
                                 pending.shared_kernel_identity = &distribution;
                             }
@@ -1098,6 +1841,23 @@ struct SolveWork::Impl {
         for (std::size_t row_index = first_unpriced;
              row_index < transition_cache->rows.size(); ++row_index) {
             update_priced_row(row_index);
+        }
+        if (restart_state == kNoId && restart_operator_index != kNoId) {
+            for (const SparseRow& row : transition_cache->rows) {
+                bool has_restart = false;
+                for (std::uint32_t i = 0; i < row.variant_count; ++i) {
+                    const SparseVariant& variant =
+                        transition_cache->variants.at(
+                            transition_cache->row_variant_indices.at(
+                                row.variant_offset + i));
+                    has_restart |=
+                        variant.operator_index == restart_operator_index;
+                }
+                if (!has_restart || row.transition_count != 1) continue;
+                restart_state = transition_cache->successors.at(
+                    row.transition_offset);
+                break;
+            }
         }
         for (std::size_t row_index = pricing_diagnostics_cursor;
              row_index < transition_cache->rows.size(); ++row_index) {
@@ -1459,6 +2219,7 @@ struct SolveWork::Impl {
             for (std::uint32_t row = 0; row < span.count; ++row) {
                 std::uint32_t work = 0;
                 const std::uint64_t absolute = span.offset + row;
+                if (preservation_prunes(absolute)) continue;
                 const double q = sparse_row_q(absolute, work);
                 ++result.diagnostics.bellman_action_evaluations;
                 if (q < best - options.epsilon) {
@@ -2296,6 +3057,7 @@ struct SolveWork::Impl {
             for (std::uint32_t i = 0; i < span.count; ++i) {
                 const std::uint64_t row_index = span.offset + i;
                 if (policy_rows[state] == row_index) continue;
+                if (preservation_prunes(row_index)) continue;
                 const SparseRow& row = transition_cache->rows.at(row_index);
                 bool exits = false;
                 for (std::uint32_t transition = 0;
@@ -2675,6 +3437,7 @@ struct SolveWork::Impl {
         ++result.diagnostics.bellman_backups;
         for (std::uint32_t row = 0; row < span.count; ++row) {
             std::uint32_t row_work = 0;
+            if (preservation_prunes(span.offset + row)) continue;
             best = std::min(
                 best, sparse_row_q(span.offset + row, row_work));
             transition_work += row_work;
@@ -2896,6 +3659,7 @@ struct SolveWork::Impl {
 
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
+        finalize_preservation_diagnostics();
         /* Deterministic argmin: cost ties break toward lower cost-to-go
          * variance, then lower action index by stable registry traversal. */
         for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -2909,6 +3673,7 @@ struct SolveWork::Impl {
             for (std::uint32_t row_index = 0; row_index < span.count;
                  ++row_index) {
                 const std::uint64_t absolute_row = span.offset + row_index;
+                if (preservation_prunes(absolute_row)) continue;
                 const SparseRow& row = transition_cache->rows.at(absolute_row);
                 ++result.diagnostics.extraction_action_evaluations;
                 std::uint32_t transition_work = 0;
@@ -3271,6 +4036,8 @@ struct SolveWork::Impl {
         bytes += string_vector_bytes(result.diagnostics.skipped_unsupported);
         bytes += string_vector_bytes(
             result.diagnostics.action_inclusion_reasons);
+        bytes += string_vector_bytes(
+            result.diagnostics.preservation_witnesses);
         bytes += string_vector_bytes(result.diagnostics.cap_hits);
         return bytes;
     }
@@ -3393,7 +4160,7 @@ std::string serialize_solver_telemetry(
     json += ",\"availability\":{";
     json += "\"evaluator_support\":\"applied_before_expansion\"";
     json += ",\"relevance_filter\":\"explicit_envelope_or_conservative_include\"";
-    json += ",\"dominance_filter\":\"certified_abstract_kernel_equivalence\"";
+    json += ",\"dominance_filter\":\"certified_kernel_equivalence_or_preservation_restart_bound\"";
     json += ",\"policy_improvement_rounds\":\"available\"";
     json += ",\"optimality_gap\":\"available_for_focused_expansion\"";
     json += ",\"verification\":\"external_harness\"}";
@@ -3447,7 +4214,8 @@ std::string serialize_solver_telemetry(
         json += ",\"relevance_reduced\":" + std::to_string(
                     diagnostics->relevance_reduced_actions);
         json += ",\"dominance_reduced\":" + std::to_string(
-                    diagnostics->equivalent_actions_collapsed);
+                    diagnostics->equivalent_actions_collapsed +
+                    diagnostics->preservation_rows_pruned);
         json += ",\"deferred\":" + std::to_string(
                     diagnostics->deferred_actions);
         json += ",\"equivalent_price_ties\":" + std::to_string(
@@ -3466,6 +4234,19 @@ std::string serialize_solver_telemetry(
         calc.action_control().dependency_primitives);
     json += ",\"goal_relevant_pruned\":" + std::to_string(
         calc.action_control().pruned_outside_goal_relevance);
+    if (diagnostics == nullptr) {
+        json += ",\"preservation_rows\":null";
+    } else {
+        json += ",\"preservation_rows\":{";
+        json += "\"considered\":" + std::to_string(
+            diagnostics->preservation_rows_considered);
+        json += ",\"included\":" + std::to_string(
+            diagnostics->preservation_rows_retained);
+        json += ",\"pruned\":" + std::to_string(
+            diagnostics->preservation_rows_pruned);
+        json += ",\"certified_disposable\":" + std::to_string(
+            diagnostics->certified_disposable_rows) + "}";
+    }
     json += ",\"fossil_loadouts\":{";
     json += "\"possible\":" + std::to_string(
         calc.registry().fossil_loadouts_possible);
@@ -3492,6 +4273,14 @@ std::string serialize_solver_telemetry(
                 json += c;
             }
             json += '"';
+        }
+    }
+    json += "],\"preservation_witnesses\":[";
+    if (diagnostics != nullptr) {
+        for (std::size_t i = 0;
+             i < diagnostics->preservation_witnesses.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += diagnostics->preservation_witnesses[i];
         }
     }
     json += "]}";

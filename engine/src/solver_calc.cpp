@@ -525,6 +525,40 @@ bool CalcContext::materialize(
             });
         if (!desired_flags.empty()) return false;
     }
+    /* A metamod can exist on the queried item even when the candidate action
+     * set cannot create bench modifiers, in which case it has no junk class.
+     * Materialize any still-needed protection flags directly from their
+     * native metamod descriptors. The affix is an ordinary crafted modifier;
+     * its fractured identity is tracked separately from its protection. */
+    for (auto it = needed_codes.begin(); it != needed_codes.end();) {
+        std::uint32_t abstract_flag = 0;
+        if (*it == data.metamod_multimod_code) {
+            abstract_flag = kFlagMultimod;
+        } else if (*it == data.metamod_no_attack_code) {
+            abstract_flag = kFlagNoAttack;
+        } else if (*it == data.metamod_no_caster_code) {
+            abstract_flag = kFlagNoCaster;
+        } else if (*it == data.metamod_prefixes_locked_code) {
+            abstract_flag = kFlagPrefixesLocked;
+        } else if (*it == data.metamod_suffixes_locked_code) {
+            abstract_flag = kFlagSuffixesLocked;
+        }
+        std::uint8_t slot_flags = PC_MOD_SLOT_CRAFTED;
+        if ((target.fractured_metamod_flags & abstract_flag) != 0) {
+            slot_flags |= PC_MOD_SLOT_FRACTURED;
+        }
+        bool added = false;
+        for (const std::uint32_t mod : session.bench_mod_ids) {
+            if (mod < session.metamod_type.size() &&
+                session.metamod_type[mod] == *it &&
+                try_add(mod, slot_flags)) {
+                added = true;
+                break;
+            }
+        }
+        if (!added) return false;
+        it = needed_codes.erase(it);
+    }
     if (!needed_codes.empty()) return false;
     if (out.prefix_count != target.prefix_count ||
         out.suffix_count != target.suffix_count) {

@@ -2104,7 +2104,50 @@ const char* pcw_solver_actions(uint32_t solver_id) {
             if (k != 0) out.push_back(',');
             append_escaped(out, info.cost_keys[k]);
         }
-        out += "]}";
+        out += "],\"preservation\":{";
+        const auto append_properties = [&](const char* key,
+                                           std::uint32_t mask) {
+            out += "\"" + std::string(key) + "\":[";
+            bool first = true;
+            const auto append_property = [&](std::uint32_t bit,
+                                             const char* name) {
+                if ((mask & bit) == 0) return;
+                if (!first) out.push_back(',');
+                first = false;
+                append_escaped(out, name);
+            };
+            append_property(1u << 0, "goal_families");
+            append_property(1u << 1, "satisfied_goal_subset");
+            append_property(1u << 2, "junk_blockers");
+            append_property(1u << 3, "crafted_state");
+            append_property(1u << 4, "fractured_state");
+            append_property(1u << 5, "prefix_side");
+            append_property(1u << 6, "suffix_side");
+            append_property(1u << 7, "active_protection");
+            out.push_back(']');
+        };
+        append_properties("can_preserve", info.can_preserve);
+        out.push_back(',');
+        append_properties("can_destroy", info.can_destroy);
+        out.push_back(',');
+        append_properties("can_create", info.can_create);
+        out.push_back(',');
+        append_properties(
+            "can_make_unreachable", info.can_make_unreachable);
+        out += ",\"destructive_renewal\":";
+        out += info.destructive_renewal ? "true" : "false";
+        out += ",\"preserves_fractured_affixes\":";
+        out += info.preserves_fractured_affixes ? "true" : "false";
+        out += ",\"protection\":{";
+        out += "\"prefix_lock\":";
+        out += info.respects_prefix_lock ? "true" : "false";
+        out += ",\"suffix_lock\":";
+        out += info.respects_suffix_lock ? "true" : "false";
+        out += ",\"cannot_roll_attack\":";
+        out += info.respects_cannot_roll_attack ? "true" : "false";
+        out += ",\"cannot_roll_caster\":";
+        out += info.respects_cannot_roll_caster ? "true" : "false";
+        out += "}}}";
     }
     out += "]}";
     return respond(std::move(out));

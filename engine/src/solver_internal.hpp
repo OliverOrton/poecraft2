@@ -141,6 +141,39 @@ struct LegalityPredicate {
     std::uint8_t min_total_affixes = 0;
 };
 
+/* Symbolic carrier vocabulary for S8.2 preservation control. Descriptor
+ * masks are conservative action capabilities; state-local witnesses refine
+ * them to exact goal-slot masks, counts, flags, and transition outcomes. */
+enum CarrierProperty : std::uint32_t {
+    kCarrierGoalFamilies = 1u << 0,
+    kCarrierSatisfiedGoalSubset = 1u << 1,
+    kCarrierJunkBlockers = 1u << 2,
+    kCarrierCraftedState = 1u << 3,
+    kCarrierFracturedState = 1u << 4,
+    kCarrierPrefixSide = 1u << 5,
+    kCarrierSuffixSide = 1u << 6,
+    kCarrierActiveProtection = 1u << 7,
+};
+
+inline constexpr std::uint32_t kAllCarrierProperties =
+    kCarrierGoalFamilies | kCarrierSatisfiedGoalSubset |
+    kCarrierJunkBlockers | kCarrierCraftedState |
+    kCarrierFracturedState | kCarrierPrefixSide | kCarrierSuffixSide |
+    kCarrierActiveProtection;
+
+struct ActionPreservationMetadata {
+    std::uint32_t can_preserve = 0;
+    std::uint32_t can_destroy = 0;
+    std::uint32_t can_create = 0;
+    std::uint32_t can_make_unreachable = 0;
+    bool destructive_renewal = false;
+    bool preserves_fractured_affixes = false;
+    bool respects_prefix_lock = false;
+    bool respects_suffix_lock = false;
+    bool respects_cannot_roll_attack = false;
+    bool respects_cannot_roll_caster = false;
+};
+
 /*
  * One plannable action instance. Parameterized mechanics enumerate one
  * descriptor per parameter value (per essence, per fossil, per Harvest tag,
@@ -163,6 +196,7 @@ struct ActionDescriptor {
     std::vector<std::uint32_t> discriminating_tag_ids;
     std::uint32_t sets_flags = 0;   /* AbstractFlag bits the action can set */
     std::uint32_t clears_flags = 0; /* AbstractFlag bits it can clear */
+    ActionPreservationMetadata preservation;
     /* Reserved for future two-item techniques (imprint/recombinator inside
      * the item-level solver). Nothing planned sets it; see plan. */
     bool uses_companion_state = false;
@@ -508,6 +542,11 @@ struct AbstractState {
     std::uint8_t searing_exarch_tier = 0;
     std::uint8_t eater_of_worlds_tier = 0;
     std::uint32_t flags = 0; /* AbstractFlag bits */
+    /* Subset of active metamod AbstractFlag bits whose concrete affix is
+     * fractured. Metamods may be queried on an input item even when no
+     * candidate action can create them, so this identity cannot depend on
+     * the action-reachable junk partition. */
+    std::uint32_t fractured_metamod_flags = 0;
     CompactCountVector junk_counts; /* logical size: layout.junk_classes */
     CompactCountVector fractured_junk_counts;
     CompactCountVector crafted_junk_counts;
@@ -983,6 +1022,9 @@ struct SolveOptions {
     std::uint32_t max_compiled_nodes = 100000;
     std::uint32_t max_compiled_edges = 400000;
     std::uint64_t max_strategy_json_bytes = 67108864;
+    /* White-box oracle comparison switch. Product/API solves leave exact
+     * preservation control enabled. */
+    bool preservation_control = true;
 };
 
 struct SolveDiagnostics {
@@ -1015,6 +1057,13 @@ struct SolveDiagnostics {
     std::uint32_t equivalent_actions_collapsed = 0;
     std::uint32_t equivalent_price_ties = 0;
     std::vector<std::string> action_inclusion_reasons;
+    std::uint32_t preservation_rows_considered = 0;
+    std::uint32_t preservation_rows_pruned = 0;
+    std::uint32_t preservation_rows_retained = 0;
+    std::uint32_t certified_disposable_rows = 0;
+    /* Each entry is one complete JSON object. Kept separately from the
+     * legacy reason strings so exact carrier/control evidence stays typed. */
+    std::vector<std::string> preservation_witnesses;
     std::uint32_t discovered_states = 0;
     std::uint32_t frontier_states = 0;
     std::uint32_t goal_states = 0;

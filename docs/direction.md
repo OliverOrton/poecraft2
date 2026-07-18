@@ -67,7 +67,10 @@ validation; it is waived/deferred, not complete, and its full acceptance,
 versions the exact solver before-state and the review, accounting, and trimming
 contracts. S8.1 now derives deterministic display-only review sections over
 those frozen strategies with complete raw graph traceability and no executable
-authority. S8.2 preservation-aware action control is the immediate boundary.
+authority. S8.2 corrected Fossil/Essence metamod behavior and added exact
+preservation-aware action control without changing the cost objective or raw
+strategy authority. S8.3 automatic Fracture, bench, and metamod candidates is
+the immediate boundary.
 Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

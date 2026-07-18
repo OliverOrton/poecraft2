@@ -63,5 +63,19 @@ function action(id: string, costKeys: string[]): SolverActionInfo {
         transition_kind: 0,
         synthetic: false,
         cost_keys: costKeys,
+        preservation: {
+            can_preserve: [],
+            can_destroy: [],
+            can_create: [],
+            can_make_unreachable: [],
+            destructive_renewal: false,
+            preserves_fractured_affixes: false,
+            protection: {
+                prefix_lock: false,
+                suffix_lock: false,
+                cannot_roll_attack: false,
+                cannot_roll_caster: false,
+            },
+        },
     };
 }

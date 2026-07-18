@@ -445,6 +445,7 @@ std::size_t hash_refill_pool_cache_parts(
     std::int8_t influence_only_code,
     bool block_attack,
     bool block_caster,
+    bool respects_metamod_pool_blocks,
     const std::vector<std::uint32_t>& fossil_indices) {
     std::uint64_t hash = 1469598103934665603ULL;
     for (std::uint64_t word : group_block_mask) {
@@ -461,6 +462,7 @@ std::size_t hash_refill_pool_cache_parts(
         hash, static_cast<std::uint64_t>(influence_only_code + 1));
     hash = mix_hash(hash, block_attack);
     hash = mix_hash(hash, block_caster);
+    hash = mix_hash(hash, respects_metamod_pool_blocks);
     for (std::uint32_t fossil : fossil_indices) {
         hash = mix_hash(hash, fossil);
     }
@@ -473,7 +475,7 @@ std::size_t RefillPoolCacheHash::operator()(
         key.group_block_mask, key.tag_signature_id, key.weight_kind,
         key.target_tag_id, key.influence_bits, key.side_filter,
         key.influence_only_code, key.block_attack, key.block_caster,
-        key.fossil_indices);
+        key.respects_metamod_pool_blocks, key.fossil_indices);
 }
 
 std::size_t RefillPoolCacheHash::operator()(
@@ -482,7 +484,7 @@ std::size_t RefillPoolCacheHash::operator()(
         *key.group_block_mask, key.tag_signature_id, key.weight_kind,
         key.target_tag_id, key.influence_bits, key.side_filter,
         key.influence_only_code, key.block_attack, key.block_caster,
-        *key.fossil_indices);
+        key.respects_metamod_pool_blocks, *key.fossil_indices);
 }
 
 bool RefillPoolCacheEqual::operator()(
@@ -497,6 +499,8 @@ bool RefillPoolCacheEqual::operator()(
            a.influence_only_code == b.influence_only_code &&
            a.block_attack == b.block_attack &&
            a.block_caster == b.block_caster &&
+           a.respects_metamod_pool_blocks ==
+               b.respects_metamod_pool_blocks &&
            a.fossil_indices == *b.fossil_indices;
 }
 
@@ -1098,6 +1102,7 @@ const WeightedPool& get_weighted_pool(
             static_cast<std::int8_t>(request.influence_only_code),
             hints->block_attack,
             hints->block_caster,
+            request.respects_metamod_pool_blocks,
             &request.fossil_indices};
         if (context.last_refill_pool_key != nullptr &&
             context.last_refill_pool != nullptr &&
@@ -1134,6 +1139,8 @@ const WeightedPool& get_weighted_pool(
         key.influence_only_code = refill_lookup.influence_only_code;
         key.block_attack = refill_lookup.block_attack;
         key.block_caster = refill_lookup.block_caster;
+        key.respects_metamod_pool_blocks =
+            refill_lookup.respects_metamod_pool_blocks;
         key.fossil_indices = *refill_lookup.fossil_indices;
         const auto inserted =
             context.refill_pool_cache.emplace(std::move(key), pool).first;
@@ -1209,17 +1216,19 @@ const WeightedPool& get_weighted_pool(
         pc_bitset_and(candidate.data(), candidate.data(),
                       context.influence_mask_scratch.data(), session.words);
     }
-    apply_metamod_pool_blocks(
-        session,
-        hints != nullptr
-            ? hints->block_attack
-            : item_has_metamod(
-                  session, item, session.data->metamod_no_attack_code),
-        hints != nullptr
-            ? hints->block_caster
-            : item_has_metamod(
-                  session, item, session.data->metamod_no_caster_code),
-        candidate);
+    if (request.respects_metamod_pool_blocks) {
+        apply_metamod_pool_blocks(
+            session,
+            hints != nullptr
+                ? hints->block_attack
+                : item_has_metamod(
+                      session, item, session.data->metamod_no_attack_code),
+            hints != nullptr
+                ? hints->block_caster
+                : item_has_metamod(
+                      session, item, session.data->metamod_no_caster_code),
+            candidate);
+    }
     const std::vector<std::uint64_t>* group_block =
         hints != nullptr ? hints->group_block_mask : nullptr;
     if (group_block == nullptr) {
@@ -1367,13 +1376,15 @@ void build_pool_debug_rows(
     }
     std::vector<std::uint64_t> metamod_allowed(session.words, ~std::uint64_t{0});
     pc_bitset_zero_padding(metamod_allowed.data(), session.mod_count);
-    apply_metamod_pool_blocks(
-        session,
-        item_has_metamod(
-            session, item, session.data->metamod_no_attack_code),
-        item_has_metamod(
-            session, item, session.data->metamod_no_caster_code),
-        metamod_allowed);
+    if (request.respects_metamod_pool_blocks) {
+        apply_metamod_pool_blocks(
+            session,
+            item_has_metamod(
+                session, item, session.data->metamod_no_attack_code),
+            item_has_metamod(
+                session, item, session.data->metamod_no_caster_code),
+            metamod_allowed);
+    }
     std::vector<std::uint32_t> occupied_groups;
     collect_occupied_groups(session, item, occupied_groups);
     build_current_group_block_mask(context, occupied_groups);

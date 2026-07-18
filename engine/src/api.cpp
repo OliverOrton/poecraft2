@@ -137,6 +137,12 @@ pc_result parse_action_request(
             return PC_RESULT_NOT_FOUND;
         }
         out_action.essence_index = it->second;
+        if (out_pool != nullptr) {
+            out_pool->respects_metamod_pool_blocks =
+                poecraft::action_transition_facts(
+                    poecraft::ActionType::Essence)
+                    .respects_metamod_pool_blocks;
+        }
     } else if (request.action_type == PC_ACTION_FOSSIL) {
         if (request.fossil_count == 0 ||
             request.fossil_count > PC_MAX_FOSSILS_PER_ACTION) {
@@ -166,6 +172,10 @@ pc_result parse_action_request(
         if (out_pool != nullptr) {
             out_pool->weight_kind = poecraft::PoolWeightKind::Fossil;
             out_pool->fossil_indices = out_action.fossil_indices;
+            out_pool->respects_metamod_pool_blocks =
+                poecraft::action_transition_facts(
+                    poecraft::ActionType::Fossil)
+                    .respects_metamod_pool_blocks;
         }
     } else if (request.action_type == PC_ACTION_BENCH ||
                request.action_type == PC_ACTION_UNVEIL) {

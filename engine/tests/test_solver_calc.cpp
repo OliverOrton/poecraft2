@@ -136,8 +136,8 @@ std::vector<std::uint32_t> basic_indices(const ActionRegistry& registry) {
 }
 
 void place(pc_item_state* item, int side, std::uint32_t mod_id,
-           std::uint16_t group) {
-    pc_item_add_mod(item, side, mod_id, group, 0, nullptr);
+           std::uint16_t group, std::uint8_t flags = 0) {
+    pc_item_add_mod(item, side, mod_id, group, flags, nullptr);
 }
 
 bool sums_to_one(const OutcomeDistribution& distribution) {
@@ -1056,6 +1056,213 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             "solver reforge artifact: %u states after "
             "chaos/essence/fossil/harvest\n",
             reforge_calc.state_count());
+
+        /* S8.2 owner correction: Fossil and Essence share the same preserved
+         * base as the metamod-disabled transition. Locks and cannot-roll
+         * modifiers cannot influence either exact kernel, while fractured
+         * slots remain independent. */
+        const std::uint32_t prefix_lock = registry.index_by_id.at(
+            "bench:StrMasterItemGenerationCannotChangePrefixes");
+        const std::uint32_t suffix_lock = registry.index_by_id.at(
+            "bench:DexMasterItemGenerationCannotChangeSuffixes");
+        const std::uint32_t no_attack = registry.index_by_id.at(
+            "bench:IntMasterItemGenerationCannotRollAttackAffixes");
+        const std::uint32_t no_caster = registry.index_by_id.at(
+            "bench:StrDexMasterItemGenerationCannotRollCasterAffixes");
+        const auto bench_mod = [&](const std::uint32_t action_index) {
+            return registry.actions[action_index].params.mod_id;
+        };
+        std::uint32_t prefix_marker = kNoId;
+        std::uint32_t suffix_marker = kNoId;
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (!pc_bitset_test(
+                    session->normal_random_roll_mask.data(), mod) ||
+                !pc_bitset_test(
+                    session->positive_base_weight_mask.data(), mod)) {
+                continue;
+            }
+            if (session->gen_type[mod] == 0 && prefix_marker == kNoId) {
+                prefix_marker = mod;
+            }
+            if (session->gen_type[mod] == 1 && suffix_marker == kNoId) {
+                suffix_marker = mod;
+            }
+        }
+        PC_CHECK(prefix_marker != kNoId && suffix_marker != kNoId);
+        for (const std::uint32_t action_index :
+             {fossil_index, essence_index}) {
+            const ActionDescriptor& descriptor =
+                registry.actions[action_index];
+            PC_CHECK(descriptor.preservation.destructive_renewal);
+            PC_CHECK(descriptor.preservation.preserves_fractured_affixes);
+            PC_CHECK(!descriptor.preservation.respects_prefix_lock);
+            PC_CHECK(!descriptor.preservation.respects_suffix_lock);
+            PC_CHECK(
+                !descriptor.preservation.respects_cannot_roll_attack);
+            PC_CHECK(
+                !descriptor.preservation.respects_cannot_roll_caster);
+
+            pc_item_state locked_prefix = empty_rare;
+            place(
+                &locked_prefix, PC_SIDE_PREFIX, prefix_marker,
+                session->primary_group[prefix_marker]);
+            place(
+                &locked_prefix, session->gen_type[bench_mod(prefix_lock)],
+                bench_mod(prefix_lock),
+                session->primary_group[bench_mod(prefix_lock)],
+                PC_MOD_SLOT_CRAFTED);
+            const std::uint32_t locked_prefix_state =
+                reforge_calc.intern_item(locked_prefix);
+            const OutcomeDistribution& prefix_result =
+                reforge_calc.outcomes(locked_prefix_state, action_index);
+            PC_CHECK(prefix_result.supported);
+            for (const OutcomeEntry& entry : prefix_result.entries) {
+                const AbstractState& successor =
+                    reforge_calc.state(entry.state);
+                PC_CHECK((successor.flags &
+                          (kFlagPrefixesLocked | kFlagCraftedMod)) == 0);
+            }
+
+            pc_item_state locked_suffix = empty_rare;
+            place(
+                &locked_suffix, PC_SIDE_SUFFIX, suffix_marker,
+                session->primary_group[suffix_marker]);
+            place(
+                &locked_suffix, session->gen_type[bench_mod(suffix_lock)],
+                bench_mod(suffix_lock),
+                session->primary_group[bench_mod(suffix_lock)],
+                PC_MOD_SLOT_CRAFTED);
+            const std::uint32_t locked_suffix_state =
+                reforge_calc.intern_item(locked_suffix);
+            const OutcomeDistribution& suffix_result =
+                reforge_calc.outcomes(locked_suffix_state, action_index);
+            PC_CHECK(suffix_result.supported);
+            for (const OutcomeEntry& entry : suffix_result.entries) {
+                const AbstractState& successor =
+                    reforge_calc.state(entry.state);
+                PC_CHECK((successor.flags &
+                          (kFlagSuffixesLocked | kFlagCraftedMod)) == 0);
+            }
+
+            pc_item_state fractured = empty_rare;
+            place(
+                &fractured, session->gen_type[prefix_marker], prefix_marker,
+                session->primary_group[prefix_marker],
+                PC_MOD_SLOT_FRACTURED);
+            const std::uint32_t fractured_state =
+                reforge_calc.intern_item(fractured);
+            const OutcomeDistribution& fractured_dist =
+                reforge_calc.outcomes(fractured_state, action_index);
+            for (const OutcomeEntry& entry : fractured_dist.entries) {
+                PC_CHECK(
+                    reforge_calc.state(entry.state).fractured_goal_mask & 1u);
+            }
+        }
+        PC_CHECK(
+            registry.actions[registry.index_by_id.at("chaos")]
+                .preservation.respects_prefix_lock);
+        PC_CHECK(
+            registry.actions[registry.index_by_id.at("chaos")]
+                .preservation.respects_cannot_roll_attack);
+
+        /* Vaal Regalia has no rollable attack/caster affixes. Use a wand
+         * session for the exact no-filter proof because its live pool
+         * contains both tag families. */
+        auto tagged_session = std::make_shared<SessionImpl>();
+        tagged_session->data = data;
+        const auto tagged_base = data->base_by_path.find(
+            "Metadata/Items/Weapons/OneHandWeapons/Wands/Wand16");
+        PC_CHECK(tagged_base != data->base_by_path.end());
+        if (tagged_base == data->base_by_path.end()) return;
+        tagged_session->base_index = tagged_base->second;
+        tagged_session->item_level = 86;
+        build_session(*tagged_session);
+        ActionRegistry tagged_registry =
+            build_action_registry(*tagged_session);
+        std::uint32_t tagged_essence = kNoId;
+        std::uint32_t tagged_fossil = kNoId;
+        for (std::uint32_t i = 0;
+             i < static_cast<std::uint32_t>(
+                     tagged_registry.actions.size());
+             ++i) {
+            const ActionDescriptor& action = tagged_registry.actions[i];
+            if (tagged_essence == kNoId &&
+                action.params.type == ActionType::Essence) {
+                tagged_essence = i;
+            }
+            if (tagged_fossil == kNoId &&
+                action.params.type == ActionType::Fossil &&
+                action.params.fossil_indices.size() == 1) {
+                tagged_fossil = i;
+            }
+        }
+        PC_CHECK(tagged_essence != kNoId && tagged_fossil != kNoId);
+        if (tagged_essence == kNoId || tagged_fossil == kNoId) return;
+        for (const auto& [tag_name, metamod_id] :
+             std::vector<std::pair<const char*, const char*>>{
+                 {"attack",
+                  "bench:IntMasterItemGenerationCannotRollAttackAffixes"},
+                 {"caster",
+                  "bench:StrDexMasterItemGenerationCannotRollCasterAffixes"}}) {
+            const auto tag = data->tag_id_by_name.find(tag_name);
+            PC_CHECK(tag != data->tag_id_by_name.end());
+            if (tag == data->tag_id_by_name.end() ||
+                tag->second >= tagged_session->implicit_tag_masks.size() ||
+                tagged_session->implicit_tag_masks[tag->second].empty()) {
+                PC_CHECK(false);
+                continue;
+            }
+            std::uint32_t goal_mod = kNoId;
+            const auto& mask = tagged_session->implicit_tag_masks[tag->second];
+            pc_bitset_for_each(
+                mask.data(), tagged_session->words,
+                [&](const std::size_t raw) {
+                    if (goal_mod != kNoId ||
+                        raw >= tagged_session->mod_count) {
+                        return;
+                    }
+                    const auto mod = static_cast<std::uint32_t>(raw);
+                    if (pc_bitset_test(
+                            tagged_session->normal_random_roll_mask.data(),
+                            mod) &&
+                        pc_bitset_test(
+                            tagged_session->positive_base_weight_mask.data(),
+                            mod)) {
+                        goal_mod = mod;
+                    }
+                });
+            PC_CHECK(goal_mod != kNoId);
+            if (goal_mod == kNoId) continue;
+            GoalSpec tag_goal;
+            GoalSlot tag_slot;
+            tag_slot.group_id = tagged_session->primary_group[goal_mod];
+            tag_goal.slots.push_back(tag_slot);
+            for (const std::uint32_t action_index :
+                 {tagged_fossil, tagged_essence}) {
+                CalcContext tag_calc(
+                    tagged_session, tag_goal, tagged_registry,
+                    {action_index});
+                pc_item_state protected_item = empty_rare;
+                const ActionDescriptor& metamod_action =
+                    tagged_registry.actions[
+                        tagged_registry.index_by_id.at(metamod_id)];
+                const std::uint32_t metamod = metamod_action.params.mod_id;
+                place(
+                    &protected_item, tagged_session->gen_type[metamod],
+                    metamod, tagged_session->primary_group[metamod],
+                    PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_FRACTURED);
+                const std::uint32_t protected_state =
+                    tag_calc.intern_item(protected_item);
+                const OutcomeDistribution& corrected =
+                    tag_calc.outcomes(protected_state, action_index);
+                PC_CHECK(corrected.slot_satisfied_probability[0] > 0.0);
+                ActionContextImpl corrected_mc(700 + action_index);
+                corrected_mc.session = tagged_session;
+                mc_cross_check(
+                    tag_calc, corrected_mc, protected_state, action_index,
+                    4000, 1.2e-2, 1.2e-2);
+            }
+        }
     }
 
     /* --- S6 Phase 4 gate: every veiled/eldritch evaluator on the real

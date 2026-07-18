@@ -248,6 +248,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         action.params.type == ActionType::VeiledChaos;
     const bool eldritch_reforge =
         action.params.type == ActionType::EldritchChaos;
+    const ActionTransitionFacts transition_facts =
+        action_transition_facts(action.params.type);
     const int eldritch_side =
         item.searing_exarch_tier > item.eater_of_worlds_tier
             ? PC_SIDE_PREFIX
@@ -262,8 +264,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     base.searing_exarch_tier = item.searing_exarch_tier;
     base.eater_of_worlds_tier = item.eater_of_worlds_tier;
     const bool prefix_locked =
+        transition_facts.respects_metamod_side_locks &&
         reforge_side_locked(session, item, PC_SIDE_PREFIX);
     const bool suffix_locked =
+        transition_facts.respects_metamod_side_locks &&
         reforge_side_locked(session, item, PC_SIDE_SUFFIX);
     const auto preserve = [&](int side, const pc_mod_slot* slots,
                               std::uint8_t count, bool locked) {
@@ -417,6 +421,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
     /* --- roll pool and buckets --------------------------------------------- */
     PoolBuildRequest request;
+    request.respects_metamod_pool_blocks =
+        transition_facts.respects_metamod_pool_blocks;
     if (action.params.type == ActionType::Fossil) {
         request.weight_kind = PoolWeightKind::Fossil;
         request.fossil_indices = action.params.fossil_indices;

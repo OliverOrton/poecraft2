@@ -329,6 +329,41 @@ std::string abstract_state_condition(
                             ? condition
                             : not_of(condition));
     }
+    /* Item flags establish that a metamod is active. When that ordinary
+     * crafted affix is fractured, distinguish the exact carrier identity so
+     * compiled routing agrees with the native transition. */
+    const DataImpl& data = *session.data;
+    const std::pair<std::uint32_t, int> metamod_flags[] = {
+        {kFlagMultimod, data.metamod_multimod_code},
+        {kFlagNoAttack, data.metamod_no_attack_code},
+        {kFlagNoCaster, data.metamod_no_caster_code},
+        {kFlagPrefixesLocked, data.metamod_prefixes_locked_code},
+        {kFlagSuffixesLocked, data.metamod_suffixes_locked_code},
+    };
+    for (const auto& [flag, code] : metamod_flags) {
+        if ((state.flags & flag) == 0 || code < 0) continue;
+        std::uint32_t representative = kNoId;
+        for (const std::uint32_t mod : session.bench_mod_ids) {
+            if (mod < session.metamod_type.size() &&
+                session.metamod_type[mod] == code) {
+                representative = mod;
+                break;
+            }
+        }
+        if (representative == kNoId) {
+            gap("active metamod has no stable session modifier");
+        }
+        const std::string member =
+            "{\"type\":\"has_mod_family\",\"family_mod_key\":\"" +
+            json_escape(mod_key_of(session, representative)) +
+            "\",\"min_tier\":0}";
+        parts.push_back(with_slot_flags(member, false, true));
+        const std::string fractured =
+            with_slot_flags(member, true, false);
+        parts.push_back((state.fractured_metamod_flags & flag) != 0
+                            ? fractured
+                            : not_of(fractured));
+    }
     const std::string veiled_prefix = item_flag_condition("veiled_prefix");
     const std::string veiled_suffix = item_flag_condition("veiled_suffix");
     parts.push_back(state.veiled_side == PC_SIDE_PREFIX

@@ -179,6 +179,21 @@ void run_alt_spam_tests() {
         PC_CHECK(result.diagnostics.skipped_unsupported.empty());
         PC_CHECK(near(result.values[result.start_state], 1.0 / p));
         PC_CHECK(result.policy[result.start_state] == transmute);
+        PC_CHECK(result.diagnostics.preservation_rows_considered > 0);
+        PC_CHECK(result.diagnostics.certified_disposable_rows > 0);
+        PC_CHECK(result.diagnostics.preservation_rows_retained ==
+                 result.diagnostics.preservation_rows_considered);
+        PC_CHECK(result.diagnostics.preservation_rows_pruned == 0);
+        bool retained_uncertain = false;
+        for (const std::string& witness :
+             result.diagnostics.preservation_witnesses) {
+            PC_CHECK(valid_json_object(witness));
+            retained_uncertain |=
+                witness.find(
+                    "no_exact_dominance_or_equivalence_proof") !=
+                std::string::npos;
+        }
+        PC_CHECK(retained_uncertain);
 
         /* Any magic non-goal state alt-spams at the same expected cost. */
         pc_item_state below;
@@ -246,6 +261,8 @@ void run_alt_spam_tests() {
             const SolveResult stepped =
                 solve_stepped(calc, start, prices, budget);
             PC_CHECK(identical_solve(result, stepped));
+            PC_CHECK(stepped.diagnostics.preservation_witnesses ==
+                     result.diagnostics.preservation_witnesses);
         }
     }
 
@@ -326,6 +343,45 @@ void run_alt_spam_tests() {
         const std::uint32_t below_state = calc.intern_item(below);
         PC_CHECK(near(result.values[below_state], 2.0 / p));
         PC_CHECK(result.policy[below_state] == restart);
+        PC_CHECK(result.diagnostics.preservation_rows_pruned > 0);
+        PC_CHECK(result.diagnostics.preservation_rows_retained > 0);
+        bool saw_bound = false;
+        bool saw_disposable = false;
+        for (const std::string& witness :
+             result.diagnostics.preservation_witnesses) {
+            PC_CHECK(valid_json_object(witness));
+            saw_bound |= witness.find(
+                             "candidate_lower_bound > "
+                             "restart_route_upper_bound") !=
+                         std::string::npos;
+            saw_disposable |= witness.find(
+                                  "genuine_restart_state_identity") !=
+                              std::string::npos;
+        }
+        PC_CHECK(saw_bound);
+        PC_CHECK(saw_disposable);
+        const std::string telemetry = serialize_solver_telemetry(
+            calc, &result, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(telemetry));
+        PC_CHECK(telemetry.find("\"preservation_witnesses\":[{") !=
+                 std::string::npos);
+
+        /* Exhaustive-oracle comparison: disabling only S8.2 control leaves
+         * the same cheapest value and selected policy cost. */
+        SolveOptions oracle_options;
+        oracle_options.preservation_control = false;
+        const SolveResult oracle =
+            solve(calc, start, prices, oracle_options);
+        PC_CHECK(oracle.converged);
+        PC_CHECK(near(
+            oracle.values[oracle.start_state],
+            result.values[result.start_state], 1e-9));
+        PC_CHECK(near(
+            oracle.values[below_state], result.values[below_state], 1e-9));
+        PC_CHECK(oracle.policy[oracle.start_state] ==
+                 result.policy[result.start_state]);
+        PC_CHECK(oracle.policy[below_state] == result.policy[below_state]);
+        PC_CHECK(oracle.diagnostics.preservation_rows_considered == 0);
     }
 }
 
@@ -376,6 +432,17 @@ void run_artifact_solve_tests(const char* artifact_dir) {
     }
 
     ActionRegistry registry = build_action_registry(*session);
+    for (const ActionDescriptor& action : registry.actions) {
+        if (action.params.type == ActionType::Fossil ||
+            action.params.type == ActionType::Essence) {
+            PC_CHECK(action.preservation.destructive_renewal);
+            PC_CHECK(action.preservation.preserves_fractured_affixes);
+            PC_CHECK(!action.preservation.respects_prefix_lock);
+            PC_CHECK(!action.preservation.respects_suffix_lock);
+            PC_CHECK(!action.preservation.respects_cannot_roll_attack);
+            PC_CHECK(!action.preservation.respects_cannot_roll_caster);
+        }
+    }
     GoalSpec goal;
     GoalSlot slot;
     for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
@@ -462,6 +529,44 @@ void run_artifact_solve_tests(const char* artifact_dir) {
         const SolveResult stepped = solve_stepped(calc, start, prices, budget);
         PC_CHECK(identical_solve(first, stepped));
     }
+
+    /* Real-artifact S8.2 reduction gate. Reprice only Chaos far above the
+     * genuine Restart route. Progressed rare carriers must drop Chaos with a
+     * strict bound witness, while the controlled and exhaustive envelopes
+     * retain the same exact value and selected policy cost. */
+    auto expensive_chaos = prices;
+    expensive_chaos["chaos"] = 1000000.0;
+    const SolveResult controlled = solve(calc, start, expensive_chaos);
+    SolveOptions exhaustive_options;
+    exhaustive_options.preservation_control = false;
+    const SolveResult exhaustive =
+        solve(calc, start, expensive_chaos, exhaustive_options);
+    PC_CHECK(controlled.converged);
+    PC_CHECK(exhaustive.converged);
+    PC_CHECK(near(
+        controlled.values[controlled.start_state],
+        exhaustive.values[exhaustive.start_state], 1e-9));
+    PC_CHECK(controlled.policy[controlled.start_state] ==
+             exhaustive.policy[exhaustive.start_state]);
+    PC_CHECK(controlled.diagnostics.preservation_rows_pruned > 0);
+    PC_CHECK(controlled.diagnostics.preservation_rows_retained > 0);
+    bool saw_real_chaos_bound = false;
+    for (const std::string& witness :
+         controlled.diagnostics.preservation_witnesses) {
+        saw_real_chaos_bound |=
+            witness.find("\"action\":\"chaos\"") != std::string::npos &&
+            witness.find(
+                "candidate_lower_bound > restart_route_upper_bound") !=
+                std::string::npos;
+    }
+    PC_CHECK(saw_real_chaos_bound);
+    std::printf(
+        "solver solve S8.2 real control: %u considered, %u retained, "
+        "%u pruned, V(start)=%.6f\n",
+        controlled.diagnostics.preservation_rows_considered,
+        controlled.diagnostics.preservation_rows_retained,
+        controlled.diagnostics.preservation_rows_pruned,
+        controlled.values[controlled.start_state]);
 
     std::printf(
         "solver solve artifact: %u states, %u sweeps, V(start)=%.3f\n",

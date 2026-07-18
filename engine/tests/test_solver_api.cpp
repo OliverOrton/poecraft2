@@ -174,6 +174,80 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(action_info.cost_key_count == 1);
     PC_CHECK(std::string(action_info.cost_keys[0]) == "exalt");
     PC_CHECK(action_info.synthetic == 0);
+    PC_CHECK(pc_solver_action_count(solver, &action_count, &error) ==
+             PC_RESULT_OK);
+    bool saw_fossil_metadata = false;
+    bool saw_essence_metadata = false;
+    bool saw_respecting_reforge = false;
+    for (uint32_t action_index = 0; action_index < action_count;
+         ++action_index) {
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     solver, action_index, &info, &error) == PC_RESULT_OK);
+        const std::string id = info.id;
+        if (id == "chaos") {
+            saw_respecting_reforge = true;
+            PC_CHECK(info.destructive_renewal == 1);
+            PC_CHECK(info.respects_prefix_lock == 1);
+            PC_CHECK(info.respects_suffix_lock == 1);
+            PC_CHECK(info.respects_cannot_roll_attack == 1);
+            PC_CHECK(info.respects_cannot_roll_caster == 1);
+        }
+        if (id.rfind("fossil:", 0) == 0 && !saw_fossil_metadata) {
+            saw_fossil_metadata = true;
+            PC_CHECK(info.destructive_renewal == 1);
+            PC_CHECK(info.preserves_fractured_affixes == 1);
+            PC_CHECK(info.respects_prefix_lock == 0);
+            PC_CHECK(info.respects_suffix_lock == 0);
+            PC_CHECK(info.respects_cannot_roll_attack == 0);
+            PC_CHECK(info.respects_cannot_roll_caster == 0);
+            PC_CHECK((info.can_destroy & (1u << 1)) != 0);
+            PC_CHECK((info.can_preserve & (1u << 4)) != 0);
+        }
+        if (id.rfind("essence:", 0) == 0 && !saw_essence_metadata) {
+            saw_essence_metadata = true;
+            PC_CHECK(info.destructive_renewal == 1);
+            PC_CHECK(info.preserves_fractured_affixes == 1);
+            PC_CHECK(info.respects_prefix_lock == 0);
+            PC_CHECK(info.respects_suffix_lock == 0);
+            PC_CHECK(info.respects_cannot_roll_attack == 0);
+            PC_CHECK(info.respects_cannot_roll_caster == 0);
+        }
+    }
+    const std::string fossil_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"actions\":["
+        "\"fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold\"]}";
+    pc_solver_handle fossil_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, fossil_goal_json.c_str(), fossil_goal_json.size(),
+                 &fossil_solver, &error) == PC_RESULT_OK);
+    if (fossil_solver != nullptr) {
+        uint32_t fossil_action = 0;
+        PC_CHECK(pc_solver_find_action(
+                     fossil_solver,
+                     "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCold",
+                     &fossil_action, &error) == PC_RESULT_OK);
+        pc_solver_action_info info{};
+        PC_CHECK(pc_solver_get_action_info(
+                     fossil_solver, fossil_action, &info, &error) ==
+                 PC_RESULT_OK);
+        saw_fossil_metadata = true;
+        PC_CHECK(info.destructive_renewal == 1);
+        PC_CHECK(info.preserves_fractured_affixes == 1);
+        PC_CHECK(info.respects_prefix_lock == 0);
+        PC_CHECK(info.respects_suffix_lock == 0);
+        PC_CHECK(info.respects_cannot_roll_attack == 0);
+        PC_CHECK(info.respects_cannot_roll_caster == 0);
+        PC_CHECK((info.can_destroy & (1u << 1)) != 0);
+        PC_CHECK((info.can_preserve & (1u << 4)) != 0);
+        pc_solver_destroy(fossil_solver);
+    }
+    PC_CHECK(saw_fossil_metadata);
+    PC_CHECK(saw_essence_metadata);
+    PC_CHECK(saw_respecting_reforge);
 
     /* Calculator: exact exalt odds on the empty rare. */
     std::vector<pc_calc_outcome> outcomes(256);

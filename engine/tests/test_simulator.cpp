@@ -43,6 +43,40 @@ std::string repeat_strategy(int required_prefixes) {
 })JSON";
 }
 
+std::string metamod_renewal_strategy(bool fossil) {
+    const std::string operation =
+        fossil
+            ? R"JSON({"type":"fossil","params":{"fossils":["Metadata/Items/Currency/CurrencyDelveCraftingRandom"]}})JSON"
+            : R"JSON({"type":"essence","params":{"essence_key":"Metadata/Items/Currency/CurrencyEssenceAnguish2"}})JSON";
+    return std::string(R"JSON({
+  "version":"v1",
+  "name":"S8.2 metamod-ignoring renewal",
+  "start_node_id":"start",
+  "base_state":{
+    "base_key":"Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "item_level":86,
+    "rarity":"rare",
+    "prefixes":[
+      {"mod_key":"DexMasterItemGenerationCannotChangeSuffixes","crafted":true},
+      {"mod_key":"LocalIncreasedEnergyShield11","fractured":true}
+    ],
+    "suffixes":[
+      {"mod_key":"StrMasterItemGenerationCannotChangePrefixes","crafted":true}
+    ]
+  },
+  "nodes":[
+    {"id":"start","kind":"start"},
+    {"id":"renew","kind":"operation","operation":)JSON") +
+           operation + R"JSON(},
+    {"id":"success","kind":"terminal","terminal":"success"}
+  ],
+  "edges":[
+    {"id":"begin","from":"start","to":"renew"},
+    {"id":"done","from":"renew","to":"success"}
+  ]
+})JSON";
+}
+
 const char* condition_strategy() {
     return R"JSON({
   "version":"v1",
@@ -275,6 +309,76 @@ void run_simulator_tests(const char* artifact_dir) {
     PC_CHECK(example.item.prefix_count == 3);
 
     pc_simulator_destroy(simulator);
+
+    /* S8.2 owner correction through the compiled Simulator path: both
+     * renewal operations destroy the two ordinary lock crafts, while the
+     * independent fractured affix survives. */
+    std::uint32_t prefix_lock_id = UINT32_MAX;
+    std::uint32_t suffix_lock_id = UINT32_MAX;
+    std::uint32_t fractured_id = UINT32_MAX;
+    std::uint32_t session_mod_count = 0;
+    PC_CHECK(pc_session_get_mod_count(
+                 session, &session_mod_count, &error) == PC_RESULT_OK);
+    for (std::uint32_t id = 0; id < session_mod_count; ++id) {
+        pc_mod_info info{};
+        info.struct_size = sizeof(info);
+        info.abi_version = PC_ABI_VERSION;
+        PC_CHECK(pc_session_get_mod_info(session, id, &info, &error) ==
+                 PC_RESULT_OK);
+        const std::string key = info.key;
+        if (key == "StrMasterItemGenerationCannotChangePrefixes") {
+            prefix_lock_id = id;
+        } else if (key ==
+                   "DexMasterItemGenerationCannotChangeSuffixes") {
+            suffix_lock_id = id;
+        } else if (key == "LocalIncreasedEnergyShield11") {
+            fractured_id = id;
+        }
+    }
+    PC_CHECK(prefix_lock_id != UINT32_MAX);
+    PC_CHECK(suffix_lock_id != UINT32_MAX);
+    PC_CHECK(fractured_id != UINT32_MAX);
+    for (const bool fossil : {false, true}) {
+        const std::string renewal_json =
+            metamod_renewal_strategy(fossil);
+        pc_strategy_handle renewal_strategy = nullptr;
+        PC_CHECK(pc_strategy_compile_json(
+                     session, renewal_json.data(), renewal_json.size(),
+                     &renewal_strategy, &error) == PC_RESULT_OK);
+        pc_simulator_handle renewal_simulator = nullptr;
+        PC_CHECK(pc_simulator_create(
+                     session, renewal_strategy, nullptr,
+                     &renewal_simulator, &error) == PC_RESULT_OK);
+        auto renewal_options = options(1);
+        renewal_options.retained_success_count = 1;
+        PC_CHECK(pc_simulator_run_chunk(
+                     renewal_simulator, &renewal_options, 1, &progress,
+                     &error) == PC_RESULT_OK);
+        pc_simulation_example renewal_example{};
+        PC_CHECK(pc_simulator_example_query(
+                     renewal_simulator, PC_TERMINAL_SUCCESS, 0,
+                     &renewal_example, &error) == PC_RESULT_OK);
+        bool saw_fractured = false;
+        bool saw_lock = false;
+        const auto inspect = [&](const pc_mod_slot* slots,
+                                 std::uint8_t count) {
+            for (std::uint8_t i = 0; i < count; ++i) {
+                saw_lock |= slots[i].mod_id == prefix_lock_id ||
+                            slots[i].mod_id == suffix_lock_id;
+                saw_fractured |=
+                    slots[i].mod_id == fractured_id &&
+                    (slots[i].flags & PC_MOD_SLOT_FRACTURED) != 0;
+            }
+        };
+        inspect(renewal_example.item.prefixes,
+                renewal_example.item.prefix_count);
+        inspect(renewal_example.item.suffixes,
+                renewal_example.item.suffix_count);
+        PC_CHECK(!saw_lock);
+        PC_CHECK(saw_fractured);
+        pc_simulator_destroy(renewal_simulator);
+        pc_strategy_destroy(renewal_strategy);
+    }
 
     // Missing prices do not block an unbudgeted run, but cost status and the
     // canonical missing key remain queryable.

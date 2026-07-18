@@ -57,9 +57,202 @@ SessionImpl make_synth_session() {
     return s;
 }
 
+SessionImpl make_metamod_renewal_session() {
+    constexpr std::uint32_t kModCount = 12;
+    auto data = std::make_shared<DataImpl>();
+    data->strings = {"", "Test Fossil"};
+    data->mod_global_ids.resize(kModCount);
+    for (std::uint32_t i = 0; i < kModCount; ++i) {
+        data->mod_global_ids[i] = i;
+    }
+    data->tag_id_by_name = {{"attack", 0}, {"caster", 1}};
+    data->metamod_prefixes_locked_code = 1;
+    data->metamod_suffixes_locked_code = 2;
+    data->metamod_no_attack_code = 3;
+    data->metamod_no_caster_code = 4;
+    data->metamod_multimod_code = 5;
+    data->fossil_weight_offsets = {0, 0};
+    data->fossil_name_sids = {1};
+    data->fossil_rolls_lucky = {0};
+    data->fossil_mirrors = {0};
+    data->essence_item_level_restrictions = {-1};
+
+    SessionImpl s;
+    s.data = data;
+    s.mod_count = kModCount;
+    s.words = pc_bitset_words(kModCount);
+    s.global_index.resize(kModCount);
+    for (std::uint32_t i = 0; i < kModCount; ++i) s.global_index[i] = i;
+    s.gen_type = {
+        0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1};
+    s.primary_group.resize(kModCount);
+    s.required_level.assign(kModCount, 1);
+    s.base_spawn_weight.assign(kModCount, 100);
+    s.base_gen_pct.assign(kModCount, 100);
+    s.base_roll_weight.assign(kModCount, 100);
+    s.group_offsets.resize(kModCount + 1);
+    s.group_ids.resize(kModCount);
+    s.class_offsets.assign(kModCount + 1, 0);
+    s.class_tag_ids = {0, 1};
+    for (std::uint32_t i = 0; i < kModCount; ++i) {
+        s.primary_group[i] = static_cast<std::uint16_t>(10 + i);
+        s.group_offsets[i] = i;
+        s.group_ids[i] = 10 + i;
+    }
+    s.group_offsets[kModCount] = kModCount;
+    s.class_offsets[0] = 0;
+    s.class_offsets[1] = 1;
+    for (std::uint32_t i = 2; i <= kModCount; ++i) {
+        s.class_offsets[i] = 2;
+    }
+    s.rare_affix_cap = 3;
+    s.positive_base_weight_mask.assign(s.words, 0);
+    s.positive_spawn_weight_mask.assign(s.words, 0);
+    s.normal_random_roll_mask.assign(s.words, 0);
+    s.prefix_mask.assign(s.words, 0);
+    s.suffix_mask.assign(s.words, 0);
+    s.influence_masks.assign(1, std::vector<uint64_t>(s.words, 0));
+    s.implicit_tag_masks.assign(2, std::vector<uint64_t>(s.words, 0));
+    for (std::uint32_t i = 0; i < kModCount; ++i) {
+        pc_bitset_set((s.gen_type[i] == 0 ? s.prefix_mask : s.suffix_mask).data(),
+                      i);
+        pc_bitset_set(s.influence_masks[0].data(), i);
+        if (s.primary_group[i] >= s.group_masks.size()) {
+            s.group_masks.resize(s.primary_group[i] + 1);
+        }
+        auto& group_mask = s.group_masks[s.primary_group[i]];
+        if (group_mask.empty()) group_mask.assign(s.words, 0);
+        pc_bitset_set(group_mask.data(), i);
+    }
+    for (std::uint32_t i = 0; i <= 4; ++i) {
+        pc_bitset_set(s.positive_base_weight_mask.data(), i);
+        pc_bitset_set(s.positive_spawn_weight_mask.data(), i);
+        if (i < 4) pc_bitset_set(s.normal_random_roll_mask.data(), i);
+    }
+    pc_bitset_set(s.implicit_tag_masks[0].data(), 0);
+    pc_bitset_set(s.implicit_tag_masks[1].data(), 1);
+    s.metamod_type.assign(kModCount, -1);
+    s.metamod_type[7] = data->metamod_prefixes_locked_code;
+    s.metamod_type[8] = data->metamod_suffixes_locked_code;
+    s.metamod_type[9] = data->metamod_no_attack_code;
+    s.metamod_type[10] = data->metamod_no_caster_code;
+    s.metamod_type[11] = data->metamod_multimod_code;
+    s.essence_guaranteed_mod_ids = {4};
+    s.fossil_added_mod_ids.resize(1);
+    s.fossil_forced_mod_ids.resize(1);
+    return s;
+}
+
 void place(pc_item_state* item, int side, uint32_t mod_id, uint16_t group,
            uint8_t flags) {
     pc_item_add_mod(item, side, mod_id, group, flags, nullptr);
+}
+
+bool contains_mod(const pc_item_state& item, const std::uint32_t mod_id) {
+    for (std::uint8_t i = 0; i < item.prefix_count; ++i) {
+        if (item.prefixes[i].mod_id == mod_id) return true;
+    }
+    for (std::uint8_t i = 0; i < item.suffix_count; ++i) {
+        if (item.suffixes[i].mod_id == mod_id) return true;
+    }
+    return false;
+}
+
+void run_metamod_renewal_unit_tests() {
+    auto session =
+        std::make_shared<SessionImpl>(make_metamod_renewal_session());
+    const auto apply_renewal = [&](const ActionType type,
+                                   pc_item_state& item,
+                                   const std::uint64_t seed) {
+        ActionContextImpl context(seed);
+        context.session = session;
+        ActionParameters action;
+        action.type = type;
+        if (type == ActionType::Essence) action.essence_index = 0;
+        if (type == ActionType::Fossil) action.fossil_indices = {0};
+        return apply_action(context, &item, action);
+    };
+
+    for (const ActionType type : {ActionType::Fossil, ActionType::Essence}) {
+        /* Prefix and suffix locks are ordinary removable crafted affixes for
+         * these two owner-corrected renewals. */
+        {
+            pc_item_state item;
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            place(&item, PC_SIDE_PREFIX, 5, 15, 0);
+            place(&item, PC_SIDE_SUFFIX, 7, 17, PC_MOD_SLOT_CRAFTED);
+            PC_CHECK(apply_renewal(type, item, 11).applied);
+            PC_CHECK(!contains_mod(item, 5));
+            PC_CHECK(!contains_mod(item, 7));
+        }
+        {
+            pc_item_state item;
+            pc_item_clear(&item);
+            item.rarity = PC_RARITY_RARE;
+            place(&item, PC_SIDE_SUFFIX, 6, 16, 0);
+            place(&item, PC_SIDE_PREFIX, 8, 18, PC_MOD_SLOT_CRAFTED);
+            PC_CHECK(apply_renewal(type, item, 13).applied);
+            PC_CHECK(!contains_mod(item, 6));
+            PC_CHECK(!contains_mod(item, 8));
+        }
+
+        /* A fractured metamod remains as a fractured affix, but its active
+         * cannot-roll effect is ignored by Fossil/Essence pool generation. */
+        bool saw_attack = false;
+        bool saw_caster = false;
+        for (std::uint64_t seed = 1; seed <= 256; ++seed) {
+            pc_item_state attack;
+            pc_item_clear(&attack);
+            attack.rarity = PC_RARITY_RARE;
+            place(&attack, PC_SIDE_SUFFIX, 9, 19,
+                  PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_FRACTURED);
+            PC_CHECK(apply_renewal(type, attack, seed).applied);
+            PC_CHECK(contains_mod(attack, 9));
+            saw_attack |= contains_mod(attack, 0);
+
+            pc_item_state caster;
+            pc_item_clear(&caster);
+            caster.rarity = PC_RARITY_RARE;
+            place(&caster, PC_SIDE_PREFIX, 10, 20,
+                  PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_FRACTURED);
+            PC_CHECK(apply_renewal(type, caster, seed).applied);
+            PC_CHECK(contains_mod(caster, 10));
+            saw_caster |= contains_mod(caster, 1);
+        }
+        PC_CHECK(saw_attack);
+        PC_CHECK(saw_caster);
+
+        /* Fractured preservation is independent of metamod protection. */
+        pc_item_state fractured;
+        pc_item_clear(&fractured);
+        fractured.rarity = PC_RARITY_RARE;
+        place(&fractured, PC_SIDE_PREFIX, 5, 15, PC_MOD_SLOT_FRACTURED);
+        PC_CHECK(apply_renewal(type, fractured, 17).applied);
+        PC_CHECK(contains_mod(fractured, 5));
+        PC_CHECK(fractured.prefixes[0].flags & PC_MOD_SLOT_FRACTURED);
+    }
+
+    /* A renewal that genuinely respects metamods retains the existing native
+     * behavior: Chaos preserves the locked side and obeys cannot-roll. */
+    {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_PREFIX, 5, 15, 0);
+        place(&item, PC_SIDE_SUFFIX, 7, 17, PC_MOD_SLOT_CRAFTED);
+        PC_CHECK(apply_renewal(ActionType::Chaos, item, 19).applied);
+        PC_CHECK(contains_mod(item, 5));
+    }
+    for (std::uint64_t seed = 1; seed <= 64; ++seed) {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_SUFFIX, 9, 19,
+              PC_MOD_SLOT_CRAFTED | PC_MOD_SLOT_FRACTURED);
+        PC_CHECK(apply_renewal(ActionType::Chaos, item, seed).applied);
+        PC_CHECK(!contains_mod(item, 0));
+    }
 }
 
 void run_reforge_unit_tests() {
@@ -743,6 +936,7 @@ void run_integration_tests(const char* artifact_dir) {
 
 void run_action_tests(const char* artifact_dir) {
     run_reforge_unit_tests(); // always runs (synthetic, no data needed)
+    run_metamod_renewal_unit_tests();
     run_fossil_precision_unit_test();
     if (artifact_dir == nullptr) {
         std::printf("action integration suite skipped (no artifact dir)\n");

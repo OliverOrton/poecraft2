@@ -447,7 +447,31 @@ export interface SolverActionInfo {
     transition_kind: number;
     synthetic: boolean;
     cost_keys: string[];
+    preservation: {
+        can_preserve: CarrierProperty[];
+        can_destroy: CarrierProperty[];
+        can_create: CarrierProperty[];
+        can_make_unreachable: CarrierProperty[];
+        destructive_renewal: boolean;
+        preserves_fractured_affixes: boolean;
+        protection: {
+            prefix_lock: boolean;
+            suffix_lock: boolean;
+            cannot_roll_attack: boolean;
+            cannot_roll_caster: boolean;
+        };
+    };
 }
+
+export type CarrierProperty =
+    | "goal_families"
+    | "satisfied_goal_subset"
+    | "junk_blockers"
+    | "crafted_state"
+    | "fractured_state"
+    | "prefix_side"
+    | "suffix_side"
+    | "active_protection";
 
 /** One abstract successor class from the calculation engine. */
 export interface CalcOutcome {

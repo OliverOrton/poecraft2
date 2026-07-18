@@ -719,6 +719,23 @@ pc_result pc_solver_get_action_info(
     out_info->cost_key_count =
         static_cast<uint32_t>(cost_key_ptrs.size());
     out_info->cost_keys = cost_key_ptrs.data();
+    out_info->can_preserve = action.preservation.can_preserve;
+    out_info->can_destroy = action.preservation.can_destroy;
+    out_info->can_create = action.preservation.can_create;
+    out_info->can_make_unreachable =
+        action.preservation.can_make_unreachable;
+    out_info->destructive_renewal =
+        action.preservation.destructive_renewal ? 1 : 0;
+    out_info->preserves_fractured_affixes =
+        action.preservation.preserves_fractured_affixes ? 1 : 0;
+    out_info->respects_prefix_lock =
+        action.preservation.respects_prefix_lock ? 1 : 0;
+    out_info->respects_suffix_lock =
+        action.preservation.respects_suffix_lock ? 1 : 0;
+    out_info->respects_cannot_roll_attack =
+        action.preservation.respects_cannot_roll_attack ? 1 : 0;
+    out_info->respects_cannot_roll_caster =
+        action.preservation.respects_cannot_roll_caster ? 1 : 0;
     clear_error(out_error);
     return PC_RESULT_OK;
 }
