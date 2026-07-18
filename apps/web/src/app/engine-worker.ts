@@ -410,6 +410,7 @@ async function evaluateStrategy(
 ): Promise<unknown> {
     let strategy = 0;
     let evaluation = 0;
+    let economy = 0;
     let workItems = Math.max(1, (params.chunkSize as number) || 16);
     let yieldCount = 0;
     let lastProgressAt = -Infinity;
@@ -425,9 +426,14 @@ async function evaluateStrategy(
             params.session as number,
             params.strategy,
         );
+        if (params.economy !== undefined) {
+            economy = bindings.loadEconomy(params.economy);
+        }
         evaluation = bindings.beginStrategyEvaluation(
             strategy,
             params.options as StrategyEvalOptions | undefined,
+            economy || undefined,
+            params.reviewProjection,
         );
         let progress: StrategyEvalProgress;
         do {
@@ -494,6 +500,7 @@ async function evaluateStrategy(
         return bindings.finishStrategyEvaluation(evaluation);
     } finally {
         if (evaluation) bindings.closeStrategyEvaluation(evaluation);
+        if (economy) bindings.closeEconomy(economy);
         if (strategy) bindings.closeStrategy(strategy);
     }
 }

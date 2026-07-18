@@ -73,7 +73,13 @@ strategy authority. S8.3 automatic Fracture, bench, and metamod candidates is
 complete: price-independent native generation now admits only legal,
 goal-relevant, complete exact kernels; selected options compete by downstream
 expected cost and compile into the existing primitive strategy vocabulary.
-S8.4 exact action and material accounting is the immediate boundary.
+S8.4 exact action and material accounting is complete: the existing evaluator
+occupancy result now reports stable action descriptors, exact material and
+native-priced contributions, technique/retry work, optional display-only review
+section totals, reconciliation, and explicitly labelled independent-retry
+success normalization. Simulator descriptor/material averages remain a
+separate sampled evidence source with run count and seed. S8.5 compact review
+and optional empirical trim is the immediate and sole boundary.
 Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

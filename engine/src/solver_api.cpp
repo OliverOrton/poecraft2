@@ -1088,7 +1088,9 @@ solver::StrategyEvalOptions strategy_eval_options(
     const pc_strategy_eval_options* options) {
     solver::StrategyEvalOptions result;
     if (options == nullptr) return result;
-    if (options->struct_size < sizeof(pc_strategy_eval_options) ||
+    constexpr std::size_t kLegacyOptionsSize =
+        offsetof(pc_strategy_eval_options, economy);
+    if (options->struct_size < kLegacyOptionsSize ||
         options->abi_version != PC_ABI_VERSION) {
         throw std::invalid_argument("invalid strategy evaluation options ABI");
     }
@@ -1101,6 +1103,22 @@ solver::StrategyEvalOptions strategy_eval_options(
     }
     if (options->top_classes_per_node != 0) {
         result.top_classes_per_node = options->top_classes_per_node;
+    }
+    if (options->struct_size >= sizeof(pc_strategy_eval_options)) {
+        if (options->economy != nullptr) {
+            result.economy = options->economy->impl;
+        }
+        if (options->review_projection_json_size != 0) {
+            if (options->review_projection_json == nullptr) {
+                throw std::invalid_argument(
+                    "null strategy review projection JSON");
+            }
+            result.review_projection_json.assign(
+                options->review_projection_json,
+                options->review_projection_json_size);
+        }
+        result.include_success_normalized =
+            options->include_success_normalized != 0;
     }
     return result;
 }

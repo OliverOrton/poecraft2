@@ -131,6 +131,23 @@ export class PcSimulator extends HTMLElement {
             </div>
             ${result?.economy ? `<div class="pc-sim-economy">Costs pinned to ${escapeHtml(result.economy.league_name)} · ${escapeHtml(result.economy.source_cutoff_at_utc ? new Date(result.economy.source_cutoff_at_utc).toLocaleString() : "manual prices")}</div>` : ""}
             ${
+                result
+                    ? `<div class="pc-failure-summary"><span>Simulator sample · ${result.sampled_accounting.sample_count.toLocaleString()} runs · seed ${result.sampled_accounting.seed}</span>${[
+                          ...result.sampled_accounting.actions.map(
+                              (entry) =>
+                                  `${escapeHtml(entry.action_id)} ${entry.average_per_invocation.toLocaleString("en-US", { maximumFractionDigits: 4 })}/run`,
+                          ),
+                          ...result.sampled_accounting.materials.map(
+                              (entry) =>
+                                  `${escapeHtml(entry.price_key)} ${entry.average_per_invocation.toLocaleString("en-US", { maximumFractionDigits: 4 })}/run`,
+                          ),
+                      ]
+                          .slice(0, 6)
+                          .map((entry) => `<span>${entry}</span>`)
+                          .join("")}</div>`
+                    : ""
+            }
+            ${
                 result?.failure_summaries.length
                     ? `<div class="pc-failure-summary">${result.failure_summaries
                           .slice(0, 4)

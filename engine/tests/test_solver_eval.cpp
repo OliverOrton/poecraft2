@@ -29,23 +29,29 @@ bool near(double a, double b, double tolerance = 1e-9) {
 
 std::shared_ptr<SessionImpl> make_eval_session() {
     auto data = std::make_shared<DataImpl>();
-    data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    data->mod_global_ids = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     data->strings = {
         "", "synthetic/base", "mod0", "mod1", "mod2", "mod3",
         "mod4", "mod5", "mod6", "mod7", "mod8", "mod9",
         "g10", "g11", "g12", "g13", "g20", "g21", "g22",
-        "g23", "g24"};
+        "g23", "g24", "bench_prefix_lock", "bench_multimod",
+        "bench_finish_prefix", "bench_suffix_lock", "bench_blocker",
+        "bench_finish_suffix", "g25", "g26", "g27", "g28", "g29",
+        "g30"};
     data->base_count = 1;
     data->base_metadata_path_sid = {1};
-    data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    for (std::uint32_t mod = 0; mod < 10; ++mod) {
+    data->mod_key_sid = {
+        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 21, 22, 23, 24, 25, 26};
+    for (std::uint32_t mod = 0; mod < 16; ++mod) {
         data->mod_pos_by_key.emplace(
             data->strings[data->mod_key_sid[mod]], mod);
     }
-    data->group_key_sids.assign(25, 0);
+    data->group_key_sids.assign(31, 0);
     const std::pair<std::uint32_t, std::uint32_t> groups[] = {
         {10, 12}, {11, 13}, {12, 14}, {13, 15}, {20, 16},
-        {21, 17}, {22, 18}, {23, 19}, {24, 20}};
+        {21, 17}, {22, 18}, {23, 19}, {24, 20}, {25, 27},
+        {26, 28}, {27, 29}, {28, 30}, {29, 31}, {30, 32}};
     for (const auto& [group, sid] : groups) {
         data->group_key_sids[group] = sid;
         data->group_id_by_key.emplace(data->strings[sid], group);
@@ -55,28 +61,48 @@ std::shared_ptr<SessionImpl> make_eval_session() {
     session->data = data;
     session->base_index = 0;
     session->item_level = 1;
-    session->mod_count = 10;
-    session->words = pc_bitset_words(10);
-    session->global_index = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1};
-    session->primary_group = {10, 10, 11, 12, 13, 20, 21, 22, 23, 24};
-    session->required_level.assign(10, 1);
-    session->group_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    session->group_ids = {10, 10, 11, 12, 13, 20, 21, 22, 23, 24};
-    session->family_id = {100, 100, 101, 102, 103,
-                          104, 105, 106, 107, 108};
-    session->family_tier_index = {1, 2, 1, 1, 1, 1, 1, 1, 1, 1};
-    session->metamod_type.assign(10, -1);
-    session->special_kind.assign(10, -1);
-    session->flags.assign(10, 0);
-    session->influence_code.assign(10, -1);
-    session->class_offsets.assign(11, 0);
+    session->mod_count = 16;
+    session->words = pc_bitset_words(16);
+    session->global_index = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    session->gen_type = {
+        0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1};
+    session->primary_group = {
+        10, 10, 11, 12, 13, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+    session->required_level.assign(16, 1);
+    session->group_offsets = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    session->group_ids = {
+        10, 10, 11, 12, 13, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+    session->family_id = {
+        100, 100, 101, 102, 103, 104, 105, 106,
+        107, 108, 109, 110, 111, 112, 113, 114};
+    session->family_tier_index = {
+        1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    session->metamod_type.assign(16, -1);
+    data->metamod_multimod_code = 1;
+    data->metamod_prefixes_locked_code = 2;
+    data->metamod_suffixes_locked_code = 3;
+    data->metamod_no_attack_code = 4;
+    data->metamod_no_caster_code = 5;
+    session->metamod_type[10] = data->metamod_prefixes_locked_code;
+    session->metamod_type[13] = data->metamod_suffixes_locked_code;
+    session->metamod_type[11] = data->metamod_multimod_code;
+    session->special_kind.assign(16, -1);
+    session->flags.assign(16, 0);
+    session->bench_mod_ids = {10, 11, 12, 13, 14, 15};
+    for (const std::uint32_t mod : session->bench_mod_ids) {
+        session->flags[mod] |= 1u << 1;
+    }
+    session->influence_code.assign(16, -1);
+    session->class_offsets.assign(17, 0);
     session->rare_affix_cap = 3;
-    session->base_spawn_weight = {100, 100, 100, 100, 100,
-                                  100, 100, 100, 100, 400};
-    session->base_gen_pct.assign(10, 100);
+    session->base_spawn_weight = {
+        100, 100, 100, 100, 100, 100, 100, 100,
+        100, 400, 0, 0, 0, 0, 0, 0};
+    session->base_gen_pct.assign(16, 100);
     session->base_roll_weight = session->base_spawn_weight;
-    for (std::uint32_t mod = 0; mod < 10; ++mod) {
+    for (std::uint32_t mod = 0; mod < 16; ++mod) {
         session->session_id_by_global_id.emplace(mod, mod);
     }
 
@@ -88,12 +114,14 @@ std::shared_ptr<SessionImpl> make_eval_session() {
     session->suffix_mask.assign(words, 0);
     session->unveiled_mask.assign(words, 0);
     session->implicit_tag_masks.clear();
-    session->group_masks.assign(25, {});
+    session->group_masks.assign(31, {});
     session->influence_masks.assign(1, std::vector<std::uint64_t>(words, 0));
-    for (std::uint32_t mod = 0; mod < 10; ++mod) {
-        pc_bitset_set(session->normal_random_roll_mask.data(), mod);
-        pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
-        pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+    for (std::uint32_t mod = 0; mod < 16; ++mod) {
+        if (mod < 10) {
+            pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+            pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
+            pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+        }
         pc_bitset_set(session->influence_masks[0].data(), mod);
         pc_bitset_set((mod < 5 ? session->prefix_mask : session->suffix_mask)
                           .data(), mod);
@@ -151,6 +179,26 @@ double edge_value(const StrategyEvalResult& result, const std::string& id) {
     return -1.0;
 }
 
+const StrategyEvalActionTotal* action_total(
+    const StrategyEvalResult& result,
+    const std::string& id) {
+    const auto found = std::find_if(
+        result.action_totals.begin(), result.action_totals.end(),
+        [&](const StrategyEvalActionTotal& action) { return action.id == id; });
+    return found == result.action_totals.end() ? nullptr : &*found;
+}
+
+const StrategyEvalMaterialTotal* material_total(
+    const StrategyEvalResult& result,
+    const std::string& key) {
+    const auto found = std::find_if(
+        result.material_totals.begin(), result.material_totals.end(),
+        [&](const StrategyEvalMaterialTotal& material) {
+            return material.price_key == key;
+        });
+    return found == result.material_totals.end() ? nullptr : &*found;
+}
+
 void check_reference_parity(
     const StrategyImpl& strategy,
     const StrategyEvalResult& exact,
@@ -205,6 +253,15 @@ void run_closed_form_tests() {
     PC_CHECK(near(straight.success_probability, 1.0));
     PC_CHECK(near(straight.expected_actions, 1.0));
     PC_CHECK(near(straight.expected_consumption.at("base"), 1.0));
+    PC_CHECK(action_total(straight, "restart") != nullptr);
+    PC_CHECK(material_total(straight, "base") != nullptr);
+    PC_CHECK(material_total(straight, "base") != nullptr &&
+             !material_total(straight, "base")->priced);
+    PC_CHECK(!straight.pricing_enabled);
+    PC_CHECK(near(
+        straight.technique_totals.at("restart_actions"), 1.0));
+    PC_CHECK(near(
+        straight.technique_totals.at("base_consumptions"), 1.0));
     PC_CHECK(near(edge_value(straight, "begin"), 1.0));
     PC_CHECK(near(edge_value(straight, "done"), 1.0));
     PC_CHECK(straight.max_mass_conservation_error < 1e-12);
@@ -213,11 +270,11 @@ void run_closed_form_tests() {
     const std::string loop = shell(
         "chaos loop", "rare",
         R"JSON({"id":"start","kind":"start"},
-{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}},"accounting_roles":["retry_action"]},
 {"id":"success","kind":"terminal","terminal":"success"})JSON",
         R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
 {"id":"hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
-{"id":"repeat","from":"chaos","to":"chaos","priority":999,"is_default":true})JSON");
+{"id":"repeat","from":"chaos","to":"chaos","priority":999,"is_default":true,"accounting_roles":["retry"]})JSON");
     const auto loop_strategy = compile(session, loop);
 
     ActionRegistry registry = build_action_registry(*session);
@@ -244,6 +301,19 @@ void run_closed_form_tests() {
 
     StrategyEvalOptions options;
     options.epsilon = 1e-13;
+    auto loop_economy = std::make_shared<EconomyImpl>();
+    loop_economy->id = "s8.4-loop-prices";
+    loop_economy->prices = {{"chaos", 2.0}};
+    options.economy = loop_economy;
+    options.review_projection_json = R"JSON({
+      "schema_version":"solver_review_projection_v1",
+      "raw_strategy":{"execution_authority":"raw_strategy_only"},
+      "sections":[
+        {"id":"setup","label":"Setup","role":"setup","raw_references":[{"node_id":"start"},{"edge_id":"begin"}]},
+        {"id":"rolling","label":"Retry rolling","role":"rolling","raw_references":[{"node_id":"chaos"},{"edge_id":"hit"},{"edge_id":"repeat"}]},
+        {"id":"finish","label":"Finished","role":"finishing","raw_references":[{"node_id":"success"}]}
+      ]
+    })JSON";
     const StrategyEvalResult exact = evaluate_strategy(*loop_strategy, options);
     PC_CHECK(exact.converged);
     PC_CHECK(std::fabs(exact.success_probability - 1.0) < 1e-10);
@@ -256,6 +326,57 @@ void run_closed_form_tests() {
              1e-10);
     PC_CHECK(exact.max_mass_conservation_error < 1e-10);
     PC_CHECK(exact.sweeps == 0);
+    const StrategyEvalActionTotal* chaos_total = action_total(exact, "chaos");
+    PC_CHECK(chaos_total != nullptr);
+    PC_CHECK(chaos_total != nullptr &&
+             near(chaos_total->expected_visits, 1.0 / p, 1e-10));
+    PC_CHECK(chaos_total != nullptr && chaos_total->nodes.size() == 1);
+    const StrategyEvalMaterialTotal* chaos_material =
+        material_total(exact, "chaos");
+    PC_CHECK(chaos_material != nullptr && chaos_material->priced);
+    PC_CHECK(chaos_material != nullptr &&
+             near(chaos_material->cost_contribution, 2.0 / p, 1e-10));
+    PC_CHECK(near(exact.known_expected_cost, 2.0 / p, 1e-10));
+    PC_CHECK(exact.cost_complete);
+    PC_CHECK(near(
+        exact.technique_totals.at("retry_actions"), 1.0 / p, 1e-10));
+    PC_CHECK(near(
+        exact.technique_totals.at("retry_count"), (1.0 - p) / p,
+        1e-10));
+    PC_CHECK(exact.review_sections.size() == 3);
+    PC_CHECK(near(
+        exact.review_sections[1].expected_actions, 1.0 / p, 1e-10));
+    PC_CHECK(near(
+        material_total(exact, "chaos")->expected_quantity, 1.0 / p,
+        1e-10));
+    PC_CHECK(near(exact.section_actions_difference, 0.0, 1e-12));
+    PC_CHECK(near(
+        exact.section_material_differences.at("chaos"), 0.0, 1e-12));
+    PC_CHECK(near(exact.action_descriptor_visits_difference, 0.0, 1e-12));
+    PC_CHECK(near(exact.node_operation_visits_difference, 0.0, 1e-12));
+    PC_CHECK(near(
+        exact.material_quantity_differences.at("chaos"), 0.0, 1e-12));
+    SimulatorImpl loop_simulator;
+    const std::uint64_t accounting_runs = 10000;
+    (void)simulate(
+        session, loop_strategy, accounting_runs, 20260718, &loop_simulator);
+    const double sampled_chaos =
+        static_cast<double>(
+            loop_simulator.action_descriptor_counts.at("chaos")) /
+        accounting_runs;
+    const double sampled_material =
+        static_cast<double>(loop_simulator.material_counts.at("chaos")) /
+        accounting_runs;
+    std::printf(
+        "solver S8.4 accounting loop: runs=%llu seed=%llu p=%.12f "
+        "exact_actions=%.12f sampled_actions=%.12f "
+        "exact_material=%.12f sampled_material=%.12f\n",
+        static_cast<unsigned long long>(accounting_runs),
+        static_cast<unsigned long long>(20260718), p, 1.0 / p,
+        sampled_chaos, 1.0 / p, sampled_material);
+    PC_CHECK(std::fabs(sampled_chaos - 1.0 / p) < 0.08 / p + 0.02);
+    PC_CHECK(near(sampled_chaos, sampled_material, 1e-12));
+    PC_CHECK(loop_simulator.options.seed == 20260718);
     check_reference_parity(*loop_strategy, exact, options);
 
     auto two_state_session = make_eval_session();
@@ -273,7 +394,7 @@ void run_closed_form_tests() {
         two_state_session->words);
     two_state_session->base_spawn_weight.assign(10, 0);
     two_state_session->base_roll_weight.assign(10, 0);
-    for (const std::uint32_t mod : {0u, 2u}) {
+    for (const std::uint32_t mod : {0u, 5u}) {
         pc_bitset_set(two_state_session->normal_random_roll_mask.data(), mod);
         pc_bitset_set(
             two_state_session->positive_spawn_weight_mask.data(), mod);
@@ -310,6 +431,235 @@ void run_closed_form_tests() {
              1e-10);
     PC_CHECK(two_node.sweeps == 0);
     check_reference_parity(*two_node_strategy, two_node);
+
+    const auto fracture_strategy = compile(
+        session,
+        shell(
+            "fracture accounting", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"prepare","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_finish_prefix"}},"accounting_roles":["fracture_preparation"]},
+{"id":"fracture","kind":"operation","operation":{"type":"fracture","params":{}}},
+{"id":"cleanup","kind":"operation","operation":{"type":"remove_crafted_modifiers","params":{}}},
+{"id":"restart","kind":"operation","operation":{"type":"restart","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"},
+{"id":"failure","kind":"terminal","terminal":"failure"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"prepare","priority":0,"condition":{"type":"all","conditions":[{"type":"has_mod_family","family_mod_key":"mod0"},{"type":"has_mod_family","family_mod_key":"mod2"},{"type":"has_mod_family","family_mod_key":"mod5"},{"type":"has_mod_family","family_mod_key":"mod6"}]}},
+{"id":"prepared","from":"prepare","to":"fracture","priority":0,"condition":{"type":"always"}},
+{"id":"fracture_hit","from":"fracture","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","fractured":true}},
+{"id":"fracture_miss","from":"fracture","to":"cleanup","priority":999,"is_default":true},
+{"id":"cleaned","from":"cleanup","to":"restart","priority":0,"condition":{"type":"always"}},
+{"id":"recovered","from":"restart","to":"failure","priority":0,"condition":{"type":"always"}})JSON",
+            R"JSON(,"prefixes":["mod0","mod2"],"suffixes":["mod5","mod6"])JSON"));
+    StrategyEvalOptions fracture_options;
+    auto fracture_economy = std::make_shared<EconomyImpl>();
+    fracture_economy->id = "s8.4-fracture-prices";
+    fracture_economy->prices = {
+        {"bench:bench_finish_prefix", 3.0}, {"fracture", 10.0},
+        {"scour", 1.0}, {"base", 5.0}};
+    fracture_options.economy = fracture_economy;
+    fracture_options.include_success_normalized = true;
+    fracture_options.review_projection_json = R"JSON({
+      "schema_version":"solver_review_projection_v1",
+      "raw_strategy":{"execution_authority":"raw_strategy_only"},
+      "sections":[
+        {"id":"setup","label":"Setup","role":"setup","raw_references":[{"node_id":"start"},{"edge_id":"begin"}]},
+        {"id":"fracture","label":"Fracture","role":"fracture","raw_references":[{"node_id":"prepare"},{"node_id":"fracture"},{"edge_id":"prepared"},{"edge_id":"fracture_hit"},{"edge_id":"fracture_miss"}]},
+        {"id":"recovery","label":"Recovery","role":"recovery","raw_references":[{"node_id":"cleanup"},{"node_id":"restart"},{"edge_id":"cleaned"},{"edge_id":"recovered"}]},
+        {"id":"success","label":"Success","role":"finishing","raw_references":[{"node_id":"success"}]},
+        {"id":"failure","label":"Failure","role":"recovery","raw_references":[{"node_id":"failure"}]}
+      ]
+    })JSON";
+    const StrategyEvalResult fracture_accounting =
+        evaluate_strategy(*fracture_strategy, fracture_options);
+    PC_CHECK(near(fracture_accounting.success_probability, 0.2, 1e-12));
+    PC_CHECK(near(fracture_accounting.failure_probability, 0.8, 1e-12));
+    PC_CHECK(near(fracture_accounting.expected_actions, 3.6, 1e-12));
+    PC_CHECK(near(
+        fracture_accounting.expected_consumption.at(
+            "bench:bench_finish_prefix"),
+        1.0));
+    PC_CHECK(near(
+        fracture_accounting.expected_consumption.at("fracture"), 1.0));
+    PC_CHECK(near(
+        fracture_accounting.expected_consumption.at(
+            "scour"),
+        0.8, 1e-12));
+    PC_CHECK(near(
+        fracture_accounting.expected_consumption.at("base"), 0.8,
+        1e-12));
+    PC_CHECK(near(fracture_accounting.total_expected_cost, 17.8, 1e-12));
+    PC_CHECK(fracture_accounting.success_normalized_enabled);
+    PC_CHECK(near(
+        fracture_accounting.expected_actions /
+            fracture_accounting.success_probability,
+        18.0, 1e-12));
+    PC_CHECK(near(
+        fracture_accounting.total_expected_cost /
+            fracture_accounting.success_probability,
+        89.0, 1e-12));
+    PC_CHECK(near(
+        fracture_accounting.technique_totals.at(
+            "fracture_preparation_actions"),
+        1.0));
+    PC_CHECK(near(
+        fracture_accounting.technique_totals.at("fracture_actions"),
+        1.0));
+    PC_CHECK(near(
+        fracture_accounting.technique_totals.at(
+            "crafted_mod_cleanup_or_replacement_actions"),
+        0.8, 1e-12));
+    PC_CHECK(near(
+        fracture_accounting.technique_totals.at("restart_actions"),
+        0.8, 1e-12));
+    PC_CHECK(near(fracture_accounting.section_actions_difference, 0.0));
+    PC_CHECK(fracture_accounting.review_sections.size() == 5);
+    PC_CHECK(near(
+        fracture_accounting.review_sections[1].expected_actions, 2.0));
+    PC_CHECK(near(
+        fracture_accounting.review_sections[2].expected_actions, 1.6,
+        1e-12));
+    for (const auto& [unused, difference] :
+         fracture_accounting.section_material_differences) {
+        (void)unused;
+        PC_CHECK(near(difference, 0.0, 1e-12));
+    }
+    auto missing_fracture_economy = std::make_shared<EconomyImpl>(
+        *fracture_economy);
+    missing_fracture_economy->id = "s8.4-missing-fracture";
+    missing_fracture_economy->prices.erase("fracture");
+    fracture_options.economy = missing_fracture_economy;
+    const StrategyEvalResult missing_price =
+        evaluate_strategy(*fracture_strategy, fracture_options);
+    PC_CHECK(!missing_price.cost_complete);
+    PC_CHECK(material_total(missing_price, "fracture") != nullptr);
+    PC_CHECK(material_total(missing_price, "fracture") != nullptr &&
+             !material_total(missing_price, "fracture")->priced);
+    PC_CHECK(near(missing_price.known_expected_cost, 7.8, 1e-12));
+    const std::string missing_json = serialize_strategy_eval(missing_price);
+    PC_CHECK(missing_json.find("\"status\":\"incomplete\"") !=
+             std::string::npos);
+    PC_CHECK(missing_json.find("\"missing_price_keys\":[\"fracture\"]") !=
+             std::string::npos);
+    PC_CHECK(missing_json.find("\"total_expected_cost\":null") !=
+             std::string::npos);
+
+    const auto technique_strategy = compile(
+        session,
+        shell(
+            "bench technique accounting", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"blocker","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_blocker"}},"accounting_roles":["temporary_blocker"]},
+{"id":"blocker_cleanup","kind":"operation","operation":{"type":"remove_crafted_modifiers","params":{}}},
+{"id":"protect_once","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_prefix_lock"}},"accounting_roles":["protection_setup"]},
+{"id":"protect_cleanup_once","kind":"operation","operation":{"type":"remove_crafted_modifiers","params":{}}},
+{"id":"protect_again","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_prefix_lock"}},"accounting_roles":["protection_setup"]},
+{"id":"protect_cleanup_again","kind":"operation","operation":{"type":"remove_crafted_modifiers","params":{}}},
+{"id":"multimod","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_multimod"}},"accounting_roles":["multimod_setup"]},
+{"id":"finish_one","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_finish_prefix"}},"accounting_roles":["multimod_finish","permanent_goal_bench","deterministic_finish"]},
+{"id":"finish_two","kind":"operation","operation":{"type":"bench","params":{"mod_key":"bench_finish_suffix"}},"accounting_roles":["multimod_finish","permanent_goal_bench","deterministic_finish"]},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"blocker","priority":0,"condition":{"type":"always"}},
+{"id":"blocker_used","from":"blocker","to":"blocker_cleanup","priority":0,"condition":{"type":"always"}},
+{"id":"blocker_cleaned","from":"blocker_cleanup","to":"protect_once","priority":0,"condition":{"type":"always"}},
+{"id":"protected_once","from":"protect_once","to":"protect_cleanup_once","priority":0,"condition":{"type":"always"}},
+{"id":"reapply","from":"protect_cleanup_once","to":"protect_again","priority":0,"condition":{"type":"always"},"accounting_roles":["protection_reapplication"]},
+{"id":"protected_again","from":"protect_again","to":"protect_cleanup_again","priority":0,"condition":{"type":"always"}},
+{"id":"protection_cleaned","from":"protect_cleanup_again","to":"multimod","priority":0,"condition":{"type":"always"}},
+{"id":"multimod_ready","from":"multimod","to":"finish_one","priority":0,"condition":{"type":"always"}},
+{"id":"finish_one_done","from":"finish_one","to":"finish_two","priority":0,"condition":{"type":"always"}},
+{"id":"finished","from":"finish_two","to":"success","priority":0,"condition":{"type":"always"}})JSON"));
+    StrategyEvalOptions technique_options;
+    auto technique_economy = std::make_shared<EconomyImpl>();
+    technique_economy->id = "s8.4-technique-prices";
+    technique_economy->prices = {
+        {"bench:bench_prefix_lock", 4.0},
+        {"bench:bench_multimod", 5.0},
+        {"bench:bench_blocker", 2.0},
+        {"bench:bench_finish_prefix", 6.0},
+        {"bench:bench_finish_suffix", 7.0},
+        {"scour", 1.0}};
+    technique_options.economy = technique_economy;
+    technique_options.review_projection_json = R"JSON({
+      "schema_version":"solver_review_projection_v1",
+      "raw_strategy":{"execution_authority":"raw_strategy_only"},
+      "sections":[
+        {"id":"setup","label":"Setup","role":"setup","raw_references":[{"node_id":"start"},{"edge_id":"begin"}]},
+        {"id":"blocking","label":"Temporary block","role":"temporary_blocking","raw_references":[{"node_id":"blocker"},{"node_id":"blocker_cleanup"},{"edge_id":"blocker_used"},{"edge_id":"blocker_cleaned"}]},
+        {"id":"protection","label":"Protection","role":"protection","raw_references":[{"node_id":"protect_once"},{"node_id":"protect_cleanup_once"},{"node_id":"protect_again"},{"node_id":"protect_cleanup_again"},{"edge_id":"protected_once"},{"edge_id":"reapply"},{"edge_id":"protected_again"},{"edge_id":"protection_cleaned"}]},
+        {"id":"finishing","label":"Multimod finish","role":"finishing","raw_references":[{"node_id":"multimod"},{"node_id":"finish_one"},{"node_id":"finish_two"},{"edge_id":"multimod_ready"},{"edge_id":"finish_one_done"},{"edge_id":"finished"}]},
+        {"id":"success","label":"Success","role":"finishing","raw_references":[{"node_id":"success"}]}
+      ]
+    })JSON";
+    const StrategyEvalResult technique_accounting =
+        evaluate_strategy(*technique_strategy, technique_options);
+    PC_CHECK(near(technique_accounting.expected_actions, 9.0));
+    PC_CHECK(near(technique_accounting.total_expected_cost, 31.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "temporary_blocker_applications"),
+        1.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at("protection_setup_actions"),
+        2.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "protection_reapplications"),
+        1.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at("retry_count"), 1.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at("multimod_setup_actions"),
+        1.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "multimod_finishing_bench_actions"),
+        2.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "permanent_goal_bench_finishes"),
+        2.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "deterministic_finishing_actions"),
+        2.0));
+    PC_CHECK(near(
+        technique_accounting.technique_totals.at(
+            "crafted_mod_cleanup_or_replacement_actions"),
+        3.0));
+    const StrategyEvalActionTotal* repeated_protection =
+        action_total(technique_accounting, "bench:bench_prefix_lock");
+    PC_CHECK(repeated_protection != nullptr);
+    PC_CHECK(repeated_protection != nullptr &&
+             near(repeated_protection->expected_visits, 2.0));
+    PC_CHECK(repeated_protection != nullptr &&
+             repeated_protection->nodes.size() == 2);
+    const StrategyEvalActionTotal* shared_cleanup = action_total(
+        technique_accounting, "remove_crafted_modifiers");
+    PC_CHECK(shared_cleanup != nullptr &&
+             near(shared_cleanup->expected_visits, 3.0));
+    PC_CHECK(shared_cleanup != nullptr && shared_cleanup->nodes.size() == 3);
+    const StrategyEvalActionTotal* finish_prefix = action_total(
+        technique_accounting, "bench:bench_finish_prefix");
+    const StrategyEvalActionTotal* finish_suffix = action_total(
+        technique_accounting, "bench:bench_finish_suffix");
+    PC_CHECK(finish_prefix != nullptr && finish_suffix != nullptr);
+    PC_CHECK(finish_prefix != nullptr &&
+             near(finish_prefix->expected_visits, 1.0));
+    PC_CHECK(finish_suffix != nullptr &&
+             near(finish_suffix->expected_visits, 1.0));
+    PC_CHECK(near(technique_accounting.section_actions_difference, 0.0));
+    PC_CHECK(technique_accounting.review_sections.size() == 5);
+    PC_CHECK(near(
+        technique_accounting.review_sections[1].expected_actions, 2.0));
+    PC_CHECK(near(
+        technique_accounting.review_sections[2].expected_actions, 4.0));
+    PC_CHECK(near(
+        technique_accounting.review_sections[3].expected_actions, 3.0));
+    for (const auto& [unused, difference] :
+         technique_accounting.section_material_differences) {
+        (void)unused;
+        PC_CHECK(near(difference, 0.0, 1e-12));
+    }
 
     const std::string bytes = serialize_strategy_eval(exact);
     PC_CHECK(bytes == serialize_strategy_eval(evaluate_strategy(
@@ -735,9 +1085,35 @@ void run_c_abi_tests() {
     PC_CHECK(pc_strategy_evaluate(
                  &strategy, nullptr, json.data(), json.size(), &length,
                  &error) == PC_RESULT_OK);
+    const std::size_t unpriced_length = length;
     PC_CHECK(json.find("\"version\":\"v1\"") != std::string::npos);
     PC_CHECK(json.find("\"success\":1") != std::string::npos);
     PC_CHECK(json.find("\"key\":\"base\"") != std::string::npos);
+    PC_CHECK(json.find("\"accounting\":{") != std::string::npos);
+    PC_CHECK(json.find("\"action_descriptor_visits_difference\":0") !=
+             std::string::npos);
+
+    pc_economy economy;
+    economy.impl = std::make_shared<EconomyImpl>();
+    economy.impl->id = "c-abi-accounting";
+    economy.impl->prices = {{"base", 5.0}};
+    pc_strategy_eval_options priced_options{};
+    priced_options.struct_size = sizeof(priced_options);
+    priced_options.abi_version = PC_ABI_VERSION;
+    priced_options.economy = &economy;
+    length = 0;
+    PC_CHECK(pc_strategy_evaluate(
+                 &strategy, &priced_options, nullptr, 0, &length,
+                 &error) == PC_RESULT_OK);
+    std::string priced_json(length + 1, '\0');
+    PC_CHECK(pc_strategy_evaluate(
+                 &strategy, &priced_options, priced_json.data(),
+                 priced_json.size(), &length, &error) == PC_RESULT_OK);
+    priced_json.resize(length);
+    PC_CHECK(priced_json.find("\"economy_id\":\"c-abi-accounting\"") !=
+             std::string::npos);
+    PC_CHECK(priced_json.find("\"total_expected_cost\":5") !=
+             std::string::npos);
 
     pc_strategy_eval_work_handle work = nullptr;
     PC_CHECK(pc_strategy_eval_begin(
@@ -761,7 +1137,7 @@ void run_c_abi_tests() {
                  work, stepped.data(), stepped.size(), &stepped_length,
                  &error) == PC_RESULT_OK);
     stepped.resize(stepped_length);
-    json.resize(length);
+    json.resize(unpriced_length);
     PC_CHECK(stepped == json);
     pc_strategy_eval_destroy(work);
 

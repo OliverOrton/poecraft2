@@ -1617,6 +1617,12 @@ pc_result pc_simulator_get_summary(
             ? PC_COST_DISABLED
             : (src.missing_price_action_count == 0 ? PC_COST_COMPLETE
                                                     : PC_COST_INCOMPLETE);
+    out_summary->seed = simulator->impl->options_set
+                            ? simulator->impl->options.seed
+                            : 0;
+    out_summary->target_runs = simulator->impl->options_set
+                                   ? simulator->impl->options.target_runs
+                                   : 0;
     clear_error(out_error);
     return PC_RESULT_OK;
 }
@@ -1856,6 +1862,70 @@ pc_result pc_simulator_action_distribution_query(
         entries[i].node_id = node.id.c_str();
         entries[i].action_type = node.action_type;
         entries[i].count = simulator->impl->action_counts[node_index];
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_action_descriptor_distribution_query(
+    pc_simulator_handle simulator,
+    pc_action_descriptor_sample_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::vector<std::string> keys;
+    for (const auto& [key, count] :
+         simulator->impl->action_descriptor_counts) {
+        if (count != 0) keys.push_back(key);
+    }
+    std::sort(keys.begin(), keys.end());
+    *out_entry_count = static_cast<std::uint32_t>(keys.size());
+    if (entry_capacity < keys.size() || (entries == nullptr && !keys.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        const auto found =
+            simulator->impl->action_descriptor_counts.find(keys[i]);
+        entries[i].struct_size = static_cast<std::uint32_t>(sizeof(entries[i]));
+        entries[i].abi_version = PC_ABI_VERSION;
+        entries[i].action_id = found->first.c_str();
+        entries[i].count = found->second;
+    }
+    clear_error(out_error);
+    return PC_RESULT_OK;
+}
+
+pc_result pc_simulator_material_distribution_query(
+    pc_simulator_handle simulator,
+    pc_material_sample_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error) {
+    if (simulator == nullptr || out_entry_count == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    std::vector<std::string> keys;
+    for (const auto& [key, count] : simulator->impl->material_counts) {
+        if (count != 0) keys.push_back(key);
+    }
+    std::sort(keys.begin(), keys.end());
+    *out_entry_count = static_cast<std::uint32_t>(keys.size());
+    if (entry_capacity < keys.size() || (entries == nullptr && !keys.empty())) {
+        set_error(out_error, PC_RESULT_BUFFER_TOO_SMALL, "buffer too small");
+        return PC_RESULT_BUFFER_TOO_SMALL;
+    }
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        const auto found = simulator->impl->material_counts.find(keys[i]);
+        entries[i].struct_size = static_cast<std::uint32_t>(sizeof(entries[i]));
+        entries[i].abi_version = PC_ABI_VERSION;
+        entries[i].price_key = found->first.c_str();
+        entries[i].count = found->second;
     }
     clear_error(out_error);
     return PC_RESULT_OK;

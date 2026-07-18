@@ -199,6 +199,8 @@ export interface SimulationSummary {
     missing_price_action_count: number;
     known_total_cost: number;
     cost_status: "disabled" | "complete" | "incomplete";
+    seed: number;
+    target_runs: number;
 }
 
 export interface StrategyTraceEntry {
@@ -256,6 +258,21 @@ export interface StrategyResult {
     };
     failure_summaries: FailureSummary[];
     missing_prices: Array<{ key: string; missing_count: number }>;
+    sampled_accounting: {
+        evidence_source: "simulator_sample";
+        sample_count: number;
+        seed: number;
+        actions: Array<{
+            action_id: string;
+            count: number;
+            average_per_invocation: number;
+        }>;
+        materials: Array<{
+            price_key: string;
+            count: number;
+            average_per_invocation: number;
+        }>;
+    };
     economy?: EconomyIdentity;
 }
 
@@ -266,6 +283,36 @@ export interface StrategyEvalOptions {
     max_pairs?: number;
     max_transitions?: number;
     top_classes_per_node?: number;
+    include_success_normalized?: boolean;
+}
+
+export interface StrategyAccountingMaterial {
+    price_key: string;
+    expected_quantity: number;
+    price_status: "priced" | "missing";
+    unit_price: number | null;
+    cost_contribution: number | null;
+}
+
+export interface StrategyAccountingAction {
+    id: string;
+    display_name: string;
+    expected_visits: number;
+    expected_applied: number;
+    classifications: string[];
+    materials: StrategyAccountingMaterial[];
+    raw_nodes: Array<{
+        node_id: string;
+        expected_visits: number;
+        expected_applied: number;
+    }>;
+}
+
+export interface StrategyAccountingWorkTotals {
+    expected_actions: number;
+    known_expected_cost: number;
+    total_expected_cost: number | null;
+    cost_complete: boolean;
 }
 
 export interface StrategyEvalProgress {
@@ -316,6 +363,76 @@ export interface StrategyEvalResult {
     }>;
     expected_actions: number;
     expected_consumption: Array<{ key: string; quantity: number }>;
+    accounting: {
+        version: "s8.4_v1";
+        semantics: {
+            primary: "per_strategy_invocation";
+            terminal_mass_separate: true;
+            success_normalized_basis:
+                | "independent_whole_strategy_retries"
+                | null;
+            success_normalized_is_conditional_path_expectation: false;
+        };
+        pricing: {
+            status: "disabled" | "complete" | "incomplete";
+            economy_id: string | null;
+            missing_price_keys: string[];
+        };
+        totals: {
+            per_invocation: StrategyAccountingWorkTotals;
+            success_normalized: {
+                basis: "independent_whole_strategy_retries";
+                success_probability_denominator: number;
+                expected_invocations: number;
+                work: StrategyAccountingWorkTotals;
+            } | null;
+        };
+        actions: {
+            per_invocation: StrategyAccountingAction[];
+            success_normalized: StrategyAccountingAction[] | null;
+        };
+        materials: {
+            per_invocation: StrategyAccountingMaterial[];
+            success_normalized: StrategyAccountingMaterial[] | null;
+        };
+        techniques: {
+            per_invocation: Record<string, number>;
+            success_normalized: Record<string, number> | null;
+        };
+        review_sections: {
+            enabled: boolean;
+            items: Array<{
+                id: string;
+                label: string;
+                role: string;
+                raw_references: {
+                    node_ids: string[];
+                    edge_ids: string[];
+                };
+                per_invocation: StrategyAccountingWorkTotals;
+                expected_edge_traversals: number;
+                actions: StrategyAccountingAction[];
+                materials: StrategyAccountingMaterial[];
+                techniques: Record<string, number>;
+                success_normalized: {
+                    work: StrategyAccountingWorkTotals;
+                    expected_edge_traversals: number;
+                    actions: StrategyAccountingAction[];
+                    materials: StrategyAccountingMaterial[];
+                    techniques: Record<string, number>;
+                } | null;
+            }>;
+        };
+        reconciliation: {
+            action_descriptor_visits_difference: number;
+            action_descriptor_applied_difference: number;
+            node_operation_visits_difference: number;
+            material_quantity_differences: Record<string, number>;
+            cost_dot_product_difference: number;
+            section_actions_difference: number;
+            section_material_differences: Record<string, number>;
+        };
+    };
     targets: Array<
         | { kind: "family"; family_id: number; min_tier: number }
         | { kind: "group"; group_id: number }

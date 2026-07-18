@@ -10,7 +10,7 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-18: B1.0-B1.4 and S8.0-S8.3 are complete. Oliver explicitly waived
+Status 2026-07-18: B1.0-B1.4 and S8.0-S8.4 are complete. Oliver explicitly waived
 B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
 validation already completed; B1.5 is recorded as waived/deferred, not
 complete. Its full acceptance suite, 10,000-run Imprint verification, and
@@ -23,8 +23,11 @@ preserving their exact bytes and sole execution authority. S8.2 corrected
 Fossil/Essence metamod handling and added exact preservation-aware action
 control. S8.3 promotes exact Fracture, permanent and temporary bench,
 protected-side, and Multimod finishes into carrier-aware native candidate
-generation with complete-kernel evidence and primitive execution. The next
-implementation boundary is **S8.4 only**. The recorded S7 endgame sample remains `0.9942`
+generation with complete-kernel evidence and primitive execution. S8.4 extends
+the existing exact evaluator occupancy result with descriptor/material,
+native-priced, technique, review-section, and opt-in success-normalized
+accounting, while keeping Simulator comparisons as separately labelled sampled
+evidence. The next implementation boundary is **S8.5 only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -534,9 +537,14 @@ With automatic generation disabled, `oracle-real-one-mod`,
 state counts, node/edge counts, and byte-identical raw strategies. The frozen
 temporary-blocker non-convergence, abandoned protected capture, archived
 endgame result, S7 pins, compiler-only evaluator refusal, and B1.5 waiver all
-remain unchanged. S8.4 is the sole next boundary.
+remain unchanged. That checkpoint handed off to S8.4, which is now complete
+below.
 
 ### S8.4 - Exact Action And Material Accounting
+
+Status: complete 2026-07-18. Evidence is recorded separately in
+[fixtures/solver-baselines/s8.4/evidence.json](../../fixtures/solver-baselines/s8.4/evidence.json);
+the S8.0-S8.3 evidence was not modified.
 
 Extend the existing exact strategy evaluator result rather than duplicating its
 occupancy solve:
@@ -560,6 +568,45 @@ versus finishing costs explicit.
 Checkpoint: analytic loops match hand-computed action/resource counts, exact
 section totals sum to whole-graph totals, and simulator aggregates converge to
 the exact forecast within the existing fixture tolerances.
+
+Checkpoint passed. The evaluator continues to solve occupancy once, then
+finalization aggregates operation visits by stable native action descriptor,
+applied price-key quantities, priced or explicitly missing contributions,
+native technique roles, and optional S8.1 section references. The result keeps
+raw terminal mass, per-invocation work, and opt-in `total / P(success)` work in
+separate fields; the latter is labelled independent whole-strategy retries and
+explicitly not a conditional-path expectation. Reconciliation reports
+descriptor visits/applied counts against raw operation nodes, price-key vectors
+against evaluator consumption, priced dot products against known cost, and
+non-overlapping section actions/materials against the whole graph.
+
+Analytic coverage pins Restart/base `1 / 1`; a geometric Chaos loop with
+single-attempt `p = 0.383397158397`, exact actions/material `2.608261376220`,
+and retry count `1.608261376220`; a `0.2` Fracture path with per-invocation
+actions `3.6`, cost `17.8`, and independent-retry normalized actions/cost
+`18 / 89`; and a deterministic nine-action bench chain costing `31`, including
+one blocker, two protection setups, one reapplication, three cleanups, one
+Multimod, and two finishing benches. Its non-overlapping section action totals
+are `0 + 2 + 4 + 3 + 0 = 9`. Missing Fracture price remains explicit with
+known cost `7.8` and no complete total.
+
+The one required S8.4 exact-versus-sampled check used exactly 10,000 runs at
+seed `20260718`: exact action/material average `2.608261376220` versus sampled
+`2.6069`, within the existing tolerance. Exact and sampled fields are separate.
+Native C++, C ABI, Python, release WASM, worker/TypeScript, Strategy Calculator,
+and Simulator presentation carry the result; the frontend contains no retry,
+pricing, setup, cleanup, or section-accounting rules. With automatic generation
+disabled, the two oracle cases and `ordinary-es-bench` retain their S8.3/S8.0
+values, state and graph counts, and byte-identical raw strategy hashes.
+Automatic S8.3 graphs gain only non-executable `accounting_roles` metadata on
+already selected primitive nodes/edges; Bellman values, policy selection,
+kernels, compression, and routing are unchanged.
+
+Release WASM and the production web bundle were rebuilt. The relevant native,
+binding, WASM, and non-visual web acceptance is recorded in the S8.4 evidence.
+The archived S7 pre-B1.4 web pin remains excluded and unchanged. The six
+historical mismatches and all S8.5/S8.6 work remain deferred. S8.5 is the sole
+next boundary.
 
 ### S8.5 - Compact Review And Optional Empirical Trim
 

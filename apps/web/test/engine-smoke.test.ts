@@ -746,9 +746,54 @@ test("Phase 13 strategy operations run natively through WASM", async () => {
 
 test("exact strategy evaluation agrees with a 5k-run simulation", async () => {
     const document = evaluatorStrategy();
-    const exact = await client.strategyEvaluate(sessionId, document, {
-        top_classes_per_node: 4,
-    });
+    const economy = {
+        version: "v1",
+        id: "wasm-s8.4-accounting",
+        prices: { chaos: 2 },
+    };
+    const reviewProjection = {
+        schema_version: "solver_review_projection_v1",
+        raw_strategy: { execution_authority: "raw_strategy_only" },
+        sections: [
+            {
+                id: "setup",
+                label: "Setup",
+                role: "setup",
+                raw_references: [
+                    { node_id: "start" },
+                    { edge_id: "begin" },
+                ],
+            },
+            {
+                id: "rolling",
+                label: "One reforge",
+                role: "rolling",
+                raw_references: [
+                    { node_id: "reforge" },
+                    { edge_id: "three-prefixes" },
+                    { edge_id: "otherwise" },
+                ],
+            },
+            {
+                id: "success",
+                label: "Success",
+                role: "finishing",
+                raw_references: [{ node_id: "success" }],
+            },
+            {
+                id: "failure",
+                label: "Failure",
+                role: "recovery",
+                raw_references: [{ node_id: "failure" }],
+            },
+        ],
+    };
+    const exact = await client.strategyEvaluate(
+        sessionId,
+        document,
+        { top_classes_per_node: 4, include_success_normalized: true },
+        { economy, reviewProjection },
+    );
     const terminalTotal =
         exact.terminals.success +
         exact.terminals.failure +
@@ -767,6 +812,41 @@ test("exact strategy evaluation agrees with a 5k-run simulation", async () => {
             (entry) => entry.key === "chaos" && entry.quantity > 0,
         ),
     );
+    assert.equal(exact.accounting.version, "s8.4_v1");
+    assert.equal(exact.accounting.pricing.status, "complete");
+    assert.equal(exact.accounting.pricing.economy_id, "wasm-s8.4-accounting");
+    assert.equal(exact.accounting.totals.per_invocation.expected_actions, 1);
+    assert.equal(exact.accounting.totals.per_invocation.total_expected_cost, 2);
+    assert.equal(exact.accounting.actions.per_invocation.length, 1);
+    assert.equal(exact.accounting.actions.per_invocation[0].id, "chaos");
+    assert.equal(exact.accounting.actions.per_invocation[0].expected_visits, 1);
+    assert.deepEqual(exact.accounting.materials.per_invocation, [
+        {
+            price_key: "chaos",
+            expected_quantity: 1,
+            price_status: "priced",
+            unit_price: 2,
+            cost_contribution: 2,
+        },
+    ]);
+    assert.ok(exact.accounting.totals.success_normalized);
+    assert.equal(exact.accounting.review_sections.enabled, true);
+    assert.equal(
+        exact.accounting.review_sections.items.reduce(
+            (sum, section) => sum + section.per_invocation.expected_actions,
+            0,
+        ),
+        1,
+    );
+    assert.deepEqual(exact.accounting.reconciliation, {
+        action_descriptor_visits_difference: 0,
+        action_descriptor_applied_difference: 0,
+        node_operation_visits_difference: 0,
+        material_quantity_differences: { chaos: 0 },
+        cost_dot_product_difference: 0,
+        section_actions_difference: 0,
+        section_material_differences: { chaos: 0 },
+    });
 
     const strategy = await client.compileStrategy(sessionId, document);
     const simulator = await client.createSimulator(sessionId, strategy);
@@ -782,6 +862,19 @@ test("exact strategy evaluation agrees with a 5k-run simulation", async () => {
     assert.ok(
         Math.abs(run.summary.total_actions / 5000 - exact.expected_actions) <
             0.03,
+    );
+    assert.equal(run.sampled_accounting.evidence_source, "simulator_sample");
+    assert.equal(run.sampled_accounting.sample_count, 5000);
+    assert.equal(run.sampled_accounting.seed, 20260714);
+    assert.equal(run.sampled_accounting.actions[0].action_id, "chaos");
+    assert.equal(
+        run.sampled_accounting.actions[0].count,
+        run.summary.total_actions,
+    );
+    assert.equal(run.sampled_accounting.materials[0].price_key, "chaos");
+    assert.equal(
+        run.sampled_accounting.materials[0].count,
+        run.summary.total_actions,
     );
     await client.closeSimulator(simulator);
     await client.closeStrategy(strategy);

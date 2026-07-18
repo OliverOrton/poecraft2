@@ -48,6 +48,8 @@ export interface StrategyNode {
     notes?: string;
     /** Native solver value V(s), preserved on compiled policy nodes. */
     expected_cost?: number;
+    /** Native, non-executable S8.4 classification metadata. */
+    accounting_roles?: string[];
 }
 
 export type StrategyCondition = {
@@ -81,6 +83,8 @@ export interface StrategyEdge {
     condition?: StrategyCondition;
     label?: string;
     is_default?: boolean;
+    /** Native, non-executable retry/reapplication classification metadata. */
+    accounting_roles?: string[];
 }
 
 /**

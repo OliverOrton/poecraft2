@@ -485,6 +485,7 @@ double obj_double(const Value& object, const char* key, double fallback = 0.0) {
 bool parse_strategy_eval_options(
     const char* options_json,
     pc_strategy_eval_options& options,
+    std::string& review_projection_storage,
     std::string& error) {
     options = {};
     options.struct_size = sizeof(options);
@@ -508,6 +509,34 @@ bool parse_strategy_eval_options(
     options.max_transitions = obj_u32(spec, "max_transitions");
     options.top_classes_per_node =
         obj_u32(spec, "top_classes_per_node");
+    const std::uint32_t economy_id = obj_u32(spec, "economy_id");
+    if (economy_id != 0) {
+        pc_economy_handle* economy = find(g_economies, economy_id);
+        if (economy == nullptr) {
+            error = "unknown strategy evaluation economy";
+            return false;
+        }
+        options.economy = *economy;
+    }
+    const Value* review = spec.find("review_projection_json");
+    if (review != nullptr) {
+        if (review->type != Type::String) {
+            error = "review_projection_json must be a string";
+            return false;
+        }
+        review_projection_storage = review->string;
+        options.review_projection_json = review_projection_storage.data();
+        options.review_projection_json_size =
+            review_projection_storage.size();
+    }
+    const Value* normalized = spec.find("include_success_normalized");
+    if (normalized != nullptr) {
+        if (normalized->type != Type::Bool) {
+            error = "include_success_normalized must be a bool";
+            return false;
+        }
+        options.include_success_normalized = normalized->boolean ? 1 : 0;
+    }
     return true;
 }
 
@@ -1634,8 +1663,10 @@ const char* pcw_strategy_evaluate(uint32_t strategy_id,
     }
 
     pc_strategy_eval_options options{};
+    std::string review_projection_storage;
     std::string parse_error;
-    if (!parse_strategy_eval_options(options_json, options, parse_error)) {
+    if (!parse_strategy_eval_options(
+            options_json, options, review_projection_storage, parse_error)) {
         return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
     }
 
@@ -1664,8 +1695,10 @@ const char* pcw_strategy_eval_begin(uint32_t strategy_id,
         return fail(PC_RESULT_NOT_FOUND, "unknown strategy");
     }
     pc_strategy_eval_options options{};
+    std::string review_projection_storage;
     std::string parse_error;
-    if (!parse_strategy_eval_options(options_json, options, parse_error)) {
+    if (!parse_strategy_eval_options(
+            options_json, options, review_projection_storage, parse_error)) {
         return fail(PC_RESULT_INVALID_ARGUMENT, parse_error.c_str());
     }
     pc_strategy_eval_work_handle work = nullptr;
@@ -1882,6 +1915,10 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
             ? "disabled"
             : (summary.cost_status == PC_COST_COMPLETE ? "complete"
                                                        : "incomplete"));
+    out += ",\"seed\":";
+    append_u64(out, summary.seed);
+    out += ",\"target_runs\":";
+    append_u64(out, summary.target_runs);
     out += "},\"action_distribution\":[";
 
     uint32_t distribution_count = 0;
@@ -1905,7 +1942,64 @@ const char* pcw_simulator_result(uint32_t simulator_id) {
         append_u64(out, distribution[i].count);
         out.push_back('}');
     }
-    out += "],\"traces\":[";
+    out += "],\"sampled_accounting\":{\"evidence_source\":"
+           "\"simulator_sample\",\"sample_count\":";
+    append_u64(out, summary.completed_runs);
+    out += ",\"seed\":";
+    append_u64(out, summary.seed);
+    out += ",\"actions\":[";
+    uint32_t descriptor_count = 0;
+    rc = pc_simulator_action_descriptor_distribution_query(
+        *simulator, nullptr, 0, &descriptor_count, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+        return fail(error);
+    std::vector<pc_action_descriptor_sample_entry> descriptors(
+        descriptor_count ? descriptor_count : 1);
+    rc = pc_simulator_action_descriptor_distribution_query(
+        *simulator, descriptors.data(), descriptor_count,
+        &descriptor_count, &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t i = 0; i < descriptor_count; ++i) {
+        if (i != 0) out.push_back(',');
+        out += "{\"action_id\":";
+        append_escaped(out, descriptors[i].action_id);
+        out += ",\"count\":";
+        append_u64(out, descriptors[i].count);
+        out += ",\"average_per_invocation\":";
+        out += summary.completed_runs == 0
+                   ? "0"
+                   : std::to_string(
+                         static_cast<double>(descriptors[i].count) /
+                         static_cast<double>(summary.completed_runs));
+        out.push_back('}');
+    }
+    out += "],\"materials\":[";
+    uint32_t material_count = 0;
+    rc = pc_simulator_material_distribution_query(
+        *simulator, nullptr, 0, &material_count, &error);
+    if (rc != PC_RESULT_OK && rc != PC_RESULT_BUFFER_TOO_SMALL)
+        return fail(error);
+    std::vector<pc_material_sample_entry> materials(
+        material_count ? material_count : 1);
+    rc = pc_simulator_material_distribution_query(
+        *simulator, materials.data(), material_count, &material_count,
+        &error);
+    if (rc != PC_RESULT_OK) return fail(error);
+    for (uint32_t i = 0; i < material_count; ++i) {
+        if (i != 0) out.push_back(',');
+        out += "{\"price_key\":";
+        append_escaped(out, materials[i].price_key);
+        out += ",\"count\":";
+        append_u64(out, materials[i].count);
+        out += ",\"average_per_invocation\":";
+        out += summary.completed_runs == 0
+                   ? "0"
+                   : std::to_string(
+                         static_cast<double>(materials[i].count) /
+                         static_cast<double>(summary.completed_runs));
+        out.push_back('}');
+    }
+    out += "]},\"traces\":[";
 
     uint32_t trace_count = 0;
     rc = pc_simulator_get_trace_count(*simulator, &trace_count, &error);

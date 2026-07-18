@@ -335,22 +335,42 @@ export class EngineBindings {
     strategyEvaluate(
         strategy: number,
         options?: StrategyEvalOptions,
+        economy?: number,
+        reviewProjection?: unknown,
     ): StrategyEvalResult {
+        const nativeOptions = {
+            ...(options ?? {}),
+            economy_id: economy,
+            review_projection_json:
+                reviewProjection === undefined
+                    ? undefined
+                    : JSON.stringify(reviewProjection),
+        };
         return this.callJson(
             "pcw_strategy_evaluate",
             ["number", "string"],
-            [strategy, JSON.stringify(options ?? {})],
+            [strategy, JSON.stringify(nativeOptions)],
         ).result as unknown as StrategyEvalResult;
     }
 
     beginStrategyEvaluation(
         strategy: number,
         options?: StrategyEvalOptions,
+        economy?: number,
+        reviewProjection?: unknown,
     ): number {
+        const nativeOptions = {
+            ...(options ?? {}),
+            economy_id: economy,
+            review_projection_json:
+                reviewProjection === undefined
+                    ? undefined
+                    : JSON.stringify(reviewProjection),
+        };
         return this.callJson(
             "pcw_strategy_eval_begin",
             ["number", "string"],
-            [strategy, JSON.stringify(options ?? {})],
+            [strategy, JSON.stringify(nativeOptions)],
         ).evaluation as number;
     }
 

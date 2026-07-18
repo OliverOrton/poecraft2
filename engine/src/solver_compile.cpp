@@ -463,6 +463,68 @@ std::string operation_json(const SessionImpl& session,
     }
 }
 
+std::string accounting_roles_json(
+    const PlannerOperator& planner,
+    std::uint32_t action_index,
+    bool fracture_use = false) {
+    std::vector<std::string> roles;
+    const auto add = [&](const char* role) {
+        if (std::find(roles.begin(), roles.end(), role) == roles.end()) {
+            roles.emplace_back(role);
+        }
+    };
+    if (planner.kind == PlannerOperatorKind::FixedOption) {
+        switch (planner.option_kind) {
+        case FixedOptionKind::FracturePrepare:
+            add(fracture_use ? "fracture" : "fracture_preparation");
+            if (!fracture_use) add("retry_action");
+            break;
+        case FixedOptionKind::TemporaryBenchRepeat:
+            if (action_index == planner.setup_action) add("temporary_blocker");
+            if (action_index == planner.followup_action) add("retry_action");
+            if (action_index == planner.cleanup_action) {
+                add("cleanup_or_replacement");
+            }
+            break;
+        case FixedOptionKind::ProtectedRepeat:
+            if (action_index == planner.setup_action) add("protection_setup");
+            if (action_index == planner.followup_action) add("retry_action");
+            if (action_index == planner.cleanup_action) {
+                add("cleanup_or_replacement");
+            }
+            break;
+        case FixedOptionKind::ProtectedSide:
+            if (action_index == planner.setup_action) add("protection_setup");
+            break;
+        case FixedOptionKind::MultimodFinish:
+            if (action_index == planner.setup_action) {
+                add("multimod_setup");
+            } else {
+                add("multimod_finish");
+                add("permanent_goal_bench");
+                add("deterministic_finish");
+            }
+            break;
+        case FixedOptionKind::Renewal:
+            add("retry_action");
+            break;
+        default:
+            break;
+        }
+    }
+    if (planner.automatic_kind == AutomaticCandidateKind::PermanentBench) {
+        add("permanent_goal_bench");
+        add("deterministic_finish");
+    }
+    if (roles.empty()) return {};
+    std::string out = ",\"accounting_roles\":[";
+    for (std::size_t i = 0; i < roles.size(); ++i) {
+        if (i != 0) out += ',';
+        out += "\"" + roles[i] + "\"";
+    }
+    return out + ']';
+}
+
 } // namespace
 
 std::string compile_policy_strategy_json(
@@ -726,13 +788,15 @@ std::string compile_policy_strategy_json(
             ++node_count;
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
+                const std::uint32_t action_index =
+                    planner.primitive_program[step];
                 json += ",{\"id\":\"" + state_node(state_id) + "_o" +
                         std::to_string(step) +
                         "\",\"kind\":\"operation\",\"operation\":" +
                         operation_json(
-                            session, calc.registry().actions.at(
-                                         planner.primitive_program[step])) +
-                        "}";
+                            session,
+                            calc.registry().actions.at(action_index)) +
+                        accounting_roles_json(planner, action_index) + "}";
                 ++node_count;
             }
             json += ",{\"id\":\"" + state_node(state_id) +
@@ -759,6 +823,8 @@ std::string compile_policy_strategy_json(
                 gap("renewal option has no executable rolling step");
             }
             for (std::size_t step = 0; step < primitive_steps; ++step) {
+                const std::uint32_t action_index =
+                    planner.primitive_program[step];
                 json += ",{\"id\":\"" + state_node(state_id);
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
@@ -767,8 +833,8 @@ std::string compile_policy_strategy_json(
                             number(result.values[state_id]);
                 }
                 json += ",\"operation\":" + operation_json(
-                    session, calc.registry().actions.at(
-                                 planner.primitive_program[step])) + "}";
+                    session, calc.registry().actions.at(action_index));
+                json += accounting_roles_json(planner, action_index) + "}";
                 ++node_count;
                 check_node_cap();
             }
@@ -825,13 +891,17 @@ std::string compile_policy_strategy_json(
                         number(result.values[state_id]) +
                         ",\"operation\":" + operation_json(
                             session, calc.registry().actions.at(
-                                         planner.conditional_action)) + "}";
+                                         planner.conditional_action)) +
+                        accounting_roles_json(
+                            planner, planner.conditional_action, true) + "}";
                 ++node_count;
                 check_node_cap();
                 continue;
             }
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
+                const std::uint32_t action_index =
+                    planner.primitive_program[step];
                 json += ",{\"id\":\"" + state_node(state_id);
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
@@ -840,8 +910,8 @@ std::string compile_policy_strategy_json(
                             number(result.values[state_id]);
                 }
                 json += ",\"operation\":" + operation_json(
-                    session, calc.registry().actions.at(
-                                 planner.primitive_program[step])) + "}";
+                    session, calc.registry().actions.at(action_index));
+                json += accounting_roles_json(planner, action_index) + "}";
                 ++node_count;
                 check_node_cap();
             }
@@ -851,7 +921,9 @@ std::string compile_policy_strategy_json(
                     "_fracture\",\"kind\":\"operation\",\"operation\":" +
                     operation_json(
                         session, calc.registry().actions.at(
-                                     planner.conditional_action)) + "}";
+                                     planner.conditional_action)) +
+                    accounting_roles_json(
+                        planner, planner.conditional_action, true) + "}";
             node_count += 2;
             check_node_cap();
             continue;
@@ -862,6 +934,7 @@ std::string compile_policy_strategy_json(
             gap("planner operator " + planner.id + " has no primitive program");
         }
         for (std::size_t step = 0; step < program.size(); ++step) {
+            const std::uint32_t action_index = program[step];
             json += ",{\"id\":\"";
             json += state_node(state_id);
             if (step > 0) json += "_o" + std::to_string(step);
@@ -872,7 +945,8 @@ std::string compile_policy_strategy_json(
             }
             json += ",\"operation\":";
             json += operation_json(
-                session, calc.registry().actions.at(program[step]));
+                session, calc.registry().actions.at(action_index));
+            json += accounting_roles_json(planner, action_index);
             json += "}";
             ++node_count;
             check_node_cap();
@@ -883,7 +957,8 @@ std::string compile_policy_strategy_json(
     std::uint32_t edge_counter = 0;
     const auto edge = [&](const std::string& from, const std::string& to,
                           int priority, const std::string& condition,
-                          bool is_default) {
+                          bool is_default,
+                          const char* accounting_role = nullptr) {
         if (edge_counter > 0) json += ',';
         json += "{\"id\":\"e";
         json += std::to_string(edge_counter++);
@@ -898,6 +973,11 @@ std::string compile_policy_strategy_json(
         } else {
             json += ",\"condition\":";
             json += condition;
+        }
+        if (accounting_role != nullptr) {
+            json += ",\"accounting_roles\":[\"";
+            json += accounting_role;
+            json += "\"]";
         }
         json += "}";
         if (edge_counter > result.options.max_compiled_edges) {
@@ -977,7 +1057,7 @@ std::string compile_policy_strategy_json(
             edge(
                 route, "router",
                 static_cast<int>(kernel.retry_states.size()), "", true);
-            edge(base + "_restore", base, 0, "", true);
+            edge(base + "_restore", base, 0, "", true, "retry");
             continue;
         }
         if (planner.kind == PlannerOperatorKind::FixedOption &&
@@ -1066,7 +1146,10 @@ std::string compile_policy_strategy_json(
                         abstract_state_condition(
                             session, layout, vocabulary,
                             calc.state(kernel.retry_states[i])),
-                        false);
+                        false,
+                        planner.option_kind == FixedOptionKind::ProtectedRepeat
+                            ? "protection_reapplication"
+                            : "retry");
                 }
                 edge(
                     retry, "router",
@@ -1114,7 +1197,7 @@ std::string compile_policy_strategy_json(
                     abstract_state_condition(
                         session, layout, vocabulary,
                         calc.state(retry_state)),
-                    false);
+                    false, "retry");
             }
             edge(route, "router", priority, "", true);
             edge(

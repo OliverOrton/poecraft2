@@ -867,6 +867,10 @@ struct StrategyEdge {
     bool is_default = false;
     std::uint32_t source_order = 0;
     CompiledCondition condition;
+    /* Non-executable S8.4 accounting vocabulary. These tags never
+     * participate in routing or action application; they only classify the
+     * exact traversal mass already produced by the evaluator. */
+    std::vector<std::string> accounting_roles;
 };
 
 struct StrategyDispatchNode {
@@ -901,6 +905,10 @@ struct StrategyNode {
     std::uint32_t bestiary_action_index =
         std::numeric_limits<std::uint32_t>::max();
     std::vector<std::string> price_keys;
+    /* Non-executable S8.4 accounting vocabulary emitted by the native policy
+     * compiler. Hand-authored documents may omit it; descriptor-derived
+     * classifications remain available in that case. */
+    std::vector<std::string> accounting_roles;
     int terminal_kind = -1;
     std::string reason;
     std::vector<StrategyEdge> edges;
@@ -1019,6 +1027,9 @@ struct SimulatorImpl {
     std::vector<SimulationExampleInternal> failure_examples;
     std::vector<FailureSummaryInternal> failure_summaries;
     std::vector<std::uint64_t> action_counts;
+    std::vector<std::string> action_descriptor_ids;
+    std::unordered_map<std::string, std::uint64_t> action_descriptor_counts;
+    std::unordered_map<std::string, std::uint64_t> material_counts;
     std::unordered_map<std::string, std::uint64_t> missing_prices;
     std::vector<double> node_prices;
     std::vector<std::uint8_t> node_prices_known;

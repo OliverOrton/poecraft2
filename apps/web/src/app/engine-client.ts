@@ -65,6 +65,10 @@ export interface StrategyEvaluationRunOptions {
     chunkSize?: number;
     onProgress?: (progress: StrategyEvalProgress) => void;
     signal?: AbortSignal;
+    /** Immutable active economy passed through the worker to native pricing. */
+    economy?: unknown;
+    /** Optional S8.1 display-only review projection. */
+    reviewProjection?: unknown;
 }
 
 export interface SolverRunOptions {
@@ -432,6 +436,8 @@ export class EngineClient {
                 options,
                 chunkSize: runOptions?.chunkSize,
                 reportProgress: runOptions?.onProgress !== undefined,
+                economy: runOptions?.economy,
+                reviewProjection: runOptions?.reviewProjection,
             },
             {
                 onEvaluationProgress: runOptions?.onProgress,

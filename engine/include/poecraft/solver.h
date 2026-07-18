@@ -191,6 +191,13 @@ typedef struct pc_strategy_eval_options {
     uint32_t max_pairs;   /* 0 uses the default 1000000 */
     uint32_t max_transitions; /* 0 uses the default 10000000 stored row entries */
     uint32_t top_classes_per_node; /* 0 uses the default 16 */
+    /* Optional S8.4 accounting context. The evaluator retains the immutable
+     * economy snapshot for stateful work. Review JSON is copied during begin
+     * and remains non-executable display grouping metadata. */
+    pc_economy_handle economy;
+    const char* review_projection_json;
+    size_t review_projection_json_size;
+    int32_t include_success_normalized;
 } pc_strategy_eval_options;
 
 typedef struct pc_strategy_eval_work* pc_strategy_eval_work_handle;

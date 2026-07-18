@@ -2,6 +2,7 @@
 #include "harvest_crafts.generated.hpp"
 #include "json.hpp"
 #include "poecraft/session.h"
+#include "solver_internal.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -62,6 +63,32 @@ bool bool_member(const Value& object, const char* key, bool fallback) {
         invalid(std::string(key) + " must be a bool");
     }
     return value->boolean;
+}
+
+std::vector<std::string> accounting_roles_member(const Value& object) {
+    const Value* value = object.find("accounting_roles");
+    if (value == nullptr) return {};
+    if (value->type != Type::Array) {
+        invalid("accounting_roles must be an array");
+    }
+    static const std::vector<std::string> allowed{
+        "ordinary_crafting", "restart", "fracture_preparation",
+        "fracture", "retry_action", "retry", "temporary_blocker",
+        "permanent_goal_bench", "multimod_setup", "multimod_finish",
+        "protection_setup", "protection_reapplication", "cleanup_or_replacement",
+        "deterministic_finish"};
+    std::vector<std::string> roles;
+    for (const Value& entry : value->array) {
+        if (entry.type != Type::String ||
+            std::find(allowed.begin(), allowed.end(), entry.string) ==
+                allowed.end()) {
+            invalid("unknown accounting role");
+        }
+        if (std::find(roles.begin(), roles.end(), entry.string) == roles.end()) {
+            roles.push_back(entry.string);
+        }
+    }
+    return roles;
 }
 
 int rarity_from_name(const std::string& name) {
@@ -1950,12 +1977,19 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
             }
             ++result.actions;
             ++simulator.action_counts[node_index];
+            if (!simulator.action_descriptor_ids[node_index].empty()) {
+                ++simulator.action_descriptor_counts[
+                    simulator.action_descriptor_ids[node_index]];
+            }
             if (!outcome.applied) {
                 finish_failure(PC_SIM_FAILURE_ACTION_NOT_APPLIED, node, "");
                 break;
             }
 
             applied = true;
+            for (const std::string& price_key : node.price_keys) {
+                ++simulator.material_counts[price_key];
+            }
             if (price_known && simulator.economy != nullptr) {
                 result.known_cost += price;
                 ++simulator.summary.costed_action_count;
@@ -2067,6 +2101,7 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
         } else {
             invalid("unknown node kind: " + kind);
         }
+        node.accounting_roles = accounting_roles_member(node_value);
         strategy->node_by_id.emplace(
             node.id, static_cast<std::uint32_t>(strategy->nodes.size()));
         strategy->nodes.push_back(std::move(node));
@@ -2126,6 +2161,7 @@ std::shared_ptr<StrategyImpl> compile_strategy_json(
                     ? compile_condition(*strategy->session, *condition)
                     : CompiledCondition{};
         }
+        edge.accounting_roles = accounting_roles_member(edge_value);
         strategy->nodes[from_it->second].edges.push_back(std::move(edge));
     }
 
@@ -2215,6 +2251,17 @@ void prepare_simulator_runtime(SimulatorImpl& simulator) {
     }
 
     simulator.action_counts.assign(node_count, 0);
+    simulator.action_descriptor_ids.assign(node_count, {});
+    const solver::ActionRegistry accounting_registry =
+        solver::build_action_registry(*simulator.session);
+    for (std::size_t node_index = 0; node_index < node_count; ++node_index) {
+        const std::uint32_t descriptor = solver::resolve_strategy_action(
+            simulator.strategy->nodes[node_index], accounting_registry);
+        if (descriptor != solver::kNoId) {
+            simulator.action_descriptor_ids[node_index] =
+                accounting_registry.actions[descriptor].id;
+        }
+    }
     simulator.node_prices.assign(node_count, 0.0);
     simulator.node_prices_known.assign(node_count, 1);
     simulator.node_missing_price_keys.assign(node_count, {});

@@ -1,0 +1,294 @@
+{
+  "schema_version": "s8_4_exact_accounting_evidence_v1",
+  "checkpoint": "S8.4 exact action and material accounting",
+  "implementation_date": "2026-07-18",
+  "authority": {
+    "exact_source": "existing strategy evaluator node/state occupancy and edge traversal mass",
+    "sampled_source": "native Simulator aggregate counters",
+    "sources_merged": false,
+    "raw_strategy_execution_authority": "raw_strategy_only",
+    "review_projection_execution_authority": false,
+    "frontend_accounting_authority": false
+  },
+  "historical_inputs": {
+    "s8_0_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/manifest.json",
+      "sha256": "c034a794f7f48ec919e03c2ae7d4afe6f1ebf4c2851d2c547ab2e8c6b803d1da",
+      "mutated": false
+    },
+    "s8_1_projection_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/review-projections/manifest.json",
+      "sha256": "dfa99fb9ea57c7cb18d37ed8b1cf03752f10817ffd76d279effa5f4ca46199b3",
+      "mutated": false,
+      "used_for_execution": false
+    },
+    "s8_2_evidence_mutated": false,
+    "s8_3_evidence_mutated": false
+  },
+  "exact_result_contract": {
+    "version": "s8.4_v1",
+    "primary_basis": "per_strategy_invocation",
+    "terminal_mass_separate": true,
+    "success_normalized": {
+      "optional": true,
+      "formula": "per_invocation_total / P(success)",
+      "basis": "independent_whole_strategy_retries",
+      "conditional_path_expectation": false,
+      "enabled_only_when": "requested and 0 < P(success) < 1"
+    },
+    "action_fields": [
+      "stable native descriptor id and display name",
+      "expected visits and expected applied count",
+      "engine price-key quantity vector",
+      "priced or explicitly missing material contributions",
+      "native accounting classifications",
+      "reconciled raw operation-node visits and applied counts"
+    ],
+    "material_fields": [
+      "stable price key",
+      "exact expected quantity",
+      "priced or missing status",
+      "unit price",
+      "cost contribution"
+    ],
+    "review_section_fields": [
+      "display-only section id, label, and role",
+      "referenced raw node and edge ids",
+      "exact actions, materials, costs, edge traversals, and techniques",
+      "optional success-normalized section work"
+    ],
+    "reconciliation_fields": [
+      "action descriptor visits minus evaluator operation visits",
+      "action descriptor applied count minus applied operation visits",
+      "raw operation-node visits minus evaluator expected actions",
+      "descriptor material quantities minus evaluator price-key consumption",
+      "priced quantity dot product minus known expected cost",
+      "non-overlapping review-section actions and materials minus whole-strategy totals"
+    ]
+  },
+  "technique_vocabulary": [
+    "ordinary crafting actions",
+    "Restart actions and base consumptions",
+    "Fracture preparation and Fracture use",
+    "retry actions and traversed retry counts",
+    "temporary blocker applications",
+    "permanent goal bench finishes",
+    "Multimod setup and finishing benches",
+    "prefix or suffix protection setup and reapplication",
+    "crafted-mod cleanup or replacement",
+    "deterministic finishing actions"
+  ],
+  "analytic_fixtures": {
+    "geometric_retry": {
+      "single_attempt_success_probability": 0.383397158397,
+      "expected_actions": 2.60826137622,
+      "expected_chaos": 2.60826137622,
+      "expected_retry_count": 1.60826137622,
+      "chaos_unit_price": 2.0,
+      "expected_cost": 5.21652275244,
+      "review_section_actions": {
+        "setup": 0.0,
+        "rolling": 2.60826137622,
+        "finish": 0.0
+      },
+      "all_reconciliation_differences": 0.0
+    },
+    "restart": {
+      "expected_actions": 1.0,
+      "expected_base_consumptions": 1.0,
+      "restart_actions": 1.0,
+      "all_reconciliation_differences": 0.0
+    },
+    "fracture_and_recovery": {
+      "success_probability": 0.2,
+      "failure_probability": 0.8,
+      "per_invocation": {
+        "expected_actions": 3.6,
+        "materials": {
+          "bench:bench_finish_prefix": 1.0,
+          "fracture": 1.0,
+          "scour": 0.8,
+          "base": 0.8
+        },
+        "expected_cost": 17.8,
+        "review_section_actions": {
+          "setup": 0.0,
+          "fracture": 2.0,
+          "recovery": 1.6,
+          "success": 0.0,
+          "failure": 0.0
+        }
+      },
+      "success_normalized_independent_retries": {
+        "expected_invocations": 5.0,
+        "expected_actions": 18.0,
+        "expected_cost": 89.0
+      },
+      "missing_fracture_price": {
+        "cost_status": "incomplete",
+        "missing_price_keys": [
+          "fracture"
+        ],
+        "known_expected_cost": 7.8,
+        "total_expected_cost": null
+      },
+      "all_reconciliation_differences": 0.0
+    },
+    "bench_techniques_and_shared_descriptors": {
+      "expected_actions": 9.0,
+      "expected_cost": 31.0,
+      "review_section_actions": {
+        "setup": 0.0,
+        "temporary_blocking": 2.0,
+        "protection": 4.0,
+        "finishing": 3.0,
+        "success": 0.0
+      },
+      "techniques": {
+        "temporary_blocker_applications": 1.0,
+        "protection_setup_actions": 2.0,
+        "protection_reapplications": 1.0,
+        "retry_count": 1.0,
+        "multimod_setup_actions": 1.0,
+        "multimod_finishing_bench_actions": 2.0,
+        "permanent_goal_bench_finishes": 2.0,
+        "deterministic_finishing_actions": 2.0,
+        "crafted_mod_cleanup_or_replacement_actions": 3.0
+      },
+      "repeated_descriptor": {
+        "id": "bench:bench_prefix_lock",
+        "raw_nodes": 2,
+        "expected_visits": 2.0
+      },
+      "shared_descriptor_across_raw_regions": {
+        "id": "remove_crafted_modifiers",
+        "raw_nodes": 3,
+        "expected_visits": 3.0
+      },
+      "distinct_finishing_descriptor_ids": [
+        "bench:bench_finish_prefix",
+        "bench:bench_finish_suffix"
+      ],
+      "all_reconciliation_differences": 0.0
+    }
+  },
+  "exact_vs_sampled": {
+    "evidence_sources": [
+      "exact_evaluator",
+      "simulator_sample"
+    ],
+    "runs": 10000,
+    "seed": 20260718,
+    "exact_action_average": 2.60826137622,
+    "sampled_action_average": 2.6069,
+    "exact_material_average": 2.60826137622,
+    "sampled_material_average": 2.6069,
+    "absolute_difference": -0.00136137622,
+    "within_existing_fixture_tolerance": true
+  },
+  "real_case_effects": [
+    {
+      "id": "oracle-real-one-mod",
+      "automatic_candidates": false,
+      "start_value": 8.02014428412885,
+      "expanded_states": 90,
+      "compiled_nodes": 15,
+      "compiled_edges": 94,
+      "raw_strategy_sha256": "072c6c25b59e34e3edc117dc285e4545175431dcf1efa8218203a278f3e0abad",
+      "byte_identical_to_s8_3": true
+    },
+    {
+      "id": "oracle-real-two-mod",
+      "automatic_candidates": false,
+      "start_value": 356.45917785234406,
+      "expanded_states": 99,
+      "compiled_nodes": 19,
+      "compiled_edges": 116,
+      "raw_strategy_sha256": "951a4282a48974c4ca4c338cca7e8cdc320af2570a684db70b8fbb3b40e97269",
+      "byte_identical_to_s8_3": true
+    },
+    {
+      "id": "ordinary-es-bench",
+      "automatic_candidates": false,
+      "start_value": 741.5018555381404,
+      "expanded_states": 18817,
+      "compiled_nodes": 3457,
+      "compiled_edges": 19437,
+      "raw_strategy_sha256": "61038f737ad5c916e314fb1070359daccfd6a0adfc52a0c6c7f62521012ff60e",
+      "byte_identical_to_s8_3": true
+    }
+  ],
+  "policy_invariants": {
+    "minimum_expected_cost_objective_changed": false,
+    "candidate_control_changed": false,
+    "policy_selection_changed_for_accounting": false,
+    "exact_kernel_collapse_changed": false,
+    "policy_compression_changed": false,
+    "raw_routing_changed": false,
+    "automatic_enabled_graph_effect": "Selected S8.3 primitive nodes and retry edges carry additive validated accounting_roles metadata; the metadata has no legality, transition, routing, or Bellman authority."
+  },
+  "interfaces": {
+    "native_cpp": "Evaluator occupancy finalization now emits descriptor, material, technique, section, normalized, and reconciliation totals. Simulator retains separate descriptor/material sample counters.",
+    "c_abi": "Evaluator options accept an immutable economy, display-only review projection JSON, and opt-in normalization. Simulator exposes descriptor/material aggregate queries plus sample seed and count.",
+    "python": "Strategy.evaluate returns the native exact JSON; SimulationResult exposes sampled_accounting with sample count and seed.",
+    "wasm": "The release module carries the same evaluator options/results and sampled aggregate queries.",
+    "typescript_worker": "Protocol types and worker plumbing pass pinned economy and optional review projection documents without implementing accounting rules.",
+    "product": "Strategy Calculator renders engine-priced material contributions, descriptor/technique totals, optional section totals, and explicitly labelled success-normalized work. Simulator labels its counters as sampled evidence with run count and seed."
+  },
+  "acceptance": {
+    "status": "passed 2026-07-18",
+    "native_build": "scripts/build.ps1 passed",
+    "release_wasm_build": "scripts/build-wasm.ps1 passed",
+    "native_engine_suite": {
+      "checks": 469026,
+      "failures": 0,
+      "header_smoke": "passed"
+    },
+    "python": {
+      "binding_tests": 17,
+      "s8_baseline_tests": 10,
+      "failures": 0
+    },
+    "web": {
+      "typescript_no_emit": "passed",
+      "wasm_engine_smoke": "27/27 passed",
+      "strategy_model": "passed",
+      "strategy_calculator_mode": "passed",
+      "economy_service": "9/9 passed",
+      "odds_presentation": "passed"
+    },
+    "production_bundle": {
+      "build": "passed",
+      "served_http_status": 200,
+      "verified_assets": {
+        "index_html_bytes": 457,
+        "main_js_bytes": 440413,
+        "main_css_bytes": 97910,
+        "release_wasm_bytes": 1600623,
+        "compiled_data_json_bytes": 22979725,
+        "economy_index_bytes": 4584,
+        "pinned_economy_snapshot_bytes": 99568
+      }
+    },
+    "known_excluded_web_assertion": "The archived S7 benchmark corpus artifact-pin assertion still expects pre-B1.4 hashes and is preserved rather than rewritten.",
+    "preserved_corpus_validation_result": "poecraft_solver_benchmark --validate-only reports that corpus file hash pins do not match the artifact, reproducing the disclosed archived S7 pre-B1.4 mismatch.",
+    "new_compiled_strategy_verification_gate_runs": 10000,
+    "ten_thousand_run_reason": "The new sampled descriptor/material aggregates required one exact-versus-Simulator convergence check against the analytic geometric loop."
+  },
+  "preserved_mismatches": [
+    "Compiler-only mod_count routing remains unsupported by Calculator exact evaluation.",
+    "The archived endgame sample remains 0.9942 against 0.995.",
+    "The historical temporary-blocker solve remains non-converged.",
+    "Protected-reforge captures remain abandoned after long runs.",
+    "Archived S7 artifact pins still predate B1.4.",
+    "B1.5 remains waived/deferred, not complete."
+  ],
+  "deferred_scope": [
+    "S8.5 focus and empirical trimming",
+    "S8.6 solver acceptance",
+    "recombinators",
+    "B1.5 backfill",
+    "unrelated mechanics"
+  ],
+  "next_boundary": "S8.5 compact review and optional empirical trim only"
+}

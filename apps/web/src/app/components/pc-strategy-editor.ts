@@ -557,12 +557,7 @@ export class PcStrategyEditor extends HTMLElement {
         );
         this.odds.addEventListener("strategy-recost", () => {
             if (!this.evalResult) return;
-            this.evalEconomy = pinEconomy();
-            this.evalResult = {
-                ...this.evalResult,
-                economy: this.evalEconomy.identity,
-            };
-            this.syncModeAndOddsView();
+            this.requestEvaluation(0);
         });
         this.trace.addEventListener("trace-highlight", (event) => {
             const detail = (
@@ -1447,9 +1442,10 @@ export class PcStrategyEditor extends HTMLElement {
             const result = await this.client.strategyEvaluate(
                 session,
                 cloneStrategy(this.strategy),
-                undefined,
+                { include_success_normalized: true },
                 {
                     signal: controller.signal,
+                    economy: pinned.snapshot,
                     onProgress: (progress) => {
                         if (
                             controller.signal.aborted ||

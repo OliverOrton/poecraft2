@@ -358,8 +358,40 @@ class BindingTests(unittest.TestCase):
         }
         with self.session.compile_strategy(strategy_json) as strategy:
             with load_economy(
-                {"version": "v1", "prices": {"chaos": 2.0}}
+                {
+                    "version": "v1",
+                    "id": "python-s8.4-accounting",
+                    "prices": {"chaos": 2.0},
+                }
             ) as economy:
+                exact = strategy.evaluate(economy=economy)
+                self.assertEqual(exact["accounting"]["version"], "s8.4_v1")
+                self.assertEqual(
+                    exact["accounting"]["pricing"],
+                    {
+                        "status": "complete",
+                        "economy_id": "python-s8.4-accounting",
+                        "missing_price_keys": [],
+                    },
+                )
+                self.assertEqual(
+                    exact["accounting"]["totals"]["per_invocation"][
+                        "expected_actions"
+                    ],
+                    exact["expected_actions"],
+                )
+                self.assertEqual(
+                    exact["accounting"]["reconciliation"][
+                        "action_descriptor_visits_difference"
+                    ],
+                    0,
+                )
+                self.assertEqual(
+                    exact["accounting"]["reconciliation"][
+                        "material_quantity_differences"
+                    ]["chaos"],
+                    0,
+                )
                 with strategy.create_simulator(economy) as simulator:
                     result = simulator.run(
                         SimulationOptions(
@@ -374,6 +406,8 @@ class BindingTests(unittest.TestCase):
                     self.assertEqual(result.summary["success_count"], 20)
                     self.assertGreater(result.summary["total_actions"], 20)
                     self.assertEqual(result.summary["cost_status"], "complete")
+                    self.assertEqual(result.summary["seed"], 42)
+                    self.assertEqual(result.summary["target_runs"], 20)
                     self.assertEqual(len(result.action_distribution), 1)
                     self.assertEqual(
                         result.action_distribution[0]["count"],
@@ -391,6 +425,28 @@ class BindingTests(unittest.TestCase):
                         result.success_examples[0].item._state.prefix_count, 3
                     )
                     self.assertEqual(result.missing_prices, {})
+                    self.assertEqual(
+                        result.sampled_accounting["evidence_source"],
+                        "simulator_sample",
+                    )
+                    self.assertEqual(result.sampled_accounting["sample_count"], 20)
+                    self.assertEqual(result.sampled_accounting["seed"], 42)
+                    self.assertEqual(
+                        result.sampled_accounting["actions"][0]["action_id"],
+                        "chaos",
+                    )
+                    self.assertEqual(
+                        result.sampled_accounting["actions"][0]["count"],
+                        result.summary["total_actions"],
+                    )
+                    self.assertEqual(
+                        result.sampled_accounting["materials"][0]["price_key"],
+                        "chaos",
+                    )
+                    self.assertEqual(
+                        result.sampled_accounting["materials"][0]["count"],
+                        result.summary["total_actions"],
+                    )
 
     def test_phase13_mechanics(self):
         with self.session.create_action_context(seed=42) as context:

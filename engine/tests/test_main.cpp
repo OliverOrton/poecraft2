@@ -26,6 +26,12 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 && std::string(argv[1]) == "--solver-eval-only") {
+        run_solver_eval_tests(nullptr);
+        std::printf("solver evaluator tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 2 && std::string(argv[1]) == "--solver-api-only") {
         run_solver_api_tests(argv[2]);
         std::printf("solver API tests: %d checks, %d failures\n",

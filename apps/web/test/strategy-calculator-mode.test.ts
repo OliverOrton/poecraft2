@@ -151,6 +151,94 @@ function cannedResult(): StrategyEvalResult {
         failures_by_node: [],
         expected_actions: 2.5,
         expected_consumption: [{ key: "chaos", quantity: 2.5 }],
+        accounting: {
+            version: "s8.4_v1",
+            semantics: {
+                primary: "per_strategy_invocation",
+                terminal_mass_separate: true,
+                success_normalized_basis:
+                    "independent_whole_strategy_retries",
+                success_normalized_is_conditional_path_expectation: false,
+            },
+            pricing: {
+                status: "complete",
+                economy_id: "test",
+                missing_price_keys: [],
+            },
+            totals: {
+                per_invocation: {
+                    expected_actions: 2.5,
+                    known_expected_cost: 5,
+                    total_expected_cost: 5,
+                    cost_complete: true,
+                },
+                success_normalized: {
+                    basis: "independent_whole_strategy_retries",
+                    success_probability_denominator: 0.75,
+                    expected_invocations: 4 / 3,
+                    work: {
+                        expected_actions: 10 / 3,
+                        known_expected_cost: 20 / 3,
+                        total_expected_cost: 20 / 3,
+                        cost_complete: true,
+                    },
+                },
+            },
+            actions: {
+                per_invocation: [
+                    {
+                        id: "chaos",
+                        display_name: "Chaos Orb",
+                        expected_visits: 2.5,
+                        expected_applied: 2.5,
+                        classifications: ["ordinary_crafting", "retry_action"],
+                        materials: [
+                            {
+                                price_key: "chaos",
+                                expected_quantity: 2.5,
+                                price_status: "priced",
+                                unit_price: 2,
+                                cost_contribution: 5,
+                            },
+                        ],
+                        raw_nodes: [
+                            {
+                                node_id: "chaos",
+                                expected_visits: 2.5,
+                                expected_applied: 2.5,
+                            },
+                        ],
+                    },
+                ],
+                success_normalized: null,
+            },
+            materials: {
+                per_invocation: [
+                    {
+                        price_key: "chaos",
+                        expected_quantity: 2.5,
+                        price_status: "priced",
+                        unit_price: 2,
+                        cost_contribution: 5,
+                    },
+                ],
+                success_normalized: null,
+            },
+            techniques: {
+                per_invocation: { retry_actions: 2.5, retry_count: 1.5 },
+                success_normalized: null,
+            },
+            review_sections: { enabled: false, items: [] },
+            reconciliation: {
+                action_descriptor_visits_difference: 0,
+                action_descriptor_applied_difference: 0,
+                node_operation_visits_difference: 0,
+                material_quantity_differences: { chaos: 0 },
+                cost_dot_product_difference: 0,
+                section_actions_difference: 0,
+                section_material_differences: {},
+            },
+        },
         targets: [{ kind: "group", group_id: 1 }],
         nodes: [
             {

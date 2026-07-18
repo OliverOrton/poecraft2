@@ -12,15 +12,30 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "json.hpp"
 #include "poecraft/bitset.h"
 
 namespace poecraft {
 namespace solver {
 
 namespace {
+
+using json::Parser;
+using json::Type;
+using json::Value;
+
+struct ReviewSectionSpec {
+    std::string id;
+    std::string label;
+    std::string role;
+    std::vector<std::uint32_t> nodes;
+    std::vector<std::string> edges;
+};
 
 struct TargetEntry {
     GoalSlot slot;
@@ -415,6 +430,229 @@ const char* terminal_name(int kind) {
     }
 }
 
+void add_classification(
+    std::vector<std::string>& classifications,
+    const std::string& value) {
+    if (std::find(
+            classifications.begin(), classifications.end(), value) ==
+        classifications.end()) {
+        classifications.push_back(value);
+    }
+}
+
+std::map<std::string, double> empty_technique_totals() {
+    return {
+        {"ordinary_crafting_actions", 0.0},
+        {"restart_actions", 0.0},
+        {"base_consumptions", 0.0},
+        {"fracture_preparation_actions", 0.0},
+        {"fracture_actions", 0.0},
+        {"retry_actions", 0.0},
+        {"retry_count", 0.0},
+        {"temporary_blocker_applications", 0.0},
+        {"permanent_goal_bench_finishes", 0.0},
+        {"multimod_setup_actions", 0.0},
+        {"multimod_finishing_bench_actions", 0.0},
+        {"protection_setup_actions", 0.0},
+        {"protection_reapplications", 0.0},
+        {"crafted_mod_cleanup_or_replacement_actions", 0.0},
+        {"deterministic_finishing_actions", 0.0},
+    };
+}
+
+void add_role_work(
+    std::map<std::string, double>& totals,
+    const std::string& role,
+    double visits,
+    double applied) {
+    if (role == "ordinary_crafting") {
+        totals["ordinary_crafting_actions"] += visits;
+    } else if (role == "restart") {
+        totals["restart_actions"] += visits;
+        totals["base_consumptions"] += applied;
+    } else if (role == "fracture_preparation") {
+        totals["fracture_preparation_actions"] += visits;
+    } else if (role == "fracture") {
+        totals["fracture_actions"] += visits;
+    } else if (role == "retry_action") {
+        totals["retry_actions"] += visits;
+    } else if (role == "retry") {
+        totals["retry_count"] += visits;
+    } else if (role == "temporary_blocker") {
+        totals["temporary_blocker_applications"] += applied;
+    } else if (role == "permanent_goal_bench") {
+        totals["permanent_goal_bench_finishes"] += applied;
+    } else if (role == "multimod_setup") {
+        totals["multimod_setup_actions"] += applied;
+    } else if (role == "multimod_finish") {
+        totals["multimod_finishing_bench_actions"] += applied;
+    } else if (role == "protection_setup") {
+        totals["protection_setup_actions"] += applied;
+    } else if (role == "protection_reapplication") {
+        totals["retry_count"] += visits;
+        totals["protection_reapplications"] += visits;
+    } else if (role == "cleanup_or_replacement") {
+        totals["crafted_mod_cleanup_or_replacement_actions"] += applied;
+    } else if (role == "deterministic_finish") {
+        totals["deterministic_finishing_actions"] += applied;
+    }
+}
+
+std::vector<StrategyEvalMaterialTotal> price_materials(
+    const std::map<std::string, double>& quantities,
+    const std::shared_ptr<const EconomyImpl>& economy,
+    double& known_cost,
+    bool& complete) {
+    known_cost = 0.0;
+    complete = economy != nullptr;
+    std::vector<StrategyEvalMaterialTotal> materials;
+    materials.reserve(quantities.size());
+    for (const auto& [key, quantity] : quantities) {
+        StrategyEvalMaterialTotal material;
+        material.price_key = key;
+        material.expected_quantity = quantity;
+        if (economy != nullptr) {
+            const auto found = economy->prices.find(key);
+            if (found != economy->prices.end()) {
+                material.priced = true;
+                material.unit_price = found->second;
+                material.cost_contribution = quantity * found->second;
+                known_cost += material.cost_contribution;
+            } else {
+                complete = false;
+            }
+        }
+        materials.push_back(std::move(material));
+    }
+    return materials;
+}
+
+std::vector<ReviewSectionSpec> parse_review_sections(
+    const StrategyImpl& strategy,
+    const std::string& document) {
+    if (document.empty()) return {};
+    Value root = Parser(document.data(), document.size()).parse();
+    if (root.type != Type::Object) {
+        throw std::invalid_argument("review projection root must be an object");
+    }
+    const Value* schema = root.find("schema_version");
+    if (schema == nullptr || schema->type != Type::String ||
+        schema->string != "solver_review_projection_v1") {
+        throw std::invalid_argument(
+            "review projection must use solver_review_projection_v1");
+    }
+    const Value* raw = root.find("raw_strategy");
+    if (raw == nullptr || raw->type != Type::Object) {
+        throw std::invalid_argument("review projection requires raw_strategy");
+    }
+    const Value* authority = raw->find("execution_authority");
+    if (authority == nullptr || authority->type != Type::String ||
+        authority->string != "raw_strategy_only") {
+        throw std::invalid_argument(
+            "review projection cannot have execution authority");
+    }
+    const Value* sections = root.find("sections");
+    if (sections == nullptr || sections->type != Type::Array ||
+        sections->array.empty()) {
+        throw std::invalid_argument("review projection requires sections");
+    }
+
+    std::unordered_map<std::string, std::uint32_t> node_by_id;
+    std::unordered_set<std::string> edge_ids;
+    for (std::uint32_t node = 0; node < strategy.nodes.size(); ++node) {
+        node_by_id.emplace(strategy.nodes[node].id, node);
+        for (const StrategyEdge& edge : strategy.nodes[node].edges) {
+            edge_ids.emplace(edge.id);
+        }
+    }
+    std::unordered_set<std::string> seen_sections;
+    std::unordered_set<std::string> seen_nodes;
+    std::unordered_set<std::string> seen_edges;
+    std::vector<ReviewSectionSpec> result;
+    for (const Value& section_value : sections->array) {
+        if (section_value.type != Type::Object) {
+            throw std::invalid_argument("review section must be an object");
+        }
+        const auto required_string = [&](const char* key) -> std::string {
+            const Value* value = section_value.find(key);
+            if (value == nullptr || value->type != Type::String ||
+                value->string.empty()) {
+                throw std::invalid_argument(
+                    std::string("review section requires ") + key);
+            }
+            return value->string;
+        };
+        ReviewSectionSpec section;
+        section.id = required_string("id");
+        section.label = required_string("label");
+        section.role = required_string("role");
+        if (!seen_sections.emplace(section.id).second) {
+            throw std::invalid_argument("duplicate review section id");
+        }
+        const Value* references = section_value.find("raw_references");
+        if (references == nullptr || references->type != Type::Array) {
+            throw std::invalid_argument(
+                "review section requires raw_references");
+        }
+        for (const Value& reference : references->array) {
+            if (reference.type != Type::Object) {
+                throw std::invalid_argument(
+                    "review raw reference must be an object");
+            }
+            const Value* node_id = reference.find("node_id");
+            const Value* edge_id = reference.find("edge_id");
+            if ((node_id == nullptr) == (edge_id == nullptr)) {
+                throw std::invalid_argument(
+                    "review reference must name one raw node or edge");
+            }
+            if (node_id != nullptr) {
+                if (node_id->type != Type::String ||
+                    !node_by_id.contains(node_id->string) ||
+                    !seen_nodes.emplace(node_id->string).second) {
+                    throw std::invalid_argument(
+                        "review projection has an unresolved or duplicate raw node");
+                }
+                section.nodes.push_back(node_by_id.at(node_id->string));
+            } else {
+                if (edge_id->type != Type::String ||
+                    !edge_ids.contains(edge_id->string) ||
+                    !seen_edges.emplace(edge_id->string).second) {
+                    throw std::invalid_argument(
+                        "review projection has an unresolved or duplicate raw edge");
+                }
+                section.edges.push_back(edge_id->string);
+            }
+        }
+        result.push_back(std::move(section));
+    }
+    if (seen_nodes.size() != strategy.nodes.size() ||
+        seen_edges.size() != edge_ids.size()) {
+        throw std::invalid_argument(
+            "review projection must cover every raw node and edge exactly once");
+    }
+    std::vector<std::size_t> section_by_node(strategy.nodes.size());
+    for (std::size_t section = 0; section < result.size(); ++section) {
+        for (const std::uint32_t node : result[section].nodes) {
+            section_by_node[node] = section;
+        }
+    }
+    std::unordered_map<std::string, std::size_t> section_by_edge;
+    for (std::size_t section = 0; section < result.size(); ++section) {
+        for (const std::string& edge : result[section].edges) {
+            section_by_edge.emplace(edge, section);
+        }
+    }
+    for (std::size_t source = 0; source < strategy.nodes.size(); ++source) {
+        for (const StrategyEdge& edge : strategy.nodes[source].edges) {
+            if (section_by_edge.at(edge.id) != section_by_node[source]) {
+                throw std::invalid_argument(
+                    "review edge must be owned by its source-node section");
+            }
+        }
+    }
+    return result;
+}
+
 } // namespace
 
 std::uint32_t resolve_strategy_action(
@@ -584,6 +822,7 @@ struct StrategyEvalWork::Impl {
     std::shared_ptr<const StrategyImpl> strategy;
     StrategyEvalOptions options;
     EvalModel model;
+    std::vector<ReviewSectionSpec> review_sections;
     StrategyEvalResult output;
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
 
@@ -629,7 +868,9 @@ struct StrategyEvalWork::Impl {
         const StrategyEvalOptions& options_in)
         : strategy(std::move(strategy_in)),
           options(options_in),
-          model(derive_checked_model(strategy, options_in.max_states)) {
+          model(derive_checked_model(strategy, options_in.max_states)),
+          review_sections(parse_review_sections(
+              *strategy, options_in.review_projection_json)) {
         if (strategy == nullptr || strategy->session == nullptr ||
             strategy->start_node >= strategy->nodes.size()) {
             throw std::invalid_argument("invalid compiled strategy");
@@ -1509,6 +1750,8 @@ struct StrategyEvalWork::Impl {
         CalcContext& calc = *model.calc;
         const std::size_t node_count = strategy->nodes.size();
         std::vector<double> node_visits(node_count, 0.0);
+        std::vector<double> operation_visits(node_count, 0.0);
+        std::vector<double> operation_applied(node_count, 0.0);
         std::vector<double> unresolved_by_node(node_count, 0.0);
         std::vector<std::map<std::uint32_t, double>> incoming(node_count);
 
@@ -1521,7 +1764,9 @@ struct StrategyEvalWork::Impl {
             output.residual_mass += unresolved_pair[pair];
             if (record.operation) {
                 output.expected_actions += visits;
+                operation_visits[record.node] += visits;
                 if (record.consumes) {
+                    operation_applied[record.node] += visits;
                     const ActionDescriptor& action =
                         calc.registry().actions.at(record.action);
                     for (const std::string& key : action.cost_keys) {
@@ -1600,6 +1845,260 @@ struct StrategyEvalWork::Impl {
                     {edge.id, edge_traversals.at(edge_index_by_id.at(edge.id))});
             }
         }
+
+        output.technique_totals = empty_technique_totals();
+        std::vector<std::map<std::string, double>> node_techniques(
+            node_count);
+        std::vector<std::vector<std::string>> node_classifications(
+            node_count);
+        std::map<std::string, StrategyEvalActionTotal> actions_by_id;
+        double total_applied_actions = 0.0;
+        for (std::size_t node_index = 0; node_index < node_count;
+             ++node_index) {
+            const StrategyNode& node = strategy->nodes[node_index];
+            if (node.kind != StrategyNodeKind::Operation) continue;
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(
+                    model.action_by_node.at(node_index));
+            StrategyEvalActionTotal& action = actions_by_id[descriptor.id];
+            if (action.id.empty()) {
+                action.id = descriptor.id;
+                action.display_name = descriptor.display_name;
+                action.price_keys = descriptor.cost_keys;
+            }
+            action.expected_visits += operation_visits[node_index];
+            action.expected_applied += operation_applied[node_index];
+            action.nodes.push_back(
+                {node.id, operation_visits[node_index],
+                 operation_applied[node_index]});
+            total_applied_actions += operation_applied[node_index];
+
+            std::vector<std::string> roles = node.accounting_roles;
+            if (descriptor.synthetic) {
+                add_classification(roles, "restart");
+            } else {
+                add_classification(roles, "ordinary_crafting");
+            }
+            if (descriptor.params.type == ActionType::Fracture) {
+                add_classification(roles, "fracture");
+            } else if (
+                descriptor.params.type == ActionType::RemoveCraftedModifiers) {
+                add_classification(roles, "cleanup_or_replacement");
+            } else if (descriptor.params.type == ActionType::Bench) {
+                const std::uint32_t mod = descriptor.params.mod_id;
+                if (mod < calc.session().metamod_type.size()) {
+                    const int metamod = calc.session().metamod_type[mod];
+                    if (metamod ==
+                            calc.session().data->metamod_prefixes_locked_code ||
+                        metamod ==
+                            calc.session().data->metamod_suffixes_locked_code) {
+                        add_classification(roles, "protection_setup");
+                    } else if (
+                        metamod ==
+                        calc.session().data->metamod_multimod_code) {
+                        add_classification(roles, "multimod_setup");
+                    }
+                }
+                const bool goal_bench = std::any_of(
+                    output.targets.begin(), output.targets.end(),
+                    [&](const GoalSlot& target) {
+                        return target_contains_mod(
+                            calc.session(), target, mod);
+                    });
+                if (goal_bench) {
+                    add_classification(roles, "permanent_goal_bench");
+                    add_classification(roles, "deterministic_finish");
+                }
+            }
+            for (const std::string& role : roles) {
+                add_classification(
+                    node_classifications[node_index], role);
+                add_classification(action.classifications, role);
+                add_role_work(
+                    output.technique_totals, role,
+                    operation_visits[node_index],
+                    operation_applied[node_index]);
+                add_role_work(
+                    node_techniques[node_index], role,
+                    operation_visits[node_index],
+                    operation_applied[node_index]);
+            }
+        }
+        for (const auto& [unused, action] : actions_by_id) {
+            (void)unused;
+            output.action_totals.push_back(action);
+        }
+
+        std::unordered_map<std::string, double> traversal_by_edge;
+        for (const StrategyEvalEdge& edge : output.edges) {
+            traversal_by_edge.emplace(edge.id, edge.expected_traversals);
+        }
+        std::unordered_map<std::string, std::map<std::string, double>>
+            edge_techniques;
+        for (const StrategyNode& node : strategy->nodes) {
+            for (const StrategyEdge& edge : node.edges) {
+                const double traversals = traversal_by_edge.at(edge.id);
+                for (const std::string& role : edge.accounting_roles) {
+                    add_role_work(
+                        output.technique_totals, role, traversals,
+                        traversals);
+                    add_role_work(
+                        edge_techniques[edge.id], role, traversals,
+                        traversals);
+                }
+            }
+        }
+
+        output.pricing_enabled = options.economy != nullptr;
+        if (options.economy != nullptr) {
+            output.economy_id = options.economy->id;
+        }
+        output.material_totals = price_materials(
+            output.expected_consumption, options.economy,
+            output.known_expected_cost, output.cost_complete);
+        if (output.cost_complete) {
+            output.total_expected_cost = output.known_expected_cost;
+        }
+
+        double descriptor_visits = 0.0;
+        double descriptor_applied = 0.0;
+        std::map<std::string, double> action_materials;
+        for (const StrategyEvalActionTotal& action : output.action_totals) {
+            descriptor_visits += action.expected_visits;
+            descriptor_applied += action.expected_applied;
+            for (const std::string& key : action.price_keys) {
+                action_materials[key] += action.expected_applied;
+            }
+        }
+        output.action_descriptor_visits_difference =
+            descriptor_visits - output.expected_actions;
+        output.action_descriptor_applied_difference =
+            descriptor_applied - total_applied_actions;
+        double operation_visit_sum = 0.0;
+        for (const double visits : operation_visits) {
+            operation_visit_sum += visits;
+        }
+        output.node_operation_visits_difference =
+            operation_visit_sum - output.expected_actions;
+        for (const auto& [key, quantity] : output.expected_consumption) {
+            output.material_quantity_differences[key] =
+                action_materials[key] - quantity;
+        }
+        double priced_dot_product = 0.0;
+        for (const StrategyEvalMaterialTotal& material :
+             output.material_totals) {
+            if (material.priced) {
+                priced_dot_product += material.expected_quantity *
+                                      material.unit_price;
+            }
+        }
+        output.cost_dot_product_difference =
+            priced_dot_product - output.known_expected_cost;
+
+        output.review_sections_enabled = !review_sections.empty();
+        if (!review_sections.empty()) {
+            std::vector<std::size_t> section_by_node(node_count);
+            for (std::size_t section = 0; section < review_sections.size();
+                 ++section) {
+                for (const std::uint32_t node :
+                     review_sections[section].nodes) {
+                    section_by_node[node] = section;
+                }
+            }
+            std::vector<std::map<std::string, StrategyEvalActionTotal>>
+                section_actions(review_sections.size());
+            std::vector<std::map<std::string, double>> section_materials(
+                review_sections.size());
+            output.review_sections.resize(review_sections.size());
+            for (std::size_t section = 0; section < review_sections.size();
+                 ++section) {
+                StrategyEvalReviewSection& target =
+                    output.review_sections[section];
+                target.id = review_sections[section].id;
+                target.label = review_sections[section].label;
+                target.role = review_sections[section].role;
+                target.raw_edge_ids = review_sections[section].edges;
+                target.techniques = empty_technique_totals();
+                for (const std::uint32_t node_index :
+                     review_sections[section].nodes) {
+                    target.raw_node_ids.push_back(
+                        strategy->nodes[node_index].id);
+                    target.expected_actions += operation_visits[node_index];
+                    for (const auto& [key, value] :
+                         node_techniques[node_index]) {
+                        target.techniques[key] += value;
+                    }
+                    if (strategy->nodes[node_index].kind !=
+                        StrategyNodeKind::Operation) {
+                        continue;
+                    }
+                    const ActionDescriptor& descriptor =
+                        calc.registry().actions.at(
+                            model.action_by_node.at(node_index));
+                    StrategyEvalActionTotal& action =
+                        section_actions[section][descriptor.id];
+                    if (action.id.empty()) {
+                        action.id = descriptor.id;
+                        action.display_name = descriptor.display_name;
+                        action.price_keys = descriptor.cost_keys;
+                    }
+                    for (const std::string& role :
+                         node_classifications[node_index]) {
+                        add_classification(action.classifications, role);
+                    }
+                    action.expected_visits += operation_visits[node_index];
+                    action.expected_applied += operation_applied[node_index];
+                    action.nodes.push_back(
+                        {strategy->nodes[node_index].id,
+                         operation_visits[node_index],
+                         operation_applied[node_index]});
+                    for (const std::string& key : descriptor.cost_keys) {
+                        section_materials[section][key] +=
+                            operation_applied[node_index];
+                    }
+                }
+                for (const std::string& edge :
+                     review_sections[section].edges) {
+                    target.expected_edge_traversals +=
+                        traversal_by_edge.at(edge);
+                    for (const auto& [key, value] : edge_techniques[edge]) {
+                        target.techniques[key] += value;
+                    }
+                }
+                for (auto& [unused, action] : section_actions[section]) {
+                    (void)unused;
+                    target.actions.push_back(std::move(action));
+                }
+                target.materials = price_materials(
+                    section_materials[section], options.economy,
+                    target.known_expected_cost, target.cost_complete);
+                if (target.cost_complete) {
+                    target.total_expected_cost = target.known_expected_cost;
+                }
+            }
+            double section_actions_sum = 0.0;
+            std::map<std::string, double> section_material_sum;
+            for (const StrategyEvalReviewSection& section :
+                 output.review_sections) {
+                section_actions_sum += section.expected_actions;
+                for (const StrategyEvalMaterialTotal& material :
+                     section.materials) {
+                    section_material_sum[material.price_key] +=
+                        material.expected_quantity;
+                }
+            }
+            output.section_actions_difference =
+                section_actions_sum - output.expected_actions;
+            for (const auto& [key, quantity] :
+                 output.expected_consumption) {
+                output.section_material_differences[key] =
+                    section_material_sum[key] - quantity;
+            }
+        }
+        output.success_normalized_enabled =
+            options.include_success_normalized &&
+            output.success_probability > 0.0 &&
+            output.success_probability < 1.0;
         output.unresolved_probability = output.residual_mass;
         output.sweeps = static_cast<std::uint32_t>(std::min<std::uint64_t>(
             fallback_sweeps,
@@ -1780,6 +2279,149 @@ StrategyEvalResult evaluate_strategy_forward_reference_for_test(
     return work.impl_->forward_reference();
 }
 
+namespace {
+
+void append_material_totals_json(
+    std::string& out,
+    const std::vector<StrategyEvalMaterialTotal>& materials,
+    double divisor = 1.0) {
+    out.push_back('[');
+    for (std::size_t i = 0; i < materials.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalMaterialTotal& material = materials[i];
+        out += "{\"price_key\":\"" + json_escape(material.price_key) +
+               "\",\"expected_quantity\":";
+        append_number(out, material.expected_quantity / divisor);
+        out += ",\"price_status\":\"";
+        out += material.priced ? "priced" : "missing";
+        out += "\",\"unit_price\":";
+        if (material.priced) {
+            append_number(out, material.unit_price);
+        } else {
+            out += "null";
+        }
+        out += ",\"cost_contribution\":";
+        if (material.priced) {
+            append_number(out, material.cost_contribution / divisor);
+        } else {
+            out += "null";
+        }
+        out.push_back('}');
+    }
+    out.push_back(']');
+}
+
+void append_techniques_json(
+    std::string& out,
+    const std::map<std::string, double>& techniques,
+    double divisor = 1.0) {
+    out.push_back('{');
+    std::size_t index = 0;
+    for (const auto& [key, value] : techniques) {
+        if (index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, value / divisor);
+    }
+    out.push_back('}');
+}
+
+void append_action_totals_json(
+    std::string& out,
+    const std::vector<StrategyEvalActionTotal>& actions,
+    const std::vector<StrategyEvalMaterialTotal>& priced_materials,
+    double divisor = 1.0) {
+    std::map<std::string, const StrategyEvalMaterialTotal*> price_by_key;
+    for (const StrategyEvalMaterialTotal& material : priced_materials) {
+        price_by_key.emplace(material.price_key, &material);
+    }
+    out.push_back('[');
+    for (std::size_t i = 0; i < actions.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalActionTotal& action = actions[i];
+        out += "{\"id\":\"" + json_escape(action.id) +
+               "\",\"display_name\":\"" +
+               json_escape(action.display_name) +
+               "\",\"expected_visits\":";
+        append_number(out, action.expected_visits / divisor);
+        out += ",\"expected_applied\":";
+        append_number(out, action.expected_applied / divisor);
+        out += ",\"classifications\":[";
+        for (std::size_t role = 0; role < action.classifications.size();
+             ++role) {
+            if (role != 0) out.push_back(',');
+            out += "\"" + json_escape(action.classifications[role]) + "\"";
+        }
+        out += "],\"materials\":[";
+        std::map<std::string, std::uint32_t> quantities;
+        for (const std::string& key : action.price_keys) ++quantities[key];
+        std::size_t material_index = 0;
+        for (const auto& [key, count] : quantities) {
+            if (material_index++ != 0) out.push_back(',');
+            const double quantity =
+                action.expected_applied * static_cast<double>(count) /
+                divisor;
+            out += "{\"price_key\":\"" + json_escape(key) +
+                   "\",\"expected_quantity\":";
+            append_number(out, quantity);
+            const auto found = price_by_key.find(key);
+            const bool priced =
+                found != price_by_key.end() && found->second->priced;
+            out += ",\"price_status\":\"";
+            out += priced ? "priced" : "missing";
+            out += "\",\"unit_price\":";
+            if (priced) {
+                append_number(out, found->second->unit_price);
+            } else {
+                out += "null";
+            }
+            out += ",\"cost_contribution\":";
+            if (priced) {
+                append_number(out, quantity * found->second->unit_price);
+            } else {
+                out += "null";
+            }
+            out.push_back('}');
+        }
+        out += "],\"raw_nodes\":[";
+        for (std::size_t node = 0; node < action.nodes.size(); ++node) {
+            if (node != 0) out.push_back(',');
+            const StrategyEvalActionNode& entry = action.nodes[node];
+            out += "{\"node_id\":\"" + json_escape(entry.node_id) +
+                   "\",\"expected_visits\":";
+            append_number(out, entry.expected_visits / divisor);
+            out += ",\"expected_applied\":";
+            append_number(out, entry.expected_applied / divisor);
+            out.push_back('}');
+        }
+        out += "]}";
+    }
+    out.push_back(']');
+}
+
+void append_cost_totals_json(
+    std::string& out,
+    double expected_actions,
+    double known_cost,
+    bool complete,
+    double total_cost,
+    double divisor = 1.0) {
+    out += "{\"expected_actions\":";
+    append_number(out, expected_actions / divisor);
+    out += ",\"known_expected_cost\":";
+    append_number(out, known_cost / divisor);
+    out += ",\"total_expected_cost\":";
+    if (complete) {
+        append_number(out, total_cost / divisor);
+    } else {
+        out += "null";
+    }
+    out += ",\"cost_complete\":";
+    out += complete ? "true" : "false";
+    out.push_back('}');
+}
+
+} // namespace
+
 std::string serialize_strategy_eval(const StrategyEvalResult& result) {
     std::string out = "{\"version\":\"v1\",\"converged\":";
     out += result.converged ? "true" : "false";
@@ -1846,6 +2488,175 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result) {
         out += '}';
     }
     out += ']';
+
+    out += ",\"accounting\":{\"version\":\"s8.4_v1\",\"semantics\":{";
+    out += "\"primary\":\"per_strategy_invocation\",";
+    out += "\"terminal_mass_separate\":true,";
+    out += "\"success_normalized_basis\":";
+    if (result.success_normalized_enabled) {
+        out += "\"independent_whole_strategy_retries\"";
+    } else {
+        out += "null";
+    }
+    out += ",\"success_normalized_is_conditional_path_expectation\":false}";
+    out += ",\"pricing\":{\"status\":\"";
+    out += !result.pricing_enabled
+               ? "disabled"
+               : (result.cost_complete ? "complete" : "incomplete");
+    out += "\",\"economy_id\":";
+    if (result.pricing_enabled) {
+        out += "\"" + json_escape(result.economy_id) + "\"";
+    } else {
+        out += "null";
+    }
+    out += ",\"missing_price_keys\":[";
+    std::size_t missing_price_index = 0;
+    for (const StrategyEvalMaterialTotal& material : result.material_totals) {
+        if (material.priced) continue;
+        if (missing_price_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(material.price_key) + "\"";
+    }
+    out += "]}";
+    out += ",\"totals\":{\"per_invocation\":";
+    append_cost_totals_json(
+        out, result.expected_actions, result.known_expected_cost,
+        result.cost_complete, result.total_expected_cost);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        out += "{\"basis\":\"independent_whole_strategy_retries\",";
+        out += "\"success_probability_denominator\":";
+        append_number(out, result.success_probability);
+        out += ",\"expected_invocations\":";
+        append_number(out, 1.0 / result.success_probability);
+        out += ",\"work\":";
+        append_cost_totals_json(
+            out, result.expected_actions, result.known_expected_cost,
+            result.cost_complete, result.total_expected_cost,
+            result.success_probability);
+        out.push_back('}');
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"actions\":{\"per_invocation\":";
+    append_action_totals_json(
+        out, result.action_totals, result.material_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_action_totals_json(
+            out, result.action_totals, result.material_totals,
+            result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"materials\":{\"per_invocation\":";
+    append_material_totals_json(out, result.material_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_material_totals_json(
+            out, result.material_totals, result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"techniques\":{\"per_invocation\":";
+    append_techniques_json(out, result.technique_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_techniques_json(
+            out, result.technique_totals, result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"review_sections\":{\"enabled\":";
+    out += result.review_sections_enabled ? "true" : "false";
+    out += ",\"items\":[";
+    for (std::size_t i = 0; i < result.review_sections.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalReviewSection& section = result.review_sections[i];
+        out += "{\"id\":\"" + json_escape(section.id) +
+               "\",\"label\":\"" + json_escape(section.label) +
+               "\",\"role\":\"" + json_escape(section.role) +
+               "\",\"raw_references\":{\"node_ids\":[";
+        for (std::size_t node = 0; node < section.raw_node_ids.size(); ++node) {
+            if (node != 0) out.push_back(',');
+            out += "\"" + json_escape(section.raw_node_ids[node]) + "\"";
+        }
+        out += "],\"edge_ids\":[";
+        for (std::size_t edge = 0; edge < section.raw_edge_ids.size(); ++edge) {
+            if (edge != 0) out.push_back(',');
+            out += "\"" + json_escape(section.raw_edge_ids[edge]) + "\"";
+        }
+        out += "]},\"per_invocation\":";
+        append_cost_totals_json(
+            out, section.expected_actions, section.known_expected_cost,
+            section.cost_complete, section.total_expected_cost);
+        out += ",\"expected_edge_traversals\":";
+        append_number(out, section.expected_edge_traversals);
+        out += ",\"actions\":";
+        append_action_totals_json(
+            out, section.actions, section.materials);
+        out += ",\"materials\":";
+        append_material_totals_json(out, section.materials);
+        out += ",\"techniques\":";
+        append_techniques_json(out, section.techniques);
+        out += ",\"success_normalized\":";
+        if (result.success_normalized_enabled) {
+            out += "{\"work\":";
+            append_cost_totals_json(
+                out, section.expected_actions, section.known_expected_cost,
+                section.cost_complete, section.total_expected_cost,
+                result.success_probability);
+            out += ",\"expected_edge_traversals\":";
+            append_number(
+                out, section.expected_edge_traversals /
+                         result.success_probability);
+            out += ",\"actions\":";
+            append_action_totals_json(
+                out, section.actions, section.materials,
+                result.success_probability);
+            out += ",\"materials\":";
+            append_material_totals_json(
+                out, section.materials, result.success_probability);
+            out += ",\"techniques\":";
+            append_techniques_json(
+                out, section.techniques, result.success_probability);
+            out.push_back('}');
+        } else {
+            out += "null";
+        }
+        out.push_back('}');
+    }
+    out += "]}";
+    out += ",\"reconciliation\":{\"action_descriptor_visits_difference\":";
+    append_number(out, result.action_descriptor_visits_difference);
+    out += ",\"action_descriptor_applied_difference\":";
+    append_number(out, result.action_descriptor_applied_difference);
+    out += ",\"node_operation_visits_difference\":";
+    append_number(out, result.node_operation_visits_difference);
+    out += ",\"material_quantity_differences\":{";
+    std::size_t difference_index = 0;
+    for (const auto& [key, difference] :
+         result.material_quantity_differences) {
+        if (difference_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, difference);
+    }
+    out += "},\"cost_dot_product_difference\":";
+    append_number(out, result.cost_dot_product_difference);
+    out += ",\"section_actions_difference\":";
+    append_number(out, result.section_actions_difference);
+    out += ",\"section_material_differences\":{";
+    difference_index = 0;
+    for (const auto& [key, difference] :
+         result.section_material_differences) {
+        if (difference_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, difference);
+    }
+    out += "}}}";
 
     out += ",\"targets\":[";
     for (std::size_t i = 0; i < result.targets.size(); ++i) {

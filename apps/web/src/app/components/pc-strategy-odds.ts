@@ -8,7 +8,6 @@ import {
     formatConsumptionQuantity,
     formatProbabilityExact,
     formatRawProbability,
-    presentExpectedConsumption,
 } from "../odds-presentation";
 import {
     escapeStrategyEvalHtml,
@@ -88,6 +87,7 @@ export class PcStrategyOdds extends HTMLElement {
             <div class="pc-strategy-eval-grid">
                 ${this.renderSummary(result, error)}
                 ${this.renderCost(result)}
+                ${this.renderAccounting(result)}
                 ${this.renderNodeDetails(result)}
             </div>`;
         this.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
@@ -154,23 +154,64 @@ export class PcStrategyOdds extends HTMLElement {
     }
 
     private renderCost(result: StrategyEvalResult): string {
-        const priced = presentExpectedConsumption(
-            result.expected_consumption,
-            (key) => this.view.prices[key],
-        );
-        const total = priced.complete
-            ? formatChaosValue(priced.total)
-            : `Incomplete · ${formatChaosValue(priced.total)} known`;
+        const accounting = result.accounting;
+        const totals = accounting.totals.per_invocation;
+        const total = totals.cost_complete
+            ? formatChaosValue(totals.total_expected_cost ?? 0)
+            : `Incomplete · ${formatChaosValue(totals.known_expected_cost)} known`;
+        const rows = accounting.materials.per_invocation
+            .map(
+                (material) => `<div class="pc-calc-cost-row">
+                    <span class="pc-calc-cost-key">${formatConsumptionQuantity(material.expected_quantity)} × ${escapeStrategyEvalHtml(material.price_key)}</span>
+                    <input type="number" min="0" step="any" data-price-key="${escapeStrategyEvalHtml(material.price_key)}"
+                        value="${material.unit_price ?? ""}" placeholder="Set price">
+                    <span class="pc-calc-cost-sub ${material.price_status === "missing" ? "is-missing" : ""}">${
+                        material.price_status === "missing"
+                            ? "Missing price"
+                            : formatChaosValue(material.cost_contribution ?? 0)
+                    }</span>
+                </div>`,
+            )
+            .join("");
         return `<section class="pc-strategy-eval-cost">
             <span class="pc-strategy-eval-kicker">Expected consumption</span>
             <p class="pc-help">Per strategy run · ${this.view.economy ? escapeStrategyEvalHtml(economyLabel(this.view.economy)) : "manual prices"}</p>
             <div class="pc-strategy-eval-cost-rows">
-                ${priced.rowsHtml || '<p class="pc-help">No priced actions in this strategy.</p>'}
+                ${rows || '<p class="pc-help">No material-consuming actions in this strategy.</p>'}
             </div>
             <div class="pc-strategy-eval-total">
                 <span>Total expected cost</span><strong>${total}</strong>
             </div>
             <button data-recost>Re-cost with active league</button>
+        </section>`;
+    }
+
+    private renderAccounting(result: StrategyEvalResult): string {
+        const accounting = result.accounting;
+        const actions = accounting.actions.per_invocation
+            .map(
+                (action) => `<li><span>${escapeStrategyEvalHtml(action.display_name)} <small>${escapeStrategyEvalHtml(action.id)}</small></span><strong>${formatCount(action.expected_visits)}</strong></li>`,
+            )
+            .join("");
+        const techniques = Object.entries(accounting.techniques.per_invocation)
+            .filter(([, value]) => value > 0)
+            .map(
+                ([key, value]) => `<li><span>${escapeStrategyEvalHtml(techniqueLabel(key))}</span><strong>${formatCount(value)}</strong></li>`,
+            )
+            .join("");
+        const normalized = accounting.totals.success_normalized;
+        const sections = accounting.review_sections.items
+            .map(
+                (section) => `<li><span>${escapeStrategyEvalHtml(section.label)} <small>${escapeStrategyEvalHtml(section.role)}</small></span><strong>${formatCount(section.per_invocation.expected_actions)} actions</strong></li>`,
+            )
+            .join("");
+        return `<section class="pc-strategy-eval-cost pc-strategy-eval-accounting">
+            <span class="pc-strategy-eval-kicker">Exact action accounting</span>
+            <p class="pc-help">Per one strategy invocation. Descriptor ids, quantities, retries, and classifications come from the engine.</p>
+            <ul class="pc-strategy-eval-attribution">${actions}</ul>
+            ${techniques ? `<p class="pc-help">Technique totals</p><ul class="pc-strategy-eval-attribution">${techniques}</ul>` : ""}
+            ${normalized ? `<div class="pc-strategy-eval-total"><span>Success-normalized actions <small>independent whole-strategy retries</small></span><strong>${formatCount(normalized.work.expected_actions)}</strong></div>` : ""}
+            ${sections ? `<p class="pc-help">Review sections · display-only grouping</p><ul class="pc-strategy-eval-attribution">${sections}</ul>` : ""}
         </section>`;
     }
 
@@ -232,6 +273,12 @@ function reasonLabel(reason: string): string {
         : reason === "no_matching_edge"
           ? "No matching edge"
           : reason;
+}
+
+function techniqueLabel(key: string): string {
+    return key
+        .replace(/_/g, " ")
+        .replace(/^./, (letter) => letter.toUpperCase());
 }
 
 function economyLabel(economy: EconomyIdentity): string {

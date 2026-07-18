@@ -376,6 +376,23 @@ class _SimulationOptions(ct.Structure):
     ]
 
 
+class _StrategyEvalOptions(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("epsilon", ct.c_double),
+        ("max_sweeps", ct.c_uint32),
+        ("max_states", ct.c_uint32),
+        ("max_pairs", ct.c_uint32),
+        ("max_transitions", ct.c_uint32),
+        ("top_classes_per_node", ct.c_uint32),
+        ("economy", ct.c_void_p),
+        ("review_projection_json", ct.c_char_p),
+        ("review_projection_json_size", ct.c_size_t),
+        ("include_success_normalized", ct.c_int32),
+    ]
+
+
 class _SimulationProgress(ct.Structure):
     _fields_ = [
         ("struct_size", ct.c_uint32),
@@ -405,6 +422,8 @@ class _SimulationSummary(ct.Structure):
         ("missing_price_action_count", ct.c_uint64),
         ("known_total_cost", ct.c_double),
         ("cost_status", ct.c_int32),
+        ("seed", ct.c_uint64),
+        ("target_runs", ct.c_uint64),
     ]
 
 
@@ -468,6 +487,24 @@ class _PriceKeyEntry(ct.Structure):
         ("abi_version", ct.c_uint32),
         ("key", ct.c_char_p),
         ("missing_count", ct.c_uint64),
+    ]
+
+
+class _ActionDescriptorSampleEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("action_id", ct.c_char_p),
+        ("count", ct.c_uint64),
+    ]
+
+
+class _MaterialSampleEntry(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("price_key", ct.c_char_p),
+        ("count", ct.c_uint64),
     ]
 
 
@@ -709,6 +746,15 @@ _lib.pc_strategy_compile_json.argtypes = [
 ]
 _lib.pc_strategy_compile_json.restype = ct.c_int32
 _lib.pc_strategy_destroy.argtypes = [_handle]
+_lib.pc_strategy_evaluate.argtypes = [
+    _handle,
+    ct.POINTER(_StrategyEvalOptions),
+    ct.c_char_p,
+    ct.c_size_t,
+    ct.POINTER(ct.c_size_t),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_strategy_evaluate.restype = ct.c_int32
 _lib.pc_economy_load_json.argtypes = [
     ct.c_char_p,
     ct.c_size_t,
@@ -793,6 +839,22 @@ _lib.pc_simulator_action_distribution_query.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_simulator_action_distribution_query.restype = ct.c_int32
+_lib.pc_simulator_action_descriptor_distribution_query.argtypes = [
+    _handle,
+    ct.POINTER(_ActionDescriptorSampleEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_action_descriptor_distribution_query.restype = ct.c_int32
+_lib.pc_simulator_material_distribution_query.argtypes = [
+    _handle,
+    ct.POINTER(_MaterialSampleEntry),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_simulator_material_distribution_query.restype = ct.c_int32
 _lib.pc_simulator_destroy.argtypes = [_handle]
 
 if _lib.pc_abi_version() != ABI_VERSION:
@@ -1100,6 +1162,7 @@ class SimulationResult:
     stop_examples: tuple[SimulationExample, ...]
     failure_summaries: tuple[dict[str, int | str], ...]
     missing_prices: dict[str, int]
+    sampled_accounting: dict[str, Any]
 
 
 class _OwnedHandle:
@@ -1612,6 +1675,66 @@ class Strategy(_OwnedHandle):
         )
         return Simulator(handle, self._session, self, economy)
 
+    def evaluate(
+        self,
+        *,
+        economy: "Economy | None" = None,
+        review_projection: str | Mapping[str, Any] | None = None,
+        include_success_normalized: bool = False,
+        epsilon: float = 0.0,
+        max_sweeps: int = 0,
+        max_states: int = 0,
+        max_pairs: int = 0,
+        max_transitions: int = 0,
+        top_classes_per_node: int = 0,
+    ) -> dict[str, Any]:
+        review = (
+            b""
+            if review_projection is None
+            else _json_bytes(review_projection)
+        )
+        options = _StrategyEvalOptions(
+            ct.sizeof(_StrategyEvalOptions),
+            ABI_VERSION,
+            epsilon,
+            max_sweeps,
+            max_states,
+            max_pairs,
+            max_transitions,
+            top_classes_per_node,
+            economy._handle if economy is not None else None,
+            review if review else None,
+            len(review),
+            int(include_success_normalized),
+        )
+        length = ct.c_size_t()
+        error = _error()
+        _check(
+            _lib.pc_strategy_evaluate(
+                self._handle,
+                ct.byref(options),
+                None,
+                0,
+                ct.byref(length),
+                ct.byref(error),
+            ),
+            error,
+        )
+        buffer = ct.create_string_buffer(length.value + 1)
+        error = _error()
+        _check(
+            _lib.pc_strategy_evaluate(
+                self._handle,
+                ct.byref(options),
+                buffer,
+                len(buffer),
+                ct.byref(length),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return json.loads(buffer.raw[: length.value].decode("utf-8"))
+
 
 class Economy(_OwnedHandle):
     _destroy = _lib.pc_economy_destroy
@@ -1684,6 +1807,8 @@ class Simulator(_OwnedHandle):
             "missing_price_action_count": native.missing_price_action_count,
             "known_total_cost": native.known_total_cost,
             "cost_status": _COST_STATUS.get(native.cost_status, "unknown"),
+            "seed": native.seed,
+            "target_runs": native.target_runs,
         }
 
     @property
@@ -1872,6 +1997,70 @@ class Simulator(_OwnedHandle):
             _decode(row.key): row.missing_count for row in rows[: count.value]
         }
 
+    @property
+    def sampled_accounting(self) -> dict[str, Any]:
+        summary = self.summary
+        action_count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_simulator_action_descriptor_distribution_query(
+            self._handle, None, 0, ct.byref(action_count), ct.byref(error)
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        actions = (_ActionDescriptorSampleEntry * max(1, action_count.value))()
+        error = _error()
+        _check(
+            _lib.pc_simulator_action_descriptor_distribution_query(
+                self._handle,
+                actions,
+                action_count.value,
+                ct.byref(action_count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        material_count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_simulator_material_distribution_query(
+            self._handle, None, 0, ct.byref(material_count), ct.byref(error)
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        materials = (_MaterialSampleEntry * max(1, material_count.value))()
+        error = _error()
+        _check(
+            _lib.pc_simulator_material_distribution_query(
+                self._handle,
+                materials,
+                material_count.value,
+                ct.byref(material_count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        runs = int(summary["completed_runs"])
+        return {
+            "evidence_source": "simulator_sample",
+            "sample_count": runs,
+            "seed": int(summary["seed"]),
+            "actions": tuple(
+                {
+                    "action_id": _decode(row.action_id),
+                    "count": row.count,
+                    "average_per_invocation": row.count / runs if runs else 0.0,
+                }
+                for row in actions[: action_count.value]
+            ),
+            "materials": tuple(
+                {
+                    "price_key": _decode(row.price_key),
+                    "count": row.count,
+                    "average_per_invocation": row.count / runs if runs else 0.0,
+                }
+                for row in materials[: material_count.value]
+            ),
+        }
+
     def run(
         self,
         options: SimulationOptions,
@@ -1893,6 +2082,7 @@ class Simulator(_OwnedHandle):
             self.examples("stop"),
             self.failure_summaries,
             self.missing_prices,
+            self.sampled_accounting,
         )
 
 

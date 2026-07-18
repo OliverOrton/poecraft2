@@ -43,6 +43,7 @@ export function strategyStructuralSignature(
             kind: node.kind,
             operation: node.operation,
             terminal: node.terminal,
+            accounting_roles: node.accounting_roles,
         })),
         edges: strategy.edges.map((edge) => ({
             id: edge.id,
@@ -51,6 +52,7 @@ export function strategyStructuralSignature(
             priority: edge.priority,
             is_default: edge.is_default,
             condition: edge.condition,
+            accounting_roles: edge.accounting_roles,
         })),
     });
 }

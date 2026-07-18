@@ -119,6 +119,8 @@ typedef struct pc_simulation_summary {
     uint64_t missing_price_action_count;
     double known_total_cost;
     int32_t cost_status; /* pc_cost_status */
+    uint64_t seed;
+    uint64_t target_runs;
 } pc_simulation_summary;
 
 typedef struct pc_trace_entry {
@@ -173,6 +175,20 @@ typedef struct pc_price_key_entry {
     const char* key;
     uint64_t missing_count;
 } pc_price_key_entry;
+
+typedef struct pc_action_descriptor_sample_entry {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    const char* action_id;
+    uint64_t count;
+} pc_action_descriptor_sample_entry;
+
+typedef struct pc_material_sample_entry {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    const char* price_key;
+    uint64_t count;
+} pc_material_sample_entry;
 
 pc_result pc_simulator_create(
     pc_session_handle session,
@@ -246,6 +262,22 @@ pc_result pc_simulator_failure_summary_query(
 pc_result pc_simulator_action_distribution_query(
     pc_simulator_handle simulator,
     pc_action_distribution_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+/* S8.4 sampled evidence. These are raw Simulator counters aggregated by the
+ * same stable descriptor ids and price keys used by exact accounting. */
+pc_result pc_simulator_action_descriptor_distribution_query(
+    pc_simulator_handle simulator,
+    pc_action_descriptor_sample_entry* entries,
+    uint32_t entry_capacity,
+    uint32_t* out_entry_count,
+    pc_error_info* out_error);
+
+pc_result pc_simulator_material_distribution_query(
+    pc_simulator_handle simulator,
+    pc_material_sample_entry* entries,
     uint32_t entry_capacity,
     uint32_t* out_entry_count,
     pc_error_info* out_error);

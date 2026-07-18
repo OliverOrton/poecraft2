@@ -926,6 +926,9 @@ struct StrategyEvalOptions {
     std::uint32_t max_pairs = 1000000;
     std::uint32_t max_transitions = 10000000;
     std::uint32_t top_classes_per_node = 16;
+    std::shared_ptr<const EconomyImpl> economy;
+    std::string review_projection_json;
+    bool include_success_normalized = false;
 };
 
 enum class StrategyEvalPhase {
@@ -981,6 +984,46 @@ struct StrategyEvalFailure {
     double probability = 0.0;
 };
 
+struct StrategyEvalActionNode {
+    std::string node_id;
+    double expected_visits = 0.0;
+    double expected_applied = 0.0;
+};
+
+struct StrategyEvalActionTotal {
+    std::string id;
+    std::string display_name;
+    std::vector<std::string> price_keys;
+    double expected_visits = 0.0;
+    double expected_applied = 0.0;
+    std::vector<std::string> classifications;
+    std::vector<StrategyEvalActionNode> nodes;
+};
+
+struct StrategyEvalMaterialTotal {
+    std::string price_key;
+    double expected_quantity = 0.0;
+    bool priced = false;
+    double unit_price = 0.0;
+    double cost_contribution = 0.0;
+};
+
+struct StrategyEvalReviewSection {
+    std::string id;
+    std::string label;
+    std::string role;
+    std::vector<std::string> raw_node_ids;
+    std::vector<std::string> raw_edge_ids;
+    double expected_actions = 0.0;
+    double expected_edge_traversals = 0.0;
+    double known_expected_cost = 0.0;
+    bool cost_complete = false;
+    double total_expected_cost = 0.0;
+    std::vector<StrategyEvalActionTotal> actions;
+    std::vector<StrategyEvalMaterialTotal> materials;
+    std::map<std::string, double> techniques;
+};
+
 struct StrategyEvalResult {
     bool converged = false;
     std::uint32_t sweeps = 0;
@@ -993,6 +1036,24 @@ struct StrategyEvalResult {
     double unresolved_probability = 0.0;
     double expected_actions = 0.0;
     std::map<std::string, double> expected_consumption;
+    std::vector<StrategyEvalActionTotal> action_totals;
+    std::vector<StrategyEvalMaterialTotal> material_totals;
+    std::map<std::string, double> technique_totals;
+    std::vector<StrategyEvalReviewSection> review_sections;
+    bool review_sections_enabled = false;
+    bool pricing_enabled = false;
+    std::string economy_id;
+    bool cost_complete = false;
+    double known_expected_cost = 0.0;
+    double total_expected_cost = 0.0;
+    bool success_normalized_enabled = false;
+    double action_descriptor_visits_difference = 0.0;
+    double action_descriptor_applied_difference = 0.0;
+    double node_operation_visits_difference = 0.0;
+    std::map<std::string, double> material_quantity_differences;
+    double cost_dot_product_difference = 0.0;
+    double section_actions_difference = 0.0;
+    std::map<std::string, double> section_material_differences;
     std::vector<GoalSlot> targets;
     std::vector<StrategyEvalTerminalNode> terminal_nodes;
     std::vector<StrategyEvalNodeMass> unresolved_by_node;
