@@ -1,0 +1,75 @@
+{
+  "schema_version": "solver_trimming_provenance_v1",
+  "marker": "empirically_trimmed",
+  "heuristic": true,
+  "parent_strategy_sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+  "fallback": {
+    "kind": "Restart",
+    "serialized_action": {"type": "restart"},
+    "selection": "explicit_user_choice_required"
+  },
+  "discovery": {
+    "run_count": 10000,
+    "seeds": [2026071704],
+    "parameters": {
+      "max_actions_per_run": 1000,
+      "max_graph_steps_per_run": 10000,
+      "evidence_role": "contract_example_only"
+    }
+  },
+  "selection_threshold": {
+    "metric": "observed_visitation_mass",
+    "maximum_visitation_mass": 0.0001
+  },
+  "removed": {
+    "node_ids": [],
+    "edge_ids": []
+  },
+  "observed_visitation_mass": 0.0,
+  "exact_impact_evaluation": {
+    "status": "completed",
+    "original": {
+      "success_probability": 1.0,
+      "expected_actions": 1.0,
+      "expected_cost": 5.0,
+      "nodes": 3,
+      "edges": 2
+    },
+    "derived": {
+      "success_probability": 1.0,
+      "expected_actions": 1.0,
+      "expected_cost": 5.0,
+      "nodes": 3,
+      "edges": 2
+    },
+    "delta": {
+      "success_probability": 0.0,
+      "expected_actions": 0.0,
+      "expected_cost": 0.0,
+      "nodes": 0,
+      "edges": 0
+    }
+  },
+  "independent_validation": {
+    "parameters": {
+      "run_count": 10000,
+      "max_actions_per_run": 1000,
+      "max_graph_steps_per_run": 10000,
+      "evidence_role": "contract_example_only"
+    },
+    "seeds": [2026071705],
+    "sampled_confidence": {
+      "confidence_level": 0.95,
+      "method": "two-sided normal interval contract field",
+      "intervals": {
+        "success_probability_delta": [0.0, 0.0],
+        "mean_cost_delta": [0.0, 0.0]
+      }
+    },
+    "unvisited_branch_nonzero_upper_bound": {
+      "confidence_level": 0.95,
+      "method": "one-sided exact zero-observation bound: 1 - alpha^(1/n)",
+      "probability_upper_bound": 0.00029952835977664627
+    }
+  }
+}

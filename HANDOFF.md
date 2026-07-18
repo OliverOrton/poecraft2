@@ -1,95 +1,109 @@
-# Session Handoff - B1.5 Bestiary Acceptance Is Next
+# Session Handoff - S8.1 Derived Review Sections Is Next
 
-Updated 2026-07-17 after B1.4. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-17 after S8.0. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.4 are complete. Only `bestiary:imprint` is selected, classified as
-checkpoint/restore. Prefix to Suffix and Suffix to Prefix remain explicit
-unsupported B1 recipe rows and have no action descriptors or behavior.
+B1.0-B1.4 are complete. Oliver explicitly waived B1.5 as a separate acceptance
+checkpoint based on the focused B1.3/B1.4 validation already completed. B1.5 is
+waived/deferred, not complete: its full acceptance suite, 10,000-run Imprint
+verification, and rendered Bestiary review were not run or backfilled.
 
-The data path is canonical SQLite schema 2 to derived artifact schema 4.
-Recipe/action descriptors preserve approved legality, checkpoint effects, and
-the exact repeated price-key vector. Craicic Chimeral resolves through the
-existing Beast provider; `beast:rare` is explicit manual-only pricing.
+S8.0 is complete. Its manifest, normalized case records, ordinary strategies,
+contracts, examples, and evidence notes are under
+[fixtures/solver-baselines/s8.0](fixtures/solver-baselines/s8.0/). This is a
+reproducible before-state and review-contract checkpoint, not a new subjective
+strategy-quality corpus.
 
-Native `BestiaryCraftState` is one live item plus an optional full-state saved
-copy bound to a stable live identity. Creation/restoration and deterministic
-calculation share one atomic transition implementation. Strategy execution
-supports the exact two action ids and keeps checkpoint state per run; restart
-discards the old item and its checkpoint.
+The selected baseline contains all five existing S7 cases plus narrow cases for
+Fracture, temporary bench blocking, and protected metamod reforging:
 
-Solver support is the specific `imprint_retry` fixed option. It accepts one to
-three exact ordinary primitive actions, only for a complete magic-item goal.
-Every attempt pays the four beast keys plus program costs. Non-goal outcomes
-compile through explicit free restore and retry; goal outcomes terminate with
-the active checkpoint still bound to the successful item. Raw create/restore
-are not ordinary one-item DP primitives.
+- `oracle-real-one-mod`, `oracle-real-two-mod`, `ordinary-es-bench`, and
+  `advanced-es-resist-bench` were recaptured at pre-S8 commit `b9e426b` against
+  the exact current B1.4 artifact.
+- `endgame-fractured-es` reuses the archived S7.6 graph and 10,000-run sample;
+  it was not rerun after Oliver directed abandoning long runs.
+- `s8-fracture-prepare` converged, compiled, and completed 10,000 Simulator
+  runs.
+- `s8-temporary-bench-blocker` records `not_converged`; no graph, evaluator
+  completion, or Simulator run is claimed.
+- `s8-protected-metamod-reforge` records both abandoned long attempts; no
+  solver report, graph, evaluator result, or Simulator run is claimed.
 
-The additive public C ABI uses `pc_bestiary_craft_state` for the live item and
-its bound checkpoint without widening `pc_item_state`. Stable presentation,
-action results, deterministic calculations, refusal keys/reasons, declared
-cost keys, actual consumption, and the specific solver-option metadata are
-available through Python and WASM. WASM item export/import preserves the bound
-checkpoint while a fresh item/restart begins without one.
+Five newly captured compiled strategies each completed exactly 10,000
+Simulator executions (50,000 total). The archived endgame sample contributes
+another 10,000, so the baseline represents 60,000 runs. No unrelated
+repository-wide acceptance, B1.5 Imprint run, browser review, screenshot, or
+rendered smoke was performed.
 
-Emulator and Calculator consume the same engine-owned Bestiary presentation.
-Calculator renders engine calculation/refusal results and exact repeated beast
-costs, and exposes only the complete-magic-goal `imprint_retry` option. Strategy
-Builder emits the two existing ordinary Bestiary operations. The parked
-conversions remain absent from bindings and all workspace surfaces.
+The S8.0 contracts are definition/example only:
 
-Local checkpoint commits:
-
-- `f0c4461` - B1.0 authoritative Imprint contract.
-- `534dac4` - B1.1 data, price, and registry substrate.
-- `a6adfb7` - B1.2 native checkpoint state and deterministic calculation.
-- `4f89e23` - B1.3 solver and strategy integration.
-- The B1.4 bindings/workspace checkpoint is this handoff's commit.
+- `review-projection.schema.json` makes derived sections non-executable, gives
+  every section/entry explicit raw node/edge references, and pins the raw graph
+  as the only execution authority.
+- `action-accounting.schema.json` versions native descriptor, price,
+  contribution, raw-node/review-section, and all planned classification fields;
+  it does not implement S8.4 accounting.
+- `trimming-provenance.schema.json` requires parent hash, empirical marker,
+  discovery and independent-validation parameters/seeds, threshold, removed
+  raw ids, visitation mass, exact impact result, sampled confidence, and a
+  nonzero upper bound for unvisited branches. Removed entries are pinned to
+  serialized Restart with `explicit_user_choice_required`; trimming is not
+  implemented.
 
 ## Exact Next Boundary
 
-Execute **B1.5 only - Bestiary Acceptance**:
+Execute **S8.1 only - Derived Review Sections**.
 
-1. Run the complete relevant ingest, artifact, native, binding, WASM, and web
-   acceptance once.
-2. Verify engine/calculation parity for the selected Imprint recipe on its
-   approved fixtures, including all checkpoint/refusal semantics.
-3. Solve and compile the selected solver-visible recipe, then run the required
-   strategy verification exactly 10,000 times.
-4. Deliver the resulting ordinary strategy and Calculator outputs for Oliver's
-   visual and mechanic review, recording the shipped recipe, parked recipes,
-   and any remaining state-model constraints.
+Build a display-only projection over the chosen exact policy using the S8.0
+review schema. Representative projections should group exact graph/evaluator
+facts for restart-equivalent/disposable carriers, satisfied goal carriers and
+crafted/fractured state, preserved affix side or goal subset, protection/setup
+intent, deterministic finishing readiness, and recovery paths. Retry SCCs stay
+inside one section; restart or genuine carrier loss may return to an earlier
+section. Labels remain descriptive metadata and every projected entry retains
+raw node/edge links.
 
-Stop after B1.5. Do not begin S8 until B1 acceptance and Oliver's review are
-complete.
+Prove that projected and unprojected inputs remain the same executable ordinary
+strategy and compile/evaluate identically. Deliver representative projections
+to Oliver for usefulness review. Stop after S8.1. Do not begin S8.2 action
+control, S8.3 candidate generation, S8.4 accounting behavior, S8.5 trimming,
+or S8.6 acceptance.
 
 ## Gotchas
 
-- Simulator trace/action-distribution values for the two Bestiary operations
-  use internal operation codes outside `pc_action_type`. Bindings and UI must
-  continue using the explicit Bestiary presentation rather than casting those
-  values to ordinary public action enums.
-- Refusals preserve item, checkpoint, and costs. Identical-state restore still
-  applies and consumes the checkpoint.
-- UI has no mechanic authority and must not reimplement legality or checkpoint
-  rules in TypeScript.
-- `beast:rare` may be missing until the user supplies a manual price; never
-  treat that as free.
-- Do not expose parked conversions or infer mechanics.
-- Oliver owns rendered/visual review; no screenshots or browser visual smoke.
+- The archived S7 corpus manifest pins pre-Bestiary game/strings hashes. The
+  S8.0 corpus pins the current B1.4 artifact while reusing unchanged S7 case
+  files. Do not rewrite the archived corpus as if it were current.
+- Compiler-produced ordinary graphs contain compiler-only `mod_count` routing,
+  which Calculator exact evaluation currently refuses even in the oracle
+  cases. S8.0 records that pre-existing mismatch verbatim. Do not turn S8.1
+  into an evaluator or compiler fix.
+- The archived endgame sample remains 0.9942 success against its historical
+  0.995 threshold. It is disclosed, not a passing numeric gate.
+- The temporary blocker case's current fixed policy-improvement path does not
+  converge. Automatic blocker assembly belongs to S8.3, not S8.1.
+- The protected-repeat exact captures were abandoned because they ran too
+  long. Do not restart them as part of S8.1.
+- Raw ordinary strategy nodes/edges remain the only execution, routing,
+  legality, and evaluation authority. Projection metadata must not acquire
+  solver semantics.
+- Oliver owns rendered/visual review. Do not perform browser visual checks,
+  screenshots, or rendered UI smoke unless explicitly asked.
 
-## Validation At B1.4
+## Validation At S8.0
 
-- Native release/fallback build completed; focused Bestiary suite passed 76
-  checks with 0 failures, including the public C ABI.
-- Focused Python binding file passed all 14 tests.
-- Release `poecraft_engine.mjs` and `.wasm` rebuilt successfully from `C:\emsdk`.
-- Narrow non-visual WASM/worker binding and workspace contract test passed.
-- Web TypeScript check passed with `npx tsc --noEmit`.
-- No B1.5 complete acceptance suite, 10,000-run verification, rendered browser
-  review, screenshot, or visual smoke was performed.
+- Native corpus validation accepted all eight exact S8.0 case specifications.
+- Five focused baseline tests passed: every JSON and gzip strategy reloads;
+  manifest and graph hashes/counts match; every review reference resolves;
+  the accounting example reconciles to the existing exact Restart evaluator;
+  and trimming provenance requires the explicit Restart fallback plus discovery,
+  impact, independent-validation, confidence, and upper-bound fields.
+- Newly captured Simulator verification: 5 strategies x 10,000 = 50,000 runs.
+- Reused archived S7.6 Simulator evidence: 1 strategy x 10,000 = 10,000 runs.
+- No full test pipeline, browser review, B1.5 suite, or later S8 implementation
+  was performed.
 
-B1.5 is the sole next boundary. S8 follows only after B1 closes.
+S8.1 is the sole next boundary.

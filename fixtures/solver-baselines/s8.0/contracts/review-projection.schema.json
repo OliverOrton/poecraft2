@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft2.local/schemas/solver/review-projection-v1.json",
+  "title": "poecraft2 derived solver review projection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projection_id",
+    "raw_strategy",
+    "semantics",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": {"const": "solver_review_projection_v1"},
+    "projection_id": {"type": "string", "minLength": 1},
+    "raw_strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "execution_authority"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "execution_authority": {"const": "raw_strategy_only"}
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executable",
+        "can_alter_execution",
+        "can_alter_routing",
+        "can_alter_legality",
+        "can_alter_evaluation"
+      ],
+      "properties": {
+        "executable": {"const": false},
+        "can_alter_execution": {"const": false},
+        "can_alter_routing": {"const": false},
+        "can_alter_legality": {"const": false},
+        "can_alter_evaluation": {"const": false}
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/section"}
+    }
+  },
+  "$defs": {
+    "role": {
+      "enum": [
+        "rolling",
+        "temporary_blocking",
+        "protection",
+        "fracture",
+        "finishing",
+        "recovery",
+        "restart",
+        "setup",
+        "cleanup"
+      ]
+    },
+    "raw_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {"type": "string", "minLength": 1},
+        "edge_id": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {
+          "required": ["node_id"]
+        },
+        {
+          "required": ["edge_id"]
+        }
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "role", "raw_references"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "role": {"$ref": "#/$defs/role"},
+        "raw_references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/raw_reference"}
+        }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "role", "derived", "raw_references", "entries"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "role": {"$ref": "#/$defs/role"},
+        "derived": {"const": true},
+        "raw_references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/raw_reference"}
+        },
+        "entries": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/entry"}
+        }
+      }
+    }
+  }
+}

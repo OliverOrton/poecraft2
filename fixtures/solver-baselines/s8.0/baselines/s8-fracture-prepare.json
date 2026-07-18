@@ -1,0 +1,431 @@
+{
+  "schema_version": "s8_solver_baseline_case_v1",
+  "case_id": "s8-fracture-prepare",
+  "capture_origin": "current_s8.0_before_state",
+  "status": "compiled_simulated_evaluator_refused",
+  "identity": {
+    "repository_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+    "source_case_path": "fixtures/solver-baselines/s8.0/cases/fracture-prepare.json",
+    "source_case_sha256": "332f3d101504e0bde8474aa506b1968091417ea19e071340328ab6d92732429e",
+    "capture_report_path": "build/s8.0-baseline/s8-fracture-prepare.report.json",
+    "capture_report_sha256": "ec2aa2c72deca1291c680a403611799c3988d927de1a5199d58152d750175fdb",
+    "artifact": {
+      "artifact_schema_version": 4,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "database_schema_version": "2",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+      "captured_manifest_payload_sha256": "5a106204680ed0467b627f616e73c03a1346bb771c70120c5dd303ee45d2873c",
+      "manifest_path": "data/compiled/current/manifest.json",
+      "manifest_sha256": "9006d3a0db21d688ac1dd308bf130175e14e0d35608509f9d6cff7d1f4f66eb7",
+      "canonical_sqlite_path": "data/sqlite/poecraft.db",
+      "canonical_sqlite_sha256": "31b4fc8da6f0391d2328e099cb76c8e1867e1cecee5be244997f843a8af39c64"
+    },
+    "engine": {
+      "runner": "native",
+      "abi_version": 1,
+      "compiler": "gcc-14.2.0"
+    }
+  },
+  "configuration": {
+    "session": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "base_name": "Vaal Regalia",
+      "item_level": 86
+    },
+    "start": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": []
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedEnergyShield11",
+          "min_tier": 1
+        }
+      ],
+      "actions": [
+        "restart"
+      ],
+      "options": [
+        {
+          "type": "fracture_prepare",
+          "preparation": [
+            "chaos"
+          ],
+          "carrier_goal_slot": 0
+        }
+      ]
+    },
+    "success_threshold": {
+      "required_goal_slots": 1,
+      "simulator_minimum_success_rate": 0.995
+    },
+    "allowed_mechanic_families": [
+      "ordinary_currency",
+      "fracture",
+      "restart"
+    ],
+    "solver_options": [
+      {
+        "type": "fracture_prepare",
+        "preparation": [
+          "chaos"
+        ],
+        "carrier_goal_slot": 0
+      }
+    ],
+    "action_envelope": [
+      "restart"
+    ],
+    "economy": {
+      "version": "v1",
+      "id": "s8.0-narrow-fracture-v1",
+      "prices": {
+        "chaos": 1.0,
+        "fracture": 20.0,
+        "base": 1000.0
+      }
+    },
+    "price_sources": [
+      {
+        "price_key": "base",
+        "value": 1000.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/fracture-prepare.json",
+        "json_pointer": "/economy/prices/base"
+      },
+      {
+        "price_key": "chaos",
+        "value": 1.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/fracture-prepare.json",
+        "json_pointer": "/economy/prices/chaos"
+      },
+      {
+        "price_key": "fracture",
+        "value": 20.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/fracture-prepare.json",
+        "json_pointer": "/economy/prices/fracture"
+      }
+    ],
+    "caps": {
+      "max_states": 25000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 16,
+      "max_discovered_states": 50000,
+      "max_expanded_states": 25000,
+      "max_state_action_rows": 250000,
+      "max_transitions": 5000000,
+      "max_reforge_work": 5000000,
+      "max_solver_owned_bytes": 536870912,
+      "max_compiled_nodes": 250000,
+      "max_compiled_edges": 1000000,
+      "max_strategy_json_bytes": 268435456,
+      "worker_step_ms": 50,
+      "cancel_ack_ms": 250
+    },
+    "tolerances_and_seeds": {
+      "runs": 10000,
+      "seed": 2026071701,
+      "max_actions_per_run": 250000,
+      "mean_cost_relative_tolerance": 0.08,
+      "minimum_success_rate": 0.995
+    }
+  },
+  "commands": [
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-baselines/s8.0/corpus.json --case s8-fracture-prepare --output build/s8.0-baseline/s8-fracture-prepare.report.json --strategy-output build/s8.0-baseline/strategies --verification-runs 10000 --verification-seed 2026071701 --verification-chunk-runs 1 --exact-strategy-evaluation --progress"
+  ],
+  "solver": {
+    "actual_status": "converged",
+    "result": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 44.915464317950615,
+      "expanded_states": 32,
+      "sweeps": 1,
+      "residual": 2.842170943040401e-14,
+      "skipped_action_count": 0
+    },
+    "value": {
+      "start": 44.915464317950615
+    },
+    "telemetry": {
+      "version": "solver_telemetry_v1",
+      "availability": {
+        "evaluator_support": "applied_before_expansion",
+        "relevance_filter": "explicit_envelope_or_conservative_include",
+        "dominance_filter": "certified_abstract_kernel_equivalence",
+        "policy_improvement_rounds": "available",
+        "optimality_gap": "available_for_focused_expansion",
+        "verification": "external_harness"
+      },
+      "execution": {
+        "status": "complete",
+        "phase": "done"
+      },
+      "actions": {
+        "registry": 277,
+        "registry_before_lazy": 15552,
+        "candidate": 1,
+        "evaluator_supported": 1,
+        "priced_scanned": 2,
+        "supported_priced": 2,
+        "unsupported_requested": 0,
+        "relevance_reduced": 15551,
+        "dominance_reduced": 0,
+        "deferred": 0,
+        "equivalent_price_ties": 0,
+        "missing_price": 0,
+        "unsupported_observed": 0
+      },
+      "action_control": {
+        "explicit_envelope": true,
+        "dependency_primitives": 2,
+        "goal_relevant_pruned": 0,
+        "fossil_loadouts": {
+          "possible": 15275,
+          "generated": 0,
+          "deferred": 15275,
+          "lazy": true,
+          "mode": "requested"
+        },
+        "reason_observations_total": 3,
+        "reason_counts": [
+          {
+            "reason": "included:explicit_goal_envelope:1",
+            "observations": 1
+          },
+          {
+            "reason": "included:fixed_option_structural_dependency:2",
+            "observations": 1
+          },
+          {
+            "reason": "pruned:not_permitted_by_explicit_goal_envelope:15551",
+            "observations": 1
+          }
+        ]
+      },
+      "planner": {
+        "registry": 278,
+        "candidate": 2,
+        "fixed_options": 1
+      },
+      "abstraction": {
+        "discriminating_tags": 0,
+        "junk_classes": 15
+      },
+      "states": {
+        "discovered": 24884,
+        "expanded": 32,
+        "frontier": 24852,
+        "goal": 17259,
+        "policy_reachable": 14521
+      },
+      "focused_expansion": {
+        "used": true,
+        "rounds": 1,
+        "lower_bound": 44.915464317950615,
+        "upper_bound": 44.915464317950615,
+        "optimality_gap": 0,
+        "duration_ns": 1707200
+      },
+      "work": {
+        "state_action_rows": 3,
+        "transition_entries": 14522,
+        "outcome_entries": 158028818,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "bellman_backups": 12,
+        "bellman_action_evaluations": 18,
+        "extraction_action_evaluations": 3,
+        "bellman_work_units": 1,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 2,
+        "transition_bits_hash": "da94cd5b965bb87b",
+        "policy_bits_hash": "8310efbeda509268"
+      },
+      "cache": {
+        "distribution": {
+          "requests": 20730,
+          "hits": 2,
+          "misses": 20728,
+          "entries": 10363,
+          "build_ns": 37270800,
+          "released_after_sparse_copy": true
+        },
+        "transition_graph": {
+          "reused": false
+        },
+        "reforge": {
+          "requests": 15248,
+          "hits": 15246,
+          "misses": 2,
+          "entries": 1,
+          "build_ns": 11926500,
+          "frontier_work": 402480
+        }
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 2,
+        "largest_policy_component": 1,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 2,
+        "policy_states_collapsed": 0,
+        "policy_evaluation_failure": null,
+        "status": "exact_abstract",
+        "converged": true,
+        "sweeps": 1,
+        "policy_improvement_rounds": 1,
+        "residual": 0.0,
+        "optimality_gap": 0,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "cap_hits": [],
+        "full_request_status": "exact_abstract_within_tolerance"
+      },
+      "timings_ns": {
+        "registry_generation": 174500,
+        "abstract_layout": 25100,
+        "solve_setup": 113900,
+        "expansion": 24061000,
+        "transition_calculation": 37270800,
+        "optimization": 1653400,
+        "extraction": 266600,
+        "compilation": 1173273300,
+        "verification": null
+      },
+      "memory": {
+        "solver_owned_bytes_estimate": 16842560,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 144,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "compilation": {
+        "available": true,
+        "working_states": 1,
+        "policy_regions": 1,
+        "nodes": 7,
+        "edges": 10369,
+        "strategy_json_bytes": 84852673,
+        "cap_hit": null
+      },
+      "value": {
+        "start": 44.915464317950615,
+        "start_status": "exact_abstract_within_tolerance",
+        "start_scope": "full_requested_action_set",
+        "raw_start_bound": 44.915464317950615
+      },
+      "verification": null
+    }
+  },
+  "strategy": {
+    "format": "ordinary_strategy_json_gzip",
+    "path": "fixtures/solver-baselines/s8.0/strategies/s8-fracture-prepare.strategy.json.gz",
+    "uncompressed_sha256": "d4663894ec13461815d43ad24a2eb6ff3ec1ceecc087705606809968aac796e7",
+    "uncompressed_bytes": 84852673,
+    "gzip_sha256": "4b644cdcd203716466f0b8c1857597315ecf89ef81ad76d8f33d599df9451a38",
+    "gzip_bytes": 668457,
+    "document_version": "v1",
+    "start_node_id": "start",
+    "nodes": 7,
+    "edges": 10369,
+    "execution_authority": "raw_strategy_only",
+    "source": "solver_compiled_ordinary_graph"
+  },
+  "evaluator": {
+    "status": "unsupported",
+    "result": null,
+    "error": "exact strategy evaluation returned unsupported_feature: strategy evaluation unsupported:\n- edge 'e2' compiler-only mod_count cannot be represented by Calculator mode yet\n- edge 'e5' compiler-only mod_count cannot be represented by Calculator mode yet\n- edge 'e6' compiler-only mod_count cannot be represented by",
+    "wall_ms": 4078.885,
+    "time_limited": false
+  },
+  "simulator": {
+    "result": {
+      "runs": 10000,
+      "requested_runs": 10000,
+      "finished": true,
+      "diagnostic": true,
+      "time_limited": false,
+      "projected_total_ms": 412.3399,
+      "cost_standard_deviation": 24.436413143887034,
+      "cost_standard_error": 0.24436413143887034,
+      "success_count": 10000,
+      "failure_count": 0,
+      "mean_cost": 44.7843,
+      "off_policy_failures": 0,
+      "cost_delta_absolute": 0.13116431795061345,
+      "cost_delta_relative": 0.0029202485144563715,
+      "success_rate": 1,
+      "action_distribution": [
+        {
+          "node_id": "s0",
+          "action_type": 5,
+          "count": 247843
+        },
+        {
+          "node_id": "s0_fracture",
+          "action_type": 24,
+          "count": 10000
+        }
+      ],
+      "mean_cost_within_tolerance": true,
+      "success_rate_within_tolerance": true,
+      "verification_passed": true
+    },
+    "run_count": 10000
+  },
+  "action_diagnostics": {
+    "counts": {
+      "registry": 277,
+      "registry_before_lazy": 15552,
+      "candidate": 1,
+      "evaluator_supported": 1,
+      "priced_scanned": 2,
+      "supported_priced": 2,
+      "unsupported_requested": 0,
+      "relevance_reduced": 15551,
+      "dominance_reduced": 0,
+      "deferred": 0,
+      "equivalent_price_ties": 0,
+      "missing_price": 0,
+      "unsupported_observed": 0
+    },
+    "reason_observations_total": 3,
+    "included": [
+      {
+        "reason": "included:explicit_goal_envelope:1",
+        "observations": 1
+      },
+      {
+        "reason": "included:fixed_option_structural_dependency:2",
+        "observations": 1
+      }
+    ],
+    "deferred": [],
+    "pruned": [
+      {
+        "reason": "pruned:not_permitted_by_explicit_goal_envelope:15551",
+        "observations": 1
+      }
+    ],
+    "unpriced": [],
+    "unsupported": [],
+    "fossil_loadouts": {
+      "possible": 15275,
+      "generated": 0,
+      "deferred": 15275,
+      "lazy": true,
+      "mode": "requested"
+    }
+  },
+  "documented_mismatches": [
+    "Exact evaluation refused compiler-only mod_count routing; Simulator verification still completed exactly 10000 runs.",
+    "The compiled ordinary graph uses compiler-only mod_count routing that Calculator exact evaluation currently refuses; the compiler and evaluator were not changed in S8.0."
+  ]
+}

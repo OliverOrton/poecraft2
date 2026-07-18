@@ -1,0 +1,486 @@
+{
+  "schema_version": "s8_solver_baseline_case_v1",
+  "case_id": "oracle-real-two-mod",
+  "capture_origin": "current_s8.0_before_state",
+  "status": "compiled_simulated_evaluator_refused",
+  "identity": {
+    "repository_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+    "source_case_path": "fixtures/solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+    "source_case_sha256": "149e41de238c596dfa004ae68c1f4457ec3175154bf308b5910acc540dc3f8bd",
+    "capture_report_path": "build/s8.0-baseline/oracle-real-two-mod.report.json",
+    "capture_report_sha256": "f6c53cf54a08786b8795e671c0a24da411677d4412bc8908be5ea85bcfbaccea",
+    "artifact": {
+      "artifact_schema_version": 4,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "database_schema_version": "2",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+      "captured_manifest_payload_sha256": "5a106204680ed0467b627f616e73c03a1346bb771c70120c5dd303ee45d2873c",
+      "manifest_path": "data/compiled/current/manifest.json",
+      "manifest_sha256": "9006d3a0db21d688ac1dd308bf130175e14e0d35608509f9d6cff7d1f4f66eb7",
+      "canonical_sqlite_path": "data/sqlite/poecraft.db",
+      "canonical_sqlite_sha256": "31b4fc8da6f0391d2328e099cb76c8e1867e1cecee5be244997f843a8af39c64"
+    },
+    "engine": {
+      "runner": "native",
+      "abi_version": 1,
+      "compiler": "gcc-14.2.0"
+    }
+  },
+  "configuration": {
+    "session": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "base_name": "Vaal Regalia",
+      "item_level": 86
+    },
+    "start": {
+      "rarity": "normal",
+      "with_implicits": false,
+      "mods": []
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "magic",
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedEnergyShield11",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        }
+      ],
+      "actions": [
+        "transmute",
+        "augment",
+        "alteration",
+        "restart"
+      ]
+    },
+    "success_threshold": {
+      "required_goal_slots": 2,
+      "simulator_minimum_success_rate": 0.995
+    },
+    "allowed_mechanic_families": [
+      "ordinary_currency",
+      "restart"
+    ],
+    "solver_options": [],
+    "action_envelope": [
+      "transmute",
+      "augment",
+      "alteration",
+      "restart"
+    ],
+    "economy": {
+      "version": "v1",
+      "id": "solver-benchmark-frozen-v1",
+      "prices": {
+        "transmute": 0.05,
+        "augment": 0.05,
+        "alteration": 0.1,
+        "base": 5.0
+      }
+    },
+    "price_sources": [
+      {
+        "price_key": "alteration",
+        "value": 0.1,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+        "json_pointer": "/economy/prices/alteration"
+      },
+      {
+        "price_key": "augment",
+        "value": 0.05,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+        "json_pointer": "/economy/prices/augment"
+      },
+      {
+        "price_key": "base",
+        "value": 5.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+        "json_pointer": "/economy/prices/base"
+      },
+      {
+        "price_key": "transmute",
+        "value": 0.05,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+        "json_pointer": "/economy/prices/transmute"
+      }
+    ],
+    "caps": {
+      "max_states": 25000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 256,
+      "max_discovered_states": 25000,
+      "max_expanded_states": 25000,
+      "max_state_action_rows": 250000,
+      "max_transitions": 2500000,
+      "max_reforge_work": 2500000,
+      "max_solver_owned_bytes": 536870912,
+      "max_compiled_nodes": 50000,
+      "max_compiled_edges": 200000,
+      "max_strategy_json_bytes": 33554432,
+      "worker_step_ms": 50,
+      "cancel_ack_ms": 250
+    },
+    "tolerances_and_seeds": {
+      "runs": 10000,
+      "seed": 2026071502,
+      "max_actions_per_run": 100000,
+      "mean_cost_relative_tolerance": 0.08,
+      "minimum_success_rate": 0.995
+    }
+  },
+  "commands": [
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-baselines/s8.0/corpus.json --case oracle-real-two-mod --output build/s8.0-baseline/oracle-real-two-mod.report.json --strategy-output build/s8.0-baseline/strategies --verification-runs 10000 --verification-seed 2026071502 --verification-chunk-runs 1 --exact-strategy-evaluation --progress"
+  ],
+  "solver": {
+    "actual_status": "converged",
+    "result": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 356.45917785234406,
+      "expanded_states": 99,
+      "sweeps": 1,
+      "residual": 1.1368683772161603e-13,
+      "skipped_action_count": 0
+    },
+    "value": {
+      "start": 356.45917785234406
+    },
+    "telemetry": {
+      "version": "solver_telemetry_v1",
+      "availability": {
+        "evaluator_support": "applied_before_expansion",
+        "relevance_filter": "explicit_envelope_or_conservative_include",
+        "dominance_filter": "certified_abstract_kernel_equivalence",
+        "policy_improvement_rounds": "available",
+        "optimality_gap": "available_for_focused_expansion",
+        "verification": "external_harness"
+      },
+      "execution": {
+        "status": "complete",
+        "phase": "done"
+      },
+      "actions": {
+        "registry": 277,
+        "registry_before_lazy": 15552,
+        "candidate": 4,
+        "evaluator_supported": 4,
+        "priced_scanned": 4,
+        "supported_priced": 4,
+        "unsupported_requested": 0,
+        "relevance_reduced": 15548,
+        "dominance_reduced": 0,
+        "deferred": 0,
+        "equivalent_price_ties": 0,
+        "missing_price": 0,
+        "unsupported_observed": 0
+      },
+      "action_control": {
+        "explicit_envelope": true,
+        "dependency_primitives": 0,
+        "goal_relevant_pruned": 0,
+        "fossil_loadouts": {
+          "possible": 15275,
+          "generated": 0,
+          "deferred": 15275,
+          "lazy": true,
+          "mode": "requested"
+        },
+        "reason_observations_total": 2,
+        "reason_counts": [
+          {
+            "reason": "included:explicit_goal_envelope:4",
+            "observations": 1
+          },
+          {
+            "reason": "pruned:not_permitted_by_explicit_goal_envelope:15548",
+            "observations": 1
+          }
+        ]
+      },
+      "planner": {
+        "registry": 277,
+        "candidate": 4,
+        "fixed_options": 0
+      },
+      "abstraction": {
+        "discriminating_tags": 0,
+        "junk_classes": 14
+      },
+      "states": {
+        "discovered": 99,
+        "expanded": 99,
+        "frontier": 0,
+        "goal": 1,
+        "policy_reachable": 99
+      },
+      "focused_expansion": {
+        "used": false,
+        "rounds": 0,
+        "lower_bound": 0,
+        "upper_bound": null,
+        "optimality_gap": null,
+        "duration_ns": 0
+      },
+      "work": {
+        "state_action_rows": 214,
+        "transition_entries": 259,
+        "outcome_entries": 9862,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "bellman_backups": 588,
+        "bellman_action_evaluations": 1284,
+        "extraction_action_evaluations": 214,
+        "bellman_work_units": 1,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 98,
+        "transition_bits_hash": "3a8a9550c1393df7",
+        "policy_bits_hash": "92d46a85017869cd"
+      },
+      "cache": {
+        "distribution": {
+          "requests": 214,
+          "hits": 0,
+          "misses": 214,
+          "entries": 0,
+          "build_ns": 437300,
+          "released_after_sparse_copy": true
+        },
+        "transition_graph": {
+          "reused": false
+        },
+        "reforge": {
+          "requests": 98,
+          "hits": 96,
+          "misses": 2,
+          "entries": 0,
+          "build_ns": 205300,
+          "frontier_work": 3762
+        }
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 1,
+        "largest_policy_component": 3,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 4,
+        "policy_states_collapsed": 94,
+        "policy_evaluation_failure": null,
+        "status": "exact_abstract",
+        "converged": true,
+        "sweeps": 1,
+        "policy_improvement_rounds": 1,
+        "residual": 0.0,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "cap_hits": [],
+        "full_request_status": "exact_abstract_within_tolerance"
+      },
+      "timings_ns": {
+        "registry_generation": 171900,
+        "abstract_layout": 25400,
+        "solve_setup": 60000,
+        "expansion": 515500,
+        "transition_calculation": 437300,
+        "optimization": 98300,
+        "extraction": 75400,
+        "compilation": 11107800,
+        "verification": null
+      },
+      "memory": {
+        "solver_owned_bytes_estimate": 4191008,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 144,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "compilation": {
+        "available": true,
+        "working_states": 98,
+        "policy_regions": 15,
+        "nodes": 19,
+        "edges": 116,
+        "strategy_json_bytes": 772539,
+        "cap_hit": null
+      },
+      "value": {
+        "start": 356.45917785234406,
+        "start_status": "exact_abstract_within_tolerance",
+        "start_scope": "full_requested_action_set",
+        "raw_start_bound": 356.45917785234406
+      },
+      "verification": null
+    }
+  },
+  "strategy": {
+    "format": "ordinary_strategy_json_gzip",
+    "path": "fixtures/solver-baselines/s8.0/strategies/oracle-real-two-mod.strategy.json.gz",
+    "uncompressed_sha256": "951a4282a48974c4ca4c338cca7e8cdc320af2570a684db70b8fbb3b40e97269",
+    "uncompressed_bytes": 772539,
+    "gzip_sha256": "be266044a46c144810d2c51ec2091bc60e6c83dfcb55ce11b9dc22315738bab4",
+    "gzip_bytes": 7365,
+    "document_version": "v1",
+    "start_node_id": "start",
+    "nodes": 19,
+    "edges": 116,
+    "execution_authority": "raw_strategy_only",
+    "source": "solver_compiled_ordinary_graph"
+  },
+  "evaluator": {
+    "status": "unsupported",
+    "result": null,
+    "error": "exact strategy evaluation returned unsupported_feature: strategy evaluation unsupported:\n- edge 'e2' compiler-only mod_count cannot be represented by Calculator mode yet\n- edge 'e3' compiler-only mod_count cannot be represented by Calculator mode yet\n- edge 'e4' compiler-only mod_count cannot be represented by",
+    "wall_ms": 28.8111,
+    "time_limited": false
+  },
+  "simulator": {
+    "result": {
+      "runs": 10000,
+      "requested_runs": 10000,
+      "finished": true,
+      "diagnostic": true,
+      "time_limited": false,
+      "projected_total_ms": 25936.7844,
+      "cost_standard_deviation": 357.531212061128,
+      "cost_standard_error": 3.57531212061128,
+      "success_count": 10000,
+      "failure_count": 0,
+      "mean_cost": 357.11403000001025,
+      "off_policy_failures": 0,
+      "cost_delta_absolute": 0.6548521476661904,
+      "cost_delta_relative": 0.0018371027830217618,
+      "success_rate": 1,
+      "action_distribution": [
+        {
+          "node_id": "s9",
+          "action_type": 2,
+          "count": 9209168
+        },
+        {
+          "node_id": "s0",
+          "action_type": 2,
+          "count": 8278808
+        },
+        {
+          "node_id": "s50",
+          "action_type": 2,
+          "count": 3042340
+        },
+        {
+          "node_id": "s74",
+          "action_type": 2,
+          "count": 2866600
+        },
+        {
+          "node_id": "s18",
+          "action_type": 2,
+          "count": 2555165
+        },
+        {
+          "node_id": "s66",
+          "action_type": 2,
+          "count": 1883571
+        },
+        {
+          "node_id": "s90",
+          "action_type": 2,
+          "count": 1808429
+        },
+        {
+          "node_id": "s34",
+          "action_type": 2,
+          "count": 1599720
+        },
+        {
+          "node_id": "s82",
+          "action_type": 2,
+          "count": 1560847
+        },
+        {
+          "node_id": "s58",
+          "action_type": 2,
+          "count": 1080439
+        },
+        {
+          "node_id": "s42",
+          "action_type": 2,
+          "count": 979577
+        },
+        {
+          "node_id": "s26",
+          "action_type": 2,
+          "count": 692657
+        },
+        {
+          "node_id": "s1",
+          "action_type": 1,
+          "count": 149135
+        },
+        {
+          "node_id": "s11",
+          "action_type": 1,
+          "count": 149029
+        },
+        {
+          "node_id": "s97",
+          "action_type": 0,
+          "count": 10000
+        }
+      ],
+      "mean_cost_within_tolerance": true,
+      "success_rate_within_tolerance": true,
+      "verification_passed": true
+    },
+    "run_count": 10000
+  },
+  "action_diagnostics": {
+    "counts": {
+      "registry": 277,
+      "registry_before_lazy": 15552,
+      "candidate": 4,
+      "evaluator_supported": 4,
+      "priced_scanned": 4,
+      "supported_priced": 4,
+      "unsupported_requested": 0,
+      "relevance_reduced": 15548,
+      "dominance_reduced": 0,
+      "deferred": 0,
+      "equivalent_price_ties": 0,
+      "missing_price": 0,
+      "unsupported_observed": 0
+    },
+    "reason_observations_total": 2,
+    "included": [
+      {
+        "reason": "included:explicit_goal_envelope:4",
+        "observations": 1
+      }
+    ],
+    "deferred": [],
+    "pruned": [
+      {
+        "reason": "pruned:not_permitted_by_explicit_goal_envelope:15548",
+        "observations": 1
+      }
+    ],
+    "unpriced": [],
+    "unsupported": [],
+    "fossil_loadouts": {
+      "possible": 15275,
+      "generated": 0,
+      "deferred": 15275,
+      "lazy": true,
+      "mode": "requested"
+    }
+  },
+  "documented_mismatches": [
+    "The compiled ordinary graph uses compiler-only mod_count routing that Calculator exact evaluation currently refuses; the compiler and evaluator were not changed in S8.0."
+  ]
+}

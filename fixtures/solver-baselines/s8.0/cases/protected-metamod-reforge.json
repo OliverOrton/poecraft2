@@ -1,0 +1,90 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "s8-protected-metamod-reforge",
+  "category": "s8_narrow_feature",
+  "approval_status": "existing_s7_protected_repeat_contract",
+  "benchmark_enabled": true,
+  "description": "Narrow protected-reforge baseline using the existing S7.4 protected-repeat option: reapply Prefixes Cannot Be Changed and Harvest Reforge Fire until T1 fire resistance appears while the T1 flat-ES prefix remains preserved.",
+  "comparison_profile": "native-s8.0-before-state-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": [
+      {"key": "LocalIncreasedEnergyShield11", "flags": []}
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["restart"],
+    "options": [
+      {
+        "type": "protected_repeat",
+        "side": "prefix",
+        "action": "harvest_reforge:fire",
+        "until": {
+          "goal_slots": [1],
+          "min_satisfied": 1
+        }
+      }
+    ]
+  },
+  "allowed_mechanic_families": ["bench_metamod", "ordinary_currency", "restart"],
+  "fixture_lineage": {
+    "source": "engine/tests/test_solver_compile.cpp",
+    "contract": "FixedOptionKind::ProtectedRepeat reapplication, exact reforge, recovery, and ordinary primitive compilation"
+  },
+  "economy": {
+    "version": "v1",
+    "id": "s8.0-narrow-protected-reforge-v1",
+    "prices": {
+      "bench:StrMasterItemGenerationCannotChangePrefixes": 2.0,
+      "harvest_reforge:fire": 5.0,
+      "base": 100.0
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "run"
+  },
+  "caps": {
+    "max_states": 50000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 16,
+    "max_discovered_states": 100000,
+    "max_expanded_states": 50000,
+    "max_state_action_rows": 500000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 10000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071703,
+    "max_actions_per_run": 250000,
+    "mean_cost_relative_tolerance": 0.08,
+    "minimum_success_rate": 0.995
+  }
+}

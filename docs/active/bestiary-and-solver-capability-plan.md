@@ -10,13 +10,17 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: B1.0-B1.4 are complete. Imprint is the sole B1 recipe;
+Status 2026-07-17: B1.0-B1.4 and S8.0 are complete. Oliver explicitly waived
+B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
+validation already completed; B1.5 is recorded as waived/deferred, not
+complete. Its full acceptance suite, 10,000-run Imprint verification, and
+rendered Bestiary review were not backfilled. Imprint is the sole B1 recipe;
 Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
 the engine and workspace action envelopes. The authoritative contract is
 [fixtures/bestiary/v1](../../fixtures/bestiary/v1/). The next implementation
-boundary is **B1.5 only**. The recorded S7 endgame sample remains
-`0.9942` against the former `0.995` target; the number is retained as a
-disclosed miss, not rewritten as a passing numeric gate.
+boundary is **S8.1 only**. The recorded S7 endgame sample remains `0.9942`
+against the former `0.995` target; the number is retained as a disclosed miss,
+not rewritten as a passing numeric gate.
 
 ## Outcome And Sequence
 
@@ -291,9 +295,15 @@ the two ordinary operations. Calculator exposes only the exact `imprint_retry`
 solver option and its complete magic-item-goal restriction, including one
 Craicic Chimeral plus three rare beasts and incomplete missing-beast pricing.
 Release WASM and the focused native, Python, WASM-worker, and non-visual web
-checks passed. B1.5 is the sole next boundary.
+checks passed. B1.5 was the next planned boundary at B1.4; Oliver subsequently
+waived it as the separate checkpoint described below.
 
 ### B1.5 - Bestiary Acceptance
+
+Status: waived/deferred by Oliver 2026-07-17, not complete. The focused B1.3
+and B1.4 validation was accepted in place of a separate checkpoint. The full
+acceptance suite, 10,000-run Imprint verification, and rendered Bestiary review
+below were intentionally not performed or backfilled.
 
 - Run the complete relevant ingest, artifact, native, binding, WASM, and web
   acceptance once.
@@ -311,6 +321,9 @@ parked, and any state-model constraints before starting S8.
 
 ### S8.0 - Baseline And Review Contract
 
+Status: complete 2026-07-17. The exact evidence and contracts are versioned
+under [fixtures/solver-baselines/s8.0](../../fixtures/solver-baselines/s8.0/).
+
 - Capture the current exact solver envelope, compiled graph, evaluator result,
   and Simulator aggregate result for the applicable existing S7 cases plus
   narrow fixtures for Fracture, bench blocking, and protected reforging.
@@ -320,15 +333,29 @@ parked, and any state-model constraints before starting S8.
 - Version trimming provenance: parent strategy hash, discovery parameters,
   selection threshold, explicit fallback choice, exact impact result, and
   independent validation parameters.
-- Pin whether a derived trim routes removed entries to Restart or an explicit
-  `trimmed` stop/failure terminal. Both are executable and measurable; neither
-  may be selected silently.
+- Pin a derived trim's removed entries to serialized Restart with an explicit
+  user-choice requirement; it may never be selected silently.
 
 This is implementation evidence, not a new owner-maintained quality corpus.
 
 Checkpoint: the before-state is reproducible and every later readability or
 action-space claim can be compared with the same exact strategy/evaluator
 contracts.
+
+Checkpoint passed: all five S7 cases were retained, with four captured against
+the current B1.4 artifact and the long endgame case represented by its archived
+S7.6 10,000-run graph. Narrow Fracture capture converged and completed 10,000
+Simulator runs; the temporary-blocker case truthfully records non-convergence,
+and the protected-reforge attempts were abandoned at Oliver's direction before
+a report or graph. Five newly captured compiled strategies completed 50,000
+Simulator executions; the archived endgame sample brings represented runs to
+60,000. Review projection, accounting, and empirical-trimming provenance
+contracts and examples are versioned, with Restart pinned as the explicit trim
+fallback. Focused reload, raw-reference, accounting-reconciliation, and
+provenance validation passed. Pre-existing `mod_count` exact-evaluator refusal,
+stale historical S7 artifact pins, the endgame 0.9942 sample, and the temporary
+blocker non-convergence are disclosed rather than fixed. No S8.1 presentation
+or later behavior was implemented. S8.1 is the sole next boundary.
 
 ### S8.1 - Derived Review Sections
 

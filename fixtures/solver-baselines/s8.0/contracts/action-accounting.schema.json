@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft2.local/schemas/solver/action-accounting-v1.json",
+  "title": "poecraft2 exact action accounting projection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "strategy_sha256",
+    "economy",
+    "totals",
+    "entries",
+    "reconciliation"
+  ],
+  "properties": {
+    "schema_version": {"const": "solver_action_accounting_v1"},
+    "strategy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "economy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prices"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "prices": {
+          "type": "object",
+          "additionalProperties": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_actions", "expected_cost", "by_price_key"],
+      "properties": {
+        "expected_actions": {"type": "number", "minimum": 0},
+        "expected_cost": {"type": "number", "minimum": 0},
+        "by_price_key": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/price_total"}
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/accounting_entry"}
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_expected_actions",
+        "evaluator_expected_consumption",
+        "action_difference",
+        "consumption_differences",
+        "cost_dot_product_difference"
+      ],
+      "properties": {
+        "evaluator_expected_actions": {"type": "number", "minimum": 0},
+        "evaluator_expected_consumption": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/consumption"}
+        },
+        "action_difference": {"type": "number"},
+        "consumption_differences": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/consumption"}
+        },
+        "cost_dot_product_difference": {"type": "number"}
+      }
+    }
+  },
+  "$defs": {
+    "classification": {
+      "enum": [
+        "retry",
+        "restart",
+        "setup",
+        "cleanup",
+        "protection",
+        "temporary_blocker",
+        "fracture",
+        "finishing"
+      ]
+    },
+    "consumption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "quantity"],
+      "properties": {
+        "key": {"type": "string", "minLength": 1},
+        "quantity": {"type": "number"}
+      }
+    },
+    "price_total": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["price_key", "quantity", "unit_price", "cost_contribution"],
+      "properties": {
+        "price_key": {"type": "string", "minLength": 1},
+        "quantity": {"type": "number", "minimum": 0},
+        "unit_price": {"type": "number", "minimum": 0},
+        "cost_contribution": {"type": "number", "minimum": 0}
+      }
+    },
+    "accounting_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_descriptor",
+        "price_key",
+        "quantity",
+        "unit_price",
+        "cost_contribution",
+        "raw_node_id",
+        "classifications"
+      ],
+      "properties": {
+        "action_descriptor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "native_operation"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "native_operation": {"type": "object"}
+          }
+        },
+        "price_key": {"type": "string", "minLength": 1},
+        "quantity": {"type": "number", "minimum": 0},
+        "unit_price": {"type": "number", "minimum": 0},
+        "cost_contribution": {"type": "number", "minimum": 0},
+        "raw_node_id": {"type": "string", "minLength": 1},
+        "review_section_id": {"type": "string", "minLength": 1},
+        "classifications": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/classification"}
+        }
+      }
+    }
+  }
+}

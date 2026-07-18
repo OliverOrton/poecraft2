@@ -1,0 +1,66 @@
+{
+  "schema_version": "s8_solver_baseline_manifest_v1",
+  "baseline_id": "poecraft2-s8.0-before-state-v1",
+  "repository_before_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+  "scope": "S8.0 reproducible baseline and review contracts only",
+  "cases": [
+    {
+      "id": "oracle-real-one-mod",
+      "path": "fixtures/solver-baselines/s8.0/baselines/oracle-real-one-mod.json",
+      "sha256": "5f3f3c5b2260a748b4d6b27296e5e53a4c837ca76a4c4d062951cd20a8534647",
+      "status": "compiled_simulated_evaluator_refused"
+    },
+    {
+      "id": "oracle-real-two-mod",
+      "path": "fixtures/solver-baselines/s8.0/baselines/oracle-real-two-mod.json",
+      "sha256": "c7d40c2ca502b181de76bcd302104853ae18c86bcd0c54aed87dcc393e2126ce",
+      "status": "compiled_simulated_evaluator_refused"
+    },
+    {
+      "id": "ordinary-es-bench",
+      "path": "fixtures/solver-baselines/s8.0/baselines/ordinary-es-bench.json",
+      "sha256": "3f5c9d166532b7dd3fc14172aae42da414af1c3852312f77e4191189ac327244",
+      "status": "compiled_simulated_evaluator_refused"
+    },
+    {
+      "id": "advanced-es-resist-bench",
+      "path": "fixtures/solver-baselines/s8.0/baselines/advanced-es-resist-bench.json",
+      "sha256": "c2cb782d4e732de3a25d2a2bad52d97385bc567ad5f22f6362df863984ac68eb",
+      "status": "compiled_simulated_evaluator_refused"
+    },
+    {
+      "id": "endgame-fractured-es",
+      "path": "fixtures/solver-baselines/s8.0/baselines/endgame-fractured-es.json",
+      "sha256": "73b9be247a7eaca2293103b8d649bb813cfbcf9e0c8950454859287ffd33e318",
+      "status": "compiled_simulated"
+    },
+    {
+      "id": "s8-fracture-prepare",
+      "path": "fixtures/solver-baselines/s8.0/baselines/s8-fracture-prepare.json",
+      "sha256": "5140918ba2e39fe74b1b1372ea92fcc6fef0000008aeb65d4242e313c3915cda",
+      "status": "compiled_simulated_evaluator_refused"
+    },
+    {
+      "id": "s8-temporary-bench-blocker",
+      "path": "fixtures/solver-baselines/s8.0/baselines/s8-temporary-bench-blocker.json",
+      "sha256": "1dad972527a0c6aac0672f4fb390d919c0668f0de91528728386c2218e41192e",
+      "status": "not_converged"
+    },
+    {
+      "id": "s8-protected-metamod-reforge",
+      "path": "fixtures/solver-baselines/s8.0/baselines/s8-protected-metamod-reforge.json",
+      "sha256": "160f084726e16b6cfad1f45c4dd57233ee8f34a4de5e8960b511dc083c4c5e03",
+      "status": "abandoned_before_report"
+    }
+  ],
+  "contracts": [
+    "fixtures/solver-baselines/s8.0/contracts/review-projection.schema.json",
+    "fixtures/solver-baselines/s8.0/contracts/action-accounting.schema.json",
+    "fixtures/solver-baselines/s8.0/contracts/trimming-provenance.schema.json"
+  ],
+  "examples": [
+    "fixtures/solver-baselines/s8.0/examples/review-projection.example.json",
+    "fixtures/solver-baselines/s8.0/examples/action-accounting.example.json",
+    "fixtures/solver-baselines/s8.0/examples/trimming-provenance.example.json"
+  ]
+}

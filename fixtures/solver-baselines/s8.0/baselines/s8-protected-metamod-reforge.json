@@ -1,0 +1,193 @@
+{
+  "schema_version": "s8_solver_baseline_case_v1",
+  "case_id": "s8-protected-metamod-reforge",
+  "capture_origin": "current_s8.0_abandoned",
+  "status": "abandoned_before_report",
+  "identity": {
+    "repository_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+    "source_case_path": "fixtures/solver-baselines/s8.0/cases/protected-metamod-reforge.json",
+    "source_case_sha256": "7e23b7f9307dac47a3234409edccfb7091b540f3d099f2259fee43a5ddd71fee",
+    "capture_report_path": null,
+    "capture_report_sha256": null,
+    "artifact": {
+      "artifact_schema_version": 4,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "database_schema_version": "2",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+      "captured_manifest_payload_sha256": "5a106204680ed0467b627f616e73c03a1346bb771c70120c5dd303ee45d2873c",
+      "manifest_path": "data/compiled/current/manifest.json",
+      "manifest_sha256": "9006d3a0db21d688ac1dd308bf130175e14e0d35608509f9d6cff7d1f4f66eb7",
+      "canonical_sqlite_path": "data/sqlite/poecraft.db",
+      "canonical_sqlite_sha256": "31b4fc8da6f0391d2328e099cb76c8e1867e1cecee5be244997f843a8af39c64"
+    },
+    "engine": {
+      "runner": "native",
+      "abi_version": 1,
+      "compiler": "gcc-14.2.0"
+    }
+  },
+  "configuration": {
+    "session": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "base_name": "Vaal Regalia",
+      "item_level": 86
+    },
+    "start": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": [
+        {
+          "key": "LocalIncreasedEnergyShield11",
+          "flags": []
+        }
+      ]
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedEnergyShield11",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        }
+      ],
+      "actions": [
+        "restart"
+      ],
+      "options": [
+        {
+          "type": "protected_repeat",
+          "side": "prefix",
+          "action": "harvest_reforge:fire",
+          "until": {
+            "goal_slots": [
+              1
+            ],
+            "min_satisfied": 1
+          }
+        }
+      ]
+    },
+    "success_threshold": {
+      "required_goal_slots": 2,
+      "simulator_minimum_success_rate": 0.995
+    },
+    "allowed_mechanic_families": [
+      "bench_metamod",
+      "ordinary_currency",
+      "restart"
+    ],
+    "solver_options": [
+      {
+        "type": "protected_repeat",
+        "side": "prefix",
+        "action": "harvest_reforge:fire",
+        "until": {
+          "goal_slots": [
+            1
+          ],
+          "min_satisfied": 1
+        }
+      }
+    ],
+    "action_envelope": [
+      "restart"
+    ],
+    "economy": {
+      "version": "v1",
+      "id": "s8.0-narrow-protected-reforge-v1",
+      "prices": {
+        "bench:StrMasterItemGenerationCannotChangePrefixes": 2.0,
+        "harvest_reforge:fire": 5.0,
+        "base": 100.0
+      }
+    },
+    "price_sources": [
+      {
+        "price_key": "base",
+        "value": 100.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/protected-metamod-reforge.json",
+        "json_pointer": "/economy/prices/base"
+      },
+      {
+        "price_key": "bench:StrMasterItemGenerationCannotChangePrefixes",
+        "value": 2.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/protected-metamod-reforge.json",
+        "json_pointer": "/economy/prices/bench:StrMasterItemGenerationCannotChangePrefixes"
+      },
+      {
+        "price_key": "harvest_reforge:fire",
+        "value": 5.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/protected-metamod-reforge.json",
+        "json_pointer": "/economy/prices/harvest_reforge:fire"
+      }
+    ],
+    "caps": {
+      "max_states": 50000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 16,
+      "max_discovered_states": 100000,
+      "max_expanded_states": 50000,
+      "max_state_action_rows": 500000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 10000000,
+      "max_solver_owned_bytes": 1073741824,
+      "max_compiled_nodes": 100000,
+      "max_compiled_edges": 400000,
+      "max_strategy_json_bytes": 67108864,
+      "worker_step_ms": 50,
+      "cancel_ack_ms": 250
+    },
+    "tolerances_and_seeds": {
+      "runs": 10000,
+      "seed": 2026071703,
+      "max_actions_per_run": 250000,
+      "mean_cost_relative_tolerance": 0.08,
+      "minimum_success_rate": 0.995
+    }
+  },
+  "commands": [
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-baselines/s8.0/corpus.json --case s8-protected-metamod-reforge --output build/s8.0-baseline/s8-protected-metamod-reforge.report.json --strategy-output build/s8.0-baseline/strategies --verification-runs 10000 --verification-seed 2026071703 --verification-chunk-runs 1 --exact-strategy-evaluation --progress"
+  ],
+  "attempts": [
+    {
+      "action": "chaos",
+      "outcome": "abandoned_by_owner_after_long_run",
+      "elapsed_cpu_seconds": 1164.328125,
+      "report_written": false
+    },
+    {
+      "action": "harvest_reforge:fire",
+      "outcome": "abandoned_by_owner_after_long_run",
+      "elapsed_cpu_seconds": 124.21875,
+      "report_written": false
+    }
+  ],
+  "solver": {
+    "actual_status": "abandoned",
+    "result": null,
+    "value": null,
+    "telemetry": null
+  },
+  "strategy": null,
+  "evaluator": {
+    "status": "not_run",
+    "result": null,
+    "error": null
+  },
+  "simulator": {
+    "result": null,
+    "run_count": 0
+  },
+  "action_diagnostics": null,
+  "documented_mismatches": [
+    "The current exact protected-repeat capture did not finish promptly and was abandoned at Oliver's direction; no solver result, graph, evaluator result, or Simulator result is claimed."
+  ]
+}

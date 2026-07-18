@@ -1,0 +1,88 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "s8-temporary-bench-blocker",
+  "category": "s8_narrow_feature",
+  "approval_status": "existing_s7_bench_and_single_slot_contracts",
+  "benchmark_enabled": true,
+  "description": "Narrow temporary-blocker before-state using existing S7 primitives: craft cold resistance onto a suffix-only carrier, Exalt with its group and slot occupied, and Restart failed full carriers. Automatic blocker synthesis and cleanup assembly remain deferred to S8.3.",
+  "comparison_profile": "native-s8.0-before-state-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": [
+      {"key": "LocalIncreasedEnergyShield11", "flags": []},
+      {"key": "LocalIncreasedEnergyShieldPercent8", "flags": []},
+      {"key": "LocalIncreasedEnergyShieldPercentAndStunRecovery6", "flags": []}
+    ]
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      }
+    ],
+    "actions": [
+      "bench:EinharMasterColdResist3__",
+      "exalt",
+      "restart"
+    ]
+  },
+  "allowed_mechanic_families": ["bench", "ordinary_currency", "restart"],
+  "fixture_lineage": {
+    "sources": [
+      "engine/tests/test_solver_calc.cpp",
+      "engine/tests/test_actions.cpp"
+    ],
+    "contracts": [
+      "deterministic ordinary bench successor",
+      "crafted carrier changes the exact following-action pool through group conflict and slot occupancy",
+      "ordinary single-slot action and Restart recovery compilation"
+    ]
+  },
+  "economy": {
+    "version": "v1",
+    "id": "s8.0-narrow-temporary-blocker-v1",
+    "prices": {
+      "bench:EinharMasterColdResist3__": 0.5,
+      "exalt": 10.0,
+      "base": 100.0
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "run"
+  },
+  "caps": {
+    "max_states": 25000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 16,
+    "max_discovered_states": 50000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 250000,
+    "max_transitions": 5000000,
+    "max_reforge_work": 5000000,
+    "max_solver_owned_bytes": 536870912,
+    "max_compiled_nodes": 50000,
+    "max_compiled_edges": 200000,
+    "max_strategy_json_bytes": 33554432,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071702,
+    "max_actions_per_run": 250000,
+    "mean_cost_relative_tolerance": 0.08,
+    "minimum_success_rate": 0.995
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-s8.0-before-state-v1",
+  "purpose": "Reproducible S8.0 before-state capture; not a strategy-quality corpus.",
+  "repository_before_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 1,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "comparison_profile": {
+    "id": "native-s8.0-before-state-v1",
+    "status": "native_exact_capture",
+    "v_start_absolute_tolerance": 1e-7,
+    "phase_timings": "reported_not_machine_gated",
+    "memory": "reported_not_owner_ceiling",
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "capture_rules": [
+    "The five S7 case paths are reused without modification.",
+    "The three S8.0 feature cases exercise existing exact S7 option contracts and are not subjective strategy-quality cases.",
+    "Every newly captured compiled strategy is verified by exactly 10000 native Simulator runs.",
+    "Exact strategy evaluation is requested for every compiled strategy and its result or refusal is recorded; action-control diagnostics are recorded whenever the solver produces them."
+  ],
+  "cases": [
+    "../../solver-benchmarks/v1/cases/oracle-real-one-mod.json",
+    "../../solver-benchmarks/v1/cases/oracle-real-two-mod.json",
+    "../../solver-benchmarks/v1/cases/ordinary-es-bench.json",
+    "../../solver-benchmarks/v1/cases/advanced-es-resist-bench.json",
+    "../../solver-benchmarks/v1/cases/endgame-fractured-es.json",
+    "cases/fracture-prepare.json",
+    "cases/temporary-bench-blocker.json",
+    "cases/protected-metamod-reforge.json"
+  ]
+}

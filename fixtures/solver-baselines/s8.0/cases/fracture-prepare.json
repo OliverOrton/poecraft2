@@ -1,0 +1,80 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "s8-fracture-prepare",
+  "category": "s8_narrow_feature",
+  "approval_status": "existing_s7_fracture_prepare_contract",
+  "benchmark_enabled": true,
+  "description": "Narrow exact Fracture-preparation baseline using the existing S7.4 fixed option: repeat Chaos until the flat-ES carrier is present and Fracture is legal, then execute the primitive Fracture action.",
+  "comparison_profile": "native-s8.0-before-state-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LocalIncreasedEnergyShield11",
+        "min_tier": 1
+      }
+    ],
+    "actions": ["restart"],
+    "options": [
+      {
+        "type": "fracture_prepare",
+        "preparation": ["chaos"],
+        "carrier_goal_slot": 0
+      }
+    ]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "fracture", "restart"],
+  "fixture_lineage": {
+    "source": "engine/tests/test_solver_compile.cpp",
+    "contract": "FixedOptionKind::FracturePrepare carrier-exact kernel and ordinary primitive compilation"
+  },
+  "economy": {
+    "version": "v1",
+    "id": "s8.0-narrow-fracture-v1",
+    "prices": {
+      "chaos": 1.0,
+      "fracture": 20.0,
+      "base": 1000.0
+    }
+  },
+  "expected": {
+    "solve_status": "converged",
+    "optimality_status": "exact",
+    "compile_status": "compiled",
+    "verification_status": "run"
+  },
+  "caps": {
+    "max_states": 25000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 16,
+    "max_discovered_states": 50000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 250000,
+    "max_transitions": 5000000,
+    "max_reforge_work": 5000000,
+    "max_solver_owned_bytes": 536870912,
+    "max_compiled_nodes": 250000,
+    "max_compiled_edges": 1000000,
+    "max_strategy_json_bytes": 268435456,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "seed": 2026071701,
+    "max_actions_per_run": 250000,
+    "mean_cost_relative_tolerance": 0.08,
+    "minimum_success_rate": 0.995
+  }
+}

@@ -1,0 +1,3549 @@
+{
+  "schema_version": "s8_solver_baseline_case_v1",
+  "case_id": "endgame-fractured-es",
+  "capture_origin": "archived_s7.6_final_not_rerun",
+  "status": "compiled_simulated",
+  "identity": {
+    "repository_commit": "f2678b137f9fceff6b37b6ba5c080f8f6b686f66",
+    "source_case_path": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+    "source_case_sha256": "f2b4bd44bcfaf2763c86eb42d368bef6eed4df2dd8673e3b0ba3d3f7d558c3c4",
+    "capture_report_path": "build/performance/native-solver-s7.6-final-endgame-case-endgame-fractured-es-v1.json",
+    "capture_report_sha256": "6605ba389ae3ffee75785aaaa6b3c0e502bea11e87cd12b892bf73bfd6f36747",
+    "artifact": {
+      "artifact_schema_version": 3,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+      "source_data_hash": "c459d0b9b774973ee165b8390dde226b5422b09b3250dda0b38feed16bdc0eba",
+      "database_schema_version": "1",
+      "game_data_sha256": "9776797b31345f3ac3f8b911e717b5583c72da255b5f6d72ccb4128f149a64c0",
+      "strings_sha256": "6ba72d7139349c4e5db6fddb21d443304ac4881062ded48322c139d01fe37a9b",
+      "captured_manifest_payload_sha256": "754a3399037d15362b734853ec087b94374c557c8c3b22ff0563491a6f83531e",
+      "manifest_path": "archived report payload",
+      "manifest_sha256": null,
+      "canonical_sqlite_path": "historical S7 canonical database",
+      "canonical_sqlite_sha256": null
+    },
+    "engine": {
+      "runner": "native",
+      "abi_version": 1,
+      "compiler": "gcc-14.2.0"
+    }
+  },
+  "configuration": {
+    "session": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "base_name": "Vaal Regalia",
+      "item_level": 86
+    },
+    "start": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": [
+        {
+          "key": "LocalIncreasedEnergyShield11",
+          "flags": [
+            "fractured"
+          ]
+        }
+      ]
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "slots": [
+        {
+          "family_mod_key": "LocalIncreasedEnergyShield11",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedEnergyShieldPercent8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedEnergyShieldPercentAndStunRecovery6",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ColdResist8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "EinharMasterIntelligence3",
+          "min_tier": 1
+        }
+      ],
+      "actions": [
+        "chaos",
+        "exalt",
+        "annul",
+        "harvest_reforge:defences",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "bench:EinharMasterIntelligence3",
+        "restart"
+      ]
+    },
+    "success_threshold": {
+      "required_goal_slots": 6,
+      "simulator_minimum_success_rate": 0.995
+    },
+    "allowed_mechanic_families": [
+      "ordinary_currency",
+      "harvest_reforge",
+      "fossil",
+      "bench",
+      "restart"
+    ],
+    "solver_options": [],
+    "action_envelope": [
+      "chaos",
+      "exalt",
+      "annul",
+      "harvest_reforge:defences",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+      "bench:EinharMasterIntelligence3",
+      "restart"
+    ],
+    "economy": {
+      "version": "v1",
+      "id": "solver-benchmark-frozen-v1",
+      "prices": {
+        "chaos": 1.0,
+        "exalt": 10.0,
+        "annul": 2.0,
+        "harvest_reforge:defences": 5.0,
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences": 1.0,
+        "resonator:1": 0.25,
+        "bench:EinharMasterIntelligence3": 0.5,
+        "base": 25.0
+      }
+    },
+    "price_sources": [
+      {
+        "price_key": "annul",
+        "value": 2.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/annul"
+      },
+      {
+        "price_key": "base",
+        "value": 25.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/base"
+      },
+      {
+        "price_key": "bench:EinharMasterIntelligence3",
+        "value": 0.5,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/bench:EinharMasterIntelligence3"
+      },
+      {
+        "price_key": "chaos",
+        "value": 1.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/chaos"
+      },
+      {
+        "price_key": "exalt",
+        "value": 10.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/exalt"
+      },
+      {
+        "price_key": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingDefences",
+        "value": 1.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/fossil:Metadata~1Items~1Currency~1CurrencyDelveCraftingDefences"
+      },
+      {
+        "price_key": "harvest_reforge:defences",
+        "value": 5.0,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/harvest_reforge:defences"
+      },
+      {
+        "price_key": "resonator:1",
+        "value": 0.25,
+        "source_document": "fixtures/solver-benchmarks/v1/cases/endgame-fractured-es.json",
+        "json_pointer": "/economy/prices/resonator:1"
+      }
+    ],
+    "caps": {
+      "max_states": 250000,
+      "max_sweeps": 150000,
+      "solve_step_work_items": 1,
+      "max_discovered_states": 500000,
+      "max_expanded_states": 250000,
+      "max_state_action_rows": 6000000,
+      "max_transitions": 60000000,
+      "max_reforge_work": 60000000,
+      "max_solver_owned_bytes": 4294967296,
+      "max_compiled_nodes": 400000,
+      "max_compiled_edges": 1600000,
+      "max_strategy_json_bytes": 268435456,
+      "worker_step_ms": 50,
+      "cancel_ack_ms": 250
+    },
+    "tolerances_and_seeds": {
+      "runs": 10000,
+      "seed": 2026071530,
+      "max_actions_per_run": 500000,
+      "mean_cost_relative_tolerance": 0.1,
+      "minimum_success_rate": 0.995
+    }
+  },
+  "commands": [
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-benchmarks/v1/manifest.json --output build/performance/native-solver-s7.6-final-endgame-case-endgame-fractured-es-v1.json --case endgame-fractured-es --strategy-output build/performance/strategies-s7.6-final --progress --verification-runs 10000 --verification-seed 2026071530 --verification-chunk-runs 1"
+  ],
+  "solver": {
+    "actual_status": "converged",
+    "result": {
+      "converged": true,
+      "start_state": 0,
+      "start_value": 132353.19529787666,
+      "expanded_states": 48943,
+      "sweeps": 7,
+      "residual": 6.984919309616089e-09,
+      "skipped_action_count": 0
+    },
+    "value": {
+      "start": 132353.19529787666
+    },
+    "telemetry": {
+      "version": "solver_telemetry_v1",
+      "availability": {
+        "evaluator_support": "applied_before_expansion",
+        "relevance_filter": "explicit_envelope_or_conservative_include",
+        "dominance_filter": "certified_abstract_kernel_equivalence",
+        "policy_improvement_rounds": "available",
+        "optimality_gap": "available_for_focused_expansion",
+        "verification": "external_harness"
+      },
+      "execution": {
+        "status": "complete",
+        "phase": "done"
+      },
+      "actions": {
+        "registry": 278,
+        "registry_before_lazy": 15552,
+        "candidate": 7,
+        "evaluator_supported": 7,
+        "priced_scanned": 7,
+        "supported_priced": 7,
+        "unsupported_requested": 0,
+        "relevance_reduced": 15545,
+        "dominance_reduced": 0,
+        "deferred": 0,
+        "equivalent_price_ties": 0,
+        "missing_price": 0,
+        "unsupported_observed": 0
+      },
+      "action_control": {
+        "explicit_envelope": true,
+        "dependency_primitives": 0,
+        "goal_relevant_pruned": 0,
+        "fossil_loadouts": {
+          "possible": 15275,
+          "generated": 1,
+          "deferred": 15274,
+          "lazy": true,
+          "mode": "requested"
+        },
+        "reason_observations_total": 2,
+        "reason_counts": [
+          {
+            "reason": "included:explicit_goal_envelope:7",
+            "observations": 1
+          },
+          {
+            "reason": "pruned:not_permitted_by_explicit_goal_envelope:15545",
+            "observations": 1
+          }
+        ]
+      },
+      "planner": {
+        "registry": 278,
+        "candidate": 7,
+        "fixed_options": 0
+      },
+      "abstraction": {
+        "discriminating_tags": 0,
+        "junk_classes": 11
+      },
+      "states": {
+        "discovered": 48945,
+        "expanded": 48943,
+        "frontier": 2,
+        "goal": 2,
+        "policy_reachable": 4507
+      },
+      "focused_expansion": {
+        "used": true,
+        "rounds": 15,
+        "lower_bound": 132353.19529787666,
+        "upper_bound": 132353.19529787666,
+        "optimality_gap": 0,
+        "duration_ns": 2439550300
+      },
+      "work": {
+        "state_action_rows": 296239,
+        "transition_entries": 599362,
+        "outcome_entries": 3137365681,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "bellman_backups": 587316,
+        "bellman_action_evaluations": 3554868,
+        "extraction_action_evaluations": 296239,
+        "bellman_work_units": 7,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 108416,
+        "transition_bits_hash": "5dae3dba2150bc9a",
+        "policy_bits_hash": "d6feccb87cdc94fd"
+      },
+      "cache": {
+        "distribution": {
+          "requests": 296239,
+          "hits": 0,
+          "misses": 296239,
+          "entries": 0,
+          "build_ns": 710189200,
+          "released_after_sparse_copy": true
+        },
+        "transition_graph": {
+          "reused": false
+        },
+        "reforge": {
+          "requests": 146827,
+          "hits": 146821,
+          "misses": 6,
+          "entries": 0,
+          "build_ns": 53287400,
+          "frontier_work": 2048532
+        }
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 53,
+        "largest_policy_component": 17501,
+        "sparse_policy_iterations": 1107,
+        "max_sparse_policy_iterations": 77,
+        "policy_kernel_groups": 482697,
+        "policy_states_collapsed": 1197434,
+        "policy_evaluation_failure": null,
+        "status": "exact_abstract",
+        "converged": true,
+        "sweeps": 7,
+        "policy_improvement_rounds": 7,
+        "residual": 0.0,
+        "optimality_gap": 0,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "cap_hits": [],
+        "full_request_status": "exact_abstract_within_tolerance"
+      },
+      "timings_ns": {
+        "registry_generation": 189500,
+        "abstract_layout": 24200,
+        "solve_setup": 104100,
+        "expansion": 863535200,
+        "transition_calculation": 710189200,
+        "optimization": 775900400,
+        "extraction": 5527341200,
+        "compilation": 403625900,
+        "verification": null
+      },
+      "memory": {
+        "solver_owned_bytes_estimate": 151357398,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 144,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "compilation": {
+        "available": true,
+        "working_states": 4506,
+        "policy_regions": 615,
+        "nodes": 619,
+        "edges": 5124,
+        "strategy_json_bytes": 34174515,
+        "cap_hit": null
+      },
+      "value": {
+        "start": 132353.19529787666,
+        "start_status": "exact_abstract_within_tolerance",
+        "start_scope": "full_requested_action_set",
+        "raw_start_bound": 132353.19529787666
+      },
+      "verification": null
+    }
+  },
+  "strategy": {
+    "format": "ordinary_strategy_json_gzip",
+    "path": "fixtures/solver-baselines/s8.0/strategies/endgame-fractured-es.strategy.json.gz",
+    "uncompressed_sha256": "762919a1a383b1a92ba3ac8c4e3461986249489f6e3b045ca9a4e79a43fc65e8",
+    "uncompressed_bytes": 34174515,
+    "gzip_sha256": "c6f63a6215ac19f9356035c7bf4b570d6f8c65b4fd0f0396840f6e338319b309",
+    "gzip_bytes": 262613,
+    "document_version": "v1",
+    "start_node_id": "start",
+    "nodes": 619,
+    "edges": 5124,
+    "execution_authority": "raw_strategy_only",
+    "source": "solver_compiled_ordinary_graph"
+  },
+  "evaluator": {
+    "status": "not_requested",
+    "result": null,
+    "error": null,
+    "wall_ms": null,
+    "time_limited": false
+  },
+  "simulator": {
+    "result": {
+      "runs": 10000,
+      "requested_runs": 10000,
+      "finished": true,
+      "diagnostic": true,
+      "time_limited": false,
+      "projected_total_ms": 1523755.2412,
+      "cost_standard_deviation": 126478.99525383864,
+      "cost_standard_error": 1264.7899525383864,
+      "success_count": 9942,
+      "failure_count": 58,
+      "mean_cost": 130724.1208,
+      "off_policy_failures": 0,
+      "cost_delta_absolute": 1629.0744978766597,
+      "cost_delta_relative": 0.012308539240100952,
+      "success_rate": 0.9942,
+      "action_distribution": [
+        {
+          "node_id": "s1370",
+          "action_type": 10,
+          "count": 59997440
+        },
+        {
+          "node_id": "s1412",
+          "action_type": 10,
+          "count": 49354477
+        },
+        {
+          "node_id": "s1619",
+          "action_type": 10,
+          "count": 29762949
+        },
+        {
+          "node_id": "s1498",
+          "action_type": 10,
+          "count": 23643264
+        },
+        {
+          "node_id": "s1378",
+          "action_type": 10,
+          "count": 22965665
+        },
+        {
+          "node_id": "s1776",
+          "action_type": 10,
+          "count": 22018228
+        },
+        {
+          "node_id": "s1611",
+          "action_type": 10,
+          "count": 20291993
+        },
+        {
+          "node_id": "s1603",
+          "action_type": 10,
+          "count": 17883048
+        },
+        {
+          "node_id": "s1586",
+          "action_type": 10,
+          "count": 17000227
+        },
+        {
+          "node_id": "s2556",
+          "action_type": 10,
+          "count": 16964507
+        },
+        {
+          "node_id": "s2478",
+          "action_type": 10,
+          "count": 16725778
+        },
+        {
+          "node_id": "s2953",
+          "action_type": 10,
+          "count": 15772322
+        },
+        {
+          "node_id": "s2857",
+          "action_type": 10,
+          "count": 14332990
+        },
+        {
+          "node_id": "s2524",
+          "action_type": 10,
+          "count": 14212526
+        },
+        {
+          "node_id": "s1506",
+          "action_type": 10,
+          "count": 13203755
+        },
+        {
+          "node_id": "s2162",
+          "action_type": 10,
+          "count": 12183675
+        },
+        {
+          "node_id": "s2548",
+          "action_type": 10,
+          "count": 10938576
+        },
+        {
+          "node_id": "s214",
+          "action_type": 10,
+          "count": 10908024
+        },
+        {
+          "node_id": "s1784",
+          "action_type": 10,
+          "count": 10424047
+        },
+        {
+          "node_id": "s1684",
+          "action_type": 10,
+          "count": 10389380
+        },
+        {
+          "node_id": "s1728",
+          "action_type": 10,
+          "count": 9837687
+        },
+        {
+          "node_id": "s1660",
+          "action_type": 10,
+          "count": 9327065
+        },
+        {
+          "node_id": "s2733",
+          "action_type": 10,
+          "count": 9219709
+        },
+        {
+          "node_id": "s1430",
+          "action_type": 10,
+          "count": 8539998
+        },
+        {
+          "node_id": "s2516",
+          "action_type": 10,
+          "count": 8221791
+        },
+        {
+          "node_id": "s2154",
+          "action_type": 10,
+          "count": 8025000
+        },
+        {
+          "node_id": "s2470",
+          "action_type": 10,
+          "count": 7801156
+        },
+        {
+          "node_id": "s1792",
+          "action_type": 10,
+          "count": 7512927
+        },
+        {
+          "node_id": "s2486",
+          "action_type": 10,
+          "count": 7295905
+        },
+        {
+          "node_id": "s1388",
+          "action_type": 10,
+          "count": 7212181
+        },
+        {
+          "node_id": "s3836",
+          "action_type": 10,
+          "count": 7158776
+        },
+        {
+          "node_id": "s3608",
+          "action_type": 10,
+          "count": 7054896
+        },
+        {
+          "node_id": "s322",
+          "action_type": 10,
+          "count": 6921715
+        },
+        {
+          "node_id": "s2062",
+          "action_type": 10,
+          "count": 6495308
+        },
+        {
+          "node_id": "s2106",
+          "action_type": 10,
+          "count": 6464078
+        },
+        {
+          "node_id": "s2725",
+          "action_type": 10,
+          "count": 6389812
+        },
+        {
+          "node_id": "s3740",
+          "action_type": 10,
+          "count": 6093452
+        },
+        {
+          "node_id": "s2685",
+          "action_type": 10,
+          "count": 5832284
+        },
+        {
+          "node_id": "s1538",
+          "action_type": 10,
+          "count": 5577111
+        },
+        {
+          "node_id": "s1578",
+          "action_type": 10,
+          "count": 5490556
+        },
+        {
+          "node_id": "s1396",
+          "action_type": 10,
+          "count": 5433501
+        },
+        {
+          "node_id": "s222",
+          "action_type": 10,
+          "count": 5348590
+        },
+        {
+          "node_id": "s198",
+          "action_type": 10,
+          "count": 5297420
+        },
+        {
+          "node_id": "s1466",
+          "action_type": 10,
+          "count": 5247776
+        },
+        {
+          "node_id": "s1420",
+          "action_type": 10,
+          "count": 5032566
+        },
+        {
+          "node_id": "s189",
+          "action_type": 10,
+          "count": 5031469
+        },
+        {
+          "node_id": "s1404",
+          "action_type": 10,
+          "count": 4836243
+        },
+        {
+          "node_id": "s2969",
+          "action_type": 10,
+          "count": 4697349
+        },
+        {
+          "node_id": "s1826",
+          "action_type": 10,
+          "count": 4639054
+        },
+        {
+          "node_id": "s3828",
+          "action_type": 10,
+          "count": 4577299
+        },
+        {
+          "node_id": "s1841",
+          "action_type": 10,
+          "count": 4494860
+        },
+        {
+          "node_id": "s2170",
+          "action_type": 10,
+          "count": 4206632
+        },
+        {
+          "node_id": "s2178",
+          "action_type": 10,
+          "count": 4119172
+        },
+        {
+          "node_id": "s1736",
+          "action_type": 10,
+          "count": 4108789
+        },
+        {
+          "node_id": "s2454",
+          "action_type": 10,
+          "count": 4017554
+        },
+        {
+          "node_id": "s1435",
+          "action_type": 7,
+          "count": 3947032
+        },
+        {
+          "node_id": "s1490",
+          "action_type": 10,
+          "count": 3900447
+        },
+        {
+          "node_id": "s1627",
+          "action_type": 10,
+          "count": 3740194
+        },
+        {
+          "node_id": "s513",
+          "action_type": 10,
+          "count": 3679118
+        },
+        {
+          "node_id": "s1482",
+          "action_type": 10,
+          "count": 3634688
+        },
+        {
+          "node_id": "s2741",
+          "action_type": 10,
+          "count": 3603376
+        },
+        {
+          "node_id": "s1692",
+          "action_type": 10,
+          "count": 3545641
+        },
+        {
+          "node_id": "s3732",
+          "action_type": 10,
+          "count": 3472205
+        },
+        {
+          "node_id": "s1636",
+          "action_type": 10,
+          "count": 3455077
+        },
+        {
+          "node_id": "s1800",
+          "action_type": 10,
+          "count": 3400269
+        },
+        {
+          "node_id": "s330",
+          "action_type": 10,
+          "count": 3395442
+        },
+        {
+          "node_id": "s2661",
+          "action_type": 10,
+          "count": 3391153
+        },
+        {
+          "node_id": "s306",
+          "action_type": 10,
+          "count": 3381471
+        },
+        {
+          "node_id": "s2022",
+          "action_type": 10,
+          "count": 3233853
+        },
+        {
+          "node_id": "s297",
+          "action_type": 10,
+          "count": 3202349
+        },
+        {
+          "node_id": "s2070",
+          "action_type": 10,
+          "count": 3172916
+        },
+        {
+          "node_id": "s2508",
+          "action_type": 10,
+          "count": 3155697
+        },
+        {
+          "node_id": "s2114",
+          "action_type": 10,
+          "count": 3143073
+        },
+        {
+          "node_id": "s2564",
+          "action_type": 10,
+          "count": 3141946
+        },
+        {
+          "node_id": "s2572",
+          "action_type": 10,
+          "count": 3116477
+        },
+        {
+          "node_id": "s2296",
+          "action_type": 10,
+          "count": 3086396
+        },
+        {
+          "node_id": "s3616",
+          "action_type": 10,
+          "count": 3082450
+        },
+        {
+          "node_id": "s3560",
+          "action_type": 10,
+          "count": 3073765
+        },
+        {
+          "node_id": "s2532",
+          "action_type": 10,
+          "count": 3063850
+        },
+        {
+          "node_id": "s2873",
+          "action_type": 10,
+          "count": 2992061
+        },
+        {
+          "node_id": "s2865",
+          "action_type": 10,
+          "count": 2952969
+        },
+        {
+          "node_id": "s1474",
+          "action_type": 10,
+          "count": 2932739
+        },
+        {
+          "node_id": "s2630",
+          "action_type": 10,
+          "count": 2890554
+        },
+        {
+          "node_id": "s2586",
+          "action_type": 10,
+          "count": 2841877
+        },
+        {
+          "node_id": "s3852",
+          "action_type": 10,
+          "count": 2711278
+        },
+        {
+          "node_id": "s1594",
+          "action_type": 10,
+          "count": 2694911
+        },
+        {
+          "node_id": "s3059",
+          "action_type": 10,
+          "count": 2687148
+        },
+        {
+          "node_id": "s1808",
+          "action_type": 10,
+          "count": 2497377
+        },
+        {
+          "node_id": "s2961",
+          "action_type": 10,
+          "count": 2487973
+        },
+        {
+          "node_id": "s2638",
+          "action_type": 10,
+          "count": 2462782
+        },
+        {
+          "node_id": "s3624",
+          "action_type": 10,
+          "count": 2349344
+        },
+        {
+          "node_id": "s505",
+          "action_type": 10,
+          "count": 2309620
+        },
+        {
+          "node_id": "s2993",
+          "action_type": 10,
+          "count": 2294898
+        },
+        {
+          "node_id": "s3520",
+          "action_type": 10,
+          "count": 2252183
+        },
+        {
+          "node_id": "s1546",
+          "action_type": 10,
+          "count": 2227653
+        },
+        {
+          "node_id": "s413",
+          "action_type": 10,
+          "count": 2193014
+        },
+        {
+          "node_id": "s4487",
+          "action_type": 10,
+          "count": 2102107
+        },
+        {
+          "node_id": "s1570",
+          "action_type": 10,
+          "count": 2070638
+        },
+        {
+          "node_id": "s1768",
+          "action_type": 10,
+          "count": 2066794
+        },
+        {
+          "node_id": "s2540",
+          "action_type": 10,
+          "count": 2066646
+        },
+        {
+          "node_id": "s3294",
+          "action_type": 10,
+          "count": 2047920
+        },
+        {
+          "node_id": "s3051",
+          "action_type": 10,
+          "count": 2032827
+        },
+        {
+          "node_id": "s273",
+          "action_type": 10,
+          "count": 2024945
+        },
+        {
+          "node_id": "s2594",
+          "action_type": 10,
+          "count": 1989704
+        },
+        {
+          "node_id": "s1676",
+          "action_type": 10,
+          "count": 1983818
+        },
+        {
+          "node_id": "s457",
+          "action_type": 10,
+          "count": 1974310
+        },
+        {
+          "node_id": "s2977",
+          "action_type": 10,
+          "count": 1958906
+        },
+        {
+          "node_id": "s3748",
+          "action_type": 10,
+          "count": 1929597
+        },
+        {
+          "node_id": "s1976",
+          "action_type": 10,
+          "count": 1917446
+        },
+        {
+          "node_id": "s1752",
+          "action_type": 10,
+          "count": 1913949
+        },
+        {
+          "node_id": "s3007",
+          "action_type": 10,
+          "count": 1909537
+        },
+        {
+          "node_id": "s624",
+          "action_type": 10,
+          "count": 1909064
+        },
+        {
+          "node_id": "s163",
+          "action_type": 10,
+          "count": 1906686
+        },
+        {
+          "node_id": "s206",
+          "action_type": 10,
+          "count": 1883490
+        },
+        {
+          "node_id": "s381",
+          "action_type": 10,
+          "count": 1858015
+        },
+        {
+          "node_id": "s3756",
+          "action_type": 10,
+          "count": 1818863
+        },
+        {
+          "node_id": "s153",
+          "action_type": 10,
+          "count": 1710549
+        },
+        {
+          "node_id": "s592",
+          "action_type": 10,
+          "count": 1633346
+        },
+        {
+          "node_id": "s1439",
+          "action_type": 6,
+          "count": 1606173
+        },
+        {
+          "node_id": "s3015",
+          "action_type": 10,
+          "count": 1599865
+        },
+        {
+          "node_id": "s2809",
+          "action_type": 10,
+          "count": 1543618
+        },
+        {
+          "node_id": "s2749",
+          "action_type": 10,
+          "count": 1532519
+        },
+        {
+          "node_id": "s2030",
+          "action_type": 10,
+          "count": 1530333
+        },
+        {
+          "node_id": "s1712",
+          "action_type": 10,
+          "count": 1516274
+        },
+        {
+          "node_id": "s1514",
+          "action_type": 10,
+          "count": 1501227
+        },
+        {
+          "node_id": "s1760",
+          "action_type": 10,
+          "count": 1462750
+        },
+        {
+          "node_id": "s553",
+          "action_type": 10,
+          "count": 1460714
+        },
+        {
+          "node_id": "s4383",
+          "action_type": 10,
+          "count": 1442655
+        },
+        {
+          "node_id": "s4152",
+          "action_type": 10,
+          "count": 1431792
+        },
+        {
+          "node_id": "s1923",
+          "action_type": 10,
+          "count": 1426059
+        },
+        {
+          "node_id": "s1720",
+          "action_type": 10,
+          "count": 1422980
+        },
+        {
+          "node_id": "s2344",
+          "action_type": 10,
+          "count": 1422058
+        },
+        {
+          "node_id": "s4051",
+          "action_type": 10,
+          "count": 1404193
+        },
+        {
+          "node_id": "s1877",
+          "action_type": 7,
+          "count": 1395297
+        },
+        {
+          "node_id": "s2146",
+          "action_type": 10,
+          "count": 1391446
+        },
+        {
+          "node_id": "s1854",
+          "action_type": 7,
+          "count": 1374008
+        },
+        {
+          "node_id": "s3860",
+          "action_type": 10,
+          "count": 1349279
+        },
+        {
+          "node_id": "s2390",
+          "action_type": 10,
+          "count": 1343048
+        },
+        {
+          "node_id": "s181",
+          "action_type": 10,
+          "count": 1340407
+        },
+        {
+          "node_id": "s3082",
+          "action_type": 10,
+          "count": 1331195
+        },
+        {
+          "node_id": "s2304",
+          "action_type": 10,
+          "count": 1326069
+        },
+        {
+          "node_id": "s3844",
+          "action_type": 10,
+          "count": 1325534
+        },
+        {
+          "node_id": "s1362",
+          "action_type": 11,
+          "count": 1314377
+        },
+        {
+          "node_id": "s2242",
+          "action_type": 10,
+          "count": 1311433
+        },
+        {
+          "node_id": "s2197",
+          "action_type": 10,
+          "count": 1310474
+        },
+        {
+          "node_id": "s2929",
+          "action_type": 10,
+          "count": 1295451
+        },
+        {
+          "node_id": "s3568",
+          "action_type": 10,
+          "count": 1293451
+        },
+        {
+          "node_id": "s2312",
+          "action_type": 10,
+          "count": 1289556
+        },
+        {
+          "node_id": "s351",
+          "action_type": 6,
+          "count": 1279541
+        },
+        {
+          "node_id": "s2905",
+          "action_type": 10,
+          "count": 1237869
+        },
+        {
+          "node_id": "s3427",
+          "action_type": 10,
+          "count": 1236799
+        },
+        {
+          "node_id": "s4256",
+          "action_type": 10,
+          "count": 1228770
+        },
+        {
+          "node_id": "s521",
+          "action_type": 10,
+          "count": 1227189
+        },
+        {
+          "node_id": "s3926",
+          "action_type": 10,
+          "count": 1217912
+        },
+        {
+          "node_id": "s314",
+          "action_type": 10,
+          "count": 1216785
+        },
+        {
+          "node_id": "s2945",
+          "action_type": 10,
+          "count": 1204922
+        },
+        {
+          "node_id": "s2494",
+          "action_type": 10,
+          "count": 1191437
+        },
+        {
+          "node_id": "s2841",
+          "action_type": 10,
+          "count": 1181766
+        },
+        {
+          "node_id": "s529",
+          "action_type": 10,
+          "count": 1175055
+        },
+        {
+          "node_id": "s877",
+          "action_type": 10,
+          "count": 1166584
+        },
+        {
+          "node_id": "s1856",
+          "action_type": 7,
+          "count": 1164544
+        },
+        {
+          "node_id": "s230",
+          "action_type": 10,
+          "count": 1162115
+        },
+        {
+          "node_id": "s243",
+          "action_type": 6,
+          "count": 1145185
+        },
+        {
+          "node_id": "s2038",
+          "action_type": 10,
+          "count": 1101610
+        },
+        {
+          "node_id": "s1860",
+          "action_type": 7,
+          "count": 1089307
+        },
+        {
+          "node_id": "s239",
+          "action_type": 10,
+          "count": 1083595
+        },
+        {
+          "node_id": "s1382",
+          "action_type": 7,
+          "count": 1081654
+        },
+        {
+          "node_id": "s1668",
+          "action_type": 10,
+          "count": 1066595
+        },
+        {
+          "node_id": "s338",
+          "action_type": 10,
+          "count": 1049047
+        },
+        {
+          "node_id": "s2138",
+          "action_type": 10,
+          "count": 1040682
+        },
+        {
+          "node_id": "s3692",
+          "action_type": 10,
+          "count": 1028861
+        },
+        {
+          "node_id": "s632",
+          "action_type": 10,
+          "count": 1025959
+        },
+        {
+          "node_id": "s3780",
+          "action_type": 10,
+          "count": 1004525
+        },
+        {
+          "node_id": "s347",
+          "action_type": 10,
+          "count": 1000389
+        },
+        {
+          "node_id": "s2422",
+          "action_type": 10,
+          "count": 997657
+        },
+        {
+          "node_id": "s2130",
+          "action_type": 10,
+          "count": 995313
+        },
+        {
+          "node_id": "s845",
+          "action_type": 10,
+          "count": 970703
+        },
+        {
+          "node_id": "s3632",
+          "action_type": 10,
+          "count": 954505
+        },
+        {
+          "node_id": "s1892",
+          "action_type": 6,
+          "count": 952193
+        },
+        {
+          "node_id": "s168",
+          "action_type": 11,
+          "count": 946166
+        },
+        {
+          "node_id": "s2090",
+          "action_type": 10,
+          "count": 934881
+        },
+        {
+          "node_id": "s2717",
+          "action_type": 10,
+          "count": 921169
+        },
+        {
+          "node_id": "s1631",
+          "action_type": 7,
+          "count": 918696
+        },
+        {
+          "node_id": "s4144",
+          "action_type": 10,
+          "count": 916588
+        },
+        {
+          "node_id": "s545",
+          "action_type": 10,
+          "count": 915287
+        },
+        {
+          "node_id": "s289",
+          "action_type": 10,
+          "count": 900178
+        },
+        {
+          "node_id": "s806",
+          "action_type": 10,
+          "count": 888206
+        },
+        {
+          "node_id": "s1425",
+          "action_type": 7,
+          "count": 880696
+        },
+        {
+          "node_id": "s3812",
+          "action_type": 10,
+          "count": 879831
+        },
+        {
+          "node_id": "s1454",
+          "action_type": 10,
+          "count": 876673
+        },
+        {
+          "node_id": "s2765",
+          "action_type": 10,
+          "count": 870433
+        },
+        {
+          "node_id": "s3419",
+          "action_type": 10,
+          "count": 868977
+        },
+        {
+          "node_id": "s2897",
+          "action_type": 10,
+          "count": 868059
+        },
+        {
+          "node_id": "s2462",
+          "action_type": 10,
+          "count": 866728
+        },
+        {
+          "node_id": "s465",
+          "action_type": 10,
+          "count": 846998
+        },
+        {
+          "node_id": "s155",
+          "action_type": 11,
+          "count": 845244
+        },
+        {
+          "node_id": "s2709",
+          "action_type": 10,
+          "count": 840464
+        },
+        {
+          "node_id": "s281",
+          "action_type": 10,
+          "count": 835667
+        },
+        {
+          "node_id": "s129",
+          "action_type": 10,
+          "count": 827653
+        },
+        {
+          "node_id": "s340",
+          "action_type": 7,
+          "count": 815384
+        },
+        {
+          "node_id": "s537",
+          "action_type": 10,
+          "count": 814325
+        },
+        {
+          "node_id": "s1654",
+          "action_type": 7,
+          "count": 811673
+        },
+        {
+          "node_id": "s1321",
+          "action_type": 10,
+          "count": 805018
+        },
+        {
+          "node_id": "s2054",
+          "action_type": 10,
+          "count": 801698
+        },
+        {
+          "node_id": "s2677",
+          "action_type": 10,
+          "count": 798286
+        },
+        {
+          "node_id": "s89",
+          "action_type": 10,
+          "count": 795755
+        },
+        {
+          "node_id": "s600",
+          "action_type": 10,
+          "count": 793589
+        },
+        {
+          "node_id": "s389",
+          "action_type": 10,
+          "count": 770718
+        },
+        {
+          "node_id": "s1562",
+          "action_type": 10,
+          "count": 762704
+        },
+        {
+          "node_id": "s232",
+          "action_type": 7,
+          "count": 755239
+        },
+        {
+          "node_id": "s3592",
+          "action_type": 10,
+          "count": 754032
+        },
+        {
+          "node_id": "s1225",
+          "action_type": 10,
+          "count": 743279
+        },
+        {
+          "node_id": "s4248",
+          "action_type": 10,
+          "count": 704421
+        },
+        {
+          "node_id": "s358",
+          "action_type": 7,
+          "count": 698541
+        },
+        {
+          "node_id": "s3918",
+          "action_type": 10,
+          "count": 693032
+        },
+        {
+          "node_id": "s1931",
+          "action_type": 10,
+          "count": 692071
+        },
+        {
+          "node_id": "s2701",
+          "action_type": 10,
+          "count": 689387
+        },
+        {
+          "node_id": "s4447",
+          "action_type": 10,
+          "count": 686799
+        },
+        {
+          "node_id": "s33",
+          "action_type": 10,
+          "count": 683805
+        },
+        {
+          "node_id": "s2985",
+          "action_type": 10,
+          "count": 678088
+        },
+        {
+          "node_id": "s1849",
+          "action_type": 10,
+          "count": 677496
+        },
+        {
+          "node_id": "s3244",
+          "action_type": 10,
+          "count": 674728
+        },
+        {
+          "node_id": "s2817",
+          "action_type": 10,
+          "count": 674669
+        },
+        {
+          "node_id": "s3536",
+          "action_type": 10,
+          "count": 672618
+        },
+        {
+          "node_id": "s1810",
+          "action_type": 7,
+          "count": 658013
+        },
+        {
+          "node_id": "s3111",
+          "action_type": 7,
+          "count": 651431
+        },
+        {
+          "node_id": "s1530",
+          "action_type": 10,
+          "count": 650818
+        },
+        {
+          "node_id": "s421",
+          "action_type": 10,
+          "count": 649697
+        },
+        {
+          "node_id": "s250",
+          "action_type": 7,
+          "count": 647509
+        },
+        {
+          "node_id": "s2937",
+          "action_type": 10,
+          "count": 642231
+        },
+        {
+          "node_id": "s2250",
+          "action_type": 10,
+          "count": 636301
+        },
+        {
+          "node_id": "s3724",
+          "action_type": 10,
+          "count": 634480
+        },
+        {
+          "node_id": "s4200",
+          "action_type": 10,
+          "count": 632499
+        },
+        {
+          "node_id": "s4391",
+          "action_type": 10,
+          "count": 630996
+        },
+        {
+          "node_id": "s2669",
+          "action_type": 10,
+          "count": 628471
+        },
+        {
+          "node_id": "s4059",
+          "action_type": 10,
+          "count": 617206
+        },
+        {
+          "node_id": "s3876",
+          "action_type": 10,
+          "count": 615134
+        },
+        {
+          "node_id": "s1833",
+          "action_type": 7,
+          "count": 592200
+        },
+        {
+          "node_id": "s1893",
+          "action_type": 6,
+          "count": 582948
+        },
+        {
+          "node_id": "s885",
+          "action_type": 10,
+          "count": 562961
+        },
+        {
+          "node_id": "s2220",
+          "action_type": 7,
+          "count": 553087
+        },
+        {
+          "node_id": "s2205",
+          "action_type": 10,
+          "count": 546544
+        },
+        {
+          "node_id": "s798",
+          "action_type": 10,
+          "count": 543761
+        },
+        {
+          "node_id": "s4168",
+          "action_type": 10,
+          "count": 543350
+        },
+        {
+          "node_id": "s3584",
+          "action_type": 10,
+          "count": 541657
+        },
+        {
+          "node_id": "s1361",
+          "action_type": 10,
+          "count": 524356
+        },
+        {
+          "node_id": "s2328",
+          "action_type": 10,
+          "count": 519034
+        },
+        {
+          "node_id": "s2825",
+          "action_type": 10,
+          "count": 516555
+        },
+        {
+          "node_id": "s0",
+          "action_type": 10,
+          "count": 513224
+        },
+        {
+          "node_id": "s1948",
+          "action_type": 7,
+          "count": 507027
+        },
+        {
+          "node_id": "s9",
+          "action_type": 10,
+          "count": 502002
+        },
+        {
+          "node_id": "s173",
+          "action_type": 10,
+          "count": 501761
+        },
+        {
+          "node_id": "s2046",
+          "action_type": 10,
+          "count": 498015
+        },
+        {
+          "node_id": "s441",
+          "action_type": 10,
+          "count": 492320
+        },
+        {
+          "node_id": "s481",
+          "action_type": 10,
+          "count": 491728
+        },
+        {
+          "node_id": "s1099",
+          "action_type": 10,
+          "count": 491726
+        },
+        {
+          "node_id": "s3177",
+          "action_type": 7,
+          "count": 489547
+        },
+        {
+          "node_id": "s2849",
+          "action_type": 10,
+          "count": 483244
+        },
+        {
+          "node_id": "s4224",
+          "action_type": 10,
+          "count": 483203
+        },
+        {
+          "node_id": "s2881",
+          "action_type": 10,
+          "count": 483068
+        },
+        {
+          "node_id": "s2382",
+          "action_type": 10,
+          "count": 480289
+        },
+        {
+          "node_id": "s2625",
+          "action_type": 7,
+          "count": 480279
+        },
+        {
+          "node_id": "s790",
+          "action_type": 10,
+          "count": 475915
+        },
+        {
+          "node_id": "s853",
+          "action_type": 10,
+          "count": 469796
+        },
+        {
+          "node_id": "s4067",
+          "action_type": 10,
+          "count": 465513
+        },
+        {
+          "node_id": "s2430",
+          "action_type": 10,
+          "count": 465306
+        },
+        {
+          "node_id": "s1443",
+          "action_type": 11,
+          "count": 464331
+        },
+        {
+          "node_id": "s3097",
+          "action_type": 7,
+          "count": 460704
+        },
+        {
+          "node_id": "s137",
+          "action_type": 10,
+          "count": 451747
+        },
+        {
+          "node_id": "s3100",
+          "action_type": 7,
+          "count": 449557
+        },
+        {
+          "node_id": "s3788",
+          "action_type": 10,
+          "count": 440282
+        },
+        {
+          "node_id": "s3820",
+          "action_type": 10,
+          "count": 440142
+        },
+        {
+          "node_id": "s3640",
+          "action_type": 10,
+          "count": 438436
+        },
+        {
+          "node_id": "s397",
+          "action_type": 10,
+          "count": 437051
+        },
+        {
+          "node_id": "s25",
+          "action_type": 10,
+          "count": 436381
+        },
+        {
+          "node_id": "s2913",
+          "action_type": 10,
+          "count": 432107
+        },
+        {
+          "node_id": "s3435",
+          "action_type": 10,
+          "count": 430499
+        },
+        {
+          "node_id": "s3708",
+          "action_type": 10,
+          "count": 430355
+        },
+        {
+          "node_id": "s3112",
+          "action_type": 7,
+          "count": 429740
+        },
+        {
+          "node_id": "s2921",
+          "action_type": 10,
+          "count": 427882
+        },
+        {
+          "node_id": "s3443",
+          "action_type": 10,
+          "count": 427254
+        },
+        {
+          "node_id": "s3310",
+          "action_type": 10,
+          "count": 427215
+        },
+        {
+          "node_id": "s3119",
+          "action_type": 7,
+          "count": 426037
+        },
+        {
+          "node_id": "s3090",
+          "action_type": 10,
+          "count": 423917
+        },
+        {
+          "node_id": "s3700",
+          "action_type": 10,
+          "count": 422174
+        },
+        {
+          "node_id": "s3302",
+          "action_type": 10,
+          "count": 421638
+        },
+        {
+          "node_id": "s17",
+          "action_type": 10,
+          "count": 419526
+        },
+        {
+          "node_id": "s2617",
+          "action_type": 7,
+          "count": 405797
+        },
+        {
+          "node_id": "s497",
+          "action_type": 10,
+          "count": 396358
+        },
+        {
+          "node_id": "s2579",
+          "action_type": 7,
+          "count": 394799
+        },
+        {
+          "node_id": "s903",
+          "action_type": 7,
+          "count": 393721
+        },
+        {
+          "node_id": "s3716",
+          "action_type": 10,
+          "count": 390629
+        },
+        {
+          "node_id": "s2098",
+          "action_type": 10,
+          "count": 389410
+        },
+        {
+          "node_id": "s988",
+          "action_type": 7,
+          "count": 387176
+        },
+        {
+          "node_id": "s3934",
+          "action_type": 10,
+          "count": 385523
+        },
+        {
+          "node_id": "s4359",
+          "action_type": 10,
+          "count": 377212
+        },
+        {
+          "node_id": "s3218",
+          "action_type": 7,
+          "count": 376565
+        },
+        {
+          "node_id": "s561",
+          "action_type": 10,
+          "count": 373028
+        },
+        {
+          "node_id": "s365",
+          "action_type": 10,
+          "count": 369103
+        },
+        {
+          "node_id": "s1956",
+          "action_type": 7,
+          "count": 365714
+        },
+        {
+          "node_id": "s257",
+          "action_type": 10,
+          "count": 364948
+        },
+        {
+          "node_id": "s3942",
+          "action_type": 10,
+          "count": 364444
+        },
+        {
+          "node_id": "s651",
+          "action_type": 7,
+          "count": 363825
+        },
+        {
+          "node_id": "s608",
+          "action_type": 10,
+          "count": 358308
+        },
+        {
+          "node_id": "s3528",
+          "action_type": 10,
+          "count": 355531
+        },
+        {
+          "node_id": "s489",
+          "action_type": 10,
+          "count": 351269
+        },
+        {
+          "node_id": "s97",
+          "action_type": 10,
+          "count": 348763
+        },
+        {
+          "node_id": "s2258",
+          "action_type": 10,
+          "count": 347641
+        },
+        {
+          "node_id": "s3044",
+          "action_type": 7,
+          "count": 344481
+        },
+        {
+          "node_id": "s766",
+          "action_type": 10,
+          "count": 342577
+        },
+        {
+          "node_id": "s1994",
+          "action_type": 7,
+          "count": 335031
+        },
+        {
+          "node_id": "s3796",
+          "action_type": 10,
+          "count": 334262
+        },
+        {
+          "node_id": "s2228",
+          "action_type": 7,
+          "count": 333338
+        },
+        {
+          "node_id": "s1091",
+          "action_type": 10,
+          "count": 333260
+        },
+        {
+          "node_id": "s4495",
+          "action_type": 10,
+          "count": 331322
+        },
+        {
+          "node_id": "s2438",
+          "action_type": 10,
+          "count": 330304
+        },
+        {
+          "node_id": "s736",
+          "action_type": 7,
+          "count": 329770
+        },
+        {
+          "node_id": "s449",
+          "action_type": 10,
+          "count": 327033
+        },
+        {
+          "node_id": "s2186",
+          "action_type": 10,
+          "count": 325621
+        },
+        {
+          "node_id": "s3600",
+          "action_type": 10,
+          "count": 325173
+        },
+        {
+          "node_id": "s3186",
+          "action_type": 7,
+          "count": 321130
+        },
+        {
+          "node_id": "s1019",
+          "action_type": 10,
+          "count": 316376
+        },
+        {
+          "node_id": "s1051",
+          "action_type": 10,
+          "count": 312562
+        },
+        {
+          "node_id": "s2266",
+          "action_type": 7,
+          "count": 306900
+        },
+        {
+          "node_id": "s774",
+          "action_type": 10,
+          "count": 306879
+        },
+        {
+          "node_id": "s1554",
+          "action_type": 10,
+          "count": 302664
+        },
+        {
+          "node_id": "s2014",
+          "action_type": 10,
+          "count": 302166
+        },
+        {
+          "node_id": "s2602",
+          "action_type": 7,
+          "count": 298876
+        },
+        {
+          "node_id": "s145",
+          "action_type": 10,
+          "count": 297584
+        },
+        {
+          "node_id": "s1027",
+          "action_type": 10,
+          "count": 297533
+        },
+        {
+          "node_id": "s723",
+          "action_type": 10,
+          "count": 297424
+        },
+        {
+          "node_id": "s3036",
+          "action_type": 7,
+          "count": 290447
+        },
+        {
+          "node_id": "s584",
+          "action_type": 10,
+          "count": 288158
+        },
+        {
+          "node_id": "s3252",
+          "action_type": 10,
+          "count": 284428
+        },
+        {
+          "node_id": "s640",
+          "action_type": 10,
+          "count": 282866
+        },
+        {
+          "node_id": "s1700",
+          "action_type": 10,
+          "count": 281872
+        },
+        {
+          "node_id": "s2998",
+          "action_type": 7,
+          "count": 280706
+        },
+        {
+          "node_id": "s1353",
+          "action_type": 10,
+          "count": 280665
+        },
+        {
+          "node_id": "s3544",
+          "action_type": 10,
+          "count": 280566
+        },
+        {
+          "node_id": "s1984",
+          "action_type": 10,
+          "count": 280000
+        },
+        {
+          "node_id": "s4351",
+          "action_type": 10,
+          "count": 279532
+        },
+        {
+          "node_id": "s1866",
+          "action_type": 6,
+          "count": 278348
+        },
+        {
+          "node_id": "s664",
+          "action_type": 10,
+          "count": 277838
+        },
+        {
+          "node_id": "s3884",
+          "action_type": 10,
+          "count": 275135
+        },
+        {
+          "node_id": "s4431",
+          "action_type": 10,
+          "count": 273076
+        },
+        {
+          "node_id": "s4176",
+          "action_type": 10,
+          "count": 269465
+        },
+        {
+          "node_id": "s405",
+          "action_type": 10,
+          "count": 267019
+        },
+        {
+          "node_id": "s3764",
+          "action_type": 10,
+          "count": 266781
+        },
+        {
+          "node_id": "s4160",
+          "action_type": 10,
+          "count": 265596
+        },
+        {
+          "node_id": "s2122",
+          "action_type": 10,
+          "count": 256948
+        },
+        {
+          "node_id": "s1459",
+          "action_type": 7,
+          "count": 255056
+        },
+        {
+          "node_id": "s648",
+          "action_type": 10,
+          "count": 254873
+        },
+        {
+          "node_id": "s917",
+          "action_type": 10,
+          "count": 252961
+        },
+        {
+          "node_id": "s976",
+          "action_type": 10,
+          "count": 242907
+        },
+        {
+          "node_id": "s1527",
+          "action_type": 7,
+          "count": 241649
+        },
+        {
+          "node_id": "s672",
+          "action_type": 10,
+          "count": 240039
+        },
+        {
+          "node_id": "s3868",
+          "action_type": 10,
+          "count": 234770
+        },
+        {
+          "node_id": "s3173",
+          "action_type": 7,
+          "count": 233929
+        },
+        {
+          "node_id": "s901",
+          "action_type": 10,
+          "count": 233622
+        },
+        {
+          "node_id": "s105",
+          "action_type": 10,
+          "count": 229264
+        },
+        {
+          "node_id": "s65",
+          "action_type": 10,
+          "count": 227105
+        },
+        {
+          "node_id": "s2693",
+          "action_type": 10,
+          "count": 224740
+        },
+        {
+          "node_id": "s1337",
+          "action_type": 10,
+          "count": 222167
+        },
+        {
+          "node_id": "s3467",
+          "action_type": 7,
+          "count": 221840
+        },
+        {
+          "node_id": "s4184",
+          "action_type": 10,
+          "count": 220799
+        },
+        {
+          "node_id": "s861",
+          "action_type": 10,
+          "count": 220661
+        },
+        {
+          "node_id": "s822",
+          "action_type": 10,
+          "count": 220640
+        },
+        {
+          "node_id": "s2398",
+          "action_type": 10,
+          "count": 220305
+        },
+        {
+          "node_id": "s2833",
+          "action_type": 10,
+          "count": 219150
+        },
+        {
+          "node_id": "s569",
+          "action_type": 10,
+          "count": 218898
+        },
+        {
+          "node_id": "s2078",
+          "action_type": 10,
+          "count": 216374
+        },
+        {
+          "node_id": "s3021",
+          "action_type": 7,
+          "count": 214798
+        },
+        {
+          "node_id": "s925",
+          "action_type": 10,
+          "count": 214680
+        },
+        {
+          "node_id": "s2336",
+          "action_type": 10,
+          "count": 213892
+        },
+        {
+          "node_id": "s893",
+          "action_type": 10,
+          "count": 212844
+        },
+        {
+          "node_id": "s2648",
+          "action_type": 7,
+          "count": 208125
+        },
+        {
+          "node_id": "s2374",
+          "action_type": 10,
+          "count": 205047
+        },
+        {
+          "node_id": "s4463",
+          "action_type": 10,
+          "count": 202071
+        },
+        {
+          "node_id": "s4097",
+          "action_type": 7,
+          "count": 202037
+        },
+        {
+          "node_id": "s4075",
+          "action_type": 10,
+          "count": 199454
+        },
+        {
+          "node_id": "s4240",
+          "action_type": 10,
+          "count": 199066
+        },
+        {
+          "node_id": "s4232",
+          "action_type": 10,
+          "count": 198304
+        },
+        {
+          "node_id": "s968",
+          "action_type": 7,
+          "count": 195845
+        },
+        {
+          "node_id": "s1939",
+          "action_type": 10,
+          "count": 194231
+        },
+        {
+          "node_id": "s2414",
+          "action_type": 10,
+          "count": 193887
+        },
+        {
+          "node_id": "s4264",
+          "action_type": 10,
+          "count": 192406
+        },
+        {
+          "node_id": "s814",
+          "action_type": 10,
+          "count": 191926
+        },
+        {
+          "node_id": "s3451",
+          "action_type": 10,
+          "count": 188328
+        },
+        {
+          "node_id": "s473",
+          "action_type": 10,
+          "count": 185507
+        },
+        {
+          "node_id": "s433",
+          "action_type": 10,
+          "count": 185118
+        },
+        {
+          "node_id": "s3648",
+          "action_type": 10,
+          "count": 183302
+        },
+        {
+          "node_id": "s716",
+          "action_type": 7,
+          "count": 180827
+        },
+        {
+          "node_id": "s4343",
+          "action_type": 10,
+          "count": 178631
+        },
+        {
+          "node_id": "s4083",
+          "action_type": 10,
+          "count": 176962
+        },
+        {
+          "node_id": "s3382",
+          "action_type": 7,
+          "count": 176853
+        },
+        {
+          "node_id": "s1908",
+          "action_type": 7,
+          "count": 176638
+        },
+        {
+          "node_id": "s930",
+          "action_type": 7,
+          "count": 173739
+        },
+        {
+          "node_id": "s1107",
+          "action_type": 10,
+          "count": 173184
+        },
+        {
+          "node_id": "s3512",
+          "action_type": 10,
+          "count": 172112
+        },
+        {
+          "node_id": "s3260",
+          "action_type": 10,
+          "count": 170510
+        },
+        {
+          "node_id": "s2320",
+          "action_type": 10,
+          "count": 168698
+        },
+        {
+          "node_id": "s1744",
+          "action_type": 10,
+          "count": 163870
+        },
+        {
+          "node_id": "s1177",
+          "action_type": 10,
+          "count": 163451
+        },
+        {
+          "node_id": "s1233",
+          "action_type": 10,
+          "count": 161669
+        },
+        {
+          "node_id": "s4479",
+          "action_type": 10,
+          "count": 161404
+        },
+        {
+          "node_id": "s678",
+          "action_type": 7,
+          "count": 160454
+        },
+        {
+          "node_id": "s4012",
+          "action_type": 7,
+          "count": 160191
+        },
+        {
+          "node_id": "s2502",
+          "action_type": 7,
+          "count": 157041
+        },
+        {
+          "node_id": "s616",
+          "action_type": 10,
+          "count": 155722
+        },
+        {
+          "node_id": "s1855",
+          "action_type": 7,
+          "count": 155027
+        },
+        {
+          "node_id": "s41",
+          "action_type": 10,
+          "count": 154436
+        },
+        {
+          "node_id": "s2002",
+          "action_type": 7,
+          "count": 152571
+        },
+        {
+          "node_id": "s73",
+          "action_type": 10,
+          "count": 151157
+        },
+        {
+          "node_id": "s2288",
+          "action_type": 10,
+          "count": 149706
+        },
+        {
+          "node_id": "s3067",
+          "action_type": 7,
+          "count": 148867
+        },
+        {
+          "node_id": "s1964",
+          "action_type": 7,
+          "count": 147803
+        },
+        {
+          "node_id": "s1241",
+          "action_type": 10,
+          "count": 146778
+        },
+        {
+          "node_id": "s3411",
+          "action_type": 10,
+          "count": 142667
+        },
+        {
+          "node_id": "s3804",
+          "action_type": 10,
+          "count": 142527
+        },
+        {
+          "node_id": "s2889",
+          "action_type": 10,
+          "count": 142324
+        },
+        {
+          "node_id": "s2801",
+          "action_type": 10,
+          "count": 140306
+        },
+        {
+          "node_id": "s1329",
+          "action_type": 10,
+          "count": 140034
+        },
+        {
+          "node_id": "s2274",
+          "action_type": 7,
+          "count": 139898
+        },
+        {
+          "node_id": "s2446",
+          "action_type": 10,
+          "count": 139693
+        },
+        {
+          "node_id": "s3318",
+          "action_type": 10,
+          "count": 136100
+        },
+        {
+          "node_id": "s1273",
+          "action_type": 10,
+          "count": 135770
+        },
+        {
+          "node_id": "s2236",
+          "action_type": 7,
+          "count": 134498
+        },
+        {
+          "node_id": "s574",
+          "action_type": 7,
+          "count": 133457
+        },
+        {
+          "node_id": "s4367",
+          "action_type": 10,
+          "count": 129496
+        },
+        {
+          "node_id": "s3950",
+          "action_type": 10,
+          "count": 127809
+        },
+        {
+          "node_id": "s4375",
+          "action_type": 10,
+          "count": 127797
+        },
+        {
+          "node_id": "s56",
+          "action_type": 7,
+          "count": 127276
+        },
+        {
+          "node_id": "s4043",
+          "action_type": 10,
+          "count": 127028
+        },
+        {
+          "node_id": "s3910",
+          "action_type": 10,
+          "count": 126830
+        },
+        {
+          "node_id": "s3267",
+          "action_type": 7,
+          "count": 124570
+        },
+        {
+          "node_id": "s3374",
+          "action_type": 7,
+          "count": 123906
+        },
+        {
+          "node_id": "s2773",
+          "action_type": 10,
+          "count": 119511
+        },
+        {
+          "node_id": "s3103",
+          "action_type": 7,
+          "count": 117302
+        },
+        {
+          "node_id": "s1436",
+          "action_type": 11,
+          "count": 114584
+        },
+        {
+          "node_id": "s3897",
+          "action_type": 7,
+          "count": 113374
+        },
+        {
+          "node_id": "s49",
+          "action_type": 10,
+          "count": 113309
+        },
+        {
+          "node_id": "s1596",
+          "action_type": 7,
+          "count": 113056
+        },
+        {
+          "node_id": "s3656",
+          "action_type": 10,
+          "count": 113017
+        },
+        {
+          "node_id": "s4004",
+          "action_type": 7,
+          "count": 112970
+        },
+        {
+          "node_id": "s4455",
+          "action_type": 10,
+          "count": 108932
+        },
+        {
+          "node_id": "s113",
+          "action_type": 10,
+          "count": 108004
+        },
+        {
+          "node_id": "s3552",
+          "action_type": 10,
+          "count": 107385
+        },
+        {
+          "node_id": "s3146",
+          "action_type": 7,
+          "count": 105180
+        },
+        {
+          "node_id": "s952",
+          "action_type": 7,
+          "count": 103066
+        },
+        {
+          "node_id": "s2757",
+          "action_type": 10,
+          "count": 102819
+        },
+        {
+          "node_id": "s4503",
+          "action_type": 10,
+          "count": 102791
+        },
+        {
+          "node_id": "s4335",
+          "action_type": 10,
+          "count": 102003
+        },
+        {
+          "node_id": "s782",
+          "action_type": 10,
+          "count": 101663
+        },
+        {
+          "node_id": "s3145",
+          "action_type": 7,
+          "count": 100515
+        },
+        {
+          "node_id": "s3328",
+          "action_type": 7,
+          "count": 97867
+        },
+        {
+          "node_id": "s837",
+          "action_type": 10,
+          "count": 97236
+        },
+        {
+          "node_id": "s1345",
+          "action_type": 10,
+          "count": 97133
+        },
+        {
+          "node_id": "s1884",
+          "action_type": 7,
+          "count": 97013
+        },
+        {
+          "node_id": "s3475",
+          "action_type": 7,
+          "count": 96813
+        },
+        {
+          "node_id": "s1131",
+          "action_type": 10,
+          "count": 96384
+        },
+        {
+          "node_id": "s700",
+          "action_type": 7,
+          "count": 95040
+        },
+        {
+          "node_id": "s121",
+          "action_type": 10,
+          "count": 94405
+        },
+        {
+          "node_id": "s1922",
+          "action_type": 7,
+          "count": 93436
+        },
+        {
+          "node_id": "s303",
+          "action_type": 7,
+          "count": 93363
+        },
+        {
+          "node_id": "s2781",
+          "action_type": 7,
+          "count": 92814
+        },
+        {
+          "node_id": "s904",
+          "action_type": 7,
+          "count": 92479
+        },
+        {
+          "node_id": "s3504",
+          "action_type": 10,
+          "count": 91520
+        },
+        {
+          "node_id": "s869",
+          "action_type": 10,
+          "count": 91192
+        },
+        {
+          "node_id": "s4280",
+          "action_type": 10,
+          "count": 91052
+        },
+        {
+          "node_id": "s3772",
+          "action_type": 10,
+          "count": 90777
+        },
+        {
+          "node_id": "s1265",
+          "action_type": 10,
+          "count": 90547
+        },
+        {
+          "node_id": "s4216",
+          "action_type": 10,
+          "count": 89854
+        },
+        {
+          "node_id": "s1861",
+          "action_type": 7,
+          "count": 89807
+        },
+        {
+          "node_id": "s4311",
+          "action_type": 10,
+          "count": 89238
+        },
+        {
+          "node_id": "s3958",
+          "action_type": 7,
+          "count": 88317
+        },
+        {
+          "node_id": "s4105",
+          "action_type": 7,
+          "count": 88238
+        },
+        {
+          "node_id": "s4136",
+          "action_type": 10,
+          "count": 88176
+        },
+        {
+          "node_id": "s55",
+          "action_type": 6,
+          "count": 87967
+        },
+        {
+          "node_id": "s4192",
+          "action_type": 10,
+          "count": 85662
+        },
+        {
+          "node_id": "s960",
+          "action_type": 7,
+          "count": 85267
+        },
+        {
+          "node_id": "s652",
+          "action_type": 7,
+          "count": 85179
+        },
+        {
+          "node_id": "s2406",
+          "action_type": 10,
+          "count": 84974
+        },
+        {
+          "node_id": "s2194",
+          "action_type": 7,
+          "count": 84791
+        },
+        {
+          "node_id": "s4471",
+          "action_type": 10,
+          "count": 83886
+        },
+        {
+          "node_id": "s3576",
+          "action_type": 10,
+          "count": 82729
+        },
+        {
+          "node_id": "s731",
+          "action_type": 10,
+          "count": 80698
+        },
+        {
+          "node_id": "s2366",
+          "action_type": 10,
+          "count": 80143
+        },
+        {
+          "node_id": "s1115",
+          "action_type": 10,
+          "count": 79787
+        },
+        {
+          "node_id": "s4399",
+          "action_type": 10,
+          "count": 79472
+        },
+        {
+          "node_id": "s708",
+          "action_type": 7,
+          "count": 78613
+        },
+        {
+          "node_id": "s1067",
+          "action_type": 10,
+          "count": 78078
+        },
+        {
+          "node_id": "s984",
+          "action_type": 10,
+          "count": 77910
+        },
+        {
+          "node_id": "s1905",
+          "action_type": 7,
+          "count": 75965
+        },
+        {
+          "node_id": "s1185",
+          "action_type": 10,
+          "count": 75771
+        },
+        {
+          "node_id": "s3483",
+          "action_type": 7,
+          "count": 74439
+        },
+        {
+          "node_id": "s3",
+          "action_type": 11,
+          "count": 73479
+        },
+        {
+          "node_id": "s3286",
+          "action_type": 10,
+          "count": 69401
+        },
+        {
+          "node_id": "s4439",
+          "action_type": 10,
+          "count": 68334
+        },
+        {
+          "node_id": "s4113",
+          "action_type": 7,
+          "count": 67417
+        },
+        {
+          "node_id": "s999",
+          "action_type": 7,
+          "count": 66728
+        },
+        {
+          "node_id": "s3666",
+          "action_type": 7,
+          "count": 66653
+        },
+        {
+          "node_id": "s1313",
+          "action_type": 10,
+          "count": 62296
+        },
+        {
+          "node_id": "s747",
+          "action_type": 7,
+          "count": 61669
+        },
+        {
+          "node_id": "s3390",
+          "action_type": 7,
+          "count": 61517
+        },
+        {
+          "node_id": "s3134",
+          "action_type": 7,
+          "count": 60938
+        },
+        {
+          "node_id": "s3398",
+          "action_type": 7,
+          "count": 60795
+        },
+        {
+          "node_id": "s1035",
+          "action_type": 10,
+          "count": 58843
+        },
+        {
+          "node_id": "s573",
+          "action_type": 7,
+          "count": 57926
+        },
+        {
+          "node_id": "s1297",
+          "action_type": 10,
+          "count": 57305
+        },
+        {
+          "node_id": "s4020",
+          "action_type": 7,
+          "count": 55857
+        },
+        {
+          "node_id": "s3104",
+          "action_type": 7,
+          "count": 55339
+        },
+        {
+          "node_id": "s4028",
+          "action_type": 7,
+          "count": 55238
+        },
+        {
+          "node_id": "s1043",
+          "action_type": 10,
+          "count": 55237
+        },
+        {
+          "node_id": "s1209",
+          "action_type": 10,
+          "count": 54788
+        },
+        {
+          "node_id": "s1146",
+          "action_type": 6,
+          "count": 54156
+        },
+        {
+          "node_id": "s1193",
+          "action_type": 10,
+          "count": 53027
+        },
+        {
+          "node_id": "s3232",
+          "action_type": 7,
+          "count": 50945
+        },
+        {
+          "node_id": "s2791",
+          "action_type": 7,
+          "count": 49637
+        },
+        {
+          "node_id": "s1075",
+          "action_type": 10,
+          "count": 49571
+        },
+        {
+          "node_id": "s1151",
+          "action_type": 7,
+          "count": 46765
+        },
+        {
+          "node_id": "s3684",
+          "action_type": 10,
+          "count": 46579
+        },
+        {
+          "node_id": "s1281",
+          "action_type": 10,
+          "count": 45303
+        },
+        {
+          "node_id": "s1083",
+          "action_type": 10,
+          "count": 45208
+        },
+        {
+          "node_id": "s3164",
+          "action_type": 7,
+          "count": 45029
+        },
+        {
+          "node_id": "s1870",
+          "action_type": 7,
+          "count": 44642
+        },
+        {
+          "node_id": "s1289",
+          "action_type": 10,
+          "count": 44321
+        },
+        {
+          "node_id": "s1143",
+          "action_type": 6,
+          "count": 43261
+        },
+        {
+          "node_id": "s3336",
+          "action_type": 7,
+          "count": 43031
+        },
+        {
+          "node_id": "s1444",
+          "action_type": 11,
+          "count": 41516
+        },
+        {
+          "node_id": "s3966",
+          "action_type": 7,
+          "count": 38650
+        },
+        {
+          "node_id": "s1159",
+          "action_type": 7,
+          "count": 37526
+        },
+        {
+          "node_id": "s3107",
+          "action_type": 7,
+          "count": 37479
+        },
+        {
+          "node_id": "s4208",
+          "action_type": 10,
+          "count": 36287
+        },
+        {
+          "node_id": "s3239",
+          "action_type": 7,
+          "count": 34233
+        },
+        {
+          "node_id": "s936",
+          "action_type": 6,
+          "count": 33944
+        },
+        {
+          "node_id": "s2352",
+          "action_type": 10,
+          "count": 33015
+        },
+        {
+          "node_id": "s2778",
+          "action_type": 7,
+          "count": 32785
+        },
+        {
+          "node_id": "s1249",
+          "action_type": 10,
+          "count": 32728
+        },
+        {
+          "node_id": "s4290",
+          "action_type": 7,
+          "count": 32657
+        },
+        {
+          "node_id": "s684",
+          "action_type": 6,
+          "count": 31814
+        },
+        {
+          "node_id": "s2607",
+          "action_type": 7,
+          "count": 30997
+        },
+        {
+          "node_id": "s1305",
+          "action_type": 10,
+          "count": 30930
+        },
+        {
+          "node_id": "s3197",
+          "action_type": 7,
+          "count": 30411
+        },
+        {
+          "node_id": "s3491",
+          "action_type": 7,
+          "count": 30183
+        },
+        {
+          "node_id": "s4407",
+          "action_type": 10,
+          "count": 29447
+        },
+        {
+          "node_id": "s81",
+          "action_type": 10,
+          "count": 28325
+        },
+        {
+          "node_id": "s4121",
+          "action_type": 7,
+          "count": 27484
+        },
+        {
+          "node_id": "s3204",
+          "action_type": 7,
+          "count": 27108
+        },
+        {
+          "node_id": "s2777",
+          "action_type": 7,
+          "count": 26762
+        },
+        {
+          "node_id": "s1871",
+          "action_type": 6,
+          "count": 26343
+        },
+        {
+          "node_id": "s3191",
+          "action_type": 7,
+          "count": 25940
+        },
+        {
+          "node_id": "s3406",
+          "action_type": 7,
+          "count": 24016
+        },
+        {
+          "node_id": "s1217",
+          "action_type": 10,
+          "count": 23893
+        },
+        {
+          "node_id": "s1007",
+          "action_type": 7,
+          "count": 23819
+        },
+        {
+          "node_id": "s937",
+          "action_type": 7,
+          "count": 23759
+        },
+        {
+          "node_id": "s1201",
+          "action_type": 10,
+          "count": 23463
+        },
+        {
+          "node_id": "s3026",
+          "action_type": 7,
+          "count": 22481
+        },
+        {
+          "node_id": "s4415",
+          "action_type": 10,
+          "count": 22262
+        },
+        {
+          "node_id": "s755",
+          "action_type": 7,
+          "count": 22049
+        },
+        {
+          "node_id": "s4036",
+          "action_type": 7,
+          "count": 21896
+        },
+        {
+          "node_id": "s1059",
+          "action_type": 10,
+          "count": 21591
+        },
+        {
+          "node_id": "s3366",
+          "action_type": 7,
+          "count": 20370
+        },
+        {
+          "node_id": "s685",
+          "action_type": 7,
+          "count": 19466
+        },
+        {
+          "node_id": "s3996",
+          "action_type": 7,
+          "count": 18365
+        },
+        {
+          "node_id": "s4327",
+          "action_type": 10,
+          "count": 18130
+        },
+        {
+          "node_id": "s4319",
+          "action_type": 10,
+          "count": 17994
+        },
+        {
+          "node_id": "s432",
+          "action_type": 11,
+          "count": 15873
+        },
+        {
+          "node_id": "s3108",
+          "action_type": 7,
+          "count": 15609
+        },
+        {
+          "node_id": "s1257",
+          "action_type": 10,
+          "count": 14595
+        },
+        {
+          "node_id": "s1169",
+          "action_type": 10,
+          "count": 14200
+        },
+        {
+          "node_id": "s2606",
+          "action_type": 7,
+          "count": 13911
+        },
+        {
+          "node_id": "s2656",
+          "action_type": 7,
+          "count": 13669
+        },
+        {
+          "node_id": "s3348",
+          "action_type": 7,
+          "count": 13321
+        },
+        {
+          "node_id": "s3075",
+          "action_type": 7,
+          "count": 13243
+        },
+        {
+          "node_id": "s3275",
+          "action_type": 7,
+          "count": 13221
+        },
+        {
+          "node_id": "s1139",
+          "action_type": 10,
+          "count": 13023
+        },
+        {
+          "node_id": "s4303",
+          "action_type": 7,
+          "count": 12893
+        },
+        {
+          "node_id": "s828",
+          "action_type": 7,
+          "count": 12691
+        },
+        {
+          "node_id": "s4272",
+          "action_type": 10,
+          "count": 12259
+        },
+        {
+          "node_id": "s3978",
+          "action_type": 7,
+          "count": 12141
+        },
+        {
+          "node_id": "s3025",
+          "action_type": 7,
+          "count": 11994
+        },
+        {
+          "node_id": "s3905",
+          "action_type": 7,
+          "count": 11779
+        },
+        {
+          "node_id": "s2789",
+          "action_type": 7,
+          "count": 11408
+        },
+        {
+          "node_id": "s3972",
+          "action_type": 7,
+          "count": 11212
+        },
+        {
+          "node_id": "s3342",
+          "action_type": 7,
+          "count": 11186
+        },
+        {
+          "node_id": "s1123",
+          "action_type": 10,
+          "count": 10779
+        },
+        {
+          "node_id": "s3975",
+          "action_type": 7,
+          "count": 10631
+        },
+        {
+          "node_id": "s3345",
+          "action_type": 7,
+          "count": 10481
+        },
+        {
+          "node_id": "s3459",
+          "action_type": 7,
+          "count": 10321
+        },
+        {
+          "node_id": "s350",
+          "action_type": 11,
+          "count": 10126
+        },
+        {
+          "node_id": "s242",
+          "action_type": 11,
+          "count": 9436
+        },
+        {
+          "node_id": "s4089",
+          "action_type": 7,
+          "count": 9374
+        },
+        {
+          "node_id": "s4423",
+          "action_type": 10,
+          "count": 8935
+        },
+        {
+          "node_id": "s2358",
+          "action_type": 7,
+          "count": 8078
+        },
+        {
+          "node_id": "s1945",
+          "action_type": 7,
+          "count": 6810
+        },
+        {
+          "node_id": "s2357",
+          "action_type": 7,
+          "count": 6523
+        },
+        {
+          "node_id": "s2217",
+          "action_type": 7,
+          "count": 6318
+        },
+        {
+          "node_id": "s1702",
+          "action_type": 7,
+          "count": 5322
+        },
+        {
+          "node_id": "s3158",
+          "action_type": 7,
+          "count": 5313
+        },
+        {
+          "node_id": "s3200",
+          "action_type": 7,
+          "count": 4778
+        },
+        {
+          "node_id": "s3358",
+          "action_type": 7,
+          "count": 4423
+        },
+        {
+          "node_id": "s3988",
+          "action_type": 7,
+          "count": 4188
+        },
+        {
+          "node_id": "s3136",
+          "action_type": 7,
+          "count": 4053
+        },
+        {
+          "node_id": "s429",
+          "action_type": 11,
+          "count": 4002
+        },
+        {
+          "node_id": "s2219",
+          "action_type": 7,
+          "count": 3599
+        },
+        {
+          "node_id": "s1947",
+          "action_type": 7,
+          "count": 3581
+        },
+        {
+          "node_id": "s3674",
+          "action_type": 7,
+          "count": 3566
+        },
+        {
+          "node_id": "s1944",
+          "action_type": 7,
+          "count": 2252
+        },
+        {
+          "node_id": "s2216",
+          "action_type": 7,
+          "count": 2208
+        },
+        {
+          "node_id": "s1865",
+          "action_type": 11,
+          "count": 1570
+        },
+        {
+          "node_id": "s3356",
+          "action_type": 7,
+          "count": 655
+        },
+        {
+          "node_id": "s3140",
+          "action_type": 7,
+          "count": 643
+        },
+        {
+          "node_id": "s3986",
+          "action_type": 7,
+          "count": 606
+        },
+        {
+          "node_id": "s4295",
+          "action_type": 7,
+          "count": 482
+        },
+        {
+          "node_id": "s3139",
+          "action_type": 7,
+          "count": 221
+        }
+      ],
+      "mean_cost_within_tolerance": true,
+      "success_rate_within_tolerance": false,
+      "verification_passed": false
+    },
+    "run_count": 10000
+  },
+  "action_diagnostics": {
+    "counts": {
+      "registry": 278,
+      "registry_before_lazy": 15552,
+      "candidate": 7,
+      "evaluator_supported": 7,
+      "priced_scanned": 7,
+      "supported_priced": 7,
+      "unsupported_requested": 0,
+      "relevance_reduced": 15545,
+      "dominance_reduced": 0,
+      "deferred": 0,
+      "equivalent_price_ties": 0,
+      "missing_price": 0,
+      "unsupported_observed": 0
+    },
+    "reason_observations_total": 2,
+    "included": [
+      {
+        "reason": "included:explicit_goal_envelope:7",
+        "observations": 1
+      }
+    ],
+    "deferred": [],
+    "pruned": [
+      {
+        "reason": "pruned:not_permitted_by_explicit_goal_envelope:15545",
+        "observations": 1
+      }
+    ],
+    "unpriced": [],
+    "unsupported": [],
+    "fossil_loadouts": {
+      "possible": 15275,
+      "generated": 1,
+      "deferred": 15274,
+      "lazy": true,
+      "mode": "requested"
+    }
+  },
+  "documented_mismatches": [
+    "Not rerun in S8.0 after Oliver authorized abandoning long runs; this is the archived single 10000-run S7.6 sample.",
+    "The archived artifact is schema 3/database schema 1 and differs from the current additive B1 artifact identity.",
+    "The archived exact evaluator was not requested; no evaluator completion is claimed.",
+    "The archived 0.9942 success rate remains below its historical 0.995 threshold."
+  ]
+}

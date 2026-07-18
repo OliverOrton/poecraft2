@@ -1,0 +1,46 @@
+{
+  "schema_version": "solver_action_accounting_v1",
+  "strategy_sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+  "economy": {
+    "id": "s8.0-accounting-contract-example-v1",
+    "prices": {"base": 5.0}
+  },
+  "totals": {
+    "expected_actions": 1.0,
+    "expected_cost": 5.0,
+    "by_price_key": [
+      {
+        "price_key": "base",
+        "quantity": 1.0,
+        "unit_price": 5.0,
+        "cost_contribution": 5.0
+      }
+    ]
+  },
+  "entries": [
+    {
+      "action_descriptor": {
+        "id": "restart",
+        "native_operation": {"type": "restart", "params": {}}
+      },
+      "price_key": "base",
+      "quantity": 1.0,
+      "unit_price": 5.0,
+      "cost_contribution": 5.0,
+      "raw_node_id": "restart",
+      "review_section_id": "recovery",
+      "classifications": ["restart"]
+    }
+  ],
+  "reconciliation": {
+    "evaluator_expected_actions": 1.0,
+    "evaluator_expected_consumption": [
+      {"key": "base", "quantity": 1.0}
+    ],
+    "action_difference": 0.0,
+    "consumption_differences": [
+      {"key": "base", "quantity": 0.0}
+    ],
+    "cost_dot_product_difference": 0.0
+  }
+}

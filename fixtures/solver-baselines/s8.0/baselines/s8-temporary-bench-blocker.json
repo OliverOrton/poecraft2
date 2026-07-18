@@ -1,0 +1,379 @@
+{
+  "schema_version": "s8_solver_baseline_case_v1",
+  "case_id": "s8-temporary-bench-blocker",
+  "capture_origin": "current_s8.0_before_state",
+  "status": "not_converged",
+  "identity": {
+    "repository_commit": "b9e426b7e45feb4b254a56cbf3fbf43239a51261",
+    "source_case_path": "fixtures/solver-baselines/s8.0/cases/temporary-bench-blocker.json",
+    "source_case_sha256": "43a8b9606f29fb11a59b78558da3dbd117a3df900b5d569c369cfb14f8295181",
+    "capture_report_path": "build/s8.0-baseline/s8-temporary-bench-blocker.report.json",
+    "capture_report_sha256": "4c33bdb016ae8c906961c01b44312d8d8b9bc993c971c77e7adcdcd55935491e",
+    "artifact": {
+      "artifact_schema_version": 4,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "database_schema_version": "2",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c",
+      "captured_manifest_payload_sha256": "5a106204680ed0467b627f616e73c03a1346bb771c70120c5dd303ee45d2873c",
+      "manifest_path": "data/compiled/current/manifest.json",
+      "manifest_sha256": "9006d3a0db21d688ac1dd308bf130175e14e0d35608509f9d6cff7d1f4f66eb7",
+      "canonical_sqlite_path": "data/sqlite/poecraft.db",
+      "canonical_sqlite_sha256": "31b4fc8da6f0391d2328e099cb76c8e1867e1cecee5be244997f843a8af39c64"
+    },
+    "engine": {
+      "runner": "native",
+      "abi_version": 1,
+      "compiler": "gcc-14.2.0"
+    }
+  },
+  "configuration": {
+    "session": {
+      "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "base_name": "Vaal Regalia",
+      "item_level": 86
+    },
+    "start": {
+      "rarity": "rare",
+      "with_implicits": false,
+      "mods": [
+        {
+          "key": "LocalIncreasedEnergyShield11",
+          "flags": []
+        },
+        {
+          "key": "LocalIncreasedEnergyShieldPercent8",
+          "flags": []
+        },
+        {
+          "key": "LocalIncreasedEnergyShieldPercentAndStunRecovery6",
+          "flags": []
+        }
+      ]
+    },
+    "goal": {
+      "version": "v1",
+      "rarity": "rare",
+      "slots": [
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        }
+      ],
+      "actions": [
+        "bench:EinharMasterColdResist3__",
+        "exalt",
+        "restart"
+      ]
+    },
+    "success_threshold": {
+      "required_goal_slots": 1,
+      "simulator_minimum_success_rate": 0.995
+    },
+    "allowed_mechanic_families": [
+      "bench",
+      "ordinary_currency",
+      "restart"
+    ],
+    "solver_options": [],
+    "action_envelope": [
+      "bench:EinharMasterColdResist3__",
+      "exalt",
+      "restart"
+    ],
+    "economy": {
+      "version": "v1",
+      "id": "s8.0-narrow-temporary-blocker-v1",
+      "prices": {
+        "bench:EinharMasterColdResist3__": 0.5,
+        "exalt": 10.0,
+        "base": 100.0
+      }
+    },
+    "price_sources": [
+      {
+        "price_key": "base",
+        "value": 100.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/temporary-bench-blocker.json",
+        "json_pointer": "/economy/prices/base"
+      },
+      {
+        "price_key": "bench:EinharMasterColdResist3__",
+        "value": 0.5,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/temporary-bench-blocker.json",
+        "json_pointer": "/economy/prices/bench:EinharMasterColdResist3__"
+      },
+      {
+        "price_key": "exalt",
+        "value": 10.0,
+        "source_document": "fixtures/solver-baselines/s8.0/cases/temporary-bench-blocker.json",
+        "json_pointer": "/economy/prices/exalt"
+      }
+    ],
+    "caps": {
+      "max_states": 25000,
+      "max_sweeps": 100000,
+      "solve_step_work_items": 16,
+      "max_discovered_states": 50000,
+      "max_expanded_states": 25000,
+      "max_state_action_rows": 250000,
+      "max_transitions": 5000000,
+      "max_reforge_work": 5000000,
+      "max_solver_owned_bytes": 536870912,
+      "max_compiled_nodes": 50000,
+      "max_compiled_edges": 200000,
+      "max_strategy_json_bytes": 33554432,
+      "worker_step_ms": 50,
+      "cancel_ack_ms": 250
+    },
+    "tolerances_and_seeds": {
+      "runs": 10000,
+      "seed": 2026071702,
+      "max_actions_per_run": 250000,
+      "mean_cost_relative_tolerance": 0.08,
+      "minimum_success_rate": 0.995
+    }
+  },
+  "commands": [
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-baselines/s8.0/corpus.json --case s8-temporary-bench-blocker --output build/s8.0-baseline/s8-temporary-bench-blocker.report.json --strategy-output build/s8.0-baseline/strategies --verification-runs 10000 --verification-seed 2026071702 --verification-chunk-runs 1 --exact-strategy-evaluation --progress"
+  ],
+  "solver": {
+    "actual_status": "not_converged",
+    "result": {
+      "converged": false,
+      "start_state": 0,
+      "start_value": 948516001513.1893,
+      "expanded_states": 213,
+      "sweeps": 2,
+      "residual": 0.0001220703125,
+      "skipped_action_count": 0
+    },
+    "value": {
+      "start": null
+    },
+    "telemetry": {
+      "version": "solver_telemetry_v1",
+      "availability": {
+        "evaluator_support": "applied_before_expansion",
+        "relevance_filter": "explicit_envelope_or_conservative_include",
+        "dominance_filter": "certified_abstract_kernel_equivalence",
+        "policy_improvement_rounds": "available",
+        "optimality_gap": "available_for_focused_expansion",
+        "verification": "external_harness"
+      },
+      "execution": {
+        "status": "complete",
+        "phase": "done"
+      },
+      "actions": {
+        "registry": 277,
+        "registry_before_lazy": 15552,
+        "candidate": 3,
+        "evaluator_supported": 3,
+        "priced_scanned": 3,
+        "supported_priced": 3,
+        "unsupported_requested": 0,
+        "relevance_reduced": 15549,
+        "dominance_reduced": 0,
+        "deferred": 0,
+        "equivalent_price_ties": 0,
+        "missing_price": 0,
+        "unsupported_observed": 0
+      },
+      "action_control": {
+        "explicit_envelope": true,
+        "dependency_primitives": 0,
+        "goal_relevant_pruned": 0,
+        "fossil_loadouts": {
+          "possible": 15275,
+          "generated": 0,
+          "deferred": 15275,
+          "lazy": true,
+          "mode": "requested"
+        },
+        "reason_observations_total": 2,
+        "reason_counts": [
+          {
+            "reason": "included:explicit_goal_envelope:3",
+            "observations": 1
+          },
+          {
+            "reason": "pruned:not_permitted_by_explicit_goal_envelope:15549",
+            "observations": 1
+          }
+        ]
+      },
+      "planner": {
+        "registry": 277,
+        "candidate": 3,
+        "fixed_options": 0
+      },
+      "abstraction": {
+        "discriminating_tags": 0,
+        "junk_classes": 15
+      },
+      "states": {
+        "discovered": 213,
+        "expanded": 213,
+        "frontier": 0,
+        "goal": 45,
+        "policy_reachable": 168
+      },
+      "focused_expansion": {
+        "used": false,
+        "rounds": 0,
+        "lower_bound": 0,
+        "upper_bound": null,
+        "optimality_gap": null,
+        "duration_ns": 0
+      },
+      "work": {
+        "state_action_rows": 278,
+        "transition_entries": 489,
+        "outcome_entries": 665,
+        "choice_groups": 0,
+        "choice_successor_entries": 0,
+        "bellman_backups": 1176,
+        "bellman_action_evaluations": 1946,
+        "extraction_action_evaluations": 278,
+        "bellman_work_units": 2,
+        "max_bellman_unit_transitions": 0,
+        "algebraic_self_loops": 19,
+        "transition_bits_hash": "eb9b1ed8db8be34f",
+        "policy_bits_hash": "c66759667ec7f81d"
+      },
+      "cache": {
+        "distribution": {
+          "requests": 278,
+          "hits": 0,
+          "misses": 278,
+          "entries": 0,
+          "build_ns": 846400,
+          "released_after_sparse_copy": true
+        },
+        "transition_graph": {
+          "reused": false
+        },
+        "reforge": {
+          "requests": 0,
+          "hits": 0,
+          "misses": 0,
+          "entries": 0,
+          "build_ns": 0,
+          "frontier_work": 0
+        }
+      },
+      "optimization": {
+        "method": "policy_iteration_scc",
+        "policy_evaluation_calls": 2,
+        "largest_policy_component": 1,
+        "sparse_policy_iterations": 0,
+        "max_sparse_policy_iterations": 0,
+        "policy_kernel_groups": 102,
+        "policy_states_collapsed": 232,
+        "policy_evaluation_failure": null,
+        "status": "not_converged",
+        "converged": false,
+        "sweeps": 2,
+        "policy_improvement_rounds": 2,
+        "residual": 0.000122,
+        "optimality_gap": null,
+        "state_cap_hit": false,
+        "resource_cap_hit": false,
+        "cap_hits": [],
+        "full_request_status": "incomplete_solve"
+      },
+      "timings_ns": {
+        "registry_generation": 166700,
+        "abstract_layout": 23600,
+        "solve_setup": 92300,
+        "expansion": 994600,
+        "transition_calculation": 846400,
+        "optimization": 104800,
+        "extraction": 21500,
+        "compilation": null,
+        "verification": null
+      },
+      "memory": {
+        "solver_owned_bytes_estimate": 8090326,
+        "estimate_kind": "selected_allocations_not_process_heap",
+        "abstract_state_bytes": 144,
+        "state_payload": "inline_sparse_junk_counts"
+      },
+      "compilation": {
+        "available": false,
+        "working_states": null,
+        "policy_regions": null,
+        "nodes": null,
+        "edges": null,
+        "strategy_json_bytes": null,
+        "cap_hit": null
+      },
+      "value": {
+        "start": null,
+        "start_status": "unavailable_incomplete_solve",
+        "start_scope": null,
+        "raw_start_bound": 948516001513.1893
+      },
+      "verification": null
+    }
+  },
+  "strategy": null,
+  "evaluator": {
+    "status": "not_completed",
+    "result": null,
+    "error": null,
+    "wall_ms": null,
+    "time_limited": false
+  },
+  "simulator": {
+    "result": null,
+    "run_count": 0
+  },
+  "action_diagnostics": {
+    "counts": {
+      "registry": 277,
+      "registry_before_lazy": 15552,
+      "candidate": 3,
+      "evaluator_supported": 3,
+      "priced_scanned": 3,
+      "supported_priced": 3,
+      "unsupported_requested": 0,
+      "relevance_reduced": 15549,
+      "dominance_reduced": 0,
+      "deferred": 0,
+      "equivalent_price_ties": 0,
+      "missing_price": 0,
+      "unsupported_observed": 0
+    },
+    "reason_observations_total": 2,
+    "included": [
+      {
+        "reason": "included:explicit_goal_envelope:3",
+        "observations": 1
+      }
+    ],
+    "deferred": [],
+    "pruned": [
+      {
+        "reason": "pruned:not_permitted_by_explicit_goal_envelope:15549",
+        "observations": 1
+      }
+    ],
+    "unpriced": [],
+    "unsupported": [],
+    "fossil_loadouts": {
+      "possible": 15275,
+      "generated": 0,
+      "deferred": 15275,
+      "lazy": true,
+      "mode": "requested"
+    }
+  },
+  "documented_mismatches": [
+    "The raw bench/Exalt/cleanup/Restart envelope did not converge within the current fixed policy-improvement limit.",
+    "The narrower bench/Exalt/Restart envelope also did not converge; automatic blocker assembly remains an S8.3 capability and no compiled strategy is claimed."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "solver_review_projection_v1",
+  "projection_id": "s8.0-existing-deterministic-restart-example",
+  "raw_strategy": {
+    "path": "evaluator-straight.strategy.json",
+    "sha256": "71bd8aea350928a3da87103b7d78c454b9e024cb5502fb3af66c9ad2987e333f",
+    "execution_authority": "raw_strategy_only"
+  },
+  "semantics": {
+    "executable": false,
+    "can_alter_execution": false,
+    "can_alter_routing": false,
+    "can_alter_legality": false,
+    "can_alter_evaluation": false
+  },
+  "sections": [
+    {
+      "id": "recovery",
+      "label": "Recovery",
+      "role": "recovery",
+      "derived": true,
+      "raw_references": [
+        {"node_id": "restart"},
+        {"edge_id": "begin"},
+        {"edge_id": "done"}
+      ],
+      "entries": [
+        {
+          "id": "restart-entry",
+          "label": "Restart fallback",
+          "role": "restart",
+          "raw_references": [
+            {"node_id": "restart"},
+            {"edge_id": "done"}
+          ]
+        }
+      ]
+    }
+  ]
+}

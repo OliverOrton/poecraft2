@@ -1,0 +1,23 @@
+{
+  "schema_version": "s8_evaluator_fixture_result_v1",
+  "source": "engine/tests/test_solver_eval.cpp::run_closed_form_tests deterministic Restart graph",
+  "result": {
+    "converged": true,
+    "success_probability": 1.0,
+    "failure_probability": 0.0,
+    "stop_probability": 0.0,
+    "expected_actions": 1.0,
+    "expected_consumption": [
+      {"key": "base", "quantity": 1.0}
+    ],
+    "nodes": [
+      {"id": "start", "expected_visits": 1.0},
+      {"id": "restart", "expected_visits": 1.0},
+      {"id": "success", "expected_visits": 1.0}
+    ],
+    "edges": [
+      {"id": "begin", "expected_traversals": 1.0},
+      {"id": "done", "expected_traversals": 1.0}
+    ]
+  }
+}

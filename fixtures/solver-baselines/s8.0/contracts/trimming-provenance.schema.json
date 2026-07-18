@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poecraft2.local/schemas/solver/trimming-provenance-v1.json",
+  "title": "poecraft2 empirical trimming provenance v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "marker",
+    "heuristic",
+    "parent_strategy_sha256",
+    "fallback",
+    "discovery",
+    "selection_threshold",
+    "removed",
+    "observed_visitation_mass",
+    "exact_impact_evaluation",
+    "independent_validation"
+  ],
+  "properties": {
+    "schema_version": {"const": "solver_trimming_provenance_v1"},
+    "marker": {"const": "empirically_trimmed"},
+    "heuristic": {"const": true},
+    "parent_strategy_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "serialized_action", "selection"],
+      "properties": {
+        "kind": {"const": "Restart"},
+        "serialized_action": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {"type": {"const": "restart"}}
+        },
+        "selection": {"const": "explicit_user_choice_required"}
+      }
+    },
+    "discovery": {"$ref": "#/$defs/sample_parameters"},
+    "selection_threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metric", "maximum_visitation_mass"],
+      "properties": {
+        "metric": {"const": "observed_visitation_mass"},
+        "maximum_visitation_mass": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "removed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_ids", "edge_ids"],
+      "properties": {
+        "node_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "edge_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "observed_visitation_mass": {"type": "number", "minimum": 0, "maximum": 1},
+    "exact_impact_evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "original", "derived", "delta"],
+      "properties": {
+        "status": {"enum": ["completed", "unsupported", "not_run_contract_example"]},
+        "original": {"$ref": "#/$defs/exact_metrics"},
+        "derived": {"$ref": "#/$defs/exact_metrics"},
+        "delta": {"$ref": "#/$defs/exact_metrics"}
+      }
+    },
+    "independent_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parameters",
+        "seeds",
+        "sampled_confidence",
+        "unvisited_branch_nonzero_upper_bound"
+      ],
+      "properties": {
+        "parameters": {"type": "object"},
+        "seeds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+        "sampled_confidence": {
+          "type": "object",
+          "required": ["confidence_level", "method", "intervals"],
+          "properties": {
+            "confidence_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "method": {"type": "string", "minLength": 1},
+            "intervals": {"type": "object"}
+          }
+        },
+        "unvisited_branch_nonzero_upper_bound": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["confidence_level", "method", "probability_upper_bound"],
+          "properties": {
+            "confidence_level": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "method": {"type": "string", "minLength": 1},
+            "probability_upper_bound": {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sample_parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_count", "seeds", "parameters"],
+      "properties": {
+        "run_count": {"type": "integer", "minimum": 1},
+        "seeds": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+        "parameters": {"type": "object"}
+      }
+    },
+    "exact_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success_probability", "expected_actions", "expected_cost", "nodes", "edges"],
+      "properties": {
+        "success_probability": {"type": "number"},
+        "expected_actions": {"type": "number"},
+        "expected_cost": {"type": "number"},
+        "nodes": {"type": "number"},
+        "edges": {"type": "number"}
+      }
+    }
+  }
+}

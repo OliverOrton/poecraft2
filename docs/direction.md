@@ -49,7 +49,7 @@ former `0.995` target; the miss was not relabelled as a numeric pass and no
 replacement sample was run. The completed plan and evidence are preserved in
 [the S7 archive](archive/2026-07-solver-s7/).
 
-The active product chunk is now:
+The active product chunk is:
 
 ```text
 B1  owner-selected Bestiary expansion
@@ -59,17 +59,20 @@ then recombinators
 
 The authoritative execution plan is
 [bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md).
-B1.0 is complete: Oliver selected Imprint, approved its exact
+B1.0-B1.4 are complete: Oliver selected Imprint, approved its exact
 checkpoint/restore contract, and parked both prefix/suffix conversion recipes.
-B1.1 data, price, and registry substrate is the immediate boundary. Mechanic
-rules are never researched or inferred by agents.
+Oliver waived B1.5 as a separate checkpoint based on focused B1.3/B1.4
+validation; it is waived/deferred, not complete, and its full acceptance,
+10,000-run Imprint verification, and rendered review were not backfilled. S8.0
+now versions the exact solver before-state and the review, accounting, and
+trimming contracts. S8.1 derived review sections is the immediate boundary.
+Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,
 and pinned cost identities are present. Production activation only needs the
-documented R2 resources and repository secrets. A Beast stash category exists;
-B1.0 now supplies the approved Imprint and beast price identities, while B1.1
-must add their production mappings.
+documented R2 resources and repository secrets. Imprint and beast price
+identities and mappings are present from B1.
 
 ## Direction Of Travel
 
