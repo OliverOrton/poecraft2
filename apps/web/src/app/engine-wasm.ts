@@ -11,6 +11,9 @@ import createPoecraftEngine from "../../../../bindings/wasm/dist/poecraft_engine
 import {
     ActionOutcome,
     BaseInfo,
+    BestiaryActionResult,
+    BestiaryCalculation,
+    BestiaryPresentation,
     BatchSummary,
     CalcResult,
     CraftAction,
@@ -129,6 +132,16 @@ export class EngineBindings {
     listBases(data: number): BaseInfo[] {
         return this.callJson("pcw_data_bases", ["number"], [data])
             .bases as unknown as BaseInfo[];
+    }
+
+    bestiaryPresentation(data: number): BestiaryPresentation {
+        const { ok, ...presentation } = this.callJson(
+            "pcw_bestiary_presentation",
+            ["number"],
+            [data],
+        );
+        void ok;
+        return presentation as unknown as BestiaryPresentation;
     }
 
     closeData(data: number): void {
@@ -266,6 +279,32 @@ export class EngineBindings {
             ["number", "number", "string"],
             [context, item, JSON.stringify(action)],
         ).result as unknown as ActionOutcome;
+    }
+
+    bestiaryApply(
+        data: number,
+        item: number,
+        actionId: string,
+    ): BestiaryActionResult {
+        return this.callJson(
+            "pcw_bestiary_apply",
+            ["number", "number", "string"],
+            [data, item, actionId],
+        ).result as unknown as BestiaryActionResult;
+    }
+
+    bestiaryCalculate(
+        data: number,
+        item: number,
+        actionId: string,
+    ): BestiaryCalculation {
+        const { ok, ...calculation } = this.callJson(
+            "pcw_bestiary_calculate",
+            ["number", "number", "string"],
+            [data, item, actionId],
+        );
+        void ok;
+        return calculation as unknown as BestiaryCalculation;
     }
 
     runBatch(

@@ -5,7 +5,12 @@ import json
 import unittest
 from pathlib import Path
 
-from poecraft_engine import SimulationOptions, load_data, load_economy
+from poecraft_engine import (
+    BestiaryCraftState,
+    SimulationOptions,
+    load_data,
+    load_economy,
+)
 
 
 ARTIFACT = Path(
@@ -39,6 +44,67 @@ class BindingTests(unittest.TestCase):
             pool = context.debug_pool(item, {"type": "chaos"})
             self.assertEqual(len(pool), pool.summary["candidate_count"])
             self.assertTrue(all(entry["final_weight"] > 0 for entry in pool))
+
+    def test_bestiary_compound_state_and_public_presentation(self):
+        actions = self.data.bestiary_actions
+        self.assertEqual(
+            [action.id for action in actions],
+            ["bestiary:imprint", "bestiary:restore_imprint"],
+        )
+        self.assertEqual(actions[0].family_display_name, "Imprint")
+        self.assertEqual(
+            actions[0].cost_keys,
+            (
+                "beast:craicic-chimeral",
+                "beast:rare",
+                "beast:rare",
+                "beast:rare",
+            ),
+        )
+        self.assertEqual(actions[1].cost_keys, ())
+        options = self.data.bestiary_solver_options
+        self.assertEqual(len(options), 1)
+        self.assertEqual(options[0].id, "imprint_retry")
+        self.assertEqual(options[0].goal_restriction_key, "complete_magic_item_goal")
+        self.assertEqual(options[0].goal_rarity, "magic")
+        self.assertTrue(options[0].requires_complete_goal)
+        self.assertEqual(
+            (options[0].min_program_actions, options[0].max_program_actions),
+            (1, 3),
+        )
+
+        item = self.session.create_item(rarity="magic", with_implicits=False)
+        state = self.session.create_bestiary_state(item)
+        self.assertIsInstance(state, BestiaryCraftState)
+        self.assertIs(state.item, item)
+        calculation = state.calculate("bestiary:imprint")
+        self.assertTrue(calculation.deterministic)
+        self.assertEqual(calculation.probability, 1.0)
+        self.assertFalse(state.checkpoint_present)
+        self.assertTrue(calculation.successor.checkpoint_present)
+        self.assertEqual(
+            calculation.result.consumed_price_keys, actions[0].cost_keys
+        )
+
+        created = state.apply("bestiary:imprint")
+        self.assertTrue(created.applied)
+        self.assertTrue(state.checkpoint_present)
+        refused = state.apply("bestiary:imprint")
+        self.assertFalse(refused.applied)
+        self.assertEqual(refused.refusal_key, "checkpoint_already_exists")
+        self.assertEqual(refused.consumed_price_keys, ())
+        self.assertTrue(state.checkpoint_present)
+
+        with self.session.create_action_context(seed=71) as context:
+            self.assertTrue(context.apply(state.item, "alteration").applied)
+        self.assertGreater(state.item.explicit_count, 0)
+        restored = state.apply("bestiary:restore_imprint")
+        self.assertTrue(restored.applied)
+        self.assertEqual(restored.cost_keys, ())
+        self.assertEqual(restored.consumed_price_keys, ())
+        self.assertEqual(restored.consumed_checkpoint_count, 1)
+        self.assertFalse(state.checkpoint_present)
+        self.assertEqual(state.item.explicit_count, 0)
 
     def test_packaged_manual_economy_uses_runtime_v1_envelope(self):
         path = Path(__file__).resolve().parents[3] / "data" / "economy" / "public-none.json"

@@ -1,9 +1,12 @@
 #include "tests.hpp"
 
 #include "../src/engine_internal.hpp"
+#include "../src/handles_internal.hpp"
+#include "poecraft/bestiary.h"
 #include "poecraft/item_state.h"
 
 #include <cstring>
+#include <memory>
 
 using namespace poecraft;
 
@@ -11,8 +14,20 @@ namespace {
 
 DataImpl contract_data() {
     DataImpl data;
+    BestiaryRecipeDescriptor recipe;
+    recipe.global_recipe_id = 10;
+    recipe.id = "bestiary:imprint";
+    recipe.display_name = "Imprint";
+    recipe.emulator_available = true;
+    recipe.calculator_available = true;
+    recipe.strategy_builder_available = true;
+    recipe.solver_available = true;
+    data.bestiary_recipes = {recipe};
     BestiaryActionDescriptor create;
+    create.global_action_id = 20;
+    create.global_recipe_id = 10;
     create.id = "bestiary:imprint";
+    create.display_name = "Create Imprint";
     create.operation = BestiaryOperationKind::Create;
     create.rarity_mask = 1u << PC_RARITY_MAGIC;
     create.forbidden_item_flags = PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED;
@@ -22,7 +37,10 @@ DataImpl contract_data() {
     create.cost_keys = {
         "beast:craicic-chimeral", "beast:rare", "beast:rare", "beast:rare"};
     BestiaryActionDescriptor restore;
+    restore.global_action_id = 21;
+    restore.global_recipe_id = 10;
     restore.id = "bestiary:restore_imprint";
+    restore.display_name = "Restore Imprint";
     restore.operation = BestiaryOperationKind::Restore;
     restore.rarity_mask = 0x7;
     restore.forbidden_item_flags = PC_ITEM_CORRUPTED | PC_ITEM_MIRRORED;
@@ -30,6 +48,10 @@ DataImpl contract_data() {
     restore.checkpoint_effect = BestiaryCheckpointEffect::Consume;
     restore.identity_requirement = BestiaryIdentityRequirement::SameItem;
     data.bestiary_actions = {create, restore};
+    data.bestiary_recipe_by_id.emplace("bestiary:imprint", 0);
+    data.bestiary_action_by_id.emplace("bestiary:imprint", 0);
+    data.bestiary_action_by_id.emplace("bestiary:restore_imprint", 1);
+    data.count_bestiary_actions = 2;
     return data;
 }
 
@@ -158,4 +180,71 @@ void run_bestiary_tests() {
     PC_CHECK(same_item(different.item, changed_item));
     PC_CHECK(same_item(different.checkpoint, saved));
     PC_CHECK(different.checkpoint_active);
+    auto public_data = std::make_shared<DataImpl>(contract_data());
+    pc_data public_handle{public_data};
+    pc_error_info error;
+    pc_error_info_init(&error);
+    std::uint32_t action_count = 0;
+    PC_CHECK(pc_bestiary_get_action_count(
+                 &public_handle, &action_count, &error) == PC_RESULT_OK);
+    PC_CHECK(action_count == 2);
+    pc_bestiary_action_info action_info{};
+    PC_CHECK(pc_bestiary_get_action_info(
+                 &public_handle, 0, &action_info, &error) == PC_RESULT_OK);
+    PC_CHECK(std::strcmp(action_info.action_id, "bestiary:imprint") == 0);
+    PC_CHECK(std::strcmp(action_info.recipe_id, "bestiary:imprint") == 0);
+    PC_CHECK(std::strcmp(action_info.family_display_name, "Imprint") == 0);
+    PC_CHECK(action_info.cost_key_count == 4);
+    PC_CHECK(std::strcmp(action_info.cost_keys[0],
+                         "beast:craicic-chimeral") == 0);
+    PC_CHECK(std::strcmp(action_info.cost_keys[1], "beast:rare") == 0);
+    PC_CHECK(std::strcmp(action_info.cost_keys[2], "beast:rare") == 0);
+    PC_CHECK(std::strcmp(action_info.cost_keys[3], "beast:rare") == 0);
+
+    pc_bestiary_solver_option_info option_info{};
+    PC_CHECK(pc_bestiary_get_solver_option_info(
+                 &public_handle, 0, &option_info, &error) == PC_RESULT_OK);
+    PC_CHECK(std::strcmp(option_info.option_id, "imprint_retry") == 0);
+    PC_CHECK(option_info.goal_rarity == PC_RARITY_MAGIC);
+    PC_CHECK(option_info.requires_complete_goal == 1);
+    PC_CHECK(option_info.min_program_actions == 1);
+    PC_CHECK(option_info.max_program_actions == 3);
+
+    const BestiaryCraftState public_source = representative_state();
+    pc_bestiary_craft_state public_state{};
+    PC_CHECK(pc_bestiary_state_init(
+                 &public_source.item, public_source.live_item_identity,
+                 &public_state, &error) == PC_RESULT_OK);
+    pc_bestiary_action_request create_request{
+        sizeof(pc_bestiary_action_request), PC_ABI_VERSION,
+        "bestiary:imprint"};
+    pc_bestiary_calculation public_calc{};
+    PC_CHECK(pc_bestiary_calculate_action(
+                 &public_handle, &public_state, &create_request,
+                 &public_calc, &error) == PC_RESULT_OK);
+    PC_CHECK(public_calc.outcome_count == 1);
+    PC_CHECK(public_calc.probability == 1.0);
+    PC_CHECK(public_calc.result.applied == 1);
+    PC_CHECK(public_calc.result.consumed_price_key_count == 4);
+    PC_CHECK(public_calc.successor.checkpoint_present == 1);
+    PC_CHECK(public_state.checkpoint_present == 0);
+
+    pc_bestiary_action_result public_result{};
+    PC_CHECK(pc_bestiary_apply_action(
+                 &public_handle, &public_state, &create_request,
+                 &public_result, &error) == PC_RESULT_OK);
+    PC_CHECK(public_result.applied == 1);
+    PC_CHECK(public_state.checkpoint_present == 1);
+    const pc_bestiary_craft_state public_before_refusal = public_state;
+    PC_CHECK(pc_bestiary_apply_action(
+                 &public_handle, &public_state, &create_request,
+                 &public_result, &error) == PC_RESULT_OK);
+    PC_CHECK(public_result.applied == 0);
+    PC_CHECK(public_result.refusal ==
+             PC_BESTIARY_REFUSAL_CHECKPOINT_ALREADY_EXISTS);
+    PC_CHECK(std::strcmp(public_result.refusal_key,
+                         "checkpoint_already_exists") == 0);
+    PC_CHECK(public_result.consumed_price_key_count == 0);
+    PC_CHECK(std::memcmp(&public_state, &public_before_refusal,
+                         sizeof(public_state)) == 0);
 }

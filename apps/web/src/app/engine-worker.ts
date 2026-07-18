@@ -516,6 +516,8 @@ async function dispatch(
             return bindings.dataSummary(params.data as number);
         case "listBases":
             return { bases: bindings.listBases(params.data as number) };
+        case "bestiaryPresentation":
+            return bindings.bestiaryPresentation(params.data as number);
         case "closeData":
             bindings.closeData(params.data as number);
             dataBundles.delete(params.data as number);
@@ -600,6 +602,20 @@ async function dispatch(
                     params.action as CraftAction,
                 ),
             };
+        case "bestiaryApply":
+            return {
+                result: bindings.bestiaryApply(
+                    params.data as number,
+                    params.item as number,
+                    params.actionId as string,
+                ),
+            };
+        case "bestiaryCalculate":
+            return bindings.bestiaryCalculate(
+                params.data as number,
+                params.item as number,
+                params.actionId as string,
+            );
         case "debugPool":
             return bindings.debugPool(
                 params.context as number,

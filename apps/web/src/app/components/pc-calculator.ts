@@ -26,6 +26,9 @@ import { EngineClient } from "../engine-client";
 import {
     BaseInfo,
     CalcOutcome,
+    BestiaryActionInfo,
+    BestiaryCalculation,
+    BestiarySolverOptionInfo,
     CalcResult,
     Catalog,
     EngineError,
@@ -120,7 +123,8 @@ type CraftPanel =
     | "fossil"
     | "eldritch"
     | "influenced"
-    | "veiled";
+    | "veiled"
+    | "bestiary";
 
 const CRAFT_PANELS: Array<[CraftPanel, string]> = [
     ["basic", "Basic currency"],
@@ -130,6 +134,7 @@ const CRAFT_PANELS: Array<[CraftPanel, string]> = [
     ["eldritch", "Eldritch"],
     ["influenced", "Influenced"],
     ["veiled", "Veiled"],
+    ["bestiary", "Bestiary"],
 ];
 
 /** Abstract mechanic flags, in solver_internal.hpp bit order. */
@@ -158,6 +163,8 @@ export class PcCalculator extends HTMLElement {
     private dataId = 0;
     private bases: BaseInfo[] = [];
     private catalog: Catalog | null = null;
+    private bestiaryActions: BestiaryActionInfo[] = [];
+    private bestiaryOption: BestiarySolverOptionInfo | null = null;
 
     private docId = "";
     private base = DEFAULT_BASE;
@@ -174,6 +181,8 @@ export class PcCalculator extends HTMLElement {
     private modifierOptions: ModifierFamilyOption[] = [];
     private modKeyToFamily = new Map<string, string>();
     private pickerActions: SolverActionInfo[] = [];
+    private imprintRetryEnabled = false;
+    private imprintRetryActions: string[] = [];
 
     private itemRarity = "normal";
     private itemInfluences: string[] = [];
@@ -193,6 +202,7 @@ export class PcCalculator extends HTMLElement {
     private mechanicValues = new Map<string, string>();
     private calc: CalcResult | null = null;
     private calcError = "";
+    private bestiaryCalc: BestiaryCalculation | null = null;
     private solveSummary: SolveSummary | null = null;
     private solvedStrategy: StrategyDocument | null = null;
     private solveEconomy: PinnedEconomy | null = null;
@@ -245,6 +255,11 @@ export class PcCalculator extends HTMLElement {
         this.bases = (await this.client.listBases(this.dataId)).filter(
             (base) => base.support === 0,
         );
+        const bestiary = await this.client.bestiaryPresentation(this.dataId);
+        this.bestiaryActions = bestiary.actions.filter(
+            (action) => action.calculator_available,
+        );
+        this.bestiaryOption = bestiary.solver_options[0] ?? null;
         if (this.disposed) {
             return;
         }
@@ -259,6 +274,11 @@ export class PcCalculator extends HTMLElement {
                 draft.minSatisfiedSlots ?? draft.slots.length;
             this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
+            this.imprintRetryEnabled = Boolean(draft.imprintRetryEnabled);
+            this.imprintRetryActions = (draft.imprintRetryActions ?? []).slice(
+                0,
+                this.bestiaryOption?.max_program_actions ?? 3,
+            );
             this.fossilKeys = draft.fossilKeys;
             this.activeCraftPanel = panelForAction(this.actionId);
         }
@@ -378,6 +398,7 @@ export class PcCalculator extends HTMLElement {
         this.clearSolveResult();
         await this.closeSolverHandle();
         this.calc = null;
+        this.bestiaryCalc = null;
         this.calcError = "";
         if (this.disposed || this.slots.length === 0) {
             return;
@@ -400,11 +421,45 @@ export class PcCalculator extends HTMLElement {
         // price/action envelope is refreshed from this exact solver handle.
         this.pickerActions = await this.client.solverActions(this.solver);
     }
+    private imprintRetryEligible(): boolean {
+        const option = this.bestiaryOption;
+        if (!option || this.slots.length === 0) return false;
+        if (this.goalRarity !== option.goal_rarity) return false;
+        return (
+            !option.requires_complete_goal ||
+            this.effectiveMinSatisfiedSlots() === this.slots.length
+        );
+    }
+
+    private imprintRetryGoalOption():
+        | NonNullable<SolverGoal["options"]>[number]
+        | null {
+        const option = this.bestiaryOption;
+        if (
+            !this.imprintRetryEnabled ||
+            !this.imprintRetryEligible() ||
+            !option ||
+            this.imprintRetryActions.length < option.min_program_actions ||
+            this.imprintRetryActions.length > option.max_program_actions
+        ) {
+            return null;
+        }
+        return {
+            type: "imprint_retry",
+            actions: [...this.imprintRetryActions],
+            until: {
+                goal_slots: this.slots.map((_, index) => index),
+                min_satisfied: this.slots.length,
+            },
+        };
+    }
+
 
     private solverGoal(
         actions?: string[],
         goalRelevantActions = false,
     ): SolverGoal {
+        const imprintRetry = this.imprintRetryGoalOption();
         return {
             version: "v1",
             rarity: this.goalRarity,
@@ -430,6 +485,9 @@ export class PcCalculator extends HTMLElement {
                           ? [this.actionId]
                           : [],
                   }),
+            ...(imprintRetry
+                ? { options: [imprintRetry] }
+                : {}),
         };
     }
 
@@ -596,6 +654,13 @@ export class PcCalculator extends HTMLElement {
         await this.persist();
     }
 
+    private async imprintRetryChanged(): Promise<void> {
+        this.clearSolveResult();
+        await this.openSolver();
+        await this.recalc();
+        await this.persist();
+    }
+
     private async actionChanged(): Promise<void> {
         this.renderActionPanels();
         if (
@@ -648,7 +713,18 @@ export class PcCalculator extends HTMLElement {
 
     /** Cost keys for the selected action; fossil loadouts mirror the
      * registry's per-fossil + resonator-size vector. */
+    private imprintCreationCostKeys(): string[] {
+        return (
+            this.bestiaryActions.find((action) => action.operation === "create")
+                ?.cost_keys ?? []
+        );
+    }
+
     private selectedCostKeys(): string[] {
+        const bestiary = this.bestiaryActions.find(
+            (action) => action.id === this.actionId,
+        );
+        if (bestiary) return bestiary.cost_keys;
         if (this.actionId.startsWith("fossil:") && this.fossilKeys.length) {
             return [
                 ...[...this.fossilKeys].sort().map((key) => `fossil:${key}`),
@@ -662,8 +738,14 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async startSolve(): Promise<void> {
+        const imprintCostKeys = this.imprintRetryGoalOption()
+            ? this.imprintCreationCostKeys()
+            : [];
         const pinned = pinEconomy(
-            this.pickerActions.flatMap((action) => action.cost_keys),
+            [
+                ...this.pickerActions.flatMap((action) => action.cost_keys),
+                ...imprintCostKeys,
+            ],
         );
         const pinnedPrice = (key: string): number | undefined =>
             pinned.snapshot.prices[key];
@@ -680,6 +762,17 @@ export class PcCalculator extends HTMLElement {
             this.solveError = {
                 heading: "Solve needs at least one priced action.",
                 detail: "Set a chaos-equivalent price in the shared action price table.",
+            };
+            this.renderSolvePanel();
+            return;
+        }
+        const missingImprintKeys = Array.from(new Set(imprintCostKeys)).filter(
+            (key) => pinnedPrice(key) === undefined,
+        );
+        if (missingImprintKeys.length) {
+            this.solveError = {
+                heading: "Imprint Retry pricing is incomplete.",
+                detail: `Set prices for ${missingImprintKeys.join(", ")}. Missing beast prices are never treated as zero cost.`,
             };
             this.renderSolvePanel();
             return;
@@ -886,14 +979,26 @@ export class PcCalculator extends HTMLElement {
 
     private async recalc(): Promise<void> {
         this.calc = null;
+        this.bestiaryCalc = null;
         this.calcError = "";
-        if (this.solver && this.item && this.actionId) {
+        if (this.item && this.actionId) {
             try {
-                this.calc = await this.client.solverCalc(
-                    this.solver,
-                    this.item,
-                    this.actionId,
+                const bestiary = this.bestiaryActions.find(
+                    (action) => action.id === this.actionId,
                 );
+                if (bestiary) {
+                    this.bestiaryCalc = await this.client.bestiaryCalculate(
+                        this.dataId,
+                        this.item,
+                        bestiary.id,
+                    );
+                } else if (this.solver) {
+                    this.calc = await this.client.solverCalc(
+                        this.solver,
+                        this.item,
+                        this.actionId,
+                    );
+                }
             } catch (error) {
                 this.calcError =
                     error instanceof EngineError &&
@@ -919,6 +1024,8 @@ export class PcCalculator extends HTMLElement {
             minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
             actionId: this.actionId,
             fossilKeys: this.fossilKeys,
+            imprintRetryEnabled: this.imprintRetryEnabled,
+            imprintRetryActions: this.imprintRetryActions,
             updatedAt: Date.now(),
         };
         await putCalculatorDraft(draft);
@@ -1365,6 +1472,30 @@ export class PcCalculator extends HTMLElement {
                             )}</select>
                             <button data-derive-action="influence_exalt">Influenced exalt</button>
                         </div>`;
+                case "bestiary":
+                    return `
+                        <div class="pc-craft-options">
+                            ${this.bestiaryActions
+                                .map(
+                                    (action) =>
+                                        `<button data-select-action="${escapeHtml(action.id)}">${escapeHtml(action.display_name)}</button>`,
+                                )
+                                .join("")}
+                        </div>
+                        <div class="pc-fracture-hint">
+                            ${this.bestiaryActions
+                                .map(
+                                    (action) =>
+                                        `${escapeHtml(action.display_name)}: ${
+                                            action.cost_keys.length
+                                                ? action.cost_keys
+                                                      .map(escapeHtml)
+                                                      .join(" + ")
+                                                : "no beast cost"
+                                        }`,
+                                )
+                                .join(" ? ")}
+                        </div>`;
                 case "veiled":
                     return `
                         <div class="pc-craft-options">
@@ -1539,6 +1670,10 @@ export class PcCalculator extends HTMLElement {
 
     /** Human label for a registry action id, resolved through the catalog. */
     private actionLabel(id: string): string {
+        const bestiary = this.bestiaryActions.find(
+            (action) => action.id === id,
+        );
+        if (bestiary) return bestiary.display_name;
         const colon = id.indexOf(":");
         const kind = colon < 0 ? id : id.slice(0, colon);
         const rest = colon < 0 ? "" : id.slice(colon + 1);
@@ -1597,13 +1732,25 @@ export class PcCalculator extends HTMLElement {
             host.innerHTML = `<p class="pc-calc-error">${escapeHtml(this.calcError)}</p>`;
             return;
         }
+        if (!this.actionId) {
+            host.innerHTML = '<p class="pc-empty">Pick an action.</p>';
+            return;
+        }
+        const selectedBestiary = this.bestiaryActions.some(
+            (action) => action.id === this.actionId,
+        );
+        if (selectedBestiary) {
+            if (!this.bestiaryCalc) {
+                host.innerHTML = '<p class="pc-empty">Calculating...</p>';
+                return;
+            }
+            host.innerHTML = this.renderBestiaryResult(this.bestiaryCalc);
+            this.bindPriceInputs(host);
+            return;
+        }
         if (this.slots.length === 0) {
             host.innerHTML =
                 '<p class="pc-empty">Define a goal to compute odds against.</p>';
-            return;
-        }
-        if (!this.actionId) {
-            host.innerHTML = '<p class="pc-empty">Pick an action.</p>';
             return;
         }
         const calc = this.calc;
@@ -1625,6 +1772,10 @@ export class PcCalculator extends HTMLElement {
             ${this.renderExactResult(calc)}
             ${this.renderCost(calc.success_probability)}
             ${this.renderOutcomes(calc)}`;
+        this.bindPriceInputs(host);
+    }
+
+    private bindPriceInputs(host: HTMLElement): void {
         host.querySelectorAll<HTMLInputElement>("[data-price-key]").forEach(
             (input) => {
                 input.addEventListener("change", () => {
@@ -1643,15 +1794,40 @@ export class PcCalculator extends HTMLElement {
             this.pickerActions,
             getActionPrice,
         );
+        const option = this.bestiaryOption;
+        const optionEligible = this.imprintRetryEligible();
+        const optionEnabled = this.imprintRetryEnabled && optionEligible;
+        const solveCostCounts = new Map<string, number>();
+        for (const key of readiness.costKeys) solveCostCounts.set(key, 1);
+        if (optionEnabled) {
+            for (const key of this.imprintCreationCostKeys()) {
+                solveCostCounts.set(key, (solveCostCounts.get(key) ?? 0) + 1);
+            }
+        }
+        const solveCostEntries = Array.from(
+            solveCostCounts,
+            ([key, quantity]) => ({ key, quantity }),
+        ).sort((a, b) => a.key.localeCompare(b.key));
+        const solveCostKeys = solveCostEntries.map((entry) => entry.key);
+        const solveMissingKeys = solveCostKeys.filter(
+            (key) => getActionPrice(key) === undefined,
+        );
         const priceTable = presentExpectedConsumption(
-            readiness.costKeys.map((key) => ({ key, quantity: 1 })),
+            solveCostEntries,
             getActionPrice,
             (key) => getActionPriceResolution(key).source,
         );
         const fallbackPrice = getFallbackPrice();
+        const optionReady =
+            !this.imprintRetryEnabled ||
+            (this.imprintRetryGoalOption() !== null &&
+                this.imprintCreationCostKeys().every(
+                    (key) => getActionPrice(key) !== undefined,
+                ));
         const canStart =
             Boolean(this.solver && this.item && this.slots.length) &&
             readiness.pricedActions > 0 &&
+            optionReady &&
             !this.busy;
         const progress = this.solveProgress;
         const progressMarkup =
@@ -1720,6 +1896,37 @@ export class PcCalculator extends HTMLElement {
                   : this.solveCancelled
                     ? "Solve cancelled. Adjust the goal or prices, then start again."
                   : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
+        const retryActionChoices = this.pickerActions.filter(
+            (action) => !action.synthetic,
+        );
+        const retrySelectors = option
+            ? Array.from({ length: option.max_program_actions }, (_, index) => {
+                  const current = this.imprintRetryActions[index] ?? "";
+                  return `<label>
+                    <span>Retry action ${index + 1}${index === 0 ? " (required)" : ""}</span>
+                    <select data-imprint-retry-action="${index}" ${optionEnabled ? "" : "disabled"}>
+                        <option value="">${index === 0 ? "Choose an ordinary action" : "Stop here"}</option>
+                        ${retryActionChoices
+                            .map(
+                                (action) =>
+                                    `<option value="${escapeHtml(action.id)}" ${action.id === current ? "selected" : ""}>${escapeHtml(action.display_name)}</option>`,
+                            )
+                            .join("")}
+                    </select>
+                </label>`;
+              }).join("")
+            : "";
+        const retryMarkup = option
+            ? `<section class="pc-calc-imprint-retry">
+                <label>
+                    <input type="checkbox" data-imprint-retry ${this.imprintRetryEnabled ? "checked" : ""} ${optionEligible || this.imprintRetryEnabled ? "" : "disabled"}>
+                    <strong>${escapeHtml(option.display_name)}</strong>
+                </label>
+                <p>${escapeHtml(option.goal_restriction)}</p>
+                <p class="pc-help">This is the engine's specific Imprint option, not a generic macro. It creates a checkpoint, runs 1-3 ordinary actions, and restores on failure.</p>
+                ${optionEligible ? retrySelectors : '<p class="pc-calc-error">Available only for a complete magic-item goal: every goal slot must be required.</p>'}
+            </section>`
+            : "";
 
         host.innerHTML = `
             <header class="pc-calc-solve-header">
@@ -1733,11 +1940,12 @@ export class PcCalculator extends HTMLElement {
                         : `<button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>`
                 }
             </header>
+            ${retryMarkup}
             ${progressMarkup}
             ${
-                readiness.costKeys.length
+                solveCostKeys.length
                     ? `<details class="pc-calc-solve-price-table">
-                        <summary>Action price table · ${readiness.missingKeys.length.toLocaleString()} missing</summary>
+                        <summary>Action price table · ${solveMissingKeys.length.toLocaleString()} missing</summary>
                         <label class="pc-calc-price-fallback">
                             <span>Unquoted real-action fallback</span>
                             <input type="number" min="0" step="any" data-price-fallback
@@ -1745,7 +1953,7 @@ export class PcCalculator extends HTMLElement {
                             <small>Must be greater than zero. Used only for engine-listed cost keys after overrides and certified recipes.</small>
                         </label>
                         <div class="pc-calc-solve-price-rows">${priceTable.rowsHtml}</div>
-                        <p class="pc-help">Every row discloses its source. Clearing an override reveals its recipe, quote, or fallback; keys still missing are excluded.</p>
+                        <p class="pc-help">Every row discloses its source. Missing beast prices make Imprint Retry pricing incomplete; they are never treated as zero.</p>
                     </details>`
                     : ""
             }
@@ -1767,6 +1975,31 @@ export class PcCalculator extends HTMLElement {
                 const value = Number(input.value);
                 setFallbackPrice(input.value === "" ? null : value);
             });
+        host.querySelector<HTMLInputElement>("[data-imprint-retry]")
+            ?.addEventListener("change", (event) => {
+                this.imprintRetryEnabled = (
+                    event.currentTarget as HTMLInputElement
+                ).checked;
+                if (
+                    this.imprintRetryEnabled &&
+                    this.imprintRetryActions.length === 0
+                ) {
+                    const first = retryActionChoices[0];
+                    if (first) this.imprintRetryActions = [first.id];
+                }
+                void this.guard(() => this.imprintRetryChanged());
+            });
+        host.querySelectorAll<HTMLSelectElement>(
+            "[data-imprint-retry-action]",
+        ).forEach((select) => {
+            select.addEventListener("change", () => {
+                const index = Number(select.dataset.imprintRetryAction);
+                const next = this.imprintRetryActions.slice(0, index);
+                if (select.value) next.push(select.value);
+                this.imprintRetryActions = next;
+                void this.guard(() => this.imprintRetryChanged());
+            });
+        });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {
@@ -1809,6 +2042,36 @@ export class PcCalculator extends HTMLElement {
             </div>
             <p class="pc-calc-answer-note">Expected attempts assumes every try starts from this same input item.</p>
         </section>`;
+    }
+
+    private renderBestiaryResult(calc: BestiaryCalculation): string {
+        const result = calc.result;
+        const checkpoint = result.checkpoint_present
+            ? "Present after this action"
+            : result.consumed_checkpoint_count
+              ? "Consumed by restoration"
+              : "Absent after this action";
+        const consumption = result.consumed_price_keys.length
+            ? result.consumed_price_keys.map(escapeHtml).join(" + ")
+            : "Nothing consumed";
+        const refusal = result.applied
+            ? ""
+            : `<p class="pc-calc-error"><strong>Engine refusal:</strong> ${escapeHtml(result.refusal_reason)} (${escapeHtml(result.refusal_key)})</p>
+               <p class="pc-help">The live item, checkpoint, and costs are preserved.</p>`;
+        const cost = result.cost_keys.length
+            ? this.renderCost(calc.probability)
+            : `<section class="pc-calc-section pc-calc-cost"><h4>Cost</h4><p>Restoration is beast-free.</p></section>`;
+        return `<section class="pc-calc-answer">
+            <span class="pc-calc-answer-kicker">Deterministic engine result</span>
+            <strong class="pc-calc-answer-value">${formatProbabilityExact(calc.probability)}</strong>
+            <span class="pc-calc-answer-action">${escapeHtml(this.actionLabel(result.action_id))}</span>
+            <div class="pc-calc-answer-details">
+                <span><small>Applied</small><strong>${result.applied ? "Yes" : "No"}</strong></span>
+                <span><small>Checkpoint</small><strong>${checkpoint}</strong></span>
+                <span><small>Consumption</small><strong>${consumption}</strong></span>
+            </div>
+            ${refusal}
+        </section>${cost}`;
     }
 
     private renderCost(successProbability: number): string {
@@ -2344,6 +2607,7 @@ export class PcCalculator extends HTMLElement {
 }
 
 function panelForAction(id: string): CraftPanel {
+    if (id.startsWith("bestiary:")) return "bestiary";
     if (id.startsWith("essence:")) return "essence";
     if (id.startsWith("fossil:")) return "fossil";
     if (id.startsWith("harvest_")) return "harvest";

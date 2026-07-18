@@ -1,5 +1,10 @@
 from ._binding import (
     ActionResult,
+    BestiaryActionInfo,
+    BestiaryActionResult,
+    BestiaryCalculation,
+    BestiaryCraftState,
+    BestiarySolverOptionInfo,
     BatchResult,
     BatchSummary,
     Data,
@@ -23,6 +28,11 @@ from ._binding import (
 
 __all__ = [
     "ActionResult",
+    "BestiaryActionInfo",
+    "BestiaryActionResult",
+    "BestiaryCalculation",
+    "BestiaryCraftState",
+    "BestiarySolverOptionInfo",
     "BatchResult",
     "BatchSummary",
     "Data",

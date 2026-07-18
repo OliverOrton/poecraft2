@@ -22,6 +22,7 @@
 
 #include <emscripten.h>
 
+#include "poecraft/bestiary.h"
 #include "poecraft/api.h"
 #include "poecraft/item_state.h"
 #include "poecraft/session.h"
@@ -74,6 +75,7 @@ std::unordered_map<std::uint32_t, pc_data_handle> g_data;
 std::unordered_map<std::uint32_t, pc_session_handle> g_sessions;
 std::unordered_map<std::uint32_t, pc_action_context_handle> g_contexts;
 std::unordered_map<std::uint32_t, pc_item_state> g_items;
+std::unordered_map<std::uint32_t, pc_bestiary_craft_state> g_bestiary_states;
 std::unordered_map<std::uint32_t, pc_strategy_handle> g_strategies;
 std::unordered_map<std::uint32_t, pc_economy_handle> g_economies;
 std::unordered_map<std::uint32_t, pc_simulator_handle> g_simulators;
@@ -111,6 +113,28 @@ template <typename Map>
 auto find(Map& map, std::uint32_t id) -> typename Map::mapped_type* {
     auto it = map.find(id);
     return it == map.end() ? nullptr : &it->second;
+}
+
+void reset_bestiary_state(std::uint32_t item_id,
+                          const pc_item_state& item) {
+    pc_bestiary_craft_state state{};
+    pc_error_info error = make_error();
+    if (pc_bestiary_state_init(&item, item_id, &state, &error) ==
+        PC_RESULT_OK) {
+        g_bestiary_states[item_id] = state;
+    }
+}
+
+pc_bestiary_craft_state* sync_bestiary_state(
+    std::uint32_t item_id,
+    const pc_item_state& item) {
+    auto* state = find(g_bestiary_states, item_id);
+    if (state == nullptr) {
+        reset_bestiary_state(item_id, item);
+        state = find(g_bestiary_states, item_id);
+    }
+    if (state != nullptr) state->item = item;
+    return state;
 }
 
 // --- action / option parsing ------------------------------------------------
@@ -389,6 +413,54 @@ void append_item_state(std::string& out, const pc_item_state& item) {
     out.push_back('}');
 }
 
+void append_compound_item_state(
+    std::string& out,
+    const pc_bestiary_craft_state& state) {
+    append_item_state(out, state.item);
+    out.pop_back();
+    out += ",\"bestiary\":{\"checkpoint_present\":";
+    out += state.checkpoint_present ? "true" : "false";
+    if (state.checkpoint_present) {
+        out += ",\"checkpoint\":";
+        append_item_state(out, state.checkpoint);
+    }
+    out += "}}";
+}
+
+void append_bestiary_result(
+    std::string& out,
+    const pc_bestiary_action_result& result) {
+    out += "{\"action_id\":";
+    append_escaped(out, result.action_id);
+    out += ",\"applied\":";
+    out += result.applied ? "true" : "false";
+    out += ",\"refusal_code\":" + std::to_string(result.refusal);
+    out += ",\"refusal_key\":";
+    append_escaped(out, result.refusal_key);
+    out += ",\"refusal_reason\":";
+    append_escaped(out, result.refusal_reason);
+    out += ",\"cost_keys\":[";
+    for (std::uint32_t i = 0; i < result.cost_key_count; ++i) {
+        if (i != 0) out.push_back(',');
+        append_escaped(out, result.cost_keys[i]);
+    }
+    out += "],\"consumed_price_keys\":[";
+    for (std::uint32_t i = 0;
+         i < result.consumed_price_key_count; ++i) {
+        if (i != 0) out.push_back(',');
+        append_escaped(out, result.consumed_price_keys[i]);
+    }
+    out += "],\"output_item_count\":" +
+           std::to_string(result.output_item_count);
+    out += ",\"output_checkpoint_count\":" +
+           std::to_string(result.output_checkpoint_count);
+    out += ",\"consumed_checkpoint_count\":" +
+           std::to_string(result.consumed_checkpoint_count);
+    out += ",\"checkpoint_present\":";
+    out += result.checkpoint_present ? "true" : "false";
+    out.push_back('}');
+}
+
 uint32_t obj_u32(const Value& object, const char* key, uint32_t fallback = 0) {
     const Value* value = object.find(key);
     return value != nullptr && value->type == Type::Number
@@ -604,6 +676,37 @@ uint8_t parse_slot_array(const Value& state, const char* name,
     }
     return count;
 }
+pc_item_state parse_item_state(const Value& state) {
+    pc_item_state item{};
+    item.rarity = static_cast<uint8_t>(obj_u32(state, "rarity"));
+    item.quality = static_cast<uint8_t>(obj_u32(state, "quality"));
+    item.item_flags = static_cast<uint8_t>(obj_u32(state, "item_flags"));
+    item.generic_influence_bits =
+        static_cast<uint8_t>(obj_u32(state, "generic_influence_bits"));
+    item.searing_exarch_tier =
+        static_cast<uint8_t>(obj_u32(state, "searing_exarch_tier"));
+    item.eater_of_worlds_tier =
+        static_cast<uint8_t>(obj_u32(state, "eater_of_worlds_tier"));
+    item.link_mask = static_cast<uint8_t>(obj_u32(state, "link_mask"));
+    const Value* sockets = state.find("socket_colors");
+    if (sockets != nullptr && sockets->type == Type::Array) {
+        for (std::size_t i = 0;
+             i < sockets->array.size() && i < PC_MAX_SOCKETS; ++i) {
+            item.socket_colors[i] =
+                static_cast<uint8_t>(sockets->array[i].number);
+            item.socket_count = static_cast<uint8_t>(i + 1);
+        }
+    }
+    item.prefix_count =
+        parse_slot_array(state, "prefixes", item.prefixes, PC_MAX_PREFIXES);
+    item.suffix_count =
+        parse_slot_array(state, "suffixes", item.suffixes, PC_MAX_SUFFIXES);
+    item.implicit_count =
+        parse_slot_array(state, "implicits", item.implicits, PC_MAX_IMPLICITS);
+    item.enchantment_count = parse_slot_array(
+        state, "enchantments", item.enchantments, PC_MAX_ENCHANTS);
+    return item;
+}
 
 } // namespace
 
@@ -694,6 +797,113 @@ const char* pcw_data_bases(uint32_t data_id) {
         append_escaped(out, item_class_key ? item_class_key : "");
         out += ",\"drop_level\":" + std::to_string(drop_level);
         out += ",\"support\":" + std::to_string(support);
+        out.push_back('}');
+    }
+    out += "]}";
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_bestiary_presentation(uint32_t data_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    std::uint32_t action_count = 0;
+    pc_error_info error = make_error();
+    if (pc_bestiary_get_action_count(
+            *data, &action_count, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    std::string out = "{\"ok\":true,\"actions\":[";
+    for (std::uint32_t index = 0; index < action_count; ++index) {
+        pc_bestiary_action_info info{};
+        error = make_error();
+        if (pc_bestiary_get_action_info(
+                *data, index, &info, &error) != PC_RESULT_OK) {
+            return fail(error);
+        }
+        if (index != 0) out.push_back(',');
+        out += "{\"index\":" + std::to_string(info.action_index);
+        out += ",\"global_action_id\":" +
+               std::to_string(info.global_action_id);
+        out += ",\"global_recipe_id\":" +
+               std::to_string(info.global_recipe_id);
+        out += ",\"id\":";
+        append_escaped(out, info.action_id);
+        out += ",\"recipe_id\":";
+        append_escaped(out, info.recipe_id);
+        out += ",\"family_display_name\":";
+        append_escaped(out, info.family_display_name);
+        out += ",\"display_name\":";
+        append_escaped(out, info.display_name);
+        out += ",\"operation\":";
+        append_escaped(
+            out,
+            info.operation == PC_BESTIARY_OPERATION_CREATE
+                ? "create"
+                : "restore");
+        out += ",\"transition_kind\":\"deterministic\"";
+        out += ",\"emulator_available\":";
+        out += info.emulator_available ? "true" : "false";
+        out += ",\"calculator_available\":";
+        out += info.calculator_available ? "true" : "false";
+        out += ",\"strategy_builder_available\":";
+        out += info.strategy_builder_available ? "true" : "false";
+        out += ",\"solver_available\":";
+        out += info.solver_available ? "true" : "false";
+        out += ",\"checkpoint_requirement\":";
+        append_escaped(
+            out,
+            info.checkpoint_requirement == PC_BESTIARY_CHECKPOINT_ABSENT
+                ? "absent"
+                : "present");
+        out += ",\"checkpoint_effect\":";
+        append_escaped(
+            out,
+            info.checkpoint_effect == PC_BESTIARY_CHECKPOINT_CREATE
+                ? "create"
+                : "consume");
+        out += ",\"identity_requirement\":";
+        append_escaped(out, info.identity_requirement == 0
+                                ? "current_item"
+                                : "same_item");
+        out += ",\"cost_keys\":[";
+        for (std::uint32_t key = 0; key < info.cost_key_count; ++key) {
+            if (key != 0) out.push_back(',');
+            append_escaped(out, info.cost_keys[key]);
+        }
+        out += "]}";
+    }
+    out += "],\"solver_options\":[";
+    std::uint32_t option_count = 0;
+    error = make_error();
+    if (pc_bestiary_get_solver_option_count(
+            *data, &option_count, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    for (std::uint32_t index = 0; index < option_count; ++index) {
+        pc_bestiary_solver_option_info info{};
+        error = make_error();
+        if (pc_bestiary_get_solver_option_info(
+                *data, index, &info, &error) != PC_RESULT_OK) {
+            return fail(error);
+        }
+        if (index != 0) out.push_back(',');
+        out += "{\"index\":" + std::to_string(info.option_index);
+        out += ",\"id\":";
+        append_escaped(out, info.option_id);
+        out += ",\"display_name\":";
+        append_escaped(out, info.display_name);
+        out += ",\"goal_restriction_key\":";
+        append_escaped(out, info.goal_restriction_key);
+        out += ",\"goal_restriction\":";
+        append_escaped(out, info.goal_restriction);
+        out += ",\"goal_rarity\":\"magic\"";
+        out += ",\"requires_complete_goal\":";
+        out += info.requires_complete_goal ? "true" : "false";
+        out += ",\"min_program_actions\":" +
+               std::to_string(info.min_program_actions);
+        out += ",\"max_program_actions\":" +
+               std::to_string(info.max_program_actions);
         out.push_back('}');
     }
     out += "]}";
@@ -890,6 +1100,7 @@ const char* pcw_item_create(uint32_t session_id, const char* options_json) {
     if (rc != PC_RESULT_OK) return fail(error);
     std::uint32_t id = g_next_id++;
     g_items[id] = state;
+    reset_bestiary_state(id, state);
     std::string out = "{\"ok\":true,\"item\":";
     out += std::to_string(id);
     out.push_back('}');
@@ -902,6 +1113,7 @@ const char* pcw_item_clone(uint32_t item_id) {
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::uint32_t id = g_next_id++;
     g_items[id] = *item;
+    reset_bestiary_state(id, *item);
     std::string out = "{\"ok\":true,\"item\":";
     out += std::to_string(id);
     out.push_back('}');
@@ -909,7 +1121,10 @@ const char* pcw_item_clone(uint32_t item_id) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-void pcw_item_close(uint32_t item_id) { g_items.erase(item_id); }
+void pcw_item_close(uint32_t item_id) {
+    g_bestiary_states.erase(item_id);
+    g_items.erase(item_id);
+}
 
 EMSCRIPTEN_KEEPALIVE
 const char* pcw_item_info(uint32_t item_id, uint32_t session_id) {
@@ -917,6 +1132,11 @@ const char* pcw_item_info(uint32_t item_id, uint32_t session_id) {
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::string out = "{\"ok\":true,";
     append_item_info(out, *item);
+    pc_bestiary_craft_state* bestiary =
+        sync_bestiary_state(item_id, *item);
+    out += ",\"checkpoint_present\":";
+    out += bestiary != nullptr && bestiary->checkpoint_present
+               ? "true" : "false";
     if (session_id != 0) {
         pc_session_handle* session = find(g_sessions, session_id);
         if (session != nullptr) {
@@ -1075,7 +1295,11 @@ const char* pcw_item_export(uint32_t item_id) {
     pc_item_state* item = find(g_items, item_id);
     if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
     std::string out = "{\"ok\":true,\"state\":";
-    append_item_state(out, *item);
+    pc_bestiary_craft_state* bestiary =
+        sync_bestiary_state(item_id, *item);
+    if (bestiary == nullptr)
+        return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
+    append_compound_item_state(out, *bestiary);
     out.push_back('}');
     return respond(std::move(out));
 }
@@ -1098,45 +1322,117 @@ const char* pcw_item_import(const char* state_json) {
     if (state->type != Type::Object) {
         return fail(PC_RESULT_INVALID_ARGUMENT, "item state must be an object");
     }
-    pc_item_state item;
-    std::memset(&item, 0, sizeof(item));
-    item.rarity = static_cast<uint8_t>(obj_u32(*state, "rarity"));
-    item.quality = static_cast<uint8_t>(obj_u32(*state, "quality"));
-    item.item_flags = static_cast<uint8_t>(obj_u32(*state, "item_flags"));
-    item.generic_influence_bits =
-        static_cast<uint8_t>(obj_u32(*state, "generic_influence_bits"));
-    item.searing_exarch_tier =
-        static_cast<uint8_t>(obj_u32(*state, "searing_exarch_tier"));
-    item.eater_of_worlds_tier =
-        static_cast<uint8_t>(obj_u32(*state, "eater_of_worlds_tier"));
-    item.link_mask = static_cast<uint8_t>(obj_u32(*state, "link_mask"));
-    const Value* sockets = state->find("socket_colors");
-    if (sockets != nullptr && sockets->type == Type::Array) {
-        for (std::size_t i = 0;
-             i < sockets->array.size() && i < PC_MAX_SOCKETS; ++i) {
-            item.socket_colors[i] =
-                static_cast<uint8_t>(sockets->array[i].number);
-            item.socket_count = static_cast<uint8_t>(i + 1);
-        }
-    }
-    item.prefix_count =
-        parse_slot_array(*state, "prefixes", item.prefixes, PC_MAX_PREFIXES);
-    item.suffix_count =
-        parse_slot_array(*state, "suffixes", item.suffixes, PC_MAX_SUFFIXES);
-    item.implicit_count =
-        parse_slot_array(*state, "implicits", item.implicits, PC_MAX_IMPLICITS);
-    item.enchantment_count = parse_slot_array(*state, "enchantments",
-                                              item.enchantments, PC_MAX_ENCHANTS);
+    pc_item_state item = parse_item_state(*state);
     if (item.generic_influence_bits != 0 &&
         pc_item_find_fractured(&item, nullptr, nullptr) == PC_RESULT_OK) {
         return fail(
             PC_RESULT_INVALID_ARGUMENT,
             "ordinary influence and fractured modifiers are mutually exclusive");
     }
+    bool checkpoint_present = false;
+    pc_item_state checkpoint{};
+    const Value* bestiary = state->find("bestiary");
+    if (bestiary != nullptr && bestiary->type == Type::Object) {
+        const Value* present = bestiary->find("checkpoint_present");
+        checkpoint_present =
+            present != nullptr && present->type == Type::Bool &&
+            present->boolean;
+        if (checkpoint_present) {
+            const Value* saved = bestiary->find("checkpoint");
+            if (saved == nullptr || saved->type != Type::Object) {
+                return fail(
+                    PC_RESULT_INVALID_ARGUMENT,
+                    "active Bestiary checkpoint requires saved item state");
+            }
+            checkpoint = parse_item_state(*saved);
+            if (checkpoint.generic_influence_bits != 0 &&
+                pc_item_find_fractured(
+                    &checkpoint, nullptr, nullptr) == PC_RESULT_OK) {
+                return fail(
+                    PC_RESULT_INVALID_ARGUMENT,
+                    "checkpoint influence and fractured modifiers are mutually exclusive");
+            }
+        }
+    }
     std::uint32_t id = g_next_id++;
     g_items[id] = item;
+    reset_bestiary_state(id, item);
+    if (checkpoint_present) {
+        pc_bestiary_craft_state* compound = find(g_bestiary_states, id);
+        if (compound == nullptr) {
+            g_items.erase(id);
+            return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
+        }
+        compound->checkpoint_present = 1;
+        compound->checkpoint_bound_identity = id;
+        compound->checkpoint = checkpoint;
+    }
     std::string out = "{\"ok\":true,\"item\":";
     out += std::to_string(id);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_bestiary_apply(
+    uint32_t data_id,
+    uint32_t item_id,
+    const char* action_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    if (action_id == nullptr)
+        return fail(PC_RESULT_INVALID_ARGUMENT, "null Bestiary action id");
+    pc_bestiary_craft_state* state =
+        sync_bestiary_state(item_id, *item);
+    if (state == nullptr)
+        return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
+    pc_bestiary_action_request request{
+        sizeof(pc_bestiary_action_request), PC_ABI_VERSION, action_id};
+    pc_bestiary_action_result result{};
+    pc_error_info error = make_error();
+    if (pc_bestiary_apply_action(
+            *data, state, &request, &result, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    *item = state->item;
+    std::string out = "{\"ok\":true,\"result\":";
+    append_bestiary_result(out, result);
+    out.push_back('}');
+    return respond(std::move(out));
+}
+
+EMSCRIPTEN_KEEPALIVE
+const char* pcw_bestiary_calculate(
+    uint32_t data_id,
+    uint32_t item_id,
+    const char* action_id) {
+    pc_data_handle* data = find(g_data, data_id);
+    if (data == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown data handle");
+    pc_item_state* item = find(g_items, item_id);
+    if (item == nullptr) return fail(PC_RESULT_NOT_FOUND, "unknown item");
+    if (action_id == nullptr)
+        return fail(PC_RESULT_INVALID_ARGUMENT, "null Bestiary action id");
+    pc_bestiary_craft_state* state =
+        sync_bestiary_state(item_id, *item);
+    if (state == nullptr)
+        return fail(PC_RESULT_INTERNAL_ERROR, "Bestiary state unavailable");
+    pc_bestiary_action_request request{
+        sizeof(pc_bestiary_action_request), PC_ABI_VERSION, action_id};
+    pc_bestiary_calculation calculation{};
+    pc_error_info error = make_error();
+    if (pc_bestiary_calculate_action(
+            *data, state, &request, &calculation, &error) != PC_RESULT_OK) {
+        return fail(error);
+    }
+    std::string out =
+        "{\"ok\":true,\"deterministic\":true,\"probability\":";
+    out += std::to_string(calculation.probability);
+    out += ",\"result\":";
+    append_bestiary_result(out, calculation.result);
+    out += ",\"successor\":";
+    append_compound_item_state(out, calculation.successor);
     out.push_back('}');
     return respond(std::move(out));
 }

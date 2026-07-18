@@ -12,7 +12,13 @@
 
 import { getEngine } from "../engine-service";
 import { EngineClient } from "../engine-client";
-import { BaseInfo, Catalog, CraftAction, ModInfo } from "../engine-protocol";
+import {
+    BaseInfo,
+    BestiaryActionInfo,
+    Catalog,
+    CraftAction,
+    ModInfo,
+} from "../engine-protocol";
 import {
     craftActionLabel,
     groupEssences,
@@ -60,7 +66,8 @@ type CraftPanel =
     | "fossil"
     | "eldritch"
     | "influenced"
-    | "veiled";
+    | "veiled"
+    | "bestiary";
 
 const CRAFT_PANELS: Array<[CraftPanel, string]> = [
     ["basic", "Basic currency"],
@@ -70,6 +77,7 @@ const CRAFT_PANELS: Array<[CraftPanel, string]> = [
     ["eldritch", "Eldritch"],
     ["influenced", "Influenced"],
     ["veiled", "Veiled"],
+    ["bestiary", "Bestiary"],
 ];
 
 const DEFAULT_BASE = "Metadata/Items/Armours/BodyArmours/BodyInt17";
@@ -79,6 +87,7 @@ interface HistoryEntry {
     applied: boolean;
     added: number;
     removed: number;
+    detail?: string;
 }
 
 const REACH_KIND_CRAFTED = 2;
@@ -88,6 +97,8 @@ export class PcEmulator extends HTMLElement {
     private dataId = 0;
     private bases: BaseInfo[] = [];
     private catalog: Catalog | null = null;
+    private bestiaryActions: BestiaryActionInfo[] = [];
+    private checkpointPresent = false;
 
     private docId = "";
     private base = DEFAULT_BASE;
@@ -139,6 +150,9 @@ export class PcEmulator extends HTMLElement {
         this.bases = (await this.client.listBases(this.dataId)).filter(
             (base) => base.support === 0,
         );
+        this.bestiaryActions = (await this.client.bestiaryPresentation(
+            this.dataId,
+        )).actions.filter((action) => action.emulator_available);
         if (this.disposed) {
             return;
         }
@@ -306,6 +320,29 @@ export class PcEmulator extends HTMLElement {
             added: outcome.added,
             removed: outcome.removed,
         });
+        await this.markChanged();
+    }
+
+    private async applyBestiaryAction(
+        action: BestiaryActionInfo,
+    ): Promise<void> {
+        const outcome = await this.client.bestiaryApply(
+            this.dataId,
+            this.item,
+            action.id,
+        );
+        this.history.push({
+            action: action.display_name,
+            applied: outcome.applied,
+            added: 0,
+            removed: 0,
+            detail: outcome.applied
+                ? action.checkpoint_effect === "create"
+                    ? "checkpoint saved"
+                    : "checkpoint consumed"
+                : outcome.refusal_reason,
+        });
+        this.checkpointPresent = outcome.checkpoint_present;
         await this.markChanged();
     }
 
@@ -503,6 +540,7 @@ export class PcEmulator extends HTMLElement {
 
     private async refresh(): Promise<void> {
         const info = await this.client.itemInfo(this.item, this.session);
+        this.checkpointPresent = Boolean(info.checkpoint_present);
         this.rarity = info.rarity as string;
         this.veiledOptions =
             (info.veiled_option_mod_ids as number[] | undefined) ?? [];
@@ -629,7 +667,7 @@ export class PcEmulator extends HTMLElement {
     private setBusy(busy: boolean): void {
         this.busy = busy;
         this.querySelectorAll<HTMLButtonElement>(
-            "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-fossil-add], button[data-fossil-remove]",
+            "button[data-cmd], button[data-craft-panel], button[data-simple-action], button[data-config-action], button[data-bestiary-action], button[data-fossil-add], button[data-fossil-remove]",
         ).forEach((button) => {
             if (busy) {
                 button.dataset.disabledBeforeBusy ??= String(button.disabled);
@@ -682,13 +720,15 @@ export class PcEmulator extends HTMLElement {
             .map((entry, index) => ({ entry, number: index + 1 }))
             .reverse()
             .map(({ entry, number }) => {
-                const detail = entry.applied
-                    ? `+${entry.added} / -${entry.removed}`
-                    : "no-op";
+                const detail =
+                    entry.detail ??
+                    (entry.applied
+                        ? `+${entry.added} / -${entry.removed}`
+                        : "no-op");
                 return `<li class="${entry.applied ? "" : "pc-history-noop"}">
                     <span class="pc-history-n">${number}</span>
                     <span class="pc-history-action">${escapeHtml(entry.action)}</span>
-                    <span class="pc-history-detail">${detail}</span>
+                    <span class="pc-history-detail">${escapeHtml(detail)}</span>
                 </li>`;
             })
             .join("");
@@ -876,6 +916,31 @@ export class PcEmulator extends HTMLElement {
                             )}</select>
                             <button data-config-action="influence_exalt">Influenced exalt</button>
                         </div>`;
+                case "bestiary":
+                    return `
+                        <div class="pc-craft-options">
+                            ${this.bestiaryActions
+                                .map(
+                                    (action) =>
+                                        `<button data-bestiary-action="${escapeHtml(action.id)}">${escapeHtml(action.display_name)}</button>`,
+                                )
+                                .join("")}
+                        </div>
+                        <div class="pc-fracture-hint">Imprint checkpoint: ${this.checkpointPresent ? "active" : "none"}.</div>
+                        <div class="pc-fracture-hint">
+                            ${this.bestiaryActions
+                                .map(
+                                    (action) =>
+                                        `${escapeHtml(action.display_name)}: ${
+                                            action.cost_keys.length
+                                                ? action.cost_keys
+                                                      .map(escapeHtml)
+                                                      .join(" + ")
+                                                : "no beast cost"
+                                        }`,
+                                )
+                                .join(" ? ")}
+                        </div>`;
                 case "veiled":
                     return `
                         <div class="pc-craft-options">
@@ -936,6 +1001,18 @@ export class PcEmulator extends HTMLElement {
                             button.dataset.simpleAction as CraftAction["type"],
                         ),
                     );
+                });
+            },
+        );
+        host.querySelectorAll<HTMLButtonElement>("[data-bestiary-action]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    const action = this.bestiaryActions.find(
+                        (entry) => entry.id === button.dataset.bestiaryAction,
+                    );
+                    if (action) {
+                        void this.guard(() => this.applyBestiaryAction(action));
+                    }
                 });
             },
         );

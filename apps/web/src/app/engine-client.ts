@@ -13,6 +13,9 @@ import {
     AffixSide,
     BaseInfo,
     CalcResult,
+    BestiaryActionResult,
+    BestiaryCalculation,
+    BestiaryPresentation,
     Catalog,
     ClientMessage,
     CraftAction,
@@ -237,6 +240,9 @@ export class EngineClient {
         });
         return bases;
     }
+    bestiaryPresentation(data: number): Promise<BestiaryPresentation> {
+        return this.call("bestiaryPresentation", { data });
+    }
 
     /** UI-authoring catalog (mod groups, essences, fossils) distilled from the
      * loaded data bundle. Cached in the worker after the first call. */
@@ -363,6 +369,26 @@ export class EngineClient {
             action,
         });
         return result;
+    }
+
+    async bestiaryApply(
+        data: number,
+        item: number,
+        actionId: BestiaryActionResult["action_id"],
+    ): Promise<BestiaryActionResult> {
+        const { result } = await this.call<{ result: BestiaryActionResult }>(
+            "bestiaryApply",
+            { data, item, actionId },
+        );
+        return result;
+    }
+
+    bestiaryCalculate(
+        data: number,
+        item: number,
+        actionId: BestiaryActionResult["action_id"],
+    ): Promise<BestiaryCalculation> {
+        return this.call("bestiaryCalculate", { data, item, actionId });
     }
 
     debugPool(

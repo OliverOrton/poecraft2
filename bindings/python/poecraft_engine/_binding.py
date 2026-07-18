@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+MAX_BESTIARY_COST_KEYS = 4
 ABI_VERSION = 1
 RESULT_OK = 0
 RESULT_BUFFER_TOO_SMALL = 7
@@ -143,6 +144,98 @@ class _ActionResult(ct.Structure):
         ("applied", ct.c_int32),
         ("added", ct.c_int32),
         ("removed", ct.c_int32),
+    ]
+
+
+class _BestiaryCraftState(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("item", _ItemState),
+        ("live_item_identity", ct.c_uint64),
+        ("checkpoint_present", ct.c_int32),
+        ("checkpoint_bound_identity", ct.c_uint64),
+        ("checkpoint", _ItemState),
+    ]
+
+
+class _BestiaryActionInfo(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("action_index", ct.c_uint32),
+        ("global_action_id", ct.c_uint32),
+        ("global_recipe_id", ct.c_uint32),
+        ("action_id", ct.c_char_p),
+        ("recipe_id", ct.c_char_p),
+        ("family_display_name", ct.c_char_p),
+        ("display_name", ct.c_char_p),
+        ("operation", ct.c_int32),
+        ("transition_kind", ct.c_int32),
+        ("emulator_available", ct.c_int32),
+        ("calculator_available", ct.c_int32),
+        ("strategy_builder_available", ct.c_int32),
+        ("solver_available", ct.c_int32),
+        ("checkpoint_requirement", ct.c_int32),
+        ("checkpoint_effect", ct.c_int32),
+        ("identity_requirement", ct.c_int32),
+        ("cost_key_count", ct.c_uint32),
+        ("cost_keys", ct.c_char_p * MAX_BESTIARY_COST_KEYS),
+    ]
+
+
+class _BestiaryActionRequest(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("action_id", ct.c_char_p),
+    ]
+
+
+class _BestiaryActionResult(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("action_id", ct.c_char_p),
+        ("applied", ct.c_int32),
+        ("refusal", ct.c_int32),
+        ("refusal_key", ct.c_char_p),
+        ("refusal_reason", ct.c_char_p),
+        ("cost_key_count", ct.c_uint32),
+        ("cost_keys", ct.c_char_p * MAX_BESTIARY_COST_KEYS),
+        ("consumed_price_key_count", ct.c_uint32),
+        ("consumed_price_keys", ct.c_char_p * MAX_BESTIARY_COST_KEYS),
+        ("output_item_count", ct.c_uint32),
+        ("output_checkpoint_count", ct.c_uint32),
+        ("consumed_checkpoint_count", ct.c_uint32),
+        ("checkpoint_present", ct.c_int32),
+    ]
+
+
+class _BestiaryCalculation(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("outcome_count", ct.c_uint32),
+        ("probability", ct.c_double),
+        ("successor", _BestiaryCraftState),
+        ("result", _BestiaryActionResult),
+    ]
+
+
+class _BestiarySolverOptionInfo(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("option_index", ct.c_uint32),
+        ("option_id", ct.c_char_p),
+        ("display_name", ct.c_char_p),
+        ("goal_restriction_key", ct.c_char_p),
+        ("goal_restriction", ct.c_char_p),
+        ("goal_rarity", ct.c_int32),
+        ("requires_complete_goal", ct.c_int32),
+        ("min_program_actions", ct.c_uint32),
+        ("max_program_actions", ct.c_uint32),
     ]
 
 
@@ -530,6 +623,62 @@ _lib.pc_apply_action.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_apply_action.restype = ct.c_int32
+_lib.pc_bestiary_state_init.argtypes = [
+    ct.POINTER(_ItemState),
+    ct.c_uint64,
+    ct.POINTER(_BestiaryCraftState),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_state_init.restype = ct.c_int32
+_lib.pc_bestiary_get_action_count.argtypes = [
+    _handle,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_get_action_count.restype = ct.c_int32
+_lib.pc_bestiary_get_action_info.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(_BestiaryActionInfo),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_get_action_info.restype = ct.c_int32
+_lib.pc_bestiary_find_action.argtypes = [
+    _handle,
+    ct.c_char_p,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_find_action.restype = ct.c_int32
+_lib.pc_bestiary_apply_action.argtypes = [
+    _handle,
+    ct.POINTER(_BestiaryCraftState),
+    ct.POINTER(_BestiaryActionRequest),
+    ct.POINTER(_BestiaryActionResult),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_apply_action.restype = ct.c_int32
+_lib.pc_bestiary_calculate_action.argtypes = [
+    _handle,
+    ct.POINTER(_BestiaryCraftState),
+    ct.POINTER(_BestiaryActionRequest),
+    ct.POINTER(_BestiaryCalculation),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_calculate_action.restype = ct.c_int32
+_lib.pc_bestiary_get_solver_option_count.argtypes = [
+    _handle,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_get_solver_option_count.restype = ct.c_int32
+_lib.pc_bestiary_get_solver_option_info.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(_BestiarySolverOptionInfo),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_bestiary_get_solver_option_info.restype = ct.c_int32
 _lib.pc_apply_action_batch.argtypes = [
     _handle,
     ct.POINTER(_ItemState),
@@ -743,6 +892,85 @@ class ActionResult:
 
 
 @dataclass(frozen=True)
+class BestiaryActionInfo:
+    index: int
+    global_action_id: int
+    global_recipe_id: int
+    id: str
+    recipe_id: str
+    family_display_name: str
+    display_name: str
+    operation: str
+    transition_kind: str
+    emulator_available: bool
+    calculator_available: bool
+    strategy_builder_available: bool
+    solver_available: bool
+    checkpoint_requirement: str
+    checkpoint_effect: str
+    identity_requirement: str
+    cost_keys: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class BestiarySolverOptionInfo:
+    index: int
+    id: str
+    display_name: str
+    goal_restriction_key: str
+    goal_restriction: str
+    goal_rarity: str
+    requires_complete_goal: bool
+    min_program_actions: int
+    max_program_actions: int
+
+
+@dataclass(frozen=True)
+class BestiaryActionResult:
+    action_id: str
+    applied: bool
+    refusal_code: int
+    refusal_key: str
+    refusal_reason: str
+    cost_keys: tuple[str, ...]
+    consumed_price_keys: tuple[str, ...]
+    output_item_count: int
+    output_checkpoint_count: int
+    consumed_checkpoint_count: int
+    checkpoint_present: bool
+
+
+@dataclass(frozen=True)
+class BestiaryCalculation:
+    deterministic: bool
+    probability: float
+    successor: "BestiaryCraftState"
+    result: BestiaryActionResult
+
+
+def _bestiary_result(native: _BestiaryActionResult) -> BestiaryActionResult:
+    return BestiaryActionResult(
+        _decode(native.action_id),
+        bool(native.applied),
+        native.refusal,
+        _decode(native.refusal_key),
+        _decode(native.refusal_reason),
+        tuple(
+            _decode(native.cost_keys[index])
+            for index in range(native.cost_key_count)
+        ),
+        tuple(
+            _decode(native.consumed_price_keys[index])
+            for index in range(native.consumed_price_key_count)
+        ),
+        native.output_item_count,
+        native.output_checkpoint_count,
+        native.consumed_checkpoint_count,
+        bool(native.checkpoint_present),
+    )
+
+
+@dataclass(frozen=True)
 class BatchSummary:
     item_count: int
     applied_count: int
@@ -927,6 +1155,87 @@ class Data(_OwnedHandle):
             "group_count": native.group_count,
         }
 
+    @property
+    def bestiary_actions(self) -> tuple[BestiaryActionInfo, ...]:
+        count = ct.c_uint32()
+        error = _error()
+        _check(
+            _lib.pc_bestiary_get_action_count(
+                self._handle, ct.byref(count), ct.byref(error)
+            ),
+            error,
+        )
+        actions: list[BestiaryActionInfo] = []
+        for index in range(count.value):
+            native = _BestiaryActionInfo()
+            error = _error()
+            _check(
+                _lib.pc_bestiary_get_action_info(
+                    self._handle, index, ct.byref(native), ct.byref(error)
+                ),
+                error,
+            )
+            actions.append(
+                BestiaryActionInfo(
+                    native.action_index,
+                    native.global_action_id,
+                    native.global_recipe_id,
+                    _decode(native.action_id),
+                    _decode(native.recipe_id),
+                    _decode(native.family_display_name),
+                    _decode(native.display_name),
+                    ("create", "restore")[native.operation],
+                    "deterministic" if native.transition_kind == 0 else "unknown",
+                    bool(native.emulator_available),
+                    bool(native.calculator_available),
+                    bool(native.strategy_builder_available),
+                    bool(native.solver_available),
+                    ("absent", "present")[native.checkpoint_requirement],
+                    ("create", "consume")[native.checkpoint_effect],
+                    ("current_item", "same_item")[native.identity_requirement],
+                    tuple(
+                        _decode(native.cost_keys[key_index])
+                        for key_index in range(native.cost_key_count)
+                    ),
+                )
+            )
+        return tuple(actions)
+
+    @property
+    def bestiary_solver_options(self) -> tuple[BestiarySolverOptionInfo, ...]:
+        count = ct.c_uint32()
+        error = _error()
+        _check(
+            _lib.pc_bestiary_get_solver_option_count(
+                self._handle, ct.byref(count), ct.byref(error)
+            ),
+            error,
+        )
+        options: list[BestiarySolverOptionInfo] = []
+        for index in range(count.value):
+            native = _BestiarySolverOptionInfo()
+            error = _error()
+            _check(
+                _lib.pc_bestiary_get_solver_option_info(
+                    self._handle, index, ct.byref(native), ct.byref(error)
+                ),
+                error,
+            )
+            options.append(
+                BestiarySolverOptionInfo(
+                    native.option_index,
+                    _decode(native.option_id),
+                    _decode(native.display_name),
+                    _decode(native.goal_restriction_key),
+                    _decode(native.goal_restriction),
+                    ("normal", "magic", "rare")[native.goal_rarity],
+                    bool(native.requires_complete_goal),
+                    native.min_program_actions,
+                    native.max_program_actions,
+                )
+            )
+        return tuple(options)
+
     def create_session(self, base_key: str, item_level: int) -> "Session":
         encoded = base_key.encode()
         options = _SessionOptions(ct.sizeof(_SessionOptions), ABI_VERSION, encoded, item_level)
@@ -948,6 +1257,25 @@ class Session(_OwnedHandle):
         super().__init__(handle)
         self._data = data
         self._mods_by_key: dict[str, ModInfo] | None = None
+        self._next_bestiary_identity = 1
+
+    def create_bestiary_state(self, item: "Item") -> "BestiaryCraftState":
+        if item._session is not self:
+            raise ValueError("item belongs to a different session")
+        native = _BestiaryCraftState()
+        error = _error()
+        identity = self._next_bestiary_identity
+        self._next_bestiary_identity += 1
+        _check(
+            _lib.pc_bestiary_state_init(
+                ct.byref(item._state),
+                identity,
+                ct.byref(native),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return BestiaryCraftState(self, native, item)
 
     def create_action_context(self, seed: int = 0) -> "ActionContext":
         options = _ContextOptions(ct.sizeof(_ContextOptions), ABI_VERSION, seed)
@@ -1169,6 +1497,90 @@ class Item:
                 if slots[index].flags & MOD_SLOT_FRACTURED
             )
         return tuple(ids)
+
+
+class BestiaryCraftState:
+    """One live item plus its optional engine-authoritative Imprint checkpoint."""
+
+    def __init__(
+        self,
+        session: Session,
+        state: _BestiaryCraftState,
+        item: Item | None = None,
+    ):
+        self._session = session
+        self._state = state
+        self._item = item or Item(session, self._state.item)
+        self._item._state = self._state.item
+
+    @property
+    def item(self) -> Item:
+        return self._item
+
+    @property
+    def live_item_identity(self) -> int:
+        return self._state.live_item_identity
+
+    @property
+    def checkpoint_present(self) -> bool:
+        return bool(self._state.checkpoint_present)
+
+    @property
+    def checkpoint_bound_identity(self) -> int | None:
+        return (
+            self._state.checkpoint_bound_identity
+            if self.checkpoint_present
+            else None
+        )
+
+    def apply(self, action_id: str) -> BestiaryActionResult:
+        encoded = action_id.encode()
+        request = _BestiaryActionRequest(
+            ct.sizeof(_BestiaryActionRequest), ABI_VERSION, encoded
+        )
+        native = _BestiaryActionResult()
+        error = _error()
+        _check(
+            _lib.pc_bestiary_apply_action(
+                self._session._data._handle,
+                ct.byref(self._state),
+                ct.byref(request),
+                ct.byref(native),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return _bestiary_result(native)
+
+    def calculate(self, action_id: str) -> BestiaryCalculation:
+        encoded = action_id.encode()
+        request = _BestiaryActionRequest(
+            ct.sizeof(_BestiaryActionRequest), ABI_VERSION, encoded
+        )
+        native = _BestiaryCalculation()
+        error = _error()
+        _check(
+            _lib.pc_bestiary_calculate_action(
+                self._session._data._handle,
+                ct.byref(self._state),
+                ct.byref(request),
+                ct.byref(native),
+                ct.byref(error),
+            ),
+            error,
+        )
+        successor = _BestiaryCraftState()
+        ct.memmove(
+            ct.byref(successor),
+            ct.byref(native.successor),
+            ct.sizeof(_BestiaryCraftState),
+        )
+        return BestiaryCalculation(
+            native.outcome_count == 1,
+            native.probability,
+            BestiaryCraftState(self._session, successor),
+            _bestiary_result(native.result),
+        )
 
 
 def _copy_item_state(source: _ItemState) -> _ItemState:

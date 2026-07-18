@@ -105,6 +105,10 @@ export interface CalculatorDraftRecord {
     actionId: string;
     /** Extra fossils layered onto a selected fossil action (loadout). */
     fossilKeys: string[];
+    /** Specific engine-owned B1 Imprint retry option; absent in legacy drafts. */
+    imprintRetryEnabled?: boolean;
+    /** One to three ordinary primitive registry action ids. */
+    imprintRetryActions?: string[];
     updatedAt: number;
 }
 

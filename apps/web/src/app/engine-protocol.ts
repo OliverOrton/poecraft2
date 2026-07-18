@@ -89,6 +89,75 @@ export interface ActionOutcome {
     removed: number;
 }
 
+export interface BestiaryActionInfo {
+    index: number;
+    global_action_id: number;
+    global_recipe_id: number;
+    id: "bestiary:imprint" | "bestiary:restore_imprint";
+    recipe_id: "bestiary:imprint";
+    family_display_name: string;
+    display_name: string;
+    operation: "create" | "restore";
+    transition_kind: "deterministic";
+    emulator_available: boolean;
+    calculator_available: boolean;
+    strategy_builder_available: boolean;
+    solver_available: boolean;
+    checkpoint_requirement: "absent" | "present";
+    checkpoint_effect: "create" | "consume";
+    identity_requirement: "current_item" | "same_item";
+    /** Repeated keys are exact consumed quantities. */
+    cost_keys: string[];
+}
+
+export interface BestiarySolverOptionInfo {
+    index: number;
+    id: "imprint_retry";
+    display_name: string;
+    goal_restriction_key: "complete_magic_item_goal";
+    goal_restriction: string;
+    goal_rarity: "magic";
+    requires_complete_goal: true;
+    min_program_actions: 1;
+    max_program_actions: 3;
+}
+
+export interface BestiaryPresentation {
+    actions: BestiaryActionInfo[];
+    solver_options: BestiarySolverOptionInfo[];
+}
+
+export interface BestiaryActionResult {
+    action_id: BestiaryActionInfo["id"];
+    applied: boolean;
+    refusal_code: number;
+    refusal_key: string;
+    refusal_reason: string;
+    cost_keys: string[];
+    consumed_price_keys: string[];
+    output_item_count: number;
+    output_checkpoint_count: number;
+    consumed_checkpoint_count: number;
+    checkpoint_present: boolean;
+}
+
+export interface BestiaryCompoundSuccessor {
+    /** Saved checkpoint is nested state, never a second live item handle. */
+    bestiary: {
+        checkpoint_present: boolean;
+        checkpoint?: unknown;
+    };
+    [key: string]: unknown;
+}
+
+export interface BestiaryCalculation {
+    deterministic: true;
+    probability: number;
+    result: BestiaryActionResult;
+    /** Complete deterministic compound successor serialized by the engine. */
+    successor: BestiaryCompoundSuccessor;
+}
+
 export interface BatchSummary {
     item_count: number;
     applied_count: number;
@@ -356,6 +425,12 @@ export type SolverFixedOption =
           /** Approved roll/reforge used until the exact carrier is ready. */
           preparation: string[];
           carrier_goal_slot: number;
+      }
+    | {
+          type: "imprint_retry";
+          /** One to three exact ordinary primitives; not a generic macro. */
+          actions: string[];
+          until: SolverOptionExit;
       };
 
 export interface SolverOptionExit {
@@ -526,6 +601,8 @@ export interface ItemInfo {
     searing_exarch_tier: number;
     eater_of_worlds_tier: number;
     veiled_option_mod_ids: number[];
+    /** Engine-owned compound Imprint checkpoint presence. */
+    checkpoint_present: boolean;
 }
 
 // --- worker message envelopes ----------------------------------------------

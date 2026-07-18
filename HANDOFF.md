@@ -1,12 +1,12 @@
-# Session Handoff - B1.4 Bindings And Workspace Surfaces Is Next
+# Session Handoff - B1.5 Bestiary Acceptance Is Next
 
-Updated 2026-07-17 after B1.3. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-17 after B1.4. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.3 are complete. Only `bestiary:imprint` is selected, classified as
+B1.0-B1.4 are complete. Only `bestiary:imprint` is selected, classified as
 checkpoint/restore. Prefix to Suffix and Suffix to Prefix remain explicit
 unsupported B1 recipe rows and have no action descriptors or behavior.
 
@@ -28,39 +28,50 @@ compile through explicit free restore and retry; goal outcomes terminate with
 the active checkpoint still bound to the successful item. Raw create/restore
 are not ordinary one-item DP primitives.
 
+The additive public C ABI uses `pc_bestiary_craft_state` for the live item and
+its bound checkpoint without widening `pc_item_state`. Stable presentation,
+action results, deterministic calculations, refusal keys/reasons, declared
+cost keys, actual consumption, and the specific solver-option metadata are
+available through Python and WASM. WASM item export/import preserves the bound
+checkpoint while a fresh item/restart begins without one.
+
+Emulator and Calculator consume the same engine-owned Bestiary presentation.
+Calculator renders engine calculation/refusal results and exact repeated beast
+costs, and exposes only the complete-magic-goal `imprint_retry` option. Strategy
+Builder emits the two existing ordinary Bestiary operations. The parked
+conversions remain absent from bindings and all workspace surfaces.
+
 Local checkpoint commits:
 
 - `f0c4461` - B1.0 authoritative Imprint contract.
 - `534dac4` - B1.1 data, price, and registry substrate.
 - `a6adfb7` - B1.2 native checkpoint state and deterministic calculation.
-- The B1.3 checkpoint commit is the immediate parent of the next session.
+- `4f89e23` - B1.3 solver and strategy integration.
+- The B1.4 bindings/workspace checkpoint is this handoff's commit.
 
 ## Exact Next Boundary
 
-Implement **B1.4 only - Bindings And Workspace Surfaces**:
+Execute **B1.5 only - Bestiary Acceptance**:
 
-1. Define the public C ABI compound-state/action/calculation surface without
-   widening `pc_item_state` or pretending the checkpoint is a second item.
-   Carry stable action ids, refusal reasons, costs, checkpoint presence, and
-   success output through Python and WASM bindings.
-2. Add the selected Bestiary family to the engine-owned shared action
-   presentation used by Emulator and Calculator. Strategy Builder emits the
-   same ordinary `bestiary:imprint` and `bestiary:restore_imprint` operations
-   already accepted by the native strategy compiler.
-3. Expose the specific `imprint_retry` solver option and its complete-magic-goal
-   restriction honestly. Do not invent a generic macro editor.
-4. Rebuild release WASM because the public ABI/binding surface changes, then
-   run only the B1.4 binding/web automated checks required by the active plan.
+1. Run the complete relevant ingest, artifact, native, binding, WASM, and web
+   acceptance once.
+2. Verify engine/calculation parity for the selected Imprint recipe on its
+   approved fixtures, including all checkpoint/refusal semantics.
+3. Solve and compile the selected solver-visible recipe, then run the required
+   strategy verification exactly 10,000 times.
+4. Deliver the resulting ordinary strategy and Calculator outputs for Oliver's
+   visual and mechanic review, recording the shipped recipe, parked recipes,
+   and any remaining state-model constraints.
 
-Stop after B1.4. Do not begin B1.5 acceptance or S8. Rewrite this handoff so
-B1.5 is the sole exact next boundary.
+Stop after B1.5. Do not begin S8 until B1 acceptance and Oliver's review are
+complete.
 
 ## Gotchas
 
 - Simulator trace/action-distribution values for the two Bestiary operations
-  currently use internal operation codes outside `pc_action_type`; B1.4 must
-  give bindings an explicit stable presentation rather than assuming those
-  are ordinary public action enum values.
+  use internal operation codes outside `pc_action_type`. Bindings and UI must
+  continue using the explicit Bestiary presentation rather than casting those
+  values to ordinary public action enums.
 - Refusals preserve item, checkpoint, and costs. Identical-state restore still
   applies and consumes the checkpoint.
 - UI has no mechanic authority and must not reimplement legality or checkpoint
@@ -70,13 +81,15 @@ B1.5 is the sole exact next boundary.
 - Do not expose parked conversions or infer mechanics.
 - Oliver owns rendered/visual review; no screenshots or browser visual smoke.
 
-## Validation At B1.3
+## Validation At B1.4
 
-- Canonical ingest and artifact validation: passed.
-- Focused economy Beast fixture: passed.
-- Native fallback build: passed.
-- Focused Imprint action/calculation tests: 42 checks, 0 failures.
-- Solver/compiler layer: 134 checks, 0 failures. The Imprint exact policy
-  compiled and simulated with no unsupported, unapplied, or unmatched route.
+- Native release/fallback build completed; focused Bestiary suite passed 76
+  checks with 0 failures, including the public C ABI.
+- Focused Python binding file passed all 14 tests.
+- Release `poecraft_engine.mjs` and `.wasm` rebuilt successfully from `C:\emsdk`.
+- Narrow non-visual WASM/worker binding and workspace contract test passed.
+- Web TypeScript check passed with `npx tsc --noEmit`.
+- No B1.5 complete acceptance suite, 10,000-run verification, rendered browser
+  review, screenshot, or visual smoke was performed.
 
-B1.5 remains final Bestiary acceptance. S8 follows only after B1 closes.
+B1.5 is the sole next boundary. S8 follows only after B1 closes.

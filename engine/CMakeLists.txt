@@ -56,6 +56,7 @@ add_library(poecraft_engine_objects OBJECT
     src/session_builder.cpp
     src/actions_basic.cpp
     src/actions_bestiary.cpp
+    src/bestiary_api.cpp
     src/simulator.cpp
     src/solver_registry.cpp
     src/solver_abstract.cpp

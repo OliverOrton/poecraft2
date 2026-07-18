@@ -47,6 +47,8 @@ $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
 $Exported = @(
     "_pcw_abi_version", "_pcw_data_open", "_pcw_data_summary", "_pcw_data_bases",
+    "_pcw_bestiary_presentation", "_pcw_bestiary_apply",
+    "_pcw_bestiary_calculate",
     "_pcw_data_close",
     "_pcw_session_open", "_pcw_session_close", "_pcw_session_mod_count",
     "_pcw_session_mod_info", "_pcw_context_open", "_pcw_context_close",

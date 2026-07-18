@@ -496,6 +496,10 @@ export function operationLabel(
     const params = operation.params ?? {};
     const catalog = context.catalog;
     switch (operation.type) {
+        case "bestiary:imprint":
+            return "Create Imprint";
+        case "bestiary:restore_imprint":
+            return "Restore Imprint";
         case "condition_check_only":
             return "Condition router";
         case "essence": {

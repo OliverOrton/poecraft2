@@ -10,11 +10,11 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: B1.0 is complete. Oliver selected Imprint as the sole B1
-recipe, approved its exact checkpoint/restore contract and focused outcomes,
-and explicitly parked Prefix to Suffix and Suffix to Prefix. The authoritative
-contract is [fixtures/bestiary/v1](../../fixtures/bestiary/v1/). The next
-implementation boundary is **B1.1 only**. The recorded S7 endgame sample remains
+Status 2026-07-17: B1.0-B1.4 are complete. Imprint is the sole B1 recipe;
+Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
+the engine and workspace action envelopes. The authoritative contract is
+[fixtures/bestiary/v1](../../fixtures/bestiary/v1/). The next implementation
+boundary is **B1.5 only**. The recorded S7 endgame sample remains
 `0.9942` against the former `0.995` target; the number is retained as a
 disclosed miss, not rewritten as a passing numeric gate.
 
@@ -270,6 +270,8 @@ boundary.
 
 ### B1.4 - Bindings And Workspace Surfaces
 
+Status: complete 2026-07-17.
+
 - Carry the registry/action/calculation additions through Python, C ABI, WASM,
   and the worker protocol.
 - Add the selected Bestiary family to the shared action presentation used by
@@ -279,6 +281,17 @@ boundary.
 
 Checkpoint: native and WASM expose the same selected recipe ids, outcomes, and
 strategy behavior. No rendered browser review is performed by an agent.
+
+Completion: the public C ABI, Python binding, WASM facade, worker protocol, and
+TypeScript client expose the two stable Imprint action ids, compound checkpoint
+presence, deterministic successors, engine refusal keys/reasons, declared cost
+keys, and actual consumption without widening `pc_item_state`. Emulator and
+Calculator share the engine-owned Bestiary presentation; Strategy Builder emits
+the two ordinary operations. Calculator exposes only the exact `imprint_retry`
+solver option and its complete magic-item-goal restriction, including one
+Craicic Chimeral plus three rare beasts and incomplete missing-beast pricing.
+Release WASM and the focused native, Python, WASM-worker, and non-visual web
+checks passed. B1.5 is the sole next boundary.
 
 ### B1.5 - Bestiary Acceptance
 
