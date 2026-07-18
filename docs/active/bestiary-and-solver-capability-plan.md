@@ -10,7 +10,7 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-17: B1.0-B1.4 and S8.0-S8.2 are complete. Oliver explicitly waived
+Status 2026-07-18: B1.0-B1.4 and S8.0-S8.3 are complete. Oliver explicitly waived
 B1.5 as a separate acceptance checkpoint based on the focused B1.3/B1.4
 validation already completed; B1.5 is recorded as waived/deferred, not
 complete. Its full acceptance suite, 10,000-run Imprint verification, and
@@ -21,7 +21,10 @@ the engine and workspace action envelopes. The authoritative contract is
 display-only review projections over the frozen S8.0 ordinary strategies while
 preserving their exact bytes and sole execution authority. S8.2 corrected
 Fossil/Essence metamod handling and added exact preservation-aware action
-control. The next implementation boundary is **S8.3 only**. The recorded S7 endgame sample remains `0.9942`
+control. S8.3 promotes exact Fracture, permanent and temporary bench,
+protected-side, and Multimod finishes into carrier-aware native candidate
+generation with complete-kernel evidence and primitive execution. The next
+implementation boundary is **S8.4 only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -452,10 +455,14 @@ nodes, and edges. Their unproved destructive rows remain included. A separate
 real-artifact price flip proves intended reduction: 24 destructive rows were
 considered, 12 retained, and 12 expensive Chaos rows pruned with strict bound
 witnesses while controlled and exhaustive values/policies matched. No S8.1
-section, role, label, or ordering became solver input. S8.3 is the sole next
-boundary.
+section, role, label, or ordering became solver input. That checkpoint handed
+off to S8.3.
 
 ### S8.3 - Automatic Fracture, Bench, And Metamod Candidates
+
+Status: complete 2026-07-18. Exact comparison and acceptance evidence is
+versioned under
+[fixtures/solver-baselines/s8.3](../../fixtures/solver-baselines/s8.3/).
 
 Promote existing targeted option machinery into ordinary candidate generation:
 
@@ -477,6 +484,57 @@ Do not create a general action-program authoring system.
 Checkpoint: price-flip fixtures select and reject automatic Fracture,
 bench-blocking, and protected candidates at analytically checked boundaries;
 every selected option compiles to primitive operations and simulator routes.
+
+Checkpoint passed: native generation is enabled by the bounded
+`goal_relevant` action mode or the additive `automatic_candidates` goal flag.
+It adds permanent goal benches only when their exact deterministic successor
+advances the requested group/family/tier; temporary ordinary bench blockers
+only when setup is exact, the complete successor kernel differs through group
+conflict or occupied-side capacity, the target advances, and every exit is
+cleaned; protected prefix/suffix routes only when a satisfied carrier exists,
+the follow-up respects the lock and changes the exact kernel, and setup,
+reapplication, replacement, recovery, and every exit are complete; and
+Fracture preparation only for a legal exact satisfying carrier with an
+almost-sure complete preparation/retry route. Fossil and Essence remain
+ineligible for protection because their S8.2 transition facts ignore every
+metamod. Nonconflicting permanent goal benches may use the existing exact
+Multimod finish.
+
+Candidates are synthesized before pricing and compete only through the
+ordinary minimum-complete-expected-downstream-cost Bellman step. Missing
+prices skip otherwise complete candidates with evidence. Telemetry records
+carrier identity, relevant goal mask, legality, exact baseline/candidate
+kernel hashes and mechanism, primitive setup/follow-up/cleanup, complete
+coverage, and selected/included/rejected/collapsed/deferred disposition. Every
+selected option compiles into the existing primitive strategy vocabulary; no
+generic program language or frontend crafting authority was added.
+
+Analytic boundaries passed: temporary blocker price `4` (selected at `2` for
+value `13`, raw Exalt selected at `5` for value `15`, deterministic retained
+tie at `4`); prefix-lock price `23` (protected Scour selected at `10` for value
+`14`, Restart selected at `30` for value `27`); and Fracture price `23.75`
+(selected at `23` for value `124.25`, Restart selected at `24` for value
+`125`). The temporary candidate matches the pruning-disabled oracle policy and
+value, while automatic Fracture matches the manually enumerated S7 option
+value within `1e-12`. Kernel-neutral blockers, influenced Fracture paths,
+missing cleanup/lock dependencies, and Fossil/Essence protection are absent.
+
+Compiled native execution completed 64 temporary-blocker, 64 protected-side,
+and 512 stochastic Fracture runs with zero failures, unapplied actions, or
+unmatched routes. Release WASM selected, compiled, and ran an automatic
+permanent bench for 64/64 successes. Native acceptance passed 468,934 checks;
+the focused S8.3 and C-ABI gates passed 226 and 2,724 checks; WASM engine smoke
+passed 27/27; typecheck and all other non-visual web checks passed. The one
+archived S7 artifact-pin assertion remains the disclosed pre-B1.4 mismatch and
+was not rewritten. No new 10,000-run S8.3 verification gate was invented; the
+native suite retained its pre-existing embedded 10,000-run checks.
+
+With automatic generation disabled, `oracle-real-one-mod`,
+`oracle-real-two-mod`, and `ordinary-es-bench` retain the exact S8.0 values,
+state counts, node/edge counts, and byte-identical raw strategies. The frozen
+temporary-blocker non-convergence, abandoned protected capture, archived
+endgame result, S7 pins, compiler-only evaluator refusal, and B1.5 waiver all
+remain unchanged. S8.4 is the sole next boundary.
 
 ### S8.4 - Exact Action And Material Accounting
 

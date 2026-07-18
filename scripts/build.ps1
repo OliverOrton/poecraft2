@@ -91,6 +91,7 @@ else {
             "$Root/engine/tests/test_solver_calc.cpp",
             "$Root/engine/tests/test_solver_solve.cpp",
             "$Root/engine/tests/test_solver_compile.cpp",
+            "$Root/engine/tests/test_solver_s8_3.cpp",
             "$Root/engine/tests/test_solver_eval.cpp",
             "$Root/engine/tests/test_solver_api.cpp"
         )

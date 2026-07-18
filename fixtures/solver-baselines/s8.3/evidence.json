@@ -1,0 +1,226 @@
+{
+  "schema_version": "s8_3_automatic_candidate_evidence_v1",
+  "checkpoint": "S8.3 automatic Fracture, bench, and metamod candidates",
+  "implementation_date": "2026-07-18",
+  "historical_inputs": {
+    "s8_0_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/manifest.json",
+      "sha256": "c034a794f7f48ec919e03c2ae7d4afe6f1ebf4c2851d2c547ab2e8c6b803d1da",
+      "mutated": false
+    },
+    "s8_1_projection_manifest": {
+      "path": "fixtures/solver-baselines/s8.0/review-projections/manifest.json",
+      "sha256": "dfa99fb9ea57c7cb18d37ed8b1cf03752f10817ffd76d279effa5f4ca46199b3",
+      "mutated": false,
+      "used_as_solver_input": false
+    }
+  },
+  "candidate_control": {
+    "activation": [
+      "goal action_mode goal_relevant",
+      "goal automatic_candidates true"
+    ],
+    "price_independent_generation": true,
+    "selection_objective": "minimum complete expected downstream cost",
+    "frontend_rule_authority": false,
+    "bounded_by": [
+      "goal-relevant native action registry",
+      "finite supported preparation and single-slot follow-up vocabularies",
+      "carrier-local exact legality and kernel construction",
+      "existing solver state, transition, reforge-work, and owned-byte caps"
+    ],
+    "price_behavior": "Complete native candidates are synthesized before economy lookup. Missing-price candidates are skipped with evidence; present prices participate only in the ordinary Bellman comparison.",
+    "diagnostic_witness_fields": [
+      "candidate kind and stable id",
+      "carrier state id, hash, rarity, affix counts, crafted/fractured goal masks, and active protection flags",
+      "relevant goal mask",
+      "legality result and eligibility reason",
+      "baseline and candidate exact-kernel hashes",
+      "group-conflict, occupied-side, protection, fracture, or deterministic-finish mechanism",
+      "setup, follow-up, and cleanup primitive operations",
+      "setup, cleanup, recovery, and outer-exit completeness",
+      "selected, included, rejected, collapsed, or resource-cap-deferred disposition and reason"
+    ]
+  },
+  "eligibility": {
+    "automatic_fracture": [
+      "The carrier has an exact satisfying goal-slot affix selected as the fracture carrier.",
+      "Direct fracture is used only when the carrier is ready and Fracture is legal; otherwise a finite approved exact renewal preparation is required.",
+      "Every preparation step is supported and legal, reaches the exact carrier, and has an almost-sure retry chain with complete recovery and outer exits.",
+      "Influenced, synthesised, or already fractured carriers refuse preparation when the path would be illegal.",
+      "The option expands to existing preparation, Fracture, routing, and recovery primitives; isolated hit rate has no selection authority."
+    ],
+    "permanent_bench": [
+      "The native bench modifier exactly satisfies a requested group or family/tier slot.",
+      "The bench action is legal on the current carrier and its deterministic successor strictly advances that goal slot.",
+      "Native group conflict, prefix/suffix capacity, crafted replacement, Multimod, and ordinary bench legality remain authoritative."
+    ],
+    "temporary_bench_blocker": [
+      "Setup is one legal ordinary non-metamod bench craft and the follow-up is an existing supported exact single-slot action.",
+      "No pre-existing unfractured crafted carrier may be erased by cleanup.",
+      "The setup applies exactly and changes the complete follow-up successor kernel relative to follow-up alone through a mod-group conflict, occupied prefix slot, or occupied suffix slot.",
+      "The changed kernel advances the relevant goal mask; descriptive blocker roles or isolated hit-rate improvement are insufficient.",
+      "Every exit is cleaned through remove_crafted_modifiers, and setup, repeated attempts, recovery, and outer exits are complete and almost-sure."
+    ],
+    "protected_side_and_metamod": [
+      "A requested goal carrier is already satisfied on the protected side and an unsatisfied goal remains on the opposite side.",
+      "The existing prefix-lock or suffix-lock bench setup is legal, absent on entry, and the follow-up action's native transition facts say that it respects that protection.",
+      "The protected exact kernel differs from the unprotected kernel, advances the relevant target, and every exit removes or replaces the temporary lock with complete setup, reapplication, recovery, and routing.",
+      "Fossil and Essence are never protected candidates because their S8.2 transition facts ignore metamods; fractures remain independently preserved.",
+      "Scour uses the existing exact S7 protected-side contract, and nonconflicting distinct permanent goal benches may form the existing exact Multimod finish."
+    ]
+  },
+  "analytic_price_flips": [
+    {
+      "candidate": "temporary bench blocker",
+      "boundary": 4.0,
+      "derivation": "Raw Exalt has expected cost 15. Blocker option cost is blocker + Exalt 10 + cleanup 1.",
+      "selected": {
+        "blocker_price": 2.0,
+        "start_value": 13.0,
+        "start_policy": "automatic temporary_bench_repeat"
+      },
+      "rejected": {
+        "blocker_price": 5.0,
+        "start_value": 15.0,
+        "start_policy": "raw Exalt"
+      },
+      "tie": {
+        "blocker_price": 4.0,
+        "start_value": 15.0,
+        "retention": "both exact rows retained",
+        "deterministic_selection": "lower-variance automatic blocker row"
+      },
+      "neutral_control": "A bench setup with an identical successor kernel is rejected as exact_successor_kernel_neutral."
+    },
+    {
+      "candidate": "protected prefix side",
+      "boundary": 23.0,
+      "derivation": "Protected Scour route costs prefix lock + Scour 1 + target bench 3; the complete Restart, Alchemy, and deterministic finishing route costs 27.",
+      "selected": {
+        "lock_price": 10.0,
+        "start_value": 14.0,
+        "start_policy": "automatic protected prefix Scour"
+      },
+      "rejected": {
+        "lock_price": 30.0,
+        "start_value": 27.0,
+        "start_policy": "Restart"
+      }
+    },
+    {
+      "candidate": "automatic Fracture preparation",
+      "boundary": 23.75,
+      "derivation": "Complete non-fracture route D is Restart 20 + Alchemy 5 + goal bench 100 = 125. Fracture route Q is fracture price + 0.25*Chaos 30 + 0.75*D = fracture price + 101.25.",
+      "selected": {
+        "fracture_price": 23.0,
+        "start_value": 124.25,
+        "start_policy": "automatic fracture_prepare"
+      },
+      "rejected": {
+        "fracture_price": 24.0,
+        "start_value": 125.0,
+        "start_policy": "Restart"
+      }
+    }
+  ],
+  "controlled_comparisons": {
+    "temporary_blocker": "Disabling preservation-control pruning produced the identical value and start policy at blocker price 2.",
+    "fracture": "The automatically generated Fracture preparation value matched a manually enumerated S7 FracturePrepare option within 1e-12 at fracture price 23.",
+    "permanent_bench": "A real Vaal Regalia WASM solve with an explicit Restart envelope automatically added, selected, compiled, and executed the exact ColdResistance goal bench.",
+    "unsupported_protection": "Synthetic Fossil and Essence descriptors produced no protected candidate; missing cleanup or the required side lock also prevented construction."
+  },
+  "unchanged_real_cases": [
+    {
+      "id": "oracle-real-one-mod",
+      "automatic_candidates": false,
+      "start_value": 8.02014428412885,
+      "expanded_states": 90,
+      "compiled_nodes": 15,
+      "compiled_edges": 94,
+      "raw_strategy_sha256": "072c6c25b59e34e3edc117dc285e4545175431dcf1efa8218203a278f3e0abad",
+      "raw_strategy_byte_identical_to_s8_0": true
+    },
+    {
+      "id": "oracle-real-two-mod",
+      "automatic_candidates": false,
+      "start_value": 356.45917785234406,
+      "expanded_states": 99,
+      "compiled_nodes": 19,
+      "compiled_edges": 116,
+      "raw_strategy_sha256": "951a4282a48974c4ca4c338cca7e8cdc320af2570a684db70b8fbb3b40e97269",
+      "raw_strategy_byte_identical_to_s8_0": true
+    },
+    {
+      "id": "ordinary-es-bench",
+      "automatic_candidates": false,
+      "start_value": 741.5018555381404,
+      "expanded_states": 18817,
+      "compiled_nodes": 3457,
+      "compiled_edges": 19437,
+      "raw_strategy_sha256": "61038f737ad5c916e314fb1070359daccfd6a0adfc52a0c6c7f62521012ff60e",
+      "raw_strategy_byte_identical_to_s8_0": true
+    }
+  ],
+  "intentional_changes": {
+    "automatic_disabled": "No policy, value, state count, compiled graph count, or raw strategy byte change in the three applicable real comparisons.",
+    "automatic_enabled": "Goal-matching permanent benches and complete carrier-local fixed options enter the Bellman candidate set. Only a cheaper complete candidate can change policy/value/graph; price ties retain ordinary deterministic ordering and variance tie-breaking.",
+    "historical_temporary_blocker": "The frozen S8.0 non-converged capture remains unchanged. S8.3 proves automatic assembly with a bounded analytic native fixture rather than rewriting that historical report.",
+    "review_authority": "No S8.1 projection field, role, label, ordering, or solve depth is consumed by candidate generation."
+  },
+  "execution_layers": {
+    "native": "Carrier-aware candidate synthesis, exact option kernels, sparse Bellman rows, evidence, and primitive policy compilation.",
+    "c_abi": "Additive goal JSON controls and additive telemetry JSON; ABI version and structs are unchanged.",
+    "python": "The Python solver boundary already passes goal and telemetry JSON through the C ABI, so no Python source/schema change was required.",
+    "wasm": "Release poecraft_engine.wasm rebuilt from the changed native solver; worker solve/compile/simulator paths use the same C ABI JSON.",
+    "typescript": "Protocol metadata adds the optional automatic_candidates request flag only; no mechanic or eligibility rule is implemented in TypeScript.",
+    "simulator": "Selected candidates compile into existing bench, currency, Fracture, cleanup, routing, and Restart operations with no opaque macro operation."
+  },
+  "focused_execution": {
+    "temporary_blocker": {
+      "runs": 64,
+      "successes": 64,
+      "unmatched_routes": 0,
+      "unapplied_actions": 0
+    },
+    "protected_side": {
+      "runs": 64,
+      "successes": 64,
+      "unmatched_routes": 0,
+      "unapplied_actions": 0
+    },
+    "fracture": {
+      "runs": 512,
+      "successes": 512,
+      "unmatched_routes": 0,
+      "unapplied_actions": 0
+    },
+    "wasm_permanent_bench": {
+      "runs": 64,
+      "successes": 64,
+      "unmatched_routes": 0,
+      "unapplied_actions": 0
+    }
+  },
+  "acceptance": {
+    "native_engine": "468934 checks, 0 failures",
+    "focused_s8_3_native": "226 checks, 0 failures",
+    "focused_c_abi": "2724 checks, 0 failures",
+    "wasm_engine_smoke": "27/27 passed",
+    "web_typecheck": "passed",
+    "other_nonvisual_web_checks": "passed",
+    "known_excluded_web_assertion": "The archived S7 benchmark corpus artifact-pin assertion still expects pre-B1.4 hashes and fails against the current artifact by design; the corpus was not rewritten.",
+    "benchmark_verification": "skipped for S8.0 byte comparisons",
+    "new_s8_3_verification_gate_runs": 0,
+    "ten_thousand_run_note": "No new S8.3 compiled-strategy verification gate was invented. The full native acceptance did execute its pre-existing embedded 10000-run compiler/evaluator/API checks."
+  },
+  "preserved_mismatches": [
+    "Compiler-only mod_count routing remains unsupported by Calculator exact evaluation.",
+    "The archived endgame sample remains 0.9942 against 0.995.",
+    "The historical temporary-blocker solve remains non-converged.",
+    "Protected-reforge captures remain abandoned after long runs.",
+    "Archived S7 artifact pins still predate B1.4.",
+    "B1.5 remains waived/deferred, not complete."
+  ],
+  "next_boundary": "S8.4 exact action and material accounting only"
+}

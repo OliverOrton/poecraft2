@@ -39,5 +39,6 @@ void run_solver_solve_tests(const char* artifact_dir);
 void run_solver_compile_tests(const char* artifact_dir);
 void run_solver_eval_tests(const char* artifact_dir);
 void run_solver_api_tests(const char* artifact_dir);
+void run_solver_s8_3_tests();
 
 #endif

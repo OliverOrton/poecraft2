@@ -57,6 +57,25 @@ enum class FixedOptionKind : std::uint8_t {
     ProtectedRepeat = 5,
     FracturePrepare = 6,
     ImprintRetry = 7,
+    TemporaryBenchRepeat = 8,
+};
+
+enum class AutomaticCandidateKind : std::uint8_t {
+    None = 0,
+    Fracture = 1,
+    PermanentBench = 2,
+    TemporaryBenchBlocker = 3,
+    ProtectedMetamod = 4,
+    MultimodFinish = 5,
+};
+
+enum AutomaticKernelMechanism : std::uint32_t {
+    kAutomaticGroupConflict = 1u << 0,
+    kAutomaticPrefixSlot = 1u << 1,
+    kAutomaticSuffixSlot = 1u << 2,
+    kAutomaticMetamodProtection = 1u << 3,
+    kAutomaticCarrierFracture = 1u << 4,
+    kAutomaticDeterministicFinish = 1u << 5,
 };
 
 /*
@@ -78,6 +97,10 @@ struct FixedOptionSpec {
     /* Fracture preparation waits for this exact satisfying goal carrier.
      * Wrong-carrier fracture outcomes remain outer-policy exits. */
     std::uint32_t carrier_goal_slot = kNoId;
+    /* S8.3 native synthesis metadata. Automatic programs use the same
+     * bounded fixed-option vocabulary as explicit S7 programs. */
+    AutomaticCandidateKind automatic_kind = AutomaticCandidateKind::None;
+    std::uint32_t relevant_goal_mask = 0;
 };
 
 struct GoalSpec {
@@ -88,6 +111,9 @@ struct GoalSpec {
      * GoalSpec directly instead of going through the JSON parser. */
     std::uint32_t min_satisfied_slots = 0;
     bool primitive_actions_explicit = false;
+    /* Product goal-relevant solves enable native S8.3 candidate synthesis.
+     * Explicit historical/manual goal documents remain unchanged. */
+    bool automatic_candidates = false;
     std::vector<FixedOptionSpec> fixed_options;
 
     std::size_t required_satisfied_slots() const {
@@ -200,6 +226,10 @@ struct ActionDescriptor {
     /* Reserved for future two-item techniques (imprint/recombinator inside
      * the item-level solver). Nothing planned sets it; see plan. */
     bool uses_companion_state = false;
+    /* Retained in a goal-relevant registry only as an automatic option
+     * dependency. It participates in abstraction and exact evaluation but is
+     * not independently selectable unless the caller explicitly names it. */
+    bool automatic_dependency_only = false;
 };
 
 struct ActionRegistry {
@@ -227,6 +257,7 @@ struct ActionRegistryBuildOptions {
     bool needs_suffix_lock = false;
     bool needs_multimod = false;
     bool needs_fracture = false;
+    bool automatic_candidates = false;
     std::vector<std::vector<std::uint32_t>> fossil_goal_mod_ids;
 };
 
@@ -257,6 +288,11 @@ struct PlannerOperator {
     std::uint32_t conditional_action = kNoId; /* Fracture after preparation */
     std::uint32_t bestiary_create_action = kNoId;
     std::uint32_t bestiary_restore_action = kNoId;
+    AutomaticCandidateKind automatic_kind = AutomaticCandidateKind::None;
+    std::uint32_t relevant_goal_mask = 0;
+    std::uint32_t setup_action = kNoId;
+    std::uint32_t followup_action = kNoId;
+    std::uint32_t cleanup_action = kNoId;
     /* Sorted dependency quantities. S7.3 fixed programs execute each entry
      * exactly once; S7.4 kernels return the exact state-dependent expected
      * quantities used for pricing conditional and observed paths. */
@@ -646,6 +682,21 @@ struct OptionKernel {
     std::vector<std::uint32_t> retry_states;
     std::vector<std::uint32_t> continuation_states;
     bool entry_continues = false;
+    struct AutomaticEvidence {
+        bool candidate = false;
+        bool eligible = false;
+        bool kernel_changed = false;
+        bool setup_complete = false;
+        bool cleanup_complete = false;
+        bool recovery_complete = false;
+        bool exits_complete = false;
+        std::uint32_t relevant_goal_mask = 0;
+        std::uint32_t kernel_change_mechanisms = 0;
+        std::uint64_t baseline_kernel_hash = 0;
+        std::uint64_t candidate_kernel_hash = 0;
+        std::string legality_result;
+        std::string reason;
+    } automatic;
 };
 
 struct ObservedUnveilChoice {
@@ -709,6 +760,8 @@ struct ActionControlSummary {
     std::uint32_t pruned_outside_goal_relevance = 0;
     std::uint32_t pruned_outside_envelope = 0;
     std::uint32_t deferred_fossil_loadouts = 0;
+    std::uint32_t automatic_options = 0;
+    std::uint32_t automatic_dependency_primitives = 0;
 };
 
 /* True when CalcContext has an exact evaluator dispatch for this descriptor,
@@ -1064,6 +1117,13 @@ struct SolveDiagnostics {
     /* Each entry is one complete JSON object. Kept separately from the
      * legacy reason strings so exact carrier/control evidence stays typed. */
     std::vector<std::string> preservation_witnesses;
+    std::uint32_t automatic_rows_considered = 0;
+    std::uint32_t automatic_rows_eligible = 0;
+    std::uint32_t automatic_rows_rejected = 0;
+    std::uint32_t automatic_rows_collapsed = 0;
+    std::uint32_t automatic_rows_selected = 0;
+    std::uint32_t automatic_rows_deferred = 0;
+    std::vector<std::string> automatic_candidate_witnesses;
     std::uint32_t discovered_states = 0;
     std::uint32_t frontier_states = 0;
     std::uint32_t goal_states = 0;

@@ -131,6 +131,7 @@ if(BUILD_TESTING)
         tests/test_solver_calc.cpp
         tests/test_solver_solve.cpp
         tests/test_solver_compile.cpp
+        tests/test_solver_s8_3.cpp
         tests/test_solver_eval.cpp
         tests/test_solver_api.cpp
     )

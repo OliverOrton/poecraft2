@@ -1,6 +1,7 @@
 #include "solver_internal.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <map>
 #include <set>
@@ -142,6 +143,261 @@ bool approved_renewal_roll(const ActionDescriptor& action) {
     default:
         return false;
     }
+}
+
+bool mod_satisfies_goal_slot(
+    const SessionImpl& session,
+    const std::uint32_t mod_id,
+    const GoalSlot& slot) {
+    if (mod_id >= session.mod_count) return false;
+    bool member = false;
+    if (slot.group_id != kNoId) {
+        for (std::uint32_t row = session.group_offsets[mod_id];
+             row < session.group_offsets[mod_id + 1]; ++row) {
+            member |= session.group_ids[row] == slot.group_id;
+        }
+    } else if (slot.family_id != kNoId) {
+        member = session.family_id[mod_id] == slot.family_id;
+    }
+    if (!member) return false;
+    const std::uint32_t tier = session.family_tier_index[mod_id];
+    return slot.min_tier == 0 ||
+           (tier != 0 && tier <= slot.min_tier);
+}
+
+std::uint32_t goal_mask_for_mod(
+    const SessionImpl& session,
+    const GoalSpec& goal,
+    const std::uint32_t mod_id) {
+    std::uint32_t mask = 0;
+    for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+        if (mod_satisfies_goal_slot(session, mod_id, goal.slots[slot])) {
+            mask |= 1u << slot;
+        }
+    }
+    return mask;
+}
+
+std::int8_t goal_slot_side(
+    const SessionImpl& session,
+    const GoalSlot& slot) {
+    std::int8_t side = -1;
+    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+        if (!mod_satisfies_goal_slot(session, mod, slot)) continue;
+        if (session.gen_type[mod] != PC_SIDE_PREFIX &&
+            session.gen_type[mod] != PC_SIDE_SUFFIX) {
+            continue;
+        }
+        if (side == -1) {
+            side = session.gen_type[mod];
+        } else if (side != session.gen_type[mod]) {
+            return -1;
+        }
+    }
+    return side;
+}
+
+bool mods_conflict(
+    const SessionImpl& session,
+    const std::uint32_t left,
+    const std::uint32_t right) {
+    if (left >= session.mod_count || right >= session.mod_count) return true;
+    for (std::uint32_t a = session.group_offsets[left];
+         a < session.group_offsets[left + 1]; ++a) {
+        for (std::uint32_t b = session.group_offsets[right];
+             b < session.group_offsets[right + 1]; ++b) {
+            if (session.group_ids[a] == session.group_ids[b]) return true;
+        }
+    }
+    return false;
+}
+
+bool temporary_followup(const ActionDescriptor& action) {
+    if (!calc_supports(action) || action.synthetic ||
+        action.kind != TransitionKind::SingleSlot) {
+        return false;
+    }
+    switch (action.params.type) {
+    case ActionType::Augment:
+    case ActionType::Regal:
+    case ActionType::Exalt:
+    case ActionType::VeiledExalt:
+    case ActionType::HarvestAugment:
+    case ActionType::InfluenceExalt:
+        return true;
+    default:
+        return false;
+    }
+}
+
+std::vector<FixedOptionSpec> synthesize_automatic_options(
+    const SessionImpl& session,
+    const GoalSpec& goal,
+    const ActionRegistry& registry) {
+    std::vector<FixedOptionSpec> result;
+    if (!goal.automatic_candidates) return result;
+
+    /* Carrier-exact Fracture candidates reuse every already-approved exact
+     * renewal preparation present in the bounded registry. Exact row
+     * eligibility later refuses programs that cannot reach the named carrier
+     * and a legal Fracture continuation. */
+    if (registry.index_by_id.contains("fracture")) {
+        std::vector<std::vector<std::string>> preparations;
+        for (const ActionDescriptor& action : registry.actions) {
+            if (approved_renewal_roll(action) && calc_supports(action)) {
+                preparations.push_back({action.id});
+            }
+        }
+        if (registry.index_by_id.contains("scour") &&
+            registry.index_by_id.contains("alchemy")) {
+            preparations.push_back({"scour", "alchemy"});
+        }
+        for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+            for (const auto& preparation : preparations) {
+                FixedOptionSpec option;
+                option.kind = FixedOptionKind::FracturePrepare;
+                option.program_action_ids = preparation;
+                option.carrier_goal_slot = slot;
+                option.automatic_kind = AutomaticCandidateKind::Fracture;
+                option.relevant_goal_mask = 1u << slot;
+                result.push_back(std::move(option));
+            }
+        }
+    }
+
+    std::vector<std::uint32_t> ordinary_bench;
+    std::vector<std::uint32_t> goal_bench;
+    for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
+        const ActionDescriptor& action = registry.actions[index];
+        if (action.params.type != ActionType::Bench ||
+            action.params.mod_id >= session.metamod_type.size() ||
+            session.metamod_type[action.params.mod_id] >= 0) {
+            continue;
+        }
+        ordinary_bench.push_back(index);
+        if (goal_mask_for_mod(session, goal, action.params.mod_id) != 0) {
+            goal_bench.push_back(index);
+        }
+    }
+
+    /* Deterministic Multimod finishes are generated only for pairs of legal
+     * permanent goal crafts. The fixed kernel retains native group, crafted
+     * count, replacement, and open-side legality. */
+    if (registry.index_by_id.end() != std::find_if(
+            registry.index_by_id.begin(), registry.index_by_id.end(),
+            [&](const auto& entry) {
+                const ActionDescriptor& action = registry.actions[entry.second];
+                return action.params.type == ActionType::Bench &&
+                       action.params.mod_id < session.metamod_type.size() &&
+                       session.metamod_type[action.params.mod_id] ==
+                           session.data->metamod_multimod_code;
+            })) {
+        for (std::size_t a = 0; a < goal_bench.size(); ++a) {
+            for (std::size_t b = a + 1; b < goal_bench.size(); ++b) {
+                const ActionDescriptor& left = registry.actions[goal_bench[a]];
+                const ActionDescriptor& right = registry.actions[goal_bench[b]];
+                const std::uint32_t mask =
+                    goal_mask_for_mod(session, goal, left.params.mod_id) |
+                    goal_mask_for_mod(session, goal, right.params.mod_id);
+                if ((mask & (mask - 1)) == 0 ||
+                    mods_conflict(
+                        session, left.params.mod_id, right.params.mod_id)) {
+                    continue;
+                }
+                FixedOptionSpec option;
+                option.kind = FixedOptionKind::MultimodFinish;
+                option.bench_craft_ids = {left.id, right.id};
+                option.automatic_kind =
+                    AutomaticCandidateKind::MultimodFinish;
+                option.relevant_goal_mask = mask;
+                result.push_back(std::move(option));
+            }
+        }
+    }
+
+    const auto cleanup = registry.index_by_id.find(
+        "remove_crafted_modifiers");
+    if (cleanup != registry.index_by_id.end()) {
+        for (const std::uint32_t blocker_index : ordinary_bench) {
+            const ActionDescriptor& blocker = registry.actions[blocker_index];
+            if (goal_mask_for_mod(
+                    session, goal, blocker.params.mod_id) != 0) {
+                continue; /* permanent goal craft, never temporary */
+            }
+            for (const ActionDescriptor& followup : registry.actions) {
+                if (!temporary_followup(followup)) continue;
+                for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+                    FixedOptionSpec option;
+                    option.kind = FixedOptionKind::TemporaryBenchRepeat;
+                    option.setup_action_ids = {blocker.id};
+                    option.action_id = followup.id;
+                    option.exit_goal_slots = {slot};
+                    option.exit_min_satisfied = 1;
+                    option.automatic_kind =
+                        AutomaticCandidateKind::TemporaryBenchBlocker;
+                    option.relevant_goal_mask = 1u << slot;
+                    result.push_back(std::move(option));
+                }
+            }
+        }
+    }
+
+    /* Protected candidates are bounded to the exact S7 side-lock programs
+     * and only actions whose native preservation facts say the lock matters.
+     * Fossils and Essences therefore cannot enter this set. */
+    for (const std::int8_t side : {static_cast<std::int8_t>(PC_SIDE_PREFIX),
+                                   static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
+        const int lock_code =
+            side == PC_SIDE_PREFIX
+                ? session.data->metamod_prefixes_locked_code
+                : session.data->metamod_suffixes_locked_code;
+        const bool lock_available = std::any_of(
+            registry.actions.begin(), registry.actions.end(),
+            [&](const ActionDescriptor& action) {
+                return action.params.type == ActionType::Bench &&
+                       action.params.mod_id < session.metamod_type.size() &&
+                       session.metamod_type[action.params.mod_id] == lock_code;
+            });
+        if (!lock_available) continue;
+        std::uint32_t protected_mask = 0;
+        for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+            if (goal_slot_side(session, goal.slots[slot]) == side) {
+                protected_mask |= 1u << slot;
+            }
+        }
+        if (protected_mask == 0) continue;
+        for (const ActionDescriptor& followup : registry.actions) {
+            const bool respects =
+                followup.params.type == ActionType::Scour ||
+                (side == PC_SIDE_PREFIX
+                     ? followup.preservation.respects_prefix_lock
+                     : followup.preservation.respects_suffix_lock);
+            if (!respects || !calc_supports(followup) ||
+                (followup.params.type != ActionType::Scour &&
+                 !approved_renewal_roll(followup))) {
+                continue;
+            }
+            for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+                const std::uint32_t target = 1u << slot;
+                if ((protected_mask & target) != 0) continue;
+                FixedOptionSpec option;
+                option.kind = followup.params.type == ActionType::Scour
+                                  ? FixedOptionKind::ProtectedSide
+                                  : FixedOptionKind::ProtectedRepeat;
+                option.side = side;
+                option.action_id = followup.id;
+                if (option.kind == FixedOptionKind::ProtectedRepeat) {
+                    option.exit_goal_slots = {slot};
+                    option.exit_min_satisfied = 1;
+                }
+                option.automatic_kind =
+                    AutomaticCandidateKind::ProtectedMetamod;
+                option.relevant_goal_mask = protected_mask | target;
+                result.push_back(std::move(option));
+            }
+        }
+    }
+    return result;
 }
 
 std::string exit_suffix(const FixedOptionSpec& spec) {
@@ -340,6 +596,153 @@ bool same_attempt(
            left.choice_options == right.choice_options;
 }
 
+bool same_attempt_outcomes(
+    const AttemptKernel& left,
+    const AttemptKernel& right) {
+    return left.supported == right.supported &&
+           left.fully_legal == right.fully_legal &&
+           left.entries == right.entries &&
+           left.choice_groups == right.choice_groups &&
+           left.choice_options == right.choice_options;
+}
+
+std::uint64_t attempt_kernel_hash(const AttemptKernel& attempt) {
+    std::uint64_t hash = 1469598103934665603ull;
+    auto mix = [&](const std::uint64_t value) {
+        hash ^= value;
+        hash *= 1099511628211ull;
+    };
+    mix(attempt.supported ? 1u : 0u);
+    mix(attempt.fully_legal ? 1u : 0u);
+    for (const OutcomeEntry& entry : attempt.entries) {
+        mix(entry.state);
+        mix(std::bit_cast<std::uint64_t>(entry.probability));
+    }
+    for (const OutcomeChoiceGroup& group : attempt.choice_groups) {
+        mix(std::bit_cast<std::uint64_t>(group.probability));
+        for (const std::uint32_t state : group.states) mix(state);
+        mix(kNoId);
+    }
+    for (const OutcomeChoiceOption& choice : attempt.choice_options) {
+        mix(choice.mod_id);
+        mix(choice.state);
+        mix(choice.observation_state);
+        mix(choice.actual_state);
+    }
+    return hash;
+}
+
+bool state_has_unfractured_crafted(const AbstractState& state) {
+    if (state.crafted_goal_mask != 0) return true;
+    for (std::size_t i = 0; i < state.crafted_junk_counts.size(); ++i) {
+        if (state.crafted_junk_counts[i] >
+            state.fractured_crafted_junk_counts[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool advances_goal_mask(
+    const CalcContext& calc,
+    const AbstractState& source,
+    const std::vector<OutcomeEntry>& exits,
+    const std::uint32_t goal_mask) {
+    for (const OutcomeEntry& exit : exits) {
+        if (exit.probability <= 0.0) continue;
+        const AbstractState& successor = calc.state(exit.state);
+        for (std::uint32_t slot = 0; slot < calc.layout().slots.size(); ++slot) {
+            if ((goal_mask & (1u << slot)) != 0 &&
+                successor.slot_status[slot] > source.slot_status[slot]) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool clears_target_space(
+    const CalcContext& calc,
+    const AbstractState& source,
+    const std::vector<OutcomeEntry>& exits,
+    const std::uint32_t goal_mask) {
+    for (const OutcomeEntry& exit : exits) {
+        if (exit.probability <= 0.0) continue;
+        const AbstractState& successor = calc.state(exit.state);
+        for (std::uint32_t slot = 0; slot < calc.goal().slots.size(); ++slot) {
+            if ((goal_mask & (1u << slot)) == 0) continue;
+            if ((source.blocked_mask & (1u << slot)) != 0 &&
+                (successor.blocked_mask & (1u << slot)) == 0) {
+                return true;
+            }
+            const std::int8_t side =
+                goal_slot_side(calc.session(), calc.goal().slots[slot]);
+            if ((side == PC_SIDE_PREFIX &&
+                 successor.prefix_count < source.prefix_count) ||
+                (side == PC_SIDE_SUFFIX &&
+                 successor.suffix_count < source.suffix_count)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::uint32_t satisfied_goal_mask(const AbstractState& state) {
+    std::uint32_t mask = 0;
+    for (std::uint32_t slot = 0; slot < kMaxGoalSlots; ++slot) {
+        if (state.slot_status[slot] ==
+            static_cast<std::uint8_t>(GoalSlotStatus::Satisfied)) {
+            mask |= 1u << slot;
+        }
+    }
+    return mask;
+}
+
+bool all_exits_without_flag(
+    const CalcContext& calc,
+    const std::vector<OutcomeEntry>& exits,
+    const std::uint32_t flag) {
+    return std::all_of(
+        exits.begin(), exits.end(), [&](const OutcomeEntry& exit) {
+            return (calc.state(exit.state).flags & flag) == 0;
+        });
+}
+
+bool all_exits_cleaned(
+    const CalcContext& calc,
+    const std::vector<OutcomeEntry>& exits) {
+    return std::all_of(
+        exits.begin(), exits.end(), [&](const OutcomeEntry& exit) {
+            return !state_has_unfractured_crafted(calc.state(exit.state));
+        });
+}
+
+bool setup_applies_exactly(
+    CalcContext& calc,
+    const std::uint32_t state_id,
+    const std::uint32_t setup_action,
+    const std::uint32_t required_flag = 0) {
+    if (setup_action == kNoId ||
+        !action_legal(
+            calc.session(), calc.registry().actions.at(setup_action),
+            calc.state(state_id))) {
+        return false;
+    }
+    const OutcomeDistribution& setup = calc.outcomes(state_id, setup_action);
+    if (!setup.supported || !setup.choice_groups.empty() ||
+        setup.entries.empty()) {
+        return false;
+    }
+    return std::all_of(
+        setup.entries.begin(), setup.entries.end(),
+        [&](const OutcomeEntry& exit) {
+            return exit.state != state_id &&
+                   (required_flag == 0 ||
+                    (calc.state(exit.state).flags & required_flag) != 0);
+        });
+}
+
 void add_scaled_resources(
     std::map<std::string, double>& target,
     const std::vector<std::pair<std::string, double>>& source,
@@ -365,7 +768,11 @@ std::vector<PlannerOperator> build_planner_operators(
     const GoalSpec& goal,
     const ActionRegistry& registry) {
     std::vector<PlannerOperator> operators;
-    operators.reserve(registry.actions.size() + goal.fixed_options.size());
+    const std::vector<FixedOptionSpec> automatic =
+        synthesize_automatic_options(session, goal, registry);
+    operators.reserve(
+        registry.actions.size() + goal.fixed_options.size() +
+        automatic.size());
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
         const ActionDescriptor& action = registry.actions[index];
         PlannerOperator primitive;
@@ -376,11 +783,23 @@ std::vector<PlannerOperator> build_planner_operators(
         primitive.primitive_program.push_back(index);
         primitive.resource_quantities =
             aggregate_resources(registry, primitive.primitive_program);
+        if (goal.automatic_candidates &&
+            action.params.type == ActionType::Bench &&
+            action.params.mod_id < session.mod_count) {
+            primitive.relevant_goal_mask =
+                goal_mask_for_mod(session, goal, action.params.mod_id);
+            if (primitive.relevant_goal_mask != 0) {
+                primitive.automatic_kind =
+                    AutomaticCandidateKind::PermanentBench;
+            }
+        }
         operators.push_back(std::move(primitive));
     }
 
     std::set<std::string> option_ids;
-    for (const FixedOptionSpec& spec : goal.fixed_options) {
+    std::vector<FixedOptionSpec> specs = goal.fixed_options;
+    specs.insert(specs.end(), automatic.begin(), automatic.end());
+    for (const FixedOptionSpec& spec : specs) {
         PlannerOperator option;
         option.kind = PlannerOperatorKind::FixedOption;
         option.option_kind = spec.kind;
@@ -388,6 +807,8 @@ std::vector<PlannerOperator> build_planner_operators(
         option.exit_goal_slots = spec.exit_goal_slots;
         option.exit_min_satisfied = spec.exit_min_satisfied;
         option.carrier_goal_slot = spec.carrier_goal_slot;
+        option.automatic_kind = spec.automatic_kind;
+        option.relevant_goal_mask = spec.relevant_goal_mask;
 
         switch (spec.kind) {
         case FixedOptionKind::ScourAlchemy: {
@@ -471,6 +892,12 @@ std::vector<PlannerOperator> build_planner_operators(
                                   side_name(spec.side) + " then " +
                                   action.display_name;
             option.primitive_program = {lock, action_index};
+            option.setup_action = lock;
+            option.followup_action = action_index;
+            if (spec.automatic_kind != AutomaticCandidateKind::None) {
+                option.id += ":goal:" +
+                             std::to_string(spec.relevant_goal_mask);
+            }
             break;
         }
         case FixedOptionKind::MultimodFinish: {
@@ -508,6 +935,7 @@ std::vector<PlannerOperator> build_planner_operators(
                             option.primitive_program.begin() + 1,
                             option.primitive_program.end()));
             option.display_name = "Multimod deterministic finish";
+            option.setup_action = multimod;
             break;
         }
         case FixedOptionKind::Renewal: {
@@ -541,6 +969,8 @@ std::vector<PlannerOperator> build_planner_operators(
                     "approved exact rolling/reforge method");
             }
             option.primitive_program = {lock, action_index};
+            option.setup_action = lock;
+            option.followup_action = action_index;
             option.id = std::string("option:protected_repeat:") +
                         side_name(spec.side) + ':' + action.id +
                         exit_suffix(spec);
@@ -559,6 +989,7 @@ std::vector<PlannerOperator> build_planner_operators(
                         std::to_string(spec.carrier_goal_slot) + ':' +
                         join_ids(registry, option.primitive_program);
             option.display_name = "Prepare and Fracture exact goal carrier";
+            option.followup_action = fracture;
             break;
         }
         case FixedOptionKind::ImprintRetry: {
@@ -602,9 +1033,52 @@ std::vector<PlannerOperator> build_planner_operators(
                                            option.primitive_program);
             break;
         }
+        case FixedOptionKind::TemporaryBenchRepeat: {
+            if (spec.setup_action_ids.size() != 1 ||
+                spec.exit_goal_slots.size() != 1 ||
+                spec.exit_min_satisfied != 1) {
+                throw std::runtime_error(
+                    "fixed option: temporary bench repeat needs one blocker "
+                    "and one exact goal-slot exit");
+            }
+            std::uint32_t blocker_index = kNoId;
+            const ActionDescriptor& blocker = require_action(
+                registry, spec.setup_action_ids.front(), blocker_index);
+            if (blocker.params.type != ActionType::Bench ||
+                blocker.params.mod_id >= session.metamod_type.size() ||
+                session.metamod_type[blocker.params.mod_id] >= 0) {
+                throw std::runtime_error(
+                    "fixed option: temporary blocker must be an ordinary "
+                    "bench craft");
+            }
+            std::uint32_t followup_index = kNoId;
+            const ActionDescriptor& followup = require_action(
+                registry, spec.action_id, followup_index);
+            if (!temporary_followup(followup)) {
+                throw std::runtime_error(
+                    "fixed option: temporary blocker follow-up must be an "
+                    "exact supported single-slot action");
+            }
+            std::uint32_t cleanup_index = kNoId;
+            require_action(
+                registry, "remove_crafted_modifiers", cleanup_index);
+            option.primitive_program = {
+                blocker_index, followup_index, cleanup_index};
+            option.setup_action = blocker_index;
+            option.followup_action = followup_index;
+            option.cleanup_action = cleanup_index;
+            option.id = "option:temporary_bench_repeat:" + blocker.id +
+                        ':' + followup.id + exit_suffix(spec);
+            option.display_name = "Temporary " + blocker.display_name +
+                                  " then repeat " + followup.display_name;
+            break;
+        }
         }
 
         if (!option_ids.insert(option.id).second) {
+            if (spec.automatic_kind != AutomaticCandidateKind::None) {
+                continue;
+            }
             throw std::runtime_error(
                 "fixed option: duplicate definition: " + option.id);
         }
@@ -668,12 +1142,39 @@ const OptionKernel& CalcContext::option_kernel(
     result->supported = true;
     result->legal = true;
     result->terminates_almost_surely = true;
+    result->automatic.candidate =
+        option.automatic_kind != AutomaticCandidateKind::None;
+    result->automatic.relevant_goal_mask = option.relevant_goal_mask;
+    if (result->automatic.candidate) {
+        result->automatic.legality_result = "pending_exact_kernel";
+    }
 
     if (option.option_kind == FixedOptionKind::Renewal ||
         option.option_kind == FixedOptionKind::ProtectedRepeat ||
         option.option_kind == FixedOptionKind::FracturePrepare ||
-        option.option_kind == FixedOptionKind::ImprintRetry) {
+        option.option_kind == FixedOptionKind::ImprintRetry ||
+        option.option_kind == FixedOptionKind::TemporaryBenchRepeat) {
         const auto finish = [&]() -> const OptionKernel& {
+            if (result->automatic.candidate) {
+                result->automatic.eligible =
+                    result->supported && result->legal &&
+                    result->terminates_almost_surely;
+                if (result->automatic.reason.empty()) {
+                    result->automatic.reason =
+                        result->automatic.eligible
+                            ? "complete_exact_automatic_kernel"
+                            : !result->supported
+                                  ? "exact_kernel_unsupported"
+                                  : !result->legal
+                                        ? "exact_legality_or_relevance_refused"
+                                        : "retry_chain_not_almost_sure";
+                }
+                if (result->automatic.legality_result ==
+                    "pending_exact_kernel") {
+                    result->automatic.legality_result =
+                        result->automatic.eligible ? "legal" : "illegal";
+                }
+            }
             std::sort(result->retry_states.begin(),
                       result->retry_states.end());
             result->retry_states.erase(
@@ -698,6 +1199,7 @@ const OptionKernel& CalcContext::option_kernel(
                  state(state_id)))) {
             result->legal = false;
             result->terminates_almost_surely = false;
+            result->automatic.reason = "setup_or_first_step_illegal";
             return finish();
         }
         if (option.option_kind == FixedOptionKind::ImprintRetry) {
@@ -728,8 +1230,18 @@ const OptionKernel& CalcContext::option_kernel(
             if ((state(state_id).flags & lock_flag) != 0) {
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    "protection_already_active_no_exact_reapplication";
                 return finish();
             }
+        }
+        if (option.option_kind == FixedOptionKind::TemporaryBenchRepeat &&
+            state_has_unfractured_crafted(state(state_id))) {
+            result->legal = false;
+            result->terminates_almost_surely = false;
+            result->automatic.reason =
+                "cleanup_would_remove_preexisting_crafted_carrier";
+            return finish();
         }
         if (option.option_kind == FixedOptionKind::FracturePrepare) {
             const ActionDescriptor& fracture =
@@ -758,6 +1270,27 @@ const OptionKernel& CalcContext::option_kernel(
                 }
                 result->exits = distribution.entries;
                 result->legal = !result->exits.empty();
+                if (result->automatic.candidate) {
+                    AttemptKernel fractured;
+                    fractured.supported = distribution.supported;
+                    fractured.fully_legal = result->legal;
+                    fractured.entries = distribution.entries;
+                    result->automatic.kernel_changed = true;
+                    result->automatic.kernel_change_mechanisms =
+                        kAutomaticCarrierFracture;
+                    result->automatic.candidate_kernel_hash =
+                        attempt_kernel_hash(fractured);
+                    result->automatic.setup_complete = true;
+                    result->automatic.cleanup_complete = true;
+                    result->automatic.recovery_complete = true;
+                    result->automatic.exits_complete = result->legal;
+                    result->automatic.legality_result =
+                        result->legal ? "legal" : "illegal";
+                    result->automatic.reason =
+                        result->legal
+                            ? "exact_satisfying_carrier_fracture_route"
+                            : "fracture_has_no_complete_exact_exits";
+                }
                 return finish();
             }
             if ((entry.flags &
@@ -765,6 +1298,8 @@ const OptionKernel& CalcContext::option_kernel(
                 0) {
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    "carrier_flags_make_fracture_path_illegal";
                 return finish();
             }
         }
@@ -780,7 +1315,105 @@ const OptionKernel& CalcContext::option_kernel(
         if (!attempt.fully_legal) {
             result->legal = false;
             result->terminates_almost_surely = false;
+            result->automatic.reason =
+                option.option_kind == FixedOptionKind::TemporaryBenchRepeat
+                    ? "missing_setup_followup_or_cleanup_route"
+                    : "one_or_more_program_steps_illegal";
             return finish();
+        }
+        if (option.option_kind == FixedOptionKind::TemporaryBenchRepeat ||
+            (option.option_kind == FixedOptionKind::ProtectedRepeat &&
+             result->automatic.candidate)) {
+            const AbstractState& entry = state(state_id);
+            const AttemptKernel baseline = execute_attempt(
+                *this, {option.followup_action}, state_id);
+            result->automatic.baseline_kernel_hash =
+                attempt_kernel_hash(baseline);
+            result->automatic.candidate_kernel_hash =
+                attempt_kernel_hash(attempt);
+            result->automatic.kernel_changed =
+                baseline.supported && baseline.fully_legal &&
+                !same_attempt_outcomes(baseline, attempt);
+            result->automatic.setup_complete = setup_applies_exactly(
+                *this, state_id, option.setup_action,
+                option.option_kind == FixedOptionKind::ProtectedRepeat
+                    ? (option.intended_side == PC_SIDE_PREFIX
+                           ? kFlagPrefixesLocked
+                           : kFlagSuffixesLocked)
+                    : 0);
+
+            bool carrier_relevant = true;
+            bool cleanup_complete = true;
+            std::uint32_t target_mask = option.relevant_goal_mask;
+            if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+                std::uint32_t protected_mask = 0;
+                for (std::uint32_t slot = 0;
+                     slot < goal_.slots.size(); ++slot) {
+                    if (goal_slot_side(session(), goal_.slots[slot]) ==
+                        option.intended_side) {
+                        protected_mask |= 1u << slot;
+                    }
+                }
+                carrier_relevant =
+                    (satisfied_goal_mask(entry) & protected_mask) != 0;
+                target_mask &= ~protected_mask;
+                const std::uint32_t lock_flag =
+                    option.intended_side == PC_SIDE_PREFIX
+                        ? kFlagPrefixesLocked
+                        : kFlagSuffixesLocked;
+                cleanup_complete =
+                    all_exits_without_flag(*this, attempt.entries, lock_flag);
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticMetamodProtection;
+            } else {
+                cleanup_complete = all_exits_cleaned(*this, attempt.entries);
+                const ActionDescriptor& blocker =
+                    registry_.actions.at(option.setup_action);
+                if (blocker.params.mod_id < session().mod_count &&
+                    session().group_offsets[blocker.params.mod_id] <
+                        session().group_offsets[blocker.params.mod_id + 1]) {
+                    result->automatic.kernel_change_mechanisms |=
+                        kAutomaticGroupConflict;
+                }
+                if (blocker.params.mod_id < session().gen_type.size()) {
+                    result->automatic.kernel_change_mechanisms |=
+                        session().gen_type[blocker.params.mod_id] ==
+                                PC_SIDE_PREFIX
+                            ? kAutomaticPrefixSlot
+                            : kAutomaticSuffixSlot;
+                }
+            }
+            result->automatic.cleanup_complete = cleanup_complete;
+            const bool relevant = carrier_relevant &&
+                advances_goal_mask(*this, entry, attempt.entries, target_mask);
+            if (!result->automatic.setup_complete) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason = "setup_did_not_apply_exactly";
+                return finish();
+            }
+            if (!result->automatic.kernel_changed) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason = "exact_successor_kernel_neutral";
+                return finish();
+            }
+            if (!relevant) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    option.option_kind == FixedOptionKind::ProtectedRepeat
+                        ? "no_satisfied_protected_carrier_or_goal_relevant_exit"
+                        : "following_action_does_not_advance_relevant_goal";
+                return finish();
+            }
+            if (!cleanup_complete) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason = "cleanup_or_replacement_incomplete";
+                return finish();
+            }
+            result->automatic.legality_result = "legal";
         }
         const OutcomeDistribution* entry_reforge_kernel = nullptr;
         std::uint32_t entry_reforge_action = kNoId;
@@ -931,7 +1564,34 @@ const OptionKernel& CalcContext::option_kernel(
                 retry_probability < 1.0 - 1e-15;
             result->legal = result->supported &&
                             result->terminates_almost_surely &&
-                            !result->exits.empty();
+                            !result->exits.empty() &&
+                            (!result->automatic.candidate ||
+                             !result->continuation_states.empty());
+            if (result->automatic.candidate) {
+                AttemptKernel fractured;
+                fractured.supported = result->supported;
+                fractured.fully_legal = result->legal;
+                fractured.entries = result->exits;
+                result->automatic.kernel_changed =
+                    !result->continuation_states.empty();
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticCarrierFracture;
+                result->automatic.candidate_kernel_hash =
+                    attempt_kernel_hash(fractured);
+                result->automatic.setup_complete = attempt.fully_legal;
+                result->automatic.cleanup_complete = true;
+                result->automatic.recovery_complete =
+                    result->terminates_almost_surely;
+                result->automatic.exits_complete = !result->exits.empty();
+                result->automatic.legality_result =
+                    result->legal ? "legal" : "illegal";
+                result->automatic.reason =
+                    result->continuation_states.empty()
+                        ? "preparation_never_reaches_exact_legal_carrier"
+                        : result->legal
+                              ? "exact_preparation_retry_and_fracture_exits"
+                              : "fracture_retry_or_outer_exit_incomplete";
+            }
             return finish();
         }
 
@@ -996,6 +1656,17 @@ const OptionKernel& CalcContext::option_kernel(
                         result->terminates_almost_surely &&
                         (!result->exits.empty() ||
                          !result->observation_choice_groups.empty());
+        if (result->automatic.candidate) {
+            result->automatic.recovery_complete =
+                result->terminates_almost_surely;
+            result->automatic.exits_complete =
+                !result->exits.empty() ||
+                !result->observation_choice_groups.empty();
+            if (!result->legal && result->automatic.reason.empty()) {
+                result->automatic.reason =
+                    "success_failure_recovery_or_outer_exit_incomplete";
+            }
+        }
         return finish();
     }
 
@@ -1085,6 +1756,93 @@ const OptionKernel& CalcContext::option_kernel(
             result->legal = false;
             result->terminates_almost_surely = false;
         }
+    }
+    if (result->automatic.candidate) {
+        const AbstractState& entry = state(state_id);
+        result->automatic.exits_complete = !result->exits.empty();
+        result->automatic.recovery_complete =
+            result->automatic.exits_complete;
+        if (option.option_kind == FixedOptionKind::MultimodFinish) {
+            result->automatic.kernel_changed = true;
+            result->automatic.kernel_change_mechanisms =
+                kAutomaticDeterministicFinish;
+            result->automatic.setup_complete = result->legal;
+            result->automatic.cleanup_complete = true;
+            if (!advances_goal_mask(
+                    *this, entry, result->exits,
+                    option.relevant_goal_mask)) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    "multimod_program_does_not_advance_goal_subset";
+            } else {
+                result->automatic.reason =
+                    "legal_exact_multimod_goal_finish";
+            }
+        } else if (option.option_kind == FixedOptionKind::ProtectedSide) {
+            std::uint32_t protected_mask = 0;
+            for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot) {
+                if (goal_slot_side(session(), goal_.slots[slot]) ==
+                    option.intended_side) {
+                    protected_mask |= 1u << slot;
+                }
+            }
+            const std::uint32_t target_mask =
+                option.relevant_goal_mask & ~protected_mask;
+            const AttemptKernel baseline = execute_attempt(
+                *this, {option.followup_action}, state_id);
+            AttemptKernel candidate;
+            candidate.supported = result->supported;
+            candidate.fully_legal = result->legal;
+            candidate.entries = result->exits;
+            result->automatic.baseline_kernel_hash =
+                attempt_kernel_hash(baseline);
+            result->automatic.candidate_kernel_hash =
+                attempt_kernel_hash(candidate);
+            result->automatic.kernel_changed =
+                baseline.supported && baseline.fully_legal &&
+                !same_attempt_outcomes(baseline, candidate);
+            const std::uint32_t lock_flag =
+                option.intended_side == PC_SIDE_PREFIX
+                    ? kFlagPrefixesLocked
+                    : kFlagSuffixesLocked;
+            result->automatic.setup_complete = setup_applies_exactly(
+                *this, state_id, option.setup_action, lock_flag);
+            result->automatic.cleanup_complete = all_exits_without_flag(
+                *this, result->exits, lock_flag);
+            result->automatic.kernel_change_mechanisms =
+                kAutomaticMetamodProtection;
+            const bool carrier_relevant =
+                (satisfied_goal_mask(entry) & protected_mask) != 0;
+            const bool target_relevant = advances_goal_mask(
+                *this, entry, result->exits, target_mask) ||
+                clears_target_space(
+                    *this, entry, result->exits, target_mask);
+            if (!result->automatic.setup_complete ||
+                !result->automatic.kernel_changed || !carrier_relevant ||
+                !target_relevant || !result->automatic.cleanup_complete ||
+                !result->automatic.exits_complete) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.reason =
+                    !result->automatic.setup_complete
+                        ? "setup_did_not_apply_exactly"
+                        : !result->automatic.kernel_changed
+                              ? "exact_successor_kernel_neutral"
+                              : !carrier_relevant || !target_relevant
+                                    ? "unsupported_or_irrelevant_protection_combination"
+                                    : !result->automatic.cleanup_complete
+                                          ? "cleanup_or_replacement_incomplete"
+                                          : "outer_exit_coverage_incomplete";
+            } else {
+                result->automatic.reason =
+                    "exact_protected_side_kernel_and_complete_exits";
+            }
+        }
+        result->automatic.eligible = result->supported && result->legal &&
+                                     result->terminates_almost_surely;
+        result->automatic.legality_result =
+            result->automatic.eligible ? "legal" : "illegal";
     }
     const auto inserted = option_kernel_cache_.emplace(key, std::move(result));
     return *inserted.first->second;

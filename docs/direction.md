@@ -70,7 +70,10 @@ those frozen strategies with complete raw graph traceability and no executable
 authority. S8.2 corrected Fossil/Essence metamod behavior and added exact
 preservation-aware action control without changing the cost objective or raw
 strategy authority. S8.3 automatic Fracture, bench, and metamod candidates is
-the immediate boundary.
+complete: price-independent native generation now admits only legal,
+goal-relevant, complete exact kernels; selected options compete by downstream
+expected cost and compile into the existing primitive strategy vocabulary.
+S8.4 exact action and material accounting is the immediate boundary.
 Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

@@ -571,6 +571,7 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
              planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+             planner.option_kind == FixedOptionKind::TemporaryBenchRepeat ||
              planner.option_kind == FixedOptionKind::FracturePrepare ||
              planner.option_kind == FixedOptionKind::ImprintRetry);
         std::uint32_t leader = state_id;
@@ -597,6 +598,7 @@ std::string compile_policy_strategy_json(
         if (planner.kind != PlannerOperatorKind::FixedOption ||
             (planner.option_kind != FixedOptionKind::Renewal &&
              planner.option_kind != FixedOptionKind::ProtectedRepeat &&
+             planner.option_kind != FixedOptionKind::TemporaryBenchRepeat &&
              planner.option_kind != FixedOptionKind::FracturePrepare &&
              planner.option_kind != FixedOptionKind::ImprintRetry)) {
             continue;
@@ -744,7 +746,8 @@ std::string compile_policy_strategy_json(
         }
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
-             planner.option_kind == FixedOptionKind::ProtectedRepeat)) {
+             planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+             planner.option_kind == FixedOptionKind::TemporaryBenchRepeat)) {
             const bool observed =
                 !planner.primitive_program.empty() &&
                 calc.registry()
@@ -979,7 +982,8 @@ std::string compile_policy_strategy_json(
         }
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
-             planner.option_kind == FixedOptionKind::ProtectedRepeat)) {
+             planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+             planner.option_kind == FixedOptionKind::TemporaryBenchRepeat)) {
             const bool observed =
                 !planner.primitive_program.empty() &&
                 calc.registry()

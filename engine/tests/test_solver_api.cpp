@@ -127,6 +127,28 @@ void run_public_solver_gate(const char* artifact_dir) {
         pc_solver_destroy(options_only_solver);
     }
 
+    const std::string automatic_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"action_mode\":\"goal_relevant\"}";
+    pc_solver_handle automatic_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, automatic_goal_json.c_str(),
+                 automatic_goal_json.size(), &automatic_solver,
+                 &error) == PC_RESULT_OK);
+    if (automatic_solver != nullptr) {
+        const std::string automatic_telemetry =
+            solver_telemetry_json(automatic_solver, &error);
+        PC_CHECK(automatic_telemetry.find(
+                     "\"automatic_candidates\":{\"enabled\":true") !=
+                 std::string::npos);
+        PC_CHECK(automatic_telemetry.find(
+                     "\"dependency_primitives\":0") ==
+                 std::string::npos);
+        pc_solver_destroy(automatic_solver);
+    }
+
     const std::string goal_json =
         std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
                     "{\"family_mod_key\":\"") +

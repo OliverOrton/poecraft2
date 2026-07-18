@@ -86,6 +86,24 @@ solver::ActionRegistryBuildOptions registry_build_options(
             "goal: action_mode must be goal_relevant when provided");
     }
     options.goal_relevant_actions = action_mode == "goal_relevant";
+    /* S8.3 automatic candidates are an ordinary part of the bounded product
+     * envelope. Explicit/manual action documents keep their authored S7
+     * option set and historical behavior. */
+    const Value* automatic_candidates = root.find("automatic_candidates");
+    if (automatic_candidates != nullptr &&
+        automatic_candidates->type != Type::Bool) {
+        throw std::runtime_error(
+            "goal: automatic_candidates must be a boolean");
+    }
+    options.automatic_candidates = options.goal_relevant_actions ||
+        (automatic_candidates != nullptr &&
+         automatic_candidates->boolean);
+    if (options.automatic_candidates) {
+        /* Automatic assembly always uses the bounded product registry even
+         * when an explicit primitive subset is supplied for an analytic or
+         * parity fixture. */
+        options.goal_relevant_actions = true;
+    }
     const Value* requested = root.find("requested_fossil_actions");
     if (requested != nullptr) {
         if (requested->type != Type::Array) {
@@ -235,6 +253,15 @@ solver::GoalSpec parse_goal(
     }
 
     solver::GoalSpec goal;
+    const Value* automatic_candidates = root.find("automatic_candidates");
+    if (automatic_candidates != nullptr &&
+        automatic_candidates->type != Type::Bool) {
+        throw std::runtime_error(
+            "goal: automatic_candidates must be a boolean");
+    }
+    goal.automatic_candidates =
+        string_member(root, "action_mode") == "goal_relevant" ||
+        (automatic_candidates != nullptr && automatic_candidates->boolean);
     const std::string rarity = string_member(root, "rarity");
     if (rarity == "normal") {
         goal.rarity = PC_RARITY_NORMAL;

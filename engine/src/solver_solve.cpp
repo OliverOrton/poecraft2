@@ -517,6 +517,14 @@ WideFloat operator/(const WideFloat numerator, const WideFloat denominator) {
  * relative prices without rebuilding transitions or reusing a stale action
  * representative. */
 struct SolveTransitionCache {
+    struct AutomaticCandidateRecord {
+        std::uint32_t state_id = kNoId;
+        std::uint32_t operator_index = kNoId;
+        bool eligible = false;
+        bool collapsed = false;
+        bool deferred = false;
+        OptionKernel::AutomaticEvidence evidence;
+    };
     std::uint32_t start_state = kNoId;
     std::vector<std::uint32_t> operator_indices;
     std::uint32_t max_discovered_states = 0;
@@ -537,6 +545,7 @@ struct SolveTransitionCache {
     std::vector<SparseChoiceGroup> choices;
     std::vector<std::uint32_t> choice_successors;
     std::vector<OutcomeChoiceOption> choice_options;
+    std::vector<AutomaticCandidateRecord> automatic_candidates;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
 
@@ -573,6 +582,12 @@ struct SolveTransitionCache {
         bytes += choices.capacity() * sizeof(SparseChoiceGroup);
         bytes += choice_successors.capacity() * sizeof(std::uint32_t);
         bytes += choice_options.capacity() * sizeof(OutcomeChoiceOption);
+        bytes += automatic_candidates.capacity() *
+                 sizeof(AutomaticCandidateRecord);
+        for (const AutomaticCandidateRecord& record : automatic_candidates) {
+            bytes += record.evidence.legality_result.capacity() +
+                     record.evidence.reason.capacity();
+        }
         return bytes;
     }
 };
@@ -760,6 +775,11 @@ struct SolveWork::Impl {
                         : "deferred:lazy_fossil_signature_not_requested:") +
                 std::to_string(control.deferred_fossil_loadouts));
         }
+        if (control.automatic_options != 0) {
+            result.diagnostics.action_inclusion_reasons.push_back(
+                "included:native_price_independent_automatic_options:" +
+                std::to_string(control.automatic_options));
+        }
         /* Primitive support remains action-registry telemetry. Fixed options
          * are priced and evaluated alongside those primitive wrappers. */
         for (const std::uint32_t index : calc.candidates()) {
@@ -791,6 +811,12 @@ struct SolveWork::Impl {
                 add_action_reason(
                     "unpriced", planner.id,
                     "missing_one_or_more_resource_prices");
+                if (planner.automatic_kind !=
+                    AutomaticCandidateKind::None) {
+                    result.diagnostics.action_inclusion_reasons.push_back(
+                        "rejected:automatic_candidate_missing_price:" +
+                        planner.id);
+                }
                 continue;
             }
             ++result.diagnostics.priced_scanned_actions;
@@ -1332,6 +1358,160 @@ struct SolveWork::Impl {
         return out;
     }
 
+    static const char* automatic_kind_name(
+        const AutomaticCandidateKind kind) {
+        switch (kind) {
+        case AutomaticCandidateKind::Fracture:
+            return "fracture";
+        case AutomaticCandidateKind::PermanentBench:
+            return "permanent_bench";
+        case AutomaticCandidateKind::TemporaryBenchBlocker:
+            return "temporary_bench_blocker";
+        case AutomaticCandidateKind::ProtectedMetamod:
+            return "protected_metamod";
+        case AutomaticCandidateKind::MultimodFinish:
+            return "multimod_finish";
+        case AutomaticCandidateKind::None:
+            return "none";
+        }
+        return "none";
+    }
+
+    static std::string automatic_mechanisms_json(
+        const std::uint32_t mechanisms) {
+        std::string out = "[";
+        bool first = true;
+        const auto add = [&](const std::uint32_t bit, const char* name) {
+            if ((mechanisms & bit) == 0) return;
+            if (!first) out.push_back(',');
+            first = false;
+            append_json_string(out, name);
+        };
+        add(kAutomaticGroupConflict, "mod_group_conflict");
+        add(kAutomaticPrefixSlot, "occupied_prefix_slot");
+        add(kAutomaticSuffixSlot, "occupied_suffix_slot");
+        add(kAutomaticMetamodProtection, "metamod_protection");
+        add(kAutomaticCarrierFracture, "carrier_exact_fracture");
+        add(kAutomaticDeterministicFinish, "deterministic_finish");
+        out.push_back(']');
+        return out;
+    }
+
+    std::string automatic_candidate_witness_json(
+        const SolveTransitionCache::AutomaticCandidateRecord& record,
+        const char* disposition,
+        const char* decision_reason) const {
+        const PlannerOperator& planner =
+            calc.operators().at(record.operator_index);
+        const AbstractState& state = calc.state(record.state_id);
+        const CarrierFacts carrier = carrier_facts(state);
+        const auto action_id = [&](const std::uint32_t index) {
+            return index == kNoId ? std::string()
+                                  : calc.registry().actions.at(index).id;
+        };
+        std::string out = "{";
+        out += "\"candidate_kind\":";
+        append_json_string(out, automatic_kind_name(planner.automatic_kind));
+        out += ",\"candidate\":";
+        append_json_string(out, planner.id);
+        out += ",\"carrier_identity\":{\"state_id\":" +
+               std::to_string(record.state_id) +
+               ",\"state_hash\":" + std::to_string(carrier.state_hash) +
+               ",\"rarity\":" + std::to_string(carrier.rarity) +
+               ",\"prefix_count\":" +
+               std::to_string(carrier.prefix_count) +
+               ",\"suffix_count\":" +
+               std::to_string(carrier.suffix_count) +
+               ",\"crafted_goal_mask\":" +
+               std::to_string(carrier.crafted_goal_mask) +
+               ",\"fractured_goal_mask\":" +
+               std::to_string(carrier.fractured_goal_mask) +
+               ",\"active_protection_flags\":" +
+               std::to_string(carrier.active_protection) + "}";
+        out += ",\"relevant_goal_subset\":" +
+               std::to_string(record.evidence.relevant_goal_mask);
+        out += ",\"legality_result\":";
+        append_json_string(out, record.evidence.legality_result);
+        out += ",\"exact_kernel_change\":{\"changed\":" +
+               std::string(record.evidence.kernel_changed ? "true" : "false") +
+               ",\"baseline_hash\":" +
+               std::to_string(record.evidence.baseline_kernel_hash) +
+               ",\"candidate_hash\":" +
+               std::to_string(record.evidence.candidate_kernel_hash) +
+               ",\"mechanisms\":" + automatic_mechanisms_json(
+                   record.evidence.kernel_change_mechanisms) + "}";
+        out += ",\"setup_operations\":[";
+        if (planner.setup_action != kNoId) {
+            append_json_string(out, action_id(planner.setup_action));
+        }
+        out += "],\"followup_operation\":";
+        if (planner.followup_action == kNoId) out += "null";
+        else append_json_string(out, action_id(planner.followup_action));
+        out += ",\"cleanup_operations\":[";
+        if (planner.cleanup_action != kNoId) {
+            append_json_string(out, action_id(planner.cleanup_action));
+        }
+        out += "],\"coverage\":{\"setup_complete\":" +
+               std::string(record.evidence.setup_complete ? "true" : "false") +
+               ",\"cleanup_complete\":" +
+               std::string(record.evidence.cleanup_complete ? "true" : "false") +
+               ",\"recovery_complete\":" +
+               std::string(record.evidence.recovery_complete ? "true" : "false") +
+               ",\"outer_exits_complete\":" +
+               std::string(record.evidence.exits_complete ? "true" : "false") +
+               "}";
+        out += ",\"disposition\":";
+        append_json_string(out, disposition);
+        out += ",\"reason\":";
+        append_json_string(out, decision_reason);
+        out += ",\"eligibility_reason\":";
+        append_json_string(out, record.evidence.reason);
+        out += "}";
+        return out;
+    }
+
+    void finalize_automatic_candidate_diagnostics() {
+        result.diagnostics.automatic_rows_considered = 0;
+        result.diagnostics.automatic_rows_eligible = 0;
+        result.diagnostics.automatic_rows_rejected = 0;
+        result.diagnostics.automatic_rows_collapsed = 0;
+        result.diagnostics.automatic_rows_selected = 0;
+        result.diagnostics.automatic_rows_deferred = 0;
+        result.diagnostics.automatic_candidate_witnesses.clear();
+        for (const auto& record : transition_cache->automatic_candidates) {
+            ++result.diagnostics.automatic_rows_considered;
+            const bool selected =
+                record.state_id < result.policy.size() &&
+                result.policy[record.state_id].index == record.operator_index;
+            const char* disposition = "included";
+            const char* reason = "retained_for_minimum_expected_cost_bellman_step";
+            if (record.deferred) {
+                disposition = "deferred";
+                reason = "solver_resource_cap_before_exact_row_completion";
+                ++result.diagnostics.automatic_rows_deferred;
+            } else if (!record.eligible) {
+                disposition = "rejected";
+                reason = "exact_invalidity_legality_or_relevance";
+                ++result.diagnostics.automatic_rows_rejected;
+            } else {
+                ++result.diagnostics.automatic_rows_eligible;
+                if (record.collapsed) {
+                    disposition = "collapsed";
+                    reason = "exact_kernel_variant_retained_for_price_choice";
+                    ++result.diagnostics.automatic_rows_collapsed;
+                }
+                if (selected) {
+                    disposition = "selected";
+                    reason = "minimum_complete_expected_downstream_cost";
+                    ++result.diagnostics.automatic_rows_selected;
+                }
+            }
+            result.diagnostics.automatic_candidate_witnesses.push_back(
+                automatic_candidate_witness_json(
+                    record, disposition, reason));
+        }
+    }
+
     void finalize_preservation_diagnostics() {
         result.diagnostics.preservation_rows_considered = 0;
         result.diagnostics.preservation_rows_pruned = 0;
@@ -1402,7 +1582,7 @@ struct SolveWork::Impl {
         }
     }
 
-    void append_sparse_row(
+    bool append_sparse_row(
         const std::uint32_t state,
         PendingSparseRow pending) {
         static const std::vector<OutcomeEntry> empty_transitions;
@@ -1657,6 +1837,7 @@ struct SolveWork::Impl {
                 }
             }
         }
+        return equivalent != nullptr;
     }
 
     bool expand_one_unit() {
@@ -1692,10 +1873,26 @@ struct SolveWork::Impl {
                 pending.state = state;
                 pending.operator_index = priced.index;
                 pending.resources = &planner.resource_quantities;
+                std::optional<SolveTransitionCache::AutomaticCandidateRecord>
+                    automatic_record;
+                if (planner.automatic_kind !=
+                    AutomaticCandidateKind::None) {
+                    automatic_record.emplace();
+                    automatic_record->state_id = state;
+                    automatic_record->operator_index = priced.index;
+                    automatic_record->evidence.candidate = true;
+                    automatic_record->evidence.relevant_goal_mask =
+                        planner.relevant_goal_mask;
+                }
                 bool append = true;
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
                     const OptionKernel& kernel =
                         calc.option_kernel(state, priced.index);
+                    if (automatic_record.has_value()) {
+                        automatic_record->evidence = kernel.automatic;
+                        automatic_record->eligible =
+                            kernel.automatic.eligible;
+                    }
                     if (!kernel.supported) {
                         if (!reported_unsupported[priced.index]) {
                             reported_unsupported[priced.index] = true;
@@ -1750,11 +1947,61 @@ struct SolveWork::Impl {
                             pending.choice_options =
                                 &distribution.choice_options;
                         }
+                        if (append && automatic_record.has_value()) {
+                            bool advances = false;
+                            const AbstractState& source = calc.state(state);
+                            for (const OutcomeEntry& exit :
+                                 distribution.entries) {
+                                if (exit.probability <= 0.0) continue;
+                                const AbstractState& successor =
+                                    calc.state(exit.state);
+                                for (std::uint32_t slot = 0;
+                                     slot < calc.layout().slots.size(); ++slot) {
+                                    if ((planner.relevant_goal_mask &
+                                         (1u << slot)) != 0 &&
+                                        successor.slot_status[slot] >
+                                            source.slot_status[slot]) {
+                                        advances = true;
+                                    }
+                                }
+                            }
+                            OptionKernel::AutomaticEvidence& evidence =
+                                automatic_record->evidence;
+                            evidence.eligible = advances;
+                            evidence.kernel_changed = advances;
+                            evidence.setup_complete = advances;
+                            evidence.cleanup_complete = true;
+                            evidence.recovery_complete = true;
+                            evidence.exits_complete =
+                                !distribution.entries.empty();
+                            evidence.kernel_change_mechanisms =
+                                kAutomaticDeterministicFinish;
+                            evidence.legality_result =
+                                advances ? "legal" : "irrelevant";
+                            evidence.reason =
+                                advances
+                                    ? "legal_permanent_goal_bench_successor"
+                                    : "permanent_bench_does_not_advance_goal";
+                            automatic_record->eligible = advances;
+                            if (!advances) append = false;
+                        }
                     }
                 }
                 try {
                     if (append) {
-                        append_sparse_row(state, std::move(pending));
+                        if (automatic_record.has_value() &&
+                            automatic_record->evidence.candidate_kernel_hash ==
+                                0) {
+                            automatic_record->evidence.candidate_kernel_hash =
+                                static_cast<std::uint64_t>(
+                                    kernel_hash(pending));
+                        }
+                        const bool collapsed =
+                            append_sparse_row(state, std::move(pending));
+                        if (automatic_record.has_value()) {
+                            automatic_record->collapsed = collapsed;
+                            automatic_record->eligible = true;
+                        }
                     }
                 } catch (...) {
                     if (planner.kind == PlannerOperatorKind::FixedOption) {
@@ -1765,6 +2012,16 @@ struct SolveWork::Impl {
                     }
                     throw;
                 }
+                if (automatic_record.has_value()) {
+                    if (automatic_record->evidence.reason.empty()) {
+                        automatic_record->evidence.eligible = false;
+                        automatic_record->evidence.legality_result = "illegal";
+                        automatic_record->evidence.reason =
+                            "native_carrier_legality_refused";
+                    }
+                    transition_cache->automatic_candidates.push_back(
+                        std::move(*automatic_record));
+                }
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
                     calc.release_option_kernel(state, priced.index);
                 } else {
@@ -1772,6 +2029,29 @@ struct SolveWork::Impl {
                 }
             }
         } catch (const SolverResourceLimit& limit) {
+            if (expansion_operator_cursor != 0 &&
+                expansion_operator_cursor <= operators.size()) {
+                const PricedOperator& priced =
+                    operators[expansion_operator_cursor - 1];
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                if (planner.automatic_kind !=
+                    AutomaticCandidateKind::None) {
+                    SolveTransitionCache::AutomaticCandidateRecord record;
+                    record.state_id = state;
+                    record.operator_index = priced.index;
+                    record.deferred = true;
+                    record.evidence.candidate = true;
+                    record.evidence.relevant_goal_mask =
+                        planner.relevant_goal_mask;
+                    record.evidence.legality_result =
+                        "deferred_resource_cap";
+                    record.evidence.reason =
+                        "price_independent_kernel_generation_resource_cap";
+                    transition_cache->automatic_candidates.push_back(
+                        std::move(record));
+                }
+            }
             record_cap(
                 limit.cap_name(),
                 limit.cap_name() == "max_discovered_states");
@@ -3810,6 +4090,7 @@ struct SolveWork::Impl {
                 }
             }
         }
+        finalize_automatic_candidate_diagnostics();
 
         result.policy_reachable.assign(state_count, 0);
         bool reachable_policy_complete = true;
@@ -4283,7 +4564,37 @@ std::string serialize_solver_telemetry(
             json += diagnostics->preservation_witnesses[i];
         }
     }
-    json += "]}";
+    json += "],\"automatic_candidates\":{";
+    json += "\"enabled\":" + std::string(bool_json(
+        calc.goal().automatic_candidates));
+    json += ",\"operators\":" + std::to_string(
+        calc.action_control().automatic_options);
+    json += ",\"dependency_primitives\":" + std::to_string(
+        calc.action_control().automatic_dependency_primitives);
+    if (diagnostics == nullptr) {
+        json += ",\"rows\":null,\"witnesses\":[]";
+    } else {
+        json += ",\"rows\":{\"considered\":" + std::to_string(
+            diagnostics->automatic_rows_considered);
+        json += ",\"eligible\":" + std::to_string(
+            diagnostics->automatic_rows_eligible);
+        json += ",\"rejected\":" + std::to_string(
+            diagnostics->automatic_rows_rejected);
+        json += ",\"collapsed\":" + std::to_string(
+            diagnostics->automatic_rows_collapsed);
+        json += ",\"selected\":" + std::to_string(
+            diagnostics->automatic_rows_selected);
+        json += ",\"deferred\":" + std::to_string(
+            diagnostics->automatic_rows_deferred) + "}";
+        json += ",\"witnesses\":[";
+        for (std::size_t i = 0;
+             i < diagnostics->automatic_candidate_witnesses.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += diagnostics->automatic_candidate_witnesses[i];
+        }
+        json += "]";
+    }
+    json += "}}";
 
     json += ",\"planner\":{\"registry\":" +
             std::to_string(calc.operators().size());

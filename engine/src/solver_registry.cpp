@@ -136,6 +136,7 @@ bool action_is_goal_relevant(
          * product planning only as dependencies of bounded options, not as
          * standalone flag setters. */
         if (action.params.mod_id < session.metamod_type.size()) {
+            if (options.automatic_candidates) return true;
             const int metamod =
                 session.metamod_type[action.params.mod_id];
             const DataImpl& data = *session.data;
@@ -171,14 +172,14 @@ bool action_is_goal_relevant(
         return goal_has_influence(
             session, options, action.params.influence_code);
     case ActionType::Fracture:
-        return options.needs_fracture;
+        return options.needs_fracture || options.automatic_candidates;
     case ActionType::RemoveCraftedModifiers:
         /* Crafted cleanup remains outside the product envelope; Fracture is
          * retained only when a carrier-exact option requests it. Exposing the
          * unfinished primitives to the product MDP creates flag/tag state
          * combinations that exhaust the normal state cap before iteration.
          * They remain available in the exhaustive Calculator registry. */
-        return false;
+        return options.automatic_candidates;
     default:
         /* General currency and restart are structural ways to reach any
          * explicit goal. */
@@ -203,6 +204,18 @@ void retain_goal_relevant_actions(
         static_cast<std::uint32_t>(before - registry.actions.size());
     registry.index_by_id.clear();
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
+        ActionDescriptor& action = registry.actions[index];
+        if (options.automatic_candidates) {
+            if (action.params.type == ActionType::Bench) {
+                action.automatic_dependency_only =
+                    !goal_contains_mod_family(
+                        session, options, action.params.mod_id);
+            } else if (action.params.type == ActionType::Fracture ||
+                       action.params.type ==
+                           ActionType::RemoveCraftedModifiers) {
+                action.automatic_dependency_only = true;
+            }
+        }
         registry.index_by_id.emplace(registry.actions[index].id, index);
     }
 }

@@ -385,6 +385,8 @@ export interface SolverGoal {
     fossil_mode?: "exhaustive" | "goal_relevant";
     /** Engine-owned product relevance/dependency action envelope. */
     action_mode?: "goal_relevant";
+    /** Native S8.3 carrier-aware candidates; implies the bounded product envelope. */
+    automatic_candidates?: boolean;
     /** Additional hand-selected loadouts to materialize without scoping actions. */
     requested_fossil_actions?: string[];
     /** Explicit, price-independent fixed planner programs. */

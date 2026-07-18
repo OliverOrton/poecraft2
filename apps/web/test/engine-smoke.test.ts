@@ -1586,6 +1586,98 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
     await client.closeItem(item);
 });
 
+test("automatic S8.3 bench selects and executes through WASM", async () => {
+    const item = await client.createItem(sessionId, {
+        rarity: "rare",
+        withImplicits: false,
+    });
+    for (const key of [
+        "LocalIncreasedEnergyShield11",
+        "LocalIncreasedEnergyShieldPercent8",
+        "LocalIncreasedEnergyShieldPercentAndStunRecovery6",
+    ]) {
+        await client.addMod(item, sessionId, { key });
+    }
+    const solver = await client.openSolver(sessionId, {
+        version: "v1",
+        rarity: "rare",
+        slots: [
+            {
+                group: "ColdResistance",
+            },
+        ],
+        actions: ["restart"],
+        automatic_candidates: true,
+    });
+    const economy = await client.loadEconomy({
+        version: "v1",
+        prices: {
+            base: 100,
+            "bench:EinharMasterColdResist3__": 0.5,
+        },
+    });
+    const solve = await client.solverSolve(solver, item, economy, {
+        max_states: 25000,
+        max_discovered_states: 50000,
+        max_expanded_states: 25000,
+        max_state_action_rows: 250000,
+        max_transitions: 5000000,
+        max_reforge_work: 5000000,
+    });
+    assert.equal(solve.cancelled, false);
+    if (solve.cancelled) assert.fail("automatic solve was cancelled");
+    const telemetry = await client.solverTelemetry(solver);
+    const control = (telemetry.action_control as Record<string, unknown>)
+        .automatic_candidates as Record<string, unknown>;
+    assert.equal(
+        solve.converged,
+        true,
+        `automatic bench solve did not converge: ${JSON.stringify(solve)}`,
+    );
+    const start = await client.solverStateValue(solver, solve.start_state);
+    assert.equal(
+        start.action,
+        "bench:EinharMasterColdResist3__",
+        "automatic permanent bench should be the deterministic finish",
+    );
+    assert.equal(control.enabled, true);
+    assert.ok((control.operators as number) > 0);
+    const rows = control.rows as Record<string, number>;
+    assert.ok(rows.selected > 0);
+
+    const compiled = await client.solverCompileStrategy(solver);
+    const prepared = prepareSolverStrategy(compiled);
+    assert.ok(
+        prepared.nodes.some(
+            (node) =>
+                node.kind === "operation" &&
+                node.operation?.type === "bench",
+        ),
+    );
+    const strategy = await client.compileStrategy(sessionId, prepared);
+    const simulator = await client.createSimulator(
+        sessionId,
+        strategy,
+        economy,
+    );
+    const run = await client.runStrategy(simulator, {
+        target_runs: 64,
+        seed: 2026071803,
+        max_actions_per_run: 1000,
+    });
+    assert.equal(run.cancelled, false);
+    assert.equal(run.summary.completed_runs, 64);
+    assert.equal(run.summary.success_count, 64);
+    assert.equal(run.summary.action_not_applied_count, 0);
+    assert.equal(run.summary.no_matching_edge_count, 0);
+
+    await client.closeSimulator(simulator);
+    await client.closeStrategy(strategy);
+    await client.closeEconomy(economy);
+    await client.closeSolver(solver);
+    await client.closeItem(item);
+});
+
 // Wire the shared client into the runner before executing.
 {
     const spawned = spawnClient();
