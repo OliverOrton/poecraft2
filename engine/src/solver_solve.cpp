@@ -521,6 +521,12 @@ struct SolveTransitionCache {
     struct AutomaticCandidateRecord {
         std::uint32_t state_id = kNoId;
         std::uint32_t operator_index = kNoId;
+        std::string candidate_id;
+        AutomaticCandidateKind candidate_kind =
+            AutomaticCandidateKind::None;
+        std::string setup_action_id;
+        std::string followup_action_id;
+        std::string cleanup_action_id;
         bool eligible = false;
         bool collapsed = false;
         bool deferred = false;
@@ -595,7 +601,11 @@ struct SolveTransitionCache {
         for (const AutomaticCandidateRecord& record :
              automatic_candidate_samples) {
             bytes += record.evidence.legality_result.capacity() +
-                     record.evidence.reason.capacity();
+                     record.evidence.reason.capacity() +
+                     record.candidate_id.capacity() +
+                     record.setup_action_id.capacity() +
+                     record.followup_action_id.capacity() +
+                     record.cleanup_action_id.capacity();
         }
         return bytes;
     }
@@ -653,14 +663,18 @@ struct SolveWork::Impl {
     CalcContext& calc;
     const SessionImpl& session;
     SolveOptions options;
+    std::unordered_map<std::string, double> prices;
     SolveResult result;
     std::vector<PricedOperator> operators;
+    std::vector<std::uint32_t> static_operator_indices;
+    std::vector<std::uint32_t> expansion_operator_indices;
     std::vector<bool> reported_unsupported;
     std::vector<std::uint8_t> expanded;
     std::vector<std::uint8_t> queued;
     std::deque<std::uint32_t> queue;
     std::uint32_t expanded_count = 0;
     bool expansion_active = false;
+    bool expansion_prepared = false;
     std::uint32_t expansion_state = kNoId;
     std::uint32_t expansion_operator_cursor = 0;
     std::uint32_t peak_queue_size = 0;
@@ -790,6 +804,7 @@ struct SolveWork::Impl {
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& solve_options)
         : calc(context), session(context.session()), options(solve_options),
+          prices(prices),
           reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
         options.max_expanded_states = std::min(
@@ -911,6 +926,19 @@ struct SolveWork::Impl {
             }
             ++result.diagnostics.supported_priced_actions;
         }
+        for (std::size_t i = 0;
+             i < calc.static_candidate_operator_count(); ++i) {
+            const std::uint32_t index = calc.candidate_operators().at(i);
+            if (index < reported_unsupported.size() &&
+                !reported_unsupported[index] &&
+                std::find_if(
+                    operators.begin(), operators.end(),
+                    [&](const PricedOperator& priced) {
+                        return priced.index == index;
+                    }) != operators.end()) {
+                static_operator_indices.push_back(index);
+            }
+        }
 
         result.start_state = calc.intern_item(start_item);
         priced_operator_position.assign(calc.operators().size(), -1);
@@ -949,6 +977,128 @@ struct SolveWork::Impl {
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - setup_started)
                 .count());
+    }
+
+    bool ensure_priced_operator(const std::uint32_t index) {
+        if (index >= priced_operator_position.size()) {
+            priced_operator_position.resize(index + 1, -1);
+        }
+        if (priced_operator_position[index] >= 0) return true;
+        if (index >= reported_unsupported.size()) {
+            reported_unsupported.resize(index + 1, false);
+        }
+        const PlannerOperator& planner = calc.operators().at(index);
+        double cost = 0.0;
+        std::vector<std::pair<std::string, double>> resource_prices;
+        for (const auto& [key, quantity] : planner.resource_quantities) {
+            const auto found = prices.find(key);
+            if (found == prices.end()) {
+                record_skipped_missing_price(planner.id);
+                add_action_reason(
+                    "unpriced", planner.id,
+                    "missing_one_or_more_resource_prices");
+                if (planner.automatic_kind !=
+                    AutomaticCandidateKind::None) {
+                    add_action_reason(
+                        "rejected", planner.id,
+                        "automatic_candidate_missing_price");
+                }
+                return false;
+            }
+            cost += quantity * found->second;
+            resource_prices.push_back({key, found->second});
+        }
+        const bool supported =
+            planner.kind == PlannerOperatorKind::FixedOption ||
+            calc_supports(calc.registry().actions.at(
+                planner.primitive_action));
+        if (!supported) {
+            reported_unsupported[index] = true;
+            record_skipped_unsupported(planner.id);
+            add_action_reason(
+                "unsupported", planner.id,
+                "no_exact_evaluator_for_requested_primitive");
+            return false;
+        }
+        priced_operator_position[index] =
+            static_cast<std::int32_t>(operators.size());
+        operators.push_back({index, cost, std::move(resource_prices)});
+        transition_cache->operator_indices.push_back(index);
+        ++result.diagnostics.priced_scanned_actions;
+        ++result.diagnostics.supported_priced_actions;
+        return true;
+    }
+
+    SolveTransitionCache::AutomaticCandidateRecord automatic_record_from(
+        const std::uint32_t state,
+        const StateLocalAutomaticCandidate& decision) const {
+        SolveTransitionCache::AutomaticCandidateRecord record;
+        record.state_id = state;
+        record.operator_index = decision.operator_index;
+        record.candidate_id = decision.id;
+        record.candidate_kind = decision.kind;
+        record.eligible = decision.evidence.eligible;
+        record.collapsed = decision.collapsed;
+        record.deferred = decision.deferred;
+        record.evidence = decision.evidence;
+        if (decision.operator_index < calc.operators().size()) {
+            const PlannerOperator& planner =
+                calc.operators().at(decision.operator_index);
+            const auto id = [&](const std::uint32_t action) {
+                return action == kNoId
+                           ? std::string()
+                           : calc.registry().actions.at(action).id;
+            };
+            record.setup_action_id = id(planner.setup_action);
+            record.followup_action_id = id(planner.followup_action);
+            record.cleanup_action_id = id(planner.cleanup_action);
+        }
+        return record;
+    }
+
+    void prepare_state_expansion(const std::uint32_t state) {
+        expansion_operator_indices = static_operator_indices;
+        AutomaticAdmissionLimits limits;
+        limits.max_discovered_states = options.max_discovered_states;
+        limits.max_state_action_rows = options.max_state_action_rows;
+        limits.max_transitions = options.max_transitions;
+        limits.max_reforge_work = options.max_reforge_work;
+        const std::uint64_t calc_bytes = calc.estimated_owned_bytes();
+        const std::uint64_t total_bytes = estimated_owned_bytes();
+        const std::uint64_t other_bytes =
+            total_bytes > calc_bytes ? total_bytes - calc_bytes : 0;
+        limits.max_solver_owned_bytes =
+            options.max_solver_owned_bytes > other_bytes
+                ? options.max_solver_owned_bytes - other_bytes
+                : 1;
+        limits.prices = &prices;
+        StateLocalAutomaticBatch batch =
+            calc.admit_state_local_automatic_candidates(state, limits);
+        for (const StateLocalAutomaticCandidate& decision : batch.decisions) {
+            if (!decision.admitted) {
+                if (decision.missing_price) {
+                    record_skipped_missing_price(decision.id);
+                    add_action_reason(
+                        "unpriced", decision.id,
+                        "missing_one_or_more_resource_prices");
+                    add_action_reason(
+                        "rejected", decision.id,
+                        "automatic_candidate_missing_price");
+                    continue;
+                }
+                retain_automatic_candidate_record(
+                    automatic_record_from(state, decision));
+            }
+        }
+        for (const std::uint32_t index : batch.admitted_operators) {
+            if (ensure_priced_operator(index) &&
+                std::find(
+                    expansion_operator_indices.begin(),
+                    expansion_operator_indices.end(), index) ==
+                    expansion_operator_indices.end()) {
+                expansion_operator_indices.push_back(index);
+            }
+        }
     }
 
     double acceptable_residual() const {
@@ -1489,8 +1639,10 @@ struct SolveWork::Impl {
         const SolveTransitionCache::AutomaticCandidateRecord& record,
         const char* disposition,
         const char* decision_reason) const {
-        const PlannerOperator& planner =
-            calc.operators().at(record.operator_index);
+        const PlannerOperator* planner =
+            record.operator_index < calc.operators().size()
+                ? &calc.operators().at(record.operator_index)
+                : nullptr;
         const AbstractState& state = calc.state(record.state_id);
         const CarrierFacts carrier = carrier_facts(state);
         const auto action_id = [&](const std::uint32_t index) {
@@ -1499,9 +1651,18 @@ struct SolveWork::Impl {
         };
         std::string out = "{";
         out += "\"candidate_kind\":";
-        append_json_string(out, automatic_kind_name(planner.automatic_kind));
+        append_json_string(
+            out, automatic_kind_name(
+                record.candidate_kind != AutomaticCandidateKind::None
+                    ? record.candidate_kind
+                    : planner != nullptr
+                          ? planner->automatic_kind
+                          : AutomaticCandidateKind::None));
         out += ",\"candidate\":";
-        append_json_string(out, planner.id);
+        append_json_string(
+            out, record.candidate_id.empty() && planner != nullptr
+                     ? planner->id
+                     : record.candidate_id);
         out += ",\"carrier_identity\":{\"state_id\":" +
                std::to_string(record.state_id) +
                ",\"state_hash\":" + std::to_string(carrier.state_hash) +
@@ -1529,15 +1690,24 @@ struct SolveWork::Impl {
                ",\"mechanisms\":" + automatic_mechanisms_json(
                    record.evidence.kernel_change_mechanisms) + "}";
         out += ",\"setup_operations\":[";
-        if (planner.setup_action != kNoId) {
-            append_json_string(out, action_id(planner.setup_action));
+        if (!record.setup_action_id.empty()) {
+            append_json_string(out, record.setup_action_id);
+        } else if (planner != nullptr && planner->setup_action != kNoId) {
+            append_json_string(out, action_id(planner->setup_action));
         }
         out += "],\"followup_operation\":";
-        if (planner.followup_action == kNoId) out += "null";
-        else append_json_string(out, action_id(planner.followup_action));
+        if (!record.followup_action_id.empty()) {
+            append_json_string(out, record.followup_action_id);
+        } else if (planner == nullptr || planner->followup_action == kNoId) {
+            out += "null";
+        } else {
+            append_json_string(out, action_id(planner->followup_action));
+        }
         out += ",\"cleanup_operations\":[";
-        if (planner.cleanup_action != kNoId) {
-            append_json_string(out, action_id(planner.cleanup_action));
+        if (!record.cleanup_action_id.empty()) {
+            append_json_string(out, record.cleanup_action_id);
+        } else if (planner != nullptr && planner->cleanup_action != kNoId) {
+            append_json_string(out, action_id(planner->cleanup_action));
         }
         out += "],\"coverage\":{\"setup_complete\":" +
                std::string(record.evidence.setup_complete ? "true" : "false") +
@@ -1605,6 +1775,7 @@ struct SolveWork::Impl {
         for (const auto& record :
              transition_cache->automatic_candidate_samples) {
             const bool selected =
+                record.operator_index != kNoId &&
                 record.state_id < result.policy.size() &&
                 result.policy[record.state_id].index == record.operator_index;
             const char* disposition = "included";
@@ -1983,6 +2154,8 @@ struct SolveWork::Impl {
             ++expanded_count;
             expansion_operator_cursor = 0;
             expansion_active = true;
+            expansion_prepared = false;
+            expansion_operator_indices.clear();
         }
         const std::uint32_t state = expansion_state;
         if (calc.is_goal_state(calc.state(state))) {
@@ -1995,9 +2168,22 @@ struct SolveWork::Impl {
         }
 
         try {
-            if (expansion_operator_cursor < operators.size()) {
-                const PricedOperator& priced =
-                    operators[expansion_operator_cursor++];
+            if (!expansion_prepared) {
+                prepare_state_expansion(state);
+                expansion_prepared = true;
+            }
+            if (expansion_operator_cursor <
+                expansion_operator_indices.size()) {
+                const std::uint32_t operator_index =
+                    expansion_operator_indices[expansion_operator_cursor++];
+                const std::int32_t priced_position =
+                    priced_operator_position.at(operator_index);
+                if (priced_position < 0) {
+                    throw std::logic_error(
+                        "state-local automatic operator is not priced");
+                }
+                const PricedOperator& priced = operators.at(
+                    static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
                 PendingSparseRow pending;
@@ -2159,9 +2345,15 @@ struct SolveWork::Impl {
             }
         } catch (const SolverResourceLimit& limit) {
             if (expansion_operator_cursor != 0 &&
-                expansion_operator_cursor <= operators.size()) {
-                const PricedOperator& priced =
-                    operators[expansion_operator_cursor - 1];
+                expansion_operator_cursor <=
+                    expansion_operator_indices.size()) {
+                const std::uint32_t operator_index =
+                    expansion_operator_indices[
+                        expansion_operator_cursor - 1];
+                const std::int32_t priced_position =
+                    priced_operator_position.at(operator_index);
+                const PricedOperator& priced = operators.at(
+                    static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
                 if (planner.automatic_kind !=
@@ -2185,7 +2377,8 @@ struct SolveWork::Impl {
                 limit.cap_name() == "max_discovered_states");
         }
         const bool completed = result.diagnostics.resource_cap_hit ||
-                               expansion_operator_cursor >= operators.size();
+                               expansion_operator_cursor >=
+                                   expansion_operator_indices.size();
         if (completed) expansion_active = false;
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -4441,6 +4634,14 @@ struct SolveWork::Impl {
 
     std::uint64_t estimated_owned_bytes() const {
         std::uint64_t bytes = sizeof(*this) + calc.estimated_owned_bytes();
+        bytes += prices.bucket_count() * sizeof(void*);
+        bytes += prices.size() *
+                 (sizeof(std::pair<const std::string, double>) +
+                  2 * sizeof(void*));
+        for (const auto& [key, price] : prices) {
+            (void)price;
+            bytes += key.capacity() + 1;
+        }
         bytes += operators.capacity() * sizeof(PricedOperator);
         for (const PricedOperator& priced : operators) {
             bytes += priced.resource_prices.capacity() *
@@ -4451,6 +4652,9 @@ struct SolveWork::Impl {
             }
         }
         bytes += (reported_unsupported.capacity() + 7) / 8;
+        bytes += static_operator_indices.capacity() * sizeof(std::uint32_t);
+        bytes += expansion_operator_indices.capacity() *
+                 sizeof(std::uint32_t);
         bytes += expanded.capacity() * sizeof(std::uint8_t);
         bytes += queued.capacity() * sizeof(std::uint8_t);
         bytes += static_cast<std::uint64_t>(peak_queue_size) *

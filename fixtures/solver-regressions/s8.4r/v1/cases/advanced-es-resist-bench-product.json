@@ -1,0 +1,86 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "advanced-es-resist-bench-product-bounded",
+  "category": "s8.4r_product_regression",
+  "approval_status": "derived_from_approved_owner_case_2026-07-15",
+  "benchmark_enabled": true,
+  "benchmark_mode": "bounded_first_expansion",
+  "description": "Bounded Calculator goal-relevant diagnostic derived from the approved advanced Vaal Regalia case.",
+  "comparison_profile": "s8.4r-bounded-product-diagnostic-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86
+  },
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "searing_exarch_tier": 0,
+    "eater_of_worlds_tier": 0,
+    "mods": []
+  },
+  "goal": {
+    "version": "v1",
+    "rarity": "rare",
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 4,
+    "slots": [
+      {"family_mod_key": "LocalIncreasedEnergyShield11", "min_tier": 1},
+      {"family_mod_key": "LocalIncreasedEnergyShieldPercent8", "min_tier": 1},
+      {"family_mod_key": "FireResist7", "min_tier": 2},
+      {"family_mod_key": "EinharMasterColdResist3__", "min_tier": 1}
+    ],
+    "actions": [
+      "chaos",
+      "exalt",
+      "annul",
+      "bench:EinharMasterColdResist3__",
+      "restart"
+    ]
+  },
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "economy": {
+    "version": "v1",
+    "id": "solver-benchmark-frozen-v1",
+    "prices": {
+      "chaos": 1.0,
+      "exalt": 10.0,
+      "annul": 2.0,
+      "bench:EinharMasterColdResist3__": 0.5,
+      "base": 5.0
+    }
+  },
+  "expected": {
+    "solve_status": "bounded_diagnostic",
+    "optimality_status": "not_requested",
+    "compile_status": "not_required",
+    "verification_status": "not_requested"
+  },
+  "caps": {
+    "max_states": 70000,
+    "max_sweeps": 1,
+    "solve_step_work_items": 1,
+    "max_diagnostic_work_items": 2000,
+    "diagnostic_time_limit_seconds": 45,
+    "max_discovered_states": 70000,
+    "max_expanded_states": 1,
+    "max_state_action_rows": 5000,
+    "max_transitions": 2000000,
+    "max_reforge_work": 2000000,
+    "max_solver_owned_bytes": 67108864,
+    "max_diagnostic_samples": 16,
+    "max_telemetry_json_bytes": 262144,
+    "max_compiled_nodes": 1,
+    "max_compiled_edges": 1,
+    "max_strategy_json_bytes": 1,
+    "worker_step_ms": 50,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 0,
+    "seed": 20260718,
+    "max_actions_per_run": 1
+  }
+}

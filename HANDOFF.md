@@ -1,142 +1,128 @@
-# Session Handoff - S8.4R.2 State-Local Automatic Candidates Is Next
+# Session Handoff - S8.4R.3 Automatic Imprint Discovery Is Next
 
-Updated 2026-07-18 after completing S8.4R.1. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-18 after completing S8.4R.2. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.4, S8.0-S8.4, and S8.4R.1 are complete. **S8.4R.2 is the sole next
-implementation boundary.** Do not begin automatic Imprint discovery (R3),
-browser transfer/lifetime work (R4), verification truth work (R5), integrated
-acceptance (R6), or S8.5 in the R2 chunk.
+B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R2 are complete. **S8.4R.3 is the sole next
+implementation boundary.** Do not begin browser transfer/lifetime work (R4),
+verification truth work (R5), integrated acceptance (R6), or S8.5 in the R3
+chunk.
 
-Historical S8.0-S8.4 evidence remains immutable. R1 evidence lives separately
-under [fixtures/solver-regressions/s8.4r/v1](fixtures/solver-regressions/s8.4r/v1/).
-The pre-fix runner build missed its 124-second safe timeout. Per Oliver's
-direction, the baseline was recorded honestly as skipped and implementation
-continued; no pre-fix or unbounded product solve was launched.
+Historical S8.0-S8.4 evidence remains immutable. R1/R2 regression evidence is
+separate under
+[fixtures/solver-regressions/s8.4r/v1](fixtures/solver-regressions/s8.4r/v1/).
+No unbounded real solve, real-case compilation, verification run, 10,000-run
+sample, full acceptance suite, rendered review, or R3+ implementation was
+performed during R2.
 
-## What R1 Delivered
+## What R2 Delivered
 
-### Pinned product regression and bounded runner
+### Lazy carrier-local automatic candidates
 
-The new versioned case pins:
+Automatic permanent bench, temporary blocker, protected-metamod, Multimod, and
+Fracture options are no longer materialized as one global cross product during
+`CalcContext` construction. Construction retains only explicit primitive and
+manual fixed-option candidates. On expansion, the current carrier supplies a
+bounded plausibility filter; candidates that require exact evaluation run in a
+transient strict local abstraction.
 
-- `Metadata/Items/Armours/BodyArmours/BodyStrDex20` (Conquest Lamellar), item
-  level 86, empty rare start;
-- the four required T1 family keys named in the active plan;
-- Mirage economy
-  `economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f`
-  at cutoff `2026-07-15T21:18:29Z`, without overrides or fallback and with the
-  missing base price explicit;
-- the exact 17 Calculator-envelope primitive/fossil action IDs priced by that
-  snapshot; and
-- a runner mode that performs construction plus at most the capped first
-  expansion. It never compiles, evaluates, or verifies the strategy.
+Price-key availability can skip a candidate before expensive exact work, but
+price values never participate in generation or admission. Complete exact
+outcome and state-local resource kernels deduplicate before a planner operator,
+dependency, or shared successor is admitted. Dependency-only primitives remain
+non-selectable product actions. Exact rejected, collapsed, missing-price, and
+resource-deferred dispositions continue through the bounded R1 diagnostic
+path.
 
-The runner records construction/action pins, work counts, time, report bytes,
-process working-set snapshots, selected native live/peak bytes, and solver
-estimated live/diagnostic bytes. The compact evidence is
-[r1-after-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r1-after-summary.json);
-the complete telemetry is
-[r1-after-report.json](fixtures/solver-regressions/s8.4r/v1/evidence/r1-after-report.json).
+Admitted state-local option kernels are retained after ordinary evaluator-cache
+release because the existing primitive compiler needs their exact setup,
+retry, cleanup, recovery, and exit routes. Those kernels, the state-local maps,
+the dynamic operator/dependency sets, and the price-identity map are included
+in the existing selected owned-byte estimate and cap. Transient local action,
+transition, and reforge work is merged into the R1 telemetry and uses the same
+configured caps.
 
-The repeated pinned measurement completed in 154.1663 ms, expanded exactly one
-state, reached the explicit 70,000 discovered-state cap with 69,999 frontier
-states, stored 11 state/action rows and 55,804 transitions, and performed 19
-bounded work units. It retained 16 action-reason samples while reporting 245
-omitted events, 9 preservation samples, and 2 automatic-candidate samples. The
-telemetry document was 24,756 bytes; selected native memory was 31,252,333 live
-and 39,093,816 peak bytes. There were no runner errors. These are containment
-measurements, not optimality or performance acceptance.
+### Bounded before/after evidence
 
-### Bounded diagnostics and final output
+R2 adds derived bounded ordinary and advanced product cases beside the pinned
+Conquest/Mirage case. The compact evidence is
+[r2-before-after-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
+All three runs construct and expand at most the start state, compile nothing,
+and verify nothing.
 
-`SolveTransitionCache` no longer owns one full automatic-candidate record for
-every option/state. It retains aggregate considered/eligible/rejected/
-collapsed/deferred counters plus at most `max_diagnostic_samples` typed samples.
-Preservation witnesses, automatic witnesses, skipped-action samples, and action
-reason samples use the same explicit sample budget and report totals/omissions.
+| Case | Candidate operators | Shared dependencies | Junk classes | Discovered states | Selected owned bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Conquest before → after | 1,785 → 17 | 147 → 0 | 44 → 13 | 70,000 → 29,069 | 39,092,675 → 16,763,739 |
+| Ordinary before → after | 1,318 → 7 | 153 → 0 | 45 → 14 | 13,887 → 13,887 | 13,849,401 → 12,970,069 |
+| Advanced before → after | 1,773 → 5 | 159 → 0 | 45 → 13 | 17,954 → 17,954 | 15,213,407 → 14,034,697 |
 
-Solver owned-memory estimates include retained transition samples, finalized
-diagnostic strings, result vectors, and retained outputs. Preservation,
-automatic-candidate finalization, extraction scratch projections, final result
-owners, and telemetry serialization are checked against explicit caps.
-`max_telemetry_json_bytes` is enforced before each append, so serialization does
-not first create an oversized document and reject it afterward.
+The after Conquest run expanded one state without hitting the 70,000 shared
+discovered-state cap. Its remaining expensive automatic local kernel was
+truthfully deferred at the existing local resource boundary. Ordinary and
+advanced first-expansion row/transition counts stayed at `4 / 13,886` and
+`4 / 17,953` respectively.
 
-Exact strategy evaluation now has `max_owned_bytes` and
-`max_output_json_bytes`. Persistent evaluator owners, final accounting results,
-important finalization temporaries, and the final JSON builder are bounded and
-reported in the result's `memory` object.
+### Preserved S8.3 and R1 contracts
 
-### Native and WASM live-memory telemetry
+Focused S8.3 tests retain the analytic temporary-blocker boundary `4`,
+protected boundary `23`, and Fracture boundary `23.75`, including primitive
+compiled execution. Direct ready-carrier Fracture pricing uses the exact local
+resource vector, so an unused preparation identity cannot affect its price
+boundary. Exact-kernel-neutral automatic programs no longer survive as planner
+operators.
 
-The C ABI exposes `pc_solver_memory_stats` and
-`pc_strategy_eval_memory_stats`, returning selected live owned bytes, lifetime
-peak bytes, and retained serialized-output bytes. The WASM facade aggregates
-facade registries plus solver/evaluator owners through `pcw_memory_stats`.
-`EngineClient.memoryStats()` now returns WASM heap high-water, live handle count,
-native live/peak/serialized selected bytes, and an explicit scope label.
-
-Release WASM was rebuilt after the ABI/facade changes. Python evaluator options
-and TypeScript protocol types carry the new byte caps.
+R1 diagnostic sample budgets, counters, byte/output caps, native memory
+telemetry, and the pinned runner remain in force. No C ABI or strategy
+vocabulary changed, so release WASM was not rebuilt in this intermediate
+checkpoint.
 
 ## Focused Validation Completed
 
 No full acceptance suite was run.
 
 - `powershell -File scripts/build.ps1` — passed.
-- `poecraft_engine_tests.exe --solver-solve-only` — 96 checks, 0 failures.
-- `poecraft_engine_tests.exe --solver-eval-only` — 895 checks, 0 failures. This
-  retained the repository-required 10,000-run S8.4 accounting oracle already in
-  that focused test group.
-- `poecraft_engine_tests.exe --solver-api-only data\compiled\current` — 2,724
-  checks, 0 failures.
-- `poecraft_engine_tests.exe --solver-s8-3-only` — 226 checks, 0 failures.
-- `powershell -File scripts/build-wasm.ps1` — passed and rebuilt release WASM.
-- A direct final release-WASM `pcw_memory_stats` smoke reported a 128 MiB heap,
-  zero handles, and valid selected live/peak/serialized fields with the explicit
-  scope label.
-- The intended name-filtered WASM memory smoke uses a custom in-file runner, so
-  it executed that one smoke file's 27 non-visual checks; all passed. It was not
-  the full web or repository acceptance suite.
-- `npx tsc --noEmit` in `apps/web` — passed.
-- The pinned corpus validated, then the post-fix case completed under
-  `bounded_first_expansion` with verification disabled.
+- `poecraft_engine_tests.exe --solver-s8-3-only` — 137 checks, 0 failures.
+- `poecraft_engine_tests.exe --solver-solve-only` — 96 checks, 0 failures;
+  the optional artifact sub-suite was not requested and reported skipped.
+- The three-case S8.4R corpus validated.
+- Pinned Conquest/Mirage, ordinary, and advanced cases completed under
+  `bounded_first_expansion` with compilation and verification disabled.
 
-## Exact Next Boundary: S8.4R.2 Only
+## Exact Next Boundary: S8.4R.3 Only
 
-Replace eager global Fracture/bench/blocker/metamod cross-product generation
-with lazy, carrier/state-local admission before dependencies widen the shared
-abstraction. Deduplicate by exact complete kernel before admission. Preserve:
+Correct the Imprint option drift and build automatic Imprint discovery on the
+new bounded state-local substrate:
 
-- the existing analytic S8.3 price boundaries;
-- exact legality, setup/cleanup/recovery/exit evidence;
-- dependency-only primitives as non-selectable structural dependencies;
-- primitive execution and compiled-strategy vocabulary; and
-- the R1 counters, sample budgets, owned-byte/output caps, memory telemetry, and
-  pinned Conquest/Mirage bounded runner.
+- magic rarity is required when the checkpoint is created, not for the final
+  solve goal;
+- discover useful bounded exact attempt programs only at reachable magic
+  carriers where native checkpoint creation is legal;
+- discover intermediate exits automatically and let them continue through
+  ordinary Bellman values; non-exits restore and retry exactly;
+- deduplicate complete attempt/restore kernels before admission and report any
+  internal depth/work boundary as a resource boundary, never mechanic
+  invalidity;
+- remove the user-authored attempt program and false final-magic/complete-goal
+  restriction across native metadata, bindings, types, Calculator, tests, and
+  docs; and
+- add the non-magic-final-goal compiled strategy fixture, while deferring its
+  final 10,000-run verification to R6.
 
-Use the pinned regression plus ordinary/advanced product construction and
-bounded solve diagnostics. R2 must reduce candidate/dependency/layout widening
-before state expansion. Do not solve the Conquest case without explicit caps,
-do not run its 10,000-run verification, and do not run the complete acceptance
-suite. Those integrated gates remain R6 work.
+Mechanic ambiguity is decided by Oliver. Do not research or infer PoE rules.
 
 ## Deferred Boundaries And Gotchas
 
-- R3 owns automatic Imprint stage/program discovery and the correction of the
-  false final-magic/complete-goal restriction. Do not mix it into R2.
 - R4 owns giant strategy transfer, structured clones, solved-handle lifetime,
   and rebuild-on-reprice behavior.
 - R5 owns verification terminal/off-policy truth, confidence, cost semantics,
   and compiler-emitted evaluator vocabulary such as `mod_count`.
 - R6 alone runs exact real product solves, required 10,000-run compiled-policy
-  verifications, and the complete non-visual acceptance/evidence pass.
+  verifications, release-WASM rebuild, and the complete non-visual
+  acceptance/evidence pass.
 - B1.5 remains waived/deferred, not complete. Do not silently backfill it.
 - Prefix-to-Suffix and Suffix-to-Prefix beastcrafts remain parked and absent.
 - Large S8.0 strategies and projections are immutable historical evidence, not
   normal product inputs.
-- Mechanic ambiguity is decided by Oliver. Do not research or infer PoE rules.

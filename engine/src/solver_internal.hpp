@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "engine_internal.hpp"
@@ -764,6 +765,32 @@ struct ActionControlSummary {
     std::uint32_t automatic_dependency_primitives = 0;
 };
 
+struct AutomaticAdmissionLimits {
+    std::uint32_t max_discovered_states = 0;
+    std::uint64_t max_state_action_rows = 0;
+    std::uint64_t max_transitions = 0;
+    std::uint64_t max_reforge_work = 0;
+    std::uint64_t max_solver_owned_bytes = 0;
+    const std::unordered_map<std::string, double>* prices = nullptr;
+};
+
+struct StateLocalAutomaticCandidate {
+    std::string id;
+    AutomaticCandidateKind kind = AutomaticCandidateKind::None;
+    std::uint32_t operator_index = kNoId;
+    bool admitted = false;
+    bool collapsed = false;
+    bool deferred = false;
+    bool missing_price = false;
+    OptionKernel::AutomaticEvidence evidence;
+};
+
+struct StateLocalAutomaticBatch {
+    bool cached = false;
+    std::vector<StateLocalAutomaticCandidate> decisions;
+    std::vector<std::uint32_t> admitted_operators;
+};
+
 /* True when CalcContext has an exact evaluator dispatch for this descriptor,
  * independent of the current state. */
 bool calc_supports(const ActionDescriptor& action);
@@ -802,6 +829,15 @@ class CalcContext {
     }
     const std::vector<std::uint32_t>& candidate_operators() const {
         return candidate_operators_;
+    }
+    std::size_t static_candidate_operator_count() const {
+        return static_candidate_operator_count_;
+    }
+    StateLocalAutomaticBatch admit_state_local_automatic_candidates(
+        std::uint32_t state_id,
+        const AutomaticAdmissionLimits& limits);
+    bool is_state_local_automatic_operator(std::uint32_t index) const {
+        return state_local_automatic_operator_indices_.contains(index);
     }
     /* The configured slot threshold satisfied at the required rarity. */
     bool is_goal_state(const AbstractState& state) const;
@@ -875,6 +911,12 @@ class CalcContext {
     std::vector<std::uint32_t> candidates_;
     std::vector<PlannerOperator> operators_;
     std::vector<std::uint32_t> candidate_operators_;
+    std::size_t static_candidate_operator_count_ = 0;
+    std::unordered_map<std::uint32_t, std::vector<std::uint32_t>>
+        state_local_automatic_operators_;
+    std::unordered_set<std::uint32_t> admitted_automatic_dependencies_;
+    std::unordered_set<std::uint32_t>
+        state_local_automatic_operator_indices_;
     ActionContextImpl context_;
     std::vector<AbstractState> states_;
     std::optional<std::uint32_t> state_cap_;

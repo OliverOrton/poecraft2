@@ -230,10 +230,58 @@ bool temporary_followup(const ActionDescriptor& action) {
     }
 }
 
-std::vector<FixedOptionSpec> synthesize_automatic_options(
+std::uint32_t satisfied_goal_mask(const AbstractState& state);
+
+bool target_slot_missing(
+    const AbstractState& state,
+    const std::uint32_t slot) {
+    return slot < kMaxGoalSlots &&
+           state.slot_status[slot] != static_cast<std::uint8_t>(
+               GoalSlotStatus::Satisfied);
+}
+
+bool blocker_can_change_target_kernel(
     const SessionImpl& session,
     const GoalSpec& goal,
-    const ActionRegistry& registry) {
+    const AbstractState& state,
+    const std::uint32_t blocker_mod,
+    const std::uint32_t slot) {
+    if (slot >= goal.slots.size() || blocker_mod >= session.mod_count) {
+        return false;
+    }
+    bool conflicts_target = false;
+    bool conflicts_competitor = false;
+    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+        if (!mods_conflict(session, blocker_mod, mod)) continue;
+        if (mod_satisfies_goal_slot(session, mod, goal.slots[slot])) {
+            conflicts_target = true;
+        } else if (mod < session.base_roll_weight.size() &&
+                   session.base_roll_weight[mod] > 0) {
+            conflicts_competitor = true;
+        }
+    }
+    if (conflicts_target) return false;
+
+    const std::int8_t blocker_side = session.gen_type[blocker_mod];
+    const std::int8_t target_side = goal_slot_side(session, goal.slots[slot]);
+    const std::uint8_t cap = rarity_affix_cap(session, state.rarity);
+    const bool fills_side =
+        (blocker_side == PC_SIDE_PREFIX &&
+         state.prefix_count + 1 >= cap) ||
+        (blocker_side == PC_SIDE_SUFFIX &&
+         state.suffix_count + 1 >= cap);
+    const bool capacity_changes_target =
+        fills_side && target_side >= 0 && target_side != blocker_side;
+    return conflicts_competitor || capacity_changes_target;
+}
+
+std::vector<FixedOptionSpec> synthesize_automatic_options(
+    const CalcContext& calc,
+    const std::uint32_t state_id) {
+    const SessionImpl& session = calc.session();
+    const GoalSpec& goal = calc.goal();
+    const ActionRegistry& registry = calc.registry();
+    const AbstractState& state = calc.state(state_id);
     std::vector<FixedOptionSpec> result;
     if (!goal.automatic_candidates) return result;
 
@@ -253,7 +301,19 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
             preparations.push_back({"scour", "alchemy"});
         }
         for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+            const bool carrier_ready =
+                !target_slot_missing(state, slot) &&
+                action_legal(session, registry.actions.at(
+                    registry.index_by_id.at("fracture")), state);
             for (const auto& preparation : preparations) {
+                const auto first = registry.index_by_id.find(
+                    preparation.front());
+                if (!carrier_ready &&
+                    (first == registry.index_by_id.end() ||
+                     !action_legal(
+                         session, registry.actions.at(first->second), state))) {
+                    continue;
+                }
                 FixedOptionSpec option;
                 option.kind = FixedOptionKind::FracturePrepare;
                 option.program_action_ids = preparation;
@@ -261,6 +321,9 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
                 option.automatic_kind = AutomaticCandidateKind::Fracture;
                 option.relevant_goal_mask = 1u << slot;
                 result.push_back(std::move(option));
+                if (carrier_ready) {
+                    break; /* all preparations share the direct Fracture row */
+                }
             }
         }
     }
@@ -283,7 +346,7 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
     /* Deterministic Multimod finishes are generated only for pairs of legal
      * permanent goal crafts. The fixed kernel retains native group, crafted
      * count, replacement, and open-side legality. */
-    if (registry.index_by_id.end() != std::find_if(
+    const auto multimod_entry = std::find_if(
             registry.index_by_id.begin(), registry.index_by_id.end(),
             [&](const auto& entry) {
                 const ActionDescriptor& action = registry.actions[entry.second];
@@ -291,7 +354,10 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
                        action.params.mod_id < session.metamod_type.size() &&
                        session.metamod_type[action.params.mod_id] ==
                            session.data->metamod_multimod_code;
-            })) {
+            });
+    if (multimod_entry != registry.index_by_id.end() &&
+        action_legal(
+            session, registry.actions.at(multimod_entry->second), state)) {
         for (std::size_t a = 0; a < goal_bench.size(); ++a) {
             for (std::size_t b = a + 1; b < goal_bench.size(); ++b) {
                 const ActionDescriptor& left = registry.actions[goal_bench[a]];
@@ -300,6 +366,7 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
                     goal_mask_for_mod(session, goal, left.params.mod_id) |
                     goal_mask_for_mod(session, goal, right.params.mod_id);
                 if ((mask & (mask - 1)) == 0 ||
+                    (mask & ~satisfied_goal_mask(state)) == 0 ||
                     mods_conflict(
                         session, left.params.mod_id, right.params.mod_id)) {
                     continue;
@@ -317,7 +384,8 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
 
     const auto cleanup = registry.index_by_id.find(
         "remove_crafted_modifiers");
-    if (cleanup != registry.index_by_id.end()) {
+    if (cleanup != registry.index_by_id.end() &&
+        (state.flags & kFlagCraftedMod) == 0) {
         for (const std::uint32_t blocker_index : ordinary_bench) {
             const ActionDescriptor& blocker = registry.actions[blocker_index];
             if (goal_mask_for_mod(
@@ -325,8 +393,18 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
                 continue; /* permanent goal craft, never temporary */
             }
             for (const ActionDescriptor& followup : registry.actions) {
-                if (!temporary_followup(followup)) continue;
+                if (!temporary_followup(followup) ||
+                    !action_legal(session, blocker, state) ||
+                    !action_legal(session, followup, state)) {
+                    continue;
+                }
                 for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+                    if (!target_slot_missing(state, slot) ||
+                        !blocker_can_change_target_kernel(
+                            session, goal, state, blocker.params.mod_id,
+                            slot)) {
+                        continue;
+                    }
                     FixedOptionSpec option;
                     option.kind = FixedOptionKind::TemporaryBenchRepeat;
                     option.setup_action_ids = {blocker.id};
@@ -366,6 +444,7 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
             }
         }
         if (protected_mask == 0) continue;
+        if ((satisfied_goal_mask(state) & protected_mask) == 0) continue;
         for (const ActionDescriptor& followup : registry.actions) {
             const bool respects =
                 followup.params.type == ActionType::Scour ||
@@ -379,7 +458,10 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
             }
             for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
                 const std::uint32_t target = 1u << slot;
-                if ((protected_mask & target) != 0) continue;
+                if ((protected_mask & target) != 0 ||
+                    !target_slot_missing(state, slot)) {
+                    continue;
+                }
                 FixedOptionSpec option;
                 option.kind = followup.params.type == ActionType::Scour
                                   ? FixedOptionKind::ProtectedSide
@@ -768,11 +850,8 @@ std::vector<PlannerOperator> build_planner_operators(
     const GoalSpec& goal,
     const ActionRegistry& registry) {
     std::vector<PlannerOperator> operators;
-    const std::vector<FixedOptionSpec> automatic =
-        synthesize_automatic_options(session, goal, registry);
     operators.reserve(
-        registry.actions.size() + goal.fixed_options.size() +
-        automatic.size());
+        registry.actions.size() + goal.fixed_options.size());
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
         const ActionDescriptor& action = registry.actions[index];
         PlannerOperator primitive;
@@ -797,9 +876,7 @@ std::vector<PlannerOperator> build_planner_operators(
     }
 
     std::set<std::string> option_ids;
-    std::vector<FixedOptionSpec> specs = goal.fixed_options;
-    specs.insert(specs.end(), automatic.begin(), automatic.end());
-    for (const FixedOptionSpec& spec : specs) {
+    for (const FixedOptionSpec& spec : goal.fixed_options) {
         PlannerOperator option;
         option.kind = PlannerOperatorKind::FixedOption;
         option.option_kind = spec.kind;
@@ -1124,6 +1201,502 @@ std::vector<PlannerOperator> build_planner_operators(
         operators.push_back(std::move(option));
     }
     return operators;
+}
+
+namespace {
+
+bool same_complete_option_kernel(
+    const OptionKernel& left,
+    const OptionKernel& right) {
+    return left.legal == right.legal &&
+           left.supported == right.supported &&
+           left.terminates_almost_surely == right.terminates_almost_surely &&
+           left.expected_primitive_actions ==
+               right.expected_primitive_actions &&
+           left.expected_resources == right.expected_resources &&
+           left.exits == right.exits &&
+           left.observation_choice_groups ==
+               right.observation_choice_groups &&
+           left.observation_choice_options ==
+               right.observation_choice_options &&
+           left.retry_states == right.retry_states &&
+           left.continuation_states == right.continuation_states &&
+           left.entry_continues == right.entry_continues;
+}
+
+bool same_complete_distribution(
+    const OutcomeDistribution& left,
+    const OutcomeDistribution& right) {
+    return left.supported == right.supported &&
+           left.entries == right.entries &&
+           left.choice_groups == right.choice_groups &&
+           left.choice_options == right.choice_options &&
+           left.slot_satisfied_probability ==
+               right.slot_satisfied_probability;
+}
+
+std::uint64_t mapped_kernel_hash(const OptionKernel& kernel) {
+    AttemptKernel attempt;
+    attempt.supported = kernel.supported;
+    attempt.fully_legal = kernel.legal;
+    attempt.entries = kernel.exits;
+    attempt.choice_groups = kernel.observation_choice_groups;
+    attempt.choice_options = kernel.observation_choice_options;
+    return attempt_kernel_hash(attempt);
+}
+
+std::uint32_t map_local_state(
+    CalcContext& local,
+    CalcContext& destination,
+    const std::uint32_t local_state,
+    std::unordered_map<std::uint32_t, std::uint32_t>& mapped) {
+    const auto found = mapped.find(local_state);
+    if (found != mapped.end()) return found->second;
+    pc_item_state item;
+    if (!local.materialize(local_state, item)) {
+        throw std::runtime_error(
+            "automatic candidate local state cannot be materialized");
+    }
+    const std::uint32_t result = destination.intern_item(item);
+    mapped.emplace(local_state, result);
+    return result;
+}
+
+OutcomeDistribution map_local_distribution(
+    CalcContext& local,
+    CalcContext& destination,
+    const OutcomeDistribution& source,
+    std::unordered_map<std::uint32_t, std::uint32_t>& mapped) {
+    OutcomeDistribution result = source;
+    std::map<std::uint32_t, double> entries;
+    for (const OutcomeEntry& entry : source.entries) {
+        entries[map_local_state(
+            local, destination, entry.state, mapped)] += entry.probability;
+    }
+    result.entries.clear();
+    for (const auto& [state, probability] : entries) {
+        result.entries.push_back({state, probability});
+    }
+    for (OutcomeChoiceGroup& group : result.choice_groups) {
+        for (std::uint32_t& state : group.states) {
+            state = map_local_state(local, destination, state, mapped);
+        }
+        std::sort(group.states.begin(), group.states.end());
+        group.states.erase(
+            std::unique(group.states.begin(), group.states.end()),
+            group.states.end());
+    }
+    for (OutcomeChoiceOption& choice : result.choice_options) {
+        choice.state = map_local_state(
+            local, destination, choice.state, mapped);
+        choice.observation_state = map_local_state(
+            local, destination, choice.observation_state, mapped);
+        choice.actual_state = map_local_state(
+            local, destination, choice.actual_state, mapped);
+    }
+    result.stable_shared_kernel = false;
+    return result;
+}
+
+OptionKernel map_local_option_kernel(
+    CalcContext& local,
+    CalcContext& destination,
+    const OptionKernel& source,
+    std::unordered_map<std::uint32_t, std::uint32_t>& mapped) {
+    OptionKernel result = source;
+    std::map<std::uint32_t, double> exits;
+    for (const OutcomeEntry& exit : source.exits) {
+        exits[map_local_state(
+            local, destination, exit.state, mapped)] += exit.probability;
+    }
+    result.exits.clear();
+    for (const auto& [state, probability] : exits) {
+        result.exits.push_back({state, probability});
+    }
+    for (OutcomeChoiceGroup& group : result.observation_choice_groups) {
+        for (std::uint32_t& state : group.states) {
+            state = map_local_state(local, destination, state, mapped);
+        }
+        std::sort(group.states.begin(), group.states.end());
+        group.states.erase(
+            std::unique(group.states.begin(), group.states.end()),
+            group.states.end());
+    }
+    for (OutcomeChoiceOption& choice : result.observation_choice_options) {
+        choice.state = map_local_state(
+            local, destination, choice.state, mapped);
+        choice.observation_state = map_local_state(
+            local, destination, choice.observation_state, mapped);
+        choice.actual_state = map_local_state(
+            local, destination, choice.actual_state, mapped);
+    }
+    for (std::uint32_t& state : result.retry_states) {
+        state = map_local_state(local, destination, state, mapped);
+    }
+    for (std::uint32_t& state : result.continuation_states) {
+        state = map_local_state(local, destination, state, mapped);
+    }
+    std::sort(result.retry_states.begin(), result.retry_states.end());
+    result.retry_states.erase(
+        std::unique(result.retry_states.begin(), result.retry_states.end()),
+        result.retry_states.end());
+    std::sort(
+        result.continuation_states.begin(),
+        result.continuation_states.end());
+    result.continuation_states.erase(
+        std::unique(
+            result.continuation_states.begin(),
+            result.continuation_states.end()),
+        result.continuation_states.end());
+    result.automatic.candidate_kernel_hash = mapped_kernel_hash(result);
+    return result;
+}
+
+} // namespace
+
+StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
+    const std::uint32_t state_id,
+    const AutomaticAdmissionLimits& limits) {
+    StateLocalAutomaticBatch batch;
+    const auto cached = state_local_automatic_operators_.find(state_id);
+    if (cached != state_local_automatic_operators_.end()) {
+        batch.cached = true;
+        batch.admitted_operators = cached->second;
+        return batch;
+    }
+    if (!goal_.automatic_candidates || is_goal_state(state(state_id))) {
+        state_local_automatic_operators_.emplace(
+            state_id, std::vector<std::uint32_t>{});
+        return batch;
+    }
+
+    pc_item_state carrier;
+    if (!materialize(state_id, carrier)) {
+        state_local_automatic_operators_.emplace(
+            state_id, std::vector<std::uint32_t>{});
+        return batch;
+    }
+
+    std::vector<FixedOptionSpec> specs =
+        synthesize_automatic_options(*this, state_id);
+    std::vector<std::uint32_t> permanent_benches;
+    std::vector<std::uint32_t> local_candidates = candidates_;
+    for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
+        const PlannerOperator& planner = operators_.at(index);
+        if (planner.automatic_kind !=
+                AutomaticCandidateKind::PermanentBench ||
+            std::find(candidates_.begin(), candidates_.end(), index) !=
+                candidates_.end() ||
+            !action_legal(*session_, registry_.actions[index], state(state_id))) {
+            continue;
+        }
+        permanent_benches.push_back(index);
+        if (std::find(
+                local_candidates.begin(), local_candidates.end(), index) ==
+            local_candidates.end()) {
+            local_candidates.push_back(index);
+        }
+    }
+
+    GoalSpec local_goal = goal_;
+    local_goal.automatic_candidates = false;
+    local_goal.fixed_options = std::move(specs);
+    CalcContext local(
+        session_, local_goal, registry_, local_candidates,
+        false, false, true);
+    local.set_solve_resource_caps(
+        limits.max_discovered_states == 0
+            ? std::numeric_limits<std::uint32_t>::max()
+            : limits.max_discovered_states,
+        limits.max_reforge_work == 0
+            ? std::numeric_limits<std::uint64_t>::max()
+            : limits.max_reforge_work);
+    const std::uint32_t local_state = local.intern_item(carrier);
+    std::unordered_map<std::uint32_t, std::uint32_t> mapped_states;
+    mapped_states.emplace(local_state, state_id);
+    std::vector<const OptionKernel*> seen_option_kernels;
+    std::vector<std::pair<
+        const OutcomeDistribution*,
+        std::vector<std::pair<std::string, double>>>>
+        seen_primitive_kernels;
+
+    const auto check_limits = [&]() {
+        const CalcTelemetry& work = local.telemetry();
+        if (limits.max_state_action_rows != 0 &&
+            work.state_action_rows > limits.max_state_action_rows) {
+            throw SolverResourceLimit(
+                "max_state_action_rows", limits.max_state_action_rows);
+        }
+        if (limits.max_transitions != 0 &&
+            work.transition_entries > limits.max_transitions) {
+            throw SolverResourceLimit(
+                "max_transitions", limits.max_transitions);
+        }
+        if (limits.max_solver_owned_bytes != 0 &&
+            estimated_owned_bytes() + local.estimated_owned_bytes() >
+                limits.max_solver_owned_bytes) {
+            throw SolverResourceLimit(
+                "max_solver_owned_bytes", limits.max_solver_owned_bytes);
+        }
+    };
+
+    const auto add_dependency = [&](const std::uint32_t action) {
+        if (std::find(candidates_.begin(), candidates_.end(), action) ==
+                candidates_.end() &&
+            admitted_automatic_dependencies_.insert(action).second) {
+            ++action_control_.automatic_dependency_primitives;
+        }
+    };
+    const auto admit_operator = [&](const std::uint32_t index) {
+        if (std::find(
+                candidate_operators_.begin(), candidate_operators_.end(),
+                index) == candidate_operators_.end()) {
+            candidate_operators_.push_back(index);
+            ++action_control_.automatic_options;
+        }
+        batch.admitted_operators.push_back(index);
+    };
+    const auto has_prices = [&](const PlannerOperator& planner) {
+        if (limits.prices == nullptr) return true;
+        return std::all_of(
+            planner.resource_quantities.begin(),
+            planner.resource_quantities.end(),
+            [&](const auto& resource) {
+                return limits.prices->contains(resource.first);
+            });
+    };
+    bool local_work_merged = false;
+    const auto merge_local_work = [&]() {
+        if (local_work_merged) return;
+        local_work_merged = true;
+        const CalcTelemetry& work = local.telemetry();
+        const auto add_bounded = [&](std::uint64_t& target,
+                                     const std::uint64_t amount,
+                                     const std::uint64_t limit,
+                                     const char* cap) {
+            if (limit != 0 && amount > limit - std::min(target, limit)) {
+                target = limit;
+                throw SolverResourceLimit(cap, limit);
+            }
+            target += amount;
+        };
+        telemetry_.distribution_requests += work.distribution_requests;
+        telemetry_.distribution_hits += work.distribution_hits;
+        telemetry_.distribution_misses += work.distribution_misses;
+        telemetry_.distribution_build_ns += work.distribution_build_ns;
+        add_bounded(
+            telemetry_.state_action_rows, work.state_action_rows,
+            limits.max_state_action_rows, "max_state_action_rows");
+        add_bounded(
+            telemetry_.transition_entries, work.transition_entries,
+            limits.max_transitions, "max_transitions");
+        telemetry_.outcome_entries += work.outcome_entries;
+        telemetry_.choice_groups += work.choice_groups;
+        telemetry_.choice_successor_entries +=
+            work.choice_successor_entries;
+        telemetry_.reforge_requests += work.reforge_requests;
+        telemetry_.reforge_hits += work.reforge_hits;
+        telemetry_.reforge_misses += work.reforge_misses;
+        telemetry_.reforge_build_ns += work.reforge_build_ns;
+        consume_reforge_work(work.reforge_frontier_work);
+    };
+
+    try {
+        for (const std::uint32_t action_index : permanent_benches) {
+            StateLocalAutomaticCandidate decision;
+            const PlannerOperator& planner = operators_.at(action_index);
+            decision.id = planner.id;
+            decision.kind = planner.automatic_kind;
+            decision.evidence.candidate = true;
+            decision.evidence.relevant_goal_mask = planner.relevant_goal_mask;
+            if (!has_prices(planner)) {
+                decision.missing_price = true;
+                decision.evidence.legality_result =
+                    "not_evaluated_missing_price";
+                decision.evidence.reason =
+                    "automatic_candidate_missing_price";
+                batch.decisions.push_back(std::move(decision));
+                continue;
+            }
+            const OutcomeDistribution& distribution =
+                local.outcomes(local_state, action_index);
+            bool advances = false;
+            for (const OutcomeEntry& exit : distribution.entries) {
+                const AbstractState& successor = local.state(exit.state);
+                for (std::uint32_t slot = 0;
+                     slot < local.layout().slots.size(); ++slot) {
+                    advances |=
+                        (planner.relevant_goal_mask & (1u << slot)) != 0 &&
+                        successor.slot_status[slot] >
+                            local.state(local_state).slot_status[slot];
+                }
+            }
+            decision.evidence.eligible = distribution.supported && advances;
+            decision.evidence.kernel_changed = advances;
+            decision.evidence.setup_complete = advances;
+            decision.evidence.cleanup_complete = true;
+            decision.evidence.recovery_complete = true;
+            decision.evidence.exits_complete = !distribution.entries.empty();
+            decision.evidence.kernel_change_mechanisms =
+                kAutomaticDeterministicFinish;
+            decision.evidence.legality_result =
+                advances ? "legal" : "irrelevant";
+            decision.evidence.reason =
+                advances ? "legal_permanent_goal_bench_successor"
+                         : "permanent_bench_does_not_advance_goal";
+            if (decision.evidence.eligible) {
+                const auto resources = planner.resource_quantities;
+                const auto duplicate = std::find_if(
+                    seen_primitive_kernels.begin(),
+                    seen_primitive_kernels.end(),
+                    [&](const auto& seen) {
+                        return same_complete_distribution(
+                                   *seen.first, distribution) &&
+                               seen.second == resources;
+                    });
+                if (duplicate != seen_primitive_kernels.end()) {
+                    decision.collapsed = true;
+                } else {
+                    seen_primitive_kernels.push_back(
+                        {&distribution, resources});
+                    auto mapped = std::make_shared<OutcomeDistribution>(
+                        map_local_distribution(
+                            local, *this, distribution, mapped_states));
+                    const std::uint64_t key =
+                        (static_cast<std::uint64_t>(state_id) << 32) |
+                        action_index;
+                    distribution_cache_[key] = std::move(mapped);
+                    decision.operator_index = action_index;
+                    decision.admitted = true;
+                    admit_operator(action_index);
+                }
+            }
+            batch.decisions.push_back(std::move(decision));
+            check_limits();
+        }
+
+        for (std::uint32_t local_operator =
+                 static_cast<std::uint32_t>(registry_.actions.size());
+             local_operator < local.operators().size(); ++local_operator) {
+            const PlannerOperator& local_planner =
+                local.operators().at(local_operator);
+            StateLocalAutomaticCandidate decision;
+            decision.id = local_planner.id;
+            decision.kind = local_planner.automatic_kind;
+            const bool direct_fracture =
+                local_planner.option_kind ==
+                    FixedOptionKind::FracturePrepare &&
+                local_planner.carrier_goal_slot < local.layout().slots.size() &&
+                local.state(local_state).slot_status[
+                    local_planner.carrier_goal_slot] ==
+                    static_cast<std::uint8_t>(GoalSlotStatus::Satisfied) &&
+                local_planner.conditional_action != kNoId &&
+                action_legal(
+                    local.session(),
+                    local.registry().actions.at(
+                        local_planner.conditional_action),
+                    local.state(local_state));
+            if (!has_prices(local_planner) && !direct_fracture) {
+                decision.missing_price = true;
+                decision.evidence.candidate = true;
+                decision.evidence.relevant_goal_mask =
+                    local_planner.relevant_goal_mask;
+                decision.evidence.legality_result =
+                    "not_evaluated_missing_price";
+                decision.evidence.reason =
+                    "automatic_candidate_missing_price";
+                batch.decisions.push_back(std::move(decision));
+                continue;
+            }
+            const OptionKernel& local_kernel =
+                local.option_kernel(local_state, local_operator);
+            decision.evidence = local_kernel.automatic;
+            if (limits.prices != nullptr &&
+                std::any_of(
+                    local_kernel.expected_resources.begin(),
+                    local_kernel.expected_resources.end(),
+                    [&](const auto& resource) {
+                        return !limits.prices->contains(resource.first);
+                    })) {
+                decision.missing_price = true;
+                decision.evidence.legality_result =
+                    "not_admitted_missing_price";
+                decision.evidence.reason =
+                    "automatic_candidate_missing_price";
+                batch.decisions.push_back(std::move(decision));
+                continue;
+            }
+            if (local_kernel.automatic.eligible) {
+                const auto duplicate = std::find_if(
+                    seen_option_kernels.begin(), seen_option_kernels.end(),
+                    [&](const OptionKernel* seen) {
+                        return same_complete_option_kernel(
+                            *seen, local_kernel);
+                    });
+                if (duplicate != seen_option_kernels.end()) {
+                    decision.collapsed = true;
+                } else {
+                    seen_option_kernels.push_back(&local_kernel);
+                    PlannerOperator admitted = local_planner;
+                    admitted.resource_quantities =
+                        local_kernel.expected_resources;
+                    auto mapped = std::make_shared<OptionKernel>(
+                        map_local_option_kernel(
+                            local, *this, local_kernel, mapped_states));
+                    const std::uint32_t operator_index =
+                        static_cast<std::uint32_t>(operators_.size());
+                    operators_.push_back(std::move(admitted));
+                    const std::uint64_t key =
+                        (static_cast<std::uint64_t>(state_id) << 32) |
+                        operator_index;
+                    option_kernel_cache_[key] = std::move(mapped);
+                    state_local_automatic_operator_indices_.insert(
+                        operator_index);
+                    decision.operator_index = operator_index;
+                    decision.admitted = true;
+                    admit_operator(operator_index);
+                    for (const std::uint32_t dependency :
+                         operators_.back().primitive_program) {
+                        add_dependency(dependency);
+                    }
+                    if (operators_.back().conditional_action != kNoId) {
+                        add_dependency(operators_.back().conditional_action);
+                    }
+                }
+            }
+            batch.decisions.push_back(std::move(decision));
+            check_limits();
+        }
+
+        merge_local_work();
+    } catch (const SolverResourceLimit& limit) {
+        if (!local_work_merged) {
+            try {
+                merge_local_work();
+            } catch (const SolverResourceLimit&) {
+                /* The deferred witness below owns the exact cap name from
+                 * the operation that first stopped admission. */
+            }
+        }
+        StateLocalAutomaticCandidate deferred;
+        deferred.id = "automatic:state_local_generation";
+        deferred.deferred = true;
+        deferred.evidence.candidate = true;
+        deferred.evidence.legality_result = "deferred_resource_cap";
+        deferred.evidence.reason =
+            "price_independent_kernel_generation_" + limit.cap_name();
+        batch.decisions.push_back(std::move(deferred));
+    }
+    std::sort(
+        batch.admitted_operators.begin(), batch.admitted_operators.end());
+    batch.admitted_operators.erase(
+        std::unique(
+            batch.admitted_operators.begin(),
+            batch.admitted_operators.end()),
+        batch.admitted_operators.end());
+    state_local_automatic_operators_.emplace(
+        state_id, batch.admitted_operators);
+    return batch;
 }
 
 const OptionKernel& CalcContext::option_kernel(

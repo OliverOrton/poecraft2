@@ -10,9 +10,9 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1 are complete, but the
+Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R2 are complete, but the
 post-S8.4 regression audit below found further blocking correctness, scaling,
-and product-delivery failures. **S8.4R.2 is the sole next implementation
+and product-delivery failures. **S8.4R.3 is the sole next implementation
 boundary and S8.5 is blocked until all of S8.4R passes.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
@@ -621,7 +621,7 @@ audit below supersedes the former S8.5 handoff.
 
 ### S8.4R - Solver And Web Regression Repair
 
-Status: audit complete 2026-07-18; R1 complete 2026-07-18; R2 is next. This
+Status: audit complete 2026-07-18; R1-R2 complete 2026-07-18; R3 is next. This
 phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
 until every required gate below passes. The audit covers B1.3/B1.4 Imprint
 integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
@@ -656,14 +656,32 @@ acceptance once in R6 as required by `AGENTS.md`.
    capped. Native C ABI and release WASM expose live/peak/serialized selected
    allocation telemetry. Full evidence and commands are under
    [fixtures/solver-regressions/s8.4r/v1](../../fixtures/solver-regressions/s8.4r/v1/).
-2. **S8.4R.2 - State-Local Automatic Candidate Generation.** This is the sole
-   next boundary. Replace the eager
-   global Fracture/bench/blocker/metamod cross products with lazy/state-local,
-   kernel-deduplicated admission before abstraction widening. Preserve exact
-   dependencies, primitive compilation, and the existing analytic price
-   boundaries. Use the pinned regression case plus ordinary/advanced product construction and
-   solve diagnostics; do not begin Imprint discovery in this checkpoint.
-3. **S8.4R.3 - Automatic Imprint Discovery.** Correct entry/exit semantics and
+2. **S8.4R.2 - State-Local Automatic Candidate Generation (complete
+   2026-07-18).** Replaced the eager global Fracture, permanent/temporary bench,
+   protected-metamod, and Multimod cross products with carrier-local synthesis.
+   Plausibility and price-key availability are checked without using price
+   values; candidates that reach exact evaluation run in a transient strict
+   local abstraction, and complete outcome/resource kernels deduplicate before
+   any planner operator, dependency, or shared successor is admitted. Only
+   admitted dependencies remain structural and non-selectable. Admitted local
+   kernels are retained under the R1 owned-byte cap because primitive strategy
+   compilation needs their exact setup/retry/cleanup routes after the ordinary
+   solve releases evaluator caches.
+
+   The bounded Conquest/ordinary/advanced construction counts fell from
+   1,785/1,318/1,773 candidate operators to 17/7/5, shared dependency counts
+   from 147/153/159 to zero, and shared junk classes from 44/45/45 to 13/14/13.
+   The capped Conquest first expansion discovered 29,069 states instead of
+   70,000 and retained 16,763,739 selected owned bytes instead of 39,092,675;
+   its remaining automatic local work was explicitly deferred at the existing
+   cap. Ordinary/advanced static first-expansion rows and transitions were
+   unchanged. Focused S8.3 coverage retained the blocker `4`, protected `23`,
+   and Fracture `23.75` analytic boundaries and primitive compiled execution.
+   No unbounded solve, compilation/verification of the real cases, 10,000-run
+   verification, or full acceptance suite was run. Evidence is under
+   [the S8.4R fixture](../../fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
+3. **S8.4R.3 - Automatic Imprint Discovery.** This is the sole next boundary.
+   Correct entry/exit semantics and
    build automatic state-local Imprint stage/program discovery on the bounded
    R2 candidate substrate. Remove user-authored retry controls and the false
    final-magic/complete-goal restriction across every binding and product

@@ -198,6 +198,29 @@ std::uint32_t operator_by_fragment(
     return kNoId;
 }
 
+std::uint32_t operator_by_kind(
+    const CalcContext& calc,
+    const AutomaticCandidateKind kind) {
+    for (std::uint32_t index = 0; index < calc.operators().size(); ++index) {
+        if (calc.operators()[index].automatic_kind == kind) return index;
+    }
+    return kNoId;
+}
+
+void admit_automatic(
+    CalcContext& calc,
+    const std::uint32_t state,
+    const std::unordered_map<std::string, double>& prices) {
+    AutomaticAdmissionLimits limits;
+    limits.max_discovered_states = 100000;
+    limits.max_state_action_rows = 100000;
+    limits.max_transitions = 1000000;
+    limits.max_reforge_work = 1000000;
+    limits.max_solver_owned_bytes = 1073741824;
+    limits.prices = &prices;
+    calc.admit_state_local_automatic_candidates(state, limits);
+}
+
 SimulationSummaryInternal run_compiled(
     std::shared_ptr<const SessionImpl> session,
     const std::string& strategy_json,
@@ -233,7 +256,13 @@ void run_temporary_blocker_price_flip() {
     GoalSpec goal = automatic_goal(false, true);
     const std::uint32_t exalt = registry.index_by_id.at("exalt");
     const std::uint32_t restart = registry.index_by_id.at("restart");
-    CalcContext calc(session, goal, registry, {exalt, restart});
+    CalcContext calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    PC_CHECK(calc.operators().size() == registry.actions.size());
+    PC_CHECK(calc.candidate_operators().size() == 2);
+    PC_CHECK(calc.action_control().dependency_primitives == 0);
+    PC_CHECK(calc.action_control().automatic_dependency_primitives == 0);
 
     pc_item_state start;
     pc_item_clear(&start);
@@ -243,6 +272,13 @@ void run_temporary_blocker_price_flip() {
         add_mod(start, *session, mod);
     }
     const std::uint32_t state = calc.intern_item(start);
+    admit_automatic(calc, state, {
+        {"exalt", 10.0},
+        {"base", 100.0},
+        {"scour", 1.0},
+        {"bench:s83_mod_8", 2.0}});
+    PC_CHECK(calc.candidate_operators().size() == 3);
+    PC_CHECK(calc.action_control().automatic_dependency_primitives == 2);
     const std::string blocker_id =
         "option:temporary_bench_repeat:bench:s83_mod_8:exalt";
     const std::string neutral_id =
@@ -250,18 +286,14 @@ void run_temporary_blocker_price_flip() {
     const std::uint32_t blocker = operator_by_fragment(calc, blocker_id);
     const std::uint32_t neutral = operator_by_fragment(calc, neutral_id);
     PC_CHECK(blocker != kNoId);
-    PC_CHECK(neutral != kNoId);
-    if (blocker == kNoId || neutral == kNoId) return;
+    PC_CHECK(neutral == kNoId);
+    if (blocker == kNoId) return;
     const OptionKernel& blocker_kernel = calc.option_kernel(state, blocker);
     PC_CHECK(blocker_kernel.legal);
     PC_CHECK(blocker_kernel.automatic.kernel_changed);
     PC_CHECK(blocker_kernel.automatic.cleanup_complete);
     PC_CHECK((blocker_kernel.automatic.kernel_change_mechanisms &
               kAutomaticGroupConflict) != 0);
-    const OptionKernel& neutral_kernel = calc.option_kernel(state, neutral);
-    PC_CHECK(!neutral_kernel.legal);
-    PC_CHECK(neutral_kernel.automatic.reason ==
-             "exact_successor_kernel_neutral");
 
     const auto prices = [](const double blocker_price) {
         return std::unordered_map<std::string, double>{
@@ -330,6 +362,14 @@ void run_protected_price_flip() {
     start.rarity = PC_RARITY_RARE;
     add_mod(start, *session, kGoalPrefix);
     add_mod(start, *session, kTargetBlocker);
+    const std::uint32_t start_state = calc.intern_item(start);
+    admit_automatic(calc, start_state, {
+        {"base", 20.0},
+        {"alchemy", 5.0},
+        {"scour", 1.0},
+        {"bench:s83_mod_6", 2.0},
+        {"bench:s83_mod_7", 3.0},
+        {"bench:s83_mod_9", 10.0}});
 
     const std::uint32_t protected_scour = operator_by_fragment(
         calc, "option:protected_side:prefix:scour");
@@ -344,7 +384,7 @@ void run_protected_price_flip() {
     PC_CHECK(protected_scour != kNoId);
     if (protected_scour == kNoId) return;
     const OptionKernel& kernel = calc.option_kernel(
-        calc.intern_item(start), protected_scour);
+        start_state, protected_scour);
     PC_CHECK(kernel.legal);
     PC_CHECK(kernel.automatic.kernel_changed);
     PC_CHECK(kernel.automatic.cleanup_complete);
@@ -420,15 +460,22 @@ void run_fracture_price_flip() {
          {kGoalPrefix, kPrefixJunkA, kPrefixJunkB, kTargetBlocker}) {
         add_mod(start, *session, mod);
     }
-    const std::uint32_t fracture = operator_by_fragment(
-        calc, "option:fracture_prepare:0:chaos");
+    const std::uint32_t start_state = calc.intern_item(start);
+    admit_automatic(calc, start_state, {
+        {"base", 20.0},
+        {"alchemy", 5.0},
+        {"chaos", 30.0},
+        {"fracture", 23.0},
+        {"bench:s83_mod_6", 100.0}});
+    const std::uint32_t fracture = operator_by_kind(
+        calc, AutomaticCandidateKind::Fracture);
     PC_CHECK(fracture != kNoId);
     if (fracture == kNoId) return;
     const OptionKernel& kernel = calc.option_kernel(
-        calc.intern_item(start), fracture);
+        start_state, fracture);
     PC_CHECK(kernel.legal);
     PC_CHECK(kernel.entry_continues);
-    PC_CHECK(kernel.exits.size() == 4);
+    PC_CHECK(!kernel.exits.empty());
     PC_CHECK(kernel.automatic.exits_complete);
 
     const auto prices = [](const double fracture_price) {

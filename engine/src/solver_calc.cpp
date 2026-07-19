@@ -172,43 +172,25 @@ CalcContext::CalcContext(
         }
     }
     operators_ = build_planner_operators(*session_, goal_, registry_);
-    std::vector<std::uint32_t> automatic_primitives;
-    automatic_primitives.reserve(registry_.actions.size());
-    for (std::uint32_t i = 0; i < registry_.actions.size(); ++i) {
-        if (operators_[i].automatic_kind != AutomaticCandidateKind::None) {
-            automatic_primitives.push_back(i);
-        }
-    }
-    const std::uint32_t automatic_primitive_additions =
-        static_cast<std::uint32_t>(std::count_if(
-            automatic_primitives.begin(), automatic_primitives.end(),
-            [&](const std::uint32_t index) {
-                return std::find(
-                           candidates_.begin(), candidates_.end(), index) ==
-                       candidates_.end();
-            }));
     action_control_.explicit_envelope = goal_.primitive_actions_explicit;
     action_control_.registry_actions = static_cast<std::uint32_t>(
         registry_.actions.size());
     action_control_.included_primitives = static_cast<std::uint32_t>(
-        candidates_.size()) + automatic_primitive_additions;
+        candidates_.size());
     action_control_.automatic_options = static_cast<std::uint32_t>(
-        operators_.size() - registry_.actions.size() -
-        goal_.fixed_options.size() + automatic_primitives.size());
+        std::count_if(
+            candidates_.begin(), candidates_.end(),
+            [&](const std::uint32_t index) {
+                return operators_.at(index).automatic_kind !=
+                       AutomaticCandidateKind::None;
+            }));
     action_control_.automatic_dependency_primitives = 0;
-    for (std::uint32_t i = 0; i < registry_.actions.size(); ++i) {
-        if (registry_.actions[i].automatic_dependency_only &&
-            operators_[i].automatic_kind == AutomaticCandidateKind::None) {
-            ++action_control_.automatic_dependency_primitives;
-        }
-    }
     action_control_.pruned_outside_goal_relevance =
         registry_.goal_relevant_actions_pruned;
     action_control_.pruned_outside_envelope =
         goal_.primitive_actions_explicit
             ? static_cast<std::uint32_t>(
-                  registry_.actions.size() - candidates_.size() -
-                  automatic_primitive_additions +
+                  registry_.actions.size() - candidates_.size() +
                   registry_.fossil_loadouts_deferred)
             : 0;
     action_control_.deferred_fossil_loadouts =
@@ -220,13 +202,6 @@ CalcContext::CalcContext(
      * alone, or list any dependency in actions when it should also remain an
      * independently selectable primitive. */
     std::vector<std::uint32_t> layout_actions = candidates_;
-    for (const std::uint32_t automatic : automatic_primitives) {
-        if (std::find(
-                layout_actions.begin(), layout_actions.end(), automatic) ==
-            layout_actions.end()) {
-            layout_actions.push_back(automatic);
-        }
-    }
     for (std::uint32_t operator_index =
              static_cast<std::uint32_t>(registry_.actions.size());
          operator_index < operators_.size(); ++operator_index) {
@@ -248,18 +223,12 @@ CalcContext::CalcContext(
         }
     }
     candidate_operators_ = candidates_;
-    for (const std::uint32_t automatic : automatic_primitives) {
-        if (std::find(
-                candidate_operators_.begin(), candidate_operators_.end(),
-                automatic) == candidate_operators_.end()) {
-            candidate_operators_.push_back(automatic);
-        }
-    }
     for (std::uint32_t operator_index =
              static_cast<std::uint32_t>(registry_.actions.size());
          operator_index < operators_.size(); ++operator_index) {
         candidate_operators_.push_back(operator_index);
     }
+    static_candidate_operator_count_ = candidate_operators_.size();
     const bool exact_group_effects =
         distinguish_junk_exclusion_effects ||
         std::any_of(
@@ -705,7 +674,16 @@ void CalcContext::consume_reforge_work(const std::uint64_t amount) {
 
 void CalcContext::release_solve_transition_caches() {
     distribution_cache_.clear();
-    option_kernel_cache_.clear();
+    for (auto it = option_kernel_cache_.begin();
+         it != option_kernel_cache_.end();) {
+        const std::uint32_t operator_index =
+            static_cast<std::uint32_t>(it->first);
+        if (is_state_local_automatic_operator(operator_index)) {
+            ++it;
+        } else {
+            it = option_kernel_cache_.erase(it);
+        }
+    }
     reforge_cache_.clear();
     telemetry_rows_.clear();
 }
@@ -723,6 +701,7 @@ void CalcContext::release_option_kernel(
     const std::uint32_t operator_index) {
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | operator_index;
+    if (is_state_local_automatic_operator(operator_index)) return;
     option_kernel_cache_.erase(key);
 }
 
@@ -757,6 +736,23 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     }
     bytes += candidates_.capacity() * sizeof(std::uint32_t);
     bytes += candidate_operators_.capacity() * sizeof(std::uint32_t);
+    bytes += state_local_automatic_operators_.bucket_count() * sizeof(void*);
+    bytes += state_local_automatic_operators_.size() *
+             (sizeof(std::pair<const std::uint32_t,
+                               std::vector<std::uint32_t>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, indices] :
+         state_local_automatic_operators_) {
+        (void)unused;
+        bytes += indices.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += admitted_automatic_dependencies_.bucket_count() * sizeof(void*);
+    bytes += admitted_automatic_dependencies_.size() *
+             (sizeof(std::uint32_t) + 2 * sizeof(void*));
+    bytes += state_local_automatic_operator_indices_.bucket_count() *
+             sizeof(void*);
+    bytes += state_local_automatic_operator_indices_.size() *
+             (sizeof(std::uint32_t) + 2 * sizeof(void*));
     bytes += operators_.capacity() * sizeof(PlannerOperator);
     for (const PlannerOperator& op : operators_) {
         bytes += string_bytes(op.id) + string_bytes(op.display_name);

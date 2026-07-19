@@ -1,0 +1,147 @@
+{
+  "schema_version": "s8.4r2_bounded_evidence_v1",
+  "recorded_on": "2026-07-18",
+  "scope": "S8.4R.2 state-local automatic candidate admission only",
+  "before_revision": "66dfb65",
+  "measurement": "construction_and_strictly_capped_first_expansion",
+  "constraints": {
+    "max_expanded_states": 1,
+    "max_discovered_states": 70000,
+    "max_state_action_rows": 5000,
+    "max_transitions": 2000000,
+    "max_reforge_work": 2000000,
+    "max_solver_owned_bytes": 67108864,
+    "max_diagnostic_samples": 16,
+    "max_telemetry_json_bytes": 262144,
+    "compilation_requested": false,
+    "verification_runs": 0,
+    "unbounded_solve_requested": false
+  },
+  "cases": [
+    {
+      "id": "conquest-lamellar-mirage-product",
+      "before": {
+        "wall_ms": 148.227,
+        "candidate_operators": 1785,
+        "automatic_operators": 1768,
+        "shared_dependency_primitives": 147,
+        "automatic_dependency_primitives": 149,
+        "junk_classes": 44,
+        "automatic_rows": {"considered": 2, "eligible": 0, "rejected": 1, "collapsed": 0, "deferred": 1},
+        "states": {"discovered": 70000, "expanded": 1},
+        "state_action_rows": 11,
+        "transitions": 55804,
+        "reforge_frontier_work": 1213688,
+        "solver_owned_bytes": 39092675,
+        "solver_live_owned_bytes": 31251192,
+        "telemetry_json_bytes": 24756,
+        "cap_hits": ["max_discovered_states", "max_expanded_states"]
+      },
+      "after": {
+        "wall_ms": 148.188,
+        "candidate_operators": 17,
+        "automatic_operators": 0,
+        "shared_dependency_primitives": 0,
+        "automatic_dependency_primitives": 0,
+        "junk_classes": 13,
+        "automatic_rows": {"considered": 1, "eligible": 0, "rejected": 0, "collapsed": 0, "deferred": 1},
+        "states": {"discovered": 29069, "expanded": 1},
+        "state_action_rows": 11,
+        "transitions": 55804,
+        "reforge_frontier_work": 1213688,
+        "solver_owned_bytes": 16763739,
+        "solver_live_owned_bytes": 14091720,
+        "telemetry_json_bytes": 21018,
+        "cap_hits": ["max_expanded_states"]
+      }
+    },
+    {
+      "id": "ordinary-es-bench-product-bounded",
+      "before": {
+        "wall_ms": 23.950,
+        "candidate_operators": 1318,
+        "automatic_operators": 1312,
+        "shared_dependency_primitives": 153,
+        "automatic_dependency_primitives": 146,
+        "junk_classes": 45,
+        "automatic_rows": {"considered": 1, "eligible": 1, "rejected": 0, "collapsed": 0, "deferred": 0},
+        "states": {"discovered": 13887, "expanded": 1},
+        "state_action_rows": 4,
+        "transitions": 13886,
+        "reforge_frontier_work": 281580,
+        "solver_owned_bytes": 13849401,
+        "solver_live_owned_bytes": 13075629,
+        "telemetry_json_bytes": 7660,
+        "cap_hits": ["max_expanded_states"]
+      },
+      "after": {
+        "wall_ms": 19.574,
+        "candidate_operators": 7,
+        "automatic_operators": 1,
+        "shared_dependency_primitives": 0,
+        "automatic_dependency_primitives": 0,
+        "junk_classes": 14,
+        "automatic_rows": {"considered": 1, "eligible": 1, "rejected": 0, "collapsed": 0, "deferred": 0},
+        "states": {"discovered": 13887, "expanded": 1},
+        "state_action_rows": 4,
+        "transitions": 13886,
+        "reforge_frontier_work": 281580,
+        "solver_owned_bytes": 12970069,
+        "solver_live_owned_bytes": 12200725,
+        "telemetry_json_bytes": 7529,
+        "cap_hits": ["max_expanded_states"]
+      }
+    },
+    {
+      "id": "advanced-es-resist-bench-product-bounded",
+      "before": {
+        "wall_ms": 28.071,
+        "candidate_operators": 1773,
+        "automatic_operators": 1769,
+        "shared_dependency_primitives": 159,
+        "automatic_dependency_primitives": 146,
+        "junk_classes": 45,
+        "automatic_rows": {"considered": 1, "eligible": 1, "rejected": 0, "collapsed": 0, "deferred": 0},
+        "states": {"discovered": 17954, "expanded": 1},
+        "state_action_rows": 4,
+        "transitions": 17953,
+        "reforge_frontier_work": 380760,
+        "solver_owned_bytes": 15213407,
+        "solver_live_owned_bytes": 13877532,
+        "telemetry_json_bytes": 7761,
+        "cap_hits": ["max_expanded_states"]
+      },
+      "after": {
+        "wall_ms": 24.020,
+        "candidate_operators": 5,
+        "automatic_operators": 1,
+        "shared_dependency_primitives": 0,
+        "automatic_dependency_primitives": 0,
+        "junk_classes": 13,
+        "automatic_rows": {"considered": 1, "eligible": 1, "rejected": 0, "collapsed": 0, "deferred": 0},
+        "states": {"discovered": 17954, "expanded": 1},
+        "state_action_rows": 4,
+        "transitions": 17953,
+        "reforge_frontier_work": 380760,
+        "solver_owned_bytes": 14034697,
+        "solver_live_owned_bytes": 12705282,
+        "telemetry_json_bytes": 7702,
+        "cap_hits": ["max_expanded_states"]
+      }
+    }
+  ],
+  "analytic_boundaries": {
+    "temporary_blocker": {"boundary": 4.0, "low_price_value": 13.0, "high_price_value": 15.0, "tie_value": 15.0},
+    "protected_prefix": {"boundary": 23.0, "low_price_value": 14.0, "high_price_value": 27.0},
+    "fracture": {"boundary": 23.75, "low_price_value": 124.25, "high_price_value": 125.0},
+    "focused_test_checks": 137,
+    "focused_test_failures": 0
+  },
+  "validation": [
+    "powershell -File scripts/build.ps1",
+    "build/engine/poecraft_engine_tests.exe --solver-s8-3-only",
+    "build/engine/poecraft_engine_tests.exe --solver-solve-only",
+    "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-regressions/s8.4r/v1/manifest.json --validate-only",
+    "three case-specific bounded benchmark invocations with --skip-verification"
+  ]
+}

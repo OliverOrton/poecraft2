@@ -21,9 +21,11 @@
     "Require all four named T1 goal families.",
     "Replay the selected Mirage snapshot without overrides or fallback.",
     "The absent base quote keeps Restart explicitly unpriced.",
-    "Never continue beyond the bounded first-expansion diagnostic in S8.4R.1."
+    "Never continue beyond the bounded first-expansion diagnostic in S8.4R."
   ],
   "cases": [
-    "cases/conquest-lamellar-mirage.json"
+    "cases/conquest-lamellar-mirage.json",
+    "cases/ordinary-es-bench-product.json",
+    "cases/advanced-es-resist-bench-product.json"
   ]
 }

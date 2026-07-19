@@ -108,7 +108,14 @@ R4 browser transfer/lifetime, R5 verification truth, and R6 integrated
 acceptance. R1 is complete: its exact Conquest Lamellar/Mirage case is pinned,
 diagnostic retention and final output are bounded, evaluator byte caps are in
 place, and native/release-WASM selected live-memory telemetry is available.
-**S8.4R.2 is the immediate and sole boundary; S8.5 is blocked until all of
+R2 is complete: automatic Fracture, bench/blocker, protected-metamod, and
+Multimod candidates are now discovered from the current carrier, rejected or
+exact-kernel/resource-deduplicated in a transient exact local context, and only
+then admitted with their minimal structural dependencies. Product construction
+no longer widens the shared layout for the eager global cross product; the
+pinned and ordinary/advanced bounded cases now construct 17/7/5 candidates
+with 13-14 junk classes instead of 1,785/1,318/1,773 candidates with 44-45.
+**S8.4R.3 is the immediate and sole boundary; S8.5 is blocked until all of
 S8.4R passes.** Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
