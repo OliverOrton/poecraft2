@@ -829,17 +829,31 @@ acceptance once in R6 as required by `AGENTS.md`.
    No cap hit, crash, or Bellman-entry result was emitted, and no cap changed.
    Therefore the gate is not passed and R4 must not begin.
 
+   The temporary-bench preclassification follow-up is implemented. Context
+   construction now builds 399 exact conflict classes in 5.29 ms / 194,072
+   selected bytes. At 1,024 expanded states, carrier filtering collapsed
+   276,054 applicable resource variants into 5,654 effect classes before exact
+   evaluation. Temporary raw outcomes fell from 882,313 to 38,634, admission
+   from 1.626 seconds to 0.314 seconds, and total expansion from 8.82 seconds
+   to 4.44 seconds, while discovered states (29,637), retained temporary rows
+   (2,944), transitions (20,691), and the 12-row carrier maximum were
+   unchanged. Distinct prices remain exact row variants; this raises the
+   shared planner registry from 669 to 1,470 and live selected bytes from
+   22,737,809 to 29,297,385 rather than conflating costs with kernel identity.
+
    Exact next boundary: add reconciled timings for state-expansion preparation,
-   transient-context construction/projection, candidate enumeration versus
-   evaluation, state interning, sparse-row/effect/enqueue work, and exact byte
-   audits. Use bounded, time-boxed 1,024/2,048/4,096 samples until the growth
-   curve identifies the hot phase; do not repeat the normal-cap run until the
-   curve predicts usable completion. Partition discovered states by normalized
-   observable facts and require an admitted-action witness for remaining
-   goal-slot distinctions. If the exact full envelope is still unusable after
-   the measured hot phase is repaired, use the planned mechanic-neutral
-   focused/custom action scope and label its result optimal only within that
-   scope. Compact evidence is
+   transient-context construction/projection, state interning,
+   sparse-row/effect/enqueue work, operator/pricing refresh, and exact byte
+   audits. The 2,048-state sample takes 18.25 seconds of expansion despite
+   discovering only 29,942 states and near-saturation of the planner registry
+   at 1,512, proving a separate superlinear outer-expansion phase remains.
+   Do not run the 4,096 or normal-cap samples until those timers identify and
+   repair that phase.
+   Partition discovered states by normalized observable facts and require an
+   admitted-action witness for remaining goal-slot distinctions. If the exact
+   full envelope is still unusable after the measured hot phase is repaired,
+   use the planned mechanic-neutral focused/custom action scope and label its
+   result optimal only within that scope. Compact evidence is
    [r3a-carrier-scaling-summary.json](../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 6. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** After R3A passes,
    remove giant
@@ -1122,6 +1136,19 @@ acceptance once in R6 as required by `AGENTS.md`.
    compilation; dependencies are admitted once per unique template. Preserve
    distinct templates whenever fractured, locked, crafted, influence, affix
    capacity, or any other mechanic-relevant fact changes legality or outcomes.
+
+   Temporary-bench preclassification completed 2026-07-19. Solver-context
+   construction canonicalizes ordinary blockers by side and exact conflict
+   mask for the supported add-mod followups and unblocked goal slots. Each
+   carrier performs only legality/capacity checks and intersects that
+   vocabulary with the followup's exact eligible pool; equal effective pools
+   share one exact evaluation while separately priced blocker crafts remain
+   resource variants. Telemetry reports precompiled classes/time/bytes, raw
+   resource variants, carrier-effective classes, early collapses, enumeration
+   time, and the existing kernel/row counters. A focused oracle uses two
+   blockers with different global conflict masks but the same carrier-effective
+   pool and proves one effect kernel still retains both price variants and
+   chooses the cheaper exact route.
 
    Add automatic-kind and primitive-family telemetry for candidates, unique
    templates, cache hits, rows, raw outcomes, retained transitions, time, and

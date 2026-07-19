@@ -683,6 +683,13 @@ struct SolveTransitionCache {
         std::uint64_t template_id = 0;
         std::uint64_t raw_outcomes = 0;
         std::uint64_t admission_ns = 0;
+        std::uint64_t precompiled_classes = 0;
+        std::uint64_t precompile_ns = 0;
+        std::uint64_t precompiled_bytes = 0;
+        std::uint64_t candidate_variants = 0;
+        std::uint64_t effect_classes = 0;
+        std::uint64_t collapsed_variants = 0;
+        std::uint64_t enumeration_ns = 0;
         std::uint64_t row_ns = 0;
         std::uint64_t selected_bytes = 0;
         std::uint64_t retained_rows = 0;
@@ -859,6 +866,8 @@ struct SolveWork::Impl {
     std::unordered_set<std::uint64_t> automatic_admission_records;
     struct AutomaticCarrierWork {
         std::uint64_t candidates = 0;
+        std::uint64_t candidate_variants = 0;
+        std::uint64_t effect_classes = 0;
         std::uint64_t templates = 0;
         std::uint64_t rows = 0;
     };
@@ -1267,6 +1276,27 @@ struct SolveWork::Impl {
         limits.prices = &prices;
         StateLocalAutomaticBatch batch =
             calc.admit_state_local_automatic_candidates(state, limits);
+        if (batch.temporary_precompiled_classes != 0 ||
+            batch.temporary_precompile_ns != 0 ||
+            batch.temporary_candidate_variants != 0 ||
+            batch.temporary_effect_classes != 0 ||
+            batch.temporary_enumeration_ns != 0) {
+            SolveTransitionCache::AutomaticCandidateRecord timing;
+            timing.state_id = state;
+            timing.telemetry_kind = AutomaticTelemetryKind::TemporaryBench;
+            timing.count_candidate = false;
+            timing.precompiled_classes =
+                batch.temporary_precompiled_classes;
+            timing.precompile_ns = batch.temporary_precompile_ns;
+            timing.precompiled_bytes = batch.temporary_precompiled_bytes;
+            timing.candidate_variants =
+                batch.temporary_candidate_variants;
+            timing.effect_classes = batch.temporary_effect_classes;
+            timing.collapsed_variants =
+                batch.temporary_collapsed_variants;
+            timing.enumeration_ns = batch.temporary_enumeration_ns;
+            retain_automatic_candidate_record(std::move(timing));
+        }
         for (std::size_t i = 0;
              i < batch.shared_admission_ns.size(); ++i) {
             if (batch.shared_admission_ns[i] == 0) continue;
@@ -1997,6 +2027,16 @@ struct SolveWork::Impl {
                 kind.raw_outcomes += record.raw_outcomes;
                 kind.admission_ns += record.admission_ns;
             }
+            kind.precompiled_classes = std::max(
+                kind.precompiled_classes, record.precompiled_classes);
+            kind.precompile_ns = std::max(
+                kind.precompile_ns, record.precompile_ns);
+            kind.precompiled_bytes = std::max(
+                kind.precompiled_bytes, record.precompiled_bytes);
+            kind.candidate_variants += record.candidate_variants;
+            kind.effect_classes += record.effect_classes;
+            kind.collapsed_variants += record.collapsed_variants;
+            kind.enumeration_ns += record.enumeration_ns;
             kind.rows += record.retained_rows;
             kind.retained_transitions += record.retained_transitions;
             kind.row_ns += record.row_ns;
@@ -2013,6 +2053,9 @@ struct SolveWork::Impl {
                     ++carrier->second.templates;
                 }
             }
+            carrier->second.candidate_variants +=
+                record.candidate_variants;
+            carrier->second.effect_classes += record.effect_classes;
             carrier->second.rows += record.retained_rows;
             kind.max_candidates_per_carrier = std::max(
                 kind.max_candidates_per_carrier,
@@ -2020,6 +2063,12 @@ struct SolveWork::Impl {
             kind.max_templates_per_carrier = std::max(
                 kind.max_templates_per_carrier,
                 carrier->second.templates);
+            kind.max_candidate_variants_per_carrier = std::max(
+                kind.max_candidate_variants_per_carrier,
+                carrier->second.candidate_variants);
+            kind.max_effect_classes_per_carrier = std::max(
+                kind.max_effect_classes_per_carrier,
+                carrier->second.effect_classes);
             kind.max_rows_per_carrier = std::max(
                 kind.max_rows_per_carrier, carrier->second.rows);
         }
@@ -5595,6 +5644,23 @@ std::string serialize_solver_telemetry(
                     std::to_string(values.carriers);
             json += ",\"max_candidates_per_carrier\":" +
                     std::to_string(values.max_candidates_per_carrier);
+            json += ",\"precompiled_classes\":" +
+                    std::to_string(values.precompiled_classes);
+            json += ",\"precompile_time_ns\":" +
+                    std::to_string(values.precompile_ns);
+            json += ",\"precompiled_bytes\":" +
+                    std::to_string(values.precompiled_bytes);
+            json += ",\"candidate_variants\":" +
+                    std::to_string(values.candidate_variants);
+            json += ",\"max_candidate_variants_per_carrier\":" +
+                    std::to_string(
+                        values.max_candidate_variants_per_carrier);
+            json += ",\"effect_classes\":" +
+                    std::to_string(values.effect_classes);
+            json += ",\"max_effect_classes_per_carrier\":" +
+                    std::to_string(values.max_effect_classes_per_carrier);
+            json += ",\"collapsed_variants\":" +
+                    std::to_string(values.collapsed_variants);
             json += ",\"unique_templates\":" +
                     std::to_string(values.unique_templates);
             json += ",\"template_hits\":" +
@@ -5610,6 +5676,8 @@ std::string serialize_solver_telemetry(
                     std::to_string(values.retained_transitions);
             json += ",\"time_ns\":" +
                     std::to_string(values.admission_ns);
+            json += ",\"enumeration_time_ns\":" +
+                    std::to_string(values.enumeration_ns);
             json += ",\"row_time_ns\":" +
                     std::to_string(values.row_ns);
             json += ",\"selected_bytes\":" +

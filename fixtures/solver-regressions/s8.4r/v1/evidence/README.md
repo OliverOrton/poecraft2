@@ -9,14 +9,16 @@ transition templates and planner/resource routes across carriers, records
 automatic-kind and primitive-family time/byte telemetry, tightens Essence
 relevance, and proves equivalent physical affix/junk ordering collapses.
 
-At the final 1,024-state diagnostic boundary, planner registry size fell from
-66,888 to 669, live selected bytes fell from 109,475,643 to 22,737,809, and
-temporary-bench retention was bounded at 12 templates/rows per carrier. The
-request still spent 8.82 seconds in expansion, of which about 7 seconds was
-outside the new automatic-admission and primitive build/row timers. Oliver
-stopped the unchanged-cap run before it emitted a report, so Bellman entry is
-not claimed, no cap was raised, and R4 remains blocked. The evidence record
-defines the next reconciled-timing and bounded-scaling boundary.
+The temporary-bench follow-up precompiles 399 blocker conflict classes and
+intersects them with each carrier's exact add-mod pool. At 1,024 expanded
+states this collapses 276,054 applicable blocker/resource variants to 5,654
+effect classes before exact evaluation, reduces temporary raw outcomes from
+882,313 to 38,634, and reduces expansion from 8.82 to 4.44 seconds without
+changing discovered states or retained rows/transitions. Separately priced
+blockers remain exact resource variants. The 2,048-state sample still grows
+superlinearly to 18.25 seconds, so the remaining outer-expansion work must be
+timed before 4,096 or another normal-cap run. Bellman entry is not claimed, no
+cap was raised, and R4 remains blocked.
 
 ## R3F primitive Fracture product planning
 

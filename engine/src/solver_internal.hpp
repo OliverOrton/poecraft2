@@ -112,6 +112,14 @@ struct AutomaticKindTelemetry {
     std::uint64_t candidates = 0;
     std::uint64_t carriers = 0;
     std::uint64_t max_candidates_per_carrier = 0;
+    std::uint64_t precompiled_classes = 0;
+    std::uint64_t precompile_ns = 0;
+    std::uint64_t precompiled_bytes = 0;
+    std::uint64_t candidate_variants = 0;
+    std::uint64_t max_candidate_variants_per_carrier = 0;
+    std::uint64_t effect_classes = 0;
+    std::uint64_t max_effect_classes_per_carrier = 0;
+    std::uint64_t collapsed_variants = 0;
     std::uint64_t unique_templates = 0;
     std::uint64_t template_hits = 0;
     std::uint64_t max_templates_per_carrier = 0;
@@ -120,6 +128,7 @@ struct AutomaticKindTelemetry {
     std::uint64_t raw_outcomes = 0;
     std::uint64_t retained_transitions = 0;
     std::uint64_t admission_ns = 0;
+    std::uint64_t enumeration_ns = 0;
     std::uint64_t row_ns = 0;
     std::uint64_t selected_bytes = 0;
 };
@@ -866,8 +875,28 @@ struct StateLocalAutomaticBatch {
     bool cached = false;
     std::array<std::uint64_t, kAutomaticTelemetryKindCount>
         shared_admission_ns{};
+    std::uint64_t temporary_precompiled_classes = 0;
+    std::uint64_t temporary_precompile_ns = 0;
+    std::uint64_t temporary_precompiled_bytes = 0;
+    std::uint64_t temporary_candidate_variants = 0;
+    std::uint64_t temporary_effect_classes = 0;
+    std::uint64_t temporary_collapsed_variants = 0;
+    std::uint64_t temporary_enumeration_ns = 0;
     std::vector<StateLocalAutomaticCandidate> decisions;
     std::vector<std::uint32_t> admitted_operators;
+};
+
+/* State-independent temporary-bench vocabulary. A class records the exact
+ * mod conflict mask shared by one or more separately priced bench actions;
+ * carrier admission intersects it with the following add-mod action's exact
+ * eligible pool before constructing any fixed option. */
+struct TemporaryBenchEffectClass {
+    std::uint32_t followup_action = kNoId;
+    std::uint32_t goal_slot = kNoId;
+    std::int8_t blocker_side = -1;
+    std::vector<std::uint64_t> conflict_mask;
+    std::vector<std::uint64_t> target_mask;
+    std::vector<std::uint32_t> blocker_actions;
 };
 
 /* True when CalcContext has an exact evaluator dispatch for this descriptor,
@@ -909,6 +938,22 @@ class CalcContext {
     const std::vector<std::uint32_t>& candidate_operators() const {
         return candidate_operators_;
     }
+    const std::vector<std::uint32_t>& automatic_goal_bench_actions() const {
+        return automatic_goal_bench_actions_;
+    }
+    const std::vector<TemporaryBenchEffectClass>&
+    temporary_bench_effect_classes() const {
+        return temporary_bench_effect_classes_;
+    }
+    std::uint64_t temporary_bench_precompile_ns() const {
+        return temporary_bench_precompile_ns_;
+    }
+    std::uint64_t temporary_bench_precompiled_bytes() const {
+        return temporary_bench_precompiled_bytes_;
+    }
+    std::vector<std::uint64_t> temporary_followup_eligible_mask(
+        const pc_item_state& carrier,
+        std::uint32_t followup_action);
     std::size_t static_candidate_operator_count() const {
         return static_candidate_operator_count_;
     }
@@ -1007,6 +1052,10 @@ class CalcContext {
     std::unordered_set<std::uint32_t> admitted_automatic_dependencies_;
     std::unordered_set<std::uint32_t>
         state_local_automatic_operator_indices_;
+    std::vector<std::uint32_t> automatic_goal_bench_actions_;
+    std::vector<TemporaryBenchEffectClass> temporary_bench_effect_classes_;
+    std::uint64_t temporary_bench_precompile_ns_ = 0;
+    std::uint64_t temporary_bench_precompiled_bytes_ = 0;
     ActionContextImpl context_;
     std::vector<AbstractState> states_;
     std::optional<std::uint32_t> state_cap_;
@@ -1049,6 +1098,8 @@ class CalcContext {
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
     std::uint64_t layout_build_ns_ = 0;
+
+    void initialize_temporary_bench_effect_classes();
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,

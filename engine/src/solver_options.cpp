@@ -1,4 +1,5 @@
 #include "solver_internal.hpp"
+#include "poecraft/bitset.h"
 
 #include <algorithm>
 #include <bit>
@@ -282,65 +283,77 @@ bool target_slot_missing(
                GoalSlotStatus::Satisfied);
 }
 
-bool blocker_can_change_target_kernel(
-    const SessionImpl& session,
-    const GoalSpec& goal,
-    const AbstractState& state,
-    const std::uint32_t blocker_mod,
-    const std::uint32_t slot) {
-    if (slot >= goal.slots.size() || blocker_mod >= session.mod_count) {
-        return false;
-    }
-    bool conflicts_target = false;
-    bool conflicts_competitor = false;
-    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
-        if (!mods_conflict(session, blocker_mod, mod)) continue;
-        if (mod_satisfies_goal_slot(session, mod, goal.slots[slot])) {
-            conflicts_target = true;
-        } else if (mod < session.base_roll_weight.size() &&
-                   session.base_roll_weight[mod] > 0) {
-            conflicts_competitor = true;
-        }
-    }
-    if (conflicts_target) return false;
+struct TemporaryBenchCandidateGroup {
+    std::uint32_t representative_blocker = kNoId;
+    std::uint32_t followup_action = kNoId;
+    std::uint32_t goal_slot = kNoId;
+    std::vector<std::uint32_t> blocker_variants;
+};
 
-    const std::int8_t blocker_side = session.gen_type[blocker_mod];
-    const std::int8_t target_side = goal_slot_side(session, goal.slots[slot]);
-    const std::uint8_t cap = rarity_affix_cap(session, state.rarity);
-    const bool fills_side =
-        (blocker_side == PC_SIDE_PREFIX &&
-         state.prefix_count + 1 >= cap) ||
-        (blocker_side == PC_SIDE_SUFFIX &&
-         state.suffix_count + 1 >= cap);
-    const bool capacity_changes_target =
-        fills_side && target_side >= 0 && target_side != blocker_side;
-    return conflicts_competitor || capacity_changes_target;
+struct AutomaticOptionSynthesis {
+    std::vector<FixedOptionSpec> specs;
+    std::vector<TemporaryBenchCandidateGroup> temporary_groups;
+    std::uint64_t temporary_precompiled_classes = 0;
+    std::uint64_t temporary_candidate_variants = 0;
+    std::uint64_t temporary_effect_classes = 0;
+    std::uint64_t temporary_collapsed_variants = 0;
+    std::uint64_t temporary_enumeration_ns = 0;
+};
+
+bool mask_has_any(const std::vector<std::uint64_t>& mask) {
+    return std::any_of(mask.begin(), mask.end(), [](const std::uint64_t word) {
+        return word != 0;
+    });
 }
 
-std::vector<FixedOptionSpec> synthesize_automatic_options(
-    const CalcContext& calc,
-    const std::uint32_t state_id) {
+bool mask_intersects(
+    const std::vector<std::uint64_t>& left,
+    const std::vector<std::uint64_t>& right) {
+    const std::size_t words = std::min(left.size(), right.size());
+    for (std::size_t i = 0; i < words; ++i) {
+        if ((left[i] & right[i]) != 0) return true;
+    }
+    return false;
+}
+
+bool temporary_blocker_applies(
+    const SessionImpl& session,
+    const pc_item_state& carrier,
+    const TemporaryBenchEffectClass& effect) {
+    const std::uint8_t cap = rarity_affix_cap(session, carrier.rarity);
+    if ((effect.blocker_side == PC_SIDE_PREFIX &&
+         carrier.prefix_count >= cap) ||
+        (effect.blocker_side == PC_SIDE_SUFFIX &&
+         carrier.suffix_count >= cap)) {
+        return false;
+    }
+    const auto conflicts = [&](const pc_mod_slot* mods,
+                               const std::uint8_t count) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            if (mods[i].mod_id < session.mod_count &&
+                pc_bitset_test(effect.conflict_mask.data(), mods[i].mod_id)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return !conflicts(carrier.prefixes, carrier.prefix_count) &&
+           !conflicts(carrier.suffixes, carrier.suffix_count);
+}
+
+AutomaticOptionSynthesis synthesize_automatic_options(
+    CalcContext& calc,
+    const std::uint32_t state_id,
+    const pc_item_state& carrier) {
     const SessionImpl& session = calc.session();
     const GoalSpec& goal = calc.goal();
     const ActionRegistry& registry = calc.registry();
     const AbstractState& state = calc.state(state_id);
-    std::vector<FixedOptionSpec> result;
-    if (!goal.automatic_candidates) return result;
-
-    std::vector<std::uint32_t> ordinary_bench;
-    std::vector<std::uint32_t> goal_bench;
-    for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
-        const ActionDescriptor& action = registry.actions[index];
-        if (action.params.type != ActionType::Bench ||
-            action.params.mod_id >= session.metamod_type.size() ||
-            session.metamod_type[action.params.mod_id] >= 0) {
-            continue;
-        }
-        ordinary_bench.push_back(index);
-        if (goal_mask_for_mod(session, goal, action.params.mod_id) != 0) {
-            goal_bench.push_back(index);
-        }
-    }
+    AutomaticOptionSynthesis synthesis;
+    std::vector<FixedOptionSpec>& result = synthesis.specs;
+    if (!goal.automatic_candidates) return synthesis;
+    const std::vector<std::uint32_t>& goal_bench =
+        calc.automatic_goal_bench_actions();
 
     /* Deterministic Multimod finishes are generated only for pairs of legal
      * permanent goal crafts. The fixed kernel retains native group, crafted
@@ -385,69 +398,132 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
         "remove_crafted_modifiers");
     if (cleanup != registry.index_by_id.end() &&
         (state.flags & kFlagCraftedMod) == 0) {
-        using TemporaryKey = std::tuple<
-            std::uint32_t,
-            std::uint32_t,
-            std::int8_t,
-            std::vector<std::uint32_t>,
-            std::vector<std::string>>;
-        std::set<TemporaryKey> seen_temporary;
-        for (const std::uint32_t blocker_index : ordinary_bench) {
-            const ActionDescriptor& blocker = registry.actions[blocker_index];
-            if (goal_mask_for_mod(
-                    session, goal, blocker.params.mod_id) != 0) {
-                continue; /* permanent goal craft, never temporary */
+        const auto enumeration_started = std::chrono::steady_clock::now();
+        const auto& precompiled = calc.temporary_bench_effect_classes();
+        synthesis.temporary_precompiled_classes = precompiled.size();
+        std::map<
+            std::tuple<
+                std::uint32_t,
+                std::uint32_t,
+                std::int8_t,
+                std::vector<std::uint64_t>>,
+            std::size_t>
+            group_by_effect;
+        std::unordered_map<std::uint32_t, std::vector<std::uint64_t>>
+            eligible_by_followup;
+        for (const TemporaryBenchEffectClass& effect : precompiled) {
+            if (!target_slot_missing(state, effect.goal_slot) ||
+                !action_legal(
+                    session, registry.actions.at(effect.followup_action),
+                    state) ||
+                !action_legal(
+                    session,
+                    registry.actions.at(effect.blocker_actions.front()),
+                    state) ||
+                !temporary_blocker_applies(session, carrier, effect)) {
+                continue;
             }
-            for (const ActionDescriptor& followup : registry.actions) {
-                if (!temporary_followup(followup) ||
-                    !action_legal(session, blocker, state) ||
-                    !action_legal(session, followup, state)) {
-                    continue;
+            synthesis.temporary_candidate_variants +=
+                effect.blocker_actions.size();
+            auto [eligible, inserted] = eligible_by_followup.try_emplace(
+                effect.followup_action);
+            if (inserted) {
+                eligible->second = calc.temporary_followup_eligible_mask(
+                    carrier, effect.followup_action);
+            }
+            if (!mask_intersects(eligible->second, effect.target_mask)) {
+                continue;
+            }
+            std::vector<std::uint64_t> blocked(session.words, 0);
+            for (std::size_t word = 0; word < session.words; ++word) {
+                blocked[word] = effect.conflict_mask[word] &
+                                eligible->second[word];
+            }
+            const ActionDescriptor& followup =
+                registry.actions.at(effect.followup_action);
+            std::uint8_t followup_rarity = carrier.rarity;
+            if (followup.params.type == ActionType::Regal) {
+                followup_rarity = PC_RARITY_RARE;
+            }
+            const std::uint8_t cap =
+                rarity_affix_cap(session, followup_rarity);
+            const bool closes_blocker_side =
+                (effect.blocker_side == PC_SIDE_PREFIX &&
+                 carrier.prefix_count + 1 >= cap) ||
+                (effect.blocker_side == PC_SIDE_SUFFIX &&
+                 carrier.suffix_count + 1 >= cap);
+            if (closes_blocker_side) {
+                const std::vector<std::uint64_t>& side_mask =
+                    effect.blocker_side == PC_SIDE_PREFIX
+                        ? session.prefix_mask
+                        : session.suffix_mask;
+                for (std::size_t word = 0; word < session.words; ++word) {
+                    blocked[word] |= eligible->second[word] & side_mask[word];
                 }
-                for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
-                    if (!target_slot_missing(state, slot) ||
-                        !blocker_can_change_target_kernel(
-                            session, goal, state, blocker.params.mod_id,
-                            slot)) {
-                        continue;
-                    }
-                    std::vector<std::uint32_t> blocker_groups;
-                    for (std::uint32_t row =
-                             session.group_offsets[blocker.params.mod_id];
-                         row < session.group_offsets[
-                                   blocker.params.mod_id + 1];
-                         ++row) {
-                        blocker_groups.push_back(session.group_ids[row]);
-                    }
-                    std::sort(
-                        blocker_groups.begin(), blocker_groups.end());
-                    blocker_groups.erase(
-                        std::unique(
-                            blocker_groups.begin(), blocker_groups.end()),
-                        blocker_groups.end());
-                    if (!seen_temporary.emplace(
-                            static_cast<std::uint32_t>(
-                                &followup - registry.actions.data()),
-                            slot,
-                            session.gen_type[blocker.params.mod_id],
-                            blocker_groups,
-                            blocker.cost_keys)
-                             .second) {
-                        continue;
-                    }
-                    FixedOptionSpec option;
-                    option.kind = FixedOptionKind::TemporaryBenchRepeat;
-                    option.setup_action_ids = {blocker.id};
-                    option.action_id = followup.id;
-                    option.exit_goal_slots = {slot};
-                    option.exit_min_satisfied = 1;
-                    option.automatic_kind =
-                        AutomaticCandidateKind::TemporaryBenchBlocker;
-                    option.relevant_goal_mask = 1u << slot;
-                    result.push_back(std::move(option));
+            }
+            if (!mask_has_any(blocked) ||
+                mask_intersects(blocked, effect.target_mask)) {
+                continue;
+            }
+            auto [found, effect_inserted] = group_by_effect.emplace(
+                std::make_tuple(
+                    effect.followup_action, effect.goal_slot,
+                    effect.blocker_side, blocked),
+                synthesis.temporary_groups.size());
+            TemporaryBenchCandidateGroup* group = nullptr;
+            if (effect_inserted) {
+                TemporaryBenchCandidateGroup created;
+                created.representative_blocker =
+                    effect.blocker_actions.front();
+                created.followup_action = effect.followup_action;
+                created.goal_slot = effect.goal_slot;
+                synthesis.temporary_groups.push_back(std::move(created));
+                group = &synthesis.temporary_groups.back();
+            } else {
+                group = &synthesis.temporary_groups.at(found->second);
+            }
+            for (const std::uint32_t blocker : effect.blocker_actions) {
+                const auto duplicate = std::find_if(
+                    group->blocker_variants.begin(),
+                    group->blocker_variants.end(),
+                    [&](const std::uint32_t existing) {
+                        return registry.actions.at(existing).cost_keys ==
+                               registry.actions.at(blocker).cost_keys;
+                    });
+                if (duplicate == group->blocker_variants.end()) {
+                    group->blocker_variants.push_back(blocker);
                 }
             }
         }
+        synthesis.temporary_effect_classes =
+            synthesis.temporary_groups.size();
+        synthesis.temporary_collapsed_variants =
+            synthesis.temporary_candidate_variants >
+                    synthesis.temporary_effect_classes
+                ? synthesis.temporary_candidate_variants -
+                      synthesis.temporary_effect_classes
+                : 0;
+        for (const TemporaryBenchCandidateGroup& group :
+             synthesis.temporary_groups) {
+            const ActionDescriptor& blocker =
+                registry.actions.at(group.representative_blocker);
+            const ActionDescriptor& followup =
+                registry.actions.at(group.followup_action);
+            FixedOptionSpec option;
+            option.kind = FixedOptionKind::TemporaryBenchRepeat;
+            option.setup_action_ids = {blocker.id};
+            option.action_id = followup.id;
+            option.exit_goal_slots = {group.goal_slot};
+            option.exit_min_satisfied = 1;
+            option.automatic_kind =
+                AutomaticCandidateKind::TemporaryBenchBlocker;
+            option.relevant_goal_mask = 1u << group.goal_slot;
+            result.push_back(std::move(option));
+        }
+        synthesis.temporary_enumeration_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - enumeration_started)
+                .count());
     }
 
     /* Protected candidates are bounded to the exact S7 side-lock programs
@@ -509,7 +585,7 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
             }
         }
     }
-    return result;
+    return synthesis;
 }
 
 std::string exit_suffix(const FixedOptionSpec& spec) {
@@ -1639,6 +1715,44 @@ std::string temporary_evaluation_key(
     return key;
 }
 
+PlannerOperator temporary_variant_planner(
+    const ActionRegistry& registry,
+    const PlannerOperator& representative,
+    const OptionKernel& kernel,
+    const std::uint32_t blocker_action) {
+    PlannerOperator variant = representative;
+    const ActionDescriptor& old_blocker =
+        registry.actions.at(representative.setup_action);
+    const ActionDescriptor& blocker = registry.actions.at(blocker_action);
+    const ActionDescriptor& followup =
+        registry.actions.at(representative.followup_action);
+    variant.setup_action = blocker_action;
+    if (!variant.primitive_program.empty()) {
+        variant.primitive_program.front() = blocker_action;
+    }
+    variant.id = "option:temporary_bench_repeat:" + blocker.id + ':' +
+                 followup.id + ":until:" +
+                 std::to_string(variant.exit_min_satisfied) + ':';
+    for (std::size_t i = 0; i < variant.exit_goal_slots.size(); ++i) {
+        if (i != 0) variant.id.push_back('+');
+        variant.id += std::to_string(variant.exit_goal_slots[i]);
+    }
+    variant.display_name = "Temporary " + blocker.display_name +
+                           " then repeat " + followup.display_name;
+
+    std::map<std::string, double> resources(
+        kernel.expected_resources.begin(), kernel.expected_resources.end());
+    for (const std::string& key : old_blocker.cost_keys) {
+        auto found = resources.find(key);
+        if (found == resources.end()) continue;
+        found->second -= 1.0;
+        if (std::abs(found->second) <= 1e-15) resources.erase(found);
+    }
+    for (const std::string& key : blocker.cost_keys) resources[key] += 1.0;
+    variant.resource_quantities.assign(resources.begin(), resources.end());
+    return variant;
+}
+
 bool same_complete_distribution(
     const OutcomeDistribution& left,
     const OutcomeDistribution& right) {
@@ -1770,6 +1884,196 @@ OptionKernel map_local_option_kernel(
 
 } // namespace
 
+void CalcContext::initialize_temporary_bench_effect_classes() {
+    const auto started = std::chrono::steady_clock::now();
+    automatic_goal_bench_actions_.clear();
+    temporary_bench_effect_classes_.clear();
+    temporary_bench_precompiled_bytes_ = 0;
+    if (!goal_.automatic_candidates ||
+        !registry_.index_by_id.contains("remove_crafted_modifiers")) {
+        temporary_bench_precompile_ns_ = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+        return;
+    }
+
+    std::vector<std::uint32_t> ordinary_bench;
+    for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
+        const ActionDescriptor& action = registry_.actions[index];
+        if (action.params.type != ActionType::Bench ||
+            action.params.mod_id >= session_->metamod_type.size() ||
+            session_->metamod_type[action.params.mod_id] >= 0) {
+            continue;
+        }
+        if (goal_mask_for_mod(*session_, goal_, action.params.mod_id) != 0) {
+            automatic_goal_bench_actions_.push_back(index);
+        } else {
+            ordinary_bench.push_back(index);
+        }
+    }
+
+    std::vector<std::vector<std::uint64_t>> target_masks(
+        goal_.slots.size(), std::vector<std::uint64_t>(session_->words, 0));
+    for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot) {
+        for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
+            if (mod_satisfies_goal_slot(*session_, mod, goal_.slots[slot])) {
+                pc_bitset_set(target_masks[slot].data(), mod);
+            }
+        }
+    }
+
+    for (std::uint32_t followup = 0;
+         followup < registry_.actions.size(); ++followup) {
+        if (!temporary_followup(registry_.actions[followup])) continue;
+        for (std::uint32_t slot = 0; slot < goal_.slots.size(); ++slot) {
+            const std::int8_t target_side =
+                goal_slot_side(*session_, goal_.slots[slot]);
+            for (const std::uint32_t blocker_index : ordinary_bench) {
+                const ActionDescriptor& blocker =
+                    registry_.actions[blocker_index];
+                const std::uint32_t blocker_mod = blocker.params.mod_id;
+                std::vector<std::uint64_t> conflict_mask(
+                    session_->words, 0);
+                bool conflicts_positive = false;
+                for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
+                    if (!mods_conflict(*session_, blocker_mod, mod)) continue;
+                    pc_bitset_set(conflict_mask.data(), mod);
+                    conflicts_positive |=
+                        mod < session_->base_roll_weight.size() &&
+                        session_->base_roll_weight[mod] > 0;
+                }
+                if (mask_intersects(conflict_mask, target_masks[slot])) {
+                    continue;
+                }
+                const std::int8_t blocker_side =
+                    session_->gen_type[blocker_mod];
+                const bool can_change_capacity =
+                    target_side >= 0 && target_side != blocker_side;
+                if (!conflicts_positive && !can_change_capacity) continue;
+
+                auto existing = std::find_if(
+                    temporary_bench_effect_classes_.begin(),
+                    temporary_bench_effect_classes_.end(),
+                    [&](const TemporaryBenchEffectClass& candidate) {
+                        return candidate.followup_action == followup &&
+                               candidate.goal_slot == slot &&
+                               candidate.blocker_side == blocker_side &&
+                               candidate.conflict_mask == conflict_mask;
+                    });
+                if (existing == temporary_bench_effect_classes_.end()) {
+                    TemporaryBenchEffectClass effect;
+                    effect.followup_action = followup;
+                    effect.goal_slot = slot;
+                    effect.blocker_side = blocker_side;
+                    effect.conflict_mask = std::move(conflict_mask);
+                    effect.target_mask = target_masks[slot];
+                    temporary_bench_effect_classes_.push_back(
+                        std::move(effect));
+                    existing = std::prev(
+                        temporary_bench_effect_classes_.end());
+                }
+                const auto duplicate = std::find_if(
+                    existing->blocker_actions.begin(),
+                    existing->blocker_actions.end(),
+                    [&](const std::uint32_t action) {
+                        return registry_.actions[action].cost_keys ==
+                               blocker.cost_keys;
+                    });
+                if (duplicate == existing->blocker_actions.end()) {
+                    existing->blocker_actions.push_back(blocker_index);
+                }
+            }
+        }
+    }
+    temporary_bench_precompiled_bytes_ =
+        automatic_goal_bench_actions_.capacity() * sizeof(std::uint32_t) +
+        temporary_bench_effect_classes_.capacity() *
+            sizeof(TemporaryBenchEffectClass);
+    for (const TemporaryBenchEffectClass& effect :
+         temporary_bench_effect_classes_) {
+        temporary_bench_precompiled_bytes_ +=
+            effect.conflict_mask.capacity() * sizeof(std::uint64_t) +
+            effect.target_mask.capacity() * sizeof(std::uint64_t) +
+            effect.blocker_actions.capacity() * sizeof(std::uint32_t);
+    }
+    temporary_bench_precompile_ns_ = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - started)
+            .count());
+}
+
+std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
+    const pc_item_state& carrier,
+    const std::uint32_t followup_action) {
+    std::vector<std::uint64_t> result(session_->words, 0);
+    if (followup_action >= registry_.actions.size()) return result;
+    const ActionDescriptor& followup = registry_.actions[followup_action];
+    if (!temporary_followup(followup)) return result;
+
+    pc_item_state pool_carrier = carrier;
+    PoolBuildRequest request;
+    switch (followup.params.type) {
+    case ActionType::Augment:
+        if (pool_carrier.rarity != PC_RARITY_MAGIC) return result;
+        break;
+    case ActionType::Regal:
+        if (pool_carrier.rarity != PC_RARITY_MAGIC) return result;
+        pool_carrier.rarity = PC_RARITY_RARE;
+        break;
+    case ActionType::Exalt:
+        if (pool_carrier.rarity != PC_RARITY_RARE) return result;
+        break;
+    case ActionType::InfluenceExalt:
+        if (pool_carrier.rarity != PC_RARITY_RARE ||
+            followup.params.influence_code <= 0 ||
+            followup.params.influence_code > 8) {
+            return result;
+        }
+        pool_carrier.generic_influence_bits |= static_cast<std::uint8_t>(
+            1u << (followup.params.influence_code - 1));
+        request.influence_only_code = followup.params.influence_code;
+        break;
+    case ActionType::HarvestAugment:
+        if (followup.params.target_tag_id == kNoId) return result;
+        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.target_tag_id = followup.params.target_tag_id;
+        break;
+    case ActionType::VeiledExalt: {
+        if (pool_carrier.rarity != PC_RARITY_RARE) return result;
+        const std::uint8_t cap =
+            rarity_affix_cap(*session_, pool_carrier.rarity);
+        if (pool_carrier.prefix_count < cap &&
+            session_->veiled_prefix_mod_id < session_->mod_count) {
+            pc_bitset_set(result.data(), session_->veiled_prefix_mod_id);
+        }
+        if (pool_carrier.suffix_count < cap &&
+            session_->veiled_suffix_mod_id < session_->mod_count) {
+            pc_bitset_set(result.data(), session_->veiled_suffix_mod_id);
+        }
+        return result;
+    }
+    default:
+        return result;
+    }
+
+    const std::uint8_t cap =
+        rarity_affix_cap(*session_, pool_carrier.rarity);
+    const bool prefix_open = pool_carrier.prefix_count < cap;
+    const bool suffix_open = pool_carrier.suffix_count < cap;
+    if (!prefix_open && !suffix_open) return result;
+    request.side_filter =
+        prefix_open && suffix_open ? -1 : (prefix_open ? 0 : 1);
+    const WeightedPool& pool =
+        get_weighted_pool(context_, &pool_carrier, request);
+    for (const PoolEntry& entry : pool.entries) {
+        if (entry.final_weight != 0 && entry.session_mod_id < session_->mod_count) {
+            pc_bitset_set(result.data(), entry.session_mod_id);
+        }
+    }
+    return result;
+}
+
 StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     const std::uint32_t state_id,
     const AutomaticAdmissionLimits& limits) {
@@ -1794,8 +2098,20 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     }
 
     const auto shared_started = std::chrono::steady_clock::now();
-    std::vector<FixedOptionSpec> specs =
-        synthesize_automatic_options(*this, state_id);
+    AutomaticOptionSynthesis synthesis =
+        synthesize_automatic_options(*this, state_id, carrier);
+    batch.temporary_precompiled_classes =
+        synthesis.temporary_precompiled_classes;
+    batch.temporary_precompile_ns = temporary_bench_precompile_ns_;
+    batch.temporary_precompiled_bytes = temporary_bench_precompiled_bytes_;
+    batch.temporary_candidate_variants =
+        synthesis.temporary_candidate_variants;
+    batch.temporary_effect_classes =
+        synthesis.temporary_effect_classes;
+    batch.temporary_collapsed_variants =
+        synthesis.temporary_collapsed_variants;
+    batch.temporary_enumeration_ns =
+        synthesis.temporary_enumeration_ns;
     std::vector<std::uint32_t> permanent_benches;
     std::vector<std::uint32_t> local_candidates = candidates_;
     for (std::uint32_t index = 0; index < registry_.actions.size(); ++index) {
@@ -1817,7 +2133,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
 
     GoalSpec local_goal = goal_;
     local_goal.automatic_candidates = false;
-    local_goal.fixed_options = std::move(specs);
+    local_goal.fixed_options = std::move(synthesis.specs);
     CalcContext local(
         session_, local_goal, registry_, local_candidates,
         false, false, true);
@@ -2133,15 +2449,39 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             std::string,
             std::shared_ptr<const OptionKernel>>
             temporary_evaluation_memo;
+        const auto temporary_group_for = [&](const PlannerOperator& planner)
+            -> const TemporaryBenchCandidateGroup* {
+            if (planner.option_kind !=
+                FixedOptionKind::TemporaryBenchRepeat) {
+                return nullptr;
+            }
+            const auto found = std::find_if(
+                synthesis.temporary_groups.begin(),
+                synthesis.temporary_groups.end(),
+                [&](const TemporaryBenchCandidateGroup& group) {
+                    return group.representative_blocker ==
+                               planner.setup_action &&
+                           group.followup_action ==
+                               planner.followup_action &&
+                           group.goal_slot < kMaxGoalSlots &&
+                           planner.exit_goal_slots.size() == 1 &&
+                           planner.exit_goal_slots.front() == group.goal_slot;
+                });
+            return found == synthesis.temporary_groups.end()
+                       ? nullptr
+                       : &*found;
+        };
         for (const std::uint32_t local_operator : local_option_indices) {
             const auto candidate_started = std::chrono::steady_clock::now();
             const PlannerOperator& local_planner =
                 local.operators().at(local_operator);
-            StateLocalAutomaticCandidate decision;
-            decision.id = local_planner.id;
-            decision.kind = local_planner.automatic_kind;
-            decision.telemetry_kind =
-                telemetry_kind_for_candidate(decision.kind);
+            const TemporaryBenchCandidateGroup* temporary_group =
+                temporary_group_for(local_planner);
+            StateLocalAutomaticCandidate base_decision;
+            base_decision.id = local_planner.id;
+            base_decision.kind = local_planner.automatic_kind;
+            base_decision.telemetry_kind =
+                telemetry_kind_for_candidate(base_decision.kind);
             const bool direct_fracture =
                 local_planner.option_kind ==
                     FixedOptionKind::FracturePrepare &&
@@ -2155,21 +2495,75 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     local.registry().actions.at(
                         local_planner.conditional_action),
                     local.state(local_state));
-            if (!has_prices(local_planner) && !direct_fracture) {
-                decision.missing_price = true;
-                decision.evidence.candidate = true;
-                decision.evidence.relevant_goal_mask =
+            if (temporary_group == nullptr &&
+                !has_prices(local_planner) && !direct_fracture) {
+                base_decision.missing_price = true;
+                base_decision.evidence.candidate = true;
+                base_decision.evidence.relevant_goal_mask =
                     local_planner.relevant_goal_mask;
-                decision.evidence.legality_result =
+                base_decision.evidence.legality_result =
                     "not_evaluated_missing_price";
-                decision.evidence.reason =
+                base_decision.evidence.reason =
                     "automatic_candidate_missing_price";
-                decision.admission_ns = static_cast<std::uint64_t>(
+                base_decision.admission_ns = static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now() - candidate_started)
                         .count());
-                batch.decisions.push_back(std::move(decision));
+                batch.decisions.push_back(std::move(base_decision));
                 continue;
+            }
+            if (temporary_group != nullptr && limits.prices != nullptr) {
+                const auto action_has_prices = [&](const std::uint32_t action) {
+                    return std::all_of(
+                        local.registry().actions.at(action).cost_keys.begin(),
+                        local.registry().actions.at(action).cost_keys.end(),
+                        [&](const std::string& key) {
+                            return limits.prices->contains(key);
+                        });
+                };
+                const bool common_prices =
+                    action_has_prices(local_planner.followup_action) &&
+                    action_has_prices(local_planner.cleanup_action);
+                const bool any_priced_variant = common_prices && std::any_of(
+                    temporary_group->blocker_variants.begin(),
+                    temporary_group->blocker_variants.end(),
+                    action_has_prices);
+                if (!any_priced_variant) {
+                    bool first = true;
+                    for (const std::uint32_t blocker :
+                         temporary_group->blocker_variants) {
+                        StateLocalAutomaticCandidate missing = base_decision;
+                        missing.id =
+                            "option:temporary_bench_repeat:" +
+                            local.registry().actions.at(blocker).id + ':' +
+                            local.registry().actions.at(
+                                local_planner.followup_action).id +
+                            ":until:" +
+                            std::to_string(
+                                local_planner.exit_min_satisfied) + ':' +
+                            std::to_string(
+                                local_planner.exit_goal_slots.front());
+                        missing.missing_price = true;
+                        missing.evidence.candidate = true;
+                        missing.evidence.relevant_goal_mask =
+                            local_planner.relevant_goal_mask;
+                        missing.evidence.legality_result =
+                            "not_evaluated_missing_price";
+                        missing.evidence.reason =
+                            "automatic_candidate_missing_price";
+                        if (first) {
+                            missing.admission_ns = static_cast<std::uint64_t>(
+                                std::chrono::duration_cast<
+                                    std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now() -
+                                    candidate_started)
+                                    .count());
+                            first = false;
+                        }
+                        batch.decisions.push_back(std::move(missing));
+                    }
+                    continue;
+                }
             }
             const std::string evaluation_key = temporary_evaluation_key(
                 local.session(), local.registry(), local_planner);
@@ -2202,33 +2596,34 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 }
             }
             const OptionKernel& local_kernel = *local_kernel_ptr;
-            decision.raw_outcomes = outcome_count(local_kernel);
-            if (decision.kind == AutomaticCandidateKind::Imprint &&
+            base_decision.raw_outcomes = outcome_count(local_kernel);
+            if (base_decision.kind == AutomaticCandidateKind::Imprint &&
                 !imprint_time_attributed) {
-                decision.admission_ns += imprint_discovery_ns;
+                base_decision.admission_ns += imprint_discovery_ns;
                 imprint_time_attributed = true;
             }
-            decision.evidence = local_kernel.automatic;
-            if (limits.prices != nullptr &&
+            base_decision.evidence = local_kernel.automatic;
+            if (temporary_group == nullptr && limits.prices != nullptr &&
                 std::any_of(
                     local_kernel.expected_resources.begin(),
                     local_kernel.expected_resources.end(),
                     [&](const auto& resource) {
                         return !limits.prices->contains(resource.first);
                     })) {
-                decision.missing_price = true;
-                decision.evidence.legality_result =
+                base_decision.missing_price = true;
+                base_decision.evidence.legality_result =
                     "not_admitted_missing_price";
-                decision.evidence.reason =
+                base_decision.evidence.reason =
                     "automatic_candidate_missing_price";
-                decision.admission_ns += static_cast<std::uint64_t>(
+                base_decision.admission_ns += static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now() - candidate_started)
                         .count());
-                batch.decisions.push_back(std::move(decision));
+                batch.decisions.push_back(std::move(base_decision));
                 continue;
             }
-            if (local_kernel.automatic.eligible) {
+            bool collapse_non_temporary = false;
+            if (local_kernel.automatic.eligible && temporary_group == nullptr) {
                 const auto duplicate = std::find_if(
                     seen_option_kernels.begin(), seen_option_kernels.end(),
                     [&](const OptionKernel* seen) {
@@ -2236,114 +2631,177 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                             *seen, local_kernel);
                     });
                 if (duplicate != seen_option_kernels.end()) {
-                    decision.collapsed = true;
+                    collapse_non_temporary = true;
                 } else {
                     seen_option_kernels.push_back(&local_kernel);
-                    PlannerOperator admitted = local_planner;
-                    admitted.resource_quantities =
-                        local_kernel.expected_resources;
-                    auto mapped = std::make_shared<OptionKernel>(
-                        map_local_option_kernel(
-                            local, *this, local_kernel, mapped_states));
-                    const std::uint64_t transition_template_id =
-                        option_transition_hash(*mapped);
-                    mapped->retained_template_id = transition_template_id;
-                    decision.template_id = transition_template_id;
-                    std::uint32_t operator_index = kNoId;
-                    std::shared_ptr<const OptionKernel> retained_kernel;
-                    bool new_operator = false;
-                    bool new_transition_template = false;
-                    {
-                        const std::uint64_t planner_id =
-                            option_planner_hash(admitted);
-                        const auto planner_bucket =
-                            option_operator_templates_.find(planner_id);
-                        if (planner_bucket !=
-                            option_operator_templates_.end()) {
-                            for (const std::uint32_t candidate :
-                                 planner_bucket->second) {
-                                if (candidate < operators_.size() &&
-                                    same_option_template_planner(
-                                        operators_.at(candidate),
-                                        admitted)) {
-                                    operator_index = candidate;
-                                    break;
-                                }
-                            }
-                        }
-                        if (operator_index == kNoId) {
-                            operator_index = static_cast<std::uint32_t>(
-                                operators_.size());
-                            operators_.push_back(admitted);
-                            option_operator_templates_[planner_id].push_back(
-                                operator_index);
-                            new_operator = true;
-                        }
-                        const auto transition_bucket =
-                            option_transition_templates_.find(
-                                transition_template_id);
-                        if (transition_bucket !=
-                            option_transition_templates_.end()) {
-                            for (const auto& candidate :
-                                 transition_bucket->second) {
-                                if (!same_option_transition_kernel(
-                                        *candidate, *mapped)) {
-                                    continue;
-                                }
-                                retained_kernel = candidate;
-                                decision.template_hit = true;
-                                break;
-                            }
-                        }
-                        if (retained_kernel == nullptr) {
-                            retained_kernel = mapped;
-                            option_transition_templates_[
-                                transition_template_id].push_back(
-                                    retained_kernel);
-                            new_transition_template = true;
-                        }
-                        if (new_operator) {
-                            decision.selected_bytes =
-                                sizeof(PlannerOperator);
-                        }
-                        if (new_transition_template) {
-                            decision.selected_bytes +=
-                                option_kernel_selected_bytes(
-                                    *retained_kernel);
-                        }
+                }
+            }
+            if (!local_kernel.automatic.eligible || collapse_non_temporary) {
+                base_decision.collapsed = collapse_non_temporary;
+                base_decision.admission_ns += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - candidate_started)
+                        .count());
+                batch.decisions.push_back(std::move(base_decision));
+                check_limits();
+                continue;
+            }
+
+            std::vector<PlannerOperator> admitted_variants;
+            if (temporary_group == nullptr) {
+                PlannerOperator admitted = local_planner;
+                admitted.resource_quantities = local_kernel.expected_resources;
+                admitted_variants.push_back(std::move(admitted));
+            } else {
+                admitted_variants.reserve(
+                    temporary_group->blocker_variants.size());
+                for (const std::uint32_t blocker :
+                     temporary_group->blocker_variants) {
+                    admitted_variants.push_back(temporary_variant_planner(
+                        local.registry(), local_planner, local_kernel,
+                        blocker));
+                }
+            }
+
+            std::vector<PlannerOperator> priced_variants;
+            priced_variants.reserve(admitted_variants.size());
+            const std::size_t first_variant_decision =
+                batch.decisions.size();
+            for (PlannerOperator& admitted : admitted_variants) {
+                if (!has_prices(admitted)) {
+                    StateLocalAutomaticCandidate missing = base_decision;
+                    missing.id = admitted.id;
+                    missing.raw_outcomes = 0;
+                    missing.missing_price = true;
+                    missing.evidence.legality_result =
+                        "not_admitted_missing_price";
+                    missing.evidence.reason =
+                        "automatic_candidate_missing_price";
+                    batch.decisions.push_back(std::move(missing));
+                    continue;
+                }
+                priced_variants.push_back(std::move(admitted));
+            }
+            if (priced_variants.empty()) {
+                const std::uint64_t elapsed = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - candidate_started)
+                        .count());
+                if (batch.decisions.size() > first_variant_decision) {
+                    batch.decisions[first_variant_decision].admission_ns +=
+                        elapsed;
+                } else {
+                    base_decision.admission_ns +=
+                        elapsed;
+                    batch.decisions.push_back(std::move(base_decision));
+                }
+                check_limits();
+                continue;
+            }
+
+            auto mapped = std::make_shared<OptionKernel>(
+                map_local_option_kernel(
+                    local, *this, local_kernel, mapped_states));
+            const std::uint64_t transition_template_id =
+                option_transition_hash(*mapped);
+            mapped->retained_template_id = transition_template_id;
+            std::shared_ptr<const OptionKernel> retained_kernel;
+            bool transition_template_hit = false;
+            bool new_transition_template = false;
+            const auto transition_bucket =
+                option_transition_templates_.find(transition_template_id);
+            if (transition_bucket != option_transition_templates_.end()) {
+                for (const auto& candidate : transition_bucket->second) {
+                    if (!same_option_transition_kernel(*candidate, *mapped)) {
+                        continue;
                     }
-                    const std::uint64_t key =
-                        (static_cast<std::uint64_t>(state_id) << 32) |
-                        operator_index;
-                    option_kernel_cache_[key] = retained_kernel;
-                    if (decision.template_hit) {
-                        option_kernel_template_hit_keys_.insert(key);
-                    }
-                    state_local_automatic_operator_indices_.insert(
-                        operator_index);
-                    decision.operator_index = operator_index;
-                    decision.admitted = true;
-                    admit_operator(operator_index);
-                    if (new_operator) {
-                        for (const std::uint32_t dependency :
-                             operators_.at(operator_index)
-                                 .primitive_program) {
-                            add_dependency(dependency);
-                        }
-                        if (operators_.at(operator_index)
-                                .conditional_action != kNoId) {
-                            add_dependency(
-                                operators_.at(operator_index)
-                                    .conditional_action);
+                    retained_kernel = candidate;
+                    transition_template_hit = true;
+                    break;
+                }
+            }
+            if (retained_kernel == nullptr) {
+                retained_kernel = mapped;
+                option_transition_templates_[transition_template_id].push_back(
+                    retained_kernel);
+                new_transition_template = true;
+            }
+
+            bool first_variant = true;
+            for (PlannerOperator& admitted : priced_variants) {
+                StateLocalAutomaticCandidate decision = base_decision;
+                decision.id = admitted.id;
+                decision.raw_outcomes = first_variant
+                                            ? base_decision.raw_outcomes
+                                            : 0;
+                decision.template_id = transition_template_id;
+                decision.template_hit = transition_template_hit ||
+                                        !first_variant;
+                std::uint32_t operator_index = kNoId;
+                bool new_operator = false;
+                const std::uint64_t planner_id =
+                    option_planner_hash(admitted);
+                const auto planner_bucket =
+                    option_operator_templates_.find(planner_id);
+                if (planner_bucket != option_operator_templates_.end()) {
+                    for (const std::uint32_t candidate :
+                         planner_bucket->second) {
+                        if (candidate < operators_.size() &&
+                            same_option_template_planner(
+                                operators_.at(candidate), admitted)) {
+                            operator_index = candidate;
+                            break;
                         }
                     }
                 }
+                if (operator_index == kNoId) {
+                    operator_index = static_cast<std::uint32_t>(
+                        operators_.size());
+                    operators_.push_back(admitted);
+                    option_operator_templates_[planner_id].push_back(
+                        operator_index);
+                    new_operator = true;
+                }
+                if (new_operator) {
+                    decision.selected_bytes = sizeof(PlannerOperator);
+                }
+                if (new_transition_template && first_variant) {
+                    decision.selected_bytes +=
+                        option_kernel_selected_bytes(*retained_kernel);
+                }
+                const std::uint64_t key =
+                    (static_cast<std::uint64_t>(state_id) << 32) |
+                    operator_index;
+                option_kernel_cache_[key] = retained_kernel;
+                if (decision.template_hit) {
+                    option_kernel_template_hit_keys_.insert(key);
+                }
+                state_local_automatic_operator_indices_.insert(
+                    operator_index);
+                decision.operator_index = operator_index;
+                decision.admitted = true;
+                admit_operator(operator_index);
+                if (new_operator) {
+                    for (const std::uint32_t dependency :
+                         operators_.at(operator_index).primitive_program) {
+                        add_dependency(dependency);
+                    }
+                    if (operators_.at(operator_index).conditional_action !=
+                        kNoId) {
+                        add_dependency(
+                            operators_.at(operator_index).conditional_action);
+                    }
+                }
+                if (first_variant) {
+                    decision.admission_ns += static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            candidate_started)
+                            .count());
+                }
+                batch.decisions.push_back(std::move(decision));
+                first_variant = false;
             }
-            decision.admission_ns += static_cast<std::uint64_t>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() - candidate_started)
-                    .count());
-            batch.decisions.push_back(std::move(decision));
             check_limits();
         }
 

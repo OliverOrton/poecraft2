@@ -19,6 +19,12 @@
       "carrier-local sparse rows resolve the entry-relative sentinel to their owner state",
       "fractured and other mechanically distinct preserved substrates remain distinct"
     ],
+    "temporary_bench_preclassification": [
+      "solver-context construction precompiles ordinary blockers by side, exact conflict mask, supported add-mod followup, and unblocked goal slot",
+      "carrier admission intersects those classes with the exact eligible followup pool before transient fixed-option construction",
+      "classes with the same carrier-effective blocked pool share one exact evaluation",
+      "separately priced blockers remain resource variants and preserve their executable setup action"
+    ],
     "telemetry": {
       "automatic_kinds": [
         "imprint",
@@ -151,11 +157,93 @@
         "harvest": {"requests": 0, "rows": 0}
       },
       "note": "Primitive-family selected_bytes are cumulative construction attribution, not retained live bytes; evaluator caches are released after sparse copy."
+    },
+    {
+      "stage": "1024_after_temporary_bench_preclassification",
+      "source": "build/s8.4r3a-temp-precompile-1024-final.json",
+      "result": "expected_refused_state_cap_at_diagnostic_1024_limit",
+      "expanded_states": 1024,
+      "discovered_states": 29637,
+      "total_ms": 4558.8603,
+      "expansion_ms": 4443.4049,
+      "extraction_ms": 18.3652,
+      "planner_registry": 1470,
+      "planner_candidates": 1320,
+      "state_action_rows": 15230,
+      "transition_entries": 91959,
+      "peak_selected_bytes": 62538285,
+      "live_selected_bytes": 29297385,
+      "temporary_bench": {
+        "precompiled_classes": 399,
+        "precompile_ns": 5294600,
+        "precompiled_bytes": 194072,
+        "candidate_variants": 276054,
+        "effect_classes": 5654,
+        "collapsed_variants": 270400,
+        "candidates": 135350,
+        "max_candidates_per_carrier": 319,
+        "max_candidate_variants_per_carrier": 509,
+        "max_effect_classes_per_carrier": 45,
+        "unique_templates": 2944,
+        "template_hits": 125247,
+        "rows": 2944,
+        "max_rows_per_carrier": 12,
+        "raw_outcomes": 38634,
+        "retained_transitions": 20691,
+        "admission_ns": 313632000,
+        "enumeration_ns": 27192000,
+        "row_ns": 73860600
+      },
+      "comparison_to_previous_1024": {
+        "discovered_states_unchanged": true,
+        "state_action_rows_unchanged": true,
+        "transition_entries_unchanged": true,
+        "temporary_rows_unchanged": true,
+        "temporary_transitions_unchanged": true,
+        "expansion_reduction_percent": 49.62,
+        "temporary_candidate_reduction_percent": 73.76,
+        "temporary_raw_outcome_reduction_percent": 95.62,
+        "temporary_admission_reduction_percent": 80.71,
+        "finding": "The old candidate flood caused about four seconds of transient/downstream expansion work outside its direct admission timer. Exact price variants increase the shared planner registry and selected bytes but remain far below checked-in caps."
+      }
+    },
+    {
+      "stage": "2048_after_temporary_bench_preclassification",
+      "source": "build/s8.4r3a-temp-precompile-2048-final.json",
+      "result": "expected_refused_state_cap_at_diagnostic_2048_limit",
+      "expanded_states": 2048,
+      "discovered_states": 29942,
+      "total_ms": 18497.3385,
+      "expansion_ms": 18251.6897,
+      "planner_registry": 1512,
+      "planner_candidates": 1362,
+      "state_action_rows": 30670,
+      "transition_entries": 131276,
+      "peak_selected_bytes": 89047358,
+      "live_selected_bytes": 41396471,
+      "temporary_bench": {
+        "candidate_variants": 595774,
+        "effect_classes": 10265,
+        "collapsed_variants": 585509,
+        "candidates": 241899,
+        "max_candidates_per_carrier": 319,
+        "max_candidate_variants_per_carrier": 509,
+        "max_effect_classes_per_carrier": 45,
+        "unique_templates": 6085,
+        "rows": 6085,
+        "raw_outcomes": 71346,
+        "retained_transitions": 44163,
+        "admission_ns": 611029300,
+        "enumeration_ns": 57133300,
+        "row_ns": 132271500
+      },
+      "finding": "Expansion grows from 4.44 seconds at 1024 to 18.25 seconds at 2048 while discovered states grow by only 305 and the planner registry nearly saturates, proving a separate superlinear outer-expansion boundary."
     }
   ],
   "focused_exact_evidence": {
     "renewal_template": "two distinct carriers differing only in preparation-wiped modifiers share one kernel pointer and template id; an otherwise similar fractured carrier is illegal and distinct",
     "retry_oracle": "entry-relative retry mass plus non-self exit mass sums to one and the exact attempt_cost/exit_probability oracle is preserved",
+    "temporary_effect_oracle": "two separately priced blockers with different global conflict masks but the same carrier-effective eligible-pool intersection share one exact effect evaluation; both executable resource variants remain selectable and the cheaper route wins",
     "existing_boundaries": "temporary-bench, protected-side, primitive-Fracture, compilation, and simulator checks remain in the passing S8.3/native suites"
   },
   "normal_cap_attempt": {
@@ -174,11 +262,11 @@
     "acceptance_claim": "not_passed"
   },
   "measured_boundary": {
-    "finding": "Retained automatic storage is now bounded, but product usability is still dominated by expansion work outside the attributed automatic-admission and primitive build/row timers. At 1024 states, about 7 seconds of the 8.82-second expansion remains unattributed; the full normal-cap closure did not reach Bellman entry within the accepted wait.",
+    "finding": "Temporary-bench preclassification proves the candidate flood caused about four seconds of formerly unattributed transient/downstream work at 1024 states, reducing expansion from 8.82 to 4.44 seconds without changing discovered-state, retained-row, or retained-transition counts. The 2048 sample still grows superlinearly to 18.25 seconds, so a separate outer-expansion phase remains unattributed and the normal-cap gate remains open.",
     "next_work": [
       "Keep the current normal caps and exact action envelope unchanged.",
-      "Add reconciled timers around prepare_state_expansion, transient-context construction and projection, candidate enumeration versus exact evaluation, state interning, sparse-row/effect construction and enqueue, and exact owned-byte audits so per-carrier expansion time sums to the outer expansion timer.",
-      "Run only bounded, time-boxed 1024/2048/4096 expansion samples until the growth curve and dominant phase are known; do not launch another normal-cap run until the bounded curve predicts a usable completion.",
+      "Add reconciled timers around prepare_state_expansion, transient-context construction and projection outside the now-attributed temporary effect evaluator, state interning, sparse-row/effect construction and enqueue, operator/pricing refresh, and exact owned-byte audits so per-carrier expansion time sums to the outer expansion timer.",
+      "The 1024/2048 curve is already superlinear; do not launch 4096 or another normal-cap run until the remaining outer phase is identified and repaired.",
       "Partition discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
       "If the exact full goal-relevant envelope remains unusable after the measured hot phase is repaired, implement the already-planned mechanic-neutral focused/custom action scope and label results optimal only within that selected scope."
     ],
@@ -187,8 +275,8 @@
   },
   "validation": {
     "native_build": "passed",
-    "native_engine_tests": "164814 checks, 0 failures",
-    "focused_solver_s8_3": "177 checks, 0 failures",
+    "native_engine_tests": "164835 checks, 0 failures",
+    "focused_solver_s8_3": "198 checks, 0 failures",
     "release_wasm_rebuild": "passed",
     "typescript": "passed",
     "remaining_web_tests": "passed",

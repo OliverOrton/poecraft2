@@ -287,6 +287,7 @@ CalcContext::CalcContext(
     /* Exact paths never sample, and evaluation must not depend on trace
      * bookkeeping from earlier queries. */
     context_.capture_action_trace = false;
+    initialize_temporary_bench_effect_classes();
 }
 
 bool calc_supports(const ActionDescriptor& action) {
@@ -803,6 +804,16 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     }
     bytes += candidates_.capacity() * sizeof(std::uint32_t);
     bytes += candidate_operators_.capacity() * sizeof(std::uint32_t);
+    bytes += automatic_goal_bench_actions_.capacity() *
+             sizeof(std::uint32_t);
+    bytes += temporary_bench_effect_classes_.capacity() *
+             sizeof(TemporaryBenchEffectClass);
+    for (const TemporaryBenchEffectClass& effect :
+         temporary_bench_effect_classes_) {
+        bytes += effect.conflict_mask.capacity() * sizeof(std::uint64_t);
+        bytes += effect.target_mask.capacity() * sizeof(std::uint64_t);
+        bytes += effect.blocker_actions.capacity() * sizeof(std::uint32_t);
+    }
     bytes += state_local_automatic_operators_.bucket_count() * sizeof(void*);
     bytes += state_local_automatic_operators_.size() *
              (sizeof(std::pair<const std::uint32_t,

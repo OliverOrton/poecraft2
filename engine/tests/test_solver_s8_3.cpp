@@ -33,7 +33,8 @@ constexpr std::uint32_t kMultimod = 11;
 constexpr std::uint32_t kBenchNeutral = 12;
 constexpr std::uint32_t kSuffixJunk = 13;
 constexpr std::uint32_t kBenchPrefixNeutral = 14;
-constexpr std::uint32_t kModCount = 15;
+constexpr std::uint32_t kBenchTemporaryAlt = 15;
+constexpr std::uint32_t kModCount = 16;
 
 std::shared_ptr<SessionImpl> make_automatic_session(
     const bool renewal_retry_pool = false) {
@@ -70,7 +71,7 @@ std::shared_ptr<SessionImpl> make_automatic_session(
 
     const std::vector<std::uint32_t> groups = {
         10, 20, 21, 30, 31, 20, 10, 20, 21, 40, 41, 42, 50, 22,
-        51};
+        51, 21};
     data->group_key_sids.assign(64, 0);
     for (const std::uint32_t group : groups) {
         if (data->group_key_sids[group] != 0) continue;
@@ -96,15 +97,23 @@ std::shared_ptr<SessionImpl> make_automatic_session(
         PC_SIDE_PREFIX, PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX,
         PC_SIDE_PREFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX,
         PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX,
-        PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX};
+        PC_SIDE_SUFFIX, PC_SIDE_SUFFIX, PC_SIDE_PREFIX, PC_SIDE_SUFFIX};
     session->primary_group = groups;
     session->required_level.assign(kModCount, 1);
     session->group_offsets.resize(kModCount + 1);
-    std::iota(session->group_offsets.begin(), session->group_offsets.end(), 0u);
-    session->group_ids = groups;
+    for (std::uint32_t mod = 0; mod < kModCount; ++mod) {
+        session->group_offsets[mod] =
+            static_cast<std::uint32_t>(session->group_ids.size());
+        session->group_ids.push_back(groups[mod]);
+        if (mod == kBenchTemporaryAlt) {
+            session->group_ids.push_back(50);
+        }
+    }
+    session->group_offsets[kModCount] =
+        static_cast<std::uint32_t>(session->group_ids.size());
     session->family_id = {
         100, 101, 102, 103, 104, 105, 100, 101, 108, 109, 110, 111,
-        112, 113, 114};
+        112, 113, 114, 115};
     session->family_tier_index.assign(kModCount, 1);
     session->metamod_type.assign(kModCount, -1);
     session->metamod_type[kPrefixLock] = 4;
@@ -115,7 +124,7 @@ std::shared_ptr<SessionImpl> make_automatic_session(
     for (const std::uint32_t mod : {
              kTargetBlocker, kBenchGoalPrefix, kBenchGoalSuffix,
              kBenchTemporary, kPrefixLock, kSuffixLock, kMultimod,
-             kBenchNeutral, kBenchPrefixNeutral}) {
+             kBenchNeutral, kBenchPrefixNeutral, kBenchTemporaryAlt}) {
         session->flags[mod] = 1 << 1;
         session->bench_mod_ids.push_back(mod);
     }
@@ -151,9 +160,13 @@ std::shared_ptr<SessionImpl> make_automatic_session(
                  : session->suffix_mask)
                 .data(),
             mod);
-        auto& group_mask = session->group_masks[groups[mod]];
-        if (group_mask.empty()) group_mask.assign(session->words, 0);
-        pc_bitset_set(group_mask.data(), mod);
+        for (std::uint32_t row = session->group_offsets[mod];
+             row < session->group_offsets[mod + 1]; ++row) {
+            auto& group_mask =
+                session->group_masks[session->group_ids[row]];
+            if (group_mask.empty()) group_mask.assign(session->words, 0);
+            pc_bitset_set(group_mask.data(), mod);
+        }
     }
     for (const std::uint32_t mod : {
              kGoalPrefix, kGoalSuffix, kSuffixCompetitor, kPrefixJunkA,
@@ -225,7 +238,7 @@ std::uint32_t operator_by_kind(
     return kNoId;
 }
 
-void admit_automatic(
+StateLocalAutomaticBatch admit_automatic(
     CalcContext& calc,
     const std::uint32_t state,
     const std::unordered_map<std::string, double>& prices) {
@@ -236,7 +249,7 @@ void admit_automatic(
     limits.max_reforge_work = 1000000;
     limits.max_solver_owned_bytes = 1073741824;
     limits.prices = &prices;
-    calc.admit_state_local_automatic_candidates(state, limits);
+    return calc.admit_state_local_automatic_candidates(state, limits);
 }
 
 SimulationSummaryInternal run_compiled(
@@ -290,11 +303,18 @@ void run_temporary_blocker_price_flip() {
         add_mod(start, *session, mod);
     }
     const std::uint32_t state = calc.intern_item(start);
-    admit_automatic(calc, state, {
+    const StateLocalAutomaticBatch blocker_batch = admit_automatic(calc, state, {
         {"exalt", 10.0},
         {"base", 100.0},
         {"scour", 1.0},
         {"bench:s83_mod_8", 2.0}});
+    PC_CHECK(blocker_batch.temporary_precompiled_classes > 0);
+    PC_CHECK(blocker_batch.temporary_precompile_ns > 0);
+    PC_CHECK(blocker_batch.temporary_precompiled_bytes > 0);
+    PC_CHECK(blocker_batch.temporary_candidate_variants >= 2);
+    PC_CHECK(blocker_batch.temporary_effect_classes > 0);
+    PC_CHECK(blocker_batch.temporary_effect_classes <
+             blocker_batch.temporary_candidate_variants);
     PC_CHECK(calc.candidate_operators().size() == 3);
     PC_CHECK(calc.action_control().automatic_dependency_primitives == 2);
     const std::string blocker_id =
@@ -312,6 +332,40 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(blocker_kernel.automatic.cleanup_complete);
     PC_CHECK((blocker_kernel.automatic.kernel_change_mechanisms &
               kAutomaticGroupConflict) != 0);
+
+    CalcContext variant_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t variant_state = variant_calc.intern_item(start);
+    const StateLocalAutomaticBatch variant_batch = admit_automatic(
+        variant_calc, variant_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 5.0},
+         {"bench:s83_mod_15", 2.0}});
+    const std::uint32_t first_variant = operator_by_fragment(
+        variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_8:exalt");
+    const std::uint32_t cheaper_variant = operator_by_fragment(
+        variant_calc,
+        "option:temporary_bench_repeat:bench:s83_mod_15:exalt");
+    PC_CHECK(variant_batch.temporary_collapsed_variants > 0);
+    PC_CHECK(first_variant != kNoId);
+    PC_CHECK(cheaper_variant != kNoId);
+    const SolveResult variant_solve = solve(
+        variant_calc, start,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 5.0},
+         {"bench:s83_mod_15", 2.0}});
+    PC_CHECK(variant_solve.converged);
+    PC_CHECK(variant_solve.policy[variant_solve.start_state].index ==
+             cheaper_variant);
+    PC_CHECK(std::fabs(
+                 variant_solve.values[variant_solve.start_state] - 13.0) <
+             1e-9);
 
     const auto prices = [](const double blocker_price) {
         return std::unordered_map<std::string, double>{
@@ -355,6 +409,18 @@ void run_temporary_blocker_price_flip() {
              std::string::npos);
     PC_CHECK(telemetry.find("\"by_kind\":{") != std::string::npos);
     PC_CHECK(telemetry.find("\"unique_templates\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"precompiled_classes\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"precompile_time_ns\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"precompiled_bytes\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"candidate_variants\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"effect_classes\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"enumeration_time_ns\":") !=
              std::string::npos);
     PC_CHECK(telemetry.find("\"primitive_families\":{") !=
              std::string::npos);

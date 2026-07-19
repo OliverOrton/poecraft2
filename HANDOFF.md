@@ -73,10 +73,36 @@ eligible carriers, 2,944 unique transition templates, 63,775 template hits,
 carrier. Automatic admission accounted for 1.626 seconds and row work 0.041
 seconds. Roughly 7 seconds of outer expansion remains unattributed.
 
+The next R3A follow-up precompiled the temporary-bench blocker vocabulary once
+per solver context and intersects it with each carrier's exact eligible add-mod
+pool before transient option construction. The final 1,024-state comparison is:
+
+- 399 precompiled classes, built in 5.29 ms and 194,072 selected bytes;
+- 276,054 applicable blocker/resource variants collapsed to 5,654
+  carrier-effective classes before exact evaluation;
+- temporary raw outcomes 882,313 -> 38,634 and automatic admission 1.626 s ->
+  0.314 s;
+- expansion 8.819 s -> 4.443 s and total 8.905 s -> 4.559 s;
+- identical 29,637 discovered states, 15,230 rows, 91,959 transitions, 2,944
+  retained temporary rows, 20,691 temporary transitions, and 12 maximum
+  temporary rows per carrier.
+
+The candidate flood therefore caused about four seconds of transient and
+downstream expansion work that its old direct timer did not expose. Exact
+separately priced blocker variants are retained rather than conflated, so the
+planner registry is 1,470 and live/peak selected bytes are 29,297,385 /
+62,538,285. These remain far below the checked-in caps. The 2,048-state sample
+then rises to 18.252 seconds expansion with only 29,942 discovered states and
+1,512 registry operators, exposing a separate superlinear outer-expansion
+phase. Do not run 4,096 or the normal-cap request before that phase is timed
+and repaired.
+
 The compact checked-in record is
 [r3a-carrier-scaling-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 Full diagnostic reports remain ignored under `build/`, including
-`build/s8.4r3a-boundary-1024-final.json`.
+`build/s8.4r3a-boundary-1024-final.json`,
+`build/s8.4r3a-temp-precompile-1024-final.json`, and
+`build/s8.4r3a-temp-precompile-2048-final.json`.
 
 ### Relevance and abstract-state audit
 
@@ -114,15 +140,16 @@ entry, or convergence result. Do not describe this gate as passed.
 
 1. Preserve the current exact envelope, mechanics, representation, and checked-
    in caps. Do not begin with another normal-cap run.
-2. Add reconciled timing counters around all currently unattributed outer
-   expansion work: `prepare_state_expansion`, transient-context construction
-   and projection, candidate enumeration versus exact evaluation, state
-   interning, sparse-row/effect construction and enqueue, operator/pricing
-   refresh, and exact owned-byte audits. The attributed pieces must sum closely
-   to the outer expansion timer per carrier and automatic kind.
-3. Run bounded, time-boxed 1,024/2,048/4,096 expansion samples only until the
-   growth curve and dominant phase are known. Stop a sample rather than
-   extending it. Do not raise caps.
+2. The temporary candidate enumeration/evaluation boundary is repaired and
+   attributed. Add reconciled timing counters around the still-unattributed
+   outer work: `prepare_state_expansion`, transient-context construction and
+   projection outside the temporary effect evaluator, state interning,
+   sparse-row/effect construction and enqueue, operator/pricing refresh, and
+   exact owned-byte audits. The attributed pieces must sum closely to the
+   outer expansion timer per carrier and automatic kind.
+3. The bounded 1,024/2,048 curve is already recorded and is superlinear. Do
+   not run 4,096 or normal caps until the hot outer phase is identified and
+   the curve predicts usable completion. Do not raise caps.
 4. Partition discovered states by normalized observable facts. Require a
    concrete admitted-action legality/transition witness for any remaining
    goal-slot distinction, while preserving the passing physical-affix/junk-
@@ -141,8 +168,10 @@ outer Bellman optimization and retained automatic kinds remain bounded.
 ## Validation Completed
 
 - `powershell -File scripts/build.ps1`: passed.
-- Full native engine suite: 164,814 checks, 0 failures.
-- Focused `--solver-s8-3-only`: 177 checks, 0 failures.
+- Full native engine suite: 164,835 checks, 0 failures.
+- Focused `--solver-s8-3-only`: 198 checks, 0 failures. The added oracle
+  covers differently priced blockers with distinct global conflict masks but
+  one carrier-effective add-mod pool.
 - `powershell -File scripts/build-wasm.ps1`: release WASM rebuilt from the
   final native source. No C ABI or strategy vocabulary changed.
 - Remaining non-visual web tests passed; `npx tsc --noEmit` passed.
