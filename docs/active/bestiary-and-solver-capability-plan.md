@@ -841,14 +841,22 @@ acceptance once in R6 as required by `AGENTS.md`.
    shared planner registry from 669 to 1,470 and live selected bytes from
    22,737,809 to 29,297,385 rather than conflating costs with kernel identity.
 
-   Exact next boundary: add reconciled timings for state-expansion preparation,
-   transient-context construction/projection, state interning,
-   sparse-row/effect/enqueue work, operator/pricing refresh, and exact byte
-   audits. The 2,048-state sample takes 18.25 seconds of expansion despite
-   discovering only 29,942 states and near-saturation of the planner registry
-   at 1,512, proving a separate superlinear outer-expansion phase remains.
-   Do not run the 4,096 or normal-cap samples until those timers identify and
-   repair that phase.
+   Reconciled outer timers now identify the separate phase. At 1,024 states,
+   expansion takes 3.854 seconds and calculation-context selected-owned-byte
+   audits consume 2.945 seconds across 3,277 calls (76.4%). At 2,048 states,
+   expansion takes 13.725 seconds and those audits consume 11.592 seconds
+   across 6,385 calls (84.5%). The full estimator walks the growing
+   registry/state/template/cache structures roughly three times per carrier,
+   explaining the progressive slowdown. Ordinary diagnostic retention is only
+   41/79 ms, kernel work 96/142 ms, and sparse-row work 94/144 ms. The
+   attributed phases sum within 0.8% of expansion.
+
+   Exact next boundary: replace repeated full selected-owned-byte walks with
+   incrementally maintained or otherwise constant-time accounting while
+   preserving strict `max_solver_owned_bytes` enforcement and the conservative
+   estimate contract. Re-run only the 1,024/2,048 samples first. Do not run the
+   4,096 or normal-cap samples until the repaired curve predicts usable
+   completion.
    Partition discovered states by normalized observable facts and require an
    admitted-action witness for remaining goal-slot distinctions. If the exact
    full envelope is still unusable after the measured hot phase is repaired,

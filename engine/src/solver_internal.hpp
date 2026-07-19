@@ -809,6 +809,8 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::uint64_t owned_byte_audit_requests = 0;
+    std::uint64_t owned_byte_audit_ns = 0;
     std::array<PrimitiveFamilyTelemetry, kPrimitiveTelemetryFamilyCount>
         primitive_families{};
 };
@@ -1093,7 +1095,7 @@ class CalcContext {
     std::map<
         std::pair<std::uint32_t, std::uint64_t>,
         std::shared_ptr<const OutcomeDistribution>> reforge_cache_;
-    CalcTelemetry telemetry_;
+    mutable CalcTelemetry telemetry_;
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
@@ -1429,6 +1431,19 @@ struct SolveDiagnostics {
     std::uint32_t max_bellman_unit_transitions = 0;
     std::uint64_t solve_setup_ns = 0;
     std::uint64_t expansion_ns = 0;
+    std::uint64_t expansion_prepare_ns = 0;
+    std::uint64_t expansion_prepare_byte_audit_ns = 0;
+    std::uint64_t expansion_prepare_admission_ns = 0;
+    std::uint64_t expansion_prepare_diagnostics_ns = 0;
+    std::uint64_t expansion_prepare_pricing_ns = 0;
+    std::uint64_t expansion_kernel_ns = 0;
+    std::uint64_t expansion_sparse_row_ns = 0;
+    std::uint64_t expansion_row_byte_audit_ns = 0;
+    std::uint64_t expansion_diagnostics_ns = 0;
+    std::uint64_t expansion_release_ns = 0;
+    std::uint64_t expansion_cap_byte_audit_ns = 0;
+    std::uint64_t expansion_finalize_ns = 0;
+    std::uint64_t expansion_finalize_byte_audit_ns = 0;
     std::uint64_t optimization_ns = 0;
     std::uint64_t extraction_ns = 0;
     std::uint64_t solver_owned_bytes_estimate = 0;

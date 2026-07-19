@@ -240,6 +240,46 @@
       "finding": "Expansion grows from 4.44 seconds at 1024 to 18.25 seconds at 2048 while discovered states grow by only 305 and the planner registry nearly saturates, proving a separate superlinear outer-expansion boundary."
     }
   ],
+  "expansion_phase_audit": {
+    "telemetry_contract": "additive outer phases reconcile to expansion; nested prepare and byte-audit detail is reported separately",
+    "samples": [
+      {
+        "source": "build/s8.4r3a-expansion-phases-1024.json",
+        "expanded_states": 1024,
+        "discovered_states": 29637,
+        "expansion_ms": 3854.3051,
+        "attributed_ms": 3824.0378,
+        "unattributed_ms": 30.2673,
+        "prepare_ms": 3569.4379,
+        "prepare_direct_byte_audit_ms": 1994.4839,
+        "automatic_admission_ms": 1535.9956,
+        "kernel_ms": 95.5586,
+        "sparse_row_ms": 93.8227,
+        "diagnostic_retention_ms": 41.3485,
+        "calc_owned_byte_audit_calls": 3277,
+        "calc_owned_byte_audit_ms": 2945.178,
+        "calc_owned_byte_audit_percent_of_expansion": 76.4
+      },
+      {
+        "source": "build/s8.4r3a-expansion-phases-2048.json",
+        "expanded_states": 2048,
+        "discovered_states": 29942,
+        "expansion_ms": 13724.7,
+        "attributed_ms": 13668.1,
+        "unattributed_ms": 56.6,
+        "prepare_ms": 13225.0,
+        "prepare_direct_byte_audit_ms": 7896.2,
+        "automatic_admission_ms": 5253.9,
+        "kernel_ms": 142.3,
+        "sparse_row_ms": 143.9,
+        "diagnostic_retention_ms": 79.3,
+        "calc_owned_byte_audit_calls": 6385,
+        "calc_owned_byte_audit_ms": 11591.5,
+        "calc_owned_byte_audit_percent_of_expansion": 84.5
+      }
+    ],
+    "finding": "The progressive slowdown is repeated full selected-owned-byte estimation, not textual logging, kernel evaluation, sparse-row construction, discovered-state growth, or a single automatic kind. The estimator walks growing registry/state/template/cache structures roughly three times per carrier and its cost grows almost fourfold when the carrier bound doubles."
+  },
   "focused_exact_evidence": {
     "renewal_template": "two distinct carriers differing only in preparation-wiped modifiers share one kernel pointer and template id; an otherwise similar fractured carrier is illegal and distinct",
     "retry_oracle": "entry-relative retry mass plus non-self exit mass sums to one and the exact attempt_cost/exit_probability oracle is preserved",
@@ -262,11 +302,11 @@
     "acceptance_claim": "not_passed"
   },
   "measured_boundary": {
-    "finding": "Temporary-bench preclassification proves the candidate flood caused about four seconds of formerly unattributed transient/downstream work at 1024 states, reducing expansion from 8.82 to 4.44 seconds without changing discovered-state, retained-row, or retained-transition counts. The 2048 sample still grows superlinearly to 18.25 seconds, so a separate outer-expansion phase remains unattributed and the normal-cap gate remains open.",
+    "finding": "Temporary-bench preclassification removed the candidate flood without changing retained state/row/transition counts. Reconciled 1024/2048 timers then identify repeated full selected-owned-byte estimation as 76.4%/84.5% of expansion; ordinary diagnostic retention is below 1%. The normal-cap gate remains open.",
     "next_work": [
       "Keep the current normal caps and exact action envelope unchanged.",
-      "Add reconciled timers around prepare_state_expansion, transient-context construction and projection outside the now-attributed temporary effect evaluator, state interning, sparse-row/effect construction and enqueue, operator/pricing refresh, and exact owned-byte audits so per-carrier expansion time sums to the outer expansion timer.",
-      "The 1024/2048 curve is already superlinear; do not launch 4096 or another normal-cap run until the remaining outer phase is identified and repaired.",
+      "Replace the roughly three full selected-owned-byte walks per carrier with incrementally maintained or otherwise constant-time selected-allocation accounting while preserving strict max_solver_owned_bytes enforcement and the conservative estimate contract.",
+      "Re-run only the 1024/2048 samples first; do not launch 4096 or another normal-cap run until the repaired curve predicts usable completion.",
       "Partition discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
       "If the exact full goal-relevant envelope remains unusable after the measured hot phase is repaired, implement the already-planned mechanic-neutral focused/custom action scope and label results optimal only within that selected scope."
     ],
@@ -274,7 +314,7 @@
     "blocked_phases": ["S8.4R.4", "S8.4R.5", "S8.4R.6", "S8.5"]
   },
   "validation": {
-    "native_build": "passed",
+    "native_build": "current native test executable and release benchmark built with the fallback compiler; the all-target build wrapper hit its 120-second command limit after producing the test executable and left no child process",
     "native_engine_tests": "164835 checks, 0 failures",
     "focused_solver_s8_3": "198 checks, 0 failures",
     "release_wasm_rebuild": "passed",

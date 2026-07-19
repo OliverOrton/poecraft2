@@ -1,4 +1,4 @@
-# Session Handoff - S8.4R.3A Measured Expansion Boundary Is Next
+# Session Handoff - S8.4R.3A Byte-Audit Expansion Repair Is Next
 
 Updated 2026-07-19. Read [AGENTS.md](AGENTS.md), this file,
 [docs/direction.md](docs/direction.md), then
@@ -12,7 +12,7 @@ are implemented and focused validation passes, but **R3A is not closed**: the
 normal-cap `conquest-lamellar-mirage-r3f-product` attempt was stopped before it
 emitted a report or entered Bellman optimization. No cap was raised.
 
-The sole next boundary is the measured R3A expansion-time follow-up below. Do
+The sole next boundary is the measured R3A byte-accounting repair below. Do
 not begin R4 browser transfer/lifetime work, R5 verification truth, R6
 integrated acceptance, S8.5, or later work. Mechanic questions remain Oliver's
 authority; never research or infer them.
@@ -94,15 +94,39 @@ planner registry is 1,470 and live/peak selected bytes are 29,297,385 /
 62,538,285. These remain far below the checked-in caps. The 2,048-state sample
 then rises to 18.252 seconds expansion with only 29,942 discovered states and
 1,512 registry operators, exposing a separate superlinear outer-expansion
-phase. Do not run 4,096 or the normal-cap request before that phase is timed
-and repaired.
+phase.
+
+The reconciled outer timers now identify that phase. They are additive to
+within 0.8% of the outer expansion timer:
+
+- At 1,024 states, expansion is 3.854 seconds. Carrier preparation is 3.569
+  seconds: 1.994 seconds of direct byte audits plus 1.536 seconds of automatic
+  admission. Calculation-context owned-byte audits total 2.945 seconds across
+  3,277 calls, or 76.4% of expansion.
+- At 2,048 states, expansion is 13.725 seconds. Carrier preparation is 13.225
+  seconds: 7.896 seconds of direct byte audits plus 5.254 seconds of automatic
+  admission. Calculation-context owned-byte audits total 11.592 seconds across
+  6,385 calls, or 84.5% of expansion.
+- Ordinary diagnostic retention is only 41 ms / 79 ms at those bounds. Kernel
+  work is 96 ms / 142 ms and sparse-row work 94 ms / 144 ms. Textual logging
+  and row construction are not the progressive slowdown.
+
+The full selected-owned-byte estimator walks the growing registry, state/hash
+table, automatic-operator maps, distribution/kernel templates, and telemetry
+sets. It is invoked roughly three times per carrier: twice before admission
+and again by admission's forced cap check. Its time grows almost 4x when the
+carrier bound doubles, which explains why expansion visibly slows as it runs.
+Do not run 4,096 or the normal-cap request until this measured audit path is
+repaired without weakening the checked-in byte cap.
 
 The compact checked-in record is
 [r3a-carrier-scaling-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 Full diagnostic reports remain ignored under `build/`, including
 `build/s8.4r3a-boundary-1024-final.json`,
 `build/s8.4r3a-temp-precompile-1024-final.json`, and
-`build/s8.4r3a-temp-precompile-2048-final.json`.
+`build/s8.4r3a-temp-precompile-2048-final.json`,
+`build/s8.4r3a-expansion-phases-1024.json`, and
+`build/s8.4r3a-expansion-phases-2048.json`.
 
 ### Relevance and abstract-state audit
 
@@ -136,20 +160,17 @@ rebuild and explicitly stopped before report emission at 858.14 CPU seconds
 and about 153 MiB working set. There was no report, cap hit, crash, Bellman
 entry, or convergence result. Do not describe this gate as passed.
 
-## Exact Next Boundary: R3A Measured Expansion Work Only
+## Exact Next Boundary: R3A Selected-Byte Accounting Only
 
 1. Preserve the current exact envelope, mechanics, representation, and checked-
    in caps. Do not begin with another normal-cap run.
-2. The temporary candidate enumeration/evaluation boundary is repaired and
-   attributed. Add reconciled timing counters around the still-unattributed
-   outer work: `prepare_state_expansion`, transient-context construction and
-   projection outside the temporary effect evaluator, state interning,
-   sparse-row/effect construction and enqueue, operator/pricing refresh, and
-   exact owned-byte audits. The attributed pieces must sum closely to the
-   outer expansion timer per carrier and automatic kind.
-3. The bounded 1,024/2,048 curve is already recorded and is superlinear. Do
-   not run 4,096 or normal caps until the hot outer phase is identified and
-   the curve predicts usable completion. Do not raise caps.
+2. Replace the roughly three full selected-owned-byte walks per carrier with
+   incrementally maintained or otherwise constant-time selected-allocation
+   accounting. Preserve strict `max_solver_owned_bytes` enforcement and the
+   existing conservative estimate contract; do not merely skip cap checks.
+3. Re-run only the bounded 1,024/2,048 samples first. The byte-audit component
+   should cease growing quadratically and the curve must predict usable
+   completion before any 4,096 or normal-cap run. Do not raise caps.
 4. Partition discovered states by normalized observable facts. Require a
    concrete admitted-action legality/transition witness for any remaining
    goal-slot distinction, while preserving the passing physical-affix/junk-
@@ -167,7 +188,10 @@ outer Bellman optimization and retained automatic kinds remain bounded.
 
 ## Validation Completed
 
-- `powershell -File scripts/build.ps1`: passed.
+- The current native test executable and release benchmark built successfully
+  with the fallback compiler. The all-target `scripts/build.ps1` wrapper hit
+  the 120-second command limit while compiling redundant fallback targets
+  after producing the test executable; no compiler/benchmark child remained.
 - Full native engine suite: 164,835 checks, 0 failures.
 - Focused `--solver-s8-3-only`: 198 checks, 0 failures. The added oracle
   covers differently priced blockers with distinct global conflict masks but

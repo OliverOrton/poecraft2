@@ -2270,6 +2270,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         telemetry_.reforge_hits += work.reforge_hits;
         telemetry_.reforge_misses += work.reforge_misses;
         telemetry_.reforge_build_ns += work.reforge_build_ns;
+        telemetry_.owned_byte_audit_requests +=
+            work.owned_byte_audit_requests;
+        telemetry_.owned_byte_audit_ns += work.owned_byte_audit_ns;
         for (std::size_t i = 0; i < kPrimitiveTelemetryFamilyCount; ++i) {
             PrimitiveFamilyTelemetry& target =
                 telemetry_.primitive_families[i];

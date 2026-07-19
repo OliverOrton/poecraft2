@@ -774,6 +774,7 @@ void CalcContext::release_option_kernel(
 }
 
 std::uint64_t CalcContext::estimated_owned_bytes() const {
+    const auto audit_started = std::chrono::steady_clock::now();
     /* This deliberately reports a conservative selected-allocation estimate.
      * Standard-library node overhead, allocator metadata, and pool-cache
      * storage inside ActionContextImpl are not portable enough to claim as an
@@ -992,6 +993,11 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
               2 * sizeof(void*));
+    ++telemetry_.owned_byte_audit_requests;
+    telemetry_.owned_byte_audit_ns += static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - audit_started)
+            .count());
     return bytes;
 }
 

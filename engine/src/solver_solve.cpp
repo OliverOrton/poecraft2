@@ -1255,14 +1255,21 @@ struct SolveWork::Impl {
     }
 
     void prepare_state_expansion(const std::uint32_t state) {
+        const auto prepare_started = std::chrono::steady_clock::now();
         expansion_operator_indices = static_operator_indices;
         AutomaticAdmissionLimits limits;
         limits.max_discovered_states = options.max_discovered_states;
         limits.max_state_action_rows = options.max_state_action_rows;
         limits.max_transitions = options.max_transitions;
         limits.max_reforge_work = options.max_reforge_work;
+        const auto byte_audit_started = std::chrono::steady_clock::now();
         const std::uint64_t calc_bytes = calc.estimated_owned_bytes();
         const std::uint64_t total_bytes = estimated_owned_bytes();
+        result.diagnostics.expansion_prepare_byte_audit_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - byte_audit_started)
+                    .count());
         const std::uint64_t other_bytes =
             total_bytes > calc_bytes ? total_bytes - calc_bytes : 0;
         limits.max_solver_owned_bytes =
@@ -1274,8 +1281,15 @@ struct SolveWork::Impl {
         limits.max_imprint_program_work =
             options.max_imprint_program_work;
         limits.prices = &prices;
+        const auto admission_started = std::chrono::steady_clock::now();
         StateLocalAutomaticBatch batch =
             calc.admit_state_local_automatic_candidates(state, limits);
+        result.diagnostics.expansion_prepare_admission_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - admission_started)
+                    .count());
+        const auto diagnostics_started = std::chrono::steady_clock::now();
         if (batch.temporary_precompiled_classes != 0 ||
             batch.temporary_precompile_ns != 0 ||
             batch.temporary_candidate_variants != 0 ||
@@ -1326,6 +1340,12 @@ struct SolveWork::Impl {
                     decision.operator_index);
             }
         }
+        result.diagnostics.expansion_prepare_diagnostics_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - diagnostics_started)
+                    .count());
+        const auto pricing_started = std::chrono::steady_clock::now();
         for (const std::uint32_t index : batch.admitted_operators) {
             if (ensure_priced_operator(index) &&
                 std::find(
@@ -1335,6 +1355,16 @@ struct SolveWork::Impl {
                 expansion_operator_indices.push_back(index);
             }
         }
+        result.diagnostics.expansion_prepare_pricing_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - pricing_started)
+                    .count());
+        result.diagnostics.expansion_prepare_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - prepare_started)
+                    .count());
     }
 
     double acceptable_residual() const {
@@ -2605,6 +2635,7 @@ struct SolveWork::Impl {
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
                 const auto row_started = std::chrono::steady_clock::now();
+                const auto kernel_started = row_started;
                 PendingSparseRow pending;
                 pending.state = state;
                 pending.operator_index = priced.index;
@@ -2829,6 +2860,11 @@ struct SolveWork::Impl {
                         }
                     }
                 }
+                result.diagnostics.expansion_kernel_ns +=
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() - kernel_started)
+                            .count());
                 try {
                     if (append) {
                         if (automatic_record.has_value() &&
@@ -2843,10 +2879,28 @@ struct SolveWork::Impl {
                         const std::uint64_t transitions_before =
                             transition_cache->successors.size() +
                             transition_cache->choice_successors.size();
+                        const auto row_byte_audit_started =
+                            std::chrono::steady_clock::now();
                         const std::uint64_t bytes_before =
                             transition_cache->estimated_owned_bytes();
+                        result.diagnostics.expansion_row_byte_audit_ns +=
+                            static_cast<std::uint64_t>(
+                                std::chrono::duration_cast<
+                                    std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now() -
+                                    row_byte_audit_started)
+                                    .count());
+                        const auto sparse_row_started =
+                            std::chrono::steady_clock::now();
                         const bool collapsed =
                             append_sparse_row(state, std::move(pending));
+                        result.diagnostics.expansion_sparse_row_ns +=
+                            static_cast<std::uint64_t>(
+                                std::chrono::duration_cast<
+                                    std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now() -
+                                    sparse_row_started)
+                                    .count());
                         if (automatic_record.has_value()) {
                             automatic_record->collapsed = collapsed;
                             automatic_record->eligible = true;
@@ -2856,9 +2910,19 @@ struct SolveWork::Impl {
                                 transition_cache->successors.size() +
                                 transition_cache->choice_successors.size() -
                                 transitions_before;
+                            const auto selected_byte_audit_started =
+                                std::chrono::steady_clock::now();
+                            const std::uint64_t bytes_after =
+                                transition_cache->estimated_owned_bytes();
+                            result.diagnostics.expansion_row_byte_audit_ns +=
+                                static_cast<std::uint64_t>(
+                                    std::chrono::duration_cast<
+                                        std::chrono::nanoseconds>(
+                                        std::chrono::steady_clock::now() -
+                                        selected_byte_audit_started)
+                                        .count());
                             automatic_record->selected_bytes +=
-                                transition_cache->estimated_owned_bytes() -
-                                bytes_before;
+                                bytes_after - bytes_before;
                         }
                     }
                 } catch (...) {
@@ -2886,14 +2950,30 @@ struct SolveWork::Impl {
                         automatic_record->evidence.reason =
                             "native_carrier_legality_refused";
                     }
+                    const auto diagnostics_started =
+                        std::chrono::steady_clock::now();
                     retain_automatic_candidate_record(
                         std::move(*automatic_record));
+                    result.diagnostics.expansion_diagnostics_ns +=
+                        static_cast<std::uint64_t>(
+                            std::chrono::duration_cast<
+                                std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() -
+                                diagnostics_started)
+                                .count());
                 }
+                const auto release_started =
+                    std::chrono::steady_clock::now();
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
                     calc.release_option_kernel(state, priced.index);
                 } else {
                     calc.release_outcome(state, planner.primitive_action);
                 }
+                result.diagnostics.expansion_release_ns +=
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() - release_started)
+                            .count());
             }
         } catch (const SolverResourceLimit& limit) {
             if (expansion_operator_cursor != 0 &&
@@ -2939,14 +3019,22 @@ struct SolveWork::Impl {
                                expansion_operator_cursor >=
                                    expansion_operator_indices.size();
         if (completed) expansion_active = false;
+        if (completed && !result.diagnostics.resource_cap_hit &&
+            expanded_count % 64 == 0) {
+            const auto byte_audit_started =
+                std::chrono::steady_clock::now();
+            check_solver_byte_cap();
+            result.diagnostics.expansion_cap_byte_audit_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        byte_audit_started)
+                        .count());
+        }
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
-        if (completed && !result.diagnostics.resource_cap_hit &&
-            expanded_count % 64 == 0) {
-            check_solver_byte_cap();
-        }
         return completed;
     }
 
@@ -3117,7 +3205,15 @@ struct SolveWork::Impl {
         result.diagnostics.reforge_frontier_work =
             calc.telemetry().reforge_frontier_work;
         prepare_priced_rows();
+        const auto final_cap_audit_started =
+            std::chrono::steady_clock::now();
         check_solver_byte_cap();
+        result.diagnostics.expansion_finalize_byte_audit_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    final_cap_audit_started)
+                    .count());
         /* The solve now owns the compact CSR rows used by every later phase;
          * release evaluator distributions so transitions are stored once. A
          * reusable price-only context is the separate S7.5 cache-reuse pass. */
@@ -3132,8 +3228,21 @@ struct SolveWork::Impl {
         shared_kernel_rows.clear();
         shared_kernel_rows.rehash(0);
         cache_pending = false;
+        const auto peak_byte_audit_started =
+            std::chrono::steady_clock::now();
         peak_owned_bytes = std::max(
             peak_owned_bytes, estimated_owned_bytes());
+        result.diagnostics.expansion_finalize_byte_audit_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    peak_byte_audit_started)
+                    .count());
+        result.diagnostics.expansion_finalize_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
         result.diagnostics.expansion_ns += static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
@@ -5988,6 +6097,7 @@ std::string serialize_solver_telemetry(
             std::to_string(calc.layout_build_ns());
     if (diagnostics == nullptr) {
         json += ",\"solve_setup\":null,\"expansion\":null";
+        json += ",\"expansion_phases\":null";
         json += ",\"transition_calculation\":null,\"optimization\":null";
         json += ",\"extraction\":null";
     } else {
@@ -5995,6 +6105,51 @@ std::string serialize_solver_telemetry(
                 std::to_string(diagnostics->solve_setup_ns);
         json += ",\"expansion\":" +
                 std::to_string(diagnostics->expansion_ns);
+        const std::uint64_t expansion_attributed_ns =
+            diagnostics->expansion_prepare_ns +
+            diagnostics->expansion_kernel_ns +
+            diagnostics->expansion_sparse_row_ns +
+            diagnostics->expansion_row_byte_audit_ns +
+            diagnostics->expansion_diagnostics_ns +
+            diagnostics->expansion_release_ns +
+            diagnostics->expansion_cap_byte_audit_ns +
+            diagnostics->expansion_finalize_ns;
+        const std::uint64_t expansion_unattributed_ns =
+            diagnostics->expansion_ns > expansion_attributed_ns
+                ? diagnostics->expansion_ns - expansion_attributed_ns
+                : 0;
+        json += ",\"expansion_phases\":{";
+        json += "\"prepare\":" +
+                std::to_string(diagnostics->expansion_prepare_ns);
+        json += ",\"prepare_detail\":{";
+        json += "\"byte_audit\":" + std::to_string(
+            diagnostics->expansion_prepare_byte_audit_ns);
+        json += ",\"automatic_admission\":" + std::to_string(
+            diagnostics->expansion_prepare_admission_ns);
+        json += ",\"diagnostics\":" + std::to_string(
+            diagnostics->expansion_prepare_diagnostics_ns);
+        json += ",\"operator_pricing\":" + std::to_string(
+            diagnostics->expansion_prepare_pricing_ns) + "}";
+        json += ",\"kernel\":" +
+                std::to_string(diagnostics->expansion_kernel_ns);
+        json += ",\"sparse_row\":" +
+                std::to_string(diagnostics->expansion_sparse_row_ns);
+        json += ",\"row_byte_audit\":" + std::to_string(
+            diagnostics->expansion_row_byte_audit_ns);
+        json += ",\"diagnostics\":" +
+                std::to_string(diagnostics->expansion_diagnostics_ns);
+        json += ",\"cache_release\":" +
+                std::to_string(diagnostics->expansion_release_ns);
+        json += ",\"periodic_cap_byte_audit\":" + std::to_string(
+            diagnostics->expansion_cap_byte_audit_ns);
+        json += ",\"finalize\":" +
+                std::to_string(diagnostics->expansion_finalize_ns);
+        json += ",\"finalize_byte_audit\":" + std::to_string(
+            diagnostics->expansion_finalize_byte_audit_ns);
+        json += ",\"attributed\":" +
+                std::to_string(expansion_attributed_ns);
+        json += ",\"unattributed\":" +
+                std::to_string(expansion_unattributed_ns) + "}";
         json += ",\"transition_calculation\":" +
                 std::to_string(cache.distribution_build_ns);
         json += ",\"optimization\":" +
@@ -6010,6 +6165,12 @@ std::string serialize_solver_telemetry(
             count_or_null(compilation == nullptr ? nullptr
                                                  : &compilation->duration_ns);
     json += ",\"verification\":null}";
+
+    json += ",\"diagnostic_cost\":{";
+    json += "\"calc_owned_byte_audit_requests\":" +
+            std::to_string(cache.owned_byte_audit_requests);
+    json += ",\"calc_owned_byte_audit_ns\":" +
+            std::to_string(cache.owned_byte_audit_ns) + "}";
 
     const std::uint64_t current_bytes = calc.estimated_owned_bytes();
     json += ",\"memory\":{\"solver_owned_bytes_estimate\":" +
