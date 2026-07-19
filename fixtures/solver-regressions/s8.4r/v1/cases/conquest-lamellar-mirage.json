@@ -64,7 +64,8 @@
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant",
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingLife",
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
-      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife"
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingDefences+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fracture"
     ]
   },
   "allowed_mechanic_families": [

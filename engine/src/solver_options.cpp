@@ -2,12 +2,15 @@
 
 #include <algorithm>
 #include <bit>
+#include <chrono>
 #include <cmath>
 #include <functional>
 #include <map>
+#include <numeric>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -15,6 +18,44 @@ namespace poecraft {
 namespace solver {
 
 namespace {
+
+AutomaticTelemetryKind telemetry_kind_for_candidate(
+    const AutomaticCandidateKind kind) {
+    switch (kind) {
+    case AutomaticCandidateKind::Imprint:
+        return AutomaticTelemetryKind::Imprint;
+    case AutomaticCandidateKind::TemporaryBenchBlocker:
+        return AutomaticTelemetryKind::TemporaryBench;
+    case AutomaticCandidateKind::ProtectedMetamod:
+        return AutomaticTelemetryKind::ProtectedSide;
+    case AutomaticCandidateKind::MultimodFinish:
+        return AutomaticTelemetryKind::MultimodFinish;
+    case AutomaticCandidateKind::PermanentBench:
+        return AutomaticTelemetryKind::PermanentBench;
+    case AutomaticCandidateKind::Fracture:
+        return AutomaticTelemetryKind::PrimitiveFracture;
+    case AutomaticCandidateKind::None:
+        return AutomaticTelemetryKind::None;
+    }
+    return AutomaticTelemetryKind::None;
+}
+
+std::uint64_t outcome_count(const OutcomeDistribution& distribution) {
+    std::uint64_t count = distribution.entries.size();
+    for (const OutcomeChoiceGroup& group : distribution.choice_groups) {
+        count += group.states.size();
+    }
+    return count;
+}
+
+std::uint64_t outcome_count(const OptionKernel& kernel) {
+    std::uint64_t count = kernel.exits.size();
+    for (const OutcomeChoiceGroup& group :
+         kernel.observation_choice_groups) {
+        count += group.states.size();
+    }
+    return count;
+}
 
 const ActionDescriptor& require_action(
     const ActionRegistry& registry,
@@ -344,6 +385,13 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
         "remove_crafted_modifiers");
     if (cleanup != registry.index_by_id.end() &&
         (state.flags & kFlagCraftedMod) == 0) {
+        using TemporaryKey = std::tuple<
+            std::uint32_t,
+            std::uint32_t,
+            std::int8_t,
+            std::vector<std::uint32_t>,
+            std::vector<std::string>>;
+        std::set<TemporaryKey> seen_temporary;
         for (const std::uint32_t blocker_index : ordinary_bench) {
             const ActionDescriptor& blocker = registry.actions[blocker_index];
             if (goal_mask_for_mod(
@@ -361,6 +409,30 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
                         !blocker_can_change_target_kernel(
                             session, goal, state, blocker.params.mod_id,
                             slot)) {
+                        continue;
+                    }
+                    std::vector<std::uint32_t> blocker_groups;
+                    for (std::uint32_t row =
+                             session.group_offsets[blocker.params.mod_id];
+                         row < session.group_offsets[
+                                   blocker.params.mod_id + 1];
+                         ++row) {
+                        blocker_groups.push_back(session.group_ids[row]);
+                    }
+                    std::sort(
+                        blocker_groups.begin(), blocker_groups.end());
+                    blocker_groups.erase(
+                        std::unique(
+                            blocker_groups.begin(), blocker_groups.end()),
+                        blocker_groups.end());
+                    if (!seen_temporary.emplace(
+                            static_cast<std::uint32_t>(
+                                &followup - registry.actions.data()),
+                            slot,
+                            session.gen_type[blocker.params.mod_id],
+                            blocker_groups,
+                            blocker.cost_keys)
+                             .second) {
                         continue;
                     }
                     FixedOptionSpec option;
@@ -1343,6 +1415,230 @@ bool same_complete_option_kernel(
            left.entry_continues == right.entry_continues;
 }
 
+bool same_option_transition_kernel(
+    const OptionKernel& left,
+    const OptionKernel& right) {
+    return left.legal == right.legal &&
+           left.supported == right.supported &&
+           left.terminates_almost_surely == right.terminates_almost_surely &&
+           left.expected_primitive_actions ==
+               right.expected_primitive_actions &&
+           left.exits == right.exits &&
+           left.observation_choice_groups ==
+               right.observation_choice_groups &&
+           left.observation_choice_options ==
+               right.observation_choice_options &&
+           left.retry_states == right.retry_states &&
+           left.continuation_states == right.continuation_states &&
+           left.entry_continues == right.entry_continues;
+}
+
+bool same_option_template_planner(
+    const PlannerOperator& left,
+    const PlannerOperator& right) {
+    return left.kind == right.kind &&
+           left.option_kind == right.option_kind &&
+           left.primitive_program == right.primitive_program &&
+           left.intended_side == right.intended_side &&
+           left.exit_goal_slots == right.exit_goal_slots &&
+           left.exit_min_satisfied == right.exit_min_satisfied &&
+           left.carrier_goal_slot == right.carrier_goal_slot &&
+           left.conditional_action == right.conditional_action &&
+           left.bestiary_create_action == right.bestiary_create_action &&
+           left.bestiary_restore_action == right.bestiary_restore_action &&
+           left.automatic_kind == right.automatic_kind &&
+           left.relevant_goal_mask == right.relevant_goal_mask &&
+           left.resource_quantities == right.resource_quantities &&
+           left.setup_action == right.setup_action &&
+           left.followup_action == right.followup_action &&
+           left.cleanup_action == right.cleanup_action;
+}
+
+std::uint64_t option_planner_hash(const PlannerOperator& planner) {
+    std::uint64_t hash = 1469598103934665603ull;
+    const auto mix = [&](const std::uint64_t value) {
+        hash ^= value;
+        hash *= 1099511628211ull;
+    };
+    mix(static_cast<std::uint8_t>(planner.kind));
+    mix(static_cast<std::uint8_t>(planner.option_kind));
+    mix(static_cast<std::uint8_t>(planner.automatic_kind));
+    mix(static_cast<std::uint8_t>(planner.intended_side + 1));
+    mix(planner.exit_min_satisfied);
+    mix(planner.carrier_goal_slot);
+    mix(planner.conditional_action);
+    mix(planner.bestiary_create_action);
+    mix(planner.bestiary_restore_action);
+    mix(planner.relevant_goal_mask);
+    mix(planner.setup_action);
+    mix(planner.followup_action);
+    mix(planner.cleanup_action);
+    for (const std::uint32_t action : planner.primitive_program) mix(action);
+    mix(kNoId);
+    for (const std::uint32_t slot : planner.exit_goal_slots) mix(slot);
+    mix(kNoId);
+    for (const auto& [key, quantity] : planner.resource_quantities) {
+        for (const unsigned char c : key) mix(c);
+        mix(0xffu);
+        mix(std::bit_cast<std::uint64_t>(quantity));
+    }
+    return hash == 0 ? 1 : hash;
+}
+
+std::uint64_t option_template_hash(
+    const PlannerOperator& planner,
+    const OptionKernel& kernel) {
+    std::uint64_t hash = 1469598103934665603ull;
+    const auto mix = [&](const std::uint64_t value) {
+        hash ^= value;
+        hash *= 1099511628211ull;
+    };
+    mix(static_cast<std::uint8_t>(planner.option_kind));
+    mix(static_cast<std::uint8_t>(planner.automatic_kind));
+    mix(static_cast<std::uint8_t>(planner.intended_side + 1));
+    mix(planner.exit_min_satisfied);
+    mix(planner.carrier_goal_slot);
+    mix(planner.conditional_action);
+    mix(planner.bestiary_create_action);
+    mix(planner.bestiary_restore_action);
+    mix(planner.relevant_goal_mask);
+    mix(planner.setup_action);
+    mix(planner.followup_action);
+    mix(planner.cleanup_action);
+    for (const std::uint32_t action : planner.primitive_program) mix(action);
+    mix(kNoId);
+    for (const std::uint32_t slot : planner.exit_goal_slots) mix(slot);
+    mix(kNoId);
+    mix(kernel.legal ? 1u : 0u);
+    mix(kernel.supported ? 1u : 0u);
+    mix(kernel.terminates_almost_surely ? 1u : 0u);
+    mix(kernel.entry_continues ? 1u : 0u);
+    mix(std::bit_cast<std::uint64_t>(kernel.expected_primitive_actions));
+    for (const auto& [key, quantity] : kernel.expected_resources) {
+        for (const unsigned char c : key) mix(c);
+        mix(0xffu);
+        mix(std::bit_cast<std::uint64_t>(quantity));
+    }
+    mix(kNoId);
+    for (const OutcomeEntry& exit : kernel.exits) {
+        mix(exit.state);
+        mix(std::bit_cast<std::uint64_t>(exit.probability));
+    }
+    mix(kNoId);
+    for (const OutcomeChoiceGroup& group :
+         kernel.observation_choice_groups) {
+        mix(std::bit_cast<std::uint64_t>(group.probability));
+        for (const std::uint32_t state : group.states) mix(state);
+        mix(kNoId);
+    }
+    for (const OutcomeChoiceOption& choice :
+         kernel.observation_choice_options) {
+        mix(choice.mod_id);
+        mix(choice.state);
+        mix(choice.observation_state);
+        mix(choice.actual_state);
+    }
+    for (const std::uint32_t state : kernel.retry_states) mix(state);
+    mix(kNoId);
+    for (const std::uint32_t state : kernel.continuation_states) mix(state);
+    return hash == 0 ? 1 : hash;
+}
+
+std::uint64_t option_transition_hash(const OptionKernel& kernel) {
+    std::uint64_t hash = 1469598103934665603ull;
+    const auto mix = [&](const std::uint64_t value) {
+        hash ^= value;
+        hash *= 1099511628211ull;
+    };
+    mix(kernel.legal ? 1u : 0u);
+    mix(kernel.supported ? 1u : 0u);
+    mix(kernel.terminates_almost_surely ? 1u : 0u);
+    mix(kernel.entry_continues ? 1u : 0u);
+    mix(std::bit_cast<std::uint64_t>(kernel.expected_primitive_actions));
+    for (const OutcomeEntry& exit : kernel.exits) {
+        mix(exit.state);
+        mix(std::bit_cast<std::uint64_t>(exit.probability));
+    }
+    mix(kNoId);
+    for (const OutcomeChoiceGroup& group :
+         kernel.observation_choice_groups) {
+        mix(std::bit_cast<std::uint64_t>(group.probability));
+        for (const std::uint32_t state : group.states) mix(state);
+        mix(kNoId);
+    }
+    for (const OutcomeChoiceOption& choice :
+         kernel.observation_choice_options) {
+        mix(choice.mod_id);
+        mix(choice.state);
+        mix(choice.observation_state);
+        mix(choice.actual_state);
+    }
+    for (const std::uint32_t state : kernel.retry_states) mix(state);
+    mix(kNoId);
+    for (const std::uint32_t state : kernel.continuation_states) mix(state);
+    return hash == 0 ? 1 : hash;
+}
+
+std::uint64_t option_kernel_selected_bytes(const OptionKernel& kernel) {
+    std::uint64_t bytes = sizeof(kernel);
+    bytes += kernel.expected_resources.capacity() *
+             sizeof(std::pair<std::string, double>);
+    for (const auto& [key, unused] : kernel.expected_resources) {
+        (void)unused;
+        bytes += key.capacity() + 1;
+    }
+    bytes += kernel.exits.capacity() * sizeof(OutcomeEntry);
+    bytes += kernel.observation_choice_groups.capacity() *
+             sizeof(OutcomeChoiceGroup);
+    for (const OutcomeChoiceGroup& group :
+         kernel.observation_choice_groups) {
+        bytes += group.states.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += kernel.observation_choice_options.capacity() *
+             sizeof(OutcomeChoiceOption);
+    bytes += kernel.retry_states.capacity() * sizeof(std::uint32_t);
+    bytes += kernel.continuation_states.capacity() * sizeof(std::uint32_t);
+    bytes += kernel.automatic.legality_result.capacity() + 1;
+    bytes += kernel.automatic.reason.capacity() + 1;
+    return bytes;
+}
+
+std::string temporary_evaluation_key(
+    const SessionImpl& session,
+    const ActionRegistry& registry,
+    const PlannerOperator& planner) {
+    if (planner.option_kind != FixedOptionKind::TemporaryBenchRepeat ||
+        planner.setup_action == kNoId ||
+        planner.followup_action == kNoId ||
+        planner.cleanup_action == kNoId) {
+        return {};
+    }
+    const ActionDescriptor& blocker =
+        registry.actions.at(planner.setup_action);
+    if (blocker.params.mod_id >= session.mod_count) return {};
+    std::string key =
+        std::to_string(planner.followup_action) + ':' +
+        std::to_string(planner.cleanup_action) + ':' +
+        std::to_string(planner.exit_min_satisfied) + ':' +
+        std::to_string(
+            static_cast<int>(session.gen_type[blocker.params.mod_id])) + ':';
+    for (const std::uint32_t slot : planner.exit_goal_slots) {
+        key += std::to_string(slot) + ',';
+    }
+    key.push_back(':');
+    std::vector<std::uint32_t> groups;
+    for (std::uint32_t row = session.group_offsets[blocker.params.mod_id];
+         row < session.group_offsets[blocker.params.mod_id + 1]; ++row) {
+        groups.push_back(session.group_ids[row]);
+    }
+    std::sort(groups.begin(), groups.end());
+    groups.erase(std::unique(groups.begin(), groups.end()), groups.end());
+    for (const std::uint32_t group : groups) {
+        key += std::to_string(group) + ',';
+    }
+    return key;
+}
+
 bool same_complete_distribution(
     const OutcomeDistribution& left,
     const OutcomeDistribution& right) {
@@ -1369,6 +1665,7 @@ std::uint32_t map_local_state(
     CalcContext& destination,
     const std::uint32_t local_state,
     std::unordered_map<std::uint32_t, std::uint32_t>& mapped) {
+    if (local_state == kNoId) return kNoId;
     const auto found = mapped.find(local_state);
     if (found != mapped.end()) return found->second;
     pc_item_state item;
@@ -1496,6 +1793,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         return batch;
     }
 
+    const auto shared_started = std::chrono::steady_clock::now();
     std::vector<FixedOptionSpec> specs =
         synthesize_automatic_options(*this, state_id);
     std::vector<std::uint32_t> permanent_benches;
@@ -1529,8 +1827,46 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             : limits.max_discovered_states,
         limits.max_reforge_work == 0
             ? std::numeric_limits<std::uint64_t>::max()
-            : limits.max_reforge_work);
+            : limits.max_reforge_work,
+        false);
     const std::uint32_t local_state = local.intern_item(carrier);
+    const std::uint32_t base_operator_count =
+        static_cast<std::uint32_t>(local.operators().size());
+    std::vector<std::uint32_t> local_option_indices;
+    local_option_indices.reserve(
+        base_operator_count - registry_.actions.size() + 8);
+    for (std::uint32_t index =
+             static_cast<std::uint32_t>(registry_.actions.size());
+         index < base_operator_count; ++index) {
+        local_option_indices.push_back(index);
+    }
+    std::array<std::uint64_t, kAutomaticTelemetryKindCount> shared_weights{};
+    ++shared_weights[static_cast<std::size_t>(AutomaticTelemetryKind::Imprint)];
+    for (const std::uint32_t index : permanent_benches) {
+        (void)index;
+        ++shared_weights[static_cast<std::size_t>(
+            AutomaticTelemetryKind::PermanentBench)];
+    }
+    for (const std::uint32_t index : local_option_indices) {
+        const AutomaticTelemetryKind kind =
+            telemetry_kind_for_candidate(
+                local.operators().at(index).automatic_kind);
+        if (kind != AutomaticTelemetryKind::None) {
+            ++shared_weights[static_cast<std::size_t>(kind)];
+        }
+    }
+    const std::uint64_t shared_ns = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - shared_started)
+            .count());
+    const std::uint64_t total_shared_weight = std::accumulate(
+        shared_weights.begin(), shared_weights.end(), std::uint64_t{0});
+    if (total_shared_weight != 0) {
+        for (std::size_t i = 0; i < shared_weights.size(); ++i) {
+            batch.shared_admission_ns[i] =
+                shared_ns * shared_weights[i] / total_shared_weight;
+        }
+    }
     std::unordered_map<std::uint32_t, std::uint32_t> mapped_states;
     mapped_states.emplace(local_state, state_id);
     std::vector<const OptionKernel*> seen_option_kernels;
@@ -1539,7 +1875,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         std::vector<std::pair<std::string, double>>>>
         seen_primitive_kernels;
 
-    const auto check_limits = [&]() {
+    const auto check_limits = [&](const bool force_bytes = false) {
         const CalcTelemetry& work = local.telemetry();
         if (limits.max_state_action_rows != 0 &&
             work.state_action_rows > limits.max_state_action_rows) {
@@ -1551,9 +1887,10 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             throw SolverResourceLimit(
                 "max_transitions", limits.max_transitions);
         }
-        if (limits.max_solver_owned_bytes != 0 &&
-            estimated_owned_bytes() + local.estimated_owned_bytes() >
-                limits.max_solver_owned_bytes) {
+        if (limits.max_solver_owned_bytes == 0) return;
+        if (!force_bytes) return;
+        if (estimated_owned_bytes() + local.estimated_owned_bytes() >
+            limits.max_solver_owned_bytes) {
             throw SolverResourceLimit(
                 "max_solver_owned_bytes", limits.max_solver_owned_bytes);
         }
@@ -1617,13 +1954,34 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         telemetry_.reforge_hits += work.reforge_hits;
         telemetry_.reforge_misses += work.reforge_misses;
         telemetry_.reforge_build_ns += work.reforge_build_ns;
+        for (std::size_t i = 0; i < kPrimitiveTelemetryFamilyCount; ++i) {
+            PrimitiveFamilyTelemetry& target =
+                telemetry_.primitive_families[i];
+            const PrimitiveFamilyTelemetry& source =
+                work.primitive_families[i];
+            target.requests += source.requests;
+            target.cache_hits += source.cache_hits;
+            target.rows += source.rows;
+            target.raw_outcomes += source.raw_outcomes;
+            target.transitions += source.transitions;
+            target.build_ns += source.build_ns;
+            target.row_ns += source.row_ns;
+            target.selected_bytes += source.selected_bytes;
+        }
         consume_reforge_work(work.reforge_frontier_work);
     };
 
     try {
+        const auto imprint_started = std::chrono::steady_clock::now();
         const ImprintDiscoveryResult imprint =
             discover_automatic_imprint_options(
                 local, local_state, limits, check_limits);
+        const std::uint64_t imprint_discovery_ns =
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - imprint_started)
+                    .count());
+        bool imprint_time_attributed = false;
         if (!imprint.specs.empty()) {
             GoalSpec imprint_goal = local_goal;
             imprint_goal.fixed_options = imprint.specs;
@@ -1635,6 +1993,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                  index < imprint_operators.size(); ++index) {
                 local.operators_.push_back(
                     std::move(imprint_operators[index]));
+                local_option_indices.push_back(
+                    static_cast<std::uint32_t>(
+                        local.operators_.size() - 1));
             }
             check_limits();
         }
@@ -1642,6 +2003,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             StateLocalAutomaticCandidate missing;
             missing.id = "automatic:imprint_discovery";
             missing.kind = AutomaticCandidateKind::Imprint;
+            missing.telemetry_kind = AutomaticTelemetryKind::Imprint;
+            missing.admission_ns = imprint_discovery_ns;
+            imprint_time_attributed = true;
             missing.missing_price = true;
             missing.evidence.candidate = true;
             missing.evidence.legality_result =
@@ -1655,6 +2019,11 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             StateLocalAutomaticCandidate deferred;
             deferred.id = "automatic:imprint_program_discovery";
             deferred.kind = AutomaticCandidateKind::Imprint;
+            deferred.telemetry_kind = AutomaticTelemetryKind::Imprint;
+            if (!imprint_time_attributed) {
+                deferred.admission_ns = imprint_discovery_ns;
+                imprint_time_attributed = true;
+            }
             deferred.deferred = true;
             deferred.evidence.candidate = true;
             deferred.evidence.kernel_change_mechanisms =
@@ -1676,10 +2045,13 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         }
 
         for (const std::uint32_t action_index : permanent_benches) {
+            const auto candidate_started = std::chrono::steady_clock::now();
             StateLocalAutomaticCandidate decision;
             const PlannerOperator& planner = operators_.at(action_index);
             decision.id = planner.id;
             decision.kind = planner.automatic_kind;
+            decision.telemetry_kind =
+                telemetry_kind_for_candidate(decision.kind);
             decision.evidence.candidate = true;
             decision.evidence.relevant_goal_mask = planner.relevant_goal_mask;
             if (!has_prices(planner)) {
@@ -1688,11 +2060,16 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     "not_evaluated_missing_price";
                 decision.evidence.reason =
                     "automatic_candidate_missing_price";
+                decision.admission_ns = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - candidate_started)
+                        .count());
                 batch.decisions.push_back(std::move(decision));
                 continue;
             }
             const OutcomeDistribution& distribution =
                 local.outcomes(local_state, action_index);
+            decision.raw_outcomes = outcome_count(distribution);
             bool advances = false;
             for (const OutcomeEntry& exit : distribution.entries) {
                 const AbstractState& successor = local.state(exit.state);
@@ -1744,18 +2121,27 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     admit_operator(action_index);
                 }
             }
+            decision.admission_ns = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - candidate_started)
+                    .count());
             batch.decisions.push_back(std::move(decision));
             check_limits();
         }
 
-        for (std::uint32_t local_operator =
-                 static_cast<std::uint32_t>(registry_.actions.size());
-             local_operator < local.operators().size(); ++local_operator) {
+        std::unordered_map<
+            std::string,
+            std::shared_ptr<const OptionKernel>>
+            temporary_evaluation_memo;
+        for (const std::uint32_t local_operator : local_option_indices) {
+            const auto candidate_started = std::chrono::steady_clock::now();
             const PlannerOperator& local_planner =
                 local.operators().at(local_operator);
             StateLocalAutomaticCandidate decision;
             decision.id = local_planner.id;
             decision.kind = local_planner.automatic_kind;
+            decision.telemetry_kind =
+                telemetry_kind_for_candidate(decision.kind);
             const bool direct_fracture =
                 local_planner.option_kind ==
                     FixedOptionKind::FracturePrepare &&
@@ -1778,11 +2164,50 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     "not_evaluated_missing_price";
                 decision.evidence.reason =
                     "automatic_candidate_missing_price";
+                decision.admission_ns = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - candidate_started)
+                        .count());
                 batch.decisions.push_back(std::move(decision));
                 continue;
             }
-            const OptionKernel& local_kernel =
-                local.option_kernel(local_state, local_operator);
+            const std::string evaluation_key = temporary_evaluation_key(
+                local.session(), local.registry(), local_planner);
+            const OptionKernel* local_kernel_ptr = nullptr;
+            const auto reused = evaluation_key.empty()
+                                    ? temporary_evaluation_memo.end()
+                                    : temporary_evaluation_memo.find(
+                                          evaluation_key);
+            if (reused != temporary_evaluation_memo.end()) {
+                auto kernel = std::make_shared<OptionKernel>(
+                    *reused->second);
+                kernel->expected_resources =
+                    local_planner.resource_quantities;
+                kernel->retained_template_id = 0;
+                const std::uint64_t local_key =
+                    (static_cast<std::uint64_t>(local_state) << 32) |
+                    local_operator;
+                local_kernel_ptr = kernel.get();
+                local.option_kernel_cache_[local_key] = std::move(kernel);
+            } else {
+                local_kernel_ptr = &local.option_kernel(
+                    local_state, local_operator);
+                if (!evaluation_key.empty()) {
+                    const std::uint64_t local_key =
+                        (static_cast<std::uint64_t>(local_state) << 32) |
+                        local_operator;
+                    temporary_evaluation_memo.emplace(
+                        evaluation_key,
+                        local.option_kernel_cache_.at(local_key));
+                }
+            }
+            const OptionKernel& local_kernel = *local_kernel_ptr;
+            decision.raw_outcomes = outcome_count(local_kernel);
+            if (decision.kind == AutomaticCandidateKind::Imprint &&
+                !imprint_time_attributed) {
+                decision.admission_ns += imprint_discovery_ns;
+                imprint_time_attributed = true;
+            }
             decision.evidence = local_kernel.automatic;
             if (limits.prices != nullptr &&
                 std::any_of(
@@ -1796,6 +2221,10 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     "not_admitted_missing_price";
                 decision.evidence.reason =
                     "automatic_candidate_missing_price";
+                decision.admission_ns += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - candidate_started)
+                        .count());
                 batch.decisions.push_back(std::move(decision));
                 continue;
             }
@@ -1816,31 +2245,121 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     auto mapped = std::make_shared<OptionKernel>(
                         map_local_option_kernel(
                             local, *this, local_kernel, mapped_states));
-                    const std::uint32_t operator_index =
-                        static_cast<std::uint32_t>(operators_.size());
-                    operators_.push_back(std::move(admitted));
+                    const std::uint64_t transition_template_id =
+                        option_transition_hash(*mapped);
+                    mapped->retained_template_id = transition_template_id;
+                    decision.template_id = transition_template_id;
+                    std::uint32_t operator_index = kNoId;
+                    std::shared_ptr<const OptionKernel> retained_kernel;
+                    bool new_operator = false;
+                    bool new_transition_template = false;
+                    {
+                        const std::uint64_t planner_id =
+                            option_planner_hash(admitted);
+                        const auto planner_bucket =
+                            option_operator_templates_.find(planner_id);
+                        if (planner_bucket !=
+                            option_operator_templates_.end()) {
+                            for (const std::uint32_t candidate :
+                                 planner_bucket->second) {
+                                if (candidate < operators_.size() &&
+                                    same_option_template_planner(
+                                        operators_.at(candidate),
+                                        admitted)) {
+                                    operator_index = candidate;
+                                    break;
+                                }
+                            }
+                        }
+                        if (operator_index == kNoId) {
+                            operator_index = static_cast<std::uint32_t>(
+                                operators_.size());
+                            operators_.push_back(admitted);
+                            option_operator_templates_[planner_id].push_back(
+                                operator_index);
+                            new_operator = true;
+                        }
+                        const auto transition_bucket =
+                            option_transition_templates_.find(
+                                transition_template_id);
+                        if (transition_bucket !=
+                            option_transition_templates_.end()) {
+                            for (const auto& candidate :
+                                 transition_bucket->second) {
+                                if (!same_option_transition_kernel(
+                                        *candidate, *mapped)) {
+                                    continue;
+                                }
+                                retained_kernel = candidate;
+                                decision.template_hit = true;
+                                break;
+                            }
+                        }
+                        if (retained_kernel == nullptr) {
+                            retained_kernel = mapped;
+                            option_transition_templates_[
+                                transition_template_id].push_back(
+                                    retained_kernel);
+                            new_transition_template = true;
+                        }
+                        if (new_operator) {
+                            decision.selected_bytes =
+                                sizeof(PlannerOperator);
+                        }
+                        if (new_transition_template) {
+                            decision.selected_bytes +=
+                                option_kernel_selected_bytes(
+                                    *retained_kernel);
+                        }
+                    }
                     const std::uint64_t key =
                         (static_cast<std::uint64_t>(state_id) << 32) |
                         operator_index;
-                    option_kernel_cache_[key] = std::move(mapped);
+                    option_kernel_cache_[key] = retained_kernel;
+                    if (decision.template_hit) {
+                        option_kernel_template_hit_keys_.insert(key);
+                    }
                     state_local_automatic_operator_indices_.insert(
                         operator_index);
                     decision.operator_index = operator_index;
                     decision.admitted = true;
                     admit_operator(operator_index);
-                    for (const std::uint32_t dependency :
-                         operators_.back().primitive_program) {
-                        add_dependency(dependency);
-                    }
-                    if (operators_.back().conditional_action != kNoId) {
-                        add_dependency(operators_.back().conditional_action);
+                    if (new_operator) {
+                        for (const std::uint32_t dependency :
+                             operators_.at(operator_index)
+                                 .primitive_program) {
+                            add_dependency(dependency);
+                        }
+                        if (operators_.at(operator_index)
+                                .conditional_action != kNoId) {
+                            add_dependency(
+                                operators_.at(operator_index)
+                                    .conditional_action);
+                        }
                     }
                 }
             }
+            decision.admission_ns += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - candidate_started)
+                    .count());
             batch.decisions.push_back(std::move(decision));
             check_limits();
         }
 
+        if (!imprint_time_attributed && imprint_discovery_ns != 0) {
+            StateLocalAutomaticCandidate timing;
+            timing.id = "automatic:imprint_discovery";
+            timing.kind = AutomaticCandidateKind::Imprint;
+            timing.telemetry_kind = AutomaticTelemetryKind::Imprint;
+            timing.admission_ns = imprint_discovery_ns;
+            timing.evidence.candidate = true;
+            timing.evidence.legality_result = "not_applicable";
+            timing.evidence.reason = "no_legal_imprint_checkpoint_carrier";
+            batch.decisions.push_back(std::move(timing));
+        }
+
+        check_limits(true);
         merge_local_work();
     } catch (const SolverResourceLimit& limit) {
         if (!local_work_merged) {
@@ -1933,8 +2452,37 @@ const OptionKernel& CalcContext::option_kernel(
                 std::unique(result->continuation_states.begin(),
                             result->continuation_states.end()),
                 result->continuation_states.end());
+            std::shared_ptr<const OptionKernel> retained = result;
+            if (result->supported && result->legal) {
+                const std::uint64_t template_id =
+                    option_template_hash(option, *result);
+                result->retained_template_id = template_id;
+                const auto bucket = option_kernel_templates_.find(template_id);
+                if (bucket != option_kernel_templates_.end()) {
+                    for (const OptionKernelTemplateMemo& memo :
+                         bucket->second) {
+                        if (memo.operator_index >= operators_.size() ||
+                            !same_option_template_planner(
+                                operators_.at(memo.operator_index), option) ||
+                            memo.expected_resources !=
+                                result->expected_resources ||
+                            !same_complete_option_kernel(
+                                *memo.kernel, *result)) {
+                            continue;
+                        }
+                        retained = memo.kernel;
+                        option_kernel_template_hit_keys_.insert(key);
+                        break;
+                    }
+                }
+                if (retained.get() == result.get()) {
+                    option_kernel_templates_[template_id].push_back(
+                        {operator_index, retained,
+                         retained->expected_resources});
+                }
+            }
             const auto inserted = option_kernel_cache_.emplace(
-                key, std::move(result));
+                key, std::move(retained));
             return *inserted.first->second;
         };
         if (option.primitive_program.empty() ||
@@ -1983,7 +2531,7 @@ const OptionKernel& CalcContext::option_kernel(
         if (option.option_kind == FixedOptionKind::FracturePrepare) {
             const ActionDescriptor& fracture =
                 registry_.actions.at(option.conditional_action);
-            const AbstractState& entry = state(state_id);
+            const AbstractState entry = state(state_id);
             const bool carrier_ready =
                 option.carrier_goal_slot < layout_.slots.size() &&
                 entry.slot_status[option.carrier_goal_slot] ==
@@ -2061,7 +2609,7 @@ const OptionKernel& CalcContext::option_kernel(
         if (option.option_kind == FixedOptionKind::TemporaryBenchRepeat ||
             (option.option_kind == FixedOptionKind::ProtectedRepeat &&
              result->automatic.candidate)) {
-            const AbstractState& entry = state(state_id);
+            const AbstractState entry = state(state_id);
             const AttemptKernel baseline = execute_attempt(
                 *this, {option.followup_action}, state_id);
             result->automatic.baseline_kernel_hash =
@@ -2220,7 +2768,7 @@ const OptionKernel& CalcContext::option_kernel(
                 if (option_exit_matches(state(outcome.state), option)) {
                     exits[outcome.state] += outcome.probability;
                 } else {
-                    exits[state_id] += outcome.probability;
+                    exits[kNoId] += outcome.probability;
                     retry_probability += outcome.probability;
                     result->expected_primitive_actions += outcome.probability;
                     result->retry_states.push_back(outcome.state);
@@ -2310,7 +2858,7 @@ const OptionKernel& CalcContext::option_kernel(
                                 prepared.probability * outcome.probability;
                         }
                 } else if (retry_equivalent(prepared.state)) {
-                        exits[state_id] += prepared.probability;
+                        exits[kNoId] += prepared.probability;
                         retry_probability += prepared.probability;
                         result->retry_states.push_back(prepared.state);
                 } else {
@@ -2373,7 +2921,7 @@ const OptionKernel& CalcContext::option_kernel(
             const bool retry =
                 !option_exit_matches(state(actual), option) &&
                 retry_equivalent(actual);
-            const std::uint32_t successor = retry ? state_id : actual;
+            const std::uint32_t successor = retry ? kNoId : actual;
             normalized.emplace(actual, successor);
             if (retry) result->retry_states.push_back(actual);
             return successor;
@@ -2382,7 +2930,7 @@ const OptionKernel& CalcContext::option_kernel(
         for (const OutcomeEntry& outcome : attempt.entries) {
             const std::uint32_t successor = normalize(outcome.state);
             exits[successor] += outcome.probability;
-            if (successor == state_id) {
+            if (successor == kNoId) {
                 forced_retry_probability += outcome.probability;
             }
         }
@@ -2396,7 +2944,7 @@ const OptionKernel& CalcContext::option_kernel(
                 std::unique(successors.begin(), successors.end()),
                 successors.end());
             choices[successors] += group.probability;
-            if (successors.size() == 1 && successors.front() == state_id) {
+            if (successors.size() == 1 && successors.front() == kNoId) {
                 forced_retry_probability += group.probability;
             }
         }
@@ -2522,7 +3070,7 @@ const OptionKernel& CalcContext::option_kernel(
         }
     }
     if (result->automatic.candidate) {
-        const AbstractState& entry = state(state_id);
+        const AbstractState entry = state(state_id);
         result->automatic.exits_complete = !result->exits.empty();
         result->automatic.recovery_complete =
             result->automatic.exits_complete;

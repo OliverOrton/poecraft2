@@ -73,6 +73,68 @@ enum class AutomaticCandidateKind : std::uint8_t {
     Imprint = 6,
 };
 
+/* R3A retention/accounting categories. These are deliberately independent
+ * of AutomaticCandidateKind: explicit renewal/fracture envelopes use the
+ * same carrier-relative kernel representation even though they are not
+ * native product candidates. */
+enum class AutomaticTelemetryKind : std::uint8_t {
+    Imprint = 0,
+    Renewal = 1,
+    ProtectedSide = 2,
+    TemporaryBench = 3,
+    FracturePrepare = 4,
+    PermanentBench = 5,
+    MultimodFinish = 6,
+    PrimitiveFracture = 7,
+    Count = 8,
+    None = 255,
+};
+
+inline constexpr std::size_t kAutomaticTelemetryKindCount =
+    static_cast<std::size_t>(AutomaticTelemetryKind::Count);
+
+enum class PrimitiveTelemetryFamily : std::uint8_t {
+    Currency = 0,
+    Essence = 1,
+    Fossil = 2,
+    Harvest = 3,
+    Bench = 4,
+    Bestiary = 5,
+    Fracture = 6,
+    Other = 7,
+    Count = 8,
+};
+
+inline constexpr std::size_t kPrimitiveTelemetryFamilyCount =
+    static_cast<std::size_t>(PrimitiveTelemetryFamily::Count);
+
+struct AutomaticKindTelemetry {
+    std::uint64_t candidates = 0;
+    std::uint64_t carriers = 0;
+    std::uint64_t max_candidates_per_carrier = 0;
+    std::uint64_t unique_templates = 0;
+    std::uint64_t template_hits = 0;
+    std::uint64_t max_templates_per_carrier = 0;
+    std::uint64_t rows = 0;
+    std::uint64_t max_rows_per_carrier = 0;
+    std::uint64_t raw_outcomes = 0;
+    std::uint64_t retained_transitions = 0;
+    std::uint64_t admission_ns = 0;
+    std::uint64_t row_ns = 0;
+    std::uint64_t selected_bytes = 0;
+};
+
+struct PrimitiveFamilyTelemetry {
+    std::uint64_t requests = 0;
+    std::uint64_t cache_hits = 0;
+    std::uint64_t rows = 0;
+    std::uint64_t raw_outcomes = 0;
+    std::uint64_t transitions = 0;
+    std::uint64_t build_ns = 0;
+    std::uint64_t row_ns = 0;
+    std::uint64_t selected_bytes = 0;
+};
+
 enum AutomaticKernelMechanism : std::uint32_t {
     kAutomaticGroupConflict = 1u << 0,
     kAutomaticPrefixSlot = 1u << 1,
@@ -687,6 +749,7 @@ struct OptionKernel {
     std::vector<std::uint32_t> retry_states;
     std::vector<std::uint32_t> continuation_states;
     bool entry_continues = false;
+    std::uint64_t retained_template_id = 0;
     struct AutomaticEvidence {
         bool candidate = false;
         bool eligible = false;
@@ -737,6 +800,8 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::array<PrimitiveFamilyTelemetry, kPrimitiveTelemetryFamilyCount>
+        primitive_families{};
 };
 
 /* Price-independent sparse closure retained by CalcContext between compatible
@@ -788,11 +853,19 @@ struct StateLocalAutomaticCandidate {
     bool collapsed = false;
     bool deferred = false;
     bool missing_price = false;
+    AutomaticTelemetryKind telemetry_kind = AutomaticTelemetryKind::None;
+    bool template_hit = false;
+    std::uint64_t template_id = 0;
+    std::uint64_t raw_outcomes = 0;
+    std::uint64_t admission_ns = 0;
+    std::uint64_t selected_bytes = 0;
     OptionKernel::AutomaticEvidence evidence;
 };
 
 struct StateLocalAutomaticBatch {
     bool cached = false;
+    std::array<std::uint64_t, kAutomaticTelemetryKindCount>
+        shared_admission_ns{};
     std::vector<StateLocalAutomaticCandidate> decisions;
     std::vector<std::uint32_t> admitted_operators;
 };
@@ -875,12 +948,23 @@ class CalcContext {
     const OptionKernel& option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);
+    bool option_kernel_template_hit(
+        std::uint32_t state_id,
+        std::uint32_t operator_index) const {
+        const std::uint64_t key =
+            (static_cast<std::uint64_t>(state_id) << 32) | operator_index;
+        return option_kernel_template_hit_keys_.contains(key);
+    }
 
     void reset_solve_telemetry();
     void set_solve_resource_caps(
         std::uint32_t max_discovered_states,
-        std::uint64_t max_reforge_work);
+        std::uint64_t max_reforge_work,
+        bool reserve_storage = true);
     void consume_reforge_work(std::uint64_t amount);
+    void record_primitive_row_time(
+        std::uint32_t action_index,
+        std::uint64_t elapsed_ns);
     void release_solve_transition_caches();
     void release_outcome(
         std::uint32_t state_id,
@@ -939,6 +1023,21 @@ class CalcContext {
     std::unordered_map<
         std::uint64_t,
         std::shared_ptr<const OptionKernel>> option_kernel_cache_;
+    struct OptionKernelTemplateMemo {
+        std::uint32_t operator_index = kNoId;
+        std::shared_ptr<const OptionKernel> kernel;
+        std::vector<std::pair<std::string, double>> expected_resources;
+    };
+    std::unordered_map<
+        std::uint64_t,
+        std::vector<OptionKernelTemplateMemo>> option_kernel_templates_;
+    std::unordered_map<
+        std::uint64_t,
+        std::vector<std::shared_ptr<const OptionKernel>>>
+        option_transition_templates_;
+    std::unordered_map<std::uint64_t, std::vector<std::uint32_t>>
+        option_operator_templates_;
+    std::unordered_set<std::uint64_t> option_kernel_template_hit_keys_;
     /* Reforges depend only on the preserved base (fractured/locked slots,
      * rarity, item-wide flags), so states sharing one base share one roll
      * DP. Key: (action index, base signature hash). */
@@ -1251,6 +1350,8 @@ struct SolveDiagnostics {
     std::uint32_t automatic_rows_collapsed = 0;
     std::uint32_t automatic_rows_selected = 0;
     std::uint32_t automatic_rows_deferred = 0;
+    std::array<AutomaticKindTelemetry, kAutomaticTelemetryKindCount>
+        automatic_kind_telemetry{};
     std::vector<std::string> automatic_candidate_witnesses;
     std::uint64_t automatic_candidate_witnesses_omitted = 0;
     std::uint32_t discovered_states = 0;

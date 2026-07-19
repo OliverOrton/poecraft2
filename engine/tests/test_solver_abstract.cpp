@@ -369,6 +369,34 @@ void run_projection_tests(const std::shared_ptr<SessionImpl>& session) {
         PC_CHECK(state.flags == 0);
     }
 
+    /* Physical affix-array order and the visitation order of equivalent junk
+     * must not split abstract state identity. */
+    {
+        pc_item_state left;
+        pc_item_clear(&left);
+        left.rarity = PC_RARITY_RARE;
+        place(&left, PC_SIDE_PREFIX, 0, 10);
+        place(&left, PC_SIDE_PREFIX, 3, 12);
+        place(&left, PC_SIDE_SUFFIX, 5, 20);
+        place(&left, PC_SIDE_SUFFIX, 7, 22);
+
+        pc_item_state right;
+        pc_item_clear(&right);
+        right.rarity = PC_RARITY_RARE;
+        place(&right, PC_SIDE_PREFIX, 3, 12);
+        place(&right, PC_SIDE_PREFIX, 0, 10);
+        place(&right, PC_SIDE_SUFFIX, 7, 22);
+        place(&right, PC_SIDE_SUFFIX, 5, 20);
+
+        const AbstractState projected_left =
+            project_item(*session, layout, left);
+        const AbstractState projected_right =
+            project_item(*session, layout, right);
+        PC_CHECK(projected_left == projected_right);
+        PC_CHECK(abstract_state_hash(projected_left) ==
+                 abstract_state_hash(projected_right));
+    }
+
     /* Below-tier member: present but not satisfied, and not junk. */
     {
         pc_item_state item;
@@ -457,6 +485,30 @@ void run_projection_tests(const std::shared_ptr<SessionImpl>& session) {
         PC_CHECK(state.fractured_crafted_junk_counts ==
                  (std::vector<std::uint8_t>{0, 0, 0}));
     }
+}
+
+void run_exact_essence_relevance_test() {
+    auto session = make_solver_session();
+    auto data = std::make_shared<DataImpl>(*session->data);
+    data->strings.push_back("essence_exact_t1");
+    const std::uint32_t exact_sid =
+        static_cast<std::uint32_t>(data->strings.size() - 1);
+    data->strings.push_back("essence_same_family_t2");
+    const std::uint32_t below_sid =
+        static_cast<std::uint32_t>(data->strings.size() - 1);
+    data->essence_count = 2;
+    data->essence_key_sids = {exact_sid, below_sid};
+    data->essence_item_level_restrictions = {-1, -1};
+    session->data = std::move(data);
+    session->essence_guaranteed_mod_ids = {0, 1};
+
+    ActionRegistryBuildOptions options;
+    options.goal_relevant_actions = true;
+    options.fossil_goal_mod_ids = {{0}};
+    const ActionRegistry registry = build_action_registry(*session, options);
+    PC_CHECK(registry.index_by_id.contains("essence:essence_exact_t1"));
+    PC_CHECK(!registry.index_by_id.contains(
+        "essence:essence_same_family_t2"));
 }
 
 void run_legality_tests(const std::shared_ptr<SessionImpl>& session) {
@@ -648,6 +700,7 @@ void run_solver_abstract_tests(const char* artifact_dir) {
     run_registry_tests(*session);
     run_junk_class_tests(session);
     run_projection_tests(session);
+    run_exact_essence_relevance_test();
     run_legality_tests(session);
     run_artifact_registry_tests(artifact_dir);
 }

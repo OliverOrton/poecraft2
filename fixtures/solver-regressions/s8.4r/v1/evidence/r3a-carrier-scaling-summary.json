@@ -1,0 +1,202 @@
+{
+  "schema_version": "s8.4r3a_carrier_scaling_summary_v1",
+  "recorded_at": "2026-07-19",
+  "scope": "S8.4R.3A only",
+  "implementation_status": "implemented_and_focused_checks_passed",
+  "normal_cap_gate_status": "unmet_stopped_before_bellman_entry",
+  "caps_changed": false,
+  "implementation": {
+    "entry_relative_self_retry": [
+      "imprint",
+      "renewal",
+      "protected_repeat",
+      "temporary_bench_repeat",
+      "explicit_fracture_prepare"
+    ],
+    "exact_sharing": [
+      "transition templates are keyed without the absolute entry carrier",
+      "planner routes and exact resource quantities are shared independently from carrier-local kernels",
+      "carrier-local sparse rows resolve the entry-relative sentinel to their owner state",
+      "fractured and other mechanically distinct preserved substrates remain distinct"
+    ],
+    "telemetry": {
+      "automatic_kinds": [
+        "imprint",
+        "renewal",
+        "protected_side",
+        "temporary_bench",
+        "fracture_prepare",
+        "permanent_bench",
+        "multimod_finish",
+        "primitive_fracture"
+      ],
+      "primitive_families": [
+        "currency",
+        "essence",
+        "fossil",
+        "harvest",
+        "bench",
+        "bestiary",
+        "fracture",
+        "other"
+      ]
+    },
+    "relevance_and_state_audit": [
+      "Essence goal relevance now requires an exact guaranteed modifier that satisfies a requested slot",
+      "physical prefix/suffix order and equivalent junk visitation order project and hash identically",
+      "the pinned product sample admits zero Essence and zero Harvest primitive rows"
+    ]
+  },
+  "measured_representation_changes": [
+    {
+      "stage": "1024_before_template_sharing_and_batched_extraction_audits",
+      "source": "build/s8.4r3a-telemetry-1024.json",
+      "expanded_states": 1024,
+      "total_ms": 362502.2012,
+      "expansion_ms": 76420.4347,
+      "extraction_ms": 285784.966,
+      "planner_registry": 66888,
+      "planner_candidates": 66738,
+      "peak_selected_bytes": 154577630,
+      "live_selected_bytes": 109475643,
+      "temporary_bench": {
+        "candidates": 515857,
+        "carriers": 1023,
+        "unique_templates": 66719,
+        "template_hits": 0,
+        "rows": 2944,
+        "max_candidates_per_carrier": 509,
+        "max_templates_per_carrier": 127,
+        "max_rows_per_carrier": 12,
+        "retained_transitions": 20691,
+        "selected_bytes": 61255284
+      }
+    },
+    {
+      "stage": "1024_final_corrected_binary",
+      "source": "build/s8.4r3a-boundary-1024-final.json",
+      "result": "expected_refused_state_cap_at_diagnostic_1024_limit",
+      "expanded_states": 1024,
+      "discovered_states": 29637,
+      "total_ms": 8905.0149,
+      "expansion_ms": 8819.4443,
+      "extraction_ms": 15.5559,
+      "planner_registry": 669,
+      "planner_candidates": 519,
+      "peak_selected_bytes": 46165870,
+      "live_selected_bytes": 22737809,
+      "temporary_bench": {
+        "candidates": 515857,
+        "carriers": 1023,
+        "unique_templates": 2944,
+        "template_hits": 63775,
+        "rows": 2944,
+        "max_candidates_per_carrier": 509,
+        "max_templates_per_carrier": 12,
+        "max_rows_per_carrier": 12,
+        "raw_outcomes": 882313,
+        "retained_transitions": 20691,
+        "admission_ns": 1625920800,
+        "row_ns": 41157800,
+        "selected_bytes": 8184470
+      },
+      "other_automatic_kinds": {
+        "imprint": {
+          "candidates": 1024,
+          "carriers": 1024,
+          "max_candidates_per_carrier": 1,
+          "rows": 0
+        },
+        "renewal": {"candidates": 0, "rows": 0},
+        "protected_side": {"candidates": 0, "rows": 0},
+        "fracture_prepare": {"candidates": 0, "rows": 0},
+        "primitive_fracture": {
+          "candidates": 1024,
+          "carriers": 1024,
+          "max_candidates_per_carrier": 1,
+          "rows": 0
+        }
+      },
+      "primitive_families": {
+        "currency": {
+          "requests": 34943,
+          "cache_hits": 27986,
+          "rows": 6957,
+          "raw_outcomes": 29777551,
+          "transitions": 29777551,
+          "time_ns": 113200000,
+          "row_time_ns": 114400500,
+          "selected_bytes": 538547136
+        },
+        "fossil": {
+          "requests": 8192,
+          "cache_hits": 0,
+          "rows": 8192,
+          "raw_outcomes": 27377664,
+          "transitions": 27377664,
+          "time_ns": 25104400,
+          "row_time_ns": 45769900,
+          "selected_bytes": 652607488
+        },
+        "bench": {
+          "requests": 99570,
+          "cache_hits": 75879,
+          "rows": 23691,
+          "raw_outcomes": 23691,
+          "transitions": 23691,
+          "time_ns": 35858800,
+          "selected_bytes": 3790560
+        },
+        "essence": {"requests": 0, "rows": 0},
+        "harvest": {"requests": 0, "rows": 0}
+      },
+      "note": "Primitive-family selected_bytes are cumulative construction attribution, not retained live bytes; evaluator caches are released after sparse copy."
+    }
+  ],
+  "focused_exact_evidence": {
+    "renewal_template": "two distinct carriers differing only in preparation-wiped modifiers share one kernel pointer and template id; an otherwise similar fractured carrier is illegal and distinct",
+    "retry_oracle": "entry-relative retry mass plus non-self exit mass sums to one and the exact attempt_cost/exit_probability oracle is preserved",
+    "existing_boundaries": "temporary-bench, protected-side, primitive-Fracture, compilation, and simulator checks remain in the passing S8.3/native suites"
+  },
+  "normal_cap_attempt": {
+    "command": "build\\engine\\poecraft_solver_benchmark.exe --artifact data\\compiled\\current --corpus fixtures\\solver-regressions\\s8.4r\\v1\\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\\s8.4r3a-after.json --skip-verification",
+    "checked_in_caps": {
+      "max_states": 100000,
+      "max_sweeps": 100000,
+      "max_discovered_states": 100000,
+      "max_expanded_states": 100000,
+      "max_state_action_rows": 1000000,
+      "max_transitions": 10000000,
+      "max_reforge_work": 10000000,
+      "max_solver_owned_bytes": 1073741824
+    },
+    "outcome": "Oliver requested the long run be aborted after about nine minutes of foreground waiting. The wrapper stopped first; its child was then found and explicitly stopped before report emission at 858.140625 CPU seconds and about 153104 KiB working set. No report, Bellman-entry result, cap hit, or crash was emitted.",
+    "acceptance_claim": "not_passed"
+  },
+  "measured_boundary": {
+    "finding": "Retained automatic storage is now bounded, but product usability is still dominated by expansion work outside the attributed automatic-admission and primitive build/row timers. At 1024 states, about 7 seconds of the 8.82-second expansion remains unattributed; the full normal-cap closure did not reach Bellman entry within the accepted wait.",
+    "next_work": [
+      "Keep the current normal caps and exact action envelope unchanged.",
+      "Add reconciled timers around prepare_state_expansion, transient-context construction and projection, candidate enumeration versus exact evaluation, state interning, sparse-row/effect construction and enqueue, and exact owned-byte audits so per-carrier expansion time sums to the outer expansion timer.",
+      "Run only bounded, time-boxed 1024/2048/4096 expansion samples until the growth curve and dominant phase are known; do not launch another normal-cap run until the bounded curve predicts a usable completion.",
+      "Partition discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
+      "If the exact full goal-relevant envelope remains unusable after the measured hot phase is repaired, implement the already-planned mechanic-neutral focused/custom action scope and label results optimal only within that selected scope."
+    ],
+    "next_phase_allowed": false,
+    "blocked_phases": ["S8.4R.4", "S8.4R.5", "S8.4R.6", "S8.5"]
+  },
+  "validation": {
+    "native_build": "passed",
+    "native_engine_tests": "164814 checks, 0 failures",
+    "focused_solver_s8_3": "177 checks, 0 failures",
+    "release_wasm_rebuild": "passed",
+    "typescript": "passed",
+    "remaining_web_tests": "passed",
+    "known_preexisting_web_stops": [
+      "engine-smoke automatic permanent-bench group-goal solve non-convergence",
+      "historical S7 corpus artifact pin expects 9776797b... while current artifact is af41b8f4..."
+    ],
+    "rendered_review": "not_run_owner_owned",
+    "verification_runs": 0
+  }
+}

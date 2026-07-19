@@ -1,5 +1,23 @@
 # S8.4R bounded evidence
 
+## R3A carrier-relative automatic-kernel scaling
+
+The compact implementation and measured-boundary record is
+[`r3a-carrier-scaling-summary.json`](r3a-carrier-scaling-summary.json).
+R3A normalizes automatic self/retry exits to the carrier entry, shares exact
+transition templates and planner/resource routes across carriers, records
+automatic-kind and primitive-family time/byte telemetry, tightens Essence
+relevance, and proves equivalent physical affix/junk ordering collapses.
+
+At the final 1,024-state diagnostic boundary, planner registry size fell from
+66,888 to 669, live selected bytes fell from 109,475,643 to 22,737,809, and
+temporary-bench retention was bounded at 12 templates/rows per carrier. The
+request still spent 8.82 seconds in expansion, of which about 7 seconds was
+outside the new automatic-admission and primitive build/row timers. Oliver
+stopped the unchanged-cap run before it emitted a report, so Bellman entry is
+not claimed, no cap was raised, and R4 remains blocked. The evidence record
+defines the next reconciled-timing and bounded-scaling boundary.
+
 ## R3F primitive Fracture product planning
 
 R3F makes goal-relevant `fracture` an ordinary priced primitive and removes
@@ -31,9 +49,9 @@ build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --co
 ```
 
 Oliver directed the final long-running benchmark attempt to stop before it
-emitted a report. Consequently the normal-cap Bellman-entry acceptance gate is
-not claimed as passed, no cap was raised, and R3F remains the active acceptance
-boundary despite the completed implementation and focused evidence.
+emitted a report. Consequently the normal-cap Bellman-entry acceptance gate was
+not claimed as passed and no cap was raised. On 2026-07-19 he closed R3F on its
+structural evidence and transferred this gate to R3A.
 
 ## R3 automatic Imprint-stage discovery
 

@@ -135,6 +135,7 @@ struct PendingSparseRow {
     const std::vector<OutcomeChoiceGroup>* choices = nullptr;
     const std::vector<OutcomeChoiceOption>* choice_options = nullptr;
     const OutcomeDistribution* shared_kernel_identity = nullptr;
+    bool entry_relative_self = false;
 };
 
 struct PricedSparseRow {
@@ -163,6 +164,82 @@ struct PolicyTarjanFrame {
 constexpr std::uint32_t kProtectionFlags =
     kFlagMultimod | kFlagNoAttack | kFlagNoCaster |
     kFlagPrefixesLocked | kFlagSuffixesLocked;
+
+AutomaticTelemetryKind automatic_telemetry_kind(
+    const PlannerOperator& planner) {
+    if (planner.kind == PlannerOperatorKind::FixedOption) {
+        switch (planner.option_kind) {
+        case FixedOptionKind::ImprintRetry:
+            return AutomaticTelemetryKind::Imprint;
+        case FixedOptionKind::Renewal:
+            return AutomaticTelemetryKind::Renewal;
+        case FixedOptionKind::ProtectedSide:
+        case FixedOptionKind::ProtectedRepeat:
+            return AutomaticTelemetryKind::ProtectedSide;
+        case FixedOptionKind::TemporaryBenchRepeat:
+            return AutomaticTelemetryKind::TemporaryBench;
+        case FixedOptionKind::FracturePrepare:
+            return AutomaticTelemetryKind::FracturePrepare;
+        case FixedOptionKind::MultimodFinish:
+            return AutomaticTelemetryKind::MultimodFinish;
+        default:
+            break;
+        }
+    }
+    switch (planner.automatic_kind) {
+    case AutomaticCandidateKind::PermanentBench:
+        return AutomaticTelemetryKind::PermanentBench;
+    case AutomaticCandidateKind::Fracture:
+        return AutomaticTelemetryKind::PrimitiveFracture;
+    case AutomaticCandidateKind::MultimodFinish:
+        return AutomaticTelemetryKind::MultimodFinish;
+    case AutomaticCandidateKind::Imprint:
+        return AutomaticTelemetryKind::Imprint;
+    case AutomaticCandidateKind::TemporaryBenchBlocker:
+        return AutomaticTelemetryKind::TemporaryBench;
+    case AutomaticCandidateKind::ProtectedMetamod:
+        return AutomaticTelemetryKind::ProtectedSide;
+    case AutomaticCandidateKind::None:
+        break;
+    }
+    return AutomaticTelemetryKind::None;
+}
+
+const char* automatic_telemetry_kind_name(
+    const AutomaticTelemetryKind kind) {
+    switch (kind) {
+    case AutomaticTelemetryKind::Imprint: return "imprint";
+    case AutomaticTelemetryKind::Renewal: return "renewal";
+    case AutomaticTelemetryKind::ProtectedSide: return "protected_side";
+    case AutomaticTelemetryKind::TemporaryBench: return "temporary_bench";
+    case AutomaticTelemetryKind::FracturePrepare:
+        return "fracture_prepare";
+    case AutomaticTelemetryKind::PermanentBench: return "permanent_bench";
+    case AutomaticTelemetryKind::MultimodFinish: return "multimod_finish";
+    case AutomaticTelemetryKind::PrimitiveFracture:
+        return "primitive_fracture";
+    case AutomaticTelemetryKind::Count:
+    case AutomaticTelemetryKind::None:
+        return "none";
+    }
+    return "none";
+}
+
+const char* primitive_telemetry_family_name(
+    const PrimitiveTelemetryFamily family) {
+    switch (family) {
+    case PrimitiveTelemetryFamily::Currency: return "currency";
+    case PrimitiveTelemetryFamily::Essence: return "essence";
+    case PrimitiveTelemetryFamily::Fossil: return "fossil";
+    case PrimitiveTelemetryFamily::Harvest: return "harvest";
+    case PrimitiveTelemetryFamily::Bench: return "bench";
+    case PrimitiveTelemetryFamily::Bestiary: return "bestiary";
+    case PrimitiveTelemetryFamily::Fracture: return "fracture";
+    case PrimitiveTelemetryFamily::Other: return "other";
+    case PrimitiveTelemetryFamily::Count: return "none";
+    }
+    return "none";
+}
 
 std::uint32_t compact_count_total(const CompactCountVector& counts) {
     std::uint32_t total = 0;
@@ -212,19 +289,7 @@ void classify_slot_mask(
     unreachable = source & ~any_successor;
 }
 
-CarrierEffectSummary carrier_effect(
-    const CalcContext& calc,
-    const std::uint32_t source_state,
-    std::vector<std::uint32_t> successor_ids) {
-    CarrierEffectSummary effect;
-    std::sort(successor_ids.begin(), successor_ids.end());
-    successor_ids.erase(
-        std::unique(successor_ids.begin(), successor_ids.end()),
-        successor_ids.end());
-    if (successor_ids.empty()) successor_ids.push_back(source_state);
-
-    const AbstractState& source = calc.state(source_state);
-    const CarrierFacts source_facts = carrier_facts(source);
+struct CarrierSuccessorEnvelope {
     std::uint32_t all_goal = std::numeric_limits<std::uint32_t>::max();
     std::uint32_t any_goal = 0;
     std::uint32_t all_satisfied = std::numeric_limits<std::uint32_t>::max();
@@ -235,82 +300,149 @@ CarrierEffectSummary carrier_effect(
     std::uint32_t any_crafted = 0;
     std::uint32_t all_protection = std::numeric_limits<std::uint32_t>::max();
     std::uint32_t any_protection = 0;
-    bool all_junk_exact = true;
-    bool any_junk_decrease = false;
-    bool any_junk_increase = false;
-    bool all_junk_zero = true;
-    bool all_blockers_exact = true;
-    bool any_blocker_lost = false;
-    bool any_blocker_created = false;
-    bool all_blockers_zero = true;
-    bool all_crafted_junk_exact = true;
-    bool any_crafted_junk_lost = false;
-    bool any_crafted_junk_created = false;
-    bool all_crafted_junk_zero = true;
-    bool all_fractured_junk_exact = true;
-    bool any_fractured_junk_lost = false;
-    bool any_fractured_junk_created = false;
-    bool all_fractured_junk_zero = true;
-    effect.min_prefix_count = std::numeric_limits<std::uint8_t>::max();
-    effect.min_suffix_count = std::numeric_limits<std::uint8_t>::max();
+    std::uint32_t all_blocked = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t any_blocked = 0;
+    std::uint32_t min_junk_count = std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t max_junk_count = 0;
+    std::uint32_t min_crafted_junk_count =
+        std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t max_crafted_junk_count = 0;
+    std::uint32_t min_fractured_junk_count =
+        std::numeric_limits<std::uint32_t>::max();
+    std::uint32_t max_fractured_junk_count = 0;
+    std::uint8_t min_prefix_count =
+        std::numeric_limits<std::uint8_t>::max();
+    std::uint8_t max_prefix_count = 0;
+    std::uint8_t min_suffix_count =
+        std::numeric_limits<std::uint8_t>::max();
+    std::uint8_t max_suffix_count = 0;
+    CompactCountVector junk_counts;
+    CompactCountVector crafted_junk_counts;
+    CompactCountVector fractured_junk_counts;
+    bool junk_counts_uniform = true;
+    bool crafted_junk_counts_uniform = true;
+    bool fractured_junk_counts_uniform = true;
+};
 
+CarrierSuccessorEnvelope carrier_successor_envelope(
+    const CalcContext& calc,
+    std::vector<std::uint32_t> successor_ids) {
+    std::sort(successor_ids.begin(), successor_ids.end());
+    successor_ids.erase(
+        std::unique(successor_ids.begin(), successor_ids.end()),
+        successor_ids.end());
+    if (successor_ids.empty()) {
+        throw std::logic_error("carrier successor envelope is empty");
+    }
+    CarrierSuccessorEnvelope envelope;
+    bool first = true;
     for (const std::uint32_t successor_id : successor_ids) {
         const AbstractState& successor = calc.state(successor_id);
         const CarrierFacts facts = carrier_facts(successor);
-        all_goal &= facts.goal_family_mask;
-        any_goal |= facts.goal_family_mask;
-        all_satisfied &= facts.satisfied_goal_mask;
-        any_satisfied |= facts.satisfied_goal_mask;
-        all_fractured &= facts.fractured_goal_mask;
-        any_fractured |= facts.fractured_goal_mask;
-        all_crafted &= facts.crafted_goal_mask;
-        any_crafted |= facts.crafted_goal_mask;
-        all_protection &= facts.active_protection;
-        any_protection |= facts.active_protection;
-        all_junk_exact &= successor.junk_counts == source.junk_counts;
-        any_junk_decrease |= facts.junk_count < source_facts.junk_count;
-        any_junk_increase |= facts.junk_count > source_facts.junk_count ||
-                             (source_facts.junk_count == 0 &&
-                              facts.junk_count != 0);
-        all_junk_zero &= facts.junk_count == 0;
-        all_blockers_exact &= facts.blocked_mask == source_facts.blocked_mask;
-        any_blocker_lost |=
-            (source_facts.blocked_mask & ~facts.blocked_mask) != 0;
-        any_blocker_created |=
-            (~source_facts.blocked_mask & facts.blocked_mask) != 0;
-        all_blockers_zero &= facts.blocked_mask == 0;
-        all_crafted_junk_exact &=
-            successor.crafted_junk_counts == source.crafted_junk_counts;
-        any_crafted_junk_lost |=
-            facts.crafted_junk_count < source_facts.crafted_junk_count;
-        any_crafted_junk_created |=
-            facts.crafted_junk_count > source_facts.crafted_junk_count;
-        all_crafted_junk_zero &= facts.crafted_junk_count == 0;
-        all_fractured_junk_exact &=
-            successor.fractured_junk_counts == source.fractured_junk_counts;
-        any_fractured_junk_lost |=
-            facts.fractured_junk_count < source_facts.fractured_junk_count;
-        any_fractured_junk_created |=
-            facts.fractured_junk_count > source_facts.fractured_junk_count;
-        all_fractured_junk_zero &= facts.fractured_junk_count == 0;
-        effect.min_prefix_count =
-            std::min(effect.min_prefix_count, facts.prefix_count);
-        effect.max_prefix_count =
-            std::max(effect.max_prefix_count, facts.prefix_count);
-        effect.min_suffix_count =
-            std::min(effect.min_suffix_count, facts.suffix_count);
-        effect.max_suffix_count =
-            std::max(effect.max_suffix_count, facts.suffix_count);
+        envelope.all_goal &= facts.goal_family_mask;
+        envelope.any_goal |= facts.goal_family_mask;
+        envelope.all_satisfied &= facts.satisfied_goal_mask;
+        envelope.any_satisfied |= facts.satisfied_goal_mask;
+        envelope.all_fractured &= facts.fractured_goal_mask;
+        envelope.any_fractured |= facts.fractured_goal_mask;
+        envelope.all_crafted &= facts.crafted_goal_mask;
+        envelope.any_crafted |= facts.crafted_goal_mask;
+        envelope.all_protection &= facts.active_protection;
+        envelope.any_protection |= facts.active_protection;
+        envelope.all_blocked &= facts.blocked_mask;
+        envelope.any_blocked |= facts.blocked_mask;
+        envelope.min_junk_count =
+            std::min(envelope.min_junk_count, facts.junk_count);
+        envelope.max_junk_count =
+            std::max(envelope.max_junk_count, facts.junk_count);
+        envelope.min_crafted_junk_count = std::min(
+            envelope.min_crafted_junk_count, facts.crafted_junk_count);
+        envelope.max_crafted_junk_count = std::max(
+            envelope.max_crafted_junk_count, facts.crafted_junk_count);
+        envelope.min_fractured_junk_count = std::min(
+            envelope.min_fractured_junk_count, facts.fractured_junk_count);
+        envelope.max_fractured_junk_count = std::max(
+            envelope.max_fractured_junk_count, facts.fractured_junk_count);
+        envelope.min_prefix_count =
+            std::min(envelope.min_prefix_count, facts.prefix_count);
+        envelope.max_prefix_count =
+            std::max(envelope.max_prefix_count, facts.prefix_count);
+        envelope.min_suffix_count =
+            std::min(envelope.min_suffix_count, facts.suffix_count);
+        envelope.max_suffix_count =
+            std::max(envelope.max_suffix_count, facts.suffix_count);
+        if (first) {
+            envelope.junk_counts = successor.junk_counts;
+            envelope.crafted_junk_counts = successor.crafted_junk_counts;
+            envelope.fractured_junk_counts = successor.fractured_junk_counts;
+            first = false;
+        } else {
+            envelope.junk_counts_uniform &=
+                envelope.junk_counts == successor.junk_counts;
+            envelope.crafted_junk_counts_uniform &=
+                envelope.crafted_junk_counts == successor.crafted_junk_counts;
+            envelope.fractured_junk_counts_uniform &=
+                envelope.fractured_junk_counts ==
+                successor.fractured_junk_counts;
+        }
     }
+    return envelope;
+}
+
+CarrierEffectSummary carrier_effect(
+    const CalcContext& calc,
+    const std::uint32_t source_state,
+    const CarrierSuccessorEnvelope& envelope) {
+    CarrierEffectSummary effect;
+    const AbstractState& source = calc.state(source_state);
+    const CarrierFacts source_facts = carrier_facts(source);
+    const bool all_junk_exact = envelope.junk_counts_uniform &&
+                                envelope.junk_counts == source.junk_counts;
+    const bool any_junk_decrease =
+        envelope.min_junk_count < source_facts.junk_count;
+    const bool any_junk_increase =
+        envelope.max_junk_count > source_facts.junk_count;
+    const bool all_junk_zero = envelope.max_junk_count == 0;
+    const bool all_blockers_exact =
+        envelope.all_blocked == source_facts.blocked_mask &&
+        envelope.any_blocked == source_facts.blocked_mask;
+    const bool any_blocker_lost =
+        (source_facts.blocked_mask & ~envelope.all_blocked) != 0;
+    const bool any_blocker_created =
+        (~source_facts.blocked_mask & envelope.any_blocked) != 0;
+    const bool all_blockers_zero = envelope.any_blocked == 0;
+    const bool all_crafted_junk_exact =
+        envelope.crafted_junk_counts_uniform &&
+        envelope.crafted_junk_counts == source.crafted_junk_counts;
+    const bool any_crafted_junk_lost =
+        envelope.min_crafted_junk_count < source_facts.crafted_junk_count;
+    const bool any_crafted_junk_created =
+        envelope.max_crafted_junk_count > source_facts.crafted_junk_count;
+    const bool all_crafted_junk_zero =
+        envelope.max_crafted_junk_count == 0;
+    const bool all_fractured_junk_exact =
+        envelope.fractured_junk_counts_uniform &&
+        envelope.fractured_junk_counts == source.fractured_junk_counts;
+    const bool any_fractured_junk_lost =
+        envelope.min_fractured_junk_count < source_facts.fractured_junk_count;
+    const bool any_fractured_junk_created =
+        envelope.max_fractured_junk_count > source_facts.fractured_junk_count;
+    const bool all_fractured_junk_zero =
+        envelope.max_fractured_junk_count == 0;
+    effect.min_prefix_count = envelope.min_prefix_count;
+    effect.max_prefix_count = envelope.max_prefix_count;
+    effect.min_suffix_count = envelope.min_suffix_count;
+    effect.max_suffix_count = envelope.max_suffix_count;
 
     classify_slot_mask(
-        source_facts.goal_family_mask, all_goal, any_goal,
+        source_facts.goal_family_mask, envelope.all_goal, envelope.any_goal,
         effect.preserved_goal_family_mask,
         effect.destroyed_goal_family_mask,
         effect.created_goal_family_mask,
         effect.unreachable_goal_family_mask);
     classify_slot_mask(
-        source_facts.satisfied_goal_mask, all_satisfied, any_satisfied,
+        source_facts.satisfied_goal_mask, envelope.all_satisfied,
+        envelope.any_satisfied,
         effect.preserved_satisfied_goal_mask,
         effect.destroyed_satisfied_goal_mask,
         effect.created_satisfied_goal_mask,
@@ -318,17 +450,20 @@ CarrierEffectSummary carrier_effect(
     std::uint32_t unused_created = 0;
     std::uint32_t unused_unreachable = 0;
     classify_slot_mask(
-        source_facts.fractured_goal_mask, all_fractured, any_fractured,
+        source_facts.fractured_goal_mask, envelope.all_fractured,
+        envelope.any_fractured,
         effect.preserved_fractured_goal_mask,
         effect.destroyed_fractured_goal_mask,
         unused_created, unused_unreachable);
     classify_slot_mask(
-        source_facts.crafted_goal_mask, all_crafted, any_crafted,
+        source_facts.crafted_goal_mask, envelope.all_crafted,
+        envelope.any_crafted,
         effect.preserved_crafted_goal_mask,
         effect.destroyed_crafted_goal_mask,
         unused_created, unused_unreachable);
     classify_slot_mask(
-        source_facts.active_protection, all_protection, any_protection,
+        source_facts.active_protection, envelope.all_protection,
+        envelope.any_protection,
         effect.preserved_protection, effect.destroyed_protection,
         unused_created, unused_unreachable);
 
@@ -375,10 +510,11 @@ CarrierEffectSummary carrier_effect(
         effect.destroyed_properties |= kCarrierCraftedState;
     }
     if (any_crafted_junk_created ||
-        (any_crafted & ~source_facts.crafted_goal_mask) != 0) {
+        (envelope.any_crafted & ~source_facts.crafted_goal_mask) != 0) {
         effect.created_properties |= kCarrierCraftedState;
     }
-    if ((source_facts.crafted_goal_mask != 0 && any_crafted == 0) ||
+    if ((source_facts.crafted_goal_mask != 0 &&
+         envelope.any_crafted == 0) ||
         (source_facts.crafted_junk_count != 0 && all_crafted_junk_zero)) {
         effect.unreachable_properties |= kCarrierCraftedState;
     }
@@ -390,10 +526,11 @@ CarrierEffectSummary carrier_effect(
         effect.destroyed_properties |= kCarrierFracturedState;
     }
     if (any_fractured_junk_created ||
-        (any_fractured & ~source_facts.fractured_goal_mask) != 0) {
+        (envelope.any_fractured & ~source_facts.fractured_goal_mask) != 0) {
         effect.created_properties |= kCarrierFracturedState;
     }
-    if ((source_facts.fractured_goal_mask != 0 && any_fractured == 0) ||
+    if ((source_facts.fractured_goal_mask != 0 &&
+         envelope.any_fractured == 0) ||
         (source_facts.fractured_junk_count != 0 && all_fractured_junk_zero)) {
         effect.unreachable_properties |= kCarrierFracturedState;
     }
@@ -419,9 +556,19 @@ CarrierEffectSummary carrier_effect(
     set_mask_effect(
         kCarrierActiveProtection, effect.preserved_protection,
         effect.destroyed_protection,
-        any_protection & ~source_facts.active_protection,
-        source_facts.active_protection & ~any_protection);
+        envelope.any_protection & ~source_facts.active_protection,
+        source_facts.active_protection & ~envelope.any_protection);
     return effect;
+}
+
+CarrierEffectSummary carrier_effect(
+    const CalcContext& calc,
+    const std::uint32_t source_state,
+    std::vector<std::uint32_t> successor_ids) {
+    if (successor_ids.empty()) successor_ids.push_back(source_state);
+    return carrier_effect(
+        calc, source_state,
+        carrier_successor_envelope(calc, std::move(successor_ids)));
 }
 
 /* Deterministic double-double arithmetic for the ill-conditioned recurrent
@@ -530,6 +677,17 @@ struct SolveTransitionCache {
         bool eligible = false;
         bool collapsed = false;
         bool deferred = false;
+        AutomaticTelemetryKind telemetry_kind =
+            AutomaticTelemetryKind::None;
+        bool template_hit = false;
+        std::uint64_t template_id = 0;
+        std::uint64_t raw_outcomes = 0;
+        std::uint64_t admission_ns = 0;
+        std::uint64_t row_ns = 0;
+        std::uint64_t selected_bytes = 0;
+        std::uint64_t retained_rows = 0;
+        std::uint64_t retained_transitions = 0;
+        bool count_candidate = true;
         OptionKernel::AutomaticEvidence evidence;
     };
     std::uint32_t start_state = kNoId;
@@ -558,6 +716,8 @@ struct SolveTransitionCache {
     std::uint32_t automatic_rows_rejected = 0;
     std::uint32_t automatic_rows_collapsed = 0;
     std::uint32_t automatic_rows_deferred = 0;
+    std::array<AutomaticKindTelemetry, kAutomaticTelemetryKindCount>
+        automatic_kind_telemetry{};
     std::vector<AutomaticCandidateRecord> automatic_candidate_samples;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
@@ -692,9 +852,18 @@ struct SolveWork::Impl {
     struct SharedKernelMemo {
         std::uint64_t row_index = 0;
         bool fringe_enqueued = false;
+        std::optional<CarrierSuccessorEnvelope> successor_envelope;
     };
     std::unordered_map<const OutcomeDistribution*, SharedKernelMemo>
         shared_kernel_rows;
+    std::unordered_set<std::uint64_t> automatic_admission_records;
+    struct AutomaticCarrierWork {
+        std::uint64_t candidates = 0;
+        std::uint64_t templates = 0;
+        std::uint64_t rows = 0;
+    };
+    std::unordered_map<std::uint64_t, AutomaticCarrierWork>
+        automatic_carrier_work;
     enum class BackupStage : std::uint8_t { Measure, Apply };
     BackupStage backup_stage = BackupStage::Measure;
     std::uint32_t backup_cursor = 0;
@@ -1054,6 +1223,12 @@ struct SolveWork::Impl {
         record.eligible = decision.evidence.eligible;
         record.collapsed = decision.collapsed;
         record.deferred = decision.deferred;
+        record.telemetry_kind = decision.telemetry_kind;
+        record.template_hit = decision.template_hit;
+        record.template_id = decision.template_id;
+        record.raw_outcomes = decision.raw_outcomes;
+        record.admission_ns = decision.admission_ns;
+        record.selected_bytes = decision.selected_bytes;
         record.evidence = decision.evidence;
         if (decision.operator_index < calc.operators().size()) {
             const PlannerOperator& planner =
@@ -1092,20 +1267,33 @@ struct SolveWork::Impl {
         limits.prices = &prices;
         StateLocalAutomaticBatch batch =
             calc.admit_state_local_automatic_candidates(state, limits);
+        for (std::size_t i = 0;
+             i < batch.shared_admission_ns.size(); ++i) {
+            if (batch.shared_admission_ns[i] == 0) continue;
+            SolveTransitionCache::AutomaticCandidateRecord timing;
+            timing.state_id = state;
+            timing.telemetry_kind =
+                static_cast<AutomaticTelemetryKind>(i);
+            timing.count_candidate = false;
+            timing.admission_ns = batch.shared_admission_ns[i];
+            retain_automatic_candidate_record(std::move(timing));
+        }
         for (const StateLocalAutomaticCandidate& decision : batch.decisions) {
-            if (!decision.admitted) {
-                if (decision.missing_price) {
-                    record_skipped_missing_price(decision.id);
-                    add_action_reason(
-                        "unpriced", decision.id,
-                        "missing_one_or_more_resource_prices");
-                    add_action_reason(
-                        "rejected", decision.id,
-                        "automatic_candidate_missing_price");
-                    continue;
-                }
-                retain_automatic_candidate_record(
-                    automatic_record_from(state, decision));
+            if (decision.missing_price) {
+                record_skipped_missing_price(decision.id);
+                add_action_reason(
+                    "unpriced", decision.id,
+                    "missing_one_or_more_resource_prices");
+                add_action_reason(
+                    "rejected", decision.id,
+                    "automatic_candidate_missing_price");
+            }
+            retain_automatic_candidate_record(
+                automatic_record_from(state, decision));
+            if (decision.admitted && decision.operator_index != kNoId) {
+                automatic_admission_records.insert(
+                    (static_cast<std::uint64_t>(state) << 32) |
+                    decision.operator_index);
             }
         }
         for (const std::uint32_t index : batch.admitted_operators) {
@@ -1154,17 +1342,38 @@ struct SolveWork::Impl {
     bool same_kernel(
         const SparseRow& stored,
         const PendingSparseRow& pending) const {
-        const std::size_t transition_count =
-            pending.transitions == nullptr ? 0 : pending.transitions->size();
+        const auto is_self = [&](const std::uint32_t successor) {
+            return pending.entry_relative_self ? successor == kNoId
+                                               : successor == pending.state;
+        };
+        std::size_t transition_count = 0;
+        double self_probability = 0.0;
+        if (pending.transitions != nullptr) {
+            for (const OutcomeEntry& entry : *pending.transitions) {
+                if (pending.entry_relative_self && is_self(entry.state)) {
+                    self_probability += entry.probability;
+                } else {
+                    ++transition_count;
+                    if (!pending.entry_relative_self && is_self(entry.state)) {
+                        self_probability += entry.probability;
+                    }
+                }
+            }
+        }
         const std::size_t choice_count =
             pending.choices == nullptr ? 0 : pending.choices->size();
         if (stored.transition_count != transition_count ||
-            stored.choice_count != choice_count) {
+            stored.choice_count != choice_count ||
+            (pending.entry_relative_self &&
+             stored.self_probability != self_probability)) {
             return false;
         }
         std::size_t stored_transition = 0;
         if (pending.transitions != nullptr) {
             for (const OutcomeEntry& right : *pending.transitions) {
+                if (pending.entry_relative_self && is_self(right.state)) {
+                    continue;
+                }
                 const std::uint64_t offset =
                     stored.transition_offset + stored_transition++;
                 if (transition_cache->successors.at(offset) != right.state ||
@@ -1179,7 +1388,8 @@ struct SolveWork::Impl {
                 stored.choice_offset + i);
             const OutcomeChoiceGroup& right = pending.choices->at(i);
             const bool has_self = std::find(
-                right.states.begin(), right.states.end(), pending.state) !=
+                right.states.begin(), right.states.end(),
+                pending.entry_relative_self ? kNoId : pending.state) !=
                 right.states.end();
             const std::size_t successor_count =
                 right.states.size() - (has_self ? 1u : 0u);
@@ -1190,7 +1400,7 @@ struct SolveWork::Impl {
             }
             std::size_t stored_successor = 0;
             for (const std::uint32_t successor : right.states) {
-                if (successor == pending.state) continue;
+                if (is_self(successor)) continue;
                 if (transition_cache->choice_successors.at(
                         left.successor_offset + stored_successor++) !=
                     successor) {
@@ -1209,6 +1419,11 @@ struct SolveWork::Impl {
         std::size_t hash = 2166136261u;
         if (pending.transitions != nullptr) {
             for (const OutcomeEntry& entry : *pending.transitions) {
+                if (pending.entry_relative_self && entry.state == kNoId) {
+                    mix(hash, 0x73656c66u);
+                    mix(hash, std::hash<double>{}(entry.probability));
+                    continue;
+                }
                 mix(hash, entry.state);
                 mix(hash, std::hash<double>{}(entry.probability));
             }
@@ -1220,11 +1435,16 @@ struct SolveWork::Impl {
                 mix(hash, std::hash<double>{}(group.probability));
                 const bool has_self = std::find(
                     group.states.begin(), group.states.end(),
-                    pending.state) != group.states.end();
+                    pending.entry_relative_self ? kNoId : pending.state) !=
+                    group.states.end();
                 mix(hash, has_self ? 1u : 0u);
                 mix(hash, group.states.size() - (has_self ? 1u : 0u));
                 for (const std::uint32_t state : group.states) {
-                    if (state == pending.state) continue;
+                    if ((pending.entry_relative_self && state == kNoId) ||
+                        (!pending.entry_relative_self &&
+                         state == pending.state)) {
+                        continue;
+                    }
                     mix(hash, state);
                 }
             }
@@ -1751,18 +1971,60 @@ struct SolveWork::Impl {
 
     void retain_automatic_candidate_record(
         SolveTransitionCache::AutomaticCandidateRecord record) {
-        ++transition_cache->automatic_rows_considered;
-        if (record.deferred) {
-            ++transition_cache->automatic_rows_deferred;
-        } else if (!record.eligible) {
-            ++transition_cache->automatic_rows_rejected;
-        } else {
-            ++transition_cache->automatic_rows_eligible;
-            if (record.collapsed) {
-                ++transition_cache->automatic_rows_collapsed;
+        if (record.count_candidate) {
+            ++transition_cache->automatic_rows_considered;
+            if (record.deferred) {
+                ++transition_cache->automatic_rows_deferred;
+            } else if (!record.eligible) {
+                ++transition_cache->automatic_rows_rejected;
+            } else {
+                ++transition_cache->automatic_rows_eligible;
+                if (record.collapsed) {
+                    ++transition_cache->automatic_rows_collapsed;
+                }
             }
         }
-        if (transition_cache->automatic_candidate_samples.size() <
+        if (record.telemetry_kind != AutomaticTelemetryKind::None) {
+            AutomaticKindTelemetry& kind =
+                transition_cache->automatic_kind_telemetry.at(
+                    static_cast<std::size_t>(record.telemetry_kind));
+            if (record.count_candidate) {
+                ++kind.candidates;
+                if (record.template_id != 0) {
+                    if (record.template_hit) ++kind.template_hits;
+                    else ++kind.unique_templates;
+                }
+                kind.raw_outcomes += record.raw_outcomes;
+                kind.admission_ns += record.admission_ns;
+            }
+            kind.rows += record.retained_rows;
+            kind.retained_transitions += record.retained_transitions;
+            kind.row_ns += record.row_ns;
+            kind.selected_bytes += record.selected_bytes;
+            const std::uint64_t carrier_key =
+                (static_cast<std::uint64_t>(record.state_id) << 8) |
+                static_cast<std::uint64_t>(record.telemetry_kind);
+            auto [carrier, inserted] = automatic_carrier_work.try_emplace(
+                carrier_key, AutomaticCarrierWork{});
+            if (inserted) ++kind.carriers;
+            if (record.count_candidate) {
+                ++carrier->second.candidates;
+                if (record.template_id != 0 && !record.template_hit) {
+                    ++carrier->second.templates;
+                }
+            }
+            carrier->second.rows += record.retained_rows;
+            kind.max_candidates_per_carrier = std::max(
+                kind.max_candidates_per_carrier,
+                carrier->second.candidates);
+            kind.max_templates_per_carrier = std::max(
+                kind.max_templates_per_carrier,
+                carrier->second.templates);
+            kind.max_rows_per_carrier = std::max(
+                kind.max_rows_per_carrier, carrier->second.rows);
+        }
+        if (record.count_candidate &&
+            transition_cache->automatic_candidate_samples.size() <
             options.max_diagnostic_samples) {
             transition_cache->automatic_candidate_samples.push_back(
                 std::move(record));
@@ -1781,6 +2043,8 @@ struct SolveWork::Impl {
         result.diagnostics.automatic_rows_selected = 0;
         result.diagnostics.automatic_rows_deferred =
             transition_cache->automatic_rows_deferred;
+        result.diagnostics.automatic_kind_telemetry =
+            transition_cache->automatic_kind_telemetry;
         result.diagnostics.automatic_candidate_witnesses.clear();
         result.diagnostics.automatic_candidate_witnesses_omitted =
             result.diagnostics.automatic_rows_considered -
@@ -1891,8 +2155,9 @@ struct SolveWork::Impl {
         if (state_cap) result.diagnostics.state_cap_hit = true;
     }
 
-    bool check_solver_byte_cap(std::uint64_t transient_bytes = 0) {
-        const std::uint64_t current = estimated_owned_bytes();
+    bool check_solver_byte_cap_from(
+        const std::uint64_t current,
+        const std::uint64_t transient_bytes = 0) {
         const std::uint64_t projected =
             transient_bytes > std::numeric_limits<std::uint64_t>::max() - current
                 ? std::numeric_limits<std::uint64_t>::max()
@@ -1903,6 +2168,11 @@ struct SolveWork::Impl {
             return true;
         }
         return false;
+    }
+
+    bool check_solver_byte_cap(const std::uint64_t transient_bytes = 0) {
+        return check_solver_byte_cap_from(
+            estimated_owned_bytes(), transient_bytes);
     }
 
     bool append_sparse_row(
@@ -1929,18 +2199,22 @@ struct SolveWork::Impl {
             transition_cache->state_rows.resize(state + 1);
         }
         StateRowSpan& span = transition_cache->state_rows[state];
-        SparseRow* equivalent = nullptr;
-        for (std::uint32_t i = 0; i < span.count; ++i) {
-            SparseRow& stored = transition_cache->rows.at(span.offset + i);
-            if (!same_kernel(stored, pending)) continue;
-            equivalent = &stored;
-            break;
-        }
-
+        const auto is_self = [&](const std::uint32_t successor) {
+            return pending.entry_relative_self ? successor == kNoId
+                                               : successor == state;
+        };
         std::uint64_t transition_count = 0;
         double self_probability = 0.0;
-        transition_count = transitions.size();
-        if (pending.shared_kernel_identity != nullptr) {
+        if (pending.entry_relative_self) {
+            for (const OutcomeEntry& entry : transitions) {
+                if (entry.state == kNoId) {
+                    self_probability += entry.probability;
+                } else {
+                    ++transition_count;
+                }
+            }
+        } else if (pending.shared_kernel_identity != nullptr) {
+            transition_count = transitions.size();
             const auto self = std::lower_bound(
                 transitions.begin(), transitions.end(), state,
                 [](const OutcomeEntry& entry, const std::uint32_t value) {
@@ -1950,6 +2224,7 @@ struct SolveWork::Impl {
                 self_probability = self->probability;
             }
         } else {
+            transition_count = transitions.size();
             for (const OutcomeEntry& entry : transitions) {
                 if (entry.state == state) {
                     self_probability += entry.probability;
@@ -1958,7 +2233,31 @@ struct SolveWork::Impl {
         }
         for (const OutcomeChoiceGroup& group : choices) {
             for (const std::uint32_t successor : group.states) {
-                if (successor != state) ++transition_count;
+                if (!is_self(successor)) ++transition_count;
+            }
+        }
+        SparseRow* equivalent = nullptr;
+        if (identity_found != shared_kernel_rows.end()) {
+            const SparseRow& shared = transition_cache->rows.at(
+                identity_found->second.row_index);
+            for (std::uint32_t i = 0; i < span.count; ++i) {
+                SparseRow& stored = transition_cache->rows.at(span.offset + i);
+                if (stored.transition_offset != shared.transition_offset ||
+                    stored.transition_count != shared.transition_count ||
+                    stored.choice_offset != shared.choice_offset ||
+                    stored.choice_count != shared.choice_count ||
+                    stored.self_probability != self_probability) {
+                    continue;
+                }
+                equivalent = &stored;
+                break;
+            }
+        } else {
+            for (std::uint32_t i = 0; i < span.count; ++i) {
+                SparseRow& stored = transition_cache->rows.at(span.offset + i);
+                if (!same_kernel(stored, pending)) continue;
+                equivalent = &stored;
+                break;
             }
         }
         if (equivalent == nullptr &&
@@ -1973,21 +2272,38 @@ struct SolveWork::Impl {
             row.owner_state = state;
             row.variant_offset = transition_cache->row_variant_indices.size();
             row.self_probability = self_probability;
-            std::vector<std::uint32_t> effect_successors;
-            effect_successors.reserve(transition_count);
-            for (const OutcomeEntry& entry : transitions) {
-                if (entry.probability != 0.0) {
-                    effect_successors.push_back(entry.state);
+            if (identity_found != shared_kernel_rows.end() &&
+                identity_found->second.successor_envelope.has_value()) {
+                row.preservation_effect = carrier_effect(
+                    calc, state,
+                    *identity_found->second.successor_envelope);
+            } else {
+                std::vector<std::uint32_t> effect_successors;
+                effect_successors.reserve(transition_count);
+                for (const OutcomeEntry& entry : transitions) {
+                    if (entry.probability != 0.0) {
+                        effect_successors.push_back(
+                            is_self(entry.state) ? state : entry.state);
+                    }
+                }
+                for (const OutcomeChoiceGroup& group : choices) {
+                    if (group.probability == 0.0) continue;
+                    for (const std::uint32_t successor : group.states) {
+                        effect_successors.push_back(
+                            is_self(successor) ? state : successor);
+                    }
+                }
+                row.preservation_effect = carrier_effect(
+                    calc, state, effect_successors);
+                if (pending.shared_kernel_identity != nullptr) {
+                    const CarrierSuccessorEnvelope envelope =
+                        carrier_successor_envelope(
+                            calc, std::move(effect_successors));
+                    if (identity_found != shared_kernel_rows.end()) {
+                        identity_found->second.successor_envelope = envelope;
+                    }
                 }
             }
-            for (const OutcomeChoiceGroup& group : choices) {
-                if (group.probability == 0.0) continue;
-                effect_successors.insert(
-                    effect_successors.end(), group.states.begin(),
-                    group.states.end());
-            }
-            row.preservation_effect = carrier_effect(
-                calc, state, std::move(effect_successors));
             const std::size_t hash =
                 identity_found == shared_kernel_rows.end()
                     ? kernel_hash(pending)
@@ -2023,6 +2339,10 @@ struct SolveWork::Impl {
                 }
                 row.transition_offset = transition_cache->successors.size();
                 for (const OutcomeEntry& entry : transitions) {
+                    if (pending.entry_relative_self &&
+                        entry.state == kNoId) {
+                        continue;
+                    }
                     transition_cache->successors.push_back(entry.state);
                     transition_cache->probabilities.push_back(
                         entry.probability);
@@ -2038,7 +2358,7 @@ struct SolveWork::Impl {
                         transition_cache->choice_successors.size();
                     stored.probability = group.probability;
                     for (const std::uint32_t successor : group.states) {
-                        if (successor == state) {
+                        if (is_self(successor)) {
                             stored.has_self = true;
                         } else {
                             transition_cache->choice_successors.push_back(
@@ -2070,7 +2390,20 @@ struct SolveWork::Impl {
                     shared_kernel_rows.emplace(
                         pending.shared_kernel_identity,
                         SharedKernelMemo{
-                            transition_cache->rows.size() - 1, false});
+                            transition_cache->rows.size() - 1, false,
+                            carrier_successor_envelope(
+                                calc,
+                                [&]() {
+                                    std::vector<std::uint32_t> ids;
+                                    ids.reserve(transitions.size());
+                                    for (const OutcomeEntry& entry :
+                                         transitions) {
+                                        if (entry.probability != 0.0) {
+                                            ids.push_back(entry.state);
+                                        }
+                                    }
+                                    return ids;
+                                }())});
                 }
             }
             ++span.count;
@@ -2083,7 +2416,19 @@ struct SolveWork::Impl {
                 SharedKernelMemo{
                     static_cast<std::uint64_t>(
                         stored_row - transition_cache->rows.data()),
-                    false});
+                    false,
+                    carrier_successor_envelope(
+                        calc,
+                        [&]() {
+                            std::vector<std::uint32_t> ids;
+                            ids.reserve(transitions.size());
+                            for (const OutcomeEntry& entry : transitions) {
+                                if (entry.probability != 0.0) {
+                                    ids.push_back(entry.state);
+                                }
+                            }
+                            return ids;
+                        }())});
         }
 
         SparseVariant variant;
@@ -2111,9 +2456,12 @@ struct SolveWork::Impl {
         variant.choice_option_offset = transition_cache->choice_options.size();
         variant.choice_option_count = static_cast<std::uint32_t>(
             choice_options.size());
-        transition_cache->choice_options.insert(
-            transition_cache->choice_options.end(),
-            choice_options.begin(), choice_options.end());
+        for (OutcomeChoiceOption choice : choice_options) {
+            if (pending.entry_relative_self && choice.state == kNoId) {
+                choice.state = state;
+            }
+            transition_cache->choice_options.push_back(choice);
+        }
         transition_cache->variants.push_back(variant);
         const std::uint32_t variant_index = static_cast<std::uint32_t>(
             transition_cache->variants.size() - 1);
@@ -2152,11 +2500,11 @@ struct SolveWork::Impl {
         }
         if (enqueue_fringe) {
             for (const OutcomeEntry& entry : transitions) {
-                if (entry.state != state) enqueue(entry.state);
+                if (!is_self(entry.state)) enqueue(entry.state);
             }
             for (const OutcomeChoiceGroup& group : choices) {
                 for (const std::uint32_t successor : group.states) {
-                    if (successor != state) enqueue(successor);
+                    if (!is_self(successor)) enqueue(successor);
                 }
             }
         }
@@ -2207,17 +2555,27 @@ struct SolveWork::Impl {
                     static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
+                const auto row_started = std::chrono::steady_clock::now();
                 PendingSparseRow pending;
                 pending.state = state;
                 pending.operator_index = priced.index;
                 pending.resources = &planner.resource_quantities;
                 std::optional<SolveTransitionCache::AutomaticCandidateRecord>
                     automatic_record;
-                if (planner.automatic_kind !=
-                    AutomaticCandidateKind::None) {
+                const AutomaticTelemetryKind telemetry_kind =
+                    automatic_telemetry_kind(planner);
+                if (telemetry_kind != AutomaticTelemetryKind::None) {
                     automatic_record.emplace();
                     automatic_record->state_id = state;
                     automatic_record->operator_index = priced.index;
+                    automatic_record->candidate_kind =
+                        planner.automatic_kind;
+                    automatic_record->telemetry_kind = telemetry_kind;
+                    const std::uint64_t admission_key =
+                        (static_cast<std::uint64_t>(state) << 32) |
+                        priced.index;
+                    automatic_record->count_candidate =
+                        !automatic_admission_records.contains(admission_key);
                     automatic_record->evidence.candidate = true;
                     automatic_record->evidence.relevant_goal_mask =
                         planner.relevant_goal_mask;
@@ -2229,7 +2587,32 @@ struct SolveWork::Impl {
                     if (automatic_record.has_value()) {
                         automatic_record->evidence = kernel.automatic;
                         automatic_record->eligible =
-                            kernel.automatic.eligible;
+                            kernel.supported && kernel.legal;
+                        if (automatic_record->count_candidate) {
+                            automatic_record->template_id =
+                                kernel.retained_template_id;
+                            automatic_record->template_hit =
+                                calc.option_kernel_template_hit(
+                                    state, priced.index);
+                            automatic_record->raw_outcomes =
+                                kernel.exits.size();
+                            for (const OutcomeChoiceGroup& group :
+                                 kernel.observation_choice_groups) {
+                                automatic_record->raw_outcomes +=
+                                    group.states.size();
+                            }
+                            if (!automatic_record->template_hit &&
+                                kernel.retained_template_id != 0) {
+                                automatic_record->selected_bytes +=
+                                    sizeof(OptionKernel) +
+                                    kernel.exits.capacity() *
+                                        sizeof(OutcomeEntry) +
+                                    kernel.retry_states.capacity() *
+                                        sizeof(std::uint32_t) +
+                                    kernel.continuation_states.capacity() *
+                                        sizeof(std::uint32_t);
+                            }
+                        }
                     }
                     if (!kernel.supported) {
                         if (!reported_unsupported[priced.index]) {
@@ -2248,7 +2631,27 @@ struct SolveWork::Impl {
                             &kernel.observation_choice_groups;
                         pending.choice_options =
                             &kernel.observation_choice_options;
-                        pending.resources = &kernel.expected_resources;
+                        pending.resources =
+                            calc.is_state_local_automatic_operator(
+                                priced.index)
+                                ? &planner.resource_quantities
+                                : &kernel.expected_resources;
+                        pending.entry_relative_self = std::any_of(
+                            kernel.exits.begin(), kernel.exits.end(),
+                            [](const OutcomeEntry& entry) {
+                                return entry.state == kNoId;
+                            });
+                        if (!pending.entry_relative_self) {
+                            pending.entry_relative_self = std::any_of(
+                                kernel.observation_choice_groups.begin(),
+                                kernel.observation_choice_groups.end(),
+                                [](const OutcomeChoiceGroup& group) {
+                                    return std::find(
+                                        group.states.begin(),
+                                        group.states.end(), kNoId) !=
+                                        group.states.end();
+                                });
+                        }
                     }
                 } else {
                     const std::uint32_t action_index =
@@ -2386,11 +2789,27 @@ struct SolveWork::Impl {
                                 static_cast<std::uint64_t>(
                                     kernel_hash(pending));
                         }
+                        const std::uint64_t rows_before =
+                            transition_cache->rows.size();
+                        const std::uint64_t transitions_before =
+                            transition_cache->successors.size() +
+                            transition_cache->choice_successors.size();
+                        const std::uint64_t bytes_before =
+                            transition_cache->estimated_owned_bytes();
                         const bool collapsed =
                             append_sparse_row(state, std::move(pending));
                         if (automatic_record.has_value()) {
                             automatic_record->collapsed = collapsed;
                             automatic_record->eligible = true;
+                            automatic_record->retained_rows =
+                                transition_cache->rows.size() - rows_before;
+                            automatic_record->retained_transitions =
+                                transition_cache->successors.size() +
+                                transition_cache->choice_successors.size() -
+                                transitions_before;
+                            automatic_record->selected_bytes +=
+                                transition_cache->estimated_owned_bytes() -
+                                bytes_before;
                         }
                     }
                 } catch (...) {
@@ -2402,7 +2821,16 @@ struct SolveWork::Impl {
                     }
                     throw;
                 }
+                const std::uint64_t row_ns = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - row_started)
+                        .count());
+                if (planner.kind == PlannerOperatorKind::Primitive) {
+                    calc.record_primitive_row_time(
+                        planner.primitive_action, row_ns);
+                }
                 if (automatic_record.has_value()) {
+                    automatic_record->row_ns = row_ns;
                     if (automatic_record->evidence.reason.empty()) {
                         automatic_record->evidence.eligible = false;
                         automatic_record->evidence.legality_result = "illegal";
@@ -2431,12 +2859,19 @@ struct SolveWork::Impl {
                     static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
-                if (planner.automatic_kind !=
-                    AutomaticCandidateKind::None) {
+                const AutomaticTelemetryKind telemetry_kind =
+                    automatic_telemetry_kind(planner);
+                if (telemetry_kind != AutomaticTelemetryKind::None) {
                     SolveTransitionCache::AutomaticCandidateRecord record;
                     record.state_id = state;
                     record.operator_index = priced.index;
                     record.deferred = true;
+                    record.telemetry_kind = telemetry_kind;
+                    const std::uint64_t admission_key =
+                        (static_cast<std::uint64_t>(state) << 32) |
+                        priced.index;
+                    record.count_candidate =
+                        !automatic_admission_records.contains(admission_key);
                     record.evidence.candidate = true;
                     record.evidence.relevant_goal_mask =
                         planner.relevant_goal_mask;
@@ -2665,7 +3100,11 @@ struct SolveWork::Impl {
                 calc.option_kernel(state, priced.index);
             if (!kernel.supported || !kernel.legal) return kInfinity;
             double expected = 0.0;
-            for (const auto& [key, quantity] : kernel.expected_resources) {
+            const auto& resources =
+                calc.is_state_local_automatic_operator(priced.index)
+                    ? planner.resource_quantities
+                    : kernel.expected_resources;
+            for (const auto& [key, quantity] : resources) {
                 const auto found = std::find_if(
                     priced.resource_prices.begin(),
                     priced.resource_prices.end(),
@@ -2674,7 +3113,9 @@ struct SolveWork::Impl {
                 expected += quantity * found->second;
             }
             for (const OutcomeEntry& exit : kernel.exits) {
-                const double value = result.values[exit.state];
+                const std::uint32_t successor =
+                    exit.state == kNoId ? state : exit.state;
+                const double value = result.values[successor];
                 if (value == kInfinity) return kInfinity;
                 expected += exit.probability * value;
             }
@@ -2682,7 +3123,10 @@ struct SolveWork::Impl {
                  kernel.observation_choice_groups) {
                 double best = kInfinity;
                 for (const std::uint32_t successor : group.states) {
-                    best = std::min(best, result.values[successor]);
+                    best = std::min(
+                        best,
+                        result.values[successor == kNoId ? state
+                                                         : successor]);
                 }
                 if (best == kInfinity) return kInfinity;
                 expected += group.probability * best;
@@ -4328,6 +4772,8 @@ struct SolveWork::Impl {
             transition_cache->automatic_rows_collapsed;
         snapshot.diagnostics.automatic_rows_deferred =
             transition_cache->automatic_rows_deferred;
+        snapshot.diagnostics.automatic_kind_telemetry =
+            transition_cache->automatic_kind_telemetry;
         snapshot.diagnostics.automatic_candidate_witnesses_omitted =
             snapshot.diagnostics.automatic_rows_considered;
         const std::uint64_t live_bytes = estimated_owned_bytes();
@@ -4352,7 +4798,9 @@ struct SolveWork::Impl {
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
         finalize_preservation_diagnostics();
-        bool finalization_capped = check_solver_byte_cap();
+        const std::uint64_t extraction_base_bytes = estimated_owned_bytes();
+        bool finalization_capped =
+            check_solver_byte_cap_from(extraction_base_bytes);
         /* Deterministic argmin: cost ties break toward lower cost-to-go
          * variance, then lower action index by stable registry traversal. */
         for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -4373,7 +4821,9 @@ struct SolveWork::Impl {
                     (static_cast<std::uint64_t>(row.transition_count) +
                      row.choice_count + 1) *
                     sizeof(std::pair<double, double>);
-                if (check_solver_byte_cap(variance_scratch_bytes)) {
+                if (check_solver_byte_cap_from(
+                        extraction_base_bytes,
+                        variance_scratch_bytes)) {
                     finalization_capped = true;
                     break;
                 }
@@ -4752,6 +5202,13 @@ struct SolveWork::Impl {
             (void)unused;
             bytes += rows.capacity() * sizeof(std::uint64_t);
         }
+        bytes += automatic_admission_records.bucket_count() * sizeof(void*);
+        bytes += automatic_admission_records.size() *
+                 (sizeof(std::uint64_t) + 2 * sizeof(void*));
+        bytes += automatic_carrier_work.bucket_count() * sizeof(void*);
+        bytes += automatic_carrier_work.size() *
+                 (sizeof(std::uint64_t) + sizeof(AutomaticCarrierWork) +
+                  2 * sizeof(void*));
         bytes += result.values.capacity() * sizeof(double);
         bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
         bytes += result.expanded.capacity() * sizeof(std::uint8_t);
@@ -5109,7 +5566,7 @@ std::string serialize_solver_telemetry(
     json += ",\"dependency_primitives\":" + std::to_string(
         calc.action_control().automatic_dependency_primitives);
     if (diagnostics == nullptr) {
-        json += ",\"rows\":null,\"witnesses\":[]";
+        json += ",\"rows\":null,\"by_kind\":null,\"witnesses\":[]";
     } else {
         json += ",\"rows\":{\"considered\":" + std::to_string(
             diagnostics->automatic_rows_considered);
@@ -5123,6 +5580,42 @@ std::string serialize_solver_telemetry(
             diagnostics->automatic_rows_selected);
         json += ",\"deferred\":" + std::to_string(
             diagnostics->automatic_rows_deferred) + "}";
+        json += ",\"by_kind\":{";
+        for (std::size_t i = 0; i < kAutomaticTelemetryKindCount; ++i) {
+            if (i != 0) json.push_back(',');
+            const AutomaticTelemetryKind kind =
+                static_cast<AutomaticTelemetryKind>(i);
+            const AutomaticKindTelemetry& values =
+                diagnostics->automatic_kind_telemetry[i];
+            json += '"';
+            json += automatic_telemetry_kind_name(kind);
+            json += "\":{\"candidates\":" +
+                    std::to_string(values.candidates);
+            json += ",\"carriers\":" +
+                    std::to_string(values.carriers);
+            json += ",\"max_candidates_per_carrier\":" +
+                    std::to_string(values.max_candidates_per_carrier);
+            json += ",\"unique_templates\":" +
+                    std::to_string(values.unique_templates);
+            json += ",\"template_hits\":" +
+                    std::to_string(values.template_hits);
+            json += ",\"max_templates_per_carrier\":" +
+                    std::to_string(values.max_templates_per_carrier);
+            json += ",\"rows\":" + std::to_string(values.rows);
+            json += ",\"max_rows_per_carrier\":" +
+                    std::to_string(values.max_rows_per_carrier);
+            json += ",\"raw_outcomes\":" +
+                    std::to_string(values.raw_outcomes);
+            json += ",\"retained_transitions\":" +
+                    std::to_string(values.retained_transitions);
+            json += ",\"time_ns\":" +
+                    std::to_string(values.admission_ns);
+            json += ",\"row_time_ns\":" +
+                    std::to_string(values.row_ns);
+            json += ",\"selected_bytes\":" +
+                    std::to_string(values.selected_bytes) + "}";
+        }
+        json += "}";
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;
              i < diagnostics->automatic_candidate_witnesses.size(); ++i) {
@@ -5283,7 +5776,31 @@ std::string serialize_solver_telemetry(
     json += ",\"build_ns\":" +
             std::to_string(cache.reforge_build_ns);
     json += ",\"frontier_work\":" +
-            std::to_string(cache.reforge_frontier_work) + "}}";
+            std::to_string(cache.reforge_frontier_work) + "}";
+    json += ",\"primitive_families\":{";
+    for (std::size_t i = 0; i < kPrimitiveTelemetryFamilyCount; ++i) {
+        if (i != 0) json.push_back(',');
+        const PrimitiveTelemetryFamily family =
+            static_cast<PrimitiveTelemetryFamily>(i);
+        const PrimitiveFamilyTelemetry& values =
+            cache.primitive_families[i];
+        json += '"';
+        json += primitive_telemetry_family_name(family);
+        json += "\":{\"requests\":" + std::to_string(values.requests);
+        json += ",\"cache_hits\":" +
+                std::to_string(values.cache_hits);
+        json += ",\"rows\":" + std::to_string(values.rows);
+        json += ",\"raw_outcomes\":" +
+                std::to_string(values.raw_outcomes);
+        json += ",\"transitions\":" +
+                std::to_string(values.transitions);
+        json += ",\"time_ns\":" + std::to_string(values.build_ns);
+        json += ",\"row_time_ns\":" +
+                std::to_string(values.row_ns);
+        json += ",\"selected_bytes\":" +
+                std::to_string(values.selected_bytes) + "}";
+    }
+    json += "}}";
 
     json += ",\"optimization\":{";
     json += "\"method\":\"";

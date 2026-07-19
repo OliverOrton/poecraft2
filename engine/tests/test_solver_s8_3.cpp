@@ -35,7 +35,8 @@ constexpr std::uint32_t kSuffixJunk = 13;
 constexpr std::uint32_t kBenchPrefixNeutral = 14;
 constexpr std::uint32_t kModCount = 15;
 
-std::shared_ptr<SessionImpl> make_automatic_session() {
+std::shared_ptr<SessionImpl> make_automatic_session(
+    const bool renewal_retry_pool = false) {
     auto data = std::make_shared<DataImpl>();
     data->strings = {"", "synthetic/s8.3"};
     for (std::uint32_t mod = 0; mod < kModCount; ++mod) {
@@ -54,6 +55,10 @@ std::shared_ptr<SessionImpl> make_automatic_session() {
     data->spawn_weights.assign(kModCount, 0);
     data->spawn_weights[kGoalSuffix] = 100;
     data->spawn_weights[kSuffixCompetitor] = 100;
+    if (renewal_retry_pool) {
+        data->spawn_weights[kSuffixJunk] = 100;
+        data->spawn_weights[kBenchNeutral] = 100;
+    }
     data->mod_gen_type_code.assign(kModCount, 0);
     data->base_count = 1;
     data->base_metadata_path_sid = {1};
@@ -120,6 +125,10 @@ std::shared_ptr<SessionImpl> make_automatic_session() {
     session->base_spawn_weight.assign(kModCount, 0);
     session->base_spawn_weight[kGoalSuffix] = 100;
     session->base_spawn_weight[kSuffixCompetitor] = 100;
+    if (renewal_retry_pool) {
+        session->base_spawn_weight[kSuffixJunk] = 100;
+        session->base_spawn_weight[kBenchNeutral] = 100;
+    }
     session->base_gen_pct.assign(kModCount, 100);
     session->base_roll_weight = session->base_spawn_weight;
     session->effective_base_tag_ids = {0};
@@ -155,6 +164,15 @@ std::shared_ptr<SessionImpl> make_automatic_session() {
             pc_bitset_set(session->positive_base_weight_mask.data(), mod);
         }
         pc_bitset_set(session->influence_masks[0].data(), mod);
+    }
+    if (renewal_retry_pool) {
+        pc_bitset_set(
+            session->normal_random_roll_mask.data(), kBenchNeutral);
+        pc_bitset_set(
+            session->positive_spawn_weight_mask.data(), kBenchNeutral);
+        pc_bitset_set(
+            session->positive_base_weight_mask.data(), kBenchNeutral);
+        pc_bitset_set(session->influence_masks[0].data(), kBenchNeutral);
     }
     return session;
 }
@@ -334,6 +352,11 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(json::Parser(telemetry.data(), telemetry.size()).parse().type ==
              json::Type::Object);
     PC_CHECK(telemetry.find("\"automatic_candidates\":{") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"by_kind\":{") != std::string::npos);
+    PC_CHECK(telemetry.find("\"unique_templates\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"primitive_families\":{") !=
              std::string::npos);
     PC_CHECK(telemetry.find("\"candidate_kind\":\"temporary_bench_blocker\"") !=
              std::string::npos);
@@ -643,6 +666,98 @@ void run_incomplete_dependency_refusals() {
     }
 }
 
+void run_carrier_relative_renewal_templates() {
+    auto session = make_automatic_session(true);
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(false, true);
+    goal.automatic_candidates = false;
+    FixedOptionSpec renewal;
+    renewal.kind = FixedOptionKind::Renewal;
+    renewal.program_action_ids = {"scour", "alchemy"};
+    renewal.exit_goal_slots = {0};
+    renewal.exit_min_satisfied = 1;
+    goal.fixed_options.push_back(renewal);
+
+    CalcContext calc(
+        session, goal, registry,
+        {registry.index_by_id.at("scour"),
+         registry.index_by_id.at("alchemy"),
+         registry.index_by_id.at("restart")},
+        false, true, true);
+    const std::uint32_t renewal_index = operator_by_fragment(
+        calc, "option:renewal:scour+alchemy:until:1:0");
+    PC_CHECK(renewal_index != kNoId);
+    if (renewal_index == kNoId) return;
+
+    pc_item_state blocked;
+    pc_item_clear(&blocked);
+    blocked.rarity = PC_RARITY_RARE;
+    add_mod(blocked, *session, kTargetBlocker);
+
+    pc_item_state junk;
+    pc_item_clear(&junk);
+    junk.rarity = PC_RARITY_RARE;
+    add_mod(junk, *session, kSuffixJunk);
+
+    pc_item_state fractured = junk;
+    fractured.suffixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+
+    const std::uint32_t blocked_state = calc.intern_item(blocked);
+    const std::uint32_t junk_state = calc.intern_item(junk);
+    const std::uint32_t fractured_state = calc.intern_item(fractured);
+    PC_CHECK(blocked_state != junk_state);
+    PC_CHECK(junk_state != fractured_state);
+
+    const OptionKernel& blocked_kernel =
+        calc.option_kernel(blocked_state, renewal_index);
+    const OptionKernel& junk_kernel =
+        calc.option_kernel(junk_state, renewal_index);
+    PC_CHECK(blocked_kernel.legal);
+    PC_CHECK(junk_kernel.legal);
+    PC_CHECK(blocked_kernel.retained_template_id != 0);
+    PC_CHECK(blocked_kernel.retained_template_id ==
+             junk_kernel.retained_template_id);
+    PC_CHECK(&blocked_kernel == &junk_kernel);
+    PC_CHECK(calc.option_kernel_template_hit(junk_state, renewal_index));
+    PC_CHECK(blocked_kernel.expected_resources ==
+             junk_kernel.expected_resources);
+    PC_CHECK(blocked_kernel.retry_states == junk_kernel.retry_states);
+    PC_CHECK(std::any_of(
+        blocked_kernel.exits.begin(), blocked_kernel.exits.end(),
+        [](const OutcomeEntry& exit) { return exit.state == kNoId; }));
+
+    double retry_mass = 0.0;
+    double exit_mass = 0.0;
+    for (const OutcomeEntry& exit : blocked_kernel.exits) {
+        if (exit.state == kNoId) {
+            retry_mass += exit.probability;
+        } else {
+            exit_mass += exit.probability;
+            PC_CHECK(calc.is_goal_state(calc.state(exit.state)));
+        }
+    }
+    PC_CHECK(std::fabs(retry_mass + exit_mass - 1.0) < 1e-12);
+    PC_CHECK(exit_mass > 0.0);
+    double attempt_cost = 0.0;
+    for (const auto& [key, quantity] :
+         blocked_kernel.expected_resources) {
+        if (key == "scour" || key == "alchemy") {
+            attempt_cost += quantity;
+        }
+    }
+    const double manual_retry_value = attempt_cost / exit_mass;
+    PC_CHECK(std::isfinite(manual_retry_value));
+    PC_CHECK(std::fabs(
+                 manual_retry_value -
+                 attempt_cost / (1.0 - retry_mass)) < 1e-12);
+
+    const OptionKernel& fractured_kernel =
+        calc.option_kernel(fractured_state, renewal_index);
+    PC_CHECK(!fractured_kernel.legal);
+    PC_CHECK(fractured_kernel.retained_template_id == 0);
+    PC_CHECK(&fractured_kernel != &blocked_kernel);
+}
+
 } // namespace
 
 void run_solver_s8_3_tests() {
@@ -650,4 +765,5 @@ void run_solver_s8_3_tests() {
     run_protected_price_flip();
     run_fracture_price_flip();
     run_incomplete_dependency_refusals();
+    run_carrier_relative_renewal_templates();
 }

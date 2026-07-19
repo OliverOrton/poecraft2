@@ -15,9 +15,12 @@ post-S8.4 regression audit and post-R3 product diagnostic below found further
 blocking correctness, scaling, and product-delivery failures. S8.4R.3F is
 complete on its structural evidence; on 2026-07-19 Oliver transferred its
 pinned normal-cap Bellman-entry gate to S8.4R.3A, whose scaling levers own the
-remaining expansion-throughput and state-space boundary. **S8.4R.3A is the
-sole next implementation boundary; S8.5 remains blocked until all of S8.4R
-passes.** Oliver explicitly
+remaining expansion-throughput and state-space boundary. R3A's
+carrier-relative representation, telemetry, relevance, and equivalence work is
+implemented and its focused checks pass, but Oliver stopped the unchanged-cap
+product run before report emission and Bellman entry was not reached. **The
+measured R3A expansion boundary remains the sole next implementation boundary;
+R4 and S8.5 remain blocked.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
 as waived/deferred, not complete. Its full acceptance suite, 10,000-run
@@ -44,8 +47,13 @@ structurally — fracturing is an early-craft technique planned over ordinary
 primitives, not a per-carrier preparation closure. That representation is
 implemented, release WASM is rebuilt, and R3F closed on its structural
 evidence; by owner decision 2026-07-19 the normal-cap Bellman-entry gate moved
-to **S8.4R.3A**, which is now the sole next boundary for the remaining
-automatic kinds and the transferred gate. The recorded S7 endgame
+to **S8.4R.3A**. R3A now has entry-relative kernels, cross-carrier exact
+transition/planner sharing, per-kind timing/byte telemetry, exact Essence
+relevance, and an ordering-equivalence fixture. Its final 1,024-state sample
+retained at most 12 temporary-bench templates/rows per carrier and 22,737,809
+live selected bytes, but the unchanged-cap attempt was stopped before Bellman
+entry. The measured, unattributed expansion-time boundary remains R3A's sole
+next work. The recorded S7 endgame
 sample remains `0.9942` against the former `0.995` target; the number is
 retained as a disclosed miss, not rewritten as a passing numeric gate.
 
@@ -636,8 +644,10 @@ audit below supersedes the former S8.5 handoff.
 ### S8.4R - Solver And Web Regression Repair
 
 Status: audit and R1-R3 complete 2026-07-18; R3F complete 2026-07-19 with its
-normal-cap Bellman-entry gate transferred to R3A by owner decision. R3A is
-next. This phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
+normal-cap Bellman-entry gate transferred to R3A by owner decision. R3A's
+representation implementation and focused validation are complete, but the
+transferred gate is unmet and the measured expansion boundary remains next.
+This phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
 until every required gate below passes. The audit covers B1.3/B1.4 Imprint
 integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
 product paths.
@@ -772,7 +782,8 @@ acceptance once in R6 as required by `AGENTS.md`.
    kinds and possible ordering-induced state splitting — which are exactly
    R3A's scaling levers, not Fracture planning.
 5. **S8.4R.3A - Carrier-Relative Automatic-Kernel Scaling And Product
-   Usability.** This is the sole next boundary. Preserve R1 caps/telemetry,
+   Usability (representation implemented 2026-07-19; product gate unmet).**
+   Preserve R1 caps/telemetry,
    R2's lazy
    state-local exact admission, and R3F's primitive Fracture product planning,
    and apply the carrier-relative scaling repair to the remaining automatic
@@ -794,6 +805,42 @@ acceptance once in R6 as required by `AGENTS.md`.
    remains R6-owned. If exact sharing, relevance, and state minimization still
    cannot reach that boundary, stop and plan the measured boundary rather than
    raising caps.
+
+   The representation work is implemented. Imprint, renewal,
+   protected-repeat, temporary-bench-repeat, and authored Fracture preparation
+   now encode retry/self exits with an entry-relative sentinel. Exact
+   transition templates and exact planner/resource routes share independently
+   across carriers, while each sparse row resolves self to its owner. The
+   focused renewal oracle proves two preparation-wiped carriers share one
+   kernel/template and a fractured substrate remains distinct. Essence
+   relevance requires the exact guaranteed tier-satisfying modifier, and
+   physical affix/junk ordering projects and hashes identically. Automatic-kind
+   and primitive-family candidate/cache/row/outcome/transition/time/byte
+   telemetry is emitted.
+
+   The corrected 1,024-state diagnostic discovered 29,637 states, reduced the
+   planner registry from 66,888 to 669, reduced live selected bytes from
+   109,475,643 to 22,737,809, and bounded temporary-bench retention at 12
+   templates/rows per carrier. It still spent 8.82 seconds in expansion, with
+   roughly 7 seconds not reconciled by automatic-admission or primitive
+   build/row timers. Oliver stopped the unchanged-cap run after about nine
+   minutes of foreground waiting; the surviving child was explicitly stopped
+   before report emission at 858.14 CPU seconds and about 153 MiB working set.
+   No cap hit, crash, or Bellman-entry result was emitted, and no cap changed.
+   Therefore the gate is not passed and R4 must not begin.
+
+   Exact next boundary: add reconciled timings for state-expansion preparation,
+   transient-context construction/projection, candidate enumeration versus
+   evaluation, state interning, sparse-row/effect/enqueue work, and exact byte
+   audits. Use bounded, time-boxed 1,024/2,048/4,096 samples until the growth
+   curve identifies the hot phase; do not repeat the normal-cap run until the
+   curve predicts usable completion. Partition discovered states by normalized
+   observable facts and require an admitted-action witness for remaining
+   goal-slot distinctions. If the exact full envelope is still unusable after
+   the measured hot phase is repaired, use the planned mechanic-neutral
+   focused/custom action scope and label its result optimal only within that
+   scope. Compact evidence is
+   [r3a-carrier-scaling-summary.json](../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 6. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** After R3A passes,
    remove giant
    JSON-inside-JSON transfer and unnecessary full clones, preflight or align
@@ -992,15 +1039,15 @@ acceptance once in R6 as required by `AGENTS.md`.
    limit is not mechanic authority. Any internal program-depth/work bound must
    be an explicit reported solver resource boundary, not a claim that longer
    Imprint techniques are invalid.
-3. **Partially completed in R2; carrier-relative completion belongs to R3A.**
+3. **Implemented across R2 and R3A; product gate remains open.**
    Rework S8.3 generation so candidates are bounded and deduplicated before
    they widen global abstraction. R2 removed the eager global cross product,
    made generation carrier-local, and retained only minimal dependencies, but
-   its exact-kernel deduplication is local to one carrier. R3F removes the
-   dominant Fracture-preparation closures from the product path entirely; R3A
-   must then normalize entry-relative retry/self structure and deduplicate
-   complete retained kernels across equivalent carriers for the remaining
-   automatic kinds before another full closure is admitted. Dependency-only
+   its original exact-kernel deduplication was local to one carrier. R3F
+   removed the dominant Fracture-preparation closures from the product path;
+   R3A now normalizes entry-relative retry/self structure and deduplicates
+   retained transition templates and planner/resource routes across equivalent
+   carriers for the remaining automatic kinds. Dependency-only
    primitives remain non-selectable as standalone product actions, with one
    owner-directed exception: R3F makes goal-relevant primitive Fracture an
    ordinary selectable product candidate.
@@ -1098,6 +1145,14 @@ acceptance once in R6 as required by `AGENTS.md`.
    optimality claim. Keep Imprint an ordinary automatic mechanic: no authored
    attempt/exit controls and no Imprint-specific explanatory panel.
 
+   Representation implementation completed 2026-07-19 with focused native and
+   release-WASM validation. The 1,024-state product measurement proves bounded
+   retained automatic templates and much lower planner/live-memory growth, but
+   the normal-cap run was stopped before Bellman entry and produced no report.
+   The acceptance gate remains open. Continue only with the reconciled timing,
+   bounded scaling, and observable-state audit recorded in the execution
+   sequence and R3A evidence; do not raise caps or begin R4.
+
 #### Repair acceptance gate
 
 - Exercise the same `action_mode:"goal_relevant"` and automatic-candidate
@@ -1120,6 +1175,14 @@ acceptance once in R6 as required by `AGENTS.md`.
   or `max_solver_owned_bytes`. Record whether it converges; if a different
   honest boundary remains, stop and plan that measured boundary rather than
   raising caps blindly.
+
+  R3A result 2026-07-19: bounded per-carrier retention passed in the 1,024-state
+  telemetry (temporary bench: maximum 12 templates and 12 rows per carrier),
+  but the unchanged-cap request was stopped before report emission and did not
+  establish Bellman entry. The measured boundary is expansion CPU outside the
+  currently attributed automatic and primitive timers, not retained automatic
+  storage or a cap refusal. R4 remains blocked pending the reconciled timing
+  and bounded scaling work described above.
 - Add focused projection fixtures proving physical affix ordering and junk
   ordering do not create distinct abstract states. Record any remaining
   goal-slot distinction and the admitted action fact that requires it. Add an

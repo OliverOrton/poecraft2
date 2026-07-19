@@ -1,232 +1,176 @@
-# Session Handoff - S8.4R.3A Carrier-Relative Kernel Scaling Is Next
+# Session Handoff - S8.4R.3A Measured Expansion Boundary Is Next
 
-Updated 2026-07-19. S8.4R.3F is complete on its structural evidence; Oliver
-transferred its pinned normal-cap Bellman-entry gate to S8.4R.3A, whose
-scaling levers own the remaining expansion-throughput and state-space
-boundary. Read
-[AGENTS.md](AGENTS.md),
-[docs/direction.md](docs/direction.md), this file, then
+Updated 2026-07-19. Read [AGENTS.md](AGENTS.md), this file,
+[docs/direction.md](docs/direction.md), then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3F are complete. **S8.4R.3A is the sole
-next implementation boundary and now owns the transferred normal-cap
-Bellman-entry gate.** Do not begin browser transfer/lifetime work (R4),
-verification-truth work (R5), integrated acceptance (R6), S8.5, or later work
-in the R3A chunk.
+B1.0-B1.4, S8.0-S8.4, S8.4R.1-R3, and R3F are complete. R3A's
+carrier-relative representation, telemetry, relevance, and state-order audit
+are implemented and focused validation passes, but **R3A is not closed**: the
+normal-cap `conquest-lamellar-mirage-r3f-product` attempt was stopped before it
+emitted a report or entered Bellman optimization. No cap was raised.
 
-Historical S8.0-S8.4 evidence remains immutable. R1-R3 regression evidence is
-separate under
-[fixtures/solver-regressions/s8.4r/v1](fixtures/solver-regressions/s8.4r/v1/).
-No completed real product solve, full acceptance suite, 10,000-run
-verification, or rendered UI review was performed in R3F. The Calculator now
-omits the dedicated Imprint explanation, reports actual native cap/status
-detail for incomplete solves, and blocks priced Fracture without an actionable
-fresh-base price.
+The sole next boundary is the measured R3A expansion-time follow-up below. Do
+not begin R4 browser transfer/lifetime work, R5 verification truth, R6
+integrated acceptance, S8.5, or later work. Mechanic questions remain Oliver's
+authority; never research or infer them.
 
-## What R3 Delivered
+The owner-decision docs that transferred the R3F gate to R3A were committed
+first and remain intact in commit `50f7825`.
 
-### Correct Imprint semantics
+## What R3A Implemented
 
-Magic rarity is enforced only when native checkpoint creation is attempted.
-The final solver goal may be rare. An Imprint attempt exits when its discovered
-intermediate predicate matches, preserving that actual successor for ordinary
-Bellman continuation. Every other exact outcome restores the bound checkpoint
-and retries. Checkpoint creation/restoration, one Craicic Chimeral plus three
-rare beasts per attempt, retry occupancy, and primitive compilation retain the
-existing exact engine paths.
+### Carrier-relative exact kernels
 
-The JSON goal parser now rejects user-authored `imprint_retry` programs and
-exits. C ABI metadata, Python/WASM bindings, TypeScript types, Calculator draft
-persistence, eligibility, controls, pricing text, tests, and docs describe
-automatic state-local discovery instead of a final-rarity or complete-goal
-restriction. Missing beast prices defer candidates and are never zero cost.
+- Imprint, renewal, protected-repeat, temporary-bench-repeat, and explicit
+  authored Fracture preparation encode entry retry/self as `kNoId` rather than
+  retaining the absolute entry state in the template.
+- Sparse rows resolve that sentinel to their owner carrier for self-loop
+  algebra, choices, compilation, and direct option evaluation.
+- Complete transition templates share across carriers independently from exact
+  planner routes and resource quantities. Carrier-local state/operator caches
+  remain available for solve and primitive compilation.
+- Planner operators are reused by exact program/target/resource identity, so
+  the pinned 1,024-state sample uses 669 registry operators instead of 66,888.
+  Dependencies are admitted only for a newly retained planner route.
+- Fractured, locked, crafted, influenced, capacity-distinct, or otherwise
+  mechanically distinct substrates remain separate through complete-kernel and
+  planner equality. The focused renewal test proves two carriers differing only
+  in wiped modifiers share one kernel pointer/template, while a fractured
+  carrier is illegal and distinct.
 
-### Bounded state-local discovery on R2
+### Telemetry and measured costs
 
-At each reachable carrier, the transient strict R2 context first asks the
-native Bestiary action whether checkpoint creation is legal. It enumerates a
-bounded set of goal-relevant primitive programs, executes each exact kernel,
-and derives useful exits from goal slots missing at the carrier and satisfied
-by actual positive-probability outcomes. Complete create/attempt/restore/exit
-kernels and exact resource vectors deduplicate before admission. Only a unique
-admitted program's structural primitives are added to the shared solve.
+Automatic telemetry is split into Imprint, renewal, protected-side,
+temporary-bench, authored Fracture preparation, permanent bench, Multimod
+finish, and primitive Fracture. It reports candidates, carriers,
+per-carrier maxima, unique templates/hits, rows, raw outcomes, retained
+transitions, admission/row time, and selected bytes.
 
-The default program depth/work ceilings are solver search resources, not
-mechanic limits. Exhaustion appears in bounded automatic-candidate diagnostics
-as `max_imprint_program_depth` or `max_imprint_program_work`. R1 sample, output,
-owned-byte, and solve-work caps remain in force; automatic evidence strings are
-included in the selected owned-byte estimate.
+Primitive telemetry is split into currency, Essence, Fossil, Harvest, bench,
+Bestiary, Fracture, and other. It reports requests/cache hits, rows, outcomes,
+transitions, build/row time, and cumulative attributed construction bytes.
+Those primitive bytes are not retained live bytes; evaluator caches are
+released after sparse copy.
 
-### Focused rare-final fixture
+R3A added this timing before optimization. It showed that repeated full
+owned-byte estimates and extraction scratch audits were initially dominant:
 
-The fixture
-[automatic-imprint-to-rare-focused.json](fixtures/solver-regressions/s8.4r/v1/cases/automatic-imprint-to-rare-focused.json)
-starts from a legal magic Vaal Regalia carrier and has a rare two-slot final
-goal. The solver automatically selects an exact Augment Imprint stage, exits on
-the actual useful magic successor, and continues through ordinary Regal value.
-The compiled graph uses the existing create/Augment/route/restore/retry/Regal
-primitives.
+- 64 carriers: 12.27 seconds before batched per-carrier audits, 1.14 seconds
+  after them, with the same transition/policy hashes at that checkpoint.
+- 1,024 carriers before extraction/share repair: 362.50 seconds total, of
+  which 285.78 seconds was extraction; 66,888 registry operators; 154,577,630
+  peak / 109,475,643 live selected bytes.
+- Final corrected 1,024-state boundary: 8.91 seconds total, 8.82 seconds
+  expansion, 15.56 ms extraction; 669 registry operators; 46,165,870 peak /
+  22,737,809 live selected bytes.
 
-Its intentionally small deterministic simulation completed 64/64 successes
-with zero failure, limit, unapplied, or unmatched routes: 2,230 checkpoint
-creates, 2,166 restores, 2,230 Augments, 64 Regals, 2,230 Chimerals, and 6,690
-rare beasts. The compact record is
-[r3-imprint-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3-imprint-summary.json).
-The required 10,000-run verification belongs to R6.
+The final sample's temporary-bench work was 515,857 candidates over 1,023
+eligible carriers, 2,944 unique transition templates, 63,775 template hits,
+2,944 retained rows, 20,691 transitions, and at most 12 templates/rows per
+carrier. Automatic admission accounted for 1.626 seconds and row work 0.041
+seconds. Roughly 7 seconds of outer expansion remains unattributed.
 
-## Post-R3 Product Scaling Finding
+The compact checked-in record is
+[r3a-carrier-scaling-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
+Full diagnostic reports remain ignored under `build/`, including
+`build/s8.4r3a-boundary-1024-final.json`.
 
-The normal-cap pinned Conquest/Mirage diagnostic did not fail because primitive
-Fossil roll DPs were repeatedly rebuilt. It expanded 223 states, admitted
-exactly 223 fixed options, retained 2,891 state/action rows and 9,168,904 sparse
-transitions, reached 433,238,148 selected owned bytes, and performed zero
-Bellman sweeps. Reforge telemetry recorded 2,001 requests, 1,992 hits, and only
-9 builds.
+### Relevance and abstract-state audit
 
-The one-fixed-option-per-state signature comes from automatic Fracture
-preparation. R2 compares complete option kernels only within one carrier's
-transient local admission batch. Every admitted option then receives a new
-operator and a mapped kernel keyed by absolute `(state_id, operator_index)`;
-kernel equality includes absolute exit, retry, and continuation state IDs. The
-preparation retry returns to its own entry carrier, so otherwise-equivalent
-closures cannot share retained transitions across carriers. An owner-supplied
-follow-up report observed the same linear slope at an 8x transition budget:
-1,344 expanded states, 1,344 fixed options, 34 million transitions, then a clean
-1.48 GiB selected-byte refusal. Reproduce bounded evidence before relying on
-those follow-up numbers.
+- Essence goal relevance now requires the exact guaranteed modifier to be a
+  requested tier-satisfying goal member; a merely same-family lower member is
+  excluded.
+- The pinned product sample admits zero Essence and zero Harvest rows and keeps
+  the already bounded requested Fossil envelope.
+- A focused projection fixture proves physical prefix/suffix array order and
+  equivalent junk visitation order project and hash identically. No new state
+  dimension was added.
+- The product envelope expectation now includes the ordinary primitive
+  `fracture`, matching R3F's product representation; explicit authored
+  `fracture_prepare` retains its S7 option contract.
 
-This is not the resolved eager global S8.3 cross product: construction remains
-state-local and the shared abstract layout remains narrow. Owner mechanic
-direction 2026-07-18 resolves the Fracture half structurally: fracturing is an
-early-craft technique planned over ordinary primitives, so R3F removes
-product-path Fracture-preparation closures entirely by making goal-relevant
-primitive Fracture an ordinary selectable candidate. R3A then owns the
-carrier-relative retained-kernel representation and cross-carrier exact
-template sharing for the remaining automatic kinds and for explicit-envelope
-Fracture preparation.
+## Transferred Normal-Cap Gate: Unmet
 
-## What R3F Delivered
+The unchanged command remains:
 
-In `goal_relevant` automatic product mode, `fracture` is now a normal priced
-primitive candidate. Its native per-state distribution is retained only when a
-legal carrier has a satisfied, unfractured goal slot; irrelevant legal carriers
-are refused before outcome construction, so rejected rows do not intern
-unreachable fractured states. Bounded witnesses distinguish native illegality,
-carrier irrelevance, exact primitive inclusion, and missing prices.
+```powershell
+build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus fixtures\solver-regressions\s8.4r\v1\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\s8.4r3a-after.json --skip-verification
+```
 
-Automatic product synthesis no longer creates per-state `fracture_prepare`
-closures. Explicit user-authored `fracture_prepare` options still use the
-unchanged S7 contract. A priced automatic Fracture solve without `base` is
-refused natively because Restart is the miss-recovery route, and Calculator
-readiness surfaces the same requirement before solve launch.
+Its checked-in caps remain 100,000 states/sweeps/discovered/expanded,
+1,000,000 rows, 10,000,000 transitions/reforge work, and 1 GiB selected solver
+owned bytes.
 
-The focused S8.3 test now proves the automatic operator is primitive, no
-automatic Fracture preparation operator exists, the exact distribution has
-four outcomes summing to one, and the price flip remains exactly `23.75`:
-Fracture at price `23` has value `124.25`; Restart at price `24` has value
-`125`. An irrelevant four-mod carrier discovers only itself plus Restart's
-fresh base, with no leaked Fracture successors. Release WASM was rebuilt from
-the final native source; no C ABI or strategy vocabulary changed.
+Oliver asked to abort after about nine minutes of foreground waiting. The
+wrapper stopped first, but its benchmark child survived; it was found during a
+rebuild and explicitly stopped before report emission at 858.14 CPU seconds
+and about 153 MiB working set. There was no report, cap hit, crash, Bellman
+entry, or convergence result. Do not describe this gate as passed.
 
-The reproduced pre-fix normal-cap record is pinned in
-[r3f-linear-retention-before.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3f-linear-retention-before.json):
-243 expanded states retained 243 Fracture preparation operators, reached
-9,989,904 transitions and 452,827,288 selected bytes, performed zero Bellman
-sweeps, then refused `max_transitions`.
+## Exact Next Boundary: R3A Measured Expansion Work Only
 
-## Focused Validation Completed
+1. Preserve the current exact envelope, mechanics, representation, and checked-
+   in caps. Do not begin with another normal-cap run.
+2. Add reconciled timing counters around all currently unattributed outer
+   expansion work: `prepare_state_expansion`, transient-context construction
+   and projection, candidate enumeration versus exact evaluation, state
+   interning, sparse-row/effect construction and enqueue, operator/pricing
+   refresh, and exact owned-byte audits. The attributed pieces must sum closely
+   to the outer expansion timer per carrier and automatic kind.
+3. Run bounded, time-boxed 1,024/2,048/4,096 expansion samples only until the
+   growth curve and dominant phase are known. Stop a sample rather than
+   extending it. Do not raise caps.
+4. Partition discovered states by normalized observable facts. Require a
+   concrete admitted-action legality/transition witness for any remaining
+   goal-slot distinction, while preserving the passing physical-affix/junk-
+   ordering equivalence fixture.
+5. Repair only the measured hot phase, re-run the focused/native correctness
+   checks, and attempt the unchanged normal-cap Bellman-entry gate only when
+   the bounded curve predicts a usable completion.
+6. If the exact full goal-relevant envelope remains unusable after that repair,
+   implement the already-planned mechanic-neutral focused/custom action scope.
+   Label it "optimal within the selected action scope" and never claim global
+   optimality. Any narrower mechanic-specific retry decision requires Oliver.
 
-No full acceptance suite was run.
+R4 remains blocked until the normal-cap request completes expansion and enters
+outer Bellman optimization and retained automatic kinds remain bounded.
 
-- `powershell -File scripts/build.ps1` passed after the locked benchmark image
-  was stopped.
-- Native `--solver-s8-3-only`: 150 checks, 0 failures.
-- `npx tsx test/solve-workspace.test.ts`: 4 checks, 0 failures.
-- `npx tsc --noEmit` passed.
-- `powershell -File scripts/build-wasm.ps1` rebuilt the release module from the
-  final source. The R3F WASM picker subtest exposed primitive Fracture directly.
-- The broader `engine-smoke.test.ts` run continued past the R3F picker subtest
-  but later stopped at an automatic permanent-bench group-goal solve, which did
-  not converge. Do not report the full smoke as passing or attribute that
-  boundary to R3F without a separate diagnosis.
-- No C ABI or strategy vocabulary changed in R3F.
+## Validation Completed
 
-## R3F Gate Decision (owner, 2026-07-19)
+- `powershell -File scripts/build.ps1`: passed.
+- Full native engine suite: 164,814 checks, 0 failures.
+- Focused `--solver-s8-3-only`: 177 checks, 0 failures.
+- `powershell -File scripts/build-wasm.ps1`: release WASM rebuilt from the
+  final native source. No C ABI or strategy vocabulary changed.
+- Remaining non-visual web tests passed; `npx tsc --noEmit` passed.
+- The broad `npm test` run stopped at the known pre-R3A automatic
+  permanent-bench group-goal non-convergence in `engine-smoke.test.ts`. Do not
+  attribute it to R3A.
+- The corpus pin test separately exposes the already-disclosed stale historical
+  S7 `9776797b...` game-data pin versus current `af41b8f4...`; the active S8.4R
+  manifest correctly pins `af41b8f4...`.
+- No 10,000-run verification was performed; R6 owns it. No rendered or visual
+  review was performed; Oliver owns it.
 
-Oliver transferred the normal-cap Bellman-entry requirement from R3F to R3A
-and closed R3F on its structural evidence. Rationale: two normal-cap Conquest
-attempts were stopped while still expanding (one after ~27,094 CPU seconds; no
-cap hit, no crash), and the remaining boundary — per-state expansion cost for
-the remaining automatic kinds plus possible ordering-induced state splitting —
-is exactly what R3A's scaling levers repair; it is not Fracture planning. No
-cap was raised. The stopped-attempt record remains in
-[r3f-implementation-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3f-implementation-summary.json).
+## Gotchas
 
-## Exact Next Boundary: S8.4R.3A Only
-
-Repair carrier-relative automatic-kernel retention for the remaining automatic
-kinds (Imprint, renewal, protected-side, temporary bench) and for
-explicit-envelope Fracture preparation before browser transfer work:
-
-- normalize an option's entry-relative retry/self mass instead of treating the
-  absolute entry state ID as part of an otherwise shared kernel;
-- cache and reuse exact preparation/renewal templates across carriers with the
-  same preparation program, target goal slot, preserved-base signature,
-  non-self exits, continuation classification, primitive routes, and resource
-  vector;
-- retain only the carrier-local Bellman self reference/template ID per state,
-  admit dependencies once per unique template, and keep distinct fractured or
-  otherwise mechanic-relevant preserved substrates separate;
-- add per-automatic-kind and per-primitive-family candidate/template/row/
-  outcome/transition/time/byte telemetry;
-- tighten Essence relevance to guaranteed modifiers that actually satisfy a
-  requested slot, add bounded exact Harvest/Fossil/Essence relevance and
-  deduplication where proven, and report search bounds as resources rather than
-  mechanic invalidity;
-- prove physical affix ordering and junk ordering collapse in abstract-state
-  projection; preserve goal-slot identity only where an admitted action can
-  observe a real difference; and
-- pass the gate transferred from R3F: the pinned
-  `conquest-lamellar-mirage-r3f-product` request (1-chaos disclosed `base`
-  override, not a market quote) completes expansion and enters outer Bellman
-  optimization under the checked-in normal caps, and the remaining automatic
-  kinds show bounded per-carrier retention in the new telemetry. Reproduce
-  with:
-
-  ```powershell
-  build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus fixtures\solver-regressions\s8.4r\v1\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\s8.4r3a-after.json --skip-verification
-  ```
-
-  Add the automatic-kind time telemetry early and attribute expansion time per
-  kind before optimizing; if exact sharing, relevance, and state minimization
-  still cannot reach the boundary, stop and plan the measured boundary rather
-  than raising caps.
-
-Do not silently hard-prune every destructive raw renewal by solve depth or a UI
-stage. If Oliver chooses a narrower Fossil/Essence product scope, first pin the
-specific below-exit retry rule and label the result optimal only within that
-scope. A general focused/custom action scope is a fallback only if the exact
-sharing/relevance/state repair still cannot produce a usable product policy.
-Oliver owns rendered and visual review.
-
-## Deferred Boundaries And Gotchas
-
-- R5 owns terminal/off-policy verification truth, confidence, cost semantics,
-  and exact evaluator vocabulary such as `mod_count`.
-- R4 owns giant strategy transfer, clone removal, compile-size alignment,
-  solved-handle/transition-closure release, rebuild-on-reprice, and browser
-  live-byte lifecycle checks after R3A passes.
-- R6 alone runs exact real product solves, required 10,000-run compiled-policy
-  verifications, and the complete non-visual acceptance/evidence pass.
-- B1.5 remains waived/deferred, not complete. Do not silently backfill it.
-- Prefix-to-Suffix and Suffix-to-Prefix beastcrafts remain parked and absent.
-- R1 caps/telemetry and R2 lazy state-local generation remain settled. R3F
-  changes only Fracture's product planning shape (primitive candidate, no
-  product-path preparation closures); R3A then changes only cross-carrier
-  retained-kernel normalization/sharing and measured product usability for the
-  remaining kinds; do not recreate or reopen the resolved eager global
-  cross-product/`bad_alloc` design.
-- Large S8.0 strategies and projections are immutable historical evidence, not
-  normal product inputs.
+- `set_solve_resource_caps(..., reserve_storage=false)` is intentional only for
+  transient local evaluators. Outcome interning can reallocate state storage,
+  so callers that evaluate outcomes must not retain `AbstractState&` references
+  across that work.
+- Static authored options use kernel-derived expected resources; state-local
+  automatic operators use the exact planner resource vector. In particular,
+  authored conditional Fracture quantities must not be replaced with a static
+  planner vector.
+- Keep legacy absolute sparse-kernel equivalence unchanged. The additional
+  owner-relative self-probability comparison applies only to entry-relative
+  kernels; applying it globally makes existing policy iteration oscillate.
+- A whole transient-context cache was measured at about 106 seconds and 81 MB
+  for 64 carriers with no useful cross-carrier hits and was rejected.
+- `functions.wait` or a shell-wrapper cancellation may leave a spawned native
+  benchmark child alive on Windows. Verify the exact process after aborting a
+  long run before rebuilding.
+- SQLite is canonical and compiled data is derived. Neither was edited in R3A.

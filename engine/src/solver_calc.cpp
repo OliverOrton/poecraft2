@@ -32,6 +32,40 @@
 namespace poecraft {
 namespace solver {
 
+namespace {
+
+PrimitiveTelemetryFamily primitive_family(const ActionType type) {
+    switch (type) {
+    case ActionType::Essence:
+        return PrimitiveTelemetryFamily::Essence;
+    case ActionType::Fossil:
+        return PrimitiveTelemetryFamily::Fossil;
+    case ActionType::HarvestReforge:
+    case ActionType::HarvestAugment:
+    case ActionType::HarvestResist:
+        return PrimitiveTelemetryFamily::Harvest;
+    case ActionType::Bench:
+    case ActionType::RemoveCraftedModifiers:
+        return PrimitiveTelemetryFamily::Bench;
+    case ActionType::Fracture:
+        return PrimitiveTelemetryFamily::Fracture;
+    case ActionType::Transmute:
+    case ActionType::Augment:
+    case ActionType::Alteration:
+    case ActionType::Regal:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Exalt:
+    case ActionType::Annul:
+    case ActionType::Scour:
+        return PrimitiveTelemetryFamily::Currency;
+    default:
+        return PrimitiveTelemetryFamily::Other;
+    }
+}
+
+} // namespace
+
 std::uint8_t rarity_affix_cap(const SessionImpl& session, std::uint8_t rarity) {
     switch (rarity) {
     case PC_RARITY_NORMAL:
@@ -608,10 +642,15 @@ const OutcomeDistribution& CalcContext::outcomes(
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | action_index;
     ++telemetry_.distribution_requests;
+    PrimitiveFamilyTelemetry& family =
+        telemetry_.primitive_families.at(static_cast<std::size_t>(
+            primitive_family(registry_.actions.at(action_index).params.type)));
+    ++family.requests;
     const auto cached = distribution_cache_.find(key);
     const OutcomeDistribution* result = nullptr;
     if (cached != distribution_cache_.end()) {
         ++telemetry_.distribution_hits;
+        ++family.cache_hits;
         result = cached->second.get();
     } else {
         ++telemetry_.distribution_misses;
@@ -623,13 +662,16 @@ const OutcomeDistribution& CalcContext::outcomes(
                 std::chrono::steady_clock::now() - started)
                 .count());
         telemetry_.distribution_build_ns += build_ns;
+        family.build_ns += build_ns;
         result = distribution_cache_.emplace(key, std::move(distribution))
                      .first->second.get();
     }
 
     if (telemetry_rows_.emplace(key, 1).second) {
         ++telemetry_.state_action_rows;
+        ++family.rows;
         telemetry_.outcome_entries += result->entries.size();
+        family.raw_outcomes += result->entries.size();
         telemetry_.choice_groups += result->choice_groups.size();
         std::uint64_t choice_successors = 0;
         for (const OutcomeChoiceGroup& group : result->choice_groups) {
@@ -640,6 +682,20 @@ const OutcomeDistribution& CalcContext::outcomes(
             result->choice_groups.empty()
                 ? result->entries.size()
                 : choice_successors;
+        family.transitions += result->choice_groups.empty()
+                                  ? result->entries.size()
+                                  : choice_successors;
+        std::uint64_t selected_bytes = sizeof(OutcomeDistribution);
+        selected_bytes += result->entries.capacity() * sizeof(OutcomeEntry);
+        selected_bytes += result->choice_groups.capacity() *
+                          sizeof(OutcomeChoiceGroup);
+        for (const OutcomeChoiceGroup& group : result->choice_groups) {
+            selected_bytes +=
+                group.states.capacity() * sizeof(std::uint32_t);
+        }
+        selected_bytes += result->choice_options.capacity() *
+                          sizeof(OutcomeChoiceOption);
+        family.selected_bytes += selected_bytes;
     }
     return *result;
 }
@@ -651,9 +707,11 @@ void CalcContext::reset_solve_telemetry() {
 
 void CalcContext::set_solve_resource_caps(
     const std::uint32_t max_discovered_states,
-    const std::uint64_t max_reforge_work) {
+    const std::uint64_t max_reforge_work,
+    const bool reserve_storage) {
     solve_discovered_state_cap_ = max_discovered_states;
     solve_reforge_work_cap_ = max_reforge_work;
+    if (!reserve_storage) return;
     const std::size_t practical_reserve = std::min<std::size_t>(
         max_discovered_states, 65536);
     states_.reserve(std::max(states_.size(), practical_reserve));
@@ -670,6 +728,15 @@ void CalcContext::consume_reforge_work(const std::uint64_t amount) {
             "max_reforge_work", *solve_reforge_work_cap_);
     }
     telemetry_.reforge_frontier_work += amount;
+}
+
+void CalcContext::record_primitive_row_time(
+    const std::uint32_t action_index,
+    const std::uint64_t elapsed_ns) {
+    PrimitiveFamilyTelemetry& family =
+        telemetry_.primitive_families.at(static_cast<std::size_t>(
+            primitive_family(registry_.actions.at(action_index).params.type)));
+    family.row_ns += elapsed_ns;
 }
 
 void CalcContext::release_solve_transition_caches() {
@@ -818,30 +885,87 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
                   const std::uint64_t,
                   std::shared_ptr<const OptionKernel>>) +
               2 * sizeof(void*));
-    for (const auto& [unused, kernel] : option_kernel_cache_) {
-        (void)unused;
+    std::unordered_set<const OptionKernel*> counted_option_kernels;
+    const auto add_option_kernel_bytes = [&](const OptionKernel& kernel) {
         bytes += sizeof(OptionKernel);
-        bytes += kernel->expected_resources.capacity() *
+        bytes += kernel.expected_resources.capacity() *
                  sizeof(std::pair<std::string, double>);
-        for (const auto& [key, quantity] : kernel->expected_resources) {
+        for (const auto& [key, quantity] : kernel.expected_resources) {
             (void)quantity;
             bytes += string_bytes(key);
         }
-        bytes += kernel->exits.capacity() * sizeof(OutcomeEntry);
-        bytes += kernel->observation_choice_groups.capacity() *
+        bytes += kernel.exits.capacity() * sizeof(OutcomeEntry);
+        bytes += kernel.observation_choice_groups.capacity() *
                  sizeof(OutcomeChoiceGroup);
         for (const OutcomeChoiceGroup& group :
-             kernel->observation_choice_groups) {
+             kernel.observation_choice_groups) {
             bytes += group.states.capacity() * sizeof(std::uint32_t);
         }
-        bytes += kernel->observation_choice_options.capacity() *
+        bytes += kernel.observation_choice_options.capacity() *
                  sizeof(OutcomeChoiceOption);
-        bytes += kernel->retry_states.capacity() * sizeof(std::uint32_t);
-        bytes += kernel->continuation_states.capacity() *
+        bytes += kernel.retry_states.capacity() * sizeof(std::uint32_t);
+        bytes += kernel.continuation_states.capacity() *
                  sizeof(std::uint32_t);
-        bytes += string_bytes(kernel->automatic.legality_result);
-        bytes += string_bytes(kernel->automatic.reason);
+        bytes += string_bytes(kernel.automatic.legality_result);
+        bytes += string_bytes(kernel.automatic.reason);
+    };
+    for (const auto& [unused, kernel] : option_kernel_cache_) {
+        (void)unused;
+        if (counted_option_kernels.insert(kernel.get()).second) {
+            add_option_kernel_bytes(*kernel);
+        }
     }
+    bytes += option_kernel_templates_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<OptionKernelTemplateMemo>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, templates] : option_kernel_templates_) {
+        (void)unused;
+        bytes += templates.capacity() * sizeof(OptionKernelTemplateMemo);
+        for (const OptionKernelTemplateMemo& memo : templates) {
+            bytes += memo.expected_resources.capacity() *
+                     sizeof(std::pair<std::string, double>);
+            for (const auto& [key, unused_quantity] :
+                 memo.expected_resources) {
+                (void)unused_quantity;
+                bytes += string_bytes(key);
+            }
+            if (counted_option_kernels.insert(memo.kernel.get()).second) {
+                add_option_kernel_bytes(*memo.kernel);
+            }
+        }
+    }
+    bytes += option_transition_templates_.bucket_count() * sizeof(void*);
+    bytes += option_transition_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<std::shared_ptr<const OptionKernel>>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, templates] : option_transition_templates_) {
+        (void)unused;
+        bytes += templates.capacity() *
+                 sizeof(std::shared_ptr<const OptionKernel>);
+        for (const auto& kernel : templates) {
+            if (counted_option_kernels.insert(kernel.get()).second) {
+                add_option_kernel_bytes(*kernel);
+            }
+        }
+    }
+    bytes += option_operator_templates_.bucket_count() * sizeof(void*);
+    bytes += option_operator_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<std::uint32_t>>) +
+              2 * sizeof(void*));
+    for (const auto& [unused, operators] : option_operator_templates_) {
+        (void)unused;
+        bytes += operators.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += option_kernel_template_hit_keys_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_template_hit_keys_.size() *
+             (sizeof(std::uint64_t) + 2 * sizeof(void*));
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<
                   const std::pair<std::uint32_t, std::uint64_t>,

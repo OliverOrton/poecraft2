@@ -79,6 +79,17 @@ bool goal_contains_mod_family(
         });
 }
 
+bool goal_contains_exact_mod(
+    const ActionRegistryBuildOptions& options,
+    const std::uint32_t mod) {
+    return std::any_of(
+        options.fossil_goal_mod_ids.begin(),
+        options.fossil_goal_mod_ids.end(),
+        [&](const std::vector<std::uint32_t>& slot) {
+            return std::find(slot.begin(), slot.end(), mod) != slot.end();
+        });
+}
+
 bool goal_has_tag(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options,
@@ -125,8 +136,8 @@ bool action_is_goal_relevant(
     case ActionType::Essence:
         return action.params.essence_index <
                    session.essence_guaranteed_mod_ids.size() &&
-               goal_contains_mod_family(
-                   session, options,
+               goal_contains_exact_mod(
+                   options,
                    session.essence_guaranteed_mod_ids[
                        action.params.essence_index]);
     case ActionType::Fossil:

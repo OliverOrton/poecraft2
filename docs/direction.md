@@ -150,16 +150,21 @@ are complete. The pinned normal-cap Conquest attempts were stopped at Oliver's
 direction while still expanding, and on 2026-07-19 Oliver transferred the
 normal-cap Bellman-entry requirement to R3A: the remaining boundary is
 expansion throughput and state-space size, which are R3A's scaling levers, so
-R3F is closed on its structural evidence. R3A normalizes entry-relative
-self/retry mass and shares
-exact non-self preparation templates across carriers with the same preserved
-substrate for the remaining automatic kinds, adds per-family/per-automatic-kind
-scaling telemetry, tightens safe
-Essence/Harvest relevance, and audits abstract-state equivalence, and now owns
-the transferred normal-cap Bellman-entry gate. This does not
-reopen the resolved eager global cross product. **S8.4R.3A is
-the immediate and sole boundary; S8.5 remains blocked until all of S8.4R
-passes.** Mechanic
+R3F is closed on its structural evidence. R3A now normalizes entry-relative
+self/retry mass, shares exact transition templates and planner/resource routes
+across carriers, emits per-family/per-automatic-kind scaling telemetry,
+tightens exact Essence relevance, and proves physical affix/junk ordering does
+not split abstract identity. Its final 1,024-state sample bounded
+temporary-bench retention at 12 templates/rows per carrier and reduced live
+selected bytes to about 22.7 MB, but Oliver stopped the unchanged-cap run
+before report emission and Bellman entry was not established. No cap was
+raised. This does not reopen the resolved eager global cross product.
+**The measured R3A expansion-time boundary is the immediate and sole boundary;
+R4 and S8.5 remain blocked.** The next work adds reconciled expansion timers,
+runs bounded/time-boxed scaling samples, and audits remaining observable state
+distinctions before another normal-cap attempt. If the exact full envelope
+remains unusable, the fallback is a disclosed mechanic-neutral focused/custom
+action scope, never a global optimality claim. Mechanic
 rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
