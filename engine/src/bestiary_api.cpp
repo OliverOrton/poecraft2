@@ -378,14 +378,15 @@ pc_result pc_bestiary_get_solver_option_info(
     out_info->abi_version = PC_ABI_VERSION;
     out_info->option_index = option_index;
     out_info->option_id = "imprint_retry";
-    out_info->display_name = "Imprint retry";
-    out_info->goal_restriction_key = "complete_magic_item_goal";
-    out_info->goal_restriction =
-        "Available only for a complete magic-item goal.";
-    out_info->goal_rarity = PC_RARITY_MAGIC;
-    out_info->requires_complete_goal = 1;
-    out_info->min_program_actions = 1;
-    out_info->max_program_actions = 3;
+    out_info->display_name = "Automatic Imprint stages";
+    out_info->checkpoint_restriction_key = "magic_checkpoint_carrier";
+    out_info->checkpoint_restriction =
+        "Discovered at reachable magic carriers where native checkpoint "
+        "creation is legal; the final goal may have any rarity.";
+    out_info->checkpoint_rarity = PC_RARITY_MAGIC;
+    out_info->automatic_discovery = 1;
+    out_info->state_local_discovery = 1;
+    out_info->resource_bounded = 1;
     clear_public_error(out_error);
     return PC_RESULT_OK;
 }

@@ -1,5 +1,24 @@
 # S8.4R bounded evidence
 
+## R3 automatic Imprint-stage discovery
+
+The focused fixture contract is
+[`automatic-imprint-to-rare-focused.json`](../cases/automatic-imprint-to-rare-focused.json),
+and its compact result is [`r3-imprint-summary.json`](r3-imprint-summary.json).
+The final goal is rare, while native automatic discovery creates a checkpoint
+only at the reachable legal magic carrier, discovers an exact Augment attempt
+and useful intermediate exit, then continues from that actual successor with
+ordinary Regal policy value. Non-exits restore and retry.
+
+The compiled strategy uses the existing create/attempt/route/restore/retry
+primitives. The intentionally small deterministic simulation completed all 64
+runs: 2,230 checkpoints, 2,166 restores, and 64 successful exits followed by
+Regal. The required 10,000-run verification remains deferred to S8.4R.6.
+
+```powershell
+build\engine\poecraft_engine_tests.exe --solver-imprint-only data\compiled\current
+```
+
 ## R2 state-local automatic admission
 
 S8.4R.2 adds bounded ordinary and advanced product representatives alongside

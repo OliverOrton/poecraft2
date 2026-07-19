@@ -205,10 +205,13 @@ void run_bestiary_tests() {
     PC_CHECK(pc_bestiary_get_solver_option_info(
                  &public_handle, 0, &option_info, &error) == PC_RESULT_OK);
     PC_CHECK(std::strcmp(option_info.option_id, "imprint_retry") == 0);
-    PC_CHECK(option_info.goal_rarity == PC_RARITY_MAGIC);
-    PC_CHECK(option_info.requires_complete_goal == 1);
-    PC_CHECK(option_info.min_program_actions == 1);
-    PC_CHECK(option_info.max_program_actions == 3);
+    PC_CHECK(std::strcmp(
+                 option_info.checkpoint_restriction_key,
+                 "magic_checkpoint_carrier") == 0);
+    PC_CHECK(option_info.checkpoint_rarity == PC_RARITY_MAGIC);
+    PC_CHECK(option_info.automatic_discovery == 1);
+    PC_CHECK(option_info.state_local_discovery == 1);
+    PC_CHECK(option_info.resource_bounded == 1);
 
     const BestiaryCraftState public_source = representative_state();
     pc_bestiary_craft_state public_state{};

@@ -931,17 +931,17 @@ const char* pcw_bestiary_presentation(uint32_t data_id) {
         append_escaped(out, info.option_id);
         out += ",\"display_name\":";
         append_escaped(out, info.display_name);
-        out += ",\"goal_restriction_key\":";
-        append_escaped(out, info.goal_restriction_key);
-        out += ",\"goal_restriction\":";
-        append_escaped(out, info.goal_restriction);
-        out += ",\"goal_rarity\":\"magic\"";
-        out += ",\"requires_complete_goal\":";
-        out += info.requires_complete_goal ? "true" : "false";
-        out += ",\"min_program_actions\":" +
-               std::to_string(info.min_program_actions);
-        out += ",\"max_program_actions\":" +
-               std::to_string(info.max_program_actions);
+        out += ",\"checkpoint_restriction_key\":";
+        append_escaped(out, info.checkpoint_restriction_key);
+        out += ",\"checkpoint_restriction\":";
+        append_escaped(out, info.checkpoint_restriction);
+        out += ",\"checkpoint_rarity\":\"magic\"";
+        out += ",\"automatic_discovery\":";
+        out += info.automatic_discovery ? "true" : "false";
+        out += ",\"state_local_discovery\":";
+        out += info.state_local_discovery ? "true" : "false";
+        out += ",\"resource_bounded\":";
+        out += info.resource_bounded ? "true" : "false";
         out.push_back('}');
     }
     out += "]}";

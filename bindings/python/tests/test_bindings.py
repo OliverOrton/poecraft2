@@ -65,13 +65,14 @@ class BindingTests(unittest.TestCase):
         options = self.data.bestiary_solver_options
         self.assertEqual(len(options), 1)
         self.assertEqual(options[0].id, "imprint_retry")
-        self.assertEqual(options[0].goal_restriction_key, "complete_magic_item_goal")
-        self.assertEqual(options[0].goal_rarity, "magic")
-        self.assertTrue(options[0].requires_complete_goal)
         self.assertEqual(
-            (options[0].min_program_actions, options[0].max_program_actions),
-            (1, 3),
+            options[0].checkpoint_restriction_key,
+            "magic_checkpoint_carrier",
         )
+        self.assertEqual(options[0].checkpoint_rarity, "magic")
+        self.assertTrue(options[0].automatic_discovery)
+        self.assertTrue(options[0].state_local_discovery)
+        self.assertTrue(options[0].resource_bounded)
 
         item = self.session.create_item(rarity="magic", with_implicits=False)
         state = self.session.create_bestiary_state(item)

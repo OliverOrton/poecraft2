@@ -81,15 +81,15 @@ success normalization. Simulator descriptor/material averages remain a
 separate sampled evidence source with run count and seed.
 
 A post-S8.4 audit found blocking regressions in the path Calculator actually
-uses. B1.3/B1.4 incorrectly restricted Imprint retry to a complete magic final
-goal even though the approved mechanic requires magic only when the checkpoint
-is created. S8.3 `goal_relevant` automatic generation eagerly creates a large
-cross product of fixed options and widens one global abstraction for all their
-dependencies; a one-state ordinary product diagnostic discovered 63,479 states
-and took about 30 seconds. S8.2/S8.3 also retain unbounded per-row diagnostic
-JSON, omit finalized automatic witnesses from the byte estimate, and check
-caps before diagnostic finalization. The real S8.3/S8.4 comparisons disabled
-automatic candidates, so they did not cover this product path. Large strategy
+uses. The now-repaired R3 drift treated magic as a final-goal restriction
+instead of a checkpoint-creation condition. The now-repaired R2 path eagerly
+created a large `goal_relevant` fixed-option cross product and widened one
+global abstraction for all dependencies; a one-state ordinary product
+diagnostic discovered 63,479 states and took about 30 seconds. The now-repaired
+R1 path retained unbounded per-row diagnostics, omitted finalized automatic
+witnesses from its byte estimate, and checked caps before finalization. The
+real S8.3/S8.4 comparisons disabled automatic candidates, so they did not cover
+this product path. Large strategy
 serialization, repeated browser copies, retained repricing closure, a 64 MiB
 product compile cap below current ordinary/advanced graph sizes, and
 non-actionable UI diagnostics compound the problem. Calculator's 5,000-run
@@ -115,7 +115,19 @@ then admitted with their minimal structural dependencies. Product construction
 no longer widens the shared layout for the eager global cross product; the
 pinned and ordinary/advanced bounded cases now construct 17/7/5 candidates
 with 13-14 junk classes instead of 1,785/1,318/1,773 candidates with 44-45.
-**S8.4R.3 is the immediate and sole boundary; S8.5 is blocked until all of
+R3 is complete: Imprint is now automatic and state-local. Native discovery
+runs only at reachable carriers where checkpoint creation is legal, constructs
+bounded goal-relevant exact attempt programs, derives useful intermediate
+exits, and passes complete attempt/restore kernels through the R2 admission and
+deduplication path before adding minimal dependencies. Magic is a checkpoint
+creation condition, not a final-goal restriction; exits continue from their
+actual successor through ordinary Bellman values, while non-exits restore and
+retry exactly. Authored Imprint programs/exits are gone from the product
+contract, and depth/work exhaustion is reported as a solver resource boundary.
+The focused rare-final compiled fixture passed 64 deterministic runs; its
+required 10,000-run verification remains deferred to R6. Release WASM was
+rebuilt for the corrected C ABI metadata. **S8.4R.4 is the immediate and sole
+boundary; S8.5 is blocked until all of
 S8.4R passes.** Mechanic rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

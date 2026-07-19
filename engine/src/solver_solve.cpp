@@ -1071,6 +1071,10 @@ struct SolveWork::Impl {
             options.max_solver_owned_bytes > other_bytes
                 ? options.max_solver_owned_bytes - other_bytes
                 : 1;
+        limits.max_imprint_program_depth =
+            options.max_imprint_program_depth;
+        limits.max_imprint_program_work =
+            options.max_imprint_program_work;
         limits.prices = &prices;
         StateLocalAutomaticBatch batch =
             calc.admit_state_local_automatic_candidates(state, limits);
@@ -1609,6 +1613,8 @@ struct SolveWork::Impl {
             return "protected_metamod";
         case AutomaticCandidateKind::MultimodFinish:
             return "multimod_finish";
+        case AutomaticCandidateKind::Imprint:
+            return "imprint";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -1631,6 +1637,7 @@ struct SolveWork::Impl {
         add(kAutomaticMetamodProtection, "metamod_protection");
         add(kAutomaticCarrierFracture, "carrier_exact_fracture");
         add(kAutomaticDeterministicFinish, "deterministic_finish");
+        add(kAutomaticImprintCheckpoint, "imprint_checkpoint_restore");
         out.push_back(']');
         return out;
     }

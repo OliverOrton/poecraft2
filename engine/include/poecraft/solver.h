@@ -58,6 +58,10 @@ extern "C" {
  *   }                               // omitted actions = generated registry;
  *                                   // [] = options only
  *
+ * Imprint retry stages are not authored in `options`. Goal-relevant solves
+ * discover bounded exact attempt/restore kernels automatically at reachable
+ * magic carriers where native checkpoint creation is legal.
+ *
  * Costs are currency-quantity vectors dotted with a pc_economy price table
  * at solve time (same key vocabulary as strategy operations, plus "base"
  * for the synthetic restart action).

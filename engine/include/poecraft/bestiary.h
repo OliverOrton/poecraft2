@@ -110,19 +110,19 @@ typedef struct pc_bestiary_calculation {
     pc_bestiary_action_result result;
 } pc_bestiary_calculation;
 
-/* Engine-owned presentation for the one specific B1 solver option. */
+/* Engine-owned presentation for automatic Imprint-stage discovery. */
 typedef struct pc_bestiary_solver_option_info {
     uint32_t struct_size;
     uint32_t abi_version;
     uint32_t option_index;
     const char* option_id;
     const char* display_name;
-    const char* goal_restriction_key;
-    const char* goal_restriction;
-    int32_t goal_rarity; /* pc_rarity */
-    int32_t requires_complete_goal;
-    uint32_t min_program_actions;
-    uint32_t max_program_actions;
+    const char* checkpoint_restriction_key;
+    const char* checkpoint_restriction;
+    int32_t checkpoint_rarity; /* pc_rarity */
+    int32_t automatic_discovery;
+    int32_t state_local_discovery;
+    int32_t resource_bounded;
 } pc_bestiary_solver_option_info;
 
 pc_result pc_bestiary_state_init(

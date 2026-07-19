@@ -1,128 +1,107 @@
-# Session Handoff - S8.4R.3 Automatic Imprint Discovery Is Next
+# Session Handoff - S8.4R.4 Browser Transfer And Lifetime Is Next
 
-Updated 2026-07-18 after completing S8.4R.2. Read [AGENTS.md](AGENTS.md),
+Updated 2026-07-18 after completing S8.4R.3. Read [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R2 are complete. **S8.4R.3 is the sole next
-implementation boundary.** Do not begin browser transfer/lifetime work (R4),
-verification truth work (R5), integrated acceptance (R6), or S8.5 in the R3
-chunk.
+B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete. **S8.4R.4 is the sole next
+implementation boundary.** Do not begin verification-truth work (R5),
+integrated acceptance (R6), S8.5, or later work in the R4 chunk.
 
-Historical S8.0-S8.4 evidence remains immutable. R1/R2 regression evidence is
+Historical S8.0-S8.4 evidence remains immutable. R1-R3 regression evidence is
 separate under
 [fixtures/solver-regressions/s8.4r/v1](fixtures/solver-regressions/s8.4r/v1/).
-No unbounded real solve, real-case compilation, verification run, 10,000-run
-sample, full acceptance suite, rendered review, or R3+ implementation was
-performed during R2.
+No unbounded real solve, full acceptance suite, 10,000-run verification, or
+rendered UI review was performed in R3.
 
-## What R2 Delivered
+## What R3 Delivered
 
-### Lazy carrier-local automatic candidates
+### Correct Imprint semantics
 
-Automatic permanent bench, temporary blocker, protected-metamod, Multimod, and
-Fracture options are no longer materialized as one global cross product during
-`CalcContext` construction. Construction retains only explicit primitive and
-manual fixed-option candidates. On expansion, the current carrier supplies a
-bounded plausibility filter; candidates that require exact evaluation run in a
-transient strict local abstraction.
+Magic rarity is enforced only when native checkpoint creation is attempted.
+The final solver goal may be rare. An Imprint attempt exits when its discovered
+intermediate predicate matches, preserving that actual successor for ordinary
+Bellman continuation. Every other exact outcome restores the bound checkpoint
+and retries. Checkpoint creation/restoration, one Craicic Chimeral plus three
+rare beasts per attempt, retry occupancy, and primitive compilation retain the
+existing exact engine paths.
 
-Price-key availability can skip a candidate before expensive exact work, but
-price values never participate in generation or admission. Complete exact
-outcome and state-local resource kernels deduplicate before a planner operator,
-dependency, or shared successor is admitted. Dependency-only primitives remain
-non-selectable product actions. Exact rejected, collapsed, missing-price, and
-resource-deferred dispositions continue through the bounded R1 diagnostic
-path.
+The JSON goal parser now rejects user-authored `imprint_retry` programs and
+exits. C ABI metadata, Python/WASM bindings, TypeScript types, Calculator draft
+persistence, eligibility, controls, pricing text, tests, and docs describe
+automatic state-local discovery instead of a final-rarity or complete-goal
+restriction. Missing beast prices defer candidates and are never zero cost.
 
-Admitted state-local option kernels are retained after ordinary evaluator-cache
-release because the existing primitive compiler needs their exact setup,
-retry, cleanup, recovery, and exit routes. Those kernels, the state-local maps,
-the dynamic operator/dependency sets, and the price-identity map are included
-in the existing selected owned-byte estimate and cap. Transient local action,
-transition, and reforge work is merged into the R1 telemetry and uses the same
-configured caps.
+### Bounded state-local discovery on R2
 
-### Bounded before/after evidence
+At each reachable carrier, the transient strict R2 context first asks the
+native Bestiary action whether checkpoint creation is legal. It enumerates a
+bounded set of goal-relevant primitive programs, executes each exact kernel,
+and derives useful exits from goal slots missing at the carrier and satisfied
+by actual positive-probability outcomes. Complete create/attempt/restore/exit
+kernels and exact resource vectors deduplicate before admission. Only a unique
+admitted program's structural primitives are added to the shared solve.
 
-R2 adds derived bounded ordinary and advanced product cases beside the pinned
-Conquest/Mirage case. The compact evidence is
-[r2-before-after-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
-All three runs construct and expand at most the start state, compile nothing,
-and verify nothing.
+The default program depth/work ceilings are solver search resources, not
+mechanic limits. Exhaustion appears in bounded automatic-candidate diagnostics
+as `max_imprint_program_depth` or `max_imprint_program_work`. R1 sample, output,
+owned-byte, and solve-work caps remain in force; automatic evidence strings are
+included in the selected owned-byte estimate.
 
-| Case | Candidate operators | Shared dependencies | Junk classes | Discovered states | Selected owned bytes |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Conquest before → after | 1,785 → 17 | 147 → 0 | 44 → 13 | 70,000 → 29,069 | 39,092,675 → 16,763,739 |
-| Ordinary before → after | 1,318 → 7 | 153 → 0 | 45 → 14 | 13,887 → 13,887 | 13,849,401 → 12,970,069 |
-| Advanced before → after | 1,773 → 5 | 159 → 0 | 45 → 13 | 17,954 → 17,954 | 15,213,407 → 14,034,697 |
+### Focused rare-final fixture
 
-The after Conquest run expanded one state without hitting the 70,000 shared
-discovered-state cap. Its remaining expensive automatic local kernel was
-truthfully deferred at the existing local resource boundary. Ordinary and
-advanced first-expansion row/transition counts stayed at `4 / 13,886` and
-`4 / 17,953` respectively.
+The fixture
+[automatic-imprint-to-rare-focused.json](fixtures/solver-regressions/s8.4r/v1/cases/automatic-imprint-to-rare-focused.json)
+starts from a legal magic Vaal Regalia carrier and has a rare two-slot final
+goal. The solver automatically selects an exact Augment Imprint stage, exits on
+the actual useful magic successor, and continues through ordinary Regal value.
+The compiled graph uses the existing create/Augment/route/restore/retry/Regal
+primitives.
 
-### Preserved S8.3 and R1 contracts
-
-Focused S8.3 tests retain the analytic temporary-blocker boundary `4`,
-protected boundary `23`, and Fracture boundary `23.75`, including primitive
-compiled execution. Direct ready-carrier Fracture pricing uses the exact local
-resource vector, so an unused preparation identity cannot affect its price
-boundary. Exact-kernel-neutral automatic programs no longer survive as planner
-operators.
-
-R1 diagnostic sample budgets, counters, byte/output caps, native memory
-telemetry, and the pinned runner remain in force. No C ABI or strategy
-vocabulary changed, so release WASM was not rebuilt in this intermediate
-checkpoint.
+Its intentionally small deterministic simulation completed 64/64 successes
+with zero failure, limit, unapplied, or unmatched routes: 2,230 checkpoint
+creates, 2,166 restores, 2,230 Augments, 64 Regals, 2,230 Chimerals, and 6,690
+rare beasts. The compact record is
+[r3-imprint-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3-imprint-summary.json).
+The required 10,000-run verification belongs to R6.
 
 ## Focused Validation Completed
 
 No full acceptance suite was run.
 
-- `powershell -File scripts/build.ps1` — passed.
-- `poecraft_engine_tests.exe --solver-s8-3-only` — 137 checks, 0 failures.
-- `poecraft_engine_tests.exe --solver-solve-only` — 96 checks, 0 failures;
-  the optional artifact sub-suite was not requested and reported skipped.
-- The three-case S8.4R corpus validated.
-- Pinned Conquest/Mirage, ordinary, and advanced cases completed under
-  `bounded_first_expansion` with compilation and verification disabled.
+- Native Imprint gate: 42 checks, 0 failures.
+- Existing R2/S8.3 state-local gate: 137 checks, 0 failures.
+- Native Bestiary gate: 77 checks, 0 failures.
+- Python bindings: 15 tests passed.
+- Release-WASM Bestiary binding/workspace contract passed.
+- `npx tsc --noEmit` passed.
+- Release WASM was rebuilt because the solver-option C ABI metadata changed.
 
-## Exact Next Boundary: S8.4R.3 Only
+## Exact Next Boundary: S8.4R.4 Only
 
-Correct the Imprint option drift and build automatic Imprint discovery on the
-new bounded state-local substrate:
+Implement the browser strategy-transfer and lifetime repair already pinned in
+the active plan:
 
-- magic rarity is required when the checkpoint is created, not for the final
-  solve goal;
-- discover useful bounded exact attempt programs only at reachable magic
-  carriers where native checkpoint creation is legal;
-- discover intermediate exits automatically and let them continue through
-  ordinary Bellman values; non-exits restore and retry exactly;
-- deduplicate complete attempt/restore kernels before admission and report any
-  internal depth/work boundary as a resource boundary, never mechanic
-  invalidity;
-- remove the user-authored attempt program and false final-magic/complete-goal
-  restriction across native metadata, bindings, types, Calculator, tests, and
-  docs; and
-- add the non-magic-final-goal compiled strategy fixture, while deferring its
-  final 10,000-run verification to R6.
+- remove giant JSON-inside-JSON transfer and unnecessary full clones;
+- preflight or align compilation size caps;
+- release the solved native handle and transition closure after successful
+  strategy transfer;
+- rebuild on repricing rather than retaining the solve closure; and
+- add non-visual live-byte lifecycle coverage under the R1 telemetry contract.
 
-Mechanic ambiguity is decided by Oliver. Do not research or infer PoE rules.
+Do not add retained-cache mode. Oliver owns rendered and visual review.
 
 ## Deferred Boundaries And Gotchas
 
-- R4 owns giant strategy transfer, structured clones, solved-handle lifetime,
-  and rebuild-on-reprice behavior.
-- R5 owns verification terminal/off-policy truth, confidence, cost semantics,
-  and compiler-emitted evaluator vocabulary such as `mod_count`.
+- R5 owns terminal/off-policy verification truth, confidence, cost semantics,
+  and exact evaluator vocabulary such as `mod_count`.
 - R6 alone runs exact real product solves, required 10,000-run compiled-policy
-  verifications, release-WASM rebuild, and the complete non-visual
-  acceptance/evidence pass.
+  verifications, and the complete non-visual acceptance/evidence pass.
 - B1.5 remains waived/deferred, not complete. Do not silently backfill it.
 - Prefix-to-Suffix and Suffix-to-Prefix beastcrafts remain parked and absent.
+- R1 caps/telemetry and R2 lazy exact-kernel-deduplicated admission are settled;
+  do not reopen the resolved eager-cross-product/`bad_alloc` work.
 - Large S8.0 strategies and projections are immutable historical evidence, not
   normal product inputs.

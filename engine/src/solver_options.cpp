@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <functional>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -541,10 +542,9 @@ void resolve_imprint_program(
     const ActionRegistry& registry,
     const FixedOptionSpec& spec,
     std::vector<std::uint32_t>& out) {
-    if (spec.program_action_ids.empty() ||
-        spec.program_action_ids.size() > 3) {
+    if (spec.program_action_ids.empty()) {
         throw std::runtime_error(
-            "fixed option: imprint retry program must contain 1-3 actions");
+            "fixed option: imprint retry program must be non-empty");
     }
     for (const std::string& id : spec.program_action_ids) {
         std::uint32_t index = kNoId;
@@ -712,6 +712,159 @@ std::uint64_t attempt_kernel_hash(const AttemptKernel& attempt) {
         mix(choice.actual_state);
     }
     return hash;
+}
+
+struct ImprintDiscoveryResult {
+    std::vector<FixedOptionSpec> specs;
+    bool missing_price = false;
+    bool depth_deferred = false;
+    bool work_deferred = false;
+    std::uint32_t depth_limit = 0;
+    std::uint64_t work_limit = 0;
+    std::uint64_t work_used = 0;
+};
+
+bool resource_keys_available(
+    const std::vector<std::string>& keys,
+    const std::unordered_map<std::string, double>* prices) {
+    return prices == nullptr || std::all_of(
+        keys.begin(), keys.end(), [&](const std::string& key) {
+            return prices->contains(key);
+        });
+}
+
+bool native_imprint_checkpoint_creation_legal(
+    CalcContext& calc,
+    const std::uint32_t state_id) {
+    const auto found = calc.session().data->bestiary_action_by_id.find(
+        "bestiary:imprint");
+    if (found == calc.session().data->bestiary_action_by_id.end()) {
+        return false;
+    }
+    pc_item_state item;
+    if (!calc.materialize(state_id, item)) return false;
+    BestiaryCraftState craft;
+    craft.item = item;
+    craft.live_item_identity = 1;
+    return apply_bestiary_action(
+               *calc.session().data, craft, found->second).applied;
+}
+
+ImprintDiscoveryResult discover_automatic_imprint_options(
+    CalcContext& calc,
+    const std::uint32_t state_id,
+    const AutomaticAdmissionLimits& limits,
+    const std::function<void()>& check_limits) {
+    ImprintDiscoveryResult result;
+    result.depth_limit = limits.max_imprint_program_depth == 0
+                             ? kDefaultImprintProgramDepth
+                             : limits.max_imprint_program_depth;
+    result.work_limit = limits.max_imprint_program_work == 0
+                            ? kDefaultImprintProgramWork
+                            : limits.max_imprint_program_work;
+    if (!native_imprint_checkpoint_creation_legal(calc, state_id)) {
+        return result;
+    }
+
+    const auto create = calc.session().data->bestiary_action_by_id.find(
+        "bestiary:imprint");
+    if (create == calc.session().data->bestiary_action_by_id.end()) {
+        return result;
+    }
+    if (!resource_keys_available(
+            calc.session().data->bestiary_actions.at(create->second).cost_keys,
+            limits.prices)) {
+        result.missing_price = true;
+        return result;
+    }
+
+    std::vector<std::uint32_t> actions;
+    for (const std::uint32_t index : calc.candidates()) {
+        const ActionDescriptor& action = calc.registry().actions.at(index);
+        if (action.synthetic || action.uses_companion_state ||
+            action.automatic_dependency_only ||
+            action.params.type == ActionType::Unveil ||
+            !calc_supports(action) ||
+            !resource_keys_available(action.cost_keys, limits.prices)) {
+            continue;
+        }
+        actions.push_back(index);
+    }
+    std::sort(actions.begin(), actions.end(), [&](const std::uint32_t left,
+                                                  const std::uint32_t right) {
+        return calc.registry().actions.at(left).id <
+               calc.registry().actions.at(right).id;
+    });
+    if (actions.empty()) return result;
+
+    const AbstractState& entry = calc.state(state_id);
+    const std::uint32_t goal_mask = calc.goal().slots.size() == 32
+                                        ? 0xffffffffu
+                                        : (1u << calc.goal().slots.size()) - 1u;
+    const std::uint32_t missing_mask =
+        goal_mask & ~satisfied_goal_mask(entry);
+    if (missing_mask == 0) return result;
+
+    std::vector<std::vector<std::uint32_t>> frontier(1);
+    for (std::uint32_t depth = 1;
+         depth <= result.depth_limit && !frontier.empty(); ++depth) {
+        std::vector<std::vector<std::uint32_t>> next;
+        for (const std::vector<std::uint32_t>& prefix : frontier) {
+            for (const std::uint32_t action : actions) {
+                if (result.work_used >= result.work_limit) {
+                    result.work_deferred = true;
+                    return result;
+                }
+                std::vector<std::uint32_t> program = prefix;
+                program.push_back(action);
+                ++result.work_used;
+                const AttemptKernel attempt = execute_attempt(
+                    calc, program, state_id);
+                check_limits();
+                if (!attempt.supported || !attempt.fully_legal ||
+                    !attempt.choice_groups.empty() ||
+                    !attempt.choice_options.empty() ||
+                    attempt.entries.empty()) {
+                    continue;
+                }
+
+                std::uint32_t relevant_exit_mask = 0;
+                bool changed = false;
+                for (const OutcomeEntry& outcome : attempt.entries) {
+                    if (outcome.probability <= 0.0) continue;
+                    changed |= outcome.state != state_id;
+                    relevant_exit_mask |=
+                        satisfied_goal_mask(calc.state(outcome.state)) &
+                        missing_mask;
+                }
+                if (relevant_exit_mask != 0) {
+                    FixedOptionSpec option;
+                    option.kind = FixedOptionKind::ImprintRetry;
+                    for (const std::uint32_t step : program) {
+                        option.program_action_ids.push_back(
+                            calc.registry().actions.at(step).id);
+                    }
+                    for (std::uint32_t slot = 0;
+                         slot < calc.goal().slots.size(); ++slot) {
+                        if ((relevant_exit_mask & (1u << slot)) != 0) {
+                            option.exit_goal_slots.push_back(slot);
+                        }
+                    }
+                    option.exit_min_satisfied = 1;
+                    option.automatic_kind = AutomaticCandidateKind::Imprint;
+                    option.relevant_goal_mask = relevant_exit_mask;
+                    result.specs.push_back(std::move(option));
+                }
+                if (changed && depth < result.depth_limit) {
+                    next.push_back(std::move(program));
+                } else if (changed && depth == result.depth_limit) {
+                    result.depth_deferred = true;
+                }
+            }
+        }
+        frontier = std::move(next);
+    }
+    return result;
 }
 
 bool state_has_unfractured_crafted(const AbstractState& state) {
@@ -1070,18 +1223,20 @@ std::vector<PlannerOperator> build_planner_operators(
             break;
         }
         case FixedOptionKind::ImprintRetry: {
-            if (goal.rarity != PC_RARITY_MAGIC ||
-                spec.exit_goal_slots.size() != goal.slots.size() ||
-                spec.exit_min_satisfied != goal.required_satisfied_slots()) {
+            if (spec.exit_goal_slots.empty() ||
+                spec.exit_min_satisfied == 0 ||
+                spec.exit_min_satisfied > spec.exit_goal_slots.size()) {
                 throw std::runtime_error(
-                    "fixed option: imprint retry exit must be the complete "
-                    "magic-item solve goal");
+                    "fixed option: imprint retry needs a non-empty exact "
+                    "intermediate exit");
             }
-            for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
-                if (spec.exit_goal_slots[slot] != slot) {
+            std::set<std::uint32_t> unique_exit_slots;
+            for (const std::uint32_t slot : spec.exit_goal_slots) {
+                if (slot >= goal.slots.size() ||
+                    !unique_exit_slots.insert(slot).second) {
                     throw std::runtime_error(
-                        "fixed option: imprint retry must name every goal "
-                        "slot in order");
+                        "fixed option: imprint retry exit has an invalid or "
+                        "duplicate goal slot");
                 }
             }
             resolve_imprint_program(
@@ -1502,6 +1657,60 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     };
 
     try {
+        const ImprintDiscoveryResult imprint =
+            discover_automatic_imprint_options(
+                local, local_state, limits, check_limits);
+        if (!imprint.specs.empty()) {
+            GoalSpec imprint_goal = local_goal;
+            imprint_goal.fixed_options = imprint.specs;
+            std::vector<PlannerOperator> imprint_operators =
+                build_planner_operators(
+                    *session_, imprint_goal, registry_);
+            for (std::uint32_t index =
+                     static_cast<std::uint32_t>(registry_.actions.size());
+                 index < imprint_operators.size(); ++index) {
+                local.operators_.push_back(
+                    std::move(imprint_operators[index]));
+            }
+            check_limits();
+        }
+        if (imprint.missing_price) {
+            StateLocalAutomaticCandidate missing;
+            missing.id = "automatic:imprint_discovery";
+            missing.kind = AutomaticCandidateKind::Imprint;
+            missing.missing_price = true;
+            missing.evidence.candidate = true;
+            missing.evidence.legality_result =
+                "not_evaluated_missing_price";
+            missing.evidence.reason =
+                "automatic_imprint_checkpoint_price_missing";
+            batch.decisions.push_back(std::move(missing));
+        }
+        const auto add_imprint_boundary = [&](const char* cap,
+                                              const std::uint64_t limit) {
+            StateLocalAutomaticCandidate deferred;
+            deferred.id = "automatic:imprint_program_discovery";
+            deferred.kind = AutomaticCandidateKind::Imprint;
+            deferred.deferred = true;
+            deferred.evidence.candidate = true;
+            deferred.evidence.kernel_change_mechanisms =
+                kAutomaticImprintCheckpoint;
+            deferred.evidence.legality_result = "deferred_resource_cap";
+            deferred.evidence.reason =
+                std::string("price_independent_kernel_generation_") + cap +
+                "_limit_" + std::to_string(limit) + "_work_" +
+                std::to_string(imprint.work_used);
+            batch.decisions.push_back(std::move(deferred));
+        };
+        if (imprint.depth_deferred) {
+            add_imprint_boundary(
+                "max_imprint_program_depth", imprint.depth_limit);
+        }
+        if (imprint.work_deferred) {
+            add_imprint_boundary(
+                "max_imprint_program_work", imprint.work_limit);
+        }
+
         for (const std::uint32_t action_index : permanent_benches) {
             StateLocalAutomaticCandidate decision;
             const PlannerOperator& planner = operators_.at(action_index);
@@ -1776,22 +1985,13 @@ const OptionKernel& CalcContext::option_kernel(
             return finish();
         }
         if (option.option_kind == FixedOptionKind::ImprintRetry) {
-            const AbstractState& entry = state(state_id);
-            const BestiaryActionDescriptor& create =
-                session_->data->bestiary_actions.at(
-                    option.bestiary_create_action);
-            const std::uint8_t rarity_bit =
-                entry.rarity < 8
-                    ? static_cast<std::uint8_t>(1u << entry.rarity)
-                    : 0;
-            const bool forbidden =
-                ((create.forbidden_item_flags & PC_ITEM_CORRUPTED) != 0 &&
-                 (entry.flags & kFlagCorrupted) != 0) ||
-                ((create.forbidden_item_flags & PC_ITEM_MIRRORED) != 0 &&
-                 (entry.flags & kFlagMirrored) != 0);
-            if ((create.rarity_mask & rarity_bit) == 0 || forbidden) {
+            if (!native_imprint_checkpoint_creation_legal(*this, state_id)) {
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                result->automatic.legality_result =
+                    "checkpoint_creation_illegal";
+                result->automatic.reason =
+                    "native_imprint_checkpoint_creation_refused";
                 return finish();
             }
         }
@@ -2053,7 +2253,7 @@ const OptionKernel& CalcContext::option_kernel(
             std::map<std::uint32_t, double> exits;
             double retry_probability = 0.0;
             for (const OutcomeEntry& outcome : attempt.entries) {
-                if (is_goal_state(state(outcome.state))) {
+                if (option_exit_matches(state(outcome.state), option)) {
                     exits[outcome.state] += outcome.probability;
                 } else {
                     exits[state_id] += outcome.probability;
@@ -2072,6 +2272,33 @@ const OptionKernel& CalcContext::option_kernel(
             result->legal = result->supported &&
                             result->terminates_almost_surely &&
                             !result->exits.empty();
+            if (result->automatic.candidate) {
+                AttemptKernel restored;
+                restored.supported = result->supported;
+                restored.fully_legal = result->legal;
+                restored.expected_primitive_actions =
+                    result->expected_primitive_actions;
+                restored.expected_resources = result->expected_resources;
+                restored.entries = result->exits;
+                result->automatic.baseline_kernel_hash =
+                    attempt_kernel_hash(attempt);
+                result->automatic.candidate_kernel_hash =
+                    attempt_kernel_hash(restored);
+                result->automatic.kernel_changed =
+                    retry_probability < 1.0 - 1e-15;
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticImprintCheckpoint;
+                result->automatic.setup_complete = true;
+                result->automatic.cleanup_complete = true;
+                result->automatic.recovery_complete =
+                    result->terminates_almost_surely;
+                result->automatic.exits_complete = !result->exits.empty();
+                result->automatic.legality_result =
+                    result->legal ? "legal" : "illegal";
+                result->automatic.reason = result->legal
+                    ? "exact_imprint_checkpoint_attempt_restore_and_intermediate_exit"
+                    : "imprint_attempt_has_no_almost_sure_intermediate_exit";
+            }
             return finish();
         }
 

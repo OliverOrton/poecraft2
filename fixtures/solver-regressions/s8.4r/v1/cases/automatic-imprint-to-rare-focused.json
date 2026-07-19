@@ -1,0 +1,70 @@
+{
+  "schema_version": "solver_imprint_stage_fixture_v1",
+  "id": "automatic-imprint-magic-checkpoint-to-rare-focused",
+  "scope": "S8.4R.3 focused exact discovery, compilation, and small deterministic simulation",
+  "benchmark_enabled": false,
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "base_name": "Vaal Regalia",
+    "item_level": 86,
+    "artifact": "data/compiled/current"
+  },
+  "selection": {
+    "carrier": "first positive-weight ordinary prefix in deterministic native session order",
+    "intermediate_target": "first positive-weight ordinary suffix in deterministic native session order"
+  },
+  "start": {
+    "rarity": "magic",
+    "mods": ["selected carrier prefix"]
+  },
+  "goal": {
+    "rarity": "rare",
+    "min_satisfied_slots": 2,
+    "slots": ["selected carrier prefix family", "selected intermediate suffix family"],
+    "action_mode": "goal_relevant",
+    "automatic_candidates": true,
+    "actions": ["augment", "regal"],
+    "user_authored_imprint_options": []
+  },
+  "economy": {
+    "augment": 0.1,
+    "regal": 100.0,
+    "beast:craicic-chimeral": 0.01,
+    "beast:rare": 0.01
+  },
+  "discovery_limits": {
+    "max_imprint_program_depth": 1,
+    "max_imprint_program_work": 16,
+    "classification": "reported_solver_resource_boundary_not_mechanic_invalidity"
+  },
+  "expected": {
+    "selected_stage": "automatic imprint retry with exact augment attempt",
+    "intermediate_exit": "actual magic successor satisfying the suffix slot but not the final rare goal",
+    "continuation": "ordinary Regal Bellman action from the actual intermediate successor",
+    "retry": "restore the exact checkpoint after every non-exit and repeat",
+    "compiled_primitives": [
+      "bestiary:imprint",
+      "augment",
+      "route",
+      "bestiary:restore_imprint",
+      "retry",
+      "regal"
+    ],
+    "expected_resources_per_stage": {
+      "augment": 1,
+      "beast:craicic-chimeral": 1,
+      "beast:rare": 3
+    }
+  },
+  "simulation": {
+    "runs": 64,
+    "seed": 20260718,
+    "max_actions_per_run": 100000,
+    "expected_successes": 64,
+    "expected_off_policy_or_terminal_failures": 0
+  },
+  "deferred": {
+    "required_verification_runs": 10000,
+    "phase": "S8.4R.6"
+  }
+}

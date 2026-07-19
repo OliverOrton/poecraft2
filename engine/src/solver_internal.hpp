@@ -34,6 +34,8 @@ inline constexpr std::uint32_t kMaxGoalSlots = 8;
 inline constexpr std::uint32_t kMaxDiscriminatingTags = 64;
 inline constexpr std::size_t kMaxExplicitAffixes =
     PC_MAX_PREFIXES + PC_MAX_SUFFIXES;
+inline constexpr std::uint32_t kDefaultImprintProgramDepth = 3;
+inline constexpr std::uint64_t kDefaultImprintProgramWork = 256;
 
 // --- goal specification ------------------------------------------------------
 
@@ -68,6 +70,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     TemporaryBenchBlocker = 3,
     ProtectedMetamod = 4,
     MultimodFinish = 5,
+    Imprint = 6,
 };
 
 enum AutomaticKernelMechanism : std::uint32_t {
@@ -77,6 +80,7 @@ enum AutomaticKernelMechanism : std::uint32_t {
     kAutomaticMetamodProtection = 1u << 3,
     kAutomaticCarrierFracture = 1u << 4,
     kAutomaticDeterministicFinish = 1u << 5,
+    kAutomaticImprintCheckpoint = 1u << 6,
 };
 
 /*
@@ -771,6 +775,8 @@ struct AutomaticAdmissionLimits {
     std::uint64_t max_transitions = 0;
     std::uint64_t max_reforge_work = 0;
     std::uint64_t max_solver_owned_bytes = 0;
+    std::uint32_t max_imprint_program_depth = 0;
+    std::uint64_t max_imprint_program_work = 0;
     const std::unordered_map<std::string, double>* prices = nullptr;
 };
 
@@ -1188,6 +1194,11 @@ struct SolveOptions {
     std::uint64_t max_strategy_json_bytes = 67108864;
     std::uint32_t max_diagnostic_samples = 32;
     std::uint64_t max_telemetry_json_bytes = 1048576;
+    /* Automatic Imprint discovery is deliberately bounded search, not a
+     * mechanic-validity limit. Exhaustion is reported as a deferred solver
+     * resource boundary in the automatic-candidate diagnostics. */
+    std::uint32_t max_imprint_program_depth = kDefaultImprintProgramDepth;
+    std::uint64_t max_imprint_program_work = kDefaultImprintProgramWork;
     /* White-box oracle comparison switch. Product/API solves leave exact
      * preservation control enabled. */
     bool preservation_control = true;

@@ -230,12 +230,12 @@ class _BestiarySolverOptionInfo(ct.Structure):
         ("option_index", ct.c_uint32),
         ("option_id", ct.c_char_p),
         ("display_name", ct.c_char_p),
-        ("goal_restriction_key", ct.c_char_p),
-        ("goal_restriction", ct.c_char_p),
-        ("goal_rarity", ct.c_int32),
-        ("requires_complete_goal", ct.c_int32),
-        ("min_program_actions", ct.c_uint32),
-        ("max_program_actions", ct.c_uint32),
+        ("checkpoint_restriction_key", ct.c_char_p),
+        ("checkpoint_restriction", ct.c_char_p),
+        ("checkpoint_rarity", ct.c_int32),
+        ("automatic_discovery", ct.c_int32),
+        ("state_local_discovery", ct.c_int32),
+        ("resource_bounded", ct.c_int32),
     ]
 
 
@@ -981,12 +981,12 @@ class BestiarySolverOptionInfo:
     index: int
     id: str
     display_name: str
-    goal_restriction_key: str
-    goal_restriction: str
-    goal_rarity: str
-    requires_complete_goal: bool
-    min_program_actions: int
-    max_program_actions: int
+    checkpoint_restriction_key: str
+    checkpoint_restriction: str
+    checkpoint_rarity: str
+    automatic_discovery: bool
+    state_local_discovery: bool
+    resource_bounded: bool
 
 
 @dataclass(frozen=True)
@@ -1291,12 +1291,12 @@ class Data(_OwnedHandle):
                     native.option_index,
                     _decode(native.option_id),
                     _decode(native.display_name),
-                    _decode(native.goal_restriction_key),
-                    _decode(native.goal_restriction),
-                    ("normal", "magic", "rare")[native.goal_rarity],
-                    bool(native.requires_complete_goal),
-                    native.min_program_actions,
-                    native.max_program_actions,
+                    _decode(native.checkpoint_restriction_key),
+                    _decode(native.checkpoint_restriction),
+                    ("normal", "magic", "rare")[native.checkpoint_rarity],
+                    bool(native.automatic_discovery),
+                    bool(native.state_local_discovery),
+                    bool(native.resource_bounded),
                 )
             )
         return tuple(options)

@@ -124,6 +124,11 @@ solver::ActionRegistryBuildOptions registry_build_options(
         for (const Value& option : fixed_options->array) {
             if (option.type != Type::Object) continue;
             const std::string type = string_member(option, "type");
+            if (type == "imprint_retry") {
+                throw std::runtime_error(
+                    "goal: imprint_retry is discovered automatically and "
+                    "cannot be user-authored");
+            }
             const std::string action = string_member(option, "action");
             if (!action.empty()) {
                 options.option_dependency_action_ids.push_back(action);
@@ -459,7 +464,9 @@ solver::GoalSpec parse_goal(
             } else if (type == "fracture_prepare") {
                 option.kind = solver::FixedOptionKind::FracturePrepare;
             } else if (type == "imprint_retry") {
-                option.kind = solver::FixedOptionKind::ImprintRetry;
+                throw std::runtime_error(
+                    "goal: imprint_retry is discovered automatically and "
+                    "cannot be user-authored");
             } else {
                 throw std::runtime_error(
                     "goal: unknown fixed option type: " + type);
@@ -514,11 +521,6 @@ solver::GoalSpec parse_goal(
                 }
                 option.carrier_goal_slot =
                     static_cast<std::uint32_t>(carrier->number);
-            } else if (option.kind ==
-                       solver::FixedOptionKind::ImprintRetry) {
-                option.program_action_ids =
-                    string_array(entry, "actions", true);
-                parse_exit(entry, option);
             }
             goal.fixed_options.push_back(std::move(option));
         }

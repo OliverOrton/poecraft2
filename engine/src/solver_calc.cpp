@@ -839,6 +839,8 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
         bytes += kernel->retry_states.capacity() * sizeof(std::uint32_t);
         bytes += kernel->continuation_states.capacity() *
                  sizeof(std::uint32_t);
+        bytes += string_bytes(kernel->automatic.legality_result);
+        bytes += string_bytes(kernel->automatic.reason);
     }
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<

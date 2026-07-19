@@ -114,12 +114,12 @@ export interface BestiarySolverOptionInfo {
     index: number;
     id: "imprint_retry";
     display_name: string;
-    goal_restriction_key: "complete_magic_item_goal";
-    goal_restriction: string;
-    goal_rarity: "magic";
-    requires_complete_goal: true;
-    min_program_actions: 1;
-    max_program_actions: 3;
+    checkpoint_restriction_key: "magic_checkpoint_carrier";
+    checkpoint_restriction: string;
+    checkpoint_rarity: "magic";
+    automatic_discovery: true;
+    state_local_discovery: true;
+    resource_bounded: true;
 }
 
 export interface BestiaryPresentation {
@@ -510,7 +510,7 @@ export interface SolverGoal {
     fossil_mode?: "exhaustive" | "goal_relevant";
     /** Engine-owned product relevance/dependency action envelope. */
     action_mode?: "goal_relevant";
-    /** Native S8.3 carrier-aware candidates; implies the bounded product envelope. */
+    /** Native carrier-aware candidates, including state-local Imprint discovery. */
     automatic_candidates?: boolean;
     /** Additional hand-selected loadouts to materialize without scoping actions. */
     requested_fossil_actions?: string[];
@@ -552,12 +552,6 @@ export type SolverFixedOption =
           /** Approved roll/reforge used until the exact carrier is ready. */
           preparation: string[];
           carrier_goal_slot: number;
-      }
-    | {
-          type: "imprint_retry";
-          /** One to three exact ordinary primitives; not a generic macro. */
-          actions: string[];
-          until: SolverOptionExit;
       };
 
 export interface SolverOptionExit {

@@ -20,6 +20,12 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 2 && std::string(argv[1]) == "--solver-imprint-only") {
+        run_solver_imprint_tests(argv[2]);
+        std::printf("solver Imprint tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-s8-3-only") {
         run_solver_s8_3_tests();
         std::printf("solver S8.3 tests: %d checks, %d failures\n",

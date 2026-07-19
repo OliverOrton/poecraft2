@@ -103,18 +103,20 @@ try {
     assert.deepEqual(
         presentation.solver_options.map((option) => ({
             id: option.id,
-            restriction: option.goal_restriction_key,
-            rarity: option.goal_rarity,
-            complete: option.requires_complete_goal,
-            bounds: [option.min_program_actions, option.max_program_actions],
+            restriction: option.checkpoint_restriction_key,
+            rarity: option.checkpoint_rarity,
+            automatic: option.automatic_discovery,
+            stateLocal: option.state_local_discovery,
+            bounded: option.resource_bounded,
         })),
         [
             {
                 id: "imprint_retry",
-                restriction: "complete_magic_item_goal",
+                restriction: "magic_checkpoint_carrier",
                 rarity: "magic",
-                complete: true,
-                bounds: [1, 3],
+                automatic: true,
+                stateLocal: true,
+                bounded: true,
             },
         ],
     );
@@ -263,7 +265,8 @@ try {
     assert.ok(goalMod);
     const goal: SolverGoal = {
         version: "v1",
-        rarity: "magic",
+        rarity: "rare",
+        action_mode: "goal_relevant",
         min_satisfied_slots: 1,
         slots: [
             {
@@ -272,13 +275,6 @@ try {
             },
         ],
         actions: ["alteration"],
-        options: [
-            {
-                type: "imprint_retry",
-                actions: ["alteration"],
-                until: { goal_slots: [0], min_satisfied: 1 },
-            },
-        ],
     };
     const solver = await client.openSolver(session, goal);
     assert.equal(
@@ -288,6 +284,19 @@ try {
         false,
     );
     await client.closeSolver(solver);
+    await assert.rejects(
+        client.openSolver(session, {
+            ...goal,
+            options: [
+                {
+                    type: "imprint_retry",
+                    actions: ["alteration"],
+                    until: { goal_slots: [0], min_satisfied: 1 },
+                },
+            ],
+        } as unknown as SolverGoal),
+        /imprint_retry is discovered automatically and cannot be user-authored/,
+    );
 
     await client.closeItem(restarted);
     await client.closeItem(imported);

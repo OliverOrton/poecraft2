@@ -181,8 +181,6 @@ export class PcCalculator extends HTMLElement {
     private modifierOptions: ModifierFamilyOption[] = [];
     private modKeyToFamily = new Map<string, string>();
     private pickerActions: SolverActionInfo[] = [];
-    private imprintRetryEnabled = false;
-    private imprintRetryActions: string[] = [];
 
     private itemRarity = "normal";
     private itemInfluences: string[] = [];
@@ -274,11 +272,6 @@ export class PcCalculator extends HTMLElement {
                 draft.minSatisfiedSlots ?? draft.slots.length;
             this.normalizeSuccessThreshold();
             this.actionId = draft.actionId;
-            this.imprintRetryEnabled = Boolean(draft.imprintRetryEnabled);
-            this.imprintRetryActions = (draft.imprintRetryActions ?? []).slice(
-                0,
-                this.bestiaryOption?.max_program_actions ?? 3,
-            );
             this.fossilKeys = draft.fossilKeys;
             this.activeCraftPanel = panelForAction(this.actionId);
         }
@@ -421,45 +414,10 @@ export class PcCalculator extends HTMLElement {
         // price/action envelope is refreshed from this exact solver handle.
         this.pickerActions = await this.client.solverActions(this.solver);
     }
-    private imprintRetryEligible(): boolean {
-        const option = this.bestiaryOption;
-        if (!option || this.slots.length === 0) return false;
-        if (this.goalRarity !== option.goal_rarity) return false;
-        return (
-            !option.requires_complete_goal ||
-            this.effectiveMinSatisfiedSlots() === this.slots.length
-        );
-    }
-
-    private imprintRetryGoalOption():
-        | NonNullable<SolverGoal["options"]>[number]
-        | null {
-        const option = this.bestiaryOption;
-        if (
-            !this.imprintRetryEnabled ||
-            !this.imprintRetryEligible() ||
-            !option ||
-            this.imprintRetryActions.length < option.min_program_actions ||
-            this.imprintRetryActions.length > option.max_program_actions
-        ) {
-            return null;
-        }
-        return {
-            type: "imprint_retry",
-            actions: [...this.imprintRetryActions],
-            until: {
-                goal_slots: this.slots.map((_, index) => index),
-                min_satisfied: this.slots.length,
-            },
-        };
-    }
-
-
     private solverGoal(
         actions?: string[],
         goalRelevantActions = false,
     ): SolverGoal {
-        const imprintRetry = this.imprintRetryGoalOption();
         return {
             version: "v1",
             rarity: this.goalRarity,
@@ -485,9 +443,6 @@ export class PcCalculator extends HTMLElement {
                           ? [this.actionId]
                           : [],
                   }),
-            ...(imprintRetry
-                ? { options: [imprintRetry] }
-                : {}),
         };
     }
 
@@ -654,13 +609,6 @@ export class PcCalculator extends HTMLElement {
         await this.persist();
     }
 
-    private async imprintRetryChanged(): Promise<void> {
-        this.clearSolveResult();
-        await this.openSolver();
-        await this.recalc();
-        await this.persist();
-    }
-
     private async actionChanged(): Promise<void> {
         this.renderActionPanels();
         if (
@@ -738,7 +686,7 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async startSolve(): Promise<void> {
-        const imprintCostKeys = this.imprintRetryGoalOption()
+        const imprintCostKeys = this.bestiaryOption
             ? this.imprintCreationCostKeys()
             : [];
         const pinned = pinEconomy(
@@ -766,18 +714,6 @@ export class PcCalculator extends HTMLElement {
             this.renderSolvePanel();
             return;
         }
-        const missingImprintKeys = Array.from(new Set(imprintCostKeys)).filter(
-            (key) => pinnedPrice(key) === undefined,
-        );
-        if (missingImprintKeys.length) {
-            this.solveError = {
-                heading: "Imprint Retry pricing is incomplete.",
-                detail: `Set prices for ${missingImprintKeys.join(", ")}. Missing beast prices are never treated as zero cost.`,
-            };
-            this.renderSolvePanel();
-            return;
-        }
-
         this.clearSolveResult();
         this.solveEconomy = pinned;
         this.solveRunning = true;
@@ -1024,8 +960,6 @@ export class PcCalculator extends HTMLElement {
             minSatisfiedSlots: this.effectiveMinSatisfiedSlots(),
             actionId: this.actionId,
             fossilKeys: this.fossilKeys,
-            imprintRetryEnabled: this.imprintRetryEnabled,
-            imprintRetryActions: this.imprintRetryActions,
             updatedAt: Date.now(),
         };
         await putCalculatorDraft(draft);
@@ -1795,11 +1729,9 @@ export class PcCalculator extends HTMLElement {
             getActionPrice,
         );
         const option = this.bestiaryOption;
-        const optionEligible = this.imprintRetryEligible();
-        const optionEnabled = this.imprintRetryEnabled && optionEligible;
         const solveCostCounts = new Map<string, number>();
         for (const key of readiness.costKeys) solveCostCounts.set(key, 1);
-        if (optionEnabled) {
+        if (option) {
             for (const key of this.imprintCreationCostKeys()) {
                 solveCostCounts.set(key, (solveCostCounts.get(key) ?? 0) + 1);
             }
@@ -1818,16 +1750,9 @@ export class PcCalculator extends HTMLElement {
             (key) => getActionPriceResolution(key).source,
         );
         const fallbackPrice = getFallbackPrice();
-        const optionReady =
-            !this.imprintRetryEnabled ||
-            (this.imprintRetryGoalOption() !== null &&
-                this.imprintCreationCostKeys().every(
-                    (key) => getActionPrice(key) !== undefined,
-                ));
         const canStart =
             Boolean(this.solver && this.item && this.slots.length) &&
             readiness.pricedActions > 0 &&
-            optionReady &&
             !this.busy;
         const progress = this.solveProgress;
         const progressMarkup =
@@ -1896,35 +1821,11 @@ export class PcCalculator extends HTMLElement {
                   : this.solveCancelled
                     ? "Solve cancelled. Adjust the goal or prices, then start again."
                   : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
-        const retryActionChoices = this.pickerActions.filter(
-            (action) => !action.synthetic,
-        );
-        const retrySelectors = option
-            ? Array.from({ length: option.max_program_actions }, (_, index) => {
-                  const current = this.imprintRetryActions[index] ?? "";
-                  return `<label>
-                    <span>Retry action ${index + 1}${index === 0 ? " (required)" : ""}</span>
-                    <select data-imprint-retry-action="${index}" ${optionEnabled ? "" : "disabled"}>
-                        <option value="">${index === 0 ? "Choose an ordinary action" : "Stop here"}</option>
-                        ${retryActionChoices
-                            .map(
-                                (action) =>
-                                    `<option value="${escapeHtml(action.id)}" ${action.id === current ? "selected" : ""}>${escapeHtml(action.display_name)}</option>`,
-                            )
-                            .join("")}
-                    </select>
-                </label>`;
-              }).join("")
-            : "";
         const retryMarkup = option
             ? `<section class="pc-calc-imprint-retry">
-                <label>
-                    <input type="checkbox" data-imprint-retry ${this.imprintRetryEnabled ? "checked" : ""} ${optionEligible || this.imprintRetryEnabled ? "" : "disabled"}>
-                    <strong>${escapeHtml(option.display_name)}</strong>
-                </label>
-                <p>${escapeHtml(option.goal_restriction)}</p>
-                <p class="pc-help">This is the engine's specific Imprint option, not a generic macro. It creates a checkpoint, runs 1-3 ordinary actions, and restores on failure.</p>
-                ${optionEligible ? retrySelectors : '<p class="pc-calc-error">Available only for a complete magic-item goal: every goal slot must be required.</p>'}
+                <strong>${escapeHtml(option.display_name)}</strong>
+                <p>${escapeHtml(option.checkpoint_restriction)}</p>
+                <p class="pc-help">The native solver discovers bounded exact attempt programs and useful intermediate exits only at reachable legal magic checkpoints. Successful exits continue through the ordinary policy; other outcomes restore and retry. Reported search bounds are solver resource limits.</p>
             </section>`
             : "";
 
@@ -1953,7 +1854,7 @@ export class PcCalculator extends HTMLElement {
                             <small>Must be greater than zero. Used only for engine-listed cost keys after overrides and certified recipes.</small>
                         </label>
                         <div class="pc-calc-solve-price-rows">${priceTable.rowsHtml}</div>
-                        <p class="pc-help">Every row discloses its source. Missing beast prices make Imprint Retry pricing incomplete; they are never treated as zero.</p>
+                        <p class="pc-help">Every row discloses its source. Missing beast prices defer automatic Imprint candidates; they are never treated as zero.</p>
                     </details>`
                     : ""
             }
@@ -1975,31 +1876,6 @@ export class PcCalculator extends HTMLElement {
                 const value = Number(input.value);
                 setFallbackPrice(input.value === "" ? null : value);
             });
-        host.querySelector<HTMLInputElement>("[data-imprint-retry]")
-            ?.addEventListener("change", (event) => {
-                this.imprintRetryEnabled = (
-                    event.currentTarget as HTMLInputElement
-                ).checked;
-                if (
-                    this.imprintRetryEnabled &&
-                    this.imprintRetryActions.length === 0
-                ) {
-                    const first = retryActionChoices[0];
-                    if (first) this.imprintRetryActions = [first.id];
-                }
-                void this.guard(() => this.imprintRetryChanged());
-            });
-        host.querySelectorAll<HTMLSelectElement>(
-            "[data-imprint-retry-action]",
-        ).forEach((select) => {
-            select.addEventListener("change", () => {
-                const index = Number(select.dataset.imprintRetryAction);
-                const next = this.imprintRetryActions.slice(0, index);
-                if (select.value) next.push(select.value);
-                this.imprintRetryActions = next;
-                void this.guard(() => this.imprintRetryChanged());
-            });
-        });
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {

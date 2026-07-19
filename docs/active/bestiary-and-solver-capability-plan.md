@@ -10,9 +10,9 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R2 are complete, but the
+Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete, but the
 post-S8.4 regression audit below found further blocking correctness, scaling,
-and product-delivery failures. **S8.4R.3 is the sole next implementation
+and product-delivery failures. **S8.4R.4 is the sole next implementation
 boundary and S8.5 is blocked until all of S8.4R passes.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
@@ -31,7 +31,9 @@ generation with complete-kernel evidence and primitive execution. S8.4 extends
 the existing exact evaluator occupancy result with descriptor/material,
 native-priced, technique, review-section, and opt-in success-normalized
 accounting, while keeping Simulator comparisons as separately labelled sampled
-evidence. The next implementation boundary is **S8.4R only**. The recorded S7 endgame sample remains `0.9942`
+evidence. R1-R3 have repaired bounded diagnostic ownership, state-local lazy
+automatic admission, and automatic Imprint-stage semantics/discovery. The next
+implementation boundary is **S8.4R.4 only**. The recorded S7 endgame sample remains `0.9942`
 against the former `0.995` target; the number is retained as a disclosed miss,
 not rewritten as a passing numeric gate.
 
@@ -274,12 +276,13 @@ compile into an ordinary strategy, and have no unsupported or unmatched route.
 Checkpoint passed: strategy JSON accepts only the two compiled Imprint action
 ids and each simulator run owns the compound checkpoint lifecycle; restart
 discards the bound snapshot. The solver exposes no raw checkpoint primitive.
-Instead, the exact `imprint_retry` S7 fixed option snapshots a magic carrier,
-runs one to three selected exact ordinary primitives, exits only on the
-complete magic-item solve goal, and maps every other outcome through explicit
-free restoration to the entry state. Its Bellman row charges one Craicic
-Chimeral, three rare beasts, and the attempt program on every retry. The policy
-compiler emits ordinary create, attempt, route, restore, and retry nodes.
+The original B1.3 option snapshot was subsequently superseded by S8.4R.3: the
+solver now discovers exact attempt programs and useful intermediate exits
+automatically at legal magic checkpoint carriers, with no final-rarity
+restriction or authored program. Every non-exit restores to the entry state,
+and the Bellman row charges one Craicic Chimeral, three rare beasts, and the
+attempt program on every retry. The policy compiler emits ordinary create,
+attempt, route, restore, and retry nodes.
 Focused native tests passed 42/42 checks; the solver/compiler layer passed
 134/134 checks, including the small exact solve and simulator execution with
 zero unsupported, unapplied, or unmatched routes. B1.4 is the sole next
@@ -304,19 +307,18 @@ TypeScript client expose the two stable Imprint action ids, compound checkpoint
 presence, deterministic successors, engine refusal keys/reasons, declared cost
 keys, and actual consumption without widening `pc_item_state`. Emulator and
 Calculator share the engine-owned Bestiary presentation; Strategy Builder emits
-the two ordinary operations. Calculator exposes only the exact `imprint_retry`
-solver option and its complete magic-item-goal restriction, including one
-Craicic Chimeral plus three rare beasts and incomplete missing-beast pricing.
+the two ordinary operations. The original B1.4 product exposed an authored
+retry option; S8.4R.3 has replaced that product contract with native automatic,
+state-local, resource-bounded discovery at magic checkpoint carriers. Missing
+beast prices defer those candidates and are never treated as zero.
 Release WASM and the focused native, Python, WASM-worker, and non-visual web
 checks passed. B1.5 was the next planned boundary at B1.4; Oliver subsequently
 waived it as the separate checkpoint described below.
 
-Audit correction 2026-07-18: the “complete magic-item goal” restriction above
-records what B1.3/B1.4 implemented, but it is not an approved mechanic rule.
-The owner-approved contract requires a magic item when the checkpoint is
-created; it does not require the overall craft to finish magic or require the
-checkpointed attempt to satisfy the complete final solve goal. S8.4R must
-correct this drift before the restriction is described as product authority.
+Correction completed in S8.4R.3 on 2026-07-18: the owner-approved contract
+requires a magic live item only when the checkpoint is created. The overall
+craft may finish at another rarity, and a useful intermediate exit continues
+from its actual successor through ordinary Bellman values.
 
 ### B1.5 - Bestiary Acceptance
 
@@ -621,7 +623,7 @@ audit below supersedes the former S8.5 handoff.
 
 ### S8.4R - Solver And Web Regression Repair
 
-Status: audit complete 2026-07-18; R1-R2 complete 2026-07-18; R3 is next. This
+Status: audit and R1-R3 complete 2026-07-18; R4 is next. This
 phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
 until every required gate below passes. The audit covers B1.3/B1.4 Imprint
 integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
@@ -680,14 +682,29 @@ acceptance once in R6 as required by `AGENTS.md`.
    No unbounded solve, compilation/verification of the real cases, 10,000-run
    verification, or full acceptance suite was run. Evidence is under
    [the S8.4R fixture](../../fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
-3. **S8.4R.3 - Automatic Imprint Discovery.** This is the sole next boundary.
-   Correct entry/exit semantics and
-   build automatic state-local Imprint stage/program discovery on the bounded
-   R2 candidate substrate. Remove user-authored retry controls and the false
-   final-magic/complete-goal restriction across every binding and product
-   surface. Add the non-magic-final-goal compiled strategy fixture; defer its
-   final 10,000-run acceptance to R6.
-4. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** Remove giant
+3. **S8.4R.3 - Automatic Imprint Discovery (complete 2026-07-18).** Magic is
+   now checked only by the native checkpoint-creation action at each reachable
+   carrier; final goals may be rare. The native solver derives bounded exact
+   attempt programs from the carrier-local goal-relevant primitive envelope,
+   derives useful missing-slot exits from their exact outcomes, and evaluates
+   the full create/attempt/exit-or-restore kernel before R2 admission and
+   complete-kernel deduplication. Admitted exits retain their actual successor
+   for ordinary Bellman continuation; every other exact outcome restores the
+   checkpoint and retries. Only dependencies of admitted unique kernels enter
+   the shared solve.
+
+   User-authored Imprint programs/exits are rejected and removed from C ABI
+   metadata, Python/WASM bindings, TypeScript, Calculator state/persistence,
+   eligibility, and presentation. Depth/work exhaustion produces a typed
+   automatic-candidate resource-boundary witness and never mechanic
+   invalidity. The focused rare-final Vaal Regalia fixture converged at
+   `105.432`, compiled to the existing create/Augment/route/restore/retry/Regal
+   primitives, and completed a deterministic 64-run sample with 64 successes,
+   2,230 creates, and 2,166 restores. Focused Imprint/R2/Bestiary native gates,
+   Python bindings, release-WASM bindings, and TypeScript checks passed. The
+   required 10,000-run verification remains explicitly deferred to R6.
+4. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** This is the sole next
+   boundary. Remove giant
    JSON-inside-JSON transfer and unnecessary full clones, preflight or align
    compilation caps, release the solved native handle/transition closure after
    successful transfer, and rebuild on repricing. Do not add retained-cache
@@ -709,7 +726,8 @@ acceptance once in R6 as required by `AGENTS.md`.
 
 #### Audit findings
 
-1. **The Imprint solver restriction is mechanically wrong.** The approved
+1. **The Imprint solver restriction was mechanically wrong (repaired in
+   S8.4R.3).** The approved
    recipe contract restricts creation to a magic live item. Native option
    parsing instead rejects every `imprint_retry` unless the final solver rarity
    is magic, its exit names every goal slot, and its threshold is the complete
@@ -837,15 +855,15 @@ acceptance once in R6 as required by `AGENTS.md`.
 
 #### Required repair work
 
-1. Correct `imprint_retry` so magic rarity is an entry/checkpoint-creation
+1. **Completed in S8.4R.3.** Correct `imprint_retry` so magic rarity is an entry/checkpoint-creation
    condition, not a final-goal condition. An attempt that reaches its authored
    intermediate exit must continue from that actual successor through the
    ordinary Bellman solve; non-exit outcomes restore the checkpoint and retry.
    Remove the duplicated incorrect restriction from C ABI metadata, bindings,
    types, Calculator eligibility, tests, and docs. Preserve exact checkpoint
    creation/restoration, consumption, and primitive compilation.
-2. **Owner decision 2026-07-18: the solver must discover useful Imprint stages
-   automatically.** Do not require the user to author an attempt program or
+2. **Completed in S8.4R.3; owner decision 2026-07-18: the solver must discover
+   useful Imprint stages automatically.** Do not require the user to author an attempt program or
    intermediate exit. Discover candidates state-locally only at reachable
    magic carriers where checkpoint creation is legal; generate bounded exact
    attempt programs from goal-relevant primitives, deduplicate them by complete
@@ -912,8 +930,9 @@ acceptance once in R6 as required by `AGENTS.md`.
   has the solver automatically discover the retry program and intermediate
   exit, continues to the final goal, and compiles/simulates with exact restore
   and resource accounting. The product solve must not contain a user-authored
-  Imprint program. Run the required compiled-strategy verification with 10,000
-  Simulator runs unless Oliver explicitly changes the count.
+  Imprint program. The focused R3 sample is intentionally 64 deterministic
+  runs; Oliver explicitly deferred the required 10,000-run compiled-strategy
+  verification to R6.
 - Add Oliver's reported Conquest Lamellar goal as a pinned product regression.
   Canonical target: base
   `Metadata/Items/Armours/BodyArmours/BodyStrDex20`, item level at least 86,

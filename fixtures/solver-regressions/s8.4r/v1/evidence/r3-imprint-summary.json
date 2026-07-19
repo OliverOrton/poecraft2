@@ -1,0 +1,44 @@
+{
+  "schema_version": "s8.4r3_focused_evidence_v1",
+  "recorded_on": "2026-07-18",
+  "scope": "S8.4R.3 automatic state-local Imprint discovery only",
+  "fixture": "../cases/automatic-imprint-to-rare-focused.json",
+  "solve": {
+    "final_goal_rarity": "rare",
+    "checkpoint_rarity": "magic",
+    "automatic_attempt_program": ["augment"],
+    "automatic_intermediate_exit": true,
+    "ordinary_continuation": "regal",
+    "converged_start_value": 105.432
+  },
+  "compiled_simulation": {
+    "runs": 64,
+    "seed": 20260718,
+    "successes": 64,
+    "failures": 0,
+    "action_limits": 0,
+    "action_not_applied": 0,
+    "unmatched_edges": 0,
+    "checkpoint_creations": 2230,
+    "checkpoint_restores": 2166,
+    "augment_actions": 2230,
+    "regal_actions": 64,
+    "craicic_chimerals": 2230,
+    "rare_beasts": 6690
+  },
+  "focused_validation": [
+    {"command": "poecraft_engine_tests.exe --solver-imprint-only data/compiled/current", "checks": 42, "failures": 0},
+    {"command": "poecraft_engine_tests.exe --solver-s8-3-only data/compiled/current", "checks": 137, "failures": 0},
+    {"command": "poecraft_engine_tests.exe --bestiary-only data/compiled/current", "checks": 77, "failures": 0},
+    {"command": "py -3 -m unittest bindings.python.tests.test_bindings", "tests": 15, "failures": 0},
+    {"command": "npx tsx test/bestiary-bindings.test.ts", "status": "passed"},
+    {"command": "npx tsc --noEmit", "status": "passed"},
+    {"command": "powershell -File scripts/build-wasm.ps1", "status": "passed_release_rebuild"}
+  ],
+  "not_run": [
+    "unbounded real solve",
+    "full acceptance suite",
+    "10000-run verification",
+    "rendered UI review"
+  ]
+}
