@@ -83,6 +83,7 @@ import {
     resistanceEntries,
 } from "../craft-choices";
 import {
+    incompleteSolveDetail,
     prepareSolverStrategy,
     pricedSolverActionIds,
     solvePriceReadiness,
@@ -714,6 +715,14 @@ export class PcCalculator extends HTMLElement {
             this.renderSolvePanel();
             return;
         }
+        if (readiness.missingFractureBasePrice) {
+            this.solveError = {
+                heading: "Set a fresh-base price to plan Fracture.",
+                detail: "Goal-relevant Fracture miss recovery uses Restart. Set the base price in the shared action price table, or remove the Fracture price before solving.",
+            };
+            this.renderSolvePanel();
+            return;
+        }
         this.clearSolveResult();
         this.solveEconomy = pinned;
         this.solveRunning = true;
@@ -788,10 +797,18 @@ export class PcCalculator extends HTMLElement {
             result.economy = pinned.identity;
             this.solveSummary = result;
             if (!result.converged) {
+                let telemetry: unknown = null;
+                try {
+                    telemetry = await this.client.solverTelemetry(
+                        this.solveSolver,
+                    );
+                } catch {
+                    // The solve summary remains usable if telemetry retrieval
+                    // itself fails.
+                }
                 this.solveError = {
                     heading: "Solve did not converge.",
-                    detail:
-                        "The incomplete policy was not compiled. Missing prices remain excluded; adjust the goal or action prices and retry.",
+                    detail: incompleteSolveDetail(telemetry),
                 };
                 return;
             }
@@ -1728,10 +1745,9 @@ export class PcCalculator extends HTMLElement {
             this.pickerActions,
             getActionPrice,
         );
-        const option = this.bestiaryOption;
         const solveCostCounts = new Map<string, number>();
         for (const key of readiness.costKeys) solveCostCounts.set(key, 1);
-        if (option) {
+        if (this.bestiaryOption) {
             for (const key of this.imprintCreationCostKeys()) {
                 solveCostCounts.set(key, (solveCostCounts.get(key) ?? 0) + 1);
             }
@@ -1753,6 +1769,7 @@ export class PcCalculator extends HTMLElement {
         const canStart =
             Boolean(this.solver && this.item && this.slots.length) &&
             readiness.pricedActions > 0 &&
+            !readiness.missingFractureBasePrice &&
             !this.busy;
         const progress = this.solveProgress;
         const progressMarkup =
@@ -1812,6 +1829,8 @@ export class PcCalculator extends HTMLElement {
             : "";
         const idleMessage = !this.slots.length
             ? "Define a goal to enable Solve."
+            : readiness.missingFractureBasePrice
+              ? "Set the fresh-base price required for Fracture miss recovery."
             : readiness.pricedActions === 0
               ? "Set at least one action price to enable Solve."
               : this.solveRunning
@@ -1821,14 +1840,6 @@ export class PcCalculator extends HTMLElement {
                   : this.solveCancelled
                     ? "Solve cancelled. Adjust the goal or prices, then start again."
                   : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
-        const retryMarkup = option
-            ? `<section class="pc-calc-imprint-retry">
-                <strong>${escapeHtml(option.display_name)}</strong>
-                <p>${escapeHtml(option.checkpoint_restriction)}</p>
-                <p class="pc-help">The native solver discovers bounded exact attempt programs and useful intermediate exits only at reachable legal magic checkpoints. Successful exits continue through the ordinary policy; other outcomes restore and retry. Reported search bounds are solver resource limits.</p>
-            </section>`
-            : "";
-
         host.innerHTML = `
             <header class="pc-calc-solve-header">
                 <div>
@@ -1841,7 +1852,11 @@ export class PcCalculator extends HTMLElement {
                         : `<button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>`
                 }
             </header>
-            ${retryMarkup}
+            ${
+                readiness.missingFractureBasePrice
+                    ? '<p class="pc-calc-solve-warning"><strong>Fracture needs Restart:</strong> set the <code>base</code> price below so a missed fracture has a priced recovery route.</p>'
+                    : ""
+            }
             ${progressMarkup}
             ${
                 solveCostKeys.length
@@ -1854,7 +1869,7 @@ export class PcCalculator extends HTMLElement {
                             <small>Must be greater than zero. Used only for engine-listed cost keys after overrides and certified recipes.</small>
                         </label>
                         <div class="pc-calc-solve-price-rows">${priceTable.rowsHtml}</div>
-                        <p class="pc-help">Every row discloses its source. Missing beast prices defer automatic Imprint candidates; they are never treated as zero.</p>
+                        <p class="pc-help">Every row discloses its source. Missing prices exclude dependent actions; they are never treated as zero.</p>
                     </details>`
                     : ""
             }

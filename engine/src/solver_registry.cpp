@@ -175,10 +175,10 @@ bool action_is_goal_relevant(
         return options.needs_fracture || options.automatic_candidates;
     case ActionType::RemoveCraftedModifiers:
         /* Crafted cleanup remains outside the product envelope; Fracture is
-         * retained only when a carrier-exact option requests it. Exposing the
-         * unfinished primitives to the product MDP creates flag/tag state
-         * combinations that exhaust the normal state cap before iteration.
-         * They remain available in the exhaustive Calculator registry. */
+         * now an ordinary product candidate, but cleanup remains structural
+         * support for exact authored/automatic option routes. Exposing this
+         * unfinished primitive to the product MDP creates flag/tag state
+         * combinations that exhaust the normal state cap before iteration. */
         return options.automatic_candidates;
     default:
         /* General currency and restart are structural ways to reach any
@@ -210,9 +210,8 @@ void retain_goal_relevant_actions(
                 action.automatic_dependency_only =
                     !goal_contains_mod_family(
                         session, options, action.params.mod_id);
-            } else if (action.params.type == ActionType::Fracture ||
-                       action.params.type ==
-                           ActionType::RemoveCraftedModifiers) {
+            } else if (action.params.type ==
+                       ActionType::RemoveCraftedModifiers) {
                 action.automatic_dependency_only = true;
             }
         }

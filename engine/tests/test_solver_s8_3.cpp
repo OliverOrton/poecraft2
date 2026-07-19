@@ -452,7 +452,8 @@ void run_fracture_price_flip() {
         registry.index_by_id.at("bench:s83_mod_6");
     CalcContext calc(
         session, goal, registry,
-        {restart, alchemy, chaos, bench_prefix});
+        {restart, alchemy, chaos, registry.index_by_id.at("fracture"),
+         bench_prefix});
     pc_item_state start;
     pc_item_clear(&start);
     start.rarity = PC_RARITY_RARE;
@@ -471,12 +472,28 @@ void run_fracture_price_flip() {
         calc, AutomaticCandidateKind::Fracture);
     PC_CHECK(fracture != kNoId);
     if (fracture == kNoId) return;
-    const OptionKernel& kernel = calc.option_kernel(
-        start_state, fracture);
-    PC_CHECK(kernel.legal);
-    PC_CHECK(kernel.entry_continues);
-    PC_CHECK(!kernel.exits.empty());
-    PC_CHECK(kernel.automatic.exits_complete);
+    const PlannerOperator& fracture_operator = calc.operators().at(fracture);
+    PC_CHECK(fracture_operator.kind == PlannerOperatorKind::Primitive);
+    PC_CHECK(fracture_operator.id == "fracture");
+    const std::uint32_t fracture_action =
+        fracture_operator.primitive_action;
+    PC_CHECK(std::none_of(
+        calc.operators().begin(), calc.operators().end(),
+        [](const PlannerOperator& planner) {
+            return planner.option_kind == FixedOptionKind::FracturePrepare &&
+                   planner.automatic_kind ==
+                       AutomaticCandidateKind::Fracture;
+        }));
+    const OutcomeDistribution& distribution = calc.outcomes(
+        start_state, fracture_action);
+    PC_CHECK(distribution.supported);
+    PC_CHECK(distribution.choice_groups.empty());
+    PC_CHECK(distribution.entries.size() == 4);
+    double fracture_probability = 0.0;
+    for (const OutcomeEntry& entry : distribution.entries) {
+        fracture_probability += entry.probability;
+    }
+    PC_CHECK(std::fabs(fracture_probability - 1.0) < 1e-12);
 
     const auto prices = [](const double fracture_price) {
         return std::unordered_map<std::string, double>{
@@ -490,6 +507,19 @@ void run_fracture_price_flip() {
     PC_CHECK(low.converged);
     PC_CHECK(low.policy[low.start_state].index == fracture);
     PC_CHECK(std::fabs(low.values[low.start_state] - 124.25) < 1e-9);
+    const std::string fracture_telemetry = serialize_solver_telemetry(
+        calc, &low, nullptr, std::nullopt, nullptr);
+    PC_CHECK(fracture_telemetry.find(
+                 "\"candidate_kind\":\"fracture\"") !=
+             std::string::npos);
+    PC_CHECK(fracture_telemetry.find(
+                 "\"candidate\":\"fracture\"") !=
+             std::string::npos);
+    PC_CHECK(fracture_telemetry.find(
+                 "exact_goal_relevant_primitive_fracture_distribution") !=
+             std::string::npos);
+    PC_CHECK(fracture_telemetry.find("option:fracture_prepare") ==
+             std::string::npos);
     const SolveResult high = solve(calc, start, prices(24.0));
     PC_CHECK(high.converged);
     PC_CHECK(high.policy[high.start_state].index == restart);
@@ -498,11 +528,54 @@ void run_fracture_price_flip() {
 
     pc_item_state influenced = start;
     influenced.generic_influence_bits = 1;
-    const OptionKernel& illegal = calc.option_kernel(
-        calc.intern_item(influenced), fracture);
-    PC_CHECK(!illegal.legal);
-    PC_CHECK(illegal.automatic.reason ==
-             "carrier_flags_make_fracture_path_illegal");
+    PC_CHECK(!action_legal(
+        *session, registry.actions.at(fracture_action),
+        calc.state(calc.intern_item(influenced))));
+
+    ActionRegistry relevance_registry;
+    for (const std::string& id : {std::string("restart"),
+                                  std::string("fracture")}) {
+        relevance_registry.index_by_id.emplace(
+            id, static_cast<std::uint32_t>(
+                    relevance_registry.actions.size()));
+        relevance_registry.actions.push_back(
+            registry.actions.at(registry.index_by_id.at(id)));
+    }
+    CalcContext relevance_calc(
+        session, goal, relevance_registry, {0, 1});
+    pc_item_state irrelevant = {};
+    pc_item_clear(&irrelevant);
+    irrelevant.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t mod :
+         {kPrefixJunkA, kPrefixJunkB, kTargetBlocker, kSuffixJunk}) {
+        add_mod(irrelevant, *session, mod);
+    }
+    SolveOptions relevance_options;
+    relevance_options.max_expanded_states = 1;
+    const SolveResult irrelevant_result = solve(
+        relevance_calc, irrelevant,
+        {{"base", 20.0}, {"fracture", 23.0}}, relevance_options);
+    /* The only successor is Restart's fresh base. Refused Fracture outcomes
+     * must not add four unreachable fractured states. */
+    PC_CHECK(irrelevant_result.diagnostics.discovered_states == 2);
+    const std::string irrelevant_telemetry = serialize_solver_telemetry(
+        relevance_calc, &irrelevant_result, nullptr, std::nullopt, nullptr);
+    PC_CHECK(irrelevant_telemetry.find(
+                 "no_unfractured_satisfied_goal_carrier") !=
+             std::string::npos);
+
+    auto missing_base = prices(23.0);
+    missing_base.erase("base");
+    bool missing_base_refused = false;
+    try {
+        (void)solve(calc, start, missing_base);
+    } catch (const std::invalid_argument& ex) {
+        missing_base_refused =
+            std::string(ex.what()).find(
+                "requires a priced base for Restart miss recovery") !=
+            std::string::npos;
+    }
+    PC_CHECK(missing_base_refused);
 
     GoalSpec manual_goal = automatic_goal(true, true);
     manual_goal.automatic_candidates = false;

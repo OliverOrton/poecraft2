@@ -286,49 +286,6 @@ std::vector<FixedOptionSpec> synthesize_automatic_options(
     std::vector<FixedOptionSpec> result;
     if (!goal.automatic_candidates) return result;
 
-    /* Carrier-exact Fracture candidates reuse every already-approved exact
-     * renewal preparation present in the bounded registry. Exact row
-     * eligibility later refuses programs that cannot reach the named carrier
-     * and a legal Fracture continuation. */
-    if (registry.index_by_id.contains("fracture")) {
-        std::vector<std::vector<std::string>> preparations;
-        for (const ActionDescriptor& action : registry.actions) {
-            if (approved_renewal_roll(action) && calc_supports(action)) {
-                preparations.push_back({action.id});
-            }
-        }
-        if (registry.index_by_id.contains("scour") &&
-            registry.index_by_id.contains("alchemy")) {
-            preparations.push_back({"scour", "alchemy"});
-        }
-        for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
-            const bool carrier_ready =
-                !target_slot_missing(state, slot) &&
-                action_legal(session, registry.actions.at(
-                    registry.index_by_id.at("fracture")), state);
-            for (const auto& preparation : preparations) {
-                const auto first = registry.index_by_id.find(
-                    preparation.front());
-                if (!carrier_ready &&
-                    (first == registry.index_by_id.end() ||
-                     !action_legal(
-                         session, registry.actions.at(first->second), state))) {
-                    continue;
-                }
-                FixedOptionSpec option;
-                option.kind = FixedOptionKind::FracturePrepare;
-                option.program_action_ids = preparation;
-                option.carrier_goal_slot = slot;
-                option.automatic_kind = AutomaticCandidateKind::Fracture;
-                option.relevant_goal_mask = 1u << slot;
-                result.push_back(std::move(option));
-                if (carrier_ready) {
-                    break; /* all preparations share the direct Fracture row */
-                }
-            }
-        }
-    }
-
     std::vector<std::uint32_t> ordinary_bench;
     std::vector<std::uint32_t> goal_bench;
     for (std::uint32_t index = 0; index < registry.actions.size(); ++index) {
@@ -1015,14 +972,21 @@ std::vector<PlannerOperator> build_planner_operators(
         primitive.primitive_program.push_back(index);
         primitive.resource_quantities =
             aggregate_resources(registry, primitive.primitive_program);
-        if (goal.automatic_candidates &&
-            action.params.type == ActionType::Bench &&
-            action.params.mod_id < session.mod_count) {
-            primitive.relevant_goal_mask =
-                goal_mask_for_mod(session, goal, action.params.mod_id);
-            if (primitive.relevant_goal_mask != 0) {
-                primitive.automatic_kind =
-                    AutomaticCandidateKind::PermanentBench;
+        if (goal.automatic_candidates) {
+            if (action.params.type == ActionType::Fracture) {
+                primitive.relevant_goal_mask =
+                    goal.slots.size() == 32
+                        ? 0xffffffffu
+                        : (1u << goal.slots.size()) - 1u;
+                primitive.automatic_kind = AutomaticCandidateKind::Fracture;
+            } else if (action.params.type == ActionType::Bench &&
+                       action.params.mod_id < session.mod_count) {
+                primitive.relevant_goal_mask =
+                    goal_mask_for_mod(session, goal, action.params.mod_id);
+                if (primitive.relevant_goal_mask != 0) {
+                    primitive.automatic_kind =
+                        AutomaticCandidateKind::PermanentBench;
+                }
             }
         }
         operators.push_back(std::move(primitive));

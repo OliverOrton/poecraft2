@@ -2,11 +2,29 @@ import assert from "node:assert/strict";
 
 import type { SolverActionInfo } from "../src/app/engine-protocol";
 import {
+    incompleteSolveDetail,
     prepareSolverStrategy,
     pricedSolverActionIds,
     solvePriceReadiness,
 } from "../src/app/solve-workspace";
 import { createDefaultStrategy } from "../src/app/strategy-model";
+
+{
+    assert.equal(
+        incompleteSolveDetail({
+            optimization: {
+                full_request_status: "incomplete_resource_cap",
+                cap_hits: ["max_transitions"],
+            },
+        }),
+        "The exact solve reached the max_transitions resource boundary before it could produce a complete policy. This is a solver-capacity limit, not a pricing error; the incomplete policy was not compiled.",
+    );
+    assert.equal(
+        incompleteSolveDetail(null),
+        "The native optimizer did not produce a complete policy. The incomplete policy was not compiled.",
+    );
+    console.log("  ok - incomplete solves report their native resource boundary");
+}
 
 {
     const actions: SolverActionInfo[] = [
@@ -29,11 +47,30 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         "resonator:1",
     ]);
     assert.deepEqual(readiness.missingKeys, ["base", "resonator:1"]);
+    assert.equal(readiness.missingFractureBasePrice, false);
     assert.deepEqual(pricedSolverActionIds(actions, (key) => prices.get(key)), [
         "chaos",
         "free-transition",
     ]);
     console.log("  ok - Solve readiness uses native cost keys and shared prices");
+}
+
+{
+    const actions: SolverActionInfo[] = [
+        action("restart", ["base"]),
+        action("fracture", ["fracture"]),
+        action("chaos", ["chaos"]),
+    ];
+    const prices = new Map<string, number>([
+        ["fracture", 25],
+        ["chaos", 1],
+    ]);
+    const missingBase = solvePriceReadiness(actions, (key) => prices.get(key));
+    assert.equal(missingBase.missingFractureBasePrice, true);
+    prices.set("base", 10);
+    const ready = solvePriceReadiness(actions, (key) => prices.get(key));
+    assert.equal(ready.missingFractureBasePrice, false);
+    console.log("  ok - priced Fracture requires an actionable Restart base price");
 }
 
 {

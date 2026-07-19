@@ -1,0 +1,64 @@
+{
+  "schema_version": "s8.4r3f_implementation_evidence_v1",
+  "recorded_on": "2026-07-19",
+  "scope": "S8.4R.3F Fracture as an ordinary product candidate",
+  "implementation": {
+    "goal_relevant_fracture": "ordinary_priced_primitive_candidate",
+    "automatic_product_fracture_prepare": "removed",
+    "explicit_authored_fracture_prepare": "preserved",
+    "missing_base_contract": "native_refusal_and_calculator_actionable_warning",
+    "release_wasm_rebuilt": true,
+    "c_abi_changed": false,
+    "strategy_vocabulary_changed": false
+  },
+  "focused_native": {
+    "command": "build/engine/poecraft_engine_tests.exe --solver-s8-3-only data/compiled/current",
+    "checks": 150,
+    "failures": 0,
+    "fracture_operator_kind": "primitive",
+    "automatic_fracture_prepare_operators": 0,
+    "irrelevant_legal_carrier_discovered_states": 2,
+    "irrelevant_legal_carrier_state_explanation": "the carrier plus Restart's fresh base; no unreachable Fracture successors",
+    "analytic_boundary": {
+      "fracture_price_boundary": 23.75,
+      "price_23_selected_action": "fracture",
+      "price_23_value": 124.25,
+      "price_24_selected_action": "restart",
+      "price_24_value": 125.0
+    }
+  },
+  "focused_web": {
+    "solve_workspace_command": "npx tsx test/solve-workspace.test.ts",
+    "solve_workspace_checks": 4,
+    "solve_workspace_failures": 0,
+    "typecheck_command": "npx tsc --noEmit",
+    "typecheck_passed": true,
+    "release_wasm_command": "powershell -File scripts/build-wasm.ps1",
+    "release_wasm_primitive_fracture_picker_subtest_passed": true,
+    "full_engine_smoke_passed": false,
+    "full_engine_smoke_boundary": "A later automatic permanent-bench group-goal solve did not converge; this broader smoke is not claimed by R3F."
+  },
+  "normal_cap_gate": {
+    "case": "conquest-lamellar-mirage-r3f-product",
+    "caps_raised": false,
+    "bellman_entry_demonstrated": false,
+    "report_emitted": false,
+    "disposition": "manually_stopped_at_owner_direction_before_bellman_entry",
+    "final_attempt": {
+      "started_at": "2026-07-19T08:36:13-07:00",
+      "stopped_at": "2026-07-19T08:40:37-07:00",
+      "cpu_seconds": 255.734375,
+      "process_working_set_bytes_at_stop": 108625920,
+      "process_private_bytes_at_stop": 124657664
+    },
+    "earlier_batched_attempt": {
+      "started_at": "2026-07-19T00:18:43-07:00",
+      "observed_after_cpu_seconds": 27094.234375,
+      "process_working_set_bytes_at_stop": 730042368,
+      "process_private_bytes_at_stop": 809648128,
+      "report_emitted": false,
+      "stop_reason": "stopped to unlock the benchmark executable for the requested final native and release-WASM rebuild"
+    }
+  },
+  "acceptance_statement": "Implementation and focused evidence are complete, but the pinned normal-cap Bellman-entry gate is not claimed as passed."
+}

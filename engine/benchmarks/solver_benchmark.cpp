@@ -243,7 +243,7 @@ std::string load_case_economy_json(const Value& specification) {
 
     const fs::path path = fs::absolute(snapshot_path->string);
     const std::string text = read_file(path);
-    const Value snapshot = parse_json(text, path);
+    Value snapshot = parse_json(text, path);
     if (required_string(snapshot, "id") != required_string(economy, "id")) {
         throw std::runtime_error("pinned economy snapshot id mismatch");
     }
@@ -256,22 +256,37 @@ std::string load_case_economy_json(const Value& specification) {
         required_string(economy, "source_cutoff_at_utc")) {
         throw std::runtime_error("pinned economy cutoff mismatch");
     }
-    const Value& prices = required(snapshot, "prices", Type::Object);
-    if (prices.find("base") != nullptr) {
+    const Value& source_prices = required(snapshot, "prices", Type::Object);
+    if (source_prices.find("base") != nullptr) {
         throw std::runtime_error(
             "pinned regression requires Restart/base to remain unpriced");
     }
     const Value& overrides = required(economy, "manual_overrides", Type::Object);
-    if (!overrides.object.empty()) {
-        throw std::runtime_error(
-            "pinned regression does not permit manual price overrides");
-    }
     const Value* fallback = economy.find("fallback_price");
     if (fallback == nullptr || fallback->type != Type::Null) {
         throw std::runtime_error(
             "pinned regression requires a null price fallback");
     }
-    return text;
+    if (overrides.object.empty()) return text;
+
+    if (overrides.object.size() != 1 ||
+        overrides.object.front().first != "base" ||
+        overrides.object.front().second.type != Type::Number ||
+        overrides.object.front().second.number <= 0.0 ||
+        required_string(economy, "override_purpose") !=
+            "r3f_restart_route_gate_not_market_quote") {
+        throw std::runtime_error(
+            "pinned regression permits only the disclosed positive R3F base "
+            "override");
+    }
+    for (auto& [key, value] : snapshot.object) {
+        if (key == "prices") {
+            value.object.emplace_back(
+                "base", overrides.object.front().second);
+            return json_of(snapshot);
+        }
+    }
+    throw std::runtime_error("pinned economy snapshot has no prices object");
 }
 
 std::vector<std::string> priced_product_action_ids(
@@ -985,6 +1000,9 @@ CaseResult run_case(
         const bool bounded_first_expansion =
             optional_string(specification, "benchmark_mode") ==
             "bounded_first_expansion";
+        const bool stop_after_bellman_entry =
+            optional_string(specification, "benchmark_mode") ==
+            "stop_after_bellman_entry";
         report.diagnostic_work_limit = optional_u64(
             caps, "max_diagnostic_work_items", 0);
         if (const Value* time_limit = optional(
@@ -1035,6 +1053,14 @@ CaseResult run_case(
                 report.actual_status = "cancelled";
                 break;
             }
+            if (stop_after_bellman_entry && !progress.done &&
+                progress.phase == PC_SOLVE_PHASE_ITERATING) {
+                pc_solver_solve_abandon(handles.solver);
+                report.actual_status = "bellman_entry_reached";
+                report.diagnostic_stop_reason =
+                    "focused_gate_after_complete_expansion";
+                break;
+            }
             if (bounded_first_expansion && !progress.done &&
                 report.diagnostic_work_limit != 0 &&
                 report.solve_steps >= report.diagnostic_work_limit) {
@@ -1056,7 +1082,8 @@ CaseResult run_case(
         report.solve_ms = milliseconds(solve_begin, Clock::now());
 
         const bool diagnostic_abandoned =
-            bounded_first_expansion && !progress.done;
+            (bounded_first_expansion || stop_after_bellman_entry) &&
+            !progress.done;
         if (!cancel_after_first && !diagnostic_abandoned) {
             report.solve_summary = {};
             result = pc_solver_solve_finish(

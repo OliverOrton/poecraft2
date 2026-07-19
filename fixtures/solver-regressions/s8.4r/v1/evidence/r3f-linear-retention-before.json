@@ -1,0 +1,74 @@
+{
+  "schema_version": "s8.4r3f_linear_retention_before_v1",
+  "recorded_on": "2026-07-18",
+  "scope": "Pre-R3F normal-cap Conquest/Mirage product-path Fracture preparation retention",
+  "revision": "83f8869",
+  "measurement": "Pinned conquest-lamellar-mirage-product input with normal product caps substituted before the R3F engine change; no base override, compilation, or verification",
+  "caps": {
+    "max_states": 100000,
+    "max_discovered_states": 100000,
+    "max_expanded_states": 100000,
+    "max_state_action_rows": 1000000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 10000000,
+    "max_solver_owned_bytes": 1073741824
+  },
+  "result": {
+    "actual_status": "refused_resource_cap",
+    "cap_hits": ["max_transitions"],
+    "phase_wall_ms": {
+      "registry_layout": 15.0211,
+      "solve": 48996.0047,
+      "total": 53406.4278
+    },
+    "product_action_count": 17,
+    "planner": {
+      "registry": 412,
+      "candidate_operators": 260,
+      "fixed_options": 243
+    },
+    "automatic_candidates": {
+      "operators": 243,
+      "dependency_primitives": 1,
+      "rows": {
+        "considered": 486,
+        "eligible": 242,
+        "rejected": 0,
+        "collapsed": 0,
+        "selected": 0,
+        "deferred": 244
+      }
+    },
+    "states": {
+      "discovered": 70321,
+      "expanded": 243,
+      "frontier": 70078,
+      "goal": 380,
+      "policy_reachable": 1
+    },
+    "work": {
+      "state_action_rows": 3157,
+      "transition_entries": 9989904,
+      "outcome_entries": 13558194,
+      "bellman_backups": 0,
+      "algebraic_self_loops": 770
+    },
+    "reforge": {
+      "requests": 2187,
+      "hits": 2178,
+      "misses": 9
+    },
+    "memory": {
+      "solver_owned_bytes_estimate": 452827288,
+      "solver_live_owned_bytes_estimate": 217639059,
+      "diagnostics_retained_bytes_estimate": 118667
+    }
+  },
+  "retention_finding": {
+    "expanded_states": 243,
+    "retained_fracture_prepare_fixed_options": 243,
+    "fixed_options_per_expanded_state": 1.0,
+    "bellman_sweeps": 0,
+    "statement": "The reproduced pre-R3F product path retained one carrier-relative fracture_prepare operator per expanded state until max_transitions refused the solve before Bellman optimization."
+  }
+}

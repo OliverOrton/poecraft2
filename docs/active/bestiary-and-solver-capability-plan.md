@@ -10,10 +10,13 @@ before recombinators. Stable solver architecture remains in
 performance history is archived under
 [archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
 
-Status 2026-07-18: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete, but the
-post-S8.4 regression audit below found further blocking correctness, scaling,
-and product-delivery failures. **S8.4R.4 is the sole next implementation
-boundary and S8.5 is blocked until all of S8.4R passes.** Oliver explicitly
+Status 2026-07-19: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete, but the
+post-S8.4 regression audit and post-R3 product diagnostic below found further
+blocking correctness, scaling, and product-delivery failures. The S8.4R.3F
+implementation and focused evidence are complete, but its pinned normal-cap
+Bellman-entry gate was stopped at Oliver's direction before producing a
+report. **S8.4R.3F therefore remains the sole active acceptance boundary;
+S8.4R.3A and S8.5 remain blocked.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
 as waived/deferred, not complete. Its full acceptance suite, 10,000-run
@@ -32,10 +35,17 @@ the existing exact evaluator occupancy result with descriptor/material,
 native-priced, technique, review-section, and opt-in success-normalized
 accounting, while keeping Simulator comparisons as separately labelled sampled
 evidence. R1-R3 have repaired bounded diagnostic ownership, state-local lazy
-automatic admission, and automatic Imprint-stage semantics/discovery. The next
-implementation boundary is **S8.4R.4 only**. The recorded S7 endgame sample remains `0.9942`
-against the former `0.995` target; the number is retained as a disclosed miss,
-not rewritten as a passing numeric gate.
+automatic admission, and automatic Imprint-stage semantics/discovery. A newly
+confirmed carrier-relative Fracture-preparation retention defect prevents that
+R2 substrate from scaling beyond a few hundred expanded product states. Owner
+mechanic direction 2026-07-18 resolves the Fracture half of that defect
+structurally — fracturing is an early-craft technique planned over ordinary
+primitives, not a per-carrier preparation closure. That representation is now
+implemented and release WASM is rebuilt, but **S8.4R.3F remains open at its
+normal-cap Bellman-entry gate**; R3A for the remaining automatic kinds does not
+begin until that gate is passed or Oliver explicitly changes it. The recorded S7 endgame
+sample remains `0.9942` against the former `0.995` target; the number is
+retained as a disclosed miss, not rewritten as a passing numeric gate.
 
 ## Outcome And Sequence
 
@@ -623,8 +633,9 @@ audit below supersedes the former S8.5 handoff.
 
 ### S8.4R - Solver And Web Regression Repair
 
-Status: audit and R1-R3 complete 2026-07-18; R4 is next. This
-phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
+Status: audit and R1-R3 complete 2026-07-18; R3F implementation/focused checks
+complete 2026-07-19, with its normal-cap Bellman-entry gate still open. R3A is
+blocked. This phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
 until every required gate below passes. The audit covers B1.3/B1.4 Imprint
 integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
 product paths.
@@ -682,6 +693,9 @@ acceptance once in R6 as required by `AGENTS.md`.
    No unbounded solve, compilation/verification of the real cases, 10,000-run
    verification, or full acceptance suite was run. Evidence is under
    [the S8.4R fixture](../../fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
+   The post-R3 finding does not invalidate this eager-construction repair, but
+   it shows that complete retained-kernel deduplication remained local to one
+   carrier and therefore did not satisfy product-scale closure sharing.
 3. **S8.4R.3 - Automatic Imprint Discovery (complete 2026-07-18).** Magic is
    now checked only by the native checkpoint-creation action at each reachable
    carrier; final goals may be rare. The native solver derives bounded exact
@@ -703,13 +717,78 @@ acceptance once in R6 as required by `AGENTS.md`.
    2,230 creates, and 2,166 restores. Focused Imprint/R2/Bestiary native gates,
    Python bindings, release-WASM bindings, and TypeScript checks passed. The
    required 10,000-run verification remains explicitly deferred to R6.
-4. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** This is the sole next
-   boundary. Remove giant
+4. **S8.4R.3F - Fracture As An Ordinary Product Candidate (implementation
+   complete 2026-07-19; acceptance gate open).** This remains the sole active
+   boundary. Owner mechanic direction 2026-07-18: fracturing is typically
+   an early-craft technique — prepare a cheap carrier, where efficient
+   preparation may mean several goal mods on the item so a fracture is more
+   likely to hit a goal mod and a miss is cheap to recover. Represent that
+   structure directly instead of retaining or sharing per-carrier
+   Fracture-preparation closures on the product path:
+
+   - In `goal_relevant`/automatic product mode, when Fracture is
+     goal-relevant, admit the primitive `fracture` action as an ordinary
+     priced, selectable candidate competing in the ordinary Bellman step
+     (recorded owner direction 5: Fracture enters the ordinary candidate
+     space). Its exact per-state outcome distribution is one successor per
+     distinct explicit-mod class and needs no retained closure. This narrows
+     the dependency-only rule for Fracture alone; every other dependency-only
+     primitive remains non-selectable.
+   - Remove per-state `fracture_prepare` preparation-closure admission from
+     the product path. Preparation — including multi-goal-mod preparation,
+     which the single-exact-carrier option cannot express — is planned by the
+     ordinary solve over existing primitives. `fracture_prepare` remains
+     available to explicit user-authored envelopes under the unchanged S7
+     option contract, and existing S8.0/S8.3 fixtures keep their meaning.
+   - Keep bounded R1 automatic-candidate evidence for Fracture
+     inclusion/refusal (carrier relevance, legality, pricing) without
+     retained closures.
+   - Anchor miss recovery: a Fracture-relevant product solve requires a
+     priced `base`, because a missed fracture recovers through the Restart
+     route and S8.2 restart-bound pruning and upper bounds depend on it.
+     Calculator readiness must surface a missing `base` price as an
+     actionable warning instead of silently excluding Restart.
+
+   Gate: the pinned Conquest/Mirage case reaches Bellman optimization under
+   the normal product caps with Fracture planned primitively, and the S8.3
+   analytic Fracture boundary `23.75` is preserved or exactly re-derived for
+   the primitive path. This checkpoint must reproduce and pin the
+   linear-retention evidence it relies on. Focused compilation/small
+   simulation may be used; full verification remains R6-owned.
+
+   Implementation result 2026-07-19: automatic product planning now uses the
+   primitive Fracture row and retains no automatic `fracture_prepare` closure;
+   authored envelopes keep the S7 option. Native and Calculator readiness
+   refuse a priced Fracture product solve without `base`, and release WASM was
+   rebuilt. The focused S8.3 gate passed 150 checks and exactly retained the
+   `23.75` boundary. Repository evidence reproduces the pre-fix 243-expanded /
+   243-fixed-option slope. The normal-cap Conquest gate was manually stopped
+   at Oliver's direction before it emitted a report, so Bellman entry is not
+   claimed, no cap was raised, and R3A remains blocked.
+5. **S8.4R.3A - Carrier-Relative Automatic-Kernel Scaling And Product
+   Usability.** After R3F passes. Preserve R1 caps/telemetry, R2's lazy
+   state-local exact admission, and R3F's primitive Fracture product planning,
+   and apply the carrier-relative scaling repair to the remaining automatic
+   kinds (Imprint, renewal, protected-side, temporary bench), whose retained
+   kernels keep the per-carrier retention shape R3F removed for Fracture.
+   Normalize entry-relative retry/self mass, share exact non-self
+   exits and resource vectors across carriers with the same preparation,
+   target slot, and preserved-base signature, and retain only genuinely
+   carrier-specific data per state. Add automatic-kind transition/time/byte
+   telemetry, tighten safe goal relevance, audit abstract-state equivalence,
+   and make the normal product result report its actual resource boundary.
+   The pinned Conquest/Mirage case must retain its R3F normal-product-cap
+   result, and the remaining automatic kinds must show bounded per-carrier
+   retention in the new automatic-kind telemetry before R4 begins; focused
+   compilation/small simulation may be used, but full verification remains
+   R6-owned.
+6. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** After R3A passes,
+   remove giant
    JSON-inside-JSON transfer and unnecessary full clones, preflight or align
    compilation caps, release the solved native handle/transition closure after
    successful transfer, and rebuild on repricing. Do not add retained-cache
    mode. Add live-byte lifecycle checks without rendered browser review.
-5. **S8.4R.5 - Verification And Forecast Truth.** Add a synthetic contract
+7. **S8.4R.5 - Verification And Forecast Truth.** Add a synthetic contract
    fixture proving failed, stopped, limited, unmatched, or otherwise off-policy
    runs cannot qualify as a solver-cost verification. Make Calculator display and
    gate success/failure/stop/limit/off-policy counters, economy identity, and
@@ -717,7 +796,7 @@ acceptance once in R6 as required by `AGENTS.md`.
    as `mod_count`, distinguish per-run from success-normalized cost, and
    reconcile Bellman, exact compiled-graph, and sampled values on the pinned
    regression case.
-6. **S8.4R.6 - Integrated Acceptance And Evidence.** Run the exact product
+8. **S8.4R.6 - Integrated Acceptance And Evidence.** Run the exact product
    `goal_relevant` path with automatic candidates enabled on the required real
    cases, execute the required 10,000-run compiled-strategy verifications,
    rebuild release WASM, run the appropriate complete non-visual acceptance
@@ -853,6 +932,35 @@ acceptance once in R6 as required by `AGENTS.md`.
    Carlo error and must be treated as failed verification until its terminal
    counts are known.
 
+10. **R2 carrier-local admission still retains one large Fracture preparation
+    closure per expanded state.** The post-R3 bounded Conquest/Mirage
+    diagnostic expanded 223 states and admitted exactly 223 fixed options. It
+    retained 2,891 state/action rows, 9,168,904 sparse transitions, and
+    433,238,148 selected owned bytes before any Bellman sweep. Primitive
+    reforge sharing was already effective: 2,001 requests produced 1,992 hits
+    and only 9 builds. The dominant growth therefore is not repeated Fossil
+    roll DP construction.
+
+    The R2 implementation compares complete option kernels only inside one
+    carrier's transient admission batch. Each admitted operator and mapped
+    kernel is then keyed by the absolute `(state_id, operator_index)`, while
+    equality includes absolute exit, retry, and continuation state IDs. A
+    Fracture preparation retry points back to its own entry carrier, so
+    otherwise identical renewal/preparation closures cannot deduplicate across
+    carriers. A separately reported 8x-transition-budget diagnostic continued
+    the same one-option-per-state slope to 1,344 expanded states, 1,344 fixed
+    options, 34 million transitions, and a clean 1.48 GiB selected-byte refusal;
+    R3F must reproduce and pin any evidence it relies on rather than treating
+    that external report as immutable repository evidence.
+
+    This is not the resolved eager global option cross product and does not
+    reopen its abstraction-width or `bad_alloc` repair. Generation remains
+    state-local; the new defect is failure to represent exact state-relative
+    self/retry structure and share the retained non-self kernel across
+    equivalent carriers. R4 transfer/lifetime and R5 verification cannot make
+    a solve that stops here produce a policy, and R6 would only rediscover the
+    same failure at the final gate.
+
 #### Required repair work
 
 1. **Completed in S8.4R.3.** Correct `imprint_retry` so magic rarity is an entry/checkpoint-creation
@@ -872,19 +980,24 @@ acceptance once in R6 as required by `AGENTS.md`.
    limit is not mechanic authority. Any internal program-depth/work bound must
    be an explicit reported solver resource boundary, not a claim that longer
    Imprint techniques are invalid.
-3. Rework S8.3 generation so candidates are bounded and deduplicated before
-   they widen global abstraction. Prefer carrier/state-local eligibility and
-   lazy kernel creation, with exact-kernel deduplication and only the minimal
-   dependencies needed for admitted candidates. Do not create every
-   cross-product option and then prove almost all of them illegal per state.
-   Dependency-only primitives must remain non-selectable as standalone product
-   actions.
-4. Replace unbounded per-row diagnostic JSON retention with aggregate counters
-   plus bounded samples or explicit on-demand detail. Avoid duplicating typed
-   records as stored JSON strings. Account every retained allocation, including
-   finalized automatic witnesses and serialized telemetry, enforce byte caps
-   during/following finalization, and give evaluator/accounting output its own
-   owned-byte/output-size protection.
+3. **Partially completed in R2; carrier-relative completion belongs to R3A.**
+   Rework S8.3 generation so candidates are bounded and deduplicated before
+   they widen global abstraction. R2 removed the eager global cross product,
+   made generation carrier-local, and retained only minimal dependencies, but
+   its exact-kernel deduplication is local to one carrier. R3F removes the
+   dominant Fracture-preparation closures from the product path entirely; R3A
+   must then normalize entry-relative retry/self structure and deduplicate
+   complete retained kernels across equivalent carriers for the remaining
+   automatic kinds before another full closure is admitted. Dependency-only
+   primitives remain non-selectable as standalone product actions, with one
+   owner-directed exception: R3F makes goal-relevant primitive Fracture an
+   ordinary selectable product candidate.
+4. **Completed in R1.** Replace unbounded per-row diagnostic JSON retention
+   with aggregate counters plus bounded samples or explicit on-demand detail.
+   Avoid duplicating typed records as stored JSON strings. Account every
+   retained allocation, including finalized automatic witnesses and serialized
+   telemetry, enforce byte caps during/following finalization, and give
+   evaluator/accounting output its own owned-byte/output-size protection.
 5. Make the supported browser lifecycle explicit. Avoid JSON-escaping and
    reparsing a giant strategy inside another JSON document, eliminate
    unnecessary full structured clones, and do not retain both a large
@@ -914,6 +1027,64 @@ acceptance once in R6 as required by `AGENTS.md`.
    evaluation to the compiler-emitted condition vocabulary, including the
    current `mod_count` gap, so compiled graph value/success can be checked
    before relying on sampling.
+9. **R3F fracture-as-primitive product planning.** Owner mechanic direction
+   2026-07-18: fracturing is an early-craft technique — prepare a cheap
+   carrier, often with several goal mods so the fracture pick is more likely
+   to hit a goal mod and a miss is cheap to recover. In `goal_relevant`/
+   automatic product mode, admit the primitive `fracture` action as an
+   ordinary priced, selectable candidate when it is goal-relevant, and remove
+   per-state `fracture_prepare` preparation-closure admission from the product
+   path; the ordinary Bellman solve plans preparation, including the
+   multi-goal-mod preparation the single-exact-carrier option cannot express.
+   Keep `fracture_prepare` for explicit user-authored envelopes under the
+   unchanged S7 option contract. Keep bounded Fracture inclusion/refusal
+   evidence without retained closures. Require a priced `base` for
+   Fracture-relevant product solves and surface a missing `base` price in
+   Calculator readiness as an actionable warning instead of silently excluding
+   Restart, because miss recovery is the Restart route and S8.2 restart-bound
+   pruning and upper bounds depend on it. Mechanic legality and pick rules
+   stay in the existing engine action/evaluator authority; this changes only
+   when the planner may consider Fracture.
+
+   Implementation and focused evidence completed 2026-07-19. The normal-cap
+   pinned Bellman-entry gate remains open because the final long-running
+   attempt was stopped at Oliver's direction before report emission; do not
+   reinterpret the stop as a passing result or begin R3A from it.
+10. **R3A product-usability scaling.** After R3F, product-path preparation
+   closures remain only for the non-Fracture automatic kinds, and
+   `fracture_prepare` closures survive only in explicit user-authored
+   envelopes; apply this carrier-relative representation there. Represent a
+   preparation/renewal kernel
+   as entry-relative self/retry mass plus exact shared non-self exits,
+   continuation classification, primitive routes, and resource quantities.
+   Cache its template across carriers by preparation program, target goal slot,
+   preserved-base signature, and complete normalized kernel. A carrier keeps
+   only the state-local reference needed for Bellman self loops and primitive
+   compilation; dependencies are admitted once per unique template. Preserve
+   distinct templates whenever fractured, locked, crafted, influence, affix
+   capacity, or any other mechanic-relevant fact changes legality or outcomes.
+
+   Add automatic-kind and primitive-family telemetry for candidates, unique
+   templates, cache hits, rows, raw outcomes, retained transitions, time, and
+   selected bytes. Tighten Essence relevance from same-family matching to an
+   exact guaranteed modifier that satisfies a requested goal slot. Give
+   Harvest and other high-fanout families bounded state-local goal relevance
+   and complete-kernel/resource deduplication where exact proof permits it;
+   any work bound is reported as a solver resource boundary. Audit abstraction
+   identity so physical prefix/suffix array order and junk ordering collapse,
+   while distinct goal slots remain separate only when an admitted action can
+   observe a real legality or transition difference. Do not add a depth/stage
+   heuristic or silently exclude a mechanically legal destructive retry. If
+   Oliver chooses a narrower raw-renewal product scope, record the concrete
+   below-exit Fossil/Essence retry decision and label optimality within that
+   scope.
+
+   If exact carrier-relative sharing, relevance, and state minimization still
+   cannot produce a policy under product caps, add a general mechanic-neutral
+   focused/custom action scope as a disclosed usability fallback. Such a
+   result is “optimal within the selected action scope,” never a global
+   optimality claim. Keep Imprint an ordinary automatic mechanic: no authored
+   attempt/exit controls and no Imprint-specific explanatory panel.
 
 #### Repair acceptance gate
 
@@ -923,6 +1094,31 @@ acceptance once in R6 as required by `AGENTS.md`.
   convergence/cap outcome, retained bytes, telemetry bytes, compilation size,
   WASM heap/live bytes, and worker responsiveness. Do not substitute
   `automatic_candidates=false` comparisons for this gate.
+- Before R4, reproduce the post-R3 Conquest signature with bounded diagnostics
+  and prove R3F removes the one-retained-Fracture-closure-per-expanded-state
+  slope by planning Fracture primitively, and that R3A bounds per-carrier
+  retention for the remaining automatic kinds. Under R3A, two carriers
+  differing only in preparation-wiped modifiers must share
+  one normalized template; different preserved/fractured substrates must not
+  collapse. Compare the shared implementation with a small exhaustive/manual
+  oracle for value, complete outcome/resource kernel, retry mass, and selected
+  primitive route. The pinned normal-cap product request must finish expansion
+  and enter Bellman optimization without hitting `max_transitions` or
+  `max_solver_owned_bytes`. Record whether it converges; if a different honest
+  boundary remains, stop and plan that measured boundary rather than raising
+  caps blindly.
+- Add focused projection fixtures proving physical affix ordering and junk
+  ordering do not create distinct abstract states. Record any remaining
+  goal-slot distinction and the admitted action fact that requires it. Add an
+  Essence goal fixture proving no Essence action is admitted when its
+  guaranteed modifier cannot satisfy any requested slot, plus bounded Harvest
+  and Fossil/Essence family counts in the product telemetry.
+- Calculator must present Imprint like any other mechanic, omit the dedicated
+  Imprint explanation block, and identify non-convergence as the actual solver
+  resource/status boundary rather than a pricing failure. Keep a compact,
+  non-rendered diagnostic record of action scope, expanded/discovered states,
+  rows, transitions, elapsed time, and selected live/peak bytes so repeated
+  product solves can measure scaling changes.
 - Retain the analytic S8.3 price boundaries and compare automatically admitted
   techniques with their manual/exhaustive exact oracles. Selected candidates
   must still compile to ordinary primitives with complete routes.

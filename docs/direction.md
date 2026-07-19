@@ -104,15 +104,18 @@ will release the solved native handle and transition closure after strategy
 transfer and rebuild on repricing; retained-cache mode stays out until live-byte
 telemetry can enforce a product budget. S8.4R is split into R1 diagnostic/cap
 ownership, R2 state-local automatic generation, R3 automatic Imprint discovery,
-R4 browser transfer/lifetime, R5 verification truth, and R6 integrated
-acceptance. R1 is complete: its exact Conquest Lamellar/Mirage case is pinned,
+R3F primitive Fracture product planning,
+R3A carrier-relative automatic-kernel scaling/product usability, R4 browser
+transfer/lifetime, R5 verification truth, and R6 integrated acceptance. R1 is
+complete: its exact Conquest Lamellar/Mirage case is pinned,
 diagnostic retention and final output are bounded, evaluator byte caps are in
 place, and native/release-WASM selected live-memory telemetry is available.
-R2 is complete: automatic Fracture, bench/blocker, protected-metamod, and
-Multimod candidates are now discovered from the current carrier, rejected or
-exact-kernel/resource-deduplicated in a transient exact local context, and only
-then admitted with their minimal structural dependencies. Product construction
-no longer widens the shared layout for the eager global cross product; the
+R2's eager-construction repair is complete: automatic Fracture, bench/blocker,
+protected-metamod, and Multimod candidates are now discovered from the current
+carrier, rejected or exact-kernel/resource-deduplicated within its transient
+exact local context, and only then admitted with their minimal structural
+dependencies. Product construction no longer widens the shared layout for the
+eager global cross product; the
 pinned and ordinary/advanced bounded cases now construct 17/7/5 candidates
 with 13-14 junk classes instead of 1,785/1,318/1,773 candidates with 44-45.
 R3 is complete: Imprint is now automatic and state-local. Native discovery
@@ -126,9 +129,34 @@ retry exactly. Authored Imprint programs/exits are gone from the product
 contract, and depth/work exhaustion is reported as a solver resource boundary.
 The focused rare-final compiled fixture passed 64 deterministic runs; its
 required 10,000-run verification remains deferred to R6. Release WASM was
-rebuilt for the corrected C ABI metadata. **S8.4R.4 is the immediate and sole
-boundary; S8.5 is blocked until all of
-S8.4R passes.** Mechanic rules are never researched or inferred by agents.
+rebuilt for the corrected C ABI metadata.
+
+A post-R3 bounded product diagnostic then isolated a separate retained-kernel
+scaling defect on the otherwise-correct R2 substrate. The pinned Conquest case
+expanded 223 states, admitted exactly 223 fixed options, retained 2,891 rows and
+9,168,904 transitions, reached about 433 MB of selected owned data, and never
+entered Bellman optimization. Primitive reforge sharing was already effective
+(1,992 hits from 2,001 requests, only 9 builds). Fracture preparation is
+discovered correctly per carrier, but complete-kernel comparison is confined to
+that carrier's transient batch and absolute entry/retry state IDs make the
+mapped closure unique. Oliver's fracture-usage direction (2026-07-18) resolves
+the Fracture half structurally: fracturing is an early-craft technique —
+prepare a cheap carrier, often with several goal mods to cut the cost of
+missing — so R3F makes goal-relevant primitive Fracture an ordinary selectable
+product candidate, removes product-path preparation closures, and requires a
+priced `base` so miss recovery routes through Restart. That implementation,
+focused `23.75` boundary evidence, Calculator warning, and release-WASM rebuild
+are complete. The pinned normal-cap Conquest attempt was stopped at Oliver's
+direction before report emission, however, so Bellman entry is not claimed and
+R3F remains the active acceptance boundary. After that gate passes or is
+explicitly changed, R3A normalizes entry-relative self/retry mass and shares
+exact non-self preparation templates across carriers with the same preserved
+substrate for the remaining automatic kinds, adds per-family/per-automatic-kind
+scaling telemetry, tightens safe
+Essence/Harvest relevance, and audits abstract-state equivalence. This does not
+reopen the resolved eager global cross product. **S8.4R.3F's normal-cap gate is
+the immediate and sole boundary; S8.4R.3A and S8.5 remain blocked.** Mechanic
+rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,

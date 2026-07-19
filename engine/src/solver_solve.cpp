@@ -926,6 +926,20 @@ struct SolveWork::Impl {
             }
             ++result.diagnostics.supported_priced_actions;
         }
+        const bool priced_automatic_fracture = std::any_of(
+            operators.begin(), operators.end(),
+            [&](const PricedOperator& priced) {
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                return planner.kind == PlannerOperatorKind::Primitive &&
+                       planner.automatic_kind ==
+                           AutomaticCandidateKind::Fracture;
+            });
+        if (priced_automatic_fracture && restart_operator_index == kNoId) {
+            throw std::invalid_argument(
+                "goal-relevant Fracture planning requires a priced base for "
+                "Restart miss recovery");
+        }
         for (std::size_t i = 0;
              i < calc.static_candidate_operator_count(); ++i) {
             const std::uint32_t index = calc.candidate_operators().at(i);
@@ -2239,10 +2253,38 @@ struct SolveWork::Impl {
                 } else {
                     const std::uint32_t action_index =
                         planner.primitive_action;
+                    const AbstractState& entry = calc.state(state);
+                    std::uint32_t fracture_relevant_mask = 0;
+                    if (planner.automatic_kind ==
+                        AutomaticCandidateKind::Fracture) {
+                        for (std::uint32_t slot = 0;
+                             slot < calc.layout().slots.size(); ++slot) {
+                            if ((planner.relevant_goal_mask & (1u << slot)) !=
+                                    0 &&
+                                entry.slot_status[slot] ==
+                                    static_cast<std::uint8_t>(
+                                        GoalSlotStatus::Satisfied) &&
+                                (entry.fractured_goal_mask & (1u << slot)) ==
+                                    0) {
+                                fracture_relevant_mask |= 1u << slot;
+                            }
+                        }
+                    }
                     if (!action_legal(
                             session, calc.registry().actions[action_index],
-                            calc.state(state))) {
+                            entry)) {
                         append = false;
+                    } else if (planner.automatic_kind ==
+                                   AutomaticCandidateKind::Fracture &&
+                               fracture_relevant_mask == 0) {
+                        append = false;
+                        OptionKernel::AutomaticEvidence& evidence =
+                            automatic_record->evidence;
+                        evidence.eligible = false;
+                        evidence.legality_result = "irrelevant";
+                        evidence.reason =
+                            "no_unfractured_satisfied_goal_carrier";
+                        automatic_record->eligible = false;
                     } else {
                         const OutcomeDistribution& distribution =
                             calc.outcomes(state, action_index);
@@ -2270,42 +2312,68 @@ struct SolveWork::Impl {
                                 &distribution.choice_options;
                         }
                         if (append && automatic_record.has_value()) {
-                            bool advances = false;
-                            const AbstractState& source = calc.state(state);
-                            for (const OutcomeEntry& exit :
-                                 distribution.entries) {
-                                if (exit.probability <= 0.0) continue;
-                                const AbstractState& successor =
-                                    calc.state(exit.state);
-                                for (std::uint32_t slot = 0;
-                                     slot < calc.layout().slots.size(); ++slot) {
-                                    if ((planner.relevant_goal_mask &
-                                         (1u << slot)) != 0 &&
-                                        successor.slot_status[slot] >
-                                            source.slot_status[slot]) {
-                                        advances = true;
+                            bool relevant_change = false;
+                            if (planner.automatic_kind ==
+                                AutomaticCandidateKind::Fracture) {
+                                for (const OutcomeEntry& exit :
+                                     distribution.entries) {
+                                    if (exit.probability <= 0.0) continue;
+                                    relevant_change |=
+                                        (calc.state(exit.state)
+                                             .fractured_goal_mask &
+                                         fracture_relevant_mask) != 0;
+                                }
+                            } else {
+                                /* Outcome interning may move the state table,
+                                 * so reacquire the carrier afterwards. */
+                                const AbstractState& source = calc.state(state);
+                                for (const OutcomeEntry& exit :
+                                     distribution.entries) {
+                                    if (exit.probability <= 0.0) continue;
+                                    const AbstractState& successor =
+                                        calc.state(exit.state);
+                                    for (std::uint32_t slot = 0;
+                                         slot < calc.layout().slots.size();
+                                         ++slot) {
+                                        if ((planner.relevant_goal_mask &
+                                             (1u << slot)) != 0 &&
+                                            successor.slot_status[slot] >
+                                                source.slot_status[slot]) {
+                                            relevant_change = true;
+                                        }
                                     }
                                 }
                             }
                             OptionKernel::AutomaticEvidence& evidence =
                                 automatic_record->evidence;
-                            evidence.eligible = advances;
-                            evidence.kernel_changed = advances;
-                            evidence.setup_complete = advances;
+                            evidence.eligible = relevant_change;
+                            evidence.kernel_changed = relevant_change;
+                            evidence.setup_complete = relevant_change;
                             evidence.cleanup_complete = true;
                             evidence.recovery_complete = true;
                             evidence.exits_complete =
                                 !distribution.entries.empty();
                             evidence.kernel_change_mechanisms =
-                                kAutomaticDeterministicFinish;
+                                planner.automatic_kind ==
+                                        AutomaticCandidateKind::Fracture
+                                    ? kAutomaticCarrierFracture
+                                    : kAutomaticDeterministicFinish;
                             evidence.legality_result =
-                                advances ? "legal" : "irrelevant";
-                            evidence.reason =
-                                advances
+                                relevant_change ? "legal" : "irrelevant";
+                            if (planner.automatic_kind ==
+                                AutomaticCandidateKind::Fracture) {
+                                evidence.relevant_goal_mask =
+                                    fracture_relevant_mask;
+                                evidence.reason = relevant_change
+                                    ? "exact_goal_relevant_primitive_fracture_distribution"
+                                    : "no_unfractured_satisfied_goal_carrier";
+                            } else {
+                                evidence.reason = relevant_change
                                     ? "legal_permanent_goal_bench_successor"
                                     : "permanent_bench_does_not_advance_goal";
-                            automatic_record->eligible = advances;
-                            if (!advances) append = false;
+                            }
+                            automatic_record->eligible = relevant_change;
+                            if (!relevant_change) append = false;
                         }
                     }
                 }

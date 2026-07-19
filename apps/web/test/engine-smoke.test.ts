@@ -1678,13 +1678,20 @@ test("calculator picker: full-registry solver, filtered actions, fossil combos",
         "bench:IntMasterItemGenerationCannotRollAttackAffixes",
         "bench:StrDexMasterItemGenerationCannotRollCasterAffixes",
         "remove_crafted_modifiers",
-        "fracture",
     ]) {
         assert.ok(
             !focusedActions.some((action) => action.id === deferred),
             `${deferred} waits for its bounded S7.4 assembly route`,
         );
     }
+    const primitiveFracture = focusedActions.find(
+        (action) => action.id === "fracture",
+    );
+    assert.ok(
+        primitiveFracture,
+        "goal-relevant product mode exposes primitive Fracture directly",
+    );
+    assert.deepEqual(primitiveFracture.cost_keys, ["fracture"]);
     await client.closeSolver(focusedSolver);
 
     await client.closeSolver(solver);

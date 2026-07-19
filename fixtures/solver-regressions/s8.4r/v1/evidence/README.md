@@ -1,5 +1,40 @@
 # S8.4R bounded evidence
 
+## R3F primitive Fracture product planning
+
+R3F makes goal-relevant `fracture` an ordinary priced primitive and removes
+automatic per-carrier `fracture_prepare` closures from the product path.
+Explicit authored `fracture_prepare` envelopes remain available. A priced
+Fracture product solve also requires `base`, because misses recover through
+Restart; the dedicated gate case uses a disclosed 1-chaos structural override,
+not a Mirage market quote.
+
+The reproduced pre-fix slope is pinned in
+[`r3f-linear-retention-before.json`](r3f-linear-retention-before.json): under
+normal product caps it retained 243 Fracture preparation operators for 243
+expanded states, reached 9,989,904 transitions and 452,827,288 selected bytes,
+performed zero Bellman sweeps, then refused `max_transitions`. The focused
+implementation, analytic-boundary, release-WASM, and stopped-gate record is
+[`r3f-implementation-summary.json`](r3f-implementation-summary.json).
+
+Focused checks and the normal-cap gate command are:
+
+```powershell
+powershell -File scripts/build.ps1
+build\engine\poecraft_engine_tests.exe --solver-s8-3-only data\compiled\current
+powershell -File scripts/build-wasm.ps1
+Push-Location apps\web
+npx tsx test/solve-workspace.test.ts
+npx tsc --noEmit
+Pop-Location
+build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus fixtures\solver-regressions\s8.4r\v1\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\s8.4r3f-after.json --skip-verification
+```
+
+Oliver directed the final long-running benchmark attempt to stop before it
+emitted a report. Consequently the normal-cap Bellman-entry acceptance gate is
+not claimed as passed, no cap was raised, and R3F remains the active acceptance
+boundary despite the completed implementation and focused evidence.
+
 ## R3 automatic Imprint-stage discovery
 
 The focused fixture contract is
