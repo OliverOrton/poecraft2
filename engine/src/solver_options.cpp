@@ -1674,6 +1674,8 @@ std::uint64_t option_kernel_selected_bytes(const OptionKernel& kernel) {
              sizeof(OutcomeChoiceOption);
     bytes += kernel.retry_states.capacity() * sizeof(std::uint32_t);
     bytes += kernel.continuation_states.capacity() * sizeof(std::uint32_t);
+    bytes += kernel.automatic_candidate_attempt_entries.capacity() *
+             sizeof(OutcomeEntry);
     bytes += kernel.automatic.legality_result.capacity() + 1;
     bytes += kernel.automatic.reason.capacity() + 1;
     return bytes;
@@ -1867,6 +1869,8 @@ OptionKernel map_local_option_kernel(
     for (std::uint32_t& state : result.continuation_states) {
         state = map_local_state(local, destination, state, mapped);
     }
+    result.automatic_candidate_attempt_entries.clear();
+    result.automatic_candidate_attempt_entries.shrink_to_fit();
     std::sort(result.retry_states.begin(), result.retry_states.end());
     result.retry_states.erase(
         std::unique(result.retry_states.begin(), result.retry_states.end()),
@@ -2103,8 +2107,14 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     }
 
     const auto shared_started = std::chrono::steady_clock::now();
+    const auto synthesis_started = std::chrono::steady_clock::now();
     AutomaticOptionSynthesis synthesis =
         synthesize_automatic_options(*this, state_id, carrier);
+    batch.phases.carriers = 1;
+    batch.phases.synthesis_ns = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - synthesis_started)
+            .count());
     batch.temporary_precompiled_classes =
         synthesis.temporary_precompiled_classes;
     batch.temporary_precompile_ns = temporary_bench_precompile_ns_;
@@ -2139,9 +2149,27 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     GoalSpec local_goal = goal_;
     local_goal.automatic_candidates = false;
     local_goal.fixed_options = std::move(synthesis.specs);
+    const auto local_context_started = std::chrono::steady_clock::now();
     CalcContext local(
         session_, local_goal, registry_, local_candidates,
         false, false, true);
+    local.set_defer_automatic_protected_baseline(true);
+    batch.phases.local_context_ns = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - local_context_started)
+            .count());
+    batch.phases.local_planner_build_ns = local.planner_build_ns();
+    batch.phases.local_layout_build_ns = local.layout_build_ns();
+    batch.phases.local_ledger_init_ns =
+        local.owned_byte_ledger_init_ns();
+    const std::uint64_t local_attributed_ns =
+        batch.phases.local_planner_build_ns +
+        batch.phases.local_layout_build_ns +
+        batch.phases.local_ledger_init_ns;
+    batch.phases.local_context_other_ns =
+        batch.phases.local_context_ns > local_attributed_ns
+            ? batch.phases.local_context_ns - local_attributed_ns
+            : 0;
     local.set_solve_resource_caps(
         limits.max_discovered_states == 0
             ? std::numeric_limits<std::uint32_t>::max()
@@ -2243,6 +2271,22 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 return limits.prices->contains(resource.first);
             });
     };
+    const auto action_has_prices = [&](const std::uint32_t action) {
+        if (limits.prices == nullptr) return true;
+        return std::all_of(
+            registry_.actions.at(action).cost_keys.begin(),
+            registry_.actions.at(action).cost_keys.end(),
+            [&](const std::string& key) {
+                return limits.prices->contains(key);
+            });
+    };
+    const auto program_has_prices = [&](const PlannerOperator& planner) {
+        return std::all_of(
+                   planner.primitive_program.begin(),
+                   planner.primitive_program.end(), action_has_prices) &&
+               (planner.conditional_action == kNoId ||
+                action_has_prices(planner.conditional_action));
+    };
     bool local_work_merged = false;
     const auto merge_local_work = [&]() {
         if (local_work_merged) return;
@@ -2276,6 +2320,17 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         telemetry_.reforge_hits += work.reforge_hits;
         telemetry_.reforge_misses += work.reforge_misses;
         telemetry_.reforge_build_ns += work.reforge_build_ns;
+        telemetry_.protected_retry_checks +=
+            work.protected_retry_checks;
+        telemetry_.protected_retry_certificates +=
+            work.protected_retry_certificates;
+        telemetry_.protected_retry_fallbacks +=
+            work.protected_retry_fallbacks;
+        telemetry_.protected_attempt_ns += work.protected_attempt_ns;
+        telemetry_.protected_baseline_ns += work.protected_baseline_ns;
+        telemetry_.protected_normalization_ns +=
+            work.protected_normalization_ns;
+        telemetry_.protected_finish_ns += work.protected_finish_ns;
         telemetry_.owned_byte_audit_requests +=
             work.owned_byte_audit_requests;
         telemetry_.owned_byte_audit_ns += work.owned_byte_audit_ns;
@@ -2469,6 +2524,17 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             std::string,
             std::shared_ptr<const OptionKernel>>
             temporary_evaluation_memo;
+        struct ProtectedKernelComparison {
+            bool supported = false;
+            bool fully_legal = false;
+            bool changed = false;
+            std::uint64_t baseline_hash = 0;
+            std::uint64_t candidate_hash = 0;
+        };
+        std::map<
+            std::pair<std::uint32_t, std::uint32_t>,
+            ProtectedKernelComparison>
+            protected_kernel_comparisons;
         const auto temporary_group_for = [&](const PlannerOperator& planner)
             -> const TemporaryBenchCandidateGroup* {
             if (planner.option_kind !=
@@ -2502,6 +2568,9 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             base_decision.kind = local_planner.automatic_kind;
             base_decision.telemetry_kind =
                 telemetry_kind_for_candidate(base_decision.kind);
+            const bool measure_protected =
+                base_decision.telemetry_kind ==
+                AutomaticTelemetryKind::ProtectedSide;
             const bool direct_fracture =
                 local_planner.option_kind ==
                     FixedOptionKind::FracturePrepare &&
@@ -2516,7 +2585,10 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                         local_planner.conditional_action),
                     local.state(local_state));
             if (temporary_group == nullptr &&
-                !has_prices(local_planner) && !direct_fracture) {
+                (!has_prices(local_planner) ||
+                 (measure_protected &&
+                  !program_has_prices(local_planner))) &&
+                !direct_fracture) {
                 base_decision.missing_price = true;
                 base_decision.evidence.candidate = true;
                 base_decision.evidence.relevant_goal_mask =
@@ -2533,14 +2605,6 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 continue;
             }
             if (temporary_group != nullptr && limits.prices != nullptr) {
-                const auto action_has_prices = [&](const std::uint32_t action) {
-                    return std::all_of(
-                        local.registry().actions.at(action).cost_keys.begin(),
-                        local.registry().actions.at(action).cost_keys.end(),
-                        [&](const std::string& key) {
-                            return limits.prices->contains(key);
-                        });
-                };
                 const bool common_prices =
                     action_has_prices(local_planner.followup_action) &&
                     action_has_prices(local_planner.cleanup_action);
@@ -2585,6 +2649,12 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     continue;
                 }
             }
+            const auto kernel_evaluation_started =
+                measure_protected
+                    ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{};
+            const CalcTelemetry protected_before =
+                measure_protected ? local.telemetry() : CalcTelemetry{};
             const std::string evaluation_key = temporary_evaluation_key(
                 local.session(), local.registry(), local_planner);
             const OptionKernel* local_kernel_ptr = nullptr;
@@ -2618,6 +2688,199 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 }
             }
             const OptionKernel& local_kernel = *local_kernel_ptr;
+            const ProtectedKernelComparison* protected_comparison = nullptr;
+            if (local_planner.option_kind ==
+                    FixedOptionKind::ProtectedRepeat &&
+                local_kernel.automatic.eligible) {
+                const std::pair<std::uint32_t, std::uint32_t> comparison_key{
+                    local_planner.setup_action,
+                    local_planner.followup_action};
+                auto found = protected_kernel_comparisons.find(
+                    comparison_key);
+                if (found == protected_kernel_comparisons.end()) {
+                    if (automatic_comparison_context_ == nullptr) {
+                        GoalSpec comparison_goal = goal_;
+                        comparison_goal.automatic_candidates = false;
+                        comparison_goal.fixed_options.clear();
+                        automatic_comparison_context_ =
+                            std::make_unique<CalcContext>(
+                                session_, comparison_goal, registry_,
+                                candidates_, false, false, true,
+                                solve_discovered_state_cap_);
+                        automatic_comparison_context_->set_solve_resource_caps(
+                            solve_discovered_state_cap_.value_or(
+                                std::numeric_limits<std::uint32_t>::max()),
+                            std::numeric_limits<std::uint64_t>::max(), false);
+                    }
+                    CalcContext& comparison_context =
+                        *automatic_comparison_context_;
+                    const CalcTelemetry comparison_before =
+                        comparison_context.telemetry();
+                    const std::uint32_t comparison_state =
+                        comparison_context.intern_item(carrier);
+                    const ActionDescriptor& baseline_action =
+                        comparison_context.registry().actions.at(
+                            local_planner.followup_action);
+                    const bool baseline_legal = action_legal(
+                        comparison_context.session(), baseline_action,
+                        comparison_context.state(comparison_state));
+                    const OutcomeDistribution* baseline_distribution =
+                        baseline_legal
+                            ? &comparison_context.outcomes(
+                                  comparison_state,
+                                  local_planner.followup_action)
+                            : nullptr;
+                    const CalcTelemetry& comparison_after =
+                        comparison_context.telemetry();
+                    telemetry_.distribution_requests +=
+                        comparison_after.distribution_requests -
+                        comparison_before.distribution_requests;
+                    telemetry_.distribution_hits +=
+                        comparison_after.distribution_hits -
+                        comparison_before.distribution_hits;
+                    telemetry_.distribution_misses +=
+                        comparison_after.distribution_misses -
+                        comparison_before.distribution_misses;
+                    telemetry_.distribution_build_ns +=
+                        comparison_after.distribution_build_ns -
+                        comparison_before.distribution_build_ns;
+                    telemetry_.outcome_entries +=
+                        comparison_after.outcome_entries -
+                        comparison_before.outcome_entries;
+                    telemetry_.choice_groups +=
+                        comparison_after.choice_groups -
+                        comparison_before.choice_groups;
+                    telemetry_.choice_successor_entries +=
+                        comparison_after.choice_successor_entries -
+                        comparison_before.choice_successor_entries;
+                    telemetry_.reforge_requests +=
+                        comparison_after.reforge_requests -
+                        comparison_before.reforge_requests;
+                    telemetry_.reforge_hits +=
+                        comparison_after.reforge_hits -
+                        comparison_before.reforge_hits;
+                    telemetry_.reforge_misses +=
+                        comparison_after.reforge_misses -
+                        comparison_before.reforge_misses;
+                    telemetry_.reforge_build_ns +=
+                        comparison_after.reforge_build_ns -
+                        comparison_before.reforge_build_ns;
+                    consume_reforge_work(
+                        comparison_after.reforge_frontier_work -
+                        comparison_before.reforge_frontier_work);
+                    ProtectedKernelComparison comparison;
+                    comparison.supported =
+                        baseline_distribution != nullptr &&
+                        baseline_distribution->supported &&
+                        baseline_distribution->choice_groups.empty();
+                    comparison.fully_legal = baseline_legal;
+                    bool same_outcomes = comparison.supported &&
+                        baseline_distribution->entries.size() ==
+                            local_kernel
+                                .automatic_candidate_attempt_entries.size();
+                    if (same_outcomes) {
+                        std::unordered_multimap<
+                            std::size_t,
+                            std::pair<const AbstractState*, double>>
+                            candidate_outcomes;
+                        candidate_outcomes.reserve(
+                            local_kernel
+                                .automatic_candidate_attempt_entries.size());
+                        for (const OutcomeEntry& entry :
+                             local_kernel
+                                 .automatic_candidate_attempt_entries) {
+                            const AbstractState& candidate_state =
+                                local.state(entry.state);
+                            candidate_outcomes.emplace(
+                                abstract_state_hash(candidate_state),
+                                std::pair{
+                                    &candidate_state, entry.probability});
+                        }
+                        for (const OutcomeEntry& entry :
+                             baseline_distribution->entries) {
+                            const AbstractState& baseline_state =
+                                comparison_context.state(entry.state);
+                            const auto [first, last] =
+                                candidate_outcomes.equal_range(
+                                    abstract_state_hash(baseline_state));
+                            const bool matched = std::any_of(
+                                first, last, [&](const auto& candidate) {
+                                    return *candidate.second.first ==
+                                               baseline_state &&
+                                           candidate.second.second ==
+                                               entry.probability;
+                                });
+                            if (!matched) {
+                                same_outcomes = false;
+                                break;
+                            }
+                        }
+                    }
+                    comparison.changed =
+                        comparison.supported && comparison.fully_legal &&
+                        !same_outcomes;
+                    if (baseline_distribution != nullptr) {
+                        AttemptKernel baseline;
+                        baseline.supported =
+                            baseline_distribution->supported;
+                        baseline.fully_legal = baseline_legal;
+                        baseline.entries = baseline_distribution->entries;
+                        comparison.baseline_hash =
+                            attempt_kernel_hash(baseline);
+                        comparison_context.release_outcome(
+                            comparison_state,
+                            local_planner.followup_action);
+                    }
+                    AttemptKernel candidate;
+                    candidate.entries =
+                        local_kernel.automatic_candidate_attempt_entries;
+                    comparison.candidate_hash =
+                        attempt_kernel_hash(candidate);
+                    found = protected_kernel_comparisons.emplace(
+                        comparison_key, comparison).first;
+                }
+                protected_comparison = &found->second;
+            }
+            if (measure_protected) {
+                const CalcTelemetry& protected_after = local.telemetry();
+                base_decision.kernel_evaluation_ns =
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            kernel_evaluation_started)
+                            .count());
+                base_decision.protected_side_evaluations =
+                    local_planner.option_kind ==
+                            FixedOptionKind::ProtectedSide
+                        ? 1
+                        : 0;
+                base_decision.protected_repeat_evaluations =
+                    local_planner.option_kind ==
+                            FixedOptionKind::ProtectedRepeat
+                        ? 1
+                        : 0;
+                base_decision.protected_retry_checks =
+                    protected_after.protected_retry_checks -
+                    protected_before.protected_retry_checks;
+                base_decision.protected_retry_certificates =
+                    protected_after.protected_retry_certificates -
+                    protected_before.protected_retry_certificates;
+                base_decision.protected_retry_fallbacks =
+                    protected_after.protected_retry_fallbacks -
+                    protected_before.protected_retry_fallbacks;
+                base_decision.protected_attempt_ns =
+                    protected_after.protected_attempt_ns -
+                    protected_before.protected_attempt_ns;
+                base_decision.protected_baseline_ns =
+                    protected_after.protected_baseline_ns -
+                    protected_before.protected_baseline_ns;
+                base_decision.protected_normalization_ns =
+                    protected_after.protected_normalization_ns -
+                    protected_before.protected_normalization_ns;
+                base_decision.protected_finish_ns =
+                    protected_after.protected_finish_ns -
+                    protected_before.protected_finish_ns;
+            }
             base_decision.raw_outcomes = outcome_count(local_kernel);
             if (base_decision.kind == AutomaticCandidateKind::Imprint &&
                 !imprint_time_attributed) {
@@ -2625,6 +2888,26 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 imprint_time_attributed = true;
             }
             base_decision.evidence = local_kernel.automatic;
+            if (protected_comparison != nullptr) {
+                base_decision.evidence.baseline_kernel_hash =
+                    protected_comparison->baseline_hash;
+                base_decision.evidence.candidate_kernel_hash =
+                    protected_comparison->candidate_hash;
+                base_decision.evidence.kernel_changed =
+                    protected_comparison->changed;
+                if (!protected_comparison->supported ||
+                    !protected_comparison->fully_legal ||
+                    !protected_comparison->changed) {
+                    base_decision.evidence.eligible = false;
+                    base_decision.evidence.legality_result = "illegal";
+                    base_decision.evidence.reason =
+                        !protected_comparison->supported
+                            ? "exact_kernel_unsupported"
+                            : !protected_comparison->fully_legal
+                                  ? "one_or_more_program_steps_illegal"
+                                  : "exact_successor_kernel_neutral";
+                }
+            }
             if (temporary_group == nullptr && limits.prices != nullptr &&
                 std::any_of(
                     local_kernel.expected_resources.begin(),
@@ -2645,7 +2928,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 continue;
             }
             bool collapse_non_temporary = false;
-            if (local_kernel.automatic.eligible && temporary_group == nullptr) {
+            if (base_decision.evidence.eligible &&
+                temporary_group == nullptr) {
                 const auto duplicate = std::find_if(
                     seen_option_kernels.begin(), seen_option_kernels.end(),
                     [&](const OptionKernel* seen) {
@@ -2658,7 +2942,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     seen_option_kernels.push_back(&local_kernel);
                 }
             }
-            if (!local_kernel.automatic.eligible || collapse_non_temporary) {
+            if (!base_decision.evidence.eligible || collapse_non_temporary) {
                 base_decision.collapsed = collapse_non_temporary;
                 base_decision.admission_ns += static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2721,9 +3005,37 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 continue;
             }
 
+            const auto outcome_mapping_started =
+                measure_protected
+                    ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{};
             auto mapped = std::make_shared<OptionKernel>(
                 map_local_option_kernel(
                     local, *this, local_kernel, mapped_states));
+            if (protected_comparison != nullptr) {
+                mapped->automatic.baseline_kernel_hash =
+                    base_decision.evidence.baseline_kernel_hash;
+                mapped->automatic.kernel_changed =
+                    base_decision.evidence.kernel_changed;
+                mapped->automatic.eligible =
+                    base_decision.evidence.eligible;
+                mapped->automatic.legality_result =
+                    base_decision.evidence.legality_result;
+                mapped->automatic.reason =
+                    base_decision.evidence.reason;
+            }
+            if (measure_protected) {
+                base_decision.outcome_mapping_ns =
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() -
+                            outcome_mapping_started)
+                            .count());
+            }
+            const auto template_matching_started =
+                measure_protected
+                    ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{};
             const std::uint64_t transition_template_id =
                 option_transition_hash(*mapped);
             mapped->retained_template_id = transition_template_id;
@@ -2827,6 +3139,16 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     }
                 }
                 if (first_variant) {
+                    if (decision.telemetry_kind ==
+                        AutomaticTelemetryKind::ProtectedSide) {
+                        decision.template_matching_ns =
+                            static_cast<std::uint64_t>(
+                                std::chrono::duration_cast<
+                                    std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now() -
+                                    template_matching_started)
+                                    .count());
+                    }
                     decision.admission_ns += static_cast<std::uint64_t>(
                         std::chrono::duration_cast<std::chrono::nanoseconds>(
                             std::chrono::steady_clock::now() -
@@ -2914,6 +3236,10 @@ const OptionKernel& CalcContext::option_kernel(
         option.option_kind == FixedOptionKind::ImprintRetry ||
         option.option_kind == FixedOptionKind::TemporaryBenchRepeat) {
         const auto finish = [&]() -> const OptionKernel& {
+            const auto finish_started =
+                option.option_kind == FixedOptionKind::ProtectedRepeat
+                    ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{};
             if (result->automatic.candidate) {
                 result->automatic.eligible =
                     result->supported && result->legal &&
@@ -2984,7 +3310,15 @@ const OptionKernel& CalcContext::option_kernel(
             account_option_cache_insert(key, retained);
             const auto inserted = option_kernel_cache_.emplace(
                 key, std::move(retained));
-            return *inserted.first->second;
+            const OptionKernel& stored = *inserted.first->second;
+            if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+                telemetry_.protected_finish_ns +=
+                    static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now() - finish_started)
+                            .count());
+            }
+            return stored;
         };
         if (option.primitive_program.empty() ||
             (option.option_kind != FixedOptionKind::FracturePrepare &&
@@ -3018,6 +3352,17 @@ const OptionKernel& CalcContext::option_kernel(
                 result->terminates_almost_surely = false;
                 result->automatic.reason =
                     "protection_already_active_no_exact_reapplication";
+                return finish();
+            }
+            if (!setup_applies_exactly(
+                    *this, state_id, option.setup_action, lock_flag)) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                result->automatic.setup_complete = false;
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticMetamodProtection;
+                result->automatic.reason =
+                    "setup_did_not_apply_exactly";
                 return finish();
             }
         }
@@ -3090,8 +3435,19 @@ const OptionKernel& CalcContext::option_kernel(
             }
         }
 
+        const auto attempt_started =
+            option.option_kind == FixedOptionKind::ProtectedRepeat
+                ? std::chrono::steady_clock::now()
+                : std::chrono::steady_clock::time_point{};
         const AttemptKernel attempt = execute_attempt(
             *this, option.primitive_program, state_id);
+        if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+            telemetry_.protected_attempt_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - attempt_started)
+                        .count());
+        }
         if (!attempt.supported) {
             result->supported = false;
             result->legal = false;
@@ -3111,15 +3467,40 @@ const OptionKernel& CalcContext::option_kernel(
             (option.option_kind == FixedOptionKind::ProtectedRepeat &&
              result->automatic.candidate)) {
             const AbstractState entry = state(state_id);
-            const AttemptKernel baseline = execute_attempt(
-                *this, {option.followup_action}, state_id);
-            result->automatic.baseline_kernel_hash =
-                attempt_kernel_hash(baseline);
-            result->automatic.candidate_kernel_hash =
-                attempt_kernel_hash(attempt);
-            result->automatic.kernel_changed =
-                baseline.supported && baseline.fully_legal &&
-                !same_attempt_outcomes(baseline, attempt);
+            const auto baseline_started =
+                option.option_kind == FixedOptionKind::ProtectedRepeat
+                    ? std::chrono::steady_clock::now()
+                    : std::chrono::steady_clock::time_point{};
+            if (option.option_kind == FixedOptionKind::ProtectedRepeat &&
+                result->automatic.candidate &&
+                defer_automatic_protected_baseline_) {
+                /* State-local automatic admission compares this exact
+                 * candidate with the parent-context baseline after local
+                 * normalization. The parent owns cross-carrier reforge
+                 * sharing; no candidate is retained before that comparison. */
+                result->automatic.kernel_changed = true;
+                result->automatic_candidate_attempt_entries =
+                    attempt.entries;
+            } else {
+                const AttemptKernel baseline = execute_attempt(
+                    *this, {option.followup_action}, state_id);
+                if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+                    telemetry_.protected_baseline_ns +=
+                        static_cast<std::uint64_t>(
+                            std::chrono::duration_cast<
+                                std::chrono::nanoseconds>(
+                                std::chrono::steady_clock::now() -
+                                baseline_started)
+                                .count());
+                }
+                result->automatic.baseline_kernel_hash =
+                    attempt_kernel_hash(baseline);
+                result->automatic.candidate_kernel_hash =
+                    attempt_kernel_hash(attempt);
+                result->automatic.kernel_changed =
+                    baseline.supported && baseline.fully_legal &&
+                    !same_attempt_outcomes(baseline, attempt);
+            }
             result->automatic.setup_complete = setup_applies_exactly(
                 *this, state_id, option.setup_action,
                 option.option_kind == FixedOptionKind::ProtectedRepeat
@@ -3203,7 +3584,61 @@ const OptionKernel& CalcContext::option_kernel(
         }
         const OutcomeDistribution* entry_reforge_kernel = nullptr;
         std::uint32_t entry_reforge_action = kNoId;
-        if (option.primitive_program.size() == 1) {
+        struct ProtectedReforgeCertificate {
+            bool exact = false;
+            const OutcomeDistribution* distribution = nullptr;
+        };
+        const auto protected_reforge_kernel =
+            [&](const std::uint32_t candidate)
+                -> ProtectedReforgeCertificate {
+            if (option.option_kind != FixedOptionKind::ProtectedRepeat ||
+                option.primitive_program.size() != 2 ||
+                option.primitive_program.front() != option.setup_action ||
+                option.primitive_program.back() != option.followup_action) {
+                return {};
+            }
+            const std::uint32_t lock_flag =
+                option.intended_side == PC_SIDE_PREFIX
+                    ? kFlagPrefixesLocked
+                    : kFlagSuffixesLocked;
+            if (!setup_applies_exactly(
+                    *this, candidate, option.setup_action, lock_flag)) {
+                /* The entry attempt is fully legal. An inapplicable exact
+                 * setup therefore cannot describe the same attempt. */
+                return {true, nullptr};
+            }
+            const OutcomeDistribution& setup =
+                outcomes(candidate, option.setup_action);
+            const OutcomeEntry* deterministic_exit = nullptr;
+            for (const OutcomeEntry& exit : setup.entries) {
+                if (exit.probability <= 0.0) continue;
+                if (deterministic_exit != nullptr ||
+                    exit.probability != 1.0) {
+                    return {};
+                }
+                deterministic_exit = &exit;
+            }
+            if (deterministic_exit == nullptr) return {};
+            if (!action_legal(
+                    *session_,
+                    registry_.actions.at(option.followup_action),
+                    state(deterministic_exit->state))) {
+                return {true, nullptr};
+            }
+            const OutcomeDistribution& reforge = outcomes(
+                deterministic_exit->state, option.followup_action);
+            if (!reforge.supported || !reforge.choice_groups.empty()) {
+                return {true, nullptr};
+            }
+            return {true, &reforge};
+        };
+        const bool protected_reforge_certificate =
+            option.option_kind == FixedOptionKind::ProtectedRepeat;
+        if (protected_reforge_certificate) {
+            entry_reforge_action = option.followup_action;
+            entry_reforge_kernel =
+                protected_reforge_kernel(state_id).distribution;
+        } else if (option.primitive_program.size() == 1) {
             entry_reforge_action = option.primitive_program.front();
             const ActionDescriptor& action =
                 registry_.actions.at(entry_reforge_action);
@@ -3218,6 +3653,7 @@ const OptionKernel& CalcContext::option_kernel(
         std::map<std::uint32_t, AttemptKernel> retry_attempts;
         const auto retry_equivalent = [&](const std::uint32_t candidate) {
             if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+                ++telemetry_.protected_retry_checks;
                 const std::uint32_t lock_flag =
                     option.intended_side == PC_SIDE_PREFIX
                         ? kFlagPrefixesLocked
@@ -3226,12 +3662,42 @@ const OptionKernel& CalcContext::option_kernel(
             }
             if (candidate == state_id) return true;
             if (entry_reforge_kernel != nullptr &&
+                protected_reforge_certificate) {
+                const ProtectedReforgeCertificate candidate_kernel =
+                    protected_reforge_kernel(candidate);
+                if (candidate_kernel.exact) {
+                    if (candidate_kernel.distribution == nullptr) {
+                        return false;
+                    }
+                    const bool same_kernel =
+                        (entry_reforge_kernel->stable_shared_kernel &&
+                         candidate_kernel.distribution ==
+                             entry_reforge_kernel) ||
+                        (attempt.choice_groups.empty() &&
+                         attempt.choice_options.empty() &&
+                         candidate_kernel.distribution->entries ==
+                             attempt.entries);
+                    if (same_kernel) {
+                        ++telemetry_.protected_retry_certificates;
+                    }
+                    /* With a deterministic exact setup, the follow-up
+                     * distribution is the complete attempt kernel. Equal
+                     * entries certify retry equivalence; unequal entries
+                     * certify that it is an outer exit. */
+                    return same_kernel;
+                }
+            }
+            if (entry_reforge_kernel != nullptr &&
+                !protected_reforge_certificate &&
                 action_legal(
                     *session_, registry_.actions.at(entry_reforge_action),
                     state(candidate)) &&
                 &outcomes(candidate, entry_reforge_action) ==
                     entry_reforge_kernel) {
                 return true;
+            }
+            if (protected_reforge_certificate) {
+                ++telemetry_.protected_retry_fallbacks;
             }
             auto found = retry_attempts.find(candidate);
             if (found == retry_attempts.end()) {
@@ -3408,6 +3874,10 @@ const OptionKernel& CalcContext::option_kernel(
             return finish();
         }
 
+        const auto normalization_started =
+            option.option_kind == FixedOptionKind::ProtectedRepeat
+                ? std::chrono::steady_clock::now()
+                : std::chrono::steady_clock::time_point{};
         if (option_exit_matches(state(state_id), option)) {
             result->legal = false;
             result->terminates_almost_surely = false;
@@ -3454,6 +3924,14 @@ const OptionKernel& CalcContext::option_kernel(
                 {choice.mod_id, normalize(choice.actual_state),
                  choice.observation_state, choice.actual_state});
         }
+        if (option.option_kind == FixedOptionKind::ProtectedRepeat) {
+            telemetry_.protected_normalization_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        normalization_started)
+                        .count());
+        }
         result->expected_resources.assign(
             resources.begin(), resources.end());
         for (const auto& [exit, probability] : exits) {
@@ -3483,10 +3961,42 @@ const OptionKernel& CalcContext::option_kernel(
         return finish();
     }
 
+    if (option.option_kind == FixedOptionKind::ProtectedSide) {
+        const std::uint32_t lock_flag =
+            option.intended_side == PC_SIDE_PREFIX
+                ? kFlagPrefixesLocked
+                : kFlagSuffixesLocked;
+        if (!setup_applies_exactly(
+                *this, state_id, option.setup_action, lock_flag)) {
+            result->legal = false;
+            result->terminates_almost_surely = false;
+            if (result->automatic.candidate) {
+                result->automatic.setup_complete = false;
+                result->automatic.kernel_change_mechanisms =
+                    kAutomaticMetamodProtection;
+                result->automatic.exits_complete = false;
+                result->automatic.recovery_complete = false;
+                result->automatic.eligible = false;
+                result->automatic.legality_result = "illegal";
+                result->automatic.reason =
+                    "setup_did_not_apply_exactly";
+            }
+            std::shared_ptr<const OptionKernel> retained = result;
+            account_option_cache_insert(key, retained);
+            const auto inserted = option_kernel_cache_.emplace(
+                key, std::move(retained));
+            return *inserted.first->second;
+        }
+    }
+
     result->expected_primitive_actions =
         static_cast<double>(option.primitive_program.size());
     result->expected_resources = option.resource_quantities;
 
+    const auto protected_side_program_started =
+        option.option_kind == FixedOptionKind::ProtectedSide
+            ? std::chrono::steady_clock::now()
+            : std::chrono::steady_clock::time_point{};
     std::map<std::uint32_t, double> frontier{{state_id, 1.0}};
     for (std::size_t step = 0; step < option.primitive_program.size(); ++step) {
         const std::uint32_t action_index = option.primitive_program[step];
@@ -3560,6 +4070,14 @@ const OptionKernel& CalcContext::option_kernel(
             }
         }
     }
+    if (option.option_kind == FixedOptionKind::ProtectedSide) {
+        telemetry_.protected_attempt_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    protected_side_program_started)
+                    .count());
+    }
 
     if (result->legal && result->supported) {
         for (const auto& [exit_state, probability] : frontier) {
@@ -3570,6 +4088,10 @@ const OptionKernel& CalcContext::option_kernel(
             result->terminates_almost_surely = false;
         }
     }
+    const auto protected_side_evidence_started =
+        option.option_kind == FixedOptionKind::ProtectedSide
+            ? std::chrono::steady_clock::now()
+            : std::chrono::steady_clock::time_point{};
     if (result->automatic.candidate) {
         const AbstractState entry = state(state_id);
         result->automatic.exits_complete = !result->exits.empty();
@@ -3602,8 +4124,15 @@ const OptionKernel& CalcContext::option_kernel(
             }
             const std::uint32_t target_mask =
                 option.relevant_goal_mask & ~protected_mask;
+            const auto baseline_started =
+                std::chrono::steady_clock::now();
             const AttemptKernel baseline = execute_attempt(
                 *this, {option.followup_action}, state_id);
+            telemetry_.protected_baseline_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - baseline_started)
+                        .count());
             AttemptKernel candidate;
             candidate.supported = result->supported;
             candidate.fully_legal = result->legal;
@@ -3657,11 +4186,32 @@ const OptionKernel& CalcContext::option_kernel(
         result->automatic.legality_result =
             result->automatic.eligible ? "legal" : "illegal";
     }
+    if (option.option_kind == FixedOptionKind::ProtectedSide) {
+        telemetry_.protected_normalization_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    protected_side_evidence_started)
+                    .count());
+    }
+    const auto protected_side_finish_started =
+        option.option_kind == FixedOptionKind::ProtectedSide
+            ? std::chrono::steady_clock::now()
+            : std::chrono::steady_clock::time_point{};
     std::shared_ptr<const OptionKernel> retained = result;
     account_option_cache_insert(key, retained);
     const auto inserted =
         option_kernel_cache_.emplace(key, std::move(retained));
-    return *inserted.first->second;
+    const OptionKernel& stored = *inserted.first->second;
+    if (option.option_kind == FixedOptionKind::ProtectedSide) {
+        telemetry_.protected_finish_ns +=
+            static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() -
+                    protected_side_finish_started)
+                    .count());
+    }
+    return stored;
 }
 
 } // namespace solver

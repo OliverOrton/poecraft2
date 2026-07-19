@@ -158,23 +158,25 @@ not split abstract identity. Its final 1,024-state sample bounded
 temporary-bench retention at 12 templates/rows per carrier and reduced live
 selected bytes to about 22.7 MB, but Oliver stopped the unchanged-cap run
 before report emission and Bellman entry was not established. No cap was
-raised. A subsequent incremental selected-byte ledger removed the measured
-quadratic accounting path: expansion fell from 3.85 to 0.97 seconds at 1,024
-states and from 13.72 to 2.25 seconds at 2,048 with identical hashes and exact
-full-ledger reconciliation. A cooperative larger diagnostic then reached only
-2,170 states in 10 seconds because protected-side admission spent 7.865
-seconds evaluating 532 candidates over 133 carriers while retaining only 24
-rows and five templates. This does not reopen the resolved eager global cross
-product.
+  raised. A subsequent incremental selected-byte ledger removed the measured
+  quadratic accounting path. Nested protected telemetry then found 13.10
+  seconds of retry normalization and 66,693 complete-program fallbacks in a
+  16.49-second 2,200-state sample. Exact vector comparison removes those
+  fallbacks; an isolated comparison context preserves parent state ordering and
+  shares the primitive reforge kernel. The same sample now completes in 2.40
+  seconds with identical counts and hashes. A completed 4,096-state diagnostic
+  takes 11.55 seconds, uses about 184.13 MB selected memory, and retains at most
+  four protected and 12 temporary-bench rows per carrier. Protected kernel and
+  outcome-mapping work still consumes 5.87 seconds. The unchanged normal-cap
+  request did not reach Bellman in a 30-second hard time box. This does not
+  reopen the resolved eager global cross product.
 **The measured R3A expansion-time boundary is the immediate and sole boundary;
-R4 and S8.5 remain blocked.** The next work partitions protected-side admission
-time, then either reuses immutable local-admission infrastructure or
-preclassifies and shares exact mechanic-equivalent protected-side evaluations
-according to the measured subphase. It also audits remaining observable state
-distinctions before another normal-cap attempt. If the exact full envelope
-remains unusable, the fallback is a disclosed mechanic-neutral focused/custom
-action scope, never a global optimality claim. Mechanic rules are never
-researched or inferred by agents.
+R4 and S8.5 remain blocked.** The required stop-and-plan point is now the
+remaining protected kernel/mapping repetition beyond 4,096 and the 38,613-state
+observable-state audit. If the exact full envelope remains unusable, the
+fallback is a disclosed mechanic-neutral focused/custom action scope, never a
+global optimality claim. Mechanic rules are never researched or inferred by
+agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,

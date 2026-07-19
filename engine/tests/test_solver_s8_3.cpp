@@ -462,6 +462,16 @@ void run_temporary_blocker_price_flip() {
              std::string::npos);
     PC_CHECK(telemetry.find("\"enumeration_time_ns\":") !=
              std::string::npos);
+    PC_CHECK(telemetry.find("\"admission_phases\":{") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"eligible\":") != std::string::npos);
+    PC_CHECK(telemetry.find("\"rejected\":") != std::string::npos);
+    PC_CHECK(telemetry.find("\"rejection_reasons\":{") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"kernel_evaluation_ns\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"protected_detail\":{") !=
+             std::string::npos);
     PC_CHECK(telemetry.find("\"primitive_families\":{") !=
              std::string::npos);
     PC_CHECK(telemetry.find("\"calc_owned_byte_ledger_requests\":") !=
@@ -522,6 +532,40 @@ void run_protected_price_flip() {
     PC_CHECK(kernel.legal);
     PC_CHECK(kernel.automatic.kernel_changed);
     PC_CHECK(kernel.automatic.cleanup_complete);
+
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    CalcContext repeat_calc(
+        session, goal, registry,
+        {restart, chaos, bench_prefix, bench_suffix});
+    const std::uint32_t repeat_state = repeat_calc.intern_item(start);
+    const StateLocalAutomaticBatch repeat_batch = admit_automatic(
+        repeat_calc, repeat_state,
+        {{"base", 20.0},
+         {"chaos", 5.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_6", 2.0},
+         {"bench:s83_mod_7", 3.0},
+         {"bench:s83_mod_9", 10.0}});
+    const std::uint32_t protected_repeat = operator_by_fragment(
+        repeat_calc, "option:protected_repeat:prefix:chaos");
+    PC_CHECK(protected_repeat != kNoId);
+    if (protected_repeat != kNoId) {
+        const OptionKernel& repeat_kernel = repeat_calc.option_kernel(
+            repeat_state, protected_repeat);
+        PC_CHECK(repeat_kernel.legal);
+        PC_CHECK(repeat_kernel.automatic.kernel_changed);
+        PC_CHECK(repeat_kernel.automatic.baseline_kernel_hash != 0);
+        PC_CHECK(repeat_kernel.automatic.candidate_kernel_hash != 0);
+        PC_CHECK(
+            repeat_kernel.automatic_candidate_attempt_entries.empty());
+    }
+    PC_CHECK(std::any_of(
+        repeat_batch.decisions.begin(), repeat_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.protected_repeat_evaluations != 0 &&
+                   decision.protected_retry_fallbacks == 0;
+        }));
+    check_owned_byte_ledger(repeat_calc);
 
     const auto prices = [](const double lock_price) {
         return std::unordered_map<std::string, double>{

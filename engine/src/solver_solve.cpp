@@ -677,12 +677,25 @@ struct SolveTransitionCache {
         bool eligible = false;
         bool collapsed = false;
         bool deferred = false;
+        bool missing_price = false;
         AutomaticTelemetryKind telemetry_kind =
             AutomaticTelemetryKind::None;
         bool template_hit = false;
         std::uint64_t template_id = 0;
         std::uint64_t raw_outcomes = 0;
         std::uint64_t admission_ns = 0;
+        std::uint64_t kernel_evaluation_ns = 0;
+        std::uint64_t outcome_mapping_ns = 0;
+        std::uint64_t template_matching_ns = 0;
+        std::uint64_t protected_side_evaluations = 0;
+        std::uint64_t protected_repeat_evaluations = 0;
+        std::uint64_t protected_retry_checks = 0;
+        std::uint64_t protected_retry_certificates = 0;
+        std::uint64_t protected_retry_fallbacks = 0;
+        std::uint64_t protected_attempt_ns = 0;
+        std::uint64_t protected_baseline_ns = 0;
+        std::uint64_t protected_normalization_ns = 0;
+        std::uint64_t protected_finish_ns = 0;
         std::uint64_t precompiled_classes = 0;
         std::uint64_t precompile_ns = 0;
         std::uint64_t precompiled_bytes = 0;
@@ -725,6 +738,7 @@ struct SolveTransitionCache {
     std::uint32_t automatic_rows_deferred = 0;
     std::array<AutomaticKindTelemetry, kAutomaticTelemetryKindCount>
         automatic_kind_telemetry{};
+    AutomaticAdmissionPhaseTelemetry automatic_admission_phases;
     std::vector<AutomaticCandidateRecord> automatic_candidate_samples;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
@@ -1232,11 +1246,29 @@ struct SolveWork::Impl {
         record.eligible = decision.evidence.eligible;
         record.collapsed = decision.collapsed;
         record.deferred = decision.deferred;
+        record.missing_price = decision.missing_price;
         record.telemetry_kind = decision.telemetry_kind;
         record.template_hit = decision.template_hit;
         record.template_id = decision.template_id;
         record.raw_outcomes = decision.raw_outcomes;
         record.admission_ns = decision.admission_ns;
+        record.kernel_evaluation_ns = decision.kernel_evaluation_ns;
+        record.outcome_mapping_ns = decision.outcome_mapping_ns;
+        record.template_matching_ns = decision.template_matching_ns;
+        record.protected_side_evaluations =
+            decision.protected_side_evaluations;
+        record.protected_repeat_evaluations =
+            decision.protected_repeat_evaluations;
+        record.protected_retry_checks = decision.protected_retry_checks;
+        record.protected_retry_certificates =
+            decision.protected_retry_certificates;
+        record.protected_retry_fallbacks =
+            decision.protected_retry_fallbacks;
+        record.protected_attempt_ns = decision.protected_attempt_ns;
+        record.protected_baseline_ns = decision.protected_baseline_ns;
+        record.protected_normalization_ns =
+            decision.protected_normalization_ns;
+        record.protected_finish_ns = decision.protected_finish_ns;
         record.selected_bytes = decision.selected_bytes;
         record.evidence = decision.evidence;
         if (decision.operator_index < calc.operators().size()) {
@@ -1291,6 +1323,19 @@ struct SolveWork::Impl {
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
                     std::chrono::steady_clock::now() - admission_started)
                     .count());
+        AutomaticAdmissionPhaseTelemetry& phases =
+            transition_cache->automatic_admission_phases;
+        phases.carriers += batch.phases.carriers;
+        phases.synthesis_ns += batch.phases.synthesis_ns;
+        phases.local_context_ns += batch.phases.local_context_ns;
+        phases.local_planner_build_ns +=
+            batch.phases.local_planner_build_ns;
+        phases.local_layout_build_ns +=
+            batch.phases.local_layout_build_ns;
+        phases.local_ledger_init_ns +=
+            batch.phases.local_ledger_init_ns;
+        phases.local_context_other_ns +=
+            batch.phases.local_context_other_ns;
         const auto diagnostics_started = std::chrono::steady_clock::now();
         if (batch.temporary_precompiled_classes != 0 ||
             batch.temporary_precompile_ns != 0 ||
@@ -2052,12 +2097,63 @@ struct SolveWork::Impl {
                     static_cast<std::size_t>(record.telemetry_kind));
             if (record.count_candidate) {
                 ++kind.candidates;
+                if (record.deferred) {
+                    ++kind.deferred_candidates;
+                } else if (!record.eligible) {
+                    ++kind.rejected_candidates;
+                } else {
+                    ++kind.eligible_candidates;
+                }
+                if (record.collapsed) ++kind.collapsed_candidates;
+                if (record.missing_price) {
+                    ++kind.missing_price_candidates;
+                }
+                if (!record.eligible && !record.deferred &&
+                    !record.missing_price) {
+                    const std::string& reason = record.evidence.reason;
+                    if (reason.find("cleanup") != std::string::npos) {
+                        ++kind.cleanup_rejections;
+                    } else if (reason.find("neutral") != std::string::npos) {
+                        ++kind.neutral_kernel_rejections;
+                    } else if (reason.find("relevant") != std::string::npos ||
+                               reason.find("advance") != std::string::npos ||
+                               reason.find("protected_carrier") !=
+                                   std::string::npos) {
+                        ++kind.relevance_rejections;
+                    } else if (reason.find("setup") != std::string::npos ||
+                               reason.find("protection_already") !=
+                                   std::string::npos) {
+                        ++kind.setup_rejections;
+                    } else {
+                        ++kind.other_rejections;
+                    }
+                }
                 if (record.template_id != 0) {
                     if (record.template_hit) ++kind.template_hits;
                     else ++kind.unique_templates;
                 }
                 kind.raw_outcomes += record.raw_outcomes;
                 kind.admission_ns += record.admission_ns;
+                kind.kernel_evaluation_ns +=
+                    record.kernel_evaluation_ns;
+                kind.outcome_mapping_ns += record.outcome_mapping_ns;
+                kind.template_matching_ns +=
+                    record.template_matching_ns;
+                kind.protected_side_evaluations +=
+                    record.protected_side_evaluations;
+                kind.protected_repeat_evaluations +=
+                    record.protected_repeat_evaluations;
+                kind.protected_retry_checks +=
+                    record.protected_retry_checks;
+                kind.protected_retry_certificates +=
+                    record.protected_retry_certificates;
+                kind.protected_retry_fallbacks +=
+                    record.protected_retry_fallbacks;
+                kind.protected_attempt_ns += record.protected_attempt_ns;
+                kind.protected_baseline_ns += record.protected_baseline_ns;
+                kind.protected_normalization_ns +=
+                    record.protected_normalization_ns;
+                kind.protected_finish_ns += record.protected_finish_ns;
             }
             kind.precompiled_classes = std::max(
                 kind.precompiled_classes, record.precompiled_classes);
@@ -2126,6 +2222,8 @@ struct SolveWork::Impl {
             transition_cache->automatic_rows_deferred;
         result.diagnostics.automatic_kind_telemetry =
             transition_cache->automatic_kind_telemetry;
+        result.diagnostics.automatic_admission_phases =
+            transition_cache->automatic_admission_phases;
         result.diagnostics.automatic_candidate_witnesses.clear();
         result.diagnostics.automatic_candidate_witnesses_omitted =
             result.diagnostics.automatic_rows_considered -
@@ -4947,6 +5045,8 @@ struct SolveWork::Impl {
             transition_cache->automatic_rows_deferred;
         snapshot.diagnostics.automatic_kind_telemetry =
             transition_cache->automatic_kind_telemetry;
+        snapshot.diagnostics.automatic_admission_phases =
+            transition_cache->automatic_admission_phases;
         snapshot.diagnostics.automatic_candidate_witnesses_omitted =
             snapshot.diagnostics.automatic_rows_considered;
         const std::uint64_t live_bytes = estimated_owned_bytes();
@@ -5755,7 +5855,8 @@ std::string serialize_solver_telemetry(
     json += ",\"dependency_primitives\":" + std::to_string(
         calc.action_control().automatic_dependency_primitives);
     if (diagnostics == nullptr) {
-        json += ",\"rows\":null,\"by_kind\":null,\"witnesses\":[]";
+        json += ",\"rows\":null,\"admission_phases\":null";
+        json += ",\"by_kind\":null,\"witnesses\":[]";
     } else {
         json += ",\"rows\":{\"considered\":" + std::to_string(
             diagnostics->automatic_rows_considered);
@@ -5769,6 +5870,22 @@ std::string serialize_solver_telemetry(
             diagnostics->automatic_rows_selected);
         json += ",\"deferred\":" + std::to_string(
             diagnostics->automatic_rows_deferred) + "}";
+        const AutomaticAdmissionPhaseTelemetry& phases =
+            diagnostics->automatic_admission_phases;
+        json += ",\"admission_phases\":{\"carriers\":" +
+                std::to_string(phases.carriers);
+        json += ",\"synthesis_ns\":" +
+                std::to_string(phases.synthesis_ns);
+        json += ",\"local_context_ns\":" +
+                std::to_string(phases.local_context_ns);
+        json += ",\"local_planner_build_ns\":" +
+                std::to_string(phases.local_planner_build_ns);
+        json += ",\"local_layout_build_ns\":" +
+                std::to_string(phases.local_layout_build_ns);
+        json += ",\"local_ledger_init_ns\":" +
+                std::to_string(phases.local_ledger_init_ns);
+        json += ",\"local_context_other_ns\":" +
+                std::to_string(phases.local_context_other_ns) + "}";
         json += ",\"by_kind\":{";
         for (std::size_t i = 0; i < kAutomaticTelemetryKindCount; ++i) {
             if (i != 0) json.push_back(',');
@@ -5780,6 +5897,26 @@ std::string serialize_solver_telemetry(
             json += automatic_telemetry_kind_name(kind);
             json += "\":{\"candidates\":" +
                     std::to_string(values.candidates);
+            json += ",\"eligible\":" +
+                    std::to_string(values.eligible_candidates);
+            json += ",\"rejected\":" +
+                    std::to_string(values.rejected_candidates);
+            json += ",\"collapsed\":" +
+                    std::to_string(values.collapsed_candidates);
+            json += ",\"deferred\":" +
+                    std::to_string(values.deferred_candidates);
+            json += ",\"missing_price\":" +
+                    std::to_string(values.missing_price_candidates);
+            json += ",\"rejection_reasons\":{\"setup\":" +
+                    std::to_string(values.setup_rejections);
+            json += ",\"neutral_kernel\":" +
+                    std::to_string(values.neutral_kernel_rejections);
+            json += ",\"relevance\":" +
+                    std::to_string(values.relevance_rejections);
+            json += ",\"cleanup\":" +
+                    std::to_string(values.cleanup_rejections);
+            json += ",\"other\":" +
+                    std::to_string(values.other_rejections) + "}";
             json += ",\"carriers\":" +
                     std::to_string(values.carriers);
             json += ",\"max_candidates_per_carrier\":" +
@@ -5816,6 +5953,30 @@ std::string serialize_solver_telemetry(
                     std::to_string(values.retained_transitions);
             json += ",\"time_ns\":" +
                     std::to_string(values.admission_ns);
+            json += ",\"kernel_evaluation_ns\":" +
+                    std::to_string(values.kernel_evaluation_ns);
+            json += ",\"outcome_mapping_ns\":" +
+                    std::to_string(values.outcome_mapping_ns);
+            json += ",\"template_matching_ns\":" +
+                    std::to_string(values.template_matching_ns);
+            json += ",\"protected_detail\":{\"side_evaluations\":" +
+                    std::to_string(values.protected_side_evaluations);
+            json += ",\"repeat_evaluations\":" +
+                    std::to_string(values.protected_repeat_evaluations);
+            json += ",\"retry_checks\":" +
+                    std::to_string(values.protected_retry_checks);
+            json += ",\"retry_certificates\":" +
+                    std::to_string(values.protected_retry_certificates);
+            json += ",\"retry_fallbacks\":" +
+                    std::to_string(values.protected_retry_fallbacks);
+            json += ",\"attempt_ns\":" +
+                    std::to_string(values.protected_attempt_ns);
+            json += ",\"baseline_ns\":" +
+                    std::to_string(values.protected_baseline_ns);
+            json += ",\"normalization_ns\":" +
+                    std::to_string(values.protected_normalization_ns);
+            json += ",\"finish_ns\":" +
+                    std::to_string(values.protected_finish_ns) + "}";
             json += ",\"enumeration_time_ns\":" +
                     std::to_string(values.enumeration_ns);
             json += ",\"row_time_ns\":" +

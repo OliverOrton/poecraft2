@@ -45,6 +45,43 @@
         "bestiary",
         "fracture",
         "other"
+      ],
+      "automatic_dispositions": [
+        "eligible",
+        "rejected",
+        "collapsed",
+        "deferred",
+        "missing_price"
+      ],
+      "automatic_rejection_reasons": [
+        "setup",
+        "neutral_kernel",
+        "relevance",
+        "cleanup",
+        "other"
+      ],
+      "admission_phases": [
+        "synthesis",
+        "local_context",
+        "planner",
+        "layout",
+        "ledger",
+        "kernel_evaluation",
+        "outcome_mapping",
+        "normalization",
+        "template_matching",
+        "row"
+      ],
+      "protected_detail": [
+        "side_evaluations",
+        "repeat_evaluations",
+        "retry_checks",
+        "retry_certificates",
+        "retry_fallbacks",
+        "attempt_ns",
+        "baseline_ns",
+        "normalization_ns",
+        "finish_ns"
       ]
     },
     "relevance_and_state_audit": [
@@ -379,6 +416,97 @@
     },
     "finding": "Protected-side admission consumed 7.865 seconds while retaining only 24 rows, five templates, and 128017 selected bytes. Temporary bench consumed 0.626 seconds and retained at most 12 rows per carrier. The next boundary is protected-side transient exact evaluation/admission, not selected-byte accounting, logging, or automatic-kind storage."
   },
+  "protected_retry_normalization_repair": {
+    "implementation": [
+      "nested per-kind admission timing and rejection telemetry was added before optimization",
+      "immutable exact-kernel pointer identity is used as the fast retry-equivalence certificate",
+      "otherwise the already-built exact entry vectors decide retry equivalence or outer exit",
+      "complete-program execute_attempt remains only for structurally uncertified cases",
+      "cross-carrier baseline comparison uses an isolated context so parent abstract-state ordering is unchanged",
+      "the isolated context shares the exact primitive reforge distribution across carriers and is included in the selected-byte ledger"
+    ],
+    "rejected_experiments": [
+      "a shared full-distribution cache had no useful measured hits and worsened memory",
+      "interning baseline states in the parent was faster but changed discovered-state ordering and hashes",
+      "duplicating candidate carrier states in the isolated comparison context raised selected memory to about 297 MB"
+    ],
+    "samples": [
+      {
+        "stage": "2200_before_exact_vector_retry_certificate",
+        "source": "build/s8.4r3a-protected-direct-deltas-2200.json",
+        "total_ms": 16490,
+        "protected_kernel_ms": 14360,
+        "protected_normalization_ms": 13100,
+        "retry_checks": 69058,
+        "pointer_certificates": 2322,
+        "full_retry_fallbacks": 66693
+      },
+      {
+        "stage": "2200_final_canonical_baseline",
+        "source": "build/s8.4r3a-canonical-baseline-2200.json",
+        "total_ms": 2403,
+        "discovered_states": 30586,
+        "state_action_rows": 33145,
+        "transition_entries": 146195,
+        "transition_bits_hash": "7d46eb8bff399f66",
+        "policy_bits_hash": "14184d9aa57677e3",
+        "full_retry_fallbacks": 0,
+        "live_selected_bytes": 50161206,
+        "peak_selected_bytes": 114943645,
+        "semantic_comparison": "counts and hashes are identical to the pre-repair 2200 sample"
+      },
+      {
+        "stage": "4096_final_canonical_baseline",
+        "source": "build/s8.4r3a-canonical-baseline-4096.json",
+        "result": "expected_refused_state_cap_at_diagnostic_4096_limit",
+        "total_ms": 11547,
+        "expansion_ms": 11190,
+        "expanded_states": 4096,
+        "discovered_states": 38613,
+        "state_action_rows": 67055,
+        "transition_entries": 539238,
+        "transition_bits_hash": "0a257d2cec6bd421",
+        "policy_bits_hash": "a2e0cdff0a23f2b5",
+        "live_selected_bytes": 79022351,
+        "peak_selected_bytes": 184132411,
+        "protected_side": {
+          "candidates": 9044,
+          "eligible": 3532,
+          "rejected": 5512,
+          "collapsed": 202,
+          "missing_price": 2261,
+          "carriers": 2059,
+          "max_candidates_per_carrier": 12,
+          "unique_templates": 749,
+          "template_hits": 2581,
+          "max_templates_per_carrier": 4,
+          "rows": 3330,
+          "max_rows_per_carrier": 4,
+          "raw_outcomes": 1910093,
+          "retained_transitions": 315909,
+          "selected_bytes": 23403180,
+          "total_ms": 5870,
+          "kernel_evaluation_ms": 3605,
+          "outcome_mapping_ms": 2246,
+          "retry_checks": 1608492,
+          "retry_certificates": 94204,
+          "retry_fallbacks": 0,
+          "attempt_ms": 1078,
+          "normalization_ms": 2284
+        },
+        "temporary_bench": {
+          "candidates": 441007,
+          "max_candidates_per_carrier": 319,
+          "rows": 12516,
+          "max_rows_per_carrier": 12,
+          "retained_transitions": 95311,
+          "total_ms": 1155,
+          "selected_bytes": 47867353
+        },
+        "finding": "Protected and temporary-bench retained rows remain bounded per carrier. The remaining measured cost is protected exact kernel evaluation and cross-context outcome mapping, not retry fallbacks or retained automatic storage."
+      }
+    ]
+  },
   "focused_exact_evidence": {
     "renewal_template": "two distinct carriers differing only in preparation-wiped modifiers share one kernel pointer and template id; an otherwise similar fractured carrier is illegal and distinct",
     "retry_oracle": "entry-relative retry mass plus non-self exit mass sums to one and the exact attempt_cost/exit_probability oracle is preserved",
@@ -397,18 +525,16 @@
       "max_reforge_work": 10000000,
       "max_solver_owned_bytes": 1073741824
     },
-    "outcome": "Oliver requested the long run be aborted after about nine minutes of foreground waiting. The wrapper stopped first; its child was then found and explicitly stopped before report emission at 858.140625 CPU seconds and about 153104 KiB working set. No report, Bellman-entry result, cap hit, or crash was emitted.",
+    "outcome": "The earlier pre-repair run was aborted at Oliver's direction without a report. After the exact protected retry repair, the unchanged checked-in normal-cap command was hard-stopped after 30 seconds; it emitted no build/s8.4r3a-after.json and did not enter Bellman. No cap changed and no child process remained.",
     "acceptance_claim": "not_passed"
   },
   "measured_boundary": {
-    "finding": "The incremental ledger removed the selected-byte accounting boundary with 74.74%/83.58% expansion reductions at 1024/2048 and exact full-ledger reconciliation. A time-boxed larger sample then found a distinct protected-side admission cliff: 7.865 seconds for 532 candidates over 133 carriers, producing only 24 rows. The normal-cap gate remains open.",
+    "finding": "The exact retry-normalization repair reduced the 2200 sample from 16.49 to 2.40 seconds with unchanged counts/hashes and zero complete-program fallbacks. A completed 4096 sample proves bounded protected and temporary-bench retention, but protected exact kernel/mapping still costs 5.87 seconds and the unchanged normal-cap request did not enter Bellman within 30 seconds. The gate remains open at the required stop-and-plan boundary.",
     "next_work": [
       "Keep the current normal caps and exact action envelope unchanged.",
-      "Partition protected-side admission time into eligibility, transient exact evaluation, kernel normalization, and template/route matching before changing representation.",
-      "Precompute carrier-invariant protected-side program and target facts, and share exact evaluations only across carriers with the same complete mechanic-relevant observable signature.",
-      "Preserve the observed bounds of four candidates, two templates, and two retained rows per carrier; optimize transient work rather than raising caps or weakening exactness.",
-      "Re-run the bounded 2048 sample and a cooperative time-boxed larger sample before another normal-cap attempt.",
-      "Partition discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
+      "Partition repeated protected kernel and cross-context outcome-mapping work beyond the completed 4096 sample by complete normalized mechanic-relevant carrier signature.",
+      "Preserve the observed bounds of four protected templates/rows and 12 temporary-bench rows per carrier; optimize transient work rather than raising caps or weakening exactness.",
+      "Partition the 38613 discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
       "If the exact full goal-relevant envelope remains unusable after the measured hot phase is repaired, implement the already-planned mechanic-neutral focused/custom action scope and label results optimal only within that selected scope."
     ],
     "next_phase_allowed": false,
@@ -417,8 +543,8 @@
   "validation": {
     "native_build": "current native test executable and release benchmark built successfully",
     "native_engine_tests": "164843 checks, 0 failures",
-    "focused_solver_s8_3": "206 checks, 0 failures",
-    "release_wasm_rebuild": "passed",
+    "focused_solver_s8_3": "220 checks, 0 failures",
+    "release_wasm_rebuild": "time_boxed_at_60_seconds_and_aborted; partial wasm output restored; completed rebuild still required",
     "typescript": "passed",
     "remaining_web_tests": "passed",
     "known_preexisting_web_stops": [

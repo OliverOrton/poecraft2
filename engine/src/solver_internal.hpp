@@ -110,6 +110,16 @@ inline constexpr std::size_t kPrimitiveTelemetryFamilyCount =
 
 struct AutomaticKindTelemetry {
     std::uint64_t candidates = 0;
+    std::uint64_t eligible_candidates = 0;
+    std::uint64_t rejected_candidates = 0;
+    std::uint64_t collapsed_candidates = 0;
+    std::uint64_t deferred_candidates = 0;
+    std::uint64_t missing_price_candidates = 0;
+    std::uint64_t setup_rejections = 0;
+    std::uint64_t neutral_kernel_rejections = 0;
+    std::uint64_t relevance_rejections = 0;
+    std::uint64_t cleanup_rejections = 0;
+    std::uint64_t other_rejections = 0;
     std::uint64_t carriers = 0;
     std::uint64_t max_candidates_per_carrier = 0;
     std::uint64_t precompiled_classes = 0;
@@ -128,9 +138,31 @@ struct AutomaticKindTelemetry {
     std::uint64_t raw_outcomes = 0;
     std::uint64_t retained_transitions = 0;
     std::uint64_t admission_ns = 0;
+    std::uint64_t kernel_evaluation_ns = 0;
+    std::uint64_t outcome_mapping_ns = 0;
+    std::uint64_t template_matching_ns = 0;
+    std::uint64_t protected_side_evaluations = 0;
+    std::uint64_t protected_repeat_evaluations = 0;
+    std::uint64_t protected_retry_checks = 0;
+    std::uint64_t protected_retry_certificates = 0;
+    std::uint64_t protected_retry_fallbacks = 0;
+    std::uint64_t protected_attempt_ns = 0;
+    std::uint64_t protected_baseline_ns = 0;
+    std::uint64_t protected_normalization_ns = 0;
+    std::uint64_t protected_finish_ns = 0;
     std::uint64_t enumeration_ns = 0;
     std::uint64_t row_ns = 0;
     std::uint64_t selected_bytes = 0;
+};
+
+struct AutomaticAdmissionPhaseTelemetry {
+    std::uint64_t carriers = 0;
+    std::uint64_t synthesis_ns = 0;
+    std::uint64_t local_context_ns = 0;
+    std::uint64_t local_planner_build_ns = 0;
+    std::uint64_t local_layout_build_ns = 0;
+    std::uint64_t local_ledger_init_ns = 0;
+    std::uint64_t local_context_other_ns = 0;
 };
 
 struct PrimitiveFamilyTelemetry {
@@ -757,6 +789,10 @@ struct OptionKernel {
      * conditional primitive Fracture step during graph expansion. */
     std::vector<std::uint32_t> retry_states;
     std::vector<std::uint32_t> continuation_states;
+    /* Transient state-local raw attempt used only to compare an automatic
+     * protected program with a cross-carrier baseline. Mapping to the parent
+     * clears it before any retained Bellman kernel is stored. */
+    std::vector<OutcomeEntry> automatic_candidate_attempt_entries;
     bool entry_continues = false;
     std::uint64_t retained_template_id = 0;
     /* Incremental selected-allocation accounting counts a shared kernel in
@@ -812,6 +848,13 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::uint64_t protected_retry_checks = 0;
+    std::uint64_t protected_retry_certificates = 0;
+    std::uint64_t protected_retry_fallbacks = 0;
+    std::uint64_t protected_attempt_ns = 0;
+    std::uint64_t protected_baseline_ns = 0;
+    std::uint64_t protected_normalization_ns = 0;
+    std::uint64_t protected_finish_ns = 0;
     std::uint64_t owned_byte_audit_requests = 0;
     std::uint64_t owned_byte_audit_ns = 0;
     std::uint64_t owned_byte_ledger_requests = 0;
@@ -876,12 +919,25 @@ struct StateLocalAutomaticCandidate {
     std::uint64_t template_id = 0;
     std::uint64_t raw_outcomes = 0;
     std::uint64_t admission_ns = 0;
+    std::uint64_t kernel_evaluation_ns = 0;
+    std::uint64_t outcome_mapping_ns = 0;
+    std::uint64_t template_matching_ns = 0;
+    std::uint64_t protected_side_evaluations = 0;
+    std::uint64_t protected_repeat_evaluations = 0;
+    std::uint64_t protected_retry_checks = 0;
+    std::uint64_t protected_retry_certificates = 0;
+    std::uint64_t protected_retry_fallbacks = 0;
+    std::uint64_t protected_attempt_ns = 0;
+    std::uint64_t protected_baseline_ns = 0;
+    std::uint64_t protected_normalization_ns = 0;
+    std::uint64_t protected_finish_ns = 0;
     std::uint64_t selected_bytes = 0;
     OptionKernel::AutomaticEvidence evidence;
 };
 
 struct StateLocalAutomaticBatch {
     bool cached = false;
+    AutomaticAdmissionPhaseTelemetry phases;
     std::array<std::uint64_t, kAutomaticTelemetryKindCount>
         shared_admission_ns{};
     std::uint64_t temporary_precompiled_classes = 0;
@@ -1011,6 +1067,9 @@ class CalcContext {
     }
 
     void reset_solve_telemetry();
+    void set_defer_automatic_protected_baseline(const bool value) {
+        defer_automatic_protected_baseline_ = value;
+    }
     void set_solve_resource_caps(
         std::uint32_t max_discovered_states,
         std::uint64_t max_reforge_work,
@@ -1031,6 +1090,10 @@ class CalcContext {
         return action_control_;
     }
     std::uint64_t layout_build_ns() const { return layout_build_ns_; }
+    std::uint64_t planner_build_ns() const { return planner_build_ns_; }
+    std::uint64_t owned_byte_ledger_init_ns() const {
+        return owned_byte_ledger_init_ns_;
+    }
     std::uint64_t estimated_owned_bytes() const;
     std::uint64_t audited_estimated_owned_bytes() const;
     std::uint64_t fast_estimated_owned_bytes() const;
@@ -1108,7 +1171,11 @@ class CalcContext {
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
+    std::unique_ptr<CalcContext> automatic_comparison_context_;
     std::uint64_t layout_build_ns_ = 0;
+    std::uint64_t planner_build_ns_ = 0;
+    std::uint64_t owned_byte_ledger_init_ns_ = 0;
+    bool defer_automatic_protected_baseline_ = false;
     std::uint64_t owned_bytes_base_ = 0;
     std::uint64_t owned_bytes_dynamic_shallow_base_ = 0;
     std::uint64_t owned_state_hash_collision_bytes_ = 0;
@@ -1451,6 +1518,7 @@ struct SolveDiagnostics {
     std::uint32_t automatic_rows_deferred = 0;
     std::array<AutomaticKindTelemetry, kAutomaticTelemetryKindCount>
         automatic_kind_telemetry{};
+    AutomaticAdmissionPhaseTelemetry automatic_admission_phases;
     std::vector<std::string> automatic_candidate_witnesses;
     std::uint64_t automatic_candidate_witnesses_omitted = 0;
     std::uint32_t discovered_states = 0;

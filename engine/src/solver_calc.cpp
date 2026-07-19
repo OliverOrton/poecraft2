@@ -115,6 +115,8 @@ std::uint64_t option_kernel_selected_bytes_for_ledger(
              sizeof(OutcomeChoiceOption);
     bytes += value.retry_states.capacity() * sizeof(std::uint32_t);
     bytes += value.continuation_states.capacity() * sizeof(std::uint32_t);
+    bytes += value.automatic_candidate_attempt_entries.capacity() *
+             sizeof(OutcomeEntry);
     bytes += selected_string_bytes(value.automatic.legality_result);
     bytes += selected_string_bytes(value.automatic.reason);
     return bytes;
@@ -261,7 +263,12 @@ CalcContext::CalcContext(
             }
         }
     }
+    const auto planner_started = std::chrono::steady_clock::now();
     operators_ = build_planner_operators(*session_, goal_, registry_);
+    planner_build_ns_ = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - planner_started)
+            .count());
     action_control_.explicit_envelope = goal_.primitive_actions_explicit;
     action_control_.registry_actions = static_cast<std::uint32_t>(
         registry_.actions.size());
@@ -344,7 +351,12 @@ CalcContext::CalcContext(
      * bookkeeping from earlier queries. */
     context_.capture_action_trace = false;
     initialize_temporary_bench_effect_classes();
+    const auto ledger_started = std::chrono::steady_clock::now();
     initialize_owned_bytes_ledger();
+    owned_byte_ledger_init_ns_ = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - ledger_started)
+            .count());
 }
 
 void CalcContext::initialize_owned_bytes_ledger() {
@@ -438,6 +450,9 @@ std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
     bytes += owned_transition_template_nested_bytes_;
     bytes += owned_operator_template_nested_bytes_;
     bytes += owned_reforge_payload_bytes_;
+    if (automatic_comparison_context_ != nullptr) {
+        bytes += automatic_comparison_context_->fast_estimated_owned_bytes();
+    }
     ++telemetry_.owned_byte_ledger_requests;
     telemetry_.owned_byte_ledger_ns += static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -972,6 +987,9 @@ const OutcomeDistribution& CalcContext::outcomes(
 void CalcContext::reset_solve_telemetry() {
     telemetry_ = {};
     telemetry_rows_.clear();
+    if (automatic_comparison_context_ != nullptr) {
+        automatic_comparison_context_->reset_solve_telemetry();
+    }
 }
 
 void CalcContext::set_solve_resource_caps(
@@ -1027,6 +1045,9 @@ void CalcContext::release_solve_transition_caches() {
     }
     reforge_cache_.clear();
     owned_reforge_payload_bytes_ = 0;
+    if (automatic_comparison_context_ != nullptr) {
+        automatic_comparison_context_->release_solve_transition_caches();
+    }
     telemetry_rows_.clear();
 }
 
@@ -1268,6 +1289,9 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
               2 * sizeof(void*));
+    if (automatic_comparison_context_ != nullptr) {
+        bytes += automatic_comparison_context_->calculate_owned_bytes();
+    }
     return bytes;
 }
 

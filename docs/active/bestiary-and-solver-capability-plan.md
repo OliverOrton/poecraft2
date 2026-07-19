@@ -15,14 +15,15 @@ post-S8.4 regression audit and post-R3 product diagnostic below found further
 blocking correctness, scaling, and product-delivery failures. S8.4R.3F is
 complete on its structural evidence; on 2026-07-19 Oliver transferred its
 pinned normal-cap Bellman-entry gate to S8.4R.3A, whose scaling levers own the
-remaining expansion-throughput and state-space boundary. R3A's
-carrier-relative representation, telemetry, relevance, and equivalence work is
-implemented and its focused checks pass. Its incremental selected-byte ledger
-removed the measured quadratic accounting cost, but a time-boxed larger sample
-then exposed a protected-side transient-evaluation cliff before the normal-cap
-gate could be retried. Bellman entry was not reached. **The measured R3A
-protected-side admission boundary remains the sole next implementation
-boundary; R4 and S8.5 remain blocked.** Oliver explicitly
+   remaining expansion-throughput and state-space boundary. R3A's
+   carrier-relative representation, nested telemetry, relevance and equivalence
+   work, incremental selected-byte ledger, and protected retry-normalization
+   repair are implemented and focused checks pass. A completed 4,096-state
+   sample now takes 11.55 seconds and proves bounded protected/temporary-bench
+   retention, but the unchanged normal-cap request did not reach Bellman in a
+   30-second hard time box. **The measured R3A kernel/mapping and observable-
+   state stop-and-plan boundary remains the sole next boundary; R4 and S8.5
+   remain blocked.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
 as waived/deferred, not complete. Its full acceptance suite, 10,000-run
@@ -50,15 +51,16 @@ primitives, not a per-carrier preparation closure. That representation is
 implemented, release WASM is rebuilt, and R3F closed on its structural
 evidence; by owner decision 2026-07-19 the normal-cap Bellman-entry gate moved
 to **S8.4R.3A**. R3A now has entry-relative kernels, cross-carrier exact
-transition/planner sharing, per-kind timing/byte telemetry, exact Essence
-relevance, and an ordering-equivalence fixture. Its final 1,024-state sample
-retained at most 12 temporary-bench templates/rows per carrier and 22,737,809
-live selected bytes. Incremental selected-byte accounting then reduced
-expansion to 0.97/2.25 seconds at 1,024/2,048 states with identical hashes and
-exact reconciliation. A cooperative larger sample localized the next boundary
-to protected-side admission: 7.865 seconds for 532 candidates over 133
-carriers, with only 24 retained rows. The normal-cap gate remains unmet and
-this protected-side transient work is R3A's sole next work. The recorded S7 endgame
+  transition/planner sharing, nested per-kind timing/byte telemetry, exact
+  Essence relevance, and an ordering-equivalence fixture. Incremental
+  selected-byte accounting removed the first progressive slowdown. Exact retry
+  vector comparison then reduced the 2,200-state protected sample from 16.49 to
+  2.40 seconds with identical hashes and zero complete-program fallbacks. The
+  completed 4,096-state sample takes 11.55 seconds, uses about 184.13 MB selected
+  memory, and retains at most four protected and 12 temporary-bench rows per
+  carrier. The normal-cap gate remains unmet after a 30-second hard time box;
+  the measured protected kernel/mapping and observable-state boundary is R3A's
+  sole next boundary. The recorded S7 endgame
 sample remains `0.9942` against the former `0.995` target; the number is
 retained as a disclosed miss, not rewritten as a passing numeric gate.
 
@@ -863,33 +865,38 @@ acceptance once in R6 as required by `AGENTS.md`.
    state/row/transition counts, registry sizes, and hashes. All nine
    reconciliations had zero undercount and zero overestimate.
 
-   Exact next boundary: partition protected-side admission before changing its
-   representation. A cooperative 10-second larger sample reached 2,170 states
-   and spent 7.865 seconds on 532 protected-side candidates over 133 carriers,
-   creating 25,272 transient outcomes but retaining only 24 rows and five
-   templates. First split automatic synthesis, fresh strict local-context
-   registry/operator/layout/ledger construction, protected-side kernel
-   evaluation, outcome mapping/normalization, and exact template/route matching.
-   Then repair only the dominant subphase:
+   The protected retry-normalization repair is implemented. Nested telemetry
+   showed that a 2,200-state run spent 13.10 of 16.49 seconds normalizing retry
+   outcomes and performed 66,693 complete-program fallbacks. Immutable pointer
+   identity now provides a fast certificate and otherwise the already-built
+   exact entry vectors decide retry versus outer exit. Structurally uncertified
+   cases retain the old fallback. The repaired 2,200 sample completes in 2.40
+   seconds with zero fallbacks and identical state/row/transition counts and
+   transition/policy hashes.
 
-   - If immutable local-context construction is material, share or prebuild the
-     registry, strict layout, and planner basis and reset only carrier-local
-     mutable state. Reuse requires the same goal, strictness, candidate set, and
-     exact fixed-option dependency-action set; local state/evaluator caches stay
-     isolated.
-   - If exact protected-side evaluation is material, preclassify
-     carrier-invariant program/target facts and memoize across carriers only by
-     a complete normalized mechanic-relevant observable signature, proved equal
-     with the existing complete-kernel oracle.
+   Cross-carrier baseline evaluation is isolated from parent interning so it
+   cannot alter abstract-state discovery order, and its exact primitive reforge
+   kernel is shared across carriers. Parent-context interning was measured and
+   rejected because it changed hashes; duplicating carrier states in the
+   comparison context was rejected because it raised selected memory to about
+   297 MB.
 
-   Preserve the measured maximum of four candidates and two retained
-   rows/templates per carrier. Re-run 2,048 and a cooperative time-boxed larger
-   sample before the normal-cap gate.
-   Partition discovered states by normalized observable facts and require an
-   admitted-action witness for remaining goal-slot distinctions. If the exact
-   full envelope is still unusable after the measured hot phase is repaired,
-   use the planned mechanic-neutral focused/custom action scope and label its
-   result optimal only within that scope. Compact evidence is
+   The completed 4,096-state sample takes 11.55 seconds and retains at most four
+   protected rows/templates and 12 temporary-bench rows per carrier. It
+   discovers 38,613 states, builds 67,055 rows and 539,238 transitions, and uses
+   about 184.13 MB selected bytes. Protected admission remains the largest
+   measured phase at 5.87 seconds: 3.61 seconds of exact kernel evaluation and
+   2.25 seconds of cross-context outcome mapping. The unchanged normal-cap run
+   still failed to enter Bellman within a 30-second hard time box and emitted no
+   report, so the gate remains open.
+
+   This is the required stop-and-plan boundary. Preserve exact mechanics and
+   caps. Next, partition repeated kernel/mapping work by a complete normalized
+   observable carrier signature and audit the 38,613 discovered states for an
+   admitted-action witness to remaining goal-slot distinctions. If that exact
+   full envelope remains unusable, use the planned mechanic-neutral
+   focused/custom action scope and label its result optimal only within that
+   scope. Compact evidence is
    [r3a-carrier-scaling-summary.json](../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 
    Validation for this boundary stays narrow: reuse `--solver-s8-3-only`, the
@@ -1219,19 +1226,16 @@ acceptance once in R6 as required by `AGENTS.md`.
    optimality claim. Keep Imprint an ordinary automatic mechanic: no authored
    attempt/exit controls and no Imprint-specific explanatory panel.
 
-   Representation implementation completed 2026-07-19 with focused native and
-   release-WASM validation. The 1,024-state product measurement proves bounded
-   retained automatic templates and much lower planner/live-memory growth, but
-   the normal-cap run was stopped before Bellman entry and produced no report.
-   The incremental selected-byte repair later removed its repeated full-walk
-   boundary with exact reconciliation and unchanged bounded semantics. The
-   subsequent time-boxed sample identifies protected-side transient exact
-   evaluation/admission as the next boundary despite bounded retention. The
-   acceptance gate remains open. Continue only with protected-side subphase
-   attribution, measured reuse of immutable local-admission infrastructure or
-   exact protected-side sharing/preclassification as selected by that
-   attribution, bounded scaling, and the observable-state audit recorded in the
-   execution sequence and R3A evidence; do not raise caps or begin R4.
+   Representation, selected-byte accounting, nested admission telemetry, and
+   protected retry normalization are implemented as of 2026-07-19 with focused
+   native validation. The completed 4,096-state product measurement proves
+   bounded retained automatic templates and about 184.13 MB selected memory.
+   Protected retry fallback work was removed exactly with unchanged bounded
+   counts/hashes, but the normal-cap run still did not enter Bellman within 30
+   seconds and produced no report. The acceptance gate remains open. Continue
+   only from the measured 4,096 kernel/mapping and observable-state boundary
+   recorded in the execution sequence and R3A evidence; do not raise caps or
+   begin R4.
 
 #### Repair acceptance gate
 
@@ -1256,15 +1260,15 @@ acceptance once in R6 as required by `AGENTS.md`.
   honest boundary remains, stop and plan that measured boundary rather than
   raising caps blindly.
 
-  R3A result 2026-07-19: bounded per-carrier retention passed (temporary bench:
-  maximum 12 templates/rows per carrier; protected side in the larger sample:
-  maximum two templates/rows per carrier). The exact incremental selected-byte
-  ledger removed the prior quadratic audit path, reducing 1,024/2,048 expansion
-  by 74.74%/83.58% with unchanged hashes and zero reconciliation difference.
-  The next time-boxed sample still spent 7.865 of 10.070 expansion seconds in
-  protected-side admission while retaining only 24 rows. The normal-cap gate
-  remains unmet. R4 remains blocked pending that measured transient-evaluation
-  repair and bounded scaling work described above.
+  R3A result 2026-07-19: bounded per-carrier retention passed in the completed
+  4,096 sample (temporary bench: maximum 12 rows per carrier; protected side:
+  maximum four templates/rows per carrier). The exact incremental selected-byte
+  ledger removed the prior quadratic audit path. The protected retry repair
+  then reduced the exact 2,200 sample from 16.49 to 2.40 seconds with unchanged
+  counts/hashes and zero full retry fallbacks. The 4,096 sample completes in
+  11.55 seconds, but protected kernel/mapping still consumes 5.87 seconds and
+  the unchanged normal-cap run did not enter Bellman within 30 seconds. The
+  gate remains unmet. R4 remains blocked at the measured stop-and-plan boundary.
 - Add focused projection fixtures proving physical affix ordering and junk
   ordering do not create distinct abstract states. Record any remaining
   goal-slot distinction and the admitted action fact that requires it. Add an
