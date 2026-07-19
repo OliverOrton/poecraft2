@@ -146,16 +146,20 @@ missing — so R3F makes goal-relevant primitive Fracture an ordinary selectable
 product candidate, removes product-path preparation closures, and requires a
 priced `base` so miss recovery routes through Restart. That implementation,
 focused `23.75` boundary evidence, Calculator warning, and release-WASM rebuild
-are complete. The pinned normal-cap Conquest attempt was stopped at Oliver's
-direction before report emission, however, so Bellman entry is not claimed and
-R3F remains the active acceptance boundary. After that gate passes or is
-explicitly changed, R3A normalizes entry-relative self/retry mass and shares
+are complete. The pinned normal-cap Conquest attempts were stopped at Oliver's
+direction while still expanding, and on 2026-07-19 Oliver transferred the
+normal-cap Bellman-entry requirement to R3A: the remaining boundary is
+expansion throughput and state-space size, which are R3A's scaling levers, so
+R3F is closed on its structural evidence. R3A normalizes entry-relative
+self/retry mass and shares
 exact non-self preparation templates across carriers with the same preserved
 substrate for the remaining automatic kinds, adds per-family/per-automatic-kind
 scaling telemetry, tightens safe
-Essence/Harvest relevance, and audits abstract-state equivalence. This does not
-reopen the resolved eager global cross product. **S8.4R.3F's normal-cap gate is
-the immediate and sole boundary; S8.4R.3A and S8.5 remain blocked.** Mechanic
+Essence/Harvest relevance, and audits abstract-state equivalence, and now owns
+the transferred normal-cap Bellman-entry gate. This does not
+reopen the resolved eager global cross product. **S8.4R.3A is
+the immediate and sole boundary; S8.5 remains blocked until all of S8.4R
+passes.** Mechanic
 rules are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,

@@ -1,21 +1,20 @@
-# Session Handoff - S8.4R.3F Implemented, Normal-Cap Gate Still Open
+# Session Handoff - S8.4R.3A Carrier-Relative Kernel Scaling Is Next
 
-Updated 2026-07-19 after implementing S8.4R.3F, rebuilding release WASM,
-reproducing the linear-retention defect, and stopping the long-running pinned
-normal-cap gate at Oliver's direction before Bellman entry. Read
+Updated 2026-07-19. S8.4R.3F is complete on its structural evidence; Oliver
+transferred its pinned normal-cap Bellman-entry gate to S8.4R.3A, whose
+scaling levers own the remaining expansion-throughput and state-space
+boundary. Read
 [AGENTS.md](AGENTS.md),
 [docs/direction.md](docs/direction.md), this file, then
 [the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
 
 ## Current State
 
-B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete. The S8.4R.3F code,
-focused native/web evidence, Calculator feedback, and release-WASM rebuild are
-complete, but **R3F's pinned normal-cap Bellman-entry gate is not passed.** It
-remains the sole active acceptance boundary. Do not begin carrier-relative
-template sharing (R3A), browser transfer/lifetime work (R4), verification-truth
-work (R5), integrated acceptance (R6), S8.5, or later work from the stopped
-gate.
+B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3F are complete. **S8.4R.3A is the sole
+next implementation boundary and now owns the transferred normal-cap
+Bellman-entry gate.** Do not begin browser transfer/lifetime work (R4),
+verification-truth work (R5), integrated acceptance (R6), S8.5, or later work
+in the R3A chunk.
 
 Historical S8.0-S8.4 evidence remains immutable. R1-R3 regression evidence is
 separate under
@@ -154,34 +153,18 @@ No full acceptance suite was run.
   boundary to R3F without a separate diagnosis.
 - No C ABI or strategy vocabulary changed in R3F.
 
-## Exact Next Boundary: S8.4R.3F Normal-Cap Gate Only
+## R3F Gate Decision (owner, 2026-07-19)
 
-Do not add more R3F mechanic behavior and do not start R3A. The implementation
-is complete; the remaining boundary is evidence that the pinned
-`conquest-lamellar-mirage-r3f-product` request completes expansion and enters
-outer Bellman optimization under the checked-in normal caps. The case uses an
-explicit 1-chaos `base` override solely to activate Restart; it is not a Mirage
-market quote.
-
-Reproduce with:
-
-```powershell
-build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus fixtures\solver-regressions\s8.4r\v1\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\s8.4r3f-after.json --skip-verification
-```
-
-Oliver directed the 2026-07-19 final attempt to stop before report emission.
-An earlier batched attempt was also stopped to unlock the benchmark executable
-for the requested final native/WASM rebuild after about 27,094 CPU seconds and
-about 810 MB private process memory; those process samples are diagnostic only,
-not solver-owned telemetry or a cap result. No attempt reached a reported
-Bellman boundary, and no cap was raised. The exact stopped-attempt record is in
+Oliver transferred the normal-cap Bellman-entry requirement from R3F to R3A
+and closed R3F on its structural evidence. Rationale: two normal-cap Conquest
+attempts were stopped while still expanding (one after ~27,094 CPU seconds; no
+cap hit, no crash), and the remaining boundary — per-state expansion cost for
+the remaining automatic kinds plus possible ordering-induced state splitting —
+is exactly what R3A's scaling levers repair; it is not Fracture planning. No
+cap was raised. The stopped-attempt record remains in
 [r3f-implementation-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3f-implementation-summary.json).
 
-If Oliver keeps the gate, let the exact command finish and pin its emitted
-report/compact after-summary before marking R3F complete. If Oliver explicitly
-changes or waives the gate, record that decision in the plan and evidence first.
-
-## After R3F: S8.4R.3A Carrier-Relative Kernel Scaling
+## Exact Next Boundary: S8.4R.3A Only
 
 Repair carrier-relative automatic-kernel retention for the remaining automatic
 kinds (Imprint, renewal, protected-side, temporary bench) and for
@@ -205,8 +188,21 @@ explicit-envelope Fracture preparation before browser transfer work:
 - prove physical affix ordering and junk ordering collapse in abstract-state
   projection; preserve goal-slot identity only where an admitted action can
   observe a real difference; and
-- retain R3F's pinned normal-cap Conquest result and prove bounded per-carrier
-  retention for the remaining automatic kinds in the new telemetry.
+- pass the gate transferred from R3F: the pinned
+  `conquest-lamellar-mirage-r3f-product` request (1-chaos disclosed `base`
+  override, not a market quote) completes expansion and enters outer Bellman
+  optimization under the checked-in normal caps, and the remaining automatic
+  kinds show bounded per-carrier retention in the new telemetry. Reproduce
+  with:
+
+  ```powershell
+  build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus fixtures\solver-regressions\s8.4r\v1\manifest.json --case conquest-lamellar-mirage-r3f-product --output build\s8.4r3a-after.json --skip-verification
+  ```
+
+  Add the automatic-kind time telemetry early and attribute expansion time per
+  kind before optimizing; if exact sharing, relevance, and state minimization
+  still cannot reach the boundary, stop and plan the measured boundary rather
+  than raising caps.
 
 Do not silently hard-prune every destructive raw renewal by solve depth or a UI
 stage. If Oliver chooses a narrower Fossil/Essence product scope, first pin the

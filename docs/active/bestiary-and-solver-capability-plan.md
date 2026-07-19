@@ -12,11 +12,12 @@ performance history is archived under
 
 Status 2026-07-19: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete, but the
 post-S8.4 regression audit and post-R3 product diagnostic below found further
-blocking correctness, scaling, and product-delivery failures. The S8.4R.3F
-implementation and focused evidence are complete, but its pinned normal-cap
-Bellman-entry gate was stopped at Oliver's direction before producing a
-report. **S8.4R.3F therefore remains the sole active acceptance boundary;
-S8.4R.3A and S8.5 remain blocked.** Oliver explicitly
+blocking correctness, scaling, and product-delivery failures. S8.4R.3F is
+complete on its structural evidence; on 2026-07-19 Oliver transferred its
+pinned normal-cap Bellman-entry gate to S8.4R.3A, whose scaling levers own the
+remaining expansion-throughput and state-space boundary. **S8.4R.3A is the
+sole next implementation boundary; S8.5 remains blocked until all of S8.4R
+passes.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
 as waived/deferred, not complete. Its full acceptance suite, 10,000-run
@@ -40,10 +41,11 @@ confirmed carrier-relative Fracture-preparation retention defect prevents that
 R2 substrate from scaling beyond a few hundred expanded product states. Owner
 mechanic direction 2026-07-18 resolves the Fracture half of that defect
 structurally — fracturing is an early-craft technique planned over ordinary
-primitives, not a per-carrier preparation closure. That representation is now
-implemented and release WASM is rebuilt, but **S8.4R.3F remains open at its
-normal-cap Bellman-entry gate**; R3A for the remaining automatic kinds does not
-begin until that gate is passed or Oliver explicitly changes it. The recorded S7 endgame
+primitives, not a per-carrier preparation closure. That representation is
+implemented, release WASM is rebuilt, and R3F closed on its structural
+evidence; by owner decision 2026-07-19 the normal-cap Bellman-entry gate moved
+to **S8.4R.3A**, which is now the sole next boundary for the remaining
+automatic kinds and the transferred gate. The recorded S7 endgame
 sample remains `0.9942` against the former `0.995` target; the number is
 retained as a disclosed miss, not rewritten as a passing numeric gate.
 
@@ -633,9 +635,9 @@ audit below supersedes the former S8.5 handoff.
 
 ### S8.4R - Solver And Web Regression Repair
 
-Status: audit and R1-R3 complete 2026-07-18; R3F implementation/focused checks
-complete 2026-07-19, with its normal-cap Bellman-entry gate still open. R3A is
-blocked. This phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
+Status: audit and R1-R3 complete 2026-07-18; R3F complete 2026-07-19 with its
+normal-cap Bellman-entry gate transferred to R3A by owner decision. R3A is
+next. This phase is a blocking repair checkpoint inserted after S8.4. Do not begin S8.5
 until every required gate below passes. The audit covers B1.3/B1.4 Imprint
 integration and the S8.0-S8.4 native, binding, WASM, worker, and non-visual
 product paths.
@@ -717,9 +719,9 @@ acceptance once in R6 as required by `AGENTS.md`.
    2,230 creates, and 2,166 restores. Focused Imprint/R2/Bestiary native gates,
    Python bindings, release-WASM bindings, and TypeScript checks passed. The
    required 10,000-run verification remains explicitly deferred to R6.
-4. **S8.4R.3F - Fracture As An Ordinary Product Candidate (implementation
-   complete 2026-07-19; acceptance gate open).** This remains the sole active
-   boundary. Owner mechanic direction 2026-07-18: fracturing is typically
+4. **S8.4R.3F - Fracture As An Ordinary Product Candidate (complete
+   2026-07-19; normal-cap Bellman-entry gate transferred to R3A by owner
+   decision).** Owner mechanic direction 2026-07-18: fracturing is typically
    an early-craft technique — prepare a cheap carrier, where efficient
    preparation may mean several goal mods on the item so a fracture is more
    likely to hit a goal mod and a miss is cheap to recover. Represent that
@@ -749,24 +751,29 @@ acceptance once in R6 as required by `AGENTS.md`.
      Calculator readiness must surface a missing `base` price as an
      actionable warning instead of silently excluding Restart.
 
-   Gate: the pinned Conquest/Mirage case reaches Bellman optimization under
-   the normal product caps with Fracture planned primitively, and the S8.3
-   analytic Fracture boundary `23.75` is preserved or exactly re-derived for
-   the primitive path. This checkpoint must reproduce and pin the
-   linear-retention evidence it relies on. Focused compilation/small
-   simulation may be used; full verification remains R6-owned.
+   Original gate: the pinned Conquest/Mirage case reaches Bellman optimization
+   under the normal product caps with Fracture planned primitively, and the
+   S8.3 analytic Fracture boundary `23.75` is preserved or exactly re-derived
+   for the primitive path, with the linear-retention evidence reproduced and
+   pinned.
 
-   Implementation result 2026-07-19: automatic product planning now uses the
-   primitive Fracture row and retains no automatic `fracture_prepare` closure;
-   authored envelopes keep the S7 option. Native and Calculator readiness
-   refuse a priced Fracture product solve without `base`, and release WASM was
-   rebuilt. The focused S8.3 gate passed 150 checks and exactly retained the
-   `23.75` boundary. Repository evidence reproduces the pre-fix 243-expanded /
-   243-fixed-option slope. The normal-cap Conquest gate was manually stopped
-   at Oliver's direction before it emitted a report, so Bellman entry is not
-   claimed, no cap was raised, and R3A remains blocked.
+   Checkpoint passed 2026-07-19 on the structural evidence: automatic product
+   planning uses the primitive Fracture row and retains no automatic
+   `fracture_prepare` closure; authored envelopes keep the S7 option. Native
+   and Calculator readiness refuse a priced Fracture product solve without
+   `base`, and release WASM was rebuilt. The focused S8.3 gate passed 150
+   checks and exactly retained the `23.75` boundary. Repository evidence
+   reproduces the pre-fix 243-expanded / 243-fixed-option slope. Two normal-cap
+   Conquest attempts were stopped at Oliver's direction (one after ~27,094 CPU
+   seconds) while still expanding; no cap was raised and Bellman entry is not
+   claimed. Owner decision 2026-07-19: the normal-cap Bellman-entry requirement
+   transfers to R3A, because the remaining boundary is expansion throughput and
+   state-space size — per-state admission cost for the remaining automatic
+   kinds and possible ordering-induced state splitting — which are exactly
+   R3A's scaling levers, not Fracture planning.
 5. **S8.4R.3A - Carrier-Relative Automatic-Kernel Scaling And Product
-   Usability.** After R3F passes. Preserve R1 caps/telemetry, R2's lazy
+   Usability.** This is the sole next boundary. Preserve R1 caps/telemetry,
+   R2's lazy
    state-local exact admission, and R3F's primitive Fracture product planning,
    and apply the carrier-relative scaling repair to the remaining automatic
    kinds (Imprint, renewal, protected-side, temporary bench), whose retained
@@ -775,13 +782,18 @@ acceptance once in R6 as required by `AGENTS.md`.
    exits and resource vectors across carriers with the same preparation,
    target slot, and preserved-base signature, and retain only genuinely
    carrier-specific data per state. Add automatic-kind transition/time/byte
-   telemetry, tighten safe goal relevance, audit abstract-state equivalence,
+   telemetry early and attribute expansion time per kind before optimizing;
+   tighten safe goal relevance, audit abstract-state equivalence,
    and make the normal product result report its actual resource boundary.
-   The pinned Conquest/Mirage case must retain its R3F normal-product-cap
-   result, and the remaining automatic kinds must show bounded per-carrier
-   retention in the new automatic-kind telemetry before R4 begins; focused
-   compilation/small simulation may be used, but full verification remains
-   R6-owned.
+   Gate (includes the requirement transferred from R3F by owner decision
+   2026-07-19): the pinned `conquest-lamellar-mirage-r3f-product` request must
+   complete expansion and enter outer Bellman optimization under the
+   checked-in normal caps, and the remaining automatic kinds must show bounded
+   per-carrier retention in the new automatic-kind telemetry before R4 begins;
+   focused compilation/small simulation may be used, but full verification
+   remains R6-owned. If exact sharing, relevance, and state minimization still
+   cannot reach that boundary, stop and plan the measured boundary rather than
+   raising caps.
 6. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** After R3A passes,
    remove giant
    JSON-inside-JSON transfer and unnecessary full clones, preflight or align
@@ -1102,11 +1114,12 @@ acceptance once in R6 as required by `AGENTS.md`.
   one normalized template; different preserved/fractured substrates must not
   collapse. Compare the shared implementation with a small exhaustive/manual
   oracle for value, complete outcome/resource kernel, retry mass, and selected
-  primitive route. The pinned normal-cap product request must finish expansion
-  and enter Bellman optimization without hitting `max_transitions` or
-  `max_solver_owned_bytes`. Record whether it converges; if a different honest
-  boundary remains, stop and plan that measured boundary rather than raising
-  caps blindly.
+  primitive route. Under R3A (requirement transferred from R3F by owner
+  decision 2026-07-19), the pinned normal-cap product request must finish
+  expansion and enter Bellman optimization without hitting `max_transitions`
+  or `max_solver_owned_bytes`. Record whether it converges; if a different
+  honest boundary remains, stop and plan that measured boundary rather than
+  raising caps blindly.
 - Add focused projection fixtures proving physical affix ordering and junk
   ordering do not create distinct abstract states. Record any remaining
   goal-slot distinction and the admitted action fact that requires it. Add an

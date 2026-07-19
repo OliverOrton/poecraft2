@@ -23,7 +23,8 @@
     "The absent base quote keeps Restart explicitly unpriced.",
     "R3F's structural Bellman-entry gate uses a disclosed 1-chaos base override only to activate Restart; it is not a Mirage market quote.",
     "The historical R1/R2 case never continues beyond its bounded first-expansion diagnostic.",
-    "The R3F case stops immediately when complete expansion exposes the outer Bellman phase; it does not optimize, compile, or verify a policy."
+    "The R3F case stops immediately when complete expansion exposes the outer Bellman phase; it does not optimize, compile, or verify a policy.",
+    "Owner decision 2026-07-19: the normal-cap Bellman-entry requirement transferred from S8.4R.3F to S8.4R.3A; R3F closed on its structural evidence after two expansion attempts were stopped without any cap hit, and R3A owns completing the r3f case under the unchanged checked-in caps."
   ],
   "cases": [
     "cases/conquest-lamellar-mirage.json",
