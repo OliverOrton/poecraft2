@@ -867,17 +867,41 @@ acceptance once in R6 as required by `AGENTS.md`.
    representation. A cooperative 10-second larger sample reached 2,170 states
    and spent 7.865 seconds on 532 protected-side candidates over 133 carriers,
    creating 25,272 transient outcomes but retaining only 24 rows and five
-   templates. Add subphase/rejection timing, preclassify carrier-invariant
-   program/target facts, and share exact evaluations only for complete
-   mechanic-equivalent observable signatures. Preserve the measured maximum of
-   four candidates and two retained rows/templates per carrier. Re-run 2,048
-   and a cooperative time-boxed larger sample before the normal-cap gate.
+   templates. First split automatic synthesis, fresh strict local-context
+   registry/operator/layout/ledger construction, protected-side kernel
+   evaluation, outcome mapping/normalization, and exact template/route matching.
+   Then repair only the dominant subphase:
+
+   - If immutable local-context construction is material, share or prebuild the
+     registry, strict layout, and planner basis and reset only carrier-local
+     mutable state. Reuse requires the same goal, strictness, candidate set, and
+     exact fixed-option dependency-action set; local state/evaluator caches stay
+     isolated.
+   - If exact protected-side evaluation is material, preclassify
+     carrier-invariant program/target facts and memoize across carriers only by
+     a complete normalized mechanic-relevant observable signature, proved equal
+     with the existing complete-kernel oracle.
+
+   Preserve the measured maximum of four candidates and two retained
+   rows/templates per carrier. Re-run 2,048 and a cooperative time-boxed larger
+   sample before the normal-cap gate.
    Partition discovered states by normalized observable facts and require an
    admitted-action witness for remaining goal-slot distinctions. If the exact
    full envelope is still unusable after the measured hot phase is repaired,
    use the planned mechanic-neutral focused/custom action scope and label its
    result optimal only within that scope. Compact evidence is
    [r3a-carrier-scaling-summary.json](../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
+
+   Validation for this boundary stays narrow: reuse `--solver-s8-3-only`, the
+   existing byte-cap oracle, and the pinned bounded diagnostics; require equal
+   admission decisions, completed-run counts, and transition/policy hashes. Do
+   not add browser work, a new 10,000-run simulation, or the full repository
+   pipeline here. The broader reviewed audit is dispositioned as follows: its
+   A2 is accepted conditionally above; A1 is mostly superseded by the
+   incremental-ledger repair and periodic full reconciliation remains;
+   A4/A6/A7 wait for measured relevance; A3 belongs to blocked R4 browser work;
+   B1-B7 are broader or later action-space, diagnostic, and usability work and
+   are not part of the current R3A gate.
 6. **S8.4R.4 - Browser Strategy Transfer And Lifetime.** After R3A passes,
    remove giant
    JSON-inside-JSON transfer and unnecessary full clones, preflight or align
@@ -1204,9 +1228,10 @@ acceptance once in R6 as required by `AGENTS.md`.
    subsequent time-boxed sample identifies protected-side transient exact
    evaluation/admission as the next boundary despite bounded retention. The
    acceptance gate remains open. Continue only with protected-side subphase
-   attribution, exact sharing/preclassification, bounded scaling, and the
-   observable-state audit recorded in the execution sequence and R3A evidence;
-   do not raise caps or begin R4.
+   attribution, measured reuse of immutable local-admission infrastructure or
+   exact protected-side sharing/preclassification as selected by that
+   attribution, bounded scaling, and the observable-state audit recorded in the
+   execution sequence and R3A evidence; do not raise caps or begin R4.
 
 #### Repair acceptance gate
 

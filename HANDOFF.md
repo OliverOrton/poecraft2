@@ -195,30 +195,50 @@ not predict usable completion.
 
 1. Preserve the current exact envelope, mechanics, representation, and checked-
    in caps. Do not begin with another normal-cap run.
-2. Add nested protected-side timing/rejection telemetry before optimizing:
-   separate carrier eligibility, transient exact evaluation, kernel
-   normalization, and exact template/route matching. The current total says
-   where the time is, not yet which protected-side subphase causes it.
-3. Audit the four protected-side candidates per carrier for carrier-invariant
-   program/target facts that can be preclassified once. Share transient exact
-   evaluation only when the complete mechanic-relevant observable signature is
-   equal; keep fractured, locked, crafted, influence, capacity, goal-slot, and
-   resource differences exact.
-4. Preserve the observed retention bound (at most two protected-side templates
+2. Add nested admission timing/rejection telemetry before optimizing. Split
+   automatic synthesis, strict local-context registry/operator/layout/ledger
+   construction, protected-side kernel evaluation, local-to-parent outcome
+   mapping, normalization, and exact template/route matching. The current
+   per-kind total says where the time is, not which subphase causes it.
+3. If immutable local-context construction is material, apply the compatible
+   immutable-context proposal from the reviewed audit: share or prebuild the
+   registry, strict layout, and planner basis, then reset only carrier-local
+   mutable state. Never assume layouts are interchangeable merely because the
+   carrier changed; reuse requires the same goal, strictness, candidate set,
+   and exact fixed-option dependency-action set. Keep local state/evaluator
+   caches isolated.
+4. If protected-side exact evaluation is material, audit the four candidates
+   per carrier for carrier-invariant program/target facts that can be
+   preclassified once. Memoize across carriers only on a complete normalized
+   mechanic-relevant observable signature and prove equality with the existing
+   complete-kernel oracle. Keep fractured, locked, crafted, influence,
+   capacity, goal-slot, and resource differences exact.
+5. Preserve the observed retention bound (at most two protected-side templates
    and rows per carrier). This is a transient evaluation repair, not a reason
    to raise caps, weaken the byte estimate, or revisit temporary-bench storage.
-5. Partition discovered states by normalized observable facts. Require a
+6. Partition discovered states by normalized observable facts. Require a
    concrete admitted-action legality/transition witness for any remaining
    goal-slot distinction, while preserving the passing physical-affix/junk-
    ordering equivalence fixture.
-6. Repair only the measured hot phase, re-run 2,048 and a cooperative
-   time-boxed larger sample plus the focused/native correctness checks, and
-   attempt the unchanged normal-cap Bellman-entry gate only when the bounded
-   curve predicts usable completion.
-7. If the exact full goal-relevant envelope remains unusable after that repair,
+7. Keep validation narrow: use the existing `--solver-s8-3-only` checks, the
+   existing byte-cap oracle, and the pinned 2,048 plus cooperative time-boxed
+   larger diagnostics. Require identical admission decisions, state/row/
+   transition counts, and transition/policy hashes where the bounded run
+   completes. Do not add browser work, a new 10,000-run simulation, or the full
+   repository pipeline for this boundary. Attempt the unchanged normal-cap
+   Bellman-entry gate only when the bounded curve predicts usable completion.
+8. If the exact full goal-relevant envelope remains unusable after that repair,
    implement the already-planned mechanic-neutral focused/custom action scope.
    Label it "optimal within the selected action scope" and never claim global
    optimality. Any narrower mechanic-specific retry decision requires Oliver.
+
+Reviewed-audit disposition for this boundary: its A2 is accepted conditionally
+as step 3 above. A1 is mostly superseded by commit `d1e928e`; retain periodic
+full ledger reconciliation, and treat the fresh local-context base walk as part
+of the A2 measurement rather than disabling the invariant oracle. A4/A6/A7 are
+plausible later measured optimizations but are not the current hot phase. A3 is
+R4/browser work and remains blocked. B1-B7 are broader or later action-space,
+diagnostic, and usability work and are not part of this R3A repair.
 
 R4 remains blocked until the normal-cap request completes expansion and enters
 outer Bellman optimization and retained automatic kinds remain bounded.

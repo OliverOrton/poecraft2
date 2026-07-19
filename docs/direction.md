@@ -168,12 +168,13 @@ rows and five templates. This does not reopen the resolved eager global cross
 product.
 **The measured R3A expansion-time boundary is the immediate and sole boundary;
 R4 and S8.5 remain blocked.** The next work partitions protected-side admission
-time, preclassifies carrier-invariant facts, shares only exact
-mechanic-equivalent transient evaluations, and audits remaining observable
-state distinctions before another normal-cap attempt. If the exact full
-envelope remains unusable, the fallback is a disclosed mechanic-neutral
-focused/custom action scope, never a global optimality claim. Mechanic rules
-are never researched or inferred by agents.
+time, then either reuses immutable local-admission infrastructure or
+preclassifies and shares exact mechanic-equivalent protected-side evaluations
+according to the measured subphase. It also audits remaining observable state
+distinctions before another normal-cap attempt. If the exact full envelope
+remains unusable, the fallback is a disclosed mechanic-neutral focused/custom
+action scope, never a global optimality claim. Mechanic rules are never
+researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,
