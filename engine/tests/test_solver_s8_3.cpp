@@ -252,6 +252,12 @@ StateLocalAutomaticBatch admit_automatic(
     return calc.admit_state_local_automatic_candidates(state, limits);
 }
 
+void check_owned_byte_ledger(CalcContext& calc) {
+    const std::uint64_t exact = calc.audited_estimated_owned_bytes();
+    const std::uint64_t incremental = calc.fast_estimated_owned_bytes();
+    PC_CHECK(incremental >= exact);
+}
+
 SimulationSummaryInternal run_compiled(
     std::shared_ptr<const SessionImpl> session,
     const std::string& strategy_json,
@@ -303,11 +309,13 @@ void run_temporary_blocker_price_flip() {
         add_mod(start, *session, mod);
     }
     const std::uint32_t state = calc.intern_item(start);
+    check_owned_byte_ledger(calc);
     const StateLocalAutomaticBatch blocker_batch = admit_automatic(calc, state, {
         {"exalt", 10.0},
         {"base", 100.0},
         {"scour", 1.0},
         {"bench:s83_mod_8", 2.0}});
+    check_owned_byte_ledger(calc);
     PC_CHECK(blocker_batch.temporary_precompiled_classes > 0);
     PC_CHECK(blocker_batch.temporary_precompile_ns > 0);
     PC_CHECK(blocker_batch.temporary_precompiled_bytes > 0);
@@ -327,6 +335,7 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(neutral == kNoId);
     if (blocker == kNoId) return;
     const OptionKernel& blocker_kernel = calc.option_kernel(state, blocker);
+    check_owned_byte_ledger(calc);
     PC_CHECK(blocker_kernel.legal);
     PC_CHECK(blocker_kernel.automatic.kernel_changed);
     PC_CHECK(blocker_kernel.automatic.cleanup_complete);
@@ -344,6 +353,7 @@ void run_temporary_blocker_price_flip() {
          {"scour", 1.0},
          {"bench:s83_mod_8", 5.0},
          {"bench:s83_mod_15", 2.0}});
+    check_owned_byte_ledger(variant_calc);
     const std::uint32_t first_variant = operator_by_fragment(
         variant_calc,
         "option:temporary_bench_repeat:bench:s83_mod_8:exalt");
@@ -353,6 +363,36 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(variant_batch.temporary_collapsed_variants > 0);
     PC_CHECK(first_variant != kNoId);
     PC_CHECK(cheaper_variant != kNoId);
+
+    CalcContext capped_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t capped_state = capped_calc.intern_item(start);
+    AutomaticAdmissionLimits capped_limits;
+    capped_limits.max_discovered_states = 100000;
+    capped_limits.max_state_action_rows = 100000;
+    capped_limits.max_transitions = 1000000;
+    capped_limits.max_reforge_work = 1000000;
+    capped_limits.max_solver_owned_bytes =
+        capped_calc.fast_estimated_owned_bytes();
+    const auto capped_prices = std::unordered_map<std::string, double>{
+        {"exalt", 10.0},
+        {"base", 100.0},
+        {"scour", 1.0},
+        {"bench:s83_mod_8", 2.0}};
+    capped_limits.prices = &capped_prices;
+    const StateLocalAutomaticBatch capped_batch =
+        capped_calc.admit_state_local_automatic_candidates(
+            capped_state, capped_limits);
+    PC_CHECK(std::any_of(
+        capped_batch.decisions.begin(), capped_batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.deferred &&
+                   decision.evidence.reason.find(
+                       "max_solver_owned_bytes") != std::string::npos;
+        }));
+    check_owned_byte_ledger(capped_calc);
+
     const SolveResult variant_solve = solve(
         variant_calc, start,
         {{"exalt", 10.0},
@@ -423,6 +463,11 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(telemetry.find("\"enumeration_time_ns\":") !=
              std::string::npos);
     PC_CHECK(telemetry.find("\"primitive_families\":{") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find("\"calc_owned_byte_ledger_requests\":") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find(
+                 "\"calc_owned_byte_ledger_max_overestimate\":") !=
              std::string::npos);
     PC_CHECK(telemetry.find("\"candidate_kind\":\"temporary_bench_blocker\"") !=
              std::string::npos);

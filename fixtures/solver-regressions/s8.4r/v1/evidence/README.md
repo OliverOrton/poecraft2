@@ -15,10 +15,18 @@ states this collapses 276,054 applicable blocker/resource variants to 5,654
 effect classes before exact evaluation, reduces temporary raw outcomes from
 882,313 to 38,634, and reduces expansion from 8.82 to 4.44 seconds without
 changing discovered states or retained rows/transitions. Separately priced
-blockers remain exact resource variants. The 2,048-state sample still grows
-superlinearly to 18.25 seconds, so the remaining outer-expansion work must be
-timed before 4,096 or another normal-cap run. Bellman entry is not claimed, no
-cap was raised, and R4 remains blocked.
+blockers remain exact resource variants.
+
+The selected-byte follow-up replaces repeated full allocation walks with an
+incremental exact ledger and periodic full reconciliation. Expansion falls
+from 3.85 to 0.97 seconds at 1,024 states and from 13.72 to 2.25 seconds at
+2,048, with identical state/row/transition counts and hashes and zero ledger
+overestimate in every reconciliation. A cooperative 10-second larger sample
+then stops at 2,170 expanded states: protected-side admission consumes 7.865
+seconds for 532 candidates over 133 carriers while retaining only 24 rows and
+five templates. That transient protected-side evaluation is the next measured
+R3A boundary. Bellman entry is not claimed, no cap was raised, and R4 remains
+blocked.
 
 ## R3F primitive Fracture product planning
 

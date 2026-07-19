@@ -17,10 +17,12 @@ complete on its structural evidence; on 2026-07-19 Oliver transferred its
 pinned normal-cap Bellman-entry gate to S8.4R.3A, whose scaling levers own the
 remaining expansion-throughput and state-space boundary. R3A's
 carrier-relative representation, telemetry, relevance, and equivalence work is
-implemented and its focused checks pass, but Oliver stopped the unchanged-cap
-product run before report emission and Bellman entry was not reached. **The
-measured R3A expansion boundary remains the sole next implementation boundary;
-R4 and S8.5 remain blocked.** Oliver explicitly
+implemented and its focused checks pass. Its incremental selected-byte ledger
+removed the measured quadratic accounting cost, but a time-boxed larger sample
+then exposed a protected-side transient-evaluation cliff before the normal-cap
+gate could be retried. Bellman entry was not reached. **The measured R3A
+protected-side admission boundary remains the sole next implementation
+boundary; R4 and S8.5 remain blocked.** Oliver explicitly
 waived B1.5 as a separate acceptance checkpoint
 based on the focused B1.3/B1.4 validation already completed; B1.5 is recorded
 as waived/deferred, not complete. Its full acceptance suite, 10,000-run
@@ -51,9 +53,12 @@ to **S8.4R.3A**. R3A now has entry-relative kernels, cross-carrier exact
 transition/planner sharing, per-kind timing/byte telemetry, exact Essence
 relevance, and an ordering-equivalence fixture. Its final 1,024-state sample
 retained at most 12 temporary-bench templates/rows per carrier and 22,737,809
-live selected bytes, but the unchanged-cap attempt was stopped before Bellman
-entry. The measured, unattributed expansion-time boundary remains R3A's sole
-next work. The recorded S7 endgame
+live selected bytes. Incremental selected-byte accounting then reduced
+expansion to 0.97/2.25 seconds at 1,024/2,048 states with identical hashes and
+exact reconciliation. A cooperative larger sample localized the next boundary
+to protected-side admission: 7.865 seconds for 532 candidates over 133
+carriers, with only 24 retained rows. The normal-cap gate remains unmet and
+this protected-side transient work is R3A's sole next work. The recorded S7 endgame
 sample remains `0.9942` against the former `0.995` target; the number is
 retained as a disclosed miss, not rewritten as a passing numeric gate.
 
@@ -851,12 +856,22 @@ acceptance once in R6 as required by `AGENTS.md`.
    41/79 ms, kernel work 96/142 ms, and sparse-row work 94/144 ms. The
    attributed phases sum within 0.8% of expansion.
 
-   Exact next boundary: replace repeated full selected-owned-byte walks with
-   incrementally maintained or otherwise constant-time accounting while
-   preserving strict `max_solver_owned_bytes` enforcement and the conservative
-   estimate contract. Re-run only the 1,024/2,048 samples first. Do not run the
-   4,096 or normal-cap samples until the repaired curve predicts usable
-   completion.
+   The selected-byte boundary is repaired. An exact incremental ledger now
+   serves hot-path cap checks, with full reconciliation at phase boundaries and
+   every 1,024 carriers. Expansion fell from 3.854 to 0.974 seconds at 1,024
+   states and from 13.725 to 2.253 seconds at 2,048, with identical
+   state/row/transition counts, registry sizes, and hashes. All nine
+   reconciliations had zero undercount and zero overestimate.
+
+   Exact next boundary: partition protected-side admission before changing its
+   representation. A cooperative 10-second larger sample reached 2,170 states
+   and spent 7.865 seconds on 532 protected-side candidates over 133 carriers,
+   creating 25,272 transient outcomes but retaining only 24 rows and five
+   templates. Add subphase/rejection timing, preclassify carrier-invariant
+   program/target facts, and share exact evaluations only for complete
+   mechanic-equivalent observable signatures. Preserve the measured maximum of
+   four candidates and two retained rows/templates per carrier. Re-run 2,048
+   and a cooperative time-boxed larger sample before the normal-cap gate.
    Partition discovered states by normalized observable facts and require an
    admitted-action witness for remaining goal-slot distinctions. If the exact
    full envelope is still unusable after the measured hot phase is repaired,
@@ -1184,9 +1199,14 @@ acceptance once in R6 as required by `AGENTS.md`.
    release-WASM validation. The 1,024-state product measurement proves bounded
    retained automatic templates and much lower planner/live-memory growth, but
    the normal-cap run was stopped before Bellman entry and produced no report.
-   The acceptance gate remains open. Continue only with the reconciled timing,
-   bounded scaling, and observable-state audit recorded in the execution
-   sequence and R3A evidence; do not raise caps or begin R4.
+   The incremental selected-byte repair later removed its repeated full-walk
+   boundary with exact reconciliation and unchanged bounded semantics. The
+   subsequent time-boxed sample identifies protected-side transient exact
+   evaluation/admission as the next boundary despite bounded retention. The
+   acceptance gate remains open. Continue only with protected-side subphase
+   attribution, exact sharing/preclassification, bounded scaling, and the
+   observable-state audit recorded in the execution sequence and R3A evidence;
+   do not raise caps or begin R4.
 
 #### Repair acceptance gate
 
@@ -1211,13 +1231,15 @@ acceptance once in R6 as required by `AGENTS.md`.
   honest boundary remains, stop and plan that measured boundary rather than
   raising caps blindly.
 
-  R3A result 2026-07-19: bounded per-carrier retention passed in the 1,024-state
-  telemetry (temporary bench: maximum 12 templates and 12 rows per carrier),
-  but the unchanged-cap request was stopped before report emission and did not
-  establish Bellman entry. The measured boundary is expansion CPU outside the
-  currently attributed automatic and primitive timers, not retained automatic
-  storage or a cap refusal. R4 remains blocked pending the reconciled timing
-  and bounded scaling work described above.
+  R3A result 2026-07-19: bounded per-carrier retention passed (temporary bench:
+  maximum 12 templates/rows per carrier; protected side in the larger sample:
+  maximum two templates/rows per carrier). The exact incremental selected-byte
+  ledger removed the prior quadratic audit path, reducing 1,024/2,048 expansion
+  by 74.74%/83.58% with unchanged hashes and zero reconciliation difference.
+  The next time-boxed sample still spent 7.865 of 10.070 expansion seconds in
+  protected-side admission while retaining only 24 rows. The normal-cap gate
+  remains unmet. R4 remains blocked pending that measured transient-evaluation
+  repair and bounded scaling work described above.
 - Add focused projection fixtures proving physical affix ordering and junk
   ordering do not create distinct abstract states. Record any remaining
   goal-slot distinction and the admitted action fact that requires it. Add an

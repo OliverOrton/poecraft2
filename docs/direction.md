@@ -158,14 +158,22 @@ not split abstract identity. Its final 1,024-state sample bounded
 temporary-bench retention at 12 templates/rows per carrier and reduced live
 selected bytes to about 22.7 MB, but Oliver stopped the unchanged-cap run
 before report emission and Bellman entry was not established. No cap was
-raised. This does not reopen the resolved eager global cross product.
+raised. A subsequent incremental selected-byte ledger removed the measured
+quadratic accounting path: expansion fell from 3.85 to 0.97 seconds at 1,024
+states and from 13.72 to 2.25 seconds at 2,048 with identical hashes and exact
+full-ledger reconciliation. A cooperative larger diagnostic then reached only
+2,170 states in 10 seconds because protected-side admission spent 7.865
+seconds evaluating 532 candidates over 133 carriers while retaining only 24
+rows and five templates. This does not reopen the resolved eager global cross
+product.
 **The measured R3A expansion-time boundary is the immediate and sole boundary;
-R4 and S8.5 remain blocked.** The next work adds reconciled expansion timers,
-runs bounded/time-boxed scaling samples, and audits remaining observable state
-distinctions before another normal-cap attempt. If the exact full envelope
-remains unusable, the fallback is a disclosed mechanic-neutral focused/custom
-action scope, never a global optimality claim. Mechanic
-rules are never researched or inferred by agents.
+R4 and S8.5 remain blocked.** The next work partitions protected-side admission
+time, preclassifies carrier-invariant facts, shares only exact
+mechanic-equivalent transient evaluations, and audits remaining observable
+state distinctions before another normal-cap attempt. If the exact full
+envelope remains unusable, the fallback is a disclosed mechanic-neutral
+focused/custom action scope, never a global optimality claim. Mechanic rules
+are never researched or inferred by agents.
 
 The parallel economy track is implemented: canonical ingest/publishing,
 immutable league snapshots, browser cache and selector, per-league overrides,

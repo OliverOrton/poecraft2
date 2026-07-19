@@ -280,6 +280,105 @@
     ],
     "finding": "The progressive slowdown is repeated full selected-owned-byte estimation, not textual logging, kernel evaluation, sparse-row construction, discovered-state growth, or a single automatic kind. The estimator walks growing registry/state/template/cache structures roughly three times per carrier and its cost grows almost fourfold when the carrier bound doubles."
   },
+  "selected_byte_ledger_repair": {
+    "implementation": "The strict selected-owned-byte cap now uses an incrementally maintained exact ledger on the hot path. A full selected-allocation walk remains at phase boundaries and every 1024 carriers as a reconciliation oracle; any ledger undercount is a hard invariant failure.",
+    "samples": [
+      {
+        "source": "build/s8.4r3a-byte-ledger-1024-final.json",
+        "result": "expected_refused_state_cap_at_diagnostic_1024_limit",
+        "expanded_states": 1024,
+        "discovered_states": 29637,
+        "state_action_rows": 15230,
+        "transition_entries": 91959,
+        "planner_registry": 1470,
+        "total_ms": 1093.4718,
+        "expansion_ms": 973.5221,
+        "previous_expansion_ms": 3854.3051,
+        "expansion_reduction_percent": 74.74,
+        "full_audit_calls": 4,
+        "full_audit_ms": 21.0144,
+        "ledger_calls": 3270,
+        "ledger_ms": 0.1467,
+        "reconciliations": 4,
+        "max_ledger_overestimate_bytes": 0,
+        "transition_bits_hash": "ae009fab9e69ebfe",
+        "policy_bits_hash": "8bc4492ee344049b",
+        "live_selected_bytes": 29323854,
+        "peak_selected_bytes": 62564754
+      },
+      {
+        "source": "build/s8.4r3a-byte-ledger-2048-final.json",
+        "result": "expected_refused_state_cap_at_diagnostic_2048_limit",
+        "expanded_states": 2048,
+        "discovered_states": 29942,
+        "state_action_rows": 30670,
+        "transition_entries": 131276,
+        "planner_registry": 1512,
+        "total_ms": 2461.0939,
+        "expansion_ms": 2253.3296,
+        "previous_expansion_ms": 13724.7,
+        "expansion_reduction_percent": 83.58,
+        "full_audit_calls": 5,
+        "full_audit_ms": 52.1283,
+        "ledger_calls": 6378,
+        "ledger_ms": 0.2704,
+        "reconciliations": 5,
+        "max_ledger_overestimate_bytes": 0,
+        "transition_bits_hash": "af28660e20ef6f48",
+        "policy_bits_hash": "a291fd5b8901b817",
+        "live_selected_bytes": 41448068,
+        "peak_selected_bytes": 89098955
+      }
+    ],
+    "semantic_comparison": "For each bound, discovered states, rows, transitions, planner registry, transition hash, and policy hash are identical to the pre-ledger timing sample. All nine bounded reconciliations reported exact equality between the incremental and full estimates.",
+    "finding": "The byte-audit repair removed the measured quadratic accounting cost. It did not make the next larger expansion usable because a distinct protected-side transient-evaluation cliff begins after the 2048-state boundary."
+  },
+  "post_ledger_boundary": {
+    "source": "build/s8.4r3a-byte-ledger-4096-timecap.json",
+    "method": "10-second cooperative diagnostic time cap; this is not a completed 4096-state sample",
+    "actual_status": "diagnostic_time_cap",
+    "expanded_states": 2170,
+    "discovered_states": 30462,
+    "state_action_rows": 32618,
+    "transition_entries": 143013,
+    "total_ms": 10210.2774,
+    "expansion_ms": 10070.1529,
+    "full_audit_calls": 2,
+    "full_audit_ms": 14.2434,
+    "ledger_calls": 6742,
+    "ledger_ms": 0.2914,
+    "reconciliations": 2,
+    "max_ledger_overestimate_bytes": 0,
+    "protected_side": {
+      "candidates": 532,
+      "carriers": 133,
+      "max_candidates_per_carrier": 4,
+      "unique_templates": 5,
+      "template_hits": 21,
+      "max_templates_per_carrier": 2,
+      "rows": 24,
+      "max_rows_per_carrier": 2,
+      "raw_outcomes": 25272,
+      "retained_transitions": 7769,
+      "admission_ns": 7864543100,
+      "row_ns": 4579900,
+      "selected_bytes": 128017
+    },
+    "protected_side_at_2048": {
+      "candidates": 44,
+      "carriers": 11,
+      "rows": 0,
+      "admission_ns": 294372100
+    },
+    "temporary_bench": {
+      "candidates": 252129,
+      "carriers": 2170,
+      "max_rows_per_carrier": 12,
+      "rows": 6436,
+      "admission_ns": 626396700
+    },
+    "finding": "Protected-side admission consumed 7.865 seconds while retaining only 24 rows, five templates, and 128017 selected bytes. Temporary bench consumed 0.626 seconds and retained at most 12 rows per carrier. The next boundary is protected-side transient exact evaluation/admission, not selected-byte accounting, logging, or automatic-kind storage."
+  },
   "focused_exact_evidence": {
     "renewal_template": "two distinct carriers differing only in preparation-wiped modifiers share one kernel pointer and template id; an otherwise similar fractured carrier is illegal and distinct",
     "retry_oracle": "entry-relative retry mass plus non-self exit mass sums to one and the exact attempt_cost/exit_probability oracle is preserved",
@@ -302,11 +401,13 @@
     "acceptance_claim": "not_passed"
   },
   "measured_boundary": {
-    "finding": "Temporary-bench preclassification removed the candidate flood without changing retained state/row/transition counts. Reconciled 1024/2048 timers then identify repeated full selected-owned-byte estimation as 76.4%/84.5% of expansion; ordinary diagnostic retention is below 1%. The normal-cap gate remains open.",
+    "finding": "The incremental ledger removed the selected-byte accounting boundary with 74.74%/83.58% expansion reductions at 1024/2048 and exact full-ledger reconciliation. A time-boxed larger sample then found a distinct protected-side admission cliff: 7.865 seconds for 532 candidates over 133 carriers, producing only 24 rows. The normal-cap gate remains open.",
     "next_work": [
       "Keep the current normal caps and exact action envelope unchanged.",
-      "Replace the roughly three full selected-owned-byte walks per carrier with incrementally maintained or otherwise constant-time selected-allocation accounting while preserving strict max_solver_owned_bytes enforcement and the conservative estimate contract.",
-      "Re-run only the 1024/2048 samples first; do not launch 4096 or another normal-cap run until the repaired curve predicts usable completion.",
+      "Partition protected-side admission time into eligibility, transient exact evaluation, kernel normalization, and template/route matching before changing representation.",
+      "Precompute carrier-invariant protected-side program and target facts, and share exact evaluations only across carriers with the same complete mechanic-relevant observable signature.",
+      "Preserve the observed bounds of four candidates, two templates, and two retained rows per carrier; optimize transient work rather than raising caps or weakening exactness.",
+      "Re-run the bounded 2048 sample and a cooperative time-boxed larger sample before another normal-cap attempt.",
       "Partition discovered abstract states by normalized observable facts and require an admitted-action witness for any remaining goal-slot distinction; preserve the passing physical-affix/junk-order equivalence fixture.",
       "If the exact full goal-relevant envelope remains unusable after the measured hot phase is repaired, implement the already-planned mechanic-neutral focused/custom action scope and label results optimal only within that selected scope."
     ],
@@ -314,9 +415,9 @@
     "blocked_phases": ["S8.4R.4", "S8.4R.5", "S8.4R.6", "S8.5"]
   },
   "validation": {
-    "native_build": "current native test executable and release benchmark built with the fallback compiler; the all-target build wrapper hit its 120-second command limit after producing the test executable and left no child process",
-    "native_engine_tests": "164835 checks, 0 failures",
-    "focused_solver_s8_3": "198 checks, 0 failures",
+    "native_build": "current native test executable and release benchmark built successfully",
+    "native_engine_tests": "164843 checks, 0 failures",
+    "focused_solver_s8_3": "206 checks, 0 failures",
     "release_wasm_rebuild": "passed",
     "typescript": "passed",
     "remaining_web_tests": "passed",

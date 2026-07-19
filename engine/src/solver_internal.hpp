@@ -759,6 +759,9 @@ struct OptionKernel {
     std::vector<std::uint32_t> continuation_states;
     bool entry_continues = false;
     std::uint64_t retained_template_id = 0;
+    /* Incremental selected-allocation accounting counts a shared kernel in
+     * template storage once rather than once per carrier cache key. */
+    mutable bool retained_template_storage = false;
     struct AutomaticEvidence {
         bool candidate = false;
         bool eligible = false;
@@ -811,6 +814,10 @@ struct CalcTelemetry {
     std::uint64_t reforge_frontier_work = 0;
     std::uint64_t owned_byte_audit_requests = 0;
     std::uint64_t owned_byte_audit_ns = 0;
+    std::uint64_t owned_byte_ledger_requests = 0;
+    std::uint64_t owned_byte_ledger_ns = 0;
+    std::uint64_t owned_byte_reconciliations = 0;
+    std::uint64_t owned_byte_ledger_max_overestimate = 0;
     std::array<PrimitiveFamilyTelemetry, kPrimitiveTelemetryFamilyCount>
         primitive_families{};
 };
@@ -1025,6 +1032,8 @@ class CalcContext {
     }
     std::uint64_t layout_build_ns() const { return layout_build_ns_; }
     std::uint64_t estimated_owned_bytes() const;
+    std::uint64_t audited_estimated_owned_bytes() const;
+    std::uint64_t fast_estimated_owned_bytes() const;
     std::uint64_t cached_distribution_count() const {
         return distribution_cache_.size();
     }
@@ -1100,8 +1109,45 @@ class CalcContext {
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
     std::uint64_t layout_build_ns_ = 0;
+    std::uint64_t owned_bytes_base_ = 0;
+    std::uint64_t owned_bytes_dynamic_shallow_base_ = 0;
+    std::uint64_t owned_state_hash_collision_bytes_ = 0;
+    std::uint64_t owned_state_local_operator_bytes_ = 0;
+    std::uint64_t owned_added_operator_nested_bytes_ = 0;
+    std::uint64_t owned_distribution_payload_bytes_ = 0;
+    std::uint64_t owned_option_cache_payload_bytes_ = 0;
+    std::uint64_t owned_option_template_nested_bytes_ = 0;
+    std::uint64_t owned_transition_template_nested_bytes_ = 0;
+    std::uint64_t owned_operator_template_nested_bytes_ = 0;
+    std::uint64_t owned_reforge_payload_bytes_ = 0;
+    bool owned_bytes_ledger_initialized_ = false;
 
     void initialize_temporary_bench_effect_classes();
+    void initialize_owned_bytes_ledger();
+    std::uint64_t calculate_owned_bytes() const;
+    std::uint64_t dynamic_shallow_owned_bytes() const;
+    void account_new_operator(const PlannerOperator& value);
+    void account_state_local_operators(
+        const std::vector<std::uint32_t>& values);
+    void account_distribution_cache_insert(
+        std::uint64_t key,
+        const std::shared_ptr<const OutcomeDistribution>& value);
+    void account_distribution_cache_erase(std::uint64_t key);
+    void account_option_cache_insert(
+        std::uint64_t key,
+        const std::shared_ptr<const OptionKernel>& value);
+    void account_option_cache_erase(std::uint64_t key);
+    void account_option_template_insert(
+        std::size_t old_capacity,
+        const OptionKernelTemplateMemo& value);
+    void account_transition_template_insert(
+        std::size_t old_capacity,
+        const std::shared_ptr<const OptionKernel>& value);
+    void account_operator_template_insert(
+        std::size_t old_capacity,
+        const std::vector<std::uint32_t>& values);
+    void account_reforge_cache_insert(
+        const std::shared_ptr<const OutcomeDistribution>& value);
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,

@@ -1,4 +1,4 @@
-# Session Handoff - S8.4R.3A Byte-Audit Expansion Repair Is Next
+# Session Handoff - S8.4R.3A Protected-Side Admission Repair Is Next
 
 Updated 2026-07-19. Read [AGENTS.md](AGENTS.md), this file,
 [docs/direction.md](docs/direction.md), then
@@ -8,14 +8,17 @@ Updated 2026-07-19. Read [AGENTS.md](AGENTS.md), this file,
 
 B1.0-B1.4, S8.0-S8.4, S8.4R.1-R3, and R3F are complete. R3A's
 carrier-relative representation, telemetry, relevance, and state-order audit
-are implemented and focused validation passes, but **R3A is not closed**: the
-normal-cap `conquest-lamellar-mirage-r3f-product` attempt was stopped before it
-emitted a report or entered Bellman optimization. No cap was raised.
+are implemented and focused validation passes. The selected-byte accounting
+repair is also implemented and removes its measured quadratic expansion cost,
+but **R3A is not closed**: a time-boxed larger sample exposed a new
+protected-side admission cliff before the normal-cap
+`conquest-lamellar-mirage-r3f-product` request could be attempted. Bellman
+entry is not established and no cap was raised.
 
-The sole next boundary is the measured R3A byte-accounting repair below. Do
-not begin R4 browser transfer/lifetime work, R5 verification truth, R6
-integrated acceptance, S8.5, or later work. Mechanic questions remain Oliver's
-authority; never research or infer them.
+The sole next boundary is the measured R3A protected-side transient-evaluation
+repair below. Do not begin R4 browser transfer/lifetime work, R5 verification
+truth, R6 integrated acceptance, S8.5, or later work. Mechanic questions
+remain Oliver's authority; never research or infer them.
 
 The owner-decision docs that transferred the R3F gate to R3A were committed
 first and remain intact in commit `50f7825`.
@@ -111,13 +114,32 @@ within 0.8% of the outer expansion timer:
   work is 96 ms / 142 ms and sparse-row work 94 ms / 144 ms. Textual logging
   and row construction are not the progressive slowdown.
 
-The full selected-owned-byte estimator walks the growing registry, state/hash
-table, automatic-operator maps, distribution/kernel templates, and telemetry
-sets. It is invoked roughly three times per carrier: twice before admission
-and again by admission's forced cap check. Its time grows almost 4x when the
-carrier bound doubles, which explains why expansion visibly slows as it runs.
-Do not run 4,096 or the normal-cap request until this measured audit path is
-repaired without weakening the checked-in byte cap.
+The selected-byte repair now maintains exact selected-allocation deltas as
+states, operators, caches, templates, and nested payloads are inserted or
+released. Hot-path cap checks read that ledger in constant time. Full walks
+remain at phase boundaries and every 1,024 carriers as a reconciliation oracle;
+an undercount is a hard invariant failure. The bounded comparison is:
+
+- 1,024 states: expansion 3.854 -> 0.974 seconds (74.74% lower); full audits
+  3,277 / 2.945 seconds -> 4 / 0.021 seconds; ledger 3,270 calls / 0.147 ms.
+- 2,048 states: expansion 13.725 -> 2.253 seconds (83.58% lower); full audits
+  6,385 / 11.592 seconds -> 5 / 0.052 seconds; ledger 6,378 calls / 0.270 ms.
+- Both bounds retain identical discovered-state, row, transition, registry,
+  transition-hash, and policy-hash results. All nine full reconciliations have
+  zero undercount and zero overestimate.
+
+A cooperative 10-second larger diagnostic then stopped at 2,170 expanded /
+30,462 discovered states. Its byte ledger cost only 0.291 ms, but
+protected-side automatic admission consumed 7.865 seconds for 532 candidates
+over 133 carriers, producing 25,272 transient outcomes but retaining only 24
+rows, five templates, 7,769 transitions, and 128,017 selected bytes. At 2,048,
+protected-side had only 44 candidates over 11 carriers, no rows, and cost
+0.294 seconds. The cliff begins just beyond that boundary.
+
+Temporary bench is no longer the dominant work there: 252,129 candidates over
+2,170 carriers cost 0.626 seconds and retained at most 12 rows per carrier.
+Textual logging, selected-byte accounting, and retained automatic storage are
+not the new progressive slowdown.
 
 The compact checked-in record is
 [r3a-carrier-scaling-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
@@ -126,7 +148,10 @@ Full diagnostic reports remain ignored under `build/`, including
 `build/s8.4r3a-temp-precompile-1024-final.json`, and
 `build/s8.4r3a-temp-precompile-2048-final.json`,
 `build/s8.4r3a-expansion-phases-1024.json`, and
-`build/s8.4r3a-expansion-phases-2048.json`.
+`build/s8.4r3a-expansion-phases-2048.json`,
+`build/s8.4r3a-byte-ledger-1024-final.json`,
+`build/s8.4r3a-byte-ledger-2048-final.json`, and
+`build/s8.4r3a-byte-ledger-4096-timecap.json`.
 
 ### Relevance and abstract-state audit
 
@@ -160,25 +185,37 @@ rebuild and explicitly stopped before report emission at 858.14 CPU seconds
 and about 153 MiB working set. There was no report, cap hit, crash, Bellman
 entry, or convergence result. Do not describe this gate as passed.
 
-## Exact Next Boundary: R3A Selected-Byte Accounting Only
+After the byte-ledger repair, a direct 4,096 wrapper attempt exceeded its short
+foreground limit and its child was explicitly stopped. The deliberate
+10-second cooperative diagnostic described above then localized the next
+boundary. The normal-cap command was not rerun because that bounded curve does
+not predict usable completion.
+
+## Exact Next Boundary: R3A Protected-Side Admission Only
 
 1. Preserve the current exact envelope, mechanics, representation, and checked-
    in caps. Do not begin with another normal-cap run.
-2. Replace the roughly three full selected-owned-byte walks per carrier with
-   incrementally maintained or otherwise constant-time selected-allocation
-   accounting. Preserve strict `max_solver_owned_bytes` enforcement and the
-   existing conservative estimate contract; do not merely skip cap checks.
-3. Re-run only the bounded 1,024/2,048 samples first. The byte-audit component
-   should cease growing quadratically and the curve must predict usable
-   completion before any 4,096 or normal-cap run. Do not raise caps.
-4. Partition discovered states by normalized observable facts. Require a
+2. Add nested protected-side timing/rejection telemetry before optimizing:
+   separate carrier eligibility, transient exact evaluation, kernel
+   normalization, and exact template/route matching. The current total says
+   where the time is, not yet which protected-side subphase causes it.
+3. Audit the four protected-side candidates per carrier for carrier-invariant
+   program/target facts that can be preclassified once. Share transient exact
+   evaluation only when the complete mechanic-relevant observable signature is
+   equal; keep fractured, locked, crafted, influence, capacity, goal-slot, and
+   resource differences exact.
+4. Preserve the observed retention bound (at most two protected-side templates
+   and rows per carrier). This is a transient evaluation repair, not a reason
+   to raise caps, weaken the byte estimate, or revisit temporary-bench storage.
+5. Partition discovered states by normalized observable facts. Require a
    concrete admitted-action legality/transition witness for any remaining
    goal-slot distinction, while preserving the passing physical-affix/junk-
    ordering equivalence fixture.
-5. Repair only the measured hot phase, re-run the focused/native correctness
-   checks, and attempt the unchanged normal-cap Bellman-entry gate only when
-   the bounded curve predicts a usable completion.
-6. If the exact full goal-relevant envelope remains unusable after that repair,
+6. Repair only the measured hot phase, re-run 2,048 and a cooperative
+   time-boxed larger sample plus the focused/native correctness checks, and
+   attempt the unchanged normal-cap Bellman-entry gate only when the bounded
+   curve predicts usable completion.
+7. If the exact full goal-relevant envelope remains unusable after that repair,
    implement the already-planned mechanic-neutral focused/custom action scope.
    Label it "optimal within the selected action scope" and never claim global
    optimality. Any narrower mechanic-specific retry decision requires Oliver.
@@ -189,15 +226,19 @@ outer Bellman optimization and retained automatic kinds remain bounded.
 ## Validation Completed
 
 - The current native test executable and release benchmark built successfully
-  with the fallback compiler. The all-target `scripts/build.ps1` wrapper hit
-  the 120-second command limit while compiling redundant fallback targets
-  after producing the test executable; no compiler/benchmark child remained.
-- Full native engine suite: 164,835 checks, 0 failures.
-- Focused `--solver-s8-3-only`: 198 checks, 0 failures. The added oracle
+  with the fallback compiler.
+- Full native engine suite: 164,843 checks, 0 failures.
+- Focused `--solver-s8-3-only`: 206 checks, 0 failures. The added byte-ledger
+  oracle reconciles incremental and full estimates before/after automatic
+  admission and kernel retention, and proves a tiny byte cap still defers the
+  candidate with an explicit `max_solver_owned_bytes` reason. The existing
+  temporary-bench oracle
   covers differently priced blockers with distinct global conflict masks but
   one carrier-effective add-mod pool.
 - `powershell -File scripts/build-wasm.ps1`: release WASM rebuilt from the
-  final native source. No C ABI or strategy vocabulary changed.
+  final native source. The foreground wrapper timed out while `emcc` continued;
+  the compiler finished, emitted both final artifacts, and no child remained.
+  No C ABI or strategy vocabulary changed.
 - Remaining non-visual web tests passed; `npx tsc --noEmit` passed.
 - The broad `npm test` run stopped at the known pre-R3A automatic
   permanent-bench group-goal non-convergence in `engine-smoke.test.ts`. Do not

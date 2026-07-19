@@ -867,7 +867,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     result.stable_shared_kernel = !state_dependent;
     std::shared_ptr<const OutcomeDistribution> finalized = finalize();
     if (!state_dependent) {
-        reforge_cache_.emplace(memo_key, finalized);
+        const auto [stored, inserted] =
+            reforge_cache_.emplace(memo_key, finalized);
+        if (inserted) account_reforge_cache_insert(stored->second);
     }
     return finalized;
 }

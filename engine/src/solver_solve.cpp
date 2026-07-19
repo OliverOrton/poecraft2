@@ -1263,8 +1263,10 @@ struct SolveWork::Impl {
         limits.max_transitions = options.max_transitions;
         limits.max_reforge_work = options.max_reforge_work;
         const auto byte_audit_started = std::chrono::steady_clock::now();
-        const std::uint64_t calc_bytes = calc.estimated_owned_bytes();
-        const std::uint64_t total_bytes = estimated_owned_bytes();
+        const std::uint64_t calc_bytes =
+            calc.fast_estimated_owned_bytes();
+        const std::uint64_t total_bytes =
+            fast_estimated_owned_bytes();
         result.diagnostics.expansion_prepare_byte_audit_ns +=
             static_cast<std::uint64_t>(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2251,7 +2253,13 @@ struct SolveWork::Impl {
 
     bool check_solver_byte_cap(const std::uint64_t transient_bytes = 0) {
         return check_solver_byte_cap_from(
-            estimated_owned_bytes(), transient_bytes);
+            audited_estimated_owned_bytes(), transient_bytes);
+    }
+
+    bool check_solver_byte_cap_fast(
+        const std::uint64_t transient_bytes = 0) {
+        return check_solver_byte_cap_from(
+            fast_estimated_owned_bytes(), transient_bytes);
     }
 
     bool append_sparse_row(
@@ -3023,7 +3031,14 @@ struct SolveWork::Impl {
             expanded_count % 64 == 0) {
             const auto byte_audit_started =
                 std::chrono::steady_clock::now();
-            check_solver_byte_cap();
+            /* Preserve the 64-carrier cap cadence with the exact incremental
+             * ledger. The full selected-allocation walk is now a
+             * reconciliation oracle rather than the hot-path cap check. */
+            if (expanded_count % 1024 == 0) {
+                check_solver_byte_cap();
+            } else {
+                check_solver_byte_cap_fast();
+            }
             result.diagnostics.expansion_cap_byte_audit_ns +=
                 static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -5316,7 +5331,23 @@ struct SolveWork::Impl {
     }
 
     std::uint64_t estimated_owned_bytes() const {
-        std::uint64_t bytes = sizeof(*this) + calc.estimated_owned_bytes();
+        return estimated_owned_bytes_with_calc(
+            calc.estimated_owned_bytes());
+    }
+
+    std::uint64_t audited_estimated_owned_bytes() const {
+        return estimated_owned_bytes_with_calc(
+            calc.audited_estimated_owned_bytes());
+    }
+
+    std::uint64_t fast_estimated_owned_bytes() const {
+        return estimated_owned_bytes_with_calc(
+            calc.fast_estimated_owned_bytes());
+    }
+
+    std::uint64_t estimated_owned_bytes_with_calc(
+        const std::uint64_t calc_bytes) const {
+        std::uint64_t bytes = sizeof(*this) + calc_bytes;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
                  (sizeof(std::pair<const std::string, double>) +
@@ -6170,7 +6201,16 @@ std::string serialize_solver_telemetry(
     json += "\"calc_owned_byte_audit_requests\":" +
             std::to_string(cache.owned_byte_audit_requests);
     json += ",\"calc_owned_byte_audit_ns\":" +
-            std::to_string(cache.owned_byte_audit_ns) + "}";
+            std::to_string(cache.owned_byte_audit_ns);
+    json += ",\"calc_owned_byte_ledger_requests\":" +
+            std::to_string(cache.owned_byte_ledger_requests);
+    json += ",\"calc_owned_byte_ledger_ns\":" +
+            std::to_string(cache.owned_byte_ledger_ns);
+    json += ",\"calc_owned_byte_reconciliations\":" +
+            std::to_string(cache.owned_byte_reconciliations);
+    json += ",\"calc_owned_byte_ledger_max_overestimate\":" +
+            std::to_string(
+                cache.owned_byte_ledger_max_overestimate) + "}";
 
     const std::uint64_t current_bytes = calc.estimated_owned_bytes();
     json += ",\"memory\":{\"solver_owned_bytes_estimate\":" +

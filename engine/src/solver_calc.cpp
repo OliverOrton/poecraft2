@@ -64,6 +64,62 @@ PrimitiveTelemetryFamily primitive_family(const ActionType type) {
     }
 }
 
+std::uint64_t selected_string_bytes(const std::string& value) {
+    return static_cast<std::uint64_t>(value.capacity() + 1);
+}
+
+std::uint64_t planner_operator_nested_bytes(const PlannerOperator& value) {
+    std::uint64_t bytes =
+        selected_string_bytes(value.id) +
+        selected_string_bytes(value.display_name);
+    bytes += value.primitive_program.capacity() * sizeof(std::uint32_t);
+    bytes += value.exit_goal_slots.capacity() * sizeof(std::uint32_t);
+    bytes += value.resource_quantities.capacity() *
+             sizeof(std::pair<std::string, double>);
+    for (const auto& [key, quantity] : value.resource_quantities) {
+        (void)quantity;
+        bytes += selected_string_bytes(key);
+    }
+    return bytes;
+}
+
+std::uint64_t distribution_selected_bytes(
+    const OutcomeDistribution& value) {
+    std::uint64_t bytes = sizeof(OutcomeDistribution);
+    bytes += value.entries.capacity() * sizeof(OutcomeEntry);
+    bytes += value.choice_groups.capacity() * sizeof(OutcomeChoiceGroup);
+    for (const OutcomeChoiceGroup& group : value.choice_groups) {
+        bytes += group.states.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += value.choice_options.capacity() * sizeof(OutcomeChoiceOption);
+    return bytes;
+}
+
+std::uint64_t option_kernel_selected_bytes_for_ledger(
+    const OptionKernel& value) {
+    std::uint64_t bytes = sizeof(OptionKernel);
+    bytes += value.expected_resources.capacity() *
+             sizeof(std::pair<std::string, double>);
+    for (const auto& [key, quantity] : value.expected_resources) {
+        (void)quantity;
+        bytes += selected_string_bytes(key);
+    }
+    bytes += value.exits.capacity() * sizeof(OutcomeEntry);
+    bytes += value.observation_choice_groups.capacity() *
+             sizeof(OutcomeChoiceGroup);
+    for (const OutcomeChoiceGroup& group :
+         value.observation_choice_groups) {
+        bytes += group.states.capacity() * sizeof(std::uint32_t);
+    }
+    bytes += value.observation_choice_options.capacity() *
+             sizeof(OutcomeChoiceOption);
+    bytes += value.retry_states.capacity() * sizeof(std::uint32_t);
+    bytes += value.continuation_states.capacity() * sizeof(std::uint32_t);
+    bytes += selected_string_bytes(value.automatic.legality_result);
+    bytes += selected_string_bytes(value.automatic.reason);
+    return bytes;
+}
+
 } // namespace
 
 std::uint8_t rarity_affix_cap(const SessionImpl& session, std::uint8_t rarity) {
@@ -288,6 +344,212 @@ CalcContext::CalcContext(
      * bookkeeping from earlier queries. */
     context_.capture_action_trace = false;
     initialize_temporary_bench_effect_classes();
+    initialize_owned_bytes_ledger();
+}
+
+void CalcContext::initialize_owned_bytes_ledger() {
+    owned_bytes_dynamic_shallow_base_ = dynamic_shallow_owned_bytes();
+    owned_bytes_base_ = estimated_owned_bytes();
+    owned_bytes_ledger_initialized_ = true;
+}
+
+std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
+    std::uint64_t bytes = 0;
+    bytes += candidate_operators_.capacity() * sizeof(std::uint32_t);
+    bytes += state_local_automatic_operators_.bucket_count() * sizeof(void*);
+    bytes += state_local_automatic_operators_.size() *
+             (sizeof(std::pair<const std::uint32_t,
+                               std::vector<std::uint32_t>>) +
+              2 * sizeof(void*));
+    bytes += admitted_automatic_dependencies_.bucket_count() * sizeof(void*);
+    bytes += admitted_automatic_dependencies_.size() *
+             (sizeof(std::uint32_t) + 2 * sizeof(void*));
+    bytes += state_local_automatic_operator_indices_.bucket_count() *
+             sizeof(void*);
+    bytes += state_local_automatic_operator_indices_.size() *
+             (sizeof(std::uint32_t) + 2 * sizeof(void*));
+    bytes += operators_.capacity() * sizeof(PlannerOperator);
+    bytes += states_.capacity() * sizeof(AbstractState);
+    bytes += state_ids_by_hash_.bucket_count() * sizeof(void*);
+    bytes += state_ids_by_hash_.size() *
+             (sizeof(std::pair<const std::size_t, StateHashBucket>) +
+              2 * sizeof(void*));
+    bytes += distribution_cache_.bucket_count() * sizeof(void*);
+    bytes += distribution_cache_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::shared_ptr<const OutcomeDistribution>>) +
+              2 * sizeof(void*));
+    bytes += option_kernel_cache_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_cache_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::shared_ptr<const OptionKernel>>) +
+              2 * sizeof(void*));
+    bytes += option_kernel_templates_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<OptionKernelTemplateMemo>>) +
+              2 * sizeof(void*));
+    bytes += option_transition_templates_.bucket_count() * sizeof(void*);
+    bytes += option_transition_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<std::shared_ptr<const OptionKernel>>>) +
+              2 * sizeof(void*));
+    bytes += option_operator_templates_.bucket_count() * sizeof(void*);
+    bytes += option_operator_templates_.size() *
+             (sizeof(std::pair<
+                  const std::uint64_t,
+                  std::vector<std::uint32_t>>) +
+              2 * sizeof(void*));
+    bytes += option_kernel_template_hit_keys_.bucket_count() * sizeof(void*);
+    bytes += option_kernel_template_hit_keys_.size() *
+             (sizeof(std::uint64_t) + 2 * sizeof(void*));
+    bytes += reforge_cache_.size() *
+             (sizeof(std::pair<
+                  const std::pair<std::uint32_t, std::uint64_t>,
+                  std::shared_ptr<const OutcomeDistribution>>) +
+              3 * sizeof(void*));
+    bytes += telemetry_rows_.bucket_count() * sizeof(void*);
+    bytes += telemetry_rows_.size() *
+             (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
+              2 * sizeof(void*));
+    return bytes;
+}
+
+std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
+    const auto started = std::chrono::steady_clock::now();
+    const std::uint64_t shallow = dynamic_shallow_owned_bytes();
+    std::uint64_t bytes = owned_bytes_base_;
+    if (shallow >= owned_bytes_dynamic_shallow_base_) {
+        bytes += shallow - owned_bytes_dynamic_shallow_base_;
+    } else {
+        bytes -= std::min(
+            bytes, owned_bytes_dynamic_shallow_base_ - shallow);
+    }
+    bytes += owned_state_hash_collision_bytes_;
+    bytes += owned_state_local_operator_bytes_;
+    bytes += owned_added_operator_nested_bytes_;
+    bytes += owned_distribution_payload_bytes_;
+    bytes += owned_option_cache_payload_bytes_;
+    bytes += owned_option_template_nested_bytes_;
+    bytes += owned_transition_template_nested_bytes_;
+    bytes += owned_operator_template_nested_bytes_;
+    bytes += owned_reforge_payload_bytes_;
+    ++telemetry_.owned_byte_ledger_requests;
+    telemetry_.owned_byte_ledger_ns += static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - started)
+            .count());
+    return bytes;
+}
+
+void CalcContext::account_new_operator(const PlannerOperator& value) {
+    owned_added_operator_nested_bytes_ +=
+        planner_operator_nested_bytes(value);
+}
+
+void CalcContext::account_state_local_operators(
+    const std::vector<std::uint32_t>& values) {
+    owned_state_local_operator_bytes_ +=
+        values.capacity() * sizeof(std::uint32_t);
+}
+
+void CalcContext::account_distribution_cache_insert(
+    const std::uint64_t key,
+    const std::shared_ptr<const OutcomeDistribution>& value) {
+    const auto existing = distribution_cache_.find(key);
+    if (existing != distribution_cache_.end()) {
+        owned_distribution_payload_bytes_ -=
+            distribution_selected_bytes(*existing->second);
+    }
+    owned_distribution_payload_bytes_ +=
+        distribution_selected_bytes(*value);
+}
+
+void CalcContext::account_distribution_cache_erase(
+    const std::uint64_t key) {
+    const auto existing = distribution_cache_.find(key);
+    if (existing == distribution_cache_.end()) return;
+    owned_distribution_payload_bytes_ -=
+        distribution_selected_bytes(*existing->second);
+}
+
+void CalcContext::account_option_cache_insert(
+    const std::uint64_t key,
+    const std::shared_ptr<const OptionKernel>& value) {
+    const auto existing = option_kernel_cache_.find(key);
+    if (existing != option_kernel_cache_.end() &&
+        !existing->second->retained_template_storage) {
+        owned_option_cache_payload_bytes_ -=
+            option_kernel_selected_bytes_for_ledger(*existing->second);
+    }
+    if (!value->retained_template_storage) {
+        owned_option_cache_payload_bytes_ +=
+            option_kernel_selected_bytes_for_ledger(*value);
+    }
+}
+
+void CalcContext::account_option_cache_erase(const std::uint64_t key) {
+    const auto existing = option_kernel_cache_.find(key);
+    if (existing == option_kernel_cache_.end() ||
+        existing->second->retained_template_storage) {
+        return;
+    }
+    owned_option_cache_payload_bytes_ -=
+        option_kernel_selected_bytes_for_ledger(*existing->second);
+}
+
+void CalcContext::account_option_template_insert(
+    const std::size_t old_capacity,
+    const OptionKernelTemplateMemo& value) {
+    const auto& bucket =
+        option_kernel_templates_.at(value.kernel->retained_template_id);
+    owned_option_template_nested_bytes_ +=
+        (bucket.capacity() - old_capacity) *
+        sizeof(OptionKernelTemplateMemo);
+    owned_option_template_nested_bytes_ +=
+        value.expected_resources.capacity() *
+        sizeof(std::pair<std::string, double>);
+    for (const auto& [key, quantity] : value.expected_resources) {
+        (void)quantity;
+        owned_option_template_nested_bytes_ +=
+            selected_string_bytes(key);
+    }
+    if (!value.kernel->retained_template_storage) {
+        value.kernel->retained_template_storage = true;
+        owned_option_template_nested_bytes_ +=
+            option_kernel_selected_bytes_for_ledger(*value.kernel);
+    }
+}
+
+void CalcContext::account_transition_template_insert(
+    const std::size_t old_capacity,
+    const std::shared_ptr<const OptionKernel>& value) {
+    const auto& bucket =
+        option_transition_templates_.at(value->retained_template_id);
+    owned_transition_template_nested_bytes_ +=
+        (bucket.capacity() - old_capacity) *
+        sizeof(std::shared_ptr<const OptionKernel>);
+    if (!value->retained_template_storage) {
+        value->retained_template_storage = true;
+        owned_transition_template_nested_bytes_ +=
+            option_kernel_selected_bytes_for_ledger(*value);
+    }
+}
+
+void CalcContext::account_operator_template_insert(
+    const std::size_t old_capacity,
+    const std::vector<std::uint32_t>& values) {
+    owned_operator_template_nested_bytes_ +=
+        (values.capacity() - old_capacity) * sizeof(std::uint32_t);
+}
+
+void CalcContext::account_reforge_cache_insert(
+    const std::shared_ptr<const OutcomeDistribution>& value) {
+    owned_reforge_payload_bytes_ += distribution_selected_bytes(*value);
 }
 
 bool calc_supports(const ActionDescriptor& action) {
@@ -367,7 +629,12 @@ std::uint32_t CalcContext::intern_state(const AbstractState& state) {
     if (inserted) {
         bucket->second.first = id;
     } else {
+        const std::size_t old_capacity =
+            bucket->second.collisions.capacity();
         bucket->second.collisions.push_back(id);
+        owned_state_hash_collision_bytes_ +=
+            (bucket->second.collisions.capacity() - old_capacity) *
+            sizeof(std::uint32_t);
     }
     return id;
 }
@@ -664,6 +931,7 @@ const OutcomeDistribution& CalcContext::outcomes(
                 .count());
         telemetry_.distribution_build_ns += build_ns;
         family.build_ns += build_ns;
+        account_distribution_cache_insert(key, distribution);
         result = distribution_cache_.emplace(key, std::move(distribution))
                      .first->second.get();
     }
@@ -742,6 +1010,7 @@ void CalcContext::record_primitive_row_time(
 
 void CalcContext::release_solve_transition_caches() {
     distribution_cache_.clear();
+    owned_distribution_payload_bytes_ = 0;
     for (auto it = option_kernel_cache_.begin();
          it != option_kernel_cache_.end();) {
         const std::uint32_t operator_index =
@@ -749,10 +1018,15 @@ void CalcContext::release_solve_transition_caches() {
         if (is_state_local_automatic_operator(operator_index)) {
             ++it;
         } else {
+            if (!it->second->retained_template_storage) {
+                owned_option_cache_payload_bytes_ -=
+                    option_kernel_selected_bytes_for_ledger(*it->second);
+            }
             it = option_kernel_cache_.erase(it);
         }
     }
     reforge_cache_.clear();
+    owned_reforge_payload_bytes_ = 0;
     telemetry_rows_.clear();
 }
 
@@ -761,6 +1035,7 @@ void CalcContext::release_outcome(
     const std::uint32_t action_index) {
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | action_index;
+    account_distribution_cache_erase(key);
     distribution_cache_.erase(key);
 }
 
@@ -770,11 +1045,11 @@ void CalcContext::release_option_kernel(
     const std::uint64_t key =
         (static_cast<std::uint64_t>(state_id) << 32) | operator_index;
     if (is_state_local_automatic_operator(operator_index)) return;
+    account_option_cache_erase(key);
     option_kernel_cache_.erase(key);
 }
 
-std::uint64_t CalcContext::estimated_owned_bytes() const {
-    const auto audit_started = std::chrono::steady_clock::now();
+std::uint64_t CalcContext::calculate_owned_bytes() const {
     /* This deliberately reports a conservative selected-allocation estimate.
      * Standard-library node overhead, allocator metadata, and pool-cache
      * storage inside ActionContextImpl are not portable enough to claim as an
@@ -993,11 +1268,57 @@ std::uint64_t CalcContext::estimated_owned_bytes() const {
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
               2 * sizeof(void*));
+    return bytes;
+}
+
+std::uint64_t CalcContext::estimated_owned_bytes() const {
+    return calculate_owned_bytes();
+}
+
+std::uint64_t CalcContext::audited_estimated_owned_bytes() const {
+    const auto audit_started = std::chrono::steady_clock::now();
+    const std::uint64_t bytes = calculate_owned_bytes();
     ++telemetry_.owned_byte_audit_requests;
     telemetry_.owned_byte_audit_ns += static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - audit_started)
             .count());
+    if (owned_bytes_ledger_initialized_) {
+        const std::uint64_t fast = fast_estimated_owned_bytes();
+        ++telemetry_.owned_byte_reconciliations;
+        if (fast < bytes) {
+            throw std::logic_error(
+                "incremental selected-owned-byte ledger undercounted by " +
+                std::to_string(bytes - fast) +
+                " (full=" + std::to_string(bytes) +
+                ", fast=" + std::to_string(fast) +
+                ", base=" + std::to_string(owned_bytes_base_) +
+                ", shallow=" +
+                std::to_string(dynamic_shallow_owned_bytes()) +
+                ", shallow_base=" +
+                std::to_string(owned_bytes_dynamic_shallow_base_) +
+                ", state_collision=" +
+                std::to_string(owned_state_hash_collision_bytes_) +
+                ", state_local=" +
+                std::to_string(owned_state_local_operator_bytes_) +
+                ", operators=" +
+                std::to_string(owned_added_operator_nested_bytes_) +
+                ", distributions=" +
+                std::to_string(owned_distribution_payload_bytes_) +
+                ", option_cache=" +
+                std::to_string(owned_option_cache_payload_bytes_) +
+                ", option_templates=" +
+                std::to_string(owned_option_template_nested_bytes_) +
+                ", transition_templates=" +
+                std::to_string(owned_transition_template_nested_bytes_) +
+                ", operator_templates=" +
+                std::to_string(owned_operator_template_nested_bytes_) +
+                ", reforge=" +
+                std::to_string(owned_reforge_payload_bytes_) + ")");
+        }
+        telemetry_.owned_byte_ledger_max_overestimate = std::max(
+            telemetry_.owned_byte_ledger_max_overestimate, fast - bytes);
+    }
     return bytes;
 }
 

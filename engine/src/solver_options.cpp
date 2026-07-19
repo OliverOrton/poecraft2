@@ -1834,6 +1834,7 @@ OptionKernel map_local_option_kernel(
     const OptionKernel& source,
     std::unordered_map<std::uint32_t, std::uint32_t>& mapped) {
     OptionKernel result = source;
+    result.retained_template_storage = false;
     std::map<std::uint32_t, double> exits;
     for (const OutcomeEntry& exit : source.exits) {
         exits[map_local_state(
@@ -2085,15 +2086,19 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         return batch;
     }
     if (!goal_.automatic_candidates || is_goal_state(state(state_id))) {
-        state_local_automatic_operators_.emplace(
+        const auto [stored, inserted] =
+            state_local_automatic_operators_.emplace(
             state_id, std::vector<std::uint32_t>{});
+        if (inserted) account_state_local_operators(stored->second);
         return batch;
     }
 
     pc_item_state carrier;
     if (!materialize(state_id, carrier)) {
-        state_local_automatic_operators_.emplace(
+        const auto [stored, inserted] =
+            state_local_automatic_operators_.emplace(
             state_id, std::vector<std::uint32_t>{});
+        if (inserted) account_state_local_operators(stored->second);
         return batch;
     }
 
@@ -2205,7 +2210,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         }
         if (limits.max_solver_owned_bytes == 0) return;
         if (!force_bytes) return;
-        if (estimated_owned_bytes() + local.estimated_owned_bytes() >
+        if (fast_estimated_owned_bytes() +
+                local.fast_estimated_owned_bytes() >
             limits.max_solver_owned_bytes) {
             throw SolverResourceLimit(
                 "max_solver_owned_bytes", limits.max_solver_owned_bytes);
@@ -2273,6 +2279,15 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         telemetry_.owned_byte_audit_requests +=
             work.owned_byte_audit_requests;
         telemetry_.owned_byte_audit_ns += work.owned_byte_audit_ns;
+        telemetry_.owned_byte_ledger_requests +=
+            work.owned_byte_ledger_requests;
+        telemetry_.owned_byte_ledger_ns +=
+            work.owned_byte_ledger_ns;
+        telemetry_.owned_byte_reconciliations +=
+            work.owned_byte_reconciliations;
+        telemetry_.owned_byte_ledger_max_overestimate = std::max(
+            telemetry_.owned_byte_ledger_max_overestimate,
+            work.owned_byte_ledger_max_overestimate);
         for (std::size_t i = 0; i < kPrimitiveTelemetryFamilyCount; ++i) {
             PrimitiveFamilyTelemetry& target =
                 telemetry_.primitive_families[i];
@@ -2312,6 +2327,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                  index < imprint_operators.size(); ++index) {
                 local.operators_.push_back(
                     std::move(imprint_operators[index]));
+                local.account_new_operator(local.operators_.back());
                 local_option_indices.push_back(
                     static_cast<std::uint32_t>(
                         local.operators_.size() - 1));
@@ -2434,6 +2450,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     const std::uint64_t key =
                         (static_cast<std::uint64_t>(state_id) << 32) |
                         action_index;
+                    account_distribution_cache_insert(key, mapped);
                     distribution_cache_[key] = std::move(mapped);
                     decision.operator_index = action_index;
                     decision.admitted = true;
@@ -2581,10 +2598,12 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 kernel->expected_resources =
                     local_planner.resource_quantities;
                 kernel->retained_template_id = 0;
+                kernel->retained_template_storage = false;
                 const std::uint64_t local_key =
                     (static_cast<std::uint64_t>(local_state) << 32) |
                     local_operator;
                 local_kernel_ptr = kernel.get();
+                local.account_option_cache_insert(local_key, kernel);
                 local.option_kernel_cache_[local_key] = std::move(kernel);
             } else {
                 local_kernel_ptr = &local.option_kernel(
@@ -2725,8 +2744,13 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             }
             if (retained_kernel == nullptr) {
                 retained_kernel = mapped;
-                option_transition_templates_[transition_template_id].push_back(
-                    retained_kernel);
+                auto& transition_templates =
+                    option_transition_templates_[transition_template_id];
+                const std::size_t old_capacity =
+                    transition_templates.capacity();
+                transition_templates.push_back(retained_kernel);
+                account_transition_template_insert(
+                    old_capacity, retained_kernel);
                 new_transition_template = true;
             }
 
@@ -2761,8 +2785,14 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     operator_index = static_cast<std::uint32_t>(
                         operators_.size());
                     operators_.push_back(admitted);
-                    option_operator_templates_[planner_id].push_back(
-                        operator_index);
+                    account_new_operator(operators_.back());
+                    auto& operator_templates =
+                        option_operator_templates_[planner_id];
+                    const std::size_t old_capacity =
+                        operator_templates.capacity();
+                    operator_templates.push_back(operator_index);
+                    account_operator_template_insert(
+                        old_capacity, operator_templates);
                     new_operator = true;
                 }
                 if (new_operator) {
@@ -2775,6 +2805,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 const std::uint64_t key =
                     (static_cast<std::uint64_t>(state_id) << 32) |
                     operator_index;
+                account_option_cache_insert(key, retained_kernel);
                 option_kernel_cache_[key] = retained_kernel;
                 if (decision.template_hit) {
                     option_kernel_template_hit_keys_.insert(key);
@@ -2847,8 +2878,10 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             batch.admitted_operators.begin(),
             batch.admitted_operators.end()),
         batch.admitted_operators.end());
-    state_local_automatic_operators_.emplace(
-        state_id, batch.admitted_operators);
+    const auto [stored, inserted] =
+        state_local_automatic_operators_.emplace(
+            state_id, batch.admitted_operators);
+    if (inserted) account_state_local_operators(stored->second);
     return batch;
 }
 
@@ -2937,11 +2970,18 @@ const OptionKernel& CalcContext::option_kernel(
                     }
                 }
                 if (retained.get() == result.get()) {
-                    option_kernel_templates_[template_id].push_back(
+                    auto& templates =
+                        option_kernel_templates_[template_id];
+                    const std::size_t old_capacity =
+                        templates.capacity();
+                    templates.push_back(
                         {operator_index, retained,
                          retained->expected_resources});
+                    account_option_template_insert(
+                        old_capacity, templates.back());
                 }
             }
+            account_option_cache_insert(key, retained);
             const auto inserted = option_kernel_cache_.emplace(
                 key, std::move(retained));
             return *inserted.first->second;
@@ -3617,7 +3657,10 @@ const OptionKernel& CalcContext::option_kernel(
         result->automatic.legality_result =
             result->automatic.eligible ? "legal" : "illegal";
     }
-    const auto inserted = option_kernel_cache_.emplace(key, std::move(result));
+    std::shared_ptr<const OptionKernel> retained = result;
+    account_option_cache_insert(key, retained);
+    const auto inserted =
+        option_kernel_cache_.emplace(key, std::move(retained));
     return *inserted.first->second;
 }
 
