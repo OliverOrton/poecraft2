@@ -1,0 +1,100 @@
+# Veiled Crafting
+
+**Status: current implemented mechanic reference.**
+
+Parent: [Mechanics](README.md)
+
+Verified against code: 2026-07-19 @ d5e38e3
+
+Verification scope: native Veiled Chaos/Exalt/Unveil transitions, offer
+generation, exact single-action calculation, solver compiler/evaluator, and
+the Emulator, Calculator, and Strategy Builder controls.
+
+## Scope
+
+This family owns `veiled_chaos`, `veiled_exalt`, and `unveil`.
+
+## Implemented Behavior
+
+Only one veiled placeholder may exist on an item at a time.
+
+- `veiled_chaos` requires a rare, non-corrupted, non-mirrored item with no
+  existing veiled placeholder. It preserves fractured affixes and locked sides,
+  removes other affixes, fills from the ordinary pool toward a random
+  four-to-six-mod rare while reserving one slot, then adds one veiled prefix or
+  suffix placeholder on an open side.
+- `veiled_exalt` requires a rare, non-corrupted, non-mirrored item with no
+  existing veiled placeholder and adds one placeholder on a randomly selected
+  open side.
+- Placeholder creation attempts to generate up to three distinct persisted
+  offers from the generic unveiled modifier mask. Each offer is weighted and
+  checked for the placeholder side, item state, and modifier-group conflicts.
+  Placeholder creation fails when it cannot generate an offer.
+- `unveil` requires an existing placeholder and an explicitly selected
+  `mod_key`. The selected modifier must be one of the stored offers, must match
+  the placeholder side, and must not conflict with another live modifier group.
+  On success it replaces the placeholder, clears the veiled flag, and records
+  the chosen modifier ID.
+
+Veiled Chaos is an ordinary metamod-respecting renewal: side locks and Cannot
+Roll Attack/Caster apply to its preservation and random filler pool.
+
+## Dated Oliver Rulings
+
+- **2026-07-15:** selecting `unveil` is intentionally zero cost. Acquisition
+  cost belongs to the preceding veiled-currency action and must not be charged
+  again. This is recorded in the archived
+  [economy plan](../archive/2026-07-15-economy/plan.md).
+
+## Engine Coverage And Code Pointers
+
+- `engine/src/session_builder.cpp` — veiled placeholder IDs and unveiled
+  candidate mask.
+- `engine/src/actions_basic.cpp` — `add_veiled_mod`,
+  `generate_unveil_options`, `do_unveil`, and Veiled Chaos/Exalt dispatch.
+- `engine/src/api.cpp` — `mod_key` parsing for explicit Unveil application.
+- `engine/src/solver_reforge.cpp` — exact Veiled Chaos distribution and
+  placeholder-side branching.
+- `engine/src/solver_calc.cpp` — exact Veiled Exalt and Unveil distributions.
+- `engine/src/solver_compile.cpp` and `engine/src/solver_eval.cpp` — strategy
+  compilation and whole-graph evaluation boundary.
+- `apps/web/src/app/components/pc-emulator.ts`, `pc-calculator.ts`, and
+  `pc-strategy-editor.ts` — product controls.
+
+## Emulator Support
+
+The Veiled panel exposes Veiled Chaos and Veiled Exalt. When the live item has
+stored unveil options, it shows each option and sends the chosen `mod_key` to
+the native Unveil action.
+
+## Solver Support
+
+The registry exposes all three primitives and the single-action calculator has
+exact support. Renewal fixed options may use Veiled Chaos as their renewal and
+may append Unveil only immediately after that Veiled Chaos step.
+
+The compiled strategy simulator can execute an explicit Unveil operation and
+can test `has_unveil_option`. Whole-graph exact strategy evaluation does not
+currently resolve an authored Unveil choice or the `has_unveil_option`
+condition. This does not remove sampled simulator support.
+
+## Calculator Support
+
+The Calculator Veiled panel exposes all three primitives. Single-action odds
+for the registered actions use native exact calculation. A solver-generated
+policy may also compile Unveil routing to ordinary strategy nodes.
+
+## Explicitly Unsupported Behavior
+
+- No additional veiled operation beyond the three named action IDs is present
+  in the engine vocabulary.
+- Whole-graph exact evaluation of a user-authored selected Unveil and
+  `has_unveil_option` routing is unsupported, even though sampled strategy
+  execution supports them.
+- Unveil selection has no independent price key beyond its explicit zero-cost
+  classification.
+
+## Open Questions Requiring Oliver
+
+- Should authored Unveil choices and `has_unveil_option` become supported by
+  whole-graph exact evaluation, or remain simulator-only authoring features?
