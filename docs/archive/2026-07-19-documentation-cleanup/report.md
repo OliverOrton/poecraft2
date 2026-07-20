@@ -75,9 +75,14 @@ The [WASM reference](../../engine/wasm.md) records the verified release shape:
 C++20 at `-O3`, no pthreads, memory growth from 128 MiB with a configured 4 GiB
 maximum and 64 MiB stack, a single Web Worker, and cooperative stepped
 solve/evaluate cancellation. It documents selected native evaluator/solver
-caps separately from whole-WASM/browser memory and records that the product
-releases solved handles and rebuilds on repricing rather than retaining an
-unbounded transition cache.
+caps separately from whole-WASM/browser memory.
+
+**Correction recorded 2026-07-20:** the completion report previously described
+release-and-rebuild repricing as implemented. The checked product instead
+retains its keyed solve handle and transition data after strategy transfer.
+Release after transfer and rebuild on repricing is an approved, deferred
+decision recorded in [Decisions](../../decisions.md#2026-07-18--browser-repricing-uses-rebuild-by-default)
+and the [solver roadmap](../../future/solver-roadmap.md), not current behavior.
 
 Unknowns remain explicit: real-browser/device throughput and peak memory,
 worst-step cancellation latency, practical 4 GiB availability, full JavaScript

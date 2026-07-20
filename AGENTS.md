@@ -14,6 +14,10 @@ Start here, in order:
    one exists. If it says no boundary is active, Oliver must choose the next
    chunk before implementation resumes. Keep it current at every handoff.
 
+Before editing a contract that crosses layers, use
+[docs/foundation/change-impact.md](docs/foundation/change-impact.md) to map the
+downstream bindings, generated artifacts, documentation, and final checks.
+
 ## Commands
 
 - Full test pipeline: `powershell -File scripts/test.ps1` (ingest tests →

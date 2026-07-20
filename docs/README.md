@@ -10,7 +10,7 @@ when Oliver has selected one.
 | Need | Go to |
 | --- | --- |
 | Product orientation and current posture | [Project direction](direction.md) |
-| Architecture and layer ownership | [Foundation](foundation/README.md) |
+| Architecture, layer ownership, and change impact | [Foundation](foundation/README.md) |
 | Implemented crafting behavior | [Mechanics](mechanics/README.md) |
 | Native data, state, pools, weights, bitsets, and WASM | [Engine](engine/README.md) |
 | Exact planning and strategy compilation | [Solver](solver/README.md) |

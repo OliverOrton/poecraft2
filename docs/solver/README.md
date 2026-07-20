@@ -28,7 +28,9 @@ The same subsystem provides four related services:
 
 The [product Calculator reference](../product/calculator.md) describes the
 current user-facing orchestration. Mechanic behavior belongs to the
-[mechanics library](../mechanics/README.md).
+[mechanics library](../mechanics/README.md). The complete UI-to-native request,
+handle, cancellation, compilation, evaluation, and verification sequence is in
+[End-To-End Solver Flow](flow.md).
 
 ## Goal And State Contract
 
@@ -226,5 +228,6 @@ build/export/memory details are owned by the [engine WASM reference](../engine/w
 
 ## History And Notes
 
+- [End-to-end solver flow](flow.md)
 - [Archived solver architecture and S1-S8 phase record](../archive/2026-07-19-bestiary-solver-s8/solver-plan.md)
 - [Solver notes](NOTES.md)

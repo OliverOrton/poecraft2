@@ -155,3 +155,6 @@ costs and solver selection; they do not change crafting legality or outcomes.
 | Product shell | `apps/web/src/app/components/pc-app.ts`, `pc-workspace.ts` |
 
 Commands and testing cadence are maintained in the repository `AGENTS.md`.
+Before changing a cross-layer contract, use the
+[Change Impact Map](change-impact.md) to identify downstream bindings,
+generated artifacts, documentation, and final verification.

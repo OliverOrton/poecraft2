@@ -77,12 +77,19 @@ the solved native handle and transition closure. Repricing rebuilds the solve.
 No retained-cache mode is added until live-byte telemetry can enforce a product
 memory budget.
 
+**Implementation status:** approved but not implemented at the checked
+baseline. Calculator currently retains its keyed solve handle after strategy
+transfer and can reuse its price-independent transition data on a later Solve.
+See [End-To-End Solver Flow](solver/flow.md#current-repricing-and-lifetime).
+
 **Context:** The decision is preserved in the
 [B1/S8 plan](archive/2026-07-19-bestiary-solver-s8/plan.md); delivery remains
 deferred in the [solver roadmap](future/solver-roadmap.md).
 
 **Consequences:** Stable docs do not promise cheap in-place browser repricing
-or authorize retaining both large native and JavaScript graph copies.
+or authorize retaining both large native and JavaScript graph copies as the
+permanent design. Until delivery, implemented-behavior references must still
+state that the handle is currently retained.
 
 ## 2026-07-19 — Numeric Misses And Stopped Gates Stay Truthful
 

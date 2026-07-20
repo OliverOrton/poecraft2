@@ -98,6 +98,10 @@ selected diagnostics. Automatic options remain native planner operators and
 compile into primitive strategy nodes; the web app does not execute opaque
 macros.
 
+The complete Calculator-to-worker-to-native sequence, including handle
+ownership, cooperative cancellation, compilation, repricing, and verification,
+is documented in [End-To-End Solver Flow](../solver/flow.md).
+
 The current browser worker adaptively steps solves but caps a call at four work
 items. The Calculator also retains its solve handle after transfer so the
 price-independent transition closure is available to a later solve. Both are
