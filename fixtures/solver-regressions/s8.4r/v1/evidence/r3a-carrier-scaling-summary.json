@@ -544,7 +544,7 @@
     "native_build": "current native test executable and release benchmark built successfully",
     "native_engine_tests": "164843 checks, 0 failures",
     "focused_solver_s8_3": "220 checks, 0 failures",
-    "release_wasm_rebuild": "time_boxed_at_60_seconds_and_aborted; partial wasm output restored; completed rebuild still required",
+    "release_wasm_rebuild": "passed in 72.8 seconds; final mjs and wasm outputs emitted",
     "typescript": "passed",
     "remaining_web_tests": "passed",
     "known_preexisting_web_stops": [

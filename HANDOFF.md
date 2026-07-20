@@ -10,8 +10,8 @@ B1.0-B1.4, S8.0-S8.4, S8.4R.1-R3, and R3F are complete. R3A's
 carrier-relative representation, per-kind admission telemetry, relevance and
 state-order audit, selected-byte ledger, temporary-bench preclassification,
 and protected-repeat exact-normalization repair are implemented. Focused
-native validation passes. The required release-WASM rebuild was time-boxed and
-aborted as described under validation, so it remains an explicit handoff item.
+native validation passes and the release WASM has been rebuilt from the final
+engine source.
 
 **R3A is not closed.** The repaired 4,096-state diagnostic completes expansion
 in 11.55 seconds and proves bounded retained rows for protected-side and
@@ -266,12 +266,9 @@ outer Bellman optimization and retained automatic kinds remain bounded.
   temporary-bench oracle
   covers differently priced blockers with distinct global conflict masks but
   one carrier-effective add-mod pool.
-- `powershell -File scripts/build-wasm.ps1`: this engine change requires a
-  release-WASM rebuild. The attempt was stopped after 60 seconds at Oliver's
-  requested time limit while `emcc` was still compiling. Its process tree was
-  terminated and the one partially replaced `.wasm` output was restored so the
-  checked-in loader/artifact pair remains consistent. A completed rebuild is
-  still required before R3A can close.
+- `powershell -File scripts/build-wasm.ps1`: release WASM rebuilt successfully
+  from the final engine source in 72.8 seconds; both `.mjs` and `.wasm` outputs
+  were emitted.
 - Remaining non-visual web tests passed; `npx tsc --noEmit` passed.
 - The broad `npm test` run stopped at the known pre-R3A automatic
   permanent-bench group-goal non-convergence in `engine-smoke.test.ts`. Do not
