@@ -1,5 +1,8 @@
 # Calculator Mockup Review
 
+**Status: historical design evidence.** Parent: [Product design archive](../../README.md).
+[Generation prompts](PROMPTS.md) are preserved with the review.
+
 These are hierarchy studies, not literal UI specifications. The image model
 invented a few labels, values, controls, and modifier combinations; the
 implementation will use the running app's actual content and behavior from

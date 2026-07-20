@@ -5,7 +5,7 @@ exact next implementation boundary; completed phase detail remains here as
 historical context.
 
 Modifier vocabulary and action-selection semantics in this plan defer to
-[mod-data-and-pool-semantics.md](engine/mod-data-and-pool-semantics.md).
+[engine pool semantics](../../engine/pools.md).
 
 ## Purpose
 
@@ -872,7 +872,7 @@ Implemented baseline:
 
 Before solver S6 Phase 1, the completed polish phases were recorded in the
 archived
-[pre-s6-product-polish-plan.md](archive/2026-07-solver-s6/pre-s6-product-polish-plan.md):
+[pre-S6 product polish plan](../2026-07-solver-s6/product-polish-plan.md):
 
 1. expose canonical base drop level and order base choices high-to-low; add
    live auto-labels with manual overrides for strategy nodes and edges;
@@ -907,7 +907,7 @@ multi-stage one-item crafting plus a dedicated solver search/memory performance
 pass; the completed Phase 14 throughput pass did not benchmark optimal solving.
 
 The completed execution plan is archived at
-[archive/2026-07-solver-s7/solver-depth-and-performance-plan.md](archive/2026-07-solver-s7/solver-depth-and-performance-plan.md).
+[archived S7 plan](../2026-07-solver-s7/plan.md).
 It covers a real craft benchmark corpus, one-item correctness gaps, safe action
 generation and pruning, exact solver-only macro/sub-policy operators, compact
 transition storage, cycle-aware optimization, policy compression, and native/
@@ -941,7 +941,7 @@ measurement, not an intermediate test-suite gate.
 ## B1 Bestiary And Solver S8 (Active / Next)
 
 The authoritative execution plan is
-[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md).
+[archived B1/S8 plan](../2026-07-19-bestiary-solver-s8/plan.md).
 B1 carries an Oliver-selected Bestiary recipe set through canonical identities
 and prices, native actions, exact calculation, strategy execution, solver
 descriptors where appropriate, Python/WASM, and shared workspace surfaces.
@@ -956,7 +956,7 @@ Oliver accepts the S8 one-item result.
 ## Parallel Track E: Economy Ingest And League Switching (Complete)
 
 The complete economy subsystem is specified in
-[economy-ingest-plan.md](economy/economy-ingest-plan.md). It is a parallel
+[economy data](../../economy/data.md). It is a parallel
 workspace-fluency track, not a continuation of the original RePoE phases and
 not a reason to mix volatile league prices into `data/sqlite/poecraft.db`.
 
@@ -972,7 +972,7 @@ tooling are present, and production-sized snapshots load through native,
 Python, and WASM. The live acceptance smoke completed all six provider leagues
 then available. Operational deployment remains an external configuration step:
 provision the two R2 buckets/custom domain and set the secrets in
-[economy-deployment.md](economy/economy-deployment.md).
+[economy deployment](../../economy/deployment.md).
 
 ## Phase 14: Performance And Public-Engine Readiness
 
@@ -1130,7 +1130,7 @@ Acceptance gate:
 Goal: add ML tooling after simulator correctness and throughput are stable.
 
 Before any learned model, the exact one-item DP crafting solver
-([crafting-solver-plan.md](solver/crafting-solver-plan.md), phases S1-S8) must
+([archived solver plan](../2026-07-19-bestiary-solver-s8/solver-plan.md), phases S1-S8) must
 exist: it computes optimal strategies from known transition
 probabilities, and its logged (state, value, action) corpus is the
 training data and evaluation baseline for everything in this phase.
@@ -1177,9 +1177,9 @@ guess, or infer recombination behavior from ordinary one-item rolling.
 The solver/editor side of recombinators — the spec-pyramid model,
 recomb/feeder strategy blocks, recycling wires, and the pyramid
 auto-planner — is specified in
-[solver-mechanic-extensions.md](future/solver-mechanic-extensions.md) (solver
+[mechanics and recombinators](../../future/mechanics-and-recombinators.md) (solver
 recombinator phases R1-R2) and
-[strategy-editor-ui.md](product/strategy-editor-ui.md). This
+[product strategies](../../product/strategies.md). This
 phase provides the engine substrate those phases consume; the exact
 outcome enumerator here and recombinator phase R1 are the same effort viewed
 from the engine and solver sides.
@@ -1194,7 +1194,7 @@ Acceptance gate:
 ## Immediate Next Task
 
 Implement **B1.1 only** from
-[bestiary-and-solver-capability-plan.md](active/bestiary-and-solver-capability-plan.md):
+[archived B1/S8 plan](../2026-07-19-bestiary-solver-s8/plan.md):
 load and validate the approved Imprint identity, map its Craicic Chimeral and
 three rare-beast price inputs through the existing economy model, add the
 creation/restoration registry descriptors, and keep both prefix/suffix

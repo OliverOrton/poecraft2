@@ -39,14 +39,14 @@ Project agents live in `.claude/agents/`. Delegate when the raw output would
 swamp the conversation or the work is self-contained research; do the work
 inline when it's a quick single-file check.
 
-- **test-pipeline** — run the test suite (full or one layer) and get back
+- [**test-pipeline**](.claude/agents/test-pipeline.md) — run the test suite (full or one layer) and get back
   only the pass/fail summary and failure excerpts. Use after changes to
   engine, ingest, bindings, or web instead of running `scripts/test.ps1`
   inline.
-- **data-auditor** — dataset health: manifest row counts, DB↔artifact
+- [**data-auditor**](.claude/agents/data-auditor.md) — dataset health: manifest row counts, DB↔artifact
   consistency, fixture parity, staleness. Use when data looks wrong or
   after ingest changes.
-- **doc-drift** — read-only audit of `docs/*.md` against the code with
+- [**doc-drift**](.claude/agents/doc-drift.md) — read-only audit of `docs/*.md` against the code with
   file:line evidence. Use after landing a phase of work and before editing
   docs (this repo's docs are load-bearing design specs).
 Independent delegations (e.g. doc-drift on two unrelated docs alongside

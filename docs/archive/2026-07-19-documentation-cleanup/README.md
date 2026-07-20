@@ -11,4 +11,5 @@ Parent: [Archive index](../README.md)
 - [Execution directive](directive.md) preserves the final cleanup request.
 - [Starting inventory and move map](inventory.md) records the classified
   Markdown tree and permanent authority choices.
-- `report.md` is added at completion with the final verification record.
+- [Completion report](report.md) records the final map, preserved knowledge,
+  WASM boundary, audit scope, and local commit sequence.

@@ -6,10 +6,10 @@ simulator can be improved for complicated multi-step crafts — faster and
 lighter while keeping or improving exactness. It is not an execution plan,
 changes no code, sets no acceptance criteria, and does not reopen owner
 decisions. Active sequencing authority is now the
-[B1/S8 plan](../../active/bestiary-and-solver-capability-plan.md); completed S7 sequencing is
-[archived](solver-depth-and-performance-plan.md), and
+[B1/S8 plan](../2026-07-19-bestiary-solver-s8/plan.md); completed S7 sequencing is
+[archived](plan.md), and
 stable architecture stays with
-[crafting-solver-plan.md](../../solver/crafting-solver-plan.md).
+[solver architecture](../../solver/README.md).
 
 ## S7.6 Outcome Addendum
 
@@ -33,7 +33,7 @@ and measured in the final S7.6 reports:
   the sample was not repeated or combined and the numeric miss remains part of
   the record.
 
-See the [archived final S7 handoff](HANDOFF-s7.6-final.md)
+See the [archived final S7 handoff](handoff.md)
 for exact report names, caps, memory, material totals, acceptance evidence, and
 the pre-closure boundary.
 
@@ -398,7 +398,7 @@ in simulation than forecast — is the expected signature of the
 documented approximately-sound abstraction: junk collapsing and
 single-representative materialization perturb pool weights, and the plan
 explicitly accepts this and prescribes refinement when a goal shows
-material drift ([crafting-solver-plan.md](../../solver/crafting-solver-plan.md),
+material drift ([solver architecture](../../solver/README.md),
 Soundness Check). For complicated multi-step crafts this is the accuracy
 frontier; the fix sequence should be:
 

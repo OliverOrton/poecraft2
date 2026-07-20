@@ -5,7 +5,7 @@
 > and [HANDOFF](../../../HANDOFF.md) for current work.
 
 Execution plan for the product-polish interlude Oliver scheduled on 2026-07-14
-before [s6-plan.md](s6-plan.md) Phase 1. Read [AGENTS.md](../../../AGENTS.md),
+before [the S6 plan](plan.md) Phase 1. Read [AGENTS.md](../../../AGENTS.md),
 [direction.md](../../direction.md), and [HANDOFF.md](../../../HANDOFF.md) first. Work
 through the active phases below in order. Each implementation phase ends
 test-green with one local commit and a rewritten handoff; stop at the stated
@@ -49,7 +49,7 @@ calculator mode Phase D remains unscheduled.
   and keep their exact meaning. P3 introduces no new goal schema.
 - P1 changes behavior inside existing controls and does not need a new visual
   design. P3 changes a major surface and must use the image-model design loop
-  in [s6-plan.md](s6-plan.md) before UI implementation.
+  in [the S6 plan](plan.md) before UI implementation.
 - Calculator one-step odds and Strategy Builder whole-graph odds keep separate
   task-shaped entry points. They already share the native action registry,
   `CalcContext`, action legality, and exact transition distributions; do not
@@ -284,7 +284,7 @@ goal/target mode of the same shared item-frame UI used by the input item.
   expected because the engine contract does not change.
 
 After P3b, commit locally, rewrite `HANDOFF.md`, and resume
-[s6-plan.md](s6-plan.md) Phase 1. Do not begin S6 Phase 2.
+[the S6 plan](plan.md) Phase 1. Do not begin S6 Phase 2.
 
 P3b completed on 2026-07-14. `pc-mod-list` now has explicit concrete and
 target models; Calculator Input and Goal use separate roles; stable target

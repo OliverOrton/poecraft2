@@ -1,5 +1,8 @@
 # Calculator Goal Item Mockups
 
+**Status: historical design evidence.** Parent: [Product design archive](../../README.md).
+[Generation prompts](PROMPTS.md) are preserved with the review.
+
 Approved direction: `variant-a-literal-twin.png`, selected by Oliver on
 2026-07-14. Variant B remains as design-loop evidence, not an implementation
 target.

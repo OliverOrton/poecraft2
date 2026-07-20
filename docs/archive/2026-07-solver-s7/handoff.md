@@ -9,7 +9,7 @@ Updated 2026-07-16 after the final S7.6 native/WASM corpus and the one
 authorized fresh endgame simulator sample. Read
 [AGENTS.md](../../../AGENTS.md), [Project Direction](../../direction.md), this
 file, then the archived
-[S7 plan](solver-depth-and-performance-plan.md).
+[S7 plan](plan.md).
 
 S7.0-S7.5 and S7.2R remain complete. Stay in **S7.6 only**: the solver,
 compiler, WASM responsiveness/parity, advanced forecast, and simulator

@@ -9,9 +9,9 @@ Execution plan for the Strategy Builder simulator/calculator mode switch,
 written 2026-07-14 as a handoff for implementation. Read
 [AGENTS.md](../../../AGENTS.md) and [HANDOFF.md](../../../HANDOFF.md) first; design
 authority for the solver machinery is
-[crafting-solver-plan.md](../../solver/crafting-solver-plan.md) and for the workspace
-[desktop-workspace-ui.md](../../product/desktop-workspace-ui.md). **This work is scheduled
-before [s6-plan.md](s6-plan.md) Phase 1** (Oliver's call, 2026-07-14); the
+[solver architecture](../../solver/README.md) and for the workspace
+[workspace reference](../../product/workspace.md). **This work is scheduled
+before [the S6 plan](plan.md) Phase 1** (Oliver's call, 2026-07-14); the
 s6 phases resume afterwards and are renumbered only in prose, not in files.
 
 Decisions already made by Oliver — do not relitigate:
@@ -348,7 +348,7 @@ engine + bindings + web all changed.
 ## Phase C — Strategy Builder UI (design loop required)
 
 Oliver requires new UI to go through the image-model design loop
-([s6-plan.md](s6-plan.md) §The image-model UI design loop) **before
+([the S6 plan](plan.md) §The image-model UI design loop) **before
 implementation**. This phase has real surface area: the mode switch, the
 summary panel, board overlays, and the drill-down.
 
@@ -605,7 +605,7 @@ Rewrite `HANDOFF.md`, make one local commit, and do not push.
 - Commits: one per phase, local-only unless Oliver says push, agent
   co-author line at the end. Rewrite HANDOFF.md at each phase boundary.
 - Doc updates at the end of Phase C: add calculator mode to
-  [desktop-workspace-ui.md](../../product/desktop-workspace-ui.md) §Strategy Builder and
+  [workspace reference](../../product/workspace.md) §Strategy Builder and
   a §Strategy Evaluation summary to
-  [crafting-solver-plan.md](../../solver/crafting-solver-plan.md); run the doc-drift
+  [solver architecture](../../solver/README.md); run the doc-drift
   agent before editing.

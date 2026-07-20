@@ -40,7 +40,7 @@ crafting legality or rewriting historical results.
 ## Placement In The Roadmap
 
 This work is the live-economy part of "Workspace fluency" in
-[direction.md](../direction.md), not a continuation of the RePoE ingest phases and
+[direction.md](../../direction.md), not a continuation of the RePoE ingest phases and
 not part of publishing/accounts.
 
 - RePoE ingest owns relatively stable crafting-rule data in

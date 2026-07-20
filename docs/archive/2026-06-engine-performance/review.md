@@ -8,7 +8,7 @@
 **Scope:** Same workload as the original audit — 100k-run chaos/alchemy/reforge sims on a
 rare body armour at iLvl 86. This is a *re-review of the current source*, because the engine
 `.cpp` files are all modified-but-uncommitted (` M` in git) and the original
-[`engine-hotpath-findings.md`](engine-hotpath-findings.md) line numbers are now stale.
+[`audit.md`](audit.md) line numbers are now stale.
 
 **Headline:** Most of the original audit's high-ROI items are **already implemented** in this
 working tree. The hot path is in good shape. What remains is (1) a missing determinism

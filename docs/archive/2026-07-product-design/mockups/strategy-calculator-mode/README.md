@@ -1,5 +1,8 @@
 # Strategy Calculator Mode Mockup Review
 
+**Status: historical design evidence.** Parent: [Product design archive](../../README.md).
+[Generation prompts](PROMPTS.md) are preserved with the review.
+
 These are structural hierarchy studies generated from the current Strategy
 Builder, current Calculator, Emulator baseline, and the real Phase B values in
 `design/briefs/strategy-calculator-mode.md`. Image-model text and graph details

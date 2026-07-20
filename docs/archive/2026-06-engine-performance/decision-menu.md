@@ -3,7 +3,7 @@
 > **Archived 2026-07-17.** Historical decision menu from 2026-06-30. It does
 > not own current sequencing.
 
-**Date:** 2026-06-30 · companion to [`engine-perf-review.md`](engine-perf-review.md) (evidence,
+**Date:** 2026-06-30 · companion to [`review.md`](review.md) (evidence,
 `file:line`, measured baseline). This is the short menu for codex to pick from.
 
 ## Anchor (measured, native g++ -O2, BodyInt17 iLvl86)

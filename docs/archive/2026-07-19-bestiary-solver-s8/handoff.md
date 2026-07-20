@@ -1,8 +1,8 @@
 # Session Handoff - S8.4R.3A Measured Boundary Recorded
 
-Updated 2026-07-19. Read [AGENTS.md](AGENTS.md), this file,
-[docs/direction.md](docs/direction.md), then
-[the active B1/S8 plan](docs/active/bestiary-and-solver-capability-plan.md).
+Updated 2026-07-19. Read [AGENTS.md](../../../AGENTS.md), this file,
+[docs/direction.md](../../direction.md), then
+[the archived B1/S8 plan](plan.md).
 
 ## Current State
 
@@ -167,7 +167,7 @@ most 12 rows per carrier. Protected work is still the largest measured phase:
 outcome mapping, over 9,044 candidates and 1,608,492 exact retry checks.
 
 The compact checked-in record is
-[r3a-carrier-scaling-summary.json](fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
+[r3a-carrier-scaling-summary.json](../../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 Full diagnostic reports remain ignored under `build/`, including
 `build/s8.4r3a-boundary-1024-final.json`,
 `build/s8.4r3a-temp-precompile-1024-final.json`, and

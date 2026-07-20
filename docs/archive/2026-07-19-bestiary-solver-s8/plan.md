@@ -1,14 +1,14 @@
 # B1 Bestiary And S8 Solver Capability Plan
 
-**Status: active execution plan.** [HANDOFF](../../HANDOFF.md) names the exact
+**Status: active execution plan.** [HANDOFF](../../../HANDOFF.md) names the exact
 phase boundary.
 
 Active execution plan for the next product chunk after S7. Bestiary breadth
 lands first. A focused one-item solver capability and reviewability pass follows
 before recombinators. Stable solver architecture remains in
-[crafting-solver-plan.md](../solver/crafting-solver-plan.md); completed S7 depth and
+[solver architecture](../../solver/README.md); completed S7 depth and
 performance history is archived under
-[archive/2026-07-solver-s7](../archive/2026-07-solver-s7/).
+[archive/2026-07-solver-s7](../2026-07-solver-s7/).
 
 Status 2026-07-19: B1.0-B1.4, S8.0-S8.4, and S8.4R.1-R3 are complete, but the
 post-S8.4 regression audit and post-R3 product diagnostic below found further
@@ -31,7 +31,7 @@ Imprint verification, and rendered Bestiary review were not backfilled.
 Imprint is the sole B1 recipe;
 Prefix to Suffix and Suffix to Prefix remain explicitly parked and absent from
 the engine and workspace action envelopes. The authoritative contract is
-[fixtures/bestiary/v1](../../fixtures/bestiary/v1/). S8.1 added deterministic,
+[fixtures/bestiary/v1](../../../fixtures/bestiary/v1/). S8.1 added deterministic,
 display-only review projections over the frozen S8.0 ordinary strategies while
 preserving their exact bytes and sole execution authority. S8.2 corrected
 Fossil/Essence metamod handling and added exact preservation-aware action
@@ -191,7 +191,7 @@ bound to that same item; it must not be flattened into the ordinary one-item
 action shape. Creation consumes one `beast:craicic-chimeral` and three
 `beast:rare` price keys. Restoration consumes the checkpoint and no beasts.
 The complete contract and focused relational outcomes are versioned under
-[fixtures/bestiary/v1](../../fixtures/bestiary/v1/).
+[fixtures/bestiary/v1](../../../fixtures/bestiary/v1/).
 
 `bestiary:prefix_to_suffix` and `bestiary:suffix_to_prefix` are classified as
 explicitly unsupported in B1. Their partial discussion did not become mechanic
@@ -371,7 +371,7 @@ parked, and any state-model constraints before starting S8.
 ### S8.0 - Baseline And Review Contract
 
 Status: complete 2026-07-17. The exact evidence and contracts are versioned
-under [fixtures/solver-baselines/s8.0](../../fixtures/solver-baselines/s8.0/).
+under [fixtures/solver-baselines/s8.0](../../../fixtures/solver-baselines/s8.0/).
 
 - Capture the current exact solver envelope, compiled graph, evaluator result,
   and Simulator aggregate result for the applicable existing S7 cases plus
@@ -410,7 +410,7 @@ or later behavior was implemented. S8.1 is the sole next boundary.
 
 Status: complete 2026-07-17. The implementation and representative documents
 are under
-[fixtures/solver-baselines/s8.0/review-projections](../../fixtures/solver-baselines/s8.0/review-projections/).
+[fixtures/solver-baselines/s8.0/review-projections](../../../fixtures/solver-baselines/s8.0/review-projections/).
 
 Build a display-only projection over the chosen policy. Group policy regions
 using exact facts already present in the graph/evaluator, including:
@@ -491,7 +491,7 @@ continuation upper bound; missing proof and ties retain the action. Exact-kernel
 collapse, price identities/ties, stable ordering, Bellman/convergence behavior,
 and ordinary strategy routing are unchanged.
 
-[S8.2 comparison evidence](../../fixtures/solver-baselines/s8.2/evidence.json)
+[S8.2 comparison evidence](../../../fixtures/solver-baselines/s8.2/evidence.json)
 keeps the S8.0/S8.1 manifests immutable. Both real oracle graphs and the
 ordinary ES bench graph remain byte-identical with unchanged values, states,
 nodes, and edges. Their unproved destructive rows remain included. A separate
@@ -505,7 +505,7 @@ off to S8.3.
 
 Status: complete 2026-07-18. Exact comparison and acceptance evidence is
 versioned under
-[fixtures/solver-baselines/s8.3](../../fixtures/solver-baselines/s8.3/).
+[fixtures/solver-baselines/s8.3](../../../fixtures/solver-baselines/s8.3/).
 
 Promote existing targeted option machinery into ordinary candidate generation:
 
@@ -583,7 +583,7 @@ below.
 ### S8.4 - Exact Action And Material Accounting
 
 Status: complete 2026-07-18. Evidence is recorded separately in
-[fixtures/solver-baselines/s8.4/evidence.json](../../fixtures/solver-baselines/s8.4/evidence.json);
+[fixtures/solver-baselines/s8.4/evidence.json](../../../fixtures/solver-baselines/s8.4/evidence.json);
 the S8.0-S8.3 evidence was not modified.
 
 Extend the existing exact strategy evaluator result rather than duplicating its
@@ -687,7 +687,7 @@ acceptance once in R6 as required by `AGENTS.md`.
    telemetry/accounting serialization, and selected owned-memory estimates are
    capped. Native C ABI and release WASM expose live/peak/serialized selected
    allocation telemetry. Full evidence and commands are under
-   [fixtures/solver-regressions/s8.4r/v1](../../fixtures/solver-regressions/s8.4r/v1/).
+   [fixtures/solver-regressions/s8.4r/v1](../../../fixtures/solver-regressions/s8.4r/v1/).
 2. **S8.4R.2 - State-Local Automatic Candidate Generation (complete
    2026-07-18).** Replaced the eager global Fracture, permanent/temporary bench,
    protected-metamod, and Multimod cross products with carrier-local synthesis.
@@ -711,7 +711,7 @@ acceptance once in R6 as required by `AGENTS.md`.
    and Fracture `23.75` analytic boundaries and primitive compiled execution.
    No unbounded solve, compilation/verification of the real cases, 10,000-run
    verification, or full acceptance suite was run. Evidence is under
-   [the S8.4R fixture](../../fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
+   [the S8.4R fixture](../../../fixtures/solver-regressions/s8.4r/v1/evidence/r2-before-after-summary.json).
    The post-R3 finding does not invalidate this eager-construction repair, but
    it shows that complete retained-kernel deduplication remained local to one
    carrier and therefore did not satisfy product-scale closure sharing.
@@ -897,7 +897,7 @@ acceptance once in R6 as required by `AGENTS.md`.
    full envelope remains unusable, use the planned mechanic-neutral
    focused/custom action scope and label its result optimal only within that
    scope. Compact evidence is
-   [r3a-carrier-scaling-summary.json](../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
+   [r3a-carrier-scaling-summary.json](../../../fixtures/solver-regressions/s8.4r/v1/evidence/r3a-carrier-scaling-summary.json).
 
    Validation for this boundary stays narrow: reuse `--solver-s8-3-only`, the
    existing byte-cap oracle, and the pinned bounded diagnostics; require equal
@@ -1377,7 +1377,7 @@ smoke, or visual acceptance unless Oliver explicitly asks.
 
 ## Approved B1.0 Owner Contract
 
-The versioned [B1 Bestiary manifest](../../fixtures/bestiary/v1/manifest.json)
+The versioned [B1 Bestiary manifest](../../../fixtures/bestiary/v1/manifest.json)
 and its referenced recipe/outcome files are the sole Bestiary mechanic
 authority for implementation. B1.1 begins from those files. Agents must not
 expand the recipe set, infer behavior for the parked conversions, or supplement

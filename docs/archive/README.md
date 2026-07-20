@@ -1,46 +1,62 @@
 # Documentation Archive
 
-**Status: historical index.** Nothing under `archive/` owns current sequencing.
+**Status: historical index.** Nothing under `archive/` owns current sequencing,
+even when preserved source wording says “active,” “next,” or “plan.”
 
-Completed execution plans live here so the active documentation map stays
-small without deleting implementation history. Archived files are evidence of
-past decisions and acceptance gates; they are not current sequencing authority.
+Parent: [Documentation map](../README.md)
 
-For current work, read in this order:
+For current orientation, read [Project Direction](../direction.md). Root
+[HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
+selected active work.
 
-1. [Project Direction](../direction.md)
-2. [HANDOFF](../../HANDOFF.md)
-3. the active plan named by `HANDOFF.md`
+## 2026-07-19
+
+- [Documentation cleanup](2026-07-19-documentation-cleanup/README.md) — final
+  directive, original parked plan, starting inventory/move map, and completion
+  report for the documentation-only restructure.
+- [B1 Bestiary and Solver S8](2026-07-19-bestiary-solver-s8/README.md) — former
+  active plan, final R3A handoff, solver architecture/phasing source, and the
+  reviewed solver audit input.
+- [Project roadmap](2026-07-19-project-roadmap/README.md) — former portfolio
+  implementation plan.
+
+## 2026-07 Product Design
+
+[Product design](2026-07-product-design/README.md) preserves the briefs,
+approved specifications, mockup reviews, prompts, reference screenshots, and
+generated images from the July Calculator, workspace, and economy UI passes.
+
+## 2026-07-15 Economy
+
+[Economy E0–E7](2026-07-15-economy/README.md) preserves the completed ingest,
+publishing, and league-switching plan.
+
+## 2026-07 Solver
+
+- [S7](2026-07-solver-s7/README.md) — completed depth/performance plan, final
+  handoff, and engineering report.
+- [S6](2026-07-solver-s6/README.md) — completed S6, Strategy Calculator mode,
+  and product-polish plans.
 
 ## 2026-06 Engine Performance
 
-[2026-06-engine-performance](2026-06-engine-performance/) contains the original
-engine hot-path audit, its follow-up review, and the short optimization/cheat
-decision menu. Phase 14 and later S7 work superseded their working-tree status;
-they remain measurement and decision history only.
+[Engine performance](2026-06-engine-performance/README.md) preserves the
+original hot-path audit, follow-up review, and decision menu. Later Phase 14 and
+solver work superseded their work-order status.
 
-## 2026-07 Solver S7
+## Archive Contract
 
-[2026-07-solver-s7](2026-07-solver-s7/) contains:
+Before moving a completed plan here, extract live knowledge:
 
-- `solver-depth-and-performance-plan.md`: S7.0-S7.6 and S7.2R historical
-  execution plan covering the real craft corpus, correctness substrate, action
-  control, exact options, solver performance, native/WASM parity, compilation,
-  and final simulator gate.
-- `HANDOFF-s7.6-final.md`: full final solve/compile/simulator evidence and the
-  pre-closure endgame success-gate caution. Oliver subsequently directed work
-  to move forward; the recorded `0.9942` versus `0.995` miss remains intact.
-- `solver-simulator-improvement-report.md`: point-in-time S7.6 engineering
-  analysis. Its implemented and superseded recommendations are historical, not
-  current sequencing.
+- mechanic rulings → [Mechanics](../mechanics/README.md);
+- durable engineering choices → [Decisions](../decisions.md);
+- measured/pinned results → [Evidence](../evidence.md) or a linked fixture;
+- stable vocabulary → [Glossary](../glossary.md);
+- implemented contracts → the owning area reference;
+- unresolved work → [Future](../future/README.md); and
+- loose ideas → an area `NOTES.md`.
 
-## 2026-07 Solver S6
-
-[2026-07-solver-s6](2026-07-solver-s6/) contains:
-
-- `pre-s6-product-polish-plan.md`: P1 and P3 complete; P2 skipped by Oliver.
-- `strategy-calculator-mode-plan.md`: exact Strategy Builder evaluation,
-  loop acceleration, progress/cancellation, and OOM hardening complete;
-  Phase D remains unscheduled historical backlog.
-- `s6-plan.md`: S6 Phases 1, 2, and 4 complete; Phase 3 ambient Emulator odds
-  skipped entirely and not deferred.
+Archive folders use `YYYY-MM-DD-topic` or `YYYY-MM-topic`. Filenames use short
+types such as `plan.md`, `audit.md`, `report.md`, and `handoff.md` without
+repeating the folder date. Archived documents may retain historical wording,
+but the folder README and this index determine lifecycle.

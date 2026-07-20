@@ -1,5 +1,8 @@
 # S6 Phase 1 Solve Panel Mockups
 
+**Status: historical design evidence.** Parent: [Product design archive](../../README.md).
+[Generation prompts](PROMPTS.md) are preserved with the review.
+
 Status: Variant D placement approved and S6 Phases 1-2 implemented on
 2026-07-15.
 

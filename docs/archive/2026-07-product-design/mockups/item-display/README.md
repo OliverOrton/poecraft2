@@ -1,5 +1,8 @@
 # Shared Item Display Review
 
+**Status: historical design evidence.** Parent: [Product design archive](../../README.md).
+[Generation prompts](PROMPTS.md) are preserved with the review.
+
 These are component hierarchy studies. Text and state come from the real
 `pc-mod-list` model, but the implementation will use the engine-rendered stat
 lines, actual family labels, influence mapping, and complete tag arrays.
@@ -47,4 +50,3 @@ Use **Variant G** as the shared narrow/default component, borrowing Variant
 F's explicit `PREFIXES` / `SUFFIXES` divider labels and Variant H's slim side
 rails. At a genuinely wide breakpoint, the same rows can optionally enter the
 two-column H layout later; that does not need to be part of this pass.
-
