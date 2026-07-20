@@ -3,8 +3,10 @@
 Path of Exile 1 crafting simulator: Python ingest → canonical SQLite →
 compiled runtime artifact → native C++20 engine (C ABI) → Python/WASM
 bindings → Vite + TypeScript + Web Components app (no React). Read
-[docs/direction.md](docs/direction.md) first for orientation; the doc map at
-its bottom links everything else.
+[docs/README.md](docs/README.md) first for the primary knowledge map, then
+[docs/direction.md](docs/direction.md) for product orientation and
+[HANDOFF.md](HANDOFF.md) for the current implementation boundary. If no
+boundary is active, Oliver must choose the next chunk before implementation.
 
 ## Commands
 
@@ -54,4 +56,5 @@ test-pipeline) can run in parallel.
 
 Path of Exile mechanic questions (how a craft behaves, rules, edge cases)
 are decided by Oliver. When a rule is ambiguous, ask him directly — do not
-research online or guess.
+research online or guess. Implemented behavior and unresolved rulings are
+indexed from [docs/mechanics/README.md](docs/mechanics/README.md).

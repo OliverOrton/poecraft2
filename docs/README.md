@@ -1,91 +1,73 @@
-# Documentation Index
+# Documentation
 
-**Status: current documentation map and lifecycle policy.** This file organizes
-the library; [Project Direction](direction.md) summarizes product direction and
-[HANDOFF](../HANDOFF.md) owns the exact next implementation boundary.
+**Status: current documentation map and lifecycle policy.** Start here for
+repository knowledge. [Project direction](direction.md) is the short product
+orientation; [HANDOFF](../HANDOFF.md) names the implementation boundary only
+when Oliver has selected one.
 
-## Start Here
+## Find The Authority
 
-Read current work in this order:
+| Need | Go to |
+| --- | --- |
+| Product orientation and current posture | [Project direction](direction.md) |
+| Architecture and layer ownership | [Foundation](foundation/README.md) |
+| Implemented crafting behavior | [Mechanics](mechanics/README.md) |
+| Native data, state, pools, weights, bitsets, and WASM | [Engine](engine/README.md) |
+| Exact planning and strategy compilation | [Solver](solver/README.md) |
+| Workspace, Calculator, and strategy surfaces | [Product](product/README.md) |
+| Economy data and deployment | [Economy](economy/README.md) |
+| Durable choices and terms | [Decisions](decisions.md) and [glossary](glossary.md) |
+| Measurements, fixtures, and acceptance evidence | [Evidence](evidence.md) |
+| Deferred possibilities, not scheduled work | [Future](future/README.md) |
+| Open mechanic rulings and raw observations | [Notes](notes/ruling-needed.md) |
+| Completed plans and point-in-time reports | [Archive](archive/README.md) |
 
-1. [Project Direction](direction.md)
-2. [HANDOFF](../HANDOFF.md)
-3. [B1 Bestiary And S8 Solver Capability Plan](active/bestiary-and-solver-capability-plan.md)
+The primary area indexes are compositional: each links the narrower references
+it owns. Area `NOTES.md` files hold observations that have not yet earned a
+stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
-[Implementation Plan](implementation-plan.md) is the portfolio-level roadmap.
-It is broader and more historical than the exact boundary in `HANDOFF.md`.
+## Execution State
 
-## Folder Lifecycle
+[Active](active/README.md) contains an executable plan only while a boundary is
+selected. [HANDOFF](../HANDOFF.md) points to that plan and records only the
+facts needed to resume it. At present there is no active implementation
+boundary; Oliver must choose the next chunk.
 
-| Folder | Purpose | Sequencing authority |
-| --- | --- | --- |
-| `active/` | The one current phased execution plan | Yes, within the boundary named by `HANDOFF.md` |
-| `foundation/` | Stable architecture and repository ownership | No |
-| `engine/` | Implemented data, item-state, pool, weight, and bitset references | No |
-| `solver/` | Stable solver architecture | No |
-| `product/` | Implemented workspace and strategy-model references | No |
-| `economy/` | Implemented economy architecture and deployment operations | No |
-| `future/` | Deferred research, mechanic, account, and product designs | No |
-| `archive/` | Completed execution plans, final handoffs, and historical reports | Never |
+Lifecycle has one direction:
 
-Root-level `direction.md` and `implementation-plan.md` are the only Markdown
-documents kept directly under `docs/` besides this index. New phased work goes
-under `active/`; when complete, it moves to a dated archive folder.
+```text
+notes -> stable area reference or future design
+active plan -> dated archive with its final handoff and evidence
+```
 
-## Active Work
+`future/` never establishes sequence. Archived checklists, targets, and
+handoffs preserve history but have no current execution authority.
 
-- [B1 Bestiary And S8 Solver Capability Plan](active/bestiary-and-solver-capability-plan.md)
+## Repository Entry Points
 
-## Stable References
+- [Developer quickstart](../README.md)
+- [Agent instructions](../AGENTS.md)
+- [Claude instructions](../CLAUDE.md)
+- [Current handoff](../HANDOFF.md)
+- [Documentation templates](_templates/area-readme.md)
 
-Foundation:
+## Maintenance Policy
 
-- [Architecture Plan](foundation/architecture-plan.md)
-- [Codebase Structure](foundation/codebase-structure.md)
-
-Engine and data:
-
-- [Data Shapes And Ingest](engine/data-shapes-and-ingest.md)
-- [Engine Bitsets](engine/engine-bitsets.md)
-- [Item State Flow](engine/item-state-flow.md)
-- [Mod Data And Pool Semantics](engine/mod-data-and-pool-semantics.md)
-- [Weight Calculation Flow](engine/weight-calculation-flow.md)
-
-Solver:
-
-- [Crafting Solver And Calculation Engine Plan](solver/crafting-solver-plan.md)
-
-Product:
-
-- [Desktop Workspace UI](product/desktop-workspace-ui.md)
-- [Strategy Editor UI](product/strategy-editor-ui.md)
-
-Economy:
-
-- [Economy Ingest And League Switching](economy/economy-ingest-plan.md)
-- [Economy Refresh Deployment](economy/economy-deployment.md)
-
-## Future And Deferred Work
-
-- [Accounts, Publishing, And Discovery](future/accounts-publishing-and-discovery.md)
-- [ML Strategy Planning Architecture](future/ml-strategy-planning.md)
-- [Parked Mechanic And Recombinator Extensions](future/solver-mechanic-extensions.md)
-
-## Historical Evidence
-
-[Archive Index](archive/README.md) lists completed plans and their final
-handoffs/reports. Archived documents preserve the wording and decisions of their
-time; their internal sequencing language is not current authority.
-
-## Maintenance Rules
-
-- Every document starts with a lifecycle/status statement.
-- `HANDOFF.md` names one exact next boundary and links one active plan.
-- `direction.md` stays short and links subjects instead of duplicating specs.
-- Stable references describe implemented contracts; phased checklists belong in
-  `active/` or `archive/`.
-- Future documents may contain architecture sketches but must state that they
-  are not scheduled.
-- Completed plans and point-in-time reports move to a dated archive folder; do
-  not delete their failed gates or superseded decisions.
-- Keep links relative and run the local Markdown-link audit after moves.
+- Extract lasting facts from completed plans into the owning stable area,
+  [decisions](decisions.md), [evidence](evidence.md), or the
+  [glossary](glossary.md) before archiving the plan.
+- Keep documents fractal: an area README explains ownership and links narrower
+  pages; a narrower page links its parent. Prefer links over duplicated prose.
+- Stable behavior pages carry a verification stamp with date, commit, and
+  checked implementation paths. Mark code-dependent claims unverified when
+  that evidence is unavailable.
+- Treat roughly 500 lines as a review trigger. Split by responsibility when a
+  page mixes several authorities; do not split a cohesive reference merely to
+  meet a number.
+- Promote notes when they become durable, delete them when disproved, and leave
+  unresolved mechanic behavior in [ruling-needed](notes/ruling-needed.md) for
+  Oliver. Agents do not research or infer Path of Exile rules.
+- Use short descriptive filenames. Move completed execution material into a
+  dated archive folder and give that folder an index.
+- Keep relative links valid. After structural moves, run a one-off link and
+  reachability audit; no documentation lint automation is currently adopted.

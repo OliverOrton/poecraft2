@@ -6,11 +6,13 @@ bindings → Vite + TypeScript + Web Components app (no React).
 
 Start here, in order:
 
-1. [docs/direction.md](docs/direction.md) — orientation; the doc map at its
-   bottom links every design doc. This repo's docs are load-bearing specs.
-2. [HANDOFF.md](HANDOFF.md) — where the current work stands, what's next,
-   and the gotchas that cost previous sessions time. Keep it current: when
-   you finish its work, rewrite it for the next session.
+1. [docs/README.md](docs/README.md) — the primary knowledge map and document
+   lifecycle policy. This repo's docs are load-bearing specs.
+2. [docs/direction.md](docs/direction.md) — short product orientation and
+   durable direction, not an execution plan.
+3. [HANDOFF.md](HANDOFF.md) — the exact current implementation boundary when
+   one exists. If it says no boundary is active, Oliver must choose the next
+   chunk before implementation resumes. Keep it current at every handoff.
 
 ## Commands
 
@@ -41,7 +43,8 @@ Start here, in order:
 
 Path of Exile mechanic questions (how a craft behaves, rules, edge cases)
 are decided by Oliver. When a rule is ambiguous, ask him directly — do not
-research online or guess.
+research online or guess. Implemented behavior and unresolved rulings are
+indexed from [docs/mechanics/README.md](docs/mechanics/README.md).
 
 ## Conventions
 
