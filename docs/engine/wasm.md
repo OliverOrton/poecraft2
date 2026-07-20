@@ -1,0 +1,235 @@
+# WebAssembly runtime
+
+**Status: implemented runtime and integration reference.** This page records
+the current WASM surface, product usage, long-work protocol, memory model, and
+evidence boundaries.
+
+Parent: [Engine](README.md)
+
+Verified against code: 2026-07-19 @ d5e38e3
+
+Release-wrapper export map verified in the tracked
+`bindings/wasm/dist/poecraft_engine.mjs` generated at this baseline.
+
+## Architecture
+
+The WASM build compiles the same C++20 engine sources as the native library
+plus `bindings/wasm/wasm_api.cpp`. That facade exports a handle-and-JSON API
+named `pcw_*`; TypeScript does not call the lower-level `pc_*` C ABI directly.
+
+The web app creates one module inside `engine-worker.ts`. `EngineClient`
+communicates with the worker through request IDs and structured-clone
+messages. The process-level engine service opens one compiled data bundle and
+shares that worker/client within the browser tab. The C++ engine itself is
+single-threaded; isolation from the UI thread comes from the Web Worker.
+
+The worker retains native handles for data, sessions, contexts, items,
+compiled strategies, economies, simulators, and solvers. TypeScript wrappers
+must close scoped handles; the long-lived data/module lifetime currently ends
+with the worker/tab rather than an ordinary product `data_close` path.
+
+## Build and release artifact
+
+`scripts/build-wasm.ps1` activates Emscripten from `$env:EMSDK` or `C:\emsdk`,
+regenerates the Harvest allowlist header, and compiles every `engine/src/*.cpp`
+file plus the facade. The release flags include:
+
+- C++20, `-O3`, disabled floating-point contraction, and C++ exceptions;
+- modularized ES module output named `createPoecraftEngine` for
+  web/worker/node;
+- growing linear memory, 128 MiB initial memory, a 4 GiB configured maximum,
+  and a 64 MiB stack;
+- a non-exiting runtime and exported `ccall`, `cwrap`, `UTF8ToString`, and
+  `HEAPU8` helpers.
+
+`-sPTHREADS` is not present. The tracked release outputs are
+`bindings/wasm/dist/poecraft_engine.mjs` and `.wasm`. A diagnostics build adds
+Emscripten assertions, safe-heap checks, and stack-overflow checks, but those
+are not release behavior.
+
+Vite treats the worker as ES2022 and suppresses Node `process` detection for
+the production worker loader. The generated module still supports Node so the
+same client/worker integration can run under `worker_threads` tests.
+
+## Implemented exported capability
+
+The tracked release module exports these facade groups:
+
+| Group | Exported capability |
+| --- | --- |
+| Data | ABI version, open/summary/base catalog, Bestiary presentation, close |
+| Session/context | Open/close, mod count/info, seeded action context |
+| Item | Create/clone/close/info, add/remove/fracture, stable-key export/import |
+| Craft actions | Apply one, run a batch, pool debug, Bestiary apply/calculate |
+| Strategy evaluation | Compile/close, synchronous evaluate, and stepped begin/step/finish/close |
+| Economy/simulation | Economy open/close; simulator open/close/chunk/result |
+| Solver | Open/close, enumerate actions, calculator odds, synchronous solve, stepped solve begin/step/finish/abandon, state value, projection, compile, log, telemetry |
+| Diagnostics | Live-handle count and memory statistics |
+| Emscripten plumbing | `malloc`, `free`, and the runtime helpers listed above |
+
+This is an implemented capability inventory, not a claim that every export is
+used by the current UI.
+
+## Product paths and exported-but-unused paths
+
+The current product uses the JSON facade for catalog/session/item operations,
+craft actions, pool inspection, Bestiary, compiled-strategy simulation,
+calculator odds, economy handles, stepped exact strategy evaluation, and the
+stepped strategy solver. Long-running product operations use the stepped
+forms so the worker can report progress and process cancellation.
+
+These exports are implemented and bound in `engine-wasm.ts` but have no normal
+current product call site, or exist chiefly for tests/diagnostics:
+
+- `pcw_item_clone` (a plain item-state clone; it does not copy the facade's
+  Bestiary compound checkpoint);
+- `pcw_run_batch`;
+- synchronous `pcw_strategy_evaluate` and synchronous `pcw_solver_solve`;
+- `pcw_solver_state_value`, `pcw_solver_project`, and `pcw_solver_log`;
+- direct `pcw_live_handle_count` and `pcw_memory_stats` calls;
+- ordinary `pcw_data_close` during a tab's service lifetime.
+
+An unused export is not an unimplemented API. It remains part of the compiled
+surface until deliberately removed.
+
+## Native capability not surfaced directly
+
+The WASM facade intentionally does not mirror every low-level native entry
+point. Native-only or facade-aggregated capability includes:
+
+- loading an artifact from filesystem paths and the explicit native capacity
+  report;
+- raw dumps of effective tags, group memberships, masks, influence/reach
+  details, and per-row weight internals beyond the JSON summaries;
+- direct RNG reseed/next calls, performance timing counters, and the last
+  action trace;
+- granular simulator and per-solver/evaluator memory queries (the facade
+  returns aggregate JSON instead).
+
+The high-level Python binding also does not currently wrap the solver C ABI.
+That is a binding boundary, not absence of the native implementation.
+
+## Stepped work, progress, and cancellation
+
+Cancellation is cooperative. An `AbortSignal` posts a cancel request to the
+worker, but the worker can inspect it only after the current native step
+returns and the event loop runs. There is no preemptive cancellation inside a
+C++ step.
+
+### Strategy solver
+
+The worker calls `pcw_solver_solve_begin`, repeatedly calls `step`, then calls
+`finish` only after native progress reports done. It starts with the requested
+chunk size or 8 work items, adapts toward roughly 12 ms steps, and clamps later
+chunks to 1–4 work items; a phase change resets the chunk to 1. It yields after
+about 8 ms of accumulated unyielded work or when `yieldEveryStep` is requested.
+Progress covers expanding, iterating, and done phases and is throttled to
+roughly 100 ms apart except for first, phase-change, and final updates.
+
+On cancellation the worker returns a cancelled result with its latest
+progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
+Abandon resets the native in-progress solve while retaining bounded abandoned
+telemetry for diagnosis.
+
+### Exact strategy evaluation
+
+The evaluator calls the stateful begin/step/finish API. It begins at the
+requested chunk size or 16, adapts toward roughly 16 ms, and may grow to
+16,384 work items. Discovery is chunked; solving advances one strongly
+connected component at a time; fallback and finalization are also surfaced as
+phases. The worker yields after each native step. Cancellation closes the
+evaluation and its scoped economy/strategy handles in `finally` cleanup.
+
+### Monte Carlo simulation
+
+The simulator runs chunks of 1,000 by default and adapts between 1 and 10,000
+runs toward roughly 16 ms. It yields between chunks and can return a partial
+cancelled result.
+
+These pacing values are current scheduling policy, not performance guarantees.
+
+## Resource defaults and memory reporting
+
+When product code omits native overrides, exact evaluation defaults include
+100,000 states and sweeps, 1,000,000 state/node pairs, 10,000,000 transitions,
+16 top classes per node, a 512 MiB selected-owned-allocation cap, and a 64 MiB
+output-JSON cap. Strategy solve defaults include 100,000-state/search limits,
+1,000,000 state/action rows, 10,000,000 transitions and reforge work, a 1 GiB
+selected-solver-owned cap, 100,000 compiled nodes, 400,000 compiled edges, a
+64 MiB strategy-JSON cap, and a 1 MiB telemetry-JSON cap.
+
+Those native caps cover selected allocations accounted by the evaluator or
+solver. They are not limits on the entire WASM heap, Emscripten stack, facade
+registries, response-string capacity, parsed data, TypeScript objects,
+structured-clone messages, or JSON copies.
+
+`pcw_memory_stats` estimates facade handle registries, the reusable response
+string, and selected solver/evaluator-owned allocations. TypeScript augments
+it with `HEAPU8.byteLength` as `wasm_memory_bytes`. That byte length is the
+current linear-memory high-water size: Emscripten memory can grow and is not
+shrunk when handles close. It is not live allocation or browser-process RSS.
+
+The facade copies large economy JSON through an explicit heap allocation;
+ordinary JSON calls use Emscripten string marshalling and the configured
+stack. The worker drops the raw artifact bytes after building the web catalog,
+but its JavaScript catalog and transient copies are outside native memory
+statistics.
+
+## Evidence in the repository
+
+Evidence must be read at the layer it actually exercises:
+
+- Native CTest sources and benchmarks exercise the C ABI, engine algorithms,
+  fixture parity, and native performance. Native timing cannot be assumed to
+  equal browser WASM timing.
+- `apps/web/test/engine-smoke.test.ts` loads the compiled release WASM in a
+  Node `worker_threads` worker through the same `EngineClient`. Its cases cover
+  the memory-safe large-payload path, pool fixture parity, stateful exact
+  progress, solve progress, cancellation cleanup/fallback, compilation, and
+  simulation.
+- The tracked release wrapper itself is evidence of the module's current
+  assignment/export map.
+
+This documentation-only phase inspected those sources and artifacts; it did
+not run the suites. The Node worker test is real WASM integration evidence,
+but it is not a real-browser/device benchmark.
+
+## Export-list drift
+
+The source facade marks all public functions `EMSCRIPTEN_KEEPALIVE`, and the
+tracked release module exports the four stepped solver functions:
+
+```text
+pcw_solver_solve_begin
+pcw_solver_solve_step
+pcw_solver_solve_finish
+pcw_solver_solve_abandon
+```
+
+However, the explicit `$Exported` array in `scripts/build-wasm.ps1` omits
+those four names. `KEEPALIVE` currently preserves them, so the release and
+product capability is present. The script's declared export inventory should
+still be synchronized with the actual public surface; this is recorded as
+debt in [Engine notes](NOTES.md).
+
+## Open evidence and product unknowns
+
+The repository does not yet establish:
+
+- browser/device throughput, peak memory, or worst-step cancellation latency
+  for difficult exact evaluations and solves;
+- practical 4 GiB memory availability across supported browsers/devices, or
+  full memory including JavaScript catalogs and structured-clone/JSON copies;
+- whether released C++ allocations return reusable heap space in each hard
+  workload, beyond the fact that the linear-memory high-water does not shrink;
+- an enforced product-wide live-memory budget and final solver/economy lifetime
+  policy for release/repricing workflows;
+- performance equivalence between native benchmarks, Node WASM workers, and
+  browsers.
+
+These are unknowns to measure or decide, not implemented guarantees.
+
+Implementation entry points: `scripts/build-wasm.ps1`,
+`bindings/wasm/wasm_api.cpp`, `apps/web/src/app/engine-wasm.ts`,
+`apps/web/src/app/engine-worker.ts`, `apps/web/src/app/engine-client.ts`, and
+`apps/web/test/engine-smoke.test.ts`.
