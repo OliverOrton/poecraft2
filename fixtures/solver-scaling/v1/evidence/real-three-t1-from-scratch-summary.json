@@ -1,0 +1,77 @@
+{
+  "schema_version": "real_three_t1_from_scratch_diagnostic_v1",
+  "recorded_on": "2026-07-21",
+  "case": {
+    "base": "item-level-86 Dire Pelt",
+    "start": "empty rare without implicits",
+    "goal_slots": [
+      "ItemFoundRarityIncreasePrefix3",
+      "IncreasedLife9",
+      "EinharMasterColdResist3__"
+    ],
+    "priced_product_actions": 32,
+    "economy": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f"
+  },
+  "constraints": {
+    "exact_all_actions": true,
+    "approximate_compaction": false,
+    "production_caps_changed": false,
+    "verification_required": false
+  },
+  "first_expansion": {
+    "status": "bounded_first_expansion_complete",
+    "solve_ms": 582.273,
+    "discovered_states": 74563,
+    "expanded_states": 1,
+    "frontier_states": 74562,
+    "state_action_rows": 34,
+    "transition_entries": 331960,
+    "reforge_frontier_work": 7863354,
+    "selected_owned_bytes": 45355422,
+    "automatic_admission_ms": 14.9692,
+    "constructive_certificates": 0,
+    "constructive_start_upper_bound": null
+  },
+  "production_caps": {
+    "status": "refused_state_cap",
+    "solve_ms": 40717.2279,
+    "total_ms": 41863.4096,
+    "discovered_states": 200000,
+    "expanded_states": 55088,
+    "frontier_states": 144912,
+    "goal_states": 547,
+    "strict_states": 200000,
+    "quotient_states": 200000,
+    "exact_behavioral_merges": 0,
+    "state_action_rows": 1152570,
+    "transition_entries": 1700569,
+    "conceptual_outcome_entries": 18241652988,
+    "reforge_frontier_work": 9304122,
+    "selected_owned_bytes": 725411658,
+    "live_selected_owned_bytes": 154648608,
+    "focused_rounds": 19,
+    "focused_lower_bound": 5.3503139241737685,
+    "focused_upper_bound": null,
+    "constructive_certificates": 0,
+    "constructive_operators_pruned": 0,
+    "bellman_backups": 0,
+    "compiled": false
+  },
+  "action_space": {
+    "automatic_operators": 2087,
+    "automatic_rows_considered": 852901,
+    "automatic_rows_eligible": 696678,
+    "automatic_admission_ms": 13643.6689,
+    "temporary_bench": {
+      "candidates": 659762,
+      "candidate_variants": 5133587,
+      "effect_classes": 31582,
+      "unique_templates": 21764,
+      "template_hits": 609918,
+      "rows": 21764,
+      "time_ms": 6852.8172,
+      "selected_bytes": 64921089
+    }
+  },
+  "finding": "The exact empty-start solve does not close under production caps. Its true focused upper bound remains infinite while the lower bound reaches 5.3503139241737685. A small cap increase is not justified because the state cap coincides with near-exhausted row and reforge budgets. The next high-leverage exact targets are a compositional executable policy upper and carrier-signature reuse or earlier exact rejection for temporary-bench synthesis."
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "solver-scaling-dire-pelt-three-t1-chaos-diagnostic",
+  "category": "exact_solver_state_scaling_diagnostic",
+  "approval_status": "active_plan_q4_2026-07-20",
+  "benchmark_enabled": true,
+  "comparison_profile": "exact-solver-state-scaling-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+    "base_name": "Dire Pelt",
+    "item_level": 86
+  },
+  "start": {"rarity": "rare", "with_implicits": false, "mods": []},
+  "goal": {
+    "version": "v1", "rarity": "rare", "min_satisfied_slots": 3,
+    "slots": [
+      {"family_mod_key": "ItemFoundRarityIncreasePrefix3", "min_tier": 1},
+      {"family_mod_key": "IncreasedLife9", "min_tier": 1},
+      {"family_mod_key": "LifeRegeneration9", "min_tier": 1}
+    ],
+    "actions": ["chaos", "restart"]
+  },
+  "allowed_mechanic_families": ["ordinary_currency", "restart"],
+  "economy": {
+    "version": "v1", "id": "solver-scaling-frozen-control-v1",
+    "prices": {"chaos": 1.0, "base": 1.0}
+  },
+  "expected": {
+    "solve_status": "converged", "optimality_status": "exact",
+    "compile_status": "compiled", "verification_status": "not_requested"
+  },
+  "caps": {
+    "max_states": 100000, "max_sweeps": 100000,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 100000, "max_expanded_states": 100000,
+    "max_state_action_rows": 1000000, "max_transitions": 10000000,
+    "max_reforge_work": 100000000, "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 32, "max_telemetry_json_bytes": 1048576,
+    "max_compiled_nodes": 100000, "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "full_evidence": true, "worker_step_ms": 5000, "cancel_ack_ms": 250
+  },
+  "verification": {"runs": 0, "seed": 20260720, "max_actions_per_run": 100000}
+}

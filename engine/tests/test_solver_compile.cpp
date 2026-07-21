@@ -230,6 +230,28 @@ void run_synthetic_gate() {
                     expected, mean);
         PC_CHECK(std::fabs(mean - expected) < 0.15);
         PC_CHECK(std::fabs(expected - 1.0 / p) < 1e-6);
+
+        /* The strict-state oracle takes the exact decision-DAG compiler path
+         * rather than the completed behavioral-quotient predicates. It must
+         * remain executable and preserve the same start value. */
+        SolveOptions strict_options;
+        strict_options.full_evidence = true;
+        strict_options.strict_states = true;
+        const SolveResult strict = solve(calc, start, prices, strict_options);
+        PC_CHECK(strict.converged);
+        PC_CHECK(strict.behavioral_representative_by_state.empty());
+        PC_CHECK(std::fabs(
+                     strict.values[strict.start_state] - expected) < 1e-9);
+        PolicyCompilationTelemetry strict_compilation;
+        const std::string strict_json = compile_policy_strategy_json(
+            calc, strict, "alt-spam-strict", &strict_compilation);
+        PC_CHECK(strict_json.find("\"id\":\"policy_route_") !=
+                 std::string::npos);
+        PC_CHECK(strict_compilation.policy_regions > 0);
+        PC_CHECK(strict_compilation.nodes <= strict.options.max_compiled_nodes);
+        auto strict_strategy = compile_strategy_json(
+            session, strict_json.data(), strict_json.size());
+        PC_CHECK(strict_strategy != nullptr);
     }
 
     /* Price flip: the compiled strategy must include restart operations
@@ -309,11 +331,10 @@ void run_synthetic_gate() {
         PC_CHECK(summary.success_count == summary.completed_runs);
     }
 
-    /* A tag-discriminating layout must retain separate junk identities in
-     * ordinary strategy conditions, then route every sampled result exactly
-     * instead of hitting the off-policy terminal. The descriptor decoration
-     * isolates the former compiler refusal without adding a second expensive
-     * reforge solve to the repository gate. */
+    /* A tag-discriminating layout must still route every sampled result
+     * exactly. Q3 may prove a junk identity unobservable under this deliberately
+     * tiny action set, so the executable policy—not a redundant serialized
+     * mod-count predicate—is the contract. */
     {
         ActionRegistry tagged_registry = registry;
         tagged_registry.actions[transmute].discriminating_tag_ids = {3};
@@ -327,8 +348,9 @@ void run_synthetic_gate() {
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             tagged_calc, solved, "tag-discriminating transmute");
-        PC_CHECK(json.find("\"type\":\"mod_family_count\"") !=
-                 std::string::npos);
+        PC_CHECK(solved.diagnostics.observation_signature_mismatches == 0);
+        PC_CHECK(solved.diagnostics.strict_discovered_states >=
+                 solved.diagnostics.quotient_states);
         const SimulationSummaryInternal summary =
             run_compiled(session, json, prices, 10000, 8675310);
         PC_CHECK(summary.success_count == summary.completed_runs);
@@ -343,7 +365,8 @@ void run_synthetic_gate() {
     }
 
     /* S5/S6 headline gate: six distinct all-T1 slots solve, compile with
-     * group-tier and junk-count guards, and simulate at V(start). */
+     * exact group-tier guards, and simulate at V(start). Unobserved junk
+     * identities may be removed by the exact outer quotient. */
     {
         GoalSpec perfect;
         for (std::uint32_t group : {11u, 12u, 13u, 20u, 21u, 22u}) {
@@ -365,8 +388,6 @@ void run_synthetic_gate() {
         PC_CHECK(solved.converged);
         const std::string json = compile_policy_strategy_json(
             perfect_calc, solved, "six-slot all-T1 perfect item");
-        PC_CHECK(json.find("\"type\":\"mod_family_count\"") !=
-                 std::string::npos);
         PC_CHECK(json.find("\"type\":\"has_mod_group\"") !=
                  std::string::npos);
         PC_CHECK(json.find("\"min_tier\":1") != std::string::npos);
@@ -1011,7 +1032,7 @@ void run_imprint_gate(const char* artifact_dir) {
     PC_CHECK(!kernel.retry_states.empty());
     bool has_magic_intermediate = false;
     for (const OutcomeEntry& exit : kernel.exits) {
-        if (exit.state == solved.start_state) continue;
+        if (exit.state == kNoId || exit.state == solved.start_state) continue;
         const AbstractState& successor = calc.state(exit.state);
         if (successor.rarity == PC_RARITY_MAGIC &&
             successor.slot_status[1] == static_cast<std::uint8_t>(

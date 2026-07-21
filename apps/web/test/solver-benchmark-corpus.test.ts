@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs";
 
 import {
     loadSolverBenchmarkCorpus,
+    materializeSolverBenchmarkEconomy,
+    materializeSolverBenchmarkGoal,
     validateCorpusArtifactPins,
 } from "./solver-benchmark-corpus";
 
@@ -48,4 +50,30 @@ test("corpus artifact pins reject stale WASM/data combinations", () => {
         () => validateCorpusArtifactPins(corpus.manifest, artifact, 999),
         /engine ABI mismatch/,
     );
+});
+
+test("state-scaling corpus materializes its pinned economy snapshot", () => {
+    const scalingManifest = fileURLToPath(new URL(
+        "../../../fixtures/solver-scaling/v1/acceptance-manifest.json",
+        import.meta.url,
+    ));
+    const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
+    const corpus = loadSolverBenchmarkCorpus(scalingManifest);
+    const product = corpus.cases.find((entry) =>
+        entry.id === "solver-scaling-dire-pelt-three-t1-product");
+    assert.ok(product);
+    const economy = materializeSolverBenchmarkEconomy(
+        product,
+        repoRoot,
+    ) as { id: string; prices: Record<string, number> };
+    assert.equal(economy.id, product.economy.id);
+    assert.equal(economy.prices.base, 1);
+    assert.equal(typeof economy.prices.chaos, "number");
+    const goal = materializeSolverBenchmarkGoal(product);
+    assert.deepEqual(
+        goal.actions,
+        product.product_action_envelope?.expected_priced_action_ids,
+    );
+    assert.equal(goal.actions?.length, 32);
+    assert.ok(goal.actions?.includes("restart"));
 });

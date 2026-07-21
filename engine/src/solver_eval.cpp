@@ -64,6 +64,9 @@ struct EvalTransition {
      * originally entered (the head of the folded deterministic chain).
      * Flow committed through the transition is credited to that chain. */
     std::uint32_t via = kNoId;
+    /* First compiler-generated policy_route_* node skipped during discovery.
+     * Its exact state-specific path is replayed once flow is known. */
+    std::uint32_t policy_route = kNoId;
 };
 
 struct EvalAbsorption {
@@ -72,6 +75,7 @@ struct EvalAbsorption {
     std::uint32_t state = kNoId;
     double probability = 0.0;
     std::uint32_t edge = kNoId;
+    std::uint32_t policy_route = kNoId;
 };
 
 struct EvalRow {
@@ -141,6 +145,7 @@ void collect_condition_targets(
     const CompiledCondition& condition,
     const std::string& edge_id,
     std::vector<TargetEntry>& targets,
+    std::vector<CountObservation>& count_observations,
     std::vector<std::string>& gaps) {
     if (condition.kind == ConditionKind::HasModFamily) {
         auto found = std::find_if(
@@ -197,11 +202,27 @@ void collect_condition_targets(
         }
     } else if (condition.kind == ConditionKind::ModCount ||
                condition.kind == ConditionKind::ModFamilyCount) {
-        add_gap(
-            gaps,
-            "edge '" + edge_id +
-                "' compiler-only mod_count cannot be represented by "
-                "Calculator mode yet");
+        CountObservation observation;
+        observation.by_family =
+            condition.kind == ConditionKind::ModFamilyCount;
+        observation.ids = observation.by_family ? condition.family_ids
+                                                : condition.mod_ids;
+        auto found = std::find_if(
+            count_observations.begin(), count_observations.end(),
+            [&](const CountObservation& existing) {
+                return existing.by_family == observation.by_family &&
+                       existing.ids == observation.ids;
+            });
+        if (found == count_observations.end()) {
+            count_observations.push_back(std::move(observation));
+            found = std::prev(count_observations.end());
+        }
+        if (condition.count_memo_slot != kNoId &&
+            std::find(
+                found->memo_slots.begin(), found->memo_slots.end(),
+                condition.count_memo_slot) == found->memo_slots.end()) {
+            found->memo_slots.push_back(condition.count_memo_slot);
+        }
     } else if (condition.kind == ConditionKind::HasUnveilOption) {
         add_gap(
             gaps,
@@ -210,7 +231,8 @@ void collect_condition_targets(
                 "Calculator mode yet");
     }
     for (const CompiledCondition& child : condition.children) {
-        collect_condition_targets(child, edge_id, targets, gaps);
+        collect_condition_targets(
+            child, edge_id, targets, count_observations, gaps);
     }
 }
 
@@ -291,11 +313,13 @@ EvalModel derive_model(
     }
 
     std::vector<TargetEntry> target_entries;
+    std::vector<CountObservation> count_observations;
     for (const StrategyNode& node : strategy.nodes) {
         for (const StrategyEdge& edge : node.edges) {
             if (!edge.is_default) {
                 collect_condition_targets(
-                    edge.condition, edge.id, target_entries, gaps);
+                    edge.condition, edge.id, target_entries,
+                    count_observations, gaps);
             }
         }
     }
@@ -341,7 +365,7 @@ EvalModel derive_model(
             true,  /* allow count/rarity-only graphs */
             false, /* no operations must not mean the full registry */
             true,  /* preserve exact group effects between graph actions */
-            state_cap);
+            state_cap, count_observations);
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
@@ -820,7 +844,64 @@ bool evaluate_abstract_condition(
         return tier >= condition.min_value && tier <= condition.max_value;
     }
     case ConditionKind::ModCount:
-    case ConditionKind::ModFamilyCount:
+    case ConditionKind::ModFamilyCount: {
+        const bool by_family =
+            condition.kind == ConditionKind::ModFamilyCount;
+        const std::vector<std::uint32_t>& ids =
+            by_family ? condition.family_ids : condition.mod_ids;
+        auto found = layout.count_observations.end();
+        if (condition.count_memo_slot <
+            layout.count_observation_by_memo_slot.size()) {
+            const std::uint32_t observation =
+                layout.count_observation_by_memo_slot[
+                    condition.count_memo_slot];
+            if (observation != kNoId) {
+                found = layout.count_observations.begin() + observation;
+            }
+        }
+        if (found == layout.count_observations.end()) {
+            found = std::find_if(
+                layout.count_observations.begin(),
+                layout.count_observations.end(),
+                [&](const CountObservation& observation) {
+                    return observation.by_family == by_family &&
+                           observation.ids == ids;
+                });
+        }
+        if (found == layout.count_observations.end()) {
+            throw std::logic_error(
+                "compiled count condition missing from exact layout");
+        }
+
+        const bool fractured =
+            (condition.required_flags & PC_MOD_SLOT_FRACTURED) != 0;
+        const bool crafted =
+            (condition.required_flags & PC_MOD_SLOT_CRAFTED) != 0;
+        const CompactCountVector& junk_counts =
+            fractured && crafted
+                ? state.fractured_crafted_junk_counts
+                : (fractured ? state.fractured_junk_counts
+                             : (crafted ? state.crafted_junk_counts
+                                        : state.junk_counts));
+        int count = 0;
+        for (const std::uint32_t junk : found->junk_class_indices) {
+            count += junk_counts[junk];
+        }
+        for (std::size_t slot = 0; slot < layout.slots.size(); ++slot) {
+            if (fractured &&
+                (state.fractured_goal_mask & (1u << slot)) == 0) {
+                continue;
+            }
+            if (crafted &&
+                (state.crafted_goal_mask & (1u << slot)) == 0) {
+                continue;
+            }
+            const std::uint8_t status = state.slot_status[slot];
+            count += found->goal_status_counts[slot][status];
+        }
+        return count >= condition.min_value &&
+               count <= condition.max_value;
+    }
     case ConditionKind::HasUnveilOption:
         return false; /* rejected during model derivation */
     case ConditionKind::All:
@@ -854,14 +935,29 @@ bool evaluate_abstract_condition(
 }
 
 struct StrategyEvalWork::Impl {
+    struct PolicyRouteResolution {
+        std::uint32_t target_node = kNoId;
+        std::uint32_t failure_node = kNoId;
+        bool resolved = false;
+    };
+
     struct FallbackState {
         std::uint32_t component = kNoId;
         std::vector<std::uint32_t> members;
-        std::map<std::uint32_t, std::size_t> local_index;
+        std::vector<std::uint32_t> local_index_by_pair;
         std::vector<double> wave;
         std::vector<double> visits;
+        std::vector<double> incoming;
+        std::vector<double> shadow;
+        std::vector<double> direction;
+        std::vector<double> image;
+        std::vector<double> intermediate;
+        std::vector<double> image_intermediate;
+        std::vector<double> diagonal;
         double input_mass = 0.0;
-        double exited_mass = 0.0;
+        double rho_previous = 1.0;
+        double alpha = 1.0;
+        double omega = 1.0;
         std::uint32_t sweeps = 0;
     };
 
@@ -879,6 +975,12 @@ struct StrategyEvalWork::Impl {
         std::pair<std::uint32_t, const OutcomeDistribution*>,
         std::uint32_t> row_by_distribution;
     std::uint64_t stored_transitions = 0;
+    std::uint64_t row_payload_owned_bytes = 0;
+    std::uint64_t component_payload_owned_bytes = 0;
+    std::uint64_t review_payload_owned_bytes = 0;
+    std::uint64_t edge_index_owned_bytes = 0;
+    std::uint64_t terminal_incoming_owned_bytes = 0;
+    std::uint64_t compressed_policy_incoming_owned_bytes = 0;
     std::size_t discover_index = 0;
     std::uint32_t start_pair = kNoId;
 
@@ -896,6 +998,7 @@ struct StrategyEvalWork::Impl {
     std::vector<std::uint8_t> pair_contracted;
     std::vector<std::uint32_t> chain_next;
     std::vector<std::uint32_t> chain_edge;
+    std::vector<std::uint32_t> chain_policy_route;
     std::vector<std::uint32_t> chain_terminal;
     std::vector<double> chain_inflow;
     std::unique_ptr<FallbackState> fallback;
@@ -906,9 +1009,20 @@ struct StrategyEvalWork::Impl {
     std::vector<double> action_not_applied;
     std::vector<double> no_matching_edge;
     std::vector<std::map<std::uint32_t, double>> terminal_incoming;
+    std::vector<std::map<std::uint32_t, double>>
+        compressed_policy_incoming;
     std::map<std::string, std::uint32_t> edge_index_by_id;
     std::vector<double> edge_traversals;
     std::uint64_t peak_owned_bytes_value = 0;
+    bool compress_policy_routes = false;
+    std::uint32_t compressed_policy_root = kNoId;
+    std::vector<PolicyRouteResolution> policy_route_cache;
+
+    bool is_policy_route_node(std::uint32_t node) const {
+        return node < strategy->nodes.size() &&
+               strategy->nodes[node].kind == StrategyNodeKind::Router &&
+               strategy->nodes[node].id.rfind("policy_route_", 0) == 0;
+    }
 
     static std::uint64_t string_bytes(const std::string& value) {
         return sizeof(std::string) + value.capacity() + 1;
@@ -1047,16 +1161,23 @@ struct StrategyEvalWork::Impl {
         bytes += pair_contracted.capacity() * sizeof(std::uint8_t);
         bytes += chain_next.capacity() * sizeof(std::uint32_t);
         bytes += chain_edge.capacity() * sizeof(std::uint32_t);
+        bytes += chain_policy_route.capacity() * sizeof(std::uint32_t);
         bytes += chain_terminal.capacity() * sizeof(std::uint32_t);
         bytes += chain_inflow.capacity() * sizeof(double);
         if (fallback != nullptr) {
             bytes += sizeof(FallbackState);
             bytes += fallback->members.capacity() * sizeof(std::uint32_t);
-            bytes += fallback->local_index.size() *
-                     (sizeof(decltype(fallback->local_index)::value_type) +
-                      3 * sizeof(void*));
+            bytes += fallback->local_index_by_pair.capacity() *
+                     sizeof(std::uint32_t);
             bytes += fallback->wave.capacity() * sizeof(double);
             bytes += fallback->visits.capacity() * sizeof(double);
+            bytes += fallback->incoming.capacity() * sizeof(double);
+            bytes += fallback->shadow.capacity() * sizeof(double);
+            bytes += fallback->direction.capacity() * sizeof(double);
+            bytes += fallback->image.capacity() * sizeof(double);
+            bytes += fallback->intermediate.capacity() * sizeof(double);
+            bytes += fallback->image_intermediate.capacity() * sizeof(double);
+            bytes += fallback->diagonal.capacity() * sizeof(double);
         }
         bytes += terminal_mass.capacity() * sizeof(double);
         bytes += action_not_applied.capacity() * sizeof(double);
@@ -1064,6 +1185,13 @@ struct StrategyEvalWork::Impl {
         bytes += terminal_incoming.capacity() *
                  sizeof(std::map<std::uint32_t, double>);
         for (const auto& incoming : terminal_incoming) {
+            bytes += incoming.size() *
+                     (sizeof(std::decay_t<decltype(incoming)>::value_type) +
+                      3 * sizeof(void*));
+        }
+        bytes += compressed_policy_incoming.capacity() *
+                 sizeof(std::map<std::uint32_t, double>);
+        for (const auto& incoming : compressed_policy_incoming) {
             bytes += incoming.size() *
                      (sizeof(std::decay_t<decltype(incoming)>::value_type) +
                       3 * sizeof(void*));
@@ -1076,12 +1204,90 @@ struct StrategyEvalWork::Impl {
             bytes += id.capacity() + 1;
         }
         bytes += edge_traversals.capacity() * sizeof(double);
+        bytes += policy_route_cache.capacity() *
+                 sizeof(PolicyRouteResolution);
         bytes += output_owned_bytes();
         return bytes;
     }
 
+    /* Constant-time selected-allocation estimate for per-work-item cap
+     * enforcement. The full estimator remains the audit authority; these
+     * counters mirror its nested-capacity terms at each mutation boundary. */
+    std::uint64_t fast_estimated_owned_bytes() const {
+        std::uint64_t bytes = sizeof(*this);
+        if (model.calc != nullptr) {
+            bytes += model.calc->fast_estimated_owned_bytes();
+        }
+        bytes += model.action_by_node.capacity() * sizeof(std::uint32_t);
+        bytes += model.targets.capacity() * sizeof(GoalSlot);
+        bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
+        bytes += review_payload_owned_bytes;
+        bytes += pair_by_key.size() *
+                 (sizeof(decltype(pair_by_key)::value_type) +
+                  3 * sizeof(void*));
+        bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += rows.capacity() * sizeof(EvalRow);
+        bytes += row_payload_owned_bytes;
+        bytes += row_by_distribution.size() *
+                 (sizeof(decltype(row_by_distribution)::value_type) +
+                  3 * sizeof(void*));
+        bytes += components.capacity() * sizeof(std::vector<std::uint32_t>);
+        bytes += component_payload_owned_bytes;
+        bytes += component_by_pair.capacity() * sizeof(std::uint32_t);
+        bytes += external_incoming.capacity() * sizeof(double);
+        bytes += pair_visits.capacity() * sizeof(double);
+        bytes += unresolved_pair.capacity() * sizeof(double);
+        bytes += pair_contracted.capacity() * sizeof(std::uint8_t);
+        bytes += chain_next.capacity() * sizeof(std::uint32_t);
+        bytes += chain_edge.capacity() * sizeof(std::uint32_t);
+        bytes += chain_policy_route.capacity() * sizeof(std::uint32_t);
+        bytes += chain_terminal.capacity() * sizeof(std::uint32_t);
+        bytes += chain_inflow.capacity() * sizeof(double);
+        if (fallback != nullptr) {
+            bytes += sizeof(FallbackState);
+            bytes += fallback->members.capacity() * sizeof(std::uint32_t);
+            bytes += fallback->local_index_by_pair.capacity() *
+                     sizeof(std::uint32_t);
+            bytes += fallback->wave.capacity() * sizeof(double);
+            bytes += fallback->visits.capacity() * sizeof(double);
+            bytes += fallback->incoming.capacity() * sizeof(double);
+            bytes += fallback->shadow.capacity() * sizeof(double);
+            bytes += fallback->direction.capacity() * sizeof(double);
+            bytes += fallback->image.capacity() * sizeof(double);
+            bytes += fallback->intermediate.capacity() * sizeof(double);
+            bytes += fallback->image_intermediate.capacity() * sizeof(double);
+            bytes += fallback->diagonal.capacity() * sizeof(double);
+        }
+        bytes += terminal_mass.capacity() * sizeof(double);
+        bytes += action_not_applied.capacity() * sizeof(double);
+        bytes += no_matching_edge.capacity() * sizeof(double);
+        bytes += terminal_incoming.capacity() *
+                 sizeof(std::map<std::uint32_t, double>);
+        bytes += terminal_incoming_owned_bytes;
+        bytes += compressed_policy_incoming.capacity() *
+                 sizeof(std::map<std::uint32_t, double>);
+        bytes += compressed_policy_incoming_owned_bytes;
+        bytes += edge_index_owned_bytes;
+        bytes += edge_traversals.capacity() * sizeof(double);
+        bytes += policy_route_cache.capacity() *
+                 sizeof(PolicyRouteResolution);
+        bytes += output_owned_bytes();
+        return bytes;
+    }
+
+    void audit_owned_bytes() {
+        const std::uint64_t fast = fast_estimated_owned_bytes();
+        const std::uint64_t audited = estimated_owned_bytes();
+        if (fast < audited) {
+            throw std::logic_error(
+                "strategy evaluation owned-byte ledger undercounted by " +
+                std::to_string(audited - fast) + " bytes");
+        }
+        peak_owned_bytes_value = std::max(peak_owned_bytes_value, audited);
+    }
+
     void check_owned_cap(std::uint64_t transient_bytes = 0) {
-        const std::uint64_t owned = estimated_owned_bytes();
+        const std::uint64_t owned = fast_estimated_owned_bytes();
         const std::uint64_t live =
             transient_bytes > std::numeric_limits<std::uint64_t>::max() - owned
                 ? std::numeric_limits<std::uint64_t>::max()
@@ -1094,6 +1300,40 @@ struct StrategyEvalWork::Impl {
                 "strategy evaluation exceeded max_owned_bytes (" +
                 std::to_string(options.max_owned_bytes) + ")");
         }
+    }
+
+    void refresh_row_payload_owned_bytes() {
+        row_payload_owned_bytes = 0;
+        for (const EvalRow& row : rows) {
+            row_payload_owned_bytes +=
+                row.transitions.capacity() * sizeof(EvalTransition) +
+                row.absorptions.capacity() * sizeof(EvalAbsorption);
+        }
+    }
+
+    void add_terminal_incoming(
+        std::uint32_t node, std::uint32_t state, double mass) {
+        auto [entry, inserted] =
+            terminal_incoming[node].try_emplace(state, 0.0);
+        if (inserted) {
+            terminal_incoming_owned_bytes +=
+                sizeof(std::map<std::uint32_t, double>::value_type) +
+                3 * sizeof(void*);
+        }
+        entry->second += mass;
+    }
+
+    void add_compressed_policy_incoming(
+        std::uint32_t node, std::uint32_t state, double mass) {
+        if (node == kNoId || !(mass > 0.0)) return;
+        auto [entry, inserted] =
+            compressed_policy_incoming[node].try_emplace(state, 0.0);
+        if (inserted) {
+            compressed_policy_incoming_owned_bytes +=
+                sizeof(std::map<std::uint32_t, double>::value_type) +
+                3 * sizeof(void*);
+        }
+        entry->second += mass;
     }
 
     void check_owned_projection(
@@ -1133,19 +1373,53 @@ struct StrategyEvalWork::Impl {
         output.max_owned_bytes = options.max_owned_bytes;
         output.max_output_json_bytes = options.max_output_json_bytes;
         output.targets = model.targets;
+        for (const ReviewSectionSpec& section : review_sections) {
+            review_payload_owned_bytes +=
+                section.id.capacity() + section.label.capacity() +
+                section.role.capacity() + 3;
+            review_payload_owned_bytes +=
+                section.nodes.capacity() * sizeof(std::uint32_t);
+            review_payload_owned_bytes += string_vector_bytes(section.edges);
+        }
         const std::size_t node_count = strategy->nodes.size();
+        std::vector<std::uint32_t> policy_roots;
+        for (std::uint32_t source = 0; source < node_count; ++source) {
+            if (is_policy_route_node(source)) continue;
+            for (const StrategyEdge& edge : strategy->nodes[source].edges) {
+                if (is_policy_route_node(edge.target) &&
+                    std::find(
+                        policy_roots.begin(), policy_roots.end(),
+                        edge.target) == policy_roots.end()) {
+                    policy_roots.push_back(edge.target);
+                }
+            }
+        }
+        /* A single external root means each state has one deterministic walk
+         * through the compiler DAG. This permits exact online contraction and
+         * bounded top-class selection without per-(router,state) graph rows. */
+        compress_policy_routes = policy_roots.size() == 1;
+        if (compress_policy_routes) {
+            compressed_policy_root = policy_roots.front();
+            policy_route_cache.reserve(options.max_states);
+        }
         terminal_mass.assign(node_count, 0.0);
         action_not_applied.assign(node_count, 0.0);
         no_matching_edge.assign(node_count, 0.0);
         terminal_incoming.resize(node_count);
+        compressed_policy_incoming.resize(node_count);
         for (const StrategyNode& node : strategy->nodes) {
             for (const StrategyEdge& edge : node.edges) {
                 const std::uint32_t index =
                     static_cast<std::uint32_t>(edge_traversals.size());
-                if (!edge_index_by_id.emplace(edge.id, index).second) {
+                const auto [entry, inserted] =
+                    edge_index_by_id.emplace(edge.id, index);
+                if (!inserted) {
                     throw std::logic_error(
                         "compiled strategy contains a duplicate edge id");
                 }
+                edge_index_owned_bytes +=
+                    sizeof(decltype(edge_index_by_id)::value_type) +
+                    3 * sizeof(void*) + entry->first.capacity() + 1;
                 edge_traversals.push_back(0.0);
             }
         }
@@ -1156,7 +1430,8 @@ struct StrategyEvalWork::Impl {
         if (strategy->nodes[strategy->start_node].kind ==
             StrategyNodeKind::Terminal) {
             terminal_mass[strategy->start_node] = 1.0;
-            terminal_incoming[strategy->start_node][start_state] = 1.0;
+            add_terminal_incoming(
+                strategy->start_node, start_state, 1.0);
             phase = StrategyEvalPhase::Finalization;
         } else {
             start_pair = intern_pair(strategy->start_node, start_state);
@@ -1222,7 +1497,8 @@ struct StrategyEvalWork::Impl {
     }
 
     void expand_pair(std::uint32_t pair_id) {
-        const std::uint64_t owned_before_expansion = estimated_owned_bytes();
+        const std::uint64_t owned_before_expansion =
+            fast_estimated_owned_bytes();
         const std::uint32_t node_index = pairs.at(pair_id).node;
         const std::uint32_t state_id = pairs.at(pair_id).state;
         const StrategyNode& node = strategy->nodes.at(node_index);
@@ -1230,12 +1506,17 @@ struct StrategyEvalWork::Impl {
         bool consumes = false;
         std::uint32_t action_index = kNoId;
         const OutcomeDistribution* shared_distribution = nullptr;
-        std::map<std::pair<std::uint32_t, std::uint32_t>, double> transitions;
         std::map<
-            std::tuple<int, std::uint32_t, std::uint32_t, std::uint32_t>,
+            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+            double> transitions;
+        std::map<
+            std::tuple<
+                int, std::uint32_t, std::uint32_t, std::uint32_t,
+                std::uint32_t>,
             double> absorptions;
 
-        const auto add_transition = [&](const std::pair<
+        const auto add_transition = [&](const std::tuple<
+                                            std::uint32_t,
                                             std::uint32_t,
                                             std::uint32_t>& key,
                                         double probability) {
@@ -1253,6 +1534,7 @@ struct StrategyEvalWork::Impl {
         };
         const auto add_absorption = [&](const std::tuple<
                                             int,
+                                            std::uint32_t,
                                             std::uint32_t,
                                             std::uint32_t,
                                             std::uint32_t>& key,
@@ -1280,22 +1562,62 @@ struct StrategyEvalWork::Impl {
             if (selected == nullptr) {
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::NoMatchingEdge),
-                     node_index, state, kNoId},
+                     node_index, state, kNoId, kNoId},
                     probability);
                 return;
             }
             const std::uint32_t edge = edge_index_by_id.at(selected->id);
-            const StrategyNode& target = strategy->nodes.at(selected->target);
+            std::uint32_t target_node = selected->target;
+            std::uint32_t policy_route = kNoId;
+            if (compress_policy_routes &&
+                target_node == compressed_policy_root) {
+                policy_route = target_node;
+                if (policy_route_cache.size() <= state) {
+                    policy_route_cache.resize(
+                        static_cast<std::size_t>(state) + 1);
+                }
+                PolicyRouteResolution& resolution =
+                    policy_route_cache[state];
+                if (!resolution.resolved) {
+                    std::uint32_t cursor = target_node;
+                    std::size_t policy_steps = 0;
+                    while (is_policy_route_node(cursor)) {
+                        if (++policy_steps > strategy->nodes.size()) {
+                            throw std::logic_error(
+                                "compiled policy router contains a cycle");
+                        }
+                        const StrategyEdge* route_edge =
+                            select_edge(strategy->nodes[cursor], state);
+                        if (route_edge == nullptr) {
+                            resolution.failure_node = cursor;
+                            break;
+                        }
+                        cursor = route_edge->target;
+                    }
+                    resolution.target_node = cursor;
+                    resolution.resolved = true;
+                }
+                if (resolution.failure_node != kNoId) {
+                    add_absorption(
+                        {static_cast<int>(
+                             EvalAbsorptionKind::NoMatchingEdge),
+                         resolution.failure_node, state, edge, policy_route},
+                        probability);
+                    return;
+                }
+                target_node = resolution.target_node;
+            }
+            const StrategyNode& target = strategy->nodes.at(target_node);
             if (target.kind == StrategyNodeKind::Terminal) {
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::Terminal),
-                     selected->target, state, edge},
+                     target_node, state, edge, policy_route},
                     probability);
                 return;
             }
             const std::uint32_t target_pair =
-                intern_pair(selected->target, state);
-            add_transition({target_pair, edge}, probability);
+                intern_pair(target_node, state);
+            add_transition({target_pair, edge, policy_route}, probability);
         };
 
         if (node.kind != StrategyNodeKind::Operation) {
@@ -1310,7 +1632,7 @@ struct StrategyEvalWork::Impl {
                     model.calc->state(state_id))) {
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::ActionNotApplied),
-                     node_index, state_id, kNoId},
+                     node_index, state_id, kNoId, kNoId},
                     1.0);
             } else {
                 consumes = true;
@@ -1355,14 +1677,15 @@ struct StrategyEvalWork::Impl {
         row.transitions.reserve(transitions.size());
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
-                {key.first, probability, key.second});
+                {std::get<0>(key), probability, std::get<1>(key), kNoId,
+                 std::get<2>(key)});
         }
         row.absorptions.reserve(absorptions.size());
         for (const auto& [key, probability] : absorptions) {
             row.absorptions.push_back(
                 {static_cast<EvalAbsorptionKind>(std::get<0>(key)),
                   std::get<1>(key), std::get<2>(key), probability,
-                  std::get<3>(key)});
+                  std::get<3>(key), std::get<4>(key)});
         }
         double row_mass = 0.0;
         for (const EvalTransition& transition : row.transitions) {
@@ -1377,6 +1700,9 @@ struct StrategyEvalWork::Impl {
                 "node '" + node.id + "'");
         }
         stored_transitions += row.transitions.size() + row.absorptions.size();
+        row_payload_owned_bytes +=
+            row.transitions.capacity() * sizeof(EvalTransition) +
+            row.absorptions.capacity() * sizeof(EvalAbsorption);
         pair.row = static_cast<std::uint32_t>(rows.size());
         rows.push_back(std::move(row));
         if (shared_distribution != nullptr) {
@@ -1402,6 +1728,7 @@ struct StrategyEvalWork::Impl {
         pair_contracted.assign(count, 0);
         chain_next.assign(count, kNoId);
         chain_edge.assign(count, kNoId);
+        chain_policy_route.assign(count, kNoId);
         chain_terminal.assign(count, kNoId);
         chain_inflow.assign(count, 0.0);
         if (count == 0) return;
@@ -1414,6 +1741,8 @@ struct StrategyEvalWork::Impl {
                 pass[pair] = 1;
                 chain_next[pair] = row.transitions.front().target;
                 chain_edge[pair] = row.transitions.front().edge;
+                chain_policy_route[pair] =
+                    row.transitions.front().policy_route;
             }
         }
 
@@ -1474,7 +1803,9 @@ struct StrategyEvalWork::Impl {
             }
             if (touched) {
                 std::map<
-                    std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+                    std::tuple<
+                        std::uint32_t, std::uint32_t, std::uint32_t,
+                        std::uint32_t>,
                     double> merged;
                 for (const EvalTransition& transition : row.transitions) {
                     const std::uint32_t via =
@@ -1484,7 +1815,8 @@ struct StrategyEvalWork::Impl {
                     const std::uint32_t target =
                         via == kNoId ? transition.target
                                      : forward[transition.target];
-                    merged[{target, transition.edge, via}] +=
+                    merged[{target, transition.edge, via,
+                            transition.policy_route}] +=
                         transition.probability;
                 }
                 row.transitions.clear();
@@ -1492,13 +1824,14 @@ struct StrategyEvalWork::Impl {
                 for (const auto& [key, probability] : merged) {
                     row.transitions.push_back(
                         {std::get<0>(key), probability, std::get<1>(key),
-                         std::get<2>(key)});
+                         std::get<2>(key), std::get<3>(key)});
                 }
             }
             remaining_transitions +=
                 row.transitions.size() + row.absorptions.size();
         }
         stored_transitions = remaining_transitions;
+        refresh_row_payload_owned_bytes();
     }
 
     /* Settle the mass that flowed through contracted pairs: each visit
@@ -1527,6 +1860,8 @@ struct StrategyEvalWork::Impl {
             if (chain_edge[pair] != kNoId) {
                 edge_traversals.at(chain_edge[pair]) += inflow;
             }
+            add_compressed_policy_incoming(
+                chain_policy_route[pair], pairs[pair].state, inflow);
             const std::uint32_t next = chain_next[pair];
             if (pair_contracted[next]) {
                 chain_inflow[next] += inflow;
@@ -1617,6 +1952,11 @@ struct StrategyEvalWork::Impl {
                 component_by_pair[pair] = component;
             }
         }
+        component_payload_owned_bytes = 0;
+        for (const auto& component : components) {
+            component_payload_owned_bytes +=
+                component.capacity() * sizeof(std::uint32_t);
+        }
 
         external_incoming.assign(count, 0.0);
         pair_visits.assign(count, 0.0);
@@ -1654,6 +1994,7 @@ struct StrategyEvalWork::Impl {
         const std::vector<double>& incoming,
         std::vector<double>& visits) const {
         const std::size_t n = members.size();
+        if (n == std::numeric_limits<std::size_t>::max()) return false;
         std::map<std::uint32_t, std::size_t> local;
         for (std::size_t i = 0; i < n; ++i) local[members[i]] = i;
         std::vector<std::vector<long double>> matrix(
@@ -1809,10 +2150,13 @@ struct StrategyEvalWork::Impl {
         if (absorption.edge != kNoId) {
             edge_traversals.at(absorption.edge) += mass;
         }
+        add_compressed_policy_incoming(
+            absorption.policy_route, absorption.state, mass);
         switch (absorption.kind) {
         case EvalAbsorptionKind::Terminal:
             terminal_mass[absorption.node] += mass;
-            terminal_incoming[absorption.node][absorption.state] += mass;
+            add_terminal_incoming(
+                absorption.node, absorption.state, mass);
             break;
         case EvalAbsorptionKind::ActionNotApplied:
             action_not_applied[absorption.node] += mass;
@@ -1837,6 +2181,9 @@ struct StrategyEvalWork::Impl {
                 if (transition.edge != kNoId) {
                     edge_traversals.at(transition.edge) += flow;
                 }
+                add_compressed_policy_incoming(
+                    transition.policy_route,
+                    pairs.at(transition.target).state, flow);
                 if (transition.via != kNoId) {
                     chain_inflow.at(transition.via) += flow;
                 }
@@ -1868,12 +2215,35 @@ struct StrategyEvalWork::Impl {
         fallback = std::make_unique<FallbackState>();
         fallback->component = component;
         fallback->members = members;
-        fallback->wave = incoming;
+        fallback->local_index_by_pair.assign(pairs.size(), kNoId);
+        fallback->incoming = incoming;
         fallback->visits.assign(members.size(), 0.0);
         for (std::size_t i = 0; i < members.size(); ++i) {
-            fallback->local_index[members[i]] = i;
+            fallback->local_index_by_pair[members[i]] =
+                static_cast<std::uint32_t>(i);
             fallback->input_mass += incoming[i];
         }
+        fallback->diagonal.assign(members.size(), 1.0);
+        for (std::size_t source = 0; source < members.size(); ++source) {
+            for (const EvalTransition& transition :
+                 pair_row(members[source]).transitions) {
+                if (transition.target == members[source]) {
+                    fallback->diagonal[source] -= transition.probability;
+                }
+            }
+            if (!(fallback->diagonal[source] > 1e-14)) {
+                fallback->diagonal[source] = 1.0;
+            }
+        }
+        fallback->wave.resize(members.size());
+        for (std::size_t i = 0; i < members.size(); ++i) {
+            fallback->wave[i] = incoming[i] / fallback->diagonal[i];
+        }
+        fallback->shadow = fallback->wave;
+        fallback->direction.assign(members.size(), 0.0);
+        fallback->image.assign(members.size(), 0.0);
+        fallback->intermediate.assign(members.size(), 0.0);
+        fallback->image_intermediate.assign(members.size(), 0.0);
         phase = StrategyEvalPhase::Fallback;
     }
 
@@ -1950,56 +2320,152 @@ struct StrategyEvalWork::Impl {
 
     void run_fallback_batch() {
         FallbackState& state = *fallback;
-        constexpr std::uint32_t kBatchSweeps = 32;
+        constexpr std::uint32_t kBatchSweeps = 4;
+        const auto dot = [](const std::vector<double>& left,
+                            const std::vector<double>& right) {
+            long double value = 0.0L;
+            for (std::size_t i = 0; i < left.size(); ++i) {
+                value += static_cast<long double>(left[i]) * right[i];
+            }
+            return static_cast<double>(value);
+        };
+        const auto norm = [](const std::vector<double>& values) {
+            double value = 0.0;
+            for (const double entry : values) {
+                value = std::max(value, std::fabs(entry));
+            }
+            return value;
+        };
+        const auto apply = [&](const std::vector<double>& input,
+                               std::vector<double>& result) {
+            result = input;
+            for (std::size_t source = 0; source < state.members.size();
+                 ++source) {
+                if (input[source] == 0.0) continue;
+                for (const EvalTransition& transition :
+                     pair_row(state.members[source]).transitions) {
+                    if (component_by_pair[transition.target] !=
+                        state.component) {
+                        continue;
+                    }
+                    const std::uint32_t target =
+                        state.local_index_by_pair[transition.target];
+                    result[target] -=
+                        transition.probability * input[source];
+                }
+            }
+            for (std::size_t i = 0; i < result.size(); ++i) {
+                result[i] /= state.diagonal[i];
+            }
+        };
+        const double tolerance =
+            options.epsilon * std::max(1.0, state.input_mass);
         bool finished = false;
+        bool failed = false;
         for (std::uint32_t batch = 0;
              batch < kBatchSweeps && state.sweeps < options.max_sweeps;
              ++batch) {
-            double wave_mass = 0.0;
-            for (std::size_t i = 0; i < state.wave.size(); ++i) {
-                state.visits[i] += state.wave[i];
-                wave_mass += state.wave[i];
+            const double rho = dot(state.shadow, state.wave);
+            if (!std::isfinite(rho) || std::fabs(rho) <= 1e-30 ||
+                !std::isfinite(state.omega) ||
+                std::fabs(state.omega) <= 1e-30) {
+                failed = true;
+                break;
             }
-            std::vector<double> next(state.wave.size(), 0.0);
-            for (std::size_t source = 0; source < state.members.size(); ++source) {
-                for (const EvalTransition& transition :
-                     pair_row(state.members[source]).transitions) {
-                    if (component_by_pair[transition.target] ==
-                        state.component) {
-                        next[state.local_index.at(transition.target)] +=
-                            state.wave[source] * transition.probability;
-                    }
+            if (state.sweeps == 0) {
+                state.direction = state.wave;
+            } else {
+                const double beta =
+                    (rho / state.rho_previous) *
+                    (state.alpha / state.omega);
+                for (std::size_t i = 0; i < state.direction.size(); ++i) {
+                    state.direction[i] =
+                        state.wave[i] +
+                        beta * (state.direction[i] -
+                                state.omega * state.image[i]);
                 }
             }
-            double residual = 0.0;
-            for (const double mass : next) residual += mass;
-            state.exited_mass += wave_mass - residual;
-            state.wave = std::move(next);
+            apply(state.direction, state.image);
+            const double denominator = dot(state.shadow, state.image);
+            if (!std::isfinite(denominator) ||
+                std::fabs(denominator) <= 1e-30) {
+                failed = true;
+                break;
+            }
+            state.alpha = rho / denominator;
+            for (std::size_t i = 0; i < state.wave.size(); ++i) {
+                state.intermediate[i] =
+                    state.wave[i] - state.alpha * state.image[i];
+            }
+            if (norm(state.intermediate) <= tolerance) {
+                for (std::size_t i = 0; i < state.visits.size(); ++i) {
+                    state.visits[i] += state.alpha * state.direction[i];
+                }
+                state.wave = state.intermediate;
+                finished = true;
+                ++state.sweeps;
+                ++fallback_sweeps;
+                break;
+            }
+            apply(state.intermediate, state.image_intermediate);
+            const double image_norm =
+                dot(state.image_intermediate, state.image_intermediate);
+            if (!std::isfinite(image_norm) || image_norm <= 1e-30) {
+                failed = true;
+                break;
+            }
+            state.omega =
+                dot(state.image_intermediate, state.intermediate) /
+                image_norm;
+            if (!std::isfinite(state.omega)) {
+                failed = true;
+                break;
+            }
+            for (std::size_t i = 0; i < state.visits.size(); ++i) {
+                state.visits[i] +=
+                    state.alpha * state.direction[i] +
+                    state.omega * state.intermediate[i];
+                state.wave[i] =
+                    state.intermediate[i] -
+                    state.omega * state.image_intermediate[i];
+            }
+            state.rho_previous = rho;
             ++state.sweeps;
             ++fallback_sweeps;
-            const double conservation_error = std::fabs(
-                state.input_mass - state.exited_mass - residual);
-            output.max_mass_conservation_error = std::max(
-                output.max_mass_conservation_error, conservation_error);
-            if (conservation_error >
-                1e-8 * std::max(1.0, state.input_mass)) {
-                throw std::runtime_error(
-                    "strategy evaluation fallback mass conservation failed");
-            }
-            if (residual < options.epsilon) {
+            if (norm(state.wave) <= tolerance) {
                 finished = true;
                 break;
             }
         }
-        if (state.sweeps >= options.max_sweeps) finished = true;
-        if (!finished) return;
+        if (!finished && !failed && state.sweeps < options.max_sweeps) {
+            return;
+        }
 
+        std::vector<double> checked;
+        apply(state.visits, checked);
         double residual = 0.0;
-        for (const double mass : state.wave) residual += mass;
-        commit_component(state.component, state.members, state.visits);
-        if (residual > 0.0) {
-            add_unresolved(
-                state.members, state.wave, residual >= options.epsilon);
+        for (std::size_t i = 0; i < checked.size(); ++i) {
+            const double rhs = state.incoming[i] / state.diagonal[i];
+            residual = std::max(residual, std::fabs(checked[i] - rhs));
+        }
+        if (!failed && residual <= tolerance * 10.0) {
+            for (double& visit : state.visits) {
+                if (visit < -1e-8 || !std::isfinite(visit)) {
+                    failed = true;
+                    break;
+                }
+                visit = std::max(0.0, visit);
+            }
+        } else {
+            failed = true;
+        }
+        if (!failed) {
+            commit_component(state.component, state.members, state.visits);
+        } else {
+            for (std::size_t i = 0; i < state.members.size(); ++i) {
+                pair_visits[state.members[i]] += state.incoming[i];
+            }
+            add_unresolved(state.members, state.incoming, true);
         }
         fallback.reset();
         finish_component();
@@ -2009,7 +2475,7 @@ struct StrategyEvalWork::Impl {
         propagate_chain_inflow();
         CalcContext& calc = *model.calc;
         const std::size_t node_count = strategy->nodes.size();
-        const std::uint64_t finalization_transient_floor =
+        std::uint64_t finalization_transient_floor =
             node_count *
                 (4ull * sizeof(double) +
                  sizeof(std::map<std::uint32_t, double>)) +
@@ -2022,6 +2488,63 @@ struct StrategyEvalWork::Impl {
         std::vector<double> operation_applied(node_count, 0.0);
         std::vector<double> unresolved_by_node(node_count, 0.0);
         std::vector<std::map<std::uint32_t, double>> incoming(node_count);
+        std::vector<std::vector<std::pair<std::uint32_t, double>>>
+            compressed_top_classes(node_count);
+        std::uint64_t compressed_top_owned_bytes =
+            compressed_top_classes.capacity() *
+            sizeof(std::vector<std::pair<std::uint32_t, double>>);
+
+        std::uint64_t compressed_routes_seen = 0;
+        for (std::uint32_t root = 0; root < node_count; ++root) {
+            for (const auto& [state, mass] :
+                 compressed_policy_incoming[root]) {
+                std::uint32_t cursor = root;
+                std::size_t steps = 0;
+                while (is_policy_route_node(cursor)) {
+                    if (++steps > node_count) {
+                        throw std::logic_error(
+                            "compiled policy router contains a cycle");
+                    }
+                    node_visits[cursor] += mass;
+                    auto& top = compressed_top_classes[cursor];
+                    if (options.top_classes_per_node != 0) {
+                        const std::size_t capacity_before = top.capacity();
+                        top.push_back({state, mass});
+                        if (top.capacity() != capacity_before) {
+                            compressed_top_owned_bytes +=
+                                (top.capacity() - capacity_before) *
+                                sizeof(std::pair<std::uint32_t, double>);
+                            check_owned_cap(
+                                finalization_transient_floor +
+                                compressed_top_owned_bytes);
+                        }
+                        std::stable_sort(
+                            top.begin(), top.end(),
+                            [](const auto& left, const auto& right) {
+                                if (left.second != right.second) {
+                                    return left.second > right.second;
+                                }
+                                return left.first < right.first;
+                            });
+                        if (top.size() > options.top_classes_per_node) {
+                            top.pop_back();
+                        }
+                    }
+                    const StrategyEdge* selected =
+                        select_edge(strategy->nodes[cursor], state);
+                    if (selected == nullptr) break;
+                    edge_traversals.at(
+                        edge_index_by_id.at(selected->id)) += mass;
+                    cursor = selected->target;
+                }
+                if ((++compressed_routes_seen & 255u) == 0) {
+                    check_owned_cap(
+                        finalization_transient_floor +
+                        compressed_top_owned_bytes);
+                }
+            }
+        }
+        finalization_transient_floor += compressed_top_owned_bytes;
 
         for (std::size_t pair = 0; pair < pairs.size(); ++pair) {
             const EvalPair& record = pairs[pair];
@@ -2085,8 +2608,14 @@ struct StrategyEvalWork::Impl {
             StrategyEvalNode output_node;
             output_node.id = source.id;
             output_node.expected_visits = node_visits[node];
-            std::vector<std::pair<std::uint32_t, double>> classes(
-                incoming[node].begin(), incoming[node].end());
+            std::vector<std::pair<std::uint32_t, double>> classes;
+            if (compress_policy_routes && is_policy_route_node(
+                    static_cast<std::uint32_t>(node))) {
+                classes = compressed_top_classes[node];
+            } else {
+                classes.assign(
+                    incoming[node].begin(), incoming[node].end());
+            }
             std::stable_sort(
                 classes.begin(), classes.end(), [](const auto& a, const auto& b) {
                     if (a.second != b.second) return a.second > b.second;
@@ -2102,8 +2631,17 @@ struct StrategyEvalWork::Impl {
                      calc.state(classes[c].first)});
             }
             double truncated = 0.0;
-            for (std::size_t c = keep; c < classes.size(); ++c) {
-                truncated += classes[c].second;
+            if (compress_policy_routes && is_policy_route_node(
+                    static_cast<std::uint32_t>(node))) {
+                double retained = 0.0;
+                for (std::size_t c = 0; c < keep; ++c) {
+                    retained += classes[c].second;
+                }
+                truncated = std::max(0.0, node_visits[node] - retained);
+            } else {
+                for (std::size_t c = keep; c < classes.size(); ++c) {
+                    truncated += classes[c].second;
+                }
             }
             output_node.classes_truncated_share =
                 node_visits[node] == 0.0
@@ -2424,6 +2962,9 @@ struct StrategyEvalWork::Impl {
                     if (transition.edge != kNoId) {
                         edge_traversals.at(transition.edge) += flow;
                     }
+                    add_compressed_policy_incoming(
+                        transition.policy_route,
+                        pairs.at(transition.target).state, flow);
                     if (transition.via != kNoId) {
                         chain_inflow.at(transition.via) += flow;
                     }
@@ -2490,6 +3031,13 @@ struct StrategyEvalWork::Impl {
             case StrategyEvalPhase::Done:
                 break;
             }
+            if (phase == StrategyEvalPhase::Discovery &&
+                discover_index != 0 &&
+                (discover_index & 4095u) == 0) {
+                audit_owned_bytes();
+            } else if (phase == StrategyEvalPhase::Done) {
+                audit_owned_bytes();
+            }
             check_owned_cap();
         }
     }
@@ -2504,7 +3052,9 @@ struct StrategyEvalWork::Impl {
         value.total_sccs = components.size();
         value.fallback_sweeps = fallback_sweeps;
         if (fallback != nullptr) {
-            for (const double mass : fallback->wave) value.residual += mass;
+            for (const double mass : fallback->wave) {
+                value.residual += std::fabs(mass);
+            }
         } else {
             for (const double mass : unresolved_pair) value.residual += mass;
         }
@@ -2538,12 +3088,12 @@ const StrategyEvalResult& StrategyEvalWork::result() const {
 }
 
 std::uint64_t StrategyEvalWork::live_owned_bytes() const {
-    return impl_->estimated_owned_bytes();
+    return impl_->fast_estimated_owned_bytes();
 }
 
 std::uint64_t StrategyEvalWork::peak_owned_bytes() const {
     return std::max(
-        impl_->peak_owned_bytes_value, impl_->estimated_owned_bytes());
+        impl_->peak_owned_bytes_value, impl_->fast_estimated_owned_bytes());
 }
 
 StrategyEvalResult evaluate_strategy(

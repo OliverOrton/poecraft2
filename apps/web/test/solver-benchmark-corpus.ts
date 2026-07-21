@@ -26,11 +26,22 @@ export interface SolverBenchmarkCase {
         mods: Array<{ key: string; flags: BenchmarkModFlag[] }>;
     };
     goal: SolverGoal;
+    product_action_envelope?: {
+        mode: "calculator_goal_relevant_priced_v1";
+        envelope_goal: SolverGoal;
+        expected_priced_action_ids: string[];
+    };
     allowed_mechanic_families: string[];
     economy: {
         version: "v1";
         id?: string;
-        prices: Record<string, number>;
+        prices?: Record<string, number>;
+        snapshot_path?: string;
+        content_sha256?: string;
+        source_cutoff_at_utc?: string;
+        manual_overrides?: Record<string, number>;
+        override_purpose?: string;
+        fallback_price?: null;
     };
     expected: {
         solve_status: string;
@@ -42,9 +53,23 @@ export interface SolverBenchmarkCase {
         max_states: number;
         max_sweeps: number;
         solve_step_work_items: number;
+        max_discovered_states: number;
+        max_expanded_states: number;
+        max_state_action_rows: number;
+        max_transitions: number;
+        max_reforge_work: number;
+        max_solver_owned_bytes: number;
+        max_compiled_nodes: number;
+        max_compiled_edges: number;
+        max_strategy_json_bytes: number;
+        max_diagnostic_samples?: number;
+        max_telemetry_json_bytes?: number;
+        full_evidence?: boolean;
+        strict_states?: boolean;
+        kernel_reuse?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
-        [key: string]: number;
+        [key: string]: number | boolean | undefined;
     };
     verification: {
         runs: number;
@@ -143,6 +168,11 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
             throw new Error(`${path}.caps.${key} must be a non-negative number`);
         }
     }
+    for (const key of ["full_evidence", "strict_states", "kernel_reuse"]) {
+        if (key in caps && typeof caps[key] !== "boolean") {
+            throw new Error(`${path}.caps.${key} must be boolean`);
+        }
+    }
     return spec as unknown as SolverBenchmarkCase;
 }
 
@@ -167,6 +197,78 @@ export function loadSolverBenchmarkCorpus(path: string): LoadedSolverBenchmarkCo
         ids.add(spec.id);
     }
     return { path: absolute, manifest, cases };
+}
+
+export function materializeSolverBenchmarkEconomy(
+    spec: SolverBenchmarkCase,
+    repoRoot: string,
+): unknown {
+    const economy = spec.economy;
+    if (!economy.snapshot_path) {
+        requireRecord(economy.prices, `${spec.id}.economy.prices`);
+        return economy;
+    }
+
+    const snapshotPath = resolve(repoRoot, economy.snapshot_path);
+    const snapshot = requireRecord(readJson(snapshotPath), snapshotPath);
+    if (snapshot.id !== economy.id) {
+        throw new Error(`${spec.id} pinned economy snapshot id mismatch`);
+    }
+    const metadata = requireRecord(snapshot.metadata, `${snapshotPath}.metadata`);
+    if (metadata.content_sha256 !== economy.content_sha256) {
+        throw new Error(`${spec.id} pinned economy content hash mismatch`);
+    }
+    if (metadata.source_cutoff_at_utc !== economy.source_cutoff_at_utc) {
+        throw new Error(`${spec.id} pinned economy cutoff mismatch`);
+    }
+    const sourcePrices = requireRecord(snapshot.prices, `${snapshotPath}.prices`);
+    if ("base" in sourcePrices) {
+        throw new Error(`${spec.id} requires Restart/base to remain unpriced`);
+    }
+    if (economy.fallback_price !== null) {
+        throw new Error(`${spec.id} requires a null price fallback`);
+    }
+    const overrides = requireRecord(
+        economy.manual_overrides,
+        `${spec.id}.economy.manual_overrides`,
+    );
+    const entries = Object.entries(overrides);
+    if (
+        entries.length !== 1 || entries[0][0] !== "base" ||
+        typeof entries[0][1] !== "number" || !Number.isFinite(entries[0][1]) ||
+        entries[0][1] <= 0 ||
+        economy.override_purpose !== "r3f_restart_route_gate_not_market_quote"
+    ) {
+        throw new Error(
+            `${spec.id} permits only the disclosed positive R3F base override`,
+        );
+    }
+    return {
+        ...snapshot,
+        prices: { ...sourcePrices, base: entries[0][1] },
+    };
+}
+
+export function materializeSolverBenchmarkGoal(
+    spec: SolverBenchmarkCase,
+): SolverGoal {
+    const envelope = spec.product_action_envelope;
+    if (!envelope) return spec.goal;
+    if (envelope.mode !== "calculator_goal_relevant_priced_v1") {
+        throw new Error(`${spec.id} has an unsupported product action-envelope mode`);
+    }
+    if (
+        !Array.isArray(envelope.expected_priced_action_ids) ||
+        envelope.expected_priced_action_ids.length === 0 ||
+        !envelope.expected_priced_action_ids.every((entry) =>
+            typeof entry === "string" && entry.length > 0)
+    ) {
+        throw new Error(`${spec.id} has an invalid pinned product action envelope`);
+    }
+    return {
+        ...spec.goal,
+        actions: [...envelope.expected_priced_action_ids],
+    };
 }
 
 export function validateCorpusArtifactPins(

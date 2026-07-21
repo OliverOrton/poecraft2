@@ -1,0 +1,23 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-exact-solver-state-scaling-cap-sweep-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 1,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "owner_decisions": [
+    "The sweep changes only discovered and expanded strict-state limits.",
+    "Sweep results are diagnostic and do not alter production defaults."
+  ],
+  "cases": [
+    "diagnostics/dire-pelt-two-t1-product-200k.json",
+    "diagnostics/dire-pelt-two-t1-product-400k.json",
+    "diagnostics/dire-pelt-two-t1-product-800k.json"
+  ]
+}

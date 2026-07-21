@@ -143,8 +143,15 @@ void run_public_solver_gate(const char* artifact_dir) {
         PC_CHECK(automatic_telemetry.find(
                      "\"automatic_candidates\":{\"enabled\":true") !=
                  std::string::npos);
-        PC_CHECK(automatic_telemetry.find(
-                     "\"dependency_primitives\":0") ==
+        const std::size_t automatic_begin = automatic_telemetry.find(
+            "\"automatic_candidates\":{");
+        const std::size_t automatic_rows = automatic_telemetry.find(
+            "\"rows\":", automatic_begin);
+        PC_CHECK(automatic_begin != std::string::npos);
+        PC_CHECK(automatic_rows != std::string::npos);
+        PC_CHECK(automatic_telemetry.substr(
+                     automatic_begin, automatic_rows - automatic_begin)
+                     .find("\"dependency_primitives\":") !=
                  std::string::npos);
         pc_solver_destroy(automatic_solver);
     }

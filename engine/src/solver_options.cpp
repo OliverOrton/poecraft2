@@ -1,4 +1,5 @@
 #include "solver_internal.hpp"
+
 #include "poecraft/bitset.h"
 
 #include <algorithm>
@@ -529,20 +530,46 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     /* Protected candidates are bounded to the exact S7 side-lock programs
      * and only actions whose native preservation facts say the lock matters.
      * Fossils and Essences therefore cannot enter this set. */
+    std::vector<std::vector<std::uint64_t>> reachable_by_followup(
+        registry.actions.size());
+    std::vector<std::uint8_t> reachable_computed(
+        registry.actions.size(), 0);
+    const auto followup_can_produce = [&](const std::uint32_t followup,
+                                          const std::uint32_t slot) {
+        if (!reachable_computed.at(followup)) {
+            reachable_by_followup.at(followup) =
+                action_explicit_affix_reachable_mask(
+                    session, registry.actions.at(followup));
+            reachable_computed.at(followup) = 1;
+        }
+        return mask_intersects(
+            reachable_by_followup.at(followup),
+            calc.layout().slots.at(slot).satisfying_mask);
+    };
     for (const std::int8_t side : {static_cast<std::int8_t>(PC_SIDE_PREFIX),
                                    static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
         const int lock_code =
             side == PC_SIDE_PREFIX
                 ? session.data->metamod_prefixes_locked_code
                 : session.data->metamod_suffixes_locked_code;
-        const bool lock_available = std::any_of(
+        const auto lock_entry = std::find_if(
             registry.actions.begin(), registry.actions.end(),
             [&](const ActionDescriptor& action) {
                 return action.params.type == ActionType::Bench &&
                        action.params.mod_id < session.metamod_type.size() &&
                        session.metamod_type[action.params.mod_id] == lock_code;
             });
-        if (!lock_available) continue;
+        if (lock_entry == registry.actions.end()) continue;
+        const std::uint32_t lock_action = static_cast<std::uint32_t>(
+            lock_entry - registry.actions.begin());
+        const std::uint32_t lock_flag =
+            side == PC_SIDE_PREFIX ? kFlagPrefixesLocked
+                                   : kFlagSuffixesLocked;
+        if ((state.flags & lock_flag) != 0 ||
+            !action_legal(
+                session, registry.actions.at(lock_action), state)) {
+            continue;
+        }
         std::uint32_t protected_mask = 0;
         for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
             if (goal_slot_side(session, goal.slots[slot]) == side) {
@@ -551,7 +578,10 @@ AutomaticOptionSynthesis synthesize_automatic_options(
         }
         if (protected_mask == 0) continue;
         if ((satisfied_goal_mask(state) & protected_mask) == 0) continue;
-        for (const ActionDescriptor& followup : registry.actions) {
+        for (std::uint32_t followup_index = 0;
+             followup_index < registry.actions.size(); ++followup_index) {
+            const ActionDescriptor& followup =
+                registry.actions[followup_index];
             const bool respects =
                 followup.params.type == ActionType::Scour ||
                 (side == PC_SIDE_PREFIX
@@ -566,6 +596,15 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 const std::uint32_t target = 1u << slot;
                 if ((protected_mask & target) != 0 ||
                     !target_slot_missing(state, slot)) {
+                    continue;
+                }
+                /* A repeat can advance only if its exact engine-owned
+                 * explicit-affix universe intersects the satisfying tier
+                 * partition. In particular, a natural reforge cannot produce
+                 * a crafted-only goal family. Protected Scour is preparation,
+                 * not a repeat-to-target, and remains admitted below. */
+                if (followup.params.type != ActionType::Scour &&
+                    !followup_can_produce(followup_index, slot)) {
                     continue;
                 }
                 FixedOptionSpec option;

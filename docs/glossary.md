@@ -59,8 +59,14 @@ abstract solver goal. See [Solver](solver/README.md).
 facts used by the exact transition graph. See [Solver](solver/README.md).
 
 **Junk class** — Equivalence class for non-goal modifiers that retains the
-facts required by admitted actions. Strict versus compact partitioning is an
-explicit exactness/state-width choice. See [Solver](solver/README.md).
+facts required by admitted actions. The strict layout is the correctness
+oracle; approximate global junk compaction is not a solver mode. See
+[Solver](solver/README.md).
+
+**Exact behavioral quotient** — Collision-checked partition of completed
+strict states whose legality, admission, resources, probabilities, choices,
+and successor classes match for every admitted action. See
+[Solver](solver/README.md).
 
 **Action envelope** — The primitive action families and modes made available
 to a solve before state-local legality and exact candidate admission. The web
@@ -89,6 +95,12 @@ across equivalent carriers. See [Solver](solver/README.md).
 **Focused expansion** — Resource-bounded graph discovery guided by optimistic
 values toward currently relevant policy states. It does not authorize heuristic
 mechanic deletion. See [Solver](solver/README.md).
+
+**Constructive state certificate** — Exact current-price proof that one
+executable row upper is strictly below every competing operator's optimistic
+goal-production lower. It avoids kernels and discovery; it is not a state
+merge, and its partial graph is not a price-independent reprice cache. See
+[Solver](solver/README.md).
 
 **Bellman value / `V(start)`** — Minimum expected downstream cost assigned by
 the solver to an abstract state, especially the solve's concrete start state.

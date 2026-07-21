@@ -30,20 +30,29 @@ does not reimplement crafting rules.
   action kinds plus Bestiary Imprint checkpoint/restore behavior.
 - The browser product provides Emulator, Calculator, Strategy Builder and
   Simulator, Stash, saved workspaces, and league-aware economy inputs.
-- The exact solver, compiled simulation, accounting, automatic candidate work,
-  and product integration are implemented through the archived S8 work. The
-  remaining delivery and scaling boundaries are preserved without scheduling
-  them in the [solver roadmap](future/solver-roadmap.md).
+- The exact solver, compiled simulation, accounting, automatic candidates,
+  all-actions state scaling, shared policy compilation, exact compiled-policy
+  evaluation, and non-visual product integration are implemented. Remaining
+  delivery boundaries are preserved without scheduling them in the
+  [solver roadmap](future/solver-roadmap.md).
 - Economy ingest, immutable snapshots, league selection, overrides, and cost
   identities exist. Production activation remains external, and scheduled
   refresh does not currently fetch Beast prices; see [Economy](economy/README.md).
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
-There is no active implementation chunk. Historical target misses, scaling
-measurements, waivers, and final gates remain discoverable through
-[Evidence](evidence.md) and the [archive](archive/README.md); they are not
-silently converted into current acceptance claims.
+No implementation chunk is currently selected. The bounded
+[real three-T1 from-scratch diagnostic](archive/2026-07-21-real-three-t1-diagnostic/README.md)
+is complete; [Active work](active/README.md) and [HANDOFF](../HANDOFF.md) record
+that Oliver must choose the next boundary.
+Exact solver action/state pruning is complete and preserved in its
+[dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
+Exact solver state scaling is preserved in its
+[dated archive](archive/2026-07-20-solver-state-scaling/README.md). Historical
+target misses, scaling measurements, waivers, and final gates remain
+discoverable through [Evidence](evidence.md) and the
+[archive](archive/README.md); they are not silently converted into current
+acceptance claims.
 
 ## Direction Of Travel
 
@@ -57,9 +66,6 @@ These are durable product directions, not a selected order:
   planning.
 - Continue workspace and economy fluency where it supports real crafting use.
 - Keep accounts, publishing, and ML downstream of their explicit prerequisites.
-
-Oliver chooses the next chunk and its acceptance boundary before implementation
-resumes.
 
 ## Non-Negotiable Boundaries
 

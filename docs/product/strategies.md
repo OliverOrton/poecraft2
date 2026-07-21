@@ -145,11 +145,11 @@ actions and materials, node visits, edge traversals, incoming state classes,
 and accounting/review projections. Price edits update displayed cost rows from
 the existing quantities and shared economy; they do not define routing.
 
-Unsupported graph vocabulary is refused with the native gap message. At
-d5e38e3 authored Unveil selection and compiler-only `mod_count`/
-`mod_family_count` cannot be represented by the evaluator's target layout, so
-some solver-compiled graphs still refuse exact evaluation. This is an explicit
-future repair boundary.
+Unsupported graph vocabulary is refused with the native gap message. Exact
+evaluation now represents compiler-emitted `mod_count` and
+`mod_family_count`, including crafted/fractured requirements. Authored concrete
+Unveil-offer selection remains the explicit gap; solver-compiled ordinary
+decision DAGs are evaluable.
 
 Code authority:
 `engine/src/solver_eval.cpp`,

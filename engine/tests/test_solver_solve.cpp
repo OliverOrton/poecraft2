@@ -265,6 +265,42 @@ void run_alt_spam_tests() {
                      result.diagnostics.preservation_witnesses);
         }
 
+        /* Q1-Q3 white-box oracle: incremental byte accounting, exact kernel
+         * reuse, and the completed outer quotient may change graph shape but
+         * never the value or selected start action. */
+        SolveOptions evidence_options;
+        evidence_options.full_evidence = true;
+        const SolveResult quotient =
+            solve(calc, start, prices, evidence_options);
+        SolveOptions strict_options = evidence_options;
+        strict_options.strict_states = true;
+        const SolveResult strict =
+            solve(calc, start, prices, strict_options);
+        SolveOptions no_reuse_options = evidence_options;
+        no_reuse_options.kernel_reuse = false;
+        const SolveResult no_reuse =
+            solve(calc, start, prices, no_reuse_options);
+        PC_CHECK(quotient.converged);
+        PC_CHECK(strict.converged);
+        PC_CHECK(no_reuse.converged);
+        PC_CHECK(near(
+            quotient.values[quotient.start_state],
+            strict.values[strict.start_state], 1e-9));
+        PC_CHECK(near(
+            quotient.values[quotient.start_state],
+            no_reuse.values[no_reuse.start_state], 1e-9));
+        PC_CHECK(quotient.policy[quotient.start_state] ==
+                 strict.policy[strict.start_state]);
+        PC_CHECK(quotient.policy[quotient.start_state] ==
+                 no_reuse.policy[no_reuse.start_state]);
+        PC_CHECK(quotient.diagnostics.strict_discovered_states >=
+                 quotient.diagnostics.quotient_states);
+        PC_CHECK(quotient.diagnostics.observation_signature_mismatches == 0);
+        PC_CHECK(strict.behavioral_representative_by_state.empty());
+        PC_CHECK(no_reuse.diagnostics.exact_kernel_payload_reuses == 0);
+        PC_CHECK(quotient.diagnostics.solve_owned_byte_ledger_requests > 0);
+        PC_CHECK(quotient.diagnostics.solve_owned_byte_reconciliations > 0);
+
         SolveOptions diagnostic_caps;
         diagnostic_caps.max_diagnostic_samples = 1;
         diagnostic_caps.max_telemetry_json_bytes = 64;
@@ -408,6 +444,95 @@ void run_alt_spam_tests() {
         PC_CHECK(oracle.policy[below_state] == result.policy[below_state]);
         PC_CHECK(oracle.diagnostics.preservation_rows_considered == 0);
     }
+}
+
+/* A crafted-only goal has an exact direct finish. Chaos cannot produce the
+ * target mod after it is removed from the normal-roll mask, so every Chaos
+ * route must still pay the bench cost later. The constructive certificate
+ * may therefore stop before materializing Chaos outcomes, while the
+ * certificate-disabled oracle must retain the same value and policy. */
+void run_constructive_state_certificate_tests() {
+    auto session = make_solve_session();
+    pc_bitset_clear(session->normal_random_roll_mask.data(), 0);
+
+    ActionRegistry registry = build_action_registry(*session);
+    session->bench_mod_ids = {0};
+    session->flags[0] |= 1u << 1;
+    ActionDescriptor bench;
+    bench.id = "bench:test_goal";
+    bench.display_name = "Bench test goal";
+    bench.params.type = ActionType::Bench;
+    bench.params.mod_id = 0;
+    bench.kind = TransitionKind::Deterministic;
+    bench.cost_keys = {"bench:test_goal"};
+    bench.legality.rarity_mask =
+        (1u << PC_RARITY_MAGIC) | (1u << PC_RARITY_RARE);
+    bench.legality.requires_open_affix = true;
+    bench.sets_flags = kFlagCraftedMod;
+    const std::uint32_t bench_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    registry.index_by_id.emplace(bench.id, bench_index);
+    registry.actions.push_back(std::move(bench));
+
+    GoalSpec goal;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    goal.rarity = PC_RARITY_RARE;
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry, {chaos, restart, bench_index});
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 0.5}, {"base", 1.0}, {"bench:test_goal", 3.0}};
+
+    const SolveResult certified = solve(calc, start, prices);
+    PC_CHECK(certified.converged);
+    PC_CHECK(near(certified.values[certified.start_state], 3.0, 1e-9));
+    PC_CHECK(certified.policy[certified.start_state] == bench_index);
+    PC_CHECK(certified.diagnostics.constructive_state_certificates == 1);
+    PC_CHECK(certified.diagnostics.constructive_state_operators_pruned == 2);
+    PC_CHECK(near(
+        certified.diagnostics.constructive_upper_bound, 3.0, 1e-9));
+    PC_CHECK(certified.diagnostics.constructive_upper_first_expanded_state ==
+             1);
+    PC_CHECK(!certified.diagnostics.constructive_state_witnesses.empty());
+    PC_CHECK(certified.diagnostics.discovered_states == 2);
+    PC_CHECK(!certified.diagnostics.transition_cache_reused);
+    const std::string telemetry = serialize_solver_telemetry(
+        calc, &certified, nullptr, std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(telemetry));
+    PC_CHECK(telemetry.find(
+                 "\"constructive_state_certificates\":{\"accepted\":1") !=
+             std::string::npos);
+    PC_CHECK(telemetry.find(
+                 "\"proof\":\"optimistic_goal_production_cover\"") !=
+             std::string::npos);
+
+    /* A price-bound partial graph is intentionally not a reprice cache. The
+     * next solve rebuilds exact rows instead of inheriting a stale proof. */
+    const SolveResult repeated = solve(calc, start, prices);
+    PC_CHECK(repeated.converged);
+    PC_CHECK(!repeated.diagnostics.transition_cache_reused);
+    PC_CHECK(near(repeated.values[repeated.start_state], 3.0, 1e-9));
+
+    SolveOptions oracle_options;
+    oracle_options.state_certificate_control = false;
+    const SolveResult oracle = solve(calc, start, prices, oracle_options);
+    PC_CHECK(oracle.converged);
+    PC_CHECK(near(
+        oracle.values[oracle.start_state],
+        certified.values[certified.start_state], 1e-9));
+    PC_CHECK(oracle.policy[oracle.start_state] ==
+             certified.policy[certified.start_state]);
+    PC_CHECK(oracle.diagnostics.constructive_state_certificates == 0);
+    PC_CHECK(oracle.diagnostics.discovered_states >
+             certified.diagnostics.discovered_states);
 }
 
 bool read_text_file(const std::string& path, std::string& out) {
@@ -603,5 +728,6 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 
 void run_solver_solve_tests(const char* artifact_dir) {
     run_alt_spam_tests();
+    run_constructive_state_certificate_tests();
     run_artifact_solve_tests(artifact_dir);
 }

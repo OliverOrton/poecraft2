@@ -710,11 +710,24 @@ bool evaluate_expectation(
              "value"}) {
         if (optional(telemetry, section, Type::Object) == nullptr) return false;
     }
-    if (required_string(expected, "optimality_status") == "exact") {
+    const std::string expected_optimality =
+        required_string(expected, "optimality_status");
+    if (expected_optimality == "exact" ||
+        expected_optimality == "exact_supported_priced_subset") {
         const Value* status = nested_member(
             telemetry, {"optimization", "status"});
-        if (status == nullptr || status->type != Type::String ||
-            status->string != "exact_abstract") {
+        const bool status_matches =
+            status != nullptr && status->type == Type::String &&
+            (expected_optimality == "exact"
+                 ? status->string == "exact_abstract"
+                 : status->string == "exact_supported_priced_subset" ||
+                       status->string == "exact_abstract");
+        /* exact_abstract is stronger than a requested
+         * exact_supported_priced_subset expectation: it means every action
+         * actually reached by the exact proof was supported and priced. A
+         * constructive certificate can make formerly observed unpriced
+         * states unreachable without weakening the requested envelope. */
+        if (!status_matches) {
             return false;
         }
     }
@@ -794,16 +807,21 @@ std::string classify_completed_solve(
     const bool has_unsupported =
         unsupported != nullptr && unsupported->type == Type::Number &&
         unsupported->number > 0;
-    if (has_missing_price && has_unsupported) {
+    const bool priced_product_envelope =
+        specification.find("product_action_envelope") != nullptr;
+    if (has_missing_price && has_unsupported && !priced_product_envelope) {
         return "refused_missing_price_and_unsupported_action";
     }
-    if (has_missing_price) return "refused_missing_price";
+    if (has_missing_price && !priced_product_envelope) {
+        return "refused_missing_price";
+    }
     if (has_unsupported) return "refused_unsupported_action";
     const Value* full_request_status = nested_member(
         telemetry, {"optimization", "full_request_status"});
     if (full_request_status != nullptr &&
         full_request_status->type == Type::String &&
-        full_request_status->string == "incomplete_action_subset") {
+        full_request_status->string == "incomplete_action_subset" &&
+        !priced_product_envelope) {
         return "incomplete_action_subset";
     }
     const Value* raw_start_bound = nested_member(
@@ -958,18 +976,18 @@ CaseResult run_case(
         pc_solve_options solve_options{};
         solve_options.struct_size = sizeof(solve_options);
         solve_options.abi_version = PC_ABI_VERSION;
-        solve_options.max_states = optional_u32(caps, "max_states", 100000);
+        solve_options.max_states = optional_u32(caps, "max_states", 200000);
         solve_options.max_sweeps = optional_u32(caps, "max_sweeps", 100000);
         solve_options.max_discovered_states = optional_u32(
             caps, "max_discovered_states", solve_options.max_states);
         solve_options.max_expanded_states = optional_u32(
             caps, "max_expanded_states", solve_options.max_states);
         solve_options.max_state_action_rows = optional_u64(
-            caps, "max_state_action_rows", 1000000);
+            caps, "max_state_action_rows", 1215000);
         solve_options.max_transitions = optional_u64(
             caps, "max_transitions", 10000000);
         solve_options.max_reforge_work = optional_u64(
-            caps, "max_reforge_work", solve_options.max_transitions);
+            caps, "max_reforge_work", 11000000);
         solve_options.max_solver_owned_bytes = optional_u64(
             caps, "max_solver_owned_bytes", 1073741824);
         solve_options.max_compiled_nodes = optional_u32(
@@ -982,6 +1000,16 @@ CaseResult run_case(
             caps, "max_diagnostic_samples", 32);
         solve_options.max_telemetry_json_bytes = optional_u64(
             caps, "max_telemetry_json_bytes", 1048576);
+        if (optional_bool(caps, "full_evidence", false)) {
+            solve_options.solver_flags |= PC_SOLVER_FLAG_FULL_EVIDENCE;
+        }
+        if (optional_bool(caps, "strict_states", false)) {
+            solve_options.solver_flags |= PC_SOLVER_FLAG_STRICT_STATES;
+        }
+        if (!optional_bool(caps, "kernel_reuse", true)) {
+            solve_options.solver_flags |=
+                PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE;
+        }
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
         pc_error_info error;

@@ -581,6 +581,21 @@ bool parse_solve_options(
         obj_u32(spec, "max_diagnostic_samples");
     options.max_telemetry_json_bytes = obj_u64(
         spec, "max_telemetry_json_bytes");
+    const Value* full_evidence = spec.find("full_evidence");
+    if (full_evidence != nullptr && full_evidence->type == Type::Bool &&
+        full_evidence->boolean) {
+        options.solver_flags |= PC_SOLVER_FLAG_FULL_EVIDENCE;
+    }
+    const Value* strict_states = spec.find("strict_states");
+    if (strict_states != nullptr && strict_states->type == Type::Bool &&
+        strict_states->boolean) {
+        options.solver_flags |= PC_SOLVER_FLAG_STRICT_STATES;
+    }
+    const Value* kernel_reuse = spec.find("kernel_reuse");
+    if (kernel_reuse != nullptr && kernel_reuse->type == Type::Bool &&
+        !kernel_reuse->boolean) {
+        options.solver_flags |= PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE;
+    }
     return true;
 }
 

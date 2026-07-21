@@ -2,26 +2,23 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <functional>
+#include <limits>
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "poecraft/bitset.h"
 
 /*
- * Solver S5: compile a policy into the ordinary strategy graph format
- * (docs/solver/crafting-solver-plan.md, Policy To Strategy Graph).
- *
- * Shape: start -> master router. The router's prioritized edges are, in
- * order, the goal test (success terminal), one membership test per
- * policy-reachable state (to that state's primitive operation or fixed-option
- * primitive chain, which routes back to the router), and a default edge to a
- * failure terminal so any
- * off-policy item — abstraction drift, vocabulary mismatch — fails loudly
- * instead of silently rerouting. The first operation node for each state
- * carries its expected remaining cost as an "expected_cost" annotation
- * (ignored by the strategy compiler, consumed by the editor/board).
+ * Compile an exact solver policy into the ordinary strategy graph format.
+ * Policy states with the same action and continuation region share operation
+ * nodes, while a collision-checked decision DAG routes each concrete item to
+ * its exact policy region. A final default edge makes abstraction drift or a
+ * vocabulary mismatch fail loudly. Expected-cost annotations are presentation
+ * metadata consumed by the editor/board, never execution authority.
  */
 namespace poecraft {
 namespace solver {
@@ -63,6 +60,7 @@ const char* rarity_name(std::uint8_t rarity) {
 }
 
 std::string all_of(const std::vector<std::string>& parts) {
+    if (parts.empty()) return "{\"type\":\"always\"}";
     if (parts.size() == 1) return parts.front();
     std::string out = "{\"type\":\"all\",\"conditions\":[";
     for (std::size_t i = 0; i < parts.size(); ++i) {
@@ -396,6 +394,326 @@ std::string abstract_state_condition(
     return all_of(parts);
 }
 
+struct QuotientFeature {
+    std::uint64_t value = 0;
+    std::string condition;
+};
+
+std::vector<QuotientFeature> quotient_features(
+    const SessionImpl& session,
+    const AbstractLayout& layout,
+    const std::vector<SlotVocabulary>& vocabulary,
+    const AbstractState& state) {
+    std::vector<QuotientFeature> features;
+    features.push_back({state.rarity, rarity_condition(state.rarity)});
+    features.push_back({
+        state.prefix_count,
+        count_condition("prefix_count_range", state.prefix_count)});
+    features.push_back({
+        state.suffix_count,
+        count_condition("suffix_count_range", state.suffix_count)});
+    for (std::size_t i = 0; i < layout.slots.size(); ++i) {
+        const auto status =
+            static_cast<GoalSlotStatus>(state.slot_status[i]);
+        std::string status_condition;
+        switch (status) {
+        case GoalSlotStatus::Satisfied:
+            status_condition = vocabulary[i].satisfied;
+            break;
+        case GoalSlotStatus::PresentBelowTier:
+            status_condition = all_of({
+                vocabulary[i].member, not_of(vocabulary[i].satisfied)});
+            break;
+        case GoalSlotStatus::Absent:
+            status_condition = not_of(vocabulary[i].member);
+            break;
+        }
+        features.push_back({state.slot_status[i], status_condition});
+        const bool fractured =
+            (state.fractured_goal_mask & (1u << i)) != 0;
+        const bool crafted =
+            (state.crafted_goal_mask & (1u << i)) != 0;
+        const std::string fractured_condition =
+            with_slot_flags(vocabulary[i].member, true, false);
+        const std::string crafted_condition =
+            with_slot_flags(vocabulary[i].member, false, true);
+        features.push_back({
+            fractured ? 1u : 0u,
+            fractured ? fractured_condition
+                       : not_of(fractured_condition)});
+        features.push_back({
+            crafted ? 1u : 0u,
+            crafted ? crafted_condition : not_of(crafted_condition)});
+    }
+    static const std::pair<std::uint32_t, const char*> flag_conditions[] = {
+        {kFlagCorrupted, "corrupted"},
+        {kFlagMirrored, "mirrored"},
+        {kFlagSplit, "split"},
+        {kFlagSynthesised, "synthesised"},
+        {kFlagFractured, "fractured"},
+        {kFlagCraftedMod, "crafted"},
+        {kFlagVeiledMod, "veiled"},
+        {kFlagMultimod, "multimod"},
+        {kFlagNoAttack, "no_attack"},
+        {kFlagNoCaster, "no_caster"},
+        {kFlagPrefixesLocked, "prefixes_locked"},
+        {kFlagSuffixesLocked, "suffixes_locked"},
+        {kFlagInfluenced, "influenced"},
+        {kFlagEldritchImplicit, "eldritch_implicit"},
+    };
+    for (const auto& [flag, name] : flag_conditions) {
+        const bool present = (state.flags & flag) != 0;
+        const std::string condition = item_flag_condition(name);
+        features.push_back({
+            present ? 1u : 0u,
+            present ? condition : not_of(condition)});
+    }
+    const std::string veiled_prefix = item_flag_condition("veiled_prefix");
+    const std::string veiled_suffix = item_flag_condition("veiled_suffix");
+    features.push_back({
+        static_cast<std::uint8_t>(state.veiled_side + 1),
+        all_of({
+            state.veiled_side == PC_SIDE_PREFIX
+                ? veiled_prefix
+                : not_of(veiled_prefix),
+            state.veiled_side == PC_SIDE_SUFFIX
+                ? veiled_suffix
+                : not_of(veiled_suffix)})});
+    features.push_back({
+        state.influence_bits,
+        "{\"type\":\"influence_bits\",\"value\":" +
+            std::to_string(state.influence_bits) + "}"});
+    features.push_back({
+        state.searing_exarch_tier,
+        eldritch_tier_condition("searing", state.searing_exarch_tier)});
+    features.push_back({
+        state.eater_of_worlds_tier,
+        eldritch_tier_condition("eater", state.eater_of_worlds_tier)});
+    for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
+        const JunkClass& junk = layout.junk_classes[i];
+        features.push_back({
+            state.junk_counts[i],
+            mod_count_condition(session, junk, state.junk_counts[i])});
+        features.push_back({
+            state.fractured_junk_counts[i],
+            mod_count_condition(
+                session, junk, state.fractured_junk_counts[i],
+                PC_MOD_SLOT_FRACTURED)});
+        features.push_back({
+            state.crafted_junk_counts[i],
+            mod_count_condition(
+                session, junk, state.crafted_junk_counts[i],
+                PC_MOD_SLOT_CRAFTED)});
+        features.push_back({
+            state.fractured_crafted_junk_counts[i],
+            mod_count_condition(
+                session, junk, state.fractured_crafted_junk_counts[i],
+                PC_MOD_SLOT_FRACTURED | PC_MOD_SLOT_CRAFTED)});
+    }
+    return features;
+}
+
+std::vector<std::uint32_t> quotient_feature_values(
+    const AbstractLayout& layout,
+    const AbstractState& state) {
+    std::vector<std::uint32_t> values;
+    values.push_back(state.rarity);
+    values.push_back(state.prefix_count);
+    values.push_back(state.suffix_count);
+    for (std::size_t i = 0; i < layout.slots.size(); ++i) {
+        values.push_back(state.slot_status[i]);
+        values.push_back(
+            (state.fractured_goal_mask & (1u << i)) != 0 ? 1u : 0u);
+        values.push_back(
+            (state.crafted_goal_mask & (1u << i)) != 0 ? 1u : 0u);
+    }
+    static const std::uint32_t flags[] = {
+        kFlagCorrupted, kFlagMirrored, kFlagSplit, kFlagSynthesised,
+        kFlagFractured, kFlagCraftedMod, kFlagVeiledMod, kFlagMultimod,
+        kFlagNoAttack, kFlagNoCaster, kFlagPrefixesLocked,
+        kFlagSuffixesLocked, kFlagInfluenced, kFlagEldritchImplicit,
+    };
+    for (const std::uint32_t flag : flags) {
+        values.push_back((state.flags & flag) != 0 ? 1u : 0u);
+    }
+    values.push_back(static_cast<std::uint8_t>(state.veiled_side + 1));
+    values.push_back(state.influence_bits);
+    values.push_back(state.searing_exarch_tier);
+    values.push_back(state.eater_of_worlds_tier);
+    for (std::size_t i = 0; i < layout.junk_classes.size(); ++i) {
+        values.push_back(state.junk_counts[i]);
+        values.push_back(state.fractured_junk_counts[i]);
+        values.push_back(state.crafted_junk_counts[i]);
+        values.push_back(state.fractured_crafted_junk_counts[i]);
+    }
+    return values;
+}
+
+struct QuotientFeatureIndex {
+    std::size_t width = 0;
+    std::uint32_t non_goal_states = 0;
+    std::vector<std::uint32_t> values;
+    std::vector<std::unordered_map<
+        std::uint32_t, std::vector<std::uint32_t>>> non_goal_buckets;
+
+    std::uint32_t at(
+        const std::uint32_t state, const std::size_t feature) const {
+        return values.at(static_cast<std::size_t>(state) * width + feature);
+    }
+
+    const std::uint32_t* row(const std::uint32_t state) const noexcept {
+        return values.data() + static_cast<std::size_t>(state) * width;
+    }
+};
+
+std::string quotient_class_condition(
+    const CalcContext& calc,
+    const std::vector<SlotVocabulary>& vocabulary,
+    const std::uint32_t representative,
+    const std::vector<std::uint32_t>& members,
+    const QuotientFeatureIndex& feature_index,
+    const std::vector<std::uint32_t>& class_by_state) {
+    const SessionImpl& session = calc.session();
+    const AbstractLayout& layout = calc.layout();
+    const std::vector<QuotientFeature> representative_features =
+        quotient_features(
+            session, layout, vocabulary, calc.state(representative));
+    const auto exact_fallback = [&]() {
+        std::vector<std::string> conditions;
+        conditions.reserve(members.size());
+        for (const std::uint32_t member : members) {
+            conditions.push_back(abstract_state_condition(
+                session, layout, vocabulary, calc.state(member)));
+        }
+        std::sort(conditions.begin(), conditions.end());
+        conditions.erase(
+            std::unique(conditions.begin(), conditions.end()),
+            conditions.end());
+        return conditions.size() == 1 ? conditions.front()
+                                      : any_of(conditions);
+    };
+    if (representative_features.empty()) return exact_fallback();
+    std::vector<std::uint8_t> constant(representative_features.size(), 1);
+    const std::uint32_t* representative_values =
+        feature_index.row(representative);
+    for (const std::uint32_t member : members) {
+        const std::uint32_t* member_values = feature_index.row(member);
+        for (std::size_t feature = 0; feature < constant.size(); ++feature) {
+            if (member_values[feature] != representative_values[feature]) {
+                constant[feature] = 0;
+            }
+        }
+    }
+    std::vector<std::size_t> selected;
+    std::vector<std::uint8_t> used(constant.size(), 0);
+
+    const std::size_t class_size = members.size();
+    const std::size_t outsider_count =
+        feature_index.non_goal_states - class_size;
+    if (outsider_count == 0) {
+        std::vector<std::string> goal_parts{
+            rarity_condition(calc.goal().rarity)};
+        std::vector<std::string> satisfied;
+        for (const SlotVocabulary& slot : vocabulary) {
+            satisfied.push_back(slot.satisfied);
+        }
+        goal_parts.push_back(
+            calc.goal().required_satisfied_slots() == satisfied.size()
+                ? all_of(satisfied)
+                : at_least(
+                      calc.goal().required_satisfied_slots(), satisfied));
+        return not_of(all_of(goal_parts));
+    }
+
+    /* The old implementation evaluated every feature against every strict
+     * state before choosing the first discriminator for every quotient
+     * class.  Use the exact inverted buckets to make the identical greedy
+     * choice in O(features), then continue over only the surviving bucket. */
+    std::size_t first = constant.size();
+    std::size_t first_remaining = outsider_count;
+    for (std::size_t feature = 0; feature < constant.size(); ++feature) {
+        if (!constant[feature]) continue;
+        const std::uint32_t value = representative_values[feature];
+        const auto& by_value = feature_index.non_goal_buckets[feature];
+        const auto found = by_value.find(value);
+        const std::size_t bucket_size =
+            found == by_value.end() ? 0 : found->second.size();
+        const std::size_t outside_class = bucket_size - class_size;
+        if (outside_class < first_remaining) {
+            first = feature;
+            first_remaining = outside_class;
+        }
+    }
+    if (first == constant.size()) return exact_fallback();
+    used[first] = 1;
+    selected.push_back(first);
+    std::vector<std::uint32_t> remaining;
+    const auto& first_bucket =
+        feature_index.non_goal_buckets[first].at(
+            representative_values[first]);
+    remaining.reserve(first_remaining);
+    for (const std::uint32_t state : first_bucket) {
+        if (class_by_state[state] != representative) {
+            remaining.push_back(state);
+        }
+    }
+    std::vector<std::size_t> covered(constant.size(), 0);
+    while (!remaining.empty()) {
+        std::size_t best = constant.size();
+        std::size_t best_covered = 0;
+        std::fill(covered.begin(), covered.end(), 0);
+        for (const std::uint32_t state : remaining) {
+            const std::uint32_t* state_values = feature_index.row(state);
+            for (std::size_t feature = 0;
+                 feature < constant.size(); ++feature) {
+                if (!constant[feature] || used[feature]) continue;
+                covered[feature] +=
+                    state_values[feature] != representative_values[feature];
+            }
+        }
+        for (std::size_t feature = 0; feature < constant.size(); ++feature) {
+            if (!constant[feature] || used[feature]) continue;
+            if (covered[feature] > best_covered) {
+                best = feature;
+                best_covered = covered[feature];
+            }
+        }
+        if (best == constant.size() || best_covered == 0) {
+            return exact_fallback();
+        }
+        used[best] = 1;
+        selected.push_back(best);
+        remaining.erase(
+            std::remove_if(
+                remaining.begin(), remaining.end(),
+                [&](const std::uint32_t state) {
+                    return feature_index.row(state)[best] !=
+                           representative_values[best];
+                }),
+            remaining.end());
+    }
+    if (selected.empty()) {
+        std::vector<std::string> goal_parts{
+            rarity_condition(calc.goal().rarity)};
+        std::vector<std::string> satisfied;
+        for (const SlotVocabulary& slot : vocabulary) {
+            satisfied.push_back(slot.satisfied);
+        }
+        goal_parts.push_back(
+            calc.goal().required_satisfied_slots() == satisfied.size()
+                ? all_of(satisfied)
+                : at_least(
+                      calc.goal().required_satisfied_slots(), satisfied));
+        return not_of(all_of(goal_parts));
+    }
+    std::vector<std::string> conditions;
+    conditions.reserve(selected.size());
+    for (const std::size_t feature : selected) {
+        conditions.push_back(representative_features[feature].condition);
+    }
+    return all_of(conditions);
+}
+
 std::string operation_json(const SessionImpl& session,
                            const ActionDescriptor& action) {
     const DataImpl& data = *session.data;
@@ -579,19 +897,67 @@ std::string compile_policy_strategy_json(
      * emitted node ids by the exact state predicate so policy compression
      * produces the same document for the same solved policy. */
     std::map<std::uint32_t, std::string> state_conditions;
+    std::map<std::uint32_t, std::vector<std::uint32_t>> quotient_members;
+    QuotientFeatureIndex feature_index;
+    {
+        const std::size_t state_count = result.values.size();
+        if (state_count != 0) {
+            feature_index.width =
+                quotient_feature_values(layout, calc.state(0)).size();
+        }
+        feature_index.values.reserve(state_count * feature_index.width);
+        feature_index.non_goal_buckets.resize(feature_index.width);
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (!result.behavioral_representative_by_state.empty()) {
+                quotient_members[
+                    result.behavioral_representative_by_state[state]]
+                    .push_back(state);
+            }
+            const std::vector<std::uint32_t> values =
+                quotient_feature_values(layout, calc.state(state));
+            if (values.size() != feature_index.width) {
+                gap("quotient feature width changed within one solve");
+            }
+            feature_index.values.insert(
+                feature_index.values.end(), values.begin(), values.end());
+            if (!calc.is_goal_state(calc.state(state))) {
+                ++feature_index.non_goal_states;
+                for (std::size_t feature = 0;
+                     feature < values.size(); ++feature) {
+                    feature_index.non_goal_buckets[feature][values[feature]]
+                        .push_back(state);
+                }
+            }
+        }
+    }
     for (const std::uint32_t state_id : compiled_states) {
-        state_conditions.emplace(
-            state_id,
-            abstract_state_condition(
-                session, layout, vocabulary, calc.state(state_id)));
+        if (!result.behavioral_representative_by_state.empty()) {
+            state_conditions.emplace(
+                state_id,
+                quotient_class_condition(
+                    calc, vocabulary, state_id,
+                    quotient_members.at(state_id), feature_index,
+                    result.behavioral_representative_by_state));
+        }
     }
     std::sort(
         compiled_states.begin(), compiled_states.end(),
         [&](const std::uint32_t left, const std::uint32_t right) {
-            const std::string& left_condition = state_conditions.at(left);
-            const std::string& right_condition = state_conditions.at(right);
-            if (left_condition != right_condition) {
-                return left_condition < right_condition;
+            if (!result.behavioral_representative_by_state.empty()) {
+                const std::string& left_condition = state_conditions.at(left);
+                const std::string& right_condition = state_conditions.at(right);
+                if (left_condition != right_condition) {
+                    return left_condition < right_condition;
+                }
+            } else {
+                const std::uint32_t* left_values = feature_index.row(left);
+                const std::uint32_t* right_values = feature_index.row(right);
+                for (std::size_t feature = 0;
+                     feature < feature_index.width; ++feature) {
+                    if (left_values[feature] != right_values[feature]) {
+                        return left_values[feature] < right_values[feature];
+                    }
+                }
             }
             if (result.policy[left].index != result.policy[right].index) {
                 return result.policy[left].index < result.policy[right].index;
@@ -615,10 +981,11 @@ std::string compile_policy_strategy_json(
     };
 
     /* Exact policy-region compression. States may share one emitted
-     * continuation only when the selected program is state-independent and
-     * the serialized expected-cost annotation is identical. Observation-
-     * owned and state-local retry options remain singleton regions so their
-     * concrete routing recipes cannot be conflated. */
+     * continuation when the selected program is state-independent. Expected
+     * cost is only an annotation, so omit it for a shared region whose member
+     * values differ. Observation-owned and state-local retry options remain
+     * singleton regions so their concrete routing recipes cannot be
+     * conflated. */
     std::map<std::string, std::vector<std::uint32_t>> leaders_by_key;
     std::map<std::uint32_t, std::vector<std::uint32_t>> states_by_leader;
     std::vector<std::uint32_t> emitted_states;
@@ -639,11 +1006,9 @@ std::string compile_policy_strategy_json(
         std::uint32_t leader = state_id;
         if (!primitive_unveil && !state_local_option) {
             const std::string key =
-                std::to_string(result.policy[state_id].index) + ":" +
-                number(result.values[state_id]);
+                std::to_string(result.policy[state_id].index);
             std::vector<std::uint32_t>& leaders = leaders_by_key[key];
-            if (leaders.empty() ||
-                states_by_leader[leaders.back()].size() >= 8) {
+            if (leaders.empty()) {
                 leaders.push_back(state_id);
                 emitted_states.push_back(state_id);
             }
@@ -652,6 +1017,225 @@ std::string compile_policy_strategy_json(
             emitted_states.push_back(state_id);
         }
         states_by_leader[leader].push_back(state_id);
+    }
+    std::vector<std::uint32_t> policy_region_by_state(
+        result.values.size(), kNoId);
+    std::map<std::uint32_t, std::optional<std::string>> region_expected_cost;
+    std::uint32_t restart_region_leader = kNoId;
+    for (const std::uint32_t leader : emitted_states) {
+        const std::vector<std::uint32_t>& members =
+            states_by_leader.at(leader);
+        for (const std::uint32_t member : members) {
+            policy_region_by_state[member] = leader;
+        }
+        const std::string first_value = number(result.values[members.front()]);
+        const bool uniform = std::all_of(
+            members.begin() + 1, members.end(),
+            [&](const std::uint32_t member) {
+                return number(result.values[member]) == first_value;
+            });
+        region_expected_cost.emplace(
+            leader, uniform ? std::optional<std::string>{first_value}
+                            : std::nullopt);
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[leader]);
+        if (planner.kind == PlannerOperatorKind::Primitive &&
+            planner.primitive_action < calc.registry().actions.size() &&
+            calc.registry().actions[planner.primitive_action].synthetic) {
+            if (restart_region_leader != kNoId) {
+                gap("policy produced multiple Restart regions");
+            }
+            restart_region_leader = leader;
+        }
+    }
+    const auto expected_cost_annotation =
+        [&](const std::uint32_t leader) -> std::string {
+        const auto found = region_expected_cost.find(leader);
+        if (found == region_expected_cost.end() ||
+            !found->second.has_value()) {
+            return {};
+        }
+        return ",\"expected_cost\":" + *found->second;
+    };
+
+    /* Spell the exact policy domain as a compressed decision tree over the
+     * existing v1 condition vocabulary. A region-wide DNF repeats the complete
+     * state predicate tens of thousands of times for ordinary reforge
+     * policies. This tree checks every abstract feature on every accepted path
+     * and defaults to offpolicy at each branch, so sharing changes only the
+     * representation, never the set of routed strict states. */
+    struct PolicyRouteEntry {
+        std::uint32_t state = kNoId;
+        std::uint32_t leader = kNoId;
+    };
+    struct PolicyRouteEdge {
+        std::string to;
+        std::string condition;
+    };
+    struct PolicyRouteNode {
+        std::string id;
+        std::vector<PolicyRouteEdge> edges;
+    };
+    struct PolicyRouteBranch {
+        std::string to;
+        std::string guard;
+    };
+    std::vector<PolicyRouteEntry> policy_route_entries;
+    const bool strict_policy_route =
+        result.behavioral_representative_by_state.empty();
+    if (strict_policy_route) {
+        policy_route_entries.reserve(compiled_states.size());
+        for (const std::uint32_t state : compiled_states) {
+            const std::uint32_t leader = policy_region_by_state.at(state);
+            if (leader != restart_region_leader) {
+                policy_route_entries.push_back({state, leader});
+            }
+        }
+    }
+    const bool use_exact_policy_tree =
+        strict_policy_route && !policy_route_entries.empty();
+    const std::string policy_route_default_node =
+        strict_policy_route && restart_region_leader != kNoId
+            ? state_node(restart_region_leader)
+            : "offpolicy";
+    std::vector<std::map<std::uint32_t, std::string>>
+        feature_condition_cache(feature_index.width);
+    const auto feature_condition =
+        [&](const std::uint32_t state,
+            const std::size_t feature) -> const std::string& {
+        const std::uint32_t value = feature_index.at(state, feature);
+        auto& cache = feature_condition_cache.at(feature);
+        auto found = cache.find(value);
+        if (found != cache.end()) return found->second;
+        const std::vector<QuotientFeature> features = quotient_features(
+            session, layout, vocabulary, calc.state(state));
+        if (features.size() != feature_index.width) {
+            gap("policy route feature width changed within one solve");
+        }
+        for (std::size_t index = 0; index < features.size(); ++index) {
+            feature_condition_cache[index].try_emplace(
+                static_cast<std::uint32_t>(features[index].value),
+                features[index].condition);
+        }
+        return feature_condition_cache.at(feature).at(value);
+    };
+    std::vector<PolicyRouteNode> policy_route_nodes;
+    std::map<std::string, std::string> policy_route_node_by_signature;
+    std::vector<std::size_t> route_features(feature_index.width);
+    for (std::size_t feature = 0; feature < route_features.size(); ++feature) {
+        route_features[feature] = feature;
+    }
+    std::function<PolicyRouteBranch(
+        const std::vector<PolicyRouteEntry>&,
+        const std::vector<std::size_t>&)> build_policy_route;
+    build_policy_route =
+        [&](const std::vector<PolicyRouteEntry>& entries,
+            const std::vector<std::size_t>& features) -> PolicyRouteBranch {
+        if (entries.empty()) gap("empty exact policy route partition");
+        std::vector<std::string> constants;
+        std::vector<std::size_t> varying;
+        varying.reserve(features.size());
+        for (const std::size_t feature : features) {
+            const std::uint32_t first =
+                feature_index.at(entries.front().state, feature);
+            const bool constant = std::all_of(
+                entries.begin() + 1, entries.end(),
+                [&](const PolicyRouteEntry& entry) {
+                    return feature_index.at(entry.state, feature) == first;
+                });
+            if (constant) {
+                constants.push_back(
+                    feature_condition(entries.front().state, feature));
+            } else {
+                varying.push_back(feature);
+            }
+        }
+        const std::string guard = all_of(constants);
+        if (varying.empty()) {
+            const std::uint32_t leader = entries.front().leader;
+            if (!std::all_of(
+                    entries.begin() + 1, entries.end(),
+                    [&](const PolicyRouteEntry& entry) {
+                        return entry.leader == leader;
+                    })) {
+                gap("identical exact policy states select different regions");
+            }
+            return {state_node(leader), guard};
+        }
+
+        /* Prefer the widest, then most balanced exact partition. This keeps
+         * the router shallow without assigning semantic meaning to hashes or
+         * state discovery ids. */
+        std::size_t selected = varying.front();
+        std::size_t selected_distinct = 0;
+        std::uint64_t selected_square_sum =
+            std::numeric_limits<std::uint64_t>::max();
+        for (const std::size_t feature : varying) {
+            std::map<std::uint32_t, std::uint32_t> counts;
+            for (const PolicyRouteEntry& entry : entries) {
+                ++counts[feature_index.at(entry.state, feature)];
+            }
+            std::uint64_t square_sum = 0;
+            for (const auto& [value, count] : counts) {
+                (void)value;
+                square_sum += static_cast<std::uint64_t>(count) * count;
+            }
+            if (counts.size() > selected_distinct ||
+                (counts.size() == selected_distinct &&
+                 square_sum < selected_square_sum)) {
+                selected = feature;
+                selected_distinct = counts.size();
+                selected_square_sum = square_sum;
+            }
+        }
+        std::vector<std::size_t> child_features;
+        child_features.reserve(varying.size() - 1);
+        for (const std::size_t feature : varying) {
+            if (feature != selected) child_features.push_back(feature);
+        }
+        std::map<std::uint32_t, std::vector<PolicyRouteEntry>> groups;
+        for (const PolicyRouteEntry& entry : entries) {
+            groups[feature_index.at(entry.state, selected)].push_back(entry);
+        }
+        std::vector<PolicyRouteEdge> edges;
+        edges.reserve(groups.size());
+        for (auto& [value, members] : groups) {
+            (void)value;
+            const PolicyRouteBranch child =
+                build_policy_route(members, child_features);
+            edges.push_back({
+                child.to,
+                all_of({feature_condition(
+                            members.front().state, selected),
+                        child.guard})});
+        }
+        std::string signature;
+        for (const PolicyRouteEdge& route_edge : edges) {
+            signature += std::to_string(route_edge.to.size()) + ":" +
+                         route_edge.to + ":" +
+                         std::to_string(route_edge.condition.size()) + ":" +
+                         route_edge.condition + ";";
+        }
+        const auto shared = policy_route_node_by_signature.find(signature);
+        if (shared != policy_route_node_by_signature.end()) {
+            return {shared->second, guard};
+        }
+        const std::string node_id =
+            "policy_route_" + std::to_string(policy_route_nodes.size());
+        policy_route_nodes.push_back({node_id, std::move(edges)});
+        policy_route_node_by_signature.emplace(std::move(signature), node_id);
+        if (policy_route_nodes.size() + 4 >
+            result.options.max_compiled_nodes) {
+            if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
+            gap("exact policy router exceeded max_compiled_nodes (" +
+                std::to_string(result.options.max_compiled_nodes) + ")");
+        }
+        return {node_id, guard};
+    };
+    PolicyRouteBranch policy_route_root;
+    if (use_exact_policy_tree) {
+        policy_route_root =
+            build_policy_route(policy_route_entries, route_features);
     }
     std::map<std::uint32_t, OptionKernel> compiled_option_kernels;
     for (const std::uint32_t state_id : compiled_states) {
@@ -672,7 +1256,8 @@ std::string compile_policy_strategy_json(
         }
         compiled_option_kernels.emplace(state_id, kernel);
     }
-    std::uint32_t node_count = 4; /* start, router, goal, offpolicy */
+    std::uint32_t node_count =
+        4 + static_cast<std::uint32_t>(policy_route_nodes.size());
     const auto check_node_cap = [&]() {
         if (node_count > result.options.max_compiled_nodes) {
             if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
@@ -740,6 +1325,9 @@ std::string compile_policy_strategy_json(
     json += "{\"id\":\"offpolicy\",\"kind\":\"terminal\",\"terminal\":"
             "\"failure\",\"reason\":\"item left the policy-reachable "
             "state set\"}";
+    for (const PolicyRouteNode& route : policy_route_nodes) {
+        json += ",{\"id\":\"" + route.id + "\",\"kind\":\"router\"}";
+    }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
@@ -763,12 +1351,12 @@ std::string compile_policy_strategy_json(
                  ++option) {
                 const std::uint32_t mod_id =
                     result.unveil_preferences[state_id][option];
-                json += ",{\"id\":\"";
-                json += state_node(state_id);
-                json += "_u" + std::to_string(option);
-                json += "\",\"kind\":\"operation\",\"expected_cost\":";
-                json += number(result.values[state_id]);
-                json += ",\"operation\":{\"type\":\"unveil\",\"mod_key\":\"";
+            json += ",{\"id\":\"";
+            json += state_node(state_id);
+            json += "_u" + std::to_string(option);
+            json += "\",\"kind\":\"operation\"";
+            json += expected_cost_annotation(state_id);
+            json += ",\"operation\":{\"type\":\"unveil\",\"mod_key\":\"";
                 json += json_escape(mod_key_of(session, mod_id));
                 json += "\"}}";
                 ++node_count;
@@ -782,8 +1370,8 @@ std::string compile_policy_strategy_json(
                 gap("imprint retry option has no attempt program");
             }
             json += ",{\"id\":\"" + state_node(state_id) +
-                    "\",\"kind\":\"operation\",\"expected_cost\":" +
-                    number(result.values[state_id]) +
+                    "\",\"kind\":\"operation\"" +
+                    expected_cost_annotation(state_id) +
                     ",\"operation\":{\"type\":\"bestiary:imprint\"}}";
             ++node_count;
             for (std::size_t step = 0;
@@ -829,8 +1417,7 @@ std::string compile_policy_strategy_json(
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
                 if (step == 0) {
-                    json += ",\"expected_cost\":" +
-                            number(result.values[state_id]);
+                    json += expected_cost_annotation(state_id);
                 }
                 json += ",\"operation\":" + operation_json(
                     session, calc.registry().actions.at(action_index));
@@ -887,8 +1474,8 @@ std::string compile_policy_strategy_json(
                 compiled_option_kernels.at(state_id);
             if (kernel.entry_continues) {
                 json += ",{\"id\":\"" + state_node(state_id) +
-                        "\",\"kind\":\"operation\",\"expected_cost\":" +
-                        number(result.values[state_id]) +
+                        "\",\"kind\":\"operation\"" +
+                        expected_cost_annotation(state_id) +
                         ",\"operation\":" + operation_json(
                             session, calc.registry().actions.at(
                                          planner.conditional_action)) +
@@ -906,8 +1493,7 @@ std::string compile_policy_strategy_json(
                 if (step > 0) json += "_o" + std::to_string(step);
                 json += "\",\"kind\":\"operation\"";
                 if (step == 0) {
-                    json += ",\"expected_cost\":" +
-                            number(result.values[state_id]);
+                    json += expected_cost_annotation(state_id);
                 }
                 json += ",\"operation\":" + operation_json(
                     session, calc.registry().actions.at(action_index));
@@ -940,8 +1526,7 @@ std::string compile_policy_strategy_json(
             if (step > 0) json += "_o" + std::to_string(step);
             json += "\",\"kind\":\"operation\"";
             if (step == 0) {
-                json += ",\"expected_cost\":";
-                json += number(result.values[state_id]);
+                json += expected_cost_annotation(state_id);
             }
             json += ",\"operation\":";
             json += operation_json(
@@ -1013,15 +1598,31 @@ std::string compile_policy_strategy_json(
         edge("router", "goal", 0, all_of(parts), false);
     }
 
-    for (const std::uint32_t leader : emitted_states) {
-        for (const std::uint32_t state_id : states_by_leader.at(leader)) {
+    if (strict_policy_route) {
+        if (use_exact_policy_tree) {
             edge(
-                "router", state_node(leader), 1,
-                state_conditions.at(state_id),
-                false);
+                "router", policy_route_root.to, 1,
+                policy_route_root.guard, false);
+        }
+    } else {
+        for (const std::uint32_t leader : emitted_states) {
+            for (const std::uint32_t state : states_by_leader.at(leader)) {
+                edge(
+                    "router", state_node(leader), 1,
+                    state_conditions.at(state), false);
+            }
         }
     }
-    edge("router", "offpolicy", 2, "", true);
+    edge("router", policy_route_default_node, 2, "", true);
+    for (const PolicyRouteNode& route : policy_route_nodes) {
+        int priority = 0;
+        for (const PolicyRouteEdge& route_edge : route.edges) {
+            edge(
+                route.id, route_edge.to, priority++,
+                route_edge.condition, false);
+        }
+        edge(route.id, policy_route_default_node, priority, "", true);
+    }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);

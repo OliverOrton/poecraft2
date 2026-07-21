@@ -610,6 +610,15 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         options->max_telemetry_json_bytes != 0) {
         value.max_telemetry_json_bytes = options->max_telemetry_json_bytes;
     }
+    if (PC_SOLVE_OPTION_HAS(solver_flags)) {
+        value.full_evidence =
+            (options->solver_flags & PC_SOLVER_FLAG_FULL_EVIDENCE) != 0;
+        value.strict_states =
+            (options->solver_flags & PC_SOLVER_FLAG_STRICT_STATES) != 0;
+        value.kernel_reuse =
+            (options->solver_flags &
+             PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE) == 0;
+    }
     return value;
 #undef PC_SOLVE_OPTION_HAS
 }

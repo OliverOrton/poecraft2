@@ -1,0 +1,33 @@
+{
+  "schema_version": "solver_benchmark_corpus_v1",
+  "corpus_id": "poecraft2-exact-solver-state-scaling-acceptance-v1",
+  "artifact": {
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "canonical_source": "data/sqlite/poecraft.db",
+    "engine_abi_version": 1,
+    "artifact_schema_version": 4,
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "comparison_profile": {
+    "id": "exact-solver-state-scaling-v1",
+    "strict_quotient_start_value_absolute_tolerance": 1e-7,
+    "all_action_lifted_kernel_equality": "required",
+    "observation_signature_mismatches": 0,
+    "compiled_strategy_verification_runs": 10000
+  },
+  "owner_decisions": [
+    "All admitted actions participate in exact behavioral equivalence.",
+    "Unknown or mismatched observation signatures retain strict behavior.",
+    "Approximate compaction is forbidden.",
+    "Only the Q4 closure evidence may change production resource caps."
+  ],
+  "cases": [
+    "cases/dire-pelt-two-t1-chaos-strict.json",
+    "cases/dire-pelt-two-t1-chaos-quotient.json",
+    "cases/dire-pelt-two-t1-product.json",
+    "cases/dire-pelt-three-t1-product.json"
+  ]
+}

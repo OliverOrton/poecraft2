@@ -51,6 +51,24 @@ bool masks_intersect(const std::vector<std::uint64_t>& a,
     return false;
 }
 
+std::uint8_t uniform_membership(
+    const std::vector<std::uint64_t>& category,
+    const std::vector<std::uint64_t>& observation,
+    const std::vector<std::uint64_t>* excluded = nullptr) {
+    bool inside = false;
+    bool outside = false;
+    const std::size_t words = std::min(category.size(), observation.size());
+    for (std::size_t w = 0; w < words; ++w) {
+        const std::uint64_t members =
+            category[w] & (excluded == nullptr ? ~std::uint64_t{0}
+                                                : ~(*excluded)[w]);
+        inside |= (members & observation[w]) != 0;
+        outside |= (members & ~observation[w]) != 0;
+    }
+    if (inside && outside) return 2;
+    return inside ? 1 : 0;
+}
+
 void mask_or_into(std::vector<std::uint64_t>& out,
                   const std::vector<std::uint64_t>& mask) {
     const std::size_t words = std::min(out.size(), mask.size());
@@ -252,6 +270,15 @@ void action_reachable_mask(const SessionImpl& session,
 
 } // namespace
 
+std::vector<std::uint64_t> action_explicit_affix_reachable_mask(
+    const SessionImpl& session,
+    const ActionDescriptor& action) {
+    std::vector<std::uint64_t> result(session.words, 0);
+    std::vector<std::uint64_t> scratch(session.words, 0);
+    action_reachable_mask(session, action, scratch, result);
+    return result;
+}
+
 AbstractLayout build_abstract_layout(
     const SessionImpl& session,
     const GoalSpec& goal,
@@ -259,7 +286,8 @@ AbstractLayout build_abstract_layout(
     const std::vector<std::uint32_t>& action_indices,
     bool allow_empty_goal,
     bool empty_actions_mean_all,
-    bool distinguish_junk_exclusion_effects) {
+    bool distinguish_junk_exclusion_effects,
+    const std::vector<CountObservation>& count_observations) {
     if (goal.slots.empty() && !allow_empty_goal) {
         invalid("goal spec has no slots");
     }
@@ -284,6 +312,71 @@ AbstractLayout build_abstract_layout(
                 invalid("goal slots " + std::to_string(a) + " and " +
                         std::to_string(b) + " have overlapping members");
             }
+        }
+    }
+
+    layout.count_observations = count_observations;
+    std::uint32_t max_count_memo_slot = 0;
+    bool has_count_memo_slot = false;
+    for (const CountObservation& observation : layout.count_observations) {
+        for (const std::uint32_t slot : observation.memo_slots) {
+            max_count_memo_slot = std::max(max_count_memo_slot, slot);
+            has_count_memo_slot = true;
+        }
+    }
+    if (has_count_memo_slot) {
+        layout.count_observation_by_memo_slot.assign(
+            static_cast<std::size_t>(max_count_memo_slot) + 1, kNoId);
+    }
+    for (std::size_t observation_index = 0;
+         observation_index < layout.count_observations.size();
+         ++observation_index) {
+        CountObservation& observation =
+            layout.count_observations[observation_index];
+        observation.member_mask = empty_mask(session);
+        observation.junk_class_indices.clear();
+        for (const std::uint32_t slot : observation.memo_slots) {
+            layout.count_observation_by_memo_slot[slot] =
+                static_cast<std::uint32_t>(observation_index);
+        }
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+            if (session.gen_type[mod] != 0 && session.gen_type[mod] != 1) {
+                continue;
+            }
+            const std::uint32_t identity = observation.by_family
+                                               ? session.family_id[mod]
+                                               : mod;
+            if (sorted_contains(observation.ids, identity)) {
+                pc_bitset_set(observation.member_mask.data(), mod);
+            }
+        }
+        for (std::size_t slot_index = 0;
+             slot_index < layout.slots.size(); ++slot_index) {
+            const ResolvedGoalSlot& slot = layout.slots[slot_index];
+            const std::uint8_t below = uniform_membership(
+                slot.member_mask, observation.member_mask,
+                &slot.satisfying_mask);
+            const std::uint8_t satisfying = uniform_membership(
+                slot.satisfying_mask, observation.member_mask);
+            if (below == 2 || satisfying == 2) {
+                invalid(
+                    "count observation " +
+                    std::to_string(observation_index) +
+                    " partially overlaps one tier-status partition of goal "
+                    "slot " + std::to_string(slot_index));
+            }
+            observation.goal_status_counts[slot_index]
+                                                  [static_cast<std::size_t>(
+                                                      GoalSlotStatus::Absent)] =
+                0;
+            observation.goal_status_counts[slot_index]
+                                                  [static_cast<std::size_t>(
+                                                      GoalSlotStatus::PresentBelowTier)] =
+                below;
+            observation.goal_status_counts[slot_index]
+                                                  [static_cast<std::size_t>(
+                                                      GoalSlotStatus::Satisfied)] =
+                satisfying;
         }
     }
 
@@ -320,6 +413,26 @@ AbstractLayout build_abstract_layout(
         action_reachable_mask(session, registry.actions[index], scratch,
                               reachable);
     }
+    /* State-local automatic candidates materialize the current carrier before
+     * deciding which exact operations to admit. A narrow explicit envelope
+     * may not itself roll the carrier's existing non-goal modifiers, so keep
+     * every ordinary affix identity in this mode. Admission must never drop
+     * or substitute an occupied group merely because its mod is unreachable
+     * through the caller-selected primitive actions. */
+    if (goal.automatic_candidates) {
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+            if (session.gen_type[mod] == PC_SIDE_PREFIX ||
+                session.gen_type[mod] == PC_SIDE_SUFFIX) {
+                pc_bitset_set(reachable.data(), mod);
+            }
+        }
+    }
+    /* A strategy can begin with an observed modifier that none of its
+     * operations can add. Retain those identities so count predicates remain
+     * exact for the initial state and every reachable successor. */
+    for (const CountObservation& observation : layout.count_observations) {
+        mask_or_into(reachable, observation.member_mask);
+    }
     for (const ResolvedGoalSlot& slot : layout.slots) {
         pc_bitset_andnot(reachable.data(), reachable.data(),
                          slot.member_mask.data(), session.words);
@@ -330,7 +443,7 @@ AbstractLayout build_abstract_layout(
      * layouts. std::map keeps the class order deterministic. */
     using ClassKey = std::tuple<
         std::int8_t, std::uint64_t, std::uint32_t, std::uint8_t,
-        std::vector<std::uint64_t>>;
+        std::vector<std::uint64_t>, std::vector<std::uint64_t>>;
     std::map<ClassKey, std::vector<std::uint32_t>> classes;
     std::vector<std::uint32_t> groups;
     pc_bitset_for_each(reachable.data(), session.words, [&](std::size_t bit) {
@@ -380,8 +493,19 @@ AbstractLayout build_abstract_layout(
             mod == session.veiled_prefix_mod_id
                 ? 1
                 : (mod == session.veiled_suffix_mod_id ? 2 : 0);
+        std::vector<std::uint64_t> observation_bits(
+            (layout.count_observations.size() + 63) / 64, 0);
+        for (std::size_t observation = 0;
+             observation < layout.count_observations.size(); ++observation) {
+            if (pc_bitset_test(
+                    layout.count_observations[observation].member_mask.data(),
+                    mod)) {
+                observation_bits[observation / 64] |=
+                    std::uint64_t{1} << (observation % 64);
+            }
+        }
         classes[{gen, tag_bits, block_mask, special_role,
-                 std::move(exclusion_effect)}]
+                 std::move(exclusion_effect), std::move(observation_bits)}]
             .push_back(mod);
     });
 
@@ -392,6 +516,7 @@ AbstractLayout build_abstract_layout(
         junk.tag_bits = std::get<1>(key);
         junk.goal_block_mask = std::get<2>(key);
         junk.exclusion_effect_mask = std::get<4>(key);
+        junk.count_observation_bits = std::get<5>(key);
         junk.member_mask = empty_mask(session);
         for (std::uint32_t mod : members) {
             pc_bitset_set(junk.member_mask.data(), mod);
@@ -399,6 +524,16 @@ AbstractLayout build_abstract_layout(
                 static_cast<std::uint32_t>(layout.junk_classes.size());
         }
         junk.member_count = static_cast<std::uint32_t>(members.size());
+        const std::uint32_t junk_index =
+            static_cast<std::uint32_t>(layout.junk_classes.size());
+        for (std::size_t observation = 0;
+             observation < layout.count_observations.size(); ++observation) {
+            if ((junk.count_observation_bits[observation / 64] &
+                 (std::uint64_t{1} << (observation % 64))) != 0) {
+                layout.count_observations[observation]
+                    .junk_class_indices.push_back(junk_index);
+            }
+        }
         layout.junk_classes.push_back(std::move(junk));
     }
     return layout;

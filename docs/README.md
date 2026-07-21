@@ -28,10 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) contains an executable plan only while a boundary is
-selected. [HANDOFF](../HANDOFF.md) points to that plan and records only the
-facts needed to resume it. At present there is no active implementation
-boundary; Oliver must choose the next chunk.
+[Active](active/README.md) records that no implementation boundary is selected.
+[HANDOFF](../HANDOFF.md) records the completed real three-T1 diagnostic and its
+measured follow-up choices. The completed action/state pruning milestone is indexed by its
+[dated archive](archive/2026-07-21-solver-action-state-pruning/README.md), and
+the earlier Q0-Q5 solver work is indexed by the
+[Exact Solver State Scaling archive](archive/2026-07-20-solver-state-scaling/README.md).
 
 Lifecycle has one direction:
 

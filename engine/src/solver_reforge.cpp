@@ -189,6 +189,10 @@ struct RollState {
                 return;
             }
         }
+        if (pick_count >= picks.size()) {
+            throw std::logic_error(
+                "reforge roll exceeded the explicit-affix capacity");
+        }
         picks[pick_count++] = {bucket, 1};
         std::sort(picks.begin(), picks.begin() + pick_count);
     }
@@ -294,9 +298,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
     /* A reforge's distribution depends only on the preserved base, so
      * states differing only in wiped mods share one roll DP. */
+    std::vector<std::uint64_t> base_observation;
     std::uint64_t base_hash = 1469598103934665603ull;
     {
-        const auto mix = [&base_hash](std::uint64_t value) {
+        const auto mix = [&base_hash, &base_observation](std::uint64_t value) {
+            base_observation.push_back(value);
             base_hash ^= value;
             base_hash *= 1099511628211ull;
         };
@@ -305,22 +311,30 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         mix(base.generic_influence_bits);
         mix(base.searing_exarch_tier);
         mix(base.eater_of_worlds_tier);
-        const auto mix_slots = [&](const pc_mod_slot* slots,
+        const auto mix_slots = [&](const std::uint64_t side,
+                                   const pc_mod_slot* slots,
                                    std::uint8_t count) {
+            mix(side);
+            mix(count);
             for (std::uint8_t i = 0; i < count; ++i) {
-                mix((static_cast<std::uint64_t>(slots[i].mod_id) << 8) |
-                    slots[i].flags);
+                mix(slots[i].mod_id);
+                mix(slots[i].group_id);
+                mix(slots[i].flags);
             }
         };
-        mix_slots(base.prefixes, base.prefix_count);
-        mix_slots(base.suffixes, base.suffix_count);
+        mix_slots(0, base.prefixes, base.prefix_count);
+        mix_slots(1, base.suffixes, base.suffix_count);
     }
     const std::pair<std::uint32_t, std::uint64_t> memo_key{action_index,
                                                            base_hash};
     const auto memo = reforge_cache_.find(memo_key);
     if (memo != reforge_cache_.end()) {
-        ++telemetry_.reforge_hits;
-        return memo->second;
+        for (const ReforgeCacheMemo& candidate : memo->second) {
+            if (candidate.observation_signature == base_observation) {
+                ++telemetry_.reforge_hits;
+                return candidate.distribution;
+            }
+        }
     }
     ++telemetry_.reforge_misses;
     telemetry_timer.miss = true;
@@ -330,7 +344,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
     bool state_dependent = false;
-    const auto finalize = [&]() -> std::shared_ptr<const OutcomeDistribution> {
+    const auto finalize = [&](const bool allow_shared_kernel = false)
+        -> std::shared_ptr<const OutcomeDistribution> {
         std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
             outcome_acc.begin(), outcome_acc.end());
         std::sort(ordered_outcomes.begin(), ordered_outcomes.end());
@@ -360,7 +375,20 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
         }
         result.supported = true;
-        return std::make_shared<OutcomeDistribution>(std::move(result));
+        const bool retain_shared_kernel =
+            allow_shared_kernel && !state_dependent &&
+            can_retain_reforge_distribution(result);
+        result.stable_shared_kernel = retain_shared_kernel;
+        std::shared_ptr<const OutcomeDistribution> finalized =
+            std::make_shared<OutcomeDistribution>(std::move(result));
+        if (retain_shared_kernel) {
+            auto& bucket = reforge_cache_[memo_key];
+            const std::size_t old_capacity = bucket.capacity();
+            bucket.push_back({std::move(base_observation), finalized});
+            account_reforge_cache_insert(
+                old_capacity, bucket.capacity(), bucket.back());
+        }
+        return finalized;
     };
     const auto unapplied = [&]() -> std::shared_ptr<const OutcomeDistribution> {
         outcome_acc.clear();
@@ -864,14 +892,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         frontier = std::move(next);
     }
 
-    result.stable_shared_kernel = !state_dependent;
-    std::shared_ptr<const OutcomeDistribution> finalized = finalize();
-    if (!state_dependent) {
-        const auto [stored, inserted] =
-            reforge_cache_.emplace(memo_key, finalized);
-        if (inserted) account_reforge_cache_insert(stored->second);
-    }
-    return finalized;
+    /* Pointer-identity kernel reuse is valid only while the reforge cache
+     * retains the distribution object. Unretained exact distributions fall
+     * back to the collision-checked content hash in SolveWork; advertising a
+     * temporary object's address would leave a dangling identity key. */
+    return finalize(true);
 }
 
 } // namespace solver

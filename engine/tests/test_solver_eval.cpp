@@ -687,6 +687,18 @@ void run_condition_parity_tests() {
         false, /* non-empty goal */
         true,  /* normal candidate default */
         true   /* exact group-exclusion effects */);
+    CountObservation family_count_observation;
+    family_count_observation.by_family = true;
+    family_count_observation.ids = {100};
+    CountObservation mod_count_observation;
+    mod_count_observation.ids = {6};
+    CalcContext count_calc(
+        session, goal, registry, actions,
+        false, /* non-empty goal */
+        true,  /* normal candidate default */
+        true,  /* exact group-exclusion effects */
+        std::nullopt,
+        {family_count_observation, mod_count_observation});
 
     /* The compact solver abstraction collapses all non-target suffixes.
      * Exact graph evaluation must keep their distinct group effects: the
@@ -738,6 +750,16 @@ void run_condition_parity_tests() {
     prefix_count.max_value = 2;
     CompiledCondition suffix_count = prefix_count;
     suffix_count.kind = ConditionKind::SuffixCountRange;
+    CompiledCondition mod_count;
+    mod_count.kind = ConditionKind::ModCount;
+    mod_count.mod_ids = {6};
+    mod_count.min_value = 0;
+    mod_count.max_value = 1;
+    CompiledCondition family_count;
+    family_count.kind = ConditionKind::ModFamilyCount;
+    family_count.family_ids = {100};
+    family_count.min_value = 1;
+    family_count.max_value = 1;
     CompiledCondition all;
     all.kind = ConditionKind::All;
     all.children = {rarity, has_family};
@@ -766,6 +788,29 @@ void run_condition_parity_tests() {
                      evaluate_compiled_condition(
                          condition, *session, representative));
         }
+    }
+
+    pc_item_state counted_item;
+    pc_item_clear(&counted_item);
+    counted_item.rarity = PC_RARITY_RARE;
+    counted_item.prefix_count = 1;
+    counted_item.prefixes[0].mod_id = 0; /* family 100 goal member */
+    counted_item.suffix_count = 1;
+    counted_item.suffixes[0].mod_id = 6; /* observed junk member */
+    counted_item.suffixes[0].flags = PC_MOD_SLOT_CRAFTED;
+    const std::uint32_t counted_state = count_calc.intern_item(counted_item);
+    for (CompiledCondition condition : {mod_count, family_count}) {
+        PC_CHECK(evaluate_abstract_condition(
+                     condition, *session, count_calc.layout(),
+                     count_calc.state(counted_state)) ==
+                 evaluate_compiled_condition(
+                     condition, *session, counted_item));
+        condition.required_flags = PC_MOD_SLOT_CRAFTED;
+        PC_CHECK(evaluate_abstract_condition(
+                     condition, *session, count_calc.layout(),
+                     count_calc.state(counted_state)) ==
+                 evaluate_compiled_condition(
+                     condition, *session, counted_item));
     }
 }
 

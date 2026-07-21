@@ -9,6 +9,21 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-21
+
+- [Real Three-T1 From-Scratch Diagnostic](2026-07-21-real-three-t1-diagnostic/README.md) —
+  empty-rare growth, finite-upper audit, exact cap stop, and measured next
+  action/state targets.
+- [Exact Solver Action And State Pruning](2026-07-21-solver-action-state-pruning/README.md) —
+  completed producibility filtering, constructive state certificates,
+  repricing-safety gates, and exact product acceptance.
+
+## 2026-07-20
+
+- [Exact Solver State Scaling](2026-07-20-solver-state-scaling/README.md) —
+  completed Q0-Q5 plan, final handoff, exact all-actions scaling contracts, and
+  pinned native/non-visual WASM acceptance evidence.
+
 ## 2026-07-19
 
 - [Documentation cleanup](2026-07-19-documentation-cleanup/README.md) — final

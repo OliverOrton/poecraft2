@@ -480,8 +480,27 @@ struct JunkClass {
      * session-mod mask excluded by its group memberships. Empty for the
      * solver's legacy compact abstraction. */
     std::vector<std::uint64_t> exclusion_effect_mask;
+    /* Bit i is set when every member of this exact-evaluation class belongs
+     * to count_observations[i]. The observation signature is part of the
+     * class key, so membership is constant across the class. */
+    std::vector<std::uint64_t> count_observation_bits;
     std::vector<std::uint64_t> member_mask;
     std::uint32_t member_count = 0;
+};
+
+/* One distinct modifier-set membership query used by compiled mod_count or
+ * mod_family_count conditions. Count thresholds and required slot flags do
+ * not affect the partition and therefore share one observation. */
+struct CountObservation {
+    bool by_family = false;
+    std::vector<std::uint32_t> ids;
+    /* Compiled condition count-memo slots sharing this membership set. */
+    std::vector<std::uint32_t> memo_slots;
+    std::vector<std::uint64_t> member_mask;
+    std::vector<std::uint32_t> junk_class_indices;
+    /* Exact contribution of a present goal member for each slot/status. */
+    std::array<std::array<std::uint8_t, 3>, kMaxGoalSlots>
+        goal_status_counts{};
 };
 
 struct AbstractLayout {
@@ -489,6 +508,10 @@ struct AbstractLayout {
     /* Union of the candidate actions' discriminating tags, sorted. Bit i of
      * JunkClass::tag_bits corresponds to discriminating_tag_ids[i]. */
     std::vector<std::uint32_t> discriminating_tag_ids;
+    /* Exact compiled-strategy count observations. Empty in normal solves. */
+    std::vector<CountObservation> count_observations;
+    /* count_memo_slot -> count_observations index, or kNoId. */
+    std::vector<std::uint32_t> count_observation_by_memo_slot;
     /* Deterministic order: sorted by (gen_type, tag_bits, goal_block_mask,
      * veiled-template role, exclusion_effect_mask). */
     std::vector<JunkClass> junk_classes;
@@ -496,6 +519,14 @@ struct AbstractLayout {
      * no candidate action can place in an explicit slot. */
     std::vector<std::uint32_t> junk_class_by_mod;
 };
+
+/* Exact/superset engine-owned set of explicit affix mods that one action can
+ * place. This is the same producibility authority used to construct the
+ * abstract layout; callers may use an empty intersection as an exact proof
+ * that an action cannot directly satisfy a goal partition. */
+std::vector<std::uint64_t> action_explicit_affix_reachable_mask(
+    const SessionImpl& session,
+    const ActionDescriptor& action);
 
 /*
  * Derive the abstract state layout for (goal, candidate action subset).
@@ -512,7 +543,8 @@ AbstractLayout build_abstract_layout(
     const std::vector<std::uint32_t>& action_indices,
     bool allow_empty_goal = false,
     bool empty_actions_mean_all = true,
-    bool distinguish_junk_exclusion_effects = false);
+    bool distinguish_junk_exclusion_effects = false,
+    const std::vector<CountObservation>& count_observations = {});
 
 // --- abstract state -----------------------------------------------------------
 
@@ -985,7 +1017,8 @@ class CalcContext {
         bool allow_empty_goal = false,
         bool empty_actions_mean_all = true,
         bool distinguish_junk_exclusion_effects = false,
-        std::optional<std::uint32_t> state_cap = std::nullopt);
+        std::optional<std::uint32_t> state_cap = std::nullopt,
+        const std::vector<CountObservation>& count_observations = {});
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -1161,12 +1194,17 @@ class CalcContext {
     std::unordered_map<std::uint64_t, std::vector<std::uint32_t>>
         option_operator_templates_;
     std::unordered_set<std::uint64_t> option_kernel_template_hit_keys_;
+    struct ReforgeCacheMemo {
+        std::vector<std::uint64_t> observation_signature;
+        std::shared_ptr<const OutcomeDistribution> distribution;
+    };
     /* Reforges depend only on the preserved base (fractured/locked slots,
-     * rarity, item-wide flags), so states sharing one base share one roll
-     * DP. Key: (action index, base signature hash). */
+     * rarity, item-wide flags), so states sharing one exact observation share
+     * one roll DP. Hashes select buckets only; the observation vector is the
+     * equality authority. */
     std::map<
         std::pair<std::uint32_t, std::uint64_t>,
-        std::shared_ptr<const OutcomeDistribution>> reforge_cache_;
+        std::vector<ReforgeCacheMemo>> reforge_cache_;
     mutable CalcTelemetry telemetry_;
     ActionControlSummary action_control_;
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
@@ -1182,11 +1220,14 @@ class CalcContext {
     std::uint64_t owned_state_local_operator_bytes_ = 0;
     std::uint64_t owned_added_operator_nested_bytes_ = 0;
     std::uint64_t owned_distribution_payload_bytes_ = 0;
+    std::unordered_map<const OutcomeDistribution*, std::uint32_t>
+        owned_distribution_payload_refs_;
     std::uint64_t owned_option_cache_payload_bytes_ = 0;
     std::uint64_t owned_option_template_nested_bytes_ = 0;
     std::uint64_t owned_transition_template_nested_bytes_ = 0;
     std::uint64_t owned_operator_template_nested_bytes_ = 0;
     std::uint64_t owned_reforge_payload_bytes_ = 0;
+    std::uint64_t retained_reforge_distribution_bytes_ = 0;
     bool owned_bytes_ledger_initialized_ = false;
 
     void initialize_temporary_bench_effect_classes();
@@ -1200,6 +1241,10 @@ class CalcContext {
         std::uint64_t key,
         const std::shared_ptr<const OutcomeDistribution>& value);
     void account_distribution_cache_erase(std::uint64_t key);
+    void retain_distribution_payload(
+        const std::shared_ptr<const OutcomeDistribution>& value);
+    void release_distribution_payload(
+        const std::shared_ptr<const OutcomeDistribution>& value);
     void account_option_cache_insert(
         std::uint64_t key,
         const std::shared_ptr<const OptionKernel>& value);
@@ -1214,7 +1259,10 @@ class CalcContext {
         std::size_t old_capacity,
         const std::vector<std::uint32_t>& values);
     void account_reforge_cache_insert(
-        const std::shared_ptr<const OutcomeDistribution>& value);
+        std::size_t old_capacity, std::size_t new_capacity,
+        const ReforgeCacheMemo& value);
+    bool can_retain_reforge_distribution(
+        const OutcomeDistribution& value) const;
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,
@@ -1446,13 +1494,13 @@ std::string serialize_strategy_eval(const StrategyEvalResult& result);
 
 struct SolveOptions {
     double epsilon = 1e-9;          /* max Bellman residual, cost units */
-    std::uint32_t max_states = 100000;
+    std::uint32_t max_states = 200000;
     std::uint32_t max_sweeps = 100000;
-    std::uint32_t max_discovered_states = 100000;
-    std::uint32_t max_expanded_states = 100000;
-    std::uint64_t max_state_action_rows = 1000000;
+    std::uint32_t max_discovered_states = 200000;
+    std::uint32_t max_expanded_states = 200000;
+    std::uint64_t max_state_action_rows = 1215000;
     std::uint64_t max_transitions = 10000000;
-    std::uint64_t max_reforge_work = 10000000;
+    std::uint64_t max_reforge_work = 11000000;
     std::uint64_t max_solver_owned_bytes = 1073741824;
     std::uint32_t max_compiled_nodes = 100000;
     std::uint32_t max_compiled_edges = 400000;
@@ -1467,6 +1515,13 @@ struct SolveOptions {
     /* White-box oracle comparison switch. Product/API solves leave exact
      * preservation control enabled. */
     bool preservation_control = true;
+    /* White-box oracle comparison switch for the price-bound constructive
+     * state certificate. Certified partial transition graphs are never
+     * retained as price-independent re-solve caches. */
+    bool state_certificate_control = true;
+    bool full_evidence = false;
+    bool strict_states = false;
+    bool kernel_reuse = true;
 };
 
 struct SolveDiagnostics {
@@ -1506,6 +1561,13 @@ struct SolveDiagnostics {
     std::uint32_t preservation_rows_pruned = 0;
     std::uint32_t preservation_rows_retained = 0;
     std::uint32_t certified_disposable_rows = 0;
+    std::uint32_t constructive_state_certificates = 0;
+    std::uint64_t constructive_state_operators_pruned = 0;
+    std::uint32_t constructive_upper_first_expanded_state = 0;
+    double constructive_upper_bound =
+        std::numeric_limits<double>::infinity();
+    std::vector<std::string> constructive_state_witnesses;
+    std::uint64_t constructive_state_witnesses_omitted = 0;
     /* Each entry is one complete JSON object. Kept separately from the
      * legacy reason strings so exact carrier/control evidence stays typed. */
     std::vector<std::string> preservation_witnesses;
@@ -1558,6 +1620,29 @@ struct SolveDiagnostics {
     std::uint64_t expansion_cap_byte_audit_ns = 0;
     std::uint64_t expansion_finalize_ns = 0;
     std::uint64_t expansion_finalize_byte_audit_ns = 0;
+    std::uint64_t solve_owned_byte_ledger_requests = 0;
+    std::uint64_t solve_owned_byte_reconciliations = 0;
+    std::uint64_t solve_owned_byte_ledger_max_overestimate = 0;
+    std::uint32_t strict_discovered_states = 0;
+    std::uint32_t quotient_states = 0;
+    std::uint32_t quotient_refinement_rounds = 0;
+    std::uint32_t coarse_candidate_classes = 0;
+    std::uint32_t max_strict_states_per_coarse_class = 0;
+    bool state_scaling_shadow_only = false;
+    std::uint32_t shadow_behavioral_classes = 0;
+    std::uint32_t shadow_expanded_states_observed = 0;
+    std::uint64_t literal_duplicate_states = 0;
+    std::uint64_t exact_behavioral_merges = 0;
+    std::uint64_t witnessed_non_equivalences = 0;
+    std::uint64_t projected_successor_class_mismatches = 0;
+    std::uint64_t exact_kernel_payload_reuses = 0;
+    std::uint64_t exact_kernel_payload_bytes_saved = 0;
+    std::uint64_t observation_signature_mismatches = 0;
+    /* Each entry is a complete JSON object with an action id and the exact
+     * cardinality of its observed strict-state kernels. */
+    std::vector<std::string> action_observation_cardinalities;
+    std::vector<std::string> equivalence_witnesses;
+    std::uint64_t equivalence_witnesses_omitted = 0;
     std::uint64_t optimization_ns = 0;
     std::uint64_t extraction_ns = 0;
     std::uint64_t solver_owned_bytes_estimate = 0;
@@ -1590,6 +1675,10 @@ struct SolveResult {
      * several pre-Unveil abstract states. */
     std::vector<std::vector<ObservedUnveilPreference>>
         option_unveil_preferences;
+    /* Exact outer-state quotient. Empty means strict state mode. Otherwise
+     * every strict state maps deterministically to one representative strict
+     * state id; representatives own Bellman rows and compiled policy. */
+    std::vector<std::uint32_t> behavioral_representative_by_state;
     SolveDiagnostics diagnostics;
     SolveOptions options;
 };

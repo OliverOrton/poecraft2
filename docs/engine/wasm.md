@@ -153,10 +153,12 @@ These pacing values are current scheduling policy, not performance guarantees.
 When product code omits native overrides, exact evaluation defaults include
 100,000 states and sweeps, 1,000,000 state/node pairs, 10,000,000 transitions,
 16 top classes per node, a 512 MiB selected-owned-allocation cap, and a 64 MiB
-output-JSON cap. Strategy solve defaults include 100,000-state/search limits,
-1,000,000 state/action rows, 10,000,000 transitions and reforge work, a 1 GiB
-selected-solver-owned cap, 100,000 compiled nodes, 400,000 compiled edges, a
-64 MiB strategy-JSON cap, and a 1 MiB telemetry-JSON cap.
+output-JSON cap. Strategy solve defaults include 200,000-state/search limits,
+1,215,000 state/action rows, 10,000,000 transitions, 11,000,000 reforge work,
+a 1 GiB selected-solver-owned cap, 100,000 compiled nodes, 400,000 compiled
+edges, a 64 MiB strategy-JSON cap, and a 1 MiB telemetry-JSON cap. Only the
+state/search, row, and reforge limits changed in the Q4 scaling checkpoint;
+the transition, memory, compiler, and JSON caps did not.
 
 Those native caps cover selected allocations accounted by the evaluator or
 solver. They are not limits on the entire WASM heap, Emscripten stack, facade
@@ -187,12 +189,18 @@ Evidence must be read at the layer it actually exercises:
   the memory-safe large-payload path, pool fixture parity, stateful exact
   progress, solve progress, cancellation cleanup/fallback, compilation, and
   simulation.
+- The [solver-scaling v1 evidence](../../fixtures/solver-scaling/v1/README.md)
+  preserves the Q5 non-visual Node/Worker baseline and the rebuilt-module
+  action/state-pruning follow-up for the accepted three-slot product. The
+  follow-up closes solve, compile, and 10,000-run verification in 270 ms with
+  two states, one row, a 19.55 ms maximum Worker slice, and no growth from the
+  278,396,928-byte starting WASM heap.
 - The tracked release wrapper itself is evidence of the module's current
   assignment/export map.
 
-This documentation-only phase inspected those sources and artifacts; it did
-not run the suites. The Node worker test is real WASM integration evidence,
-but it is not a real-browser/device benchmark.
+The Q0-Q5 and action/state-pruning acceptances rebuilt the module, ran the
+complete Node worker suite, and emitted product-scale reports. This is real
+WASM integration evidence, but it is not a real-browser/device benchmark.
 
 ## Export-list drift
 

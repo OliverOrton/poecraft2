@@ -5,10 +5,11 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope: native solver,
-calculation/evaluation engines, public C ABI, policy compilation, and the web
-worker call path. This is a source audit, not a new performance run or mechanic
-ruling.
+Verified against code and action/state-pruning acceptance: 2026-07-21 working tree. Scope:
+native solver, calculation/evaluation engines, public C ABI, policy
+compilation, and the non-visual WASM/worker path. The pinned measurements live
+in [solver-scaling v1](../../fixtures/solver-scaling/v1/README.md); this stamp
+does not claim rendered-browser review or a mechanic ruling.
 
 ## Purpose
 
@@ -57,8 +58,18 @@ effect on later pools. `CalcContext` forces the strict exclusion-effect form
 when Unveil, Harvest resistance conversion, Fracture, or remove-crafted-mods
 participates. Because automatic product mode admits Fracture, the current
 product solve does not match the old claim that strict partitioning is
-evaluator-only. The strict-versus-compact product trade remains deferred to
-the [solver roadmap](../future/solver-roadmap.md).
+evaluator-only. Automatic-candidate layouts also retain ordinary affix identity
+needed to materialize the current carrier exactly, even when the explicit
+primitive envelope cannot roll those affixes.
+
+After strict reachability closes, the solver refines a collision-checked
+behavioral partition across every admitted action. Legality, automatic
+admission, resource identity, exact probability, choices, and projected
+successor classes must all match before states merge. The strict layout is the
+oracle; unknown or mismatched observations remain distinct. The bounded Chaos
+control merges 57,722 strict states to 3 classes, while both accepted complete
+product envelopes merge none because their larger action sets observe every
+difference. No approximate global compaction exists.
 
 Code authority:
 `engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,
@@ -74,8 +85,8 @@ base state.
 
 Callers may name an explicit primitive subset and fixed option programs. The
 product `action_mode: "goal_relevant"` instead builds a bounded,
-price-independent envelope and enables state-local automatic candidates. At
-d5e38e3 those candidates cover relevant primitive Fracture, permanent bench
+price-independent envelope and enables state-local automatic candidates.
+Those candidates cover relevant primitive Fracture, permanent bench
 finishes, temporary bench blockers, protected metamod routes, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
@@ -127,22 +138,46 @@ Code authority: `engine/src/solver_calc.cpp` and
 A solve performs these implemented stages:
 
 1. Project the concrete start item and expand reachable abstract states.
-2. Admit legal state-local candidates and copy exact outcomes into one compact
-   sparse transition graph, subject to state, row, transition, reforge-work,
-   diagnostic, output, and owned-byte caps.
-3. Price each operator by dotting its resource quantities with the pinned
+2. Admit legal state-local candidates. Exact action producibility and setup
+   legality reject impossible protected-repeat programs before option-kernel
+   construction.
+3. Evaluate deterministic goal finishes and Restart before broad stochastic
+   kernels. A price-bound constructive state certificate may stop a carrier
+   early only when every other admitted operator has an optimistic lower
+   bound strictly above an executable row upper bound. The lower bound grants
+   an operator every goal slot any constituent primitive could possibly
+   produce, then prices the cheapest relaxed primitive cover of the remaining
+   goal requirement.
+4. Copy required exact outcomes into one sparse
+   transition graph, subject to state, row, transition, reforge-work,
+   diagnostic, output, and owned-byte caps. Collision-checked observation
+   signatures reuse exact kernel payloads without changing strict states.
+5. Price each operator by dotting its resource quantities with the pinned
    economy. Missing prices exclude the affected operator and are diagnosed;
    absent never means free.
-4. Optimize cyclic components with SCC-based policy iteration and sparse
+6. Refine a completed all-action strict graph into the exact quotient, then
+   optimize cyclic components with SCC-based policy iteration and sparse
    component solves. A prioritized Bellman path remains the explicit fallback
    if policy evaluation fails.
-5. Extract deterministic policy choices, observation-owned Unveil choices,
+7. Extract deterministic policy choices, observation-owned Unveil choices,
    values, reachability, diagnostics, hashes, and optional solve-log records.
 
-Focused expansion computes disclosed lower and upper bounds and an optimality
-gap while extending relevant fringe states. A result is converged only when
-the implementation's exactness and gap conditions pass. Resource exhaustion is
-a reported boundary, not a numeric solution.
+Focused expansion computes finite constructive upper bounds and global lower
+bounds while extending relevant fringe states. A zero gap is an exact closure
+proof and may finish directly without a separate outer Bellman phase. Resource
+exhaustion is a reported boundary, not a numeric solution.
+
+The constructive state certificate is not compaction and does not infer
+equivalence from similarity. Its witness records the executable upper, the
+strict minimum competing lower, and the number of kernels avoided. Because
+the proof depends on current prices, a partial graph produced by it is never
+retained as the price-independent transition cache; a later reprice rebuilds
+or safely reuses only a separately completed all-action graph.
+
+Selected-allocation enforcement uses incremental owner ledgers with periodic
+full audits. On the accepted two-T1 product, per-state preparation byte audits
+fell from the 22.47-second baseline to 7.3 ms (0.04% of expansion); audited
+undercount is a hard error.
 
 Transition caches are price-independent and can be reused by a solver handle,
 but the browser's long-lived transfer/reprice lifecycle is not a settled
@@ -155,11 +190,13 @@ Code authority: `engine/src/solver_solve.cpp`.
 ## Policy Compilation
 
 `pc_solver_compile_strategy` converts the latest solved policy into v1 strategy
-JSON. The document contains ordinary start, router, operation, and terminal
-nodes, deterministic prioritized edges, `expected_cost` annotations, and
-non-executable accounting-role metadata. Fixed and automatic operators expand
-to their primitive programs. An explicit off-policy failure terminal catches
-states outside the compiled policy-reachable set.
+JSON. Exact policy regions with the same action and continuation share
+operation nodes, and a collision-checked decision DAG routes concrete states
+to those regions. The document otherwise contains ordinary start, router,
+operation, and terminal nodes, deterministic prioritized edges,
+`expected_cost` annotations, and non-executable accounting-role metadata.
+Fixed and automatic operators expand to their primitive programs. An explicit
+off-policy failure terminal catches states outside the compiled policy.
 
 The compiled `base_state` preserves the solve start, not merely the base type:
 it serializes rarity, item flags, generic influence bits, both Eldritch tiers,
@@ -177,17 +214,21 @@ Code authority: `engine/src/solver_compile.cpp` and
 
 ## Exact Strategy Evaluation And Accounting
 
-The exact evaluator derives a strict layout from the compiled graph's actions
-and condition targets, discovers `(graph node, abstract state)` pairs, and
-solves the resulting absorbing graph by SCC. It reports terminal probability,
+The exact evaluator derives a strict layout from the compiled graph's actions,
+family/mod count observations, and condition targets; discovers `(graph node,
+abstract state)` pairs; and solves the resulting absorbing graph by SCC. It
+contracts compiler-generated policy routing without losing exact node/edge
+flow and uses dense, rank-one, or matrix-free preconditioned component solves
+as appropriate. It reports terminal probability,
 action-not-applied/no-edge/unresolved attribution, expected actions and
 materials, node/edge flow, incoming state classes, and S8.4 accounting and
 review projections. Quantities remain price-independent; product code applies
 the active price table for display.
 
 Evaluation refuses unsupported graph vocabulary rather than estimating it.
-At d5e38e3 compiler-only `mod_count`/`mod_family_count` and concrete Unveil
-offer conditions remain gaps for whole-graph evaluation. The stateful API has
+`mod_count` and `mod_family_count`, including required crafted/fractured flags,
+are exact. Concrete authored Unveil-offer conditions remain the named gap. The
+stateful API has
 begin/step/finish/destroy calls, cooperative progress, owned/output byte caps,
 and live/peak memory statistics.
 
@@ -220,8 +261,8 @@ build/export/memory details are owned by the [engine WASM reference](../engine/w
   scope. Diagnostics must disclose exclusions and caps.
 - Whole-graph exact evaluation and sampled simulation are separate evidence
   sources. A sampled cost mean is not automatically proof of Bellman parity.
-- Recombinators, publishing, ML use, remaining product-scope decisions, and the
-  measured R3A boundary are deferred; see the
+- Recombinators, publishing, ML use, and remaining product-scope decisions are
+  deferred; see the
   [solver roadmap](../future/solver-roadmap.md).
 - Mechanic rules are never decided by this architecture file; see the
   [mechanics library](../mechanics/README.md).

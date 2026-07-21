@@ -643,6 +643,9 @@ export interface SolveOptions {
     max_strategy_json_bytes?: number;
     max_diagnostic_samples?: number;
     max_telemetry_json_bytes?: number;
+    full_evidence?: boolean;
+    strict_states?: boolean;
+    kernel_reuse?: boolean;
 }
 
 export interface EngineMemoryStats {

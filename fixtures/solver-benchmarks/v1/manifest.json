@@ -8,8 +8,8 @@
     "artifact_schema_version": 4,
     "source_version": "repoe-e4eaf06c20e1ddb4",
     "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
-    "game_data_sha256": "9776797b31345f3ac3f8b911e717b5583c72da255b5f6d72ccb4128f149a64c0",
-    "strings_sha256": "6ba72d7139349c4e5db6fddb21d443304ac4881062ded48322c139d01fe37a9b"
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
   },
   "comparison_profile": {
     "id": "native-wasm-solver-v1",

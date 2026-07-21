@@ -1461,7 +1461,9 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         solveProgress.some((progress) => progress.phase === "expanding"),
     );
     assert.ok(
-        solveProgress.some((progress) => progress.phase === "iterating"),
+        solveProgress.some((progress) => progress.phase === "iterating") ||
+            solve.residual === 0,
+        "solve should expose iteration or finish with a zero exactness gap",
     );
     assert.equal(solveProgress.at(-1)?.phase, "done");
     assert.equal(solve.converged, true);

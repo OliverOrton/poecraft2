@@ -126,3 +126,39 @@ material under dated `archive/` folders. No implementation plan is active.
 
 **Consequences:** `HANDOFF.md` is intentionally minimal until Oliver selects a
 new chunk. Archived sequencing has no current authority.
+
+## 2026-07-20 — Exact Solver Scaling And Minimum Cap Increase
+
+**Decision:** Solver scaling remains exact across every admitted action. State
+compaction may merge only collision-checked, behaviorally equivalent states;
+approximate compaction is not permitted. The default state, row, and reforge
+work caps increase only to the smallest measured envelope that closes the
+two- and three-T1 product corpus: 200,000 states, 1,215,000 rows, and
+11,000,000 reforge work units. The 10,000,000-transition and 1 GiB selected
+native-memory caps remain unchanged.
+
+**Context:** [Exact scaling evidence](../fixtures/solver-scaling/v1/README.md)
+and the [Q0–Q5 archive](archive/2026-07-20-solver-state-scaling/README.md).
+
+**Consequences:** Chaos-only measurements remain a strict-versus-quotient
+regression oracle, not the product workload. Full-action product cases must
+close under the checked-in defaults, and any future cap increase again needs
+measured native, compiler, evaluator, and WASM headroom.
+
+## 2026-07-21 — Price-Bound State Pruning Is Not A Reprice Cache
+
+**Decision:** The solver may omit unevaluated state/action kernels only when an
+executable row upper is strictly below an admissible optimistic lower for
+every competitor. The proof may use current prices, but a graph made partial
+by that proof is never retained as the price-independent transition cache.
+Later repricing rebuilds, or reuses only a separately completed all-action
+graph.
+
+**Context:** [Solver](solver/README.md),
+[action/state evidence](../fixtures/solver-scaling/v1/README.md), and the
+[completed archive](archive/2026-07-21-solver-action-state-pruning/README.md).
+
+**Consequences:** Exact current-price policy behavior can avoid discovery
+without approximate compaction or stale repricing. Equality, unknown
+reachability, missing proof inputs, or an unsafe lower bound retains the
+candidate.

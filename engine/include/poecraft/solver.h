@@ -291,7 +291,7 @@ typedef struct pc_solve_options {
     uint32_t struct_size;
     uint32_t abi_version;
     double epsilon;       /* <= 0 uses the default 1e-9 */
-    uint32_t max_states;  /* 0 uses the default 100000 */
+    uint32_t max_states;  /* 0 uses the default 200000 */
     uint32_t max_sweeps;  /* 0 uses the default 100000 */
     uint32_t max_discovered_states;
     uint32_t max_expanded_states;
@@ -304,7 +304,17 @@ typedef struct pc_solve_options {
     uint64_t max_strategy_json_bytes;
     uint32_t max_diagnostic_samples;
     uint64_t max_telemetry_json_bytes;
+    /* Additive diagnostic controls. Zero selects exact quotient mode with
+     * coarse telemetry. Strict-state mode is an oracle, never an
+     * approximation switch. */
+    uint32_t solver_flags;
 } pc_solve_options;
+
+typedef enum pc_solver_flag {
+    PC_SOLVER_FLAG_FULL_EVIDENCE = 1u << 0,
+    PC_SOLVER_FLAG_STRICT_STATES = 1u << 1,
+    PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE = 1u << 2
+} pc_solver_flag;
 
 typedef struct pc_solve_summary {
     uint32_t struct_size;
@@ -363,9 +373,9 @@ void pc_solver_solve_abandon(pc_solver_handle solver);
  * Synchronous value iteration from the start item. The economy supplies
  * the price table (a null economy is invalid: costs are required).
  * Results are stored on the solver for the query calls below; a new solve
- * replaces them. S7.2 stores one compact sparse transition graph for the
- * active solve. Cross-solve price-only cache retention is the later S7.5
- * cache-reuse checkpoint.
+ * replaces them. The active solve stores one sparse transition graph and may
+ * reuse collision-checked exact action kernels within the compatible session,
+ * goal layout, and action vocabulary.
  */
 pc_result pc_solver_solve(
     pc_solver_handle solver,

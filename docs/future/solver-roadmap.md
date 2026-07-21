@@ -8,10 +8,36 @@ Parent: [Future work](README.md)
 
 ## Current Boundary Record
 
-The full automatic one-item product envelope is not proven usable under the
-checked-in normal caps. The last completed 4,096-state R3A diagnostic bounded
-retained automatic rows, but the normal-cap Conquest/Mirage request did not
-reach Bellman optimization in a 30-second time box. No cap was raised.
+The 2026-07-20 [Exact Solver State Scaling archive](../archive/2026-07-20-solver-state-scaling/README.md)
+supersedes the former normal-cap failure. Two accepted complete product cases
+now close, compile, evaluate exactly, and pass their required 10,000-run
+verification. The measured smallest sufficient defaults are 200,000
+state/search entries, 1,215,000 rows, and 11,000,000 reforge work; unrelated
+resource and compiler caps stayed fixed.
+
+Exact quotienting is useful but action-scope dependent: the bounded Chaos
+oracle reduces 57,722 strict states to 3, while the complete product envelopes
+permit no merge. Approximate compact mode remains forbidden. There is no
+active solver implementation boundary; this page retains only surrounding
+deferred work.
+
+The 2026-07-21
+[action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
+supersedes the three-slot discovery bottleneck: exact producibility filtering
+and a price-bound constructive finish certificate reduce that accepted case to
+two strict states without changing caps. The natural two-T1 product remains a
+broad exact control. Broader certificates are optional future work, not an
+active continuation.
+
+The 2026-07-21
+[real three-T1 diagnostic](../archive/2026-07-21-real-three-t1-diagnostic/README.md)
+separates the seeded carrier from a genuine empty-rare start. The real case
+hits 200,000 discovered states with no finite executable upper and no exact
+quotient merge. If Oliver selects its optimization, the measured order of
+attack is: construct an exact compositional renewal/finish policy to supply a
+finite upper; use that upper for exact frontier/state dominance; and reduce
+temporary-bench synthesis through carrier-signature reuse or earlier exact
+rejection. A cap-only continuation is not supported by the evidence.
 
 Measurements and the former optimization boundary remain in
 [the evidence index](../evidence.md) and the
@@ -27,20 +53,17 @@ If Oliver selects another one-item solver chunk, the surviving product work is:
   solved native handle and transition closure after successful strategy
   transfer, and rebuild on repricing. Retained-cache mode remains deferred
   until live-byte telemetry can enforce a product budget.
-- **R5 — verification truth.** Gate sampled verification on success, failure,
-  stop, limit, off-policy, and unapplied counters; show the pinned economy and
-  sampled uncertainty; keep per-run and independent-retry-normalized costs
-  distinct; close exact evaluator gaps for compiler-emitted conditions.
-- **R6 — integrated acceptance.** Exercise the product `goal_relevant` path on
-  selected real cases, perform any required 10,000-run compiled-strategy
-  verification, rebuild release WASM when required, and record one final
-  non-visual acceptance/evidence set.
+- **R5 — verification presentation.** Show the pinned economy and sampled
+  uncertainty in product review, keep per-run and independent-retry-normalized
+  costs distinct, and decide the remaining authored Unveil-offer evaluator
+  boundary. Compiler-emitted count conditions and the selected product
+  verification gate are complete.
 - **S8.5 — compact review and optional empirical trim.** Focus view remains
   presentation-only. Trimming creates a separate derived strategy with parent
   hash, explicit fallback, discovery provenance, exact impact evaluation, and
   independent sampled validation.
-- **S8.6 — solver acceptance.** A final acceptance checkpoint remains necessary
-  if the one-item capability pass is resumed and completed.
+- **S8.6 — broader solver acceptance.** A fresh checkpoint is needed only if a
+  later plan expands one-item scope beyond the accepted scaling corpus.
 
 The waived B1.5 checkpoint was not completed: no separate full Bestiary suite,
 10,000-run Imprint verification, or rendered review was backfilled. Any future
@@ -53,8 +76,6 @@ The archived solver audit also contains ideas that are neither approved work
 nor current findings. A future plan may reconsider them only from fresh code
 inspection and measurement:
 
-- strict versus compact outer junk partition, with measured drift and an
-  Oliver decision before changing exactness claims;
 - veiled/Eldritch product action scope and goal-producibility diagnostics;
 - WASM solve-step batching as part of browser delivery work;
 - Fossil candidate selection with price-aware evidence;
@@ -62,9 +83,11 @@ inspection and measurement:
 - remaining preservation, focused-expansion, telemetry, repricing, legality,
   and small performance proposals from the archived audit.
 
-Completed, superseded, or false audit items are not backlog: the incremental
-byte ledger is implemented; primitive Fracture product planning is implemented;
-and compiled strategies already preserve the concrete solve start item.
+Completed, superseded, or false audit items are not backlog: both incremental
+owned-byte ledgers, exact kernel reuse, exact all-action quotienting, shared
+policy compilation, compiler-emitted count-condition evaluation, selected
+product verification, primitive Fracture planning, and concrete compiled start
+items are implemented.
 
 ## Later Solver Directions
 

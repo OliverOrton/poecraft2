@@ -619,6 +619,54 @@ void run_protected_price_flip() {
     }
 }
 
+void run_protected_producibility_filter() {
+    auto session = make_automatic_session();
+    ActionRegistry registry = build_action_registry(*session);
+
+    const auto chaos_reachable = action_explicit_affix_reachable_mask(
+        *session, registry.actions.at(registry.index_by_id.at("chaos")));
+    PC_CHECK(pc_bitset_test(chaos_reachable.data(), kGoalSuffix));
+    PC_CHECK(!pc_bitset_test(chaos_reachable.data(), kBenchNeutral));
+    const auto bench_reachable = action_explicit_affix_reachable_mask(
+        *session,
+        registry.actions.at(
+            registry.index_by_id.at("bench:s83_mod_12")));
+    PC_CHECK(pc_bitset_test(bench_reachable.data(), kBenchNeutral));
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    GoalSlot protected_prefix;
+    protected_prefix.family_id = session->family_id[kGoalPrefix];
+    goal.slots.push_back(protected_prefix);
+    GoalSlot crafted_only_suffix;
+    crafted_only_suffix.family_id = session->family_id[kBenchNeutral];
+    goal.slots.push_back(crafted_only_suffix);
+
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    CalcContext calc(session, goal, registry, {restart, chaos});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    add_mod(start, *session, kGoalPrefix);
+    const std::uint32_t state = calc.intern_item(start);
+    const StateLocalAutomaticBatch batch = admit_automatic(
+        calc, state,
+        {{"base", 20.0},
+         {"chaos", 5.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_9", 10.0},
+         {"bench:s83_mod_12", 2.0}});
+    PC_CHECK(std::none_of(
+        batch.decisions.begin(), batch.decisions.end(),
+        [](const StateLocalAutomaticCandidate& decision) {
+            return decision.id.find(
+                       "option:protected_repeat:prefix:chaos") !=
+                   std::string::npos;
+        }));
+}
+
 void run_fracture_price_flip() {
     auto session = make_automatic_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -918,6 +966,7 @@ void run_carrier_relative_renewal_templates() {
 void run_solver_s8_3_tests() {
     run_temporary_blocker_price_flip();
     run_protected_price_flip();
+    run_protected_producibility_filter();
     run_fracture_price_flip();
     run_incomplete_dependency_refusals();
     run_carrier_relative_renewal_templates();

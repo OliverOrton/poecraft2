@@ -14,6 +14,8 @@ import { prepareSolverStrategy } from "../src/app/solve-workspace";
 import { isStrategyDocument } from "../src/app/strategy-model";
 import {
     loadSolverBenchmarkCorpus,
+    materializeSolverBenchmarkEconomy,
+    materializeSolverBenchmarkGoal,
     validateCorpusArtifactPins,
     type SolverBenchmarkCase,
 } from "./solver-benchmark-corpus";
@@ -239,6 +241,7 @@ function statusFrom(
     solve: SolverSolveResult | null,
     error: string | null,
     telemetry: SolverTelemetry | null,
+    pricedProductEnvelope = false,
 ): string {
     if (solve?.cancelled) return "cancelled";
     const stateCapHit = nestedBoolean(telemetry, "optimization", "state_cap_hit");
@@ -261,16 +264,22 @@ function statusFrom(
     );
     if (stateCapHit) return "refused_state_cap";
     if (resourceCapHit) return "refused_resource_cap";
-    if (missingPrice > 0 && unsupported > 0) {
+    if (missingPrice > 0 && unsupported > 0 && !pricedProductEnvelope) {
         return "refused_missing_price_and_unsupported_action";
     }
-    if (missingPrice > 0) return "refused_missing_price";
+    if (missingPrice > 0 && !pricedProductEnvelope) {
+        return "refused_missing_price";
+    }
     if (unsupported > 0) return "refused_unsupported_action";
-    if (fullRequestStatus === "incomplete_action_subset") {
+    if (
+        fullRequestStatus === "incomplete_action_subset" &&
+        !pricedProductEnvelope
+    ) {
         return "incomplete_action_subset";
     }
     if (solve && !solve.cancelled && solve.converged) {
-        return solve.skipped_actions > 0 || missingPrice > 0 || unsupported > 0
+        return !pricedProductEnvelope &&
+            (solve.skipped_actions > 0 || missingPrice > 0 || unsupported > 0)
             ? "converged_filtered_actions"
             : "converged";
     }
@@ -478,9 +487,14 @@ async function runCase(
             (spec.start.eater_of_worlds_tier ?? 0) !== 0) {
             throw new Error("non-zero Eldritch start tiers are not worker-importable yet");
         }
-        solver = await client.openSolver(session, spec.goal);
+        solver = await client.openSolver(
+            session,
+            materializeSolverBenchmarkGoal(spec),
+        );
         await client.solverActions(solver);
-        economy = await client.loadEconomy(spec.economy);
+        economy = await client.loadEconomy(
+            materializeSolverBenchmarkEconomy(spec, REPO_ROOT),
+        );
         registryLayoutMs = roundMs(performance.now() - registryStarted);
 
         const solveStarted = performance.now();
@@ -504,6 +518,11 @@ async function runCase(
                         max_compiled_nodes: spec.caps.max_compiled_nodes,
                         max_compiled_edges: spec.caps.max_compiled_edges,
                         max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
+                        max_diagnostic_samples: spec.caps.max_diagnostic_samples,
+                        max_telemetry_json_bytes: spec.caps.max_telemetry_json_bytes,
+                        full_evidence: spec.caps.full_evidence,
+                        strict_states: spec.caps.strict_states,
+                        kernel_reuse: spec.caps.kernel_reuse,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -537,6 +556,11 @@ async function runCase(
                         max_compiled_nodes: spec.caps.max_compiled_nodes,
                         max_compiled_edges: spec.caps.max_compiled_edges,
                         max_strategy_json_bytes: spec.caps.max_strategy_json_bytes,
+                        max_diagnostic_samples: spec.caps.max_diagnostic_samples,
+                        max_telemetry_json_bytes: spec.caps.max_telemetry_json_bytes,
+                        full_evidence: spec.caps.full_evidence,
+                        strict_states: spec.caps.strict_states,
+                        kernel_reuse: spec.caps.kernel_reuse,
                     },
                     { chunkSize: spec.caps.solve_step_work_items },
                 );
@@ -552,7 +576,12 @@ async function runCase(
             solve &&
             !solve.cancelled &&
             solve.converged &&
-            statusFrom(solve, solveError, telemetry) === "converged"
+            statusFrom(
+                solve,
+                solveError,
+                telemetry,
+                spec.product_action_envelope !== undefined,
+            ) === "converged"
         ) {
             const compileStarted = performance.now();
             try {
@@ -620,7 +649,12 @@ async function runCase(
         }
     }
 
-    const actualStatus = statusFrom(solve, solveError, telemetry);
+    const actualStatus = statusFrom(
+        solve,
+        solveError,
+        telemetry,
+        spec.product_action_envelope !== undefined,
+    );
     const worker = solve?.worker;
     const complete = solve && !solve.cancelled ? solve : null;
     const report: CaseReport = {

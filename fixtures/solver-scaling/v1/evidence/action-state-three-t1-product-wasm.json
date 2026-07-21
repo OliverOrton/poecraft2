@@ -1,0 +1,1337 @@
+{
+  "schema_version": "solver_benchmark_report_v1",
+  "runner": "wasm_worker",
+  "all_expectations_met": true,
+  "corpus": {
+    "id": "poecraft2-exact-solver-state-scaling-acceptance-v1",
+    "schema_version": "solver_benchmark_corpus_v1",
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\fixtures\\solver-scaling\\v1\\acceptance-manifest.json",
+    "manifest": {
+      "schema_version": "solver_benchmark_corpus_v1",
+      "corpus_id": "poecraft2-exact-solver-state-scaling-acceptance-v1",
+      "artifact": {
+        "manifest_relative_path": "data/compiled/current/manifest.json",
+        "canonical_source": "data/sqlite/poecraft.db",
+        "engine_abi_version": 1,
+        "artifact_schema_version": 4,
+        "source_version": "repoe-e4eaf06c20e1ddb4",
+        "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+        "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+        "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+      },
+      "comparison_profile": {
+        "id": "exact-solver-state-scaling-v1",
+        "strict_quotient_start_value_absolute_tolerance": 1e-7,
+        "all_action_lifted_kernel_equality": "required",
+        "observation_signature_mismatches": 0,
+        "compiled_strategy_verification_runs": 10000
+      },
+      "owner_decisions": [
+        "All admitted actions participate in exact behavioral equivalence.",
+        "Unknown or mismatched observation signatures retain strict behavior.",
+        "Approximate compaction is forbidden.",
+        "Only the Q4 closure evidence may change production resource caps."
+      ],
+      "cases": [
+        "cases/dire-pelt-two-t1-chaos-strict.json",
+        "cases/dire-pelt-two-t1-chaos-quotient.json",
+        "cases/dire-pelt-two-t1-product.json",
+        "cases/dire-pelt-three-t1-product.json"
+      ]
+    }
+  },
+  "artifact": {
+    "manifest_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current\\manifest.json",
+    "manifest": {
+      "artifact_kind": "runtime_dataset",
+      "artifact_schema_version": 4,
+      "complete_dataset": true,
+      "engine_loadable": true,
+      "enums": {
+        "base_flags": {
+          "cluster": 1,
+          "ordinary_session": 2
+        },
+        "bestiary_checkpoint_effect": {
+          "consume": 1,
+          "create": 0
+        },
+        "bestiary_checkpoint_requirement": {
+          "absent": 0,
+          "present": 1
+        },
+        "bestiary_classification": {
+          "checkpoint/restore": 2,
+          "explicitly unsupported in B1": 4,
+          "multi-output or multi-item": 3,
+          "ordinary one-item deterministic": 0,
+          "ordinary one-item stochastic": 1
+        },
+        "bestiary_identity_requirement": {
+          "current_item": 0,
+          "same_item": 1
+        },
+        "bestiary_operation": {
+          "create": 0,
+          "restore": 1
+        },
+        "bestiary_support": {
+          "selected": 0,
+          "unsupported": 1
+        },
+        "bestiary_transition": {
+          "deterministic": 0
+        },
+        "domain": {
+          "abyss_jewel": 0,
+          "affliction_charm": 1,
+          "affliction_jewel": 2,
+          "area": 3,
+          "atlas": 4,
+          "brequel_graft": 5,
+          "chest": 6,
+          "crafted": 7,
+          "crucible_remnant": 8,
+          "delve": 9,
+          "delve_area": 10,
+          "dummy": 11,
+          "expedition_relic": 12,
+          "flask": 13,
+          "heist_area": 14,
+          "heist_npc": 15,
+          "heist_trinket": 16,
+          "item": 17,
+          "leaguestone": 18,
+          "map_device": 19,
+          "map_relic": 20,
+          "memory_lines": 21,
+          "misc": 22,
+          "monster": 23,
+          "necropolis_monster": 24,
+          "primordial_altar": 25,
+          "sanctum_relic": 26,
+          "sentinel": 27,
+          "synthesis_a": 28,
+          "synthesis_bonus": 29,
+          "synthesis_globals": 30,
+          "templar_relic": 31,
+          "tincture": 32,
+          "undefined": 33,
+          "unveiled": 34,
+          "veiled": 35,
+          "watchstone": 36
+        },
+        "flags": {
+          "corrupted_implicit": 64,
+          "crafted": 2,
+          "delve": 16,
+          "eldritch_implicit": 128,
+          "essence_only": 1,
+          "implicit": 32,
+          "influence": 8,
+          "metamod": 4,
+          "unveiled": 512,
+          "veiled_template": 256
+        },
+        "fossil_mod_kind": {
+          "added": 0,
+          "forced": 1,
+          "sell_price": 2
+        },
+        "fossil_tag_kind": {
+          "allowed": 0,
+          "forbidden": 1
+        },
+        "fossil_weight_kind": {
+          "negative": 0,
+          "positive": 1
+        },
+        "generation_type": {
+          "azmeri_empowered_monster": 0,
+          "bestiary": 1,
+          "blight": 2,
+          "blight_tower": 3,
+          "bloodlines": 4,
+          "corrupted": 5,
+          "crucible_tree": 6,
+          "crucible_unique_tree": 7,
+          "delve_area": 8,
+          "eater_of_worlds_implicit": 9,
+          "enchantment": 10,
+          "essence": 11,
+          "expedition_logbook": 12,
+          "flask_enchantment_enkindling": 13,
+          "flask_enchantment_instilling": 14,
+          "memory_altar": 15,
+          "monster_affliction": 16,
+          "necropolis_devoted_monster": 17,
+          "necropolis_monster": 18,
+          "nemesis": 19,
+          "prefix": 20,
+          "scourge_benefit": 21,
+          "scourge_detriment": 22,
+          "scourge_gimmick": 23,
+          "searing_exarch_implicit": 24,
+          "suffix": 25,
+          "synthesis_a": 26,
+          "synthesis_bonus": 27,
+          "synthesis_globals": 28,
+          "talisman": 29,
+          "tempest": 30,
+          "torment": 31,
+          "unique": 32
+        },
+        "influence": {
+          "adjudicator": 1,
+          "basilisk": 2,
+          "crusader": 3,
+          "elder": 4,
+          "eyrie": 5,
+          "none": 0,
+          "shaper": 6
+        },
+        "metamod_type": {
+          "multimod": 0,
+          "no_attack": 1,
+          "no_caster": 2,
+          "prefixes_locked": 3,
+          "suffixes_locked": 4
+        },
+        "session_support": {
+          "cluster_unsupported": 1,
+          "ordinary": 0,
+          "unsupported_domain": 2
+        },
+        "special_kind": {
+          "base_implicit": 0,
+          "corrupted_implicit": 1,
+          "delve": 2,
+          "eldritch_implicit": 3,
+          "unveiled": 4,
+          "veiled_template": 5
+        }
+      },
+      "files": {
+        "game-data.json": {
+          "byte_size": 16439442,
+          "sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5"
+        },
+        "strings.json": {
+          "byte_size": 6534436,
+          "sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+        }
+      },
+      "generated_at_utc": "2026-07-21T16:05:12Z",
+      "row_counts": {
+        "adds_tag_links": 5052,
+        "base_item_implicit_links": 760,
+        "base_item_tag_links": 17150,
+        "base_items": 4974,
+        "bench_cost_rows": 789,
+        "bench_item_class_links": 4975,
+        "bench_options": 774,
+        "bestiary_action_cost_rows": 4,
+        "bestiary_actions": 2,
+        "bestiary_beast_inputs": 2,
+        "bestiary_recipes": 3,
+        "bestiary_selected_recipes": 1,
+        "bestiary_unsupported_recipes": 2,
+        "classification_tag_links": 68322,
+        "cluster_jewels": 3,
+        "cluster_notables": 309,
+        "cluster_passives": 55,
+        "cluster_unsupported_bases": 3,
+        "essence_mod_links": 2310,
+        "essences": 106,
+        "fossil_mod_links": 24,
+        "fossil_tag_links": 18,
+        "fossil_weight_rows": 877,
+        "fossils": 445,
+        "generation_weight_rows": 4074,
+        "groups": 7169,
+        "item_classes": 99,
+        "mod_group_links": 39527,
+        "mods": 39292,
+        "ordinary_session_bases": 979,
+        "spawn_weight_rows": 70196,
+        "stat_rows": 59112,
+        "tags": 1355,
+        "unsupported_domain_bases": 3992
+      },
+      "scope": {
+        "base_items": "all released canonical bases",
+        "cluster_runtime_support": "unsupported",
+        "mods": "complete normalized global mod catalog",
+        "session_source": "ordinary sessions are derived from this artifact; SQLite is not required at runtime"
+      },
+      "source": {
+        "data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+        "database_schema_version": "2",
+        "source_hash": "e4eaf06c20e1ddb48f5173f7767c40eea637391925fa58d7f2aea1bed8724cac",
+        "source_version": "repoe-e4eaf06c20e1ddb4"
+      }
+    }
+  },
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "node": "v20.20.0",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+    "logical_cpu_count": 24,
+    "abi_version": 1,
+    "runtime": "node-worker_threads-wasm",
+    "data_load_ms": 460.739
+  },
+  "cases": [
+    {
+      "id": "solver-scaling-dire-pelt-three-t1-product",
+      "category": "exact_solver_state_scaling",
+      "approval_status": "active_plan_q0_2026-07-20",
+      "benchmark_enabled": true,
+      "expected": {
+        "solve_status": "converged",
+        "optimality_status": "exact_supported_priced_subset",
+        "compile_status": "compiled",
+        "verification_status": "verified"
+      },
+      "actual_status": "converged",
+      "expectation_met": true,
+      "verification_skipped": false,
+      "input": {
+        "comparison_profile": "native-wasm-solver-v1",
+        "session": {
+          "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+          "base_name": "Dire Pelt",
+          "item_level": 86
+        },
+        "start": {
+          "rarity": "rare",
+          "with_implicits": false,
+          "mods": [
+            {
+              "key": "IncreasedLife9",
+              "flags": [
+                "fractured"
+              ]
+            },
+            {
+              "key": "ItemFoundRarityIncreasePrefix3",
+              "flags": []
+            }
+          ]
+        },
+        "goal": {
+          "version": "v1",
+          "rarity": "rare",
+          "action_mode": "goal_relevant",
+          "min_satisfied_slots": 3,
+          "slots": [
+            {
+              "family_mod_key": "ItemFoundRarityIncreasePrefix3",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "IncreasedLife9",
+              "min_tier": 1
+            },
+            {
+              "family_mod_key": "EinharMasterColdResist3__",
+              "min_tier": 1
+            }
+          ]
+        },
+        "allowed_mechanic_families": [
+          "calculator_goal_relevant_product_envelope"
+        ],
+        "economy": {
+          "version": "v1",
+          "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+          "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+          "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+          "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+          "league_key": "mirage",
+          "league_name": "Mirage",
+          "manual_overrides": {
+            "base": 1
+          },
+          "override_purpose": "r3f_restart_route_gate_not_market_quote",
+          "fallback_price": null
+        },
+        "caps": {
+          "max_states": 200000,
+          "max_sweeps": 100000,
+          "solve_step_work_items": 4096,
+          "max_discovered_states": 200000,
+          "max_expanded_states": 200000,
+          "max_state_action_rows": 1215000,
+          "max_transitions": 10000000,
+          "max_reforge_work": 11000000,
+          "max_solver_owned_bytes": 1073741824,
+          "max_diagnostic_samples": 32,
+          "max_telemetry_json_bytes": 1048576,
+          "max_compiled_nodes": 100000,
+          "max_compiled_edges": 400000,
+          "max_strategy_json_bytes": 67108864,
+          "full_evidence": true,
+          "worker_step_ms": 20000,
+          "cancel_ack_ms": 250
+        },
+        "verification": {
+          "runs": 10000,
+          "seed": 20260721,
+          "max_actions_per_run": 100000,
+          "mean_cost_relative_tolerance": 0.08,
+          "minimum_success_rate": 0.995
+        }
+      },
+      "phase_wall_ms": {
+        "registry_layout": 57.191,
+        "solve": 36.063,
+        "compile": 26.37,
+        "verification": 140.243,
+        "total": 270.071
+      },
+      "execution": {
+        "solve_steps": 4,
+        "max_solve_step_ms": 19.55,
+        "worker_max_slice_ms": 19.55,
+        "cancellation_ack_ms": null,
+        "cancellation_mode": null,
+        "cooperative_abandon_ms": null
+      },
+      "memory": {
+        "measurement_kind": "node_process_rss_sampled_5ms_and_wasm_heap_snapshots",
+        "process_working_set_before_bytes": 314814464,
+        "process_working_set_after_bytes": 329220096,
+        "process_working_set_delta_bytes": 14405632,
+        "process_working_set_peak_bytes": 373694464,
+        "wasm_heap_before_bytes": 278396928,
+        "wasm_heap_after_bytes": 278396928,
+        "wasm_heap_growth_bytes": 0
+      },
+      "solve_summary": {
+        "converged": true,
+        "start_state": 0,
+        "start_value": 3,
+        "expanded_states": 2,
+        "sweeps": 1,
+        "residual": 0,
+        "skipped_action_count": 0
+      },
+      "solver_telemetry": {
+        "version": "solver_telemetry_v1",
+        "availability": {
+          "evaluator_support": "applied_before_expansion",
+          "relevance_filter": "explicit_envelope_or_conservative_include",
+          "dominance_filter": "certified_kernel_equivalence_preservation_or_constructive_goal_bound",
+          "policy_improvement_rounds": "available",
+          "optimality_gap": "available_for_focused_expansion",
+          "verification": "external_harness"
+        },
+        "execution": {
+          "status": "complete",
+          "phase": "done"
+        },
+        "actions": {
+          "registry": 177,
+          "registry_before_lazy": 15442,
+          "candidate": 32,
+          "evaluator_supported": 32,
+          "priced_scanned": 32,
+          "supported_priced": 32,
+          "unsupported_requested": 0,
+          "relevance_reduced": 15520,
+          "dominance_reduced": 31,
+          "deferred": 0,
+          "equivalent_price_ties": 0,
+          "missing_price": 0,
+          "unsupported_observed": 0,
+          "missing_price_samples": [],
+          "unsupported_samples": []
+        },
+        "action_control": {
+          "explicit_envelope": true,
+          "dependency_primitives": 0,
+          "goal_relevant_pruned": 110,
+          "preservation_rows": {
+            "considered": 0,
+            "included": 0,
+            "pruned": 0,
+            "certified_disposable": 0
+          },
+          "constructive_state_certificates": {
+            "accepted": 1,
+            "operators_pruned": 31,
+            "start_upper_bound": 3,
+            "first_expanded_state": 1
+          },
+          "fossil_loadouts": {
+            "possible": 15275,
+            "generated": 10,
+            "deferred": 15265,
+            "lazy": true,
+            "mode": "requested"
+          },
+          "reasons": [
+            "included:explicit_goal_envelope:32",
+            "pruned:not_permitted_by_explicit_goal_envelope:15410",
+            "pruned:outside_product_goal_relevance:110",
+            "included:native_price_independent_automatic_options:2",
+            "pruned:constructive_state_certificate:31"
+          ],
+          "reason_samples": {
+            "limit": 32,
+            "omitted": 0
+          },
+          "preservation_witnesses": [],
+          "preservation_witness_samples": {
+            "retained": 0,
+            "omitted": 0
+          },
+          "constructive_state_witnesses": [
+            {
+              "state": 0,
+              "operator": "bench:EinharMasterColdResist3__",
+              "constructive_upper": 3,
+              "strict_min_other_lower": 3.005872,
+              "operators_pruned": 31,
+              "proof": "optimistic_goal_production_cover"
+            }
+          ],
+          "constructive_state_witness_samples": {
+            "retained": 1,
+            "omitted": 0
+          },
+          "automatic_candidates": {
+            "enabled": true,
+            "operators": 2,
+            "dependency_primitives": 0,
+            "rows": {
+              "considered": 3,
+              "eligible": 1,
+              "rejected": 2,
+              "collapsed": 0,
+              "selected": 1,
+              "deferred": 0
+            },
+            "admission_phases": {
+              "carriers": 1,
+              "synthesis_ns": 2097200,
+              "local_context_ns": 2027600,
+              "local_planner_build_ns": 1642400,
+              "local_layout_build_ns": 46300,
+              "local_ledger_init_ns": 9900,
+              "local_context_other_ns": 329000
+            },
+            "by_kind": {
+              "imprint": {
+                "candidates": 1,
+                "eligible": 0,
+                "rejected": 1,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 1
+                },
+                "carriers": 1,
+                "max_candidates_per_carrier": 1,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 67100,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "renewal": {
+                "candidates": 0,
+                "eligible": 0,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 0,
+                "max_candidates_per_carrier": 0,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "protected_side": {
+                "candidates": 1,
+                "eligible": 0,
+                "rejected": 1,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 1,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 1,
+                "max_candidates_per_carrier": 1,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 1,
+                "retained_transitions": 0,
+                "time_ns": 2632200,
+                "kernel_evaluation_ns": 2625200,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 1,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 65300,
+                  "baseline_ns": 456700,
+                  "normalization_ns": 651600,
+                  "finish_ns": 84900
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "temporary_bench": {
+                "candidates": 0,
+                "eligible": 0,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 1,
+                "max_candidates_per_carrier": 0,
+                "precompiled_classes": 321,
+                "precompile_time_ns": 7672900,
+                "precompiled_bytes": 138832,
+                "candidate_variants": 112,
+                "max_candidate_variants_per_carrier": 112,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 112,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 1640200,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "fracture_prepare": {
+                "candidates": 0,
+                "eligible": 0,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 0,
+                "max_candidates_per_carrier": 0,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "permanent_bench": {
+                "candidates": 1,
+                "eligible": 1,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 1,
+                "max_candidates_per_carrier": 1,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 1,
+                "max_rows_per_carrier": 1,
+                "raw_outcomes": 0,
+                "retained_transitions": 1,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 1385100,
+                "selected_bytes": 13840
+              },
+              "multimod_finish": {
+                "candidates": 0,
+                "eligible": 0,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 0,
+                "max_candidates_per_carrier": 0,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              },
+              "primitive_fracture": {
+                "candidates": 0,
+                "eligible": 0,
+                "rejected": 0,
+                "collapsed": 0,
+                "deferred": 0,
+                "missing_price": 0,
+                "rejection_reasons": {
+                  "setup": 0,
+                  "neutral_kernel": 0,
+                  "relevance": 0,
+                  "cleanup": 0,
+                  "other": 0
+                },
+                "carriers": 0,
+                "max_candidates_per_carrier": 0,
+                "precompiled_classes": 0,
+                "precompile_time_ns": 0,
+                "precompiled_bytes": 0,
+                "candidate_variants": 0,
+                "max_candidate_variants_per_carrier": 0,
+                "effect_classes": 0,
+                "max_effect_classes_per_carrier": 0,
+                "collapsed_variants": 0,
+                "unique_templates": 0,
+                "template_hits": 0,
+                "max_templates_per_carrier": 0,
+                "rows": 0,
+                "max_rows_per_carrier": 0,
+                "raw_outcomes": 0,
+                "retained_transitions": 0,
+                "time_ns": 0,
+                "kernel_evaluation_ns": 0,
+                "outcome_mapping_ns": 0,
+                "template_matching_ns": 0,
+                "protected_detail": {
+                  "side_evaluations": 0,
+                  "repeat_evaluations": 0,
+                  "retry_checks": 0,
+                  "retry_certificates": 0,
+                  "retry_fallbacks": 0,
+                  "attempt_ns": 0,
+                  "baseline_ns": 0,
+                  "normalization_ns": 0,
+                  "finish_ns": 0
+                },
+                "enumeration_time_ns": 0,
+                "row_time_ns": 0,
+                "selected_bytes": 0
+              }
+            },
+            "witnesses": [
+              {
+                "candidate_kind": "protected_metamod",
+                "candidate": "option:protected_side:prefix:scour:goal:7",
+                "carrier_identity": {
+                  "state_id": 0,
+                  "state_hash": 2634109013,
+                  "rarity": 2,
+                  "prefix_count": 2,
+                  "suffix_count": 0,
+                  "crafted_goal_mask": 0,
+                  "fractured_goal_mask": 2,
+                  "active_protection_flags": 0
+                },
+                "relevant_goal_subset": 7,
+                "legality_result": "illegal",
+                "exact_kernel_change": {
+                  "changed": true,
+                  "baseline_hash": 10770888027679635000,
+                  "candidate_hash": 10768974877446926000,
+                  "mechanisms": [
+                    "metamod_protection"
+                  ]
+                },
+                "setup_operations": [],
+                "followup_operation": null,
+                "cleanup_operations": [],
+                "coverage": {
+                  "setup_complete": true,
+                  "cleanup_complete": true,
+                  "recovery_complete": true,
+                  "outer_exits_complete": true
+                },
+                "disposition": "rejected",
+                "reason": "exact_invalidity_legality_or_relevance",
+                "eligibility_reason": "unsupported_or_irrelevant_protection_combination"
+              },
+              {
+                "candidate_kind": "imprint",
+                "candidate": "automatic:imprint_discovery",
+                "carrier_identity": {
+                  "state_id": 0,
+                  "state_hash": 2634109013,
+                  "rarity": 2,
+                  "prefix_count": 2,
+                  "suffix_count": 0,
+                  "crafted_goal_mask": 0,
+                  "fractured_goal_mask": 2,
+                  "active_protection_flags": 0
+                },
+                "relevant_goal_subset": 0,
+                "legality_result": "not_applicable",
+                "exact_kernel_change": {
+                  "changed": false,
+                  "baseline_hash": 0,
+                  "candidate_hash": 0,
+                  "mechanisms": []
+                },
+                "setup_operations": [],
+                "followup_operation": null,
+                "cleanup_operations": [],
+                "coverage": {
+                  "setup_complete": false,
+                  "cleanup_complete": false,
+                  "recovery_complete": false,
+                  "outer_exits_complete": false
+                },
+                "disposition": "rejected",
+                "reason": "exact_invalidity_legality_or_relevance",
+                "eligibility_reason": "no_legal_imprint_checkpoint_carrier"
+              },
+              {
+                "candidate_kind": "permanent_bench",
+                "candidate": "bench:EinharMasterColdResist3__",
+                "carrier_identity": {
+                  "state_id": 0,
+                  "state_hash": 2634109013,
+                  "rarity": 2,
+                  "prefix_count": 2,
+                  "suffix_count": 0,
+                  "crafted_goal_mask": 0,
+                  "fractured_goal_mask": 2,
+                  "active_protection_flags": 0
+                },
+                "relevant_goal_subset": 4,
+                "legality_result": "legal",
+                "exact_kernel_change": {
+                  "changed": true,
+                  "baseline_hash": 0,
+                  "candidate_hash": 1984638974,
+                  "mechanisms": [
+                    "deterministic_finish"
+                  ]
+                },
+                "setup_operations": [],
+                "followup_operation": null,
+                "cleanup_operations": [],
+                "coverage": {
+                  "setup_complete": true,
+                  "cleanup_complete": true,
+                  "recovery_complete": true,
+                  "outer_exits_complete": true
+                },
+                "disposition": "selected",
+                "reason": "minimum_complete_expected_downstream_cost",
+                "eligibility_reason": "legal_permanent_goal_bench_successor"
+              }
+            ],
+            "witness_samples": {
+              "retained": 3,
+              "omitted": 0,
+              "limit": 32
+            }
+          }
+        },
+        "planner": {
+          "registry": 177,
+          "candidate": 32,
+          "fixed_options": 0
+        },
+        "abstraction": {
+          "discriminating_tags": 4,
+          "junk_classes": 114
+        },
+        "exact_state_scaling": {
+          "strict_states": 2,
+          "quotient_states": 2,
+          "refinement_rounds": 0,
+          "coarse_candidate_classes": 0,
+          "max_strict_states_per_coarse_class": 0,
+          "shadow_only": false,
+          "shadow_behavioral_classes": 0,
+          "shadow_expanded_states_observed": 0,
+          "literal_duplicates": 0,
+          "exact_behavioral_merges": 0,
+          "witnessed_non_equivalences": 0,
+          "projected_successor_class_mismatches": 0,
+          "kernel_payload_reuses": 0,
+          "kernel_payload_bytes_saved": 0,
+          "observation_signature_mismatches": 0,
+          "action_observation_cardinality": [],
+          "witnesses": [],
+          "witness_samples": {
+            "retained": 0,
+            "omitted": 0,
+            "limit": 32
+          }
+        },
+        "states": {
+          "discovered": 2,
+          "strict_discovered": 2,
+          "quotient": 2,
+          "expanded": 2,
+          "frontier": 0,
+          "goal": 1,
+          "policy_reachable": 2
+        },
+        "focused_expansion": {
+          "used": false,
+          "rounds": 0,
+          "lower_bound": 0,
+          "upper_bound": null,
+          "optimality_gap": null,
+          "duration_ns": 0
+        },
+        "work": {
+          "state_action_rows": 1,
+          "transition_entries": 1,
+          "outcome_entries": 4,
+          "choice_groups": 0,
+          "choice_successor_entries": 0,
+          "bellman_backups": 6,
+          "bellman_action_evaluations": 6,
+          "extraction_action_evaluations": 1,
+          "bellman_work_units": 1,
+          "max_bellman_unit_transitions": 0,
+          "algebraic_self_loops": 0,
+          "transition_bits_hash": "9807f863bf40a2e1",
+          "policy_bits_hash": "13d0945a38b42ece"
+        },
+        "cache": {
+          "distribution": {
+            "requests": 6,
+            "hits": 2,
+            "misses": 4,
+            "entries": 0,
+            "build_ns": 692200,
+            "released_after_sparse_copy": true
+          },
+          "transition_graph": {
+            "reused": false
+          },
+          "reforge": {
+            "requests": 0,
+            "hits": 0,
+            "misses": 0,
+            "entries": 0,
+            "build_ns": 0,
+            "frontier_work": 0
+          },
+          "primitive_families": {
+            "currency": {
+              "requests": 2,
+              "cache_hits": 0,
+              "rows": 2,
+              "raw_outcomes": 2,
+              "transitions": 2,
+              "time_ns": 76800,
+              "row_time_ns": 0,
+              "selected_bytes": 240
+            },
+            "essence": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            },
+            "fossil": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            },
+            "harvest": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            },
+            "bench": {
+              "requests": 4,
+              "cache_hits": 2,
+              "rows": 2,
+              "raw_outcomes": 2,
+              "transitions": 2,
+              "time_ns": 615400,
+              "row_time_ns": 1385100,
+              "selected_bytes": 240
+            },
+            "bestiary": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            },
+            "fracture": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            },
+            "other": {
+              "requests": 0,
+              "cache_hits": 0,
+              "rows": 0,
+              "raw_outcomes": 0,
+              "transitions": 0,
+              "time_ns": 0,
+              "row_time_ns": 0,
+              "selected_bytes": 0
+            }
+          }
+        },
+        "optimization": {
+          "method": "policy_iteration_scc",
+          "policy_evaluation_calls": 1,
+          "largest_policy_component": 1,
+          "sparse_policy_iterations": 0,
+          "max_sparse_policy_iterations": 0,
+          "policy_kernel_groups": 1,
+          "policy_states_collapsed": 0,
+          "policy_evaluation_failure": null,
+          "status": "exact_abstract",
+          "converged": true,
+          "sweeps": 1,
+          "policy_improvement_rounds": 1,
+          "residual": 0,
+          "optimality_gap": null,
+          "state_cap_hit": false,
+          "resource_cap_hit": false,
+          "cap_hits": [],
+          "full_request_status": "exact_abstract_within_tolerance"
+        },
+        "timings_ns": {
+          "registry_generation": 4530700,
+          "abstract_layout": 1203700,
+          "solve_setup": 535400,
+          "expansion": 16715200,
+          "expansion_phases": {
+            "prepare": 9258600,
+            "prepare_detail": {
+              "byte_audit": 131100,
+              "automatic_admission": 8575300,
+              "diagnostics": 396300,
+              "operator_pricing": 141800
+            },
+            "kernel": 27100,
+            "sparse_row": 575700,
+            "row_byte_audit": 900,
+            "diagnostics": 3400,
+            "cache_release": 60100,
+            "periodic_cap_byte_audit": 0,
+            "finalize": 583800,
+            "finalize_byte_audit": 233000,
+            "attributed": 10509600,
+            "unattributed": 6205600
+          },
+          "transition_calculation": 692200,
+          "optimization": 774000,
+          "extraction": 270200,
+          "compilation": 10798300,
+          "verification": null
+        },
+        "diagnostic_cost": {
+          "calc_owned_byte_audit_requests": 3,
+          "calc_owned_byte_audit_ns": 25400,
+          "calc_owned_byte_ledger_requests": 17,
+          "calc_owned_byte_ledger_ns": 11400,
+          "calc_owned_byte_reconciliations": 3,
+          "calc_owned_byte_ledger_max_overestimate": 0,
+          "solve_owned_byte_ledger_requests": 9,
+          "solve_owned_byte_reconciliations": 3,
+          "solve_owned_byte_ledger_max_overestimate": 0
+        },
+        "memory": {
+          "solver_owned_bytes_estimate": 10434935,
+          "solver_live_owned_bytes_estimate": 10334457,
+          "diagnostics_retained_bytes_estimate": 3743,
+          "telemetry_json_byte_limit": 1048576,
+          "estimate_kind": "selected_allocations_not_process_heap",
+          "abstract_state_bytes": 148,
+          "state_payload": "inline_sparse_junk_counts"
+        },
+        "compilation": {
+          "available": true,
+          "working_states": 1,
+          "policy_regions": 1,
+          "nodes": 5,
+          "edges": 5,
+          "strategy_json_bytes": 66749,
+          "cap_hit": null
+        },
+        "value": {
+          "start": 3,
+          "start_status": "exact_abstract_within_tolerance",
+          "start_scope": "full_requested_action_set",
+          "raw_start_bound": 3
+        },
+        "verification": null
+      },
+      "compiled_graph": {
+        "nodes": 5,
+        "edges": 5,
+        "strategy_json_bytes": 66749
+      },
+      "value": {
+        "start": 3
+      },
+      "verification": {
+        "runs": 10000,
+        "success_count": 10000,
+        "failure_count": 0,
+        "mean_cost": 3,
+        "off_policy_failures": 0,
+        "cost_delta_absolute": 0,
+        "cost_delta_relative": 0,
+        "success_rate": 1,
+        "mean_cost_within_tolerance": true,
+        "success_rate_within_tolerance": true,
+        "verification_passed": true
+      },
+      "cap_checks": {
+        "all_passed": true,
+        "checks": {
+          "max_discovered_states": true,
+          "max_expanded_states": true,
+          "max_state_action_rows": true,
+          "max_transitions": true,
+          "max_reforge_work": true,
+          "max_solver_owned_bytes": true,
+          "max_compiled_nodes": true,
+          "max_compiled_edges": true,
+          "max_strategy_json_bytes": true,
+          "worker_step_ms": true
+        }
+      },
+      "errors": []
+    }
+  ]
+}

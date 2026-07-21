@@ -273,7 +273,14 @@ async function solveSolver(
 ): Promise<SolverSolveResult> {
     const solver = params.solver as number;
     let begun = false;
-    let workItems = Math.max(1, (params.chunkSize as number) || 8);
+    // The adaptive loop already caps later solver steps at four work items.
+    // Apply that bound to the first call as well: benchmark/native chunk sizes
+    // can be much larger, and forwarding one verbatim would create a single
+    // long, non-cancellable WASM slice before adaptation has any measurement.
+    let workItems = Math.min(
+        4,
+        Math.max(1, (params.chunkSize as number) || 8),
+    );
     let observedPhase: SolveProgress["phase"] = "expanding";
     let emittedProgress = false;
     let lastProgressAt = -Infinity;

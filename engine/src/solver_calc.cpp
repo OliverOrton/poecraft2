@@ -248,7 +248,8 @@ CalcContext::CalcContext(
     bool allow_empty_goal,
     bool empty_actions_mean_all,
     bool distinguish_junk_exclusion_effects,
-    std::optional<std::uint32_t> state_cap)
+    std::optional<std::uint32_t> state_cap,
+    const std::vector<CountObservation>& count_observations)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -341,7 +342,7 @@ CalcContext::CalcContext(
     const auto layout_started = std::chrono::steady_clock::now();
     layout_ = build_abstract_layout(
         *session_, goal_, registry_, layout_actions, allow_empty_goal,
-        false, exact_group_effects);
+        false, exact_group_effects, count_observations);
     layout_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - layout_started)
@@ -392,6 +393,11 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
                   const std::uint64_t,
                   std::shared_ptr<const OutcomeDistribution>>) +
               2 * sizeof(void*));
+    bytes += owned_distribution_payload_refs_.bucket_count() * sizeof(void*);
+    bytes += owned_distribution_payload_refs_.size() *
+             (sizeof(std::pair<const OutcomeDistribution* const,
+                               std::uint32_t>) +
+              2 * sizeof(void*));
     bytes += option_kernel_cache_.bucket_count() * sizeof(void*);
     bytes += option_kernel_cache_.size() *
              (sizeof(std::pair<
@@ -421,9 +427,9 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
              (sizeof(std::uint64_t) + 2 * sizeof(void*));
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<
-                  const std::pair<std::uint32_t, std::uint64_t>,
-                  std::shared_ptr<const OutcomeDistribution>>) +
-              3 * sizeof(void*));
+                   const std::pair<std::uint32_t, std::uint64_t>,
+                   std::vector<ReforgeCacheMemo>>) +
+               3 * sizeof(void*));
     bytes += telemetry_rows_.bucket_count() * sizeof(void*);
     bytes += telemetry_rows_.size() *
              (sizeof(std::pair<const std::uint64_t, std::uint8_t>) +
@@ -477,19 +483,41 @@ void CalcContext::account_distribution_cache_insert(
     const std::shared_ptr<const OutcomeDistribution>& value) {
     const auto existing = distribution_cache_.find(key);
     if (existing != distribution_cache_.end()) {
-        owned_distribution_payload_bytes_ -=
-            distribution_selected_bytes(*existing->second);
+        release_distribution_payload(existing->second);
     }
-    owned_distribution_payload_bytes_ +=
-        distribution_selected_bytes(*value);
+    retain_distribution_payload(value);
 }
 
 void CalcContext::account_distribution_cache_erase(
     const std::uint64_t key) {
     const auto existing = distribution_cache_.find(key);
     if (existing == distribution_cache_.end()) return;
-    owned_distribution_payload_bytes_ -=
-        distribution_selected_bytes(*existing->second);
+    release_distribution_payload(existing->second);
+}
+
+void CalcContext::retain_distribution_payload(
+    const std::shared_ptr<const OutcomeDistribution>& value) {
+    auto [it, inserted] =
+        owned_distribution_payload_refs_.try_emplace(value.get(), 0);
+    if (inserted) {
+        owned_distribution_payload_bytes_ +=
+            distribution_selected_bytes(*value);
+    }
+    ++it->second;
+}
+
+void CalcContext::release_distribution_payload(
+    const std::shared_ptr<const OutcomeDistribution>& value) {
+    const auto it = owned_distribution_payload_refs_.find(value.get());
+    if (it == owned_distribution_payload_refs_.end() || it->second == 0) {
+        throw std::logic_error(
+            "selected-owned distribution payload released without owner");
+    }
+    if (--it->second == 0) {
+        owned_distribution_payload_bytes_ -=
+            distribution_selected_bytes(*value);
+        owned_distribution_payload_refs_.erase(it);
+    }
 }
 
 void CalcContext::account_option_cache_insert(
@@ -563,8 +591,25 @@ void CalcContext::account_operator_template_insert(
 }
 
 void CalcContext::account_reforge_cache_insert(
-    const std::shared_ptr<const OutcomeDistribution>& value) {
-    owned_reforge_payload_bytes_ += distribution_selected_bytes(*value);
+    const std::size_t old_capacity,
+    const std::size_t new_capacity,
+    const ReforgeCacheMemo& value) {
+    owned_reforge_payload_bytes_ +=
+        (new_capacity - old_capacity) * sizeof(ReforgeCacheMemo);
+    owned_reforge_payload_bytes_ +=
+        value.observation_signature.capacity() * sizeof(std::uint64_t);
+    retained_reforge_distribution_bytes_ +=
+        distribution_selected_bytes(*value.distribution);
+    retain_distribution_payload(value.distribution);
+}
+
+bool CalcContext::can_retain_reforge_distribution(
+    const OutcomeDistribution& value) const {
+    constexpr std::uint64_t kMaxRetainedRawReforgeBytes = 268435456;
+    const std::uint64_t bytes = distribution_selected_bytes(value);
+    return bytes <= kMaxRetainedRawReforgeBytes &&
+           retained_reforge_distribution_bytes_ <=
+               kMaxRetainedRawReforgeBytes - bytes;
 }
 
 bool calc_supports(const ActionDescriptor& action) {
@@ -1029,6 +1074,7 @@ void CalcContext::record_primitive_row_time(
 void CalcContext::release_solve_transition_caches() {
     distribution_cache_.clear();
     owned_distribution_payload_bytes_ = 0;
+    owned_distribution_payload_refs_.clear();
     for (auto it = option_kernel_cache_.begin();
          it != option_kernel_cache_.end();) {
         const std::uint32_t operator_index =
@@ -1045,6 +1091,7 @@ void CalcContext::release_solve_transition_caches() {
     }
     reforge_cache_.clear();
     owned_reforge_payload_bytes_ = 0;
+    retained_reforge_distribution_bytes_ = 0;
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->release_solve_transition_caches();
     }
@@ -1148,9 +1195,22 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
     }
     bytes += layout_.discriminating_tag_ids.capacity() *
              sizeof(std::uint32_t);
+    bytes += layout_.count_observations.capacity() *
+             sizeof(CountObservation);
+    for (const CountObservation& observation : layout_.count_observations) {
+        bytes += observation.ids.capacity() * sizeof(std::uint32_t);
+        bytes += observation.memo_slots.capacity() * sizeof(std::uint32_t);
+        bytes += observation.member_mask.capacity() * sizeof(std::uint64_t);
+        bytes += observation.junk_class_indices.capacity() *
+                 sizeof(std::uint32_t);
+    }
+    bytes += layout_.count_observation_by_memo_slot.capacity() *
+             sizeof(std::uint32_t);
     bytes += layout_.junk_classes.capacity() * sizeof(JunkClass);
     for (const JunkClass& junk : layout_.junk_classes) {
         bytes += junk.exclusion_effect_mask.capacity() * sizeof(std::uint64_t);
+        bytes += junk.count_observation_bits.capacity() *
+                 sizeof(std::uint64_t);
         bytes += junk.member_mask.capacity() * sizeof(std::uint64_t);
     }
     bytes += layout_.junk_class_by_mod.capacity() * sizeof(std::uint32_t);
@@ -1169,6 +1229,11 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
                   const std::uint64_t,
                   std::shared_ptr<const OutcomeDistribution>>) +
                   2 * sizeof(void*));
+    bytes += owned_distribution_payload_refs_.bucket_count() * sizeof(void*);
+    bytes += owned_distribution_payload_refs_.size() *
+             (sizeof(std::pair<const OutcomeDistribution* const,
+                               std::uint32_t>) +
+              2 * sizeof(void*));
     std::unordered_set<const OutcomeDistribution*> counted_distributions;
     const auto distribution_bytes = [](const OutcomeDistribution& value) {
         std::uint64_t total = sizeof(OutcomeDistribution);
@@ -1276,13 +1341,18 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
              (sizeof(std::uint64_t) + 2 * sizeof(void*));
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<
-                  const std::pair<std::uint32_t, std::uint64_t>,
-                  std::shared_ptr<const OutcomeDistribution>>) +
-              3 * sizeof(void*));
-    for (const auto& [unused, distribution] : reforge_cache_) {
+                   const std::pair<std::uint32_t, std::uint64_t>,
+                   std::vector<ReforgeCacheMemo>>) +
+               3 * sizeof(void*));
+    for (const auto& [unused, memos] : reforge_cache_) {
         (void)unused;
-        if (counted_distributions.insert(distribution.get()).second) {
-            bytes += distribution_bytes(*distribution);
+        bytes += memos.capacity() * sizeof(ReforgeCacheMemo);
+        for (const ReforgeCacheMemo& memo : memos) {
+            bytes += memo.observation_signature.capacity() *
+                     sizeof(std::uint64_t);
+            if (counted_distributions.insert(memo.distribution.get()).second) {
+                bytes += distribution_bytes(*memo.distribution);
+            }
         }
     }
     bytes += telemetry_rows_.bucket_count() * sizeof(void*);
