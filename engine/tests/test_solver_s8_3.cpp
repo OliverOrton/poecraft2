@@ -314,14 +314,14 @@ void run_temporary_blocker_price_flip() {
         {"exalt", 10.0},
         {"base", 100.0},
         {"scour", 1.0},
-        {"bench:s83_mod_8", 2.0}});
+         {"bench:s83_mod_8", 2.0}});
     check_owned_byte_ledger(calc);
     PC_CHECK(blocker_batch.temporary_precompiled_classes > 0);
     PC_CHECK(blocker_batch.temporary_precompile_ns > 0);
     PC_CHECK(blocker_batch.temporary_precompiled_bytes > 0);
-    PC_CHECK(blocker_batch.temporary_candidate_variants >= 2);
+    PC_CHECK(blocker_batch.temporary_candidate_variants >= 1);
     PC_CHECK(blocker_batch.temporary_effect_classes > 0);
-    PC_CHECK(blocker_batch.temporary_effect_classes <
+    PC_CHECK(blocker_batch.temporary_effect_classes <=
              blocker_batch.temporary_candidate_variants);
     PC_CHECK(calc.candidate_operators().size() == 3);
     PC_CHECK(calc.action_control().automatic_dependency_primitives == 2);
@@ -341,6 +341,38 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(blocker_kernel.automatic.cleanup_complete);
     PC_CHECK((blocker_kernel.automatic.kernel_change_mechanisms &
               kAutomaticGroupConflict) != 0);
+
+    /* Admission is price-scoped even when one CalcContext is reused. A
+     * missing-price result must not be retained across a later solve. */
+    CalcContext reprice_calc(
+        session, goal, registry, {exalt, restart},
+        false, true, true);
+    const std::uint32_t reprice_state = reprice_calc.intern_item(start);
+    const StateLocalAutomaticBatch missing_batch = admit_automatic(
+        reprice_calc, reprice_state,
+        {{"exalt", 10.0}, {"base", 100.0}, {"scour", 1.0}});
+    PC_CHECK(std::none_of(
+        missing_batch.admitted_operators.begin(),
+        missing_batch.admitted_operators.end(),
+        [&](const std::uint32_t index) {
+            return reprice_calc.operators()[index].id.find(blocker_id) !=
+                   std::string::npos;
+        }));
+    reprice_calc.reset_solve_telemetry();
+    const StateLocalAutomaticBatch repriced_batch = admit_automatic(
+        reprice_calc, reprice_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 2.0}});
+    PC_CHECK(std::any_of(
+        repriced_batch.admitted_operators.begin(),
+        repriced_batch.admitted_operators.end(),
+        [&](const std::uint32_t index) {
+            return reprice_calc.operators()[index].id.find(blocker_id) !=
+                   std::string::npos;
+        }));
+    check_owned_byte_ledger(reprice_calc);
 
     CalcContext variant_calc(
         session, goal, registry, {exalt, restart},

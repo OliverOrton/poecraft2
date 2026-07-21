@@ -41,10 +41,10 @@ does not reimplement crafting rules.
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
-No implementation chunk is currently selected. The bounded
-[real three-T1 from-scratch diagnostic](archive/2026-07-21-real-three-t1-diagnostic/README.md)
-is complete; [Active work](active/README.md) and [HANDOFF](../HANDOFF.md) record
-that Oliver must choose the next boundary.
+The [exact constructive policy search](active/exact-constructive-policy-search.md)
+is currently selected. It turns the completed empty-start three-T1 diagnostic
+into a generic finite-incumbent and exact-gap-closure milestone; [Active work](active/README.md)
+and [HANDOFF](../HANDOFF.md) record its scope.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its

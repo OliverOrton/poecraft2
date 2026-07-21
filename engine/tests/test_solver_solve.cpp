@@ -5,6 +5,7 @@
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -535,6 +536,75 @@ void run_constructive_state_certificate_tests() {
              certified.diagnostics.discovered_states);
 }
 
+/* An automatic renewal may establish a finite executable policy before its
+ * successful exit states receive complete all-action expansions. The upper
+ * evaluator is allowed to inspect an admitted deterministic finish kernel
+ * directly; the lower proof still retains every admitted action. */
+void run_constructive_renewal_upper_tests() {
+    auto session = make_solve_session();
+    session->metamod_type.assign(8, -10);
+    pc_bitset_clear(session->normal_random_roll_mask.data(), 5);
+    session->flags[5] |= 1u << 1;
+
+    ActionRegistry registry = build_action_registry(*session);
+    session->bench_mod_ids = {5};
+    ActionDescriptor bench;
+    bench.id = "bench:constructive_finish";
+    bench.display_name = "Bench constructive finish";
+    bench.params.type = ActionType::Bench;
+    bench.params.mod_id = 5;
+    bench.kind = TransitionKind::Deterministic;
+    bench.cost_keys = {bench.id};
+    bench.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    bench.legality.requires_open_affix = true;
+    bench.sets_flags = kFlagCraftedMod;
+    const std::uint32_t bench_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    registry.index_by_id.emplace(bench.id, bench_index);
+    registry.actions.push_back(std::move(bench));
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    for (const std::uint32_t family : {100u, 102u, 104u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry, {chaos, restart, bench_index});
+    PC_CHECK(std::any_of(
+        calc.operators().begin(), calc.operators().end(),
+        [](const PlannerOperator& planner) {
+            return planner.automatic_kind ==
+                   AutomaticCandidateKind::ConstructiveRenewal;
+        }));
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    SolveOptions options;
+    options.max_expanded_states = 2;
+    options.state_certificate_control = false;
+    options.focused_expansion_checkpoint = 1;
+    options.focused_expansion_queue_threshold = 0;
+    const SolveResult result = solve(
+        calc, start,
+        {{"chaos", 1.0},
+         {"base", 1.0},
+         {"bench:constructive_finish", 2.0}},
+        options);
+    PC_CHECK(result.diagnostics.focused_expansion);
+    PC_CHECK(result.diagnostics.state_cap_hit);
+    PC_CHECK(std::isfinite(result.diagnostics.focused_upper_bound));
+    PC_CHECK(result.diagnostics.focused_upper_bound > 2.0);
+    PC_CHECK(result.diagnostics.focused_lower_bound <=
+             result.diagnostics.focused_upper_bound + 1e-9);
+}
+
 bool read_text_file(const std::string& path, std::string& out) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) return false;
@@ -729,5 +799,6 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 void run_solver_solve_tests(const char* artifact_dir) {
     run_alt_spam_tests();
     run_constructive_state_certificate_tests();
+    run_constructive_renewal_upper_tests();
     run_artifact_solve_tests(artifact_dir);
 }

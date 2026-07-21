@@ -265,7 +265,8 @@ CalcContext::CalcContext(
         }
     }
     const auto planner_started = std::chrono::steady_clock::now();
-    operators_ = build_planner_operators(*session_, goal_, registry_);
+    operators_ = build_planner_operators(
+        *session_, goal_, registry_, candidates_);
     planner_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - planner_started)
@@ -458,6 +459,15 @@ std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
     bytes += owned_reforge_payload_bytes_;
     if (automatic_comparison_context_ != nullptr) {
         bytes += automatic_comparison_context_->fast_estimated_owned_bytes();
+    }
+    bytes += automatic_admission_contexts_.bucket_count() * sizeof(void*);
+    bytes += automatic_admission_contexts_.size() *
+             (sizeof(std::pair<const std::string,
+                               std::unique_ptr<CalcContext>>) +
+              2 * sizeof(void*));
+    for (const auto& [key, context] : automatic_admission_contexts_) {
+        bytes += key.capacity() + 1;
+        bytes += context->fast_estimated_owned_bytes();
     }
     ++telemetry_.owned_byte_ledger_requests;
     telemetry_.owned_byte_ledger_ns += static_cast<std::uint64_t>(
@@ -1032,8 +1042,21 @@ const OutcomeDistribution& CalcContext::outcomes(
 void CalcContext::reset_solve_telemetry() {
     telemetry_ = {};
     telemetry_rows_.clear();
+    /* State-local automatic admission is price-scoped. Retained operator and
+     * kernel templates remain exact reusable structure, but the per-state
+     * decision and any graph built from it must be recomputed for each solve. */
+    state_local_automatic_operators_.clear();
+    state_local_automatic_operators_.rehash(0);
+    owned_state_local_operator_bytes_ = 0;
+    if (goal_.automatic_candidates) {
+        solve_transition_cache_.reset();
+    }
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->reset_solve_telemetry();
+    }
+    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+        (void)unused_key;
+        context->reset_solve_telemetry();
     }
 }
 
@@ -1094,6 +1117,10 @@ void CalcContext::release_solve_transition_caches() {
     retained_reforge_distribution_bytes_ = 0;
     if (automatic_comparison_context_ != nullptr) {
         automatic_comparison_context_->release_solve_transition_caches();
+    }
+    for (auto& [unused_key, context] : automatic_admission_contexts_) {
+        (void)unused_key;
+        context->release_solve_transition_caches();
     }
     telemetry_rows_.clear();
 }
@@ -1361,6 +1388,15 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
               2 * sizeof(void*));
     if (automatic_comparison_context_ != nullptr) {
         bytes += automatic_comparison_context_->calculate_owned_bytes();
+    }
+    bytes += automatic_admission_contexts_.bucket_count() * sizeof(void*);
+    bytes += automatic_admission_contexts_.size() *
+             (sizeof(std::pair<const std::string,
+                               std::unique_ptr<CalcContext>>) +
+              2 * sizeof(void*));
+    for (const auto& [key, context] : automatic_admission_contexts_) {
+        bytes += key.capacity() + 1;
+        bytes += context->calculate_owned_bytes();
     }
     return bytes;
 }

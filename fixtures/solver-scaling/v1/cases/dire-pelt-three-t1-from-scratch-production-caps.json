@@ -75,7 +75,7 @@
   },
   "caps": {
     "max_states": 200000, "max_sweeps": 100000,
-    "solve_step_work_items": 4096,
+    "solve_step_work_items": 1,
     "max_discovered_states": 200000, "max_expanded_states": 200000,
     "max_state_action_rows": 1215000, "max_transitions": 10000000,
     "max_reforge_work": 11000000, "max_solver_owned_bytes": 1073741824,

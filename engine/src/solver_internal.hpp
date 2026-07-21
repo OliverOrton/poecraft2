@@ -71,6 +71,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     ProtectedMetamod = 4,
     MultimodFinish = 5,
     Imprint = 6,
+    ConstructiveRenewal = 7,
 };
 
 /* R3A retention/accounting categories. These are deliberately independent
@@ -202,6 +203,11 @@ struct FixedOptionSpec {
     std::vector<std::string> program_action_ids;
     std::vector<std::uint32_t> exit_goal_slots;
     std::uint32_t exit_min_satisfied = 0;
+    /* Automatic constructive renewals name the admitted deterministic
+     * primitive that finishes a successful intermediate carrier. It is
+     * metadata for the executable upper policy, not part of the renewal
+     * attempt kernel itself. */
+    std::string constructive_finish_action_id;
     /* Fracture preparation waits for this exact satisfying goal carrier.
      * Wrong-carrier fracture outcomes remain outer-policy exits. */
     std::uint32_t carrier_goal_slot = kNoId;
@@ -401,6 +407,7 @@ struct PlannerOperator {
     std::uint32_t setup_action = kNoId;
     std::uint32_t followup_action = kNoId;
     std::uint32_t cleanup_action = kNoId;
+    std::uint32_t constructive_finish_action = kNoId;
     /* Sorted dependency quantities. S7.3 fixed programs execute each entry
      * exactly once; S7.4 kernels return the exact state-dependent expected
      * quantities used for pricing conditional and observed paths. */
@@ -446,7 +453,8 @@ ActionRegistry build_action_registry(
 std::vector<PlannerOperator> build_planner_operators(
     const SessionImpl& session,
     const GoalSpec& goal,
-    const ActionRegistry& registry);
+    const ActionRegistry& registry,
+    const std::vector<std::uint32_t>& admitted_primitives);
 
 // --- goal resolution and abstract layout --------------------------------------
 
@@ -936,6 +944,7 @@ struct AutomaticAdmissionLimits {
     std::uint32_t max_imprint_program_depth = 0;
     std::uint64_t max_imprint_program_work = 0;
     const std::unordered_map<std::string, double>* prices = nullptr;
+    double incumbent_upper_bound = std::numeric_limits<double>::infinity();
 };
 
 struct StateLocalAutomaticCandidate {
@@ -1052,6 +1061,18 @@ class CalcContext {
     std::vector<std::uint64_t> temporary_followup_eligible_mask(
         const pc_item_state& carrier,
         std::uint32_t followup_action);
+    /* A collision-free analytical ceiling for drawing a satisfying member of
+     * one goal slot. Existing satisfied goal families are treated as exact
+     * group blockers; each additional junk blocker receives the strongest
+     * non-metamod exclusion effect available on the carrier. */
+    double optimistic_goal_draw_probability(
+        std::uint32_t carrier_state,
+        std::uint32_t action_index,
+        std::uint32_t goal_slot,
+        std::uint32_t satisfied_mask,
+        std::uint8_t prefix_blockers,
+        std::uint8_t suffix_blockers,
+        bool guaranteed_pool = false);
     std::size_t static_candidate_operator_count() const {
         return static_candidate_operator_count_;
     }
@@ -1210,6 +1231,8 @@ class CalcContext {
     std::unordered_map<std::uint64_t, std::uint8_t> telemetry_rows_;
     std::shared_ptr<SolveTransitionCache> solve_transition_cache_;
     std::unique_ptr<CalcContext> automatic_comparison_context_;
+    std::unordered_map<std::string, std::unique_ptr<CalcContext>>
+        automatic_admission_contexts_;
     std::uint64_t layout_build_ns_ = 0;
     std::uint64_t planner_build_ns_ = 0;
     std::uint64_t owned_byte_ledger_init_ns_ = 0;
@@ -1507,6 +1530,14 @@ struct SolveOptions {
     std::uint64_t max_strategy_json_bytes = 67108864;
     std::uint32_t max_diagnostic_samples = 32;
     std::uint64_t max_telemetry_json_bytes = 1048576;
+    /* Exact work-scheduling controls. These do not change the admitted
+     * action set, state identity, transition kernels, or production caps. */
+    std::uint32_t focused_expansion_checkpoint = 32;
+    std::uint32_t focused_expansion_queue_threshold = 1024;
+    std::uint32_t focused_members_per_fringe_class = 64;
+    std::uint32_t focused_expansion_batch_states = 256;
+    std::uint32_t focused_lower_batch_states = 64;
+    double focused_goal_progress_priority_multiplier = 256.0;
     /* Automatic Imprint discovery is deliberately bounded search, not a
      * mechanic-validity limit. Exhaustion is reported as a deferred solver
      * resource boundary in the automatic-candidate diagnostics. */
@@ -1600,8 +1631,17 @@ struct SolveDiagnostics {
     std::uint32_t focused_expansion_rounds = 0;
     double focused_lower_bound = 0.0;
     double focused_upper_bound = std::numeric_limits<double>::infinity();
+    double focused_partial_policy_upper_bound =
+        std::numeric_limits<double>::infinity();
+    std::uint32_t focused_partial_policy_rounds = 0;
     double focused_optimality_gap = std::numeric_limits<double>::infinity();
     std::uint64_t focused_expansion_ns = 0;
+    std::uint64_t constructive_policy_anchor_checks = 0;
+    std::uint64_t constructive_policy_anchor_eligible = 0;
+    std::uint64_t constructive_policy_renewal_variants = 0;
+    std::uint64_t constructive_policy_exit_checks = 0;
+    std::uint64_t constructive_policy_finishable_exits = 0;
+    std::uint64_t constructive_policy_feasible_policies = 0;
     std::uint64_t reforge_frontier_work = 0;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;

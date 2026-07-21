@@ -36,6 +36,8 @@ AutomaticTelemetryKind telemetry_kind_for_candidate(
         return AutomaticTelemetryKind::PermanentBench;
     case AutomaticCandidateKind::Fracture:
         return AutomaticTelemetryKind::PrimitiveFracture;
+    case AutomaticCandidateKind::ConstructiveRenewal:
+        return AutomaticTelemetryKind::Renewal;
     case AutomaticCandidateKind::None:
         return AutomaticTelemetryKind::None;
     }
@@ -317,6 +319,43 @@ bool mask_intersects(
     return false;
 }
 
+std::string automatic_context_key(
+    const std::vector<FixedOptionSpec>& specs,
+    const std::vector<std::uint32_t>& candidates) {
+    std::string out;
+    const auto number = [&](const auto value) {
+        out += std::to_string(value);
+        out.push_back(';');
+    };
+    const auto string = [&](const std::string& value) {
+        number(value.size());
+        out.append(value);
+    };
+    const auto strings = [&](const std::vector<std::string>& values) {
+        number(values.size());
+        for (const std::string& value : values) string(value);
+    };
+    number(specs.size());
+    for (const FixedOptionSpec& spec : specs) {
+        number(static_cast<std::uint8_t>(spec.kind));
+        number(static_cast<int>(spec.side));
+        string(spec.action_id);
+        strings(spec.setup_action_ids);
+        strings(spec.bench_craft_ids);
+        strings(spec.program_action_ids);
+        number(spec.exit_goal_slots.size());
+        for (const std::uint32_t slot : spec.exit_goal_slots) number(slot);
+        number(spec.exit_min_satisfied);
+        string(spec.constructive_finish_action_id);
+        number(spec.carrier_goal_slot);
+        number(static_cast<std::uint8_t>(spec.automatic_kind));
+        number(spec.relevant_goal_mask);
+    }
+    number(candidates.size());
+    for (const std::uint32_t candidate : candidates) number(candidate);
+    return out;
+}
+
 bool temporary_blocker_applies(
     const SessionImpl& session,
     const pc_item_state& carrier,
@@ -345,7 +384,8 @@ bool temporary_blocker_applies(
 AutomaticOptionSynthesis synthesize_automatic_options(
     CalcContext& calc,
     const std::uint32_t state_id,
-    const pc_item_state& carrier) {
+    const pc_item_state& carrier,
+    const std::unordered_map<std::string, double>* prices) {
     const SessionImpl& session = calc.session();
     const GoalSpec& goal = calc.goal();
     const ActionRegistry& registry = calc.registry();
@@ -353,6 +393,13 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     AutomaticOptionSynthesis synthesis;
     std::vector<FixedOptionSpec>& result = synthesis.specs;
     if (!goal.automatic_candidates) return synthesis;
+    const auto action_has_prices = [&](const std::uint32_t action_index) {
+        if (prices == nullptr) return true;
+        return std::all_of(
+            registry.actions.at(action_index).cost_keys.begin(),
+            registry.actions.at(action_index).cost_keys.end(),
+            [&](const std::string& key) { return prices->contains(key); });
+    };
     const std::vector<std::uint32_t>& goal_bench =
         calc.automatic_goal_bench_actions();
 
@@ -398,6 +445,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     const auto cleanup = registry.index_by_id.find(
         "remove_crafted_modifiers");
     if (cleanup != registry.index_by_id.end() &&
+        action_has_prices(cleanup->second) &&
         (state.flags & kFlagCraftedMod) == 0) {
         const auto enumeration_started = std::chrono::steady_clock::now();
         const auto& precompiled = calc.temporary_bench_effect_classes();
@@ -414,18 +462,26 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             eligible_by_followup;
         for (const TemporaryBenchEffectClass& effect : precompiled) {
             if (!target_slot_missing(state, effect.goal_slot) ||
+                !action_has_prices(effect.followup_action) ||
                 !action_legal(
                     session, registry.actions.at(effect.followup_action),
-                    state) ||
-                !action_legal(
-                    session,
-                    registry.actions.at(effect.blocker_actions.front()),
                     state) ||
                 !temporary_blocker_applies(session, carrier, effect)) {
                 continue;
             }
+            const auto blocker_usable = [&](const std::uint32_t blocker) {
+                return action_has_prices(blocker) &&
+                       action_legal(
+                           session, registry.actions.at(blocker), state);
+            };
+            const auto representative = std::find_if(
+                effect.blocker_actions.begin(),
+                effect.blocker_actions.end(), blocker_usable);
+            if (representative == effect.blocker_actions.end()) continue;
             synthesis.temporary_candidate_variants +=
-                effect.blocker_actions.size();
+                static_cast<std::uint64_t>(std::count_if(
+                    representative, effect.blocker_actions.end(),
+                    blocker_usable));
             auto [eligible, inserted] = eligible_by_followup.try_emplace(
                 effect.followup_action);
             if (inserted) {
@@ -475,7 +531,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
             if (effect_inserted) {
                 TemporaryBenchCandidateGroup created;
                 created.representative_blocker =
-                    effect.blocker_actions.front();
+                    *representative;
                 created.followup_action = effect.followup_action;
                 created.goal_slot = effect.goal_slot;
                 synthesis.temporary_groups.push_back(std::move(created));
@@ -484,6 +540,7 @@ AutomaticOptionSynthesis synthesize_automatic_options(
                 group = &synthesis.temporary_groups.at(found->second);
             }
             for (const std::uint32_t blocker : effect.blocker_actions) {
+                if (!blocker_usable(blocker)) continue;
                 const auto duplicate = std::find_if(
                     group->blocker_variants.begin(),
                     group->blocker_variants.end(),
@@ -1145,7 +1202,8 @@ void add_action_resources(
 std::vector<PlannerOperator> build_planner_operators(
     const SessionImpl& session,
     const GoalSpec& goal,
-    const ActionRegistry& registry) {
+    const ActionRegistry& registry,
+    const std::vector<std::uint32_t>& admitted_primitives) {
     std::vector<PlannerOperator> operators;
     operators.reserve(
         registry.actions.size() + goal.fixed_options.size());
@@ -1179,8 +1237,60 @@ std::vector<PlannerOperator> build_planner_operators(
         operators.push_back(std::move(primitive));
     }
 
+    std::vector<FixedOptionSpec> option_specs = goal.fixed_options;
+    if (goal.automatic_candidates && goal.required_satisfied_slots() > 1) {
+        const std::uint32_t all_goal_slots =
+            goal.slots.size() == 32
+                ? 0xffffffffu
+                : (1u << goal.slots.size()) - 1u;
+        for (const std::uint32_t bench_index : admitted_primitives) {
+            if (bench_index >= registry.actions.size()) continue;
+            const ActionDescriptor& bench = registry.actions[bench_index];
+            if (bench.params.type != ActionType::Bench ||
+                bench.params.mod_id >= session.mod_count ||
+                bench.params.mod_id >= session.metamod_type.size() ||
+                session.metamod_type[bench.params.mod_id] >= 0) {
+                continue;
+            }
+            const std::uint32_t finish_mask =
+                goal_mask_for_mod(session, goal, bench.params.mod_id);
+            if (finish_mask == 0) continue;
+            const std::uint32_t finish_count = std::popcount(finish_mask);
+            const std::uint32_t required = static_cast<std::uint32_t>(
+                goal.required_satisfied_slots());
+            if (finish_count >= required) continue;
+            const std::uint32_t exit_count = required - finish_count;
+            const std::uint32_t available = all_goal_slots & ~finish_mask;
+            for (std::uint32_t subset = available; subset != 0;
+                 subset = (subset - 1u) & available) {
+                if (std::popcount(subset) != exit_count) continue;
+                std::vector<std::uint32_t> exit_slots;
+                for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
+                    if ((subset & (1u << slot)) != 0) {
+                        exit_slots.push_back(slot);
+                    }
+                }
+                for (const std::uint32_t roll_index : admitted_primitives) {
+                    if (roll_index >= registry.actions.size()) continue;
+                    const ActionDescriptor& roll = registry.actions[roll_index];
+                    if (!approved_renewal_roll(roll)) continue;
+                    FixedOptionSpec renewal;
+                    renewal.kind = FixedOptionKind::Renewal;
+                    renewal.program_action_ids = {roll.id};
+                    renewal.exit_goal_slots = exit_slots;
+                    renewal.exit_min_satisfied = exit_count;
+                    renewal.automatic_kind =
+                        AutomaticCandidateKind::ConstructiveRenewal;
+                    renewal.relevant_goal_mask = subset | finish_mask;
+                    renewal.constructive_finish_action_id = bench.id;
+                    option_specs.push_back(std::move(renewal));
+                }
+            }
+        }
+    }
+
     std::set<std::string> option_ids;
-    for (const FixedOptionSpec& spec : goal.fixed_options) {
+    for (const FixedOptionSpec& spec : option_specs) {
         PlannerOperator option;
         option.kind = PlannerOperatorKind::FixedOption;
         option.option_kind = spec.kind;
@@ -1329,6 +1439,26 @@ std::vector<PlannerOperator> build_planner_operators(
                                   join_ids(registry,
                                            option.primitive_program) +
                                   " to fixed exit";
+            if (spec.automatic_kind ==
+                AutomaticCandidateKind::ConstructiveRenewal) {
+                if (spec.constructive_finish_action_id.empty()) {
+                    throw std::runtime_error(
+                        "fixed option: constructive renewal needs an exact "
+                        "finish action");
+                }
+                const ActionDescriptor& finish = require_action(
+                    registry, spec.constructive_finish_action_id,
+                    option.constructive_finish_action);
+                if (finish.params.type != ActionType::Bench ||
+                    finish.kind != TransitionKind::Deterministic ||
+                    finish.params.mod_id >= session.metamod_type.size() ||
+                    session.metamod_type[finish.params.mod_id] >= 0) {
+                    throw std::runtime_error(
+                        "fixed option: constructive renewal finish must be "
+                        "an ordinary deterministic bench craft");
+                }
+                option.id += ":finish:" + finish.id;
+            }
             break;
         }
         case FixedOptionKind::ProtectedRepeat: {
@@ -2118,6 +2248,166 @@ std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
     return result;
 }
 
+double CalcContext::optimistic_goal_draw_probability(
+    const std::uint32_t carrier_state,
+    const std::uint32_t action_index,
+    const std::uint32_t goal_slot,
+    const std::uint32_t satisfied_mask,
+    const std::uint8_t prefix_blockers,
+    const std::uint8_t suffix_blockers,
+    const bool guaranteed_pool) {
+    if (carrier_state >= state_count() ||
+        action_index >= registry_.actions.size() ||
+        goal_slot >= layout_.slots.size()) {
+        return 0.0;
+    }
+    pc_item_state carrier;
+    if (!materialize(carrier_state, carrier)) return 0.0;
+    pc_item_clear_side(&carrier, PC_SIDE_PREFIX);
+    pc_item_clear_side(&carrier, PC_SIDE_SUFFIX);
+
+    const ActionDescriptor& action = registry_.actions[action_index];
+    PoolBuildRequest request;
+    if (action.params.type == ActionType::Fossil) {
+        request.weight_kind = PoolWeightKind::Fossil;
+        request.fossil_indices = action.params.fossil_indices;
+    } else if (guaranteed_pool) {
+        if ((action.params.type != ActionType::HarvestReforge &&
+             action.params.type != ActionType::HarvestAugment) ||
+            action.params.target_tag_id == kNoId) {
+            return 0.0;
+        }
+        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.target_tag_id = action.params.target_tag_id;
+    }
+
+    std::int8_t side = -1;
+    bool side_seen = false;
+    bool mixed_side = false;
+    const ResolvedGoalSlot& target = layout_.slots[goal_slot];
+    for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
+        if (!pc_bitset_test(target.satisfying_mask.data(), mod)) continue;
+        if (!side_seen) {
+            side = session_->gen_type[mod];
+            side_seen = true;
+        } else if (side != session_->gen_type[mod]) {
+            mixed_side = true;
+        }
+    }
+    if (mixed_side) side = -1;
+    request.side_filter = side;
+    const WeightedPool& pool = get_weighted_pool(context_, &carrier, request);
+
+    const auto groups_intersect = [&](const std::uint32_t mod,
+                                      const std::vector<std::uint8_t>& groups) {
+        for (std::uint32_t i = session_->group_offsets[mod];
+             i < session_->group_offsets[mod + 1]; ++i) {
+            const std::uint32_t group = session_->group_ids[i];
+            if (group < groups.size() && groups[group]) return true;
+        }
+        return false;
+    };
+    std::vector<std::uint8_t> target_groups(
+        session_->group_masks.size(), 0);
+    std::vector<std::uint8_t> satisfied_groups(
+        session_->group_masks.size(), 0);
+    const auto include_slot_groups = [&](const ResolvedGoalSlot& slot,
+                                         std::vector<std::uint8_t>& groups) {
+        for (std::uint32_t mod = 0; mod < session_->mod_count; ++mod) {
+            if (!pc_bitset_test(slot.satisfying_mask.data(), mod)) continue;
+            for (std::uint32_t i = session_->group_offsets[mod];
+                 i < session_->group_offsets[mod + 1]; ++i) {
+                const std::uint32_t group = session_->group_ids[i];
+                if (group < groups.size()) groups[group] = 1;
+            }
+        }
+    };
+    include_slot_groups(target, target_groups);
+    for (std::uint32_t slot = 0; slot < layout_.slots.size(); ++slot) {
+        if (slot == goal_slot || (satisfied_mask & (1u << slot)) == 0) {
+            continue;
+        }
+        include_slot_groups(layout_.slots[slot], satisfied_groups);
+    }
+
+    struct WeightedMod {
+        std::uint32_t mod = kNoId;
+        std::uint64_t weight = 0;
+    };
+    std::vector<WeightedMod> remaining;
+    remaining.reserve(pool.entries.size());
+    std::uint64_t total_weight = 0;
+    std::uint64_t target_weight = 0;
+    for (const PoolEntry& entry : pool.entries) {
+        if (entry.final_weight == 0 ||
+            entry.session_mod_id >= session_->mod_count ||
+            groups_intersect(entry.session_mod_id, satisfied_groups)) {
+            continue;
+        }
+        remaining.push_back({entry.session_mod_id, entry.final_weight});
+        total_weight += entry.final_weight;
+        if (pc_bitset_test(
+                target.satisfying_mask.data(), entry.session_mod_id)) {
+            target_weight += entry.final_weight;
+        }
+    }
+    if (target_weight == 0 || total_weight == 0) return 0.0;
+
+    /* One occupied non-goal affix can contribute only its own complete group
+     * exclusion effect. Give each optimistic blocker the strongest distinct
+     * non-metamod effect in the whole session; summing effects even when they
+     * overlap is deliberately more favorable than any real carrier. */
+    std::array<std::vector<std::uint64_t>, 2> blocker_effects;
+    blocker_effects[0].reserve(session_->mod_count);
+    blocker_effects[1].reserve(session_->mod_count);
+    for (std::uint32_t blocker = 0;
+         blocker < session_->mod_count; ++blocker) {
+        if (session_->gen_type[blocker] != PC_SIDE_PREFIX &&
+            session_->gen_type[blocker] != PC_SIDE_SUFFIX) {
+            continue;
+        }
+        if (blocker < session_->metamod_type.size() &&
+            session_->metamod_type[blocker] >= 0) {
+            continue;
+        }
+        if (groups_intersect(blocker, target_groups)) continue;
+        std::uint64_t removed = 0;
+        for (const WeightedMod& candidate : remaining) {
+            bool conflict = false;
+            for (std::uint32_t i = session_->group_offsets[blocker];
+                 !conflict && i < session_->group_offsets[blocker + 1]; ++i) {
+                const std::uint32_t group = session_->group_ids[i];
+                for (std::uint32_t j =
+                         session_->group_offsets[candidate.mod];
+                     j < session_->group_offsets[candidate.mod + 1]; ++j) {
+                    conflict |= group == session_->group_ids[j];
+                }
+            }
+            if (conflict) removed += candidate.weight;
+        }
+        blocker_effects[session_->gen_type[blocker]].push_back(removed);
+    }
+    std::uint64_t optimistic_removed = 0;
+    const std::array<std::uint8_t, 2> blocker_limits{
+        prefix_blockers, suffix_blockers};
+    for (std::size_t blocker_side = 0;
+         blocker_side < blocker_effects.size(); ++blocker_side) {
+        auto& effects = blocker_effects[blocker_side];
+        std::sort(effects.begin(), effects.end(), std::greater<>());
+        for (std::uint32_t i = 0;
+             i < blocker_limits[blocker_side] && i < effects.size(); ++i) {
+            optimistic_removed = std::min<std::uint64_t>(
+                total_weight - target_weight,
+                optimistic_removed + effects[i]);
+        }
+    }
+    const std::uint64_t denominator = std::max<std::uint64_t>(
+        target_weight, total_weight - optimistic_removed);
+    return std::min(
+        1.0, static_cast<double>(target_weight) /
+                 static_cast<double>(denominator));
+}
+
 StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     const std::uint32_t state_id,
     const AutomaticAdmissionLimits& limits) {
@@ -2148,7 +2438,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     const auto shared_started = std::chrono::steady_clock::now();
     const auto synthesis_started = std::chrono::steady_clock::now();
     AutomaticOptionSynthesis synthesis =
-        synthesize_automatic_options(*this, state_id, carrier);
+        synthesize_automatic_options(
+            *this, state_id, carrier, limits.prices);
     batch.phases.carriers = 1;
     batch.phases.synthesis_ns = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2189,18 +2480,44 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     local_goal.automatic_candidates = false;
     local_goal.fixed_options = std::move(synthesis.specs);
     const auto local_context_started = std::chrono::steady_clock::now();
-    CalcContext local(
-        session_, local_goal, registry_, local_candidates,
-        false, false, true);
+    const std::string context_key = automatic_context_key(
+        local_goal.fixed_options, local_candidates);
+    constexpr std::size_t kRetainedAutomaticAdmissionContexts = 64;
+    bool admission_context_created = false;
+    std::unique_ptr<CalcContext> transient_context;
+    CalcContext* local_pointer = nullptr;
+    const auto retained = automatic_admission_contexts_.find(context_key);
+    if (retained != automatic_admission_contexts_.end()) {
+        local_pointer = retained->second.get();
+        local_pointer->reset_solve_telemetry();
+    } else {
+        auto created = std::make_unique<CalcContext>(
+            session_, local_goal, registry_, local_candidates,
+            false, false, true);
+        created->set_defer_automatic_protected_baseline(true);
+        admission_context_created = true;
+        if (automatic_admission_contexts_.size() <
+            kRetainedAutomaticAdmissionContexts) {
+            local_pointer = created.get();
+            automatic_admission_contexts_.emplace(
+                context_key, std::move(created));
+        } else {
+            transient_context = std::move(created);
+            local_pointer = transient_context.get();
+        }
+    }
+    CalcContext& local = *local_pointer;
     local.set_defer_automatic_protected_baseline(true);
     batch.phases.local_context_ns = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - local_context_started)
             .count());
-    batch.phases.local_planner_build_ns = local.planner_build_ns();
-    batch.phases.local_layout_build_ns = local.layout_build_ns();
+    batch.phases.local_planner_build_ns =
+        admission_context_created ? local.planner_build_ns() : 0;
+    batch.phases.local_layout_build_ns =
+        admission_context_created ? local.layout_build_ns() : 0;
     batch.phases.local_ledger_init_ns =
-        local.owned_byte_ledger_init_ns();
+        admission_context_created ? local.owned_byte_ledger_init_ns() : 0;
     const std::uint64_t local_attributed_ns =
         batch.phases.local_planner_build_ns +
         batch.phases.local_layout_build_ns +
@@ -2277,8 +2594,11 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         }
         if (limits.max_solver_owned_bytes == 0) return;
         if (!force_bytes) return;
-        if (fast_estimated_owned_bytes() +
-                local.fast_estimated_owned_bytes() >
+        const std::uint64_t owned_bytes = fast_estimated_owned_bytes() +
+            (transient_context != nullptr
+                 ? local.fast_estimated_owned_bytes()
+                 : 0);
+        if (owned_bytes >
             limits.max_solver_owned_bytes) {
             throw SolverResourceLimit(
                 "max_solver_owned_bytes", limits.max_solver_owned_bytes);
@@ -2415,7 +2735,7 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
             imprint_goal.fixed_options = imprint.specs;
             std::vector<PlannerOperator> imprint_operators =
                 build_planner_operators(
-                    *session_, imprint_goal, registry_);
+                    *session_, imprint_goal, registry_, local_candidates);
             for (std::uint32_t index =
                      static_cast<std::uint32_t>(registry_.actions.size());
                  index < imprint_operators.size(); ++index) {
@@ -3023,6 +3343,28 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                     missing.evidence.reason =
                         "automatic_candidate_missing_price";
                     batch.decisions.push_back(std::move(missing));
+                    continue;
+                }
+                double exact_immediate_cost = 0.0;
+                if (limits.prices != nullptr) {
+                    for (const auto& [key, quantity] :
+                         admitted.resource_quantities) {
+                        exact_immediate_cost +=
+                            limits.prices->at(key) * quantity;
+                    }
+                }
+                if (std::isfinite(limits.incumbent_upper_bound) &&
+                    exact_immediate_cost >
+                        limits.incumbent_upper_bound + 1e-12) {
+                    StateLocalAutomaticCandidate dominated = base_decision;
+                    dominated.id = admitted.id;
+                    dominated.raw_outcomes = 0;
+                    dominated.evidence.eligible = false;
+                    dominated.evidence.legality_result =
+                        "dominated_by_incumbent";
+                    dominated.evidence.reason =
+                        "exact_expected_cost_exceeds_feasible_state_upper";
+                    batch.decisions.push_back(std::move(dominated));
                     continue;
                 }
                 priced_variants.push_back(std::move(admitted));

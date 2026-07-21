@@ -1,12 +1,16 @@
 #include "solver_internal.hpp"
 
+#include "poecraft/bitset.h"
+
 #include <algorithm>
 #include <bit>
 #include <chrono>
 #include <cmath>
 #include <deque>
+#include <functional>
 #include <limits>
 #include <numeric>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -233,6 +237,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         return AutomaticTelemetryKind::TemporaryBench;
     case AutomaticCandidateKind::ProtectedMetamod:
         return AutomaticTelemetryKind::ProtectedSide;
+    case AutomaticCandidateKind::ConstructiveRenewal:
+        return AutomaticTelemetryKind::Renewal;
     case AutomaticCandidateKind::None:
         break;
     }
@@ -1006,6 +1012,7 @@ struct SolveWork::Impl {
     };
     struct PolicyKernelPreparation {
         std::size_t state_count = 0;
+        std::vector<std::uint32_t> active_states;
         std::uint32_t cursor = 0;
         std::vector<std::uint32_t> kernel_owner;
         std::vector<std::vector<PolicyEdge>> full_kernel;
@@ -1044,8 +1051,10 @@ struct SolveWork::Impl {
     PolicyUnitStage policy_unit_stage = PolicyUnitStage::Seed;
     std::uint32_t policy_seed_pass = 0;
     std::uint32_t policy_seed_cursor = 0;
+    std::vector<std::uint32_t> policy_seed_states;
     bool policy_selection_active = false;
     std::uint32_t policy_selection_cursor = 0;
+    std::vector<std::uint32_t> policy_selection_states;
     bool policy_selection_improved = false;
     double policy_selection_residual = 0.0;
     std::uint64_t peak_policy_scratch_bytes = 0;
@@ -1072,19 +1081,43 @@ struct SolveWork::Impl {
     bool focused_mode = false;
     bool focus_optimizing = false;
     bool focused_lower_mode = false;
+    bool focused_upper_mode = false;
     bool focused_closure_proved = false;
     bool focused_bound_proved = false;
     bool full_closure_after_focused_fallback = false;
     struct FocusedFallbackPolicy {
-        double restart_state_value = kInfinity;
+        std::uint32_t anchor_state = kNoId;
+        double anchor_state_value = kInfinity;
+        double renewal_state_value = kInfinity;
         std::uint64_t renewal_row =
             std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t renewal_operator = kNoId;
+        std::uint32_t finish_action = kNoId;
+        std::uint8_t renewal_rarity = PC_RARITY_NORMAL;
+        std::uint8_t renewal_influence_bits = 0;
+        std::uint8_t renewal_searing_exarch_tier = 0;
+        std::uint8_t renewal_eater_of_worlds_tier = 0;
+        /* Exact policy-selected magic acquisition -> Regal -> deterministic
+         * finish terminals. These are ordinary primitive operators on strict
+         * states; the map is an executable fallback witness, not a quotient. */
+        std::unordered_map<std::uint32_t, double> progress_state_value;
+        std::unordered_map<std::uint32_t, std::uint32_t>
+            progress_state_operator;
     };
     std::optional<FocusedFallbackPolicy> focused_fallback_policy;
     std::uint64_t focused_direct_upper_row =
         std::numeric_limits<std::uint64_t>::max();
     std::vector<double> focused_previous_upper_values;
+    std::vector<std::uint64_t> focused_previous_upper_policy_rows;
+    std::vector<std::uint32_t> focused_frontier_upper_operator;
+    std::vector<std::uint32_t> focused_previous_frontier_upper_operator;
+    std::vector<double> focused_round_lower_values;
+    std::vector<std::uint64_t> focused_round_lower_policy_rows;
     std::vector<std::uint32_t> focused_pending_lower_fringe;
+    std::vector<std::uint32_t> focused_pending_upper_fringe;
+    std::vector<double> focused_pending_upper_priority;
+    bool focused_pending_upper_complete = false;
+    double focused_partial_upper_bound = kInfinity;
     std::shared_ptr<SolveTransitionCache> focused_strict_transition_cache;
     std::vector<std::uint8_t> focused_strict_expanded;
     std::vector<std::uint32_t> focused_behavioral_representative;
@@ -1097,6 +1130,18 @@ struct SolveWork::Impl {
     std::vector<std::uint32_t> operator_goal_reach_mask;
     std::vector<std::uint8_t> operator_goal_reach_computed;
     std::vector<double> goal_cover_cost;
+    std::vector<double> clean_goal_cover_cost;
+    /* Final one-step lower value of every non-refined action in the clean
+     * goal-progress relaxation. The strict normal/magic pattern database
+     * uses this as an optimistic escape while evaluating the productive
+     * currency actions against their exact blocker identities. */
+    std::vector<double> clean_goal_escape_cost;
+    std::vector<std::uint32_t> clean_goal_escape_action;
+    std::vector<double> clean_goal_no_exalt_escape_cost;
+    std::vector<std::uint32_t> clean_goal_no_exalt_escape_action;
+    std::vector<double> strict_clean_goal_cover_cost;
+    std::uint32_t strict_clean_goal_cover_state_count = 0;
+    bool strict_clean_goal_cover_refresh_needed = false;
     bool goal_cover_cost_ready = false;
     bool price_bound_state_pruning = false;
     std::vector<double> certified_state_upper;
@@ -1294,6 +1339,17 @@ struct SolveWork::Impl {
         }
 
         result.start_state = calc.intern_item(start_item);
+        const bool has_constructive_renewal = std::any_of(
+            operators.begin(), operators.end(),
+            [&](const PricedOperator& priced) {
+                return calc.operators().at(priced.index).automatic_kind ==
+                       AutomaticCandidateKind::ConstructiveRenewal;
+            });
+        next_focus_checkpoint = has_constructive_renewal
+                                    ? 1
+                                    : std::max<std::uint32_t>(
+                                          1,
+                                          options.focused_expansion_checkpoint);
         priced_operator_position.assign(calc.operators().size(), -1);
         for (std::uint32_t i = 0; i < operators.size(); ++i) {
             priced_operator_position[operators[i].index] =
@@ -1456,36 +1512,1003 @@ struct SolveWork::Impl {
         const std::size_t mask_count = std::size_t{1} << slot_count;
         goal_cover_cost.assign(mask_count, kInfinity);
         goal_cover_cost[0] = 0.0;
-        /* This is an intentionally optimistic set-cover relaxation. It
-         * allows every priced primitive in the registry, even a dependency
-         * or a primitive that is illegal on the eventual carrier, and lets
-         * one stochastic application satisfy every slot it could possibly
-         * produce. The result can only understate the real continuation
-         * cost, which is the required direction for an exact certificate. */
-        for (std::uint32_t action = 0;
-             action < calc.registry().actions.size(); ++action) {
-            const ActionDescriptor& descriptor =
-                calc.registry().actions.at(action);
-            const std::uint32_t reach = action_goal_reach_mask(action);
-            if (reach == 0) continue;
-            double cost = 0.0;
-            bool priced = true;
-            for (const std::string& key : descriptor.cost_keys) {
-                const auto found = prices.find(key);
-                if (found == prices.end() || !std::isfinite(found->second) ||
-                    found->second < 0.0) {
-                    priced = false;
+        clean_goal_cover_cost.assign(mask_count, kInfinity);
+        clean_goal_cover_cost[0] = 0.0;
+        std::vector<std::uint32_t> cover_predecessor(mask_count, kNoId);
+        std::vector<std::uint32_t> cover_action(mask_count, kNoId);
+        std::vector<std::uint32_t> cover_subset(mask_count, 0);
+        /* Probability-aware optimistic cover. Every stochastic primitive is
+         * replaced by a stronger macro that retries for a requested nonempty
+         * goal subset, preserves all prior progress, receives the best legal
+         * junk blockers that can still leave the requested affix slots open,
+         * and pays c / p_upper. A real strategy can only have lower success
+         * probability or lose more carrier state, so this relaxed acyclic MDP
+         * remains an admissible lower bound. Unknown transition families keep
+         * the former p=1 set-cover behavior. */
+        std::vector<std::int8_t> slot_side(slot_count, -1);
+        for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
+            for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+                if (pc_bitset_test(
+                        calc.layout().slots[slot].satisfying_mask.data(),
+                        mod)) {
+                    slot_side[slot] = session.gen_type[mod];
                     break;
+                }
+            }
+        }
+        using DrawKey = std::tuple<
+            std::uint32_t, std::uint32_t, std::uint32_t,
+            std::uint8_t, std::uint8_t, bool>;
+        std::map<DrawKey, double> draw_probability;
+        const auto draw_upper = [&] (
+            const std::uint32_t action,
+            const std::uint32_t slot,
+            const std::uint32_t satisfied,
+            const std::uint8_t prefix_blockers,
+            const std::uint8_t suffix_blockers,
+            const bool guaranteed) {
+            const DrawKey key{
+                action, slot, satisfied, prefix_blockers,
+                suffix_blockers, guaranteed};
+            const auto found = draw_probability.find(key);
+            if (found != draw_probability.end()) return found->second;
+            const double probability =
+                calc.optimistic_goal_draw_probability(
+                    result.start_state, action, slot, satisfied,
+                    prefix_blockers, suffix_blockers, guaranteed);
+            draw_probability.emplace(key, probability);
+            return probability;
+        };
+        const auto priced_action_cost = [&](const ActionDescriptor& action) {
+            double cost = 0.0;
+            for (const std::string& key : action.cost_keys) {
+                const auto found = prices.find(key);
+                if (found == prices.end() ||
+                    !std::isfinite(found->second) || found->second < 0.0) {
+                    return kInfinity;
                 }
                 cost += found->second;
             }
-            if (!priced || !std::isfinite(cost) || cost < 0.0) continue;
-            const std::vector<double> before = goal_cover_cost;
+            return cost;
+        };
+        const auto probabilistic_shape = [](const ActionType type) {
+            /* first: maximum prefix/suffix draws; second: one total draw. */
+            switch (type) {
+            case ActionType::Transmute:
+            case ActionType::Alteration:
+                return std::pair<std::uint8_t, bool>{1, false};
+            case ActionType::Alchemy:
+            case ActionType::Chaos:
+            case ActionType::Fossil:
+            case ActionType::HarvestReforge:
+                return std::pair<std::uint8_t, bool>{3, false};
+            case ActionType::Augment:
+            case ActionType::Regal:
+            case ActionType::Exalt:
+            case ActionType::HarvestAugment:
+                return std::pair<std::uint8_t, bool>{1, true};
+            default:
+                return std::pair<std::uint8_t, bool>{0, false};
+            }
+        };
+        const auto subset_probability = [&](const std::uint32_t action,
+                                             const std::uint32_t existing,
+                                             const std::uint32_t subset,
+                                             const std::uint8_t known_prefix_blockers,
+                                             const std::uint8_t known_suffix_blockers) {
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(action);
+            const auto [draws_per_side, one_total_draw] =
+                probabilistic_shape(descriptor.params.type);
+            if (draws_per_side == 0) return 1.0;
+            const std::uint32_t subset_count = std::popcount(subset);
+            if (one_total_draw && subset_count > 1) return 0.0;
+
+            std::array<std::vector<std::uint32_t>, 2> by_side;
+            for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
+                const std::int8_t side = slot_side[slot];
+                if (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX) {
+                    if ((subset & (1u << slot)) != 0) return 0.0;
+                    continue;
+                }
+                if ((subset & (1u << slot)) != 0) {
+                    by_side[side].push_back(slot);
+                }
+            }
+            if (by_side[0].size() > draws_per_side ||
+                by_side[1].size() > draws_per_side) {
+                return 0.0;
+            }
+            const bool destructive_renewal =
+                descriptor.params.type == ActionType::Transmute ||
+                descriptor.params.type == ActionType::Alteration ||
+                descriptor.params.type == ActionType::Alchemy ||
+                descriptor.params.type == ActionType::Chaos ||
+                descriptor.params.type == ActionType::Fossil ||
+                descriptor.params.type == ActionType::HarvestReforge;
+            /* A clean unprotected carrier cannot carry junk blockers through
+             * a destructive renewal. The relaxed action may still preserve
+             * already-satisfied goal slots, which is strictly more favorable
+             * than the real renewal, but its fresh roll uses the clean pool.
+             * Additive actions retain the stronger free-blocker relaxation. */
+            const std::uint8_t prefix_blockers = destructive_renewal
+                ? 0
+                : known_prefix_blockers;
+            const std::uint8_t suffix_blockers = destructive_renewal
+                ? 0
+                : known_suffix_blockers;
+            double probability = 1.0;
+            for (std::size_t side = 0; side < by_side.size(); ++side) {
+                auto slots = by_side[side];
+                if (slots.empty()) continue;
+                std::sort(slots.begin(), slots.end());
+                double best_order = 0.0;
+                do {
+                    double order = 1.0;
+                    std::uint32_t acquired = existing;
+                    for (const std::uint32_t slot : slots) {
+                        double p = draw_upper(
+                            action, slot, acquired, prefix_blockers,
+                            suffix_blockers, false);
+                        if (descriptor.params.type ==
+                                ActionType::HarvestReforge ||
+                            descriptor.params.type ==
+                                ActionType::HarvestAugment) {
+                            p = std::max(
+                                p,
+                                draw_upper(
+                                    action, slot, acquired,
+                                    prefix_blockers, suffix_blockers, true));
+                        }
+                        order *= p;
+                        acquired |= 1u << slot;
+                    }
+                    best_order = std::max(best_order, order);
+                } while (std::next_permutation(slots.begin(), slots.end()));
+                double placements = 1.0;
+                for (std::size_t i = 0; i < slots.size(); ++i) {
+                    placements *= static_cast<double>(draws_per_side - i);
+                }
+                probability *= std::min(1.0, placements * best_order);
+            }
+            return std::min(1.0, probability);
+        };
+
+        std::vector<std::uint32_t> relaxation_actions = calc.candidates();
+        const auto include_action = [&](const std::uint32_t action) {
+            if (action != kNoId && action < calc.registry().actions.size() &&
+                std::find(
+                    relaxation_actions.begin(), relaxation_actions.end(),
+                    action) == relaxation_actions.end()) {
+                relaxation_actions.push_back(action);
+            }
+        };
+        for (const std::uint32_t operator_index :
+             calc.candidate_operators()) {
+            const PlannerOperator& planner =
+                calc.operators().at(operator_index);
+            include_action(planner.primitive_action);
+            for (const std::uint32_t action : planner.primitive_program) {
+                include_action(action);
+            }
+            include_action(planner.conditional_action);
+            include_action(planner.setup_action);
+            include_action(planner.followup_action);
+            include_action(planner.cleanup_action);
+        }
+        for (const std::uint32_t action :
+             calc.automatic_goal_bench_actions()) {
+            include_action(action);
+        }
+        for (const TemporaryBenchEffectClass& effect :
+             calc.temporary_bench_effect_classes()) {
+            include_action(effect.followup_action);
+            for (const std::uint32_t action : effect.blocker_actions) {
+                include_action(action);
+            }
+        }
+
+        /* Keep a probability-free cover as the universal proof used for
+         * price-bound action pruning and for carriers whose preserved
+         * structure can change the pool. It gives every action any reachable
+         * goal subset deterministically for one immediate price. */
+        const auto relax_cover = [&] (
+            std::vector<double>& cover,
+            const bool probability_aware) {
             for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
-                if (!std::isfinite(before[mask])) continue;
-                const std::uint32_t produced = mask | reach;
-                goal_cover_cost[produced] = std::min(
-                    goal_cover_cost[produced], before[mask] + cost);
+                if (!std::isfinite(cover[mask])) continue;
+                for (const std::uint32_t action : relaxation_actions) {
+                    const ActionDescriptor& descriptor =
+                        calc.registry().actions.at(action);
+                    const double cost = priced_action_cost(descriptor);
+                    if (!std::isfinite(cost) || cost < 0.0) continue;
+                    const std::uint32_t missing_reach =
+                        action_goal_reach_mask(action) & ~mask;
+                    for (std::uint32_t subset = missing_reach;
+                         subset != 0;
+                         subset = (subset - 1) & missing_reach) {
+                        const double probability = probability_aware
+                            ? subset_probability(
+                                  action, mask, subset, 0, 0)
+                            : 1.0;
+                        if (!(probability > 0.0) ||
+                            !std::isfinite(probability)) {
+                            continue;
+                        }
+                        const std::uint32_t produced = mask | subset;
+                        const double candidate =
+                            cover[mask] + cost / probability;
+                        if (candidate < cover[produced]) {
+                            cover[produced] = candidate;
+                            if (probability_aware) {
+                                cover_predecessor[produced] = mask;
+                                cover_action[produced] = action;
+                                cover_subset[produced] = subset;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        relax_cover(goal_cover_cost, false);
+        (void)cover_predecessor;
+        (void)cover_action;
+        (void)cover_subset;
+        if (slot_count < 2) {
+            clean_goal_cover_cost.clear();
+            clean_goal_escape_cost.clear();
+            clean_goal_escape_action.clear();
+            clean_goal_no_exalt_escape_cost.clear();
+            clean_goal_no_exalt_escape_action.clear();
+            return;
+        }
+
+        /* Goal-progress/rarity relaxation for clean carriers. It is a real
+         * finite MDP rather than an acyclic set cover: destructive rolls
+         * replace the prior goal subset, their zero-target outcomes land at
+         * the action's output rarity with an empty subset, and Restart/Scour
+         * must return through normal rarity. Outcome identities are made
+         * optimistically clairvoyant and cumulative probabilities are union
+         * bounds, so this MDP can only be easier than the exact item process. */
+        constexpr std::uint32_t kRarityCount = 3;
+        constexpr std::uint32_t kAffixCountStates = 4;
+        const auto abstract_index = [&](const std::uint8_t rarity,
+                                        const std::uint32_t mask,
+                                        const std::uint8_t prefixes,
+                                        const std::uint8_t suffixes) {
+            return (((static_cast<std::size_t>(rarity) * mask_count + mask) *
+                      kAffixCountStates + prefixes) *
+                     kAffixCountStates + suffixes);
+        };
+        clean_goal_cover_cost.assign(
+            kRarityCount * mask_count * kAffixCountStates *
+                kAffixCountStates,
+            0.0);
+        clean_goal_escape_cost.assign(
+            clean_goal_cover_cost.size(), kInfinity);
+        clean_goal_escape_action.assign(
+            clean_goal_cover_cost.size(), kNoId);
+        clean_goal_no_exalt_escape_cost.assign(
+            clean_goal_cover_cost.size(), kInfinity);
+        clean_goal_no_exalt_escape_action.assign(
+            clean_goal_cover_cost.size(), kNoId);
+        std::vector<std::uint32_t> clean_goal_policy(
+            clean_goal_cover_cost.size(), kNoId);
+        const std::uint32_t required =
+            calc.goal().required_satisfied_slots();
+        const auto is_abstract_goal = [&](const std::uint8_t rarity,
+                                          const std::uint32_t mask) {
+            return rarity == calc.goal().rarity &&
+                   std::popcount(mask) >= required;
+        };
+        const auto output_rarity = [](const ActionType type,
+                                      const std::uint8_t input) {
+            switch (type) {
+            case ActionType::Transmute:
+            case ActionType::Alteration:
+                return static_cast<std::uint8_t>(PC_RARITY_MAGIC);
+            case ActionType::Alchemy:
+            case ActionType::Chaos:
+            case ActionType::Essence:
+            case ActionType::Fossil:
+            case ActionType::HarvestReforge:
+            case ActionType::Regal:
+                return static_cast<std::uint8_t>(PC_RARITY_RARE);
+            case ActionType::Scour:
+                return static_cast<std::uint8_t>(PC_RARITY_NORMAL);
+            default:
+                return input;
+            }
+        };
+        const auto is_destructive = [](const ActionType type) {
+            return type == ActionType::Transmute ||
+                   type == ActionType::Alteration ||
+                   type == ActionType::Alchemy ||
+                   type == ActionType::Chaos ||
+                   type == ActionType::Essence ||
+                   type == ActionType::Fossil ||
+                   type == ActionType::HarvestReforge;
+        };
+        std::vector<std::array<std::uint8_t, 2>> minimum_goal_affixes(
+            mask_count,
+            {std::numeric_limits<std::uint8_t>::max(),
+             std::numeric_limits<std::uint8_t>::max()});
+        minimum_goal_affixes[0] = {0, 0};
+        for (std::size_t side = 0; side < 2; ++side) {
+            std::vector<std::uint8_t> minimum(
+                mask_count, std::numeric_limits<std::uint8_t>::max());
+            minimum[0] = 0;
+            for (std::uint32_t covered = 0; covered < mask_count; ++covered) {
+                if (minimum[covered] ==
+                    std::numeric_limits<std::uint8_t>::max()) {
+                    continue;
+                }
+                for (std::uint32_t mod = 0;
+                     mod < session.mod_count; ++mod) {
+                    if (session.gen_type[mod] != side) continue;
+                    std::uint32_t mod_mask = 0;
+                    for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
+                        if (slot_side[slot] == side &&
+                            pc_bitset_test(
+                                calc.layout().slots[slot]
+                                    .satisfying_mask.data(),
+                                mod)) {
+                            mod_mask |= 1u << slot;
+                        }
+                    }
+                    if (mod_mask == 0) continue;
+                    const std::uint32_t produced = covered | mod_mask;
+                    minimum[produced] = std::min<std::uint8_t>(
+                        minimum[produced],
+                        static_cast<std::uint8_t>(minimum[covered] + 1));
+                }
+            }
+            for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+                const std::uint32_t side_mask = [&] {
+                    std::uint32_t value = 0;
+                    for (std::uint32_t slot = 0; slot < slot_count; ++slot) {
+                        if (slot_side[slot] == side &&
+                            (mask & (1u << slot)) != 0) {
+                            value |= 1u << slot;
+                        }
+                    }
+                    return value;
+                }();
+                minimum_goal_affixes[mask][side] = minimum[side_mask];
+            }
+        }
+        std::unordered_map<std::uint32_t, std::size_t>
+            relaxation_action_position;
+        for (std::size_t i = 0; i < relaxation_actions.size(); ++i) {
+            relaxation_action_position.emplace(relaxation_actions[i], i);
+        }
+        std::vector<double> subset_probability_cache(
+            relaxation_actions.size() * mask_count * mask_count *
+                kAffixCountStates * kAffixCountStates,
+            -1.0);
+        const auto cached_subset_probability = [&] (
+            const std::uint32_t action,
+            const std::uint32_t existing,
+            const std::uint32_t subset,
+            const std::uint8_t prefix_blockers,
+            const std::uint8_t suffix_blockers) {
+            const std::size_t action_position =
+                relaxation_action_position.at(action);
+            const std::size_t index =
+                ((((action_position * mask_count + existing) * mask_count +
+                    subset) * kAffixCountStates + prefix_blockers) *
+                  kAffixCountStates + suffix_blockers);
+            double& cached = subset_probability_cache[index];
+            if (cached < 0.0) {
+                cached = subset_probability(
+                    action, existing, subset,
+                    prefix_blockers, suffix_blockers);
+            }
+            return cached;
+        };
+        struct RelaxedStochasticEnvelope {
+            bool ready = false;
+            double failure_probability = 1.0;
+            std::vector<std::size_t> failure_successors;
+            std::vector<double> success_probability;
+            std::vector<std::vector<std::size_t>> success_successors;
+        };
+        std::vector<RelaxedStochasticEnvelope> stochastic_envelopes(
+            clean_goal_cover_cost.size() * relaxation_actions.size());
+        struct ExactRelaxedEntry {
+            std::size_t successor = 0;
+            double probability = 0.0;
+        };
+        std::unordered_map<std::uint32_t, std::vector<ExactRelaxedEntry>>
+            exact_destructive_envelopes;
+        const AbstractState& probability_anchor =
+            calc.state(result.start_state);
+        for (const std::uint32_t action : relaxation_actions) {
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(action);
+            const auto [draws, unused_one_total] =
+                probabilistic_shape(descriptor.params.type);
+            (void)unused_one_total;
+            if (draws == 0 || !is_destructive(descriptor.params.type)) {
+                continue;
+            }
+            std::uint32_t carrier = kNoId;
+            for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+                const AbstractState& candidate = calc.state(state);
+                if (candidate.influence_bits !=
+                        probability_anchor.influence_bits ||
+                    candidate.searing_exarch_tier !=
+                        probability_anchor.searing_exarch_tier ||
+                    candidate.eater_of_worlds_tier !=
+                        probability_anchor.eater_of_worlds_tier ||
+                    candidate.fractured_goal_mask != 0 ||
+                    candidate.fractured_metamod_flags != 0 ||
+                    (candidate.flags & kProtectionFlags) != 0 ||
+                    !action_legal(session, descriptor, candidate)) {
+                    continue;
+                }
+                bool fractured_junk = false;
+                for (const std::uint8_t count :
+                     candidate.fractured_junk_counts) {
+                    fractured_junk |= count != 0;
+                }
+                if (fractured_junk) continue;
+                carrier = state;
+                break;
+            }
+            if (carrier == kNoId) continue;
+            const OutcomeDistribution& distribution =
+                calc.outcomes(carrier, action);
+            if (!distribution.supported ||
+                !distribution.choice_groups.empty() ||
+                !distribution.choice_options.empty()) {
+                continue;
+            }
+            std::map<std::size_t, double> aggregated;
+            for (const OutcomeEntry& outcome : distribution.entries) {
+                const AbstractState& successor = calc.state(outcome.state);
+                if (successor.rarity > PC_RARITY_RARE ||
+                    successor.prefix_count >= kAffixCountStates ||
+                    successor.suffix_count >= kAffixCountStates) {
+                    continue;
+                }
+                aggregated[abstract_index(
+                    successor.rarity,
+                    satisfied_goal_mask_for_state(outcome.state),
+                    successor.prefix_count,
+                    successor.suffix_count)] += outcome.probability;
+            }
+            if (aggregated.empty()) continue;
+            auto& stored = exact_destructive_envelopes[action];
+            stored.reserve(aggregated.size());
+            for (const auto& [successor, probability] : aggregated) {
+                stored.push_back({successor, probability});
+            }
+        }
+        constexpr std::uint32_t kRelaxationSweeps = 2048;
+        std::uint32_t relaxation_sweeps = 0;
+        double relaxation_delta = kInfinity;
+        for (std::uint32_t sweep = 0; sweep < kRelaxationSweeps; ++sweep) {
+            relaxation_sweeps = sweep + 1;
+            double delta = 0.0;
+            for (std::uint8_t rarity = PC_RARITY_NORMAL;
+                 rarity <= PC_RARITY_RARE; ++rarity) {
+                for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+                    const std::uint8_t affix_cap = rarity_affix_cap(
+                        session, rarity);
+                    for (std::uint8_t prefixes = 0;
+                         prefixes <= affix_cap; ++prefixes) {
+                        for (std::uint8_t suffixes = 0;
+                             suffixes <= affix_cap; ++suffixes) {
+                            const std::size_t current = abstract_index(
+                                rarity, mask, prefixes, suffixes);
+                            const double previous_current =
+                                clean_goal_cover_cost[current];
+                            if (is_abstract_goal(rarity, mask)) {
+                                clean_goal_cover_cost[current] = 0.0;
+                                continue;
+                            }
+                            double best = kInfinity;
+                            std::uint32_t best_action = kNoId;
+                            const auto consider = [&](const double candidate,
+                                                      const std::uint32_t action) {
+                                if (candidate < best) {
+                                    best = candidate;
+                                    best_action = action;
+                                }
+                                if (action >= calc.registry().actions.size()) {
+                                    return;
+                                }
+                                const ActionDescriptor& considered =
+                                    calc.registry().actions.at(action);
+                                const ActionType considered_type =
+                                    considered.params.type;
+                                const bool destructive_refined =
+                                    considered_type == ActionType::Transmute ||
+                                    considered_type == ActionType::Alteration ||
+                                    considered_type == ActionType::Alchemy ||
+                                    considered_type == ActionType::Chaos ||
+                                    considered_type == ActionType::Essence ||
+                                    considered_type == ActionType::Fossil ||
+                                    considered_type ==
+                                        ActionType::HarvestReforge;
+                                const bool goal_bench_refined =
+                                    considered_type == ActionType::Bench &&
+                                    (considered.sets_flags &
+                                     kProtectionFlags) == 0 &&
+                                    action_goal_reach_mask(action) != 0;
+                                const bool refined = considered.synthetic ||
+                                    destructive_refined ||
+                                    considered_type ==
+                                        ActionType::Augment ||
+                                    considered_type ==
+                                        ActionType::Regal ||
+                                    considered_type == ActionType::Scour ||
+                                    goal_bench_refined;
+                                if (!refined) {
+                                    if (candidate <
+                                        clean_goal_escape_cost[current]) {
+                                        clean_goal_escape_cost[current] =
+                                            candidate;
+                                        clean_goal_escape_action[current] =
+                                            action;
+                                    }
+                                    if (considered_type !=
+                                            ActionType::Exalt &&
+                                        candidate <
+                                            clean_goal_no_exalt_escape_cost[
+                                                current]) {
+                                        clean_goal_no_exalt_escape_cost[
+                                            current] = candidate;
+                                        clean_goal_no_exalt_escape_action[
+                                            current] = action;
+                                    }
+                                }
+                            };
+                            clean_goal_escape_cost[current] = kInfinity;
+                            clean_goal_escape_action[current] = kNoId;
+                            clean_goal_no_exalt_escape_cost[current] =
+                                kInfinity;
+                            clean_goal_no_exalt_escape_action[current] =
+                                kNoId;
+                            for (const std::uint32_t action : relaxation_actions) {
+                        const ActionDescriptor& descriptor =
+                            calc.registry().actions.at(action);
+                        if ((descriptor.legality.rarity_mask &
+                             (1u << rarity)) == 0) {
+                            continue;
+                        }
+                        const double cost = priced_action_cost(descriptor);
+                        if (!std::isfinite(cost) || cost < 0.0) continue;
+
+                        if (descriptor.synthetic) {
+                            const std::size_t successor = abstract_index(
+                                PC_RARITY_NORMAL, 0, 0, 0);
+                            if (successor != current) {
+                                consider(
+                                    cost + clean_goal_cover_cost[successor],
+                                    action);
+                            }
+                            continue;
+                        }
+                        if ((descriptor.sets_flags & kProtectionFlags) != 0 ||
+                            descriptor.params.type == ActionType::Fracture) {
+                            /* Any route that leaves the clean domain first
+                             * pays this action. Grant it the whole goal. */
+                            consider(cost, action);
+                            continue;
+                        }
+                        if (descriptor.params.type == ActionType::Scour) {
+                            const std::size_t successor = abstract_index(
+                                PC_RARITY_NORMAL, 0, 0, 0);
+                            if (successor != current) {
+                                consider(
+                                    cost + clean_goal_cover_cost[successor],
+                                    action);
+                            }
+                            continue;
+                        }
+
+                        const std::uint8_t next_rarity = output_rarity(
+                            descriptor.params.type, rarity);
+                        const std::uint32_t reach =
+                            action_goal_reach_mask(action);
+                        const auto [draws, one_total_draw] =
+                            probabilistic_shape(descriptor.params.type);
+                        if (draws == 0) {
+                            const std::uint32_t next_mask = mask | reach;
+                            std::uint8_t next_prefixes = prefixes;
+                            std::uint8_t next_suffixes = suffixes;
+                            if (next_mask != mask &&
+                                descriptor.params.type == ActionType::Bench &&
+                                descriptor.params.mod_id < session.mod_count) {
+                                if (session.gen_type[descriptor.params.mod_id] ==
+                                    PC_SIDE_PREFIX) {
+                                    ++next_prefixes;
+                                } else if (
+                                    session.gen_type[descriptor.params.mod_id] ==
+                                    PC_SIDE_SUFFIX) {
+                                    ++next_suffixes;
+                                }
+                            }
+                            const std::uint8_t next_cap = rarity_affix_cap(
+                                session, next_rarity);
+                            if (next_prefixes > next_cap ||
+                                next_suffixes > next_cap) {
+                                continue;
+                            }
+                            const std::size_t successor = abstract_index(
+                                next_rarity, next_mask,
+                                next_prefixes, next_suffixes);
+                            if (successor != current) {
+                                consider(
+                                    cost + clean_goal_cover_cost[successor],
+                                    action);
+                            }
+                            continue;
+                        }
+
+                        const bool destructive =
+                            is_destructive(descriptor.params.type);
+                        const auto exact_destructive =
+                            exact_destructive_envelopes.find(action);
+                        if (destructive &&
+                            exact_destructive !=
+                                exact_destructive_envelopes.end()) {
+                            double self_probability = 0.0;
+                            double continuation = 0.0;
+                            for (const ExactRelaxedEntry& entry :
+                                 exact_destructive->second) {
+                                if (entry.successor == current) {
+                                    self_probability += entry.probability;
+                                } else {
+                                    continuation += entry.probability *
+                                        clean_goal_cover_cost[entry.successor];
+                                }
+                            }
+                            if (self_probability < 1.0) {
+                                consider(
+                                    (cost + continuation) /
+                                        (1.0 - self_probability),
+                                    action);
+                            }
+                            continue;
+                        }
+                        const std::uint32_t available = destructive
+                            ? reach
+                            : (reach & ~mask);
+                        bool disjoint_single_draw = one_total_draw;
+                        for (std::uint32_t left = 0;
+                             disjoint_single_draw && left < slot_count; ++left) {
+                            if ((available & (1u << left)) == 0) continue;
+                            for (std::uint32_t right = left + 1;
+                                 right < slot_count; ++right) {
+                                if ((available & (1u << right)) == 0) continue;
+                                const auto& left_mask =
+                                    calc.layout().slots[left].satisfying_mask;
+                                const auto& right_mask =
+                                    calc.layout().slots[right].satisfying_mask;
+                                for (std::size_t word = 0;
+                                     word < left_mask.size() &&
+                                     word < right_mask.size(); ++word) {
+                                    if ((left_mask[word] & right_mask[word]) !=
+                                        0) {
+                                        disjoint_single_draw = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (!destructive && disjoint_single_draw &&
+                            available != 0) {
+                            const std::uint8_t goal_prefixes =
+                                minimum_goal_affixes[mask][PC_SIDE_PREFIX];
+                            const std::uint8_t goal_suffixes =
+                                minimum_goal_affixes[mask][PC_SIDE_SUFFIX];
+                            const std::uint8_t prefix_blockers =
+                                static_cast<std::uint8_t>(
+                                    prefixes > goal_prefixes
+                                        ? prefixes - goal_prefixes
+                                        : 0);
+                            const std::uint8_t suffix_blockers =
+                                static_cast<std::uint8_t>(
+                                    suffixes > goal_suffixes
+                                        ? suffixes - goal_suffixes
+                                        : 0);
+                            double total_success = 0.0;
+                            double continuation = 0.0;
+                            double self_probability = 0.0;
+                            bool feasible_single_draw = true;
+                            for (std::uint32_t slot = 0;
+                                 slot < slot_count; ++slot) {
+                                const std::uint32_t subset = 1u << slot;
+                                if ((available & subset) == 0) continue;
+                                const double probability =
+                                    cached_subset_probability(
+                                        action, mask, subset,
+                                        prefix_blockers, suffix_blockers);
+                                const std::uint8_t added_prefixes =
+                                    minimum_goal_affixes[subset]
+                                                        [PC_SIDE_PREFIX];
+                                const std::uint8_t added_suffixes =
+                                    minimum_goal_affixes[subset]
+                                                        [PC_SIDE_SUFFIX];
+                                const std::uint8_t next_prefixes =
+                                    static_cast<std::uint8_t>(
+                                        prefixes + added_prefixes);
+                                const std::uint8_t next_suffixes =
+                                    static_cast<std::uint8_t>(
+                                        suffixes + added_suffixes);
+                                const std::uint8_t next_cap = rarity_affix_cap(
+                                    session, next_rarity);
+                                if (next_prefixes > next_cap ||
+                                    next_suffixes > next_cap) {
+                                    continue;
+                                }
+                                total_success += probability;
+                                const std::size_t successor = abstract_index(
+                                    next_rarity, mask | subset,
+                                    next_prefixes, next_suffixes);
+                                if (successor == current) {
+                                    self_probability += probability;
+                                } else {
+                                    continuation += probability *
+                                        clean_goal_cover_cost[successor];
+                                }
+                            }
+                            if (total_success > 1.0 + 1e-12) {
+                                feasible_single_draw = false;
+                            }
+                            if (feasible_single_draw) {
+                                const std::size_t failure = abstract_index(
+                                    next_rarity, mask, prefixes, suffixes);
+                                const double failure_probability =
+                                    std::max(0.0, 1.0 - total_success);
+                                if (failure == current) {
+                                    self_probability += failure_probability;
+                                } else {
+                                    continuation += failure_probability *
+                                        clean_goal_cover_cost[failure];
+                                }
+                                if (self_probability < 1.0) {
+                                    consider(
+                                        (cost + continuation) /
+                                            (1.0 - self_probability),
+                                        action);
+                                }
+                                continue;
+                            }
+                        }
+                        const std::size_t action_position =
+                            relaxation_action_position.at(action);
+                        RelaxedStochasticEnvelope& envelope =
+                            stochastic_envelopes.at(
+                                current * relaxation_actions.size() +
+                                action_position);
+                        if (!envelope.ready) {
+                            envelope.ready = true;
+                            const std::uint32_t max_count =
+                                std::popcount(available);
+                            std::vector<double> cumulative(
+                                max_count + 2, 0.0);
+                            envelope.success_probability.assign(
+                                max_count + 1, 0.0);
+                            envelope.success_successors.resize(max_count + 1);
+                            const std::uint8_t goal_prefixes =
+                                minimum_goal_affixes[mask][PC_SIDE_PREFIX];
+                            const std::uint8_t goal_suffixes =
+                                minimum_goal_affixes[mask][PC_SIDE_SUFFIX];
+                            const std::uint8_t prefix_blockers = destructive
+                                ? 0
+                                : static_cast<std::uint8_t>(
+                                      prefixes > goal_prefixes
+                                          ? prefixes - goal_prefixes
+                                          : 0);
+                            const std::uint8_t suffix_blockers = destructive
+                                ? 0
+                                : static_cast<std::uint8_t>(
+                                      suffixes > goal_suffixes
+                                          ? suffixes - goal_suffixes
+                                          : 0);
+                            for (std::uint32_t subset = available; subset != 0;
+                                 subset = (subset - 1u) & available) {
+                                const std::uint8_t added_prefixes =
+                                    minimum_goal_affixes[subset]
+                                                        [PC_SIDE_PREFIX];
+                                const std::uint8_t added_suffixes =
+                                    minimum_goal_affixes[subset]
+                                                        [PC_SIDE_SUFFIX];
+                                if (added_prefixes ==
+                                        std::numeric_limits<
+                                            std::uint8_t>::max() ||
+                                    added_suffixes ==
+                                        std::numeric_limits<
+                                            std::uint8_t>::max()) {
+                                    continue;
+                                }
+                                const std::uint8_t next_prefixes = destructive
+                                    ? added_prefixes
+                                    : static_cast<std::uint8_t>(
+                                          prefixes + added_prefixes);
+                                const std::uint8_t next_suffixes = destructive
+                                    ? added_suffixes
+                                    : static_cast<std::uint8_t>(
+                                          suffixes + added_suffixes);
+                                const std::uint8_t next_cap = rarity_affix_cap(
+                                    session, next_rarity);
+                                if (next_prefixes > next_cap ||
+                                    next_suffixes > next_cap) {
+                                    continue;
+                                }
+                                const std::uint32_t count =
+                                    std::popcount(subset);
+                                cumulative[count] = std::min(
+                                    1.0,
+                                    cumulative[count] +
+                                        cached_subset_probability(
+                                            action,
+                                            destructive ? 0u : mask,
+                                            subset,
+                                            prefix_blockers,
+                                            suffix_blockers));
+                                envelope.success_successors[count].push_back(
+                                    abstract_index(
+                                        next_rarity,
+                                        destructive ? subset : (mask | subset),
+                                        next_prefixes, next_suffixes));
+                            }
+                            for (std::uint32_t count = 2;
+                                 count < cumulative.size(); ++count) {
+                                cumulative[count] = std::min(
+                                    cumulative[count], cumulative[count - 1]);
+                            }
+                            envelope.failure_probability =
+                                1.0 - cumulative[1];
+                            for (std::uint32_t count = 1;
+                                 count <= max_count; ++count) {
+                                envelope.success_probability[count] =
+                                    cumulative[count] - cumulative[count + 1];
+                            }
+                            if (destructive &&
+                                (descriptor.params.type ==
+                                     ActionType::Transmute ||
+                                 descriptor.params.type ==
+                                     ActionType::Alteration) &&
+                                cumulative[1] > 0.0) {
+                                envelope.failure_successors.push_back(
+                                    abstract_index(next_rarity, 0, 1, 0));
+                                envelope.failure_successors.push_back(
+                                    abstract_index(next_rarity, 0, 0, 1));
+                            } else {
+                                envelope.failure_successors.push_back(
+                                    abstract_index(
+                                        next_rarity,
+                                        destructive ? 0 : mask,
+                                        destructive ? 0 : prefixes,
+                                        destructive ? 0 : suffixes));
+                            }
+                        }
+
+                        double self_probability = 0.0;
+                        double continuation = 0.0;
+                        const auto best_successor = [&](const auto& candidates) {
+                            return std::min_element(
+                                candidates.begin(), candidates.end(),
+                                [&](const std::size_t left,
+                                    const std::size_t right) {
+                                    return clean_goal_cover_cost[left] <
+                                           clean_goal_cover_cost[right];
+                                });
+                        };
+                        const auto failure =
+                            best_successor(envelope.failure_successors);
+                        if (failure != envelope.failure_successors.end()) {
+                            if (*failure == current) {
+                                self_probability +=
+                                    envelope.failure_probability;
+                            } else {
+                                continuation += envelope.failure_probability *
+                                    clean_goal_cover_cost[*failure];
+                            }
+                        }
+                        for (std::size_t count = 1;
+                             count < envelope.success_probability.size();
+                             ++count) {
+                            const double probability =
+                                envelope.success_probability[count];
+                            if (!(probability > 0.0)) continue;
+                            const auto successor = best_successor(
+                                envelope.success_successors[count]);
+                            if (successor ==
+                                envelope.success_successors[count].end()) {
+                                continue;
+                            }
+                            if (*successor == current) {
+                                self_probability += probability;
+                            } else {
+                                continuation += probability *
+                                    clean_goal_cover_cost[*successor];
+                            }
+                        }
+                        if (self_probability < 1.0) {
+                            consider(
+                                (cost + continuation) /
+                                    (1.0 - self_probability),
+                                action);
+                        }
+                    }
+                    if (!std::isfinite(best)) continue;
+                    const double next = std::max(previous_current, best);
+                    clean_goal_cover_cost[current] = next;
+                    if (next == best) clean_goal_policy[current] = best_action;
+                    delta = std::max(delta, next - previous_current);
+                            }
+                        }
+                    }
+            }
+            relaxation_delta = delta;
+            if (delta <= options.epsilon * 0.1) break;
+        }
+        const AbstractState& start = calc.state(result.start_state);
+        const double start_lower = clean_goal_cover_cost[abstract_index(
+            start.rarity, satisfied_goal_mask_for_state(result.start_state),
+            start.prefix_count, start.suffix_count)];
+        const std::uint32_t start_policy = clean_goal_policy[abstract_index(
+            start.rarity, satisfied_goal_mask_for_state(result.start_state),
+            start.prefix_count, start.suffix_count)];
+        retain_action_reason(
+            "included:clean_goal_progress_mdp:" + finite_json(start_lower) +
+            ":sweeps=" + std::to_string(relaxation_sweeps) + ":" +
+            "delta=" + finite_json(relaxation_delta) + ":" +
+            (start_policy == kNoId
+                ? std::string("none")
+                : calc.registry().actions.at(start_policy).id));
+        const std::size_t normal_empty = abstract_index(
+            PC_RARITY_NORMAL, 0, 0, 0);
+        const std::uint32_t normal_policy = clean_goal_policy[normal_empty];
+        retain_action_reason(
+            "included:clean_goal_progress_normal_empty:" +
+            finite_json(clean_goal_cover_cost[normal_empty]) + ":" +
+            (normal_policy == kNoId
+                ? std::string("none")
+                : calc.registry().actions.at(normal_policy).id));
+        const std::uint32_t normal_escape =
+            clean_goal_escape_action[normal_empty];
+        retain_action_reason(
+            "included:clean_goal_progress_normal_escape:" +
+            finite_json(clean_goal_escape_cost[normal_empty]) + ":" +
+            (normal_escape == kNoId
+                ? std::string("none")
+                : calc.registry().actions.at(normal_escape).id));
+        for (const std::uint8_t rarity : {
+                 static_cast<std::uint8_t>(PC_RARITY_MAGIC),
+                 static_cast<std::uint8_t>(PC_RARITY_RARE)}) {
+            for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+                if (is_abstract_goal(rarity, mask)) continue;
+                const std::uint8_t prefixes =
+                    minimum_goal_affixes[mask][PC_SIDE_PREFIX];
+                const std::uint8_t suffixes =
+                    minimum_goal_affixes[mask][PC_SIDE_SUFFIX];
+                const std::uint8_t cap = rarity_affix_cap(session, rarity);
+                if (prefixes > cap || suffixes > cap) continue;
+                const std::size_t index = abstract_index(
+                    rarity, mask, prefixes, suffixes);
+                const std::uint32_t policy = clean_goal_policy[index];
+                const std::uint32_t escape =
+                    clean_goal_escape_action[index];
+                retain_action_reason(
+                    "included:clean_goal_progress_state:" +
+                    std::to_string(rarity) + ":" +
+                    std::to_string(mask) + ":" +
+                    finite_json(clean_goal_cover_cost[index]) + ":" +
+                    (policy == kNoId
+                        ? std::string("none")
+                        : calc.registry().actions.at(policy).id) +
+                    ":escape=" +
+                    finite_json(clean_goal_escape_cost[index]) + ":" +
+                    (escape == kNoId
+                        ? std::string("none")
+                        : calc.registry().actions.at(escape).id));
             }
         }
     }
@@ -1505,11 +2528,29 @@ struct SolveWork::Impl {
     }
 
     double optimistic_completion_cost(
-        const std::uint32_t satisfied_mask) {
+        const std::uint32_t satisfied_mask,
+        const bool clean_carrier = false,
+        const std::uint8_t carrier_rarity = PC_RARITY_NORMAL,
+        const std::uint8_t carrier_prefixes = 0,
+        const std::uint8_t carrier_suffixes = 0) {
         prepare_goal_cover_cost();
         const std::uint32_t required =
             calc.goal().required_satisfied_slots();
-        if (std::popcount(satisfied_mask) >= required) return 0.0;
+        if (std::popcount(satisfied_mask) >= required &&
+            (!clean_carrier || carrier_rarity == calc.goal().rarity)) {
+            return 0.0;
+        }
+        if (clean_carrier) {
+            const std::size_t mask_count = goal_cover_cost.size();
+            constexpr std::size_t kAffixCountStates = 4;
+            const std::size_t index =
+                (((static_cast<std::size_t>(carrier_rarity) * mask_count +
+                   satisfied_mask) * kAffixCountStates + carrier_prefixes) *
+                 kAffixCountStates + carrier_suffixes);
+            return index < clean_goal_cover_cost.size()
+                ? clean_goal_cover_cost[index]
+                : 0.0;
+        }
         double best = kInfinity;
         for (std::uint32_t produced = 0;
              produced < goal_cover_cost.size(); ++produced) {
@@ -1519,6 +2560,751 @@ struct SolveWork::Impl {
             best = std::min(best, goal_cover_cost[produced]);
         }
         return best;
+    }
+
+    bool clean_goal_cover_eligible(const std::uint32_t state) const {
+        if (state >= calc.state_count() ||
+            result.start_state >= calc.state_count()) {
+            return false;
+        }
+        const AbstractState& carrier = calc.state(state);
+        const AbstractState& start = calc.state(result.start_state);
+        if ((carrier.flags & kProtectionFlags) != 0 ||
+            carrier.fractured_goal_mask != 0 ||
+            carrier.fractured_metamod_flags != 0 ||
+            carrier.influence_bits != start.influence_bits ||
+            carrier.searing_exarch_tier != start.searing_exarch_tier ||
+            carrier.eater_of_worlds_tier != start.eater_of_worlds_tier) {
+            return false;
+        }
+        for (const std::uint8_t count : carrier.fractured_junk_counts) {
+            if (count != 0) return false;
+        }
+        for (const std::uint8_t count :
+             carrier.fractured_crafted_junk_counts) {
+            if (count != 0) return false;
+        }
+        return true;
+    }
+
+    double optimistic_completion_cost_for_state(
+        const std::uint32_t state) {
+        if (state >= calc.state_count()) return 0.0;
+        const AbstractState& carrier = calc.state(state);
+        const double coarse = optimistic_completion_cost(
+            satisfied_goal_mask_for_state(state),
+            clean_goal_cover_eligible(state), carrier.rarity,
+            carrier.prefix_count, carrier.suffix_count);
+        if (state < strict_clean_goal_cover_cost.size() &&
+            std::isfinite(strict_clean_goal_cover_cost[state])) {
+            return std::max(coarse, strict_clean_goal_cover_cost[state]);
+        }
+        return coarse;
+    }
+
+    void prepare_strict_clean_goal_cover() {
+        strict_clean_goal_cover_refresh_needed = false;
+        const std::uint32_t initial_state_count = calc.state_count();
+        if (strict_clean_goal_cover_state_count == initial_state_count) return;
+        strict_clean_goal_cover_state_count = 0;
+        strict_clean_goal_cover_cost.clear();
+        if (!goal_cover_cost_ready || clean_goal_escape_cost.empty()) return;
+
+        const auto refined_action = [&](const std::uint32_t action) {
+            if (action >= calc.registry().actions.size()) return false;
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(action);
+            const ActionType type = descriptor.params.type;
+            const bool destructive =
+                type == ActionType::Transmute ||
+                type == ActionType::Alteration ||
+                type == ActionType::Alchemy ||
+                type == ActionType::Chaos ||
+                type == ActionType::Essence ||
+                type == ActionType::Fossil ||
+                type == ActionType::HarvestReforge;
+            const bool goal_bench = type == ActionType::Bench &&
+                (descriptor.sets_flags & kProtectionFlags) == 0 &&
+                action_goal_reach_mask(action) != 0;
+            return descriptor.synthetic ||
+                   destructive || type == ActionType::Augment ||
+                   type == ActionType::Regal ||
+                   type == ActionType::Exalt ||
+                   type == ActionType::Scour ||
+                   goal_bench;
+        };
+        std::vector<std::uint32_t> actions;
+        for (const std::uint32_t action : calc.candidates()) {
+            if (refined_action(action)) actions.push_back(action);
+        }
+        if (actions.empty()) return;
+        const auto action_cost = [&](const std::uint32_t action) {
+            double cost = 0.0;
+            for (const std::string& key :
+                 calc.registry().actions.at(action).cost_keys) {
+                const auto found = prices.find(key);
+                if (found == prices.end() ||
+                    !std::isfinite(found->second) || found->second < 0.0) {
+                    return kInfinity;
+                }
+                cost += found->second;
+            }
+            return cost;
+        };
+        const auto strict_state = [&](const std::uint32_t state) {
+            if (state >= calc.state_count() ||
+                calc.is_goal_state(calc.state(state)) ||
+                !clean_goal_cover_eligible(state)) {
+                return false;
+            }
+            const std::uint8_t rarity = calc.state(state).rarity;
+            return rarity == PC_RARITY_NORMAL || rarity == PC_RARITY_MAGIC;
+        };
+        const std::size_t mask_count = goal_cover_cost.size();
+        constexpr std::size_t kAffixCountStates = 4;
+        const auto clean_index = [&](const std::uint32_t state) {
+            const AbstractState& carrier = calc.state(state);
+            return (((static_cast<std::size_t>(carrier.rarity) * mask_count +
+                      satisfied_goal_mask_for_state(state)) *
+                     kAffixCountStates + carrier.prefix_count) *
+                    kAffixCountStates + carrier.suffix_count);
+        };
+        const auto coarse_value = [&](const std::uint32_t state) {
+            if (state >= calc.state_count() ||
+                calc.is_goal_state(calc.state(state))) {
+                return 0.0;
+            }
+            const AbstractState& carrier = calc.state(state);
+            return optimistic_completion_cost(
+                satisfied_goal_mask_for_state(state),
+                clean_goal_cover_eligible(state), carrier.rarity,
+                carrier.prefix_count, carrier.suffix_count);
+        };
+
+        struct StrictRow {
+            std::uint32_t action = kNoId;
+            double immediate = 0.0;
+            double fixed_continuation = 0.0;
+            std::vector<OutcomeEntry> strict_entries;
+            std::vector<std::pair<std::size_t, double>> rare_entries;
+            std::vector<OutcomeEntry> concrete_rare_entries;
+        };
+        std::vector<std::uint32_t> strict_states;
+        std::vector<std::uint32_t> concrete_rare_states;
+        std::vector<std::uint8_t> included(initial_state_count, 0);
+        std::vector<std::uint8_t> concrete_rare_included(
+            initial_state_count, 0);
+        for (std::uint32_t state = 0; state < initial_state_count; ++state) {
+            if (strict_state(state)) {
+                included[state] = 1;
+                strict_states.push_back(state);
+            }
+        }
+        using StrictRowPtr = std::shared_ptr<const StrictRow>;
+        std::vector<std::vector<StrictRowPtr>> rows(initial_state_count);
+        const auto destructive_kernel_action = [&](const std::uint32_t action) {
+            const ActionType type =
+                calc.registry().actions.at(action).params.type;
+            return type == ActionType::Transmute ||
+                   type == ActionType::Alteration ||
+                   type == ActionType::Alchemy ||
+                   type == ActionType::Chaos ||
+                   type == ActionType::Essence ||
+                   type == ActionType::Fossil ||
+                   type == ActionType::HarvestReforge;
+        };
+        std::unordered_map<std::uint32_t, const OutcomeDistribution*>
+            shared_destructive_kernels;
+        std::unordered_map<std::uint32_t, StrictRowPtr>
+            shared_destructive_rows;
+        bool exact = true;
+        for (std::size_t cursor = 0; cursor < strict_states.size() && exact;
+             ++cursor) {
+            const std::uint32_t state = strict_states[cursor];
+            if (rows.size() < calc.state_count()) rows.resize(calc.state_count());
+            for (const std::uint32_t action : actions) {
+                const ActionDescriptor& descriptor =
+                    calc.registry().actions.at(action);
+                if (!action_legal(session, descriptor, calc.state(state))) {
+                    continue;
+                }
+                const double immediate = action_cost(action);
+                if (!std::isfinite(immediate)) continue;
+                if (destructive_kernel_action(action)) {
+                    const auto shared = shared_destructive_rows.find(action);
+                    if (shared != shared_destructive_rows.end()) {
+                        rows[state].push_back(shared->second);
+                        continue;
+                    }
+                }
+                const OutcomeDistribution* distribution_pointer = nullptr;
+                if (destructive_kernel_action(action)) {
+                    const auto shared =
+                        shared_destructive_kernels.find(action);
+                    if (shared != shared_destructive_kernels.end()) {
+                        distribution_pointer = shared->second;
+                    }
+                }
+                if (distribution_pointer == nullptr) {
+                    distribution_pointer = &calc.outcomes(state, action);
+                    if (destructive_kernel_action(action)) {
+                        shared_destructive_kernels.emplace(
+                            action, distribution_pointer);
+                    }
+                }
+                const OutcomeDistribution& distribution =
+                    *distribution_pointer;
+                if (!distribution.supported ||
+                    !distribution.choice_groups.empty() ||
+                    !distribution.choice_options.empty()) {
+                    exact = false;
+                    break;
+                }
+                if (included.size() < calc.state_count()) {
+                    included.resize(calc.state_count(), 0);
+                    concrete_rare_included.resize(calc.state_count(), 0);
+                    rows.resize(calc.state_count());
+                }
+                StrictRow row;
+                row.action = action;
+                row.immediate = immediate;
+                row.strict_entries.reserve(distribution.entries.size());
+                for (const OutcomeEntry& outcome : distribution.entries) {
+                    if (strict_state(outcome.state)) {
+                        row.strict_entries.push_back(outcome);
+                        if (!included[outcome.state]) {
+                            included[outcome.state] = 1;
+                            strict_states.push_back(outcome.state);
+                        }
+                    } else if (
+                        clean_goal_cover_eligible(outcome.state) &&
+                        calc.state(outcome.state).rarity == PC_RARITY_RARE) {
+                        row.rare_entries.push_back(
+                            {clean_index(outcome.state),
+                             outcome.probability});
+                    } else {
+                        row.fixed_continuation +=
+                            outcome.probability * coarse_value(outcome.state);
+                    }
+                }
+                std::sort(
+                    row.rare_entries.begin(), row.rare_entries.end(),
+                    [](const auto& left, const auto& right) {
+                        return left.first < right.first;
+                    });
+                std::size_t write = 0;
+                for (const auto& entry : row.rare_entries) {
+                    if (write != 0 &&
+                        row.rare_entries[write - 1].first == entry.first) {
+                        row.rare_entries[write - 1].second += entry.second;
+                    } else {
+                        row.rare_entries[write++] = entry;
+                    }
+                }
+                row.rare_entries.resize(write);
+                StrictRowPtr retained =
+                    std::make_shared<StrictRow>(std::move(row));
+                if (destructive_kernel_action(action)) {
+                    shared_destructive_rows.emplace(action, retained);
+                }
+                rows[state].push_back(std::move(retained));
+            }
+        }
+        if (!exact) return;
+
+        const auto destructive_action = [&](const std::uint32_t action) {
+            const ActionType type =
+                calc.registry().actions.at(action).params.type;
+            return type == ActionType::Transmute ||
+                   type == ActionType::Alteration ||
+                   type == ActionType::Alchemy ||
+                   type == ActionType::Chaos ||
+                   type == ActionType::Essence ||
+                   type == ActionType::Fossil ||
+                   type == ActionType::HarvestReforge;
+        };
+        std::vector<StrictRowPtr> rare_rows;
+        if (result.start_state < calc.state_count() &&
+            calc.state(result.start_state).rarity == PC_RARITY_RARE &&
+            clean_goal_cover_eligible(result.start_state)) {
+            for (const std::uint32_t action : actions) {
+                if (!destructive_action(action)) continue;
+                const ActionDescriptor& descriptor =
+                    calc.registry().actions.at(action);
+                if (!action_legal(
+                        session, descriptor,
+                        calc.state(result.start_state))) {
+                    continue;
+                }
+                const double immediate = action_cost(action);
+                if (!std::isfinite(immediate)) continue;
+                const auto retained_row =
+                    shared_destructive_rows.find(action);
+                if (retained_row != shared_destructive_rows.end()) {
+                    rare_rows.push_back(retained_row->second);
+                    continue;
+                }
+                const OutcomeDistribution* distribution_pointer = nullptr;
+                const auto shared = shared_destructive_kernels.find(action);
+                if (shared != shared_destructive_kernels.end()) {
+                    distribution_pointer = shared->second;
+                } else {
+                    distribution_pointer =
+                        &calc.outcomes(result.start_state, action);
+                    shared_destructive_kernels.emplace(
+                        action, distribution_pointer);
+                }
+                const OutcomeDistribution& distribution =
+                    *distribution_pointer;
+                if (!distribution.supported ||
+                    !distribution.choice_groups.empty() ||
+                    !distribution.choice_options.empty()) {
+                    exact = false;
+                    break;
+                }
+                StrictRow row;
+                row.action = action;
+                row.immediate = immediate;
+                for (const OutcomeEntry& outcome : distribution.entries) {
+                    if (strict_state(outcome.state)) {
+                        row.strict_entries.push_back(outcome);
+                    } else if (
+                        clean_goal_cover_eligible(outcome.state) &&
+                        calc.state(outcome.state).rarity == PC_RARITY_RARE) {
+                        row.rare_entries.push_back(
+                            {clean_index(outcome.state),
+                             outcome.probability});
+                    } else {
+                        row.fixed_continuation +=
+                            outcome.probability * coarse_value(outcome.state);
+                    }
+                }
+                std::sort(
+                    row.rare_entries.begin(), row.rare_entries.end(),
+                    [](const auto& left, const auto& right) {
+                        return left.first < right.first;
+                    });
+                std::size_t write = 0;
+                for (const auto& entry : row.rare_entries) {
+                    if (write != 0 &&
+                        row.rare_entries[write - 1].first == entry.first) {
+                        row.rare_entries[write - 1].second += entry.second;
+                    } else {
+                        row.rare_entries[write++] = entry;
+                    }
+                }
+                row.rare_entries.resize(write);
+                StrictRowPtr retained =
+                    std::make_shared<StrictRow>(std::move(row));
+                shared_destructive_rows.emplace(action, retained);
+                rare_rows.push_back(std::move(retained));
+            }
+        }
+        if (!exact) return;
+
+        std::uint32_t strict_exalt = kNoId;
+        for (const std::uint32_t action : actions) {
+            if (calc.registry().actions.at(action).params.type ==
+                ActionType::Exalt) {
+                strict_exalt = action;
+                break;
+            }
+        }
+        std::unordered_map<std::uint32_t, StrictRowPtr>
+            concrete_exalt_rows;
+        for (std::size_t cursor = 0;
+             cursor < concrete_rare_states.size() && exact; ++cursor) {
+            const std::uint32_t state = concrete_rare_states[cursor];
+            if (strict_exalt == kNoId ||
+                !action_legal(
+                    session, calc.registry().actions.at(strict_exalt),
+                    calc.state(state))) {
+                continue;
+            }
+            const double immediate = action_cost(strict_exalt);
+            if (!std::isfinite(immediate)) continue;
+            const OutcomeDistribution& distribution =
+                calc.outcomes(state, strict_exalt);
+            if (!distribution.supported ||
+                !distribution.choice_groups.empty() ||
+                !distribution.choice_options.empty()) {
+                exact = false;
+                break;
+            }
+            if (concrete_rare_included.size() < calc.state_count()) {
+                concrete_rare_included.resize(calc.state_count(), 0);
+            }
+            StrictRow row;
+            row.action = strict_exalt;
+            row.immediate = immediate;
+            bool acyclic = true;
+            for (const OutcomeEntry& outcome : distribution.entries) {
+                if (calc.is_goal_state(calc.state(outcome.state))) continue;
+                if (clean_goal_cover_eligible(outcome.state) &&
+                    calc.state(outcome.state).rarity == PC_RARITY_RARE &&
+                    calc.state(outcome.state).prefix_count +
+                            calc.state(outcome.state).suffix_count >
+                        calc.state(state).prefix_count +
+                            calc.state(state).suffix_count) {
+                    row.concrete_rare_entries.push_back(outcome);
+                    if (!concrete_rare_included[outcome.state]) {
+                        concrete_rare_included[outcome.state] = 1;
+                        concrete_rare_states.push_back(outcome.state);
+                    }
+                } else {
+                    acyclic = false;
+                    break;
+                }
+            }
+            if (acyclic) {
+                concrete_exalt_rows.emplace(
+                    state,
+                    std::make_shared<StrictRow>(std::move(row)));
+            }
+        }
+        if (!exact) return;
+        std::stable_sort(
+            concrete_rare_states.begin(), concrete_rare_states.end(),
+            [&](const std::uint32_t left, const std::uint32_t right) {
+                const std::uint8_t left_count =
+                    calc.state(left).prefix_count +
+                    calc.state(left).suffix_count;
+                const std::uint8_t right_count =
+                    calc.state(right).prefix_count +
+                    calc.state(right).suffix_count;
+                return left_count != right_count
+                    ? left_count > right_count
+                    : left < right;
+            });
+
+        strict_clean_goal_cover_cost.assign(calc.state_count(), kInfinity);
+        std::vector<std::uint32_t> strict_policy(
+            calc.state_count(), kNoId);
+        for (const std::uint32_t state : strict_states) {
+            strict_clean_goal_cover_cost[state] = 0.0;
+        }
+        for (const std::uint32_t state : concrete_rare_states) {
+            strict_clean_goal_cover_cost[state] = 0.0;
+        }
+        std::vector<double> rare_value(
+            clean_goal_cover_cost.size(), kInfinity);
+        std::vector<std::uint32_t> rare_policy(
+            clean_goal_cover_cost.size(), kNoId);
+        for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+            for (std::uint8_t prefixes = 0; prefixes <= 3; ++prefixes) {
+                for (std::uint8_t suffixes = 0; suffixes <= 3; ++suffixes) {
+                    const std::size_t index =
+                        (((static_cast<std::size_t>(PC_RARITY_RARE) *
+                           mask_count + mask) * kAffixCountStates +
+                          prefixes) * kAffixCountStates + suffixes);
+                    rare_value[index] =
+                        calc.goal().rarity == PC_RARITY_RARE &&
+                                std::popcount(mask) >=
+                                    calc.goal().required_satisfied_slots()
+                            ? 0.0
+                            : 0.0;
+                }
+            }
+        }
+        double cheapest_reset = kInfinity;
+        std::uint32_t cheapest_reset_action = kNoId;
+        for (const std::uint32_t action : actions) {
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(action);
+            if (descriptor.synthetic ||
+                descriptor.params.type == ActionType::Scour) {
+                const double cost = action_cost(action);
+                if (cost < cheapest_reset) {
+                    cheapest_reset = cost;
+                    cheapest_reset_action = action;
+                }
+            }
+        }
+        constexpr std::uint32_t kStrictRelaxationSweeps = 4096;
+        std::uint32_t sweeps = 0;
+        double delta = kInfinity;
+        for (std::uint32_t sweep = 0;
+             sweep < kStrictRelaxationSweeps; ++sweep) {
+            sweeps = sweep + 1;
+            delta = 0.0;
+            const double anchor_value =
+                restart_state < strict_clean_goal_cover_cost.size()
+                    ? strict_clean_goal_cover_cost[restart_state]
+                    : 0.0;
+            for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+                for (std::uint8_t prefixes = 0; prefixes <= 3; ++prefixes) {
+                    for (std::uint8_t suffixes = 0; suffixes <= 3;
+                         ++suffixes) {
+                        const std::size_t index =
+                            (((static_cast<std::size_t>(PC_RARITY_RARE) *
+                               mask_count + mask) * kAffixCountStates +
+                              prefixes) * kAffixCountStates + suffixes);
+                        if (calc.goal().rarity == PC_RARITY_RARE &&
+                            std::popcount(mask) >=
+                                calc.goal().required_satisfied_slots()) {
+                            rare_value[index] = 0.0;
+                            continue;
+                        }
+                        const double previous = rare_value[index];
+                        double best = clean_goal_escape_cost[index];
+                        std::uint32_t best_action =
+                            clean_goal_escape_action[index];
+                        if (std::isfinite(cheapest_reset)) {
+                            const double candidate =
+                                cheapest_reset + anchor_value;
+                            if (candidate < best) {
+                                best = candidate;
+                                best_action = cheapest_reset_action;
+                            }
+                        }
+                        for (const StrictRowPtr& row_pointer : rare_rows) {
+                            const StrictRow& row = *row_pointer;
+                            double continuation = row.fixed_continuation;
+                            double self_probability = 0.0;
+                            for (const OutcomeEntry& outcome :
+                                 row.strict_entries) {
+                                continuation += outcome.probability *
+                                    strict_clean_goal_cover_cost[
+                                        outcome.state];
+                            }
+                            for (const auto& [successor, probability] :
+                                 row.rare_entries) {
+                                if (successor == index) {
+                                    self_probability += probability;
+                                } else {
+                                    continuation +=
+                                        probability * rare_value[successor];
+                                }
+                            }
+                            if (self_probability < 1.0) {
+                                const double candidate =
+                                    (row.immediate + continuation) /
+                                    (1.0 - self_probability);
+                                if (candidate < best) {
+                                    best = candidate;
+                                    best_action = row.action;
+                                }
+                            }
+                        }
+                        for (const std::uint32_t action : actions) {
+                            const ActionDescriptor& descriptor =
+                                calc.registry().actions.at(action);
+                            if (descriptor.params.type != ActionType::Bench ||
+                                (descriptor.sets_flags & kProtectionFlags) !=
+                                    0) {
+                                continue;
+                            }
+                            const std::uint32_t reach =
+                                action_goal_reach_mask(action);
+                            if (reach == 0 || (reach & ~mask) == 0) continue;
+                            const double immediate = action_cost(action);
+                            if (!std::isfinite(immediate)) continue;
+                            const std::uint32_t next_mask = mask | reach;
+                            const std::size_t successor =
+                                (((static_cast<std::size_t>(PC_RARITY_RARE) *
+                                   mask_count + next_mask) *
+                                  kAffixCountStates + prefixes) *
+                                 kAffixCountStates + suffixes);
+                            const double candidate =
+                                immediate + rare_value[successor];
+                            if (candidate < best) {
+                                best = candidate;
+                                best_action = action;
+                            }
+                        }
+                        if (!std::isfinite(best)) continue;
+                        const double next = std::max(previous, best);
+                        rare_value[index] = next;
+                        if (next == best) rare_policy[index] = best_action;
+                        delta = std::max(delta, next - previous);
+                    }
+                }
+            }
+            for (const std::uint32_t state : concrete_rare_states) {
+                const double previous =
+                    strict_clean_goal_cover_cost[state];
+                const std::size_t index = clean_index(state);
+                double best = clean_goal_no_exalt_escape_cost[index];
+                std::uint32_t best_action =
+                    clean_goal_no_exalt_escape_action[index];
+                if (std::isfinite(cheapest_reset)) {
+                    const double candidate =
+                        cheapest_reset + anchor_value;
+                    if (candidate < best) {
+                        best = candidate;
+                        best_action = cheapest_reset_action;
+                    }
+                }
+                for (const StrictRowPtr& row_pointer : rare_rows) {
+                    const StrictRow& row = *row_pointer;
+                    double continuation = row.fixed_continuation;
+                    double self_probability = 0.0;
+                    for (const OutcomeEntry& outcome :
+                         row.concrete_rare_entries) {
+                        if (outcome.state == state) {
+                            self_probability += outcome.probability;
+                        } else {
+                            continuation += outcome.probability *
+                                strict_clean_goal_cover_cost[outcome.state];
+                        }
+                    }
+                    for (const OutcomeEntry& outcome : row.strict_entries) {
+                        continuation += outcome.probability *
+                            strict_clean_goal_cover_cost[outcome.state];
+                    }
+                    if (self_probability < 1.0) {
+                        const double candidate =
+                            (row.immediate + continuation) /
+                            (1.0 - self_probability);
+                        if (candidate < best) {
+                            best = candidate;
+                            best_action = row.action;
+                        }
+                    }
+                }
+                const auto exalt_row = concrete_exalt_rows.find(state);
+                if (exalt_row != concrete_exalt_rows.end()) {
+                    double candidate = exalt_row->second->immediate;
+                    for (const OutcomeEntry& outcome :
+                         exalt_row->second->concrete_rare_entries) {
+                        candidate += outcome.probability *
+                            strict_clean_goal_cover_cost[outcome.state];
+                    }
+                    if (candidate < best) {
+                        best = candidate;
+                        best_action = strict_exalt;
+                    }
+                }
+                if (!std::isfinite(best)) continue;
+                const double next = std::max(previous, best);
+                strict_clean_goal_cover_cost[state] = next;
+                if (next == best) strict_policy[state] = best_action;
+                delta = std::max(delta, next - previous);
+            }
+            for (const std::uint32_t state : strict_states) {
+                const double previous = strict_clean_goal_cover_cost[state];
+                const std::size_t index = clean_index(state);
+                double best = index < clean_goal_escape_cost.size()
+                    ? clean_goal_escape_cost[index]
+                    : kInfinity;
+                std::uint32_t best_action =
+                    index < clean_goal_escape_action.size()
+                        ? clean_goal_escape_action[index]
+                        : kNoId;
+                for (const StrictRowPtr& row_pointer : rows[state]) {
+                    const StrictRow& row = *row_pointer;
+                    double continuation = row.fixed_continuation;
+                    double self_probability = 0.0;
+                    for (const OutcomeEntry& outcome : row.strict_entries) {
+                        if (outcome.state == state) {
+                            self_probability += outcome.probability;
+                        } else {
+                            continuation += outcome.probability *
+                                strict_clean_goal_cover_cost[outcome.state];
+                        }
+                    }
+                    for (const auto& [successor, probability] :
+                         row.rare_entries) {
+                        continuation += probability * rare_value[successor];
+                    }
+                    for (const OutcomeEntry& outcome :
+                         row.concrete_rare_entries) {
+                        continuation += outcome.probability *
+                            strict_clean_goal_cover_cost[outcome.state];
+                    }
+                    if (self_probability < 1.0) {
+                        const double candidate =
+                            (row.immediate + continuation) /
+                            (1.0 - self_probability);
+                        if (candidate < best) {
+                            best = candidate;
+                            best_action = row.action;
+                        }
+                    }
+                }
+                if (!std::isfinite(best)) continue;
+                const double next = std::max(previous, best);
+                strict_clean_goal_cover_cost[state] = next;
+                if (next == best) strict_policy[state] = best_action;
+                delta = std::max(delta, next - previous);
+            }
+            if (delta <= options.epsilon * 0.1) break;
+        }
+        if (strict_clean_goal_cover_cost.size() < calc.state_count()) {
+            strict_clean_goal_cover_cost.resize(
+                calc.state_count(), kInfinity);
+        }
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            if (!calc.is_goal_state(calc.state(state)) &&
+                clean_goal_cover_eligible(state) &&
+                calc.state(state).rarity == PC_RARITY_RARE &&
+                (state >= concrete_rare_included.size() ||
+                 !concrete_rare_included[state])) {
+                strict_clean_goal_cover_cost[state] =
+                    rare_value[clean_index(state)];
+            }
+        }
+        strict_clean_goal_cover_state_count = calc.state_count();
+        strict_clean_goal_cover_refresh_needed = true;
+        const double anchor = restart_state < strict_clean_goal_cover_cost.size()
+            ? strict_clean_goal_cover_cost[restart_state]
+            : kInfinity;
+        std::map<std::uint32_t, std::uint32_t> policy_counts;
+        std::map<std::uint32_t, std::uint32_t> rare_policy_counts;
+        for (const std::uint32_t state : strict_states) {
+            if (strict_policy[state] != kNoId) {
+                ++policy_counts[strict_policy[state]];
+            }
+        }
+        for (std::uint32_t mask = 0; mask < mask_count; ++mask) {
+            for (std::uint8_t prefixes = 0; prefixes <= 3; ++prefixes) {
+                for (std::uint8_t suffixes = 0; suffixes <= 3; ++suffixes) {
+                    const std::size_t index =
+                        (((static_cast<std::size_t>(PC_RARITY_RARE) *
+                           mask_count + mask) * kAffixCountStates +
+                          prefixes) * kAffixCountStates + suffixes);
+                    if (rare_policy[index] != kNoId) {
+                        ++rare_policy_counts[rare_policy[index]];
+                    }
+                }
+            }
+        }
+        std::string strict_reason =
+            "included:strict_clean_goal_progress_mdp:" +
+            finite_json(anchor) + ":states=" +
+            std::to_string(strict_states.size()) + ":sweeps=" +
+            std::to_string(sweeps) + ":delta=" + finite_json(delta) +
+            ":anchor_action=" +
+            (restart_state < strict_policy.size() &&
+                     strict_policy[restart_state] != kNoId
+                 ? calc.registry().actions.at(
+                       strict_policy[restart_state]).id
+                 : std::string("none")) +
+            ":policies=";
+        bool first_policy = true;
+        for (const auto& [action, count] : policy_counts) {
+            if (!first_policy) strict_reason += ',';
+            first_policy = false;
+            strict_reason += calc.registry().actions.at(action).id + '=' +
+                std::to_string(count);
+        }
+        strict_reason += ":rare_policies=";
+        first_policy = true;
+        for (const auto& [action, count] : rare_policy_counts) {
+            if (!first_policy) strict_reason += ',';
+            first_policy = false;
+            strict_reason += calc.registry().actions.at(action).id + '=' +
+                std::to_string(count);
+        }
+        if (!result.diagnostics.action_inclusion_reasons.empty() &&
+            result.diagnostics.action_inclusion_reasons.size() >=
+                options.max_diagnostic_samples) {
+            result.diagnostics.action_inclusion_reasons.back() =
+                std::move(strict_reason);
+            ++result.diagnostics.action_inclusion_reasons_omitted;
+        } else {
+            retain_action_reason(std::move(strict_reason));
+        }
     }
 
     double optimistic_operator_lower(
@@ -1761,6 +3547,18 @@ struct SolveWork::Impl {
     void prepare_state_expansion(const std::uint32_t state) {
         const auto prepare_started = std::chrono::steady_clock::now();
         expansion_operator_indices = static_operator_indices;
+        expansion_operator_indices.erase(
+            std::remove_if(
+                expansion_operator_indices.begin(),
+                expansion_operator_indices.end(),
+                [&](const std::uint32_t index) {
+                    const PlannerOperator& planner =
+                        calc.operators().at(index);
+                    return planner.automatic_kind ==
+                               AutomaticCandidateKind::ConstructiveRenewal &&
+                           restart_state != kNoId && state != restart_state;
+                }),
+            expansion_operator_indices.end());
         AutomaticAdmissionLimits limits;
         limits.max_discovered_states = options.max_discovered_states;
         limits.max_state_action_rows = options.max_state_action_rows;
@@ -1788,6 +3586,22 @@ struct SolveWork::Impl {
         limits.max_imprint_program_work =
             options.max_imprint_program_work;
         limits.prices = &prices;
+        if (state < focused_previous_upper_values.size() &&
+            std::isfinite(focused_previous_upper_values[state])) {
+            limits.incumbent_upper_bound =
+                focused_previous_upper_values[state];
+        } else if (focused_fallback_policy.has_value()) {
+            const FocusedFallbackPolicy& fallback =
+                *focused_fallback_policy;
+            const double terminal =
+                fallback_terminal_upper(state, fallback);
+            limits.incumbent_upper_bound =
+                state == fallback.anchor_state
+                    ? fallback.anchor_state_value
+                    : std::min(
+                          terminal,
+                          restart_cost + fallback.anchor_state_value);
+        }
         const auto admission_started = std::chrono::steady_clock::now();
         StateLocalAutomaticBatch batch =
             calc.admit_state_local_automatic_candidates(state, limits);
@@ -1873,6 +3687,32 @@ struct SolveWork::Impl {
                     expansion_operator_indices.end(), index) ==
                     expansion_operator_indices.end()) {
                 expansion_operator_indices.push_back(index);
+            }
+        }
+        if (std::isfinite(limits.incumbent_upper_bound)) {
+            const double incumbent = limits.incumbent_upper_bound;
+            const std::size_t before = expansion_operator_indices.size();
+            expansion_operator_indices.erase(
+                std::remove_if(
+                    expansion_operator_indices.begin(),
+                    expansion_operator_indices.end(),
+                    [&](const std::uint32_t index) {
+                        const double lower =
+                            optimistic_operator_lower(state, index);
+                        const double separation = options.epsilon *
+                            std::max({1.0, std::abs(incumbent),
+                                      std::abs(lower)});
+                        return std::isfinite(lower) &&
+                               lower > incumbent + separation;
+                    }),
+                expansion_operator_indices.end());
+            const std::size_t pruned =
+                before - expansion_operator_indices.size();
+            if (pruned != 0) {
+                price_bound_state_pruning = true;
+                retain_action_reason(
+                    "pruned:state_incumbent_operator_lower:" +
+                    std::to_string(pruned));
             }
         }
         /* Constructive deterministic goal finishes and Restart are exact
@@ -2452,6 +4292,8 @@ struct SolveWork::Impl {
             return "multimod_finish";
         case AutomaticCandidateKind::Imprint:
             return "imprint";
+        case AutomaticCandidateKind::ConstructiveRenewal:
+            return "constructive_renewal";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -4455,6 +6297,27 @@ struct SolveWork::Impl {
         return {calc.is_goal_state(state) ? 1u : 0u};
     }
 
+    std::vector<std::uint64_t> focused_schedule_signature(
+        const std::uint32_t state_id) {
+        const AbstractState& state = calc.state(state_id);
+        /* Scheduling classes are not equivalence classes and never merge a
+         * state. Preserve representatives from distinct exact goal-progress
+         * and affix-capacity regions so a large renewal outcome set cannot
+         * make its most common zero-progress carriers monopolize a round. */
+        return {
+            calc.is_goal_state(state) ? 1u : 0u,
+            satisfied_goal_mask_for_state(state_id),
+            carrier_facts(state).goal_family_mask,
+            state.blocked_mask,
+            state.rarity,
+            state.prefix_count,
+            state.suffix_count,
+            static_cast<std::uint64_t>(
+                state.flags &
+                (kFlagCraftedMod | kFlagPrefixesLocked |
+                 kFlagSuffixesLocked))};
+    }
+
     static std::uint64_t observation_signature_hash(
         const std::vector<std::uint64_t>& signature) {
         std::uint64_t hash = 1469598103934665603ull;
@@ -4856,14 +6719,9 @@ struct SolveWork::Impl {
     }
 
     void prepare_focused_exact_quotient() {
-        /* The focused lower problem deliberately keeps strict Bellman states.
-         * Treating its unexpanded zero-valued frontier as a quotient is exact
-         * for the current lower bound, but it erases the state distinctions
-         * that make the next policy-reachable fringe selective. In the chaos
-         * oracle that forced all 55,096 non-goal strict states to be expanded
-         * and made a 0.6-second solve take 83 seconds. Coarse frontier classes
-         * below remain scheduling-only; completed closure is independently
-         * quotient-refined across every admitted action. */
+        /* Focused lower solves retain strict Bellman identities. Completed
+         * graphs are still refined by the all-action exact quotient; partial
+         * frontier grouping remains scheduling-only. */
     }
 
     void prepare_exact_outer_quotient() {
@@ -5007,8 +6865,14 @@ struct SolveWork::Impl {
 
     void prepare_iteration() {
         const auto started = std::chrono::steady_clock::now();
-        if (!cache_pending && !queue.empty() &&
-            expanded_count >= options.max_expanded_states) {
+        if (!cache_pending &&
+            expanded_count >= options.max_expanded_states &&
+            calc.state_count() > expanded_count) {
+            /* A focused batch can consume its last scheduled state exactly as
+             * it reaches the expansion cap. Queue emptiness is not a closure
+             * certificate: generated strict successors still witness the
+             * unfinished graph. Record the cap before outer quotienting can
+             * reduce the visible expanded-class count. */
             result.diagnostics.state_cap_hit = true;
             record_cap("max_expanded_states", true);
         }
@@ -5106,6 +6970,13 @@ struct SolveWork::Impl {
             for (std::uint32_t state = 0; state < state_count; ++state) {
                 if (result.goal_states[state]) continue;
                 std::uint32_t operator_index = restart_operator_index;
+                if (state <
+                        focused_previous_frontier_upper_operator.size() &&
+                    focused_previous_frontier_upper_operator[state] !=
+                        kNoId) {
+                    operator_index =
+                        focused_previous_frontier_upper_operator[state];
+                }
                 if (state < policy_rows.size() &&
                     policy_rows[state] != no_row &&
                     policy_rows[state] < priced_rows.size()) {
@@ -5426,8 +7297,117 @@ struct SolveWork::Impl {
         }
         policy_selection_active = true;
         policy_selection_cursor = 0;
+        policy_selection_states.clear();
+        policy_selection_states.reserve(expanded_count);
+        for (std::uint32_t state = 0;
+             state < result.values.size(); ++state) {
+            if (result.expanded[state] && !result.goal_states[state]) {
+                policy_selection_states.push_back(state);
+            }
+        }
         policy_selection_improved = false;
         policy_selection_residual = 0.0;
+    }
+
+    bool initialize_focused_proper_policy() {
+        if (!policy_selection_active) begin_policy_selection();
+        const std::uint64_t transient_bytes = result.values.size() +
+            policy_selection_states.size() * sizeof(std::uint32_t);
+        if (check_solver_byte_cap_fast(transient_bytes)) return false;
+        std::vector<std::uint8_t> assigned(result.values.size(), 0);
+        std::vector<std::uint32_t> order = policy_selection_states;
+        const auto start = std::find(
+            order.begin(), order.end(), result.start_state);
+        if (start != order.end()) {
+            std::rotate(order.begin(), start, start + 1);
+        }
+        std::size_t remaining = order.size();
+        bool progress = true;
+        while (remaining != 0 && progress) {
+            progress = false;
+            for (const std::uint32_t state : order) {
+                if (assigned[state]) continue;
+                const StateRowSpan& span =
+                    transition_cache->state_rows.at(state);
+                std::uint64_t best_row =
+                    std::numeric_limits<std::uint64_t>::max();
+                for (std::uint32_t relative = 0;
+                     relative < span.count; ++relative) {
+                    const std::uint64_t absolute = span.offset + relative;
+                    if (preservation_prunes(absolute)) continue;
+                    const SparseRow& row =
+                        transition_cache->rows.at(absolute);
+                    bool valid = true;
+                    bool exits_rank = false;
+                    const auto route = [&](const std::uint32_t successor) {
+                        if (!valid || successor == state) return;
+                        if (successor >= result.values.size()) {
+                            valid = false;
+                        } else if (result.goal_states[successor] ||
+                                   !result.expanded[successor] ||
+                                   assigned[successor]) {
+                            exits_rank = true;
+                        } else {
+                            valid = false;
+                        }
+                    };
+                    for (std::uint32_t i = 0;
+                         valid && i < row.transition_count; ++i) {
+                        const std::uint64_t offset = row.transition_offset + i;
+                        if (transition_cache->probabilities.at(offset) > 0.0) {
+                            route(transition_cache->successors.at(offset));
+                        }
+                    }
+                    for (std::uint32_t i = 0;
+                         valid && i < row.choice_count; ++i) {
+                        const SparseChoiceGroup& choice =
+                            transition_cache->choices.at(row.choice_offset + i);
+                        if (choice.probability <= 0.0) continue;
+                        std::uint32_t selected =
+                            choice.has_self ? state : kNoId;
+                        double selected_value =
+                            choice.has_self ? result.values[state] : kInfinity;
+                        for (std::uint32_t s = 0;
+                             s < choice.successor_count; ++s) {
+                            const std::uint32_t successor =
+                                transition_cache->choice_successors.at(
+                                    choice.successor_offset + s);
+                            const double value = result.values[successor];
+                            if (value < selected_value - options.epsilon ||
+                                (std::abs(value - selected_value) <=
+                                     options.epsilon &&
+                                 successor < selected)) {
+                                selected = successor;
+                                selected_value = value;
+                            }
+                        }
+                        if (selected == kNoId) valid = false;
+                        else route(selected);
+                    }
+                    if (!valid || !exits_rank) continue;
+                    /* Initialization needs any ranked proper row. Operator
+                     * scheduling places deterministic finishes before broad
+                     * stochastic kernels, so take the first certificate and
+                     * leave cost optimality to ordinary Howard improvement. */
+                    best_row = absolute;
+                    break;
+                }
+                if (best_row == std::numeric_limits<std::uint64_t>::max()) {
+                    continue;
+                }
+                policy_rows[state] = best_row;
+                assigned[state] = 1;
+                --remaining;
+                progress = true;
+            }
+        }
+        if (remaining != 0) return false;
+        policy_selection_active = false;
+        policy_selection_cursor = 0;
+        policy_selection_states.clear();
+        policy_selection_improved = false;
+        policy_selection_residual = 0.0;
+        return true;
     }
 
     bool advance_policy_selection(bool& improved) {
@@ -5436,10 +7416,11 @@ struct SolveWork::Impl {
             std::numeric_limits<std::uint64_t>::max();
         constexpr std::uint32_t kStatesPerSelectionUnit = 128;
         const std::uint32_t end = std::min<std::uint32_t>(
-            static_cast<std::uint32_t>(result.values.size()),
+            static_cast<std::uint32_t>(policy_selection_states.size()),
             policy_selection_cursor + kStatesPerSelectionUnit);
-        for (std::uint32_t state = policy_selection_cursor;
-             state < end; ++state) {
+        for (std::uint32_t active = policy_selection_cursor;
+             active < end; ++active) {
+            const std::uint32_t state = policy_selection_states[active];
             if (!result.expanded[state] || result.goal_states[state]) continue;
             const StateRowSpan& span = transition_cache->state_rows.at(state);
             double best = kInfinity;
@@ -5462,16 +7443,30 @@ struct SolveWork::Impl {
                     std::abs(result.values[state] - best));
             }
             if (best_row != no_row && policy_rows[state] != best_row) {
-                policy_rows[state] = best_row;
-                policy_selection_improved = true;
+                bool improving = policy_rows[state] == no_row;
+                if (!improving) {
+                    std::uint32_t current_work = 0;
+                    const double current = sparse_row_q(
+                        policy_rows[state], current_work);
+                    improving = best < current - options.epsilon;
+                }
+                if (improving) {
+                    policy_rows[state] = best_row;
+                    policy_selection_improved = true;
+                }
             }
         }
-        policy_selection_cursor = end;
-        if (policy_selection_cursor < result.values.size()) return false;
+        if (policy_selection_cursor < policy_selection_states.size()) {
+            policy_selection_cursor = end;
+        }
+        if (policy_selection_cursor < policy_selection_states.size()) {
+            return false;
+        }
         residual = policy_selection_residual;
         result.diagnostics.residual = residual;
         improved = policy_selection_improved;
         policy_selection_active = false;
+        policy_selection_states.clear();
         return true;
     }
 
@@ -5479,8 +7474,10 @@ struct SolveWork::Impl {
         policy_unit_stage = PolicyUnitStage::Seed;
         policy_seed_pass = 0;
         policy_seed_cursor = 0;
+        policy_seed_states.clear();
         policy_selection_active = false;
         policy_selection_cursor = 0;
+        policy_selection_states.clear();
         policy_selection_improved = false;
         policy_selection_residual = 0.0;
         sparse_policy_resume.reset();
@@ -5520,6 +7517,14 @@ struct SolveWork::Impl {
             policy_kernel_preparation =
                 std::make_unique<PolicyKernelPreparation>();
             policy_kernel_preparation->state_count = state_count;
+            policy_kernel_preparation->active_states.reserve(
+                expanded_count);
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (result.expanded[state] && !result.goal_states[state]) {
+                    policy_kernel_preparation->active_states.push_back(
+                        state);
+                }
+            }
             policy_kernel_preparation->kernel_owner.assign(
                 state_count, kNoId);
             policy_kernel_preparation->full_kernel.resize(state_count);
@@ -5559,10 +7564,11 @@ struct SolveWork::Impl {
         };
         constexpr std::uint32_t kKernelStatesPerWorkUnit = 64;
         const std::uint32_t kernel_end = std::min<std::uint32_t>(
-            static_cast<std::uint32_t>(state_count),
+            static_cast<std::uint32_t>(preparation.active_states.size()),
             preparation.cursor + kKernelStatesPerWorkUnit);
-        for (std::uint32_t state = preparation.cursor;
-             state < kernel_end; ++state) {
+        for (std::uint32_t active = preparation.cursor;
+             active < kernel_end; ++active) {
+            const std::uint32_t state = preparation.active_states[active];
             if (!result.expanded[state] || result.goal_states[state]) continue;
             if (policy_rows[state] == no_row) continue;
             const std::uint64_t row_index = policy_rows[state];
@@ -5703,7 +7709,7 @@ struct SolveWork::Impl {
             kernel_owner[state] = owner;
         }
         preparation.cursor = kernel_end;
-        if (preparation.cursor < state_count) {
+        if (preparation.cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
         }
@@ -5729,10 +7735,11 @@ struct SolveWork::Impl {
         std::vector<PolicyEdge>& edges = preparation.edges;
         constexpr std::uint32_t kGroupingStatesPerWorkUnit = 256;
         const std::uint32_t grouping_end = std::min<std::uint32_t>(
-            static_cast<std::uint32_t>(state_count),
+            static_cast<std::uint32_t>(preparation.active_states.size()),
             preparation.grouping_cursor + kGroupingStatesPerWorkUnit);
-        for (std::uint32_t state = preparation.grouping_cursor;
-             state < grouping_end; ++state) {
+        for (std::uint32_t active = preparation.grouping_cursor;
+             active < grouping_end; ++active) {
+            const std::uint32_t state = preparation.active_states[active];
             if (representative[state] != kNoId) {
                 group_members[representative[state]].push_back(state);
             }
@@ -5743,16 +7750,17 @@ struct SolveWork::Impl {
             }
         }
         preparation.grouping_cursor = grouping_end;
-        if (preparation.grouping_cursor < state_count) {
+        if (preparation.grouping_cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
         }
         constexpr std::uint32_t kQuotientStatesPerWorkUnit = 64;
         const std::uint32_t quotient_end = std::min<std::uint32_t>(
-            static_cast<std::uint32_t>(state_count),
+            static_cast<std::uint32_t>(preparation.active_states.size()),
             preparation.quotient_cursor + kQuotientStatesPerWorkUnit);
-        for (std::uint32_t state = preparation.quotient_cursor;
-             state < quotient_end; ++state) {
+        for (std::uint32_t active = preparation.quotient_cursor;
+             active < quotient_end; ++active) {
+            const std::uint32_t state = preparation.active_states[active];
             if (representative[state] != state) continue;
             PolicyRow& row = rows[state];
             row.edge_offset = edges.size();
@@ -5803,7 +7811,7 @@ struct SolveWork::Impl {
                 edges.size() - row.edge_offset);
         }
         preparation.quotient_cursor = quotient_end;
-        if (preparation.quotient_cursor < state_count) {
+        if (preparation.quotient_cursor < preparation.active_states.size()) {
             policy_evaluation_incomplete = true;
             return false;
         }
@@ -5839,10 +7847,12 @@ struct SolveWork::Impl {
             std::uint32_t tarjan_work = 0;
             while (tarjan_work < kTarjanWorkPerUnit) {
                 if (preparation.tarjan_dfs.empty()) {
-                    while (preparation.tarjan_root_cursor < state_count &&
+                    while (preparation.tarjan_root_cursor <
+                               preparation.active_states.size() &&
                            tarjan_work < kTarjanWorkPerUnit) {
                         const std::uint32_t root =
-                            preparation.tarjan_root_cursor++;
+                            preparation.active_states[
+                                preparation.tarjan_root_cursor++];
                         ++tarjan_work;
                         if (!result.expanded[root] ||
                             result.goal_states[root] ||
@@ -5902,7 +7912,8 @@ struct SolveWork::Impl {
                 }
             }
 
-            if (preparation.tarjan_root_cursor >= state_count &&
+            if (preparation.tarjan_root_cursor >=
+                    preparation.active_states.size() &&
                 preparation.tarjan_dfs.empty()) {
                 preparation.component_by_state.assign(state_count, kNoId);
                 for (std::uint32_t component = 0;
@@ -5923,6 +7934,7 @@ struct SolveWork::Impl {
             preparation.component_by_state;
         std::vector<std::int32_t>& local = preparation.local;
         std::uint64_t policy_scratch =
+            preparation.active_states.capacity() * sizeof(std::uint32_t) +
             preparation.kernel_owner.capacity() * sizeof(std::uint32_t) +
             preparation.full_kernel.capacity() *
                 sizeof(std::vector<PolicyEdge>) +
@@ -6034,8 +8046,16 @@ struct SolveWork::Impl {
                         return fail("successor_outside_cached_closure");
                     }
                     if (result.goal_states[edge.target]) continue;
-                    if (!result.expanded[edge.target]) {
-                        if (focused_lower_mode) continue;
+                    /* Focused lower solves use the exact state's admissible
+                     * frontier value as their terminal cost. The former zero
+                     * shortcut was valid only while every frontier value was
+                     * initialized to zero; retaining it after goal-cover
+                     * initialization made fixed-policy evaluation disagree
+                     * with the Bellman backup and re-evaluate a stable policy
+                     * forever. The frontier value is included in external_sum
+                     * below. */
+                    if (!result.expanded[edge.target] &&
+                        !focused_lower_mode) {
                         return fail("policy_reaches_unexpanded_frontier");
                     }
                     if (!std::isfinite(result.values[edge.target])) {
@@ -6440,23 +8460,29 @@ struct SolveWork::Impl {
              * cross-state cycle whose one-step Q is finite but whose fixed
              * policy is improper. This is a bounded seed, not the convergence
              * algorithm. */
+            if (policy_seed_states.empty()) {
+                policy_seed_states.reserve(expanded_count);
+                for (std::uint32_t state = 0;
+                     state < result.values.size(); ++state) {
+                    if (result.expanded[state] && !result.goal_states[state]) {
+                        policy_seed_states.push_back(state);
+                    }
+                }
+            }
             if (policy_seed_cursor == 0) {
                 reset_kernel_value_cache(true);
             }
             constexpr std::uint32_t kStatesPerSeedUnit = 128;
             const std::uint32_t end = std::min<std::uint32_t>(
-                static_cast<std::uint32_t>(result.values.size()),
+                static_cast<std::uint32_t>(policy_seed_states.size()),
                 policy_seed_cursor + kStatesPerSeedUnit);
             for (std::uint32_t offset = policy_seed_cursor;
                  offset < end; ++offset) {
                 const std::uint32_t state =
                         policy_seed_pass % 2 == 0
-                            ? static_cast<std::uint32_t>(
-                                  result.values.size() - 1 - offset)
-                            : offset;
-                if (!result.expanded[state] || result.goal_states[state]) {
-                    continue;
-                }
+                            ? policy_seed_states[
+                                  policy_seed_states.size() - 1 - offset]
+                            : policy_seed_states[offset];
                 std::uint32_t work = 0;
                 const double best = backup_state(state, work);
                 if (best < result.values[state]) {
@@ -6466,9 +8492,10 @@ struct SolveWork::Impl {
                 }
             }
             policy_seed_cursor = end;
-            if (policy_seed_cursor >= result.values.size()) {
+            if (policy_seed_cursor >= policy_seed_states.size()) {
                 policy_seed_cursor = 0;
                 if (++policy_seed_pass >= 4) {
+                    policy_seed_states.clear();
                     policy_unit_stage = PolicyUnitStage::InitialSelect;
                 }
             }
@@ -6477,6 +8504,15 @@ struct SolveWork::Impl {
             return true;
         }
         if (policy_unit_stage == PolicyUnitStage::InitialSelect) {
+            if (focused_lower_mode && !policy_initialized &&
+                initialize_focused_proper_policy()) {
+                policy_initialized = true;
+                policy_stable = false;
+                policy_unit_stage = PolicyUnitStage::Evaluate;
+                backup_active = true;
+                finish_unit();
+                return true;
+            }
             bool unused_improved = false;
             if (!advance_policy_selection(unused_improved)) {
                 backup_active = true;
@@ -6547,11 +8583,15 @@ struct SolveWork::Impl {
         focus_optimizing = true;
         focused_lower_mode = true;
         result.diagnostics.focused_expansion = true;
-        prepare_focused_exact_quotient();
         const std::uint32_t state_count = calc.state_count();
         transition_cache->state_rows.resize(state_count);
         std::vector<double> previous_values = std::move(result.values);
         result.values.assign(state_count, 0.0);
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (calc.is_goal_state(calc.state(state))) continue;
+            result.values[state] =
+                optimistic_completion_cost_for_state(state);
+        }
         /* Expanding a previously zero-valued frontier can only raise the
          * focused lower bound. Preserve the last round's admissible values
          * for already-known states instead of restarting every exact policy
@@ -6561,26 +8601,34 @@ struct SolveWork::Impl {
         if (focused_behavioral_representative.empty()) {
             for (std::size_t state = 0; state < retained; ++state) {
                 if (std::isfinite(previous_values[state]) &&
-                    previous_values[state] >= 0.0) {
-                    result.values[state] = previous_values[state];
+                    previous_values[state] >= 0.0 &&
+                    previous_values[state] < kValueCeiling) {
+                    result.values[state] = std::max(
+                        result.values[state], previous_values[state]);
                 }
             }
         } else {
             /* Exact class members have the same value in the current lower
              * problem. Retaining their minimum prior lower bound preserves
              * admissibility even if an earlier solve stopped at tolerance. */
-            std::vector<std::uint8_t> initialized(state_count, 0);
+            std::vector<double> retained_min(state_count, kInfinity);
             for (std::size_t state = 0; state < retained; ++state) {
                 const double value = previous_values[state];
-                if (!std::isfinite(value) || value < 0.0) continue;
+                if (!std::isfinite(value) || value < 0.0 ||
+                    value >= kValueCeiling) {
+                    continue;
+                }
                 const std::uint32_t representative =
                     focused_behavioral_representative.at(state);
-                if (!initialized[representative]) {
-                    result.values[representative] = value;
-                    initialized[representative] = 1;
-                } else {
-                    result.values[representative] = std::min(
-                        result.values[representative], value);
+                retained_min[representative] = std::min(
+                    retained_min[representative], value);
+            }
+            for (std::uint32_t representative = 0;
+                 representative < state_count; ++representative) {
+                if (std::isfinite(retained_min[representative])) {
+                    result.values[representative] = std::max(
+                        result.values[representative],
+                        retained_min[representative]);
                 }
             }
         }
@@ -6592,6 +8640,7 @@ struct SolveWork::Impl {
                 result.goal_states[state] = 1;
             }
         }
+        prepare_focused_exact_quotient();
         prepare_priced_rows();
         policy_rows.clear();
         improper_policy_states.clear();
@@ -6599,6 +8648,11 @@ struct SolveWork::Impl {
         policy_stable = false;
         policy_iteration_failed = false;
         reset_policy_iteration_units();
+        /* Focused solves construct an explicitly proper ranked policy before
+         * their first evaluation. The legacy four all-action seed passes were
+         * only a heuristic defense against improper initialization and become
+         * pure duplicate transition work once that exact initializer exists. */
+        policy_unit_stage = PolicyUnitStage::InitialSelect;
         backup_active = false;
         sweeps = 0;
         residual = kValueCeiling;
@@ -6606,24 +8660,109 @@ struct SolveWork::Impl {
                 "selected_byte_cap_breakdown:")) {
             result.diagnostics.policy_evaluation_failure.clear();
         }
+        if (expanded_count == 1 &&
+            result.start_state < result.expanded.size() &&
+            result.expanded[result.start_state] &&
+            !result.goal_states[result.start_state]) {
+            const std::uint64_t no_row =
+                std::numeric_limits<std::uint64_t>::max();
+            policy_rows.assign(state_count, no_row);
+            const StateRowSpan& span = transition_cache->state_rows.at(
+                result.start_state);
+            double best = kInfinity;
+            std::uint64_t best_row = no_row;
+            for (std::uint32_t relative = 0;
+                 relative < span.count; ++relative) {
+                const std::uint64_t absolute = span.offset + relative;
+                if (preservation_prunes(absolute)) continue;
+                std::uint32_t work = 0;
+                const double candidate = sparse_row_q(absolute, work);
+                ++result.diagnostics.bellman_action_evaluations;
+                if (candidate < best - options.epsilon ||
+                    (std::abs(candidate - best) <= options.epsilon &&
+                     absolute < best_row)) {
+                    best = candidate;
+                    best_row = absolute;
+                }
+            }
+            ++result.diagnostics.bellman_backups;
+            if (best_row != no_row && std::isfinite(best)) {
+                result.values[result.start_state] = best;
+                policy_rows[result.start_state] = best_row;
+                policy_initialized = true;
+                policy_stable = true;
+                residual = 0.0;
+                result.diagnostics.residual = 0.0;
+                finish_focused_lower_solve();
+            }
+        }
     }
 
-    bool collect_focused_fringe(std::vector<std::uint32_t>& fringe) const {
+    bool collect_focused_fringe(
+        std::vector<std::uint32_t>& fringe,
+        std::vector<double>& priority,
+        const std::vector<double>* gap_lower_values = nullptr) {
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         if (result.start_state >= result.values.size()) return false;
         std::vector<std::uint8_t> visited(result.values.size(), 0);
         std::vector<std::uint8_t> queued_fringe(result.values.size(), 0);
+        priority.assign(result.values.size(), 0.0);
+        std::vector<double> path_mass(result.values.size(), 0.0);
+        path_mass[result.start_state] = 1.0;
         std::unordered_set<std::uint64_t> routed_transition_kernels;
         std::deque<std::uint32_t> walk{result.start_state};
-        const auto route = [&](const std::uint32_t successor) {
+        const auto route = [&](const std::uint32_t successor,
+                               const double mass) {
             if (result.goal_states[successor]) return;
             if (!result.expanded[successor]) {
+                double contribution = mass;
+                if (gap_lower_values != nullptr &&
+                    successor < gap_lower_values->size()) {
+                    const double state_upper = result.values[successor];
+                    const double state_lower = (*gap_lower_values)[successor];
+                    if (std::isfinite(state_upper) &&
+                        std::isfinite(state_lower)) {
+                        contribution *= std::max(
+                            0.0, state_upper - state_lower);
+                    }
+                } else if (successor <
+                               focused_previous_upper_values.size()) {
+                    const double state_upper =
+                        focused_previous_upper_values[successor];
+                    const double state_lower = result.values[successor];
+                    if (std::isfinite(state_upper) &&
+                        std::isfinite(state_lower)) {
+                        contribution *= std::max(
+                            0.0, state_upper - state_lower);
+                    }
+                } else if (focused_fallback_policy.has_value()) {
+                    const FocusedFallbackPolicy& fallback =
+                        *focused_fallback_policy;
+                    const double state_upper = std::min(
+                        fallback_terminal_upper(successor, fallback),
+                        restart_cost + fallback.anchor_state_value);
+                    const double state_lower = result.values[successor];
+                    if (std::isfinite(state_upper) &&
+                        std::isfinite(state_lower)) {
+                        contribution *= std::max(
+                            0.0, state_upper - state_lower);
+                    }
+                }
+                if (gap_lower_values != nullptr) {
+                    const std::uint32_t progress = std::popcount(
+                        satisfied_goal_mask_for_state(successor));
+                    contribution *= 1.0 +
+                        options.focused_goal_progress_priority_multiplier *
+                            static_cast<double>(progress);
+                }
+                priority[successor] += contribution;
                 if (!queued_fringe[successor]) {
                     queued_fringe[successor] = 1;
                     fringe.push_back(successor);
                 }
             } else if (!visited[successor]) {
+                path_mass[successor] += mass;
                 walk.push_back(successor);
             }
         };
@@ -6638,6 +8777,17 @@ struct SolveWork::Impl {
             }
             const SparseRow& row = transition_cache->rows.at(
                 policy_rows[state]);
+            const double source_mass = path_mass[state];
+            double loop_probability = row.self_probability;
+            for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+                const SparseChoiceGroup& choice =
+                    transition_cache->choices.at(row.choice_offset + i);
+                if (choice.has_self) loop_probability += choice.probability;
+            }
+            const double exit_probability = 1.0 - loop_probability;
+            const double normalization = exit_probability > 1e-15
+                                             ? source_mass / exit_probability
+                                             : source_mass;
             const bool route_transitions =
                 row.choice_count != 0 || row.transition_count == 0 ||
                 routed_transition_kernels.insert(row.transition_offset)
@@ -6647,7 +8797,10 @@ struct SolveWork::Impl {
                     const std::uint32_t successor =
                         transition_cache->successors.at(
                             row.transition_offset + i);
-                    route(successor);
+                    route(
+                        successor,
+                        normalization * transition_cache->probabilities.at(
+                            row.transition_offset + i));
                 }
             }
             for (std::uint32_t i = 0; i < row.choice_count; ++i) {
@@ -6669,88 +8822,1252 @@ struct SolveWork::Impl {
                         selected_value = value;
                     }
                 }
-                if (selected != state && selected != kNoId) route(selected);
+                if (selected != state && selected != kNoId) {
+                    route(selected, normalization * choice.probability);
+                }
             }
         }
         return true;
     }
 
-    std::optional<FocusedFallbackPolicy> focused_fallback() const {
-        if (restart_operator_index == kNoId || restart_state == kNoId ||
-            restart_state >= expanded.size() || !expanded[restart_state] ||
-            !std::isfinite(restart_cost) || restart_cost < 0.0 ||
+    std::pair<double, std::uint32_t> constructive_direct_action_upper(
+        const std::uint32_t state,
+        const std::uint32_t action_index) const {
+        if (action_index >= calc.registry().actions.size() ||
+            action_index >= priced_operator_position.size()) {
+            return {kInfinity, kNoId};
+        }
+        /* Primitive planner wrappers deliberately share registry indices. */
+        const std::int32_t priced_position =
+            priced_operator_position[action_index];
+        if (priced_position < 0) return {kInfinity, kNoId};
+        const PricedOperator& priced =
+            operators.at(static_cast<std::size_t>(priced_position));
+        const PlannerOperator& planner = calc.operators().at(priced.index);
+        const ActionDescriptor& action =
+            calc.registry().actions.at(action_index);
+        const AbstractState& carrier = calc.state(state);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action != action_index ||
+            action.params.type != ActionType::Bench ||
+            action.kind != TransitionKind::Deterministic ||
+            action.params.mod_id >= session.mod_count ||
+            action.params.mod_id >= session.metamod_type.size() ||
+            session.metamod_type[action.params.mod_id] >= 0 ||
+            !std::isfinite(priced.cost) || priced.cost < 0.0 ||
+            !action_legal(session, action, carrier) ||
+            (carrier.flags & kFlagCraftedMod) != 0 ||
+            carrier.rarity != calc.goal().rarity) {
+            return {kInfinity, kNoId};
+        }
+        std::uint32_t satisfied = satisfied_goal_mask_for_state(state);
+        std::uint32_t finish_mask = 0;
+        for (std::uint32_t slot = 0;
+             slot < calc.layout().slots.size(); ++slot) {
+            if (pc_bitset_test(
+                    calc.layout().slots[slot].satisfying_mask.data(),
+                    action.params.mod_id)) {
+                finish_mask |= 1u << slot;
+                if (carrier.slot_status[slot] !=
+                        static_cast<std::uint8_t>(GoalSlotStatus::Absent) ||
+                    (carrier.blocked_mask & (1u << slot)) != 0) {
+                    return {kInfinity, kNoId};
+                }
+            }
+        }
+        if (finish_mask == 0 ||
+            std::popcount(satisfied | finish_mask) <
+                calc.goal().required_satisfied_slots()) {
+            return {kInfinity, kNoId};
+        }
+        const std::uint8_t cap = rarity_affix_cap(session, carrier.rarity);
+        const std::int8_t side = session.gen_type[action.params.mod_id];
+        if ((side == PC_SIDE_PREFIX && carrier.prefix_count >= cap) ||
+            (side == PC_SIDE_SUFFIX && carrier.suffix_count >= cap) ||
+            (side != PC_SIDE_PREFIX && side != PC_SIDE_SUFFIX)) {
+                return {kInfinity, kNoId};
+        }
+        return {priced.cost, priced.index};
+    }
+
+    bool renewal_fallback_eligible(
+        const std::uint32_t state,
+        const FocusedFallbackPolicy& fallback) const {
+        if (state >= calc.state_count() ||
+            calc.is_goal_state(calc.state(state)) ||
+            fallback.renewal_operator == kNoId ||
+            fallback.renewal_operator >= calc.operators().size()) {
+            return false;
+        }
+        const PlannerOperator& renewal =
+            calc.operators().at(fallback.renewal_operator);
+        if (renewal.kind != PlannerOperatorKind::FixedOption ||
+            renewal.primitive_program.empty()) {
+            return false;
+        }
+        const std::uint32_t first_action = renewal.primitive_program.front();
+        if (first_action >= calc.registry().actions.size()) return false;
+        const ActionDescriptor& descriptor =
+            calc.registry().actions.at(first_action);
+        if (!action_transition_facts(descriptor.params.type).renewal) {
+            return false;
+        }
+        const AbstractState& carrier = calc.state(state);
+        if (carrier.rarity != fallback.renewal_rarity ||
+            carrier.influence_bits != fallback.renewal_influence_bits ||
+            carrier.searing_exarch_tier !=
+                fallback.renewal_searing_exarch_tier ||
+            carrier.eater_of_worlds_tier !=
+                fallback.renewal_eater_of_worlds_tier ||
+            carrier.fractured_goal_mask != 0 ||
+            carrier.fractured_metamod_flags != 0 ||
+            (carrier.flags & kProtectionFlags) != 0 ||
+            !action_legal(session, descriptor, carrier)) {
+            return false;
+        }
+        for (const std::uint8_t count : carrier.fractured_junk_counts) {
+            if (count != 0) return false;
+        }
+        for (const std::uint8_t count :
+             carrier.fractured_crafted_junk_counts) {
+            if (count != 0) return false;
+        }
+        return true;
+    }
+
+    double fallback_terminal_upper(
+        const std::uint32_t state,
+        const FocusedFallbackPolicy& fallback,
+        std::uint32_t* selected_operator = nullptr) const {
+        if (calc.is_goal_state(calc.state(state))) {
+            if (selected_operator != nullptr) *selected_operator = kNoId;
+            return 0.0;
+        }
+        double best = kInfinity;
+        std::uint32_t best_operator = kNoId;
+        const auto progress = fallback.progress_state_value.find(state);
+        if (progress != fallback.progress_state_value.end() &&
+            std::isfinite(progress->second)) {
+            best = progress->second;
+            const auto progress_operator =
+                fallback.progress_state_operator.find(state);
+            if (progress_operator !=
+                fallback.progress_state_operator.end()) {
+                best_operator = progress_operator->second;
+            }
+        }
+        if (renewal_fallback_eligible(state, fallback)) {
+            if (fallback.renewal_state_value < best) {
+                best = fallback.renewal_state_value;
+                best_operator = fallback.renewal_operator;
+            }
+        }
+        const auto [finish, finish_operator] =
+            constructive_direct_action_upper(state, fallback.finish_action);
+        if (finish < best) {
+            best = finish;
+            best_operator = finish_operator;
+        }
+        if (selected_operator != nullptr) *selected_operator = best_operator;
+        return best;
+    }
+
+    std::optional<FocusedFallbackPolicy> magic_regal_fallback() {
+        if (restart_state == kNoId || restart_state >= calc.state_count() ||
+            !std::isfinite(restart_cost) || restart_cost < 0.0) {
+            return std::nullopt;
+        }
+        const AbstractState& anchor = calc.state(restart_state);
+        if (anchor.rarity != PC_RARITY_NORMAL || anchor.prefix_count != 0 ||
+            anchor.suffix_count != 0 ||
+            (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
+            anchor.fractured_goal_mask != 0 ||
+            anchor.fractured_metamod_flags != 0) {
+            return std::nullopt;
+        }
+
+        const auto primitive_of_type = [&](const ActionType type) {
+            for (const std::uint32_t action : calc.candidates()) {
+                if (action < calc.registry().actions.size() &&
+                    calc.registry().actions[action].params.type == type) {
+                    return action;
+                }
+            }
+            return kNoId;
+        };
+        const std::uint32_t transmute =
+            primitive_of_type(ActionType::Transmute);
+        const std::uint32_t alteration =
+            primitive_of_type(ActionType::Alteration);
+        const std::uint32_t augment =
+            primitive_of_type(ActionType::Augment);
+        const std::uint32_t regal = primitive_of_type(ActionType::Regal);
+        const std::uint32_t exalt = primitive_of_type(ActionType::Exalt);
+        if (transmute == kNoId || alteration == kNoId || regal == kNoId) {
+            return std::nullopt;
+        }
+        const auto primitive_cost = [&](const std::uint32_t action) {
+            if (action >= priced_operator_position.size()) return kInfinity;
+            const std::int32_t position = priced_operator_position[action];
+            if (position < 0) return kInfinity;
+            const PricedOperator& priced =
+                operators.at(static_cast<std::size_t>(position));
+            const PlannerOperator& planner = calc.operators().at(priced.index);
+            return planner.kind == PlannerOperatorKind::Primitive &&
+                           planner.primitive_action == action &&
+                           std::isfinite(priced.cost) && priced.cost >= 0.0
+                       ? priced.cost
+                       : kInfinity;
+        };
+        const double transmute_cost = primitive_cost(transmute);
+        const double alteration_cost = primitive_cost(alteration);
+        const double augment_cost = primitive_cost(augment);
+        const double regal_cost = primitive_cost(regal);
+        const double exalt_cost = primitive_cost(exalt);
+        if (!std::isfinite(transmute_cost) ||
+            !std::isfinite(alteration_cost) ||
+            !std::isfinite(regal_cost)) {
+            return std::nullopt;
+        }
+        if (!action_legal(
+                session, calc.registry().actions.at(transmute), anchor)) {
+            return std::nullopt;
+        }
+
+        const auto exact_bench_mask = [&](const std::uint32_t action) {
+            std::uint32_t mask = 0;
+            if (action >= calc.registry().actions.size()) return mask;
+            const ActionDescriptor& descriptor =
+                calc.registry().actions.at(action);
+            if (descriptor.params.type != ActionType::Bench ||
+                descriptor.params.mod_id >= session.mod_count) {
+                return mask;
+            }
+            for (std::uint32_t slot = 0;
+                 slot < calc.layout().slots.size(); ++slot) {
+                if (pc_bitset_test(
+                        calc.layout().slots[slot].satisfying_mask.data(),
+                        descriptor.params.mod_id)) {
+                    mask |= 1u << slot;
+                }
+            }
+            return mask;
+        };
+        const auto same_kernel = [](const OutcomeDistribution& left,
+                                    const OutcomeDistribution& right) {
+            return left.supported == right.supported &&
+                   left.entries == right.entries &&
+                   left.choice_groups == right.choice_groups &&
+                   left.choice_options == right.choice_options;
+        };
+        const auto progress_mask = [&](const std::uint32_t state,
+                                       const std::uint32_t acquisition) {
+            return satisfied_goal_mask_for_state(state) & acquisition;
+        };
+
+        FocusedFallbackPolicy best;
+        best.anchor_state = restart_state;
+        const std::uint32_t required =
+            calc.goal().required_satisfied_slots();
+        const std::uint32_t all_slots =
+            calc.layout().slots.size() == 32
+                ? 0xffffffffu
+                : (1u << calc.layout().slots.size()) - 1u;
+        const std::uint32_t alteration_reach =
+            action_goal_reach_mask(alteration);
+        const std::uint32_t regal_reach = action_goal_reach_mask(regal);
+
+        for (const std::uint32_t finish_action :
+             calc.automatic_goal_bench_actions()) {
+            const std::uint32_t finish_mask = exact_bench_mask(finish_action);
+            const double finish_cost = primitive_cost(finish_action);
+            if (finish_mask == 0 || std::popcount(finish_mask) >= required) {
+                continue;
+            }
+            if (!std::isfinite(finish_cost)) continue;
+            const std::uint32_t acquisition_count =
+                required - std::popcount(finish_mask);
+            if (acquisition_count != 2) continue;
+            const std::uint32_t available = all_slots & ~finish_mask;
+            for (std::uint32_t acquisition = available; acquisition != 0;
+                 acquisition = (acquisition - 1u) & available) {
+                if (std::popcount(acquisition) != acquisition_count ||
+                    (alteration_reach & acquisition) != acquisition ||
+                    (regal_reach & acquisition) != acquisition) {
+                    continue;
+                }
+
+                const OutcomeDistribution& transmute_kernel =
+                    calc.outcomes(restart_state, transmute);
+                if (!transmute_kernel.supported ||
+                    !transmute_kernel.choice_groups.empty() ||
+                    !transmute_kernel.choice_options.empty()) {
+                    continue;
+                }
+                std::map<std::uint32_t, double> direct_carriers;
+                std::vector<std::uint32_t> no_target_states;
+                double no_target_probability = 0.0;
+                for (const OutcomeEntry& outcome : transmute_kernel.entries) {
+                    if (progress_mask(outcome.state, acquisition) != 0) {
+                        direct_carriers[outcome.state] += outcome.probability;
+                    } else {
+                        no_target_probability += outcome.probability;
+                        no_target_states.push_back(outcome.state);
+                    }
+                }
+                if (no_target_states.empty()) continue;
+
+                const OutcomeDistribution& alteration_kernel =
+                    calc.outcomes(no_target_states.front(), alteration);
+                if (!alteration_kernel.supported ||
+                    !alteration_kernel.choice_groups.empty() ||
+                    !alteration_kernel.choice_options.empty()) {
+                    continue;
+                }
+                bool retry_kernel_exact = true;
+                for (const std::uint32_t state : no_target_states) {
+                    if (!action_legal(
+                            session,
+                            calc.registry().actions.at(alteration),
+                            calc.state(state)) ||
+                        !same_kernel(
+                            alteration_kernel,
+                            calc.outcomes(state, alteration))) {
+                        retry_kernel_exact = false;
+                        break;
+                    }
+                }
+                std::map<std::uint32_t, double> alteration_exits;
+                double alteration_exit_probability = 0.0;
+                if (retry_kernel_exact) {
+                    for (const OutcomeEntry& outcome :
+                         alteration_kernel.entries) {
+                        if (progress_mask(outcome.state, acquisition) != 0) {
+                            alteration_exits[outcome.state] +=
+                                outcome.probability;
+                            alteration_exit_probability += outcome.probability;
+                        } else if (!same_kernel(
+                                       alteration_kernel,
+                                       calc.outcomes(
+                                           outcome.state, alteration))) {
+                            retry_kernel_exact = false;
+                            break;
+                        }
+                    }
+                }
+                if (!retry_kernel_exact ||
+                    alteration_exit_probability <= 1e-15) {
+                    continue;
+                }
+
+                std::map<std::uint32_t, double> carrier_probability =
+                    direct_carriers;
+                for (const auto& [state, probability] : alteration_exits) {
+                    carrier_probability[state] +=
+                        no_target_probability * probability /
+                        alteration_exit_probability;
+                }
+
+                std::map<std::uint32_t, const OutcomeDistribution*>
+                    augment_kernels;
+                if (augment != kNoId && std::isfinite(augment_cost)) {
+                    std::set<std::uint32_t> augment_sources(
+                        no_target_states.begin(), no_target_states.end());
+                    for (const OutcomeEntry& outcome :
+                         alteration_kernel.entries) {
+                        if (progress_mask(outcome.state, acquisition) == 0) {
+                            augment_sources.insert(outcome.state);
+                        }
+                    }
+                    for (const std::uint32_t state : augment_sources) {
+                        if (!action_legal(
+                                session,
+                                calc.registry().actions.at(augment),
+                                calc.state(state))) {
+                            continue;
+                        }
+                        const OutcomeDistribution& kernel =
+                            calc.outcomes(state, augment);
+                        if (!kernel.supported ||
+                            !kernel.choice_groups.empty() ||
+                            !kernel.choice_options.empty()) {
+                            continue;
+                        }
+                        bool valid = true;
+                        for (const OutcomeEntry& outcome : kernel.entries) {
+                            if (progress_mask(outcome.state, acquisition) != 0) {
+                                carrier_probability.try_emplace(
+                                    outcome.state, 0.0);
+                            } else if (!same_kernel(
+                                           alteration_kernel,
+                                           calc.outcomes(
+                                               outcome.state, alteration))) {
+                                valid = false;
+                                break;
+                            }
+                        }
+                        if (valid) augment_kernels.emplace(state, &kernel);
+                    }
+                }
+
+                struct CarrierEquation {
+                    double probability = 0.0;
+                    double constant = 0.0;
+                    double restart_coefficient = 0.0;
+                };
+                std::unordered_map<std::uint32_t, CarrierEquation>
+                    salvage_equations;
+                std::unordered_map<std::uint32_t, std::uint32_t>
+                    salvage_operator;
+                std::unordered_set<std::uint32_t> salvage_active;
+                const double salvage_anchor_guess =
+                    focused_fallback_policy.has_value()
+                        ? focused_fallback_policy->anchor_state_value
+                        : kInfinity;
+                std::function<CarrierEquation(std::uint32_t)> salvage;
+                salvage = [&](const std::uint32_t state) -> CarrierEquation {
+                    if (calc.is_goal_state(calc.state(state))) return {};
+                    const auto cached = salvage_equations.find(state);
+                    if (cached != salvage_equations.end()) {
+                        return cached->second;
+                    }
+                    CarrierEquation equation;
+                    const auto [finish, finish_operator] =
+                        constructive_direct_action_upper(
+                            state, finish_action);
+                    if (progress_mask(state, acquisition) == acquisition &&
+                        std::isfinite(finish)) {
+                        equation.constant = finish;
+                        salvage_operator[state] = finish_operator;
+                        salvage_equations.emplace(state, equation);
+                        return equation;
+                    }
+                    const bool exalt_relevant = exalt != kNoId &&
+                        std::isfinite(exalt_cost) &&
+                        (action_goal_reach_mask(exalt) & acquisition &
+                         ~progress_mask(state, acquisition)) != 0 &&
+                        action_legal(
+                            session, calc.registry().actions.at(exalt),
+                            calc.state(state));
+                    if (exalt_relevant &&
+                        std::isfinite(salvage_anchor_guess) &&
+                        salvage_active.insert(state).second) {
+                        const OutcomeDistribution& kernel =
+                            calc.outcomes(state, exalt);
+                        bool acyclic = kernel.supported &&
+                            kernel.choice_groups.empty() &&
+                            kernel.choice_options.empty();
+                        for (const OutcomeEntry& outcome : kernel.entries) {
+                            if (!calc.is_goal_state(calc.state(outcome.state)) &&
+                                calc.state(outcome.state).prefix_count +
+                                        calc.state(outcome.state).suffix_count <=
+                                    calc.state(state).prefix_count +
+                                        calc.state(state).suffix_count) {
+                                acyclic = false;
+                                break;
+                            }
+                        }
+                        if (acyclic) {
+                            CarrierEquation exalt_equation;
+                            exalt_equation.constant = exalt_cost;
+                            for (const OutcomeEntry& outcome : kernel.entries) {
+                                const CarrierEquation continuation =
+                                    salvage(outcome.state);
+                                exalt_equation.constant +=
+                                    outcome.probability *
+                                    continuation.constant;
+                                exalt_equation.restart_coefficient +=
+                                    outcome.probability *
+                                    continuation.restart_coefficient;
+                            }
+                            const double exalt_value =
+                                exalt_equation.constant +
+                                exalt_equation.restart_coefficient *
+                                    salvage_anchor_guess;
+                            const double restart_value = restart_cost +
+                                salvage_anchor_guess;
+                            if (exalt_value <
+                                restart_value - options.epsilon) {
+                                salvage_operator[state] = exalt;
+                                salvage_active.erase(state);
+                                salvage_equations.emplace(
+                                    state, exalt_equation);
+                                return exalt_equation;
+                            }
+                        }
+                        salvage_active.erase(state);
+                    }
+                    equation.constant = restart_cost;
+                    equation.restart_coefficient = 1.0;
+                    salvage_operator[state] = restart_operator_index;
+                    salvage_equations.emplace(state, equation);
+                    return equation;
+                };
+                std::map<std::uint32_t, CarrierEquation> equations;
+                std::map<std::uint32_t, CarrierEquation> direct_equations;
+                std::map<std::uint32_t, CarrierEquation> early_equations;
+                std::map<std::uint32_t, CarrierEquation>
+                    intermediate_equations;
+                std::unordered_map<std::uint32_t, std::uint32_t>
+                    early_intermediate_state;
+                std::unordered_map<std::uint32_t, std::uint32_t>
+                    carrier_operator;
+                std::unordered_map<std::uint32_t, std::uint32_t>
+                    terminal_operator;
+                std::unordered_map<std::uint32_t, double> terminal_constant;
+                bool feasible = true;
+                for (const auto& [carrier, probability] :
+                     carrier_probability) {
+                    if (!action_legal(
+                            session, calc.registry().actions.at(regal),
+                            calc.state(carrier))) {
+                        feasible = false;
+                        break;
+                    }
+                    const OutcomeDistribution& regal_kernel =
+                        calc.outcomes(carrier, regal);
+                    if (!regal_kernel.supported ||
+                        !regal_kernel.choice_groups.empty() ||
+                        !regal_kernel.choice_options.empty()) {
+                        feasible = false;
+                        break;
+                    }
+                    CarrierEquation equation;
+                    equation.probability = probability;
+                    equation.constant = regal_cost;
+                    for (const OutcomeEntry& outcome : regal_kernel.entries) {
+                        const CarrierEquation continuation =
+                            salvage(outcome.state);
+                        equation.constant += outcome.probability *
+                            continuation.constant;
+                        equation.restart_coefficient +=
+                            outcome.probability *
+                            continuation.restart_coefficient;
+                    }
+                    carrier_operator[carrier] = regal;
+
+                    /* A deterministic goal bench can be installed on the
+                     * magic carrier before Regal. This preserves the one
+                     * acquired natural goal and lets Regal pursue the other
+                     * natural goal directly. The two primitive kernels below
+                     * are retained as ordinary executable policy states. */
+                    if (std::popcount(
+                            progress_mask(carrier, acquisition)) == 1 &&
+                        (calc.state(carrier).flags & kFlagCraftedMod) == 0 &&
+                        action_legal(
+                            session,
+                            calc.registry().actions.at(finish_action),
+                            calc.state(carrier))) {
+                        const OutcomeDistribution& bench_kernel =
+                            calc.outcomes(carrier, finish_action);
+                        if (bench_kernel.supported &&
+                            bench_kernel.choice_groups.empty() &&
+                            bench_kernel.choice_options.empty() &&
+                            bench_kernel.entries.size() == 1 &&
+                            std::abs(
+                                bench_kernel.entries.front().probability -
+                                1.0) <= 1e-12) {
+                            const std::uint32_t benched =
+                                bench_kernel.entries.front().state;
+                            if (action_legal(
+                                    session,
+                                    calc.registry().actions.at(regal),
+                                    calc.state(benched))) {
+                                const OutcomeDistribution& early_regal =
+                                    calc.outcomes(benched, regal);
+                                if (early_regal.supported &&
+                                    early_regal.choice_groups.empty() &&
+                                    early_regal.choice_options.empty()) {
+                                    CarrierEquation intermediate;
+                                    intermediate.constant = regal_cost;
+                                    for (const OutcomeEntry& outcome :
+                                         early_regal.entries) {
+                                        const CarrierEquation continuation =
+                                            salvage(outcome.state);
+                                        intermediate.constant +=
+                                            outcome.probability *
+                                            continuation.constant;
+                                        intermediate.restart_coefficient +=
+                                            outcome.probability *
+                                            continuation.restart_coefficient;
+                                    }
+                                    equation.constant = finish_cost +
+                                        intermediate.constant;
+                                    equation.restart_coefficient =
+                                        intermediate.restart_coefficient;
+                                    early_equations[carrier] = equation;
+                                    intermediate_equations[benched] =
+                                        intermediate;
+                                    early_intermediate_state[carrier] =
+                                        benched;
+                                }
+                            }
+                        }
+                    }
+                    /* `equation` may now contain the early-bench choice.
+                     * Reconstruct the direct Regal equation when an early
+                     * alternative was recorded so policy improvement can
+                     * choose independently for every strict carrier. */
+                    if (early_equations.contains(carrier)) {
+                        CarrierEquation direct;
+                        direct.probability = probability;
+                        direct.constant = regal_cost;
+                        for (const OutcomeEntry& outcome :
+                             regal_kernel.entries) {
+                            const CarrierEquation continuation =
+                                salvage(outcome.state);
+                            direct.constant += outcome.probability *
+                                continuation.constant;
+                            direct.restart_coefficient +=
+                                outcome.probability *
+                                continuation.restart_coefficient;
+                        }
+                        direct_equations.emplace(carrier, direct);
+                    } else {
+                        direct_equations.emplace(carrier, equation);
+                    }
+                }
+                equations = direct_equations;
+                if (!feasible || equations.empty()) continue;
+
+                struct MagicAffine {
+                    double constant = 0.0;
+                    double restart_coefficient = 0.0;
+                    double alteration_coefficient = 0.0;
+                };
+                struct MagicSolution {
+                    double anchor_value = kInfinity;
+                    double alteration_constant = 0.0;
+                    double alteration_coefficient = 0.0;
+                    double constant = 0.0;
+                    double coefficient = 0.0;
+                };
+                const auto solve_magic = [&]() -> MagicSolution {
+                    const auto expression_for = [&] (
+                        const std::uint32_t state) {
+                        MagicAffine expression;
+                        const auto target = equations.find(state);
+                        if (target != equations.end()) {
+                            expression.constant = target->second.constant;
+                            expression.restart_coefficient =
+                                target->second.restart_coefficient;
+                            return expression;
+                        }
+                        const auto augmented = augment_kernels.find(state);
+                        if (augmented == augment_kernels.end()) {
+                            expression.alteration_coefficient = 1.0;
+                            return expression;
+                        }
+                        expression.constant = augment_cost;
+                        for (const OutcomeEntry& outcome :
+                             augmented->second->entries) {
+                            const auto exit = equations.find(outcome.state);
+                            if (exit == equations.end()) {
+                                expression.alteration_coefficient +=
+                                    outcome.probability;
+                            } else {
+                                expression.constant += outcome.probability *
+                                    exit->second.constant;
+                                expression.restart_coefficient +=
+                                    outcome.probability *
+                                    exit->second.restart_coefficient;
+                            }
+                        }
+                        return expression;
+                    };
+                    MagicAffine alteration_expression;
+                    alteration_expression.constant = alteration_cost;
+                    for (const OutcomeEntry& outcome :
+                         alteration_kernel.entries) {
+                        const MagicAffine expression =
+                            expression_for(outcome.state);
+                        alteration_expression.constant +=
+                            outcome.probability * expression.constant;
+                        alteration_expression.restart_coefficient +=
+                            outcome.probability *
+                            expression.restart_coefficient;
+                        alteration_expression.alteration_coefficient +=
+                            outcome.probability *
+                            expression.alteration_coefficient;
+                    }
+                    const double alteration_denominator =
+                        1.0 -
+                        alteration_expression.alteration_coefficient;
+                    if (alteration_denominator <= 1e-15) return {};
+                    MagicSolution solved;
+                    solved.alteration_constant =
+                        alteration_expression.constant /
+                        alteration_denominator;
+                    solved.alteration_coefficient =
+                        alteration_expression.restart_coefficient /
+                        alteration_denominator;
+                    solved.constant = transmute_cost;
+                    for (const OutcomeEntry& outcome :
+                         transmute_kernel.entries) {
+                        const MagicAffine expression =
+                            expression_for(outcome.state);
+                        solved.constant += outcome.probability *
+                            (expression.constant +
+                             expression.alteration_coefficient *
+                                 solved.alteration_constant);
+                        solved.coefficient += outcome.probability *
+                            (expression.restart_coefficient +
+                             expression.alteration_coefficient *
+                                 solved.alteration_coefficient);
+                    }
+                    const double denominator = 1.0 - solved.coefficient;
+                    if (denominator <= 1e-15) return {};
+                    solved.anchor_value = solved.constant / denominator;
+                    return solved;
+                };
+                MagicSolution solved = solve_magic();
+                for (std::uint32_t improvement = 0;
+                     improvement < 32 &&
+                     std::isfinite(solved.anchor_value);
+                     ++improvement) {
+                    bool changed = false;
+                    for (const auto& [carrier, early] : early_equations) {
+                        const CarrierEquation& direct =
+                            direct_equations.at(carrier);
+                        const double direct_value = direct.constant +
+                            direct.restart_coefficient * solved.anchor_value;
+                        const double early_value = early.constant +
+                            early.restart_coefficient * solved.anchor_value;
+                        const bool choose_early =
+                            early_value < direct_value - options.epsilon;
+                        const bool was_early =
+                            carrier_operator.at(carrier) == finish_action;
+                        if (choose_early == was_early) continue;
+                        equations[carrier] = choose_early ? early : direct;
+                        carrier_operator[carrier] =
+                            choose_early ? finish_action : regal;
+                        changed = true;
+                    }
+                    if (!changed) break;
+                    solved = solve_magic();
+                }
+                const double anchor_value = solved.anchor_value;
+                const double alteration_constant =
+                    solved.alteration_constant;
+                const double alteration_coefficient =
+                    solved.alteration_coefficient;
+                const double constant = solved.constant;
+                const double coefficient = solved.coefficient;
+                if (!std::isfinite(anchor_value) ||
+                    anchor_value >= best.anchor_state_value) {
+                    continue;
+                }
+
+                const auto magic_expression = [&](const std::uint32_t state) {
+                    MagicAffine expression;
+                    const auto target = equations.find(state);
+                    if (target != equations.end()) {
+                        expression.constant = target->second.constant;
+                        expression.restart_coefficient =
+                            target->second.restart_coefficient;
+                        return expression;
+                    }
+                    const auto augmented = augment_kernels.find(state);
+                    if (augmented == augment_kernels.end()) {
+                        expression.alteration_coefficient = 1.0;
+                        return expression;
+                    }
+                    expression.constant = augment_cost;
+                    for (const OutcomeEntry& outcome :
+                         augmented->second->entries) {
+                        const auto exit = equations.find(outcome.state);
+                        if (exit == equations.end()) {
+                            expression.alteration_coefficient +=
+                                outcome.probability;
+                        } else {
+                            expression.constant +=
+                                outcome.probability * exit->second.constant;
+                            expression.restart_coefficient +=
+                                outcome.probability *
+                                exit->second.restart_coefficient;
+                        }
+                    }
+                    return expression;
+                };
+
+                FocusedFallbackPolicy candidate;
+                candidate.anchor_state = restart_state;
+                candidate.anchor_state_value = anchor_value;
+                candidate.finish_action = finish_action;
+                candidate.progress_state_value[restart_state] = anchor_value;
+                candidate.progress_state_operator[restart_state] = transmute;
+                const double alteration_value =
+                    alteration_constant +
+                    alteration_coefficient * anchor_value;
+                std::set<std::uint32_t> no_target_policy_states(
+                    no_target_states.begin(), no_target_states.end());
+                for (const OutcomeEntry& outcome : alteration_kernel.entries) {
+                    if (progress_mask(outcome.state, acquisition) == 0) {
+                        no_target_policy_states.insert(outcome.state);
+                    }
+                }
+                for (const auto& [unused_state, kernel] : augment_kernels) {
+                    (void)unused_state;
+                    for (const OutcomeEntry& outcome : kernel->entries) {
+                        if (progress_mask(outcome.state, acquisition) == 0) {
+                            no_target_policy_states.insert(outcome.state);
+                        }
+                    }
+                }
+                for (const std::uint32_t state : no_target_policy_states) {
+                    const MagicAffine expression = magic_expression(state);
+                    candidate.progress_state_value[state] =
+                        expression.constant +
+                        expression.restart_coefficient * anchor_value +
+                        expression.alteration_coefficient * alteration_value;
+                    candidate.progress_state_operator[state] =
+                        augment_kernels.contains(state) ? augment : alteration;
+                }
+                for (const auto& [state, equation] : equations) {
+                    candidate.progress_state_value[state] =
+                        equation.constant +
+                        equation.restart_coefficient * anchor_value;
+                    candidate.progress_state_operator[state] =
+                        carrier_operator.at(state);
+                }
+                for (const auto& [state, equation] :
+                     intermediate_equations) {
+                    candidate.progress_state_value[state] =
+                        equation.constant +
+                        equation.restart_coefficient * anchor_value;
+                    candidate.progress_state_operator[state] = regal;
+                }
+                for (const auto& [state, equation] : salvage_equations) {
+                    candidate.progress_state_value[state] =
+                        equation.constant +
+                        equation.restart_coefficient * anchor_value;
+                    candidate.progress_state_operator[state] =
+                        salvage_operator.at(state);
+                }
+                for (const auto& [state, operator_index] :
+                     terminal_operator) {
+                    if (operator_index == restart_operator_index) {
+                        candidate.progress_state_value[state] =
+                            restart_cost + anchor_value;
+                    } else {
+                        candidate.progress_state_value[state] =
+                            terminal_constant.at(state);
+                    }
+                    candidate.progress_state_operator[state] = operator_index;
+                }
+                ++result.diagnostics.constructive_policy_feasible_policies;
+                retain_action_reason(
+                    "included:magic_augment_regal_policy:" +
+                    finite_json(anchor_value) + ":constant=" +
+                    finite_json(constant) + ":retry=" +
+                    finite_json(coefficient) + ":augment_states=" +
+                    std::to_string(augment_kernels.size()));
+                best = std::move(candidate);
+            }
+        }
+        if (!std::isfinite(best.anchor_state_value)) return std::nullopt;
+        return best;
+    }
+
+    std::optional<FocusedFallbackPolicy> destructive_rare_fallback() {
+        if (restart_state == kNoId || restart_state >= calc.state_count() ||
+            result.start_state >= calc.state_count()) {
+            return std::nullopt;
+        }
+        const AbstractState& anchor = calc.state(restart_state);
+        const AbstractState& rare_entry = calc.state(result.start_state);
+        if (anchor.rarity != PC_RARITY_NORMAL ||
+            anchor.prefix_count != 0 || anchor.suffix_count != 0 ||
+            rare_entry.rarity != PC_RARITY_RARE ||
+            (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
+            (rare_entry.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
+            anchor.fractured_goal_mask != 0 ||
+            rare_entry.fractured_goal_mask != 0) {
+            return std::nullopt;
+        }
+        const auto cost = [&](const std::uint32_t action) {
+            if (action >= priced_operator_position.size()) return kInfinity;
+            const std::int32_t position = priced_operator_position[action];
+            if (position < 0) return kInfinity;
+            const PricedOperator& priced =
+                operators.at(static_cast<std::size_t>(position));
+            const PlannerOperator& planner = calc.operators().at(priced.index);
+            return planner.kind == PlannerOperatorKind::Primitive &&
+                    planner.primitive_action == action &&
+                    std::isfinite(priced.cost) && priced.cost >= 0.0
+                ? priced.cost
+                : kInfinity;
+        };
+        const auto destructive_to_rare = [&](const std::uint32_t action) {
+            if (action >= calc.registry().actions.size()) return false;
+            const ActionType type =
+                calc.registry().actions.at(action).params.type;
+            return type == ActionType::Alchemy ||
+                   type == ActionType::Chaos ||
+                   type == ActionType::Essence ||
+                   type == ActionType::Fossil ||
+                   type == ActionType::HarvestReforge;
+        };
+        const auto same_kernel = [](const OutcomeDistribution& left,
+                                    const OutcomeDistribution& right) {
+            return left.supported == right.supported &&
+                   left.entries == right.entries &&
+                   left.choice_groups == right.choice_groups &&
+                   left.choice_options == right.choice_options;
+        };
+        struct Terminal {
+            double value = kInfinity;
+            std::uint32_t operation = kNoId;
+        };
+        FocusedFallbackPolicy best;
+        best.anchor_state = restart_state;
+        for (const std::uint32_t finish_action :
+             calc.automatic_goal_bench_actions()) {
+            const auto terminal = [&](const std::uint32_t state) {
+                if (calc.is_goal_state(calc.state(state))) {
+                    return Terminal{0.0, kNoId};
+                }
+                const auto [finish, operation] =
+                    constructive_direct_action_upper(state, finish_action);
+                return Terminal{finish, operation};
+            };
+            for (const std::uint32_t renewal_action : calc.candidates()) {
+                if (!destructive_to_rare(renewal_action) ||
+                    !std::isfinite(cost(renewal_action)) ||
+                    !action_legal(
+                        session,
+                        calc.registry().actions.at(renewal_action),
+                        rare_entry)) {
+                    continue;
+                }
+                const OutcomeDistribution& renewal_kernel =
+                    calc.outcomes(result.start_state, renewal_action);
+                if (!renewal_kernel.supported ||
+                    !renewal_kernel.choice_groups.empty() ||
+                    !renewal_kernel.choice_options.empty()) {
+                    continue;
+                }
+                double renewal_constant = cost(renewal_action);
+                double success_probability = 0.0;
+                std::vector<std::uint32_t> renewal_failures;
+                std::unordered_map<std::uint32_t, Terminal>
+                    renewal_terminals;
+                bool exact_retry = true;
+                for (const OutcomeEntry& outcome : renewal_kernel.entries) {
+                    const Terminal finish = terminal(outcome.state);
+                    if (std::isfinite(finish.value)) {
+                        renewal_constant +=
+                            outcome.probability * finish.value;
+                        success_probability += outcome.probability;
+                        renewal_terminals[outcome.state] = finish;
+                    } else {
+                        renewal_failures.push_back(outcome.state);
+                        if (!action_legal(
+                                session,
+                                calc.registry().actions.at(renewal_action),
+                                calc.state(outcome.state))) {
+                            exact_retry = false;
+                            break;
+                        }
+                    }
+                }
+                if (!exact_retry || success_probability <= 1e-15) continue;
+                const double renewal_value =
+                    renewal_constant / success_probability;
+                if (!std::isfinite(renewal_value)) continue;
+
+                for (const std::uint32_t setup_action : calc.candidates()) {
+                    if (!destructive_to_rare(setup_action) ||
+                        !std::isfinite(cost(setup_action)) ||
+                        !action_legal(
+                            session,
+                            calc.registry().actions.at(setup_action),
+                            anchor)) {
+                        continue;
+                    }
+                    const OutcomeDistribution& setup_kernel =
+                        calc.outcomes(restart_state, setup_action);
+                    if (!setup_kernel.supported ||
+                        !setup_kernel.choice_groups.empty() ||
+                        !setup_kernel.choice_options.empty()) {
+                        continue;
+                    }
+                    double anchor_value = cost(setup_action);
+                    bool feasible = true;
+                    std::unordered_map<std::uint32_t, Terminal>
+                        setup_terminals;
+                    std::vector<std::uint32_t> setup_failures;
+                    for (const OutcomeEntry& outcome : setup_kernel.entries) {
+                        const Terminal finish = terminal(outcome.state);
+                        if (std::isfinite(finish.value)) {
+                            anchor_value +=
+                                outcome.probability * finish.value;
+                            setup_terminals[outcome.state] = finish;
+                        } else if (action_legal(
+                            session,
+                            calc.registry().actions.at(renewal_action),
+                            calc.state(outcome.state))) {
+                            anchor_value +=
+                                outcome.probability * renewal_value;
+                            setup_failures.push_back(outcome.state);
+                        } else {
+                            feasible = false;
+                            break;
+                        }
+                    }
+                    if (!feasible || !std::isfinite(anchor_value) ||
+                        anchor_value >= best.anchor_state_value) {
+                        continue;
+                    }
+                    FocusedFallbackPolicy candidate;
+                    candidate.anchor_state = restart_state;
+                    candidate.anchor_state_value = anchor_value;
+                    candidate.finish_action = finish_action;
+                    candidate.progress_state_value[restart_state] =
+                        anchor_value;
+                    candidate.progress_state_operator[restart_state] =
+                        setup_action;
+                    candidate.progress_state_value[result.start_state] =
+                        renewal_value;
+                    candidate.progress_state_operator[result.start_state] =
+                        renewal_action;
+                    for (const std::uint32_t state : renewal_failures) {
+                        candidate.progress_state_value[state] =
+                            renewal_value;
+                        candidate.progress_state_operator[state] =
+                            renewal_action;
+                    }
+                    for (const std::uint32_t state : setup_failures) {
+                        candidate.progress_state_value[state] =
+                            renewal_value;
+                        candidate.progress_state_operator[state] =
+                            renewal_action;
+                    }
+                    const auto add_terminals = [&](const auto& terminals) {
+                        for (const auto& [state, finish] : terminals) {
+                            candidate.progress_state_value[state] =
+                                finish.value;
+                            candidate.progress_state_operator[state] =
+                                finish.operation;
+                        }
+                    };
+                    add_terminals(renewal_terminals);
+                    add_terminals(setup_terminals);
+                    best = std::move(candidate);
+                }
+            }
+        }
+        if (!std::isfinite(best.anchor_state_value)) return std::nullopt;
+        return best;
+    }
+
+    std::optional<FocusedFallbackPolicy> focused_fallback() {
+        const std::uint32_t renewal_source = result.start_state;
+        ++result.diagnostics.constructive_policy_anchor_checks;
+        if (renewal_source >= expanded.size() ||
+            !expanded[renewal_source] ||
+            renewal_source >= transition_cache->state_rows.size() ||
+            restart_state == kNoId || restart_state >= expanded.size() ||
+            !expanded[restart_state] ||
             restart_state >= transition_cache->state_rows.size()) {
             return std::nullopt;
         }
+        std::optional<FocusedFallbackPolicy> progress_fallback =
+            magic_regal_fallback();
+        const AbstractState& renewal_carrier = calc.state(renewal_source);
+        if (renewal_carrier.prefix_count != 0 ||
+            renewal_carrier.suffix_count != 0 ||
+            (renewal_carrier.flags & kFlagCraftedMod) != 0 ||
+            renewal_carrier.fractured_goal_mask != 0 ||
+            renewal_carrier.fractured_metamod_flags != 0 ||
+            (renewal_carrier.flags & kProtectionFlags) != 0) {
+            return progress_fallback;
+        }
+        for (const std::uint8_t count :
+             renewal_carrier.fractured_junk_counts) {
+            if (count != 0) return progress_fallback;
+        }
+        ++result.diagnostics.constructive_policy_anchor_eligible;
         const StateRowSpan& span =
-            transition_cache->state_rows.at(restart_state);
+            transition_cache->state_rows.at(renewal_source);
         FocusedFallbackPolicy best;
+        best.anchor_state = restart_state;
+        best.renewal_rarity = renewal_carrier.rarity;
+        best.renewal_influence_bits = renewal_carrier.influence_bits;
+        best.renewal_searing_exarch_tier =
+            renewal_carrier.searing_exarch_tier;
+        best.renewal_eater_of_worlds_tier =
+            renewal_carrier.eater_of_worlds_tier;
         for (std::uint32_t relative = 0; relative < span.count; ++relative) {
             const std::uint64_t absolute = span.offset + relative;
+            const SparseRow& row = transition_cache->rows.at(absolute);
+            if (row.choice_count != 0) continue;
+            for (std::uint32_t variant_offset = 0;
+                 variant_offset < row.variant_count; ++variant_offset) {
+                const SparseVariant& variant =
+                    transition_cache->variant_arena->variants.at(
+                        transition_cache->variant_arena
+                            ->row_variant_indices.at(
+                                row.variant_offset + variant_offset));
+                const PlannerOperator& renewal =
+                    calc.operators().at(variant.operator_index);
+                if (renewal.automatic_kind !=
+                        AutomaticCandidateKind::ConstructiveRenewal ||
+                    renewal.constructive_finish_action == kNoId) {
+                    continue;
+                }
+                ++result.diagnostics.constructive_policy_renewal_variants;
+                double renewal_cost = 0.0;
+                if (!priced_variant_cost(variant, renewal_cost) ||
+                    !std::isfinite(renewal_cost) || renewal_cost < 0.0) {
+                    continue;
+                }
+                double loop_probability = row.self_probability;
+                double constant = renewal_cost;
+                bool has_finish = false;
+                for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+                    const std::uint64_t offset = row.transition_offset + i;
+                    const std::uint32_t successor =
+                        transition_cache->successors.at(offset);
+                    const double probability =
+                        transition_cache->probabilities.at(offset);
+                    if (successor == renewal_source) {
+                        loop_probability += probability;
+                        continue;
+                    }
+                    if (calc.is_goal_state(calc.state(successor))) {
+                        has_finish = true;
+                        continue;
+                    }
+                    ++result.diagnostics.constructive_policy_exit_checks;
+                    const auto [finish, unused_operator] =
+                        constructive_direct_action_upper(
+                            successor,
+                            renewal.constructive_finish_action);
+                    (void)unused_operator;
+                    if (std::isfinite(finish)) {
+                        ++result.diagnostics
+                              .constructive_policy_finishable_exits;
+                        constant += probability * finish;
+                        has_finish = true;
+                    } else {
+                        /* The approved destructive renewal is applied again
+                         * on this non-fractured exit carrier. Its next
+                         * attempt has the same exact clean-carrier kernel;
+                         * no synthetic Restart or free setup is implied. */
+                        loop_probability += probability;
+                    }
+                }
+                const double denominator = 1.0 - loop_probability;
+                if (!has_finish || denominator <= 1e-15) continue;
+                const double value = constant / denominator;
+                if (!std::isfinite(value) || value >= kValueCeiling) {
+                    continue;
+                }
+                ++result.diagnostics.constructive_policy_feasible_policies;
+                if (value < best.renewal_state_value - options.epsilon ||
+                    (std::abs(value - best.renewal_state_value) <=
+                         options.epsilon &&
+                     std::tie(
+                         absolute, variant.operator_index,
+                         renewal.constructive_finish_action) <
+                         std::tie(
+                             best.renewal_row, best.renewal_operator,
+                             best.finish_action))) {
+                    best.renewal_state_value = value;
+                    best.renewal_row = absolute;
+                    best.renewal_operator = variant.operator_index;
+                    best.finish_action =
+                        renewal.constructive_finish_action;
+                }
+            }
+        }
+        if (!std::isfinite(best.renewal_state_value)) return progress_fallback;
+
+        if (renewal_fallback_eligible(best.anchor_state, best)) {
+            best.anchor_state_value = best.renewal_state_value;
+            if (progress_fallback.has_value() &&
+                progress_fallback->anchor_state_value <
+                    best.anchor_state_value) {
+                return progress_fallback;
+            }
+            return best;
+        }
+
+        /* Restart returns the engine's real fresh carrier, which need not
+         * have the rarity of the diagnostic start. Compose an exact setup row
+         * at that carrier with the renewable rare-state fallback; never
+         * substitute the original start state for Restart's successor. */
+        const StateRowSpan& anchor_span =
+            transition_cache->state_rows.at(best.anchor_state);
+        for (std::uint32_t relative = 0;
+             relative < anchor_span.count; ++relative) {
+            const std::uint64_t absolute = anchor_span.offset + relative;
             const SparseRow& row = transition_cache->rows.at(absolute);
             const PricedSparseRow& priced = priced_rows.at(absolute);
             if (priced.operator_index == kNoId ||
                 !std::isfinite(priced.cost) || priced.cost < 0.0) {
                 continue;
             }
-            double goal_probability = 0.0;
-            double failure_probability = 0.0;
-            double self_probability = row.self_probability;
+            double constant = priced.cost;
+            double loop_probability = row.self_probability;
+            bool feasible = true;
             for (std::uint32_t i = 0; i < row.transition_count; ++i) {
                 const std::uint64_t offset = row.transition_offset + i;
                 const std::uint32_t successor =
                     transition_cache->successors.at(offset);
-                if (successor == restart_state) continue;
-                const double probability =
-                    transition_cache->probabilities.at(offset);
-                if (calc.is_goal_state(calc.state(successor))) {
-                    goal_probability += probability;
-                } else {
-                    failure_probability += probability;
+                if (successor == best.anchor_state) {
+                    loop_probability +=
+                        transition_cache->probabilities.at(offset);
+                    continue;
                 }
+                const double continuation =
+                    fallback_terminal_upper(successor, best);
+                if (!std::isfinite(continuation)) {
+                    feasible = false;
+                    break;
+                }
+                constant += transition_cache->probabilities.at(offset) *
+                            continuation;
             }
+            if (!feasible) continue;
             for (std::uint32_t i = 0; i < row.choice_count; ++i) {
                 const SparseChoiceGroup& group =
                     transition_cache->choices.at(row.choice_offset + i);
-                bool has_goal = false;
-                for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-                    const std::uint32_t successor =
-                        transition_cache->choice_successors.at(
-                            group.successor_offset + s);
-                    has_goal |= calc.is_goal_state(calc.state(successor));
+                double selected = group.has_self ? kInfinity : kInfinity;
+                for (std::uint32_t s = 0;
+                     s < group.successor_count; ++s) {
+                    selected = std::min(
+                        selected,
+                        fallback_terminal_upper(
+                            transition_cache->choice_successors.at(
+                                group.successor_offset + s),
+                            best));
                 }
-                if (has_goal) {
-                    goal_probability += group.probability;
-                } else if (group.has_self) {
-                    self_probability += group.probability;
+                if (group.has_self) {
+                    /* The observation can explicitly choose the carrier and
+                     * therefore selects self only if its solved value beats
+                     * every executable alternate. Conservatively treating
+                     * self as the whole group remains feasible. */
+                    loop_probability += group.probability;
+                } else if (std::isfinite(selected)) {
+                    constant += group.probability * selected;
                 } else {
-                    failure_probability += group.probability;
+                    feasible = false;
+                    break;
                 }
             }
-            const double total = goal_probability + failure_probability +
-                                 self_probability;
-            if (goal_probability <= 0.0 ||
-                std::abs(total - 1.0) > 1e-9) {
-                continue;
-            }
-            /* Execute this row at the real clean Restart state. Goal exits
-             * terminate, self exits retry in place, and every other exit
-             * executes the ordinary priced Restart action before retrying.
-             * This renewal equation is a constructive policy upper bound,
-             * not a compacted or inferred transition model. */
-            const double value =
-                (priced.cost + failure_probability * restart_cost) /
-                goal_probability;
-            if (!std::isfinite(value) || value >= kValueCeiling) continue;
-            if (value < best.restart_state_value - options.epsilon ||
-                (std::abs(value - best.restart_state_value) <=
-                     options.epsilon &&
-                 absolute < best.renewal_row)) {
-                best.restart_state_value = value;
-                best.renewal_row = absolute;
-            }
+            const double denominator = 1.0 - loop_probability;
+            if (!feasible || denominator <= 1e-15) continue;
+            const double value = constant / denominator;
+            best.anchor_state_value = std::min(
+                best.anchor_state_value, value);
         }
-        if (!std::isfinite(best.restart_state_value)) return std::nullopt;
+        if (!std::isfinite(best.anchor_state_value)) return progress_fallback;
+        if (progress_fallback.has_value() &&
+            progress_fallback->anchor_state_value < best.anchor_state_value) {
+            return progress_fallback;
+        }
         return best;
     }
 
@@ -6759,12 +10076,16 @@ struct SolveWork::Impl {
         if (result.start_state >= transition_cache->state_rows.size()) {
             return kInfinity;
         }
-        if (result.start_state == restart_state) {
-            return fallback.restart_state_value;
-        }
         const double failure_value =
-            restart_cost + fallback.restart_state_value;
-        double best = failure_value; /* Restart immediately. */
+            restart_cost + fallback.anchor_state_value;
+        const auto continuation_upper = [&](const std::uint32_t state) {
+            if (state == fallback.anchor_state) {
+                return fallback.anchor_state_value;
+            }
+            return std::min(
+                failure_value, fallback_terminal_upper(state, fallback));
+        };
+        double best = continuation_upper(result.start_state);
         const StateRowSpan& span =
             transition_cache->state_rows.at(result.start_state);
         for (std::uint32_t relative = 0; relative < span.count; ++relative) {
@@ -6785,22 +10106,20 @@ struct SolveWork::Impl {
                     continue;
                 }
                 constant += transition_cache->probabilities.at(offset) *
-                            failure_value;
+                            continuation_upper(successor);
             }
             std::vector<std::pair<double, double>> self_choices;
             for (std::uint32_t i = 0; i < row.choice_count; ++i) {
                 const SparseChoiceGroup& group =
                     transition_cache->choices.at(row.choice_offset + i);
-                bool has_goal = false;
+                double alternate = kInfinity;
                 for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-                    has_goal |= calc.is_goal_state(calc.state(
-                        transition_cache->choice_successors.at(
-                            group.successor_offset + s)));
+                    alternate = std::min(
+                        alternate,
+                        continuation_upper(
+                            transition_cache->choice_successors.at(
+                                group.successor_offset + s)));
                 }
-                if (has_goal) continue;
-                const double alternate = group.successor_count == 0
-                                             ? kInfinity
-                                             : failure_value;
                 if (group.has_self) {
                     self_choices.push_back(
                         {alternate, group.probability});
@@ -6843,16 +10162,17 @@ struct SolveWork::Impl {
         return best;
     }
 
-    std::pair<double, std::uint64_t> focused_direct_start_upper() const {
+    std::pair<double, std::uint64_t> focused_direct_state_upper(
+        const std::uint32_t state) const {
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
-        if (result.start_state >= transition_cache->state_rows.size()) {
+        if (state >= transition_cache->state_rows.size()) {
             return {kInfinity, no_row};
         }
         double best = kInfinity;
         std::uint64_t best_row = no_row;
         const StateRowSpan& span =
-            transition_cache->state_rows.at(result.start_state);
+            transition_cache->state_rows.at(state);
         for (std::uint32_t relative = 0; relative < span.count; ++relative) {
             const std::uint64_t absolute = span.offset + relative;
             const SparseRow& row = transition_cache->rows.at(absolute);
@@ -6868,7 +10188,7 @@ struct SolveWork::Impl {
                 const std::uint64_t offset = row.transition_offset + i;
                 const std::uint32_t successor =
                     transition_cache->successors.at(offset);
-                if (successor == result.start_state) continue;
+                if (successor == state) continue;
                 if (!calc.is_goal_state(calc.state(successor))) {
                     feasible = false;
                     break;
@@ -6911,6 +10231,10 @@ struct SolveWork::Impl {
         return {best, best_row};
     }
 
+    std::pair<double, std::uint64_t> focused_direct_start_upper() const {
+        return focused_direct_state_upper(result.start_state);
+    }
+
     void reset_focused_optimization_state() {
         policy_rows.clear();
         improper_policy_states.clear();
@@ -6936,7 +10260,8 @@ struct SolveWork::Impl {
 
     void schedule_next_focused_expansion(
         std::vector<std::uint32_t> fringe,
-        const bool complete) {
+        const bool complete,
+        const std::vector<double>& priority) {
         queue.clear();
         queued.assign(calc.state_count(), 0);
         for (std::uint32_t state = 0; state < expanded.size(); ++state) {
@@ -6952,28 +10277,51 @@ struct SolveWork::Impl {
         }
         std::sort(fringe.begin(), fringe.end());
         fringe.erase(std::unique(fringe.begin(), fringe.end()), fringe.end());
+        std::stable_sort(
+            fringe.begin(), fringe.end(),
+            [&](const std::uint32_t left, const std::uint32_t right) {
+                const double left_priority =
+                    left < priority.size() ? priority[left] : 0.0;
+                const double right_priority =
+                    right < priority.size() ? priority[right] : 0.0;
+                return left_priority != right_priority
+                           ? left_priority > right_priority
+                           : left < right;
+            });
         /* A focused round is a work schedule, not a quotient. Bound a broad
          * reforge outcome fringe while retaining strict IDs; later rounds
          * select the next unexpanded members of the same coarse class. */
-        constexpr std::uint32_t kStrictMembersPerFringeClass = 4096;
+        const std::uint32_t members_per_class = std::max<std::uint32_t>(
+            1, options.focused_members_per_fringe_class);
         auto [coarse, coarse_count] = exact_partition(
             calc.state_count(), [&](const std::uint32_t state) {
-                return coarse_state_signature(state);
+                return focused_schedule_signature(state);
             });
         std::vector<std::uint32_t> selected_per_class(coarse_count, 0);
         std::vector<std::uint32_t> selected_fringe;
         selected_fringe.reserve(
-            std::min<std::size_t>(fringe.size(), coarse_count * 4096ull));
-        if (restart_state != kNoId && restart_state < queued.size() &&
+            std::min<std::size_t>(
+                fringe.size(),
+                static_cast<std::uint64_t>(coarse_count) *
+                    members_per_class));
+        if (!focused_fallback_policy.has_value() &&
+            restart_state != kNoId && restart_state < queued.size() &&
             !queued[restart_state]) {
             selected_fringe.push_back(restart_state);
             ++selected_per_class[coarse.at(restart_state)];
         }
         for (const std::uint32_t state : fringe) {
-            if (state == restart_state || queued.at(state)) continue;
+            if (selected_fringe.size() >=
+                options.focused_expansion_batch_states) {
+                break;
+            }
+            if (queued.at(state) ||
+                (state == restart_state &&
+                 !focused_fallback_policy.has_value())) {
+                continue;
+            }
             const std::uint32_t candidate = coarse.at(state);
-            if (selected_per_class[candidate] >=
-                kStrictMembersPerFringeClass) {
+            if (selected_per_class[candidate] >= members_per_class) {
                 continue;
             }
             ++selected_per_class[candidate];
@@ -6982,8 +10330,22 @@ struct SolveWork::Impl {
         fringe = std::move(selected_fringe);
         for (const std::uint32_t state : fringe) enqueue(state);
         if (queue.empty()) {
-            focused_mode = false;
-            full_closure_after_focused_fallback = true;
+            /* No scheduling filter is a closure proof. If the lower-selected
+             * fringe produced no work, resume strict closure from every
+             * discovered unexpanded state. Only an actually exhausted strict
+             * graph may set the full-closure flag. */
+            for (std::uint32_t state = 0;
+                 state < calc.state_count(); ++state) {
+                if (state >= expanded.size() || !expanded[state]) {
+                    enqueue(state);
+                }
+            }
+            if (queue.empty()) {
+                focused_mode = false;
+                full_closure_after_focused_fallback = true;
+            } else {
+                full_closure_after_focused_fallback = false;
+            }
         }
         peak_queue_size = std::max<std::uint32_t>(
             peak_queue_size, static_cast<std::uint32_t>(queue.size()));
@@ -6992,15 +10354,165 @@ struct SolveWork::Impl {
         reset_focused_optimization_state();
     }
 
-    void finish_focused_lower_solve() {
-        ++result.diagnostics.focused_expansion_rounds;
-        result.diagnostics.focused_lower_bound =
-            result.values.at(result.start_state);
-        result.diagnostics.focused_expansion_ns +=
-            result.diagnostics.optimization_ns;
+    bool begin_focused_upper_solve() {
+        if (!focused_fallback_policy.has_value() ||
+            focused_strict_transition_cache != nullptr ||
+            !std::isfinite(restart_cost) || restart_cost < 0.0) {
+            return false;
+        }
+        const FocusedFallbackPolicy& fallback = *focused_fallback_policy;
+        const double frontier_upper =
+            restart_cost + fallback.anchor_state_value;
+        if (!std::isfinite(frontier_upper) ||
+            frontier_upper >= kValueCeiling) {
+            return false;
+        }
+        focused_round_lower_values = std::move(result.values);
+        focused_round_lower_policy_rows = std::move(policy_rows);
+        reset_focused_optimization_state();
+        result.values.assign(calc.state_count(), frontier_upper);
+        focused_frontier_upper_operator.assign(
+            calc.state_count(), restart_operator_index);
+        for (std::uint32_t state = 0; state < result.values.size(); ++state) {
+            if (result.goal_states[state]) {
+                result.values[state] = 0.0;
+                focused_frontier_upper_operator[state] = kNoId;
+                continue;
+            }
+            std::uint32_t terminal_operator = kNoId;
+            const double terminal = fallback_terminal_upper(
+                state, fallback, &terminal_operator);
+            if (terminal < result.values[state]) {
+                result.values[state] = terminal;
+                focused_frontier_upper_operator[state] = terminal_operator;
+            }
+        }
+        if (fallback.anchor_state < result.values.size()) {
+            result.values[fallback.anchor_state] =
+                fallback.anchor_state_value;
+        }
+        /* Every finite frontier terminal means the executable policy
+         * `Restart; fallback-at-anchor`. Howard iteration is therefore
+         * optimizing a real feasible policy on the expanded exact graph, not
+         * a heuristic terminal estimate. The ranked initializer supplies a
+         * proper first row at every expanded state. */
+        focused_upper_mode = true;
+        focus_optimizing = true;
+        focused_lower_mode = true;
+        policy_unit_stage = PolicyUnitStage::InitialSelect;
+        return true;
+    }
+
+    void sync_constructive_discovered_states() {
+        const std::uint32_t state_count = calc.state_count();
+        const std::uint32_t previous =
+            static_cast<std::uint32_t>(result.values.size());
+        if (state_count <= previous) return;
+        transition_cache->state_rows.resize(state_count);
+        transition_cache->discovered_states = state_count;
+        expanded.resize(state_count, 0);
+        queued.resize(state_count, 0);
+        result.expanded.resize(state_count, 0);
+        result.goal_states.resize(state_count, 0);
+        result.values.resize(state_count, 0.0);
+        for (std::uint32_t state = previous; state < state_count; ++state) {
+            if (calc.is_goal_state(calc.state(state))) {
+                result.goal_states[state] = 1;
+                continue;
+            }
+            result.values[state] =
+                optimistic_completion_cost_for_state(state);
+        }
+    }
+
+    void finish_focused_lower_solve(
+        const bool allow_upper_pass = true) {
+        if (allow_upper_pass) {
+            ++result.diagnostics.focused_expansion_rounds;
+            result.diagnostics.focused_lower_bound =
+                result.values.at(result.start_state);
+            result.diagnostics.focused_expansion_ns +=
+                result.diagnostics.optimization_ns;
+            focused_fallback_policy = focused_fallback();
+            prepare_strict_clean_goal_cover();
+            sync_constructive_discovered_states();
+            if (strict_clean_goal_cover_refresh_needed) {
+                strict_clean_goal_cover_refresh_needed = false;
+                begin_focused_lower_solve();
+                return;
+            }
+            if (begin_focused_upper_solve()) return;
+        }
         std::vector<std::uint32_t> fringe;
-        const bool complete = collect_focused_fringe(fringe);
+        std::vector<double> fringe_priority;
+        const bool complete = collect_focused_fringe(
+            fringe, fringe_priority);
+        std::stable_sort(
+            fringe.begin(), fringe.end(),
+            [&](const std::uint32_t left, const std::uint32_t right) {
+                const double left_priority = fringe_priority[left];
+                const double right_priority = fringe_priority[right];
+                return left_priority != right_priority
+                           ? left_priority > right_priority
+                           : left < right;
+            });
         focused_closure_proved = complete && fringe.empty();
+        if (!focused_closure_proved && !focused_pending_upper_fringe.empty()) {
+            std::stable_sort(
+                focused_pending_upper_fringe.begin(),
+                focused_pending_upper_fringe.end(),
+                [&](const std::uint32_t left, const std::uint32_t right) {
+                    const double left_priority =
+                        left < focused_pending_upper_priority.size()
+                            ? focused_pending_upper_priority[left]
+                            : 0.0;
+                    const double right_priority =
+                        right < focused_pending_upper_priority.size()
+                            ? focused_pending_upper_priority[right]
+                            : 0.0;
+                    return left_priority != right_priority
+                               ? left_priority > right_priority
+                               : left < right;
+                });
+            /* Reserve half of every exact expansion batch for each bound.
+             * Combining unlike lower-gap and incumbent-improvement scores in
+             * one scalar allowed either policy to starve the other. The
+             * balanced union changes only work order and remains complete. */
+            const std::size_t batch = std::max<std::uint32_t>(
+                1, options.focused_expansion_batch_states);
+            const std::size_t lower_quota = std::min<std::size_t>(
+                batch, options.focused_lower_batch_states);
+            const std::size_t upper_quota = batch - lower_quota;
+            std::vector<std::uint8_t> selected(result.values.size(), 0);
+            std::vector<std::uint32_t> balanced;
+            balanced.reserve(batch);
+            const auto take = [&](const std::vector<std::uint32_t>& source,
+                                  const std::size_t quota) {
+                std::size_t admitted = 0;
+                for (const std::uint32_t state : source) {
+                    if (balanced.size() >= batch || admitted >= quota) break;
+                    if (state >= selected.size() || selected[state]) continue;
+                    selected[state] = 1;
+                    balanced.push_back(state);
+                    ++admitted;
+                    if (state < focused_pending_upper_priority.size()) {
+                        fringe_priority[state] = std::max(
+                            fringe_priority[state],
+                            focused_pending_upper_priority[state]);
+                    }
+                }
+            };
+            take(fringe, lower_quota);
+            take(focused_pending_upper_fringe, upper_quota);
+            if (balanced.size() < batch) take(fringe, batch);
+            if (balanced.size() < batch) {
+                take(focused_pending_upper_fringe, batch);
+            }
+            fringe = std::move(balanced);
+        }
+        focused_pending_upper_fringe.clear();
+        focused_pending_upper_priority.clear();
+        focused_pending_upper_complete = false;
 
         if (focused_strict_transition_cache != nullptr) {
             std::vector<std::uint32_t> strict_fringe;
@@ -7008,7 +10520,9 @@ struct SolveWork::Impl {
              * zero-terminal frontier class. These remain strict IDs selected
              * only for work scheduling; the next lower solve may distinguish
              * every member through its complete all-action rows. */
-            constexpr std::uint32_t kStrictMembersPerFringeClass = 4096;
+            const std::uint32_t members_per_class =
+                std::max<std::uint32_t>(
+                    1, options.focused_members_per_fringe_class);
             std::vector<std::uint8_t> fringe_class(
                 result.values.size(), 0);
             std::vector<std::uint32_t> selected_per_class(
@@ -7024,7 +10538,7 @@ struct SolveWork::Impl {
                     focused_behavioral_representative[state];
                 if (!fringe_class.at(representative) ||
                     selected_per_class.at(representative) >=
-                        kStrictMembersPerFringeClass ||
+                        members_per_class ||
                     (state < focused_strict_expanded.size() &&
                      focused_strict_expanded[state])) {
                     continue;
@@ -7050,23 +10564,24 @@ struct SolveWork::Impl {
             priced_rows.clear();
             pricing_diagnostics_cursor = 0;
             policy_rows.clear();
-            restart_state = kNoId;
+            prepare_priced_rows();
         } else if (!fringe.empty()) {
             /* Bound each focused round without treating the scheduling
              * classes as solver equivalence. All selected IDs remain strict
              * states, and subsequent exact rows may distinguish every one. */
-            constexpr std::uint32_t kStrictMembersPerFringeClass = 4096;
+            const std::uint32_t members_per_class =
+                std::max<std::uint32_t>(
+                    1, options.focused_members_per_fringe_class);
             auto [coarse, coarse_count] = exact_partition(
                 calc.state_count(), [&](const std::uint32_t state) {
-                    return coarse_state_signature(state);
+                    return focused_schedule_signature(state);
                 });
             std::vector<std::uint32_t> selected_per_class(coarse_count, 0);
             std::vector<std::uint32_t> selected_fringe;
             selected_fringe.reserve(fringe.size());
             for (const std::uint32_t state : fringe) {
                 const std::uint32_t candidate = coarse.at(state);
-                if (selected_per_class[candidate] >=
-                    kStrictMembersPerFringeClass) {
+                if (selected_per_class[candidate] >= members_per_class) {
                     continue;
                 }
                 ++selected_per_class[candidate];
@@ -7115,20 +10630,6 @@ struct SolveWork::Impl {
                 return;
             }
         }
-        if (!std::isfinite(direct_upper) &&
-            (restart_state == kNoId ||
-             restart_state >= expanded.size() ||
-             !expanded[restart_state])) {
-            if (restart_state != kNoId) {
-                focused_pending_lower_fringe.push_back(restart_state);
-            }
-            focused_closure_proved = false;
-            schedule_next_focused_expansion(
-                std::move(focused_pending_lower_fringe), complete);
-            return;
-        }
-
-        focused_fallback_policy = focused_fallback();
         if (focused_fallback_policy.has_value()) {
             const double fallback_start = focused_start_upper_bound(
                 *focused_fallback_policy);
@@ -7137,7 +10638,45 @@ struct SolveWork::Impl {
             result.diagnostics.focused_optimality_gap = std::max(
                 0.0,
                 result.diagnostics.focused_upper_bound -
-                    result.diagnostics.focused_lower_bound);
+                result.diagnostics.focused_lower_bound);
+        }
+        if (std::isfinite(focused_partial_upper_bound) &&
+            focused_previous_upper_values.size() == result.values.size() &&
+            focused_previous_upper_policy_rows.size() == result.values.size()) {
+            const double proof_tolerance = options.epsilon *
+                std::max(1.0, std::abs(focused_partial_upper_bound)) * 10.0;
+            if (std::abs(
+                    focused_partial_upper_bound -
+                    result.diagnostics.focused_lower_bound) <=
+                proof_tolerance) {
+                result.values = focused_previous_upper_values;
+                policy_rows = focused_previous_upper_policy_rows;
+                result.diagnostics.focused_upper_bound =
+                    focused_partial_upper_bound;
+                result.diagnostics.focused_lower_bound =
+                    focused_partial_upper_bound;
+                result.diagnostics.focused_optimality_gap = 0.0;
+                focused_bound_proved = true;
+                focused_closure_proved = true;
+                queue.clear();
+                focus_optimizing = false;
+                focused_lower_mode = false;
+                return;
+            }
+        }
+        if (!std::isfinite(direct_upper) &&
+            !focused_fallback_policy.has_value() &&
+            (restart_state == kNoId ||
+             restart_state >= expanded.size() ||
+             !expanded[restart_state])) {
+            if (restart_state != kNoId) {
+                focused_pending_lower_fringe.push_back(restart_state);
+            }
+            focused_closure_proved = false;
+            schedule_next_focused_expansion(
+                std::move(focused_pending_lower_fringe), complete,
+                fringe_priority);
+            return;
         }
         if (focused_closure_proved) {
             /* The lower-selected policy reaches no optimistic frontier, so
@@ -7155,14 +10694,75 @@ struct SolveWork::Impl {
             return;
         }
         schedule_next_focused_expansion(
-            std::move(focused_pending_lower_fringe), complete);
+            std::move(focused_pending_lower_fringe), complete,
+            fringe_priority);
+    }
+
+    void finish_focused_upper_solve(const bool succeeded) {
+        result.diagnostics.focused_expansion_ns +=
+            result.diagnostics.optimization_ns;
+        focused_pending_upper_fringe.clear();
+        focused_pending_upper_priority.clear();
+        focused_pending_upper_complete = false;
+        if (succeeded && result.start_state < result.values.size() &&
+            std::isfinite(result.values[result.start_state])) {
+            focused_pending_upper_complete = collect_focused_fringe(
+                focused_pending_upper_fringe,
+                focused_pending_upper_priority,
+                &focused_round_lower_values);
+            if (focused_pending_upper_complete) {
+                focused_partial_upper_bound =
+                    result.values[result.start_state];
+                result.diagnostics.focused_partial_policy_upper_bound =
+                    focused_partial_upper_bound;
+                ++result.diagnostics.focused_partial_policy_rounds;
+                focused_previous_upper_values = result.values;
+                focused_previous_upper_policy_rows = policy_rows;
+                focused_previous_frontier_upper_operator =
+                    focused_frontier_upper_operator;
+                result.diagnostics.focused_upper_bound = std::min(
+                    result.diagnostics.focused_upper_bound,
+                    focused_partial_upper_bound);
+                result.diagnostics.focused_optimality_gap = std::max(
+                    0.0,
+                    result.diagnostics.focused_upper_bound -
+                        result.diagnostics.focused_lower_bound);
+            }
+        }
+        result.values = std::move(focused_round_lower_values);
+        policy_rows = std::move(focused_round_lower_policy_rows);
+        focused_frontier_upper_operator.clear();
+        focused_upper_mode = false;
+        policy_iteration_failed = false;
+        policy_initialized = true;
+        policy_stable = true;
+        reset_policy_iteration_units();
+        finish_focused_lower_solve(false);
     }
 
     void run_focused_lower_unit() {
         if (!policy_iteration_failed) {
             if (!run_policy_iteration_unit()) {
+                if (focused_upper_mode) {
+                    finish_focused_upper_solve(false);
+                    return;
+                }
                 /* Focused lower bounds cannot use the descending prioritized
-                 * fallback. Preserve the bound and resume full expansion. */
+                 * fallback. Preserve the bound and resume full expansion.
+                 * The absence of a focused queue is not a closure proof: make
+                 * every discovered strict frontier state available before
+                 * leaving focused mode. */
+                queue.clear();
+                queued.assign(calc.state_count(), 0);
+                for (std::uint32_t state = 0;
+                     state < calc.state_count(); ++state) {
+                    if (state < expanded.size() && expanded[state]) {
+                        queued[state] = 1;
+                    } else {
+                        enqueue(state);
+                    }
+                }
+                full_closure_after_focused_fallback = false;
                 focus_optimizing = false;
                 focused_lower_mode = false;
                 focused_mode = false;
@@ -7174,7 +10774,11 @@ struct SolveWork::Impl {
             }
         }
         if (!backup_active && optimization_converged()) {
-            finish_focused_lower_solve();
+            if (focused_upper_mode) {
+                finish_focused_upper_solve(true);
+            } else {
+                finish_focused_lower_solve();
+            }
         }
     }
 
@@ -7310,18 +10914,30 @@ struct SolveWork::Impl {
                 --remaining;
                 if (completed_state && !focused_mode &&
                     expanded_count >= next_focus_checkpoint &&
-                    queue.size() > 1024 &&
+                    queue.size() >
+                        options.focused_expansion_queue_threshold &&
                     expanded_count < options.max_expanded_states) {
                     begin_focused_lower_solve();
                     continue;
                 }
-                if (result.diagnostics.resource_cap_hit ||
-                    (completed_state &&
-                     expanded_count >= options.max_expanded_states)) {
+                if (result.diagnostics.resource_cap_hit) {
                     prepare_iteration();
                     if (result.diagnostics.resource_cap_hit) {
                         phase = SolvePhase::Done;
                     }
+                    break;
+                }
+                if (completed_state &&
+                    expanded_count >= options.max_expanded_states) {
+                    /* Measure the final exact partial graph before reporting
+                     * its cap. Otherwise a focused batch that lands exactly
+                     * on the limit exposes bounds from the preceding round and
+                     * discards every state in the last batch. */
+                    if (focused_mode && !focused_closure_proved) {
+                        begin_focused_lower_solve();
+                        continue;
+                    }
+                    prepare_iteration();
                     break;
                 }
                 if (completed_state && !expansion_active && queue.empty()) {
@@ -7949,12 +11565,47 @@ struct SolveWork::Impl {
         bytes += focused_behavioral_representative.capacity() *
                  sizeof(std::uint32_t);
         bytes += focused_previous_upper_values.capacity() * sizeof(double);
+        bytes += focused_previous_upper_policy_rows.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += focused_frontier_upper_operator.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_previous_frontier_upper_operator.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_round_lower_values.capacity() * sizeof(double);
+        bytes += focused_round_lower_policy_rows.capacity() *
+                 sizeof(std::uint64_t);
         bytes += focused_pending_lower_fringe.capacity() *
                  sizeof(std::uint32_t);
+        bytes += focused_pending_upper_fringe.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_pending_upper_priority.capacity() * sizeof(double);
         bytes += operator_goal_reach_mask.capacity() * sizeof(std::uint32_t);
         bytes += operator_goal_reach_computed.capacity() *
                  sizeof(std::uint8_t);
         bytes += goal_cover_cost.capacity() * sizeof(double);
+        bytes += clean_goal_cover_cost.capacity() * sizeof(double);
+        bytes += clean_goal_escape_cost.capacity() * sizeof(double);
+        bytes += clean_goal_escape_action.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += clean_goal_no_exalt_escape_cost.capacity() *
+                 sizeof(double);
+        bytes += clean_goal_no_exalt_escape_action.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
+        if (focused_fallback_policy.has_value()) {
+            const FocusedFallbackPolicy& fallback =
+                *focused_fallback_policy;
+            bytes += fallback.progress_state_value.bucket_count() *
+                sizeof(void*);
+            bytes += fallback.progress_state_value.size() *
+                (sizeof(std::pair<const std::uint32_t, double>) +
+                 2 * sizeof(void*));
+            bytes += fallback.progress_state_operator.bucket_count() *
+                sizeof(void*);
+            bytes += fallback.progress_state_operator.size() *
+                (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                 2 * sizeof(void*));
+        }
         bytes += certified_state_upper.capacity() * sizeof(double);
         bytes += certified_state_row.capacity() * sizeof(std::uint64_t);
         bytes += priced_rows.capacity() * sizeof(PricedSparseRow);
@@ -7962,6 +11613,8 @@ struct SolveWork::Impl {
         bytes += prioritized_states.capacity() *
                  sizeof(std::pair<double, std::uint32_t>);
         bytes += policy_rows.capacity() * sizeof(std::uint64_t);
+        bytes += policy_seed_states.capacity() * sizeof(std::uint32_t);
+        bytes += policy_selection_states.capacity() * sizeof(std::uint32_t);
         bytes += current_policy_scratch_bytes;
         bytes += kernel_value_caches.capacity() * sizeof(KernelValueCache);
         bytes += kernel_value_cache_by_offset.bucket_count() * sizeof(void*);
@@ -8039,12 +11692,47 @@ struct SolveWork::Impl {
         bytes += focused_behavioral_representative.capacity() *
                  sizeof(std::uint32_t);
         bytes += focused_previous_upper_values.capacity() * sizeof(double);
+        bytes += focused_previous_upper_policy_rows.capacity() *
+                 sizeof(std::uint64_t);
+        bytes += focused_frontier_upper_operator.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_previous_frontier_upper_operator.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_round_lower_values.capacity() * sizeof(double);
+        bytes += focused_round_lower_policy_rows.capacity() *
+                 sizeof(std::uint64_t);
         bytes += focused_pending_lower_fringe.capacity() *
                  sizeof(std::uint32_t);
+        bytes += focused_pending_upper_fringe.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += focused_pending_upper_priority.capacity() * sizeof(double);
         bytes += operator_goal_reach_mask.capacity() * sizeof(std::uint32_t);
         bytes += operator_goal_reach_computed.capacity() *
                  sizeof(std::uint8_t);
         bytes += goal_cover_cost.capacity() * sizeof(double);
+        bytes += clean_goal_cover_cost.capacity() * sizeof(double);
+        bytes += clean_goal_escape_cost.capacity() * sizeof(double);
+        bytes += clean_goal_escape_action.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += clean_goal_no_exalt_escape_cost.capacity() *
+                 sizeof(double);
+        bytes += clean_goal_no_exalt_escape_action.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
+        if (focused_fallback_policy.has_value()) {
+            const FocusedFallbackPolicy& fallback =
+                *focused_fallback_policy;
+            bytes += fallback.progress_state_value.bucket_count() *
+                sizeof(void*);
+            bytes += fallback.progress_state_value.size() *
+                (sizeof(std::pair<const std::uint32_t, double>) +
+                 2 * sizeof(void*));
+            bytes += fallback.progress_state_operator.bucket_count() *
+                sizeof(void*);
+            bytes += fallback.progress_state_operator.size() *
+                (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                 2 * sizeof(void*));
+        }
         bytes += certified_state_upper.capacity() * sizeof(double);
         bytes += certified_state_row.capacity() * sizeof(std::uint64_t);
         bytes += priced_rows.capacity() * sizeof(PricedSparseRow);
@@ -8052,6 +11740,8 @@ struct SolveWork::Impl {
         bytes += prioritized_states.capacity() *
                  sizeof(std::pair<double, std::uint32_t>);
         bytes += policy_rows.capacity() * sizeof(std::uint64_t);
+        bytes += policy_seed_states.capacity() * sizeof(std::uint32_t);
+        bytes += policy_selection_states.capacity() * sizeof(std::uint32_t);
         bytes += current_policy_scratch_bytes;
         bytes += kernel_value_caches.capacity() * sizeof(KernelValueCache);
         bytes += kernel_value_cache_by_offset.bucket_count() * sizeof(void*);
@@ -8783,8 +12473,9 @@ std::string serialize_solver_telemetry(
     json += ",\"focused_expansion\":{";
     if (diagnostics == nullptr) {
         json += "\"used\":null,\"rounds\":null,\"lower_bound\":null";
-        json += ",\"upper_bound\":null,\"optimality_gap\":null";
-        json += ",\"duration_ns\":null";
+        json += ",\"upper_bound\":null,\"partial_policy_upper_bound\":null";
+        json += ",\"partial_policy_rounds\":null,\"optimality_gap\":null";
+        json += ",\"duration_ns\":null,\"constructive_policy\":null";
     } else {
         json += "\"used\":" + std::string(bool_json(
             diagnostics->focused_expansion));
@@ -8803,10 +12494,28 @@ std::string serialize_solver_telemetry(
         append_bound(diagnostics->focused_lower_bound);
         json += ",\"upper_bound\":";
         append_bound(diagnostics->focused_upper_bound);
+        json += ",\"partial_policy_upper_bound\":";
+        append_bound(
+            diagnostics->focused_partial_policy_upper_bound);
+        json += ",\"partial_policy_rounds\":" + std::to_string(
+            diagnostics->focused_partial_policy_rounds);
         json += ",\"optimality_gap\":";
         append_bound(diagnostics->focused_optimality_gap);
         json += ",\"duration_ns\":" + std::to_string(
             diagnostics->focused_expansion_ns);
+        json += ",\"constructive_policy\":{\"anchor_checks\":" +
+                std::to_string(
+                    diagnostics->constructive_policy_anchor_checks);
+        json += ",\"anchor_eligible\":" + std::to_string(
+            diagnostics->constructive_policy_anchor_eligible);
+        json += ",\"renewal_variants\":" + std::to_string(
+            diagnostics->constructive_policy_renewal_variants);
+        json += ",\"exit_checks\":" + std::to_string(
+            diagnostics->constructive_policy_exit_checks);
+        json += ",\"finishable_exits\":" + std::to_string(
+            diagnostics->constructive_policy_finishable_exits);
+        json += ",\"feasible_policies\":" + std::to_string(
+            diagnostics->constructive_policy_feasible_policies) + "}";
     }
     json += "}";
 
