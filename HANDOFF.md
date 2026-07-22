@@ -1,14 +1,14 @@
 # Session Handoff
 
-**Status: B1 is complete and accepted. B2 product presentation is the exact
-next chunk; no B2 code has been started.**
+**Status: B1 and B2 are complete and accepted. B3 seeded natural-T1 corpus
+generation is the exact next chunk; no B3 code has been started.**
 
 Oliver selected the
 [bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
 `main` commit `60500ef`. Boundary documents were committed as `0c18493`; the
 B1 implementation, including retained constructive-witness reuse, is committed
-as `58aa5ea`.
+as `58aa5ea`; B2 product presentation is committed as `86e337f`.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -181,26 +181,67 @@ Byte-ledger and audit growth are supporting profiling leads, not additions to
 the owner-selected top-three scope. No performance fix was attempted after the
 B1 gate passed.
 
+## B2 accepted boundary
+
+B2 compiles exact or bounded native policies solely when `policy_available`.
+Calculator now offers optional absolute-chaos and relative-percent targets and
+passes only positive values to the engine. Live progress shows lower/upper
+bounds, absolute gap, and factor. Final result markup separately identifies:
+
+- exact evaluated returned-policy cost;
+- optimal-cost lower bound and certified policy upper bound;
+- absolute gap and conservatively rounded multiplicative factor;
+- exact, bounded-near-optimal, bounded-feasible, or no-policy quality;
+- exact close, target gap, cap (including named cap hits), or no-policy
+  termination;
+- requested and fired target criteria;
+- pinned economy; and
+- the complete admitted priced action ID list plus exclusions/skips.
+
+The DOM contract uses the approved “Certified within 1.10x of optimal” and “At
+most 10% more expensive than optimal” forms, states that a weak lower bound can
+make the certificate pessimistic, and never calls a bounded policy exact or
+calls its upper bound the optimum. Bounded policies can open in Strategy Board
+and use the existing evaluator/simulator surface when compilation succeeds.
+The product verification button now requests 10,000 runs and labels simulation
+as corroboration rather than the authoritative evaluation.
+
+B2 evidence:
+
+- `npx tsx test/solver-result-presentation.test.ts` passed all five focused
+  DOM/predicate/target cases;
+- `npx tsc --noEmit` passed; and
+- `git diff --check` passed before commit `86e337f`.
+
+No rendered or visual review was performed, per Oliver's ownership boundary.
+
 ## Exact resume point
 
-Start B2 only. Per the active plan:
+Start B3 only. Per the active plan:
 
-1. compile whenever `policy_available`, not only when exact convergence is
-   reported;
-2. present returned-policy expected cost, optimal-cost lower bound, absolute
-   gap, certified multiplicative factor, policy quality, termination/cap
-   reason, requested target/firing criterion, economy, and admitted-action
-   identity;
-3. use only the approved certificate wording and never call a bounded policy
-   exact or call its upper bound the optimum; and
-4. verify with DOM/unit tests and TypeScript checks only. Oliver owns rendered
-   and visual review; do not take screenshots.
+1. implement seeded generator inputs for base/list/class/pool, item level,
+   start item, natural T1 goal count and side composition, natural family/tag
+   filters, seed, cases per stratum, caps, and watchdog;
+2. add the dedicated engine-owned three-way feasibility query: `feasible`,
+   `infeasible` with reason, or `unknown`;
+3. use SQLite only to enumerate candidates. Goals must be naturally rollable
+   generation-type T1 modifiers on the selected base/item level; crafted,
+   bench, essence-only, and other guaranteed-only modifiers cannot be goal
+   slots or satisfy natural-only slots;
+4. keep legal priced bench operations in the action envelope, while recording
+   generation attempts/rejections and full corpus/build provenance; and
+5. produce the smoke, full short-budget, and deep pinned corpus strata exactly
+   as B3.4 requires.
 
-The standard hard watchdog returns to 15 minutes for every later run. Use narrow
-changed-layer tests during B2-B5, then the complete affected suites and required
-10,000-run verification once at B6. At the B2 boundary, commit B2 first, then
+If any Path of Exile mechanic or feasibility semantic is ambiguous, stop at B3
+and ask Oliver; do not research or guess. Do not begin B4 until every B3
+acceptance requirement passes.
+
+The standard hard watchdog is 15 minutes for every later run. Use narrow
+changed-layer tests during B3-B5, then the complete affected suites and required
+10,000-run verification once at B6. At the B3 boundary, commit B3 first, then
 update this status/evidence/next-chunk block and commit the HANDOFF separately.
 
-Chunks completed: B1. Exact stopping point: before B2 implementation. Still
+Chunks completed: B1, B2. Exact stopping point: before B3 implementation. Still
 awaiting Oliver later are rendered UI review, corpus-strata sanity review, and
 acceptance of the B6 results.

@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: bounded executable-policy results and benchmarking are selected; B1
-implementation has not started.**
+**Status: B1 bounded-policy contracts and B2 product presentation are complete;
+B3 seeded natural-T1 corpus generation is next.**
 
 Parent: [Documentation map](../README.md)
 

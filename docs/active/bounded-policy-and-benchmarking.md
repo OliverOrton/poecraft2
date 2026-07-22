@@ -1,6 +1,7 @@
 # Bounded Policy Results And Benchmarking
 
-**Status: B1 complete and accepted. B2 product presentation is next.**
+**Status: B1 and B2 complete and accepted. B3 seeded natural-T1 corpus
+generation is next.**
 
 Parent: [Active work](README.md)
 
@@ -240,6 +241,14 @@ regression.
 - Inexpressible and non-proper fallbacks exercise distinct statuses.
 
 ## B2 - Product presentation
+
+**Status: complete.** Calculator compiles whenever `policy_available`, exposes
+optional absolute and relative product targets, and presents returned-policy
+cost, lower/upper bounds, absolute and multiplicative certificates, policy
+quality, termination/cap detail, requested/fired targets, pinned economy, and
+admitted priced action identity. Exact and bounded results use distinct
+wording. Targeted DOM-contract tests and `npx tsc --noEmit` pass; rendered
+review remains Oliver's.
 
 Compile whenever `policy_available`, not only when `converged`.
 
