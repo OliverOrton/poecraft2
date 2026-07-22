@@ -1,7 +1,8 @@
 # Bounded Policy Results And Benchmarking
 
-**Status: B1 implementation is in progress; B1 acceptance is paused for
-Oliver's two-T1 evidence re-pin decision.**
+**Status: blocked at the B1 acceptance gate. The final permitted exact two-T1
+oracle attempt hit the binding 15-minute watchdog at 55,850 / 57,182 expanded
+states. No later chunk may start until Oliver directs a new response.**
 
 Parent: [Active work](README.md)
 
@@ -31,9 +32,8 @@ guide investigation and optimization; they never authorize action pruning.
 - The structural two-T1 baseline for the `60500ef` lineage is 57,182 expanded
   states, 738,139 state-action rows, 1,165,840 transitions, and exact value
   `230.26738656962243`. The currently pinned 57,233 / 903,935 evidence was
-  generated at `7b11b34`, before the constructive-search commits, and must
-  not be used to diagnose B1 semantic drift until Oliver decides whether to
-  re-pin it.
+  generated at `7b11b34`, before the constructive-search commits. Oliver
+  approved re-pinning the active evidence to the `60500ef` lineage.
 - Candidate A/C and the exact-search review remain evidence only on
   `codex/exact-search-design` at `273831f`; this plan does not adopt them.
 - Archive the superseded exact constructive-policy plan and its final handoff.
@@ -146,21 +146,28 @@ replaces its policy, preferences, fallback, and provenance. Assert selected
 rows still belong to their states and final quotient lifting preserves rows,
 preferences, transitions, and value.
 
+The atomically captured values, row IDs, frontier operators, fallback, and
+provenance are the source of truth. Concrete policy references and Unveil
+preference vectors may be materialized lazily from that immutable same-round
+state, once when the incumbent is actually returned; do not rebuild those
+full-state derived vectors on every improving upper round.
+
 This bundle is output state, not guidance state. Search continues refreshing
 and scheduling normally.
 
 Retain a synthesized renewal/progressive-fracture fallback witness in the
 atomic bundle across focused rounds. Reuse is permitted only while its goal,
-economy, action-vocabulary, referenced row/operator provenance, and properness
-remain valid. Monotonic graph extension does not invalidate it: validate the
-referenced row owners and operators, then stamp the later output bundle with
-the current graph identity without re-synthesizing the witness. Refresh when
-no witness exists, an executable dependency changes, or validation fails; a
-mere round advance, graph extension, or lower-bound update does not refresh
-it. Direct or partial executable upper policies may still replace the
-retained witness atomically when they improve `U`. Retention must not
-influence Bellman comparisons, focused scheduling, admission, pruning, or
-exact closure.
+economy, action-vocabulary prefix, referenced row/operator provenance, and
+properness remain valid. Monotonic graph or lazy action-vocabulary extension
+does not invalidate it: validate the complete operator prefix present at
+synthesis plus referenced row owners/operators, then stamp the later output
+bundle with the current graph and vocabulary identities without
+re-synthesizing the witness. Refresh when no witness exists, an existing
+executable dependency changes, or validation fails; a mere round advance,
+graph/vocabulary extension, or lower-bound update does not refresh it. Direct
+or partial executable upper policies may still replace the retained witness
+atomically when they improve `U`. Retention must not influence Bellman
+comparisons, focused scheduling, admission, pruning, or exact closure.
 
 ### B1.4 Stitch the complete bounded policy
 
@@ -206,10 +213,10 @@ noise. Exact compiled evaluation is authoritative.
 
 ### B1 acceptance
 
-Acceptance is paused pending Oliver's decision on re-pinning the two-T1
-structural evidence from the older `7b11b34` result to the `60500ef` lineage
-baseline. Existing slow B1 reports are the before-timing evidence and must not
-be rerun merely to reconfirm the regression.
+Oliver approved re-pinning the two-T1 structural evidence from the older
+`7b11b34` result to the `60500ef` lineage baseline. Existing slow B1 reports
+are the before-timing evidence and must not be rerun merely to reconfirm the
+regression.
 
 - Exact cases keep values, actions, and compiled policies.
 - Two-T1 remains `230.26738656962243` within accepted tolerance.
