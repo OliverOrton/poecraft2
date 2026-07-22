@@ -1,0 +1,84 @@
+{
+  "schema_version": "solver_benchmark_case_v1",
+  "id": "solver-scaling-dire-pelt-three-t1-from-scratch-bootstrap-upper",
+  "category": "real_three_t1_from_scratch_diagnostic",
+  "approval_status": "oliver_selected_2026-07-21",
+  "benchmark_enabled": true,
+  "description": "Three-expanded-state diagnostic for a finite exact primitive destructive-renewal upper on the natural three-T1 Dire Pelt target.",
+  "comparison_profile": "real-three-t1-from-scratch-diagnostic-v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+    "base_name": "Dire Pelt",
+    "item_level": 86
+  },
+  "start": {"rarity": "rare", "with_implicits": false, "mods": []},
+  "goal": {
+    "version": "v1", "rarity": "rare", "action_mode": "goal_relevant",
+    "min_satisfied_slots": 3,
+    "slots": [
+      {"family_mod_key": "ItemFoundRarityIncreasePrefix3", "min_tier": 1},
+      {"family_mod_key": "IncreasedLife9", "min_tier": 1},
+      {"family_mod_key": "LifeRegeneration9", "min_tier": 1}
+    ]
+  },
+  "product_action_envelope": {
+    "mode": "calculator_goal_relevant_priced_v1",
+    "envelope_goal": {
+      "version": "v1", "rarity": "rare", "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant", "requested_fossil_actions": [],
+      "min_satisfied_slots": 3,
+      "slots": [
+        {"family_mod_key": "ItemFoundRarityIncreasePrefix3", "min_tier": 1},
+        {"family_mod_key": "IncreasedLife9", "min_tier": 1},
+        {"family_mod_key": "LifeRegeneration9", "min_tier": 1}
+      ]
+    },
+    "expected_priced_action_ids": [
+      "transmute", "augment", "alteration", "regal", "alchemy", "chaos",
+      "exalt", "annul", "scour",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "harvest_reforge:drop", "harvest_reforge:life",
+      "harvest_augment:life", "fracture", "restart"
+    ]
+  },
+  "allowed_mechanic_families": ["calculator_goal_relevant_product_envelope"],
+  "economy": {
+    "version": "v1",
+    "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+    "league_key": "mirage", "league_name": "Mirage",
+    "manual_overrides": {"base": 1.0},
+    "override_purpose": "r3f_restart_route_gate_not_market_quote",
+    "fallback_price": null
+  },
+  "expected": {
+    "solve_status": "bounded_diagnostic",
+    "optimality_status": "not_requested",
+    "compile_status": "not_required",
+    "verification_status": "not_requested"
+  },
+  "caps": {
+    "max_states": 200000, "max_sweeps": 100000,
+    "solve_step_work_items": 1,
+    "max_discovered_states": 200000, "max_expanded_states": 3,
+    "max_state_action_rows": 1215000, "max_transitions": 10000000,
+    "max_reforge_work": 11000000, "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 32, "max_telemetry_json_bytes": 1048576,
+    "max_compiled_nodes": 100000, "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "full_evidence": true, "worker_step_ms": 20000, "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 0, "seed": 20260721, "max_actions_per_run": 1
+  }
+}

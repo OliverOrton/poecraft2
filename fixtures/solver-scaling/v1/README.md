@@ -58,7 +58,7 @@ verification. Its largest Worker slice was 19.55 ms, process RSS peaked at
 373,694,464 bytes, and the 278,396,928-byte WASM heap did not grow during the
 run.
 
-## Real three-T1 from scratch diagnostic
+## Historical crafted-finish three-slot diagnostic
 
 The accepted value-`3` carrier above already owns T1 fractured life and T1
 rarity. On 2026-07-21 the separate empty-rare case retained the same goal,
@@ -87,6 +87,30 @@ The concise record is
 [real-three-t1-from-scratch-summary.json](evidence/real-three-t1-from-scratch-summary.json);
 the linked raw reports preserve the bounded first expansion and unchanged-cap
 run.
+
+## Natural three-T1 constructive follow-up
+
+The corrected 2026-07-21 target replaces crafted cold resistance with ordinary
+pool T1 life regeneration: `ItemFoundRarityIncreasePrefix3`, `IncreasedLife9`,
+and `LifeRegeneration9` on an empty rare item-level-86 Dire Pelt. Its complete
+Calculator-derived envelope contains 23 priced actions, no bench actions, and
+no essences. The three specifications in
+[real-three-t1-diagnostic-manifest.json](real-three-t1-diagnostic-manifest.json)
+are now this natural target; the older 32-action records above remain
+historical evidence only.
+
+Generic exact destructive renewal supplies a Life + Quality fossil bootstrap
+upper of `4893.92255176662`. Generic progressive fracture lowers its standalone
+start upper to `4116.0146281888519`. The one bounded production-cap run stopped
+on `max_reforge_work` and proves
+`261.05161071365512 <= V* <= 4104.7066630770487` with 127,661 discovered / 544
+expanded states, 9,631 rows, 430,232 retained transitions, and 155,223,616
+peak selected-owned bytes. The longest solve step was 10.623 seconds.
+
+This is a finite executable foothold, not exact convergence or compiled-policy
+acceptance. The exact measurement and next structural decision are preserved
+in
+[real-three-natural-t1-constructive-summary.json](evidence/real-three-natural-t1-constructive-summary.json).
 
 The Chaos case proves the quotient can remove unobservable strict identity.
 The complete product cases deliberately merge no states: their larger action

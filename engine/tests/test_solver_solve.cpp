@@ -24,9 +24,17 @@ namespace {
 std::shared_ptr<SessionImpl> make_solve_session() {
     auto data = std::make_shared<DataImpl>();
     data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7};
+    data->strings = {
+        "", "synthetic/base", "mod0", "mod1", "mod2",
+        "mod3", "mod4", "mod5", "mod6", "mod7"};
+    data->base_count = 1;
+    data->base_metadata_path_sid = {1};
+    data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9};
 
     auto session = std::make_shared<SessionImpl>();
     session->data = data;
+    session->base_index = 0;
+    session->item_level = 1;
     session->mod_count = 8;
     session->words = pc_bitset_words(8);
     session->global_index = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -605,6 +613,211 @@ void run_constructive_renewal_upper_tests() {
              result.diagnostics.focused_upper_bound + 1e-9);
 }
 
+/* A genuine naturally rolled goal has no deterministic finish. A primitive
+ * destructive roll is still an executable renewal when every miss is legal
+ * and reproduces the exact engine-owned preserved-base signature. Restart's
+ * fresh normal carrier must pay for a real rare setup before joining it. */
+void run_primitive_destructive_renewal_upper_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    for (const std::uint32_t family : {100u, 102u, 104u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::uint32_t alchemy = registry.index_by_id.at("alchemy");
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry, {alchemy, chaos, restart});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t start_state = calc.intern_item(start);
+    const OutcomeDistribution& kernel = calc.outcomes(start_state, chaos);
+    PC_CHECK(kernel.supported);
+    PC_CHECK(kernel.stable_shared_kernel);
+    double success_probability = 0.0;
+    std::uint32_t retry_state = kNoId;
+    for (const OutcomeEntry& outcome : kernel.entries) {
+        if (calc.is_goal_state(calc.state(outcome.state))) {
+            success_probability += outcome.probability;
+        } else if (retry_state == kNoId) {
+            retry_state = outcome.state;
+        }
+    }
+    PC_CHECK(success_probability > 0.0);
+    PC_CHECK(retry_state != kNoId);
+    std::vector<std::uint64_t> start_signature;
+    std::vector<std::uint64_t> retry_signature;
+    PC_CHECK(calc.exact_reforge_kernel_signature(
+        start_state, chaos, start_signature));
+    PC_CHECK(calc.exact_reforge_kernel_signature(
+        retry_state, chaos, retry_signature));
+    PC_CHECK(start_signature == retry_signature);
+
+    pc_item_state fractured = start;
+    place(&fractured, PC_SIDE_PREFIX, 3, 12);
+    fractured.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    std::vector<std::uint64_t> fractured_signature;
+    PC_CHECK(calc.exact_reforge_kernel_signature(
+        calc.intern_item(fractured), chaos, fractured_signature));
+    PC_CHECK(fractured_signature != start_signature);
+
+    SolveOptions options;
+    options.max_expanded_states = 2;
+    options.state_certificate_control = false;
+    options.focused_expansion_checkpoint = 1;
+    options.focused_expansion_queue_threshold = 0;
+    const std::unordered_map<std::string, double> prices{
+        {"alchemy", 0.5}, {"chaos", 1.0}, {"base", 1.0}};
+    const SolveResult result = solve(calc, start, prices, options);
+    const double direct_renewal = 1.0 / success_probability;
+    PC_CHECK(result.diagnostics.focused_expansion);
+    PC_CHECK(result.diagnostics.state_cap_hit);
+    PC_CHECK(std::isfinite(result.diagnostics.focused_upper_bound));
+    PC_CHECK(near(
+        result.diagnostics.focused_upper_bound, direct_renewal, 1e-8));
+    PC_CHECK(result.diagnostics.focused_lower_bound <=
+             result.diagnostics.focused_upper_bound + 1e-9);
+    PC_CHECK(result.diagnostics.supported_priced_actions == 3);
+    bool saw_primitive_renewal = false;
+    bool saw_real_anchor = false;
+    for (const std::string& reason :
+         result.diagnostics.action_inclusion_reasons) {
+        saw_primitive_renewal |=
+            reason.find(
+                "included:primitive_destructive_renewal_policy:chaos") !=
+            std::string::npos;
+        saw_real_anchor |= saw_primitive_renewal &&
+            reason.find(":anchor=") != std::string::npos;
+    }
+    PC_CHECK(saw_primitive_renewal);
+    PC_CHECK(saw_real_anchor);
+
+    /* The same uncapped toy policy must close and lift to ordinary primitive
+     * strategy behavior. This keeps the bounded fallback witness aligned with
+     * the normal compiler path used once exact closure is proved. */
+    CalcContext compile_calc(
+        session, goal, registry, {alchemy, chaos, restart});
+    const SolveResult compiled_policy = solve(
+        compile_calc, start, prices);
+    PC_CHECK(compiled_policy.converged);
+    if (compiled_policy.converged) {
+        PolicyCompilationTelemetry compilation;
+        const std::string strategy_json = compile_policy_strategy_json(
+            compile_calc, compiled_policy,
+            "primitive destructive renewal", &compilation);
+        PC_CHECK(strategy_json.find("\"type\":\"chaos\"") !=
+                 std::string::npos);
+        PC_CHECK(compilation.nodes > 0);
+        PC_CHECK(compilation.edges > 0);
+        PC_CHECK(compilation.working_states > 0);
+    }
+
+    auto doubled = prices;
+    for (auto& [unused, price] : doubled) {
+        (void)unused;
+        price *= 2.0;
+    }
+    const SolveResult repriced = solve(calc, start, doubled, options);
+    PC_CHECK(std::isfinite(repriced.diagnostics.focused_upper_bound));
+    PC_CHECK(near(
+        repriced.diagnostics.focused_upper_bound,
+        2.0 * result.diagnostics.focused_upper_bound, 1e-7));
+
+    ActionRegistry illegal_registry = registry;
+    illegal_registry.actions.at(chaos).legality.requires_open_affix = true;
+    CalcContext illegal_calc(
+        session, goal, std::move(illegal_registry),
+        {alchemy, chaos, restart});
+    const SolveResult illegal = solve(
+        illegal_calc, start, prices, options);
+    PC_CHECK(std::none_of(
+        illegal.diagnostics.action_inclusion_reasons.begin(),
+        illegal.diagnostics.action_inclusion_reasons.end(),
+        [](const std::string& reason) {
+            return reason.find(
+                       "included:primitive_destructive_renewal_policy:chaos") !=
+                   std::string::npos;
+        }));
+
+    auto fracture_session = make_solve_session();
+    for (std::uint32_t mod = 0;
+         mod < fracture_session->base_spawn_weight.size(); ++mod) {
+        fracture_session->base_spawn_weight[mod] =
+            (mod == 0 || mod == 3 || mod == 5) ? 1 : 1000;
+    }
+    fracture_session->base_roll_weight =
+        fracture_session->base_spawn_weight;
+    ActionRegistry fracture_registry =
+        build_action_registry(*fracture_session);
+    const std::uint32_t fracture_alchemy =
+        fracture_registry.index_by_id.at("alchemy");
+    const std::uint32_t fracture_chaos =
+        fracture_registry.index_by_id.at("chaos");
+    const std::uint32_t fracture =
+        fracture_registry.index_by_id.at("fracture");
+    const std::uint32_t fracture_restart =
+        fracture_registry.index_by_id.at("restart");
+    CalcContext fracture_calc(
+        fracture_session, goal, fracture_registry,
+        {fracture_alchemy, fracture_chaos, fracture, fracture_restart});
+    const std::uint32_t fracture_start_state =
+        fracture_calc.intern_item(start);
+    const OutcomeDistribution& fracture_direct_kernel =
+        fracture_calc.outcomes(fracture_start_state, fracture_chaos);
+    double fracture_direct_probability = 0.0;
+    for (const OutcomeEntry& outcome : fracture_direct_kernel.entries) {
+        if (fracture_calc.is_goal_state(
+                fracture_calc.state(outcome.state))) {
+            fracture_direct_probability += outcome.probability;
+        }
+    }
+    PC_CHECK(fracture_direct_probability > 0.0);
+    const double fracture_direct_value =
+        1.0 / fracture_direct_probability;
+    auto fracture_prices = std::unordered_map<std::string, double>{
+        {"alchemy", 0.5}, {"chaos", 1.0},
+        {"fracture", 0.1}, {"base", 1.0}};
+    fracture_prices["fracture"] = 0.1;
+    const SolveResult progressive = solve(
+        fracture_calc, start, fracture_prices, options);
+    std::printf(
+        "solver progressive fracture oracle: action=%s status=%s "
+        "class=%u/%u bootstrap=%.9g progressive=%.9g upper=%.9g "
+        "post_modes=%u\n",
+        progressive.diagnostics.destructive_renewal_action_id.c_str(),
+        progressive.diagnostics.progressive_fracture_status.c_str(),
+        progressive.diagnostics.progressive_fracture_class_mask,
+        progressive.diagnostics.progressive_fracture_class_mod_count,
+        progressive.diagnostics.destructive_renewal_start_value,
+        progressive.diagnostics.progressive_fracture_start_value,
+        progressive.diagnostics.focused_upper_bound,
+        progressive.diagnostics.progressive_fracture_post_modes);
+    PC_CHECK(std::isfinite(
+        progressive.diagnostics.focused_upper_bound));
+    PC_CHECK(progressive.diagnostics.focused_upper_bound <
+             fracture_direct_value);
+    PC_CHECK(
+        progressive.diagnostics.progressive_fracture_roll_action_id ==
+        "chaos");
+    PC_CHECK(std::isfinite(
+        progressive.diagnostics.progressive_fracture_start_value));
+    PC_CHECK(progressive.diagnostics.progressive_fracture_post_modes > 0);
+
+    fracture_prices["fracture"] = 1000000.0;
+    const SolveResult expensive_fracture = solve(
+        fracture_calc, start, fracture_prices, options);
+    PC_CHECK(near(
+        expensive_fracture.diagnostics.focused_upper_bound,
+        fracture_direct_value, 1e-5));
+}
+
 bool read_text_file(const std::string& path, std::string& out) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) return false;
@@ -800,5 +1013,6 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_alt_spam_tests();
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();
+    run_primitive_destructive_renewal_upper_tests();
     run_artifact_solve_tests(artifact_dir);
 }

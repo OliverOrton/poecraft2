@@ -92,6 +92,93 @@ bool reforge_side_locked(
     return false;
 }
 
+pc_item_state preserved_reforge_base(
+    const SessionImpl& session,
+    const ActionDescriptor& action,
+    const pc_item_state& item) {
+    const bool magic_reforge =
+        action.params.type == ActionType::Transmute ||
+        action.params.type == ActionType::Alteration;
+    const bool eldritch_reforge =
+        action.params.type == ActionType::EldritchChaos;
+    const ActionTransitionFacts transition_facts =
+        action_transition_facts(action.params.type);
+    const int eldritch_side =
+        item.searing_exarch_tier > item.eater_of_worlds_tier
+            ? PC_SIDE_PREFIX
+            : (item.eater_of_worlds_tier > item.searing_exarch_tier
+                   ? PC_SIDE_SUFFIX
+                   : -1);
+    pc_item_state base;
+    pc_item_clear(&base);
+    base.rarity = magic_reforge ? PC_RARITY_MAGIC : PC_RARITY_RARE;
+    base.item_flags = item.item_flags;
+    base.generic_influence_bits = item.generic_influence_bits;
+    base.searing_exarch_tier = item.searing_exarch_tier;
+    base.eater_of_worlds_tier = item.eater_of_worlds_tier;
+    const bool prefix_locked =
+        transition_facts.respects_metamod_side_locks &&
+        reforge_side_locked(session, item, PC_SIDE_PREFIX);
+    const bool suffix_locked =
+        transition_facts.respects_metamod_side_locks &&
+        reforge_side_locked(session, item, PC_SIDE_SUFFIX);
+    const auto preserve = [&](int side, const pc_mod_slot* slots,
+                              std::uint8_t count, bool locked) {
+        for (std::uint8_t i = 0; i < count; ++i) {
+            const bool preserve_eldritch =
+                eldritch_reforge && eldritch_side >= 0 &&
+                side != eldritch_side;
+            const bool clear_eldritch =
+                eldritch_reforge && eldritch_side >= 0 &&
+                side == eldritch_side;
+            if (preserve_eldritch ||
+                (!clear_eldritch && locked) ||
+                (slots[i].flags & PC_MOD_SLOT_FRACTURED)) {
+                pc_mod_slot* restored = nullptr;
+                pc_item_add_mod(&base, side, slots[i].mod_id,
+                                slots[i].group_id, slots[i].flags,
+                                &restored);
+                if (restored != nullptr) *restored = slots[i];
+            }
+        }
+    };
+    preserve(PC_SIDE_PREFIX, item.prefixes, item.prefix_count, prefix_locked);
+    preserve(PC_SIDE_SUFFIX, item.suffixes, item.suffix_count, suffix_locked);
+    return base;
+}
+
+std::vector<std::uint64_t> reforge_base_observation(
+    const pc_item_state& base,
+    std::uint64_t* out_hash = nullptr) {
+    std::vector<std::uint64_t> observation;
+    std::uint64_t hash = 1469598103934665603ull;
+    const auto mix = [&hash, &observation](std::uint64_t value) {
+        observation.push_back(value);
+        hash ^= value;
+        hash *= 1099511628211ull;
+    };
+    mix(base.rarity);
+    mix(base.item_flags);
+    mix(base.generic_influence_bits);
+    mix(base.searing_exarch_tier);
+    mix(base.eater_of_worlds_tier);
+    const auto mix_slots = [&](const std::uint64_t side,
+                               const pc_mod_slot* slots,
+                               std::uint8_t count) {
+        mix(side);
+        mix(count);
+        for (std::uint8_t i = 0; i < count; ++i) {
+            mix(slots[i].mod_id);
+            mix(slots[i].group_id);
+            mix(slots[i].flags);
+        }
+    };
+    mix_slots(0, base.prefixes, base.prefix_count);
+    mix_slots(1, base.suffixes, base.suffix_count);
+    if (out_hash != nullptr) *out_hash = hash;
+    return observation;
+}
+
 /* Mirrors add_direct_mod: cap and group-conflict checks. */
 bool direct_add(
     const SessionImpl& session,
@@ -227,6 +314,22 @@ std::uint8_t occupied_mask(const RollState& state, std::uint8_t base_mask) {
 
 } // namespace
 
+bool CalcContext::exact_reforge_kernel_signature(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index,
+    std::vector<std::uint64_t>& out_signature) const {
+    out_signature.clear();
+    if (action_index >= registry_.actions.size()) return false;
+    const ActionDescriptor& action = registry_.actions[action_index];
+    if (!action_transition_facts(action.params.type).renewal) return false;
+    pc_item_state item;
+    if (!materialize(state_id, item)) return false;
+    out_signature = reforge_base_observation(
+        preserved_reforge_base(*session_, action, item));
+    out_signature.insert(out_signature.begin(), action_index);
+    return true;
+}
+
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint32_t state_id,
     std::uint32_t action_index) {
@@ -260,71 +363,13 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             : (item.eater_of_worlds_tier > item.searing_exarch_tier
                    ? PC_SIDE_SUFFIX
                    : -1);
-    pc_item_state base;
-    pc_item_clear(&base);
-    base.rarity = magic_reforge ? PC_RARITY_MAGIC : PC_RARITY_RARE;
-    base.item_flags = item.item_flags;
-    base.generic_influence_bits = item.generic_influence_bits;
-    base.searing_exarch_tier = item.searing_exarch_tier;
-    base.eater_of_worlds_tier = item.eater_of_worlds_tier;
-    const bool prefix_locked =
-        transition_facts.respects_metamod_side_locks &&
-        reforge_side_locked(session, item, PC_SIDE_PREFIX);
-    const bool suffix_locked =
-        transition_facts.respects_metamod_side_locks &&
-        reforge_side_locked(session, item, PC_SIDE_SUFFIX);
-    const auto preserve = [&](int side, const pc_mod_slot* slots,
-                              std::uint8_t count, bool locked) {
-        for (std::uint8_t i = 0; i < count; ++i) {
-            const bool preserve_eldritch =
-                eldritch_reforge && eldritch_side >= 0 &&
-                side != eldritch_side;
-            const bool clear_eldritch =
-                eldritch_reforge && eldritch_side >= 0 &&
-                side == eldritch_side;
-            if (preserve_eldritch ||
-                (!clear_eldritch && locked) ||
-                (slots[i].flags & PC_MOD_SLOT_FRACTURED)) {
-                pc_mod_slot* restored = nullptr;
-                pc_item_add_mod(&base, side, slots[i].mod_id,
-                                slots[i].group_id, slots[i].flags,
-                                &restored);
-                if (restored != nullptr) *restored = slots[i];
-            }
-        }
-    };
-    preserve(PC_SIDE_PREFIX, item.prefixes, item.prefix_count, prefix_locked);
-    preserve(PC_SIDE_SUFFIX, item.suffixes, item.suffix_count, suffix_locked);
+    pc_item_state base = preserved_reforge_base(session, action, item);
 
     /* A reforge's distribution depends only on the preserved base, so
      * states differing only in wiped mods share one roll DP. */
-    std::vector<std::uint64_t> base_observation;
-    std::uint64_t base_hash = 1469598103934665603ull;
-    {
-        const auto mix = [&base_hash, &base_observation](std::uint64_t value) {
-            base_observation.push_back(value);
-            base_hash ^= value;
-            base_hash *= 1099511628211ull;
-        };
-        mix(base.rarity);
-        mix(base.item_flags);
-        mix(base.generic_influence_bits);
-        mix(base.searing_exarch_tier);
-        mix(base.eater_of_worlds_tier);
-        const auto mix_slots = [&](const std::uint64_t side,
-                                   const pc_mod_slot* slots,
-                                   std::uint8_t count) {
-            mix(side);
-            mix(count);
-            for (std::uint8_t i = 0; i < count; ++i) {
-                mix(slots[i].mod_id);
-                mix(slots[i].group_id);
-                mix(slots[i].flags);
-            }
-        };
-        mix_slots(0, base.prefixes, base.prefix_count);
-        mix_slots(1, base.suffixes, base.suffix_count);
-    }
+    std::uint64_t base_hash = 0;
+    std::vector<std::uint64_t> base_observation =
+        reforge_base_observation(base, &base_hash);
     const std::pair<std::uint32_t, std::uint64_t> memo_key{action_index,
                                                            base_hash};
     const auto memo = reforge_cache_.find(memo_key);

@@ -159,6 +159,38 @@ corrects the scope of the seeded value-`3` carrier. With the same three slots,
 The run establishes a cap stop, not acceptance. A state-cap increase alone is
 not supported because the row and reforge budgets were already nearly spent.
 
+## Natural Three-T1 Constructive Foothold
+
+The corrected 2026-07-21 target requires ordinary-pool T1 rarity, maximum
+life, and life regeneration on an empty rare item-level-86 Dire Pelt. The
+complete product envelope contains 23 priced actions and no bench or essence
+action. The rejected C4 rare-class prototype was removed before measuring this
+target.
+
+- Exact primitive destructive renewal repeats the engine-selected Life +
+  Quality fossil and proves start upper `4893.92255176662`, with full retry
+  signature equality and real Restart/setup composition.
+- Exact progressive fracture selects a six-mod, goal-mask-1 acquisition class
+  with probability `0.09005427939272441`, retains useful fractured progress,
+  and lowers the standalone start upper to `4116.0146281888519`.
+- The bounded unchanged-cap run proves
+  `261.05161071365512 <= V* <= 4104.7066630770487`; it stopped at exactly
+  11,000,000 reforge-work units after 544 expanded / 127,661 discovered
+  states, 9,631 rows, and 430,232 retained transitions.
+- Solve time was 50.779 seconds, the longest solve step was 10.623 seconds,
+  and selected-owned memory was 89,274,767 live / 155,223,616 peak bytes.
+- The cap-3 diagnostic attributes 20.927 seconds to constructive policy,
+  0.460 seconds to strict clean-goal cover, and 0.622 seconds to expansion;
+  its 10.744-second step was the maximum measured in this session.
+
+The upper is materially tighter than naive renewal, but 541 extra expansions
+raised the lower by only `0.11330375945527`. No cap increase is supported.
+Rare states with permanently fractured satisfied targets, blocker/group
+identity, and Exalt/Harvest/destructive routing are the next exact lower-bound
+bottleneck; broader progressive acquisition and post-fracture modes are the
+next executable-upper opportunity. The concise record is
+[real-three-natural-t1-constructive-summary.json](../fixtures/solver-scaling/v1/evidence/real-three-natural-t1-constructive-summary.json).
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

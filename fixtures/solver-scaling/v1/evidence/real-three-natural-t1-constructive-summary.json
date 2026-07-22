@@ -1,0 +1,79 @@
+{
+  "schema_version": "real_three_natural_t1_constructive_diagnostic_v1",
+  "recorded_on": "2026-07-21",
+  "case": {
+    "base": "item-level-86 Dire Pelt",
+    "start": "empty rare without implicits",
+    "goal_slots": [
+      "ItemFoundRarityIncreasePrefix3",
+      "IncreasedLife9",
+      "LifeRegeneration9"
+    ],
+    "priced_product_actions": 23,
+    "bench_actions": 0,
+    "essence_actions": 0,
+    "economy": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f"
+  },
+  "constraints": {
+    "exact_all_actions": true,
+    "approximate_compaction": false,
+    "production_caps_changed": false,
+    "verification_required": false
+  },
+  "clean_first_expansion": {
+    "report": "build/performance/real-three-natural-t1-first-expansion-clean.json",
+    "status": "bounded_first_expansion_complete",
+    "solve_ms": 622.2541,
+    "discovered_states": 85380,
+    "expanded_states": 1,
+    "state_action_rows": 27,
+    "transition_entries": 357381,
+    "reforge_frontier_work": 8766546,
+    "focused_lower_bound": 0.0,
+    "focused_upper_bound": null,
+    "max_solve_step_ms": 125.0536,
+    "live_selected_owned_bytes": 33021878,
+    "peak_selected_owned_bytes": 53275254,
+    "cap_hit": "max_expanded_states"
+  },
+  "constructive_bootstrap": {
+    "report": "build/performance/real-three-natural-t1-bootstrap-upper.json",
+    "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+    "renewal_start_upper": 4893.92255176662,
+    "restart_anchor_upper": 4893.5021285362827,
+    "progressive_fracture_start_upper": 4116.0146281888519,
+    "progressive_class_mask": 1,
+    "progressive_class_mod_count": 6,
+    "progressive_class_probability": 0.09005427939272441,
+    "progressive_post_renewal_modes": 1,
+    "focused_lower_bound": 260.93830695419985,
+    "focused_upper_bound": 4116.0145660483522,
+    "constructive_policy_ms": 20927.3922,
+    "strict_clean_goal_cover_ms": 459.8323,
+    "expansion_ms": 622.3713,
+    "max_solve_step_ms": 10744.1705
+  },
+  "production_caps": {
+    "report": "build/performance/real-three-natural-t1-production-bounded.json",
+    "status": "refused_resource_cap",
+    "cap_hit": "max_reforge_work",
+    "solve_ms": 50778.6527,
+    "total_ms": 50906.833,
+    "discovered_states": 127661,
+    "expanded_states": 544,
+    "frontier_states": 127117,
+    "state_action_rows": 9631,
+    "transition_entries": 430232,
+    "reforge_frontier_work": 11000000,
+    "focused_rounds": 6,
+    "focused_lower_bound": 261.05161071365512,
+    "focused_upper_bound": 4104.7066630770487,
+    "optimality_gap": 3843.6550523633937,
+    "max_solve_step_ms": 10622.9198,
+    "live_selected_owned_bytes": 89274767,
+    "peak_selected_owned_bytes": 155223616,
+    "compiled": false,
+    "verified": false
+  },
+  "finding": "Generic exact destructive renewal replaces the infinite upper, and progressive fracture lowers that bootstrap by about 15.9 percent. The bounded deeper run remains far from closure: 541 additional expansions raise the lower by only 0.11330375945527. No cap increase is justified. The next exact structural target is the rare-state lower certificate for permanently fractured goal subsets and blocker/action routing, paired with broader progressive acquisition and post-fracture renewal modes."
+}

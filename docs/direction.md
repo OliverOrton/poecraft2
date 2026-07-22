@@ -42,9 +42,10 @@ does not reimplement crafting rules.
   planning remain deferred in [Future](future/README.md).
 
 The [exact constructive policy search](active/exact-constructive-policy-search.md)
-is currently selected. It turns the completed empty-start three-T1 diagnostic
-into a generic finite-incumbent and exact-gap-closure milestone; [Active work](active/README.md)
-and [HANDOFF](../HANDOFF.md) record its scope.
+is currently selected. It has established generic destructive-renewal and
+progressive-fracture incumbents for a genuine three-ordinary-pool-T1 target;
+exact gap closure remains active. [Active work](active/README.md) and
+[HANDOFF](../HANDOFF.md) record its scope.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its

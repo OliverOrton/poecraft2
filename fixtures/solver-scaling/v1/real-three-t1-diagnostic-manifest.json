@@ -25,6 +25,7 @@
   ],
   "cases": [
     "cases/dire-pelt-three-t1-from-scratch-first-expansion.json",
+    "cases/dire-pelt-three-t1-from-scratch-bootstrap-upper.json",
     "cases/dire-pelt-three-t1-from-scratch-production-caps.json"
   ]
 }

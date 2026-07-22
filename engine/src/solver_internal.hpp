@@ -1107,6 +1107,16 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index);
 
+    /* Complete collision-checked identity used by the exact reforge memo.
+     * The action id is included because two actions with the same preserved
+     * carrier can still have different direct mods, weights, or guarantees.
+     * Returns false when the state cannot be materialized or the action is
+     * not a destructive reforge. */
+    bool exact_reforge_kernel_signature(
+        std::uint32_t state_id,
+        std::uint32_t action_index,
+        std::vector<std::uint64_t>& out_signature) const;
+
     /* Exact fixed-program or renewal kernel. operator_index must identify a
      * PlannerOperatorKind::FixedOption entry. */
     const OptionKernel& option_kernel(
@@ -1636,12 +1646,33 @@ struct SolveDiagnostics {
     std::uint32_t focused_partial_policy_rounds = 0;
     double focused_optimality_gap = std::numeric_limits<double>::infinity();
     std::uint64_t focused_expansion_ns = 0;
+    std::uint64_t constructive_policy_ns = 0;
+    std::uint64_t strict_clean_goal_cover_ns = 0;
     std::uint64_t constructive_policy_anchor_checks = 0;
     std::uint64_t constructive_policy_anchor_eligible = 0;
     std::uint64_t constructive_policy_renewal_variants = 0;
     std::uint64_t constructive_policy_exit_checks = 0;
     std::uint64_t constructive_policy_finishable_exits = 0;
     std::uint64_t constructive_policy_feasible_policies = 0;
+    std::string destructive_renewal_action_id;
+    double destructive_renewal_value =
+        std::numeric_limits<double>::infinity();
+    double destructive_renewal_anchor_value =
+        std::numeric_limits<double>::infinity();
+    double destructive_renewal_start_value =
+        std::numeric_limits<double>::infinity();
+    std::string progressive_fracture_roll_action_id;
+    std::string progressive_fracture_status;
+    double progressive_fracture_value =
+        std::numeric_limits<double>::infinity();
+    double progressive_fracture_anchor_value =
+        std::numeric_limits<double>::infinity();
+    double progressive_fracture_start_value =
+        std::numeric_limits<double>::infinity();
+    std::uint32_t progressive_fracture_class_mask = 0;
+    std::uint32_t progressive_fracture_class_mod_count = 0;
+    double progressive_fracture_class_probability = 0.0;
+    std::uint32_t progressive_fracture_post_modes = 0;
     std::uint64_t reforge_frontier_work = 0;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;

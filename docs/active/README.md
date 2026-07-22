@@ -6,7 +6,9 @@ Parent: [Documentation map](../README.md)
 
 Oliver selected
 [exact constructive policy search](exact-constructive-policy-search.md) on
-2026-07-21. It uses a generic executable incumbent to make the focused upper
-finite, then preserves all admitted actions while closing the exact gap. The
-empty-rare three-T1 diagnostic is its before evidence; completed earlier plans
-remain historical archives with no current sequencing authority.
+2026-07-21. The corrected empty-rare target requires T1 rarity, life, and life
+regeneration from ordinary pools under all 23 priced actions. Generic
+destructive renewal and progressive fracture now give a finite exact
+executable upper and a measured bracket; closing the exact gap remains active.
+Completed earlier plans remain historical archives with no current sequencing
+authority.

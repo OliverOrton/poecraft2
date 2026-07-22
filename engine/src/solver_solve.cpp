@@ -894,7 +894,10 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            string_vector_owned_bytes(
                diagnostics.automatic_candidate_witnesses) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
-           diagnostics.policy_evaluation_failure.capacity() + 1;
+           diagnostics.policy_evaluation_failure.capacity() + 1 +
+           diagnostics.destructive_renewal_action_id.capacity() + 1 +
+           diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
+           diagnostics.progressive_fracture_status.capacity() + 1;
 }
 
 std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
@@ -1086,6 +1089,11 @@ struct SolveWork::Impl {
     bool focused_bound_proved = false;
     bool full_closure_after_focused_fallback = false;
     struct FocusedFallbackPolicy {
+        struct PrimitiveRenewalMode {
+            double value = kInfinity;
+            std::uint32_t operator_index = kNoId;
+            std::vector<std::uint64_t> kernel_signature;
+        };
         std::uint32_t anchor_state = kNoId;
         double anchor_state_value = kInfinity;
         double renewal_state_value = kInfinity;
@@ -1097,6 +1105,11 @@ struct SolveWork::Impl {
         std::uint8_t renewal_influence_bits = 0;
         std::uint8_t renewal_searing_exarch_tier = 0;
         std::uint8_t renewal_eater_of_worlds_tier = 0;
+        /* Primitive destructive renewal is admitted only when every retry
+         * carrier reproduces this complete engine-owned reforge signature.
+         * Fixed options retain their own exact OptionKernel retry witness. */
+        std::vector<std::uint64_t> renewal_kernel_signature;
+        std::vector<PrimitiveRenewalMode> primitive_renewal_modes;
         /* Exact policy-selected magic acquisition -> Regal -> deterministic
          * finish terminals. These are ordinary primitive operators on strict
          * states; the map is an executable fallback witness, not a quotient. */
@@ -1342,8 +1355,19 @@ struct SolveWork::Impl {
         const bool has_constructive_renewal = std::any_of(
             operators.begin(), operators.end(),
             [&](const PricedOperator& priced) {
-                return calc.operators().at(priced.index).automatic_kind ==
-                       AutomaticCandidateKind::ConstructiveRenewal;
+                const PlannerOperator& planner =
+                    calc.operators().at(priced.index);
+                if (planner.automatic_kind ==
+                    AutomaticCandidateKind::ConstructiveRenewal) {
+                    return true;
+                }
+                return planner.kind == PlannerOperatorKind::Primitive &&
+                       planner.primitive_action <
+                           calc.registry().actions.size() &&
+                       action_transition_facts(
+                           calc.registry().actions.at(
+                               planner.primitive_action).params.type)
+                           .renewal;
             });
         next_focus_checkpoint = has_constructive_renewal
                                     ? 1
@@ -8901,11 +8925,12 @@ struct SolveWork::Impl {
         }
         const PlannerOperator& renewal =
             calc.operators().at(fallback.renewal_operator);
-        if (renewal.kind != PlannerOperatorKind::FixedOption ||
-            renewal.primitive_program.empty()) {
-            return false;
-        }
-        const std::uint32_t first_action = renewal.primitive_program.front();
+        const std::uint32_t first_action =
+            renewal.kind == PlannerOperatorKind::Primitive
+                ? renewal.primitive_action
+                : renewal.primitive_program.empty()
+                      ? kNoId
+                      : renewal.primitive_program.front();
         if (first_action >= calc.registry().actions.size()) return false;
         const ActionDescriptor& descriptor =
             calc.registry().actions.at(first_action);
@@ -8925,6 +8950,17 @@ struct SolveWork::Impl {
             !action_legal(session, descriptor, carrier)) {
             return false;
         }
+        if (renewal.kind == PlannerOperatorKind::Primitive) {
+            if (renewal.primitive_action != first_action ||
+                fallback.renewal_kernel_signature.empty()) {
+                return false;
+            }
+            std::vector<std::uint64_t> signature;
+            return calc.exact_reforge_kernel_signature(
+                       state, first_action, signature) &&
+                   signature == fallback.renewal_kernel_signature;
+        }
+        if (renewal.kind != PlannerOperatorKind::FixedOption) return false;
         for (const std::uint8_t count : carrier.fractured_junk_counts) {
             if (count != 0) return false;
         }
@@ -8933,6 +8969,32 @@ struct SolveWork::Impl {
             if (count != 0) return false;
         }
         return true;
+    }
+
+    bool primitive_renewal_mode_eligible(
+        const std::uint32_t state,
+        const FocusedFallbackPolicy::PrimitiveRenewalMode& mode) const {
+        if (state >= calc.state_count() || mode.operator_index == kNoId ||
+            mode.operator_index >= calc.operators().size() ||
+            mode.kernel_signature.empty()) {
+            return false;
+        }
+        const PlannerOperator& planner =
+            calc.operators().at(mode.operator_index);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action >= calc.registry().actions.size()) {
+            return false;
+        }
+        const ActionDescriptor& descriptor =
+            calc.registry().actions.at(planner.primitive_action);
+        if (!action_transition_facts(descriptor.params.type).renewal ||
+            !action_legal(session, descriptor, calc.state(state))) {
+            return false;
+        }
+        std::vector<std::uint64_t> signature;
+        return calc.exact_reforge_kernel_signature(
+                   state, planner.primitive_action, signature) &&
+               signature == mode.kernel_signature;
     }
 
     double fallback_terminal_upper(
@@ -8960,6 +9022,13 @@ struct SolveWork::Impl {
             if (fallback.renewal_state_value < best) {
                 best = fallback.renewal_state_value;
                 best_operator = fallback.renewal_operator;
+            }
+        }
+        for (const auto& mode : fallback.primitive_renewal_modes) {
+            if (mode.value < best &&
+                primitive_renewal_mode_eligible(state, mode)) {
+                best = mode.value;
+                best_operator = mode.operator_index;
             }
         }
         const auto [finish, finish_operator] =
@@ -9669,196 +9738,684 @@ struct SolveWork::Impl {
         return best;
     }
 
-    std::optional<FocusedFallbackPolicy> destructive_rare_fallback() {
+    std::optional<FocusedFallbackPolicy>
+    primitive_destructive_renewal_fallback() {
         if (restart_state == kNoId || restart_state >= calc.state_count() ||
-            result.start_state >= calc.state_count()) {
+            result.start_state >= calc.state_count() ||
+            result.start_state >= transition_cache->state_rows.size() ||
+            restart_state >= transition_cache->state_rows.size()) {
             return std::nullopt;
         }
         const AbstractState& anchor = calc.state(restart_state);
-        const AbstractState& rare_entry = calc.state(result.start_state);
+        const AbstractState& renewal_entry = calc.state(result.start_state);
         if (anchor.rarity != PC_RARITY_NORMAL ||
             anchor.prefix_count != 0 || anchor.suffix_count != 0 ||
-            rare_entry.rarity != PC_RARITY_RARE ||
             (anchor.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
-            (rare_entry.flags & (kFlagCraftedMod | kProtectionFlags)) != 0 ||
             anchor.fractured_goal_mask != 0 ||
-            rare_entry.fractured_goal_mask != 0) {
+            anchor.fractured_metamod_flags != 0 ||
+            calc.is_goal_state(renewal_entry)) {
             return std::nullopt;
         }
-        const auto cost = [&](const std::uint32_t action) {
-            if (action >= priced_operator_position.size()) return kInfinity;
-            const std::int32_t position = priced_operator_position[action];
-            if (position < 0) return kInfinity;
-            const PricedOperator& priced =
-                operators.at(static_cast<std::size_t>(position));
-            const PlannerOperator& planner = calc.operators().at(priced.index);
-            return planner.kind == PlannerOperatorKind::Primitive &&
-                    planner.primitive_action == action &&
-                    std::isfinite(priced.cost) && priced.cost >= 0.0
-                ? priced.cost
-                : kInfinity;
-        };
-        const auto destructive_to_rare = [&](const std::uint32_t action) {
-            if (action >= calc.registry().actions.size()) return false;
-            const ActionType type =
-                calc.registry().actions.at(action).params.type;
-            return type == ActionType::Alchemy ||
-                   type == ActionType::Chaos ||
-                   type == ActionType::Essence ||
-                   type == ActionType::Fossil ||
-                   type == ActionType::HarvestReforge;
-        };
-        const auto same_kernel = [](const OutcomeDistribution& left,
-                                    const OutcomeDistribution& right) {
-            return left.supported == right.supported &&
-                   left.entries == right.entries &&
-                   left.choice_groups == right.choice_groups &&
-                   left.choice_options == right.choice_options;
-        };
-        struct Terminal {
-            double value = kInfinity;
-            std::uint32_t operation = kNoId;
-        };
         FocusedFallbackPolicy best;
         best.anchor_state = restart_state;
-        for (const std::uint32_t finish_action :
-             calc.automatic_goal_bench_actions()) {
-            const auto terminal = [&](const std::uint32_t state) {
-                if (calc.is_goal_state(calc.state(state))) {
-                    return Terminal{0.0, kNoId};
-                }
-                const auto [finish, operation] =
-                    constructive_direct_action_upper(state, finish_action);
-                return Terminal{finish, operation};
-            };
-            for (const std::uint32_t renewal_action : calc.candidates()) {
-                if (!destructive_to_rare(renewal_action) ||
-                    !std::isfinite(cost(renewal_action)) ||
-                    !action_legal(
-                        session,
-                        calc.registry().actions.at(renewal_action),
-                        rare_entry)) {
+        double best_start = kInfinity;
+        std::unordered_set<std::uint32_t> inspected_renewals;
+        const StateRowSpan& renewal_span =
+            transition_cache->state_rows.at(result.start_state);
+        for (std::uint32_t relative = 0;
+             relative < renewal_span.count; ++relative) {
+            const std::uint64_t absolute = renewal_span.offset + relative;
+            const SparseRow& row = transition_cache->rows.at(absolute);
+            if (row.choice_count != 0) continue;
+            for (std::uint32_t variant_offset = 0;
+                 variant_offset < row.variant_count; ++variant_offset) {
+                const SparseVariant& variant =
+                    transition_cache->variant_arena->variants.at(
+                        transition_cache->variant_arena
+                            ->row_variant_indices.at(
+                                row.variant_offset + variant_offset));
+                if (!inspected_renewals.insert(
+                        variant.operator_index).second) {
                     continue;
                 }
-                const OutcomeDistribution& renewal_kernel =
-                    calc.outcomes(result.start_state, renewal_action);
-                if (!renewal_kernel.supported ||
-                    !renewal_kernel.choice_groups.empty() ||
-                    !renewal_kernel.choice_options.empty()) {
+                const PlannerOperator& renewal =
+                    calc.operators().at(variant.operator_index);
+                if (renewal.kind != PlannerOperatorKind::Primitive ||
+                    renewal.primitive_action >=
+                        calc.registry().actions.size()) {
                     continue;
                 }
-                double renewal_constant = cost(renewal_action);
+                const std::uint32_t renewal_action =
+                    renewal.primitive_action;
+                const ActionDescriptor& descriptor =
+                    calc.registry().actions.at(renewal_action);
+                if (!action_transition_facts(
+                         descriptor.params.type).renewal ||
+                    !action_legal(session, descriptor, renewal_entry)) {
+                    continue;
+                }
+                double renewal_cost = 0.0;
+                if (!priced_variant_cost(variant, renewal_cost) ||
+                    !std::isfinite(renewal_cost) || renewal_cost < 0.0) {
+                    continue;
+                }
+                const OutcomeDistribution& kernel = calc.outcomes(
+                    result.start_state, renewal_action);
+                if (!kernel.supported || !kernel.stable_shared_kernel ||
+                    !kernel.choice_groups.empty() ||
+                    !kernel.choice_options.empty()) {
+                    continue;
+                }
+                std::vector<std::uint64_t> kernel_signature;
+                if (!calc.exact_reforge_kernel_signature(
+                        result.start_state, renewal_action,
+                        kernel_signature)) {
+                    continue;
+                }
+                ++result.diagnostics.constructive_policy_renewal_variants;
                 double success_probability = 0.0;
-                std::vector<std::uint32_t> renewal_failures;
-                std::unordered_map<std::uint32_t, Terminal>
-                    renewal_terminals;
                 bool exact_retry = true;
-                for (const OutcomeEntry& outcome : renewal_kernel.entries) {
-                    const Terminal finish = terminal(outcome.state);
-                    if (std::isfinite(finish.value)) {
-                        renewal_constant +=
-                            outcome.probability * finish.value;
+                for (const OutcomeEntry& outcome : kernel.entries) {
+                    if (calc.is_goal_state(calc.state(outcome.state))) {
                         success_probability += outcome.probability;
-                        renewal_terminals[outcome.state] = finish;
-                    } else {
-                        renewal_failures.push_back(outcome.state);
-                        if (!action_legal(
-                                session,
-                                calc.registry().actions.at(renewal_action),
-                                calc.state(outcome.state))) {
-                            exact_retry = false;
-                            break;
-                        }
+                        continue;
+                    }
+                    ++result.diagnostics.constructive_policy_exit_checks;
+                    std::vector<std::uint64_t> retry_signature;
+                    if (!action_legal(
+                            session, descriptor,
+                            calc.state(outcome.state)) ||
+                        !calc.exact_reforge_kernel_signature(
+                            outcome.state, renewal_action,
+                            retry_signature) ||
+                        retry_signature != kernel_signature) {
+                        exact_retry = false;
+                        break;
                     }
                 }
                 if (!exact_retry || success_probability <= 1e-15) continue;
                 const double renewal_value =
-                    renewal_constant / success_probability;
-                if (!std::isfinite(renewal_value)) continue;
+                    renewal_cost / success_probability;
+                if (!std::isfinite(renewal_value) ||
+                    renewal_value >= kValueCeiling) {
+                    continue;
+                }
 
-                for (const std::uint32_t setup_action : calc.candidates()) {
-                    if (!destructive_to_rare(setup_action) ||
-                        !std::isfinite(cost(setup_action)) ||
-                        !action_legal(
-                            session,
-                            calc.registry().actions.at(setup_action),
-                            anchor)) {
-                        continue;
-                    }
-                    const OutcomeDistribution& setup_kernel =
-                        calc.outcomes(restart_state, setup_action);
-                    if (!setup_kernel.supported ||
-                        !setup_kernel.choice_groups.empty() ||
-                        !setup_kernel.choice_options.empty()) {
-                        continue;
-                    }
-                    double anchor_value = cost(setup_action);
-                    bool feasible = true;
-                    std::unordered_map<std::uint32_t, Terminal>
-                        setup_terminals;
-                    std::vector<std::uint32_t> setup_failures;
-                    for (const OutcomeEntry& outcome : setup_kernel.entries) {
-                        const Terminal finish = terminal(outcome.state);
-                        if (std::isfinite(finish.value)) {
-                            anchor_value +=
-                                outcome.probability * finish.value;
-                            setup_terminals[outcome.state] = finish;
-                        } else if (action_legal(
-                            session,
-                            calc.registry().actions.at(renewal_action),
-                            calc.state(outcome.state))) {
-                            anchor_value +=
-                                outcome.probability * renewal_value;
-                            setup_failures.push_back(outcome.state);
-                        } else {
-                            feasible = false;
-                            break;
+                FocusedFallbackPolicy candidate;
+                candidate.anchor_state = restart_state;
+                candidate.renewal_state_value = renewal_value;
+                candidate.renewal_row = absolute;
+                candidate.renewal_operator = variant.operator_index;
+                candidate.renewal_rarity = renewal_entry.rarity;
+                candidate.renewal_influence_bits =
+                    renewal_entry.influence_bits;
+                candidate.renewal_searing_exarch_tier =
+                    renewal_entry.searing_exarch_tier;
+                candidate.renewal_eater_of_worlds_tier =
+                    renewal_entry.eater_of_worlds_tier;
+                candidate.renewal_kernel_signature =
+                    std::move(kernel_signature);
+
+                double anchor_value = kInfinity;
+                std::uint32_t anchor_operator = kNoId;
+                if (renewal_fallback_eligible(restart_state, candidate)) {
+                    anchor_value = renewal_value;
+                    anchor_operator = variant.operator_index;
+                } else {
+                    const StateRowSpan& anchor_span =
+                        transition_cache->state_rows.at(restart_state);
+                    for (std::uint32_t setup_relative = 0;
+                         setup_relative < anchor_span.count;
+                         ++setup_relative) {
+                        const std::uint64_t setup_absolute =
+                            anchor_span.offset + setup_relative;
+                        const SparseRow& setup_row =
+                            transition_cache->rows.at(setup_absolute);
+                        if (setup_row.choice_count != 0) continue;
+                        for (std::uint32_t setup_variant_offset = 0;
+                             setup_variant_offset < setup_row.variant_count;
+                             ++setup_variant_offset) {
+                            const SparseVariant& setup_variant =
+                                transition_cache->variant_arena->variants.at(
+                                    transition_cache->variant_arena
+                                        ->row_variant_indices.at(
+                                            setup_row.variant_offset +
+                                            setup_variant_offset));
+                            const PlannerOperator& setup =
+                                calc.operators().at(
+                                    setup_variant.operator_index);
+                            if (setup.kind !=
+                                PlannerOperatorKind::Primitive) {
+                                continue;
+                            }
+                            double constant = 0.0;
+                            if (!priced_variant_cost(
+                                    setup_variant, constant) ||
+                                !std::isfinite(constant) ||
+                                constant < 0.0) {
+                                continue;
+                            }
+                            double loop_probability =
+                                setup_row.self_probability;
+                            bool feasible = true;
+                            for (std::uint32_t i = 0;
+                                 i < setup_row.transition_count; ++i) {
+                                const std::uint64_t offset =
+                                    setup_row.transition_offset + i;
+                                const std::uint32_t successor =
+                                    transition_cache->successors.at(offset);
+                                const double probability =
+                                    transition_cache->probabilities.at(
+                                        offset);
+                                if (successor == restart_state) {
+                                    loop_probability += probability;
+                                } else if (calc.is_goal_state(
+                                               calc.state(successor))) {
+                                    continue;
+                                } else if (renewal_fallback_eligible(
+                                               successor, candidate)) {
+                                    constant += probability * renewal_value;
+                                } else {
+                                    feasible = false;
+                                    break;
+                                }
+                            }
+                            const double denominator =
+                                1.0 - loop_probability;
+                            if (!feasible || denominator <= 1e-15) continue;
+                            const double value = constant / denominator;
+                            if (value < anchor_value - options.epsilon ||
+                                (std::abs(value - anchor_value) <=
+                                     options.epsilon &&
+                                 setup_variant.operator_index <
+                                     anchor_operator)) {
+                                anchor_value = value;
+                                anchor_operator =
+                                    setup_variant.operator_index;
+                            }
                         }
                     }
-                    if (!feasible || !std::isfinite(anchor_value) ||
-                        anchor_value >= best.anchor_state_value) {
-                        continue;
-                    }
-                    FocusedFallbackPolicy candidate;
-                    candidate.anchor_state = restart_state;
-                    candidate.anchor_state_value = anchor_value;
-                    candidate.finish_action = finish_action;
-                    candidate.progress_state_value[restart_state] =
-                        anchor_value;
-                    candidate.progress_state_operator[restart_state] =
-                        setup_action;
-                    candidate.progress_state_value[result.start_state] =
-                        renewal_value;
-                    candidate.progress_state_operator[result.start_state] =
-                        renewal_action;
-                    for (const std::uint32_t state : renewal_failures) {
-                        candidate.progress_state_value[state] =
-                            renewal_value;
-                        candidate.progress_state_operator[state] =
-                            renewal_action;
-                    }
-                    for (const std::uint32_t state : setup_failures) {
-                        candidate.progress_state_value[state] =
-                            renewal_value;
-                        candidate.progress_state_operator[state] =
-                            renewal_action;
-                    }
-                    const auto add_terminals = [&](const auto& terminals) {
-                        for (const auto& [state, finish] : terminals) {
-                            candidate.progress_state_value[state] =
-                                finish.value;
-                            candidate.progress_state_operator[state] =
-                                finish.operation;
-                        }
-                    };
-                    add_terminals(renewal_terminals);
-                    add_terminals(setup_terminals);
+                }
+                if (!std::isfinite(anchor_value) ||
+                    anchor_operator == kNoId) {
+                    continue;
+                }
+                candidate.anchor_state_value = anchor_value;
+                candidate.progress_state_value[restart_state] =
+                    anchor_value;
+                candidate.progress_state_operator[restart_state] =
+                    anchor_operator;
+                const double start_value = focused_start_upper_bound(
+                    candidate);
+                if (!std::isfinite(start_value)) continue;
+                ++result.diagnostics.constructive_policy_feasible_policies;
+                if (start_value < best_start - options.epsilon ||
+                    (std::abs(start_value - best_start) <= options.epsilon &&
+                     std::tie(
+                         variant.operator_index, anchor_operator) <
+                         std::tie(
+                             best.renewal_operator,
+                             best.progress_state_operator[restart_state]))) {
+                    best_start = start_value;
                     best = std::move(candidate);
                 }
             }
         }
         if (!std::isfinite(best.anchor_state_value)) return std::nullopt;
+        const PlannerOperator& chosen =
+            calc.operators().at(best.renewal_operator);
+        result.diagnostics.destructive_renewal_action_id = chosen.id;
+        result.diagnostics.destructive_renewal_value =
+            best.renewal_state_value;
+        result.diagnostics.destructive_renewal_anchor_value =
+            best.anchor_state_value;
+        result.diagnostics.destructive_renewal_start_value = best_start;
+        std::string renewal_reason =
+            "included:primitive_destructive_renewal_policy:" +
+            chosen.id + ":renewal=" +
+            finite_json(best.renewal_state_value) + ":anchor=" +
+            finite_json(best.anchor_state_value) + ":start=" +
+            finite_json(best_start);
+        /* Preserve the selected executable incumbent even when broad action
+         * admission already filled the bounded reason sample. */
+        if (!result.diagnostics.action_inclusion_reasons.empty() &&
+            result.diagnostics.action_inclusion_reasons.size() >=
+                options.max_diagnostic_samples) {
+            result.diagnostics.action_inclusion_reasons.back() =
+                std::move(renewal_reason);
+            ++result.diagnostics.action_inclusion_reasons_omitted;
+        } else {
+            retain_action_reason(std::move(renewal_reason));
+        }
         return best;
+    }
+
+    std::optional<FocusedFallbackPolicy> progressive_fracture_fallback(
+        const FocusedFallbackPolicy& bootstrap) {
+        result.diagnostics.progressive_fracture_status = "entered";
+        if (bootstrap.renewal_operator == kNoId ||
+            bootstrap.renewal_operator >= calc.operators().size() ||
+            bootstrap.renewal_kernel_signature.empty() ||
+            bootstrap.anchor_state != restart_state) {
+            return std::nullopt;
+        }
+        const PlannerOperator& renewal =
+            calc.operators().at(bootstrap.renewal_operator);
+        if (renewal.kind != PlannerOperatorKind::Primitive ||
+            renewal.primitive_action >= calc.registry().actions.size()) {
+            return std::nullopt;
+        }
+        const std::uint32_t renewal_action = renewal.primitive_action;
+        result.diagnostics.progressive_fracture_roll_action_id = renewal.id;
+        const ActionDescriptor& renewal_descriptor =
+            calc.registry().actions.at(renewal_action);
+        if (!action_transition_facts(
+                 renewal_descriptor.params.type).renewal) {
+            return std::nullopt;
+        }
+        const std::int32_t renewal_position =
+            bootstrap.renewal_operator < priced_operator_position.size()
+                ? priced_operator_position[bootstrap.renewal_operator]
+                : -1;
+        if (renewal_position < 0) return std::nullopt;
+        const double renewal_cost = operators.at(
+            static_cast<std::size_t>(renewal_position)).cost;
+        if (!std::isfinite(renewal_cost) || renewal_cost < 0.0) {
+            return std::nullopt;
+        }
+
+        std::uint32_t fracture_operator = kNoId;
+        std::uint32_t fracture_action = kNoId;
+        double fracture_cost = kInfinity;
+        for (const PricedOperator& priced : operators) {
+            const PlannerOperator& planner =
+                calc.operators().at(priced.index);
+            if (planner.kind != PlannerOperatorKind::Primitive ||
+                planner.primitive_action >=
+                    calc.registry().actions.size() ||
+                calc.registry().actions.at(
+                    planner.primitive_action).params.type !=
+                    ActionType::Fracture ||
+                !std::isfinite(priced.cost) || priced.cost < 0.0) {
+                continue;
+            }
+            if (priced.cost < fracture_cost ||
+                (priced.cost == fracture_cost &&
+                 priced.index < fracture_operator)) {
+                fracture_cost = priced.cost;
+                fracture_operator = priced.index;
+                fracture_action = planner.primitive_action;
+            }
+        }
+        if (fracture_operator == kNoId) return std::nullopt;
+        result.diagnostics.progressive_fracture_status =
+            "fracture_admitted";
+        const ActionDescriptor& fracture_descriptor =
+            calc.registry().actions.at(fracture_action);
+        const OutcomeDistribution& acquisition_kernel = calc.outcomes(
+            result.start_state, renewal_action);
+        if (!acquisition_kernel.supported ||
+            !acquisition_kernel.stable_shared_kernel ||
+            !acquisition_kernel.choice_groups.empty() ||
+            !acquisition_kernel.choice_options.empty()) {
+            return std::nullopt;
+        }
+
+        using AcquisitionClass =
+            std::pair<std::uint32_t, std::uint32_t>;
+        const auto acquisition_class = [&](const std::uint32_t state)
+            -> std::optional<AcquisitionClass> {
+            if (calc.is_goal_state(calc.state(state))) return std::nullopt;
+            const AbstractState& carrier = calc.state(state);
+            const std::uint32_t mask =
+                satisfied_goal_mask_for_state(state);
+            if (mask == 0 || carrier.fractured_goal_mask != 0 ||
+                carrier.fractured_metamod_flags != 0 ||
+                !action_legal(session, fracture_descriptor, carrier)) {
+                return std::nullopt;
+            }
+            for (const std::uint8_t count :
+                 carrier.fractured_junk_counts) {
+                if (count != 0) return std::nullopt;
+            }
+            for (const std::uint8_t count :
+                 carrier.fractured_crafted_junk_counts) {
+                if (count != 0) return std::nullopt;
+            }
+            return AcquisitionClass{
+                mask,
+                static_cast<std::uint32_t>(
+                    carrier.prefix_count + carrier.suffix_count)};
+        };
+        std::map<AcquisitionClass, double> class_mass;
+        for (const OutcomeEntry& outcome : acquisition_kernel.entries) {
+            const auto key = acquisition_class(outcome.state);
+            if (key.has_value()) class_mass[*key] += outcome.probability;
+        }
+        if (class_mass.empty()) return std::nullopt;
+        AcquisitionClass selected_class = class_mass.begin()->first;
+        double selected_mass = class_mass.begin()->second;
+        for (const auto& [key, probability] : class_mass) {
+            if (probability > selected_mass ||
+                (probability == selected_mass && key < selected_class)) {
+                selected_class = key;
+                selected_mass = probability;
+            }
+        }
+        result.diagnostics.progressive_fracture_status =
+            "acquisition_class_selected";
+        result.diagnostics.progressive_fracture_class_mask =
+            selected_class.first;
+        result.diagnostics.progressive_fracture_class_mod_count =
+            selected_class.second;
+        result.diagnostics.progressive_fracture_class_probability =
+            selected_mass;
+
+        FocusedFallbackPolicy candidate;
+        candidate.anchor_state = restart_state;
+        candidate.renewal_row = bootstrap.renewal_row;
+        candidate.renewal_operator = bootstrap.renewal_operator;
+        candidate.renewal_rarity = bootstrap.renewal_rarity;
+        candidate.renewal_influence_bits =
+            bootstrap.renewal_influence_bits;
+        candidate.renewal_searing_exarch_tier =
+            bootstrap.renewal_searing_exarch_tier;
+        candidate.renewal_eater_of_worlds_tier =
+            bootstrap.renewal_eater_of_worlds_tier;
+        candidate.renewal_kernel_signature =
+            bootstrap.renewal_kernel_signature;
+
+        std::map<std::vector<std::uint64_t>, std::size_t>
+            post_mode_by_signature;
+        const auto post_mode = [&](const std::uint32_t state)
+            -> std::optional<std::size_t> {
+            std::vector<std::uint64_t> signature;
+            if (!calc.exact_reforge_kernel_signature(
+                    state, renewal_action, signature)) {
+                result.diagnostics.progressive_fracture_status =
+                    "post_signature_refused";
+                return std::nullopt;
+            }
+            const auto cached = post_mode_by_signature.find(signature);
+            if (cached != post_mode_by_signature.end()) {
+                return cached->second;
+            }
+            if (!action_legal(
+                    session, renewal_descriptor, calc.state(state))) {
+                result.diagnostics.progressive_fracture_status =
+                    "post_renewal_illegal";
+                return std::nullopt;
+            }
+            const OutcomeDistribution& kernel =
+                calc.outcomes(state, renewal_action);
+            if (!kernel.supported || !kernel.stable_shared_kernel ||
+                !kernel.choice_groups.empty() ||
+                !kernel.choice_options.empty()) {
+                result.diagnostics.progressive_fracture_status =
+                    "post_kernel_not_stable";
+                return std::nullopt;
+            }
+            double success_probability = 0.0;
+            for (const OutcomeEntry& outcome : kernel.entries) {
+                if (calc.is_goal_state(calc.state(outcome.state))) {
+                    success_probability += outcome.probability;
+                    continue;
+                }
+                std::vector<std::uint64_t> retry_signature;
+                if (!action_legal(
+                        session, renewal_descriptor,
+                        calc.state(outcome.state)) ||
+                    !calc.exact_reforge_kernel_signature(
+                        outcome.state, renewal_action,
+                        retry_signature) ||
+                    retry_signature != signature) {
+                    result.diagnostics.progressive_fracture_status =
+                        "post_retry_kernel_mismatch";
+                    return std::nullopt;
+                }
+            }
+            if (!(success_probability > 0.0)) {
+                const AbstractState& post = calc.state(state);
+                result.diagnostics.progressive_fracture_status =
+                    "post_goal_unreachable:state=" +
+                    std::to_string(state) + ":satisfied=" +
+                    std::to_string(
+                        satisfied_goal_mask_for_state(state)) +
+                    ":fractured=" +
+                    std::to_string(post.fractured_goal_mask) +
+                    ":prefixes=" +
+                    std::to_string(post.prefix_count) +
+                    ":suffixes=" +
+                    std::to_string(post.suffix_count);
+                return std::nullopt;
+            }
+            const double value = renewal_cost / success_probability;
+            if (!std::isfinite(value) || value >= kValueCeiling) {
+                result.diagnostics.progressive_fracture_status =
+                    "post_value_ceiling";
+                return std::nullopt;
+            }
+            const std::size_t index =
+                candidate.primitive_renewal_modes.size();
+            candidate.primitive_renewal_modes.push_back({
+                value, bootstrap.renewal_operator, signature});
+            post_mode_by_signature.emplace(
+                std::move(signature), index);
+            return index;
+        };
+
+        struct FractureBranch {
+            double constant = kInfinity;
+            double anchor_coefficient = 0.0;
+        };
+        std::unordered_map<std::uint32_t, FractureBranch> branch_by_state;
+        std::unordered_set<std::uint32_t> failed_fracture_states;
+        const auto fracture_branch = [&](const std::uint32_t state)
+            -> std::optional<FractureBranch> {
+            const auto cached = branch_by_state.find(state);
+            if (cached != branch_by_state.end()) return cached->second;
+            if (acquisition_class(state) != selected_class) {
+                return std::nullopt;
+            }
+            const OutcomeDistribution& fractured =
+                calc.outcomes(state, fracture_action);
+            if (!fractured.supported ||
+                !fractured.choice_groups.empty() ||
+                !fractured.choice_options.empty()) {
+                result.diagnostics.progressive_fracture_status =
+                    "fracture_kernel_refused";
+                return std::nullopt;
+            }
+            FractureBranch branch{fracture_cost, 0.0};
+            for (const OutcomeEntry& outcome : fractured.entries) {
+                if (calc.is_goal_state(calc.state(outcome.state))) continue;
+                const std::uint32_t fractured_satisfied =
+                    calc.state(outcome.state).fractured_goal_mask &
+                    satisfied_goal_mask_for_state(outcome.state);
+                if (fractured_satisfied != 0) {
+                    const auto mode = post_mode(outcome.state);
+                    if (!mode.has_value()) return std::nullopt;
+                    branch.constant += outcome.probability *
+                        candidate.primitive_renewal_modes[*mode].value;
+                } else {
+                    branch.constant += outcome.probability * restart_cost;
+                    branch.anchor_coefficient += outcome.probability;
+                    failed_fracture_states.insert(outcome.state);
+                }
+            }
+            branch_by_state.emplace(state, branch);
+            return branch;
+        };
+
+        double initial_constant = renewal_cost;
+        double initial_anchor_coefficient = 0.0;
+        double initial_loop_probability = 0.0;
+        for (const OutcomeEntry& outcome : acquisition_kernel.entries) {
+            if (calc.is_goal_state(calc.state(outcome.state))) continue;
+            if (acquisition_class(outcome.state) == selected_class) {
+                const auto branch = fracture_branch(outcome.state);
+                if (!branch.has_value()) return std::nullopt;
+                initial_constant +=
+                    outcome.probability * branch->constant;
+                initial_anchor_coefficient +=
+                    outcome.probability * branch->anchor_coefficient;
+            } else {
+                initial_loop_probability += outcome.probability;
+            }
+        }
+        result.diagnostics.progressive_fracture_status =
+            "fracture_branches_complete";
+        const double initial_denominator =
+            1.0 - initial_loop_probability;
+        if (initial_denominator <= 0.0) return std::nullopt;
+        const double initial_alpha =
+            initial_constant / initial_denominator;
+        const double initial_beta =
+            initial_anchor_coefficient / initial_denominator;
+
+        const auto setup_operator_found =
+            bootstrap.progress_state_operator.find(restart_state);
+        if (setup_operator_found ==
+            bootstrap.progress_state_operator.end()) {
+            return std::nullopt;
+        }
+        const std::uint32_t setup_operator = setup_operator_found->second;
+        const StateRowSpan& anchor_span =
+            transition_cache->state_rows.at(restart_state);
+        const SparseRow* setup_row = nullptr;
+        double setup_cost = kInfinity;
+        for (std::uint32_t relative = 0;
+             relative < anchor_span.count; ++relative) {
+            const SparseRow& row = transition_cache->rows.at(
+                anchor_span.offset + relative);
+            if (row.choice_count != 0) continue;
+            for (std::uint32_t variant_offset = 0;
+                 variant_offset < row.variant_count; ++variant_offset) {
+                const SparseVariant& variant =
+                    transition_cache->variant_arena->variants.at(
+                        transition_cache->variant_arena
+                            ->row_variant_indices.at(
+                                row.variant_offset + variant_offset));
+                if (variant.operator_index != setup_operator) continue;
+                double cost = 0.0;
+                if (!priced_variant_cost(variant, cost)) continue;
+                setup_row = &row;
+                setup_cost = cost;
+                break;
+            }
+            if (setup_row != nullptr) break;
+        }
+        if (setup_row == nullptr || !std::isfinite(setup_cost)) {
+            result.diagnostics.progressive_fracture_status =
+                "setup_row_unavailable";
+            return std::nullopt;
+        }
+        double setup_constant = setup_cost;
+        double setup_initial_coefficient = 0.0;
+        double setup_anchor_coefficient = setup_row->self_probability;
+        for (std::uint32_t i = 0;
+             i < setup_row->transition_count; ++i) {
+            const std::uint64_t offset = setup_row->transition_offset + i;
+            const std::uint32_t successor =
+                transition_cache->successors.at(offset);
+            const double probability =
+                transition_cache->probabilities.at(offset);
+            if (successor == restart_state) {
+                setup_anchor_coefficient += probability;
+            } else if (calc.is_goal_state(calc.state(successor))) {
+                continue;
+            } else if (acquisition_class(successor) == selected_class) {
+                const auto branch = fracture_branch(successor);
+                if (!branch.has_value()) return std::nullopt;
+                setup_constant += probability * branch->constant;
+                setup_anchor_coefficient +=
+                    probability * branch->anchor_coefficient;
+            } else if (renewal_fallback_eligible(successor, bootstrap)) {
+                setup_initial_coefficient += probability;
+            } else {
+                result.diagnostics.progressive_fracture_status =
+                    "setup_successor_uncovered";
+                return std::nullopt;
+            }
+        }
+        result.diagnostics.progressive_fracture_status =
+            "setup_composed";
+        const double setup_denominator =
+            1.0 - setup_anchor_coefficient;
+        if (setup_denominator <= 0.0) return std::nullopt;
+        const double setup_gamma = setup_constant / setup_denominator;
+        const double setup_delta =
+            setup_initial_coefficient / setup_denominator;
+        const double coupled_denominator =
+            1.0 - setup_delta * initial_beta;
+        if (coupled_denominator <= 0.0) return std::nullopt;
+        const double anchor_value =
+            (setup_gamma + setup_delta * initial_alpha) /
+            coupled_denominator;
+        const double initial_value =
+            initial_alpha + initial_beta * anchor_value;
+        if (!std::isfinite(anchor_value) ||
+            !std::isfinite(initial_value) ||
+            anchor_value >= kValueCeiling ||
+            initial_value >= kValueCeiling) {
+            return std::nullopt;
+        }
+        candidate.anchor_state_value = anchor_value;
+        candidate.renewal_state_value = initial_value;
+        candidate.progress_state_value[restart_state] = anchor_value;
+        candidate.progress_state_operator[restart_state] = setup_operator;
+        for (const auto& [state, branch] : branch_by_state) {
+            candidate.progress_state_value[state] =
+                branch.constant +
+                branch.anchor_coefficient * anchor_value;
+            candidate.progress_state_operator[state] = fracture_operator;
+        }
+        for (const std::uint32_t state : failed_fracture_states) {
+            candidate.progress_state_value[state] =
+                restart_cost + anchor_value;
+            candidate.progress_state_operator[state] =
+                restart_operator_index;
+        }
+        const double start_value = focused_start_upper_bound(candidate);
+        if (!std::isfinite(start_value)) return std::nullopt;
+
+        result.diagnostics.progressive_fracture_roll_action_id = renewal.id;
+        result.diagnostics.progressive_fracture_value = initial_value;
+        result.diagnostics.progressive_fracture_anchor_value = anchor_value;
+        result.diagnostics.progressive_fracture_start_value = start_value;
+        result.diagnostics.progressive_fracture_class_mask =
+            selected_class.first;
+        result.diagnostics.progressive_fracture_class_mod_count =
+            selected_class.second;
+        result.diagnostics.progressive_fracture_class_probability =
+            selected_mass;
+        result.diagnostics.progressive_fracture_post_modes =
+            static_cast<std::uint32_t>(
+                candidate.primitive_renewal_modes.size());
+        result.diagnostics.progressive_fracture_status = "complete";
+
+        std::string reason =
+            "included:progressive_fracture_policy:roll=" + renewal.id +
+            ":fracture=" +
+            calc.operators().at(fracture_operator).id +
+            ":class_mask=" + std::to_string(selected_class.first) +
+            ":class_mods=" + std::to_string(selected_class.second) +
+            ":class_probability=" + finite_json(selected_mass) +
+            ":post_modes=" +
+            std::to_string(candidate.primitive_renewal_modes.size()) +
+            ":renewal=" + finite_json(initial_value) +
+            ":anchor=" + finite_json(anchor_value) +
+            ":start=" + finite_json(start_value);
+        if (!result.diagnostics.action_inclusion_reasons.empty() &&
+            result.diagnostics.action_inclusion_reasons.size() >=
+                options.max_diagnostic_samples) {
+            result.diagnostics.action_inclusion_reasons.back() =
+                std::move(reason);
+            ++result.diagnostics.action_inclusion_reasons_omitted;
+        } else {
+            retain_action_reason(std::move(reason));
+        }
+        return candidate;
     }
 
     std::optional<FocusedFallbackPolicy> focused_fallback() {
@@ -9874,6 +10431,38 @@ struct SolveWork::Impl {
         }
         std::optional<FocusedFallbackPolicy> progress_fallback =
             magic_regal_fallback();
+        std::optional<FocusedFallbackPolicy> destructive_fallback =
+            primitive_destructive_renewal_fallback();
+        if (destructive_fallback.has_value()) {
+            try {
+                std::optional<FocusedFallbackPolicy> progressive =
+                    progressive_fracture_fallback(*destructive_fallback);
+                if (progressive.has_value() &&
+                    focused_start_upper_bound(*progressive) <
+                        focused_start_upper_bound(*destructive_fallback)) {
+                    destructive_fallback = std::move(progressive);
+                }
+            } catch (const SolverResourceLimit& limit) {
+                std::string reason =
+                    "rejected:progressive_fracture_policy:" +
+                    limit.cap_name();
+                if (!result.diagnostics.action_inclusion_reasons.empty() &&
+                    result.diagnostics.action_inclusion_reasons.size() >=
+                        options.max_diagnostic_samples) {
+                    result.diagnostics.action_inclusion_reasons.back() =
+                        std::move(reason);
+                    ++result.diagnostics.action_inclusion_reasons_omitted;
+                } else {
+                    retain_action_reason(std::move(reason));
+                }
+            }
+        }
+        if (destructive_fallback.has_value() &&
+            (!progress_fallback.has_value() ||
+             focused_start_upper_bound(*destructive_fallback) <
+                 focused_start_upper_bound(*progress_fallback))) {
+            progress_fallback = std::move(destructive_fallback);
+        }
         const AbstractState& renewal_carrier = calc.state(renewal_source);
         if (renewal_carrier.prefix_count != 0 ||
             renewal_carrier.suffix_count != 0 ||
@@ -10433,8 +11022,24 @@ struct SolveWork::Impl {
                 result.values.at(result.start_state);
             result.diagnostics.focused_expansion_ns +=
                 result.diagnostics.optimization_ns;
+            const auto constructive_policy_start =
+                std::chrono::steady_clock::now();
             focused_fallback_policy = focused_fallback();
+            result.diagnostics.constructive_policy_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        constructive_policy_start)
+                        .count());
+            const auto strict_clean_goal_cover_start =
+                std::chrono::steady_clock::now();
             prepare_strict_clean_goal_cover();
+            result.diagnostics.strict_clean_goal_cover_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        strict_clean_goal_cover_start)
+                        .count());
             sync_constructive_discovered_states();
             if (strict_clean_goal_cover_refresh_needed) {
                 strict_clean_goal_cover_refresh_needed = false;
@@ -11595,6 +12200,14 @@ struct SolveWork::Impl {
         if (focused_fallback_policy.has_value()) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
+            bytes += fallback.renewal_kernel_signature.capacity() *
+                sizeof(std::uint64_t);
+            bytes += fallback.primitive_renewal_modes.capacity() *
+                sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
+            for (const auto& mode : fallback.primitive_renewal_modes) {
+                bytes += mode.kernel_signature.capacity() *
+                    sizeof(std::uint64_t);
+            }
             bytes += fallback.progress_state_value.bucket_count() *
                 sizeof(void*);
             bytes += fallback.progress_state_value.size() *
@@ -11722,6 +12335,14 @@ struct SolveWork::Impl {
         if (focused_fallback_policy.has_value()) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
+            bytes += fallback.renewal_kernel_signature.capacity() *
+                sizeof(std::uint64_t);
+            bytes += fallback.primitive_renewal_modes.capacity() *
+                sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
+            for (const auto& mode : fallback.primitive_renewal_modes) {
+                bytes += mode.kernel_signature.capacity() *
+                    sizeof(std::uint64_t);
+            }
             bytes += fallback.progress_state_value.bucket_count() *
                 sizeof(void*);
             bytes += fallback.progress_state_value.size() *
@@ -12515,7 +13136,51 @@ std::string serialize_solver_telemetry(
         json += ",\"finishable_exits\":" + std::to_string(
             diagnostics->constructive_policy_finishable_exits);
         json += ",\"feasible_policies\":" + std::to_string(
-            diagnostics->constructive_policy_feasible_policies) + "}";
+            diagnostics->constructive_policy_feasible_policies);
+        json += ",\"bootstrap\":{\"action\":";
+        if (diagnostics->destructive_renewal_action_id.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, diagnostics->destructive_renewal_action_id);
+        }
+        json += ",\"renewal_value\":";
+        append_bound(diagnostics->destructive_renewal_value);
+        json += ",\"anchor_value\":";
+        append_bound(diagnostics->destructive_renewal_anchor_value);
+        json += ",\"start_value\":";
+        append_bound(diagnostics->destructive_renewal_start_value);
+        json += "}";
+        json += ",\"progressive_fracture\":{\"roll_action\":";
+        if (diagnostics->progressive_fracture_roll_action_id.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                diagnostics->progressive_fracture_roll_action_id);
+        }
+        json += ",\"status\":";
+        if (diagnostics->progressive_fracture_status.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, diagnostics->progressive_fracture_status);
+        }
+        json += ",\"renewal_value\":";
+        append_bound(diagnostics->progressive_fracture_value);
+        json += ",\"anchor_value\":";
+        append_bound(diagnostics->progressive_fracture_anchor_value);
+        json += ",\"start_value\":";
+        append_bound(diagnostics->progressive_fracture_start_value);
+        json += ",\"class_mask\":" + std::to_string(
+            diagnostics->progressive_fracture_class_mask);
+        json += ",\"class_mod_count\":" + std::to_string(
+            diagnostics->progressive_fracture_class_mod_count);
+        json += ",\"class_probability\":";
+        append_bound(
+            diagnostics->progressive_fracture_class_probability);
+        json += ",\"post_modes\":" + std::to_string(
+            diagnostics->progressive_fracture_post_modes) + "}}";
     }
     json += "}";
 
@@ -12797,6 +13462,10 @@ std::string serialize_solver_telemetry(
                 std::to_string(cache.distribution_build_ns);
         json += ",\"optimization\":" +
                 std::to_string(diagnostics->optimization_ns);
+        json += ",\"constructive_policy\":" +
+                std::to_string(diagnostics->constructive_policy_ns);
+        json += ",\"strict_clean_goal_cover\":" +
+                std::to_string(diagnostics->strict_clean_goal_cover_ns);
         if (result == nullptr) {
             json += ",\"extraction\":null";
         } else {
