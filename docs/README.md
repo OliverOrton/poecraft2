@@ -28,9 +28,8 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records the selected exact constructive-policy
-search milestone. [HANDOFF](../HANDOFF.md) records its committed baseline and
-resume point. The completed action/state pruning milestone is indexed by its
+[Active](active/README.md) records the selected bounded-policy and benchmarking
+plan. [HANDOFF](../HANDOFF.md) records its clean baseline and B1 resume point. The completed action/state pruning milestone is indexed by its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md), and
 the earlier Q0-Q5 solver work is indexed by the
 [Exact Solver State Scaling archive](archive/2026-07-20-solver-state-scaling/README.md).

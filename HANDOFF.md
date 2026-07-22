@@ -1,65 +1,55 @@
 # Session Handoff
 
-**Status: the natural three-T1 constructive foothold is implemented; exact
-closure remains active.**
+**Status: bounded executable-policy results are selected; B1 implementation
+has not started.**
 
 Oliver selected the
-[exact constructive policy search plan](docs/active/exact-constructive-policy-search.md)
-on 2026-07-21. The rejected rare-class C4 prototype was removed and
-`engine/src/solver_solve.cpp` was restored to clean commit `13e8723` before
-new work began. Corrected natural-target fixtures were checkpointed in
-`6ca48b0`.
+[bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
+on 2026-07-22. Work starts from clean `main` commit `60500ef` on
+`codex/bounded-policy-contract`.
 
-The current real target is an empty rare item-level-86 Dire Pelt with three
-naturally rolled T1 modifiers: `ItemFoundRarityIncreasePrefix3`,
-`IncreasedLife9`, and `LifeRegeneration9`. Its Calculator-derived product
-envelope has 23 priced actions, no bench actions, and no essences. All 23
-remain admitted. The old crafted-cold-resistance `[156, 510]` bracket is
-historical regression evidence only.
+The preceding exact constructive-policy milestone is preserved in its
+[dated archive](docs/archive/2026-07-22-exact-constructive-policy-search/README.md).
+It established generic destructive-renewal and progressive-fracture
+incumbents for an empty rare Dire Pelt requiring three naturally rolled T1
+modifiers, proving
 
-Generic primitive destructive-renewal support now proves a finite executable
-incumbent from exact engine kernels. The cheapest real bootstrap repeats the
-Life + Quality fossil and has exact start upper `4893.92255176662`, including
-the real Restart-to-normal carrier and rare setup. Complete retry signatures
-are collision-checked; illegal or signature-changing retry states are
-rejected. A generic progressive fracture policy rolls the same fossil,
-acquires the best exact `(satisfied target subset, explicit-mod count)` class,
-fractures useful target progress, rerolls with the retained fracture, and
-uses real Restart on rejected branches. Its standalone exact start upper is
-`4116.0146281888519`.
+`261.05161071365512 <= V*(start) <= 4104.7066630770487`
 
-Under unchanged production caps, the bounded deeper diagnostic proves:
+under all 23 priced actions and unchanged production caps. This is an
+executable feasibility bracket, not a near-optimal result: `U / L` is about
+`15.7237`. Exact closure is no longer the selected next boundary.
 
-`261.05161071365512 <= V* <= 4104.7066630770487`.
+The exact-search architecture review and Candidate A/C source prototypes are
+preserved only as local review evidence on `codex/exact-search-design` at
+`273831f`. They are not ancestors of, merged into, or adopted by the current
+branch.
 
-It stopped cooperatively on `max_reforge_work` after 50.779 seconds of solve
-time, 544 expanded / 127,661 discovered states, 9,631 retained rows, 430,232
-retained transitions, exactly 11,000,000 reforge-work units, and
-155,223,616 peak selected-owned bytes. Its longest solve step was 10.623
-seconds; the session maximum was 10.744 seconds in the cap-3 timing
-diagnostic. The finite policy improved the upper materially but did not close
-the gap: 541 additional expansions raised the lower by only
-`0.11330375945527` and lowered the upper by about `11.3079`.
+The current engine already computes focused lower/upper bounds and retains
+partial executable upper-policy state internally. On a capped stop it restores
+lower-mode state for finalization, and the Calculator compiles only when
+`converged` is true. B1 must therefore change the policy/result handoff, not
+the Bellman objective or mechanic model.
 
-Resume C4 at the structural gap, not with a cap increase. The leading exact
-lower-bound weakness is rare goal-progress continuation, especially states
-with a permanently fractured satisfied subset, blocker identity, and
-Exalt/Harvest/destructive routing. The upper can also be tightened by
-supporting more progressive acquisition classes and post-fracture renewal
-modes. The constructive-policy pass is the dominant measured phase (20.93 s
-in the cap-3 diagnostic); the strict clean-goal cover costs 0.46 s and first
-expansion 0.62 s. Keep expensive constructive work cooperative or resumable
-before another deeper diagnostic.
+Resume at B1:
 
-The focused native solve, compiler/lifting, fracture, and evaluator suites
-pass. The corrected three-case diagnostic manifest validates. The historical
-accepted two-T1 product value remains `230.26738656962243`, but the current
-clean build did not finish that exact oracle within the session's 180-second
-watchdog. Treat re-greening it as an explicit regression gate before any new
-state abstraction or final acceptance claim.
+1. bump the public ABI for bounded summary/progress fields and independent
+   absolute/relative gap targets;
+2. create one atomic incumbent containing value, policy rows, Unveil
+   preferences, frontier fallback, and quotient provenance;
+3. stitch partial upper rows to the executable Restart/anchor fallback and
+   compile that bounded policy;
+4. stop after a complete focused round when either configured gap target is
+   met, without changing exact numerical semantics; and
+5. validate `L <= J_pi <= U` with native and compiled exact evaluation while
+   retaining occupancy data for later action accounting.
 
-C5 has not run. There is no exact real-case value, compiled bounded policy,
-exact policy evaluation, natural-target 10,000-run verification, WASM rebuild,
-or web acceptance. Approximate compaction, dropping an admitted action, a
-hard-coded Dire Pelt route, and cap-only continuation remain outside the
-boundary.
+No implementation code, ABI edit, WASM rebuild, web change, corpus generator,
+or acceptance run has begun on this branch. Generated benchmark goals in later
+phases are natural T1 modifiers only; bench modifiers cannot satisfy goal
+slots, while legal priced bench actions remain admitted for metamods, blocking,
+setup, and cleanup.
+
+Follow the repository testing cadence: use narrow tests only when needed during
+B1-B5, then run the complete affected native/WASM/web and 10,000-run
+verification gates once at B6. Oliver owns rendered UI review.

@@ -3,7 +3,7 @@
 **Status: C0-C3 retained; C4 has a finite natural three-T1 foothold and exact
 closure remains open.**
 
-Parent: [Active work](README.md)
+Parent: [Archive index](README.md)
 
 ## Objective
 

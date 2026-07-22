@@ -9,6 +9,12 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-22
+
+- [Exact Constructive Policy Search](2026-07-22-exact-constructive-policy-search/README.md) —
+  incomplete exact-closure milestone, final natural three-T1 bracket, and the
+  handoff superseded by bounded executable-policy delivery.
+
 ## 2026-07-21
 
 - [Real Three-T1 From-Scratch Diagnostic](2026-07-21-real-three-t1-diagnostic/README.md) —

@@ -41,11 +41,11 @@ does not reimplement crafting rules.
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
-The [exact constructive policy search](active/exact-constructive-policy-search.md)
-is currently selected. It has established generic destructive-renewal and
-progressive-fracture incumbents for a genuine three-ordinary-pool-T1 target;
-exact gap closure remains active. [Active work](active/README.md) and
-[HANDOFF](../HANDOFF.md) record its scope.
+The [bounded policy results and benchmarking plan](active/bounded-policy-and-benchmarking.md)
+is currently selected. It preserves exact mechanics and action scope while making
+certified executable incumbents useful before exact closure, then adds a seeded
+natural-T1 corpus and stratified solver evidence. [Active work](active/README.md)
+and [HANDOFF](../HANDOFF.md) record its scope.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its
