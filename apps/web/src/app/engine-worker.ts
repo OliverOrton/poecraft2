@@ -300,6 +300,10 @@ async function solveSolver(
         sweeps: 0,
         residual: 1e12,
         start_value_bound: 1e12,
+        lower_bound: null,
+        upper_bound: null,
+        absolute_optimality_gap: null,
+        relative_optimality_gap: null,
     };
 
     try {

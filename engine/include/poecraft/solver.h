@@ -308,6 +308,11 @@ typedef struct pc_solve_options {
      * coarse telemetry. Strict-state mode is an oracle, never an
      * approximation switch. */
     uint32_t solver_flags;
+    /* Product stopping targets. Non-positive values disable the target.
+     * These are observed only after a complete focused lower/upper round and
+     * never participate in Bellman comparisons or exact closure. */
+    double max_absolute_optimality_gap;
+    double max_relative_optimality_gap;
 } pc_solve_options;
 
 typedef enum pc_solver_flag {
@@ -315,6 +320,28 @@ typedef enum pc_solver_flag {
     PC_SOLVER_FLAG_STRICT_STATES = 1u << 1,
     PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE = 1u << 2
 } pc_solver_flag;
+
+typedef enum pc_solve_policy_status {
+    PC_SOLVE_POLICY_NONE = 0,
+    PC_SOLVE_POLICY_BOUNDED_FEASIBLE = 1,
+    PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL = 2,
+    PC_SOLVE_POLICY_EXACT = 3
+} pc_solve_policy_status;
+
+typedef enum pc_solve_termination {
+    PC_SOLVE_TERMINATION_NONE = 0,
+    PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP = 1,
+    PC_SOLVE_TERMINATION_TARGET_GAP = 2,
+    PC_SOLVE_TERMINATION_EXACT_CLOSED = 3,
+    PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY = 4
+} pc_solve_termination;
+
+typedef enum pc_solve_gap_target {
+    PC_SOLVE_GAP_TARGET_NONE = 0,
+    PC_SOLVE_GAP_TARGET_ABSOLUTE = 1,
+    PC_SOLVE_GAP_TARGET_RELATIVE = 2,
+    PC_SOLVE_GAP_TARGET_BOTH = 3
+} pc_solve_gap_target;
 
 typedef struct pc_solve_summary {
     uint32_t struct_size;
@@ -327,6 +354,18 @@ typedef struct pc_solve_summary {
     double residual;
     uint32_t skipped_action_count; /* unpriced or unsupported actions the
                                       solve planned without */
+    int32_t policy_available;
+    int32_t policy_status; /* pc_solve_policy_status */
+    int32_t termination; /* pc_solve_termination */
+    double lower_bound;
+    double upper_bound;
+    double evaluated_policy_cost;
+    double absolute_optimality_gap;
+    double relative_optimality_gap; /* infinity when lower_bound <= 0 */
+    double requested_absolute_optimality_gap;
+    double requested_relative_optimality_gap;
+    int32_t target_met;
+    int32_t target_fired; /* pc_solve_gap_target */
 } pc_solve_summary;
 
 typedef enum pc_solve_phase {
@@ -344,6 +383,10 @@ typedef struct pc_solve_progress {
     uint32_t sweeps;
     double residual;
     double start_value_bound;
+    double lower_bound;
+    double upper_bound;
+    double absolute_optimality_gap;
+    double relative_optimality_gap; /* infinity when lower_bound <= 0 */
 } pc_solve_progress;
 
 /* Stateful solve surface. begin snapshots the economy and resets the latest

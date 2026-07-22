@@ -426,6 +426,17 @@ std::uint64_t optional_u64(
     return static_cast<std::uint64_t>(value->number);
 }
 
+double optional_nonnegative_double(
+    const Value& object, const char* key, double fallback) {
+    const Value* value = optional(object, key, Type::Number);
+    if (value == nullptr) return fallback;
+    if (!std::isfinite(value->number) || value->number < 0.0) {
+        throw std::runtime_error(
+            std::string("non-finite or negative field: ") + key);
+    }
+    return value->number;
+}
+
 double milliseconds(Clock::time_point begin, Clock::time_point end) {
     return std::chrono::duration<double, std::milli>(end - begin).count();
 }
@@ -831,6 +842,12 @@ std::string classify_completed_solve(
         raw_start_bound->number >= 1e12 && summary.residual == 0.0) {
         return "refused_unreachable_goal";
     }
+    if (summary.policy_status == PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL) {
+        return "bounded_near_optimal";
+    }
+    if (summary.policy_status == PC_SOLVE_POLICY_BOUNDED_FEASIBLE) {
+        return "bounded_feasible";
+    }
     if (!summary.converged) {
         const Value& caps = required(specification, "caps", Type::Object);
         const std::uint32_t max_sweeps =
@@ -1000,6 +1017,10 @@ CaseResult run_case(
             caps, "max_diagnostic_samples", 32);
         solve_options.max_telemetry_json_bytes = optional_u64(
             caps, "max_telemetry_json_bytes", 1048576);
+        solve_options.max_absolute_optimality_gap = optional_nonnegative_double(
+            caps, "max_absolute_optimality_gap", 0.0);
+        solve_options.max_relative_optimality_gap = optional_nonnegative_double(
+            caps, "max_relative_optimality_gap", 0.0);
         if (optional_bool(caps, "full_evidence", false)) {
             solve_options.solver_flags |= PC_SOLVER_FLAG_FULL_EVIDENCE;
         }
@@ -1528,6 +1549,37 @@ void append_nullable_number(std::ostringstream& out, bool present, double value)
     else out << std::setprecision(17) << value;
 }
 
+const char* policy_status_name(const int32_t status) {
+    switch (status) {
+    case PC_SOLVE_POLICY_BOUNDED_FEASIBLE: return "bounded_feasible";
+    case PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL:
+        return "bounded_near_optimal";
+    case PC_SOLVE_POLICY_EXACT: return "exact";
+    default: return "none";
+    }
+}
+
+const char* termination_name(const int32_t termination) {
+    switch (termination) {
+    case PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP:
+        return "refused_resource_cap";
+    case PC_SOLVE_TERMINATION_TARGET_GAP: return "target_gap";
+    case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
+        return "no_executable_policy";
+    default: return "none";
+    }
+}
+
+const char* target_name(const int32_t target) {
+    switch (target) {
+    case PC_SOLVE_GAP_TARGET_ABSOLUTE: return "absolute";
+    case PC_SOLVE_GAP_TARGET_RELATIVE: return "relative";
+    case PC_SOLVE_GAP_TARGET_BOTH: return "both";
+    default: return "none";
+    }
+}
+
 void append_case_report(
     std::ostringstream& out, const Value& specification,
     const CaseResult& result) {
@@ -1672,7 +1724,43 @@ void append_case_report(
             << ",\"residual\":";
         append_nullable_number(out, true, result.solve_summary.residual);
         out << ",\"skipped_action_count\":"
-            << result.solve_summary.skipped_action_count << '}';
+            << result.solve_summary.skipped_action_count
+            << ",\"policy_available\":"
+            << (result.solve_summary.policy_available ? "true" : "false")
+            << ",\"policy_status\":"
+            << escape_json(policy_status_name(
+                   result.solve_summary.policy_status))
+            << ",\"termination\":"
+            << escape_json(termination_name(
+                   result.solve_summary.termination))
+            << ",\"lower_bound\":";
+        append_nullable_number(
+            out, true, result.solve_summary.lower_bound);
+        out << ",\"upper_bound\":";
+        append_nullable_number(
+            out, true, result.solve_summary.upper_bound);
+        out << ",\"evaluated_policy_cost\":";
+        append_nullable_number(
+            out, true, result.solve_summary.evaluated_policy_cost);
+        out << ",\"absolute_optimality_gap\":";
+        append_nullable_number(
+            out, true, result.solve_summary.absolute_optimality_gap);
+        out << ",\"relative_optimality_gap\":";
+        append_nullable_number(
+            out, true, result.solve_summary.relative_optimality_gap);
+        out << ",\"requested_absolute_optimality_gap\":";
+        append_nullable_number(
+            out, true,
+            result.solve_summary.requested_absolute_optimality_gap);
+        out << ",\"requested_relative_optimality_gap\":";
+        append_nullable_number(
+            out, true,
+            result.solve_summary.requested_relative_optimality_gap);
+        out << ",\"target_met\":"
+            << (result.solve_summary.target_met ? "true" : "false")
+            << ",\"target_fired\":"
+            << escape_json(target_name(result.solve_summary.target_fired))
+            << '}';
     }
     out << ",\n  \"solver_telemetry\":"
         << (result.telemetry_json.empty() ? "null" : result.telemetry_json)

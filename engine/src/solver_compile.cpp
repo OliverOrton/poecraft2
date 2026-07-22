@@ -1094,10 +1094,26 @@ std::string compile_policy_strategy_json(
     }
     const bool use_exact_policy_tree =
         strict_policy_route && !policy_route_entries.empty();
+    const bool bounded_policy =
+        result.policy_status == SolvePolicyStatus::BoundedFeasible ||
+        result.policy_status == SolvePolicyStatus::BoundedNearOptimal;
+    std::uint32_t bounded_default_restart_action = kNoId;
+    if (bounded_policy && restart_region_leader == kNoId) {
+        for (std::uint32_t action = 0;
+             action < calc.registry().actions.size(); ++action) {
+            if (calc.registry().actions[action].synthetic) {
+                bounded_default_restart_action = action;
+                break;
+            }
+        }
+        if (bounded_default_restart_action == kNoId) {
+            gap("bounded policy has no explicit safe Restart default");
+        }
+    }
     const std::string policy_route_default_node =
         strict_policy_route && restart_region_leader != kNoId
             ? state_node(restart_region_leader)
-            : "offpolicy";
+            : bounded_policy ? "bounded_default_restart" : "offpolicy";
     std::vector<std::map<std::uint32_t, std::string>>
         feature_condition_cache(feature_index.width);
     const auto feature_condition =
@@ -1257,7 +1273,8 @@ std::string compile_policy_strategy_json(
         compiled_option_kernels.emplace(state_id, kernel);
     }
     std::uint32_t node_count =
-        4 + static_cast<std::uint32_t>(policy_route_nodes.size());
+        4 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
+        (bounded_default_restart_action != kNoId ? 1u : 0u);
     const auto check_node_cap = [&]() {
         if (node_count > result.options.max_compiled_nodes) {
             if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
@@ -1325,6 +1342,14 @@ std::string compile_policy_strategy_json(
     json += "{\"id\":\"offpolicy\",\"kind\":\"terminal\",\"terminal\":"
             "\"failure\",\"reason\":\"item left the policy-reachable "
             "state set\"}";
+    if (bounded_default_restart_action != kNoId) {
+        json +=
+            ",{\"id\":\"bounded_default_restart\",\"kind\":\"operation\",";
+        json += "\"operation\":" + operation_json(
+            session,
+            calc.registry().actions.at(bounded_default_restart_action));
+        json += "}";
+    }
     for (const PolicyRouteNode& route : policy_route_nodes) {
         json += ",{\"id\":\"" + route.id + "\",\"kind\":\"router\"}";
     }
@@ -1622,6 +1647,9 @@ std::string compile_policy_strategy_json(
                 route_edge.condition, false);
         }
         edge(route.id, policy_route_default_node, priority, "", true);
+    }
+    if (bounded_default_restart_action != kNoId) {
+        edge("bounded_default_restart", "router", 0, "", true);
     }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =

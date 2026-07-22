@@ -895,6 +895,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                diagnostics.automatic_candidate_witnesses) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.policy_evaluation_failure.capacity() + 1 +
+           diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1;
@@ -1096,6 +1097,9 @@ struct SolveWork::Impl {
         };
         std::uint32_t anchor_state = kNoId;
         double anchor_state_value = kInfinity;
+        std::uint64_t anchor_row =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t anchor_operator = kNoId;
         double renewal_state_value = kInfinity;
         std::uint64_t renewal_row =
             std::numeric_limits<std::uint64_t>::max();
@@ -1116,8 +1120,46 @@ struct SolveWork::Impl {
         std::unordered_map<std::uint32_t, double> progress_state_value;
         std::unordered_map<std::uint32_t, std::uint32_t>
             progress_state_operator;
+        /* A fallback may be retained across monotonic focused-graph growth
+         * only as an executable upper-bound/output witness. These immutable
+         * identities and the referenced row/operator checks below are its
+         * refresh boundary; none of them is search guidance. */
+        std::uint64_t goal_identity = 0;
+        std::uint64_t economy_identity = 0;
+        std::uint64_t action_vocabulary_identity = 0;
+        std::uint32_t action_vocabulary_size = 0;
+        std::uint64_t synthesis_graph_identity = 0;
     };
-    std::optional<FocusedFallbackPolicy> focused_fallback_policy;
+    using FocusedFallbackWitness =
+        std::shared_ptr<const FocusedFallbackPolicy>;
+    FocusedFallbackWitness focused_fallback_policy;
+    struct BoundedPolicyIncumbent {
+        double certified_upper_bound = kInfinity;
+        double evaluated_policy_cost = kInfinity;
+        std::vector<double> values;
+        std::vector<std::uint64_t> policy_rows;
+        std::vector<PolicyOperatorRef> policy;
+        std::vector<std::vector<std::uint32_t>> unveil_preferences;
+        std::vector<std::vector<ObservedUnveilPreference>>
+            option_unveil_preferences;
+        std::vector<std::uint32_t> frontier_operators;
+        FocusedFallbackWitness fallback;
+        std::vector<std::uint32_t> behavioral_representative_by_state;
+        std::uint32_t restart_operator = kNoId;
+        std::uint32_t restart_state = kNoId;
+        std::uint32_t fallback_anchor_state = kNoId;
+        std::uint32_t round = 0;
+        std::string kind;
+        std::uint64_t goal_identity = 0;
+        std::uint64_t economy_identity = 0;
+        std::uint64_t action_vocabulary_identity = 0;
+        std::uint64_t graph_identity = 0;
+        bool strict_state_provenance = true;
+        bool policy_materialized = false;
+    };
+    std::optional<BoundedPolicyIncumbent> output_incumbent;
+    bool target_gap_stop = false;
+    SolveGapTarget target_gap_fired = SolveGapTarget::None;
     std::uint64_t focused_direct_upper_row =
         std::numeric_limits<std::uint64_t>::max();
     std::vector<double> focused_previous_upper_values;
@@ -1210,6 +1252,10 @@ struct SolveWork::Impl {
         calc.set_solve_resource_caps(
             options.max_discovered_states, options.max_reforge_work);
         result.options = options;
+        result.requested_absolute_optimality_gap =
+            options.max_absolute_optimality_gap;
+        result.requested_relative_optimality_gap =
+            options.max_relative_optimality_gap;
         result.diagnostics.diagnostic_sample_limit =
             options.max_diagnostic_samples;
         result.diagnostics.telemetry_json_byte_limit =
@@ -1419,6 +1465,511 @@ struct SolveWork::Impl {
                 std::chrono::steady_clock::now() - setup_started)
                 .count());
         initialize_owned_bytes_ledger();
+    }
+
+    static void identity_mix(
+        std::uint64_t& hash, const std::uint64_t value) {
+        hash ^= value;
+        hash *= 1099511628211ULL;
+    }
+
+    static void identity_mix_string(
+        std::uint64_t& hash, const std::string_view value) {
+        for (const unsigned char byte : value) identity_mix(hash, byte);
+        identity_mix(hash, value.size());
+    }
+
+    std::uint64_t goal_identity() const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, calc.goal().rarity);
+        identity_mix(hash, calc.goal().required_satisfied_slots());
+        identity_mix(hash, calc.layout().slots.size());
+        for (const auto& slot : calc.layout().slots) {
+            identity_mix(hash, slot.satisfying_mask.size());
+            for (const std::uint64_t word : slot.satisfying_mask) {
+                identity_mix(hash, word);
+            }
+        }
+        return hash;
+    }
+
+    std::uint64_t economy_identity() const {
+        std::vector<std::pair<std::string, double>> ordered(
+            prices.begin(), prices.end());
+        std::sort(ordered.begin(), ordered.end());
+        std::uint64_t hash = 1469598103934665603ULL;
+        for (const auto& [key, price] : ordered) {
+            identity_mix_string(hash, key);
+            identity_mix(hash, std::bit_cast<std::uint64_t>(price));
+        }
+        return hash;
+    }
+
+    std::uint64_t action_vocabulary_prefix_identity(
+        const std::size_t count) const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        const std::size_t retained = std::min(count, operators.size());
+        for (std::size_t position = 0; position < retained; ++position) {
+            const PricedOperator& priced = operators[position];
+            const PlannerOperator& planner = calc.operators().at(priced.index);
+            identity_mix(hash, priced.index);
+            identity_mix(hash, static_cast<std::uint64_t>(planner.kind));
+            identity_mix_string(hash, planner.id);
+        }
+        return hash;
+    }
+
+    std::uint64_t action_vocabulary_identity() const {
+        return action_vocabulary_prefix_identity(operators.size());
+    }
+
+    std::uint64_t graph_identity() const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, transition_cache->discovered_states);
+        identity_mix(hash, transition_cache->rows.size());
+        identity_mix(hash, transition_cache->successors.size());
+        identity_mix(hash, transition_cache->choice_successors.size());
+        for (const SparseRow& row : transition_cache->rows) {
+            identity_mix(hash, row.owner_state);
+            identity_mix(hash, row.transition_offset);
+            identity_mix(hash, row.transition_count);
+            identity_mix(hash, row.choice_offset);
+            identity_mix(hash, row.choice_count);
+        }
+        return hash;
+    }
+
+    /* Existing exact closure uses an absolute numerical tolerance. Product
+     * gap targets are separate and must never relax this proof. */
+    double exact_gap_proof_tolerance() const {
+        return options.epsilon * 10.0;
+    }
+
+    /* Some pre-existing value comparisons scale roundoff by the value's
+     * magnitude. Keep that behavior named separately from exact closure and
+     * from product stopping targets. */
+    double value_comparison_tolerance(const double value) const {
+        return options.epsilon * std::max(1.0, std::abs(value)) * 10.0;
+    }
+
+    void stamp_fallback_provenance(FocusedFallbackPolicy& fallback) const {
+        fallback.goal_identity = goal_identity();
+        fallback.economy_identity = economy_identity();
+        fallback.action_vocabulary_identity =
+            action_vocabulary_identity();
+        fallback.action_vocabulary_size =
+            static_cast<std::uint32_t>(operators.size());
+        fallback.synthesis_graph_identity = graph_identity();
+    }
+
+    const char* retained_fallback_invalid_reason(
+        const FocusedFallbackPolicy& fallback) const {
+        if (fallback.goal_identity != goal_identity()) {
+            return "goal_identity_changed";
+        }
+        if (fallback.economy_identity != economy_identity()) {
+            return "economy_identity_changed";
+        }
+        if (operators.size() < fallback.action_vocabulary_size ||
+            fallback.action_vocabulary_identity !=
+                action_vocabulary_prefix_identity(
+                    fallback.action_vocabulary_size)) {
+            return "action_vocabulary_prefix_changed";
+        }
+        if (fallback.anchor_state == kNoId ||
+            fallback.anchor_state >= calc.state_count() ||
+            !std::isfinite(fallback.anchor_state_value) ||
+            fallback.anchor_state_value < 0.0) {
+            return "invalid_anchor";
+        }
+        const auto operator_valid = [&](const std::uint32_t op) {
+            return op != kNoId && op < calc.operators().size();
+        };
+        const auto row_valid = [&](const std::uint64_t row,
+                                   const std::uint32_t owner,
+                                   const std::uint32_t op) {
+            return row < transition_cache->rows.size() &&
+                row < priced_rows.size() &&
+                transition_cache->rows[row].owner_state == owner &&
+                priced_rows[row].operator_index == op;
+        };
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        if (fallback.anchor_row != no_row &&
+            (!operator_valid(fallback.anchor_operator) ||
+             !row_valid(
+                 fallback.anchor_row, fallback.anchor_state,
+                 fallback.anchor_operator))) {
+            return "anchor_row_changed";
+        }
+        if (fallback.renewal_row != no_row &&
+            (!operator_valid(fallback.renewal_operator) ||
+             !row_valid(
+                 fallback.renewal_row, result.start_state,
+                 fallback.renewal_operator))) {
+            return "renewal_row_changed";
+        }
+        if (fallback.renewal_operator != kNoId &&
+            !operator_valid(fallback.renewal_operator)) {
+            return "renewal_operator_changed";
+        }
+        if (fallback.finish_action != kNoId &&
+            fallback.finish_action >= calc.registry().actions.size()) {
+            return "finish_action_changed";
+        }
+        for (const auto& [state, value] :
+             fallback.progress_state_value) {
+            const auto op = fallback.progress_state_operator.find(state);
+            if (state >= calc.state_count() || !std::isfinite(value) ||
+                value < 0.0 ||
+                op == fallback.progress_state_operator.end() ||
+                !operator_valid(op->second)) {
+                return "progress_value_changed";
+            }
+        }
+        for (const auto& [state, op] :
+             fallback.progress_state_operator) {
+            if (state >= calc.state_count() || !operator_valid(op) ||
+                fallback.progress_state_value.find(state) ==
+                    fallback.progress_state_value.end()) {
+                return "progress_operator_changed";
+            }
+        }
+        for (const auto& mode : fallback.primitive_renewal_modes) {
+            if (!std::isfinite(mode.value) || mode.value < 0.0 ||
+                !operator_valid(mode.operator_index) ||
+                mode.kernel_signature.empty()) {
+                return "primitive_mode_changed";
+            }
+        }
+        std::uint32_t anchor_operator = kNoId;
+        const double anchor_upper = fallback_terminal_upper(
+            fallback.anchor_state, fallback, &anchor_operator);
+        if (!std::isfinite(anchor_upper) ||
+            !operator_valid(anchor_operator)) {
+            return "anchor_not_proper";
+        }
+        if (!std::isfinite(focused_start_upper_bound(fallback))) {
+            return "start_not_proper";
+        }
+        return nullptr;
+    }
+
+    FocusedFallbackWitness acquire_focused_fallback() {
+        std::array<FocusedFallbackWitness, 2> retained{
+            focused_fallback_policy,
+            output_incumbent.has_value()
+                ? output_incumbent->fallback
+                : FocusedFallbackWitness{}};
+        bool invalid_retained = false;
+        for (std::size_t i = 0; i < retained.size(); ++i) {
+            if (!retained[i] ||
+                (i != 0 && retained[i] == retained[0])) {
+                continue;
+            }
+            const char* reason =
+                retained_fallback_invalid_reason(*retained[i]);
+            if (reason == nullptr) {
+                ++result.diagnostics.constructive_policy_reuses;
+                return retained[i];
+            }
+            invalid_retained = true;
+            result.diagnostics.constructive_policy_last_refresh_reason =
+                reason;
+        }
+        if (invalid_retained) {
+            ++result.diagnostics.constructive_policy_refreshes;
+            if (output_incumbent.has_value() &&
+                output_incumbent->fallback &&
+                retained_fallback_invalid_reason(
+                    *output_incumbent->fallback) != nullptr) {
+                output_incumbent.reset();
+            }
+        }
+        ++result.diagnostics.constructive_policy_syntheses;
+        std::optional<FocusedFallbackPolicy> synthesized =
+            focused_fallback();
+        if (synthesized.has_value()) {
+            stamp_fallback_provenance(*synthesized);
+            return std::make_shared<const FocusedFallbackPolicy>(
+                std::move(*synthesized));
+        }
+        return {};
+    }
+
+    void populate_incumbent_policy(BoundedPolicyIncumbent& candidate) {
+        if (candidate.policy_materialized) return;
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        const std::size_t state_count = candidate.values.size();
+        candidate.policy.assign(state_count, PolicyOperatorRef{});
+        candidate.unveil_preferences.assign(state_count, {});
+        candidate.option_unveil_preferences.assign(state_count, {});
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (calc.is_goal_state(calc.state(state))) continue;
+            std::uint64_t selected_row =
+                state < candidate.policy_rows.size()
+                    ? candidate.policy_rows[state]
+                    : no_row;
+            std::uint32_t selected_operator = kNoId;
+            if (selected_row != no_row) {
+                if (selected_row >= priced_rows.size() ||
+                    selected_row >= transition_cache->rows.size() ||
+                    transition_cache->rows[selected_row].owner_state != state) {
+                    throw std::logic_error(
+                        "bounded incumbent row does not belong to its state");
+                }
+                selected_operator =
+                    priced_rows[selected_row].operator_index;
+            } else if (state < candidate.frontier_operators.size()) {
+                selected_operator = candidate.frontier_operators[state];
+            }
+            if (selected_operator == kNoId && candidate.fallback) {
+                selected_operator = candidate.restart_operator;
+            }
+            if (selected_operator == kNoId ||
+                selected_operator >= calc.operators().size()) {
+                throw std::logic_error(
+                    "bounded incumbent has a reachable state without an "
+                    "executable action");
+            }
+            const PlannerOperator& planner =
+                calc.operators().at(selected_operator);
+            candidate.policy[state] =
+                PolicyOperatorRef{planner.kind, selected_operator};
+            if (selected_row == no_row) continue;
+            const PricedSparseRow& row = priced_rows.at(selected_row);
+            if (planner.kind == PlannerOperatorKind::Primitive &&
+                planner.primitive_action < calc.registry().actions.size() &&
+                calc.registry().actions[planner.primitive_action].params.type ==
+                    ActionType::Unveil) {
+                std::vector<OutcomeChoiceOption> choices;
+                for (std::uint32_t i = 0; i < row.choice_option_count; ++i) {
+                    choices.push_back(transition_cache->choice_options.at(
+                        row.choice_option_offset + i));
+                }
+                std::sort(
+                    choices.begin(), choices.end(),
+                    [&](const OutcomeChoiceOption& left,
+                        const OutcomeChoiceOption& right) {
+                        const double left_value =
+                            candidate.values.at(left.state);
+                        const double right_value =
+                            candidate.values.at(right.state);
+                        return left_value != right_value
+                                   ? left_value < right_value
+                                   : left.mod_id < right.mod_id;
+                    });
+                for (const OutcomeChoiceOption& choice : choices) {
+                    candidate.unveil_preferences[state].push_back(
+                        choice.mod_id);
+                }
+            } else if (planner.kind == PlannerOperatorKind::FixedOption &&
+                       row.choice_option_count != 0) {
+                std::map<std::uint32_t, std::vector<OutcomeChoiceOption>>
+                    by_observation;
+                for (std::uint32_t i = 0; i < row.choice_option_count; ++i) {
+                    const OutcomeChoiceOption& choice =
+                        transition_cache->choice_options.at(
+                            row.choice_option_offset + i);
+                    by_observation[choice.observation_state].push_back(choice);
+                }
+                for (auto& [observation_state, choices] : by_observation) {
+                    std::sort(
+                        choices.begin(), choices.end(),
+                        [&](const OutcomeChoiceOption& left,
+                            const OutcomeChoiceOption& right) {
+                            const double left_value =
+                                candidate.values.at(left.state);
+                            const double right_value =
+                                candidate.values.at(right.state);
+                            return left_value != right_value
+                                       ? left_value < right_value
+                                       : left.mod_id < right.mod_id;
+                        });
+                    ObservedUnveilPreference preference;
+                    preference.observation_state = observation_state;
+                    for (const OutcomeChoiceOption& choice : choices) {
+                        preference.choices.push_back(
+                            {choice.mod_id, choice.state, choice.actual_state});
+                    }
+                    candidate.option_unveil_preferences[state].push_back(
+                        std::move(preference));
+                }
+            }
+        }
+        candidate.policy_materialized = true;
+    }
+
+    void install_output_incumbent(
+        const double upper,
+        const std::vector<double>& values,
+        const std::vector<std::uint64_t>& selected_rows,
+        const std::vector<std::uint32_t>& frontier_operators,
+        const FocusedFallbackWitness& fallback,
+        std::string kind) {
+        if (!std::isfinite(upper) || upper < 0.0 ||
+            result.start_state >= values.size()) {
+            return;
+        }
+        if (output_incumbent.has_value() &&
+            upper >= output_incumbent->certified_upper_bound -
+                         options.epsilon) {
+            return;
+        }
+        BoundedPolicyIncumbent candidate;
+        candidate.certified_upper_bound = upper;
+        candidate.evaluated_policy_cost = upper;
+        candidate.values = values;
+        candidate.values[result.start_state] = upper;
+        candidate.policy_rows = selected_rows;
+        candidate.policy_rows.resize(
+            candidate.values.size(),
+            std::numeric_limits<std::uint64_t>::max());
+        candidate.frontier_operators = frontier_operators;
+        candidate.frontier_operators.resize(candidate.values.size(), kNoId);
+        candidate.fallback = fallback;
+        candidate.restart_operator = restart_operator_index;
+        candidate.restart_state = restart_state;
+        candidate.fallback_anchor_state =
+            fallback ? fallback->anchor_state : kNoId;
+        candidate.round = result.diagnostics.focused_expansion_rounds;
+        candidate.kind = std::move(kind);
+        candidate.goal_identity = goal_identity();
+        candidate.economy_identity = economy_identity();
+        candidate.action_vocabulary_identity =
+            action_vocabulary_identity();
+        candidate.graph_identity = graph_identity();
+        candidate.behavioral_representative_by_state =
+            result.behavioral_representative_by_state;
+        candidate.strict_state_provenance =
+            result.behavioral_representative_by_state.empty();
+        /* Values, row IDs, frontier operators, fallback, and provenance are
+         * the atomic same-round source of truth. Policy refs and Unveil
+         * preferences are deterministic derived output; materialize them
+         * once only if this incumbent is ultimately returned. Rebuilding
+         * those full-state vectors on every improving upper round dominated
+         * exact searches without providing search guidance. */
+        output_incumbent = std::move(candidate);
+        result.diagnostics.incumbent_kind = output_incumbent->kind;
+        result.diagnostics.incumbent_round = output_incumbent->round;
+        result.diagnostics.incumbent_restart_state =
+            output_incumbent->restart_state;
+        result.diagnostics.incumbent_anchor_state =
+            output_incumbent->fallback_anchor_state;
+        result.diagnostics.incumbent_goal_identity =
+            output_incumbent->goal_identity;
+        result.diagnostics.incumbent_economy_identity =
+            output_incumbent->economy_identity;
+        result.diagnostics.incumbent_action_vocabulary_identity =
+            output_incumbent->action_vocabulary_identity;
+        result.diagnostics.incumbent_graph_identity =
+            output_incumbent->graph_identity;
+        result.diagnostics.incumbent_strict_state_provenance =
+            output_incumbent->strict_state_provenance;
+    }
+
+    void install_fallback_output_incumbent(
+        const FocusedFallbackWitness& witness) {
+        if (!witness || restart_operator_index == kNoId ||
+            !std::isfinite(restart_cost) ||
+            !std::isfinite(witness->anchor_state_value)) {
+            return;
+        }
+        const FocusedFallbackPolicy& fallback = *witness;
+        const std::size_t state_count = calc.state_count();
+        std::vector<double> values(state_count, kInfinity);
+        std::vector<std::uint32_t> frontier(state_count, kNoId);
+        const double restart_value =
+            restart_cost + fallback.anchor_state_value;
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (calc.is_goal_state(calc.state(state))) {
+                values[state] = 0.0;
+                continue;
+            }
+            std::uint32_t terminal_operator = kNoId;
+            const double terminal = fallback_terminal_upper(
+                state, fallback, &terminal_operator);
+            if (terminal_operator != kNoId && terminal <= restart_value) {
+                values[state] = terminal;
+                frontier[state] = terminal_operator;
+            } else {
+                values[state] = restart_value;
+                frontier[state] = restart_operator_index;
+            }
+        }
+        if (fallback.anchor_state < state_count) {
+            values[fallback.anchor_state] = fallback.anchor_state_value;
+            if (frontier[fallback.anchor_state] == kNoId) return;
+        }
+        const double upper = values.at(result.start_state);
+        std::string kind = "constructive_fallback";
+        if (result.diagnostics.progressive_fracture_status == "complete" &&
+            std::isfinite(result.diagnostics.progressive_fracture_value) &&
+            std::abs(
+                upper -
+                result.diagnostics.progressive_fracture_start_value) <=
+                value_comparison_tolerance(upper)) {
+            kind = "progressive_fracture";
+        } else if (!result.diagnostics.destructive_renewal_action_id.empty()) {
+            kind = "destructive_renewal";
+        }
+        install_output_incumbent(
+            upper, values, {}, frontier, witness, std::move(kind));
+    }
+
+    void install_direct_output_incumbent(
+        const double upper, const std::uint64_t row) {
+        if (!output_incumbent.has_value() ||
+            row >= priced_rows.size() ||
+            row >= transition_cache->rows.size() ||
+            transition_cache->rows[row].owner_state != result.start_state) {
+            return;
+        }
+        std::vector<double> values = output_incumbent->values;
+        std::vector<std::uint64_t> rows = output_incumbent->policy_rows;
+        values[result.start_state] = upper;
+        rows[result.start_state] = row;
+        install_output_incumbent(
+            upper, values, rows, output_incumbent->frontier_operators,
+            output_incumbent->fallback, "direct_executable_row");
+    }
+
+    SolveGapTarget satisfied_gap_target() const {
+        if (!output_incumbent.has_value()) return SolveGapTarget::None;
+        const double lower = result.diagnostics.focused_lower_bound;
+        const double upper = output_incumbent->certified_upper_bound;
+        if (!std::isfinite(lower) || !std::isfinite(upper) ||
+            lower > upper + value_comparison_tolerance(upper)) {
+            return SolveGapTarget::None;
+        }
+        const bool absolute = options.max_absolute_optimality_gap > 0.0 &&
+            upper - lower <= options.max_absolute_optimality_gap;
+        const bool relative = options.max_relative_optimality_gap > 0.0 &&
+            lower > 0.0 &&
+            upper <= (1.0 + options.max_relative_optimality_gap) * lower;
+        if (absolute && relative) return SolveGapTarget::Both;
+        if (absolute) return SolveGapTarget::Absolute;
+        if (relative) return SolveGapTarget::Relative;
+        return SolveGapTarget::None;
+    }
+
+    bool stop_for_satisfied_gap_target() {
+        if (result.diagnostics.resource_cap_hit ||
+            result.diagnostics.state_cap_hit ||
+            (expanded_count >= options.max_expanded_states &&
+             calc.state_count() > expanded_count)) {
+            return false;
+        }
+        const SolveGapTarget fired = satisfied_gap_target();
+        if (fired == SolveGapTarget::None) return false;
+        target_gap_stop = true;
+        target_gap_fired = fired;
+        queue.clear();
+        focus_optimizing = false;
+        focused_lower_mode = false;
+        focused_upper_mode = false;
+        return true;
     }
 
     bool ensure_priced_operator(const std::uint32_t index) {
@@ -3614,7 +4165,7 @@ struct SolveWork::Impl {
             std::isfinite(focused_previous_upper_values[state])) {
             limits.incumbent_upper_bound =
                 focused_previous_upper_values[state];
-        } else if (focused_fallback_policy.has_value()) {
+        } else if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
             const double terminal =
@@ -8760,7 +9311,7 @@ struct SolveWork::Impl {
                         contribution *= std::max(
                             0.0, state_upper - state_lower);
                     }
-                } else if (focused_fallback_policy.has_value()) {
+                } else if (focused_fallback_policy) {
                     const FocusedFallbackPolicy& fallback =
                         *focused_fallback_policy;
                     const double state_upper = std::min(
@@ -9007,6 +9558,12 @@ struct SolveWork::Impl {
         }
         double best = kInfinity;
         std::uint32_t best_operator = kNoId;
+        if (state == fallback.anchor_state &&
+            std::isfinite(fallback.anchor_state_value) &&
+            fallback.anchor_operator != kNoId) {
+            best = fallback.anchor_state_value;
+            best_operator = fallback.anchor_operator;
+        }
         const auto progress = fallback.progress_state_value.find(state);
         if (progress != fallback.progress_state_value.end() &&
             std::isfinite(progress->second)) {
@@ -9290,7 +9847,7 @@ struct SolveWork::Impl {
                     salvage_operator;
                 std::unordered_set<std::uint32_t> salvage_active;
                 const double salvage_anchor_guess =
-                    focused_fallback_policy.has_value()
+                    focused_fallback_policy
                         ? focused_fallback_policy->anchor_state_value
                         : kInfinity;
                 std::function<CarrierEquation(std::uint32_t)> salvage;
@@ -10649,8 +11206,14 @@ struct SolveWork::Impl {
             const double denominator = 1.0 - loop_probability;
             if (!feasible || denominator <= 1e-15) continue;
             const double value = constant / denominator;
-            best.anchor_state_value = std::min(
-                best.anchor_state_value, value);
+            if (value < best.anchor_state_value - options.epsilon ||
+                (std::abs(value - best.anchor_state_value) <=
+                     options.epsilon &&
+                 absolute < best.anchor_row)) {
+                best.anchor_state_value = value;
+                best.anchor_row = absolute;
+                best.anchor_operator = priced.operator_index;
+            }
         }
         if (!std::isfinite(best.anchor_state_value)) return progress_fallback;
         if (progress_fallback.has_value() &&
@@ -10893,7 +11456,7 @@ struct SolveWork::Impl {
                 fringe.size(),
                 static_cast<std::uint64_t>(coarse_count) *
                     members_per_class));
-        if (!focused_fallback_policy.has_value() &&
+        if (!focused_fallback_policy &&
             restart_state != kNoId && restart_state < queued.size() &&
             !queued[restart_state]) {
             selected_fringe.push_back(restart_state);
@@ -10906,7 +11469,7 @@ struct SolveWork::Impl {
             }
             if (queued.at(state) ||
                 (state == restart_state &&
-                 !focused_fallback_policy.has_value())) {
+                 !focused_fallback_policy)) {
                 continue;
             }
             const std::uint32_t candidate = coarse.at(state);
@@ -10944,7 +11507,7 @@ struct SolveWork::Impl {
     }
 
     bool begin_focused_upper_solve() {
-        if (!focused_fallback_policy.has_value() ||
+        if (!focused_fallback_policy ||
             focused_strict_transition_cache != nullptr ||
             !std::isfinite(restart_cost) || restart_cost < 0.0) {
             return false;
@@ -11024,7 +11587,7 @@ struct SolveWork::Impl {
                 result.diagnostics.optimization_ns;
             const auto constructive_policy_start =
                 std::chrono::steady_clock::now();
-            focused_fallback_policy = focused_fallback();
+            focused_fallback_policy = acquire_focused_fallback();
             result.diagnostics.constructive_policy_ns +=
                 static_cast<std::uint64_t>(
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -11045,6 +11608,10 @@ struct SolveWork::Impl {
                 strict_clean_goal_cover_refresh_needed = false;
                 begin_focused_lower_solve();
                 return;
+            }
+            if (focused_fallback_policy) {
+                install_fallback_output_incumbent(
+                    focused_fallback_policy);
             }
             if (begin_focused_upper_solve()) return;
         }
@@ -11199,6 +11766,7 @@ struct SolveWork::Impl {
         const auto [direct_upper, direct_row] =
             focused_direct_start_upper();
         if (std::isfinite(direct_upper)) {
+            install_direct_output_incumbent(direct_upper, direct_row);
             if (direct_upper < result.diagnostics.focused_upper_bound) {
                 result.diagnostics.focused_upper_bound = direct_upper;
                 focused_direct_upper_row = direct_row;
@@ -11207,9 +11775,8 @@ struct SolveWork::Impl {
                 0.0,
                 result.diagnostics.focused_upper_bound -
                     result.diagnostics.focused_lower_bound);
-            const double proof_tolerance = options.epsilon *
-                std::max(1.0, std::abs(
-                    result.diagnostics.focused_upper_bound)) * 10.0;
+            const double proof_tolerance = value_comparison_tolerance(
+                result.diagnostics.focused_upper_bound);
             if (focused_direct_upper_row !=
                     std::numeric_limits<std::uint64_t>::max() &&
                 std::abs(
@@ -11235,21 +11802,19 @@ struct SolveWork::Impl {
                 return;
             }
         }
-        if (focused_fallback_policy.has_value()) {
-            const double fallback_start = focused_start_upper_bound(
-                *focused_fallback_policy);
-            result.diagnostics.focused_upper_bound = std::min(
-                result.diagnostics.focused_upper_bound, fallback_start);
+        if (output_incumbent.has_value()) {
+            result.diagnostics.focused_upper_bound =
+                output_incumbent->certified_upper_bound;
             result.diagnostics.focused_optimality_gap = std::max(
                 0.0,
                 result.diagnostics.focused_upper_bound -
-                result.diagnostics.focused_lower_bound);
+                    result.diagnostics.focused_lower_bound);
         }
         if (std::isfinite(focused_partial_upper_bound) &&
             focused_previous_upper_values.size() == result.values.size() &&
             focused_previous_upper_policy_rows.size() == result.values.size()) {
-            const double proof_tolerance = options.epsilon *
-                std::max(1.0, std::abs(focused_partial_upper_bound)) * 10.0;
+            const double proof_tolerance = value_comparison_tolerance(
+                focused_partial_upper_bound);
             if (std::abs(
                     focused_partial_upper_bound -
                     result.diagnostics.focused_lower_bound) <=
@@ -11270,7 +11835,7 @@ struct SolveWork::Impl {
             }
         }
         if (!std::isfinite(direct_upper) &&
-            !focused_fallback_policy.has_value() &&
+            !focused_fallback_policy &&
             (restart_state == kNoId ||
              restart_state >= expanded.size() ||
              !expanded[restart_state])) {
@@ -11325,15 +11890,34 @@ struct SolveWork::Impl {
                 focused_previous_upper_policy_rows = policy_rows;
                 focused_previous_frontier_upper_operator =
                     focused_frontier_upper_operator;
-                result.diagnostics.focused_upper_bound = std::min(
-                    result.diagnostics.focused_upper_bound,
-                    focused_partial_upper_bound);
+                std::string incumbent_kind =
+                    "partial_upper_plus_fallback";
+                if (result.diagnostics.progressive_fracture_status ==
+                    "complete") {
+                    incumbent_kind =
+                        "partial_upper_plus_progressive_fracture";
+                } else if (!result.diagnostics
+                                .destructive_renewal_action_id.empty()) {
+                    incumbent_kind =
+                        "partial_upper_plus_destructive_renewal";
+                }
+                install_output_incumbent(
+                    focused_partial_upper_bound, result.values, policy_rows,
+                    focused_frontier_upper_operator,
+                    focused_fallback_policy, std::move(incumbent_kind));
+                result.diagnostics.focused_upper_bound =
+                    output_incumbent.has_value()
+                        ? output_incumbent->certified_upper_bound
+                        : result.diagnostics.focused_upper_bound;
                 result.diagnostics.focused_optimality_gap = std::max(
                     0.0,
                     result.diagnostics.focused_upper_bound -
                         result.diagnostics.focused_lower_bound);
             }
         }
+        const bool target_reached =
+            succeeded && focused_pending_upper_complete &&
+            stop_for_satisfied_gap_target();
         result.values = std::move(focused_round_lower_values);
         policy_rows = std::move(focused_round_lower_policy_rows);
         focused_frontier_upper_operator.clear();
@@ -11342,7 +11926,7 @@ struct SolveWork::Impl {
         policy_initialized = true;
         policy_stable = true;
         reset_policy_iteration_units();
-        finish_focused_lower_solve(false);
+        if (!target_reached) finish_focused_lower_solve(false);
     }
 
     void run_focused_lower_unit() {
@@ -11493,6 +12077,11 @@ struct SolveWork::Impl {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (phase == SolvePhase::Expanding) {
+                if (target_gap_stop) {
+                    prepare_iteration();
+                    phase = SolvePhase::Done;
+                    break;
+                }
                 if (focus_optimizing) {
                     run_focused_lower_unit();
                     --remaining;
@@ -11593,6 +12182,26 @@ struct SolveWork::Impl {
             result.start_state < result.values.size()) {
             value.start_value_bound = result.values[result.start_state];
         }
+        if (result.diagnostics.focused_expansion) {
+            value.lower_bound =
+                result.diagnostics.focused_lower_bound;
+            value.upper_bound = output_incumbent.has_value()
+                                    ? output_incumbent->certified_upper_bound
+                                    : result.diagnostics.focused_upper_bound;
+        } else {
+            value.lower_bound = 0.0;
+            value.upper_bound = value.start_value_bound;
+        }
+        if (std::isfinite(value.lower_bound) &&
+            std::isfinite(value.upper_bound)) {
+            value.absolute_optimality_gap = std::max(
+                0.0, value.upper_bound - value.lower_bound);
+            if (value.lower_bound > 0.0) {
+                value.relative_optimality_gap = std::max(
+                    0.0,
+                    value.upper_bound / value.lower_bound - 1.0);
+            }
+        }
         return value;
     }
 
@@ -11658,6 +12267,71 @@ struct SolveWork::Impl {
         }
         const auto extraction_started = std::chrono::steady_clock::now();
 
+        const bool sweep_cap_hit =
+            sweeps >= options.max_sweeps && !optimization_converged();
+        if (sweep_cap_hit) record_cap("max_sweeps");
+        const bool restore_output_incumbent =
+            output_incumbent.has_value() &&
+            (target_gap_stop || result.diagnostics.state_cap_hit ||
+             result.diagnostics.resource_cap_hit || sweep_cap_hit);
+        if (restore_output_incumbent) {
+            BoundedPolicyIncumbent& incumbent = *output_incumbent;
+            populate_incumbent_policy(incumbent);
+            result.values = std::move(incumbent.values);
+            result.policy = std::move(incumbent.policy);
+            result.unveil_preferences =
+                std::move(incumbent.unveil_preferences);
+            result.option_unveil_preferences =
+                std::move(incumbent.option_unveil_preferences);
+            owned_result_nested_bytes = 0;
+            for (const auto& preferences :
+                 result.unveil_preferences) {
+                owned_result_nested_bytes +=
+                    preferences.capacity() * sizeof(std::uint32_t);
+            }
+            for (const auto& preferences :
+                 result.option_unveil_preferences) {
+                owned_result_nested_bytes += preferences.capacity() *
+                    sizeof(ObservedUnveilPreference);
+                for (const auto& preference : preferences) {
+                    owned_result_nested_bytes +=
+                        preference.choices.capacity() *
+                        sizeof(ObservedUnveilChoice);
+                }
+            }
+            result.behavioral_representative_by_state =
+                std::move(incumbent.behavioral_representative_by_state);
+            policy_rows = std::move(incumbent.policy_rows);
+            const std::size_t state_count = result.values.size();
+            result.goal_states.assign(state_count, 0);
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (calc.is_goal_state(calc.state(state))) {
+                    result.goal_states[state] = 1;
+                }
+            }
+            if (!result.behavioral_representative_by_state.empty()) {
+                if (result.behavioral_representative_by_state.size() !=
+                    state_count) {
+                    throw std::logic_error(
+                        "bounded incumbent quotient provenance size changed");
+                }
+                for (std::uint32_t state = 0; state < state_count; ++state) {
+                    const std::uint32_t representative =
+                        result.behavioral_representative_by_state[state];
+                    if (representative >= state_count ||
+                        result.policy[state] != result.policy[representative] ||
+                        result.unveil_preferences[state] !=
+                            result.unveil_preferences[representative] ||
+                        result.option_unveil_preferences[state] !=
+                            result.option_unveil_preferences[representative]) {
+                        throw std::logic_error(
+                            "bounded incumbent quotient lift changed policy "
+                            "or preferences");
+                    }
+                }
+            }
+        }
+
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
         finalize_preservation_diagnostics();
@@ -11669,7 +12343,7 @@ struct SolveWork::Impl {
         const bool authoritative_policy_available =
             !result.diagnostics.state_cap_hit &&
             !result.diagnostics.resource_cap_hit &&
-            !focused_bound_proved;
+            !focused_bound_proved && !restore_output_incumbent;
         for (std::uint32_t state = 0;
              authoritative_policy_available && state < state_count; ++state) {
             if (finalization_capped) break;
@@ -11871,7 +12545,18 @@ struct SolveWork::Impl {
             result.policy_reachable.clear();
         }
         bool reachable_policy_complete = true;
-        if (!finalization_capped && result.start_state < state_count) {
+        if (!finalization_capped && restore_output_incumbent) {
+            result.diagnostics.policy_reachable_states = 0;
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                result.policy_reachable[state] = 1;
+                ++result.diagnostics.policy_reachable_states;
+                if (!result.goal_states[state] &&
+                    result.policy[state] == kNoId) {
+                    reachable_policy_complete = false;
+                }
+            }
+        } else if (!finalization_capped &&
+                   result.start_state < state_count) {
             std::deque<std::uint32_t> walk{result.start_state};
             while (!walk.empty()) {
                 const std::uint32_t state = walk.front();
@@ -11989,7 +12674,9 @@ struct SolveWork::Impl {
             full_non_goal_closure ||
             (focused_closure_proved &&
              result.diagnostics.focused_optimality_gap <=
-                 options.epsilon * 10.0);
+                 exact_gap_proof_tolerance());
+        result.diagnostics.focused_exact_gap_proof_tolerance =
+            exact_gap_proof_tolerance();
         const bool final_optimization_converged = optimization_converged();
         result.converged = focused_exact &&
                            !result.diagnostics.state_cap_hit &&
@@ -12027,6 +12714,66 @@ struct SolveWork::Impl {
                 result.option_unveil_preferences[state] =
                     result.option_unveil_preferences[representative];
             }
+        }
+        if (result.converged) {
+            const double exact_value = result.values[result.start_state];
+            result.policy_available = true;
+            result.policy_status = SolvePolicyStatus::Exact;
+            result.termination = SolveTermination::ExactClosed;
+            result.lower_bound = exact_value;
+            result.upper_bound = exact_value;
+            result.evaluated_policy_cost = exact_value;
+            result.absolute_optimality_gap = 0.0;
+            result.relative_optimality_gap = 0.0;
+        } else if (restore_output_incumbent && reachable_policy_complete &&
+                   !finalization_capped) {
+            const BoundedPolicyIncumbent& incumbent = *output_incumbent;
+            result.policy_available = true;
+            result.target_met = target_gap_stop;
+            result.target_fired =
+                target_gap_stop ? target_gap_fired : SolveGapTarget::None;
+            result.policy_status =
+                target_gap_stop
+                    ? SolvePolicyStatus::BoundedNearOptimal
+                    : SolvePolicyStatus::BoundedFeasible;
+            result.termination =
+                target_gap_stop
+                    ? SolveTermination::TargetGap
+                    : SolveTermination::RefusedResourceCap;
+            result.lower_bound =
+                result.diagnostics.focused_lower_bound;
+            result.upper_bound = incumbent.certified_upper_bound;
+            result.evaluated_policy_cost =
+                incumbent.evaluated_policy_cost;
+            const double bracket_tolerance =
+                value_comparison_tolerance(result.upper_bound);
+            if (result.lower_bound > result.evaluated_policy_cost +
+                                         bracket_tolerance ||
+                result.evaluated_policy_cost > result.upper_bound +
+                                                   bracket_tolerance) {
+                throw std::logic_error(
+                    "bounded incumbent evaluation violates L <= J_pi <= U");
+            }
+            result.absolute_optimality_gap = std::max(
+                0.0, result.upper_bound - result.lower_bound);
+            result.relative_optimality_gap =
+                result.lower_bound > 0.0
+                    ? std::max(
+                          0.0,
+                          result.upper_bound / result.lower_bound - 1.0)
+                    : kInfinity;
+        } else {
+            result.policy_available = false;
+            result.policy_status = SolvePolicyStatus::None;
+            result.termination = SolveTermination::NoExecutablePolicy;
+            result.lower_bound =
+                result.diagnostics.focused_expansion
+                    ? result.diagnostics.focused_lower_bound
+                    : 0.0;
+            result.upper_bound = kInfinity;
+            result.evaluated_policy_cost = kInfinity;
+            result.absolute_optimality_gap = kInfinity;
+            result.relative_optimality_gap = kInfinity;
         }
         {
             std::uint64_t hash = 1469598103934665603ULL;
@@ -12134,6 +12881,56 @@ struct SolveWork::Impl {
         return audited;
     }
 
+    std::uint64_t output_incumbent_owned_bytes() const {
+        if (!output_incumbent.has_value()) return 0;
+        const BoundedPolicyIncumbent& incumbent = *output_incumbent;
+        std::uint64_t bytes = sizeof(BoundedPolicyIncumbent) +
+            incumbent.kind.capacity() + 1;
+        bytes += incumbent.values.capacity() * sizeof(double);
+        bytes += incumbent.policy_rows.capacity() * sizeof(std::uint64_t);
+        bytes += incumbent.policy.capacity() * sizeof(PolicyOperatorRef);
+        bytes += incumbent.frontier_operators.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incumbent.behavioral_representative_by_state.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incumbent.unveil_preferences.capacity() *
+                 sizeof(std::vector<std::uint32_t>);
+        for (const auto& preferences : incumbent.unveil_preferences) {
+            bytes += preferences.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += incumbent.option_unveil_preferences.capacity() *
+                 sizeof(std::vector<ObservedUnveilPreference>);
+        for (const auto& preferences :
+             incumbent.option_unveil_preferences) {
+            bytes += preferences.capacity() *
+                     sizeof(ObservedUnveilPreference);
+            for (const auto& preference : preferences) {
+                bytes += preference.choices.capacity() *
+                         sizeof(ObservedUnveilChoice);
+            }
+        }
+        if (incumbent.fallback &&
+            incumbent.fallback != focused_fallback_policy) {
+            const FocusedFallbackPolicy& fallback = *incumbent.fallback;
+            bytes += sizeof(FocusedFallbackPolicy);
+            bytes += fallback.renewal_kernel_signature.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += fallback.primitive_renewal_modes.capacity() *
+                     sizeof(FocusedFallbackPolicy::PrimitiveRenewalMode);
+            for (const auto& mode : fallback.primitive_renewal_modes) {
+                bytes += mode.kernel_signature.capacity() *
+                         sizeof(std::uint64_t);
+            }
+            bytes += fallback.progress_state_value.size() *
+                     (sizeof(std::pair<const std::uint32_t, double>) +
+                      2 * sizeof(void*));
+            bytes += fallback.progress_state_operator.size() *
+                     (sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                      2 * sizeof(void*));
+        }
+        return bytes;
+    }
+
     std::uint64_t fast_estimated_owned_bytes() const {
         ++owned_byte_ledger_requests;
         return fast_estimated_owned_bytes_with_calc(
@@ -12197,9 +12994,10 @@ struct SolveWork::Impl {
         bytes += clean_goal_no_exalt_escape_action.capacity() *
                  sizeof(std::uint32_t);
         bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
-        if (focused_fallback_policy.has_value()) {
+        if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
+            bytes += sizeof(FocusedFallbackPolicy);
             bytes += fallback.renewal_kernel_signature.capacity() *
                 sizeof(std::uint64_t);
             bytes += fallback.primitive_renewal_modes.capacity() *
@@ -12260,6 +13058,7 @@ struct SolveWork::Impl {
         bytes += result.behavioral_representative_by_state.capacity() *
                  sizeof(std::uint32_t);
         bytes += owned_result_nested_bytes;
+        bytes += output_incumbent_owned_bytes();
         /* Diagnostic samples are strictly bounded and are not graph-sized.
          * Keep their exact current allocation in both ledger paths. */
         bytes += diagnostics_owned_bytes(result.diagnostics);
@@ -12332,9 +13131,10 @@ struct SolveWork::Impl {
         bytes += clean_goal_no_exalt_escape_action.capacity() *
                  sizeof(std::uint32_t);
         bytes += strict_clean_goal_cover_cost.capacity() * sizeof(double);
-        if (focused_fallback_policy.has_value()) {
+        if (focused_fallback_policy) {
             const FocusedFallbackPolicy& fallback =
                 *focused_fallback_policy;
+            bytes += sizeof(FocusedFallbackPolicy);
             bytes += fallback.renewal_kernel_signature.capacity() *
                 sizeof(std::uint64_t);
             bytes += fallback.primitive_renewal_modes.capacity() *
@@ -12408,6 +13208,7 @@ struct SolveWork::Impl {
         }
         bytes += result.behavioral_representative_by_state.capacity() *
                  sizeof(std::uint32_t);
+        bytes += output_incumbent_owned_bytes();
         bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;
     }
@@ -12610,6 +13411,38 @@ std::string serialize_solver_telemetry(
     };
     const auto bool_json = [](bool value) {
         return value ? "true" : "false";
+    };
+    const auto policy_status_name = [](const SolvePolicyStatus status) {
+        switch (status) {
+        case SolvePolicyStatus::None: return "none";
+        case SolvePolicyStatus::BoundedFeasible:
+            return "bounded_feasible";
+        case SolvePolicyStatus::BoundedNearOptimal:
+            return "bounded_near_optimal";
+        case SolvePolicyStatus::Exact: return "exact";
+        }
+        return "none";
+    };
+    const auto termination_name = [](const SolveTermination termination) {
+        switch (termination) {
+        case SolveTermination::None: return "none";
+        case SolveTermination::RefusedResourceCap:
+            return "refused_resource_cap";
+        case SolveTermination::TargetGap: return "target_gap";
+        case SolveTermination::ExactClosed: return "exact_closed";
+        case SolveTermination::NoExecutablePolicy:
+            return "no_executable_policy";
+        }
+        return "none";
+    };
+    const auto gap_target_name = [](const SolveGapTarget target) {
+        switch (target) {
+        case SolveGapTarget::None: return "none";
+        case SolveGapTarget::Absolute: return "absolute";
+        case SolveGapTarget::Relative: return "relative";
+        case SolveGapTarget::Both: return "both";
+        }
+        return "none";
     };
 
     const std::uint64_t output_limit =
@@ -13122,9 +13955,70 @@ std::string serialize_solver_telemetry(
             diagnostics->focused_partial_policy_rounds);
         json += ",\"optimality_gap\":";
         append_bound(diagnostics->focused_optimality_gap);
+        json += ",\"exact_gap_proof_tolerance\":";
+        append_bound(diagnostics->focused_exact_gap_proof_tolerance);
+        json += ",\"incumbent\":{";
+        json += "\"kind\":";
+        if (diagnostics->incumbent_kind.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, diagnostics->incumbent_kind);
+        }
+        json += ",\"round\":" +
+                std::to_string(diagnostics->incumbent_round);
+        json += ",\"restart_state\":";
+        json += diagnostics->incumbent_restart_state == kNoId
+                    ? "null"
+                    : std::to_string(
+                          diagnostics->incumbent_restart_state);
+        json += ",\"anchor_state\":";
+        json += diagnostics->incumbent_anchor_state == kNoId
+                    ? "null"
+                    : std::to_string(
+                          diagnostics->incumbent_anchor_state);
+        const auto append_identity = [&](const char* name,
+                                         const std::uint64_t value) {
+            char buffer[17];
+            std::snprintf(
+                buffer, sizeof(buffer), "%016llx",
+                static_cast<unsigned long long>(value));
+            json += ",\"";
+            json += name;
+            json += "\":\"";
+            json += buffer;
+            json += '"';
+        };
+        append_identity(
+            "goal_identity", diagnostics->incumbent_goal_identity);
+        append_identity(
+            "economy_identity", diagnostics->incumbent_economy_identity);
+        append_identity(
+            "action_vocabulary_identity",
+            diagnostics->incumbent_action_vocabulary_identity);
+        append_identity(
+            "graph_identity", diagnostics->incumbent_graph_identity);
+        json += ",\"strict_state_provenance\":" + std::string(bool_json(
+            diagnostics->incumbent_strict_state_provenance));
+        json += "}";
         json += ",\"duration_ns\":" + std::to_string(
             diagnostics->focused_expansion_ns);
-        json += ",\"constructive_policy\":{\"anchor_checks\":" +
+        json += ",\"constructive_policy\":{\"syntheses\":" +
+                std::to_string(
+                    diagnostics->constructive_policy_syntheses);
+        json += ",\"reuses\":" + std::to_string(
+            diagnostics->constructive_policy_reuses);
+        json += ",\"refreshes\":" + std::to_string(
+            diagnostics->constructive_policy_refreshes);
+        json += ",\"last_refresh_reason\":";
+        if (diagnostics->constructive_policy_last_refresh_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                diagnostics->constructive_policy_last_refresh_reason);
+        }
+        json += ",\"anchor_checks\":" +
                 std::to_string(
                     diagnostics->constructive_policy_anchor_checks);
         json += ",\"anchor_eligible\":" + std::to_string(
@@ -13346,15 +14240,20 @@ std::string serialize_solver_telemetry(
         json += ",\"cap_hits\":[]";
         json += ",\"full_request_status\":\"incomplete_not_finished\"";
     } else {
-        const char* status = result->converged
-                                 ? (qualified_action_subset
-                                        ? "exact_supported_priced_subset"
-                                        : "exact_abstract")
-                                 : (diagnostics->state_cap_hit
-                                        ? "incomplete_state_cap"
-                                        : (diagnostics->resource_cap_hit
-                                               ? "incomplete_resource_cap"
-                                               : "not_converged"));
+        const char* status =
+            result->policy_status == SolvePolicyStatus::BoundedNearOptimal
+                ? "bounded_near_optimal"
+                : result->policy_status == SolvePolicyStatus::BoundedFeasible
+                      ? "bounded_feasible"
+                      : result->converged
+                            ? (qualified_action_subset
+                                   ? "exact_supported_priced_subset"
+                                   : "exact_abstract")
+                            : (diagnostics->state_cap_hit
+                                   ? "incomplete_state_cap"
+                                   : (diagnostics->resource_cap_hit
+                                          ? "incomplete_resource_cap"
+                                          : "not_converged"));
         json += ",\"status\":\"" + std::string(status) + "\"";
         json += ",\"converged\":" +
                 std::string(bool_json(result->converged));
@@ -13384,7 +14283,9 @@ std::string serialize_solver_telemetry(
         }
         json += "]";
         json += ",\"full_request_status\":\"";
-        if (diagnostics->state_cap_hit) {
+        if (result->termination == SolveTermination::TargetGap) {
+            json += "target_gap";
+        } else if (diagnostics->state_cap_hit) {
             json += "incomplete_state_cap";
         } else if (diagnostics->resource_cap_hit) {
             json += "incomplete_resource_cap";
@@ -13398,6 +14299,46 @@ std::string serialize_solver_telemetry(
         json += "\"";
     }
     json += "}";
+
+    json += ",\"policy_result\":";
+    if (result == nullptr) {
+        json += "null";
+    } else {
+        const auto append_result_number = [&](const double value) {
+            if (!std::isfinite(value)) {
+                json += "null";
+                return;
+            }
+            char buffer[40];
+            std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+            json += buffer;
+        };
+        json += "{\"available\":" +
+                std::string(bool_json(result->policy_available));
+        json += ",\"status\":\"";
+        json += policy_status_name(result->policy_status);
+        json += "\",\"termination\":\"";
+        json += termination_name(result->termination);
+        json += "\",\"lower_bound\":";
+        append_result_number(result->lower_bound);
+        json += ",\"upper_bound\":";
+        append_result_number(result->upper_bound);
+        json += ",\"evaluated_policy_cost\":";
+        append_result_number(result->evaluated_policy_cost);
+        json += ",\"absolute_gap\":";
+        append_result_number(result->absolute_optimality_gap);
+        json += ",\"relative_gap\":";
+        append_result_number(result->relative_optimality_gap);
+        json += ",\"requested_absolute_gap\":";
+        append_result_number(result->requested_absolute_optimality_gap);
+        json += ",\"requested_relative_gap\":";
+        append_result_number(result->requested_relative_optimality_gap);
+        json += ",\"target_met\":" +
+                std::string(bool_json(result->target_met));
+        json += ",\"target_fired\":\"";
+        json += gap_target_name(result->target_fired);
+        json += "\"}";
+    }
 
     json += ",\"timings_ns\":{\"registry_generation\":" +
             optional_count(registry_generation_ns);
@@ -13564,7 +14505,7 @@ std::string serialize_solver_telemetry(
     const bool has_snapshot_bound =
         snapshot != nullptr && std::isfinite(snapshot->raw_start_bound);
     json += ",\"value\":{\"start\":";
-    if (!has_result_bound || !result->converged) {
+    if (!has_result_bound || !result->policy_available) {
         json += "null";
     } else {
         char buffer[40];
@@ -13582,12 +14523,20 @@ std::string serialize_solver_telemetry(
         json += qualified_action_subset
                     ? "\"exact_supported_priced_subset_within_tolerance\""
                     : "\"exact_abstract_within_tolerance\"";
+    } else if (result->policy_status ==
+               SolvePolicyStatus::BoundedNearOptimal) {
+        json += "\"bounded_near_optimal_certificate\"";
+    } else if (result->policy_status ==
+               SolvePolicyStatus::BoundedFeasible) {
+        json += "\"bounded_feasible_certificate\"";
     } else {
         json += "\"unavailable_incomplete_solve\"";
     }
     json += ",\"start_scope\":";
-    if (result == nullptr || !result->converged) {
+    if (result == nullptr || !result->policy_available) {
         json += "null";
+    } else if (!result->converged) {
+        json += "\"executable_returned_policy\"";
     } else {
         json += qualified_action_subset ? "\"supported_priced_subset\""
                                         : "\"full_requested_action_set\"";

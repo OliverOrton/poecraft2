@@ -1420,6 +1420,21 @@ struct StrategyEvalReviewSection {
     std::map<std::string, double> techniques;
 };
 
+/* Retained exact state-action occupancy. `state` indexes occupancy_states and
+ * `node`/`action` preserve the deterministic compiled-policy control choice.
+ * Reward is the immediate priced cost of one applied action; the expected
+ * contribution is expected_applied * immediate_reward. These records remain
+ * internal until B4 adds the action-utility report surface. */
+struct StrategyEvalOccupancyEntry {
+    std::uint32_t state = kNoId;
+    std::uint32_t node = kNoId;
+    std::uint32_t action = kNoId;
+    double expected_visits = 0.0;
+    double expected_applied = 0.0;
+    double immediate_reward = 0.0;
+    bool reward_complete = false;
+};
+
 struct StrategyEvalResult {
     bool converged = false;
     std::uint32_t sweeps = 0;
@@ -1456,6 +1471,11 @@ struct StrategyEvalResult {
     std::vector<StrategyEvalFailure> failures_by_node;
     std::vector<StrategyEvalNode> nodes;
     std::vector<StrategyEvalEdge> edges;
+    std::vector<AbstractState> occupancy_states;
+    std::vector<StrategyEvalOccupancyEntry> occupancy;
+    double occupancy_expected_reward = 0.0;
+    double occupancy_reward_difference = 0.0;
+    bool occupancy_reward_complete = false;
     /* White-box diagnostic for the per-sweep conservation property. */
     double max_mass_conservation_error = 0.0;
     std::uint64_t owned_bytes_estimate = 0;
@@ -1563,6 +1583,30 @@ struct SolveOptions {
     bool full_evidence = false;
     bool strict_states = false;
     bool kernel_reuse = true;
+    double max_absolute_optimality_gap = 0.0;
+    double max_relative_optimality_gap = 0.0;
+};
+
+enum class SolvePolicyStatus : std::uint8_t {
+    None,
+    BoundedFeasible,
+    BoundedNearOptimal,
+    Exact,
+};
+
+enum class SolveTermination : std::uint8_t {
+    None,
+    RefusedResourceCap,
+    TargetGap,
+    ExactClosed,
+    NoExecutablePolicy,
+};
+
+enum class SolveGapTarget : std::uint8_t {
+    None,
+    Absolute,
+    Relative,
+    Both,
 };
 
 struct SolveDiagnostics {
@@ -1645,9 +1689,23 @@ struct SolveDiagnostics {
         std::numeric_limits<double>::infinity();
     std::uint32_t focused_partial_policy_rounds = 0;
     double focused_optimality_gap = std::numeric_limits<double>::infinity();
+    double focused_exact_gap_proof_tolerance = 0.0;
+    std::string incumbent_kind;
+    std::uint32_t incumbent_round = 0;
+    std::uint32_t incumbent_restart_state = kNoId;
+    std::uint32_t incumbent_anchor_state = kNoId;
+    std::uint64_t incumbent_goal_identity = 0;
+    std::uint64_t incumbent_economy_identity = 0;
+    std::uint64_t incumbent_action_vocabulary_identity = 0;
+    std::uint64_t incumbent_graph_identity = 0;
+    bool incumbent_strict_state_provenance = true;
     std::uint64_t focused_expansion_ns = 0;
     std::uint64_t constructive_policy_ns = 0;
     std::uint64_t strict_clean_goal_cover_ns = 0;
+    std::uint64_t constructive_policy_syntheses = 0;
+    std::uint64_t constructive_policy_reuses = 0;
+    std::uint64_t constructive_policy_refreshes = 0;
+    std::string constructive_policy_last_refresh_reason;
     std::uint64_t constructive_policy_anchor_checks = 0;
     std::uint64_t constructive_policy_anchor_eligible = 0;
     std::uint64_t constructive_policy_renewal_variants = 0;
@@ -1730,6 +1788,18 @@ struct SolveDiagnostics {
  */
 struct SolveResult {
     bool converged = false;
+    bool policy_available = false;
+    SolvePolicyStatus policy_status = SolvePolicyStatus::None;
+    SolveTermination termination = SolveTermination::None;
+    SolveGapTarget target_fired = SolveGapTarget::None;
+    bool target_met = false;
+    double lower_bound = 0.0;
+    double upper_bound = std::numeric_limits<double>::infinity();
+    double evaluated_policy_cost = std::numeric_limits<double>::infinity();
+    double absolute_optimality_gap = std::numeric_limits<double>::infinity();
+    double relative_optimality_gap = std::numeric_limits<double>::infinity();
+    double requested_absolute_optimality_gap = 0.0;
+    double requested_relative_optimality_gap = 0.0;
     std::uint32_t start_state = kNoId;
     std::vector<double> values;
     /* Planner operator index or kNoId. Primitive operator indices are exactly
@@ -1767,6 +1837,10 @@ struct SolveProgress {
     std::uint32_t sweeps = 0;
     double residual = 0.0;
     double start_value_bound = 0.0;
+    double lower_bound = 0.0;
+    double upper_bound = std::numeric_limits<double>::infinity();
+    double absolute_optimality_gap = std::numeric_limits<double>::infinity();
+    double relative_optimality_gap = std::numeric_limits<double>::infinity();
 };
 
 /* Read-only, non-finalizing view of stepped work. It never extracts a policy

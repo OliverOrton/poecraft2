@@ -30,6 +30,10 @@ std::shared_ptr<SessionImpl> make_solve_session() {
     data->base_count = 1;
     data->base_metadata_path_sid = {1};
     data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9};
+    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+        data->mod_pos_by_key.emplace(
+            "mod" + std::to_string(mod), mod);
+    }
 
     auto session = std::make_shared<SessionImpl>();
     session->data = data;
@@ -38,6 +42,9 @@ std::shared_ptr<SessionImpl> make_solve_session() {
     session->mod_count = 8;
     session->words = pc_bitset_words(8);
     session->global_index = {0, 1, 2, 3, 4, 5, 6, 7};
+    for (std::uint32_t mod = 0; mod < 8; ++mod) {
+        session->session_id_by_global_id.emplace(mod, mod);
+    }
     session->gen_type = {0, 0, 0, 0, 0, 1, 1, 1};
     session->primary_group = {10, 10, 10, 12, 13, 20, 21, 22};
     session->required_level = {1, 1, 1, 1, 1, 1, 1, 1};
@@ -125,6 +132,12 @@ bool identical_solve(
     const SolveResult& left,
     const SolveResult& right) {
     return left.converged == right.converged &&
+           left.policy_available == right.policy_available &&
+           left.policy_status == right.policy_status &&
+           left.termination == right.termination &&
+           left.lower_bound == right.lower_bound &&
+           left.upper_bound == right.upper_bound &&
+           left.evaluated_policy_cost == right.evaluated_policy_cost &&
            left.start_state == right.start_state &&
            left.values == right.values && left.policy == right.policy &&
            left.expanded == right.expanded &&
@@ -184,6 +197,11 @@ void run_alt_spam_tests() {
             {"transmute", 1.0}, {"alteration", 1.0}, {"base", 10.0}};
         const SolveResult result = solve(calc, start, prices);
         PC_CHECK(result.converged);
+        PC_CHECK(result.policy_available);
+        PC_CHECK(result.policy_status == SolvePolicyStatus::Exact);
+        PC_CHECK(result.termination == SolveTermination::ExactClosed);
+        PC_CHECK(result.lower_bound == result.upper_bound);
+        PC_CHECK(result.upper_bound == result.evaluated_policy_cost);
         PC_CHECK(result.diagnostics.skipped_missing_price.empty());
         PC_CHECK(result.diagnostics.skipped_unsupported.empty());
         PC_CHECK(near(result.values[result.start_state], 1.0 / p));
@@ -254,6 +272,11 @@ void run_alt_spam_tests() {
         const SolveResult capped = solve(calc, start, prices, capped_options);
         PC_CHECK(!capped.converged);
         PC_CHECK(capped.diagnostics.state_cap_hit);
+        PC_CHECK(!capped.policy_available);
+        PC_CHECK(capped.policy_status == SolvePolicyStatus::None);
+        PC_CHECK(capped.termination ==
+                 SolveTermination::NoExecutablePolicy);
+        PC_CHECK(!std::isfinite(capped.upper_bound));
         const std::string capped_telemetry = serialize_solver_telemetry(
             calc, &capped, nullptr, std::nullopt, nullptr);
         PC_CHECK(valid_json_object(capped_telemetry));
@@ -679,6 +702,22 @@ void run_primitive_destructive_renewal_upper_tests() {
     const double direct_renewal = 1.0 / success_probability;
     PC_CHECK(result.diagnostics.focused_expansion);
     PC_CHECK(result.diagnostics.state_cap_hit);
+    PC_CHECK(result.policy_available);
+    PC_CHECK(result.policy_status ==
+             SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(result.termination ==
+             SolveTermination::RefusedResourceCap);
+    PC_CHECK(result.lower_bound <= result.evaluated_policy_cost + 1e-9);
+    PC_CHECK(result.evaluated_policy_cost <= result.upper_bound + 1e-9);
+    PC_CHECK(near(
+        result.evaluated_policy_cost,
+        result.diagnostics.focused_upper_bound, 1e-8));
+    for (std::uint32_t state = 0;
+         state < result.policy_reachable.size(); ++state) {
+        if (result.policy_reachable[state] && !result.goal_states[state]) {
+            PC_CHECK(result.policy[state] != kNoId);
+        }
+    }
     PC_CHECK(std::isfinite(result.diagnostics.focused_upper_bound));
     PC_CHECK(near(
         result.diagnostics.focused_upper_bound, direct_renewal, 1e-8));
@@ -719,6 +758,103 @@ void run_primitive_destructive_renewal_upper_tests() {
         PC_CHECK(compilation.working_states > 0);
     }
 
+    {
+        PolicyCompilationTelemetry compilation;
+        const std::string strategy_json = compile_policy_strategy_json(
+            calc, result, "bounded primitive destructive renewal",
+            &compilation);
+        const std::shared_ptr<StrategyImpl> strategy =
+            compile_strategy_json(
+                session, strategy_json.data(), strategy_json.size());
+        auto economy = std::make_shared<EconomyImpl>();
+        economy->id = "bounded-policy-test";
+        economy->prices = prices;
+        StrategyEvalOptions evaluation_options;
+        evaluation_options.economy = economy;
+        const StrategyEvalResult evaluation = evaluate_strategy(
+            *strategy, evaluation_options);
+        PC_CHECK(evaluation.converged);
+        PC_CHECK(evaluation.cost_complete);
+        PC_CHECK(near(
+            evaluation.total_expected_cost,
+            result.evaluated_policy_cost, 1e-7));
+        PC_CHECK(!evaluation.occupancy_states.empty());
+        PC_CHECK(!evaluation.occupancy.empty());
+        PC_CHECK(evaluation.occupancy_reward_complete);
+        double retained_reward = 0.0;
+        for (const StrategyEvalOccupancyEntry& entry :
+             evaluation.occupancy) {
+            PC_CHECK(entry.state < evaluation.occupancy_states.size());
+            PC_CHECK(entry.action != kNoId);
+            PC_CHECK(entry.reward_complete);
+            retained_reward +=
+                entry.expected_applied * entry.immediate_reward;
+        }
+        PC_CHECK(near(
+            retained_reward, evaluation.total_expected_cost, 1e-7));
+        PC_CHECK(near(
+            evaluation.occupancy_expected_reward,
+            evaluation.total_expected_cost, 1e-7));
+        PC_CHECK(near(
+            evaluation.occupancy_reward_difference, 0.0, 1e-7));
+    }
+
+    {
+        /* A native bounded policy and a compilable strategy are separate
+         * contracts. Remove one stable vocabulary key after the native
+         * policy has been certified: compilation must refuse without
+         * relabelling the policy as exact or erasing its finite bound. */
+        const std::shared_ptr<DataImpl> mutable_data =
+            std::const_pointer_cast<DataImpl>(session->data);
+        const std::string saved_key = mutable_data->strings.at(2);
+        mutable_data->strings.at(2).clear();
+        bool compile_refused = false;
+        try {
+            (void)compile_policy_strategy_json(
+                calc, result, "inexpressible bounded policy");
+        } catch (const std::runtime_error&) {
+            compile_refused = true;
+        }
+        mutable_data->strings.at(2) = saved_key;
+        PC_CHECK(compile_refused);
+        PC_CHECK(result.policy_status ==
+                 SolvePolicyStatus::BoundedFeasible);
+        PC_CHECK(result.policy_available);
+        PC_CHECK(std::isfinite(result.upper_bound));
+    }
+
+    SolveOptions target_options = options;
+    target_options.max_expanded_states = 1000;
+    target_options.max_absolute_optimality_gap = 1e9;
+    const SolveResult target = solve(
+        calc, start, prices, target_options);
+    PC_CHECK(!target.converged);
+    PC_CHECK(target.policy_available);
+    PC_CHECK(target.policy_status ==
+             SolvePolicyStatus::BoundedNearOptimal);
+    PC_CHECK(target.termination == SolveTermination::TargetGap);
+    PC_CHECK(target.target_met);
+    PC_CHECK(target.target_fired == SolveGapTarget::Absolute);
+    PC_CHECK(!target.diagnostics.state_cap_hit);
+    /* Preparation-only lower refreshes can increment expansion rounds before
+     * any complete upper pass exists. The target must fire on the first
+     * completed lower/upper certificate, counted here. */
+    PC_CHECK(target.diagnostics.focused_partial_policy_rounds == 1);
+    PC_CHECK(target.diagnostics.supported_priced_actions ==
+             result.diagnostics.supported_priced_actions);
+    PC_CHECK(target.absolute_optimality_gap <=
+             target_options.max_absolute_optimality_gap);
+
+    SolveOptions unmet_options = options;
+    unmet_options.max_absolute_optimality_gap = 1e-30;
+    const SolveResult unmet = solve(
+        calc, start, prices, unmet_options);
+    PC_CHECK(unmet.policy_available);
+    PC_CHECK(unmet.policy_status == SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(unmet.termination == SolveTermination::RefusedResourceCap);
+    PC_CHECK(!unmet.target_met);
+    PC_CHECK(unmet.target_fired == SolveGapTarget::None);
+
     auto doubled = prices;
     for (auto& [unused, price] : doubled) {
         (void)unused;
@@ -737,6 +873,10 @@ void run_primitive_destructive_renewal_upper_tests() {
         {alchemy, chaos, restart});
     const SolveResult illegal = solve(
         illegal_calc, start, prices, options);
+    PC_CHECK(!illegal.policy_available);
+    PC_CHECK(illegal.policy_status == SolvePolicyStatus::None);
+    PC_CHECK(illegal.termination == SolveTermination::NoExecutablePolicy);
+    PC_CHECK(!std::isfinite(illegal.upper_bound));
     PC_CHECK(std::none_of(
         illegal.diagnostics.action_inclusion_reasons.begin(),
         illegal.diagnostics.action_inclusion_reasons.end(),
@@ -809,6 +949,24 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(std::isfinite(
         progressive.diagnostics.progressive_fracture_start_value));
     PC_CHECK(progressive.diagnostics.progressive_fracture_post_modes > 0);
+
+    SolveOptions retained_progressive_options = options;
+    retained_progressive_options.max_expanded_states = 8;
+    retained_progressive_options.max_absolute_optimality_gap = 1e-30;
+    const SolveResult retained_progressive = solve(
+        fracture_calc, start, fracture_prices,
+        retained_progressive_options);
+    PC_CHECK(
+        retained_progressive.diagnostics.focused_expansion_rounds > 1);
+    PC_CHECK(
+        retained_progressive.diagnostics.constructive_policy_syntheses >= 1);
+    PC_CHECK(
+        retained_progressive.diagnostics.constructive_policy_reuses >= 1);
+    PC_CHECK(
+        retained_progressive.diagnostics.constructive_policy_refreshes == 0);
+    PC_CHECK(
+        retained_progressive.diagnostics.constructive_policy_syntheses <
+        retained_progressive.diagnostics.focused_expansion_rounds);
 
     fracture_prices["fracture"] = 1000000.0;
     const SolveResult expensive_fracture = solve(

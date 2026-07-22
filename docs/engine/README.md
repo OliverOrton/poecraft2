@@ -137,6 +137,10 @@ not duplicated here.
 
 - C ABI structs that cross an extensible boundary carry `struct_size` and
   `abi_version` where defined by their header.
+- The current public ABI is version 2. The bounded-policy summary/progress
+  growth intentionally broke ABI v1 because output helpers replace complete
+  compile-time structs; consumers must rebuild and must not claim v1 binary
+  compatibility.
 - Variable-length results use query-required-count or query-required-buffer
   conventions.
 - Every created opaque handle has a matching null-safe destroy function.

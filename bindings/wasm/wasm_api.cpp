@@ -14,6 +14,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -581,6 +582,10 @@ bool parse_solve_options(
         obj_u32(spec, "max_diagnostic_samples");
     options.max_telemetry_json_bytes = obj_u64(
         spec, "max_telemetry_json_bytes");
+    options.max_absolute_optimality_gap = obj_double(
+        spec, "max_absolute_optimality_gap");
+    options.max_relative_optimality_gap = obj_double(
+        spec, "max_relative_optimality_gap");
     const Value* full_evidence = spec.find("full_evidence");
     if (full_evidence != nullptr && full_evidence->type == Type::Bool &&
         full_evidence->boolean) {
@@ -645,6 +650,45 @@ void append_precise_double(std::string& out, const double value) {
     out += buffer;
 }
 
+void append_nullable_double(std::string& out, const double value) {
+    if (!std::isfinite(value)) {
+        out += "null";
+        return;
+    }
+    append_precise_double(out, value);
+}
+
+const char* solve_policy_status_name(const int32_t status) {
+    switch (status) {
+    case PC_SOLVE_POLICY_BOUNDED_FEASIBLE: return "bounded_feasible";
+    case PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL:
+        return "bounded_near_optimal";
+    case PC_SOLVE_POLICY_EXACT: return "exact";
+    default: return "none";
+    }
+}
+
+const char* solve_termination_name(const int32_t termination) {
+    switch (termination) {
+    case PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP:
+        return "refused_resource_cap";
+    case PC_SOLVE_TERMINATION_TARGET_GAP: return "target_gap";
+    case PC_SOLVE_TERMINATION_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY:
+        return "no_executable_policy";
+    default: return "none";
+    }
+}
+
+const char* solve_gap_target_name(const int32_t target) {
+    switch (target) {
+    case PC_SOLVE_GAP_TARGET_ABSOLUTE: return "absolute";
+    case PC_SOLVE_GAP_TARGET_RELATIVE: return "relative";
+    case PC_SOLVE_GAP_TARGET_BOTH: return "both";
+    default: return "none";
+    }
+}
+
 void append_solve_progress(
     std::string& out,
     const pc_solve_progress& progress) {
@@ -659,6 +703,14 @@ void append_solve_progress(
     append_precise_double(out, progress.residual);
     out += ",\"start_value_bound\":";
     append_precise_double(out, progress.start_value_bound);
+    out += ",\"lower_bound\":";
+    append_nullable_double(out, progress.lower_bound);
+    out += ",\"upper_bound\":";
+    append_nullable_double(out, progress.upper_bound);
+    out += ",\"absolute_optimality_gap\":";
+    append_nullable_double(out, progress.absolute_optimality_gap);
+    out += ",\"relative_optimality_gap\":";
+    append_nullable_double(out, progress.relative_optimality_gap);
     out.push_back('}');
 }
 
@@ -669,7 +721,7 @@ void append_solve_summary(
     out += summary.converged ? "true" : "false";
     out += ",\"start_state\":" + std::to_string(summary.start_state);
     out += ",\"start_value\":";
-    append_precise_double(out, summary.start_value);
+    append_nullable_double(out, summary.start_value);
     out += ",\"expanded_states\":" +
            std::to_string(summary.expanded_states);
     out += ",\"sweeps\":" + std::to_string(summary.sweeps);
@@ -677,6 +729,33 @@ void append_solve_summary(
     append_precise_double(out, summary.residual);
     out += ",\"skipped_actions\":" +
            std::to_string(summary.skipped_action_count);
+    out += ",\"policy_available\":";
+    out += summary.policy_available ? "true" : "false";
+    out += ",\"policy_status\":\"";
+    out += solve_policy_status_name(summary.policy_status);
+    out += "\",\"termination\":\"";
+    out += solve_termination_name(summary.termination);
+    out += "\",\"lower_bound\":";
+    append_nullable_double(out, summary.lower_bound);
+    out += ",\"upper_bound\":";
+    append_nullable_double(out, summary.upper_bound);
+    out += ",\"evaluated_policy_cost\":";
+    append_nullable_double(out, summary.evaluated_policy_cost);
+    out += ",\"absolute_optimality_gap\":";
+    append_nullable_double(out, summary.absolute_optimality_gap);
+    out += ",\"relative_optimality_gap\":";
+    append_nullable_double(out, summary.relative_optimality_gap);
+    out += ",\"requested_absolute_optimality_gap\":";
+    append_precise_double(
+        out, summary.requested_absolute_optimality_gap);
+    out += ",\"requested_relative_optimality_gap\":";
+    append_precise_double(
+        out, summary.requested_relative_optimality_gap);
+    out += ",\"target_met\":";
+    out += summary.target_met ? "true" : "false";
+    out += ",\"target_fired\":\"";
+    out += solve_gap_target_name(summary.target_fired);
+    out += '"';
 }
 
 const char* terminal_name(int32_t kind) {

@@ -863,7 +863,10 @@ export class PcCalculator extends HTMLElement {
     }
 
     private async verifySolvedStrategy(): Promise<void> {
-        if (!this.solveSummary || !this.solvedStrategy) return;
+        const evaluatedPolicyCost =
+            this.solveSummary?.evaluated_policy_cost ?? null;
+        if (!this.solveSummary || !this.solvedStrategy ||
+            evaluatedPolicyCost === null) return;
         this.verification = null;
         this.solveError = null;
         this.verificationRunning = true;
@@ -914,7 +917,7 @@ export class PcCalculator extends HTMLElement {
             this.verification = {
                 completedRuns,
                 empiricalCost,
-                delta: empiricalCost - this.solveSummary.start_value,
+                delta: empiricalCost - evaluatedPolicyCost,
             };
         } catch (error) {
             this.solveError = {
@@ -1783,15 +1786,16 @@ export class PcCalculator extends HTMLElement {
                 </section>`
                 : "";
         const summary = this.solveSummary;
+        const solveValue = summary?.start_value ?? null;
         const finiteSolveValue =
-            summary !== null &&
-            Number.isFinite(summary.start_value) &&
-            summary.start_value < 1e12;
+            solveValue !== null &&
+            Number.isFinite(solveValue) &&
+            solveValue < 1e12;
         const resultMarkup = summary
             ? `<section class="pc-calc-solve-result">
                 <div class="pc-calc-solve-headline">
                     <span>${summary.converged ? "Expected cost" : "Current cost bound"}</span>
-                    <strong>${finiteSolveValue ? formatChaosValue(summary.start_value) : "Unavailable"}</strong>
+                    <strong>${finiteSolveValue ? formatChaosValue(solveValue) : "Unavailable"}</strong>
                 </div>
                 <div class="pc-calc-solve-state ${summary.converged ? "is-success" : "is-warning"}">
                     ${summary.converged ? "Converged" : "Did not converge"}
@@ -1813,7 +1817,7 @@ export class PcCalculator extends HTMLElement {
                 ${
                     this.verification
                         ? `<div class="pc-calc-solve-verification">
-                            <span>Exact <strong>${formatChaosValue(summary.start_value)}</strong></span>
+                            <span>Exact <strong>${finiteSolveValue ? formatChaosValue(solveValue) : "Unavailable"}</strong></span>
                             <span>Empirical <strong>${formatChaosValue(this.verification.empiricalCost)}</strong></span>
                             <span>Delta <strong>${this.verification.delta >= 0 ? "+" : "−"}${formatChaosValue(Math.abs(this.verification.delta))}</strong></span>
                         </div>`

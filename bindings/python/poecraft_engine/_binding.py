@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 MAX_BESTIARY_COST_KEYS = 4
-ABI_VERSION = 1
+ABI_VERSION = 2
 RESULT_OK = 0
 RESULT_BUFFER_TOO_SMALL = 7
 MAX_FOSSILS = 4

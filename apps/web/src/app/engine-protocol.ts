@@ -620,11 +620,32 @@ export interface CalcResult {
 export interface SolveSummary {
     converged: boolean;
     start_state: number;
-    start_value: number;
+    start_value: number | null;
     expanded_states: number;
     sweeps: number;
     residual: number;
     skipped_actions: number;
+    policy_available: boolean;
+    policy_status:
+        | "none"
+        | "bounded_feasible"
+        | "bounded_near_optimal"
+        | "exact";
+    termination:
+        | "none"
+        | "refused_resource_cap"
+        | "target_gap"
+        | "exact_closed"
+        | "no_executable_policy";
+    lower_bound: number | null;
+    upper_bound: number | null;
+    evaluated_policy_cost: number | null;
+    absolute_optimality_gap: number | null;
+    relative_optimality_gap: number | null;
+    requested_absolute_optimality_gap: number;
+    requested_relative_optimality_gap: number;
+    target_met: boolean;
+    target_fired: "none" | "absolute" | "relative" | "both";
     economy?: EconomyIdentity;
 }
 
@@ -643,6 +664,8 @@ export interface SolveOptions {
     max_strategy_json_bytes?: number;
     max_diagnostic_samples?: number;
     max_telemetry_json_bytes?: number;
+    max_absolute_optimality_gap?: number;
+    max_relative_optimality_gap?: number;
     full_evidence?: boolean;
     strict_states?: boolean;
     kernel_reuse?: boolean;
@@ -665,6 +688,10 @@ export interface SolveProgress {
     residual: number;
     /** Monotonically descending upper bound; 1e12 means iteration is pending. */
     start_value_bound: number;
+    lower_bound: number | null;
+    upper_bound: number | null;
+    absolute_optimality_gap: number | null;
+    relative_optimality_gap: number | null;
 }
 
 /** Benchmark telemetry emitted by the native optimal solver.  The versioned

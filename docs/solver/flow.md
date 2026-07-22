@@ -180,7 +180,11 @@ solve began but does not finish, worker cleanup calls
 bounded abandoned telemetry for diagnosis.
 
 Resource exhaustion, unsupported input, or a native error is surfaced as a
-boundary/error. A non-converged result is not compiled into a strategy.
+boundary/error. Termination and policy quality are separate: an exact close is
+`exact`, a cap can retain `bounded_feasible`, and an enabled post-round gap can
+return `bounded_near_optimal`. Compilation is allowed only when
+`policy_available`; a non-converged result without an executable proper
+fallback is not compiled.
 
 Code authority:
 `apps/web/src/app/engine-client.ts`,
@@ -193,7 +197,7 @@ Code authority:
 
 ## Policy To Editable Strategy
 
-After a converged solve:
+After a solve with `policy_available`:
 
 1. `pc_solver_compile_strategy` expands the chosen primitive and automatic
    operators into ordinary V1 start, router, operation, and terminal nodes.
@@ -274,8 +278,8 @@ Calculator's current “Verify 5,000 runs” path is separate sampled evidence:
 2. compile the returned strategy through the ordinary simulator compiler;
 3. create a native simulator;
 4. run 5,000 bounded Monte Carlo invocations with progress; and
-5. compare mean known cost with the solver's `V(start)` after the current
-   completion and cost-status checks.
+5. compare mean known cost with the solver's exact `evaluated_policy_cost`
+   after the current completion and cost-status checks.
 
 Simulator, strategy, and economy handles close in `finally`. This button is not
 the repository's required 10,000-run compiled-strategy verification gate and
@@ -290,7 +294,7 @@ different evidence sources.
 | --- | --- |
 | Unknown/unpriced action | Exclude or diagnose; never assign zero cost silently |
 | Unsupported exact vocabulary | Refuse exact calculation/evaluation; never sample silently |
-| Cap or incomplete solve | Report the boundary and do not compile an incomplete policy |
+| Cap or incomplete solve | Report termination and bounds; compile only an independently certified executable incumbent |
 | Stale product request | Ignore its result using request/version checks |
 | Cancelled stepped work | Yield, observe cancellation, abandon/destroy native work, and return bounded progress |
 | Document/session change | Close solver handles before replacing their owning session |

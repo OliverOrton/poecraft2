@@ -338,6 +338,25 @@ void run_closed_form_tests() {
              near(chaos_material->cost_contribution, 2.0 / p, 1e-10));
     PC_CHECK(near(exact.known_expected_cost, 2.0 / p, 1e-10));
     PC_CHECK(exact.cost_complete);
+    PC_CHECK(exact.occupancy_states.size() >= 2);
+    PC_CHECK(!exact.occupancy.empty());
+    double chaos_occupancy = 0.0;
+    double occupancy_reward = 0.0;
+    for (const StrategyEvalOccupancyEntry& entry : exact.occupancy) {
+        PC_CHECK(entry.state < exact.occupancy_states.size());
+        PC_CHECK(entry.action != kNoId);
+        PC_CHECK(entry.reward_complete);
+        if (entry.action == chaos) {
+            chaos_occupancy += entry.expected_visits;
+        }
+        occupancy_reward +=
+            entry.expected_applied * entry.immediate_reward;
+    }
+    PC_CHECK(near(chaos_occupancy, 1.0 / p, 1e-10));
+    PC_CHECK(exact.occupancy_reward_complete);
+    PC_CHECK(near(exact.occupancy_expected_reward, 2.0 / p, 1e-10));
+    PC_CHECK(near(occupancy_reward, exact.known_expected_cost, 1e-10));
+    PC_CHECK(near(exact.occupancy_reward_difference, 0.0, 1e-10));
     PC_CHECK(near(
         exact.technique_totals.at("retry_actions"), 1.0 / p, 1e-10));
     PC_CHECK(near(

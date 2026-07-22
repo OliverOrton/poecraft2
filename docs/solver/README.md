@@ -164,8 +164,36 @@ A solve performs these implemented stages:
 
 Focused expansion computes finite constructive upper bounds and global lower
 bounds while extending relevant fringe states. A zero gap is an exact closure
-proof and may finish directly without a separate outer Bellman phase. Resource
-exhaustion is a reported boundary, not a numeric solution.
+proof and may finish directly without a separate outer Bellman phase. A
+complete executable incumbent can also survive a resource-cap stop or an
+enabled product gap target. In that result, `L` is the certified optimal-cost
+lower bound, `U` is the incumbent certificate, and `J_pi` is the exact returned
+policy cost with `L <= J_pi <= U`. The gap targets are checked only after a
+complete focused lower/upper round; they do not participate in Bellman
+comparisons, ties, admission, pruning, or exact closure. Resource exhaustion
+without an executable proper fallback reports no finite upper bound.
+
+Exact focused closure uses the absolute numerical proof tolerance
+`epsilon * 10`. Separately named value comparisons may retain their historical
+value-scaled roundoff allowance. Neither tolerance is a product gap target,
+and requested absolute or relative gaps never relax exact closure.
+
+Once a constructive renewal/progressive-fracture fallback has been
+synthesized, focused rounds retain it in the atomic incumbent strictly as an
+executable upper-bound/output witness. Reuse validates goal, economy, action
+vocabulary prefix, referenced row/operator ownership, and properness.
+Monotonic graph growth and lazy action-vocabulary extension are allowed while
+the complete prefix present at synthesis remains identical. A new focused
+round or lower-bound update does not trigger re-synthesis; a missing witness,
+changed existing executable dependency, or failed validation does. The
+retained witness never guides focus, admission, pruning, ties, or Bellman
+comparisons.
+
+The atomic incumbent captures same-round values, selected row IDs, frontier
+operators, fallback, and provenance. Policy references and Unveil preferences
+are deterministic derived output and are materialized once if that incumbent
+is returned. Exact searches therefore do not rebuild full-state output vectors
+on every improving upper round.
 
 The constructive state certificate is not compaction and does not infer
 equivalence from similarity. Its witness records the executable upper, the
@@ -189,14 +217,17 @@ Code authority: `engine/src/solver_solve.cpp`.
 
 ## Policy Compilation
 
-`pc_solver_compile_strategy` converts the latest solved policy into v1 strategy
-JSON. Exact policy regions with the same action and continuation share
+`pc_solver_compile_strategy` converts the latest executable policy into v1
+strategy JSON. `policy_available`, not exact convergence, is the compilation
+precondition. Exact policy regions with the same action and continuation share
 operation nodes, and a collision-checked decision DAG routes concrete states
 to those regions. The document otherwise contains ordinary start, router,
 operation, and terminal nodes, deterministic prioritized edges,
 `expected_cost` annotations, and non-executable accounting-role metadata.
-Fixed and automatic operators expand to their primitive programs. An explicit
-off-policy failure terminal catches states outside the compiled policy.
+Fixed and automatic operators expand to their primitive programs. Exact closed
+policies retain the explicit off-policy failure terminal. Bounded policies use
+an explicit safe Restart/fallback default for unmatched compiled states; a
+frontier heuristic is never emitted as an action.
 
 The compiled `base_state` preserves the solve start, not merely the base type:
 it serializes rarity, item flags, generic influence bits, both Eldritch tiers,
@@ -222,8 +253,11 @@ flow and uses dense, rank-one, or matrix-free preconditioned component solves
 as appropriate. It reports terminal probability,
 action-not-applied/no-edge/unresolved attribution, expected actions and
 materials, node/edge flow, incoming state classes, and S8.4 accounting and
-review projections. Quantities remain price-independent; product code applies
-the active price table for display.
+review projections. The evaluator internally retains exact abstract-state,
+compiled-node, and action occupancy together with immediate priced reward;
+the retained occupancy/reward dot product is reconciled with exact expected
+cost. B4 owns its report surface. Quantities remain price-independent; product
+code applies the active price table for display.
 
 Evaluation refuses unsupported graph vocabulary rather than estimating it.
 `mod_count` and `mod_family_count`, including required crafted/fractured flags,
@@ -243,7 +277,7 @@ The public ABI is declared in `engine/include/poecraft/solver.h`:
 | --- | --- |
 | Registry | create/destroy, action count/info/find, candidate indices |
 | Calculator | exact `pc_calc_action_outcomes` for one concrete item/action |
-| Solve | synchronous solve plus begin/step/finish/abandon |
+| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, and live `L`/`U`/gap progress |
 | Results | state value/policy, concrete projection, compile, solve log |
 | Diagnostics | versioned telemetry and selected live/peak memory statistics |
 | Exact graph | synchronous evaluate plus begin/step/finish/destroy and memory statistics |

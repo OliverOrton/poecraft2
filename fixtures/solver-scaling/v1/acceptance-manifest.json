@@ -4,7 +4,7 @@
   "artifact": {
     "manifest_relative_path": "data/compiled/current/manifest.json",
     "canonical_source": "data/sqlite/poecraft.db",
-    "engine_abi_version": 1,
+    "engine_abi_version": 2,
     "artifact_schema_version": 4,
     "source_version": "repoe-e4eaf06c20e1ddb4",
     "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",

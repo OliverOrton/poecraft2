@@ -619,6 +619,16 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
             (options->solver_flags &
              PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE) == 0;
     }
+    if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
+        options->max_absolute_optimality_gap > 0.0) {
+        value.max_absolute_optimality_gap =
+            options->max_absolute_optimality_gap;
+    }
+    if (PC_SOLVE_OPTION_HAS(max_relative_optimality_gap) &&
+        options->max_relative_optimality_gap > 0.0) {
+        value.max_relative_optimality_gap =
+            options->max_relative_optimality_gap;
+    }
     return value;
 #undef PC_SOLVE_OPTION_HAS
 }
@@ -638,6 +648,50 @@ int32_t solve_phase(const solver::SolvePhase phase) {
     return PC_SOLVE_PHASE_DONE;
 }
 
+int32_t solve_policy_status(const solver::SolvePolicyStatus status) {
+    switch (status) {
+    case solver::SolvePolicyStatus::None:
+        return PC_SOLVE_POLICY_NONE;
+    case solver::SolvePolicyStatus::BoundedFeasible:
+        return PC_SOLVE_POLICY_BOUNDED_FEASIBLE;
+    case solver::SolvePolicyStatus::BoundedNearOptimal:
+        return PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL;
+    case solver::SolvePolicyStatus::Exact:
+        return PC_SOLVE_POLICY_EXACT;
+    }
+    return PC_SOLVE_POLICY_NONE;
+}
+
+int32_t solve_termination(const solver::SolveTermination termination) {
+    switch (termination) {
+    case solver::SolveTermination::None:
+        return PC_SOLVE_TERMINATION_NONE;
+    case solver::SolveTermination::RefusedResourceCap:
+        return PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP;
+    case solver::SolveTermination::TargetGap:
+        return PC_SOLVE_TERMINATION_TARGET_GAP;
+    case solver::SolveTermination::ExactClosed:
+        return PC_SOLVE_TERMINATION_EXACT_CLOSED;
+    case solver::SolveTermination::NoExecutablePolicy:
+        return PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY;
+    }
+    return PC_SOLVE_TERMINATION_NONE;
+}
+
+int32_t solve_gap_target(const solver::SolveGapTarget target) {
+    switch (target) {
+    case solver::SolveGapTarget::None:
+        return PC_SOLVE_GAP_TARGET_NONE;
+    case solver::SolveGapTarget::Absolute:
+        return PC_SOLVE_GAP_TARGET_ABSOLUTE;
+    case solver::SolveGapTarget::Relative:
+        return PC_SOLVE_GAP_TARGET_RELATIVE;
+    case solver::SolveGapTarget::Both:
+        return PC_SOLVE_GAP_TARGET_BOTH;
+    }
+    return PC_SOLVE_GAP_TARGET_NONE;
+}
+
 void copy_solve_progress(
     const solver::SolveProgress& source,
     pc_solve_progress& target) {
@@ -650,6 +704,10 @@ void copy_solve_progress(
     target.sweeps = source.sweeps;
     target.residual = source.residual;
     target.start_value_bound = source.start_value_bound;
+    target.lower_bound = source.lower_bound;
+    target.upper_bound = source.upper_bound;
+    target.absolute_optimality_gap = source.absolute_optimality_gap;
+    target.relative_optimality_gap = source.relative_optimality_gap;
 }
 
 void copy_solve_summary(
@@ -668,6 +726,22 @@ void copy_solve_summary(
     out_summary->skipped_action_count = static_cast<uint32_t>(
         result.diagnostics.skipped_missing_price_count +
         result.diagnostics.skipped_unsupported_count);
+    out_summary->policy_available = result.policy_available ? 1 : 0;
+    out_summary->policy_status = solve_policy_status(result.policy_status);
+    out_summary->termination = solve_termination(result.termination);
+    out_summary->lower_bound = result.lower_bound;
+    out_summary->upper_bound = result.upper_bound;
+    out_summary->evaluated_policy_cost = result.evaluated_policy_cost;
+    out_summary->absolute_optimality_gap =
+        result.absolute_optimality_gap;
+    out_summary->relative_optimality_gap =
+        result.relative_optimality_gap;
+    out_summary->requested_absolute_optimality_gap =
+        result.requested_absolute_optimality_gap;
+    out_summary->requested_relative_optimality_gap =
+        result.requested_relative_optimality_gap;
+    out_summary->target_met = result.target_met ? 1 : 0;
+    out_summary->target_fired = solve_gap_target(result.target_fired);
 }
 
 void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
@@ -1234,6 +1308,11 @@ pc_result pc_solver_compile_strategy(
     }
     if (!solver->solved.has_value()) {
         set_error(out_error, PC_RESULT_NOT_FOUND, "no solve has run yet");
+        return PC_RESULT_NOT_FOUND;
+    }
+    if (!solver->solved->policy_available) {
+        set_error(out_error, PC_RESULT_NOT_FOUND,
+                  "latest solve has no executable policy");
         return PC_RESULT_NOT_FOUND;
     }
     try {

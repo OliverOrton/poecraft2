@@ -617,15 +617,24 @@ async function runCase(
                 !skipVerification) {
                 const verifyStarted = performance.now();
                 try {
-                    verification = await verifyStrategy(
-                        client,
-                        session,
-                        economy,
-                        strategyHandle,
-                        nestedNumber(telemetry, "value", "start") ?? solve.start_value,
-                        spec,
-                        (handle) => { simulator = handle; },
-                    );
+                    const verificationStartValue =
+                        nestedNumber(telemetry, "value", "start") ??
+                        solve.start_value;
+                    if (verificationStartValue === null) {
+                        errors.push(
+                            "verification: executable policy has no evaluated cost",
+                        );
+                    } else {
+                        verification = await verifyStrategy(
+                            client,
+                            session,
+                            economy,
+                            strategyHandle,
+                            verificationStartValue,
+                            spec,
+                            (handle) => { simulator = handle; },
+                        );
+                    }
                 } catch (error) {
                     errors.push(`verification: ${errorDetail(error)}`);
                 }

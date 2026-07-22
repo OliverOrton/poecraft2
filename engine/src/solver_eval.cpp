@@ -1077,6 +1077,9 @@ struct StrategyEvalWork::Impl {
         for (const StrategyEvalEdge& edge : output.edges) {
             bytes += edge.id.capacity() + 1;
         }
+        bytes += output.occupancy_states.capacity() * sizeof(AbstractState);
+        bytes += output.occupancy.capacity() *
+                 sizeof(StrategyEvalOccupancyEntry);
         bytes += output.action_totals.capacity() * sizeof(StrategyEvalActionTotal);
         for (const auto& action : output.action_totals) {
             bytes += action_total_bytes(action) - sizeof(action);
@@ -2475,6 +2478,10 @@ struct StrategyEvalWork::Impl {
         propagate_chain_inflow();
         CalcContext& calc = *model.calc;
         const std::size_t node_count = strategy->nodes.size();
+        const std::size_t operation_pair_count = static_cast<std::size_t>(
+            std::count_if(
+                pairs.begin(), pairs.end(),
+                [](const EvalPair& pair) { return pair.operation; }));
         std::uint64_t finalization_transient_floor =
             node_count *
                 (4ull * sizeof(double) +
@@ -2482,7 +2489,18 @@ struct StrategyEvalWork::Impl {
             pairs.size() *
                 (sizeof(std::pair<const std::uint32_t, double>) +
                  3ull * sizeof(void*));
-        check_owned_cap(finalization_transient_floor);
+        check_owned_cap(
+            finalization_transient_floor +
+            static_cast<std::uint64_t>(calc.state_count()) *
+                sizeof(AbstractState) +
+            static_cast<std::uint64_t>(operation_pair_count) *
+                sizeof(StrategyEvalOccupancyEntry));
+        output.occupancy_states.reserve(calc.state_count());
+        for (std::uint32_t state = 0; state < calc.state_count(); ++state) {
+            output.occupancy_states.push_back(calc.state(state));
+        }
+        output.occupancy.reserve(operation_pair_count);
+        output.occupancy_reward_complete = options.economy != nullptr;
         std::vector<double> node_visits(node_count, 0.0);
         std::vector<double> operation_visits(node_count, 0.0);
         std::vector<double> operation_applied(node_count, 0.0);
@@ -2556,10 +2574,31 @@ struct StrategyEvalWork::Impl {
             if (record.operation) {
                 output.expected_actions += visits;
                 operation_visits[record.node] += visits;
+                StrategyEvalOccupancyEntry retained;
+                retained.state = record.state;
+                retained.node = record.node;
+                retained.action = record.action;
+                retained.expected_visits = visits;
+                retained.expected_applied = record.consumes ? visits : 0.0;
+                retained.reward_complete = options.economy != nullptr;
+                const ActionDescriptor& action =
+                    calc.registry().actions.at(record.action);
+                if (record.consumes && options.economy != nullptr) {
+                    for (const std::string& key : action.cost_keys) {
+                        const auto price = options.economy->prices.find(key);
+                        if (price == options.economy->prices.end()) {
+                            retained.reward_complete = false;
+                            output.occupancy_reward_complete = false;
+                        } else {
+                            retained.immediate_reward += price->second;
+                        }
+                    }
+                }
+                output.occupancy_expected_reward +=
+                    retained.expected_applied * retained.immediate_reward;
+                output.occupancy.push_back(retained);
                 if (record.consumes) {
                     operation_applied[record.node] += visits;
-                    const ActionDescriptor& action =
-                        calc.registry().actions.at(record.action);
                     for (const std::string& key : action.cost_keys) {
                         output.expected_consumption[key] += visits;
                     }
@@ -2809,6 +2848,8 @@ struct StrategyEvalWork::Impl {
         }
         output.cost_dot_product_difference =
             priced_dot_product - output.known_expected_cost;
+        output.occupancy_reward_difference =
+            output.occupancy_expected_reward - output.known_expected_cost;
 
         output.review_sections_enabled = !review_sections.empty();
         if (!review_sections.empty()) {

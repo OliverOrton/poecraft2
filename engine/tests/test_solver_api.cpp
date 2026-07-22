@@ -315,6 +315,16 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_solve(solver, &item, economy, nullptr,
                              &solve_summary, &error) == PC_RESULT_OK);
     PC_CHECK(solve_summary.converged == 1);
+    PC_CHECK(solve_summary.policy_available == 1);
+    PC_CHECK(solve_summary.policy_status == PC_SOLVE_POLICY_EXACT);
+    PC_CHECK(solve_summary.termination ==
+             PC_SOLVE_TERMINATION_EXACT_CLOSED);
+    PC_CHECK(solve_summary.lower_bound == solve_summary.start_value);
+    PC_CHECK(solve_summary.upper_bound == solve_summary.start_value);
+    PC_CHECK(solve_summary.evaluated_policy_cost ==
+             solve_summary.start_value);
+    PC_CHECK(solve_summary.absolute_optimality_gap == 0.0);
+    PC_CHECK(solve_summary.relative_optimality_gap == 0.0);
     PC_CHECK(solve_summary.start_value > 0.0);
     PC_CHECK(solve_summary.skipped_action_count == 0);
 
@@ -327,6 +337,7 @@ void run_public_solver_gate(const char* artifact_dir) {
              PC_RESULT_OK);
     PC_CHECK(solve_progress.phase != PC_SOLVE_PHASE_DONE);
     PC_CHECK(solve_progress.expanded_states >= 1);
+    PC_CHECK(solve_progress.lower_bound >= 0.0);
     const std::string expanded_fragment =
         "\"expanded\":" + std::to_string(solve_progress.expanded_states);
     const std::string live_telemetry =
@@ -377,6 +388,14 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(stepped_summary.residual == solve_summary.residual);
     PC_CHECK(stepped_summary.skipped_action_count ==
              solve_summary.skipped_action_count);
+    PC_CHECK(stepped_summary.policy_available ==
+             solve_summary.policy_available);
+    PC_CHECK(stepped_summary.policy_status == solve_summary.policy_status);
+    PC_CHECK(stepped_summary.termination == solve_summary.termination);
+    PC_CHECK(stepped_summary.lower_bound == solve_summary.lower_bound);
+    PC_CHECK(stepped_summary.upper_bound == solve_summary.upper_bound);
+    PC_CHECK(stepped_summary.evaluated_policy_cost ==
+             solve_summary.evaluated_policy_cost);
     solve_summary = stepped_summary;
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
@@ -384,6 +403,9 @@ void run_public_solver_gate(const char* artifact_dir) {
              std::string::npos);
     PC_CHECK(solved_telemetry.find(
                  "\"start_status\":\"exact_abstract_within_tolerance\"") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"policy_result\":{\"available\":true,\"status\":\"exact\"") !=
              std::string::npos);
     PC_CHECK(solved_telemetry.find("\"state_action_rows\":0") ==
              std::string::npos);
