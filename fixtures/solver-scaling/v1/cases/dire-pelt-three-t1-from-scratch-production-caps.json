@@ -4,7 +4,7 @@
   "category": "real_three_t1_from_scratch_diagnostic",
   "approval_status": "oliver_selected_2026-07-21",
   "benchmark_enabled": true,
-  "description": "Empty rare item-level-86 Dire Pelt targeting T1 rarity, T1 life, and T1 crafted cold resistance under the seeded carrier's complete product envelope and unchanged production caps.",
+  "description": "Empty rare item-level-86 Dire Pelt targeting three non-guaranteed naturally rolled modifiers: T1 rarity, T1 life, and T1 life regeneration, under unchanged production caps.",
   "comparison_profile": "real-three-t1-from-scratch-diagnostic-v1",
   "session": {
     "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
@@ -18,7 +18,7 @@
     "slots": [
       {"family_mod_key": "ItemFoundRarityIncreasePrefix3", "min_tier": 1},
       {"family_mod_key": "IncreasedLife9", "min_tier": 1},
-      {"family_mod_key": "EinharMasterColdResist3__", "min_tier": 1}
+      {"family_mod_key": "LifeRegeneration9", "min_tier": 1}
     ]
   },
   "product_action_envelope": {
@@ -30,7 +30,7 @@
       "slots": [
         {"family_mod_key": "ItemFoundRarityIncreasePrefix3", "min_tier": 1},
         {"family_mod_key": "IncreasedLife9", "min_tier": 1},
-        {"family_mod_key": "EinharMasterColdResist3__", "min_tier": 1}
+        {"family_mod_key": "LifeRegeneration9", "min_tier": 1}
       ]
     },
     "expected_priced_action_ids": [
@@ -44,15 +44,9 @@
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife",
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingQuality+Metadata/Items/Currency/CurrencyDelveCraftingRandom",
       "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
-      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAbyss+Metadata/Items/Currency/CurrencyDelveCraftingAttackMods+Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingCasterMods",
-      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingAbyss+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
-      "bench:HelenaMasterColdResist1_", "bench:EinharMasterColdResist2",
-      "bench:EinharMasterColdResist3__",
-      "harvest_reforge:cold", "harvest_reforge:drop",
-      "harvest_reforge:elemental", "harvest_reforge:life",
-      "harvest_augment:cold", "harvest_augment:life",
-      "harvest_resist:fire:cold", "harvest_resist:lightning:cold",
-      "fracture", "restart"
+      "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingQuality",
+      "harvest_reforge:drop", "harvest_reforge:life",
+      "harvest_augment:life", "fracture", "restart"
     ]
   },
   "allowed_mechanic_families": ["calculator_goal_relevant_product_envelope"],
