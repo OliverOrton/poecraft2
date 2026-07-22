@@ -1,8 +1,6 @@
 # Bounded Policy Results And Benchmarking
 
-**Status: blocked at the B1 acceptance gate. The final permitted exact two-T1
-oracle attempt hit the binding 15-minute watchdog at 55,850 / 57,182 expanded
-states. No later chunk may start until Oliver directs a new response.**
+**Status: B1 complete and accepted. B2 product presentation is next.**
 
 Parent: [Active work](README.md)
 
@@ -62,10 +60,12 @@ guide investigation and optimization; they never authorize action pruning.
 - `goal_modifier_count` means required natural T1 slots, not total explicit
   affixes on intermediate or finished items.
 - Resource caps determine comparable benchmark work; wall time is performance
-  data and an external safety watchdog. No acceptance run may exceed 15
-  minutes: launch long runs detached with a 15-minute watchdog, kill the
-  process tree on expiry, retain available telemetry, and treat expiry as a
-  failed performance gate requiring diagnosis.
+  data and an external safety watchdog. Acceptance runs default to a hard 15
+  minutes: launch long runs detached with a watchdog, kill the process tree on
+  expiry, retain available telemetry, and treat expiry as a failed performance
+  gate requiring diagnosis. Oliver authorized one B1-only 1,800-second
+  superseding run after the 900-second deadline was shown to be miscalibrated;
+  it completed successfully. The default remains 15 minutes for later runs.
 - Run routine acceptance once at the end. Intermediate tests are narrowly
   diagnostic. Oliver owns rendered/visual review.
 
@@ -79,6 +79,14 @@ guide investigation and optimization; they never authorize action pruning.
 4. Confirm the branch was clean before activating this plan.
 
 ## B1 - Bounded executable-policy contract
+
+**Status: complete.** The final detached exact two-T1 oracle completed under
+the one-time 1,800-second watchdog in 1,092,227.105 ms. It returned exact value
+`230.26738656962243`, 57,182 expanded states, 738,139 state-action rows,
+1,165,840 transitions, transition hash `ad4fc4865f2872e9`, and policy hash
+`f797e61b00a127a7`. Retained-witness telemetry recorded 3 syntheses, 323 reuses,
+and 0 refreshes. The implementation and acceptance evidence are committed;
+B2 may proceed.
 
 ### B1.1 Result vocabulary and ABI
 
