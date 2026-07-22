@@ -3491,9 +3491,44 @@ pc-run-trace {
     color: #d98a7a;
 }
 
+.pc-calc-solve-targets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(190px, 240px)) minmax(280px, 1fr);
+    align-items: end;
+    gap: 10px 16px;
+    padding: 8px 11px;
+    border-top: 1px solid var(--pc-border);
+}
+
+.pc-calc-solve-targets label {
+    display: grid;
+    grid-template-columns: 1fr 96px;
+    align-items: center;
+    gap: 8px;
+    color: var(--pc-text);
+    font-size: 10px;
+}
+
+.pc-calc-solve-targets label span {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+}
+
+.pc-calc-solve-targets small,
+.pc-calc-solve-targets p {
+    color: var(--pc-text-dim);
+}
+
+.pc-calc-solve-targets p {
+    margin: 0;
+    line-height: 1.35;
+    font-size: 10px;
+}
+
 .pc-calc-solve-progress {
     display: grid;
-    grid-template-columns: minmax(190px, 1.5fr) repeat(4, minmax(105px, 1fr));
+    grid-template-columns: minmax(175px, 1.4fr) repeat(6, minmax(85px, 1fr));
     align-items: center;
     gap: 8px 14px;
     padding: 8px 11px;
@@ -3602,8 +3637,87 @@ pc-run-trace {
     color: var(--pc-fractured);
 }
 
+.pc-calc-solve-state strong {
+    color: inherit;
+    font-weight: 600;
+}
+
+.pc-calc-solve-certificate {
+    margin: 0;
+    color: var(--pc-text-strong);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.pc-calc-solve-bounds {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(170px, 1fr));
+    gap: 1px;
+    margin: 7px 0 2px;
+    border: 1px solid var(--pc-border);
+    background: var(--pc-border);
+}
+
+.pc-calc-solve-bounds div {
+    min-width: 0;
+    padding: 7px 8px;
+    background: var(--pc-bg-raised);
+}
+
+.pc-calc-solve-bounds dt {
+    margin-bottom: 3px;
+    color: var(--pc-text-dim);
+    font-size: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.pc-calc-solve-bounds dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--pc-text-strong);
+    font-family: var(--pc-mono);
+    font-size: 10px;
+}
+
+.pc-calc-solve-termination-detail {
+    grid-column: 1 / -1;
+    margin: 2px 0;
+    color: var(--pc-text-dim);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
 .pc-calc-solve-native-skipped {
     color: var(--pc-text-dim);
+}
+
+.pc-calc-solve-admitted-actions {
+    grid-column: 1 / -1;
+    color: var(--pc-text-dim);
+    font-size: 10px;
+}
+
+.pc-calc-solve-admitted-actions summary {
+    cursor: pointer;
+}
+
+.pc-calc-solve-admitted-actions ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-height: 140px;
+    margin: 7px 0 0;
+    padding: 7px;
+    overflow: auto;
+    list-style: none;
+    border: 1px solid var(--pc-border);
+}
+
+.pc-calc-solve-admitted-actions li {
+    padding: 2px 4px;
+    background: var(--pc-bg);
 }
 
 .pc-calc-solve-actions,
@@ -3631,6 +3745,11 @@ pc-run-trace {
 .pc-calc-solve-verification strong {
     color: var(--pc-text-strong);
     font-weight: 500;
+}
+
+.pc-calc-solve-verification small {
+    margin-left: auto;
+    color: var(--pc-text-dim);
 }
 
 .pc-calc-solve-error {

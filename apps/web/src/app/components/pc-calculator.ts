@@ -83,11 +83,17 @@ import {
     resistanceEntries,
 } from "../craft-choices";
 import {
-    incompleteSolveDetail,
     prepareSolverStrategy,
     pricedSolverActionIds,
     solvePriceReadiness,
 } from "../solve-workspace";
+import {
+    certifiedFactorLabel,
+    shouldCompileSolvePolicy,
+    solveGapTargetOptions,
+    solveResultMarkup,
+    solveTerminationDetail,
+} from "../solver-result-presentation";
 import { cloneStrategy, type StrategyDocument } from "../strategy-model";
 import { PcBasePicker, BasePickerSelection } from "./pc-base-picker";
 import { PcModList, SlotMod } from "./pc-mod-list";
@@ -211,8 +217,11 @@ export class PcCalculator extends HTMLElement {
         empiricalCost: number;
         delta: number;
     } | null = null;
-    private solveCandidateActions = 0;
     private solveExcludedActions = 0;
+    private solveAdmittedActionIds: string[] = [];
+    private solveStopDetail = "";
+    private solveAbsoluteGapTarget = 0;
+    private solveRelativeGapPercentTarget = 0;
     private solveRunning = false;
     private solveProgress: SolveProgress | null = null;
     private solveAbort: AbortController | null = null;
@@ -512,8 +521,9 @@ export class PcCalculator extends HTMLElement {
         this.solveEconomy = null;
         this.solveError = null;
         this.verification = null;
-        this.solveCandidateActions = 0;
         this.solveExcludedActions = 0;
+        this.solveAdmittedActionIds = [];
+        this.solveStopDetail = "";
         this.solveProgress = null;
         this.solveCancelled = false;
     }
@@ -752,9 +762,9 @@ export class PcCalculator extends HTMLElement {
             if (candidateIds.length === 0) {
                 throw new Error("No priced solver actions are available.");
             }
-            this.solveCandidateActions = candidateIds.length;
             this.solveExcludedActions =
                 relevantActions.length - candidateIds.length;
+            this.solveAdmittedActionIds = [...candidateIds];
             const solveGoal = this.solverGoal(candidateIds, true);
             const solveKey = JSON.stringify(solveGoal);
             if (this.solveSolver && this.solveSolverKey !== solveKey) {
@@ -770,11 +780,15 @@ export class PcCalculator extends HTMLElement {
                 this.solveSolverKey = solveKey;
             }
             economy = await this.client.loadEconomy(pinned.snapshot);
+            const solveOptions = solveGapTargetOptions(
+                this.solveAbsoluteGapTarget,
+                this.solveRelativeGapPercentTarget,
+            );
             const result = await this.client.solverSolve(
                 this.solveSolver,
                 this.item,
                 economy,
-                undefined,
+                solveOptions,
                 {
                     signal: solveAbort.signal,
                     onProgress: (progress) => {
@@ -796,8 +810,8 @@ export class PcCalculator extends HTMLElement {
             }
             result.economy = pinned.identity;
             this.solveSummary = result;
-            if (!result.converged) {
-                let telemetry: unknown = null;
+            let telemetry: unknown = null;
+            if (!result.converged || result.termination !== "exact_closed") {
                 try {
                     telemetry = await this.client.solverTelemetry(
                         this.solveSolver,
@@ -806,9 +820,12 @@ export class PcCalculator extends HTMLElement {
                     // The solve summary remains usable if telemetry retrieval
                     // itself fails.
                 }
+            }
+            this.solveStopDetail = solveTerminationDetail(result, telemetry);
+            if (!shouldCompileSolvePolicy(result)) {
                 this.solveError = {
-                    heading: "Solve did not converge.",
-                    detail: incompleteSolveDetail(telemetry),
+                    heading: "No executable policy was returned.",
+                    detail: this.solveStopDetail,
                 };
                 return;
             }
@@ -823,12 +840,12 @@ export class PcCalculator extends HTMLElement {
                 this.solveError =
                     error instanceof EngineError && error.code === 4
                         ? {
-                              heading: "The solved policy could not be compiled.",
+                              heading: "The returned policy could not be compiled.",
                               detail,
                           }
                         : {
                               heading:
-                                  "The policy solved, but its Strategy Board document could not be prepared.",
+                                  "The returned policy's Strategy Board document could not be prepared.",
                               detail,
                           };
             }
@@ -870,7 +887,7 @@ export class PcCalculator extends HTMLElement {
         this.verification = null;
         this.solveError = null;
         this.verificationRunning = true;
-        this.setStatus("Verifying policy · 0 / 5,000 runs");
+        this.setStatus("Verifying policy · 0 / 10,000 runs");
         this.renderSolvePanel();
         let economy = 0;
         let strategy = 0;
@@ -890,7 +907,7 @@ export class PcCalculator extends HTMLElement {
             const result = await this.client.runStrategy(
                 simulator,
                 {
-                    target_runs: 5_000,
+                    target_runs: 10_000,
                     max_actions_per_run: 100_000,
                 },
                 {
@@ -902,9 +919,9 @@ export class PcCalculator extends HTMLElement {
             );
             result.economy = pinned.identity;
             const completedRuns = result.summary.completed_runs;
-            if (result.cancelled || completedRuns !== 5_000) {
+            if (result.cancelled || completedRuns !== 10_000) {
                 throw new Error(
-                    `Verification completed ${completedRuns.toLocaleString()} of 5,000 runs.`,
+                    `Verification completed ${completedRuns.toLocaleString()} of 10,000 runs.`,
                 );
             }
             if (result.summary.cost_status !== "complete") {
@@ -1775,55 +1792,44 @@ export class PcCalculator extends HTMLElement {
             !readiness.missingFractureBasePrice &&
             !this.busy;
         const progress = this.solveProgress;
+        const progressLower = progress
+            ? solveBoundLabel(progress.lower_bound)
+            : "Pending";
+        const progressUpper = progress
+            ? solveBoundLabel(progress.upper_bound)
+            : "Pending";
+        const progressGap = progress
+            ? solveBoundLabel(progress.absolute_optimality_gap)
+            : "Pending";
+        const progressFactor = progress
+            ? certifiedFactorLabel(progress.relative_optimality_gap)
+            : "Unavailable";
         const progressMarkup =
             this.solveRunning && progress
                 ? `<section class="pc-calc-solve-progress" aria-live="polite">
                     <strong>${progress.phase === "expanding" ? "Expanding reachable states" : progress.phase === "iterating" ? "Optimizing policy" : "Finishing policy"}</strong>
                     <span>States <b>${progress.expanded_states.toLocaleString()}</b></span>
                     <span>Sweeps <b>${progress.sweeps.toLocaleString()}</b></span>
-                    <span>Residual <b>${progress.phase === "expanding" || progress.sweeps === 0 ? "Pending" : progress.residual.toExponential(2)}</b></span>
-                    <span>V(start) bound <b>${progress.phase === "expanding" || progress.start_value_bound >= 1e12 ? "Pending" : formatChaosValue(progress.start_value_bound)}</b></span>
+                    <span>Lower <b>${progressLower}</b></span>
+                    <span>Upper <b>${progressUpper}</b></span>
+                    <span>Gap <b>${progressGap}</b></span>
+                    <span>Factor <b>${progressFactor}</b></span>
                 </section>`
                 : "";
         const summary = this.solveSummary;
-        const solveValue = summary?.start_value ?? null;
-        const finiteSolveValue =
-            solveValue !== null &&
-            Number.isFinite(solveValue) &&
-            solveValue < 1e12;
         const resultMarkup = summary
-            ? `<section class="pc-calc-solve-result">
-                <div class="pc-calc-solve-headline">
-                    <span>${summary.converged ? "Expected cost" : "Current cost bound"}</span>
-                    <strong>${finiteSolveValue ? formatChaosValue(solveValue) : "Unavailable"}</strong>
-                </div>
-                <div class="pc-calc-solve-state ${summary.converged ? "is-success" : "is-warning"}">
-                    ${summary.converged ? "Converged" : "Did not converge"}
-                    · ${summary.expanded_states.toLocaleString()} states
-                    · ${summary.sweeps.toLocaleString()} sweeps
-                    · residual ${summary.residual.toExponential(2)}
-                </div>
-                ${summary.economy ? `<span class="pc-calc-economy-pin">${escapeHtml(economyIdentityLabel(summary.economy))}</span>` : ""}
-                <strong class="pc-calc-solve-skipped">${this.solveExcludedActions.toLocaleString()} unpriced actions excluded before Solve</strong>
-                <span class="pc-calc-solve-native-skipped">${summary.skipped_actions.toLocaleString()} of ${this.solveCandidateActions.toLocaleString()} priced candidates skipped by the native solver</span>
-                ${
-                    this.solvedStrategy
-                        ? `<div class="pc-calc-solve-actions">
-                            <button data-solve-cmd="open" ${this.busy ? "disabled" : ""}>Open in Strategy Board</button>
-                            <button data-solve-cmd="verify" ${this.busy ? "disabled" : ""}>Verify 5,000 runs</button>
-                        </div>`
-                        : ""
-                }
-                ${
-                    this.verification
-                        ? `<div class="pc-calc-solve-verification">
-                            <span>Exact <strong>${finiteSolveValue ? formatChaosValue(solveValue) : "Unavailable"}</strong></span>
-                            <span>Empirical <strong>${formatChaosValue(this.verification.empiricalCost)}</strong></span>
-                            <span>Delta <strong>${this.verification.delta >= 0 ? "+" : "−"}${formatChaosValue(Math.abs(this.verification.delta))}</strong></span>
-                        </div>`
-                        : ""
-                }
-            </section>`
+            ? solveResultMarkup({
+                  summary,
+                  admittedActionIds: this.solveAdmittedActionIds,
+                  excludedActions: this.solveExcludedActions,
+                  economyLabel: summary.economy
+                      ? economyIdentityLabel(summary.economy)
+                      : null,
+                  terminationDetail: this.solveStopDetail,
+                  hasCompiledStrategy: this.solvedStrategy !== null,
+                  busy: this.busy,
+                  verification: this.verification,
+              })
             : "";
         const errorMarkup = this.solveError
             ? `<div class="pc-calc-solve-error">
@@ -1840,7 +1846,7 @@ export class PcCalculator extends HTMLElement {
               : this.solveRunning
                 ? "Solving — may take a while on large goals."
               : this.verificationRunning
-                  ? "Running 5,000 verification simulations."
+                  ? "Running 10,000 verification simulations."
                   : this.solveCancelled
                     ? "Solve cancelled. Adjust the goal or prices, then start again."
                   : `${readiness.pricedActions.toLocaleString()} of ${readiness.totalActions.toLocaleString()} actions priced.`;
@@ -1856,6 +1862,19 @@ export class PcCalculator extends HTMLElement {
                         : `<button class="pc-calc-solve-start" data-solve-cmd="start" ${canStart ? "" : "disabled"}>Start solve</button>`
                 }
             </header>
+            <div class="pc-calc-solve-targets">
+                <label>
+                    <span>Absolute gap target <small>chaos</small></span>
+                    <input type="number" min="0" step="any" data-solve-target="absolute"
+                        value="${this.solveAbsoluteGapTarget || ""}" placeholder="Disabled">
+                </label>
+                <label>
+                    <span>Relative gap target <small>%</small></span>
+                    <input type="number" min="0" step="any" data-solve-target="relative"
+                        value="${this.solveRelativeGapPercentTarget || ""}" placeholder="Disabled">
+                </label>
+                <p>Either positive target may stop the solve after a complete lower/upper round. Targets do not change Bellman comparisons or exact results.</p>
+            </div>
             ${
                 readiness.missingFractureBasePrice
                     ? '<p class="pc-calc-solve-warning"><strong>Fracture needs Restart:</strong> set the <code>base</code> price below so a missed fracture has a priced recovery route.</p>'
@@ -1895,6 +1914,23 @@ export class PcCalculator extends HTMLElement {
                 const value = Number(input.value);
                 setFallbackPrice(input.value === "" ? null : value);
             });
+        host.querySelectorAll<HTMLInputElement>("[data-solve-target]").forEach(
+            (input) => {
+                input.addEventListener("change", () => {
+                    const value = Number(input.value);
+                    const target =
+                        input.value !== "" && Number.isFinite(value) && value > 0
+                            ? value
+                            : 0;
+                    if (input.dataset.solveTarget === "absolute") {
+                        this.solveAbsoluteGapTarget = target;
+                    } else {
+                        this.solveRelativeGapPercentTarget = target;
+                    }
+                    if (target === 0) input.value = "";
+                });
+            },
+        );
         host.querySelectorAll<HTMLButtonElement>("[data-solve-cmd]").forEach(
             (button) => {
                 button.addEventListener("click", () => {
@@ -2544,6 +2580,12 @@ function baseLabel(path: string): string {
 function engineErrorDetail(error: unknown): string {
     if (error instanceof EngineError) return error.detail;
     return error instanceof Error ? error.message : String(error);
+}
+
+function solveBoundLabel(value: number | null): string {
+    return value !== null && Number.isFinite(value) && value < 1e12
+        ? formatChaosValue(value)
+        : "Pending";
 }
 
 function economyIdentityLabel(economy: EconomyIdentity): string {

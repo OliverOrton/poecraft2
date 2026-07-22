@@ -73,8 +73,8 @@ Code authority:
   Emulator copy; Odds seeds Calculator.
 - Stash strategy Edit preserves its saved identity; Import creates an unsaved
   Strategy Builder copy.
-- A converged Calculator solve can open its compiled policy as an unsaved
-  Strategy Builder copy.
+- Any Calculator result with `policy_available` can open its exact or bounded
+  compiled policy as an unsaved Strategy Builder copy.
 - Duplicate commands create independent unsaved documents.
 
 The full strategy base-state transfer includes rarity, quality, flags,

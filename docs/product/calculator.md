@@ -4,7 +4,7 @@
 
 Parent: [Product](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope:
+Verified against code: 2026-07-22 @ bounded-policy B2 boundary. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
 performed.
@@ -89,14 +89,28 @@ The Solve surface is distinct from one-action odds:
    uses Restart.
 4. Reopen/reuse a solve handle keyed by that scoped goal and run the stateful
    native begin/step/finish API in the worker with progress and cancellation.
-5. On convergence, compile the native policy to ordinary v1 strategy JSON,
-   assign missing board positions, attach the economy identity, and allow an
-   unsaved copy to open in Strategy Builder.
+5. Compile whenever the result has `policy_available`, including bounded cap
+   and target-gap results. Assign missing board positions, attach the economy
+   identity, and allow an unsaved copy to open in Strategy Builder. A
+   non-converged result without a proper executable policy is not compiled.
 
-The solve result shows the native cost bound/value, expansion/sweep state, and
-selected diagnostics. Automatic options remain native planner operators and
-compile into primitive strategy nodes; the web app does not execute opaque
-macros.
+Two optional product stopping targets are available: absolute chaos-equivalent
+gap and relative percent gap. Either positive target can stop only after a
+complete lower/upper round. The inputs do not change Bellman comparisons,
+ties, admission, pruning, or eventual exact results.
+
+The result identifies policy quality and termination separately, and shows the
+exactly evaluated returned-policy cost, optimal-cost lower bound, certified
+policy upper bound, absolute gap, certified multiplicative factor, requested
+target/firing criterion, pinned economy, and the exact admitted priced action
+IDs. Cap hits remain visible even when an executable bounded policy survives.
+Bounded certificates use only wording such as “Certified within 1.10x of
+optimal” and “At most 10% more expensive than optimal.” They never say the
+policy is 10% suboptimal or call the upper bound the optimum; a weak lower
+bound can make the certificate pessimistic.
+
+Automatic options remain native planner operators and compile into primitive
+strategy nodes; the web app does not execute opaque macros.
 
 The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,
@@ -116,13 +130,14 @@ Code authority:
 
 ## Current Verification Button
 
-`Verify 5,000 runs` compiles the generated document and samples it through the
+`Verify 10,000 runs` compiles the generated document and samples it through the
 native strategy simulator with the same pinned economy. The current UI
-requires all 5,000 runs to complete and the aggregate cost status to be
-complete, then compares sampled mean known cost with `V(start)`.
+requires all 10,000 runs to complete and the aggregate cost status to be
+complete, then compares sampled mean known cost with the exact
+`evaluated_policy_cost` of the returned policy.
 
 That button is sampled evidence, not yet a truthful end-to-end verification
-gate. At d5e38e3 it does not require a success threshold, zero
+gate. At the B2 boundary it does not require a success threshold, zero
 failure/stop/limit counts, or zero action-not-applied/no-edge/off-policy
 outcomes before displaying the cost delta, and it does not display sampled
 variance/confidence. These are open repair items, not implemented contracts;

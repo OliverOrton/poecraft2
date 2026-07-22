@@ -12,10 +12,10 @@ Parent: [Product](README.md)
 Status: promoted to the
 [future solver roadmap](../future/solver-roadmap.md).
 
-The current 5,000-run button compares sampled mean cost with `V(start)` after
-checking completed-run count and cost completeness, but does not yet require a
-successful terminal gate, zero failure/stop/limit/off-policy outcomes, or show
-sampled variance/confidence.
+The current 10,000-run button compares sampled mean cost with the returned
+policy's exact `evaluated_policy_cost` after checking completed-run count and
+cost completeness, but does not yet require a successful terminal gate, zero
+failure/stop/limit/off-policy outcomes, or show sampled variance/confidence.
 
 ### 2026-07-19 — #debt — Aggregate Simulator graph flow
 

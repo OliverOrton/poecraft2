@@ -36,9 +36,9 @@ Status: promoted to the
 [future solver roadmap](../future/solver-roadmap.md).
 
 Product verification must gate on terminal/limit/off-policy truth and sampled
-confidence before comparing cost with `V(start)`. Exact whole-graph evaluation
-still refuses compiler-only modifier-count conditions and authored Unveil
-offer selection.
+confidence before comparing sampled cost with the exact evaluated cost of the
+returned policy. Exact whole-graph evaluation still refuses compiler-only
+modifier-count conditions and authored Unveil offer selection.
 
 ### 2026-07-19 — #idea — Reviewed optimization candidates
 

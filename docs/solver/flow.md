@@ -6,7 +6,7 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code: 2026-07-20 @ 8f6ea61. Scope: Calculator orchestration,
+Verified against code: 2026-07-22 @ bounded-policy B2 boundary. Scope: Calculator orchestration,
 workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
 solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No performance run or mechanic ruling
@@ -133,6 +133,8 @@ Pressing Solve creates a scoped, priced request before native optimization:
    closes and a new solver opens.
 7. The pinned economy is loaded into a short-lived native economy handle for
    this solve invocation.
+8. Positive absolute-chaos and relative-percent product targets are converted
+   to the optional native gap fields. Disabled inputs omit those fields.
 
 Candidate generation and descriptors remain native. TypeScript filters by
 price completeness but does not decide mechanic legality or synthesize planner
@@ -185,6 +187,13 @@ boundary/error. Termination and policy quality are separate: an exact close is
 return `bounded_near_optimal`. Compilation is allowed only when
 `policy_available`; a non-converged result without an executable proper
 fallback is not compiled.
+
+Calculator renders the returned policy's exact evaluated cost separately from
+the optimal-cost lower bound and certified upper bound. It also shows absolute
+and multiplicative certificates, policy quality, termination/cap detail,
+requested and fired targets, economy identity, and the admitted priced action
+IDs. A bounded result uses certificate wording (“within 1.10x” / “at most 10%
+more expensive”) and never calls its policy or upper bound exact.
 
 Code authority:
 `apps/web/src/app/engine-client.ts`,
@@ -272,18 +281,19 @@ Code authority:
 
 ## Sampled Verification
 
-Calculator's current “Verify 5,000 runs” path is separate sampled evidence:
+Calculator's current “Verify 10,000 runs” path is separate sampled evidence:
 
 1. load the solve's pinned economy;
 2. compile the returned strategy through the ordinary simulator compiler;
 3. create a native simulator;
-4. run 5,000 bounded Monte Carlo invocations with progress; and
+4. run 10,000 bounded Monte Carlo invocations with progress; and
 5. compare mean known cost with the solver's exact `evaluated_policy_cost`
    after the current completion and cost-status checks.
 
-Simulator, strategy, and economy handles close in `finally`. This button is not
-the repository's required 10,000-run compiled-strategy verification gate and
-does not yet enforce complete terminal/off-policy truth; see
+Simulator, strategy, and economy handles close in `finally`. The button uses
+the repository's required verification sample count but is not by itself the
+compiled-strategy acceptance gate: it does not yet enforce complete
+terminal/off-policy truth or a one-sided confidence check; see
 [Calculator](../product/calculator.md#current-verification-button). Exact
 evaluation, solver value, and sampled simulation must remain labelled as three
 different evidence sources.
