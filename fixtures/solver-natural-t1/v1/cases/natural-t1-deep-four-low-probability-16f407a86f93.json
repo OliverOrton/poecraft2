@@ -1,0 +1,254 @@
+{
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "approval_status": "generated_b3_2026_07_22",
+  "benchmark_enabled": true,
+  "caps": {
+    "cancel_ack_ms": 250,
+    "full_evidence": true,
+    "max_absolute_optimality_gap": 5.0,
+    "max_compiled_edges": 400000,
+    "max_compiled_nodes": 100000,
+    "max_diagnostic_samples": 32,
+    "max_discovered_states": 25000,
+    "max_expanded_states": 25000,
+    "max_reforge_work": 3000000,
+    "max_relative_optimality_gap": 0.1,
+    "max_solver_owned_bytes": 268435456,
+    "max_state_action_rows": 300000,
+    "max_states": 25000,
+    "max_strategy_json_bytes": 67108864,
+    "max_sweeps": 100000,
+    "max_telemetry_json_bytes": 1048576,
+    "max_transitions": 3000000,
+    "solve_step_work_items": 1024,
+    "worker_step_ms": 1000
+  },
+  "category": "seeded_natural_t1",
+  "comparison_profile": "bounded-policy-natural-t1-v1",
+  "corpus": {
+    "geometric_mean_single_draw_probability": 0.008497981729339282,
+    "goal_modifier_count": 4,
+    "maximum_single_draw_probability": 0.008497981729339282,
+    "minimum_single_draw_probability": 0.008497981729339282,
+    "natural_pool_mod_count": 125,
+    "natural_pool_weight": 117675,
+    "prefix_goal_count": 3,
+    "side_mix": "PPPS",
+    "stratum": "deep-four-low-probability",
+    "suffix_goal_count": 1,
+    "tier": "deep"
+  },
+  "economy": {
+    "content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "fallback_price": null,
+    "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "league_key": "mirage",
+    "league_name": "Mirage",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+    "version": "v1"
+  },
+  "feasibility": {
+    "eligible_slot_count": 4,
+    "goal_slot_count": 4,
+    "natural_pool_mod_count": 125,
+    "natural_pool_weight": 117675,
+    "natural_prefix_mod_count": 41,
+    "natural_prefix_weight": 39275,
+    "natural_suffix_mod_count": 84,
+    "natural_suffix_weight": 78400,
+    "reason": "natural_reforge_witness",
+    "required_slot_count": 4,
+    "slot_natural_mod_counts": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "slot_natural_weights": [
+      1000,
+      1000,
+      1000,
+      1000
+    ],
+    "slot_single_draw_probabilities": [
+      0.008497981729339282,
+      0.008497981729339282,
+      0.008497981729339282,
+      0.008497981729339282
+    ],
+    "status": "feasible",
+    "witness_action_id": "chaos",
+    "witness_action_index": 5,
+    "witness_mod_ids": [
+      64,
+      117,
+      161,
+      148
+    ]
+  },
+  "generation": {
+    "artifact_manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+    "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+    "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+    "generator_seed": 20260722,
+    "generator_version": "natural-t1-corpus-v1"
+  },
+  "goal": {
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 4,
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "FireResist8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ItemFoundRarityIncreasePrefix3",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedEvasionRatingPercentAndStunRecovery6",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedEvasionRating8",
+        "min_tier": 1
+      }
+    ],
+    "version": "v1"
+  },
+  "id": "natural-t1-deep-four-low-probability-16f407a86f93",
+  "product_action_envelope": {
+    "bench_goal_slots_forbidden": true,
+    "envelope_goal": {
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "min_satisfied_slots": 4,
+      "rarity": "rare",
+      "requested_fossil_actions": [],
+      "slots": [
+        {
+          "family_mod_key": "FireResist8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ItemFoundRarityIncreasePrefix3",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedEvasionRatingPercentAndStunRecovery6",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedEvasionRating8",
+          "min_tier": 1
+        }
+      ],
+      "version": "v1"
+    },
+    "mode": "calculator_goal_relevant_priced_v1",
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "resolved_natural_t1_goals": [
+    {
+      "classification_tags": [
+        "elemental",
+        "fire",
+        "resistance"
+      ],
+      "family_id": 20,
+      "family_mod_key": "FireResist8",
+      "family_tier_index": 1,
+      "global_mod_id": 10921,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 84,
+      "session_mod_id": 64,
+      "side": "suffix",
+      "single_draw_probability": 0.008497981729339282,
+      "slot": 0
+    },
+    {
+      "classification_tags": [
+        "drop"
+      ],
+      "family_id": 33,
+      "family_mod_key": "ItemFoundRarityIncreasePrefix3",
+      "family_tier_index": 1,
+      "global_mod_id": 17389,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 62,
+      "session_mod_id": 117,
+      "side": "prefix",
+      "single_draw_probability": 0.008497981729339282,
+      "slot": 1
+    },
+    {
+      "classification_tags": [
+        "defences",
+        "evasion"
+      ],
+      "family_id": 40,
+      "family_mod_key": "LocalIncreasedEvasionRatingPercentAndStunRecovery6",
+      "family_tier_index": 1,
+      "global_mod_id": 21064,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 78,
+      "session_mod_id": 161,
+      "side": "prefix",
+      "single_draw_probability": 0.008497981729339282,
+      "slot": 2
+    },
+    {
+      "classification_tags": [
+        "defences",
+        "evasion"
+      ],
+      "family_id": 38,
+      "family_mod_key": "LocalIncreasedEvasionRating8",
+      "family_tier_index": 1,
+      "global_mod_id": 21036,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 51,
+      "session_mod_id": 148,
+      "side": "prefix",
+      "single_draw_probability": 0.008497981729339282,
+      "slot": 3
+    }
+  ],
+  "schema_version": "solver_benchmark_case_v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+    "base_name": "Dire Pelt",
+    "item_class_key": "Helmet",
+    "item_level": 86
+  },
+  "start": {
+    "mods": [],
+    "rarity": "rare",
+    "with_implicits": false
+  },
+  "verification": {
+    "max_actions_per_run": 100000,
+    "runs": 10000,
+    "seed": 20260862
+  },
+  "watchdog_seconds": 180.0
+}

@@ -1,0 +1,133 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "manifest_sha256": "6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "corpus_id": "poecraft2-seeded-natural-t1-v1",
+  "counters": {
+    "accepts": 146,
+    "attempts": 153,
+    "duplicates": 2,
+    "exhausted_strata": 0,
+    "group_slot_conflicts": 2,
+    "ineligible_bases": 1,
+    "infeasible": 3,
+    "unknown": 1,
+    "zero_weight_families": 1
+  },
+  "exhausted_strata": [],
+  "feasibility_probes": [
+    {
+      "id": "reject-ineligible-base",
+      "reason": "ineligible_base",
+      "status": "ineligible"
+    },
+    {
+      "id": "reject-bench-goal",
+      "reason": "no_natural_t1",
+      "status": "infeasible"
+    },
+    {
+      "id": "reject-prefix-capacity",
+      "reason": "slot_capacity",
+      "status": "infeasible"
+    },
+    {
+      "id": "reject-exclusion-group-conflict",
+      "reason": "group_conflict",
+      "status": "infeasible"
+    },
+    {
+      "id": "unknown-magic-start",
+      "reason": "unsupported_start",
+      "status": "unknown"
+    }
+  ],
+  "generator": {
+    "compiler": "gcc-14.2.0",
+    "engine_abi_version": 2,
+    "engine_binary_path": "build/engine/poecraft_engine.dll",
+    "engine_binary_sha256": "ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d",
+    "engine_commit": "4c99cd093ed85b9aa2ecb86c3c9117b0f356068b",
+    "engine_dirty": false,
+    "engine_dirty_paths": [],
+    "generator_version": "natural-t1-corpus-v1",
+    "seed": 20260722
+  },
+  "reason_counts": {
+    "group_conflict": 1,
+    "ineligible_base": 1,
+    "natural_reforge_witness": 146,
+    "no_natural_t1": 1,
+    "slot_capacity": 1,
+    "unsupported_start": 1
+  },
+  "rejection_examples": {
+    "group_conflict": [
+      {
+        "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+        "probe": "reject-exclusion-group-conflict"
+      }
+    ],
+    "ineligible_base": [
+      {
+        "base_metadata_path": "Metadata/Items/NotAReleasedBase",
+        "probe": "reject-ineligible-base"
+      }
+    ],
+    "no_natural_t1": [
+      {
+        "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+        "probe": "reject-bench-goal"
+      }
+    ],
+    "slot_capacity": [
+      {
+        "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+        "probe": "reject-prefix-capacity"
+      }
+    ],
+    "unsupported_start": [
+      {
+        "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+        "probe": "unknown-magic-start"
+      }
+    ]
+  },
+  "schema_version": "natural_t1_generation_report_v1",
+  "stratum_accepts": {
+    "deep-four-low-probability": 7,
+    "deep-three-low-probability": 5,
+    "full-four": 20,
+    "full-one": 15,
+    "full-three": 45,
+    "full-two": 40,
+    "smoke-one-armour": 3,
+    "smoke-one-jewellery": 2,
+    "smoke-one-weapon": 2,
+    "smoke-three-dire-pelt": 1,
+    "smoke-two-armour": 2,
+    "smoke-two-jewellery": 2,
+    "smoke-two-weapon": 2
+  },
+  "stratum_targets": {
+    "deep-four-low-probability": 7,
+    "deep-three-low-probability": 5,
+    "full-four": 20,
+    "full-one": 15,
+    "full-three": 45,
+    "full-two": 40,
+    "smoke-one-armour": 3,
+    "smoke-one-jewellery": 2,
+    "smoke-one-weapon": 2,
+    "smoke-three-dire-pelt": 1,
+    "smoke-two-armour": 2,
+    "smoke-two-jewellery": 2,
+    "smoke-two-weapon": 2
+  }
+}
