@@ -1,10 +1,11 @@
 # Session Handoff
 
-**Status: B1 through B5 are complete and accepted. B6 final acceptance and
-documentation are the exact next chunk; no B6 work has been started.**
+**Status: B1 through B6 are complete and accepted. The bounded-policy plan is
+archived, no implementation boundary is active, and Oliver must select any
+next chunk.**
 
-Oliver selected the
-[bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
+Oliver selected the now-completed
+[bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
 `main` commit `60500ef`. Boundary documents were committed as `0c18493`; the
 B1 implementation, including retained constructive-witness reuse, is committed
@@ -12,7 +13,10 @@ as `58aa5ea`; B2 product presentation is committed as `86e337f`; the B3 native
 feasibility/generator implementation is `4c99cd0`, and its pinned corpus is
 `d06efff`. B4 orchestration, bound trace, action utility, and search-cost
 telemetry are committed as `1d891a0`; B5 stratified reporting and the staged
-iteration workflow are committed as `e40b73d`.
+iteration workflow are committed as `e40b73d`, with accepted B5 handoff
+`099d6aa`. B6 final acceptance, the materialized-carrier permanent-bench fix,
+stable documentation, evidence summary, and plan archive are committed as
+`3d76198`.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -73,8 +77,8 @@ captured same-round source data only when a bounded incumbent is returned.
 The new oracle is still roughly twenty times slower than the approximately
 51-second `7b11b34` solve: `phase_wall_ms.solve` is 1,083.087 s versus 50.712 s,
 a measured 21.36x ratio. This confirms a second, non-constructive per-round
-regression source. Do not investigate or fix it in B2-B6 unless Oliver selects
-the profiling chunk separately.
+regression source. It was not investigated during B2-B6. Do not investigate or
+fix it unless Oliver selects the profiling chunk separately.
 
 The comparison below is field-for-field in milliseconds. `—` means the timer
 was absent or deliberately skipped, not zero. The old report's 50.712-second
@@ -409,21 +413,81 @@ No full-short or deep corpus, exact-evaluation stage, complete native/web
 suite, or 10,000-run simulation was executed in B5. Those runs remain staged
 for owner-selected iteration and the single B6 acceptance cadence.
 
-## Exact resume point
+## B6 accepted boundary
 
-Start B6 only. Run the plan's single downstream acceptance pass and complete
-the listed stable documentation/index updates. Do not begin the deferred
-performance profiling chunk, change mechanics, or tune search from benchmark
-action non-use.
+B6 completed the final downstream acceptance and documentation gate. During
+the pass, the historical WASM smoke fixture was corrected to request its
+crafted bench family instead of letting a broad natural group stand in for a
+bench goal, and both stale ABI assertions were updated to ABI v2. That exposed
+a real state-local admission defect: permanent-bench discovery could reject a
+legal finish when a temporary abstract context could not rematerialize the
+already-existing dense exact carrier. Permanent deterministic benches now
+evaluate directly on that materialized carrier, intern their exact successor
+in the owning context, and cache the exact distribution. This restores legal
+output behavior without changing mechanic authority, admission criteria,
+Bellman comparisons, search guidance, or pruning.
 
-The standard hard watchdog is 15 minutes for every later run. Use narrow
-changed-layer tests through B5, then the complete affected suites and required
-10,000-run verification once at B6. The exact two-T1 oracle's single final B1
-run already required 1,092 seconds under Oliver's one-run-only 1,800-second
-exception; do not rerun it merely to reconfirm that it exceeds the standard
-watchdog. Reconcile that retained exact evidence with B6 item 2 before starting
-any new slow process.
+The single final B1 two-natural-T1 oracle was not rerun. Oliver's exactly-once
+directive and the standing 15-minute ceiling make the retained report the B6
+oracle evidence. B6 revalidated report SHA-256
+`9501b055aa1808bc17aa3213f001daf134c2bfc2f621ab2867c90d81a0c061da`
+and all acceptance facts: exact value `230.26738656962243`, 57,182 expanded
+states, 738,139 rows, 1,165,840 transitions, `exact` / `exact_closed`, graph
+6,391 nodes / 9,607 edges / 2,668,693 bytes, and constructive-witness counters
+3 syntheses / 323 reuses / 0 refreshes. Its measured wall time remains
+1,092,227.105 ms; the open comparison and owner-selected profiling order are
+recorded above.
 
-Chunks completed: B1, B2, B3, B4, B5. Exact stopping point: before B6 final
-acceptance. Still awaiting Oliver later are rendered UI review, corpus-strata
-sanity review, and acceptance of the B6 results.
+The explicit bounded acceptance case was
+`natural-t1-smoke-one-armour-09767fd6f824`. It completed under the detached
+900-second watchdog as `bounded_near_optimal` / `target_gap`, with target met,
+`L = 3.0923164022485841`, `U = 8.0902955687919231`, absolute gap
+`4.9979791665433391`, and relative gap `1.6162573671015839`. Its compiled graph
+had 947 nodes / 2,831 edges / 1,154,938 bytes. Exact compiled-policy evaluation
+converged to `8.0902955687899443`, differing from certified `U` by
+`-1.9788e-12`. The required simulator run then completed exactly 10,000 trials:
+10,000 successes, zero failures, zero off-policy failures, mean cost
+`8.0376181789999475`, and passed corroboration. This is a bounded certificate,
+not an exact-optimality claim.
+
+B6 gate evidence:
+
+- the post-fix native build completed with exit 0 in 218,771.894 ms under the
+  detached watchdog;
+- the complete native suite covered capped `bounded_feasible` / resource-cap
+  termination, early `bounded_near_optimal` / target-gap termination, and
+  native-versus-compiled exact-value parity as part of 513,211 checks with zero
+  failures;
+- the final `scripts/test.ps1` cross-layer pass completed with exit 0 and no
+  watchdog survivor in 46,196.463 ms, validated all 12 historical solver
+  specifications, and passed ingest, binding, native, and complete web/WASM
+  tests;
+- `test_natural_t1_corpus.py`, `test_solver_corpus_runner.py`, and
+  `test_solver_reports.py` passed all 13 determinism, feasibility,
+  watchdog/resume/survivor, aggregation, and paired-comparison tests;
+- `npx tsc --noEmit` passed;
+- `scripts/build-wasm.ps1` completed with exit 0 in 74,349.823 ms after the
+  engine fix, producing tracked release `.wasm` SHA-256
+  `b70d3cf05c0ae9a2a2429bffbde9c279b24b74cad3d670a48090ec6a5b5b77c6`;
+  and
+- the checked-in
+  [B6 acceptance summary](fixtures/solver-natural-t1/v1/evidence/b6-acceptance-summary.json)
+  validates as JSON, `git diff --check` passed, and the documentation
+  relative-link/reachability audit passed after the plan archive move.
+
+Initial acceptance attempts exposed the two stale web assumptions and the
+materialized-carrier defect above; those were debugged before the final green
+pipeline. No performance profiling or mechanic change was attempted. No
+rendered or screenshot review was performed, per Oliver's ownership boundary.
+
+## Exact stopping point
+
+Chunks completed with evidence: B1, B2, B3, B4, B5, and B6. Exact stopping
+point: after final B6 acceptance and documentation, with the completed plan
+archived. There are no implementation blockers and no active next chunk. Do
+not begin the future performance profiling order above, change mechanics, or
+turn benchmark action non-use into search guidance unless Oliver selects new
+work explicitly.
+
+What awaits Oliver: rendered UI review, corpus strata sanity check, and
+acceptance of the B6 results.
