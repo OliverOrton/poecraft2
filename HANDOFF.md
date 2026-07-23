@@ -505,3 +505,31 @@ was not build-tested locally.
 There are no blockers at selection. The next session must capture fresh
 current-tree counts, hashes, and five-run medians exactly as specified in the
 active plan; historical B1 timings are context only and cannot substitute.
+
+## Economy pipeline state (2026-07-22, outside chunk scope)
+
+Known product gap: the Calculator cannot price `harvest_reforge:defences`.
+The engine's action id is plural (from `fixtures/economy/harvest-recipes-v1.json`
+and the game's `defences` tag), but every published snapshot carries the stale
+singular key `harvest_reforge:defence`, seeded before the S7.2R fixture
+correction and never re-seeded. `defences` is the only harvest tag whose
+spelling differs between the two vocabularies, and no pinned case admits the
+defence reforge, so no test observes this gap in either direction. A
+from-scratch recipe seed was verified to produce the correct plural
+`derived_recipe` keys with zero code changes.
+
+Incident: on 2026-07-22, during diagnosis, `poecraft-economy ingest-fixture
+--force` rebuilt the untracked local `data/economy/poecraft-economy.db` from
+frozen test fixtures. The 2026-07-15 live ingest history and quote rows were
+lost from the database. The content-addressed live raw payloads in
+`data/economy/raw/poe-ninja/` survive, and every committed snapshot artifact
+and `apps/web/public/economy/league-index.json` is unaffected.
+
+Do not run `poecraft-economy publish` in this state: the database's compiled
+snapshots (including mirage `c33c84de…`) are derived from test-fixture prices,
+not market data, and publishing them would put fake prices in the product
+league index. Publish only after the database is rebuilt from live data — a
+fresh `refresh`, or a reconstruction of the July 15 fixture from the surviving
+raws — under a separate owner-selected step. That step changes tracked files
+(a new snapshot JSON plus the league index) and must run between chunks, not
+during one.
