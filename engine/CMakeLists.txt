@@ -64,6 +64,14 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_reforge.cpp
     src/solver_options.cpp
     src/solver_solve.cpp
+    src/solver_solve_expand.cpp
+    src/solver_solve_bellman.cpp
+    src/solver_solve_focused.cpp
+    src/solver_solve_constructive.cpp
+    src/solver_solve_heuristics.cpp
+    src/solver_solve_quotient.cpp
+    src/solver_solve_finish.cpp
+    src/solver_solve_telemetry.cpp
     src/solver_compile.cpp
     src/solver_eval.cpp
     src/solver_api.cpp
