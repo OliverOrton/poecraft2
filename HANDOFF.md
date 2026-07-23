@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: B1 through B6 are complete and accepted. The bounded-policy plan is
-archived, no implementation boundary is active, and Oliver must select any
-next chunk.**
+**Status: B1 through B6 are complete and accepted. Oliver selected the new
+[mechanical solver split](docs/active/mechanical-split.md); baseline capture is
+the exact next step and no source motion has started.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -482,12 +482,26 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 
 ## Exact stopping point
 
-Chunks completed with evidence: B1, B2, B3, B4, B5, and B6. Exact stopping
-point: after final B6 acceptance and documentation, with the completed plan
-archived. There are no implementation blockers and no active next chunk. Do
-not begin the future performance profiling order above, change mechanics, or
-turn benchmark action non-use into search guidance unless Oliver selects new
-work explicitly.
+Chunks completed with evidence: B1, B2, B3, B4, B5, and B6. Oliver accepted
+the completed B6 result and selected a new post-B6 internal restructuring
+boundary. Its source parent is clean commit
+`edb7d8fc10eee2a8c34d86b08c5a471243bc6c8a`.
 
-What awaits Oliver: rendered UI review, corpus strata sanity check, and
-acceptance of the B6 results.
+Exact stopping point: before the mechanical-split baseline build, native fast
+gates, body-token inventory, or benchmark repetitions. Start with Gate 0 of
+the active plan. Do not move source until every baseline artifact is complete
+and internally deterministic.
+
+The selected chunk splits `engine/src/solver_solve.cpp` only. It adds no tests
+or behavior. Calculator, `solver_internal.hpp`, and web-test splits are
+deferred. The exact oracle must not run, and the future profiling order above
+must not be investigated or tuned. Every process retains the 15-minute ceiling.
+
+At selection time, CMake was not available; GCC, Node, npm, and the Python
+launcher were available. Re-check rather than assume. If CMake remains absent,
+update its explicit source list by inspection and record that the CMake path
+was not build-tested locally.
+
+There are no blockers at selection. The next session must capture fresh
+current-tree counts, hashes, and five-run medians exactly as specified in the
+active plan; historical B1 timings are context only and cannot substitute.

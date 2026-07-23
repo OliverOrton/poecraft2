@@ -28,12 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records that no implementation plan is selected.
+[Active](active/README.md) records the selected
+[mechanical solver split](active/mechanical-split.md). [HANDOFF](../HANDOFF.md)
+records its clean source boundary and exact baseline-capture resume point.
 The bounded executable-policy, natural-T1 corpus, benchmark orchestration, and
 reporting milestone is complete and indexed by its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
-[HANDOFF](../HANDOFF.md) records its final acceptance evidence and what awaits
-Oliver. The completed action/state pruning milestone is indexed by its
+The completed action/state pruning milestone is indexed by its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md), and
 the earlier Q0-Q5 solver work is indexed by the
 [Exact Solver State Scaling archive](archive/2026-07-20-solver-state-scaling/README.md).
