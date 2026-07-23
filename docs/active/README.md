@@ -1,7 +1,8 @@
 # Active Work
 
-**Status: B1 bounded-policy contracts and B2 product presentation are complete;
-B3 seeded natural-T1 corpus generation is next.**
+**Status: B1 bounded-policy contracts, B2 product presentation, and B3 seeded
+natural-T1 corpus generation are complete; B4 large-run orchestration and
+action telemetry is next.**
 
 Parent: [Documentation map](../README.md)
 

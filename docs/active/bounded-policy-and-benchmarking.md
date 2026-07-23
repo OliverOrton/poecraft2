@@ -1,7 +1,7 @@
 # Bounded Policy Results And Benchmarking
 
-**Status: B1 and B2 complete and accepted. B3 seeded natural-T1 corpus
-generation is next.**
+**Status: B1, B2, and B3 complete and accepted. B4 large-run orchestration and
+action telemetry is next.**
 
 Parent: [Active work](README.md)
 
@@ -267,6 +267,13 @@ Strategy Board and use existing evaluation/simulation surfaces. Preserve cap
 warnings and exclusions.
 
 ## B3 - Seeded natural-T1 corpus generator
+
+**Status: complete.** The native three-way feasibility query, Python binding,
+deterministic generator, full provenance/rejection report, and pinned initial
+corpus are committed. The corpus contains 14 smoke, 120 full short-budget, and
+12 deep engine-certified cases. Generation-engine commit, dirty state, native
+binary/compiler/ABI, data, economy, config, seed, resolved goals, caps, and
+action envelope are pinned; solver runs will record their build separately.
 
 ### B3.1 Inputs and goal contract
 

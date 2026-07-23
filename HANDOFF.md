@@ -1,14 +1,17 @@
 # Session Handoff
 
-**Status: B1 and B2 are complete and accepted. B3 seeded natural-T1 corpus
-generation is the exact next chunk; no B3 code has been started.**
+**Status: B1, B2, and B3 are complete and accepted. B4 large-run
+orchestration and action telemetry is the exact next chunk; no B4 code has
+been started.**
 
 Oliver selected the
 [bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
 `main` commit `60500ef`. Boundary documents were committed as `0c18493`; the
 B1 implementation, including retained constructive-witness reuse, is committed
-as `58aa5ea`; B2 product presentation is committed as `86e337f`.
+as `58aa5ea`; B2 product presentation is committed as `86e337f`; the B3 native
+feasibility/generator implementation is `4c99cd0`, and its pinned corpus is
+`d06efff`.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -215,33 +218,101 @@ B2 evidence:
 
 No rendered or visual review was performed, per Oliver's ownership boundary.
 
+## B3 accepted boundary
+
+B3 adds the dedicated native `pc_solver_goal_feasibility` three-way query and
+Python binding. A `feasible` result requires an engine-resolved, item-level and
+positive-base-weight natural T1 assignment that satisfies rare-item side
+capacity and every exclusion group, plus an admitted legal ordinary reforge
+witness from the supplied empty normal/rare start. Structural lack of natural
+T1 weight, side capacity, or compatible groups returns `infeasible` with a
+reason. Unsupported starts or missing admitted witnesses return `unknown`.
+The query never uses capped solving as evidence.
+
+The seeded generator supports explicit base paths, base-list files, item
+classes, and named base pools; item level and start item; one-to-four natural
+T1 goals with exact prefix/suffix composition; family/tag filters; cases per
+stratum; seed; solver resource caps; and generator/case watchdogs. Python only
+proposes base-reach T1 families for the initial uninfluenced corpus. Native
+feasibility remains the acceptance authority. Emitted goals use acquisition-
+aware family keys, so bench/crafted members cannot satisfy them; priced bench
+actions remain in the goal-relevant envelope.
+
+Pinned corpus evidence in `fixtures/solver-natural-t1/v1`:
+
+- 14 smoke, 120 full short-budget, and 12 deep cases (146 total) across six
+  bases/classes: Body Armour, Helmet, Bow, Thrusting One Hand Sword, Amulet,
+  and Ring;
+- natural goal counts 1-4, varied prefix/suffix mixes, and deep cases with at
+  least 100 natural pool modifiers and minimum single-draw goal probability
+  no greater than 0.01;
+- the smoke corpus includes the bounded three-natural-T1 Dire Pelt with
+  `ItemFoundRarityIncreasePrefix3`, `IncreasedLife9`, and `ChaosResist6`;
+- all 146 cases are native `feasible/natural_reforge_witness`, all resolved
+  goal mods are base-reach, family tier 1, positive weight, and none is a
+  bench/crafted goal;
+- the generation funnel records 153 attempts, 146 accepts, 2 duplicates, 1
+  deliberate ineligible-base probe, 3 deliberate infeasible probes, 1
+  deliberate unknown probe, 1 zero-weight family, 2 group/capacity conflicts,
+  and 0 exhausted strata; and
+- full regeneration was byte-for-byte deterministic.
+
+Generation provenance pins clean engine commit
+`4c99cd093ed85b9aa2ecb86c3c9117b0f356068b`, GCC 14.2.0, ABI 2, native binary
+SHA-256 `ee8d3d97955e864b1018dd41b1f87891b1b4952aa8fa076c331dbf589539c89d`,
+artifact manifest SHA-256
+`6b8bbfe77abf87373ec1782fb364500e064eb7539f1d3f0fdb210a807c927875`,
+config SHA-256
+`6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512`,
+and raw economy snapshot SHA-256
+`9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e`.
+B4 run records must separately pin the solver build so A/B runs consume these
+identical explicit case files.
+
+B3 targeted evidence:
+
+- `scripts/build.ps1` completed after the native C ABI and test changes;
+- `poecraft_engine_tests.exe --solver-feasibility-only
+  data/compiled/current` passed 37 checks with zero failures;
+- `py -3 -m unittest tools.ingest.tests.test_natural_t1_corpus -v` passed all
+  three tests, including byte determinism and native natural/bench/group
+  semantics;
+- the configured 146-case dry run and committed regeneration both completed
+  under the generator watchdog; the final run took about 11 seconds;
+- `scripts/build-wasm.ps1` rebuilt the tracked WASM after the C ABI addition;
+- a whole-corpus validation checked unique IDs, schemas, strata counts,
+  goal-count consistency, T1/base-reach/positive-weight provenance, native
+  feasibility, and all six intended classes; and
+- `git diff --check` passed before the B3 commits.
+
+No solver benchmark, exact evaluation, or 10,000-run simulation was executed
+in B3; those remain staged for B4-B6 under the selected cadence.
+
 ## Exact resume point
 
-Start B3 only. Per the active plan:
+Start B4 only. Implement, in order:
 
-1. implement seeded generator inputs for base/list/class/pool, item level,
-   start item, natural T1 goal count and side composition, natural family/tag
-   filters, seed, cases per stratum, caps, and watchdog;
-2. add the dedicated engine-owned three-way feasibility query: `feasible`,
-   `infeasible` with reason, or `unknown`;
-3. use SQLite only to enumerate candidates. Goals must be naturally rollable
-   generation-type T1 modifiers on the selected base/item level; crafted,
-   bench, essence-only, and other guaranteed-only modifiers cannot be goal
-   slots or satisfy natural-only slots;
-4. keep legal priced bench operations in the action envelope, while recording
-   generation attempts/rejections and full corpus/build provenance; and
-5. produce the smoke, full short-budget, and deep pinned corpus strata exactly
-   as B3.4 requires.
+1. arbitrary corpus/output paths, deterministic per-case process isolation,
+   watchdog kill and survivor checks, resumable ledger, skip-completed, and
+   optional memory-budgeted concurrency with hard-case concurrency one;
+2. bound traces at round changes and bounded wall intervals, including L/U,
+   gaps, incumbent, states/frontier, work, memory, and cap proximity, plus time
+   to first incumbent and standard gap thresholds;
+3. exact evaluator policy-action utility by reachable occupancy, expected use
+   and spend, relevant state features, and lower-versus-upper differences,
+   retaining simulator distributions only as empirical corroboration; and
+4. search-cost attribution by action for rows, raw/retained transitions,
+   reforge work, cache activity, wall time, and retained memory.
 
-If any Path of Exile mechanic or feasibility semantic is ambiguous, stop at B3
-and ask Oliver; do not research or guess. Do not begin B4 until every B3
-acceptance requirement passes.
+Action non-use is never a pruning certificate. Resource caps drive comparable
+work; wall time is safety/performance data. Every run record must pin the
+solver build separately from the B3 generation engine.
 
 The standard hard watchdog is 15 minutes for every later run. Use narrow
-changed-layer tests during B3-B5, then the complete affected suites and required
-10,000-run verification once at B6. At the B3 boundary, commit B3 first, then
+changed-layer tests during B4-B5, then the complete affected suites and required
+10,000-run verification once at B6. At the B4 boundary, commit B4 first, then
 update this status/evidence/next-chunk block and commit the HANDOFF separately.
 
-Chunks completed: B1, B2. Exact stopping point: before B3 implementation. Still
+Chunks completed: B1, B2, B3. Exact stopping point: before B4 implementation. Still
 awaiting Oliver later are rendered UI review, corpus-strata sanity review, and
 acceptance of the B6 results.

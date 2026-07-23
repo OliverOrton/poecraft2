@@ -6,7 +6,7 @@ and acceptance narratives are archived and do not control current sequencing.
 Parent: [Documentation index](../README.md)
 
 Verified against code, action/state-pruning acceptance, and the natural-T1
-feasibility contract: 2026-07-22 working tree. Scope: native solver,
+feasibility contract: 2026-07-22 @ `4c99cd0`. Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, and the non-visual WASM/worker path. The pinned scaling
 measurements live in
