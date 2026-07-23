@@ -5,7 +5,7 @@ runtime contracts. It does not own mechanic rulings or future sequencing.
 
 Parent: [Documentation](../README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code and the mechanical solve split: 2026-07-22 @ `042a281`
 
 ## Scope
 
@@ -72,7 +72,8 @@ declaration.
 | C ABI facade | `engine/src/api.cpp` |
 | Strategy compiler and simulator | `engine/src/simulator.cpp` |
 | Solver registry and exact transitions | `engine/src/solver_registry.cpp`, `solver_calc.cpp`, `solver_reforge.cpp`, `solver_options.cpp` |
-| Solve and policy compilation | `engine/src/solver_solve.cpp`, `solver_compile.cpp` |
+| Solve lifecycle and optimization | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp`, `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`, `solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp`, `solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
+| Policy compilation | `engine/src/solver_compile.cpp` |
 | Exact whole-graph evaluation | `engine/src/solver_eval.cpp` |
 | Solver C ABI | `engine/src/solver_api.cpp` |
 | WASM JSON facade | `bindings/wasm/wasm_api.cpp` |

@@ -28,9 +28,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records the selected
-[mechanical solver split](active/mechanical-split.md). [HANDOFF](../HANDOFF.md)
-records its clean source boundary and exact baseline-capture resume point.
+[Active](active/README.md) records that no implementation boundary is
+selected. The completed
+[mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
+is archived, and [HANDOFF](../HANDOFF.md) records its accepted evidence and
+exact stopping point.
 The bounded executable-policy, natural-T1 corpus, benchmark orchestration, and
 reporting milestone is complete and indexed by its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).

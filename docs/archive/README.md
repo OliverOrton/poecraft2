@@ -11,6 +11,10 @@ selected active work.
 
 ## 2026-07-22
 
+- [Mechanical Solver Split](2026-07-22-mechanical-solver-split/README.md) —
+  completed token-equivalent solve-phase source split with native,
+  deterministic-hash, performance, rebuilt-WASM, and non-visual web
+  acceptance.
 - [Bounded Policy Results And Benchmarking](2026-07-22-bounded-policy-and-benchmarking/README.md) —
   completed bounded executable-policy contract and presentation, seeded
   natural-T1 corpus, watchdog-safe orchestration, action telemetry, stratified

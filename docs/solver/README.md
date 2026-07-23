@@ -5,8 +5,8 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code and the bounded-policy B6 acceptance: 2026-07-22 @ B6
-boundary. Scope: native solver,
+Verified against code, the bounded-policy B6 acceptance, and the mechanical
+solve split: 2026-07-22 @ `042a281`. Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, benchmark orchestration/analytics, and the non-visual
 WASM/worker path. The pinned scaling
@@ -260,7 +260,13 @@ stable promise. The current product retains a solve handle; the deferred
 browser-lifetime work is recorded in the [solver roadmap](../future/solver-roadmap.md)
 and [solver notes](NOTES.md).
 
-Code authority: `engine/src/solver_solve.cpp`.
+Code authority: `engine/src/solver_solve_types.hpp` holds shared private solve
+types and declarations; `solver_solve.cpp` retains construction and the solve
+entry point; `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`,
+`solver_solve_focused.cpp`, `solver_solve_constructive.cpp`,
+`solver_solve_heuristics.cpp`, `solver_solve_quotient.cpp`,
+`solver_solve_finish.cpp`, and `solver_solve_telemetry.cpp` own their named
+phases.
 
 ## Policy Compilation
 

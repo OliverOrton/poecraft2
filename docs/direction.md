@@ -1,8 +1,8 @@
 # Project Direction
 
 **Status: current orientation, not an execution plan.** The complete knowledge
-map is [Documentation](README.md). [HANDOFF](../HANDOFF.md) records the
-selected implementation boundary and exact resume point.
+map is [Documentation](README.md). [HANDOFF](../HANDOFF.md) records whether an
+implementation boundary is selected and the exact stopping point.
 
 ## Vision
 
@@ -42,16 +42,18 @@ does not reimplement crafting rules.
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
-The [mechanical solver split](active/mechanical-split.md) is the selected
-implementation boundary. It is a token-equivalent internal restructuring with
-no behavior or test additions; exact hashes and measured fast-case performance
-must remain unchanged. The bounded policy results and benchmarking milestone is
-complete in its
+The
+[mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
+is complete. It was a token-equivalent internal restructuring with no behavior
+or test additions; exact hashes, native counts, and measured fast-case
+performance passed its acceptance gates. No next implementation boundary is
+selected. The bounded policy results and benchmarking milestone is complete in
+its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
 It preserves exact mechanics and action scope while making certified executable
 incumbents useful before exact closure, and adds a seeded natural-T1 corpus and
 stratified solver evidence. [Active work](active/README.md) and
-[HANDOFF](../HANDOFF.md) record the current split boundary.
+[HANDOFF](../HANDOFF.md) record the current stopping point.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its

@@ -1,15 +1,16 @@
 # Active Work
 
-**Status: the mechanical solver split is selected. Baseline capture is the
-exact next step; no source motion has started.**
+**Status: no implementation boundary is active.** The mechanical solver split
+completed on 2026-07-22. Oliver must select the next chunk before
+implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected the
-[mechanical solver split](mechanical-split.md) on 2026-07-22. It restructures
-`engine/src/solver_solve.cpp` into phase-scoped translation units under strict
-body-token, bit-hash, existing-test, and performance parity gates. It adds no
-behavior or tests and does not run the exact oracle.
+The completed
+[mechanical solver split](../archive/2026-07-22-mechanical-solver-split/README.md)
+restructured `engine/src/solver_solve.cpp` into phase-scoped translation units
+under strict body-token, bit-hash, existing-test, and performance parity
+gates. It added no behavior or tests and did not run the exact oracle.
 
 The Calculator, `solver_internal.hpp`, and web-test splits remain deferred.
 The oracle performance profiling order recorded in

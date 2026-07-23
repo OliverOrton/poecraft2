@@ -1,8 +1,9 @@
 # Session Handoff
 
-**Status: B1 through B6 are complete and accepted. Oliver selected the new
-[mechanical solver split](docs/active/mechanical-split.md); baseline capture is
-the exact next step and no source motion has started.**
+**Status: B1 through B6 and the
+[mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md)
+are complete and accepted. No implementation boundary is active; Oliver must
+select the next chunk before implementation resumes.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -18,11 +19,272 @@ iteration workflow are committed as `e40b73d`, with accepted B5 handoff
 stable documentation, evidence summary, and plan archive are committed as
 `3d76198`.
 
+The mechanical-split selection is `39b5613`; its unchanged source parent is
+`edb7d8fc10eee2a8c34d86b08c5a471243bc6c8a`. The clean execution start was
+`edc03a6`, whose only intervening content was the HANDOFF economy incident
+record and which therefore did not change the baseline. Accepted source motion
+is commit `042a281` (`Split solver solve phases (token-equivalent, no behavior
+change)`). The economy pipeline was not run, published, or otherwise changed
+in this chunk.
+
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
 cherry-picked, or used as a source donor. Candidate A/C search guidance remains
 forbidden. The incumbent bundle and retained witness are for executable
 upper-bound/output production only.
+
+## Mechanical solver split accepted boundary
+
+Gates 0 through 8 completed in order. The chunk only split
+`engine/src/solver_solve.cpp`; it changed no mechanic, public C ABI, strategy
+vocabulary, test, Calculator code, `solver_internal.hpp`, or engine-smoke test
+source. The exact oracle, exact evaluator, simulator verification, compiled
+strategy verification, profiling, tuning, and economy pipeline did not run.
+
+### Boundary, tooling, and commands
+
+The first commands were:
+
+```text
+git status --short --branch
+git branch --show-current
+git rev-parse HEAD
+git rev-parse 39b5613^
+git diff --name-only edb7d8f..edc03a6 -- engine bindings scripts engine/CMakeLists.txt
+```
+
+They established branch `codex/bounded-policy-contract`, clean tracked and
+untracked state, HEAD `edc03a6`, selection parent
+`edb7d8fc10eee2a8c34d86b08c5a471243bc6c8a`, and no source/build-path
+difference across the intervening HANDOFF-only commit. The toolchain was
+PowerShell `5.1.26100.8875`, Python `3.14`, and GCC
+`C:\msys64\ucrt64\bin\g++.exe` version `14.2.0`. CMake was unavailable.
+
+Every build and benchmark process ran in a detached
+`CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW` process group with a 900-second
+watchdog, tree termination on timeout, and a survivor poll. The exact build
+invocations were:
+
+```text
+py -3 build/mechanical-split/watchdog.py --evidence build/mechanical-split/before/build-watchdog.json --log build/mechanical-split/before/build.log --watchdog-seconds 900 --cwd . -- powershell -NoProfile -File scripts/build.ps1
+py -3 build/mechanical-split/watchdog.py --evidence build/mechanical-split/after/build-watchdog-3.json --log build/mechanical-split/after/build-3.log --watchdog-seconds 900 --cwd . -- powershell -NoProfile -File scripts/build.ps1
+py -3 build/mechanical-split/watchdog.py --evidence build/mechanical-split/after/wasm-build-watchdog.json --log build/mechanical-split/after/wasm-build.log --watchdog-seconds 900 --cwd . -- powershell -NoProfile -File scripts/build-wasm.ps1
+py -3 build/mechanical-split/watchdog.py --evidence build/mechanical-split/after/web-test-watchdog.json --log build/mechanical-split/after/web-test.log --watchdog-seconds 900 --cwd apps/web -- npm.cmd test
+py -3 build/mechanical-split/watchdog.py --evidence build/mechanical-split/after/tsc-watchdog.json --log build/mechanical-split/after/tsc.log --watchdog-seconds 900 --cwd apps/web -- npx.cmd tsc --noEmit
+```
+
+The fresh native count gates ran before and after with:
+
+```text
+build\engine\poecraft_engine_tests.exe --solver-solve-only
+build\engine\poecraft_engine_tests.exe --solver-api-only data\compiled\current
+build\engine\poecraft_engine_tests.exe --solver-eval-only
+```
+
+The run-local deterministic evidence commands were:
+
+```text
+py -3 build/mechanical-split/derive_input.py
+py -3 build/mechanical-split/body-audit/body_audit.py baseline
+py -3 build/mechanical-split/run_benchmarks.py before
+py -3 build/mechanical-split/body-audit/body_audit.py compare
+py -3 build/mechanical-split/run_benchmarks.py after
+py -3 build/mechanical-split/compare_benchmarks.py
+```
+
+For each benchmark repetition the runner invoked the fresh phase binary as:
+
+```text
+build\engine\poecraft_solver_benchmark.exe --artifact data\compiled\current --corpus <exact-case-manifest> --case <exact-case-id> --output <distinct-report> --skip-verification
+```
+
+Each of the three performance cases used one discarded warmup and five
+measured repetitions before and after. Each hash-only case used five measured
+repetitions. Across 56 benchmark processes and seven build/check processes,
+all 63 watchdog records report `timed_out=false` and `survivor=false`.
+
+### Fresh baseline and input provenance
+
+The baseline native build passed in `211455.00970003195` ms. Its watchdog log
+SHA-256 is
+`dfffcf13375765e8514ba4d666aa9190b8c51eac8d6215bcd84168c64e295fc2`.
+The fresh baseline test executable SHA-256 was
+`679213c7a19b453a27d4e6942a5e3f1f2a201193f4f48196c0f99ada7751d2e4`;
+the benchmark executable was
+`2e8356321a06b2e396d5f0f3d57a708cd86248d0e874aeecd67c87329c77c324`.
+The compiled artifact manifest SHA-256 was
+`c21886798080e98cfaf85e000851e7d9d3074147d5a6237f78cb51fa890d0d4d`.
+
+The exact derived 2k input came from
+`fixtures/solver-scaling/v1/cases/dire-pelt-two-t1-product.json` and its
+unchanged manifest. Provenance hashes:
+
+| Input | SHA-256 |
+| --- | --- |
+| source case | `23def8caaba8e07cb38887ca43926f7658f0ea3699fbef95392be23a97682980` |
+| source manifest | `94bdb48b7e6b72626dfd6c33b9e51c975aa196bf77a3cc94645b6f382218458b` |
+| derived case | `5d03e15d0ad1eb3f56277717e8cc0d594eb542067bc8b8868b74ef91d29e1fa3` |
+| derived manifest | `c2b00f15ea8cfb2bc69ffe2c23baea773f3361aafd696d383a655b32f2658afc` |
+
+The case changed only `id`, `caps.max_expanded_states`, the added
+`caps.max_absolute_optimality_gap`, `expected.solve_status`, and
+`expected.verification_status`; the manifest changed only `cases`. The
+derived case intentionally exited 2 as `refused_state_cap` in every
+repetition and passed all plan-defined cap assertions.
+
+### Native counts and source-body gate
+
+Pre/post counts were gate-equal:
+
+| Existing native gate | Before | After |
+| --- | ---: | ---: |
+| `--solver-solve-only` | 391 checks, 0 failures | 391 checks, 0 failures |
+| `--solver-api-only data\compiled\current` | 45,762 checks, 0 failures | 45,762 checks, 0 failures |
+| `--solver-eval-only` | 1,695 checks, 0 failures | 1,695 checks, 0 failures |
+
+The body auditor tokenized C++ while ignoring whitespace, included lambdas in
+their containing bodies, excluded signatures/outer braces/initializers,
+normalized declaration defaults, paired overloads by unqualified
+name/parameter-token signature/occurrence, and compared exact body and comment
+payload multisets. Before and after both contained 193 bodies and 82 comments.
+The comparable body multiset SHA-256 was
+`16adb3b1dd2c5e5f329ccf183db6021508714cb9dc1b89a8b887af9fbc99fce1`
+and the comment-payload multiset SHA-256 was
+`d3b469c09e5517e49b2fdcaf908bd61921fceca7c28edc4cdb9a3ba0ca00d962`
+on both sides. Baseline inventory report SHA-256 was
+`2511d284fefbe833ab60eb7f0294e73ad075d83667e1d52d21a46fa6e687116d`;
+post inventory was
+`b14252d78fd8b9ff47681d26488db1d0409fece967eefcd512fe1c5037af9a0f`;
+the passing comparison report was
+`feb073dd6e817aa66b52bcde1893b665b52f37852a6026177c3f89238798eadb`.
+`git diff --check`, a color-moved review, and a second structural review also
+passed.
+
+The accepted layout is exactly:
+
+```text
+engine/src/solver_solve.cpp
+engine/src/solver_solve_bellman.cpp
+engine/src/solver_solve_constructive.cpp
+engine/src/solver_solve_expand.cpp
+engine/src/solver_solve_finish.cpp
+engine/src/solver_solve_focused.cpp
+engine/src/solver_solve_heuristics.cpp
+engine/src/solver_solve_quotient.cpp
+engine/src/solver_solve_telemetry.cpp
+engine/src/solver_solve_types.hpp
+```
+
+The private header owns shared declarations, private types, and
+`SolveWork::Impl`. The retained entry file owns construction and solve entry.
+The phase files own Bellman/step, constructive incumbent work, expansion,
+finish, focused lifecycle, heuristics, quotient handling, and
+progress/telemetry respectively. The locally scoped `exact_partition` template
+remains token-identical inline in the private header because its definition
+must be visible at its use sites.
+
+### Deterministic hashes and performance
+
+Every one of the five repetitions for every fixed case produced the same
+pre/post pair:
+
+| Case | transition bits hash | policy bits hash |
+| --- | --- | --- |
+| `mechanical-split-real-product-2k` | `b957f6e9d877b74a` | `e822e68756d7cfc6` |
+| `solver-scaling-dire-pelt-two-t1-chaos-strict` | `2d2b5656301764c1` | `4e38cf37211140ba` |
+| `solver-scaling-dire-pelt-two-t1-chaos-quotient` | `505cd3271f47ca66` | `1e4aef1dd50cee68` |
+| `oracle-real-two-mod` | `845d39705f1a45da` | `763df0ca5ed817c5` |
+| `refusal-state-cap` | `5ac77dee07447866` | `1cedae1f72f786c3` |
+
+`oracle-real-two-mod` is the required millisecond hash-only fixture, not the
+prohibited exact two-T1 oracle. The exact oracle was never started.
+
+The exact primary five-run values, medians, one-sided post/pre ratios, and
+1.10 decisions are:
+
+| Case / primary field | Before values | Before median | After values | After median | Ratio | Gate |
+| --- | --- | ---: | --- | ---: | ---: | --- |
+| 2k / `phase_wall_ms.solve` ms | 22795.0888, 22604.3551, 24127.0446, 24306.6987, 23451.9368 | 23451.9368 | 22314.342, 22383.4564, 22263.0481, 22048.0779, 22200.9199 | 22263.0481 | 0.9493053085491856 | pass |
+| strict / `solver_telemetry.timings_ns.extraction` ns | 22048282300, 22456028100, 21979256100, 20827179900, 20919294900 | 21979256100 | 19277929200, 19530154500, 19431776100, 19366448000, 19312349200 | 19366448000 | 0.8811239066457759 | pass |
+| quotient / `phase_wall_ms.solve` ms | 35916.2306, 35730.2877, 35177.3749, 36267.043, 35616.7477 | 35730.2877 | 36452.6355, 36242.7895, 36391.2877, 36444.894, 38020.0525 | 36444.894 | 1.0200000152811532 | pass |
+
+Secondary before/post medians were captured from the same reports:
+
+| Case | `phase_wall_ms.solve` | `phase_wall_ms.total` | timer medians in ns, before → after |
+| --- | --- | --- | --- |
+| 2k | 23451.9368 → 22263.0481 | 24603.5917 → 23268.6322 | abstract layout 89300 → 78300; compilation 946577400 → 875171300; constructive 13018635800 → 12391342000; expansion 1224810100 → 1109859500; extraction 42330300 → 37861800; optimization 0 → 0; registry 165600 → 141000; setup 116500 → 113000; strict cover 1619499800 → 1562879900; transitions 767711000 → 710912000 |
+| strict | 39617.2826 → 36624.8544 | 61615.6149 → 56017.2981 | abstract layout 31400 → 31500; constructive 12100599300 → 11747874300; expansion 556961200 → 535556700; extraction 21979256100 → 19366448000; optimization 72372900 → 73124400; registry 174000 → 175300; setup 109400 → 105600; strict cover 6026200 → 5843300; transitions 121509700 → 113812900 |
+| quotient | 35730.2877 → 36444.894 | 35804.2851 → 36517.2934 | abstract layout 32100 → 31900; compilation 53968900 → 53273600; constructive 11832619300 → 11823448900; expansion 515529600 → 524961100; extraction 2799000 → 2898100; optimization 1192600 → 1149000; registry 180200 → 177300; setup 110000 → 105700; strict cover 5985800 → 5978900; transitions 112899700 → 113145800 |
+
+The baseline benchmark summary SHA-256 is
+`d9784ca01b3c83dc09a4f2d0493503afc5e2860a1bfcda64d72492e0fdabbd56`;
+the post summary is
+`984876f6ee4fb1dda38e7fa37ba35ec1d98a22e19d1897860589c8b0b4fc31a4`;
+and the passing comparison report is
+`af63391b50f6a45d53e8025071fc2972a2224468f012cde101f68b5d1580a3a3`.
+The exact measured report SHA-256 values, in run-1 through run-5 order, are:
+
+| Case | Before reports | After reports |
+| --- | --- | --- |
+| 2k | `9f8fe0046b1d3feaed55baa72c6acc8271a1d5f35cce4217592f7a11379eff6b`, `f393b57e1d9958076974d8218ab11e2ff89c2d37027f76ee8244f1e9141585c3`, `68fcd6cf589d21c38e46e60e222d3a429e6d01c68e4e0ec1abb182b9179243a0`, `16138c04795c2f9a8b7228f17d3aa4fb5234f7b5fc2e9317974deaa3a03e1b23`, `00ddaa7ea43e3e15f908ae7a795aea64adc9d0c0d5371db2ccd341fec42cf23b` | `d7b40cd01e3c3c77660036bf0b2a8dea9aadb355e4b62dde43f78f517dee2a13`, `f5ac345b802506ad142c818d0712753a3ac9a9c315207d956d1c08d39e5f5cba`, `5fdb7320680cecab8225754af31f3d8e35be9355ad41ea12436cb59fc3c1cd0f`, `68070b2c2a135dabb1ffb15646b31fab66efa7ffc5740b4535a79f40826133b9`, `8bd36d838cf80f42e724cd14ea9a84e38ef378dd7aaa94317672119866eef7fe` |
+| strict | `89c3110d7cf024dbd3e0b1aea41fe3552d72a91d078c7c56d10380cee922b0af`, `9ea1b873f811a7f2bd1fa87b3c23aa0d8815adb13ac1b1f1f802a60cb5d34d2c`, `be944fe3173815b0c6025e675dd093b997c1e8463ccf6d41769422c94a18d61c`, `f65f3dbf4c70eb1cc9b70275ff05edaff2b7f30d54d6ab4013d6811de731f9af`, `f3c2e33ff7f1cf0e6c207f24b0b401fc85c0f8fded3d9788984be5fa260f4d32` | `a75c110e53474f0b371a9a2cf48fd0eb73b75453740c324e1c6114ca1c765965`, `35164769652c3e561cdbb3202d74baa0c47c2b89593bd2acefe312e94599e05f`, `af99d584c4a0502546e91a36a2db42c1baaa8efdff854d0c2f7d708f8212907e`, `b1f9975589d005b0e950680e0281f7864507976ccbb0c11d82f2a59e480c344b`, `f5933d16289c74ccdc7299c48c5ac19076abe78dbda07594e9ce980c063390a4` |
+| quotient | `d63744bb1a16ce6e618e2adbd4603dfea69838137538b73816234d40fe1441fd`, `c30f7f5bb1d8dec2831bd3e6b560159ff0fe1b3169d1d41620ffc740f7a123ae`, `447968149e8fff69f94c321047d4ce73645e92f369b3dabab007692ba2f24c8c`, `3c1d1c03d617a70b67c096fda49c33d901735fcd65055d3440def7b032c44ade`, `ace6212f5d1e38d8a08c3a3d67152b175adc97520330b18d8deffe29618e725f` | `f8b9d27aa5f5e81de8c9d7a55c00b89bb39e3dee920f745a42d7d8a118b5f31e`, `b06ecf7fbe44d3faa5d7726f030300ef7c6a8a5e6410929697e2da6107555244`, `75997ce94c5358158a7f3d099757e86446825c3740bb30634748f1e27d6da1c8`, `7a395f3284b1e2e173f8f7e61b0539e0d9785237386c08c226ffa9fed72a6008`, `590ec11ad32ceb47674a793d730b419b380ad92da466ebbe7c6b15e13abe4a07` |
+| `oracle-real-two-mod` | `32e186907c91db4f1d79287152ba1dd21ad69cdb3bfbff850f4c00b24a4ec9f5`, `1753849aba55ca44302793ed0b5c4fec094491c673b67cafbf0c9c45bc89c6e4`, `8561f6c8476a84e5cf057242653c2e7d1e19ff6d45b18a0831610937f15d1da7`, `7585172c229cd783c1632296f167dd1b47329a68978af574ab120df8c656cf0f`, `7eb0c30ad4461c214feeb0b0302a2a3d701d57a92c2d0e5fce480e41d0c662f6` | `8eaccf67fc7b1b53b240324e2fcc189e865b135508fc084f248acea38c782daf`, `cf8a14463492df48574d056a566de7f60de77a8727fb8ec0836820a378afed0b`, `063ec81a6de0f97025e87277f2ba324c0d137661962e540a1aa6ad10619ad63a`, `c970dd745cd39225e894da24c48b9043f93551984cfdfd18e5ca41ded3c64858`, `66346fda3050c7b71d960ebd16c3b2d5afdf37f3bac4dbf272b9b48c48b69cf6` |
+| `refusal-state-cap` | `533d468afa5f12ca2930f62cb0bfba38e4fbebec35f55630b3d05fe10b915f80`, `b05574a328815ac54fb1921197f1a062fe5447816c2f9abd287d888d358dc094`, `366e5086161bbc4b178de10ef4ff7defc12340fb87f267e5095b2d690e700a50`, `24091ba8ec0bc93e627929b43623c3926c5b428912a91384eb77ce9d4309c6bb`, `fa67c46028ac9964ea005468ee980c0be71598e9dfe64ada7acf896776ba0088` | `a63111960c28b1e917d51905c7ca1b26c734a81757250d5a82b82950bd4e14ff`, `76039b5300e139b46eab78ae11faae0159beb69bfdd386791bbb30b969ae14bb`, `801ac357fff21c2ede28257db2837f8b7e76f2aafae5f010f1144bfcc759fa26`, `eae24d25556d2bacea0c5cf4bf76b50788be746d50317696014995592406d31f`, `b1ed0f65aa10427a1061543f7bf2cfe616a8dc0973ea71b9b2ebe860dca6f1bb` |
+
+### Build-path and downstream acceptance
+
+`engine/CMakeLists.txt` explicitly lists all nine translation units exactly
+once. Both `scripts/build.ps1` and `scripts/build-wasm.ps1` use the
+`engine/src/*.cpp` glob and each executed all nine exactly once. The native
+fallback and WASM glob paths therefore have local build coverage. CMake's
+explicit list was inspected and updated but could not be build-tested locally
+because CMake was unavailable.
+
+The first two post-motion native builds failed on declaration/qualification
+plumbing only (nested return-type/template visibility, then missing
+semicolon-only defaulted special-member declarations). Their watchdogs
+reported no timeout/survivor; log SHA-256 values were
+`c62f1e51dc2fab5913bd85820ee0c654d5d371d38d7d2e55cc689c1610a68440`
+and
+`7c62f1cc070a84d688906dc8664b930de88313655474e87471aa96334e7777e3`.
+The fixes stayed within permitted declarations/qualification plumbing and the
+body/comment gate remained exact. The final native build passed in
+`230843.85639999527` ms; its log SHA-256 is
+`5e77a56f93e001eb6e1a12b7226640a5286e17de05e659c05a4f2466c192614c`.
+Its test executable SHA-256 is
+`408d889ac759ef6712877bc1b8ef2c6c07364a960c44f2a1f4ad2a875600dfc7`;
+its benchmark executable is
+`a38fbe997ed6f53f3ede4a60f4417f821a81fdaff8ae1dd1b93e660551b3981b`.
+
+The rebuilt WASM path passed in `70752.57799995597` ms with log SHA-256
+`d959a6612cdf7e081bf8065d8561dbf6f5d7457d19c2d72ea840a1f4d1165096`.
+The release module SHA-256 values are
+`730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86`
+for `poecraft_engine.mjs` and
+`c178603af94faff6960144192682f60e557b521cf7866411a1cf6b8fc19e50a3`
+for `poecraft_engine.wasm`. Existing `npm test` passed in
+`12328.627999988385` ms, including engine smoke 27/27, solver corpus 4/4,
+and the remaining existing web suites; its log SHA-256 is
+`d54ec71473a8d47b1f6e205e248823a45bc940639135e262a19b3ae87283f1f6`.
+`npx tsc --noEmit` passed in `2504.879100015387` ms with the empty-log SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+No rendered, screenshot, or browser visual review was performed.
+
+The initial scoped read-only `doc-drift` audit at `042a281` found only the
+expected stale sole-owner and pre-motion execution-state claims in the solver,
+engine, active, direction, documentation map, and HANDOFF pages. It confirmed
+that `docs/foundation/change-impact.md`, `docs/product/*.md`, and
+`docs/mechanics/*.md` required no change. Those findings were corrected before
+the final audit. `py -3 build/mechanical-split/link_audit.py` then scanned 136
+owned Markdown files and checked 746 relative links: zero targets were missing
+and zero non-template docs were unreachable from `docs/README.md`. It
+explicitly excluded the concurrent untracked `docs/active/post-b6-recon.md`;
+the passing report SHA-256 is
+`42b5b3943231dc46607687069e47a504d5a97562e23c4b1597f5833c6c40b907`.
+The final scoped read-only `doc-drift` rerun reported `CLEAN`: no stale live
+sole-owner or pre-motion claim remained, and the ownership maps, lifecycle
+links, archive wrapper, evidence, stopping point, and blocker were coherent.
 
 ## B1 accepted boundary
 
@@ -482,29 +744,24 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 
 ## Exact stopping point
 
-Chunks completed with evidence: B1, B2, B3, B4, B5, and B6. Oliver accepted
-the completed B6 result and selected a new post-B6 internal restructuring
-boundary. Its source parent is clean commit
-`edb7d8fc10eee2a8c34d86b08c5a471243bc6c8a`.
+Chunks completed with evidence: B1, B2, B3, B4, B5, B6, and the mechanical
+solver split. Exact stopping point: after Gate 8 documentation closure and
+archive of the completed split plan. Source motion is accepted at `042a281`;
+no implementation boundary is active. Oliver must select the next chunk
+before source work resumes.
 
-Exact stopping point: before the mechanical-split baseline build, native fast
-gates, body-token inventory, or benchmark repetitions. Start with Gate 0 of
-the active plan. Do not move source until every baseline artifact is complete
-and internally deterministic.
+The accepted source has exactly nine `solver_solve*.cpp` files and the private
+`solver_solve_types.hpp` header. Calculator, `solver_internal.hpp`, and
+engine-smoke test splitting remain deferred. The future profiling order above
+remains unselected. The exact oracle was not run.
 
-The selected chunk splits `engine/src/solver_solve.cpp` only. It adds no tests
-or behavior. Calculator, `solver_internal.hpp`, and web-test splits are
-deferred. The exact oracle must not run, and the future profiling order above
-must not be investigated or tuned. Every process retains the 15-minute ceiling.
-
-At selection time, CMake was not available; GCC, Node, npm, and the Python
-launcher were available. Re-check rather than assume. If CMake remains absent,
-update its explicit source list by inspection and record that the CMake path
-was not build-tested locally.
-
-There are no blockers at selection. The next session must capture fresh
-current-tree counts, hashes, and five-run medians exactly as specified in the
-active plan; historical B1 timings are context only and cannot substitute.
+One external workspace condition prevents a literally empty `git status`:
+`docs/active/post-b6-recon.md` appeared as an untracked file after the initial
+clean boundary check and before documentation closure. It was not created,
+edited, staged, deleted, stashed, or archived by this chunk. The mechanical
+split's tracked source and documentation boundary is clean; ownership or
+disposition of that concurrent file remains with Oliver. This is the only
+end-state blocker.
 
 ## Economy pipeline state (2026-07-22, outside chunk scope)
 

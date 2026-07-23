@@ -6,8 +6,8 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code and complete cross-layer tests: 2026-07-22 @
-bounded-policy B6 boundary. Scope: Calculator orchestration,
+Verified against code and complete non-visual cross-layer tests: 2026-07-22 @
+mechanical-split source commit `042a281`. Scope: Calculator orchestration,
 workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
 solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No rendered review or mechanic ruling
@@ -203,7 +203,8 @@ Code authority:
 `bindings/wasm/wasm_api.cpp`,
 `engine/include/poecraft/solver.h`,
 `engine/src/solver_api.cpp`, and
-`engine/src/solver_solve.cpp`.
+the native `engine/src/solver_solve*.cpp` phase family with its private
+`solver_solve_types.hpp` declarations.
 
 ## Policy To Editable Strategy
 
@@ -323,7 +324,11 @@ different evidence sources.
 | WASM calls | `apps/web/src/app/engine-wasm.ts`, `bindings/wasm/wasm_api.cpp` |
 | Public native contract | `engine/include/poecraft/solver.h` |
 | Native API/lifetime | `engine/src/solver_api.cpp` |
-| Solve and compilation | `engine/src/solver_solve.cpp`, `solver_compile.cpp` |
+| Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
+| Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_solve_bellman.cpp` |
+| Focused, constructive, and heuristic phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp` |
+| Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
+| Policy compilation | `engine/src/solver_compile.cpp` |
 | Exact graph evaluation | `engine/src/solver_eval.cpp` |
 | Focused web checks | `apps/web/test/solve-workspace.test.ts`, `strategy-calculator-mode.test.ts`, `engine-smoke.test.ts` |
 | Native checks | `engine/tests/test_solver_api.cpp`, `test_solver_solve.cpp`, `test_solver_compile.cpp`, `test_solver_eval.cpp` |
