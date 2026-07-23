@@ -68,6 +68,7 @@ import "./pc-combobox";
 import { PcConditionEditor } from "./pc-condition-editor";
 import { PcRunTrace } from "./pc-run-trace";
 import {
+    BOARD_MIN_ZOOM,
     PcStrategyBoard,
     TraceHighlight,
 } from "./pc-strategy-board";
@@ -1347,7 +1348,7 @@ export class PcStrategyEditor extends HTMLElement {
         const zoom = Math.min(
             1,
             Math.max(
-                0.3,
+                BOARD_MIN_ZOOM,
                 Math.min(viewport.width / width, viewport.height / height),
             ),
         );

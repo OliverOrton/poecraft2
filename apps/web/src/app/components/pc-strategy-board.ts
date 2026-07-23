@@ -28,6 +28,15 @@ export const BOARD_SIMPLIFIED_EDGE_LIMIT = 320;
 export const BOARD_SUMMARY_NODE_LIMIT = 1200;
 export const BOARD_SUMMARY_EDGE_LIMIT = 2400;
 
+/*
+ * A compiled policy can be thousands of nodes wide, so the old 0.3 zoom-out
+ * floor made whole-graph views impossible. The remaining floor exists only to
+ * keep the transform and the grid background out of degenerate territory; at
+ * 0.01 a node is roughly two pixels, which is already far past readable.
+ */
+export const BOARD_MIN_ZOOM = 0.01;
+export const BOARD_MAX_ZOOM = 1.75;
+
 export interface TraceHighlight {
     nodeIds: Set<string>;
     edgeIds: Set<string>;
@@ -169,8 +178,11 @@ export class PcStrategyBoard extends HTMLElement {
                     (event.clientY - rect.top - this.viewport.panY) /
                     this.viewport.zoom;
                 const next = Math.min(
-                    1.75,
-                    Math.max(0.3, this.viewport.zoom * (event.deltaY > 0 ? 0.9 : 1.1)),
+                    BOARD_MAX_ZOOM,
+                    Math.max(
+                        BOARD_MIN_ZOOM,
+                        this.viewport.zoom * (event.deltaY > 0 ? 0.9 : 1.1),
+                    ),
                 );
                 this.viewport.zoom = next;
                 this.viewport.panX =
