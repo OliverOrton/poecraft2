@@ -1386,6 +1386,18 @@ struct StrategyEvalActionNode {
     double expected_applied = 0.0;
 };
 
+struct StrategyEvalActionRegion {
+    std::uint32_t goal_progress = 0;
+    std::uint8_t rarity = PC_RARITY_NORMAL;
+    std::uint32_t blocker_count = 0;
+    std::uint32_t crafted_count = 0;
+    std::uint32_t fractured_goal_mask = 0;
+    std::uint32_t fractured_count = 0;
+    std::uint32_t reachable_states = 0;
+    double expected_visits = 0.0;
+    double expected_applied = 0.0;
+};
+
 struct StrategyEvalActionTotal {
     std::string id;
     std::string display_name;
@@ -1394,6 +1406,8 @@ struct StrategyEvalActionTotal {
     double expected_applied = 0.0;
     std::vector<std::string> classifications;
     std::vector<StrategyEvalActionNode> nodes;
+    std::uint32_t reachable_states = 0;
+    std::vector<StrategyEvalActionRegion> regions;
 };
 
 struct StrategyEvalMaterialTotal {
@@ -1777,6 +1791,19 @@ struct SolveDiagnostics {
     std::uint64_t solver_owned_bytes_estimate = 0;
     std::uint64_t solver_live_owned_bytes_estimate = 0;
     std::uint64_t diagnostics_retained_bytes_estimate = 0;
+    struct ActionSearchCost {
+        std::uint64_t rows = 0;
+        std::uint64_t raw_outcomes = 0;
+        std::uint64_t retained_transitions = 0;
+        std::uint64_t reforge_work = 0;
+        std::uint64_t cache_requests = 0;
+        std::uint64_t cache_hits = 0;
+        std::uint64_t wall_ns = 0;
+        std::uint64_t retained_bytes = 0;
+    };
+    std::map<std::string, ActionSearchCost> action_search_costs;
+    std::map<std::string, std::uint64_t> lower_policy_action_states;
+    std::map<std::string, std::uint64_t> upper_policy_action_states;
     std::uint32_t diagnostic_sample_limit = 0;
     std::uint64_t telemetry_json_byte_limit = 0;
 };
@@ -1841,6 +1868,15 @@ struct SolveProgress {
     double upper_bound = std::numeric_limits<double>::infinity();
     double absolute_optimality_gap = std::numeric_limits<double>::infinity();
     double relative_optimality_gap = std::numeric_limits<double>::infinity();
+    std::uint32_t focused_round = 0;
+    std::string incumbent_kind;
+    std::uint32_t discovered_states = 0;
+    std::uint32_t frontier_states = 0;
+    std::uint64_t state_action_rows = 0;
+    std::uint64_t transition_entries = 0;
+    std::uint64_t reforge_work = 0;
+    std::uint64_t live_owned_bytes = 0;
+    std::uint64_t peak_owned_bytes = 0;
 };
 
 /* Read-only, non-finalizing view of stepped work. It never extracts a policy

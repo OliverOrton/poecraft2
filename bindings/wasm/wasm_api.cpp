@@ -689,6 +689,27 @@ const char* solve_gap_target_name(const int32_t target) {
     }
 }
 
+const char* solve_incumbent_kind_name(const int32_t kind) {
+    switch (kind) {
+    case PC_SOLVE_INCUMBENT_CONSTRUCTIVE_FALLBACK:
+        return "constructive_fallback";
+    case PC_SOLVE_INCUMBENT_PROGRESSIVE_FRACTURE:
+        return "progressive_fracture";
+    case PC_SOLVE_INCUMBENT_DESTRUCTIVE_RENEWAL:
+        return "destructive_renewal";
+    case PC_SOLVE_INCUMBENT_DIRECT_EXECUTABLE_ROW:
+        return "direct_executable_row";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_FALLBACK:
+        return "partial_upper_plus_fallback";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_PROGRESSIVE_FRACTURE:
+        return "partial_upper_plus_progressive_fracture";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_DESTRUCTIVE_RENEWAL:
+        return "partial_upper_plus_destructive_renewal";
+    case PC_SOLVE_INCUMBENT_OTHER: return "other";
+    default: return "none";
+    }
+}
+
 void append_solve_progress(
     std::string& out,
     const pc_solve_progress& progress) {
@@ -711,6 +732,24 @@ void append_solve_progress(
     append_nullable_double(out, progress.absolute_optimality_gap);
     out += ",\"relative_optimality_gap\":";
     append_nullable_double(out, progress.relative_optimality_gap);
+    out += ",\"focused_round\":" +
+           std::to_string(progress.focused_round);
+    out += ",\"incumbent_kind\":\"";
+    out += solve_incumbent_kind_name(progress.incumbent_kind);
+    out += "\",\"discovered_states\":" +
+           std::to_string(progress.discovered_states);
+    out += ",\"frontier_states\":" +
+           std::to_string(progress.frontier_states);
+    out += ",\"state_action_rows\":" +
+           std::to_string(progress.state_action_rows);
+    out += ",\"transition_entries\":" +
+           std::to_string(progress.transition_entries);
+    out += ",\"reforge_work\":" +
+           std::to_string(progress.reforge_work);
+    out += ",\"live_owned_bytes\":" +
+           std::to_string(progress.live_owned_bytes);
+    out += ",\"peak_owned_bytes\":" +
+           std::to_string(progress.peak_owned_bytes);
     out.push_back('}');
 }
 

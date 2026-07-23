@@ -883,7 +883,8 @@ std::uint64_t string_vector_owned_bytes(
 }
 
 std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
-    return string_vector_owned_bytes(diagnostics.skipped_missing_price) +
+    std::uint64_t bytes =
+           string_vector_owned_bytes(diagnostics.skipped_missing_price) +
            string_vector_owned_bytes(diagnostics.skipped_unsupported) +
            string_vector_owned_bytes(diagnostics.cap_hits) +
            string_vector_owned_bytes(
@@ -899,6 +900,25 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1;
+    for (const auto& [id, unused] : diagnostics.action_search_costs) {
+        (void)unused;
+        bytes += sizeof(std::pair<const std::string,
+                                  SolveDiagnostics::ActionSearchCost>) +
+                 id.capacity() + 1;
+    }
+    for (const auto& [id, unused] :
+         diagnostics.lower_policy_action_states) {
+        (void)unused;
+        bytes += sizeof(std::pair<const std::string, std::uint64_t>) +
+                 id.capacity() + 1;
+    }
+    for (const auto& [id, unused] :
+         diagnostics.upper_policy_action_states) {
+        (void)unused;
+        bytes += sizeof(std::pair<const std::string, std::uint64_t>) +
+                 id.capacity() + 1;
+    }
+    return bytes;
 }
 
 std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
@@ -5832,6 +5852,11 @@ struct SolveWork::Impl {
                     calc.operators().at(priced.index);
                 const auto row_started = std::chrono::steady_clock::now();
                 const auto kernel_started = row_started;
+                const CalcTelemetry search_before = calc.telemetry();
+                std::uint64_t search_raw_outcomes = 0;
+                std::uint64_t search_retained_transitions = 0;
+                std::uint64_t search_retained_bytes = 0;
+                bool search_row_retained = false;
                 PendingSparseRow pending;
                 pending.state = state;
                 pending.operator_index = priced.index;
@@ -6089,8 +6114,23 @@ struct SolveWork::Impl {
                                     .count());
                         const auto sparse_row_started =
                             std::chrono::steady_clock::now();
+                        search_raw_outcomes =
+                            (pending.transitions == nullptr
+                                 ? 0
+                                 : pending.transitions->size());
+                        if (pending.choices != nullptr) {
+                            for (const OutcomeChoiceGroup& group :
+                                 *pending.choices) {
+                                search_raw_outcomes += group.states.size();
+                            }
+                        }
                         const auto [collapsed, appended_row] =
                             append_sparse_row(state, std::move(pending));
+                        search_row_retained = true;
+                        search_retained_transitions =
+                            transition_cache->successors.size() +
+                            transition_cache->choice_successors.size() -
+                            transitions_before;
                         result.diagnostics.expansion_sparse_row_ns +=
                             static_cast<std::uint64_t>(
                                 std::chrono::duration_cast<
@@ -6098,6 +6138,20 @@ struct SolveWork::Impl {
                                     std::chrono::steady_clock::now() -
                                     sparse_row_started)
                                     .count());
+                        const auto selected_byte_audit_started =
+                            std::chrono::steady_clock::now();
+                        const std::uint64_t bytes_after =
+                            transition_cache->fast_estimated_owned_bytes();
+                        result.diagnostics.expansion_row_byte_audit_ns +=
+                            static_cast<std::uint64_t>(
+                                std::chrono::duration_cast<
+                                    std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now() -
+                                    selected_byte_audit_started)
+                                    .count());
+                        search_retained_bytes = bytes_after >= bytes_before
+                                                    ? bytes_after - bytes_before
+                                                    : 0;
                         if (automatic_record.has_value()) {
                             automatic_record->collapsed = collapsed;
                             automatic_record->eligible = true;
@@ -6107,19 +6161,8 @@ struct SolveWork::Impl {
                                 transition_cache->successors.size() +
                                 transition_cache->choice_successors.size() -
                                 transitions_before;
-                            const auto selected_byte_audit_started =
-                                std::chrono::steady_clock::now();
-                            const std::uint64_t bytes_after =
-                                transition_cache->fast_estimated_owned_bytes();
-                            result.diagnostics.expansion_row_byte_audit_ns +=
-                                static_cast<std::uint64_t>(
-                                    std::chrono::duration_cast<
-                                        std::chrono::nanoseconds>(
-                                        std::chrono::steady_clock::now() -
-                                        selected_byte_audit_started)
-                                        .count());
                             automatic_record->selected_bytes +=
-                                bytes_after - bytes_before;
+                                search_retained_bytes;
                         }
                         try_constructive_state_certificate(
                             state, appended_row);
@@ -6137,6 +6180,27 @@ struct SolveWork::Impl {
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::steady_clock::now() - row_started)
                         .count());
+                const CalcTelemetry& search_after = calc.telemetry();
+                SolveDiagnostics::ActionSearchCost& search =
+                    result.diagnostics.action_search_costs[planner.id];
+                search.rows += search_row_retained ? 1 : 0;
+                search.raw_outcomes += search_raw_outcomes;
+                search.retained_transitions += search_retained_transitions;
+                search.reforge_work +=
+                    search_after.reforge_frontier_work -
+                    search_before.reforge_frontier_work;
+                search.cache_requests +=
+                    (search_after.distribution_requests -
+                     search_before.distribution_requests) +
+                    (search_after.reforge_requests -
+                     search_before.reforge_requests);
+                search.cache_hits +=
+                    (search_after.distribution_hits -
+                     search_before.distribution_hits) +
+                    (search_after.reforge_hits -
+                     search_before.reforge_hits);
+                search.wall_ns += row_ns;
+                search.retained_bytes += search_retained_bytes;
                 if (planner.kind == PlannerOperatorKind::Primitive) {
                     calc.record_primitive_row_time(
                         planner.primitive_action, row_ns);
@@ -12202,6 +12266,24 @@ struct SolveWork::Impl {
                     value.upper_bound / value.lower_bound - 1.0);
             }
         }
+        value.focused_round = result.diagnostics.focused_expansion_rounds;
+        value.incumbent_kind = result.diagnostics.incumbent_kind;
+        value.discovered_states = calc.state_count();
+        value.frontier_states = value.discovered_states >= expanded_count
+                                    ? value.discovered_states - expanded_count
+                                    : 0;
+        value.state_action_rows = transition_cache == nullptr
+                                      ? 0
+                                      : transition_cache->rows.size();
+        value.transition_entries = transition_cache == nullptr
+                                       ? 0
+                                       : transition_cache->successors.size() +
+                                             transition_cache
+                                                 ->choice_successors.size();
+        value.reforge_work = calc.telemetry().reforge_frontier_work;
+        value.live_owned_bytes = estimated_owned_bytes();
+        value.peak_owned_bytes = std::max(
+            peak_owned_bytes, value.live_owned_bytes);
         return value;
     }
 
@@ -12258,6 +12340,36 @@ struct SolveWork::Impl {
         return snapshot;
     }
 
+    void count_policy_actions(
+        const std::vector<std::uint64_t>& rows,
+        const std::vector<std::uint32_t>* frontier,
+        std::map<std::string, std::uint64_t>& counts) const {
+        counts.clear();
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        const std::size_t state_count = std::max(
+            rows.size(), frontier == nullptr ? 0 : frontier->size());
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (state < calc.state_count() &&
+                calc.is_goal_state(calc.state(state))) {
+                continue;
+            }
+            std::uint32_t operator_index = kNoId;
+            const std::uint64_t row =
+                state < rows.size() ? rows[state] : no_row;
+            if (row != no_row && row < priced_rows.size()) {
+                operator_index = priced_rows[row].operator_index;
+            } else if (frontier != nullptr && state < frontier->size()) {
+                operator_index = (*frontier)[state];
+            }
+            if (operator_index == kNoId ||
+                operator_index >= calc.operators().size()) {
+                continue;
+            }
+            ++counts[calc.operators()[operator_index].id];
+        }
+    }
+
     SolveResult finish() {
         if (phase != SolvePhase::Done) {
             throw std::logic_error("solver work is not finished");
@@ -12276,6 +12388,12 @@ struct SolveWork::Impl {
              result.diagnostics.resource_cap_hit || sweep_cap_hit);
         if (restore_output_incumbent) {
             BoundedPolicyIncumbent& incumbent = *output_incumbent;
+            count_policy_actions(
+                policy_rows, nullptr,
+                result.diagnostics.lower_policy_action_states);
+            count_policy_actions(
+                incumbent.policy_rows, &incumbent.frontier_operators,
+                result.diagnostics.upper_policy_action_states);
             populate_incumbent_policy(incumbent);
             result.values = std::move(incumbent.values);
             result.policy = std::move(incumbent.policy);
@@ -14180,6 +14298,76 @@ std::string serialize_solver_telemetry(
                 std::to_string(values.selected_bytes) + "}";
     }
     json += "}}";
+
+    json += ",\"action_analysis\":{\"semantics\":{"
+            "\"search_cost_is_observational\":true,"
+            "\"non_use_is_pruning_certificate\":false},"
+            "\"search_cost\":[";
+    if (diagnostics != nullptr) {
+        std::size_t action_index = 0;
+        for (const auto& [action_id, cost] :
+             diagnostics->action_search_costs) {
+            if (action_index++ != 0) json.push_back(',');
+            json += "{\"action_id\":";
+            append_telemetry_json_string(json, action_id);
+            json += ",\"rows\":" + std::to_string(cost.rows);
+            json += ",\"raw_outcomes\":" +
+                    std::to_string(cost.raw_outcomes);
+            json += ",\"retained_transitions\":" +
+                    std::to_string(cost.retained_transitions);
+            json += ",\"reforge_work\":" +
+                    std::to_string(cost.reforge_work);
+            json += ",\"cache_requests\":" +
+                    std::to_string(cost.cache_requests);
+            json += ",\"cache_hits\":" +
+                    std::to_string(cost.cache_hits);
+            json += ",\"wall_ns\":" + std::to_string(cost.wall_ns);
+            json += ",\"retained_bytes\":" +
+                    std::to_string(cost.retained_bytes) + "}";
+        }
+    }
+    json += "],\"lower_upper_policy\":{\"basis\":"
+            "\"selected_abstract_states_not_occupancy\",\"actions\":[";
+    if (diagnostics != nullptr) {
+        std::set<std::string> policy_actions;
+        for (const auto& [id, unused] :
+             diagnostics->lower_policy_action_states) {
+            (void)unused;
+            policy_actions.insert(id);
+        }
+        for (const auto& [id, unused] :
+             diagnostics->upper_policy_action_states) {
+            (void)unused;
+            policy_actions.insert(id);
+        }
+        std::size_t policy_index = 0;
+        for (const std::string& id : policy_actions) {
+            if (policy_index++ != 0) json.push_back(',');
+            const auto lower =
+                diagnostics->lower_policy_action_states.find(id);
+            const auto upper =
+                diagnostics->upper_policy_action_states.find(id);
+            const std::uint64_t lower_states =
+                lower == diagnostics->lower_policy_action_states.end()
+                    ? 0
+                    : lower->second;
+            const std::uint64_t upper_states =
+                upper == diagnostics->upper_policy_action_states.end()
+                    ? 0
+                    : upper->second;
+            json += "{\"action_id\":";
+            append_telemetry_json_string(json, id);
+            json += ",\"lower_selected_states\":" +
+                    std::to_string(lower_states);
+            json += ",\"upper_selected_states\":" +
+                    std::to_string(upper_states);
+            json += ",\"delta_upper_minus_lower\":" +
+                    std::to_string(
+                        static_cast<std::int64_t>(upper_states) -
+                        static_cast<std::int64_t>(lower_states)) + "}";
+        }
+    }
+    json += "]}}";
 
     json += ",\"optimization\":{";
     json += "\"method\":\"";

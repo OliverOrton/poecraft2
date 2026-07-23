@@ -429,6 +429,18 @@ typedef enum pc_solve_phase {
     PC_SOLVE_PHASE_DONE = 3
 } pc_solve_phase;
 
+typedef enum pc_solve_incumbent_kind {
+    PC_SOLVE_INCUMBENT_NONE = 0,
+    PC_SOLVE_INCUMBENT_CONSTRUCTIVE_FALLBACK = 1,
+    PC_SOLVE_INCUMBENT_PROGRESSIVE_FRACTURE = 2,
+    PC_SOLVE_INCUMBENT_DESTRUCTIVE_RENEWAL = 3,
+    PC_SOLVE_INCUMBENT_DIRECT_EXECUTABLE_ROW = 4,
+    PC_SOLVE_INCUMBENT_PARTIAL_UPPER_FALLBACK = 5,
+    PC_SOLVE_INCUMBENT_PARTIAL_UPPER_PROGRESSIVE_FRACTURE = 6,
+    PC_SOLVE_INCUMBENT_PARTIAL_UPPER_DESTRUCTIVE_RENEWAL = 7,
+    PC_SOLVE_INCUMBENT_OTHER = 8
+} pc_solve_incumbent_kind;
+
 typedef struct pc_solve_progress {
     uint32_t struct_size;
     uint32_t abi_version;
@@ -442,6 +454,17 @@ typedef struct pc_solve_progress {
     double upper_bound;
     double absolute_optimality_gap;
     double relative_optimality_gap; /* infinity when lower_bound <= 0 */
+    /* B4 bounded-run observation fields. These are read-only snapshots and
+     * never participate in Bellman comparisons or stopping decisions. */
+    uint32_t focused_round;
+    int32_t incumbent_kind; /* pc_solve_incumbent_kind */
+    uint32_t discovered_states;
+    uint32_t frontier_states;
+    uint64_t state_action_rows;
+    uint64_t transition_entries;
+    uint64_t reforge_work;
+    uint64_t live_owned_bytes;
+    uint64_t peak_owned_bytes;
 } pc_solve_progress;
 
 /* Stateful solve surface. begin snapshots the economy and resets the latest

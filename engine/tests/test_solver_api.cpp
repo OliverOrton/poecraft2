@@ -377,6 +377,13 @@ void run_public_solver_gate(const char* artifact_dir) {
     } while (!solve_progress.done);
     PC_CHECK(step_count >= 2);
     PC_CHECK(solve_progress.phase == PC_SOLVE_PHASE_DONE);
+    PC_CHECK(solve_progress.discovered_states >=
+             solve_progress.expanded_states);
+    PC_CHECK(solve_progress.state_action_rows > 0);
+    PC_CHECK(solve_progress.transition_entries > 0);
+    PC_CHECK(solve_progress.live_owned_bytes > 0);
+    PC_CHECK(solve_progress.peak_owned_bytes >=
+             solve_progress.live_owned_bytes);
 
     pc_solve_summary stepped_summary{};
     PC_CHECK(pc_solver_solve_finish(solver, &stepped_summary, &error) ==
@@ -411,6 +418,13 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solved_telemetry.find("\"state_action_rows\":0") ==
              std::string::npos);
     PC_CHECK(solved_telemetry.find("\"available\":false") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find("\"action_analysis\":{") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find(
+                 "\"non_use_is_pruning_certificate\":false") !=
+             std::string::npos);
+    PC_CHECK(solved_telemetry.find("\"search_cost\":[{") !=
              std::string::npos);
 
     uint32_t start_state = 0;

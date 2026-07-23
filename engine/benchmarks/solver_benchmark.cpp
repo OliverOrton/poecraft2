@@ -81,6 +81,26 @@ struct CaseResult {
         std::int32_t action_type = -1;
         std::uint64_t count = 0;
     };
+    struct BoundTraceEntry {
+        double elapsed_ms = 0.0;
+        std::int32_t phase = 0;
+        std::uint32_t round = 0;
+        double lower_bound = 0.0;
+        double upper_bound = std::numeric_limits<double>::infinity();
+        double absolute_gap = std::numeric_limits<double>::infinity();
+        double relative_gap = std::numeric_limits<double>::infinity();
+        std::int32_t incumbent_kind = PC_SOLVE_INCUMBENT_NONE;
+        std::uint32_t discovered_states = 0;
+        std::uint32_t expanded_states = 0;
+        std::uint32_t frontier_states = 0;
+        std::uint64_t rows = 0;
+        std::uint64_t transitions = 0;
+        std::uint64_t reforge_work = 0;
+        std::uint64_t live_owned_bytes = 0;
+        std::uint64_t peak_owned_bytes = 0;
+        bool raised_lower = false;
+        bool lowered_upper = false;
+    };
     std::string actual_status = "not_run";
     bool expectation_met = false;
     bool verification_skipped = false;
@@ -130,6 +150,11 @@ struct CaseResult {
     double cost_delta_absolute = 0.0;
     double cost_delta_relative = 0.0;
     std::vector<ActionCount> action_distribution;
+    std::vector<BoundTraceEntry> bound_trace;
+    bool has_time_to_first_incumbent = false;
+    double time_to_first_incumbent_ms = 0.0;
+    std::vector<std::pair<double, double>> absolute_gap_milestones;
+    std::vector<std::pair<double, double>> relative_gap_milestones;
     std::vector<std::pair<std::string, bool>> cap_checks;
     std::vector<std::string> errors;
 };
@@ -248,9 +273,16 @@ std::string load_case_economy_json(const Value& specification) {
         throw std::runtime_error("pinned economy snapshot id mismatch");
     }
     const Value& metadata = required(snapshot, "metadata", Type::Object);
-    if (required_string(metadata, "content_sha256") !=
-        required_string(economy, "content_sha256")) {
+    const bool generated_natural_contract =
+        economy.find("override_purpose") == nullptr;
+    if (!generated_natural_contract &&
+        required_string(metadata, "content_sha256") !=
+            required_string(economy, "content_sha256")) {
         throw std::runtime_error("pinned economy content hash mismatch");
+    }
+    if (generated_natural_contract &&
+        required_string(economy, "content_sha256").size() != 64) {
+        throw std::runtime_error("generated economy file hash pin is malformed");
     }
     if (required_string(metadata, "source_cutoff_at_utc") !=
         required_string(economy, "source_cutoff_at_utc")) {
@@ -273,8 +305,9 @@ std::string load_case_economy_json(const Value& specification) {
         overrides.object.front().first != "base" ||
         overrides.object.front().second.type != Type::Number ||
         overrides.object.front().second.number <= 0.0 ||
-        required_string(economy, "override_purpose") !=
-            "r3f_restart_route_gate_not_market_quote") {
+        (!generated_natural_contract &&
+         required_string(economy, "override_purpose") !=
+             "r3f_restart_route_gate_not_market_quote")) {
         throw std::runtime_error(
             "pinned regression permits only the disclosed positive R3F base "
             "override");
@@ -704,6 +737,19 @@ bool evaluate_expectation(
         return true;
     }
     if (report.telemetry_json.empty() || !report.errors.empty()) return false;
+    const Value* expected_contract = specification.find("expected");
+    if (expected_contract == nullptr) {
+        if (!report.has_solve_summary ||
+            !report.solve_summary.policy_available ||
+            report.strategy_json_bytes == 0) {
+            return false;
+        }
+        for (const auto& [name, passed] : report.cap_checks) {
+            (void)name;
+            if (!passed) return false;
+        }
+        return true;
+    }
     if (!expectation_matches(expected_solve_status(specification),
                              report.actual_status)) {
         return false;
@@ -712,7 +758,7 @@ bool evaluate_expectation(
         (void)name;
         if (!passed) return false;
     }
-    const Value& expected = required(specification, "expected", Type::Object);
+    const Value& expected = *expected_contract;
     const Value telemetry = Parser(
         report.telemetry_json.data(), report.telemetry_json.size()).parse();
     for (const char* section : {
@@ -875,7 +921,11 @@ void validate_case_shape(const Value& specification) {
     required_string(specification, "approval_status");
     required_string(specification, "comparison_profile");
     required(specification, "benchmark_enabled", Type::Bool);
-    required(specification, "expected", Type::Object);
+    if (const Value* expected = specification.find("expected")) {
+        if (expected->type != Type::Object) {
+            throw std::runtime_error("case expected must be an object");
+        }
+    }
     const std::string backend =
         optional_string(specification, "execution_backend", "artifact");
     if (backend == "native_unit_fixture") {
@@ -919,11 +969,11 @@ void create_case_objects(
     if (product_action_ids != nullptr) *product_action_ids = derived_actions;
     if (const Value* product = optional(
             specification, "product_action_envelope", Type::Object)) {
-        const Value& expected = required(
+        const Value* expected = optional(
             *product, "expected_priced_action_ids", Type::Array);
-        if (!expected.array.empty()) {
+        if (expected != nullptr && !expected->array.empty()) {
             std::vector<std::string> pinned;
-            for (const Value& entry : expected.array) {
+            for (const Value& entry : expected->array) {
                 if (entry.type != Type::String) {
                     throw std::runtime_error(
                         "pinned product action ids must be strings");
@@ -1066,6 +1116,79 @@ CaseResult run_case(
                 : Clock::time_point::max();
         pc_solve_progress progress{};
         auto next_progress = Clock::now() + std::chrono::seconds(10);
+        const Value* trace_interval_value = optional(
+            caps, "bound_trace_interval_seconds", Type::Number);
+        const double trace_interval_seconds =
+            trace_interval_value == nullptr
+                ? 1.0
+                : std::max(0.05, trace_interval_value->number);
+        auto next_bound_trace = solve_begin;
+        std::uint32_t last_trace_round =
+            std::numeric_limits<std::uint32_t>::max();
+        std::int32_t last_trace_incumbent = -1;
+        const std::vector<double> absolute_thresholds{
+            1000.0, 100.0, 50.0, 25.0, 10.0, 5.0, 1.0, 0.1};
+        const std::vector<double> relative_thresholds{
+            1.0, 0.5, 0.25, 0.1, 0.05, 0.01};
+        const auto record_bound_trace = [&](const auto now) {
+            CaseResult::BoundTraceEntry entry;
+            entry.elapsed_ms = milliseconds(solve_begin, now);
+            entry.phase = progress.phase;
+            entry.round = progress.focused_round;
+            entry.lower_bound = progress.lower_bound;
+            entry.upper_bound = progress.upper_bound;
+            entry.absolute_gap = progress.absolute_optimality_gap;
+            entry.relative_gap = progress.relative_optimality_gap;
+            entry.incumbent_kind = progress.incumbent_kind;
+            entry.discovered_states = progress.discovered_states;
+            entry.expanded_states = progress.expanded_states;
+            entry.frontier_states = progress.frontier_states;
+            entry.rows = progress.state_action_rows;
+            entry.transitions = progress.transition_entries;
+            entry.reforge_work = progress.reforge_work;
+            entry.live_owned_bytes = progress.live_owned_bytes;
+            entry.peak_owned_bytes = progress.peak_owned_bytes;
+            if (!report.bound_trace.empty()) {
+                const CaseResult::BoundTraceEntry& previous =
+                    report.bound_trace.back();
+                entry.raised_lower =
+                    std::isfinite(entry.lower_bound) &&
+                    entry.lower_bound > previous.lower_bound;
+                entry.lowered_upper =
+                    std::isfinite(entry.upper_bound) &&
+                    (!std::isfinite(previous.upper_bound) ||
+                     entry.upper_bound < previous.upper_bound);
+            }
+            report.bound_trace.push_back(entry);
+            if (!report.has_time_to_first_incumbent &&
+                entry.incumbent_kind != PC_SOLVE_INCUMBENT_NONE &&
+                std::isfinite(entry.upper_bound)) {
+                report.has_time_to_first_incumbent = true;
+                report.time_to_first_incumbent_ms = entry.elapsed_ms;
+            }
+            for (const double threshold : absolute_thresholds) {
+                const bool recorded = std::any_of(
+                    report.absolute_gap_milestones.begin(),
+                    report.absolute_gap_milestones.end(),
+                    [&](const auto& item) { return item.first == threshold; });
+                if (!recorded && std::isfinite(entry.absolute_gap) &&
+                    entry.absolute_gap <= threshold) {
+                    report.absolute_gap_milestones.push_back(
+                        {threshold, entry.elapsed_ms});
+                }
+            }
+            for (const double threshold : relative_thresholds) {
+                const bool recorded = std::any_of(
+                    report.relative_gap_milestones.begin(),
+                    report.relative_gap_milestones.end(),
+                    [&](const auto& item) { return item.first == threshold; });
+                if (!recorded && std::isfinite(entry.relative_gap) &&
+                    entry.relative_gap <= threshold) {
+                    report.relative_gap_milestones.push_back(
+                        {threshold, entry.elapsed_ms});
+                }
+            }
+        };
         do {
             const auto step_begin = Clock::now();
             result = pc_solver_solve_step(
@@ -1082,6 +1205,19 @@ CaseResult run_case(
             if (result != PC_RESULT_OK) {
                 throw std::runtime_error(api_error("pc_solver_solve_step", result,
                                                    error));
+            }
+            const auto after_step = Clock::now();
+            if (report.bound_trace.empty() || progress.done ||
+                progress.focused_round != last_trace_round ||
+                progress.incumbent_kind != last_trace_incumbent ||
+                after_step >= next_bound_trace) {
+                record_bound_trace(after_step);
+                last_trace_round = progress.focused_round;
+                last_trace_incumbent = progress.incumbent_kind;
+                next_bound_trace = after_step +
+                    std::chrono::duration_cast<Clock::duration>(
+                        std::chrono::duration<double>(
+                            trace_interval_seconds));
             }
             if (emit_progress && Clock::now() >= next_progress) {
                 std::cout << required_string(specification, "id")
@@ -1158,10 +1294,13 @@ CaseResult run_case(
                 query_telemetry(handles.solver, report.errors);
         }
 
-        const std::string expected_compile = required_string(
-            required(specification, "expected", Type::Object),
-            "compile_status");
-        if (!bounded_first_expansion && report.actual_status == "converged" &&
+        const Value* expected_contract = specification.find("expected");
+        const std::string expected_compile =
+            expected_contract == nullptr
+                ? "compiled_if_policy_available"
+                : required_string(*expected_contract, "compile_status");
+        if (!bounded_first_expansion && report.has_solve_summary &&
+            report.solve_summary.policy_available &&
             expected_compile != "not_required" &&
             expected_compile != "not_expected_in_s7_0") {
             const auto compile_begin = Clock::now();
@@ -1224,6 +1363,7 @@ CaseResult run_case(
                                 optional_u64(
                                     caps, "max_transitions", 30000000),
                                 std::numeric_limits<std::uint32_t>::max()));
+                            evaluation_options.economy = handles.economy;
                             result = pc_strategy_eval_begin(
                                 handles.strategy, &evaluation_options,
                                 &handles.strategy_evaluation, &error);
@@ -1580,6 +1720,27 @@ const char* target_name(const int32_t target) {
     }
 }
 
+const char* incumbent_kind_name(const int32_t kind) {
+    switch (kind) {
+    case PC_SOLVE_INCUMBENT_CONSTRUCTIVE_FALLBACK:
+        return "constructive_fallback";
+    case PC_SOLVE_INCUMBENT_PROGRESSIVE_FRACTURE:
+        return "progressive_fracture";
+    case PC_SOLVE_INCUMBENT_DESTRUCTIVE_RENEWAL:
+        return "destructive_renewal";
+    case PC_SOLVE_INCUMBENT_DIRECT_EXECUTABLE_ROW:
+        return "direct_executable_row";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_FALLBACK:
+        return "partial_upper_plus_fallback";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_PROGRESSIVE_FRACTURE:
+        return "partial_upper_plus_progressive_fracture";
+    case PC_SOLVE_INCUMBENT_PARTIAL_UPPER_DESTRUCTIVE_RENEWAL:
+        return "partial_upper_plus_destructive_renewal";
+    case PC_SOLVE_INCUMBENT_OTHER: return "other";
+    default: return "none";
+    }
+}
+
 void append_case_report(
     std::ostringstream& out, const Value& specification,
     const CaseResult& result) {
@@ -1592,7 +1753,15 @@ void append_case_report(
     out << "  \"approval_status\":" << escape_json(required_string(specification, "approval_status")) << ",\n";
     out << "  \"benchmark_enabled\":"
         << (optional_bool(specification, "benchmark_enabled", false) ? "true" : "false") << ",\n";
-    out << "  \"expected\":" << json_of(required(specification, "expected", Type::Object)) << ",\n";
+    out << "  \"expected\":";
+    if (const Value* expected = specification.find("expected")) {
+        out << json_of(*expected);
+    } else {
+        out << "{\"solve_status\":\"policy_available\","
+               "\"compile_status\":\"compiled_if_policy_available\","
+               "\"verification_status\":\"deferred_to_b6\"}";
+    }
+    out << ",\n";
     out << "  \"actual_status\":" << escape_json(result.actual_status) << ",\n";
     out << "  \"expectation_met\":" << (result.expectation_met ? "true" : "false") << ",\n";
     out << "  \"verification_skipped\":"
@@ -1676,6 +1845,96 @@ void append_case_report(
     append_nullable_number(out, result.has_cooperative_abandon,
                            result.cooperative_abandon_ms);
     out << "},\n";
+    const Value* caps_for_trace = specification.find("caps");
+    const auto append_cap_ratio = [&](const char* name,
+                                      const std::uint64_t current) {
+        if (caps_for_trace == nullptr ||
+            caps_for_trace->type != Type::Object) {
+            out << "null";
+            return;
+        }
+        const Value* cap = caps_for_trace->find(name);
+        if (cap == nullptr || cap->type != Type::Number ||
+            cap->number <= 0.0) {
+            out << "null";
+            return;
+        }
+        append_nullable_number(
+            out, true, static_cast<double>(current) / cap->number);
+    };
+    out << "  \"bound_trace\":{\"sampling\":{"
+           "\"round_changes\":true,\"bounded_wall_intervals\":true},"
+           "\"time_to_first_incumbent_ms\":";
+    append_nullable_number(
+        out, result.has_time_to_first_incumbent,
+        result.time_to_first_incumbent_ms);
+    out << ",\"gap_milestones\":{\"absolute\":[";
+    for (std::size_t i = 0; i < result.absolute_gap_milestones.size(); ++i) {
+        if (i != 0) out << ',';
+        out << "{\"threshold\":";
+        append_nullable_number(
+            out, true, result.absolute_gap_milestones[i].first);
+        out << ",\"elapsed_ms\":";
+        append_nullable_number(
+            out, true, result.absolute_gap_milestones[i].second);
+        out << '}';
+    }
+    out << "],\"relative\":[";
+    for (std::size_t i = 0; i < result.relative_gap_milestones.size(); ++i) {
+        if (i != 0) out << ',';
+        out << "{\"threshold\":";
+        append_nullable_number(
+            out, true, result.relative_gap_milestones[i].first);
+        out << ",\"elapsed_ms\":";
+        append_nullable_number(
+            out, true, result.relative_gap_milestones[i].second);
+        out << '}';
+    }
+    out << "]},\"samples\":[";
+    for (std::size_t i = 0; i < result.bound_trace.size(); ++i) {
+        if (i != 0) out << ',';
+        const CaseResult::BoundTraceEntry& entry = result.bound_trace[i];
+        out << "{\"elapsed_ms\":";
+        append_nullable_number(out, true, entry.elapsed_ms);
+        out << ",\"phase\":" << entry.phase
+            << ",\"round\":" << entry.round
+            << ",\"lower_bound\":";
+        append_nullable_number(out, true, entry.lower_bound);
+        out << ",\"upper_bound\":";
+        append_nullable_number(out, true, entry.upper_bound);
+        out << ",\"absolute_gap\":";
+        append_nullable_number(out, true, entry.absolute_gap);
+        out << ",\"relative_gap\":";
+        append_nullable_number(out, true, entry.relative_gap);
+        out << ",\"incumbent_kind\":"
+            << escape_json(incumbent_kind_name(entry.incumbent_kind))
+            << ",\"states\":{\"discovered\":"
+            << entry.discovered_states << ",\"expanded\":"
+            << entry.expanded_states << ",\"frontier\":"
+            << entry.frontier_states << "},\"work\":{\"rows\":"
+            << entry.rows << ",\"transitions\":" << entry.transitions
+            << ",\"reforge_work\":" << entry.reforge_work
+            << "},\"memory\":{\"live_bytes\":"
+            << entry.live_owned_bytes << ",\"peak_bytes\":"
+            << entry.peak_owned_bytes << "},\"cap_proximity\":{"
+               "\"discovered_states\":";
+        append_cap_ratio("max_discovered_states", entry.discovered_states);
+        out << ",\"expanded_states\":";
+        append_cap_ratio("max_expanded_states", entry.expanded_states);
+        out << ",\"rows\":";
+        append_cap_ratio("max_state_action_rows", entry.rows);
+        out << ",\"transitions\":";
+        append_cap_ratio("max_transitions", entry.transitions);
+        out << ",\"reforge_work\":";
+        append_cap_ratio("max_reforge_work", entry.reforge_work);
+        out << ",\"memory\":";
+        append_cap_ratio("max_solver_owned_bytes", entry.peak_owned_bytes);
+        out << "},\"progress_effect\":{\"raised_lower_bound\":"
+            << (entry.raised_lower ? "true" : "false")
+            << ",\"lowered_upper_bound\":"
+            << (entry.lowered_upper ? "true" : "false") << "}}";
+    }
+    out << "]},\n";
     const std::int64_t delta =
         static_cast<std::int64_t>(result.working_set_after) -
         static_cast<std::int64_t>(result.working_set_before);
@@ -1782,9 +2041,8 @@ void append_case_report(
     out << "  \"value\":{\"start\":";
     append_nullable_number(out,
                            result.has_solve_summary &&
-                               result.solve_summary.converged &&
-                               result.actual_status == "converged",
-                           result.solve_summary.start_value);
+                               result.solve_summary.policy_available,
+                           result.solve_summary.evaluated_policy_cost);
     out << "},\n";
     out << "  \"verification\":";
     if (!result.has_verification) {
@@ -1972,8 +2230,10 @@ int main(int argc, char** argv) {
         const fs::path corpus_dir = corpus_path.parent_path();
         const std::string manifest_text = read_file(corpus_path);
         const Value manifest = parse_json(manifest_text, corpus_path);
-        if (required_string(manifest, "schema_version") !=
-            "solver_benchmark_corpus_v1") {
+        const std::string corpus_schema =
+            required_string(manifest, "schema_version");
+        if (corpus_schema != "solver_benchmark_corpus_v1" &&
+            corpus_schema != "natural_t1_benchmark_corpus_v1") {
             throw std::runtime_error("unsupported corpus schema_version");
         }
         const Value& case_paths = required(manifest, "cases", Type::Array);
@@ -1986,8 +2246,15 @@ int main(int argc, char** argv) {
         const Value artifact_json = parse_json(
             read_file(artifact_manifest), artifact_manifest);
         const Value& artifact_pin = required(manifest, "artifact", Type::Object);
-        if (optional_u32(artifact_pin, "engine_abi_version", 0) !=
-            pc_abi_version()) {
+        std::uint32_t pinned_abi = optional_u32(
+            artifact_pin, "engine_abi_version", 0);
+        if (pinned_abi == 0 && corpus_schema ==
+                "natural_t1_benchmark_corpus_v1") {
+            pinned_abi = optional_u32(
+                required(manifest, "generator", Type::Object),
+                "engine_abi_version", 0);
+        }
+        if (pinned_abi != pc_abi_version()) {
             throw std::runtime_error("corpus engine ABI pin does not match this build");
         }
         if (optional_u32(artifact_pin, "artifact_schema_version", 0) !=
@@ -2061,7 +2328,8 @@ int main(int argc, char** argv) {
                    << "\"runner\":\"native\",\n"
                    << "\"corpus\":{\"id\":"
                    << escape_json(required_string(manifest, "corpus_id"))
-                   << ",\"schema_version\":\"solver_benchmark_corpus_v1\","
+                   << ",\"schema_version\":"
+                   << escape_json(corpus_schema) << ','
                    << "\"manifest_path\":" << escape_json(corpus_path.string())
                    << ",\"manifest\":" << json_of(manifest)
                    << "},\n"

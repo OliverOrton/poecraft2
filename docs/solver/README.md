@@ -296,8 +296,13 @@ materials, node/edge flow, incoming state classes, and S8.4 accounting and
 review projections. The evaluator internally retains exact abstract-state,
 compiled-node, and action occupancy together with immediate priced reward;
 the retained occupancy/reward dot product is reconciled with exact expected
-cost. B4 owns its report surface. Quantities remain price-independent; product
-code applies the active price table for display.
+cost. Its action-utility report aggregates exact expected visits/applies,
+priced spend and known-cost share, distinct reachable states, and regions by
+goal progress, rarity, blockers, crafted count, and fractured subset. An
+action's probability of any use is reported only when it is derivable from the
+retained evidence; cyclic occupancy is not mislabeled as a hitting
+probability. Quantities remain price-independent; the optional pinned economy
+supplies the reward dot product.
 
 Evaluation refuses unsupported graph vocabulary rather than estimating it.
 `mod_count` and `mod_family_count`, including required crafted/fractured flags,
@@ -317,7 +322,7 @@ The public ABI is declared in `engine/include/poecraft/solver.h`:
 | --- | --- |
 | Registry | create/destroy, action count/info/find, candidate indices |
 | Calculator | exact `pc_calc_action_outcomes` for one concrete item/action |
-| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, and live `L`/`U`/gap progress |
+| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, and live `L`/`U`/gap, round, incumbent, work, and memory progress |
 | Results | state value/policy, concrete projection, compile, solve log |
 | Diagnostics | versioned telemetry and selected live/peak memory statistics |
 | Exact graph | synchronous evaluate plus begin/step/finish/destroy and memory statistics |
@@ -326,6 +331,30 @@ The public ABI is declared in `engine/include/poecraft/solver.h`:
 surfaces to the web worker. `apps/web/src/app/engine-worker.ts` provides
 cooperative stepping, progress, cancellation, and event-loop yields. WASM
 build/export/memory details are owned by the [engine WASM reference](../engine/wasm.md).
+
+## Large-run orchestration and telemetry
+
+`tools/ingest/benchmark_solver_corpus.py` runs any native corpus manifest into
+an arbitrary output directory. Cases launch in deterministic ID order in
+separate process groups, use their pinned watchdogs under a hard 900-second
+ceiling, kill the process tree on expiry, verify no parent survivor, and write
+an atomic resumable ledger. Completed reports are skipped on resume. Default
+hard-case concurrency is one; callers may opt into more workers with a memory
+budget, in which case each case reserves its declared solver-owned-byte cap.
+
+The native benchmark accepts the historical solver corpus and the generated
+natural-T1 corpus. It compiles whenever `policy_available`, evaluates the
+compiled returned policy exactly with the pinned economy, and records a bound
+trace at every focused-round/incumbent change and bounded wall intervals. Each
+sample carries `L`, `U`, both gaps, state/frontier and work counts, live/peak
+owned memory, cap proximity, and whether progress raised `L` or lowered `U`.
+Reports derive first-incumbent and standard gap-threshold times.
+
+Solver telemetry attributes row attempts, raw outcomes, retained transitions,
+reforge work, cache requests/hits, wall time, and retained selected-allocation
+growth to action IDs. It also compares lower- and executable-upper-policy
+selected abstract-state counts. These are profiling observations only:
+benchmark action non-use is explicitly never a pruning certificate.
 
 ## Boundaries
 

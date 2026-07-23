@@ -692,6 +692,24 @@ export interface SolveProgress {
     upper_bound: number | null;
     absolute_optimality_gap: number | null;
     relative_optimality_gap: number | null;
+    focused_round: number;
+    incumbent_kind:
+        | "none"
+        | "constructive_fallback"
+        | "progressive_fracture"
+        | "destructive_renewal"
+        | "direct_executable_row"
+        | "partial_upper_plus_fallback"
+        | "partial_upper_plus_progressive_fracture"
+        | "partial_upper_plus_destructive_renewal"
+        | "other";
+    discovered_states: number;
+    frontier_states: number;
+    state_action_rows: number;
+    transition_entries: number;
+    reforge_work: number;
+    live_owned_bytes: number;
+    peak_owned_bytes: number;
 }
 
 /** Benchmark telemetry emitted by the native optimal solver.  The versioned

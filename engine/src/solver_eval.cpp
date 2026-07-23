@@ -8,6 +8,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -1047,6 +1048,8 @@ struct StrategyEvalWork::Impl {
         for (const StrategyEvalActionNode& node : action.nodes) {
             bytes += node.node_id.capacity() + 1;
         }
+        bytes += action.regions.capacity() *
+                 sizeof(StrategyEvalActionRegion);
         return bytes;
     }
 
@@ -2778,6 +2781,88 @@ struct StrategyEvalWork::Impl {
                 check_owned_cap(finalization_transient_floor);
             }
         }
+        struct RetainedRegion {
+            StrategyEvalActionRegion totals;
+            std::set<std::uint32_t> states;
+        };
+        using RegionKey = std::tuple<
+            std::uint32_t, std::uint8_t, std::uint32_t, std::uint32_t,
+            std::uint32_t, std::uint32_t>;
+        std::map<std::string, std::map<RegionKey, RetainedRegion>>
+            regions_by_action;
+        std::map<std::string, std::set<std::uint32_t>> states_by_action;
+        const auto bit_count = [](std::uint32_t value) {
+            std::uint32_t count = 0;
+            while (value != 0) {
+                count += value & 1u;
+                value >>= 1u;
+            }
+            return count;
+        };
+        const auto vector_count = [](const CompactCountVector& values) {
+            std::uint32_t count = 0;
+            for (const std::uint8_t value : values) count += value;
+            return count;
+        };
+        for (const StrategyEvalOccupancyEntry& entry : output.occupancy) {
+            if (entry.state >= output.occupancy_states.size() ||
+                entry.action >= calc.registry().actions.size() ||
+                entry.expected_visits <= 0.0) {
+                continue;
+            }
+            const AbstractState& state =
+                output.occupancy_states[entry.state];
+            std::uint32_t progress = 0;
+            for (std::size_t slot = 0; slot < output.targets.size(); ++slot) {
+                if (state.slot_status[slot] == static_cast<std::uint8_t>(
+                        GoalSlotStatus::Satisfied)) {
+                    ++progress;
+                }
+            }
+            const std::uint32_t crafted =
+                bit_count(state.crafted_goal_mask) +
+                vector_count(state.crafted_junk_counts);
+            const std::uint32_t fractured =
+                bit_count(state.fractured_goal_mask) +
+                bit_count(state.fractured_metamod_flags) +
+                vector_count(state.fractured_junk_counts);
+            const RegionKey key{
+                progress, state.rarity, bit_count(state.blocked_mask),
+                crafted, state.fractured_goal_mask, fractured};
+            const std::string& id =
+                calc.registry().actions[entry.action].id;
+            RetainedRegion& region = regions_by_action[id][key];
+            region.totals.goal_progress = progress;
+            region.totals.rarity = state.rarity;
+            region.totals.blocker_count = bit_count(state.blocked_mask);
+            region.totals.crafted_count = crafted;
+            region.totals.fractured_goal_mask =
+                state.fractured_goal_mask;
+            region.totals.fractured_count = fractured;
+            region.totals.expected_visits += entry.expected_visits;
+            region.totals.expected_applied += entry.expected_applied;
+            region.states.insert(entry.state);
+            states_by_action[id].insert(entry.state);
+        }
+        for (auto& [id, action] : actions_by_id) {
+            const auto action_states = states_by_action.find(id);
+            action.reachable_states =
+                action_states == states_by_action.end()
+                    ? 0
+                    : static_cast<std::uint32_t>(
+                          action_states->second.size());
+            const auto retained_regions = regions_by_action.find(id);
+            if (retained_regions != regions_by_action.end()) {
+                for (auto& [unused_key, retained] :
+                     retained_regions->second) {
+                    (void)unused_key;
+                    retained.totals.reachable_states =
+                        static_cast<std::uint32_t>(
+                            retained.states.size());
+                    action.regions.push_back(retained.totals);
+                }
+            }
+        }
         for (const auto& [unused, action] : actions_by_id) {
             (void)unused;
             output.action_totals.push_back(action);
@@ -3214,6 +3299,10 @@ void append_action_totals_json(
     for (const StrategyEvalMaterialTotal& material : priced_materials) {
         price_by_key.emplace(material.price_key, &material);
     }
+    double known_total_cost = 0.0;
+    for (const StrategyEvalMaterialTotal& material : priced_materials) {
+        if (material.priced) known_total_cost += material.cost_contribution;
+    }
     out.push_back('[');
     for (std::size_t i = 0; i < actions.size(); ++i) {
         if (i != 0) out.push_back(',');
@@ -3225,6 +3314,41 @@ void append_action_totals_json(
         append_number(out, action.expected_visits / divisor);
         out += ",\"expected_applied\":";
         append_number(out, action.expected_applied / divisor);
+        double action_known_spend = 0.0;
+        bool action_spend_complete = true;
+        for (const std::string& key : action.price_keys) {
+            const auto price = price_by_key.find(key);
+            if (price == price_by_key.end() || !price->second->priced) {
+                action_spend_complete = false;
+            } else {
+                action_known_spend +=
+                    action.expected_applied * price->second->unit_price /
+                    divisor;
+            }
+        }
+        out += ",\"expected_spend_known\":";
+        append_number(out, action_known_spend);
+        out += ",\"expected_spend_complete\":";
+        out += action_spend_complete ? "true" : "false";
+        out += ",\"known_cost_share\":";
+        if (known_total_cost > 0.0) {
+            append_number(
+                out, action_known_spend /
+                         (known_total_cost / divisor));
+        } else {
+            out += "null";
+        }
+        out += ",\"probability_of_any_use\":{";
+        if (action.expected_visits == 0.0) {
+            out += "\"status\":\"exact_zero\",\"value\":0}";
+        } else {
+            out += "\"status\":\"not_computable_from_occupancy\","
+                   "\"value\":null}";
+        }
+        out += ",\"reachable_states\":" +
+               std::to_string(action.reachable_states);
+        out += ",\"reachable_regions\":" +
+               std::to_string(action.regions.size());
         out += ",\"classifications\":[";
         for (std::size_t role = 0; role < action.classifications.size();
              ++role) {
@@ -3260,6 +3384,31 @@ void append_action_totals_json(
             } else {
                 out += "null";
             }
+            out.push_back('}');
+        }
+        out += "],\"regions\":[";
+        for (std::size_t region_index = 0;
+             region_index < action.regions.size(); ++region_index) {
+            if (region_index != 0) out.push_back(',');
+            const StrategyEvalActionRegion& region =
+                action.regions[region_index];
+            out += "{\"goal_progress\":" +
+                   std::to_string(region.goal_progress);
+            out += ",\"rarity\":" + std::to_string(region.rarity);
+            out += ",\"blocker_count\":" +
+                   std::to_string(region.blocker_count);
+            out += ",\"crafted_count\":" +
+                   std::to_string(region.crafted_count);
+            out += ",\"fractured_goal_mask\":" +
+                   std::to_string(region.fractured_goal_mask);
+            out += ",\"fractured_count\":" +
+                   std::to_string(region.fractured_count);
+            out += ",\"reachable_states\":" +
+                   std::to_string(region.reachable_states);
+            out += ",\"expected_visits\":";
+            append_number(out, region.expected_visits / divisor);
+            out += ",\"expected_applied\":";
+            append_number(out, region.expected_applied / divisor);
             out.push_back('}');
         }
         out += "],\"raw_nodes\":[";

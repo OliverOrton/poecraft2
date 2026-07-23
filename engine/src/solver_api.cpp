@@ -694,6 +694,32 @@ int32_t solve_gap_target(const solver::SolveGapTarget target) {
     return PC_SOLVE_GAP_TARGET_NONE;
 }
 
+int32_t solve_incumbent_kind(const std::string& kind) {
+    if (kind.empty()) return PC_SOLVE_INCUMBENT_NONE;
+    if (kind == "constructive_fallback") {
+        return PC_SOLVE_INCUMBENT_CONSTRUCTIVE_FALLBACK;
+    }
+    if (kind == "progressive_fracture") {
+        return PC_SOLVE_INCUMBENT_PROGRESSIVE_FRACTURE;
+    }
+    if (kind == "destructive_renewal") {
+        return PC_SOLVE_INCUMBENT_DESTRUCTIVE_RENEWAL;
+    }
+    if (kind == "direct_executable_row") {
+        return PC_SOLVE_INCUMBENT_DIRECT_EXECUTABLE_ROW;
+    }
+    if (kind == "partial_upper_plus_fallback") {
+        return PC_SOLVE_INCUMBENT_PARTIAL_UPPER_FALLBACK;
+    }
+    if (kind == "partial_upper_plus_progressive_fracture") {
+        return PC_SOLVE_INCUMBENT_PARTIAL_UPPER_PROGRESSIVE_FRACTURE;
+    }
+    if (kind == "partial_upper_plus_destructive_renewal") {
+        return PC_SOLVE_INCUMBENT_PARTIAL_UPPER_DESTRUCTIVE_RENEWAL;
+    }
+    return PC_SOLVE_INCUMBENT_OTHER;
+}
+
 void copy_solve_progress(
     const solver::SolveProgress& source,
     pc_solve_progress& target) {
@@ -710,6 +736,15 @@ void copy_solve_progress(
     target.upper_bound = source.upper_bound;
     target.absolute_optimality_gap = source.absolute_optimality_gap;
     target.relative_optimality_gap = source.relative_optimality_gap;
+    target.focused_round = source.focused_round;
+    target.incumbent_kind = solve_incumbent_kind(source.incumbent_kind);
+    target.discovered_states = source.discovered_states;
+    target.frontier_states = source.frontier_states;
+    target.state_action_rows = source.state_action_rows;
+    target.transition_entries = source.transition_entries;
+    target.reforge_work = source.reforge_work;
+    target.live_owned_bytes = source.live_owned_bytes;
+    target.peak_owned_bytes = source.peak_owned_bytes;
 }
 
 void copy_solve_summary(

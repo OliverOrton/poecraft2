@@ -304,6 +304,15 @@ async function solveSolver(
         upper_bound: null,
         absolute_optimality_gap: null,
         relative_optimality_gap: null,
+        focused_round: 0,
+        incumbent_kind: "none",
+        discovered_states: 0,
+        frontier_states: 0,
+        state_action_rows: 0,
+        transition_entries: 0,
+        reforge_work: 0,
+        live_owned_bytes: 0,
+        peak_owned_bytes: 0,
     };
 
     try {

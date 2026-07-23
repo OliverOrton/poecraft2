@@ -652,6 +652,10 @@ void run_closed_form_tests() {
              near(repeated_protection->expected_visits, 2.0));
     PC_CHECK(repeated_protection != nullptr &&
              repeated_protection->nodes.size() == 2);
+    PC_CHECK(repeated_protection != nullptr &&
+             repeated_protection->reachable_states > 0);
+    PC_CHECK(repeated_protection != nullptr &&
+             !repeated_protection->regions.empty());
     const StrategyEvalActionTotal* shared_cleanup = action_total(
         technique_accounting, "remove_crafted_modifiers");
     PC_CHECK(shared_cleanup != nullptr &&
@@ -681,6 +685,16 @@ void run_closed_form_tests() {
     }
 
     const std::string bytes = serialize_strategy_eval(exact);
+    const std::string accounting_json =
+        serialize_strategy_eval(technique_accounting);
+    PC_CHECK(accounting_json.find("\"reachable_regions\":") !=
+             std::string::npos);
+    PC_CHECK(accounting_json.find("\"probability_of_any_use\":") !=
+             std::string::npos);
+    PC_CHECK(accounting_json.find("\"known_cost_share\":") !=
+             std::string::npos);
+    PC_CHECK(accounting_json.find("\"goal_progress\":") !=
+             std::string::npos);
     PC_CHECK(bytes == serialize_strategy_eval(evaluate_strategy(
                           *loop_strategy, options)));
 }

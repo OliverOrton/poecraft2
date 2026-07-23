@@ -125,8 +125,11 @@ chunks to 1–4 work items; a phase change resets the chunk to 1. It yields afte
 about 8 ms of accumulated unyielded work or when `yieldEveryStep` is requested.
 Progress covers expanding, iterating, and done phases and is throttled to
 roughly 100 ms apart except for first, phase-change, and final updates. ABI v2
-progress also carries live lower/upper and absolute/relative gap values;
-non-finite unavailable values cross the JSON facade as `null`.
+progress also carries live lower/upper and absolute/relative gap values,
+focused round, incumbent kind, discovered/expanded/frontier state counts,
+rows/transitions/reforge work, and live/peak selected owned bytes. The latter
+fields are observational reporting only. Non-finite unavailable values cross
+the JSON facade as `null`.
 
 On cancellation the worker returns a cancelled result with its latest
 progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
