@@ -1768,7 +1768,7 @@ void append_case_report(
         << (result.verification_skipped ? "true" : "false") << ",\n";
     out << "  \"input\":{";
     bool first_input = true;
-    for (const char* key : {"comparison_profile", "session", "start", "goal", "product_action_envelope", "allowed_mechanic_families", "economy", "caps", "verification"}) {
+    for (const char* key : {"comparison_profile", "session", "start", "goal", "corpus", "feasibility", "generation", "product_action_envelope", "allowed_mechanic_families", "economy", "caps", "verification"}) {
         const Value* value = specification.find(key);
         if (value == nullptr) continue;
         if (!first_input) out << ',';

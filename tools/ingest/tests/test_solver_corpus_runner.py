@@ -6,6 +6,7 @@ import sys
 
 from poecraft_ingest.solver_corpus_runner import (
     CaseTask,
+    _run_case,
     load_case_tasks,
     run_corpus,
     run_isolated_process,
@@ -89,6 +90,42 @@ def test_resume_skips_completed_case(tmp_path: Path) -> None:
     assert ledger["all_completed"] is True
     assert ledger["survivors"] == []
     assert ledger["cases"]["one"]["resume_disposition"] == "skipped_completed"
+
+
+def test_native_expectation_miss_is_a_completed_measurement(
+    tmp_path: Path, monkeypatch
+) -> None:
+    def fake_process(*args, **kwargs):
+        output_flag = args[0].index("--output") + 1
+        _write_json(Path(args[0][output_flag]), {"cases": []})
+        return {
+            "exit_code": 2,
+            "timed_out": False,
+            "survivor": False,
+            "survivor_check": "test",
+            "wall_ms": 1.0,
+            "output": "expectation miss",
+        }
+
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_corpus_runner.run_isolated_process",
+        fake_process,
+    )
+    task = CaseTask("miss", tmp_path / "miss.json", 1.0, 100, "smoke")
+
+    result = _run_case(
+        task,
+        executable=Path(sys.executable),
+        artifact=tmp_path,
+        corpus=tmp_path / "manifest.json",
+        output_directory=tmp_path / "run",
+        root=tmp_path,
+        exact_evaluation=False,
+    )
+
+    assert result["status"] == "completed"
+    assert result["native_expectations_met"] is False
+    assert result["exit_code"] == 2
 
 
 def test_memory_budget_refuses_oversized_case_without_launch(tmp_path: Path) -> None:

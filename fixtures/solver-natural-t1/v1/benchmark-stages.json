@@ -1,0 +1,48 @@
+{
+  "schema_version": "bounded_policy_benchmark_stages_v1",
+  "stages": [
+    {
+      "id": "smoke",
+      "tiers": ["smoke"],
+      "exact_evaluation": false,
+      "verification": false,
+      "purpose": "development gate"
+    },
+    {
+      "id": "full_short",
+      "tiers": ["full_short"],
+      "exact_evaluation": false,
+      "verification": false,
+      "requires": ["smoke"],
+      "purpose": "same-cap candidate comparison"
+    },
+    {
+      "id": "deep",
+      "tiers": ["deep"],
+      "exact_evaluation": false,
+      "verification": false,
+      "requires": ["full_short"],
+      "purpose": "representative and hard-case diagnosis"
+    },
+    {
+      "id": "exact_evaluation",
+      "tiers": ["smoke", "full_short", "deep"],
+      "exact_evaluation": true,
+      "verification": false,
+      "requires": ["deep"],
+      "requires_explicit_case_selection": true,
+      "purpose": "exact occupancy and action utility for selected compiled bounded policies"
+    },
+    {
+      "id": "acceptance_verification",
+      "tiers": ["smoke", "full_short", "deep"],
+      "exact_evaluation": true,
+      "verification": true,
+      "requires": ["exact_evaluation"],
+      "requires_explicit_case_selection": true,
+      "b6_only": true,
+      "verification_runs": 10000,
+      "purpose": "B6 empirical corroboration subset only"
+    }
+  ]
+}

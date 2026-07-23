@@ -26,3 +26,33 @@ group/capacity, unknown, and exhausted-stratum counts.
 The checked generator configuration also runs non-corpus feasibility probes
 for each semantic rejection class. Those probes make the funnel observable;
 they are never included in `manifest.json`'s accepted case list.
+
+## Benchmark workflow
+
+`benchmark-stages.json` makes the B5 funnel explicit: smoke, full short-budget
+candidate run, deep representative/hard cases, exact evaluation of an
+explicitly selected compiled-policy subset, then a B6-only 10,000-run
+acceptance subset. Run one non-acceptance stage with:
+
+```powershell
+$env:PYTHONPATH = 'tools/ingest;bindings/python'
+py -3 tools/ingest/benchmark_bounded_policy_stage.py `
+  --config fixtures/solver-natural-t1/v1/benchmark-stages.json `
+  --stage smoke --label candidate-name `
+  --executable build/engine/poecraft_solver_benchmark.exe `
+  --artifact data/compiled/current `
+  --corpus fixtures/solver-natural-t1/v1/manifest.json `
+  --output-root build/reports/bounded-policy
+```
+
+The runner defaults hard-case concurrency to one, uses per-case watchdogs,
+and resumes completed ledgers. Native exit code 2 is a completed measurement
+whose case expectations were not met (for example, a resource-cap refusal),
+so it remains in the report rather than censoring no-policy and refusal rates.
+Exit code 1, watchdog expiry, a surviving process, or a missing report remains
+a runner failure. Full-short A/B candidates must use identical case IDs and
+caps. Generate a paired report with
+`tools/ingest/report_solver_corpus.py --run baseline=<path> --run
+candidate=<path> --pair baseline:candidate --output <file>`. Analytics are
+separate from the native/WASM correctness gate, and action non-use is never a
+pruning certificate.

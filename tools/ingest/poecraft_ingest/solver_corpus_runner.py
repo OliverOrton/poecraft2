@@ -230,7 +230,7 @@ def _run_case(
     )
     log_path.write_text(result.pop("output"), encoding="utf-8")
     completed = (
-        result["exit_code"] == 0
+        result["exit_code"] in {0, 2}
         and not result["timed_out"]
         and not result["survivor"]
         and report_path.is_file()
@@ -243,6 +243,7 @@ def _run_case(
         ),
         "watchdog_seconds": task.watchdog_seconds,
         "reserved_memory_bytes": task.reserved_memory_bytes,
+        "native_expectations_met": result["exit_code"] == 0 if completed else None,
         "report_path": str(report_path.resolve()),
         "log_path": str(log_path.resolve()),
         **result,
