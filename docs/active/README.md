@@ -1,8 +1,9 @@
 # Active Work
 
 **Status: focused-round performance attribution and scheduling is selected.**
-Gate 0 boundary verification and fresh baseline capture are the exact next
-steps; no source work has started.
+Gates 0 and 1 completed with fresh retained evidence. Execution hard-stopped
+before retained Gate 2 source work because unrelated tracked web files became
+dirty; [HANDOFF](../../HANDOFF.md) records the blocker and exact boundary.
 
 Parent: [Documentation map](../README.md)
 

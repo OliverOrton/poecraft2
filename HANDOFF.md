@@ -2,10 +2,12 @@
 
 **Status: B1 through B6 and the
 [mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md)
-are complete and accepted. Oliver selected
-[focused-round performance attribution and scheduling](docs/active/focused-round-performance.md);
-Gate 0 boundary verification and fresh baseline capture are the exact next
-steps, and no source work has started.**
+are complete and accepted. For the selected
+[focused-round performance attribution and scheduling](docs/active/focused-round-performance.md)
+chunk, Gate 0 and the fresh uninstrumented Gate 1 baseline completed. Execution
+hard-stopped before any retained Gate 2 source change because two unrelated
+tracked web files became dirty during the Gate 1 build. Oliver must resolve
+that concurrent work before the focused-round plan can resume.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -41,6 +43,108 @@ on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
 cherry-picked, or used as a source donor. Candidate A/C search guidance remains
 forbidden. The incumbent bundle and retained witness are for executable
 upper-bound/output production only.
+
+## Focused-round Gate 0-1 hard-stop handoff
+
+The session began on 2026-07-23 with the exact requested preflight:
+
+- branch `codex/bounded-policy-contract`;
+- clean tracked and untracked state;
+- HEAD `590253dd1dacbbf1ece005c62b127f895f015107`; and
+- no paths from `042a281d806141a4da9876306109ab59b7f60454` to HEAD
+  under `engine`, `bindings`, `scripts`, or `apps/web`.
+
+Gate 0 recorded PowerShell 5.1.26100.8875, Python 3.14.2, Node 20.20.0,
+npm 10.8.2, GCC 14.2.0, and Emscripten 6.0.0. CMake remained unavailable.
+The compiled artifact manifest SHA-256 was
+`c21886798080e98cfaf85e000851e7d9d3074147d5a6237f78cb51fa890d0d4d`.
+The run-local detached watchdog is
+`build/focused-round/watchdog.py`, SHA-256
+`7eb3716cca2ec7903741f440f034e88c14d9270caab4bed6c40940eb4879c9f4`.
+It uses `CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW`, a 900-second ceiling,
+process-tree termination on timeout, and a survivor poll.
+
+The fresh uninstrumented native build completed with exit 0 in
+274,654.793 ms. Its log SHA-256 was
+`5e77a56f93e001eb6e1a12b7226640a5286e17de05e659c05a4f2466c192614c`.
+Fresh binary SHA-256 values were:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `poecraft_engine_tests.exe` | `28af29ce4a75a6679ff8f5b8b78104b6f93fe8ef2bccf640eddacf5980133690` |
+| `poecraft_solver_benchmark.exe` | `f1fe45ea4326070adb2b656bb11cde1162213069cbf4b5f5f7ca9cc8f4495bfc` |
+| `poecraft_engine.dll` | `a8b0411d13f9eef1e6f871a3132acb7323faec9e96de01687307b50da81fda5f` |
+
+The three fresh native fast gates passed:
+
+| Gate | Checks | Failures | Log SHA-256 |
+| --- | ---: | ---: | --- |
+| `--solver-solve-only` | 391 | 0 | `ab4007d89779dde800212d4aa89a1d5505c2674f04bd80245bf43fedacd5d4dd` |
+| `--solver-api-only data/compiled/current` | 45,762 | 0 | `fdedb4f38388cf96974336c5451ae5249d164b61c6df218da3a51f97a8e2fdd8` |
+| `--solver-eval-only` | 1,695 | 0 | `9761b207723e96505e720e05fff3986de914583f4552b48527ee1aed6ce7bcf7` |
+
+The run-local 2k input changed exactly `id`,
+`caps.max_expanded_states`, the added
+`caps.max_absolute_optimality_gap`, `expected.solve_status`, and
+`expected.verification_status`; its manifest changed only `cases`.
+Input hashes were:
+
+| Input | SHA-256 |
+| --- | --- |
+| source case | `23def8caaba8e07cb38887ca43926f7658f0ea3699fbef95392be23a97682980` |
+| source manifest | `94bdb48b7e6b72626dfd6c33b9e51c975aa196bf77a3cc94645b6f382218458b` |
+| derived case | `6455039153c855e7b95a3f10242eb509c74e08a2f7a5a505e226bdaf426413e8` |
+| derived manifest | `d937d01f72a0212d12dcb884fd58dc144d4818921cc74f674a33370319fa230d` |
+
+Gate 1 completed its fixed matrix: one discarded warmup and five measured
+repetitions for each performance case, plus five repetitions for each
+hash-only control. All 28 benchmark processes and the four preceding
+build/test processes reported `timed_out=false` and `survivor=false`.
+The summary SHA-256 was
+`a7798c4369b0d2b8112bbaca1a815b8bd4639c8f4bff07a4e04907eef8883836`.
+
+| Case / primary | Five measured values | Median |
+| --- | --- | ---: |
+| 2k / `phase_wall_ms.solve` ms | 22818.3964, 23211.5931, 22535.6307, 22601.2755, 22891.6983 | 22818.3964 |
+| strict / extraction ns | 23733866600, 21043017900, 20007173700, 21562787700, 20448664700 | 21043017900 |
+| quotient / `phase_wall_ms.solve` ms | 37359.7082, 39730.2478, 37630.169, 38292.8618, 37417.003 | 37630.169 |
+
+Deterministic hashes were:
+
+| Case | transition bits | policy bits |
+| --- | --- | --- |
+| `focused-round-real-product-2k` | `b957f6e9d877b74a` | `e822e68756d7cfc6` |
+| `solver-scaling-dire-pelt-two-t1-chaos-strict` | `2d2b5656301764c1` | `4e38cf37211140ba` |
+| `solver-scaling-dire-pelt-two-t1-chaos-quotient` | `505cd3271f47ca66` | `1e4aef1dd50cee68` |
+| `oracle-real-two-mod` | `845d39705f1a45da` | `763df0ca5ed817c5` |
+| `refusal-state-cap` | `5ac77dee07447866` | `1cedae1f72f786c3` |
+
+The 2k reports consistently returned the intended state-cap measurement with
+a finite bounded executable policy and a certificate containing
+`230.26738656962243`. All strict, quotient, millisecond, and refusal controls
+met their native expectations.
+
+During the watched native build, after the clean Gate 0 proof and before any
+Gate 2 source edit, these unrelated tracked files changed:
+
+- `apps/web/src/app/components/pc-strategy-board.ts` at
+  2026-07-23 15:55:05 UTC; and
+- `apps/web/src/app/components/pc-strategy-editor.ts` at
+  2026-07-23 15:55:16 UTC.
+
+They contain a Strategy Board zoom-floor change and were not produced or
+edited by this focused-round work. The plan's unexpected-dirty-source rule is
+a hard stop. The attempted Gate 2 instrumentation was fully reverted; no
+tracked engine, benchmark, test, ingest, binding, fixture, or evidence change
+from that attempt remains. The run-local Gate 0-1 evidence is retained under
+`build/focused-round/`. The exact natural two-T1 oracle never ran, and the
+economy pipeline was not touched.
+
+Resume only after Oliver resolves the two concurrent web changes and selects
+how they relate to this plan's clean `042a281` source boundary. Re-run Gate 0
+before restoring Gate 2 instrumentation; do not reuse historical timings in
+place of the retained fresh Gate 1 baseline unless the resolved source
+boundary invalidates it.
 
 ## Mechanical solver split accepted boundary
 
@@ -757,12 +861,13 @@ Chunks completed with evidence: B1, B2, B3, B4, B5, B6, and the mechanical
 solver split. Oliver selected the focused-round performance plan on
 2026-07-23.
 
-Exact stopping point: before Gate 0 boundary verification, the fresh
-uninstrumented native build, input derivation, fast native counts, or any
-benchmark repetition. No attribution instrumentation, copied-source variant,
-candidate default, test, fixture, evidence, binding, WASM, or web change has
-started. The selected source baseline is `042a281`; the preceding
-documentation boundary is `5eb66d4`.
+Exact stopping point: Gates 0 and 1 are complete with fresh retained run-local
+evidence. Gate 2 was about to add attribution instrumentation when the
+concurrent tracked Strategy Board changes were detected. The unvalidated
+instrumentation attempt was reverted completely. No copied-source variant,
+candidate default, tracked test/fixture/evidence change, binding change, WASM
+build, or focused-round web change has started. The selected source baseline
+remains `042a281`; the preceding documentation boundary is `5eb66d4`.
 
 The accepted source has exactly nine `solver_solve*.cpp` files and the private
 `solver_solve_types.hpp` header. Calculator, `solver_internal.hpp`, and
@@ -771,14 +876,13 @@ fast-case attribution and at most one predeclared focused scheduling-default
 tuple. The exact natural two-T1 oracle must not run. The archived
 reconnaissance is context only and cannot replace fresh evidence.
 
-There are no blockers at selection. The next session must first verify a clean
-selection commit and prove there is no source change after `042a281`, then
-execute Gates 0 through 6 in order. Every build, benchmark, evaluation,
-simulation, and test-pipeline process retains the detached 900-second
-watchdog. The documentation-only selection passed `git diff --check` and a
-Markdown audit covering 139 files and 823 relative links with zero missing
-targets or unreachable non-template docs; the audit report SHA-256 was
-`c8b30049c073ab4429dae421d298f891b1324c3558dc1f99a98ef8becd66d51d`.
+The blocker is the concurrent uncommitted Strategy Board zoom-floor work in
+`pc-strategy-board.ts` and `pc-strategy-editor.ts`. Oliver must resolve it and
+decide whether the focused-round plan still uses the clean `042a281` source
+boundary. After that decision, re-run Gate 0 and resume at Gate 2 only if the
+fresh Gate 1 source boundary remains valid. Every later build, benchmark,
+evaluation, simulation, and test-pipeline process retains the detached
+900-second watchdog. The exact natural two-T1 oracle remains prohibited.
 
 ## Economy pipeline state (2026-07-22, outside chunk scope)
 

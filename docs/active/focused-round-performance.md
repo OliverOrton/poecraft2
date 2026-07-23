@@ -1,7 +1,9 @@
 # Focused-Round Performance Attribution And Scheduling
 
-**Status: selected on 2026-07-23. Gate 0 boundary verification and fresh
-baseline capture are the exact next steps; no source work has started.**
+**Status: selected on 2026-07-23. Gates 0 and 1 completed with fresh retained
+evidence. Execution hard-stopped before any retained Gate 2 source change
+because unrelated tracked Strategy Board files became dirty during the Gate 1
+build; [HANDOFF](../../HANDOFF.md) records the exact blocker and evidence.**
 
 Parent: [Active work](README.md)
 

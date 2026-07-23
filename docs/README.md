@@ -30,7 +30,7 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 [Active](active/README.md) records the selected
 [focused-round performance plan](active/focused-round-performance.md).
-[HANDOFF](../HANDOFF.md) records its exact Gate 0 starting boundary. The
+[HANDOFF](../HANDOFF.md) records its exact post-Gate-1 hard-stop boundary. The
 completed
 [mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
 is archived, and the read-only
