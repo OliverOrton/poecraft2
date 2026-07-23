@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: B1 through B4 are complete and accepted. B5 stratified reports and
-the staged iteration workflow are the exact next chunk; no B5 code has been
-started.**
+**Status: B1 through B5 are complete and accepted. B6 final acceptance and
+documentation are the exact next chunk; no B6 work has been started.**
 
 Oliver selected the
 [bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
@@ -12,7 +11,8 @@ B1 implementation, including retained constructive-witness reuse, is committed
 as `58aa5ea`; B2 product presentation is committed as `86e337f`; the B3 native
 feasibility/generator implementation is `4c99cd0`, and its pinned corpus is
 `d06efff`. B4 orchestration, bound trace, action utility, and search-cost
-telemetry are committed as `1d891a0`.
+telemetry are committed as `1d891a0`; B5 stratified reporting and the staged
+iteration workflow are committed as `e40b73d`.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -352,19 +352,78 @@ B4 targeted evidence:
 No full native/web suite and no 10,000-run simulation was executed in B4; both
 remain reserved for B6.
 
+## B5 accepted boundary
+
+B5 adds pure-Python stratified aggregation and paired comparison over the raw
+per-case B4 reports. Reports group by base, class, base/class, natural-T1
+count, prefix/suffix side mix, natural-pool density, minimum goal probability,
+incumbent kind, policy status, and termination. They report exclusive
+exact/near-optimal/feasible/no-policy rates, refusal and target-reach rates,
+median/p90/p99 time and selected-owned memory, time to first incumbent and
+target, lower/upper progress, work and compiled-graph distributions, exact
+policy action utility, observational action search cost, outliers, and paired
+deltas/regressions.
+
+Paired comparison accepts a case only when its ID and complete
+session/start/goal/caps inputs match. Search-cost output repeats that action
+non-use is not a pruning certificate. Analytics remain separate from native
+and WASM correctness; they do not change solver admission, pruning, Bellman
+comparisons, tie-breaking, epsilon, or gap stopping.
+
+`fixtures/solver-natural-t1/v1/benchmark-stages.json` and
+`tools/ingest/benchmark_bounded_policy_stage.py` encode the ordered funnel:
+smoke, full short-budget candidate, deep representative/hard cases, explicit
+compiled-policy exact evaluation, and the B6-only acceptance-verification
+subset. Each non-smoke stage requires a green predecessor ledger under the
+same label. The acceptance stage is refused by the B5 command so the required
+10,000-run cadence cannot be spent early.
+
+Native benchmark exit code 2 is treated as a completed measurement when the
+process ended under its watchdog, left no survivor, and wrote its report. Its
+case-level expectation miss remains explicit in the ledger and report so
+no-policy and refusal outcomes are not censored. Exit code 1, timeout,
+survivor, missing report, runner error, or memory-budget launch refusal remains
+an incomplete run.
+
+B5 targeted evidence:
+
+- the native benchmark rebuilt successfully after adding generated corpus,
+  feasibility, and generation dimensions to each raw case input;
+- `py -3 -m pytest tools/ingest/tests/test_solver_reports.py
+  tools/ingest/tests/test_solver_corpus_runner.py -q` passed all 10 focused
+  analytics, paired-input, stage-gate, watchdog, resume, native-exit, ordering,
+  and memory-budget tests;
+- the clean committed two-case smoke at
+  `build/reports/bounded-policy/b5-boundary/smoke/ledger.json` pins source
+  commit `e40b73db00716edf7ad3ed53ec36eec51678cc49`, a clean tree, and executable
+  SHA-256 `e09c2f0d5bef91430773bba949a0645963b3d8f81124a72511dee5f2937f46e3`;
+- its one-natural-T1 case completed as `bounded_near_optimal` / `target_gap`
+  in 4,721.542 ms, while the three-natural-T1 Dire Pelt completed as an honest
+  `refused_state_cap` / no-policy measurement in 506.763 ms; the aggregate
+  therefore retained 50% near-optimal, no-policy, refusal, and target-reach
+  rates and recorded zero survivors; and
+- a paired self-comparison covered both identical-input cases with zero
+  exclusions and zero regressions.
+
+No full-short or deep corpus, exact-evaluation stage, complete native/web
+suite, or 10,000-run simulation was executed in B5. Those runs remain staged
+for owner-selected iteration and the single B6 acceptance cadence.
+
 ## Exact resume point
 
-Start B5 only. Produce the plan's stratified reports and staged iteration
-workflow from the accepted B3 corpus and B4 runner/telemetry. Keep raw per-case
-records and paired comparisons keyed to identical case IDs and resource caps.
-Do not tune search from action non-use, change mechanics, or run the complete
-affected suites/10,000-run verification early.
+Start B6 only. Run the plan's single downstream acceptance pass and complete
+the listed stable documentation/index updates. Do not begin the deferred
+performance profiling chunk, change mechanics, or tune search from benchmark
+action non-use.
 
 The standard hard watchdog is 15 minutes for every later run. Use narrow
-changed-layer tests during B4-B5, then the complete affected suites and required
-10,000-run verification once at B6. At the B4 boundary, commit B4 first, then
-update this status/evidence/next-chunk block and commit the HANDOFF separately.
+changed-layer tests through B5, then the complete affected suites and required
+10,000-run verification once at B6. The exact two-T1 oracle's single final B1
+run already required 1,092 seconds under Oliver's one-run-only 1,800-second
+exception; do not rerun it merely to reconfirm that it exceeds the standard
+watchdog. Reconcile that retained exact evidence with B6 item 2 before starting
+any new slow process.
 
-Chunks completed: B1, B2, B3, B4. Exact stopping point: before B5 implementation. Still
-awaiting Oliver later are rendered UI review, corpus-strata sanity review, and
-acceptance of the B6 results.
+Chunks completed: B1, B2, B3, B4, B5. Exact stopping point: before B6 final
+acceptance. Still awaiting Oliver later are rendered UI review, corpus-strata
+sanity review, and acceptance of the B6 results.
