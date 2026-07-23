@@ -899,6 +899,8 @@ struct CalcTelemetry {
     std::uint64_t owned_byte_audit_ns = 0;
     std::uint64_t owned_byte_ledger_requests = 0;
     std::uint64_t owned_byte_ledger_ns = 0;
+    std::uint64_t owned_byte_ledger_child_context_visits = 0;
+    std::uint64_t owned_byte_ledger_max_recursion_depth = 0;
     std::uint64_t owned_byte_reconciliations = 0;
     std::uint64_t owned_byte_ledger_max_overestimate = 0;
     std::array<PrimitiveFamilyTelemetry, kPrimitiveTelemetryFamilyCount>
@@ -1623,6 +1625,39 @@ enum class SolveGapTarget : std::uint8_t {
     Both,
 };
 
+struct FocusedScheduleRoundTelemetry {
+    std::uint32_t round = 0;
+    std::uint64_t lower_candidates = 0;
+    std::uint64_t upper_candidates = 0;
+    std::uint64_t batch_states = 0;
+    std::uint64_t lower_quota = 0;
+    std::uint64_t upper_quota = 0;
+    std::uint64_t lower_quota_admissions = 0;
+    std::uint64_t upper_quota_admissions = 0;
+    std::uint64_t lower_fill_admissions = 0;
+    std::uint64_t upper_fill_admissions = 0;
+    std::uint64_t schedule_candidates = 0;
+    std::uint64_t schedule_admissions = 0;
+    std::uint64_t global_batch_cap_hits = 0;
+    std::uint64_t per_class_cap_hits = 0;
+};
+
+struct FallbackValidationTelemetry {
+    struct Component {
+        std::uint64_t checks = 0;
+        std::uint64_t duration_ns = 0;
+    };
+
+    std::uint64_t calls = 0;
+    std::uint64_t total_ns = 0;
+    Component goal_identity;
+    Component economy_identity;
+    Component action_vocabulary_identity;
+    Component structural;
+    Component anchor_properness;
+    Component start_properness;
+};
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -1714,6 +1749,8 @@ struct SolveDiagnostics {
     std::uint64_t incumbent_graph_identity = 0;
     bool incumbent_strict_state_provenance = true;
     std::uint64_t focused_expansion_ns = 0;
+    std::vector<FocusedScheduleRoundTelemetry> focused_schedule_rounds;
+    FallbackValidationTelemetry fallback_validation;
     std::uint64_t constructive_policy_ns = 0;
     std::uint64_t strict_clean_goal_cover_ns = 0;
     std::uint64_t constructive_policy_syntheses = 0;

@@ -439,6 +439,20 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
 }
 
 std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
+    static thread_local std::uint64_t traversal_depth = 0;
+    static thread_local std::uint64_t child_context_visits = 0;
+    static thread_local std::uint64_t max_recursion_depth = 0;
+    const bool root_call = traversal_depth == 0;
+    if (root_call) {
+        child_context_visits = 0;
+        max_recursion_depth = 0;
+    }
+    ++traversal_depth;
+    if (!root_call) {
+        ++child_context_visits;
+        max_recursion_depth =
+            std::max(max_recursion_depth, traversal_depth - 1);
+    }
     const auto started = std::chrono::steady_clock::now();
     const std::uint64_t shallow = dynamic_shallow_owned_bytes();
     std::uint64_t bytes = owned_bytes_base_;
@@ -474,6 +488,14 @@ std::uint64_t CalcContext::fast_estimated_owned_bytes() const {
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - started)
             .count());
+    --traversal_depth;
+    if (root_call) {
+        telemetry_.owned_byte_ledger_child_context_visits +=
+            child_context_visits;
+        telemetry_.owned_byte_ledger_max_recursion_depth = std::max(
+            telemetry_.owned_byte_ledger_max_recursion_depth,
+            max_recursion_depth);
+    }
     return bytes;
 }
 

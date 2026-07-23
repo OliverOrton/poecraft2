@@ -110,6 +110,7 @@ struct CaseResult {
     double verification_ms = 0.0;
     double total_ms = 0.0;
     std::uint64_t solve_steps = 0;
+    std::vector<double> solve_step_wall_ms;
     std::uint64_t diagnostic_work_limit = 0;
     double diagnostic_time_limit_seconds = 0.0;
     std::string diagnostic_stop_reason;
@@ -1194,6 +1195,7 @@ CaseResult run_case(
             result = pc_solver_solve_step(
                 handles.solver, work_items, &progress, &error);
             const double step_ms = milliseconds(step_begin, Clock::now());
+            report.solve_step_wall_ms.push_back(step_ms);
             if (step_ms > report.max_solve_step_ms) {
                 report.max_solve_step_ms = step_ms;
                 report.max_solve_step_phase = progress.phase;
@@ -1825,6 +1827,34 @@ void append_case_report(
     out << ",\"max_solve_step_sweeps\":";
     if (!measured || result.solve_steps == 0) out << "null";
     else out << result.max_solve_step_sweeps;
+    out << ",\"solve_step_wall_ms\":";
+    if (!measured || result.solve_step_wall_ms.empty()) {
+        out << "null";
+    } else {
+        std::vector<double> ordered = result.solve_step_wall_ms;
+        std::sort(ordered.begin(), ordered.end());
+        const auto nearest_rank = [&](const double percentile) {
+            const std::size_t rank = std::max<std::size_t>(
+                1, static_cast<std::size_t>(
+                       std::ceil(percentile * ordered.size())));
+            return ordered[std::min(rank, ordered.size()) - 1];
+        };
+        double total_step_ms = 0.0;
+        for (const double value : result.solve_step_wall_ms) {
+            total_step_ms += value;
+        }
+        out << "{\"percentile_method\":\"nearest_rank_ceiling\"";
+        out << ",\"count\":" << result.solve_step_wall_ms.size();
+        out << ",\"total\":";
+        append_nullable_number(out, true, total_step_ms);
+        out << ",\"median\":";
+        append_nullable_number(out, true, nearest_rank(0.50));
+        out << ",\"p95\":";
+        append_nullable_number(out, true, nearest_rank(0.95));
+        out << ",\"maximum\":";
+        append_nullable_number(out, true, result.max_solve_step_ms);
+        out << "}";
+    }
     out << ",\"diagnostic_work_limit\":";
     if (result.diagnostic_work_limit == 0) out << "null";
     else out << result.diagnostic_work_limit;

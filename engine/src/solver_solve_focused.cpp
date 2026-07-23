@@ -447,7 +447,8 @@ void SolveWork::Impl::reset_focused_optimization_state() {
 void SolveWork::Impl::schedule_next_focused_expansion(
         std::vector<std::uint32_t> fringe,
         const bool complete,
-        const std::vector<double>& priority) {
+        const std::vector<double>& priority,
+        FocusedScheduleRoundTelemetry telemetry) {
         queue.clear();
         queued.assign(calc.state_count(), 0);
         for (std::uint32_t state = 0; state < expanded.size(); ++state) {
@@ -463,6 +464,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
         }
         std::sort(fringe.begin(), fringe.end());
         fringe.erase(std::unique(fringe.begin(), fringe.end()), fringe.end());
+        telemetry.schedule_candidates = fringe.size();
         std::stable_sort(
             fringe.begin(), fringe.end(),
             [&](const std::uint32_t left, const std::uint32_t right) {
@@ -499,6 +501,7 @@ void SolveWork::Impl::schedule_next_focused_expansion(
         for (const std::uint32_t state : fringe) {
             if (selected_fringe.size() >=
                 options.focused_expansion_batch_states) {
+                ++telemetry.global_batch_cap_hits;
                 break;
             }
             if (queued.at(state) ||
@@ -508,12 +511,15 @@ void SolveWork::Impl::schedule_next_focused_expansion(
             }
             const std::uint32_t candidate = coarse.at(state);
             if (selected_per_class[candidate] >= members_per_class) {
+                ++telemetry.per_class_cap_hits;
                 continue;
             }
             ++selected_per_class[candidate];
             selected_fringe.push_back(state);
         }
         fringe = std::move(selected_fringe);
+        telemetry.schedule_admissions = fringe.size();
+        result.diagnostics.focused_schedule_rounds.push_back(telemetry);
         for (const std::uint32_t state : fringe) enqueue(state);
         if (queue.empty()) {
             /* No scheduling filter is a closure proof. If the lower-selected
@@ -640,6 +646,20 @@ void SolveWork::Impl::finish_focused_lower_solve(
                            ? left_priority > right_priority
                            : left < right;
             });
+        FocusedScheduleRoundTelemetry schedule_telemetry;
+        schedule_telemetry.round =
+            result.diagnostics.focused_expansion_rounds;
+        schedule_telemetry.lower_candidates = fringe.size();
+        schedule_telemetry.upper_candidates =
+            focused_pending_upper_fringe.size();
+        schedule_telemetry.batch_states = std::max<std::uint32_t>(
+            1, options.focused_expansion_batch_states);
+        schedule_telemetry.lower_quota = std::min<std::uint64_t>(
+            schedule_telemetry.batch_states,
+            options.focused_lower_batch_states);
+        schedule_telemetry.upper_quota =
+            schedule_telemetry.batch_states -
+            schedule_telemetry.lower_quota;
         focused_closure_proved = complete && fringe.empty();
         if (!focused_closure_proved && !focused_pending_upper_fringe.empty()) {
             std::stable_sort(
@@ -681,16 +701,38 @@ void SolveWork::Impl::finish_focused_lower_solve(
                     ++admitted;
                     if (state < focused_pending_upper_priority.size()) {
                         fringe_priority[state] = std::max(
-                            fringe_priority[state],
-                            focused_pending_upper_priority[state]);
+                        fringe_priority[state],
+                        focused_pending_upper_priority[state]);
                     }
                 }
+                return admitted;
             };
-            take(fringe, lower_quota);
-            take(focused_pending_upper_fringe, upper_quota);
-            if (balanced.size() < batch) take(fringe, batch);
+            schedule_telemetry.lower_quota_admissions =
+                take(fringe, lower_quota);
+            schedule_telemetry.upper_quota_admissions =
+                take(focused_pending_upper_fringe, upper_quota);
             if (balanced.size() < batch) {
-                take(focused_pending_upper_fringe, batch);
+                schedule_telemetry.lower_fill_admissions =
+                    take(fringe, batch);
+            }
+            if (balanced.size() < batch) {
+                schedule_telemetry.upper_fill_admissions =
+                    take(focused_pending_upper_fringe, batch);
+            }
+            if (balanced.size() >= batch) {
+                const auto has_unselected =
+                    [&](const std::vector<std::uint32_t>& source) {
+                        return std::any_of(
+                            source.begin(), source.end(),
+                            [&](const std::uint32_t state) {
+                                return state < selected.size() &&
+                                       !selected[state];
+                            });
+                    };
+                if (has_unselected(fringe) ||
+                    has_unselected(focused_pending_upper_fringe)) {
+                    ++schedule_telemetry.global_batch_cap_hits;
+                }
             }
             fringe = std::move(balanced);
         }
@@ -721,10 +763,13 @@ void SolveWork::Impl::finish_focused_lower_solve(
                 const std::uint32_t representative =
                     focused_behavioral_representative[state];
                 if (!fringe_class.at(representative) ||
-                    selected_per_class.at(representative) >=
-                        members_per_class ||
                     (state < focused_strict_expanded.size() &&
                      focused_strict_expanded[state])) {
+                    continue;
+                }
+                if (selected_per_class.at(representative) >=
+                    members_per_class) {
+                    ++schedule_telemetry.per_class_cap_hits;
                     continue;
                 }
                 ++selected_per_class[representative];
@@ -766,6 +811,7 @@ void SolveWork::Impl::finish_focused_lower_solve(
             for (const std::uint32_t state : fringe) {
                 const std::uint32_t candidate = coarse.at(state);
                 if (selected_per_class[candidate] >= members_per_class) {
+                    ++schedule_telemetry.per_class_cap_hits;
                     continue;
                 }
                 ++selected_per_class[candidate];
@@ -857,7 +903,7 @@ void SolveWork::Impl::finish_focused_lower_solve(
             focused_closure_proved = false;
             schedule_next_focused_expansion(
                 std::move(focused_pending_lower_fringe), complete,
-                fringe_priority);
+                fringe_priority, schedule_telemetry);
             return;
         }
         if (focused_closure_proved) {
@@ -877,7 +923,7 @@ void SolveWork::Impl::finish_focused_lower_solve(
         }
         schedule_next_focused_expansion(
             std::move(focused_pending_lower_fringe), complete,
-            fringe_priority);
+            fringe_priority, schedule_telemetry);
     }
 
 void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {

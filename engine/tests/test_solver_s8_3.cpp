@@ -596,8 +596,12 @@ void run_protected_price_flip() {
         [](const StateLocalAutomaticCandidate& decision) {
             return decision.protected_repeat_evaluations != 0 &&
                    decision.protected_retry_fallbacks == 0;
-        }));
+    }));
     check_owned_byte_ledger(repeat_calc);
+    PC_CHECK(
+        repeat_calc.telemetry().owned_byte_ledger_child_context_visits > 0);
+    PC_CHECK(
+        repeat_calc.telemetry().owned_byte_ledger_max_recursion_depth > 0);
 
     const auto prices = [](const double lock_price) {
         return std::unordered_map<std::string, double>{

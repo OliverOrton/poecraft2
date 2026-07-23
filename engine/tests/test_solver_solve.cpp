@@ -967,6 +967,36 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         retained_progressive.diagnostics.constructive_policy_syntheses <
         retained_progressive.diagnostics.focused_expansion_rounds);
+    PC_CHECK(
+        !retained_progressive.diagnostics.focused_schedule_rounds.empty());
+    PC_CHECK(std::any_of(
+        retained_progressive.diagnostics.focused_schedule_rounds.begin(),
+        retained_progressive.diagnostics.focused_schedule_rounds.end(),
+        [](const FocusedScheduleRoundTelemetry& round) {
+            return round.schedule_candidates > 0 &&
+                   round.schedule_admissions > 0;
+        }));
+    PC_CHECK(
+        retained_progressive.diagnostics.fallback_validation.calls > 0);
+    PC_CHECK(
+        retained_progressive.diagnostics.fallback_validation.goal_identity
+            .checks > 0);
+    PC_CHECK(
+        retained_progressive.diagnostics.fallback_validation.structural
+            .checks > 0);
+    const std::string focused_instrumentation =
+        serialize_solver_telemetry(
+            fracture_calc, &retained_progressive, nullptr,
+            std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(focused_instrumentation));
+    PC_CHECK(
+        focused_instrumentation.find(
+            "\"schedule\":{\"counting_contract\":") !=
+        std::string::npos);
+    PC_CHECK(
+        focused_instrumentation.find(
+            "\"fallback_validation\":{\"timing_contract\":") !=
+        std::string::npos);
 
     fracture_prices["fracture"] = 1000000.0;
     const SolveResult expensive_fracture = solve(

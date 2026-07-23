@@ -43,6 +43,18 @@ def _case(
             },
         },
         "phase_wall_ms": {"solve": wall_ms - 10, "total": wall_ms},
+        "execution": {
+            "solve_steps": 4,
+            "max_solve_step_ms": wall_ms / 8,
+            "solve_step_wall_ms": {
+                "percentile_method": "nearest_rank_ceiling",
+                "count": 4,
+                "total": wall_ms / 4,
+                "median": wall_ms / 20,
+                "p95": wall_ms / 10,
+                "maximum": wall_ms / 8,
+            },
+        },
         "memory": {"native_peak_owned_bytes": memory},
         "solve_summary": {
             "policy_status": policy,
@@ -148,6 +160,9 @@ def test_stratified_report_includes_rates_work_actions_and_outliers() -> None:
     assert report["analytics_boundary"]["action_non_use_is_pruning_certificate"] is False
     assert run["overall"]["rates"]["near_optimal_rate"] == 1.0
     assert run["overall"]["time_ms"]["total"]["median"] == 150
+    assert run["overall"]["time_ms"]["solve_step_median"]["median"] == 7.5
+    assert run["overall"]["time_ms"]["solve_step_p95"]["median"] == 15
+    assert run["overall"]["time_ms"]["solve_step_max"]["median"] == 18.75
     assert run["overall"]["work"]["rows"]["median"] == 200
     assert run["strata"]["base"][0]["value"] == "Test Base"
     assert run["strata"]["class"][0]["value"] == "Helmet"
@@ -166,6 +181,9 @@ def test_paired_comparison_requires_identical_caps_and_flags_regressions() -> No
 
     assert comparison["paired_cases"] == 1
     assert comparison["pairs"][0]["deltas"]["wall_ms"] == 150
+    assert comparison["pairs"][0]["deltas"]["solve_step_median_ms"] == 7.5
+    assert comparison["pairs"][0]["deltas"]["solve_step_p95_ms"] == 15
+    assert comparison["pairs"][0]["deltas"]["solve_step_max_ms"] == 18.75
     assert comparison["status_transitions"] == {"exact->bounded_feasible": 1}
     assert set(comparison["regressions"][0]["reasons"]) == {
         "wall_time_gt_20_percent_and_100ms",

@@ -185,6 +185,15 @@ def _case_measurements(case: dict[str, Any]) -> dict[str, Any]:
     return {
         "wall_ms": _finite_number(_nested(case, "phase_wall_ms", "total")),
         "solve_ms": _finite_number(_nested(case, "phase_wall_ms", "solve")),
+        "solve_step_median_ms": _finite_number(
+            _nested(case, "execution", "solve_step_wall_ms", "median")
+        ),
+        "solve_step_p95_ms": _finite_number(
+            _nested(case, "execution", "solve_step_wall_ms", "p95")
+        ),
+        "solve_step_max_ms": _finite_number(
+            _nested(case, "execution", "solve_step_wall_ms", "maximum")
+        ),
         "peak_memory_bytes": _finite_number(
             _nested(case, "memory", "native_peak_owned_bytes")
         )
@@ -280,6 +289,15 @@ def _summarize_cases(cases: Sequence[dict[str, Any]]) -> dict[str, Any]:
                 item["time_to_incumbent_ms"] for item in measured
             ),
             "target": _distribution(item["time_to_target_ms"] for item in measured),
+            "solve_step_median": _distribution(
+                item["solve_step_median_ms"] for item in measured
+            ),
+            "solve_step_p95": _distribution(
+                item["solve_step_p95_ms"] for item in measured
+            ),
+            "solve_step_max": _distribution(
+                item["solve_step_max_ms"] for item in measured
+            ),
         },
         "memory_bytes": _distribution(
             item["peak_memory_bytes"] for item in measured
@@ -535,6 +553,9 @@ def _paired_measurement_delta(
     fields = (
         "wall_ms",
         "solve_ms",
+        "solve_step_median_ms",
+        "solve_step_p95_ms",
+        "solve_step_max_ms",
         "peak_memory_bytes",
         "time_to_incumbent_ms",
         "time_to_target_ms",

@@ -738,7 +738,7 @@ struct SolveWork::Impl {
     void stamp_fallback_provenance(FocusedFallbackPolicy& fallback) const;
 
     const char* retained_fallback_invalid_reason(
-        const FocusedFallbackPolicy& fallback) const;
+        const FocusedFallbackPolicy& fallback);
 
     FocusedFallbackWitness acquire_focused_fallback();
 
@@ -1164,7 +1164,8 @@ struct SolveWork::Impl {
     void schedule_next_focused_expansion(
         std::vector<std::uint32_t> fringe,
         const bool complete,
-        const std::vector<double>& priority);
+        const std::vector<double>& priority,
+        FocusedScheduleRoundTelemetry telemetry);
 
     bool begin_focused_upper_solve();
 

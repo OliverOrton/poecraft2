@@ -70,6 +70,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            string_vector_owned_bytes(
                diagnostics.automatic_candidate_witnesses) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
+           diagnostics.focused_schedule_rounds.capacity() *
+               sizeof(FocusedScheduleRoundTelemetry) +
            diagnostics.policy_evaluation_failure.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
@@ -1323,7 +1325,8 @@ std::string serialize_solver_telemetry(
         json += "\"used\":null,\"rounds\":null,\"lower_bound\":null";
         json += ",\"upper_bound\":null,\"partial_policy_upper_bound\":null";
         json += ",\"partial_policy_rounds\":null,\"optimality_gap\":null";
-        json += ",\"duration_ns\":null,\"constructive_policy\":null";
+        json += ",\"duration_ns\":null,\"schedule\":null";
+        json += ",\"fallback_validation\":null,\"constructive_policy\":null";
     } else {
         json += "\"used\":" + std::string(bool_json(
             diagnostics->focused_expansion));
@@ -1397,6 +1400,143 @@ std::string serialize_solver_telemetry(
         json += "}";
         json += ",\"duration_ns\":" + std::to_string(
             diagnostics->focused_expansion_ns);
+        FocusedScheduleRoundTelemetry schedule_totals;
+        for (const FocusedScheduleRoundTelemetry& round :
+             diagnostics->focused_schedule_rounds) {
+            schedule_totals.lower_candidates += round.lower_candidates;
+            schedule_totals.upper_candidates += round.upper_candidates;
+            schedule_totals.lower_quota_admissions +=
+                round.lower_quota_admissions;
+            schedule_totals.upper_quota_admissions +=
+                round.upper_quota_admissions;
+            schedule_totals.lower_fill_admissions +=
+                round.lower_fill_admissions;
+            schedule_totals.upper_fill_admissions +=
+                round.upper_fill_admissions;
+            schedule_totals.schedule_candidates +=
+                round.schedule_candidates;
+            schedule_totals.schedule_admissions +=
+                round.schedule_admissions;
+            schedule_totals.global_batch_cap_hits +=
+                round.global_batch_cap_hits;
+            schedule_totals.per_class_cap_hits +=
+                round.per_class_cap_hits;
+        }
+        json += ",\"schedule\":{\"counting_contract\":{";
+        json += "\"lower_upper_candidates\":\"bound_walk_fringe_before_union\"";
+        json += ",\"quota_admissions\":\"unique_bound_members_admitted_by_reserved_quota\"";
+        json += ",\"fill_admissions\":\"unique_bound_members_admitted_from_unused_quota\"";
+        json += ",\"schedule_candidates\":\"unique_candidates_before_schedule_caps\"";
+        json += ",\"schedule_admissions\":\"states_selected_after_schedule_caps\"";
+        json += ",\"cap_hits\":\"encountered_global_stops_or_per_class_rejections\"}";
+        json += ",\"totals\":{\"lower_candidates\":" +
+                std::to_string(schedule_totals.lower_candidates);
+        json += ",\"upper_candidates\":" +
+                std::to_string(schedule_totals.upper_candidates);
+        json += ",\"lower_quota_admissions\":" +
+                std::to_string(schedule_totals.lower_quota_admissions);
+        json += ",\"upper_quota_admissions\":" +
+                std::to_string(schedule_totals.upper_quota_admissions);
+        json += ",\"lower_fill_admissions\":" +
+                std::to_string(schedule_totals.lower_fill_admissions);
+        json += ",\"upper_fill_admissions\":" +
+                std::to_string(schedule_totals.upper_fill_admissions);
+        json += ",\"schedule_candidates\":" +
+                std::to_string(schedule_totals.schedule_candidates);
+        json += ",\"schedule_admissions\":" +
+                std::to_string(schedule_totals.schedule_admissions);
+        json += ",\"global_batch_cap_hits\":" +
+                std::to_string(schedule_totals.global_batch_cap_hits);
+        json += ",\"per_class_cap_hits\":" +
+                std::to_string(schedule_totals.per_class_cap_hits);
+        json += "},\"by_round\":[";
+        for (std::size_t i = 0;
+             i < diagnostics->focused_schedule_rounds.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            const FocusedScheduleRoundTelemetry& round =
+                diagnostics->focused_schedule_rounds[i];
+            json += "{\"round\":" + std::to_string(round.round);
+            json += ",\"lower_candidates\":" +
+                    std::to_string(round.lower_candidates);
+            json += ",\"upper_candidates\":" +
+                    std::to_string(round.upper_candidates);
+            json += ",\"batch_states\":" +
+                    std::to_string(round.batch_states);
+            json += ",\"lower_quota\":" +
+                    std::to_string(round.lower_quota);
+            json += ",\"upper_quota\":" +
+                    std::to_string(round.upper_quota);
+            json += ",\"lower_quota_admissions\":" +
+                    std::to_string(round.lower_quota_admissions);
+            json += ",\"upper_quota_admissions\":" +
+                    std::to_string(round.upper_quota_admissions);
+            json += ",\"lower_fill_admissions\":" +
+                    std::to_string(round.lower_fill_admissions);
+            json += ",\"upper_fill_admissions\":" +
+                    std::to_string(round.upper_fill_admissions);
+            json += ",\"schedule_candidates\":" +
+                    std::to_string(round.schedule_candidates);
+            json += ",\"schedule_admissions\":" +
+                    std::to_string(round.schedule_admissions);
+            json += ",\"global_batch_cap_hits\":" +
+                    std::to_string(round.global_batch_cap_hits);
+            json += ",\"per_class_cap_hits\":" +
+                    std::to_string(round.per_class_cap_hits) + "}";
+        }
+        json += "]}";
+        const FallbackValidationTelemetry& fallback_validation =
+            diagnostics->fallback_validation;
+        const std::uint64_t fallback_component_ns =
+            fallback_validation.goal_identity.duration_ns +
+            fallback_validation.economy_identity.duration_ns +
+            fallback_validation.action_vocabulary_identity.duration_ns +
+            fallback_validation.structural.duration_ns +
+            fallback_validation.anchor_properness.duration_ns +
+            fallback_validation.start_properness.duration_ns;
+        const std::uint64_t fallback_unattributed_ns =
+            fallback_validation.total_ns > fallback_component_ns
+                ? fallback_validation.total_ns - fallback_component_ns
+                : 0;
+        json += ",\"fallback_validation\":{\"timing_contract\":{";
+        json += "\"total\":\"inclusive_parent\"";
+        json += ",\"components\":\"mutually_exclusive_leaves\"";
+        json += ",\"unattributed\":\"total_minus_component_sum\"}";
+        json += ",\"calls\":" +
+                std::to_string(fallback_validation.calls);
+        json += ",\"duration_ns\":" +
+                std::to_string(fallback_validation.total_ns);
+        json += ",\"unattributed_ns\":" +
+                std::to_string(fallback_unattributed_ns);
+        json += ",\"components\":{";
+        const auto append_fallback_component =
+            [&](const char* name,
+                const FallbackValidationTelemetry::Component& component,
+                const bool first) {
+                if (!first) json.push_back(',');
+                json += '"';
+                json += name;
+                json += "\":{\"checks\":" +
+                        std::to_string(component.checks);
+                json += ",\"duration_ns\":" +
+                        std::to_string(component.duration_ns) + "}";
+            };
+        append_fallback_component(
+            "goal_identity", fallback_validation.goal_identity, true);
+        append_fallback_component(
+            "economy_identity", fallback_validation.economy_identity,
+            false);
+        append_fallback_component(
+            "action_vocabulary_identity",
+            fallback_validation.action_vocabulary_identity, false);
+        append_fallback_component(
+            "structural", fallback_validation.structural, false);
+        append_fallback_component(
+            "anchor_properness",
+            fallback_validation.anchor_properness, false);
+        append_fallback_component(
+            "start_properness",
+            fallback_validation.start_properness, false);
+        json += "}}";
         json += ",\"constructive_policy\":{\"syntheses\":" +
                 std::to_string(
                     diagnostics->constructive_policy_syntheses);
@@ -1892,6 +2032,12 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.owned_byte_ledger_requests);
     json += ",\"calc_owned_byte_ledger_ns\":" +
             std::to_string(cache.owned_byte_ledger_ns);
+    json += ",\"calc_owned_byte_ledger_child_context_visits\":" +
+            std::to_string(
+                cache.owned_byte_ledger_child_context_visits);
+    json += ",\"calc_owned_byte_ledger_max_recursion_depth\":" +
+            std::to_string(
+                cache.owned_byte_ledger_max_recursion_depth);
     json += ",\"calc_owned_byte_reconciliations\":" +
             std::to_string(cache.owned_byte_reconciliations);
     json += ",\"calc_owned_byte_ledger_max_overestimate\":" +

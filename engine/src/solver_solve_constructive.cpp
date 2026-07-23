@@ -88,96 +88,150 @@ void SolveWork::Impl::stamp_fallback_provenance(FocusedFallbackPolicy& fallback)
     }
 
 const char* SolveWork::Impl::retained_fallback_invalid_reason(
-        const FocusedFallbackPolicy& fallback) const {
-        if (fallback.goal_identity != goal_identity()) {
-            return "goal_identity_changed";
+        const FocusedFallbackPolicy& fallback) {
+        FallbackValidationTelemetry& telemetry =
+            result.diagnostics.fallback_validation;
+        ++telemetry.calls;
+        const auto total_started = std::chrono::steady_clock::now();
+        const auto elapsed_ns = [](const auto started) {
+            return static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now() - started)
+                    .count());
+        };
+        const auto finish = [&](const char* reason) {
+            telemetry.total_ns += elapsed_ns(total_started);
+            return reason;
+        };
+
+        auto component_started = std::chrono::steady_clock::now();
+        const std::uint64_t current_goal_identity = goal_identity();
+        ++telemetry.goal_identity.checks;
+        telemetry.goal_identity.duration_ns += elapsed_ns(component_started);
+        if (fallback.goal_identity != current_goal_identity) {
+            return finish("goal_identity_changed");
         }
-        if (fallback.economy_identity != economy_identity()) {
-            return "economy_identity_changed";
+        component_started = std::chrono::steady_clock::now();
+        const std::uint64_t current_economy_identity = economy_identity();
+        ++telemetry.economy_identity.checks;
+        telemetry.economy_identity.duration_ns +=
+            elapsed_ns(component_started);
+        if (fallback.economy_identity != current_economy_identity) {
+            return finish("economy_identity_changed");
         }
-        if (operators.size() < fallback.action_vocabulary_size ||
+        component_started = std::chrono::steady_clock::now();
+        const bool vocabulary_changed =
+            operators.size() < fallback.action_vocabulary_size ||
             fallback.action_vocabulary_identity !=
                 action_vocabulary_prefix_identity(
-                    fallback.action_vocabulary_size)) {
-            return "action_vocabulary_prefix_changed";
+                    fallback.action_vocabulary_size);
+        ++telemetry.action_vocabulary_identity.checks;
+        telemetry.action_vocabulary_identity.duration_ns +=
+            elapsed_ns(component_started);
+        if (vocabulary_changed) {
+            return finish("action_vocabulary_prefix_changed");
         }
-        if (fallback.anchor_state == kNoId ||
-            fallback.anchor_state >= calc.state_count() ||
-            !std::isfinite(fallback.anchor_state_value) ||
-            fallback.anchor_state_value < 0.0) {
-            return "invalid_anchor";
-        }
-        const auto operator_valid = [&](const std::uint32_t op) {
-            return op != kNoId && op < calc.operators().size();
-        };
-        const auto row_valid = [&](const std::uint64_t row,
-                                   const std::uint32_t owner,
-                                   const std::uint32_t op) {
-            return row < transition_cache->rows.size() &&
-                row < priced_rows.size() &&
-                transition_cache->rows[row].owner_state == owner &&
-                priced_rows[row].operator_index == op;
-        };
-        const std::uint64_t no_row =
-            std::numeric_limits<std::uint64_t>::max();
-        if (fallback.anchor_row != no_row &&
-            (!operator_valid(fallback.anchor_operator) ||
-             !row_valid(
-                 fallback.anchor_row, fallback.anchor_state,
-                 fallback.anchor_operator))) {
-            return "anchor_row_changed";
-        }
-        if (fallback.renewal_row != no_row &&
-            (!operator_valid(fallback.renewal_operator) ||
-             !row_valid(
-                 fallback.renewal_row, result.start_state,
-                 fallback.renewal_operator))) {
-            return "renewal_row_changed";
-        }
-        if (fallback.renewal_operator != kNoId &&
-            !operator_valid(fallback.renewal_operator)) {
-            return "renewal_operator_changed";
-        }
-        if (fallback.finish_action != kNoId &&
-            fallback.finish_action >= calc.registry().actions.size()) {
-            return "finish_action_changed";
-        }
-        for (const auto& [state, value] :
-             fallback.progress_state_value) {
-            const auto op = fallback.progress_state_operator.find(state);
-            if (state >= calc.state_count() || !std::isfinite(value) ||
-                value < 0.0 ||
-                op == fallback.progress_state_operator.end() ||
-                !operator_valid(op->second)) {
-                return "progress_value_changed";
+        component_started = std::chrono::steady_clock::now();
+        const char* structural_reason = [&]() -> const char* {
+            if (fallback.anchor_state == kNoId ||
+                fallback.anchor_state >= calc.state_count() ||
+                !std::isfinite(fallback.anchor_state_value) ||
+                fallback.anchor_state_value < 0.0) {
+                return "invalid_anchor";
             }
-        }
-        for (const auto& [state, op] :
-             fallback.progress_state_operator) {
-            if (state >= calc.state_count() || !operator_valid(op) ||
-                fallback.progress_state_value.find(state) ==
-                    fallback.progress_state_value.end()) {
-                return "progress_operator_changed";
+            const auto operator_valid = [&](const std::uint32_t op) {
+                return op != kNoId && op < calc.operators().size();
+            };
+            const auto row_valid = [&](const std::uint64_t row,
+                                       const std::uint32_t owner,
+                                       const std::uint32_t op) {
+                return row < transition_cache->rows.size() &&
+                    row < priced_rows.size() &&
+                    transition_cache->rows[row].owner_state == owner &&
+                    priced_rows[row].operator_index == op;
+            };
+            const std::uint64_t no_row =
+                std::numeric_limits<std::uint64_t>::max();
+            if (fallback.anchor_row != no_row &&
+                (!operator_valid(fallback.anchor_operator) ||
+                 !row_valid(
+                     fallback.anchor_row, fallback.anchor_state,
+                     fallback.anchor_operator))) {
+                return "anchor_row_changed";
             }
-        }
-        for (const auto& mode : fallback.primitive_renewal_modes) {
-            if (!std::isfinite(mode.value) || mode.value < 0.0 ||
-                !operator_valid(mode.operator_index) ||
-                mode.kernel_signature.empty()) {
-                return "primitive_mode_changed";
+            if (fallback.renewal_row != no_row &&
+                (!operator_valid(fallback.renewal_operator) ||
+                 !row_valid(
+                     fallback.renewal_row, result.start_state,
+                     fallback.renewal_operator))) {
+                return "renewal_row_changed";
             }
+            if (fallback.renewal_operator != kNoId &&
+                !operator_valid(fallback.renewal_operator)) {
+                return "renewal_operator_changed";
+            }
+            if (fallback.finish_action != kNoId &&
+                fallback.finish_action >= calc.registry().actions.size()) {
+                return "finish_action_changed";
+            }
+            for (const auto& [state, value] :
+                 fallback.progress_state_value) {
+                const auto op =
+                    fallback.progress_state_operator.find(state);
+                if (state >= calc.state_count() ||
+                    !std::isfinite(value) || value < 0.0 ||
+                    op == fallback.progress_state_operator.end() ||
+                    !operator_valid(op->second)) {
+                    return "progress_value_changed";
+                }
+            }
+            for (const auto& [state, op] :
+                 fallback.progress_state_operator) {
+                if (state >= calc.state_count() || !operator_valid(op) ||
+                    fallback.progress_state_value.find(state) ==
+                        fallback.progress_state_value.end()) {
+                    return "progress_operator_changed";
+                }
+            }
+            for (const auto& mode : fallback.primitive_renewal_modes) {
+                if (!std::isfinite(mode.value) || mode.value < 0.0 ||
+                    !operator_valid(mode.operator_index) ||
+                    mode.kernel_signature.empty()) {
+                    return "primitive_mode_changed";
+                }
+            }
+            return nullptr;
+        }();
+        ++telemetry.structural.checks;
+        telemetry.structural.duration_ns += elapsed_ns(component_started);
+        if (structural_reason != nullptr) {
+            return finish(structural_reason);
         }
+
+        component_started = std::chrono::steady_clock::now();
         std::uint32_t anchor_operator = kNoId;
         const double anchor_upper = fallback_terminal_upper(
             fallback.anchor_state, fallback, &anchor_operator);
-        if (!std::isfinite(anchor_upper) ||
-            !operator_valid(anchor_operator)) {
-            return "anchor_not_proper";
+        const bool anchor_proper =
+            std::isfinite(anchor_upper) &&
+            anchor_operator != kNoId &&
+            anchor_operator < calc.operators().size();
+        ++telemetry.anchor_properness.checks;
+        telemetry.anchor_properness.duration_ns +=
+            elapsed_ns(component_started);
+        if (!anchor_proper) {
+            return finish("anchor_not_proper");
         }
-        if (!std::isfinite(focused_start_upper_bound(fallback))) {
-            return "start_not_proper";
+        component_started = std::chrono::steady_clock::now();
+        const bool start_proper =
+            std::isfinite(focused_start_upper_bound(fallback));
+        ++telemetry.start_properness.checks;
+        telemetry.start_properness.duration_ns +=
+            elapsed_ns(component_started);
+        if (!start_proper) {
+            return finish("start_not_proper");
         }
-        return nullptr;
+        return finish(nullptr);
     }
 
 auto SolveWork::Impl::acquire_focused_fallback() -> FocusedFallbackWitness {
