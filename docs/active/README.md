@@ -1,20 +1,29 @@
 # Active Work
 
-**Status: no implementation boundary is active.** The mechanical solver split
-completed on 2026-07-22. Oliver must select the next chunk before
-implementation resumes.
+**Status: focused-round performance attribution and scheduling is selected.**
+Gate 0 boundary verification and fresh baseline capture are the exact next
+steps; no source work has started.
 
 Parent: [Documentation map](../README.md)
 
+Oliver selected the
+[focused-round performance plan](focused-round-performance.md) on 2026-07-23.
+It measures the global batch, per-class cap, lower quota, executable upper
+pass, fallback validation, and owned-byte ledger on bounded fast cases. It may
+accept at most one predeclared scheduling-default tuple after certificate,
+hash, responsiveness, memory, and performance gates.
+
+The exact two-natural-T1 oracle is prohibited. Economy repair/publishing, the
+120-case campaign, natural-T1 corpus design changes, Calculator work,
+source-folder moves, `solver_internal.hpp`, and web-test splits remain deferred
+and must not be interleaved. The natural-T1 generator intentionally emits
+T1-only goals; tier-range support is not pending work.
+
 The completed
 [mechanical solver split](../archive/2026-07-22-mechanical-solver-split/README.md)
-restructured `engine/src/solver_solve.cpp` into phase-scoped translation units
-under strict body-token, bit-hash, existing-test, and performance parity
-gates. It added no behavior or tests and did not run the exact oracle.
-
-The Calculator, `solver_internal.hpp`, and web-test splits remain deferred.
-The oracle performance profiling order recorded in
-[HANDOFF](../../HANDOFF.md) remains unselected and must not be interleaved.
+is the clean source boundary. The read-only
+[post-B6 reconnaissance](../archive/2026-07-23-post-b6-reconnaissance/README.md)
+is historical input, not execution authority.
 
 The bounded policy results and benchmarking plan completed B1 through B6 on
 2026-07-22 and is preserved in its

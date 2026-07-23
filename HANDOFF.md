@@ -2,8 +2,10 @@
 
 **Status: B1 through B6 and the
 [mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md)
-are complete and accepted. No implementation boundary is active; Oliver must
-select the next chunk before implementation resumes.**
+are complete and accepted. Oliver selected
+[focused-round performance attribution and scheduling](docs/active/focused-round-performance.md);
+Gate 0 boundary verification and fresh baseline capture are the exact next
+steps, and no source work has started.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -26,6 +28,13 @@ record and which therefore did not change the baseline. Accepted source motion
 is commit `042a281` (`Split solver solve phases (token-equivalent, no behavior
 change)`). The economy pipeline was not run, published, or otherwise changed
 in this chunk.
+
+On 2026-07-23 Oliver selected the focused-round plan above. The read-only
+[post-B6 reconnaissance](docs/archive/2026-07-23-post-b6-reconnaissance/README.md)
+is archived as historical input. The selection is documentation-only: solver,
+binding, build, fixture, artifact, and web source remain exactly at `042a281`.
+Oliver also confirmed that the natural-T1 generator is intentionally T1-only;
+tier-range support is not a missing or deferred generator change.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -745,23 +754,31 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 ## Exact stopping point
 
 Chunks completed with evidence: B1, B2, B3, B4, B5, B6, and the mechanical
-solver split. Exact stopping point: after Gate 8 documentation closure and
-archive of the completed split plan. Source motion is accepted at `042a281`;
-no implementation boundary is active. Oliver must select the next chunk
-before source work resumes.
+solver split. Oliver selected the focused-round performance plan on
+2026-07-23.
+
+Exact stopping point: before Gate 0 boundary verification, the fresh
+uninstrumented native build, input derivation, fast native counts, or any
+benchmark repetition. No attribution instrumentation, copied-source variant,
+candidate default, test, fixture, evidence, binding, WASM, or web change has
+started. The selected source baseline is `042a281`; the preceding
+documentation boundary is `5eb66d4`.
 
 The accepted source has exactly nine `solver_solve*.cpp` files and the private
 `solver_solve_types.hpp` header. Calculator, `solver_internal.hpp`, and
-engine-smoke test splitting remain deferred. The future profiling order above
-remains unselected. The exact oracle was not run.
+engine-smoke test splitting remain deferred. The selected plan is limited to
+fast-case attribution and at most one predeclared focused scheduling-default
+tuple. The exact natural two-T1 oracle must not run. The archived
+reconnaissance is context only and cannot replace fresh evidence.
 
-One external workspace condition prevents a literally empty `git status`:
-`docs/active/post-b6-recon.md` appeared as an untracked file after the initial
-clean boundary check and before documentation closure. It was not created,
-edited, staged, deleted, stashed, or archived by this chunk. The mechanical
-split's tracked source and documentation boundary is clean; ownership or
-disposition of that concurrent file remains with Oliver. This is the only
-end-state blocker.
+There are no blockers at selection. The next session must first verify a clean
+selection commit and prove there is no source change after `042a281`, then
+execute Gates 0 through 6 in order. Every build, benchmark, evaluation,
+simulation, and test-pipeline process retains the detached 900-second
+watchdog. The documentation-only selection passed `git diff --check` and a
+Markdown audit covering 139 files and 823 relative links with zero missing
+targets or unreachable non-template docs; the audit report SHA-256 was
+`c8b30049c073ab4429dae421d298f891b1324c3558dc1f99a98ef8becd66d51d`.
 
 ## Economy pipeline state (2026-07-22, outside chunk scope)
 

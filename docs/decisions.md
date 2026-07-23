@@ -191,3 +191,16 @@ and the completed
 the optimum. Compilation is keyed to `policy_available`; exact evaluation and
 10,000-run sampling retain distinct authority. Gap-target tuning and benchmark
 analytics cannot silently become solver-search heuristics.
+
+## 2026-07-23 — Natural-T1 Corpus Is Intentionally T1-Only
+
+**Decision:** The natural-T1 benchmark generator emits T1 goal slots only. It
+does not produce lower-tier or tier-range goals, and that omission is
+intentional rather than a generator gap.
+
+**Context:** [Solver](solver/README.md) and the
+[post-B6 reconnaissance archive](archive/2026-07-23-post-b6-reconnaissance/README.md).
+
+**Consequences:** The natural-T1 corpus remains a deliberately hard T1 slice.
+Reviews and execution plans must not list tier-range support as missing,
+deferred, or an easy generator improvement.

@@ -42,7 +42,10 @@ modifier-count conditions and authored Unveil offer selection.
 
 ### 2026-07-19 — #idea — Reviewed optimization candidates
 
-Status: open; no execution authority.
+Status: partially selected. Focused-round attribution and at most one
+scheduling-default tuple are governed by the
+[active plan](../active/focused-round-performance.md); the other candidates
+remain open with no execution authority.
 
 Preservation-envelope gating, focused-round reuse, telemetry collection
 levels, hash/container cleanups, operator repricing, legality pre-bucketing,

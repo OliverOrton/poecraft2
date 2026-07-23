@@ -46,6 +46,10 @@ also names the finished rarity and may set `min_satisfied_slots`; omission
 means every slot. Goal parsing rejects unknown, overlapping, empty, or
 out-of-range definitions.
 
+Path of Exile tier numbers descend in quality: T1 is best. Therefore
+`min_tier: N` accepts tiers 1 through N, while `min_tier: 0` accepts any tier;
+the field is the worst acceptable tier number, not a lower numeric bound.
+
 The abstract layout is derived from the resolved goal and the candidate action
 set. An abstract state records:
 
@@ -102,6 +106,10 @@ native `feasible` result before emitting a case. Generated slots use family
 keys, whose acquisition-aware family identity prevents a crafted/bench member
 from satisfying a natural-only slot. Bench operations remain available in the
 case's priced product envelope.
+
+That T1-only boundary is intentional. Oliver confirmed on 2026-07-23 that the
+natural-T1 benchmark generator must not emit lower-tier or tier-range goals;
+review and planning must not treat their absence as a generator defect.
 
 The Python generator accepts explicit base paths, a path list, item classes,
 or a named base pool; seeded side composition and goal-count strata; family

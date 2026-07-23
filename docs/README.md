@@ -28,11 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records that no implementation boundary is
-selected. The completed
+[Active](active/README.md) records the selected
+[focused-round performance plan](active/focused-round-performance.md).
+[HANDOFF](../HANDOFF.md) records its exact Gate 0 starting boundary. The
+completed
 [mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
-is archived, and [HANDOFF](../HANDOFF.md) records its accepted evidence and
-exact stopping point.
+is archived, and the read-only
+[post-B6 reconnaissance](archive/2026-07-23-post-b6-reconnaissance/README.md)
+is preserved as historical input.
 The bounded executable-policy, natural-T1 corpus, benchmark orchestration, and
 reporting milestone is complete and indexed by its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).

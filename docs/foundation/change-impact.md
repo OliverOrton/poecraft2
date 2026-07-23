@@ -114,6 +114,12 @@ Harvest allowlist header, then configures/builds the CMake targets when CMake is
 available. CMake builds the object library, static/shared engines, tests, and
 solver benchmark.
 
+Native source discovery has three paths: `engine/CMakeLists.txt` is an explicit
+per-file list, while `scripts/build.ps1` and `scripts/build-wasm.ps1` use
+non-recursive top-level `engine/src/*.cpp` globs. Adding, moving, or nesting a
+translation unit must update/verify all three; a nested source directory is not
+covered by either PowerShell glob automatically.
+
 ### Compiled game data
 
 `data/sqlite/poecraft.db` is canonical and `data/compiled/current` is derived.

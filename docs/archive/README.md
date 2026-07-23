@@ -9,6 +9,13 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-23
+
+- [Post-B6 Solver Reconnaissance](2026-07-23-post-b6-reconnaissance/README.md) —
+  read-only oracle-regression hypotheses, measurement proposal, and
+  point-in-time documentation survey preserved as input to the selected
+  focused-round plan.
+
 ## 2026-07-22
 
 - [Mechanical Solver Split](2026-07-22-mechanical-solver-split/README.md) —

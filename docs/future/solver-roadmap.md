@@ -17,9 +17,10 @@ resource and compiler caps stayed fixed.
 
 Exact quotienting is useful but action-scope dependent: the bounded Chaos
 oracle reduces 57,722 strict states to 3, while the complete product envelopes
-permit no merge. Approximate compact mode remains forbidden. There is no
-active solver implementation boundary; this page retains only surrounding
-deferred work.
+permit no merge. Approximate compact mode remains forbidden. The
+[focused-round performance plan](../active/focused-round-performance.md) is the
+selected solver boundary; this page retains only surrounding deferred work and
+does not extend that plan's scope.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
