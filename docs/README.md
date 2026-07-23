@@ -28,9 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records the selected bounded-policy and benchmarking
-plan. [HANDOFF](../HANDOFF.md) records the accepted B1-B3 boundary and exact B4
-resume point. The completed action/state pruning milestone is indexed by its
+[Active](active/README.md) records that no implementation plan is selected.
+The bounded executable-policy, natural-T1 corpus, benchmark orchestration, and
+reporting milestone is complete and indexed by its
+[dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
+[HANDOFF](../HANDOFF.md) records its final acceptance evidence and what awaits
+Oliver. The completed action/state pruning milestone is indexed by its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md), and
 the earlier Q0-Q5 solver work is indexed by the
 [Exact Solver State Scaling archive](archive/2026-07-20-solver-state-scaling/README.md).

@@ -191,6 +191,33 @@ bottleneck; broader progressive acquisition and post-fracture modes are the
 next executable-upper opportunity. The concise record is
 [real-three-natural-t1-constructive-summary.json](../fixtures/solver-scaling/v1/evidence/real-three-natural-t1-constructive-summary.json).
 
+## Bounded Policy Results And Benchmarking
+
+The 2026-07-22 B1-B6 boundary is summarized in the tracked
+[B6 acceptance record](../fixtures/solver-natural-t1/v1/evidence/b6-acceptance-summary.json).
+It preserves separate exact and bounded claims:
+
+- the exactly-once two-natural-T1 oracle report retained exact value
+  `230.26738656962243`, 57,182 expanded states, 738,139 rows, 1,165,840
+  transitions, and constructive-witness counters 3 syntheses / 323 reuses / 0
+  refreshes;
+- the acceptance bounded case stopped on its requested absolute gap with
+  `3.0923164022485841 <= V* <= 8.0902955687919231`, compiled 947 nodes / 2,831
+  edges, and exactly evaluated the returned policy at
+  `8.0902955687899443`, within `1.98e-12` of the certified `U`;
+- its required simulator corroboration completed 10,000/10,000 successes,
+  zero failures and off-policy failures, mean cost `8.0376181789999475`, and a
+  passed verification result; and
+- the final downstream pass rebuilt native and WASM, passed 513,211 native
+  checks, all historical benchmark validation, 13 generator/runner/report
+  tests, the complete web/WASM suite, TypeScript typecheck, and the full
+  cross-layer pipeline under the standing watchdog.
+
+The bounded case is not an exact-optimality claim. Its exact evaluator proves
+the returned policy cost, while `L` and `U` bound the unknown optimum. The
+sample is empirical corroboration only. Action-utility and search-cost reports
+remain observational; an unused action is never a pruning certificate.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

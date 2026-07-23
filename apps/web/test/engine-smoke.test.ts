@@ -405,7 +405,7 @@ function phase13Strategy(): Record<string, unknown> {
 }
 
 test("API shape: ABI version is current", async () => {
-    assert.equal(client.getAbiVersion(), 1);
+    assert.equal(client.getAbiVersion(), 2);
 });
 
 test("load data through the memory bundle path", async () => {
@@ -1729,7 +1729,8 @@ test("automatic S8.3 bench selects and executes through WASM", async () => {
         rarity: "rare",
         slots: [
             {
-                group: "ColdResistance",
+                family_mod_key: "EinharMasterColdResist3__",
+                min_tier: 3,
             },
         ],
         actions: ["restart"],

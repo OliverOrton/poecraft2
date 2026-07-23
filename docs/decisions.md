@@ -162,3 +162,32 @@ graph.
 without approximate compaction or stale repricing. Equality, unknown
 reachability, missing proof inputs, or an unsafe lower bound retains the
 candidate.
+
+## 2026-07-22 â€” Bounded Executable Policies Remain Separate From Exactness
+
+**Decision:** A solve may return a complete executable incumbent at an exact
+close, a post-round product gap target, or a resource-cap stop. Policy quality
+(`exact`, `bounded_near_optimal`, `bounded_feasible`, or `none`) is separate
+from termination. `L` is the global admissible lower bound, `U` is the
+executable incumbent certificate, and the returned policy is evaluated
+exactly. Absolute/relative product gaps only stop qualifying completed rounds;
+they never alter Bellman comparisons, ties, admission, pruning, epsilon, or
+eventual exact results.
+
+Retained constructive witnesses may persist across focused rounds only as
+validated upper-bound/output evidence in the atomic incumbent. They never
+guide focus or search. Benchmark action utility and search cost are
+observations; action non-use is never a pruning certificate. Seeded natural-T1
+corpus acceptance uses the engine-owned three-way feasibility query, not
+bounded solve exhaustion, and acquisition-aware natural family keys prevent
+bench/crafted members from satisfying those goal slots.
+
+**Context:** [Solver](solver/README.md), [Calculator](product/calculator.md),
+the [B6 evidence summary](../fixtures/solver-natural-t1/v1/evidence/b6-acceptance-summary.json),
+and the completed
+[bounded-policy archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
+
+**Consequences:** Product copy cannot call a bounded policy exact or call `U`
+the optimum. Compilation is keyed to `policy_available`; exact evaluation and
+10,000-run sampling retain distinct authority. Gap-target tuning and benchmark
+analytics cannot silently become solver-search heuristics.

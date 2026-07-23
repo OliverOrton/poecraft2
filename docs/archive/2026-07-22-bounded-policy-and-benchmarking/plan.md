@@ -1,9 +1,9 @@
 # Bounded Policy Results And Benchmarking
 
-**Status: B1, B2, and B3 complete and accepted. B4 large-run orchestration and
-action telemetry is next.**
+**Status: completed and accepted through B6 on 2026-07-22. Historical execution
+plan; it no longer owns sequencing.**
 
-Parent: [Active work](README.md)
+Parent: [Bounded policy archive](README.md)
 
 ## Objective
 

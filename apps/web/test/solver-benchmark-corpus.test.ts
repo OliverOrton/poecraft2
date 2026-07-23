@@ -45,7 +45,7 @@ test("corpus artifact pins reject stale WASM/data combinations", () => {
         new URL("../../../data/compiled/current/manifest.json", import.meta.url),
     );
     const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as unknown;
-    validateCorpusArtifactPins(corpus.manifest, artifact, 1);
+    validateCorpusArtifactPins(corpus.manifest, artifact, 2);
     assert.throws(
         () => validateCorpusArtifactPins(corpus.manifest, artifact, 999),
         /engine ABI mismatch/,

@@ -11,6 +11,10 @@ selected active work.
 
 ## 2026-07-22
 
+- [Bounded Policy Results And Benchmarking](2026-07-22-bounded-policy-and-benchmarking/README.md) —
+  completed bounded executable-policy contract and presentation, seeded
+  natural-T1 corpus, watchdog-safe orchestration, action telemetry, stratified
+  reporting, and final cross-layer acceptance.
 - [Exact Constructive Policy Search](2026-07-22-exact-constructive-policy-search/README.md) —
   incomplete exact-closure milestone, final natural three-T1 bracket, and the
   handoff superseded by bounded executable-policy delivery.

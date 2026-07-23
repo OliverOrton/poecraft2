@@ -1,0 +1,95 @@
+{
+  "schema_version": "bounded_policy_b6_acceptance_summary_v1",
+  "date": "2026-07-22",
+  "branch": "codex/bounded-policy-contract",
+  "source_base_commit": "099d6aa39a1c3d4dd3782315415cc58c4beb68f5",
+  "watchdog_seconds": 900,
+  "exact_two_t1_oracle": {
+    "execution": "retained_exactly_once_b1_final_run_revalidated_at_b6",
+    "report_path": "build/diagnostics/b1-two-t1-oracle-1800.json",
+    "report_sha256": "9501b055aa1808bc17aa3213f001daf134c2bfc2f621ab2867c90d81a0c061da",
+    "value": 230.26738656962243,
+    "policy_status": "exact",
+    "termination": "exact_closed",
+    "expanded_states": 57182,
+    "state_action_rows": 738139,
+    "transitions": 1165840,
+    "constructive_policy": {
+      "syntheses": 3,
+      "reuses": 323,
+      "refreshes": 0
+    },
+    "wall_ms": 1092227.1052
+  },
+  "bounded_acceptance_case": {
+    "case_id": "natural-t1-smoke-one-armour-09767fd6f824",
+    "report_path": "build/acceptance/b6/natural-10k/report.json",
+    "report_sha256": "0b4068f97c0b670176b8bcdbfa3ab004c83c99191b4158e233d4a2b0e92b6904",
+    "policy_status": "bounded_near_optimal",
+    "termination": "target_gap",
+    "target_met": true,
+    "lower_bound": 3.0923164022485841,
+    "upper_bound": 8.0902955687919231,
+    "evaluated_policy_cost": 8.0902955687919231,
+    "exact_evaluated_policy_cost": 8.0902955687899443,
+    "exact_upper_difference": -1.9788e-12,
+    "absolute_gap": 4.9979791665433391,
+    "relative_gap": 1.6162573671015839,
+    "expanded_states": 3038,
+    "state_action_rows": 19132,
+    "transitions": 82498,
+    "compiled_nodes": 947,
+    "compiled_edges": 2831,
+    "strategy_json_bytes": 1154938,
+    "utility_action_ids": [
+      "alteration",
+      "augment",
+      "harvest_reforge:fire",
+      "regal",
+      "restart",
+      "transmute"
+    ],
+    "search_cost_action_count": 176,
+    "verification": {
+      "runs": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "mean_cost": 8.0376181789999475,
+      "cost_delta_absolute": 0.052677389791975671,
+      "cost_delta_relative": 0.0065111823596627483,
+      "passed": true
+    },
+    "phase_wall_ms": {
+      "registry_layout": 15.9843,
+      "solve": 2637.4511,
+      "compile": 101.4606,
+      "verification": 2753.6177,
+      "total": 5628.6516
+    }
+  },
+  "final_gates": {
+    "native_build": "passed",
+    "wasm_rebuild": "passed",
+    "full_pipeline": {
+      "status": "passed",
+      "wall_ms": 46196.4631,
+      "native_checks": 513211,
+      "native_failures": 0,
+      "historical_solver_cases_validated": 12
+    },
+    "generator_runner_report_tests": {
+      "passed": 13,
+      "failed": 0
+    },
+    "typescript_no_emit": "passed",
+    "release_wasm_sha256": "b70d3cf05c0ae9a2a2429bffbde9c279b24b74cad3d670a48090ec6a5b5b77c6"
+  },
+  "claims": {
+    "bounded_policy_is_exact": false,
+    "gap_targets_change_search_semantics": false,
+    "epsilon_is_product_gap": false,
+    "simulation_is_authoritative_evaluation": false,
+    "action_non_use_is_pruning_certificate": false
+  }
+}

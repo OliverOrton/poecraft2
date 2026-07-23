@@ -2816,18 +2816,26 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 batch.decisions.push_back(std::move(decision));
                 continue;
             }
-            const OutcomeDistribution& distribution =
-                local.outcomes(local_state, action_index);
+            auto exact_distribution =
+                std::make_shared<OutcomeDistribution>();
+            pc_item_state successor = carrier;
+            (void)apply_action(
+                context_, &successor,
+                registry_.actions.at(action_index).params);
+            exact_distribution->supported = true;
+            exact_distribution->entries.push_back(
+                {intern_item(successor), 1.0});
+            const OutcomeDistribution& distribution = *exact_distribution;
             decision.raw_outcomes = outcome_count(distribution);
             bool advances = false;
             for (const OutcomeEntry& exit : distribution.entries) {
-                const AbstractState& successor = local.state(exit.state);
+                const AbstractState& next = state(exit.state);
                 for (std::uint32_t slot = 0;
-                     slot < local.layout().slots.size(); ++slot) {
+                     slot < layout_.slots.size(); ++slot) {
                     advances |=
                         (planner.relevant_goal_mask & (1u << slot)) != 0 &&
-                        successor.slot_status[slot] >
-                            local.state(local_state).slot_status[slot];
+                        next.slot_status[slot] >
+                            state(state_id).slot_status[slot];
                 }
             }
             decision.evidence.eligible = distribution.supported && advances;
@@ -2858,14 +2866,13 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                 } else {
                     seen_primitive_kernels.push_back(
                         {&distribution, resources});
-                    auto mapped = std::make_shared<OutcomeDistribution>(
-                        map_local_distribution(
-                            local, *this, distribution, mapped_states));
                     const std::uint64_t key =
                         (static_cast<std::uint64_t>(state_id) << 32) |
                         action_index;
-                    account_distribution_cache_insert(key, mapped);
-                    distribution_cache_[key] = std::move(mapped);
+                    account_distribution_cache_insert(
+                        key, exact_distribution);
+                    distribution_cache_[key] =
+                        std::move(exact_distribution);
                     decision.operator_index = action_index;
                     decision.admitted = true;
                     admit_operator(action_index);

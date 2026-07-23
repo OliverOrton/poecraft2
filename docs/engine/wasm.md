@@ -6,10 +6,13 @@ evidence boundaries.
 
 Parent: [Engine](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code and the rebuilt release module: 2026-07-22 @
+bounded-policy B6 boundary.
 
 Release-wrapper export map verified in the tracked
-`bindings/wasm/dist/poecraft_engine.mjs` generated at this baseline.
+`bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
+tracked `.wasm` SHA-256 is
+`b70d3cf05c0ae9a2a2429bffbde9c279b24b74cad3d670a48090ec6a5b5b77c6`.
 
 ## Architecture
 

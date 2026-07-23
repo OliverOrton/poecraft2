@@ -4,10 +4,11 @@
 
 Parent: [Product](README.md)
 
-Verified against code: 2026-07-22 @ bounded-policy B2 boundary. Scope:
+Verified against code and non-visual B6 acceptance: 2026-07-22 @
+bounded-policy B6 boundary. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
-performed.
+performed; that review remains Oliver's.
 
 ## Contract
 

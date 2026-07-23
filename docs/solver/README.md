@@ -5,10 +5,11 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code, action/state-pruning acceptance, and the natural-T1
-feasibility contract: 2026-07-22 @ `4c99cd0`. Scope: native solver,
+Verified against code and the bounded-policy B6 acceptance: 2026-07-22 @ B6
+boundary. Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
-corpus generation, and the non-visual WASM/worker path. The pinned scaling
+corpus generation, benchmark orchestration/analytics, and the non-visual
+WASM/worker path. The pinned scaling
 measurements live in
 [solver-scaling v1](../../fixtures/solver-scaling/v1/README.md), and the
 generated corpus lives in
@@ -130,6 +131,12 @@ Those candidates cover relevant primitive Fracture, permanent bench
 finishes, temporary bench blockers, protected metamod routes, Multimod
 finishes, and automatic Imprint attempt/restore programs. Imprint programs are
 not user-authored in product mode.
+
+Permanent-bench admission evaluates its deterministic successor on the
+already materialized exact carrier. It does not depend on a temporary abstract
+context being able to synthesize another representative of that carrier. This
+keeps a legal exact bench finish available even when a dense real-item junk
+class has no greedily materializable alternate representative.
 
 Fixed and automatic options are solver operators over exact primitive
 programs. They carry complete exit distributions, resource quantities, choice
@@ -355,6 +362,23 @@ reforge work, cache requests/hits, wall time, and retained selected-allocation
 growth to action IDs. It also compares lower- and executable-upper-policy
 selected abstract-state counts. These are profiling observations only:
 benchmark action non-use is explicitly never a pruning certificate.
+
+`tools/ingest/report_solver_corpus.py` aggregates completed raw reports without
+participating in native or WASM correctness. It reports exclusive policy and
+refusal rates, target reach, median/p90/p99 time and memory, lower/upper
+progress, work and graph distributions, exact policy action utility,
+observational action search cost, outliers, and exact-input paired deltas.
+Strata cover base, class, base/class, natural-T1 count, side mix, pool
+density/probability, incumbent, policy status, and termination.
+
+`fixtures/solver-natural-t1/v1/benchmark-stages.json` orders the iteration
+funnel from smoke through full-short, deep, selected exact evaluation, and the
+B6-only 10,000-run acceptance subset. Later stages require a green predecessor
+ledger under the same label. Native benchmark exit code 2 is a completed
+measurement when a report was written under the watchdog with no survivor;
+the expectation miss remains visible so no-policy/refusal results are not
+censored. Process, watchdog, survivor, output, and launch failures remain
+incomplete.
 
 ## Boundaries
 

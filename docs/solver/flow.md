@@ -6,10 +6,11 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code: 2026-07-22 @ bounded-policy B2 boundary. Scope: Calculator orchestration,
+Verified against code and complete cross-layer tests: 2026-07-22 @
+bounded-policy B6 boundary. Scope: Calculator orchestration,
 workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
 solver C ABI, native solve lifecycle, policy compilation, exact graph
-evaluation, and sampled verification. No performance run or mechanic ruling
+evaluation, and sampled verification. No rendered review or mechanic ruling
 was performed.
 
 ## Purpose

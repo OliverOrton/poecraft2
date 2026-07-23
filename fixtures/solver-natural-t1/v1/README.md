@@ -27,6 +27,10 @@ The checked generator configuration also runs non-corpus feasibility probes
 for each semantic rejection class. Those probes make the funnel observable;
 they are never included in `manifest.json`'s accepted case list.
 
+The tracked [B6 acceptance summary](evidence/b6-acceptance-summary.json)
+records the final exact-oracle facts, bounded compiled-policy exact evaluation,
+required 10,000-run corroboration, and complete downstream gates.
+
 ## Benchmark workflow
 
 `benchmark-stages.json` makes the B5 funnel explicit: smoke, full short-budget

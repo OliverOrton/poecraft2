@@ -32,20 +32,23 @@ does not reimplement crafting rules.
   Simulator, Stash, saved workspaces, and league-aware economy inputs.
 - The exact solver, compiled simulation, accounting, automatic candidates,
   all-actions state scaling, shared policy compilation, exact compiled-policy
-  evaluation, and non-visual product integration are implemented. Remaining
-  delivery boundaries are preserved without scheduling them in the
-  [solver roadmap](future/solver-roadmap.md).
+  evaluation, bounded executable-policy results, natural-T1 corpus generation,
+  benchmark orchestration and analytics, and non-visual product integration
+  are implemented. Remaining delivery boundaries are preserved without
+  scheduling them in the [solver roadmap](future/solver-roadmap.md).
 - Economy ingest, immutable snapshots, league selection, overrides, and cost
   identities exist. Production activation remains external, and scheduled
   refresh does not currently fetch Beast prices; see [Economy](economy/README.md).
 - Accounts and publishing, recombinator planning, additional mechanics, and ML
   planning remain deferred in [Future](future/README.md).
 
-The [bounded policy results and benchmarking plan](active/bounded-policy-and-benchmarking.md)
-is currently selected. It preserves exact mechanics and action scope while making
-certified executable incumbents useful before exact closure, then adds a seeded
-natural-T1 corpus and stratified solver evidence. [Active work](active/README.md)
-and [HANDOFF](../HANDOFF.md) record its scope.
+The bounded policy results and benchmarking milestone is complete in its
+[dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
+It preserves exact mechanics and action scope while making certified executable
+incumbents useful before exact closure, and adds a seeded natural-T1 corpus and
+stratified solver evidence. [Active work](active/README.md) records that Oliver
+has not selected another implementation sequence; [HANDOFF](../HANDOFF.md)
+records final acceptance and review ownership.
 Exact solver action/state pruning is complete and preserved in its
 [dated archive](archive/2026-07-21-solver-action-state-pruning/README.md).
 Exact solver state scaling is preserved in its
