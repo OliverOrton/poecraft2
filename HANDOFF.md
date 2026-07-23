@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: B1, B2, and B3 are complete and accepted. B4 large-run
-orchestration and action telemetry is the exact next chunk; no B4 code has
-been started.**
+**Status: B1 through B4 are complete and accepted. B5 stratified reports and
+the staged iteration workflow are the exact next chunk; no B5 code has been
+started.**
 
 Oliver selected the
 [bounded policy results and benchmarking plan](docs/active/bounded-policy-and-benchmarking.md)
@@ -11,7 +11,8 @@ on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
 B1 implementation, including retained constructive-witness reuse, is committed
 as `58aa5ea`; B2 product presentation is committed as `86e337f`; the B3 native
 feasibility/generator implementation is `4c99cd0`, and its pinned corpus is
-`d06efff`.
+`d06efff`. B4 orchestration, bound trace, action utility, and search-cost
+telemetry are committed as `1d891a0`.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -288,31 +289,82 @@ B3 targeted evidence:
 No solver benchmark, exact evaluation, or 10,000-run simulation was executed
 in B3; those remain staged for B4-B6 under the selected cadence.
 
+## B4 accepted boundary
+
+B4 adds a native natural-corpus benchmark contract and
+`tools/ingest/benchmark_solver_corpus.py`. The runner accepts arbitrary corpus,
+artifact, executable, and output paths; orders cases deterministically; runs
+each case in an isolated process group; applies the case watchdog under the
+default 900-second ceiling; kills the process tree on expiry; checks for a
+surviving parent; writes an atomic resumable ledger; skips completed reports;
+and supports opt-in worker concurrency constrained by each case's declared
+solver-owned-byte cap. Default hard-case concurrency is one. Run provenance
+separately records source commit/dirty paths and native executable SHA-256, so
+it is independent of the B3 generation-engine pin.
+
+The stepped C/WASM progress surface now reports focused round and incumbent
+kind, discovered/expanded/frontier states, sparse rows/transitions/reforge
+work, and live/peak selected owned bytes in addition to `L`, `U`, and both
+gaps. The native report samples this at every round/incumbent change and
+bounded wall intervals, calculates per-cap proximity, flags whether each
+sample raised `L` or lowered `U`, and derives time to first incumbent plus
+standard absolute/relative gap thresholds.
+
+Exact evaluator action utility is sourced from retained exact state/action
+occupancy. Per action it reports exact visits/applies, priced expected spend
+and known-cost share, distinct reachable states, and regions stratified by
+goal progress, rarity, blocker count, crafted count, fractured goal subset,
+and fractured count. Probability of any use is emitted only where the retained
+evidence proves it (`exact_zero`); cyclic occupancy is explicitly reported as
+insufficient rather than mislabeled as a hitting probability. Simulator action
+distributions remain separate empirical corroboration.
+
+Solver telemetry attributes row attempts, raw outcomes, retained transitions,
+reforge work, cache requests/hits, row-construction wall time, and retained
+selected-allocation growth by action ID. A lower-versus-executable-upper policy
+section compares selected abstract-state counts by action. The telemetry marks
+all search-cost data observational and records
+`non_use_is_pruning_certificate:false`; benchmark action non-use never changes
+admission or pruning.
+
+B4 targeted evidence:
+
+- `scripts/build.ps1` completed after native/header/test changes;
+- `py -3 -m pytest tools/ingest/tests/test_solver_corpus_runner.py -q`
+  passed four watchdog, resume, deterministic-order, and memory-budget tests;
+- the historical 12-case benchmark manifest and all 146 generated natural-T1
+  cases passed native `--validate-only`;
+- the clean committed smoke run at
+  `build/reports/b4-boundary-smoke/ledger.json` pins commit
+  `1d891a01ae3cfce84fbefb08ba17e3a0e6df9f1f`, a clean tree, and executable
+  SHA-256 `50add1869715e45276bcad914fbff60df76f5e9e144a6513fb15134629f56141`;
+- that isolated one-natural-T1 case completed in 4,471.660 ms as
+  `bounded_near_optimal` / `target_gap`, compiled, completed exact priced
+  evaluation, produced 16 bound samples with first incumbent at 820.862 ms,
+  reported utility for six policy actions and search cost for 176 considered
+  action IDs, and left zero survivors;
+- repeating the same run directory skipped the completed case through the
+  ledger resume path;
+- `npx tsc --noEmit` passed after the additive progress contract; and
+- `scripts/build-wasm.ps1` rebuilt the tracked release module, followed by a
+  clean `git diff --check` before commit `1d891a0`.
+
+No full native/web suite and no 10,000-run simulation was executed in B4; both
+remain reserved for B6.
+
 ## Exact resume point
 
-Start B4 only. Implement, in order:
-
-1. arbitrary corpus/output paths, deterministic per-case process isolation,
-   watchdog kill and survivor checks, resumable ledger, skip-completed, and
-   optional memory-budgeted concurrency with hard-case concurrency one;
-2. bound traces at round changes and bounded wall intervals, including L/U,
-   gaps, incumbent, states/frontier, work, memory, and cap proximity, plus time
-   to first incumbent and standard gap thresholds;
-3. exact evaluator policy-action utility by reachable occupancy, expected use
-   and spend, relevant state features, and lower-versus-upper differences,
-   retaining simulator distributions only as empirical corroboration; and
-4. search-cost attribution by action for rows, raw/retained transitions,
-   reforge work, cache activity, wall time, and retained memory.
-
-Action non-use is never a pruning certificate. Resource caps drive comparable
-work; wall time is safety/performance data. Every run record must pin the
-solver build separately from the B3 generation engine.
+Start B5 only. Produce the plan's stratified reports and staged iteration
+workflow from the accepted B3 corpus and B4 runner/telemetry. Keep raw per-case
+records and paired comparisons keyed to identical case IDs and resource caps.
+Do not tune search from action non-use, change mechanics, or run the complete
+affected suites/10,000-run verification early.
 
 The standard hard watchdog is 15 minutes for every later run. Use narrow
 changed-layer tests during B4-B5, then the complete affected suites and required
 10,000-run verification once at B6. At the B4 boundary, commit B4 first, then
 update this status/evidence/next-chunk block and commit the HANDOFF separately.
 
-Chunks completed: B1, B2, B3. Exact stopping point: before B4 implementation. Still
+Chunks completed: B1, B2, B3, B4. Exact stopping point: before B5 implementation. Still
 awaiting Oliver later are rendered UI review, corpus-strata sanity review, and
 acceptance of the B6 results.
