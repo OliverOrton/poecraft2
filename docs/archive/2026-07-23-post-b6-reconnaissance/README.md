@@ -18,10 +18,10 @@ split at `042a281`. Its function bodies remain relevant, but its monolithic
 are historical. Current ownership lives in [Solver](../../solver/README.md)
 and [Engine](../../engine/README.md).
 
-Oliver selected a bounded follow-up in the
-[active focused-round plan](../../active/focused-round-performance.md). That
-plan, not this report, defines current cases, measurements, hard gates, and
-acceptance authority. Durable build-discovery, goal-tier, active-boundary, and
+Oliver selected and completed a bounded follow-up in the
+[focused-round performance archive](../2026-07-23-focused-round-performance/README.md).
+That plan, not this report, defined its cases, measurements, hard gates, and
+acceptance authority. Durable build-discovery, goal-tier, boundary, and
 economy-hazard facts were extracted into their stable live owners. Economy
 repair, the corpus campaign, product work, and other observations remain
 unselected.

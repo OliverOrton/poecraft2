@@ -5,8 +5,9 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code, the bounded-policy B6 acceptance, and the mechanical
-solve split: 2026-07-22 @ `042a281`. Scope: native solver,
+Verified against code, the bounded-policy B6 acceptance, the mechanical solve
+split, and focused-round performance acceptance: 2026-07-23 @ `f28bbb8`.
+Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, benchmark orchestration/analytics, and the non-visual
 WASM/worker path. The pinned scaling
@@ -228,6 +229,13 @@ complete focused lower/upper round; they do not participate in Bellman
 comparisons, ties, admission, pruning, or exact closure. Resource exhaustion
 without an executable proper fallback reports no finite upper bound.
 
+The current private focused scheduler admits at most 64 members per fringe
+class, 256 states per global round, and 64 lower-bound states before upper-side
+admission. These are implementation defaults, not public caps. A fresh
+run-local matrix confirmed that increasing the global batch reduces focused
+rounds and repeated whole-graph policy evaluation, but no tested tuple passed
+the fixed worker-step responsiveness gate, so the defaults remain unchanged.
+
 Exact focused closure uses the absolute numerical proof tolerance
 `epsilon * 10`. Separately named value comparisons may retain their historical
 value-scaled roundoff allowance. Neither tolerance is a product gap target,
@@ -376,6 +384,16 @@ reforge work, cache requests/hits, wall time, and retained selected-allocation
 growth to action IDs. It also compares lower- and executable-upper-policy
 selected abstract-state counts. These are profiling observations only:
 benchmark action non-use is explicitly never a pruning certificate.
+
+Focused diagnostics additionally report per-round and total lower/upper
+candidate counts, quota/fill admissions, selected schedule admissions, and
+global/per-class cap hits. Fallback validation reports one inclusive total and
+mutually exclusive goal, economy, action-vocabulary, structural, anchor-
+properness, and start-properness leaves plus unattributed time; unrelated
+solver timers are not required to sum to solve wall time. Owned-byte
+diagnostics include recursive child-context visits and maximum depth.
+Benchmark execution records every `pc_solver_solve_step` wall time and reports
+count, total, median, nearest-rank-ceiling p95, and maximum.
 
 `tools/ingest/report_solver_corpus.py` aggregates completed raw reports without
 participating in native or WASM correctness. It reports exclusive policy and

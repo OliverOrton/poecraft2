@@ -1,14 +1,13 @@
 # Focused-Round Performance Attribution And Scheduling
 
-**Status: selected on 2026-07-23. Gates 0 and 1 completed with fresh retained
-evidence. Execution hard-stopped before any retained Gate 2 source change
-because unrelated tracked Strategy Board files became dirty during the Gate 1
-build; [HANDOFF](../../HANDOFF.md) records the exact blocker and evidence.**
+**Status: completed on 2026-07-23 with accepted diagnostic instrumentation
+and no scheduling-default change. Historical archive; it does not own current
+sequencing.**
 
-Parent: [Active work](README.md)
+Parent: [Focused-round performance archive](README.md)
 
 Input:
-[Post-B6 Solver Reconnaissance](../archive/2026-07-23-post-b6-reconnaissance/README.md)
+[Post-B6 Solver Reconnaissance](../2026-07-23-post-b6-reconnaissance/README.md)
 
 ## Objective
 

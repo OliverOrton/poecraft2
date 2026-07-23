@@ -1,24 +1,20 @@
 # Active Work
 
-**Status: focused-round performance attribution and scheduling is selected.**
-Gates 0 and 1 completed with fresh retained evidence. Execution hard-stopped
-before retained Gate 2 source work because unrelated tracked web files became
-dirty; [HANDOFF](../../HANDOFF.md) records the blocker and exact boundary.
+**Status: no implementation boundary is active.** The focused-round
+performance chunk completed on 2026-07-23. Oliver must select the next chunk
+before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected the
-[focused-round performance plan](focused-round-performance.md) on 2026-07-23.
-It measures the global batch, per-class cap, lower quota, executable upper
-pass, fallback validation, and owned-byte ledger on bounded fast cases. It may
-accept at most one predeclared scheduling-default tuple after certificate,
-hash, responsiveness, memory, and performance gates.
+The completed
+[focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)
+accepted diagnostic instrumentation and no scheduling-default change. Its
+matrix confirmed global-batch causality, but every predeclared tuple failed the
+fixed worker-step responsiveness gate.
 
-The exact two-natural-T1 oracle is prohibited. Economy repair/publishing, the
-120-case campaign, natural-T1 corpus design changes, Calculator work,
-source-folder moves, `solver_internal.hpp`, and web-test splits remain deferred
-and must not be interleaved. The natural-T1 generator intentionally emits
-T1-only goals; tier-range support is not pending work.
+The natural-T1 generator intentionally emits T1-only goals; tier-range support
+is not pending work. Economy repair/publishing remains separate and was not
+touched by the completed performance chunk.
 
 The completed
 [mechanical solver split](../archive/2026-07-22-mechanical-solver-split/README.md)

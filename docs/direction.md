@@ -46,10 +46,11 @@ The
 [mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
 is complete. It was a token-equivalent internal restructuring with no behavior
 or test additions; exact hashes, native counts, and measured fast-case
-performance passed its acceptance gates. Oliver subsequently selected the
-[focused-round performance plan](active/focused-round-performance.md), a
-bounded attribution and scheduling-default investigation on fast cases that
-prohibits the exact natural two-T1 oracle. The bounded policy results and
+performance passed its acceptance gates. The subsequent
+[focused-round performance investigation](archive/2026-07-23-focused-round-performance/README.md)
+accepted diagnostic attribution and no scheduling-default change: larger
+batches reduced repeated whole-graph work, but every tuple failed the fixed
+worker-step responsiveness gate. The bounded policy results and
 benchmarking milestone is complete in its
 [dated archive](archive/2026-07-22-bounded-policy-and-benchmarking/README.md).
 It preserves exact mechanics and action scope while making certified executable

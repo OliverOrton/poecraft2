@@ -11,9 +11,14 @@ selected active work.
 
 ## 2026-07-23
 
+- [Focused-Round Performance Attribution And Scheduling](2026-07-23-focused-round-performance/README.md) —
+  completed diagnostic instrumentation and run-local scheduling matrix; the
+  global batch was causal, but no tuple passed the fixed responsiveness gates,
+  so tracked scheduling defaults did not change.
+
 - [Post-B6 Solver Reconnaissance](2026-07-23-post-b6-reconnaissance/README.md) —
   read-only oracle-regression hypotheses, measurement proposal, and
-  point-in-time documentation survey preserved as input to the selected
+  point-in-time documentation survey preserved as input to the completed
   focused-round plan.
 
 ## 2026-07-22

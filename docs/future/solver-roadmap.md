@@ -17,10 +17,11 @@ resource and compiler caps stayed fixed.
 
 Exact quotienting is useful but action-scope dependent: the bounded Chaos
 oracle reduces 57,722 strict states to 3, while the complete product envelopes
-permit no merge. Approximate compact mode remains forbidden. The
-[focused-round performance plan](../active/focused-round-performance.md) is the
-selected solver boundary; this page retains only surrounding deferred work and
-does not extend that plan's scope.
+permit no merge. Approximate compact mode remains forbidden. The completed
+[focused-round performance attribution](../archive/2026-07-23-focused-round-performance/README.md)
+confirmed that the 256-state global batch causes repeated whole-graph work, but
+accepted no default change because every tested tuple exceeded the fixed
+5-second solve-step maximum. No solver boundary is currently selected.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
@@ -77,6 +78,14 @@ The archived solver audit also contains ideas that are neither approved work
 nor current findings. A future plan may reconsider them only from fresh code
 inspection and measurement:
 
+- cooperative subdivision of the approximately 11.5-second solve step before
+  reconsidering a larger focused global batch; the batch matrix reduced the 2k
+  median from 22.54 seconds to as low as 13.15 seconds but made the long step
+  the p95;
+- behavior-identical reuse or memoization around fallback start-properness
+  validation, which owned 99.93% of measured fallback-validation component
+  time; economy-identity work was only 0.06%, and the economy pipeline remains
+  outside solver optimization;
 - veiled/Eldritch product action scope and goal-producibility diagnostics;
 - WASM solve-step batching as part of browser delivery work;
 - Fossil candidate selection with price-aware evidence;

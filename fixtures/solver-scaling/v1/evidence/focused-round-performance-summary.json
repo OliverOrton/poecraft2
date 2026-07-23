@@ -1,0 +1,388 @@
+{
+  "schema_version": "focused_round_performance_acceptance_v1",
+  "recorded_date": "2026-07-23",
+  "result": {
+    "decision": "accept_instrumentation_only",
+    "selected_tuple": null,
+    "tracked_default_change": false,
+    "reason": "No predeclared tuple passed every fixed Gate 4 condition. Every variant exceeded the 5000 ms worker-step maximum; larger global batches also exceeded 1.10 times the instrumented-baseline solve-step p95.",
+    "exact_natural_two_t1_oracle_ran": false,
+    "economy_pipeline_touched_or_published": false,
+    "natural_t1_generator_changed": false
+  },
+  "source": {
+    "branch": "codex/bounded-policy-contract",
+    "clean_start_commit": "590253dd1dacbbf1ece005c62b127f895f015107",
+    "selected_source_baseline": "042a281d806141a4da9876306109ab59b7f60454",
+    "accepted_source_commit": "f28bbb8f747af652242a822af96e132884bb27b2",
+    "accepted_source_paths": [
+      "bindings/wasm/dist/poecraft_engine.wasm",
+      "engine/benchmarks/solver_benchmark.cpp",
+      "engine/src/solver_calc.cpp",
+      "engine/src/solver_internal.hpp",
+      "engine/src/solver_solve_constructive.cpp",
+      "engine/src/solver_solve_focused.cpp",
+      "engine/src/solver_solve_telemetry.cpp",
+      "engine/src/solver_solve_types.hpp",
+      "engine/tests/test_solver_s8_3.cpp",
+      "engine/tests/test_solver_solve.cpp",
+      "tools/ingest/poecraft_ingest/solver_reports.py",
+      "tools/ingest/tests/test_solver_reports.py"
+    ]
+  },
+  "inputs": {
+    "artifact_manifest": {
+      "path": "data/compiled/current/manifest.json",
+      "benchmark_sha256": "c21886798080e98cfaf85e000851e7d9d3074147d5a6237f78cb51fa890d0d4d",
+      "post_final_pipeline_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+      "note": "The final full pipeline rebuilt the derived artifact after the benchmark matrix."
+    },
+    "source_case_sha256": "23def8caaba8e07cb38887ca43926f7658f0ea3699fbef95392be23a97682980",
+    "source_manifest_sha256": "94bdb48b7e6b72626dfd6c33b9e51c975aa196bf77a3cc94645b6f382218458b",
+    "derived_case_sha256": "6455039153c855e7b95a3f10242eb509c74e08a2f7a5a505e226bdaf426413e8",
+    "derived_manifest_sha256": "d937d01f72a0212d12dcb884fd58dc144d4818921cc74f674a33370319fa230d",
+    "derived_case_changed_paths": [
+      "caps.max_absolute_optimality_gap",
+      "caps.max_expanded_states",
+      "expected.solve_status",
+      "expected.verification_status",
+      "id"
+    ],
+    "derived_manifest_changed_paths": [
+      "cases"
+    ]
+  },
+  "tools": {
+    "powershell": "5.1.26100.8875",
+    "python": "3.14.2",
+    "node": "20.20.0",
+    "npm": "10.8.2",
+    "gcc": "14.2.0",
+    "emscripten": "6.0.0 (afa15e0c56d1292e073c2c91bafc1d5e0cdf0dd3)",
+    "cmake": null
+  },
+  "watchdog": {
+    "seconds": 900,
+    "script_sha256": "7eb3716cca2ec7903741f440f034e88c14d9270caab4bed6c40940eb4879c9f4",
+    "process_isolation": "CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW",
+    "timeout_action": "taskkill /PID <pid> /T /F",
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "any_process_timed_out": false,
+    "any_process_left_survivor": false
+  },
+  "commands": {
+    "process_evidence": {
+      "path": "fixtures/solver-scaling/v1/evidence/focused-round-process-evidence.json",
+      "sha256": "e938ac1c09dbc428be9122434f30ed6e2481be338c8cbdb28b7c36c77782f53a",
+      "process_records": 124,
+      "contents": "Exact command arrays or reconstructible enumerated command profiles with command-array hashes, working directories, start/finish UTC, exit/allowed codes, watchdog ceiling, timeout/survivor facts, wall times, log paths/hashes, artifact hashes, and benchmark report paths/hashes."
+    },
+    "repetition_contract": {
+      "gate_1_and_gate_2_performance_cases": "one discarded warmup plus five measured repetitions",
+      "gate_1_and_gate_2_hash_controls": "five measured repetitions",
+      "gate_3_variants": "one discarded warmup plus three measured repetitions",
+      "full_matrix_candidates": "none; no variant was eligible"
+    }
+  },
+  "binaries": {
+    "uninstrumented": {
+      "poecraft_engine_tests.exe": "28af29ce4a75a6679ff8f5b8b78104b6f93fe8ef2bccf640eddacf5980133690",
+      "poecraft_solver_benchmark.exe": "f1fe45ea4326070adb2b656bb11cde1162213069cbf4b5f5f7ca9cc8f4495bfc",
+      "poecraft_engine.dll": "a8b0411d13f9eef1e6f871a3132acb7323faec9e96de01687307b50da81fda5f"
+    },
+    "instrumented": {
+      "poecraft_engine_tests.exe": "969abb85bb66bad8df037894138516031fd35e56f73c014393070cbd7da04294",
+      "poecraft_solver_benchmark.exe": "d2f70e3d20909cc103e763621bb5749146a16c273e21af70fc8633fc076b1707",
+      "poecraft_engine.dll": "44dc454691d2d4c30fdd9794fe7646ce53796d27cd586487a9286f6ca2113912"
+    },
+    "wasm": {
+      "poecraft_engine.mjs": "730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86",
+      "poecraft_engine.wasm": "71e701fb89e7379b5ea14292a9b68208eb82d82a232ffadf268123dabe8e80ac"
+    }
+  },
+  "retained_report_sets": {
+    "gate_1_summary_sha256": "a7798c4369b0d2b8112bbaca1a815b8bd4639c8f4bff07a4e04907eef8883836",
+    "gate_2_summary_sha256": "25b76689901eec289bc6d2c0d2945cf9724b57a9f72b72c10ba6206b1423aade",
+    "gate_2_comparison_sha256": "61c07933c421fb9a58deb99c0bd4915bab1c8df2d95d690ae2d84014ba2e889a",
+    "variant_provenance_sha256": "6aa4b374a063a147b0e479f653388321e1fd215beea21bd2dfc606ef49c0bb4f",
+    "variant_ranking_sha256": "e7f07172447a225d378883c6ff774f272c25d6d53a6d72fdaac32c9d9131ec1a",
+    "gate_4_decision_sha256": "3407d850daf508c245093777b713322dc13d4390384b75412d1bc9d2f6300582",
+    "source_coverage_sha256": "7ab9c46c1ea04339e78aa20ef4c23d93c24aa9ca4b58a341e567f76c65c0d75b"
+  },
+  "baselines": {
+    "uninstrumented": {
+      "performance": {
+        "focused-round-real-product-2k": {
+          "field": "phase_wall_ms.solve",
+          "values": [22818.3964, 23211.5931, 22535.6307, 22601.2755, 22891.6983],
+          "median": 22818.3964
+        },
+        "solver-scaling-dire-pelt-two-t1-chaos-strict": {
+          "field": "solver_telemetry.timings_ns.extraction",
+          "values": [23733866600, 21043017900, 20007173700, 21562787700, 20448664700],
+          "median": 21043017900
+        },
+        "solver-scaling-dire-pelt-two-t1-chaos-quotient": {
+          "field": "phase_wall_ms.solve",
+          "values": [37359.7082, 39730.2478, 37630.169, 38292.8618, 37417.003],
+          "median": 37630.169
+        }
+      },
+      "bounded_case": {
+        "focused_rounds": [20, 20, 20, 20, 20],
+        "policy_evaluation_calls": [142, 142, 142, 142, 142],
+        "partial_policy_rounds": [9, 9, 9, 9, 9],
+        "lower_bounds": [153.1270669513794, 153.1270669513794, 153.1270669513794, 153.1270669513794, 153.1270669513794],
+        "upper_bounds": [243.25209004029114, 243.25209004029114, 243.25209004029114, 243.25209004029114, 243.25209004029114],
+        "live_owned_bytes": [67042522, 67042522, 67042522, 67042522, 67042522],
+        "peak_owned_bytes": [133759037, 133759037, 133759037, 133759037, 133759037]
+      }
+    },
+    "instrumented": {
+      "performance": {
+        "focused-round-real-product-2k": {
+          "field": "phase_wall_ms.solve",
+          "values": [22411.7902, 22352.0434, 22394.532, 22220.4488, 22389.871],
+          "median": 22389.871,
+          "ratio_to_uninstrumented": 0.9812201789955756
+        },
+        "solver-scaling-dire-pelt-two-t1-chaos-strict": {
+          "field": "solver_telemetry.timings_ns.extraction",
+          "values": [19977710000, 19669877900, 20297680200, 19892160400, 19755389500],
+          "median": 19892160400,
+          "ratio_to_uninstrumented": 0.9453092942528932
+        },
+        "solver-scaling-dire-pelt-two-t1-chaos-quotient": {
+          "field": "phase_wall_ms.solve",
+          "values": [36937.804, 36867.8888, 36639.6571, 36614.6735, 36855.7335],
+          "median": 36855.7335,
+          "ratio_to_uninstrumented": 0.9794198240247074
+        }
+      },
+      "bounded_case": {
+        "focused_rounds": [20, 20, 20, 20, 20],
+        "policy_evaluation_calls": [142, 142, 142, 142, 142],
+        "partial_policy_rounds": [9, 9, 9, 9, 9],
+        "lower_bounds": [153.1270669513794, 153.1270669513794, 153.1270669513794, 153.1270669513794, 153.1270669513794],
+        "upper_bounds": [243.25209004029114, 243.25209004029114, 243.25209004029114, 243.25209004029114, 243.25209004029114],
+        "live_owned_bytes": [67044866, 67044866, 67044866, 67044866, 67044866],
+        "peak_owned_bytes": [133761381, 133761381, 133761381, 133761381, 133761381],
+        "solve_step_median_ms": [215.683, 212.3669, 209.49, 210.3221, 213.1068],
+        "solve_step_p95_ms": [1353.9689, 1344.5443, 1348.237, 1335.0284, 1363.8306],
+        "solve_step_maximum_ms": [11458.3701, 11455.7949, 11431.4273, 11411.2421, 11428.9935],
+        "schedule_totals": {
+          "lower_candidates": 10214,
+          "upper_candidates": 488394,
+          "lower_quota_admissions": 576,
+          "upper_quota_admissions": 1728,
+          "schedule_candidates": 2284,
+          "schedule_admissions": 2284,
+          "global_batch_cap_hits": 9,
+          "per_class_cap_hits": 21
+        }
+      },
+      "gate_2_equivalence": {
+        "passed": true,
+        "counts_equal": true,
+        "statuses_and_caps_equal": true,
+        "bounds_equal": true,
+        "deterministic_hashes_equal": true,
+        "known_exact_value_inside_certificate": 230.26738656962243,
+        "timeouts": 0,
+        "survivors": 0
+      }
+    },
+    "deterministic_hashes": {
+      "focused-round-real-product-2k": {
+        "transition_bits": "b957f6e9d877b74a",
+        "policy_bits": "e822e68756d7cfc6"
+      },
+      "solver-scaling-dire-pelt-two-t1-chaos-strict": {
+        "transition_bits": "2d2b5656301764c1",
+        "policy_bits": "4e38cf37211140ba"
+      },
+      "solver-scaling-dire-pelt-two-t1-chaos-quotient": {
+        "transition_bits": "505cd3271f47ca66",
+        "policy_bits": "1e4aef1dd50cee68"
+      },
+      "oracle-real-two-mod": {
+        "transition_bits": "845d39705f1a45da",
+        "policy_bits": "763df0ca5ed817c5",
+        "note": "small millisecond control, not the prohibited natural two-T1 oracle"
+      },
+      "refusal-state-cap": {
+        "transition_bits": "5ac77dee07447866",
+        "policy_bits": "1cedae1f72f786c3"
+      }
+    }
+  },
+  "variants": [
+    {
+      "id": "A",
+      "tuple": {"members_per_class": 64, "global_batch": 256, "lower_quota": 64},
+      "binary_sha256": "5c836c7bb0d5fa314bc1e7f7e35995880314bcb6ff823c1e19a360650d856309",
+      "summary_sha256": "c21b116fc59ccd2ea132a49e487ff3df005c5f7728560355c303ab0eff44bc54",
+      "solve_ms": [22485.9573, 22542.6926, 22620.8924],
+      "medians": {"solve_ms": 22542.6926, "focused_rounds": 20, "policy_evaluation_calls": 142, "step_p95_ms": 1370.2639, "step_maximum_ms": 11574.2748, "live_owned_bytes": 67044866, "peak_owned_bytes": 133761381},
+      "bounds": {"lower": 153.1270669513794, "upper": 243.25209004029114},
+      "hashes": {"transition_bits": "b957f6e9d877b74a", "policy_bits": "e822e68756d7cfc6"},
+      "solve_ratio": 1.0068254792535427,
+      "eligible": false
+    },
+    {
+      "id": "B",
+      "tuple": {"members_per_class": 64, "global_batch": 512, "lower_quota": 64},
+      "binary_sha256": "aba68759363256b6d3239a4775431aa424546937bc0b952ae63e00cd0933dc7b",
+      "summary_sha256": "2d92e63517d5b0c0c358d09361b3a99be3f41b71856fc346524af78af5a2bc79",
+      "solve_ms": [18512.6715, 18484.0137, 18362.9581],
+      "medians": {"solve_ms": 18484.0137, "focused_rounds": 14, "policy_evaluation_calls": 86, "step_p95_ms": 11528.0734, "step_maximum_ms": 11548.9785, "live_owned_bytes": 61147758, "peak_owned_bytes": 121393130},
+      "bounds": {"lower": 151.0547189722429, "upper": 243.245129299451},
+      "hashes": {"transition_bits": "dae19b8d5c6af687", "policy_bits": "b9015bb1aee95c89"},
+      "solve_ratio": 0.8255524875511788,
+      "eligible": false
+    },
+    {
+      "id": "C",
+      "tuple": {"members_per_class": 64, "global_batch": 1024, "lower_quota": 64},
+      "binary_sha256": "9e1d8c3917be5dcafdeffd583b75368640cfca2e1134e8cc46aee2cc86ea5983",
+      "summary_sha256": "60cf22a58fddc837541950466ab90ab042d7367b9f8cd500176c494379ea5538",
+      "solve_ms": [17073.9978, 16958.5295, 17294.4777],
+      "medians": {"solve_ms": 17073.9978, "focused_rounds": 12, "policy_evaluation_calls": 68, "step_p95_ms": 11476.8171, "step_maximum_ms": 11608.1045, "live_owned_bytes": 56948709, "peak_owned_bytes": 113381912},
+      "bounds": {"lower": 146.40063956855252, "upper": 243.24525624737964},
+      "hashes": {"transition_bits": "bb02831caae549e7", "policy_bits": "67bbcca98f4fc56e"},
+      "solve_ratio": 0.7625768723723331,
+      "eligible": false
+    },
+    {
+      "id": "D",
+      "tuple": {"members_per_class": 64, "global_batch": 4096, "lower_quota": 64},
+      "binary_sha256": "9104efe53a5aba5c64d8ff131b23540ea426efe3379307d46acc12827e3e40d6",
+      "summary_sha256": "8273f66d3ef76b0ef965fd79a2bb16ef87cbcd4da08572f62c58d3643aab934b",
+      "solve_ms": [14731.4191, 14580.5022, 14649.0788],
+      "medians": {"solve_ms": 14649.0788, "focused_rounds": 8, "policy_evaluation_calls": 33, "step_p95_ms": 11546.6727, "step_maximum_ms": 11628.762, "live_owned_bytes": 48087075, "peak_owned_bytes": 99182088},
+      "bounds": {"lower": 153.22052277728952, "upper": 243.2549338753536},
+      "hashes": {"transition_bits": "ac0c2a3984aca4c4", "policy_bits": "3ffa3c84a33562d2"},
+      "solve_ratio": 0.6542725860278517,
+      "eligible": false
+    },
+    {
+      "id": "E",
+      "tuple": {"members_per_class": 4096, "global_batch": 256, "lower_quota": 64},
+      "binary_sha256": "333f59d40fc5ab37817534cb27fb14c0750d148ad02d7a2755434daedac9416f",
+      "summary_sha256": "709e37c0526dfd14550041f7f0cd2f023294fb88937836f9adfb6b98361cc4c4",
+      "solve_ms": [22489.1697, 22571.9716, 22491.131],
+      "medians": {"solve_ms": 22491.131, "focused_rounds": 20, "policy_evaluation_calls": 138, "step_p95_ms": 1374.2898, "step_maximum_ms": 11544.8287, "live_owned_bytes": 67044866, "peak_owned_bytes": 133758709},
+      "bounds": {"lower": 152.50950429643984, "upper": 243.25163933282963},
+      "hashes": {"transition_bits": "6f529c53bc7223c8", "policy_bits": "f526ac0b7c6f3b8f"},
+      "solve_ratio": 1.0045225807687772,
+      "eligible": false
+    },
+    {
+      "id": "F",
+      "tuple": {"members_per_class": 4096, "global_batch": 4096, "lower_quota": 64},
+      "binary_sha256": "ccf29270bfb072c85977f3551e87cd22ac42ff2ffe630511906c096c178be93d",
+      "summary_sha256": "d06cc0b8ead32edb95e52ea284a44b3848b25d9857fd13334df53d0e4a82b69b",
+      "solve_ms": [13139.5161, 13154.8774, 13338.7587],
+      "medians": {"solve_ms": 13154.8774, "focused_rounds": 6, "policy_evaluation_calls": 18, "step_p95_ms": 11373.212, "step_maximum_ms": 11531.9093, "live_owned_bytes": 47936155, "peak_owned_bytes": 99136045},
+      "bounds": {"lower": 153.2205227767306, "upper": 243.237500710591},
+      "hashes": {"transition_bits": "5a873304b22b4fea", "policy_bits": "447d051cd08efeac"},
+      "solve_ratio": 0.5875369893823863,
+      "eligible": false
+    },
+    {
+      "id": "G",
+      "tuple": {"members_per_class": 64, "global_batch": 256, "lower_quota": 128},
+      "binary_sha256": "1e8858c68c8f59eb4e1226fd40d9aa141c1311993b29d57e506344b964bf0173",
+      "summary_sha256": "14b55c58dc988183ab327e225fff36f03e8b30b7f12bdab9c948ceb27f3ab285",
+      "solve_ms": [24157.7672, 23997.4337, 24220.9164],
+      "medians": {"solve_ms": 24157.7672, "focused_rounds": 22, "policy_evaluation_calls": 151, "step_p95_ms": 1594.1648, "step_maximum_ms": 11546.386, "live_owned_bytes": 72162004, "peak_owned_bytes": 143167744},
+      "bounds": {"lower": 153.66117047658355, "upper": 243.26657808203686},
+      "hashes": {"transition_bits": "39fe9944fd7b6e99", "policy_bits": "ba06e94dc5f89572"},
+      "solve_ratio": 1.0789596420631453,
+      "eligible": false
+    }
+  ],
+  "causal_decisions": {
+    "global_batch": {
+      "supported": true,
+      "evidence": "A/B/C/D increased the batch 256/512/1024/4096 while rounds fell 20/14/12/8, policy-evaluation calls fell 142/86/68/33, and solve medians fell 22542.6926/18484.0137/17073.9978/14649.0788 ms.",
+      "acceptance": "not accepted alone because each larger-batch variant exposed the existing approximately 11.5 s step as p95 and exceeded the 5000 ms maximum"
+    },
+    "per_class_cap": {
+      "supported": false,
+      "evidence": "A versus E retained 20 rounds and changed solve median only from 22542.6926 to 22491.131 ms."
+    },
+    "lower_quota": {
+      "supported": false,
+      "evidence": "A versus G increased rounds from 20 to 22, policy-evaluation calls from 142 to 151, and solve median from 22542.6926 to 24157.7672 ms."
+    },
+    "upper_pass": {
+      "supported": "attribution_only",
+      "acceptance": "unchanged; removing, weakening, or rescheduling it was outside scope"
+    },
+    "fallback_validation": {
+      "actionable_later": true,
+      "inclusive_duration_ns_across_five_runs": 24089191500,
+      "component_duration_sum_ns_across_five_runs": 24089173000,
+      "unattributed_duration_ns_across_five_runs": 18500,
+      "components": {
+        "goal_identity": {"duration_ns": 39900, "share": 0.0000016563445062072755},
+        "economy_identity": {"duration_ns": 14477900, "share": 0.0006010122838701332},
+        "action_vocabulary_identity": {"duration_ns": 1162400, "share": 0.00004825400636629917},
+        "structural": {"duration_ns": 39600, "share": 0.0000016438907881154916},
+        "anchor_properness": {"duration_ns": 55600, "share": 0.000002308089086343973},
+        "start_properness": {"duration_ns": 24073397600, "share": 0.9993443574061006}
+      },
+      "acceptance": "not optimized in this chunk"
+    },
+    "owned_byte_ledger": {
+      "fanout_confirmed": true,
+      "child_context_visits_median": 1177832,
+      "max_recursion_depth_median": 1,
+      "duration_ns_across_five_runs": 427132300,
+      "solve_wall_share": 0.0038215739808638745,
+      "actionable_later": false,
+      "reason": "below the fixed 2 percent threshold"
+    }
+  },
+  "final_acceptance": {
+    "native_fast_and_full": "passed",
+    "report_tests": "passed",
+    "wasm_rebuild": "passed",
+    "full_pipeline": "passed",
+    "web_tests": "passed",
+    "typescript": "passed",
+    "source_coverage": {
+      "passed": true,
+      "cmake": "all explicit source files covered; CMake unavailable on this host",
+      "native_fallback": "all source globs covered",
+      "wasm": "all source globs covered"
+    },
+    "documentation": {
+      "scoped_read_only_doc_drift": "passed_with_zero_remaining_actionable_findings",
+      "markdown_relative_links_and_reachability": "passed",
+      "markdown_files": 140,
+      "docs_files": 122,
+      "relative_links": 834,
+      "missing_targets": 0,
+      "unreachable_docs": 0,
+      "report_sha256": "87f809f7ad260e20457cb8a7b6f7fb0c3cef7bed822b023b0101fc28fe7c099b",
+      "watchdog_log_sha256": "3efa407595f4a09832c76b8a9d2df559440d993a12b20d653cd31770cd208b3d",
+      "timed_out": false,
+      "survivor": false
+    },
+    "candidate_exact_policy_evaluation_and_10000_simulations": "not_applicable_no_candidate_selected",
+    "processes": [
+      {"command": "build/engine/poecraft_engine_tests.exe --solver-solve-only", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "0fcc212e2bea6c4902d1d246d7b7144144295e888cf8f784cf6393e31ee4ff5e"},
+      {"command": "build/engine/poecraft_engine_tests.exe --solver-api-only data/compiled/current", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "fdedb4f38388cf96974336c5451ae5249d164b61c6df218da3a51f97a8e2fdd8"},
+      {"command": "build/engine/poecraft_engine_tests.exe --solver-eval-only", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "9761b207723e96505e720e05fff3986de914583f4552b48527ee1aed6ce7bcf7"},
+      {"command": "build/engine/poecraft_engine_tests.exe data/compiled/current fixtures/spec", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "b0c2a13c18198ae425e8aa24c4bc1606ef00be347c16109bdbec57eac53a6363"},
+      {"command": "py -3 -m pytest tools/ingest/tests/test_solver_reports.py -q", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "7763d1f5e6a4963b7fadffb4126032ff241694cc393a5781e658c77b41012483"},
+      {"command": "powershell -NoProfile -File scripts/build-wasm.ps1", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "d959a6612cdf7e081bf8065d8561dbf6f5d7457d19c2d72ea840a1f4d1165096"},
+      {"command": "powershell -NoProfile -File scripts/test.ps1", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "8c6fca7a5c50af9ec2ecc6f235fd13fd74bb5b06bbc92e4139ce3f0f0eaa6fe8"},
+      {"command": "npm.cmd test", "cwd": "apps/web", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "8b88adcee7e4266e37ad187497a64d7b419a4c2230ff26a11afe61c0988f2367"},
+      {"command": "npx.cmd tsc --noEmit", "cwd": "apps/web", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+      {"command": "py -3 build/focused-round/audit_source_coverage.py", "exit_code": 0, "timed_out": false, "survivor": false, "log_sha256": "7ab9c46c1ea04339e78aa20ef4c23d93c24aa9ca4b58a341e567f76c65c0d75b"}
+    ]
+  }
+}

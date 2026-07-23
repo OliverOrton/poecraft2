@@ -28,10 +28,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records the selected
-[focused-round performance plan](active/focused-round-performance.md).
-[HANDOFF](../HANDOFF.md) records its exact post-Gate-1 hard-stop boundary. The
-completed
+[Active](active/README.md) records that no implementation boundary is
+selected. The completed
+[focused-round performance attribution](archive/2026-07-23-focused-round-performance/README.md)
+is archived with its measured no-default-change result. [HANDOFF](../HANDOFF.md)
+records the exact completed boundary. The completed
 [mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
 is archived, and the read-only
 [post-B6 reconnaissance](archive/2026-07-23-post-b6-reconnaissance/README.md)

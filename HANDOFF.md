@@ -1,13 +1,13 @@
 # Session Handoff
 
-**Status: B1 through B6 and the
-[mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md)
-are complete and accepted. For the selected
-[focused-round performance attribution and scheduling](docs/active/focused-round-performance.md)
-chunk, Gate 0 and the fresh uninstrumented Gate 1 baseline completed. Execution
-hard-stopped before any retained Gate 2 source change because two unrelated
-tracked web files became dirty during the Gate 1 build. Oliver must resolve
-that concurrent work before the focused-round plan can resume.**
+**Status: B1 through B6, the
+[mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md),
+and the
+[focused-round performance chunk](docs/archive/2026-07-23-focused-round-performance/README.md)
+are complete and accepted. Focused diagnostics are committed at `f28bbb8`;
+the measured result keeps the existing scheduling defaults. No implementation
+boundary is active. Oliver must select the next chunk before source work
+resumes.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -31,12 +31,15 @@ is commit `042a281` (`Split solver solve phases (token-equivalent, no behavior
 change)`). The economy pipeline was not run, published, or otherwise changed
 in this chunk.
 
-On 2026-07-23 Oliver selected the focused-round plan above. The read-only
+On 2026-07-23 Oliver selected and completed the focused-round plan above. The read-only
 [post-B6 reconnaissance](docs/archive/2026-07-23-post-b6-reconnaissance/README.md)
-is archived as historical input. The selection is documentation-only: solver,
-binding, build, fixture, artifact, and web source remain exactly at `042a281`.
-Oliver also confirmed that the natural-T1 generator is intentionally T1-only;
-tier-range support is not a missing or deferred generator change.
+is archived as historical input. Accepted source commit `f28bbb8` adds
+diagnostic-only focused schedule, fallback-validation, owned-byte-ledger, and
+solve-step telemetry plus tests and a rebuilt WASM module. It changes no
+focused scheduling default, mechanic, certificate, public cap, natural-T1
+generation, or economy data. Oliver confirmed that the natural-T1 generator is
+intentionally T1-only; tier-range support is not a missing or deferred
+generator change.
 
 The preceding exact constructive-policy milestone remains review evidence only
 on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
@@ -44,7 +47,50 @@ cherry-picked, or used as a source donor. Candidate A/C search guidance remains
 forbidden. The incumbent bundle and retained witness are for executable
 upper-bound/output production only.
 
-## Focused-round Gate 0-1 hard-stop handoff
+## Focused-round completion handoff
+
+Gates 0 through 6 completed in order. The tracked
+[acceptance summary](fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json)
+pins source, artifact, tool, binary, report, watchdog, baseline, variant,
+causal-decision, and final-acceptance hashes.
+
+Gate 2 instrumentation replay preserved all counts, status/cap results,
+certificate bounds, and deterministic hashes. Its primary median ratios
+against the fresh Gate 1 baseline were `0.9812201789955756` for the 2k solve,
+`0.9453092942528932` for strict extraction, and `0.9794198240247074` for the
+quotient solve.
+
+The run-local matrix established the scheduling cause:
+
+| Tuple | Global batch | Focused rounds | Policy evaluations | Solve median |
+| --- | ---: | ---: | ---: | ---: |
+| A | 256 | 20 | 142 | 22,542.6926 ms |
+| B | 512 | 14 | 86 | 18,484.0137 ms |
+| C | 1,024 | 12 | 68 | 17,073.9978 ms |
+| D | 4,096 | 8 | 33 | 14,649.0788 ms |
+| F, also removing the class cap | 4,096 | 6 | 18 | 13,154.8774 ms |
+
+The global batch is causal for repeated whole-graph work. Per-class-cap
+removal did not reduce rounds with the 256 global batch, and doubling the lower
+quota made the case slower. No tuple qualified: every maximum solve step was
+approximately 11.5 seconds, exceeding the 5-second budget, and the larger
+batches made that spike the p95. The accepted result is therefore
+instrumentation only; the private 64-member, 256-batch, 64-lower-quota defaults
+remain unchanged.
+
+Start properness owned `99.93443574061006%` of measured fallback-validation
+component time and is a later behavior-identical optimization lead. Recursive
+owned-byte ledger fan-out was confirmed, but its measured share was only
+`0.38215739808638745%`, below the fixed 2% action threshold.
+
+Gate 5 passed the three native fast gates, the complete native suite, report
+tests, WASM rebuild, full cross-layer pipeline, npm tests, TypeScript, and
+source-path coverage under the detached 900-second watchdog. No candidate was
+selected, so candidate exact policy evaluation and 10,000 simulations were
+not applicable. The exact natural two-T1 oracle never ran. The economy
+pipeline was not touched or published.
+
+## Historical focused-round Gate 0-1 hard stop (resolved)
 
 The session began on 2026-07-23 with the exact requested preflight:
 
@@ -140,11 +186,11 @@ from that attempt remains. The run-local Gate 0-1 evidence is retained under
 `build/focused-round/`. The exact natural two-T1 oracle never ran, and the
 economy pipeline was not touched.
 
-Resume only after Oliver resolves the two concurrent web changes and selects
-how they relate to this plan's clean `042a281` source boundary. Re-run Gate 0
-before restoring Gate 2 instrumentation; do not reuse historical timings in
-place of the retained fresh Gate 1 baseline unless the resolved source
-boundary invalidates it.
+Oliver later directed the focused-round work to continue alongside the
+zoom-floor edits and explicitly said not to rerun Gate 0 when those were the
+only concurrent changes. The retained fresh Gate 1 baseline remained the
+comparison authority. The zoom-floor files stayed outside every
+focused-round source/evidence commit.
 
 ## Mechanical solver split accepted boundary
 
@@ -857,32 +903,26 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 
 ## Exact stopping point
 
-Chunks completed with evidence: B1, B2, B3, B4, B5, B6, and the mechanical
-solver split. Oliver selected the focused-round performance plan on
-2026-07-23.
+Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
+split, and focused-round performance attribution and scheduling.
 
-Exact stopping point: Gates 0 and 1 are complete with fresh retained run-local
-evidence. Gate 2 was about to add attribution instrumentation when the
-concurrent tracked Strategy Board changes were detected. The unvalidated
-instrumentation attempt was reverted completely. No copied-source variant,
-candidate default, tracked test/fixture/evidence change, binding change, WASM
-build, or focused-round web change has started. The selected source baseline
-remains `042a281`; the preceding documentation boundary is `5eb66d4`.
+Exact stopping point: focused diagnostic source is committed at `f28bbb8`.
+The complete plan and results are archived under
+`docs/archive/2026-07-23-focused-round-performance/`, and the concise tracked
+evidence is
+`fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json`.
+No focused scheduling default changed. No implementation plan is active;
+Oliver must select the next chunk before implementation resumes.
 
-The accepted source has exactly nine `solver_solve*.cpp` files and the private
-`solver_solve_types.hpp` header. Calculator, `solver_internal.hpp`, and
-engine-smoke test splitting remain deferred. The selected plan is limited to
-fast-case attribution and at most one predeclared focused scheduling-default
-tuple. The exact natural two-T1 oracle must not run. The archived
-reconnaissance is context only and cannot replace fresh evidence.
+The measured leads are explicit but unselected: cooperatively subdivide the
+approximately 11.5-second solve step before reconsidering a larger global
+batch, and consider behavior-identical reuse around fallback
+start-properness validation. The exact natural two-T1 oracle remains
+prohibited. The natural-T1 generator remains intentionally T1-only. Economy
+repair or publishing remains separate and untouched.
 
-The blocker is the concurrent uncommitted Strategy Board zoom-floor work in
-`pc-strategy-board.ts` and `pc-strategy-editor.ts`. Oliver must resolve it and
-decide whether the focused-round plan still uses the clean `042a281` source
-boundary. After that decision, re-run Gate 0 and resume at Gate 2 only if the
-fresh Gate 1 source boundary remains valid. Every later build, benchmark,
-evaluation, simulation, and test-pipeline process retains the detached
-900-second watchdog. The exact natural two-T1 oracle remains prohibited.
+The two Strategy Board zoom-floor files are concurrent user work and were
+preserved outside focused-round commits.
 
 ## Economy pipeline state (2026-07-22, outside chunk scope)
 

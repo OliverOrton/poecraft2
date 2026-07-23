@@ -1,0 +1,3309 @@
+{
+  "candidate_exact_evaluation_or_simulation": [],
+  "candidate_note": "No tuple qualified, so candidate exact policy evaluation and 10000-run simulation were not applicable.",
+  "exact_command_profiles": {
+    "benchmark": {
+      "allowed_exit_codes": [
+        0,
+        2
+      ],
+      "argument_order": [
+        "--artifact",
+        "artifact",
+        "--corpus",
+        "manifest_for_case",
+        "--case",
+        "case_id",
+        "--output",
+        "report_path",
+        "--skip-verification"
+      ],
+      "artifact": "C:\\Users\\Oliver\\Documents\\poecraft2\\data\\compiled\\current",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "manifests": {
+        "focused-round-real-product-2k": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\input\\manifest.json",
+        "oracle-real-two-mod": "C:\\Users\\Oliver\\Documents\\poecraft2\\fixtures\\solver-benchmarks\\v1\\manifest.json",
+        "refusal-state-cap": "C:\\Users\\Oliver\\Documents\\poecraft2\\fixtures\\solver-benchmarks\\v1\\manifest.json",
+        "solver-scaling-dire-pelt-two-t1-chaos-quotient": "C:\\Users\\Oliver\\Documents\\poecraft2\\fixtures\\solver-scaling\\v1\\manifest.json",
+        "solver-scaling-dire-pelt-two-t1-chaos-strict": "C:\\Users\\Oliver\\Documents\\poecraft2\\fixtures\\solver-scaling\\v1\\manifest.json"
+      },
+      "note": "Each process record pins case_id, report_path, and the SHA-256 of the resulting exact command array.",
+      "programs": {
+        "gate1": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+        "gate2": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+        "variant_A": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\A\\poecraft_solver_benchmark.exe",
+        "variant_B": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\B\\poecraft_solver_benchmark.exe",
+        "variant_C": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\C\\poecraft_solver_benchmark.exe",
+        "variant_D": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\D\\poecraft_solver_benchmark.exe",
+        "variant_E": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\E\\poecraft_solver_benchmark.exe",
+        "variant_F": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\F\\poecraft_solver_benchmark.exe",
+        "variant_G": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\G\\poecraft_solver_benchmark.exe"
+      }
+    },
+    "variant_build": {
+      "allowed_exit_codes": [
+        0
+      ],
+      "benchmark_source": "engine/benchmarks/solver_benchmark.cpp",
+      "compiler": "C:/msys64/ucrt64/bin/g++.exe",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "engine_source_order": [
+        "actions_basic.cpp",
+        "actions_bestiary.cpp",
+        "api.cpp",
+        "bestiary_api.cpp",
+        "bitset.cpp",
+        "data_loader.cpp",
+        "item_state.cpp",
+        "rng.cpp",
+        "session_builder.cpp",
+        "simulator.cpp",
+        "solver_abstract.cpp",
+        "solver_api.cpp",
+        "solver_calc.cpp",
+        "solver_compile.cpp",
+        "solver_eval.cpp",
+        "solver_options.cpp",
+        "solver_reforge.cpp",
+        "solver_registry.cpp",
+        "solver_solve.cpp",
+        "solver_solve_bellman.cpp",
+        "solver_solve_constructive.cpp",
+        "solver_solve_expand.cpp",
+        "solver_solve_finish.cpp",
+        "solver_solve_focused.cpp",
+        "solver_solve_heuristics.cpp",
+        "solver_solve_quotient.cpp",
+        "solver_solve_telemetry.cpp"
+      ],
+      "flags": [
+        "-std=c++20",
+        "-O2",
+        "-ffp-contract=off",
+        "-static-libstdc++",
+        "-static-libgcc"
+      ],
+      "include_order": [
+        "engine/include",
+        "build/focused-round/variants/{variant}/src",
+        "build/engine/generated"
+      ],
+      "library": "-lpsapi",
+      "note": "Variant is an enumerated substitution. Each build record pins the SHA-256 of its exact expanded command array.",
+      "output": "build/focused-round/variants/{variant}/poecraft_solver_benchmark.exe",
+      "variants": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    }
+  },
+  "final_acceptance_and_documentation": [
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-solve-only"
+      ],
+      "command_sha256": "21814b76bbe8c172822a14d94fe74e89bb66bb7e0bb5f967f7ece4299e5553a4",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/solver-solve-only.evidence.json",
+      "evidence_sha256": "41aae59122cb812c91af2a2f5c018f687c41de23600de98dfd7fd2460ae6349e",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:41:13.115791+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\solver-solve-only.log",
+      "log_sha256": "0fcc212e2bea6c4902d1d246d7b7144144295e888cf8f784cf6393e31ee4ff5e",
+      "started_utc": "2026-07-23T17:41:13.044858+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 70.92960004229099
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-api-only",
+        "data/compiled/current"
+      ],
+      "command_sha256": "736c6c872eeda73138db49b3437db9a45c185a27210fc8639fb1bab0efe3c90a",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/solver-api-only.evidence.json",
+      "evidence_sha256": "05a2ecf96654b24e33bea2d344d7fa0324ca8fc7909d6885d30a702de4421020",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:41:22.305363+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\solver-api-only.log",
+      "log_sha256": "fdedb4f38388cf96974336c5451ae5249d164b61c6df218da3a51f97a8e2fdd8",
+      "started_utc": "2026-07-23T17:41:18.562799+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 3742.562999948859
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-eval-only"
+      ],
+      "command_sha256": "0483657e90f1dc34b0368dd75e165897afc89e64ba004737f03da98f71fd19f8",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/solver-eval-only.evidence.json",
+      "evidence_sha256": "16ca236ca36ede269a9f5b026961241257df287d62f4a95adddc515eb366d7f6",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:41:27.251052+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\solver-eval-only.log",
+      "log_sha256": "9761b207723e96505e720e05fff3986de914583f4552b48527ee1aed6ce7bcf7",
+      "started_utc": "2026-07-23T17:41:27.101338+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 149.71260004676878
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "data/compiled/current",
+        "fixtures/spec"
+      ],
+      "command_sha256": "6315a8bd4fff0cfb0bde5f2e3d909630ec793aa8bbe4fdc6aa1ac81093a11760",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/native-full.evidence.json",
+      "evidence_sha256": "eab04bc4896d8ef5437c6a8b9eaaf5dc8e8aff05072cf98e65291edba8706a84",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:41:51.545228+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\native-full.log",
+      "log_sha256": "b0c2a13c18198ae425e8aa24c4bc1606ef00be347c16109bdbec57eac53a6363",
+      "started_utc": "2026-07-23T17:41:36.397266+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 15147.960099973716
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "py",
+        "-3",
+        "-m",
+        "pytest",
+        "tools/ingest/tests/test_solver_reports.py",
+        "-q"
+      ],
+      "command_sha256": "6f653b84a712f5af35120d424ab4ebe1e5eaba902706e7ec8429445eb034139c",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/solver-reports-pytest.evidence.json",
+      "evidence_sha256": "ccefcd83a2de4c1e80acf164f96d795f125a63dc48144174624e4aa3bf556616",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:42:04.701045+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\solver-reports-pytest.log",
+      "log_sha256": "7763d1f5e6a4963b7fadffb4126032ff241694cc393a5781e658c77b41012483",
+      "started_utc": "2026-07-23T17:42:04.233436+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 467.60629990603775
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\bindings\\wasm\\dist\\poecraft_engine.mjs",
+          "sha256": "730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86"
+        },
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\bindings\\wasm\\dist\\poecraft_engine.wasm",
+          "sha256": "71e701fb89e7379b5ea14292a9b68208eb82d82a232ffadf268123dabe8e80ac"
+        }
+      ],
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build-wasm.ps1"
+      ],
+      "command_sha256": "c172283a2189906d01734f9f3873578defb34ea7c7735bfdda7b756a75d7702c",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/wasm-build.evidence.json",
+      "evidence_sha256": "c44be459299694f8625d385800971e12725239c0226599a285bbec8dc6c9cd5a",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:43:34.705368+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\wasm-build.log",
+      "log_sha256": "d959a6612cdf7e081bf8065d8561dbf6f5d7457d19c2d72ea840a1f4d1165096",
+      "started_utc": "2026-07-23T17:42:14.799740+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 79905.6283000391
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/test.ps1"
+      ],
+      "command_sha256": "0232f556f46793bdaefddfd14aa60c918b0282f3a3c2989cb4eaa2f2501d95ef",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/full-test-pipeline.evidence.json",
+      "evidence_sha256": "4f5c7c50f4a79278990112ca8fba3e2cb97cf14c7f9e33810ddefc1ac383bd64",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:44:30.006044+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\full-test-pipeline.log",
+      "log_sha256": "8c6fca7a5c50af9ec2ecc6f235fd13fd74bb5b06bbc92e4139ce3f0f0eaa6fe8",
+      "started_utc": "2026-07-23T17:43:45.896973+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 44109.07040000893
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "npm.cmd",
+        "test"
+      ],
+      "command_sha256": "beae4cc39ae83ce53fb157c12082c6bfd26017e67208779782d38d42cbbc105e",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+      "evidence_path": "build/focused-round/final-acceptance/npm-test.evidence.json",
+      "evidence_sha256": "8cbb33f201635984707a6c7f810004b1a2d26201938cce458efa2e7f588ce5cf",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:44:55.104516+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\npm-test.log",
+      "log_sha256": "8b88adcee7e4266e37ad187497a64d7b419a4c2230ff26a11afe61c0988f2367",
+      "started_utc": "2026-07-23T17:44:43.677727+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 11426.788700046018
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "npx.cmd",
+        "tsc",
+        "--noEmit"
+      ],
+      "command_sha256": "17673026aa534a63d4b9d98d7210944b8ba0d4f4ecd420afe30b580c4de6711d",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2\\apps\\web",
+      "evidence_path": "build/focused-round/final-acceptance/tsc.evidence.json",
+      "evidence_sha256": "72549ce992347595fbc791724b145802956de58e8183a175d9d965e4f1fce608",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:45:03.450626+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\tsc.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "started_utc": "2026-07-23T17:45:01.007864+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 2442.7622000221163
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\source-coverage.json",
+          "sha256": "7ab9c46c1ea04339e78aa20ef4c23d93c24aa9ca4b58a341e567f76c65c0d75b"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/audit_source_coverage.py"
+      ],
+      "command_sha256": "f31e2258b19fde230b567667d165ee95e7a646f2e20b085838472b716e13a769",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/source-coverage.evidence.json",
+      "evidence_sha256": "99368dd678da73ffec07c701b449d59e6cc31a03c984a8e4799016bc79568404",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:45:58.448787+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\source-coverage.log",
+      "log_sha256": "7ab9c46c1ea04339e78aa20ef4c23d93c24aa9ca4b58a341e567f76c65c0d75b",
+      "started_utc": "2026-07-23T17:45:58.304703+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 144.08280001953244
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/audit_markdown_links.py"
+      ],
+      "command_sha256": "7830800dfb6408bcdcd2edc4143d426417cba3dca038db5de70555b4e9e0ed62",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/final-acceptance/markdown-link-audit-final.evidence.json",
+      "evidence_sha256": "77231dbeadba629529d9ba297f603908c77292e06b7a875311495a7904943639",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T18:09:49.197196+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\final-acceptance\\markdown-link-audit-final.log",
+      "log_sha256": "3efa407595f4a09832c76b8a9d2df559440d993a12b20d653cd31770cd208b3d",
+      "started_utc": "2026-07-23T18:09:48.555749+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 641.4464999688789
+    }
+  ],
+  "gate1_benchmarks": [
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "d5d2cade386e2d10e543dd2b84606b3e6834f1e186b6e9090c964fc0b81b13d3"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "11bdfdf4dc751dac1f86da41d1b466d18ada7f977f10d62b86dc65d543d392cb",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "7ef2ac64238245e7565eb1418de90a1e0d7c1019edbb2d4e8c0359684bcdcdab",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:00:20.599075+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "35d3c753303c543397a1b533998f12854feb4cb373391263b8b6332829f12821",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "d5d2cade386e2d10e543dd2b84606b3e6834f1e186b6e9090c964fc0b81b13d3",
+      "started_utc": "2026-07-23T15:59:56.403860+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 24195.21379994694
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "df24d3adbd5fd4ce93068464b42afa8375a08ddd4148bab2895a68dbf261301f"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "bb75ec5fca80334ee98d5f32ced91bffde70138772c5af5f7922ebeb42a94340",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "2be8fc13afcb1f0be92bca0a0fe57ef1d503b86bcda4c0f18376c0e8e8f5a206",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:00:44.921871+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "92bd7009bb1b1eb1c80de0038aa155f6b88b028ec3225483d680d1637849a441",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "df24d3adbd5fd4ce93068464b42afa8375a08ddd4148bab2895a68dbf261301f",
+      "started_utc": "2026-07-23T16:00:20.708890+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 24212.981899967417
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "abc17bbe7a4ff0266b87bdd0148d4903e61b0db2cbcc76b9f578a35cf0e1c3cc"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "94cb21e99fc71f8185aed6f6ce22c57a77187902d906d4ed294613085514e47b",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "22c41e7090e2c85ef70396054a8c35341da5eed2b659ddcc7ed87dc140175001",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:01:09.618102+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "e22564ab552636a4702a4b8eb0c373affde5dad53827636d3db7242da9ba7819",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "abc17bbe7a4ff0266b87bdd0148d4903e61b0db2cbcc76b9f578a35cf0e1c3cc",
+      "started_utc": "2026-07-23T16:00:45.034027+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 24584.074599901214
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "3941ec2f297c8dab65f4adc8f93d09b90c3606fa5e573da5e2aa9b7daefd1cbb"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "c473bfdc3e036f0bc33e7c6aacbd13db0abf7bc8b1fe468b58fd3ba676aa1835",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "34a4ba09ced7fc56bf7222cd8b612ef317ccff6649f31b11e907f7b7130dc26a",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:01:33.655220+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "88a5a565657f8b71e9af4a39997f926d19f9e733a891d8359eaf0c87ccefcd75",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "3941ec2f297c8dab65f4adc8f93d09b90c3606fa5e573da5e2aa9b7daefd1cbb",
+      "started_utc": "2026-07-23T16:01:09.729756+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23925.462100072764
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-4.json",
+          "sha256": "1194455e359c7eba80d12efeadcc23ad39c88a35afe50a67daa0f1c72a6b0dab"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "6e31d30ea07100594527a4e767f51c24607aa915d1479d87f7d296788487d9f9",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-4.watchdog.json",
+      "evidence_sha256": "d3f6a32e0584250f6327223c8f1f3458e18c120d9a452ed6b7ed5922676bad13",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:01:57.765651+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-4.log",
+      "log_sha256": "f7b238525366d6c06281607f1db0b7d18a33c0a425196ab9f25643c1eff7aeaf",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-4.json",
+      "report_sha256": "1194455e359c7eba80d12efeadcc23ad39c88a35afe50a67daa0f1c72a6b0dab",
+      "started_utc": "2026-07-23T16:01:33.785382+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23980.26740003843
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-5.json",
+          "sha256": "41826c2d594d3069a3eb6f478d419535f31bc57988b798b6d378be92553bb8c0"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "5cce3b80611bffd2007a460aa624b18cce480ea0ff02c66ad792c7496fa0df1c",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-5.watchdog.json",
+      "evidence_sha256": "ba82a80bd4456b02c0dbe4633df6f62a16a006a49b6a25af4afd5cc5e4b91dce",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T16:02:22.127626+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\focused-round-real-product-2k\\run-5.log",
+      "log_sha256": "685a3dd7c0c04ec89e432cb29a3e6402974cb50494e9826db60eb6e98fdc4f51",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/focused-round-real-product-2k/run-5.json",
+      "report_sha256": "41826c2d594d3069a3eb6f478d419535f31bc57988b798b6d378be92553bb8c0",
+      "started_utc": "2026-07-23T16:01:57.873591+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 24254.03360009659
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\warmup.json",
+          "sha256": "55d1b59d3b096b5f5dcf1e15a8218921483440917018427169c4e7fb3e9bba35"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "b18f70822f67bd1d7188696db3a7bb6a610ffad69fc6511ee0bf3b7e4908b36e",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/warmup.watchdog.json",
+      "evidence_sha256": "d27e5ba938f970284f55ca465d616112c1dcc236ef9ebf89123c71e349cd94f7",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:03:21.460814+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\warmup.log",
+      "log_sha256": "1364b1757e90c974399940bae2734aa9ee968fc4edad9e6e8aafa10c6081b83d",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/warmup.json",
+      "report_sha256": "55d1b59d3b096b5f5dcf1e15a8218921483440917018427169c4e7fb3e9bba35",
+      "started_utc": "2026-07-23T16:02:22.238758+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 59222.05679991748
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-1.json",
+          "sha256": "7b11252dad34b8b838a552e107043f16d95330e041effc4b8a63754f4252e15e"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "97167f0c8c8b075a58d6777556379e984d609fe46347448fbda765aae1f856e7",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-1.watchdog.json",
+      "evidence_sha256": "460b286b3031a20563368d53089467194fb29d58640744de889809ea8682744a",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:04:30.782911+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-1.log",
+      "log_sha256": "c8e3f8f77eaf0026071b7f2a864e479fcda131a449b8d86806009d8c9e364200",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-1.json",
+      "report_sha256": "7b11252dad34b8b838a552e107043f16d95330e041effc4b8a63754f4252e15e",
+      "started_utc": "2026-07-23T16:03:21.588193+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 69194.71729989164
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-2.json",
+          "sha256": "95554659dee39660fff5eae678cd55a8a7c16827d673bff33fe27f68da394cb9"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "bce2090162dc3261ebba4faf40c5df0af581dd075abd13b834bc0e766ef747bd",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-2.watchdog.json",
+      "evidence_sha256": "4eb054a97a094c9f9848ae37ca7059757ce5f89ba936af79022e033dba2a4211",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:05:35.356562+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-2.log",
+      "log_sha256": "de7c88dc9c77023812e474534ecfffa42a1206e976413e714939041714b8688f",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-2.json",
+      "report_sha256": "95554659dee39660fff5eae678cd55a8a7c16827d673bff33fe27f68da394cb9",
+      "started_utc": "2026-07-23T16:04:30.912568+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 64443.99319996592
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-3.json",
+          "sha256": "5785d13fad0998bac1ef764328ae39d51af5190edd1686c1bc8fdf824918e7e0"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "a00f8a8f5c04c8b5363c47169878e16e1f94c5e6a88f03c832dc3f656ff379c0",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-3.watchdog.json",
+      "evidence_sha256": "308291119bd0d91dd743204b5e511fbdfc1a80b1951877c54fc81d96c176a5dc",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:06:34.296127+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-3.log",
+      "log_sha256": "a08c3a1c2c30d8ef55f20d4df1fe1d037c6257058ec37f90dfdc2f36631984a6",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-3.json",
+      "report_sha256": "5785d13fad0998bac1ef764328ae39d51af5190edd1686c1bc8fdf824918e7e0",
+      "started_utc": "2026-07-23T16:05:35.468795+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 58827.33110000845
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-4.json",
+          "sha256": "301c7c00417833da03392cfbe6458e665eedf5420ccf5398706d1341cab3ef6c"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "1f9c2c4da94eacafacc395cdc627add11295be9dfcef3ba16d13bd2327c3baeb",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-4.watchdog.json",
+      "evidence_sha256": "ab592bcd951068d1bdea0c8e81881f82a5bd512f24d81a2fc1be54ecf4b5af25",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:07:35.297511+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-4.log",
+      "log_sha256": "a5a52dd3950952109802d7716316e97a18682199789c63bbf8549a45ed06bc1f",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-4.json",
+      "report_sha256": "301c7c00417833da03392cfbe6458e665eedf5420ccf5398706d1341cab3ef6c",
+      "started_utc": "2026-07-23T16:06:34.406075+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 60891.43600000534
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-5.json",
+          "sha256": "daf8d223dafe74e3f665b4be66ffee01319bac9d963c3e2011ed0dd4f92f10f3"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "bc96e3db30789ddf8696094a73922537fc07c54cc8336acb42c62cb943f26583",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-5.watchdog.json",
+      "evidence_sha256": "d9877bcc67841c27887c4414b16049a906493e12fa1c13b1a24d76707b27260d",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:08:39.467353+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-5.log",
+      "log_sha256": "ceecbf4d8817ac158480d1c88d6b5fcd2542e95c20cae2070a46838ecef494cc",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-strict/run-5.json",
+      "report_sha256": "daf8d223dafe74e3f665b4be66ffee01319bac9d963c3e2011ed0dd4f92f10f3",
+      "started_utc": "2026-07-23T16:07:35.418945+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 64048.40750002768
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\warmup.json",
+          "sha256": "4b9a06ee93f3f7aab8fd168e8245eaf4e8622f9d983a95930ecf2e4da9ba6457"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "0bead28d3d8356670ccd1a312156c0852bcaa03a106d4e32337f6eeca2d6f181",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/warmup.watchdog.json",
+      "evidence_sha256": "968d5a846a6d5901de513bbb2352a69b61a60e5950df4643e68437437dfbba46",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:09:17.616848+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\warmup.log",
+      "log_sha256": "b2ee91022f400c61cc2fcb27a8ea4197e9df8bbf8f8afce5689b5e86c734e797",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/warmup.json",
+      "report_sha256": "4b9a06ee93f3f7aab8fd168e8245eaf4e8622f9d983a95930ecf2e4da9ba6457",
+      "started_utc": "2026-07-23T16:08:39.577326+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 38039.51980010606
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-1.json",
+          "sha256": "8078e4098d40c4c322ade0150f7cba8dc86b5a6b6480cc83f6927b5a81d4da62"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "7508b12e014803ddf60346d84d84f6913b0593265d6149feacf2ab3c8a6c060d",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-1.watchdog.json",
+      "evidence_sha256": "5a8e42502f220660edbf3c7cc2c5dd3ac7c504b55db4832b7352c751f9e0c5a8",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:09:55.436181+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-1.log",
+      "log_sha256": "a562e1c4af7efd1fc44e04877bf0943c20eed8c970c54cd68320c26db21e0303",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-1.json",
+      "report_sha256": "8078e4098d40c4c322ade0150f7cba8dc86b5a6b6480cc83f6927b5a81d4da62",
+      "started_utc": "2026-07-23T16:09:17.727890+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37708.289400092326
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-2.json",
+          "sha256": "81cffa66ce419812977a8e017b6d60781093843b888d49b5f000e7be92cdb7e8"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "a60ee894b72c99462259bbd7be13b80573180fe3605b81be296cd3a950224d9d",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-2.watchdog.json",
+      "evidence_sha256": "502c8ef55e7649652483d09ff7bf857e185a63300be28727453f2219628c2da1",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:10:35.622503+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-2.log",
+      "log_sha256": "92e833b590d00ec8e780b791d1077a65377e57a2dab40a09c2389991715750f0",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-2.json",
+      "report_sha256": "81cffa66ce419812977a8e017b6d60781093843b888d49b5f000e7be92cdb7e8",
+      "started_utc": "2026-07-23T16:09:55.546996+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 40075.50640008412
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-3.json",
+          "sha256": "55c1a633a93a469d611cd9db5aa5a1a247a9db9d4f58a602c1f23c3ddfe2a37b"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "b013a3dd79bf702951a2a15f12cb0903bb3a5ea39c80900df67e15e80172efed",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-3.watchdog.json",
+      "evidence_sha256": "c2bc61925f72f2d2a849aa08fa2a091b981cd779178d9651c47385aef3adac7a",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:11:13.718085+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-3.log",
+      "log_sha256": "b285e6f904c0a682140526cc45354791e7a2c74a2041c2ade2456ba61f65cb86",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-3.json",
+      "report_sha256": "55c1a633a93a469d611cd9db5aa5a1a247a9db9d4f58a602c1f23c3ddfe2a37b",
+      "started_utc": "2026-07-23T16:10:35.733665+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37984.417899977416
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-4.json",
+          "sha256": "86d2d95f13664e8fca4e27f3b109f713f99098498b9fbc525b8f2ecf04f10aa6"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "3a8c8042ff0b00e98eafe8d505c499a698942150d65f041631385edb826a000c",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-4.watchdog.json",
+      "evidence_sha256": "24ebbe0f06d2f018f5a181dae15e380519bcb561aa3d5991f9edefe00f6ba02e",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:11:52.466778+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-4.log",
+      "log_sha256": "5428f3e09ea5bd3c141fa5cd06dfa39ba6a48a6666993befc866f76f65774f73",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-4.json",
+      "report_sha256": "86d2d95f13664e8fca4e27f3b109f713f99098498b9fbc525b8f2ecf04f10aa6",
+      "started_utc": "2026-07-23T16:11:13.830041+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 38636.735799955204
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-5.json",
+          "sha256": "c96f3b117ac7cc0a0455a77f7f125a1ab7c135565d6fa31b3f7f3e04d1c40f8e"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "914ca97b283a54068b0bf65ac26eaee2aa8189a246a8b7347f2ee041b39a4ff5",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-5.watchdog.json",
+      "evidence_sha256": "a679d5dcb43449f4c2e17addf3dc4f59a63d6c5fdcf67f2998bd370a90602966",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:30.340205+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-5.log",
+      "log_sha256": "9f089c463f4ae6b82949241eb4fc8b6c04c89e956f9a20b056657ace19da3bd0",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-5.json",
+      "report_sha256": "c96f3b117ac7cc0a0455a77f7f125a1ab7c135565d6fa31b3f7f3e04d1c40f8e",
+      "started_utc": "2026-07-23T16:11:52.576318+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37763.8856000267
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-1.json",
+          "sha256": "08a409a62828e1fbaf6690258d20342405b4008ea83004ad3ee30ae017c4011b"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "444d8df133af397efb0db228cd368ab0b420f9e122b40012020031007d302773",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-1.watchdog.json",
+      "evidence_sha256": "2b06c5025bdb1b7eab955da4d8911017a80bb2998ec66d5bf58928f1ccafc746",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:30.790555+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-1.log",
+      "log_sha256": "bfac18cd0f236f5a3aeb65bf2141b5b41e7c3c54218de10ef0f1650f71c072df",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-1.json",
+      "report_sha256": "08a409a62828e1fbaf6690258d20342405b4008ea83004ad3ee30ae017c4011b",
+      "started_utc": "2026-07-23T16:12:30.446288+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 344.2659000866115
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-2.json",
+          "sha256": "e8544e97bd903968134ef1a1fbf9c99ae202bc82d8b23e3775acf50c407fced9"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "291987d5dd9fd18f84e0a781b63b71f2207c9ce40588ac9c71f3c687f7a84522",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-2.watchdog.json",
+      "evidence_sha256": "97fc1a514b72ca4a53342da4006bb1b964f1a33e5451625d5aac7ba7f97808b7",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:31.197188+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-2.log",
+      "log_sha256": "79c0573f3b746a641d753f621a78776f57b5062202e524e6d51a13e67a86aa3c",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-2.json",
+      "report_sha256": "e8544e97bd903968134ef1a1fbf9c99ae202bc82d8b23e3775acf50c407fced9",
+      "started_utc": "2026-07-23T16:12:30.899067+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 298.1146000092849
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-3.json",
+          "sha256": "20c3dce708f3dc434e42e4ebe1a17e36e82be758ed79c8a07987b374deb321ed"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "05b5a6ee38b968a41a813448fd2d37b2938783a13bdedd93c127cf8c2c3fa82c",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-3.watchdog.json",
+      "evidence_sha256": "1b7d691450fa0ce8e773d1b05d94463d55a4247fd65b8473f67acef2012c0243",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:31.575475+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-3.log",
+      "log_sha256": "4e8fff0a7dc9c6433782b751b09cefc4b4d82ff58ba52bc1470b1d37c8e2bf4a",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-3.json",
+      "report_sha256": "20c3dce708f3dc434e42e4ebe1a17e36e82be758ed79c8a07987b374deb321ed",
+      "started_utc": "2026-07-23T16:12:31.299094+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 276.3799000531435
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-4.json",
+          "sha256": "39727742d2bf866761139148ed7a85e28175842a3f07b7e24d3ce6367053644d"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "f8edb845900e5a2546a10a595819dfaab7578c940408867d6292f8a1a4fa4ee7",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-4.watchdog.json",
+      "evidence_sha256": "5b6875f9c7d160c766e0a39701736553f469c3be4223af53725630db77562b9a",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:31.954774+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-4.log",
+      "log_sha256": "67ba439c7093f40bd9d57caaabf8ed2cd13c7d1a728caeab96fff476abd6e76d",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-4.json",
+      "report_sha256": "39727742d2bf866761139148ed7a85e28175842a3f07b7e24d3ce6367053644d",
+      "started_utc": "2026-07-23T16:12:31.679135+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 275.63789999112487
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-5.json",
+          "sha256": "f11c794cbf6ca576aa163837d5c675a0d7759a03c69e14d1ce7422adc4cf974e"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "3c52a9cb15f1b869a654dd7e79bb75d7b279d098abec121dc18aeef741b14447",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-5.watchdog.json",
+      "evidence_sha256": "4bf0085ba1dda0f7351a9994d049299c666b9a3424608d278cc43d5c5064adf4",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:32.328943+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\oracle-real-two-mod\\run-5.log",
+      "log_sha256": "3276857dd0aa949b059772f52408f48363dfa011696e6900e4268b89c72301e3",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/oracle-real-two-mod/run-5.json",
+      "report_sha256": "f11c794cbf6ca576aa163837d5c675a0d7759a03c69e14d1ce7422adc4cf974e",
+      "started_utc": "2026-07-23T16:12:32.055193+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 273.748500039801
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-1.json",
+          "sha256": "9714c80721781feaaa1ffc3f6dc95c3fbf820c16f93d7d21317474040db75511"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "f8130c5b823abfa523dd3f97f1f8702018610e6d72899acbc58ee9ad2aae50c5",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-1.watchdog.json",
+      "evidence_sha256": "225ade121931742f0359752c30109313a67b950e105bb35f5410da7520d046ec",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:32.995366+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-1.log",
+      "log_sha256": "8e2c384d6760a15a526fe96bedda36acde1ff0656d2ab86d67db8c209a191b7c",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-1.json",
+      "report_sha256": "9714c80721781feaaa1ffc3f6dc95c3fbf820c16f93d7d21317474040db75511",
+      "started_utc": "2026-07-23T16:12:32.434852+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 560.5126000009477
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-2.json",
+          "sha256": "33c5e1481dc9255ea82d1ab1ddad579e1543d412af7412d31e41656ecf630557"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "af7092a6ccb2c49d0d620fd020a8de6381cd89eb28cc75187d604b4e3a27e4f8",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-2.watchdog.json",
+      "evidence_sha256": "e302a251e7d5e8d3a711d3a7b0a2058769cdbdb80385ee6b2aee5ebc6acbe2a9",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:33.549366+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-2.log",
+      "log_sha256": "e6cee5dd3fb399155e1eb0fbb4d48dcf5bf6e85e9669e1a9051146b9792439c7",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-2.json",
+      "report_sha256": "33c5e1481dc9255ea82d1ab1ddad579e1543d412af7412d31e41656ecf630557",
+      "started_utc": "2026-07-23T16:12:33.098433+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 450.9320999495685
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-3.json",
+          "sha256": "ec0a9a7c63c8fa82beb84c2869e38a4f87e580f678c0c4f996aa19be607f0d7e"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "220330f30e1ec8c02c474e35cd390c1cbbb5383cb8172e2cd14c15500a445182",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-3.watchdog.json",
+      "evidence_sha256": "7282e0c51961d9daab25f993da70649264d3b239ad6c3535b452f5aef143c206",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:34.119408+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-3.log",
+      "log_sha256": "ee434811b56d7cf9dd167bda16d2c52bd39a5954bdc5280b803c92c2516d6c59",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-3.json",
+      "report_sha256": "ec0a9a7c63c8fa82beb84c2869e38a4f87e580f678c0c4f996aa19be607f0d7e",
+      "started_utc": "2026-07-23T16:12:33.655013+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 464.3936000065878
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-4.json",
+          "sha256": "3ed0d343b67f229c8703601968a9b19a0e97c9adf7204337d41e769f36f8063b"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "6b904d41cd557893879c17a3114ad17be1bfd1e26af6c27a451927ef3d936b67",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-4.watchdog.json",
+      "evidence_sha256": "ba725d7ea1acfc8b8fb568723af2c2ab89c0f7ab61e8d8d0bbb135502aa8333c",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:34.665486+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-4.log",
+      "log_sha256": "789fa7d716478ec91f0d974b0f50b6a877a223b344f959296d6844fad4d75de1",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-4.json",
+      "report_sha256": "3ed0d343b67f229c8703601968a9b19a0e97c9adf7204337d41e769f36f8063b",
+      "started_utc": "2026-07-23T16:12:34.220095+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 445.38879999890924
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-5.json",
+          "sha256": "74e965a1d32448d938fc9e838a9b41876547b89afc7ddcfe9e35f0d925da6ab6"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "dfb233a47562c6002f6882747b27e6918bd9d2a3bfa7c1c1c27fd0b593ca56a1",
+      "evidence_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-5.watchdog.json",
+      "evidence_sha256": "305ee087b508e2b9d0bf4b942983c05370d61b789821d07e54c2efd435e70fa6",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T16:12:35.198069+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate1-uninstrumented\\refusal-state-cap\\run-5.log",
+      "log_sha256": "b37b395333b4204adc449ac02649a338cbcb20b0711764637e2c112258620762",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate1-uninstrumented/refusal-state-cap/run-5.json",
+      "report_sha256": "74e965a1d32448d938fc9e838a9b41876547b89afc7ddcfe9e35f0d925da6ab6",
+      "started_utc": "2026-07-23T16:12:34.768058+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 430.00819999724627
+    }
+  ],
+  "gate1_prebenchmark": [
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine_tests.exe",
+          "sha256": "28af29ce4a75a6679ff8f5b8b78104b6f93fe8ef2bccf640eddacf5980133690"
+        },
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+          "sha256": "f1fe45ea4326070adb2b656bb11cde1162213069cbf4b5f5f7ca9cc8f4495bfc"
+        },
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+          "sha256": "a8b0411d13f9eef1e6f871a3132acb7323faec9e96de01687307b50da81fda5f"
+        }
+      ],
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build.ps1"
+      ],
+      "command_sha256": "9781a2ba3334334b7e8711bf0bd71a801b28a96fcd44351a595e467e4f629e19",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate1/build-watchdog.json",
+      "evidence_sha256": "b888baca537e45b0462bbf7968531a8556ac73938f1c2da73075b8561543e671",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T15:56:26.113770+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate1\\build.log",
+      "log_sha256": "5e77a56f93e001eb6e1a12b7226640a5286e17de05e659c05a4f2466c192614c",
+      "started_utc": "2026-07-23T15:51:51.458976+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 274654.7932000831
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-solve-only"
+      ],
+      "command_sha256": "21814b76bbe8c172822a14d94fe74e89bb66bb7e0bb5f967f7ece4299e5553a4",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate1/solver-solve-only-watchdog.json",
+      "evidence_sha256": "13f94883fc39d242404e36f44d9f1c27e9f3a92ad0d139f62d6fc097cca75816",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T15:56:39.552156+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate1\\solver-solve-only.log",
+      "log_sha256": "ab4007d89779dde800212d4aa89a1d5505c2674f04bd80245bf43fedacd5d4dd",
+      "started_utc": "2026-07-23T15:56:39.264050+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 288.1032000295818
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-api-only",
+        "data/compiled/current"
+      ],
+      "command_sha256": "736c6c872eeda73138db49b3437db9a45c185a27210fc8639fb1bab0efe3c90a",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate1/solver-api-only-watchdog.json",
+      "evidence_sha256": "d5ab10dc40db16018cbad2e154ab6976cd8969ea38122a6406922b3a65ee0455",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T15:56:48.710723+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate1\\solver-api-only.log",
+      "log_sha256": "fdedb4f38388cf96974336c5451ae5249d164b61c6df218da3a51f97a8e2fdd8",
+      "started_utc": "2026-07-23T15:56:44.009643+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 4701.078700018115
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-eval-only"
+      ],
+      "command_sha256": "0483657e90f1dc34b0368dd75e165897afc89e64ba004737f03da98f71fd19f8",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate1/solver-eval-only-watchdog.json",
+      "evidence_sha256": "babbed74b3c978a50d2ef5d9001a1ed7296d6ddceca6c66787b5fc58b4e3e5b8",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T15:56:53.547703+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate1\\solver-eval-only.log",
+      "log_sha256": "9761b207723e96505e720e05fff3986de914583f4552b48527ee1aed6ce7bcf7",
+      "started_utc": "2026-07-23T15:56:53.396339+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 151.3604000210762
+    }
+  ],
+  "gate2_benchmarks": [
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "46c8fc4a723631cee6d7c987a276f763313260c5b67e99a5fec630ab9e3dc725"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "47ba1de7abe45ba6a5d82e416bce08232d27dbda058c15ff0b3493db859de31a",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "6c2ce17a41f462f5d2e120b4c1fc8e47108e6f005ab5cca8c2f6729c1f051e1e",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:02:20.169703+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "e092afb0a2eac3b2f2afded3748e63a5dcc0df9dec10ce9726211749c1944108",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "46c8fc4a723631cee6d7c987a276f763313260c5b67e99a5fec630ab9e3dc725",
+      "started_utc": "2026-07-23T17:01:56.368597+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23801.103799953125
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "b028b00ef2cdffe47dda42dcc019c6d5feaf1e2877b6e1d1fbdf535e9af9e2e1"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "9d950c63d673098d20c6eb412b497d7f8506b3e1cf62040130dd660ec616b9b2",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "8f72078c616e9f064cc7643799cbf982607515bfd10be5835d9157e6f0a7dcf4",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:02:43.976885+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "91b3076c5781aa7acf7a1e363ddcafc938baa272f19c299a3c24936287aff59d",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "b028b00ef2cdffe47dda42dcc019c6d5feaf1e2877b6e1d1fbdf535e9af9e2e1",
+      "started_utc": "2026-07-23T17:02:20.267704+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23709.180400008336
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "a8244eb3bf91f56ed60a8d173dd1e69bff8a18e049017dfc60a7bc4af55b7571"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "4cb8da6e948f1588fb88107650f4a4699e27d7e87e118659f276b692dc8c10c8",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "314b92bc947c9d0bd4bc1872c454e2dac95280f17d5ccd70cc75395fac81b2a3",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:03:07.727444+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "5dc3c17de95615cd128da8f19e0664cb249bd54fc4a8fbbe853ede9ff24ebbb5",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "a8244eb3bf91f56ed60a8d173dd1e69bff8a18e049017dfc60a7bc4af55b7571",
+      "started_utc": "2026-07-23T17:02:44.073931+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23653.512299992144
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "47b037f57bc2fbbf720ff0d744bcb53e66679d19a8eeeae0bf02b703f3ac122d"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "303e9da08f2f17959aa8968c268029a5bce8061fa6f74f16d71df0c199cf9647",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "86b575951e84978079cd66751f976de799a81de234c8d943edbb22a50ab33308",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:03:31.495975+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "bdb9d4dc14808196ea98377993dd70d0134e1ceabd8079a7d7f3346779a7b2c3",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "47b037f57bc2fbbf720ff0d744bcb53e66679d19a8eeeae0bf02b703f3ac122d",
+      "started_utc": "2026-07-23T17:03:07.825398+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23670.57570000179
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-4.json",
+          "sha256": "2076f1de84c44791d579355954913d0800a5309d22f9640c894486e1a31f4030"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "e5a6edfb9744e62fb09b2c2f47bf0c0cd930a024ed1e9b85d301e158e5cebfea",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-4.watchdog.json",
+      "evidence_sha256": "911df065e09af514247d1b7f5a60375932ea8f2ce3bd563413999ac97f0ef228",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:03:55.109574+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-4.log",
+      "log_sha256": "9b6d31cb59ecef461b2b1cd520a1a988fa8c156a16a0ba0d596f5bcd76fcd7ba",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-4.json",
+      "report_sha256": "2076f1de84c44791d579355954913d0800a5309d22f9640c894486e1a31f4030",
+      "started_utc": "2026-07-23T17:03:31.591774+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23517.798400018364
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-5.json",
+          "sha256": "422045f65cf0421bded5bb56185263c55b1697ea4423f3f8a88301a16a857a5d"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "69f4638016169a9a207efac8f486cce93dd9fb92915f464dc1bb2c5d5c665241",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-5.watchdog.json",
+      "evidence_sha256": "69f223f8045b829fe315b6ca649e68c1d0e7d3bf98fa37d09016c652f6347a9a",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:04:18.946988+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\focused-round-real-product-2k\\run-5.log",
+      "log_sha256": "5ac0b22750e057f9cf3af58b29910a9a5b0510c181f602c8e4cc4d5365ba4a97",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/focused-round-real-product-2k/run-5.json",
+      "report_sha256": "422045f65cf0421bded5bb56185263c55b1697ea4423f3f8a88301a16a857a5d",
+      "started_utc": "2026-07-23T17:03:55.204729+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 23742.257700068876
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\warmup.json",
+          "sha256": "3a870593f49fd6280b98ee5c37fd5e94972f16f1855ef73c9e969d5568ed7b0e"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "0a635f027dd17a8e3f9389153c96e3204c2fa2db4b7ce15095460a24b7e3019a",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/warmup.watchdog.json",
+      "evidence_sha256": "c4a8d19fcc153c99cb30c74481c3b66c5fb9d83cfa25e0d4a4b8bd9c992a6611",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:05:15.405905+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\warmup.log",
+      "log_sha256": "4a97e304a5f9882b6a27cf871c58d037d0d47981f00f38c2c7f81d7996a96180",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/warmup.json",
+      "report_sha256": "3a870593f49fd6280b98ee5c37fd5e94972f16f1855ef73c9e969d5568ed7b0e",
+      "started_utc": "2026-07-23T17:04:19.045919+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 56359.98499998823
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-1.json",
+          "sha256": "4d9c9f640928c0aa4d98328808130829b023287799a72acc3b118e39a2997347"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "9f6b8f2559031b7b53cc7112cfbddb2550aea5ee5c792580a816d0226751471d",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-1.watchdog.json",
+      "evidence_sha256": "064f1f1353153d1a58f4609ac039407a0f18f3e55c3fecb438538cb69bffbd5e",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:06:11.733370+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-1.log",
+      "log_sha256": "124ea29e12fd3c7a04e309d2ef7b42f104103df0b9ae68a11291fc414edcda3f",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-1.json",
+      "report_sha256": "4d9c9f640928c0aa4d98328808130829b023287799a72acc3b118e39a2997347",
+      "started_utc": "2026-07-23T17:05:15.520453+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 56212.91620004922
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-2.json",
+          "sha256": "dffb4a2ac4efe78f4ade3e0ec4219d9eae5392c676917fa5fc1fef27d4a38089"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "a5f89c4b82fe81cf140f14ca1743c9ec445ba8ac0cd9bad7e3aa3e4c6f6f1505",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-2.watchdog.json",
+      "evidence_sha256": "a1952e2fb60a308b31969443a79168f65c20cd9fb9da30cb4db4f55636a68b90",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:07:08.281101+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-2.log",
+      "log_sha256": "c52c89fdb71f805d2ac557014bcbfb2e525a79d412f6567b1aae17c26dca4653",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-2.json",
+      "report_sha256": "dffb4a2ac4efe78f4ade3e0ec4219d9eae5392c676917fa5fc1fef27d4a38089",
+      "started_utc": "2026-07-23T17:06:11.831719+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 56449.381300015375
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-3.json",
+          "sha256": "fec05ea832dd9661f7b476072cb37208e90cf4119c65311c50eb8e128f850948"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "6272436a918bfb54e7a318745cc81417c9576932a133eb5f72380a7aebcb0ff2",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-3.watchdog.json",
+      "evidence_sha256": "5b16430779f3cf3a8ec2a2eea910128436c8f462237ad39620bce79a2d143553",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:08:05.968131+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-3.log",
+      "log_sha256": "e1c836928fb3d31d4160034e05cf145d56d9c43fe5d1d06698e8c17f9fcd4834",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-3.json",
+      "report_sha256": "fec05ea832dd9661f7b476072cb37208e90cf4119c65311c50eb8e128f850948",
+      "started_utc": "2026-07-23T17:07:08.378404+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 57589.72659998108
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-4.json",
+          "sha256": "a75a7af79818b397c620cf377e837bcf31e04619232ae7ee1a646325ba7b6f6d"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "9fc6a6c5f694a5a57281ab6c7f774a523b2db32eec0c570c70787eaa82cb95de",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-4.watchdog.json",
+      "evidence_sha256": "da7ff062edaed8221e5a24d74cecab5eb217c7bad8aa77b8e158e1611c3804a6",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:09:02.491421+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-4.log",
+      "log_sha256": "6bc70dcc5ce9f6ed55cd257b1187b6f79d90330bbc38fb58c4a6c1a1c097bb69",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-4.json",
+      "report_sha256": "a75a7af79818b397c620cf377e837bcf31e04619232ae7ee1a646325ba7b6f6d",
+      "started_utc": "2026-07-23T17:08:06.066941+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 56424.47969992645
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-5.json",
+          "sha256": "a8fcedc0dee4d30e2a0b5d14f4710d62e15251057df75e2d0f5baba100776259"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-strict",
+      "command_sha256": "9c0e1299a4446fd419c58f9805700e12d9209f280131b6ce6814d6388fc82647",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-5.watchdog.json",
+      "evidence_sha256": "a03c70ff1b74f047b85c99a720212ea3c1457f89f72c6716ba7cbe797f458e56",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:09:59.708716+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-strict\\run-5.log",
+      "log_sha256": "0e2770fe3143ad4212ba7ba82ca75aed9cdd9c165b3fef965b1b7eee9462662a",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-strict/run-5.json",
+      "report_sha256": "a8fcedc0dee4d30e2a0b5d14f4710d62e15251057df75e2d0f5baba100776259",
+      "started_utc": "2026-07-23T17:09:02.586983+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 57121.732800034806
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\warmup.json",
+          "sha256": "95c36c5fcc64c15709ecd9c532e00933a69b01b43142743a45fa708a4f6deee2"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "fc7e43927b1c164ff32915ca8e5eb5d326b53ba4e570bde93024400ecc118eec",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/warmup.watchdog.json",
+      "evidence_sha256": "a3c54044763cf8a5f58bec6fc7141e46d19f892ea5c2e737b18fc6a8c9ce9e9c",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:10:39.653139+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\warmup.log",
+      "log_sha256": "61c2c618146d18ebb1b8790c4d0ddb01169f144d676fbe4834a9a79a12868b34",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/warmup.json",
+      "report_sha256": "95c36c5fcc64c15709ecd9c532e00933a69b01b43142743a45fa708a4f6deee2",
+      "started_utc": "2026-07-23T17:09:59.806721+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 39846.4167000493
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-1.json",
+          "sha256": "c4de3a7ec8617abd6ef9902e65b1302a4b63e00fe3db579de1e9fe772cf79747"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "e7c2a04a82f657f77a8bcd7c405c766f1082b30f1dbb04f743f45208de8718e8",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-1.watchdog.json",
+      "evidence_sha256": "08624e669715536deb34743c4191436f0636009da24537c5bd9c354a981f11de",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:11:17.039313+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-1.log",
+      "log_sha256": "b69509bd108c89c0cf73f8555b75aa41d14a4a71bcf6545ae2a9a09c5e83ca37",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-1.json",
+      "report_sha256": "c4de3a7ec8617abd6ef9902e65b1302a4b63e00fe3db579de1e9fe772cf79747",
+      "started_utc": "2026-07-23T17:10:39.752220+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37287.09310002159
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-2.json",
+          "sha256": "c9629ca6bcfc10b6a9e9a0db64dae2f1f12b540ee9203735591373aa6e35e74d"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "97d8926319ffda52b658e21305c29250376613ed0588c6419a5eb7557fa9584f",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-2.watchdog.json",
+      "evidence_sha256": "54aee01967bd98e9640f32d0aa5eda7da9867f067e9953b1d90c3f1d1b5110d3",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:11:54.350873+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-2.log",
+      "log_sha256": "084703ca248b9e9850a49d75955287b1766d975e52eb936785ed2db8d8fe2874",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-2.json",
+      "report_sha256": "c9629ca6bcfc10b6a9e9a0db64dae2f1f12b540ee9203735591373aa6e35e74d",
+      "started_utc": "2026-07-23T17:11:17.139371+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37211.495899944566
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-3.json",
+          "sha256": "44661e616e197332f8579f9eb2cb4bb43bc842e8860d6fcd4e2b67ce362c424a"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "09ce430824732920ccd23d23f223740f17589cedb0dedd3a6fca86ddc4910315",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-3.watchdog.json",
+      "evidence_sha256": "27ce1f425f98c56247ed38247ba05bb4c26303c44d1acbb99348de6f420a7c46",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:12:31.429981+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-3.log",
+      "log_sha256": "9dcee240619f7d43c9e892cbe18f38d10a9bb85ee8b5d4c6a96559c3ac5207ae",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-3.json",
+      "report_sha256": "44661e616e197332f8579f9eb2cb4bb43bc842e8860d6fcd4e2b67ce362c424a",
+      "started_utc": "2026-07-23T17:11:54.445744+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 36984.23689999618
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-4.json",
+          "sha256": "f2c874c6833787f864feab6d11516448bc29c9cd11a4b8fe11bc66a80d2d59ad"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "f573e724e6df496f459d2a522ade7baa202675d73b6353b88bea42477b2c71c6",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-4.watchdog.json",
+      "evidence_sha256": "d657a4d08f6911399943f2a6d7641b9ff535e58886cef9e57bad90330c583ff8",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:08.481460+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-4.log",
+      "log_sha256": "fbeef230b959c515748d0a070e9f4150f8f127515d80802e3a7f58c657ad90e8",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-4.json",
+      "report_sha256": "f2c874c6833787f864feab6d11516448bc29c9cd11a4b8fe11bc66a80d2d59ad",
+      "started_utc": "2026-07-23T17:12:31.526210+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 36955.24849998765
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-5.json",
+          "sha256": "5156f539954932c96f201ae03bc5ec6259b9c9a39944f2ed361e6b69b2cf6ff9"
+        }
+      ],
+      "case_id": "solver-scaling-dire-pelt-two-t1-chaos-quotient",
+      "command_sha256": "0421a99dce822d2895680bc5d489d7c36b067612c052a47cca9eada99a413ce9",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-5.watchdog.json",
+      "evidence_sha256": "b5ad4eeed8d81e3c72a768b986821fc450cfdd1ac61bcf3b52f01c3ea0519f2e",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:45.779268+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\solver-scaling-dire-pelt-two-t1-chaos-quotient\\run-5.log",
+      "log_sha256": "fbc68b45a4b6194b43c21d7920abe66cb1d467a25ae84d51025ff2f38a9054df",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/solver-scaling-dire-pelt-two-t1-chaos-quotient/run-5.json",
+      "report_sha256": "5156f539954932c96f201ae03bc5ec6259b9c9a39944f2ed361e6b69b2cf6ff9",
+      "started_utc": "2026-07-23T17:13:08.580685+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 37198.5814999789
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-1.json",
+          "sha256": "c59fd995993c3031a7f32e84bb323a06ced4997fa08687a37bbf805e09f6e41d"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "01fd650e99d4d5ab90607c27ba1a452fd51025fae79a52ba2151256e58a405fc",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-1.watchdog.json",
+      "evidence_sha256": "15a0297160f0878e6beadefadeda085962ec3d8606ed5577b919cfd3b8534d76",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:46.144751+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-1.log",
+      "log_sha256": "1d84cd7714890c13803c4228314bbab4d690cd703a7d0b22a5dd4d04526a36de",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-1.json",
+      "report_sha256": "c59fd995993c3031a7f32e84bb323a06ced4997fa08687a37bbf805e09f6e41d",
+      "started_utc": "2026-07-23T17:13:45.875514+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 269.23609990626574
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-2.json",
+          "sha256": "5bbf2aad5e7c2da9df49634e1c94361c5e83811a0442132726fd63555578eed9"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "59e8b910c6287a7412462f2e531bbdf7e4d35d1c4e5376b4fbc9ebdf408eab19",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-2.watchdog.json",
+      "evidence_sha256": "0f4afdd8012c64493c6dbb8ed5739c0139b97bb24fa65c32277aa05ef4460491",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:46.504711+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-2.log",
+      "log_sha256": "81a8697d12ab1f897898f9bb78c92589adb3ed3f6b5ccaba037acd76cf1e04b8",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-2.json",
+      "report_sha256": "5bbf2aad5e7c2da9df49634e1c94361c5e83811a0442132726fd63555578eed9",
+      "started_utc": "2026-07-23T17:13:46.237869+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 266.84149994980544
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-3.json",
+          "sha256": "3b84b51c01ee5726efe608fcfe0215027b475894c3b5447841e49fedaa8151cb"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "ff9c33d90df4c2a248a21ff3575fcf55e6359dc5cfb686012c4988178325a82a",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-3.watchdog.json",
+      "evidence_sha256": "202af6ca60ef95f0c5dd1e095ec74ff9e89d2ea419e3aa906d5a979bdf7bc03b",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:46.863045+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-3.log",
+      "log_sha256": "9753dca5aac6172197753eb37b4a5153369315bcd1168078ce83e2df464f7013",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-3.json",
+      "report_sha256": "3b84b51c01ee5726efe608fcfe0215027b475894c3b5447841e49fedaa8151cb",
+      "started_utc": "2026-07-23T17:13:46.597106+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 265.9386999439448
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-4.json",
+          "sha256": "9ec1fd4322debb67e01e016f92a974e0463b89b702479c48c48975b59a92da8b"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "9df590e1942c80723b6b03af79278104f4fea19e2d68187396e5a66b826efdbd",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-4.watchdog.json",
+      "evidence_sha256": "4b23c38616864eee2374acf22e3a29ba5a1f63b8b6c7e047401f624febf8f4d3",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:47.225647+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-4.log",
+      "log_sha256": "7d9e8a6dc48ddf232b7920078e5c8e5cbb4f6a20ec2aaceaf81021d96704b8b0",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-4.json",
+      "report_sha256": "9ec1fd4322debb67e01e016f92a974e0463b89b702479c48c48975b59a92da8b",
+      "started_utc": "2026-07-23T17:13:46.955186+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 270.46000002883375
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-5.json",
+          "sha256": "66ee85c9531e93bb4db5479e901305f49973e16032cc9f403a1e3b6cfc80d608"
+        }
+      ],
+      "case_id": "oracle-real-two-mod",
+      "command_sha256": "f4d100f4e0f3146a87f22e883c605c16f295b8ec071b15f92b466f541b9d5c91",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-5.watchdog.json",
+      "evidence_sha256": "cf6f8a6075d00ea36796ed88cc2550bccd04462e45fb9cd3c6922cd9ca08fb4e",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:47.586929+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\oracle-real-two-mod\\run-5.log",
+      "log_sha256": "5908f659a4cd0be78adc3742aa50c616a522f785f49a4bd1b7ee86a2da08e87f",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/oracle-real-two-mod/run-5.json",
+      "report_sha256": "66ee85c9531e93bb4db5479e901305f49973e16032cc9f403a1e3b6cfc80d608",
+      "started_utc": "2026-07-23T17:13:47.318521+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 268.4073999989778
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-1.json",
+          "sha256": "bdce630b30e6e9b9b48251a6cc9136b320742d406ebeaf28a505f44d30a5ea9a"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "f407823bf27bc160345293c2009f7830f1691a459697953ceb2bc25e760dbe88",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-1.watchdog.json",
+      "evidence_sha256": "4e0076e1506563a599b7bf2ca4ec615b357cdb0561d1cb31ef8460fa0ae152d8",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:47.945506+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-1.log",
+      "log_sha256": "c3fef1916b739f9a13a5b5ddebfdabcc9fadff43b8b30ce223f245d4d8029056",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-1.json",
+      "report_sha256": "bdce630b30e6e9b9b48251a6cc9136b320742d406ebeaf28a505f44d30a5ea9a",
+      "started_utc": "2026-07-23T17:13:47.681125+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 264.3801000667736
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-2.json",
+          "sha256": "7619c8fd6dd6ce59cc6dda8a4492633e2ccc4a8466dbd59a730a18f052492364"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "28245e1a3a164484cd6a8f9149924ded5e4125be9971e4b42796fdbc39ce5224",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-2.watchdog.json",
+      "evidence_sha256": "f09d700322d7529b1ec7880f08a43c66f2723135212c454354665b5b4d86c291",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:48.299636+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-2.log",
+      "log_sha256": "903e6b143ee6cab07fcb6f5fa6f79d09dfa223d87089ae13ea8f6c0de47c5b64",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-2.json",
+      "report_sha256": "7619c8fd6dd6ce59cc6dda8a4492633e2ccc4a8466dbd59a730a18f052492364",
+      "started_utc": "2026-07-23T17:13:48.039259+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 260.3766000829637
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-3.json",
+          "sha256": "54639eeb4101fa2265135091155867d489dd7c03b58b40bdcd9046813f913ffa"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "1b4241628893615362c07a4d1cf4f92e316def99503f4b54416a79d5bb52ef6d",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-3.watchdog.json",
+      "evidence_sha256": "b818a905175f24f87a262a989869b0834901b6b263daf6924a8c85a31775f1ac",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:48.655133+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-3.log",
+      "log_sha256": "1dd1523ddb2a5ceac4d002cc395e571686414ffa7ece17bfd111c8105b396410",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-3.json",
+      "report_sha256": "54639eeb4101fa2265135091155867d489dd7c03b58b40bdcd9046813f913ffa",
+      "started_utc": "2026-07-23T17:13:48.394005+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 261.1262999707833
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-4.json",
+          "sha256": "99b8110609ff94dbebffdc50610f32667823b9844e2235e9d7e4a5d335e8155f"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "c4174d3b8062271f3f6d1ac219348c7cfe3b09a09bc8c766bf4c2632951fcb42",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-4.watchdog.json",
+      "evidence_sha256": "dcbe5b2367d37dda69adb8c7ac0bc19b460ad9000763762ea5ce011d1940a6df",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:49.013813+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-4.log",
+      "log_sha256": "8f38e03c1e6aa507a8bed1f4ad4f1c06f1a2539b363a9cd94ed9f07edf90f093",
+      "repetition": "run-4",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-4.json",
+      "report_sha256": "99b8110609ff94dbebffdc50610f32667823b9844e2235e9d7e4a5d335e8155f",
+      "started_utc": "2026-07-23T17:13:48.750102+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 263.7101999716833
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-5.json",
+          "sha256": "6c18041c642a0bc0166dd4fa2e1d23f1a1c1ba78702cb7ab91feba7723f19004"
+        }
+      ],
+      "case_id": "refusal-state-cap",
+      "command_sha256": "59478e9def424a9076f4bee69854294960cd9f767178453932914d6657d09e60",
+      "evidence_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-5.watchdog.json",
+      "evidence_sha256": "f880ab1dcf6bc1947595837b42fefcca06cc51a466a217075ad97b37056876d0",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:49.371498+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\refusal-state-cap\\run-5.log",
+      "log_sha256": "c3fef1916b739f9a13a5b5ddebfdabcc9fadff43b8b30ce223f245d4d8029056",
+      "repetition": "run-5",
+      "report_path": "build/focused-round/benchmarks/gate2-instrumented-final/refusal-state-cap/run-5.json",
+      "report_sha256": "6c18041c642a0bc0166dd4fa2e1d23f1a1c1ba78702cb7ab91feba7723f19004",
+      "started_utc": "2026-07-23T17:13:49.108136+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 263.3618999971077
+    }
+  ],
+  "gate2_instrumentation_and_replay": [
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine_tests.exe",
+          "sha256": "969abb85bb66bad8df037894138516031fd35e56f73c014393070cbd7da04294"
+        },
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_solver_benchmark.exe",
+          "sha256": "d2f70e3d20909cc103e763621bb5749146a16c273e21af70fc8633fc076b1707"
+        },
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\engine\\poecraft_engine.dll",
+          "sha256": "44dc454691d2d4c30fdd9794fe7646ce53796d27cd586487a9286f6ca2113912"
+        }
+      ],
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build.ps1"
+      ],
+      "command_sha256": "9781a2ba3334334b7e8711bf0bd71a801b28a96fcd44351a595e467e4f629e19",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/build.evidence.json",
+      "evidence_sha256": "de3e90815e90e596d559060d8399ab4c11fe4e6dcd804b2dae3366ddb360041d",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:12.810958+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\build.log",
+      "log_sha256": "5e77a56f93e001eb6e1a12b7226640a5286e17de05e659c05a4f2466c192614c",
+      "started_utc": "2026-07-23T16:57:19.468754+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 233342.20339998137
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-solve-only"
+      ],
+      "command_sha256": "21814b76bbe8c172822a14d94fe74e89bb66bb7e0bb5f967f7ece4299e5553a4",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/solver-solve-only.evidence.json",
+      "evidence_sha256": "0ea17ff25a8b4c5ee0c3e7cf78f0c2ffc15ef7d929ebd07ba63340df8b7e88f7",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:17.897783+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\solver-solve-only.log",
+      "log_sha256": "0fcc212e2bea6c4902d1d246d7b7144144295e888cf8f784cf6393e31ee4ff5e",
+      "started_utc": "2026-07-23T17:01:17.686298+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 211.48319996427745
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-api-only",
+        "data/compiled/current"
+      ],
+      "command_sha256": "736c6c872eeda73138db49b3437db9a45c185a27210fc8639fb1bab0efe3c90a",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/solver-api-only.evidence.json",
+      "evidence_sha256": "be5796da5afd35685669f11883f184764df31c7ae234f09f73b53986f266b2ba",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:29.925927+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\solver-api-only.log",
+      "log_sha256": "fdedb4f38388cf96974336c5451ae5249d164b61c6df218da3a51f97a8e2fdd8",
+      "started_utc": "2026-07-23T17:01:26.225064+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 3700.861299992539
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-eval-only"
+      ],
+      "command_sha256": "0483657e90f1dc34b0368dd75e165897afc89e64ba004737f03da98f71fd19f8",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/solver-eval-only.evidence.json",
+      "evidence_sha256": "3517f2e8caac300217886a311f01f7951a6823360ed940918b1edf8a3655f618",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:35.885695+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\solver-eval-only.log",
+      "log_sha256": "9761b207723e96505e720e05fff3986de914583f4552b48527ee1aed6ce7bcf7",
+      "started_utc": "2026-07-23T17:01:35.735792+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 149.90159997250885
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-s8-3-only"
+      ],
+      "command_sha256": "4227f416b6c35a7fefb5fa2a8f6619625591ca661ceb6dafac0cba9d4071fbd1",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/solver-s8-3-only.evidence.json",
+      "evidence_sha256": "adb98371a35a5602bc33038bc446a91c6ddbbf13b8d58d596281cbc6ecb60d74",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:21.770856+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\solver-s8-3-only.log",
+      "log_sha256": "e851629425ce488f4e145be8e55a3bf1ec8aa01659a54d5b9dd417b72c7b3ca5",
+      "started_utc": "2026-07-23T17:01:21.746658+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 24.196799960918725
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [],
+      "command": [
+        "py",
+        "-3",
+        "-m",
+        "pytest",
+        "tools/ingest/tests/test_solver_reports.py",
+        "-q"
+      ],
+      "command_sha256": "6f653b84a712f5af35120d424ab4ebe1e5eaba902706e7ec8429445eb034139c",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/solver-reports-pytest.evidence.json",
+      "evidence_sha256": "f27c4db23580ec0a50ec4f111c52bc17dd2edfb321e79e670608d10b910eec30",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:01:44.216259+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\solver-reports-pytest.log",
+      "log_sha256": "7763d1f5e6a4963b7fadffb4126032ff241694cc393a5781e658c77b41012483",
+      "started_utc": "2026-07-23T17:01:43.750986+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 465.2713999385014
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate2-instrumented-final\\summary.json",
+          "sha256": "25b76689901eec289bc6d2c0d2945cf9724b57a9f72b72c10ba6206b1423aade"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate2-instrumented-final",
+        "--executable",
+        "build/engine/poecraft_solver_benchmark.exe",
+        "--scope",
+        "full",
+        "--measured-repetitions",
+        "5",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "e9050ef8db4d6aa008c061c28490653d0b10f3ca78b5a3a246e6da9266f12207",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/matrix-driver.evidence.json",
+      "evidence_sha256": "3932b8e900885b5be115c86cbe724676ce86c61c00d398023a98e092f73f0827",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:13:49.407970+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\matrix-driver.log",
+      "log_sha256": "f3d708e7f406e68e9596fdb9245e7f6987b1612c8218c27d598147731a3215e5",
+      "started_utc": "2026-07-23T17:01:56.127748+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 713280.2198000718
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\comparison.json",
+          "sha256": "61c07933c421fb9a58deb99c0bd4915bab1c8df2d95d690ae2d84014ba2e889a"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/compare_gate2.py",
+        "--baseline",
+        "build/focused-round/benchmarks/gate1-uninstrumented/summary.json",
+        "--candidate",
+        "build/focused-round/benchmarks/gate2-instrumented-final/summary.json",
+        "--output",
+        "build/focused-round/gate2-final/comparison.json"
+      ],
+      "command_sha256": "6e94595d3c239556ac1c5c21b5bfb4934a612a9ca4ba9e19050596fc4de8c081",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/gate2-final/comparison.evidence.json",
+      "evidence_sha256": "9019e3961beb110dfb4b7b8f40c823d8d5d544340b2217f0e7b048071924f176",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:14:15.301743+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\gate2-final\\comparison.log",
+      "log_sha256": "61c07933c421fb9a58deb99c0bd4915bab1c8df2d95d690ae2d84014ba2e889a",
+      "started_utc": "2026-07-23T17:14:15.128695+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 173.0470999609679
+    }
+  ],
+  "prohibited_oracle_ran": false,
+  "schema_version": "focused_round_process_evidence_v1",
+  "variant_benchmarks": [
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "4dd1eac0b3661eeea1663be9504bb1e9fc56833577356c046d675e22feedfc74"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "f8083205dfad74150c7db4251e97003cd0471532b1d8abde77d2420f6ff82d53",
+      "evidence_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "8ee5497dfe831200510721129bdbb69bc8aff78ad9045b14e79411a12d1223d3",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:26:12.490961+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "ffb113caf2030bc17079c6fc39d9efd4f80bbef6adf783b4b2849a75025fb4e1",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "4dd1eac0b3661eeea1663be9504bb1e9fc56833577356c046d675e22feedfc74",
+      "started_utc": "2026-07-23T17:25:48.587379+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 23903.581400052644
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "93bee71a139469118e79e79a891b55a3fee3cc18416353f9c6ae7da24064be7b"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "0d3c41557ea492920cd9cf2d460bba5ac935ac7f3828ac1f8c2cfa81db43371c",
+      "evidence_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "feee9ee52e36937df95fb573b9406ea169d2145df8af9d7dc9b29fe0cd1c56a1",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:26:36.373426+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "a92d0f35f59abbc12c0ba8806c9d4c8fcf4a89cf63c61e5fba353bfba9a7b8e1",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "93bee71a139469118e79e79a891b55a3fee3cc18416353f9c6ae7da24064be7b",
+      "started_utc": "2026-07-23T17:26:12.586585+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 23786.83989995625
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "6f3cdccf7a72665e599e99d0c2d743eef74a7aed3b8567a565286b188854b88b"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "9e466da15352ce5dfe48ad8c4f3bf3bb7b99337eb48fc813fc76c4cac95d0c8b",
+      "evidence_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "703178117a61d56e2350bd69a437c998e6448ffd674573c0618d7272f55901d6",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:27:00.465989+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "037238908d8b7d7b743b95d181cb219d97f8242257c9810e809345aa9a68ff2c",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "6f3cdccf7a72665e599e99d0c2d743eef74a7aed3b8567a565286b188854b88b",
+      "started_utc": "2026-07-23T17:26:36.471233+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 23994.755399995483
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "67140b56c4dd7d8fbe4533542f79e5472832bd5f53477db8111a2bee60ea6e61"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "027f1f3ba62afa66ff45183b92b6ec5cfa6199897165566e165f6471c47cf893",
+      "evidence_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "a23f686c67ae7c66f6dab28254c262b3bd100ab931de377109cccf52531c748d",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:27:24.530712+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "71c07053da67200d626d1d8249dacffbdab320e8d78716a2814c6dd25970c9a4",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-A-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "67140b56c4dd7d8fbe4533542f79e5472832bd5f53477db8111a2bee60ea6e61",
+      "started_utc": "2026-07-23T17:27:00.570270+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 23960.440000053495
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "2cd6594e1ef8b410c9237bde9193b58ce1006d0f33154721ac74f81970fdf86d"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "26e5c677d950ccd9c3c9a1bb08c17990e4c8513bd77c51c1b5475529d982568b",
+      "evidence_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "c20223d4a8a79ef7630377e8e712fd1441cf8a0c4a3e59353c49cc799281c25c",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:27:51.141696+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "883f2b538640681f2ccd77061a5a0e4e5d369a6943c769b3e7d36e325876318d",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "2cd6594e1ef8b410c9237bde9193b58ce1006d0f33154721ac74f81970fdf86d",
+      "started_utc": "2026-07-23T17:27:31.361500+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 19780.195400002412
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "cfabbedf57610616f1731ad765f634fd33f5fafa4c9712e78cc0d40721fe2d9e"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "a26169c249ea074865d093b716f577ce5df9ce55cba57bc0a1c4b8c8a72268f0",
+      "evidence_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "ff336d8c369f31c2b958b1c925cc2d89b2c9f5a7a10a78b6271b1d6cce6996a9",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:28:11.040335+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "9e811c1a789c7024df589a0c7d0e82c544567f39d9ebb51d5caa5781b5fb1241",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "cfabbedf57610616f1731ad765f634fd33f5fafa4c9712e78cc0d40721fe2d9e",
+      "started_utc": "2026-07-23T17:27:51.236327+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 19804.007899947464
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "e4110717b254ef0af6b4f697e32be16f4baee64ef46050d01718491eb91a33ba"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "5e78c392466cf6ba4120362d41f9ec85434105d36f3eb2898f905037941d7b06",
+      "evidence_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "47a45d162b922a629b12ec563225b1187dbceb85b2f2e53581fcdf177101a016",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:28:30.923799+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "90e0d5731210de54ee1d25d0287155c764b36204c503658184ef270ca4fb2ea3",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "e4110717b254ef0af6b4f697e32be16f4baee64ef46050d01718491eb91a33ba",
+      "started_utc": "2026-07-23T17:28:11.155899+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 19767.898799967952
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "3ab22a9552467ec8cc4ce7c5ebd741ac745a0a76d1884800ae94cf0ec2bc6d46"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "57934f1f80b1e09de110c8ed99d5dbbb68625fce5d267ca4a307154b03e9f2c4",
+      "evidence_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "f685ec9437ce61a283abc34655afd736004cf3c54bf8f44b6f860d9139e6fa62",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:28:50.709912+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "8099645132a46621e6035dfc46b45c1d66fae0725be304f199b95a00136899ee",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-B-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "3ab22a9552467ec8cc4ce7c5ebd741ac745a0a76d1884800ae94cf0ec2bc6d46",
+      "started_utc": "2026-07-23T17:28:31.021797+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 19688.11319989618
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "943f735874556cad4ca9e361b5bd6573e93d138726fe513c12bb92f8defaf5da"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "4d844c9c8ce73b6174368cb8175a8c0dbc3617ff4a8fc719ceed49d3d006cf53",
+      "evidence_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "b84e2bc9e143bcdbefcd2f7d7489af040c1aaa37826ee73d2faf6b324a058401",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:29:17.604103+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "0a8f9988fb796fa17b292c55b3dff6e4eae34254a8a20ed58e2a695099df00be",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "943f735874556cad4ca9e361b5bd6573e93d138726fe513c12bb92f8defaf5da",
+      "started_utc": "2026-07-23T17:28:58.998615+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 18605.48699996434
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "0996b4e170ef50fd58c8eeda6685c37ae2fdad6b1d5922480c8b4019291cde72"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "f002743debe9985236ebf4c50ceecfc220a1c30cd05d3260f84ac61e67ff7b86",
+      "evidence_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "ead33597d7d6cefed7699b373c7983813d6df025ef420a4fa74fbe6f2e94d456",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:29:36.037755+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "6a307818ae45d91dab8eba25f2c883f95c39708458f6e80f2aee6dd6b6215c9e",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "0996b4e170ef50fd58c8eeda6685c37ae2fdad6b1d5922480c8b4019291cde72",
+      "started_utc": "2026-07-23T17:29:17.703105+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 18334.648800082505
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "3a1a31c8f959a4802d9657e7d1f9bb48335ffc53fbc843d7aa53894e46b445b3"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "4e42277a0e9291bb08ab39d83a08dca7b03910c5aab3b4df620aed561c514a95",
+      "evidence_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "9a57bdba6f3ebde3bb38a3cfaf41d67c530fe62ecbbe6093ab914d66ad2359a8",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:29:54.350450+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "388f418f833b8e823689b19f20faf48f0fafb71005c33f8e53e4b05f94614155",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "3a1a31c8f959a4802d9657e7d1f9bb48335ffc53fbc843d7aa53894e46b445b3",
+      "started_utc": "2026-07-23T17:29:36.132897+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 18217.552799964324
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "3823c1dc64f02bb419d09fdccd1a4a332a94ce15acaef1ce4d37e7729c4f3eee"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "40c7c42569182a0b2626aaa087de85bb80221669f1bc13b1903b440a21e9dcf2",
+      "evidence_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "d4786c3d76942967f948e82b59743b31d11a4b9e8c3f01e2850867f64ba79db1",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:30:13.024024+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "5e746aea1a2e41b9df7cf48d35c3cba38467ac46d28410db71624da4531009b4",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-C-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "3823c1dc64f02bb419d09fdccd1a4a332a94ce15acaef1ce4d37e7729c4f3eee",
+      "started_utc": "2026-07-23T17:29:54.446470+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 18577.55329995416
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "6dddca853106126c0a2c82a43be06429896cdf82c818a980acb50ad6bc529702"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "a92cda1283fe633b29c972ecbe6071b6dbafd111cf62af18657222c288cec634",
+      "evidence_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "dc3ac2a73548e9ce658820ad1688d5792ddb6828411ddd366d395442e7e90c71",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:30:35.571405+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "02aa9bb8414db2bea93672ea8946d7e0bb471362e50cdf280f5dedd292f0805f",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "6dddca853106126c0a2c82a43be06429896cdf82c818a980acb50ad6bc529702",
+      "started_utc": "2026-07-23T17:30:19.475699+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 16095.704399980605
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "0ae38fa77cc29ff25779f9521defb6589b33c35f7ac6d68ace2418fe7014f2c5"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "11bffe095892ea26ecf75977d8ebee47cb9e29cb66ea135789286a0f0a0207da",
+      "evidence_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "c230eb3d83697d1ce12c29899d4d7696b2efb0cca18d0187d25257602bf2b681",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:30:51.681811+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "e5e3b80e5d1be9a302c273e627e8838ca36cc438b14a4660883f11f8d27de354",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "0ae38fa77cc29ff25779f9521defb6589b33c35f7ac6d68ace2418fe7014f2c5",
+      "started_utc": "2026-07-23T17:30:35.673011+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 16008.798399940133
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "0c3363d236951a3813b429b200db2237371044557ed912ee98efcde5e8a43b6f"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "6e240ff03283ac3c3661152c18012efc94a07ac770444d42d6d70cdaa9aa0713",
+      "evidence_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "bbfb20bb77eaa57c5fb835fca4bce83e359bf7d643fdf02fefa7ea5bd07ba2e5",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:31:07.638783+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "1e3269c483c9d52a54163e1d07c7d3e17ffd0f1dde52a9ea2f3da74b83af3386",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "0c3363d236951a3813b429b200db2237371044557ed912ee98efcde5e8a43b6f",
+      "started_utc": "2026-07-23T17:30:51.777122+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 15861.660500057042
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "d8a77943c0c87b3b6dea7e062217e49ddbf48ee00a6cf505f3f0dcb48a8c997a"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "920db9033f2504170087d764d161b8eedc931146fee3edde2b71d4d67ae342c9",
+      "evidence_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "4428793e7bf7a20bbfccc951714af2b7505732ae94a1b8e43a43bc35d2e9af05",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:31:23.684564+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "5d4a9a7ae27a69acc5b47c3d630b13391b1baede2be3bb7b2a97e29421b9988a",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-D-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "d8a77943c0c87b3b6dea7e062217e49ddbf48ee00a6cf505f3f0dcb48a8c997a",
+      "started_utc": "2026-07-23T17:31:07.734617+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 15949.947000015527
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "0195422d7f17b104cb95f4582094a7b3ff0656fb5777eb5cc8c2abad8e657b91"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "1c8d70ecfb3419bbe44c7154ed217c690682b8420335ab5797075077d2d2b83c",
+      "evidence_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "a3609c3bb5e028b071703217e2936b86f59603f1201998ec46a7948f8bf8a65e",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:32:00.068040+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "117c22a6311ee1683dad2be0d705665ebe982c80a88c132a84aa14ac05c7cfba",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "0195422d7f17b104cb95f4582094a7b3ff0656fb5777eb5cc8c2abad8e657b91",
+      "started_utc": "2026-07-23T17:31:36.059224+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 24008.815599954687
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "9948eb0916430457b921087cae710f75e046bb7ddfabcfa790b32e184fccb15e"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "1ef726cbbd6fbc8ee8c340d4fd7d22cb5c6ad52ddb804bd29ee0fd258a7e8edc",
+      "evidence_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "7c2eb035b95e94b345c504867741a4c3c4c2d0a786a537175816c38fcf40db6a",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:32:24.005480+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "0250138586d0c8732bcdfcd476cea1cf6865db79ae5386dfb3371639ee082589",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "9948eb0916430457b921087cae710f75e046bb7ddfabcfa790b32e184fccb15e",
+      "started_utc": "2026-07-23T17:32:00.165756+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 23839.72409996204
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "ff6938dc177a325edf390f569a036a12951e4160971a2c01854b34a203dd7994"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "5c9112d3266194a469b3d0305fc2637209b46843cf7c82bb2031815e932d0a73",
+      "evidence_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "77bc2a632fdf5b1a5964a475b929549e36df3822a734a41205b31fa0333f19ae",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:32:47.988132+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "7966d6e5fac1c5deb767a1cc6acf1b757a931658cc70e47492e02f08e66d2bb0",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "ff6938dc177a325edf390f569a036a12951e4160971a2c01854b34a203dd7994",
+      "started_utc": "2026-07-23T17:32:24.103197+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 23884.935000096448
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "3e7c7d8aeccc86c6b048757996ff850c60a532c519c1d99d6196a1d14b4a1542"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "281af286aa229c08de3ce1c78e5186dc50f9e0ad34116d70f0691ba97c7414db",
+      "evidence_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "66ea6f24d203d4b24d22be405df3135ca170fb24b34217b5d9dcebf5d52bf8aa",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:33:11.941161+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "bfc48dfdd326dea9761caa4f67a6cf7b77a9c44b045e6cd4adabc053eb552a90",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-E-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "3e7c7d8aeccc86c6b048757996ff850c60a532c519c1d99d6196a1d14b4a1542",
+      "started_utc": "2026-07-23T17:32:48.085473+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 23855.687299976125
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "b1ca6eca1ec6445a64e58bd28364eea6f4d2379e7c7bac490bcc6af975596f63"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "8d342f4fc1645e8f4a1fa5911d73909cd06031feb47c8b8c40688ae987b4148e",
+      "evidence_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "9bcabe85cc368464da56412359fc4243eb3b494ad806e1a9ef256a5504599d46",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:33:32.558347+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "dcebf480b2cec21ddb0b918809598b968710dbf6b62b36c042ccf8b149dff135",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "b1ca6eca1ec6445a64e58bd28364eea6f4d2379e7c7bac490bcc6af975596f63",
+      "started_utc": "2026-07-23T17:33:17.809218+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 14749.111999990419
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "a884fac974aae717c85622c670d20463b11393ee6c8b32c214ef59a330030f78"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "f8f893676ddf706bcee72b9cb1a6f6cab3d4e783af8633fa2d19c525996ca25e",
+      "evidence_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "0935f6646b5fad90f1515bea9d1cd3633f1e6bf9183a3062b64ba5452fda6f4d",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:33:47.051512+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "2b2ac7e915a46e5a415c07133e8da37ae8acec65d823a52cc973996e0f328923",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "a884fac974aae717c85622c670d20463b11393ee6c8b32c214ef59a330030f78",
+      "started_utc": "2026-07-23T17:33:32.651465+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 14400.046700029634
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "3859df9fc1b00f4bacfe9764b0e73bbb9bd6c34b06e8df3f2d9a5d91ba45fda9"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "442ec0ef9784118e4a0eb3ede79ca78a73b52e6a76ea39eb8259c0a23269b69b",
+      "evidence_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "c7a66ff56f3569d7213b62984445f9ec28bb81970745c34c4518068e7fa30197",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:34:01.565530+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "1d2f36cd5c517f0b2d182f28e10733c9fa4c19d60c6e553fa1c0e125e4ba9da7",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "3859df9fc1b00f4bacfe9764b0e73bbb9bd6c34b06e8df3f2d9a5d91ba45fda9",
+      "started_utc": "2026-07-23T17:33:47.146543+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 14418.986600008793
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "99b3dac3b7f76adea41e9b772fc6aa1a463cd2146e91482243c4a627b2a635ef"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "04f3283d1794e16058a0504792ef40889294619fae5b7d94c07d73480a93cc21",
+      "evidence_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "a30cfe6ba2cd5e1c5a7913f4b0a5115e37b37250f75d21520b8f096ee39720f6",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:34:16.320671+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "ca693e509a087abec2e5984ad1df2e75c15c72ba90b33886835883536af3c39c",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-F-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "99b3dac3b7f76adea41e9b772fc6aa1a463cd2146e91482243c4a627b2a635ef",
+      "started_utc": "2026-07-23T17:34:01.663696+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 14656.974300043657
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\warmup.json",
+          "sha256": "87a76c3a92b5efd5ff86f1df810d5586369534c79381b789656f746f174156c2"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "31f7e2d8c5c180584aa346ad2bd779dcb407a6c83a60a22b987f24d707e9d23f",
+      "evidence_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/warmup.watchdog.json",
+      "evidence_sha256": "eb5ddf7873392619fcfa02c37c5767cc4d824cc972bfc6e528d42d2768f2a797",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:34:53.541584+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\warmup.log",
+      "log_sha256": "b5fffde441dcc445a45aa3f6b69baa26a2005314d0220f8a8c06db3e16199f7a",
+      "repetition": "warmup",
+      "report_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/warmup.json",
+      "report_sha256": "87a76c3a92b5efd5ff86f1df810d5586369534c79381b789656f746f174156c2",
+      "started_utc": "2026-07-23T17:34:27.735934+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 25805.647999979556
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-1.json",
+          "sha256": "8a47506f8b326e0cf07983be2ad3193a49be02debc863e9366fad6424bb50247"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "986b37b0c460f09f75f9256b1a130fe7f1c2fc609c3fbb9f6085832cd0d8a542",
+      "evidence_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-1.watchdog.json",
+      "evidence_sha256": "b2a05152336f7476fed49086bb901dd2b48f1d4b691b808de46bf43460993a8d",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:35:19.155965+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-1.log",
+      "log_sha256": "c344b58640d2a3c5ccd1be8fa9e880b3ac84fbd6c34c7a51e6a397e2aa61770f",
+      "repetition": "run-1",
+      "report_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-1.json",
+      "report_sha256": "8a47506f8b326e0cf07983be2ad3193a49be02debc863e9366fad6424bb50247",
+      "started_utc": "2026-07-23T17:34:53.638839+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 25517.1251000138
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-2.json",
+          "sha256": "0d7ed9a609f4884814d5480b63bd4d1a7c648bcffac29bf7ea2e4f77177d9d35"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "4ab7e44a859afecb7801ba3e24ac6a86ad6d8420a02b0c40c38ced67bfe95029",
+      "evidence_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-2.watchdog.json",
+      "evidence_sha256": "6f72e28ba229df2796857fe8037624bed0102f71bd6e913e73a53cdb79587fd8",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:35:44.676683+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-2.log",
+      "log_sha256": "867fe0bf788aaf19c7e2547836c2669a7d3a13ac965fd113cb2b07c6755f7889",
+      "repetition": "run-2",
+      "report_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-2.json",
+      "report_sha256": "0d7ed9a609f4884814d5480b63bd4d1a7c648bcffac29bf7ea2e4f77177d9d35",
+      "started_utc": "2026-07-23T17:35:19.255469+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 25421.213699970394
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-3.json",
+          "sha256": "aefe4de26ec9c953aabf80bd354a8041111b2a71f57d6c7b33ad777637f7fa88"
+        }
+      ],
+      "case_id": "focused-round-real-product-2k",
+      "command_sha256": "27639e330f7f3e178dbe619ed5ad41423f436edb7478b3f62cabf455f593d8f7",
+      "evidence_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-3.watchdog.json",
+      "evidence_sha256": "de0ba4697f31b278f91dec6e0ec31c9c614a6749d86afda722215bbcf6bb1a42",
+      "exit_code": 2,
+      "finished_utc": "2026-07-23T17:36:10.320974+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\focused-round-real-product-2k\\run-3.log",
+      "log_sha256": "30c0ac7495f0001485ed859b9f0a696f31db4cc323afdb758fa28969233197b2",
+      "repetition": "run-3",
+      "report_path": "build/focused-round/benchmarks/gate3-G-2k/focused-round-real-product-2k/run-3.json",
+      "report_sha256": "aefe4de26ec9c953aabf80bd354a8041111b2a71f57d6c7b33ad777637f7fa88",
+      "started_utc": "2026-07-23T17:35:44.774480+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 25546.492900000885
+    }
+  ],
+  "variant_builds_and_drivers": [
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\A\\poecraft_solver_benchmark.exe",
+          "sha256": "5c836c7bb0d5fa314bc1e7f7e35995880314bcb6ff823c1e19a360650d856309"
+        }
+      ],
+      "command_sha256": "cd0b01ccbae135ae903ee9d0e3844acf809dab89d52611de0601f7b8a7107172",
+      "evidence_path": "build/focused-round/variants/A/build.evidence.json",
+      "evidence_sha256": "7a81489f8d6c132f8043b260b6104ac49842c195fceca111e566846821f77478",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:16:50.979967+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\A\\build.log",
+      "log_sha256": "f8df773c6b8f2ed27d73b1ebe45f301d107e3b65e72038a03ffff93f5d3cabef",
+      "role": "build",
+      "started_utc": "2026-07-23T17:15:39.044748+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 71935.21760008298
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-A-2k\\summary.json",
+          "sha256": "c21b116fc59ccd2ea132a49e487ff3df005c5f7728560355c303ab0eff44bc54"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-A-2k",
+        "--executable",
+        "build/focused-round/variants/A/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "c984165b79514f74162e686673e6e84d7db74a789eb6e6db30854b4bfc24b873",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/A/ranking-driver.evidence.json",
+      "evidence_sha256": "a2c1682bb69b833b0557b12c4a622beb5a9bec012bed7e2db7cef9085b804de2",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:27:24.574351+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\A\\ranking-driver.log",
+      "log_sha256": "b2055c6ddc5c0bd79309ec04bad667c5ce9ab998e1d018c3b97bc960e18bd226",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:25:48.335165+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "A",
+      "wall_ms": 96239.18439995032
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\B\\poecraft_solver_benchmark.exe",
+          "sha256": "aba68759363256b6d3239a4775431aa424546937bc0b952ae63e00cd0933dc7b"
+        }
+      ],
+      "command_sha256": "2814a9bdbd11cdf58ee3071919ad90b59638b5f363bdf7ddda79b3e8c3cf2862",
+      "evidence_path": "build/focused-round/variants/B/build.evidence.json",
+      "evidence_sha256": "5b1b25bdaf776f5808a597564ce0343e375626c966d56e86a8f98093688e573f",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:18:08.853185+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\B\\build.log",
+      "log_sha256": "d3ff2320f13f0013faabe68259aa1a22a9b2b05719d3fc1f626d5d3ccce536f5",
+      "role": "build",
+      "started_utc": "2026-07-23T17:16:57.768115+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 71085.06920002401
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-B-2k\\summary.json",
+          "sha256": "2d92e63517d5b0c0c358d09361b3a99be3f41b71856fc346524af78af5a2bc79"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-B-2k",
+        "--executable",
+        "build/focused-round/variants/B/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "b3c19140e452a7ab049ffc31735515976e073ec75f652dc17522efc988952679",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/B/ranking-driver.evidence.json",
+      "evidence_sha256": "2c93570ad7f6d213a39f89e5a33ddc731044ef2c890d3f0b584a69345a3e5bfb",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:28:50.751585+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\B\\ranking-driver.log",
+      "log_sha256": "e458d6c4e3070d162a8f0f8bb744e83203b2e5c8132dcca22ce2122297b22aee",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:27:31.104815+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "B",
+      "wall_ms": 79646.76810009405
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\C\\poecraft_solver_benchmark.exe",
+          "sha256": "9e1d8c3917be5dcafdeffd583b75368640cfca2e1134e8cc46aee2cc86ea5983"
+        }
+      ],
+      "command_sha256": "584edafbf59b1fbb5968ceede5a26f13e7e72f5acf1924f100e5f06f86fe523d",
+      "evidence_path": "build/focused-round/variants/C/build.evidence.json",
+      "evidence_sha256": "9838c05c408f07b70da22ca0b07f5b0a3642ce6bdd320f5fc52c78b2fa37f1d1",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:19:27.594713+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\C\\build.log",
+      "log_sha256": "110f04c42476cee4f1cf23ee12891ed711913cf779ed65ae54eaa4811ccbee08",
+      "role": "build",
+      "started_utc": "2026-07-23T17:18:15.995283+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 71599.42899993621
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-C-2k\\summary.json",
+          "sha256": "60cf22a58fddc837541950466ab90ab042d7367b9f8cd500176c494379ea5538"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-C-2k",
+        "--executable",
+        "build/focused-round/variants/C/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "1c322204f9363d6ebc7abfa762b4bcc229cb00cf34ea0097634715d610122701",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/C/ranking-driver.evidence.json",
+      "evidence_sha256": "784b9feafd326f606f29796e7570933adfd660e979b6c5bd2c023fe8d7114645",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:30:13.066083+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\C\\ranking-driver.log",
+      "log_sha256": "d6824e8f5e9ab584546de202b65946605a6096fc1669ef63dffec5b662fb3fd5",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:28:58.738908+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "C",
+      "wall_ms": 74327.17329997104
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\D\\poecraft_solver_benchmark.exe",
+          "sha256": "9104efe53a5aba5c64d8ff131b23540ea426efe3379307d46acc12827e3e40d6"
+        }
+      ],
+      "command_sha256": "bea29da5cbcc5d632376c883c044353fa71bbc987d1a4b45255f36c1ff92a2b0",
+      "evidence_path": "build/focused-round/variants/D/build.evidence.json",
+      "evidence_sha256": "b62c02d1e80b51ca1ed7b17b872916d120aa4a29d612a051787bb89a0dd8ea9f",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:20:47.766300+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\D\\build.log",
+      "log_sha256": "7301cefe091fd4b1b04407a932ecc22fb273fe62b6b9a393575a5cd4d7247ec9",
+      "role": "build",
+      "started_utc": "2026-07-23T17:19:36.132960+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 71633.3389999345
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-D-2k\\summary.json",
+          "sha256": "8273f66d3ef76b0ef965fd79a2bb16ef87cbcd4da08572f62c58d3643aab934b"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-D-2k",
+        "--executable",
+        "build/focused-round/variants/D/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "c131977a14f1234dfdada7e9c3492f02df8609243e175eb731ab5dc72c4e86e5",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/D/ranking-driver.evidence.json",
+      "evidence_sha256": "44d448364b35af84dff175a39926f4d264d61503ce9ceaf845edb77afe1b1b68",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:31:23.728496+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\D\\ranking-driver.log",
+      "log_sha256": "327058734c184cea7c05402034ad5430b9ec0d12c468067cc97a62b872351bd5",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:30:19.234789+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "D",
+      "wall_ms": 64493.704800028354
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\E\\poecraft_solver_benchmark.exe",
+          "sha256": "333f59d40fc5ab37817534cb27fb14c0750d148ad02d7a2755434daedac9416f"
+        }
+      ],
+      "command_sha256": "91cefb3ad630a93b058cf463a649d21596da886f3ee298605a4de8c68d3390be",
+      "evidence_path": "build/focused-round/variants/E/build.evidence.json",
+      "evidence_sha256": "55c9efe69e6af4af31acc5c27a6028fe8ef4b0f779b5a1628a7d92853c9dc2d2",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:22:05.156697+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\E\\build.log",
+      "log_sha256": "6fd503707f45be03e0f758e3d9779a6254a5b554a29242403145a1d00d493782",
+      "role": "build",
+      "started_utc": "2026-07-23T17:20:54.413554+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 70743.14100004267
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-E-2k\\summary.json",
+          "sha256": "709e37c0526dfd14550041f7f0cd2f023294fb88937836f9adfb6b98361cc4c4"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-E-2k",
+        "--executable",
+        "build/focused-round/variants/E/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "9036656bb223d6578ed6adc32e2d39d8e848bed156e5024f1362c1de39fb5050",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/E/ranking-driver.evidence.json",
+      "evidence_sha256": "6ed40010c9fcc89ee436f815d7ac35b9fe549e98f154bb05135419d1764c182f",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:33:11.982169+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\E\\ranking-driver.log",
+      "log_sha256": "40352f4b7fe509c2b884b3b799904088ed09c986844c3dd2165f644b7685ab8f",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:31:35.818574+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "E",
+      "wall_ms": 96163.59380003996
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\F\\poecraft_solver_benchmark.exe",
+          "sha256": "ccf29270bfb072c85977f3551e87cd22ac42ff2ffe630511906c096c178be93d"
+        }
+      ],
+      "command_sha256": "c53832f3825079f3ef7b6d998e0515dda1b799ef4935e55a68976bc152469ec0",
+      "evidence_path": "build/focused-round/variants/F/build.evidence.json",
+      "evidence_sha256": "830c59123987d86e5c2e7b82904ba658ecbf38e08c8cfc5a4fa20808f415ead6",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:23:27.311617+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\F\\build.log",
+      "log_sha256": "066d56da02adb4a141f45480bb2dd76ff295fa3f1c677474bede877894872695",
+      "role": "build",
+      "started_utc": "2026-07-23T17:22:15.342104+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 71969.51189998072
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-F-2k\\summary.json",
+          "sha256": "d06cc0b8ead32edb95e52ea284a44b3848b25d9857fd13334df53d0e4a82b69b"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-F-2k",
+        "--executable",
+        "build/focused-round/variants/F/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "6d7552349921cc355c3dddb63aa1b3d4d1241e97412de5f7455e578ac6e97c2c",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/F/ranking-driver.evidence.json",
+      "evidence_sha256": "fc1c14b9802b22a0f80bf08a25d20a22e859aead8fd87ef07034eb46e0edc66b",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:34:16.362236+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\F\\ranking-driver.log",
+      "log_sha256": "745900cf3120fe1a44e49341fadfdad5e5d879f15a096685f956d67af51beed9",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:33:17.568103+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "F",
+      "wall_ms": 58794.13139994722
+    },
+    {
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\G\\poecraft_solver_benchmark.exe",
+          "sha256": "1e8858c68c8f59eb4e1226fd40d9aa141c1311993b29d57e506344b964bf0173"
+        }
+      ],
+      "command_sha256": "8b8d95ab08e32a6111b6eda3bd5fe8e9c06f313dad040161f437825559f4d713",
+      "evidence_path": "build/focused-round/variants/G/build.evidence.json",
+      "evidence_sha256": "4f56b87464da27fb4562c2372dd590e5ddfb019f9a7775ff7a0c2b15fbd5d344",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:24:48.276319+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\G\\build.log",
+      "log_sha256": "ae1509a66f773a607ee27ccb24dc95dcd79be95517fac41b2f9f624c80eeb825",
+      "role": "build",
+      "started_utc": "2026-07-23T17:23:36.915458+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 71360.86070002057
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\benchmarks\\gate3-G-2k\\summary.json",
+          "sha256": "14b55c58dc988183ab327e225fff36f03e8b30b7f12bdab9c948ceb27f3ab285"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/run_benchmarks.py",
+        "--label",
+        "gate3-G-2k",
+        "--executable",
+        "build/focused-round/variants/G/poecraft_solver_benchmark.exe",
+        "--scope",
+        "2k",
+        "--measured-repetitions",
+        "3",
+        "--warmup",
+        "--require-instrumentation"
+      ],
+      "command_sha256": "fde7a204074ac951d031d6766892caae4e7f807a3a5a2de0aa5c89e6d7aca56b",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/G/ranking-driver.evidence.json",
+      "evidence_sha256": "10eeae7831f1c8271fc7426339d0ae94ee37b5094a0004219b66046ecbca44b4",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:36:10.362764+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\G\\ranking-driver.log",
+      "log_sha256": "79b4a3fbe06a9f317d721c60272de1305e7ae68aa5982cf1cb9614dc7706d1cb",
+      "role": "benchmark_driver",
+      "started_utc": "2026-07-23T17:34:27.487553+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "variant": "G",
+      "wall_ms": 102875.20800007042
+    }
+  ],
+  "variant_control_processes": [
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\provenance.json",
+          "sha256": "6aa4b374a063a147b0e479f653388321e1fd215beea21bd2dfc606ef49c0bb4f"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/record_variant_provenance.py"
+      ],
+      "command_sha256": "6e564b2ed9e1d98d1ff6569c556e3490cbef16f54d98826f5ab622afe47e3ffd",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/provenance.evidence.json",
+      "evidence_sha256": "fdecb4cbf218a6b9e032348d84ce980412e2894a8686bc226c33b7389bb4cc39",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:25:40.613182+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\provenance.log",
+      "log_sha256": "6aa4b374a063a147b0e479f653388321e1fd215beea21bd2dfc606ef49c0bb4f",
+      "started_utc": "2026-07-23T17:25:40.268049+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 345.132099930197
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\ranking.json",
+          "sha256": "e7f07172447a225d378883c6ff774f272c25d6d53a6d72fdaac32c9d9131ec1a"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/rank_variants.py"
+      ],
+      "command_sha256": "fbe55de2f1c6f760d3eaf81e84093f81363e9e0ca60e704fc9f5201e1edb9030",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/ranking-final.evidence.json",
+      "evidence_sha256": "bdd767a13e5b5d33d410068c2561b8b4f06d5c87386e4d680bae2f24d8355b84",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:37:52.156542+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\ranking-final.log",
+      "log_sha256": "e7f07172447a225d378883c6ff774f272c25d6d53a6d72fdaac32c9d9131ec1a",
+      "started_utc": "2026-07-23T17:37:51.999119+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 157.42159995716065
+    },
+    {
+      "allowed_exit_codes": [
+        0
+      ],
+      "artifacts": [
+        {
+          "exists": true,
+          "path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\gate4-decision.json",
+          "sha256": "3407d850daf508c245093777b713322dc13d4390384b75412d1bc9d2f6300582"
+        }
+      ],
+      "command": [
+        "py",
+        "-3",
+        "build/focused-round/decide_gate4.py"
+      ],
+      "command_sha256": "20f3fc6009bf017f75754cd44a51475e7de1f44da1b08a02b9624163ddf81702",
+      "cwd": "C:\\Users\\Oliver\\Documents\\poecraft2",
+      "evidence_path": "build/focused-round/variants/gate4-decision-final.evidence.json",
+      "evidence_sha256": "0777f4b7b76b455f19b0d35e8653f0d7858f11f48184456d00d64be3e4a2c1f1",
+      "exit_code": 0,
+      "finished_utc": "2026-07-23T17:40:14.972346+00:00",
+      "log_path": "C:\\Users\\Oliver\\Documents\\poecraft2\\build\\focused-round\\variants\\gate4-decision-final.log",
+      "log_sha256": "3407d850daf508c245093777b713322dc13d4390384b75412d1bc9d2f6300582",
+      "started_utc": "2026-07-23T17:40:14.816897+00:00",
+      "survivor": false,
+      "timed_out": false,
+      "wall_ms": 155.44659993611276
+    }
+  ],
+  "watchdog_contract": {
+    "process_isolation": "CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW",
+    "seconds": 900,
+    "survivor_check": "process_group_kill_then_parent_poll",
+    "timeout_action": "taskkill /PID <pid> /T /F"
+  }
+}

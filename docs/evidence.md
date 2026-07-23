@@ -218,6 +218,36 @@ the returned policy cost, while `L` and `U` bound the unknown optimum. The
 sample is empirical corroboration only. Action-utility and search-cost reports
 remain observational; an unused action is never a pruning certificate.
 
+## Focused-Round Performance Attribution
+
+The 2026-07-23
+[focused-round acceptance summary](../fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json)
+pins fresh uninstrumented/instrumented baselines, the complete seven-tuple
+run-local matrix, deterministic hashes, bounds, step distribution, memory,
+watchdog facts, and final native/WASM/web checks.
+
+- Diagnostic instrumentation preserved focused counts, statuses, caps,
+  certificate bounds, and every transition/policy hash. Instrumented primary
+  medians were 0.981x the 2k solve baseline, 0.945x strict extraction, and
+  0.979x quotient solve.
+- Increasing only the global batch from 256 through 512, 1,024, and 4,096
+  reduced focused rounds from 20 to 14, 12, and 8 and policy-evaluation calls
+  from 142 to 86, 68, and 33. The corresponding solve medians fell from 22.54
+  seconds to 18.48, 17.07, and 14.65 seconds.
+- The combined 4,096-member/4,096-batch diagnostic reached 13.15 seconds,
+  6 rounds, and 18 policy-evaluation calls. It was not eligible: all variants
+  retained an approximately 11.5-second maximum step, and larger batches made
+  that spike the p95, violating the fixed 5-second worker-step gate.
+- Per-class-cap removal did not reduce rounds, and doubling the lower quota
+  made the case slower. Start properness owned 99.93% of measured fallback
+  validation component time. Owned-byte ledger work was only 0.38% of solve
+  wall time, below its action threshold.
+
+The accepted result is diagnostic instrumentation and no scheduling-default
+change. The exact natural two-T1 oracle did not run, no candidate required
+exact evaluation or 10,000 simulations, and the economy pipeline was not
+touched.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

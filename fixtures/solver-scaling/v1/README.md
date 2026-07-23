@@ -112,6 +112,24 @@ acceptance. The exact measurement and next structural decision are preserved
 in
 [real-three-natural-t1-constructive-summary.json](evidence/real-three-natural-t1-constructive-summary.json).
 
+## Focused-round performance attribution
+
+The 2026-07-23
+[focused-round performance summary](evidence/focused-round-performance-summary.json)
+records fresh uninstrumented and instrumented five-run baselines plus the
+predeclared seven-tuple run-local scheduling matrix. The diagnostics preserve
+the 2k case's `153.1270669513794 <= V* <= 243.25209004029114` certificate,
+including known exact value `230.26738656962243`, and all baseline
+transition/policy hashes.
+
+Global batch size is causal for repeated work: increasing it from 256 to 4,096
+reduced median focused rounds from 20 to 8, policy-evaluation calls from 142 to
+33, and solve time from 22.54 seconds to 14.65 seconds. No tuple was accepted,
+because every variant retained an approximately 11.5-second maximum solve
+step; larger batches also made that spike the p95. The tracked result adds
+attribution telemetry without changing the private 64-member, 256-batch,
+64-lower-quota defaults.
+
 The Chaos case proves the quotient can remove unobservable strict identity.
 The complete product cases deliberately merge no states: their larger action
 sets observe all strict differences. Their closure comes from incremental

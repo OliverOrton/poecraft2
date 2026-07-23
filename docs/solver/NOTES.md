@@ -42,10 +42,11 @@ modifier-count conditions and authored Unveil offer selection.
 
 ### 2026-07-19 — #idea — Reviewed optimization candidates
 
-Status: partially selected. Focused-round attribution and at most one
-scheduling-default tuple are governed by the
-[active plan](../active/focused-round-performance.md); the other candidates
-remain open with no execution authority.
+Status: partially resolved. The
+[focused-round performance archive](../archive/2026-07-23-focused-round-performance/README.md)
+records accepted attribution instrumentation and an explicit
+no-scheduling-default-change result. The other candidates remain open with no
+execution authority.
 
 Preservation-envelope gating, focused-round reuse, telemetry collection
 levels, hash/container cleanups, operator repricing, legality pre-bucketing,
@@ -55,3 +56,9 @@ the archived audit. They require fresh evidence and, where noted in the future
 roadmap, an Oliver decision. The incremental byte-ledger repair is complete;
 primitive Fracture product planning and full start-item compilation are already
 implemented and are not open items.
+
+The focused-round matrix confirmed that a larger global batch reduces repeated
+whole-graph work, but a batch-only change leaves an approximately 11.5-second
+solve step and fails the fixed responsiveness budget. Start-properness
+validation owned 99.93% of measured fallback-validation component time; it is a
+measured follow-up lead, not selected work.
