@@ -31,6 +31,10 @@ typedef struct pc_simulator* pc_simulator_handle;
 
 uint32_t pc_abi_version(void);
 
+/* Compiler identity baked into the loaded native module. The returned string
+ * is process-lifetime storage and is intended for benchmark provenance. */
+const char* pc_engine_compiler(void);
+
 /* Initialise a caller-owned error buffer. Safe to pass to any API afterwards. */
 void pc_error_info_init(pc_error_info* error);
 

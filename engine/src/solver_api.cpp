@@ -6,11 +6,13 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "handles_internal.hpp"
@@ -906,6 +908,234 @@ pc_result pc_solver_candidates(
     }
     clear_error(out_error);
     return PC_RESULT_OK;
+}
+
+pc_result pc_solver_goal_feasibility(
+    pc_solver_handle solver,
+    const pc_item_state* start_item,
+    pc_goal_feasibility* out_feasibility,
+    pc_error_info* out_error) {
+    if (solver == nullptr || start_item == nullptr ||
+        out_feasibility == nullptr) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, "null argument");
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
+    try {
+        solver::CalcContext& calc = *solver->calc;
+        const poecraft::SessionImpl& session = calc.session();
+        const auto& slots = calc.layout().slots;
+        const std::size_t required =
+            calc.goal().required_satisfied_slots();
+        pc_goal_feasibility result{};
+        result.struct_size = sizeof(result);
+        result.abi_version = PC_ABI_VERSION;
+        result.status = PC_GOAL_FEASIBILITY_UNKNOWN;
+        result.reason = PC_GOAL_FEASIBILITY_REASON_NONE;
+        result.goal_slot_count = static_cast<uint32_t>(slots.size());
+        result.required_slot_count = static_cast<uint32_t>(required);
+        result.witness_action_index = UINT32_MAX;
+        std::fill_n(result.witness_mod_ids,
+                    PC_SOLVER_MAX_GOAL_SLOTS, UINT32_MAX);
+
+        auto natural_eligible = [&](const std::uint32_t mod) {
+            return mod < session.mod_count &&
+                (session.gen_type[mod] == PC_SIDE_PREFIX ||
+                 session.gen_type[mod] == PC_SIDE_SUFFIX) &&
+                session.required_level[mod] <= session.item_level &&
+                poecraft::pc_bitset_test(
+                    session.normal_random_roll_mask.data(), mod) &&
+                poecraft::pc_bitset_test(
+                    session.positive_spawn_weight_mask.data(), mod) &&
+                poecraft::pc_bitset_test(
+                    session.positive_base_weight_mask.data(), mod) &&
+                session.base_roll_weight[mod] > 0;
+        };
+
+        for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+            if (!natural_eligible(mod)) continue;
+            ++result.natural_pool_mod_count;
+            result.natural_pool_weight += session.base_roll_weight[mod];
+            if (session.gen_type[mod] == PC_SIDE_PREFIX) {
+                ++result.natural_prefix_mod_count;
+                result.natural_prefix_weight += session.base_roll_weight[mod];
+            } else {
+                ++result.natural_suffix_mod_count;
+                result.natural_suffix_weight += session.base_roll_weight[mod];
+            }
+        }
+
+        std::vector<std::vector<std::uint32_t>> candidates(slots.size());
+        for (std::size_t slot = 0; slot < slots.size(); ++slot) {
+            for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+                if (!natural_eligible(mod) ||
+                    session.family_tier_index[mod] != 1 ||
+                    !poecraft::pc_bitset_test(
+                        slots[slot].satisfying_mask.data(), mod)) {
+                    continue;
+                }
+                candidates[slot].push_back(mod);
+                result.slot_natural_weights[slot] +=
+                    session.base_roll_weight[mod];
+            }
+            result.slot_natural_mod_counts[slot] =
+                static_cast<uint32_t>(candidates[slot].size());
+            if (!candidates[slot].empty()) ++result.eligible_slot_count;
+            if (result.natural_pool_weight != 0) {
+                result.slot_single_draw_probabilities[slot] =
+                    static_cast<double>(result.slot_natural_weights[slot]) /
+                    static_cast<double>(result.natural_pool_weight);
+            }
+        }
+
+        if (result.eligible_slot_count < required) {
+            result.status = PC_GOAL_FEASIBILITY_INFEASIBLE;
+            result.reason = PC_GOAL_FEASIBILITY_REASON_NO_NATURAL_T1;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+
+        const std::uint32_t side_cap = session.rare_affix_cap;
+        auto find_assignment = [&](const bool enforce_groups,
+                                   std::vector<std::uint32_t>& witness) {
+            std::unordered_set<std::uint32_t> occupied_groups;
+            std::function<bool(std::size_t, std::size_t, std::uint32_t,
+                               std::uint32_t)> visit;
+            visit = [&](const std::size_t slot, const std::size_t chosen,
+                        const std::uint32_t prefixes,
+                        const std::uint32_t suffixes) -> bool {
+                if (chosen >= required) return true;
+                if (slot >= candidates.size() ||
+                    chosen + candidates.size() - slot < required) {
+                    return false;
+                }
+                for (const std::uint32_t mod : candidates[slot]) {
+                    const bool prefix =
+                        session.gen_type[mod] == PC_SIDE_PREFIX;
+                    if ((prefix ? prefixes : suffixes) >= side_cap) continue;
+                    std::vector<std::uint32_t> added_groups;
+                    bool conflict = false;
+                    if (enforce_groups) {
+                        for (std::uint32_t index = session.group_offsets[mod];
+                             index < session.group_offsets[mod + 1]; ++index) {
+                            const std::uint32_t group =
+                                session.group_ids[index];
+                            if (occupied_groups.contains(group)) {
+                                conflict = true;
+                                break;
+                            }
+                            added_groups.push_back(group);
+                        }
+                    }
+                    if (conflict) continue;
+                    for (const std::uint32_t group : added_groups) {
+                        occupied_groups.insert(group);
+                    }
+                    witness[slot] = mod;
+                    if (visit(slot + 1, chosen + 1,
+                              prefixes + (prefix ? 1u : 0u),
+                              suffixes + (prefix ? 0u : 1u))) {
+                        return true;
+                    }
+                    witness[slot] = UINT32_MAX;
+                    for (const std::uint32_t group : added_groups) {
+                        occupied_groups.erase(group);
+                    }
+                }
+                return visit(slot + 1, chosen, prefixes, suffixes);
+            };
+            return visit(0, 0, 0, 0);
+        };
+
+        std::vector<std::uint32_t> witness(slots.size(), UINT32_MAX);
+        if (!find_assignment(false, witness)) {
+            result.status = PC_GOAL_FEASIBILITY_INFEASIBLE;
+            result.reason = PC_GOAL_FEASIBILITY_REASON_SLOT_CAPACITY;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        std::fill(witness.begin(), witness.end(), UINT32_MAX);
+        if (!find_assignment(true, witness)) {
+            result.status = PC_GOAL_FEASIBILITY_INFEASIBLE;
+            result.reason = PC_GOAL_FEASIBILITY_REASON_GROUP_CONFLICT;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        std::copy(witness.begin(), witness.end(),
+                  result.witness_mod_ids);
+
+        const std::uint32_t start_state = calc.intern_item(*start_item);
+        if (calc.is_goal_state(calc.state(start_state))) {
+            result.status = PC_GOAL_FEASIBILITY_FEASIBLE;
+            result.reason = PC_GOAL_FEASIBILITY_REASON_ALREADY_SATISFIED;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        if (calc.goal().rarity != PC_RARITY_RARE ||
+            start_item->prefix_count != 0 || start_item->suffix_count != 0 ||
+            start_item->generic_influence_bits != 0 ||
+            start_item->item_flags != 0) {
+            result.reason = PC_GOAL_FEASIBILITY_REASON_UNSUPPORTED_START;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+
+        const char* reforge_id = nullptr;
+        if (start_item->rarity == PC_RARITY_NORMAL) {
+            reforge_id = "alchemy";
+        } else if (start_item->rarity == PC_RARITY_RARE) {
+            reforge_id = "chaos";
+        } else {
+            result.reason = PC_GOAL_FEASIBILITY_REASON_UNSUPPORTED_START;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        const auto action_it =
+            calc.registry().index_by_id.find(reforge_id);
+        const bool admitted = action_it != calc.registry().index_by_id.end() &&
+            std::find(calc.candidates().begin(), calc.candidates().end(),
+                      action_it->second) != calc.candidates().end();
+        if (!admitted) {
+            result.reason = PC_GOAL_FEASIBILITY_REASON_NO_ADMITTED_REFORGE;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        const solver::ActionDescriptor& action =
+            calc.registry().actions[action_it->second];
+        const auto reachable =
+            solver::action_explicit_affix_reachable_mask(session, action);
+        bool reaches_witness = solver::action_legal(
+            session, action, calc.state(start_state));
+        for (const std::uint32_t mod : witness) {
+            if (mod != UINT32_MAX &&
+                !poecraft::pc_bitset_test(reachable.data(), mod)) {
+                reaches_witness = false;
+                break;
+            }
+        }
+        if (!reaches_witness) {
+            result.reason = PC_GOAL_FEASIBILITY_REASON_NO_ADMITTED_REFORGE;
+            *out_feasibility = result;
+            clear_error(out_error);
+            return PC_RESULT_OK;
+        }
+        result.status = PC_GOAL_FEASIBILITY_FEASIBLE;
+        result.reason = PC_GOAL_FEASIBILITY_REASON_NATURAL_REFORGE_WITNESS;
+        result.witness_action_index = action_it->second;
+        result.witness_action_id = action.id.c_str();
+        *out_feasibility = result;
+        clear_error(out_error);
+        return PC_RESULT_OK;
+    } catch (const std::exception& ex) {
+        set_error(out_error, PC_RESULT_INVALID_ARGUMENT, ex.what());
+        return PC_RESULT_INVALID_ARGUMENT;
+    }
 }
 
 pc_result pc_calc_action_outcomes(

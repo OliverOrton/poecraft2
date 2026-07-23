@@ -1,0 +1,276 @@
+{
+  "schema_version": "natural_t1_generator_config_v1",
+  "corpus_id": "poecraft2-seeded-natural-t1-v1",
+  "output_directory": "fixtures/solver-natural-t1/v1",
+  "artifact": "data/compiled/current",
+  "economy": {
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null
+  },
+  "base_pools": {
+    "armour": [
+      "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "Metadata/Items/Armours/Helmets/HelmetDex11"
+    ],
+    "weapon": [
+      "Metadata/Items/Weapons/OneHandWeapons/OneHandThrustingSwords/Rapier21",
+      "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20"
+    ],
+    "jewellery": [
+      "Metadata/Items/Amulets/Amulet7",
+      "Metadata/Items/Rings/Ring10"
+    ],
+    "all": [
+      "Metadata/Items/Amulets/Amulet7",
+      "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "Metadata/Items/Rings/Ring10",
+      "Metadata/Items/Weapons/OneHandWeapons/OneHandThrustingSwords/Rapier21",
+      "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20"
+    ]
+  },
+  "base_selection": {
+    "pool": "all",
+    "paths": [],
+    "classes": [],
+    "list": null
+  },
+  "item_level": 86,
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "natural_filters": {
+    "families": [],
+    "required_tags": [],
+    "excluded_tags": [],
+    "tag_mode": "any"
+  },
+  "seed": 20260722,
+  "watchdog_seconds": 240,
+  "case_watchdog_seconds": 60,
+  "resource_caps": {
+    "max_states": 25000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1024,
+    "max_discovered_states": 25000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 300000,
+    "max_transitions": 3000000,
+    "max_reforge_work": 3000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_diagnostic_samples": 32,
+    "max_telemetry_json_bytes": 1048576,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864,
+    "max_absolute_optimality_gap": 5.0,
+    "max_relative_optimality_gap": 0.1,
+    "full_evidence": true,
+    "worker_step_ms": 1000,
+    "cancel_ack_ms": 250
+  },
+  "feasibility_probes": [
+    {
+      "id": "reject-ineligible-base",
+      "base_metadata_path": "Metadata/Items/NotAReleasedBase",
+      "goal_family_mod_keys": ["IncreasedLife9"],
+      "expected_status": "ineligible",
+      "expected_reason": "ineligible_base"
+    },
+    {
+      "id": "reject-bench-goal",
+      "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "goal_family_mod_keys": ["EinharMasterColdResist3__"],
+      "expected_status": "infeasible",
+      "expected_reason": "no_natural_t1"
+    },
+    {
+      "id": "reject-prefix-capacity",
+      "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "goal_family_mod_keys": [
+        "ItemFoundRarityIncreasePrefix3",
+        "IncreasedLife9",
+        "LocalIncreasedEvasionRating8",
+        "LocalIncreasedEvasionRatingPercent7"
+      ],
+      "expected_status": "infeasible",
+      "expected_reason": "slot_capacity"
+    },
+    {
+      "id": "reject-exclusion-group-conflict",
+      "base_metadata_path": "Metadata/Items/Amulets/Amulet7",
+      "goal_family_mod_keys": [
+        "GlobalChaosGemLevel1",
+        "GlobalColdGemLevel1__"
+      ],
+      "expected_status": "infeasible",
+      "expected_reason": "group_conflict"
+    },
+    {
+      "id": "unknown-magic-start",
+      "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "goal_family_mod_keys": ["IncreasedLife9"],
+      "start": {
+        "rarity": "magic",
+        "with_implicits": false,
+        "mods": []
+      },
+      "expected_status": "unknown",
+      "expected_reason": "unsupported_start"
+    }
+  ],
+  "explicit_cases": [
+    {
+      "id": "natural-t1-smoke-dire-pelt-three",
+      "stratum": "smoke-three-dire-pelt",
+      "base_metadata_path": "Metadata/Items/Armours/Helmets/HelmetDex11",
+      "goal_family_mod_keys": [
+        "ItemFoundRarityIncreasePrefix3",
+        "IncreasedLife9",
+        "ChaosResist6"
+      ]
+    }
+  ],
+  "strata": [
+    {
+      "id": "smoke-three-dire-pelt",
+      "corpus": "smoke",
+      "goal_count": 3,
+      "side_compositions": ["PPS"],
+      "cases": 1,
+      "max_attempts": 20,
+      "base_paths": ["Metadata/Items/Armours/Helmets/HelmetDex11"]
+    },
+    {
+      "id": "smoke-one-armour",
+      "corpus": "smoke",
+      "goal_count": 1,
+      "side_compositions": ["P", "S"],
+      "cases": 3,
+      "max_attempts": 300,
+      "base_paths": [
+        "Metadata/Items/Armours/BodyArmours/BodyInt17",
+        "Metadata/Items/Armours/Helmets/HelmetDex11"
+      ]
+    },
+    {
+      "id": "smoke-one-weapon",
+      "corpus": "smoke",
+      "goal_count": 1,
+      "side_compositions": ["P", "S"],
+      "cases": 2,
+      "max_attempts": 300,
+      "base_paths": [
+        "Metadata/Items/Weapons/OneHandWeapons/OneHandThrustingSwords/Rapier21",
+        "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20"
+      ]
+    },
+    {
+      "id": "smoke-one-jewellery",
+      "corpus": "smoke",
+      "goal_count": 1,
+      "side_compositions": ["P", "S"],
+      "cases": 2,
+      "max_attempts": 300,
+      "base_paths": [
+        "Metadata/Items/Amulets/Amulet7",
+        "Metadata/Items/Rings/Ring10"
+      ]
+    },
+    {
+      "id": "smoke-two-armour",
+      "corpus": "smoke",
+      "goal_count": 2,
+      "side_compositions": ["PP", "PS", "SS"],
+      "cases": 2,
+      "max_attempts": 400,
+      "base_paths": [
+        "Metadata/Items/Armours/BodyArmours/BodyInt17",
+        "Metadata/Items/Armours/Helmets/HelmetDex11"
+      ]
+    },
+    {
+      "id": "smoke-two-weapon",
+      "corpus": "smoke",
+      "goal_count": 2,
+      "side_compositions": ["PP", "PS", "SS"],
+      "cases": 2,
+      "max_attempts": 400,
+      "base_paths": [
+        "Metadata/Items/Weapons/OneHandWeapons/OneHandThrustingSwords/Rapier21",
+        "Metadata/Items/Weapons/TwoHandWeapons/Bows/Bow20"
+      ]
+    },
+    {
+      "id": "smoke-two-jewellery",
+      "corpus": "smoke",
+      "goal_count": 2,
+      "side_compositions": ["PP", "PS", "SS"],
+      "cases": 2,
+      "max_attempts": 400,
+      "base_paths": [
+        "Metadata/Items/Amulets/Amulet7",
+        "Metadata/Items/Rings/Ring10"
+      ]
+    },
+    {
+      "id": "full-one",
+      "corpus": "full_short",
+      "goal_count": 1,
+      "side_compositions": ["P", "S"],
+      "cases": 15,
+      "max_attempts": 2000
+    },
+    {
+      "id": "full-two",
+      "corpus": "full_short",
+      "goal_count": 2,
+      "side_compositions": ["PP", "PS", "SS"],
+      "cases": 40,
+      "max_attempts": 6000
+    },
+    {
+      "id": "full-three",
+      "corpus": "full_short",
+      "goal_count": 3,
+      "side_compositions": ["PPP", "PPS", "PSS", "SSS"],
+      "cases": 45,
+      "max_attempts": 8000
+    },
+    {
+      "id": "full-four",
+      "corpus": "full_short",
+      "goal_count": 4,
+      "side_compositions": ["PPPS", "PPSS", "PSSS"],
+      "cases": 20,
+      "max_attempts": 8000
+    },
+    {
+      "id": "deep-three-low-probability",
+      "corpus": "deep",
+      "goal_count": 3,
+      "side_compositions": ["PPS", "PSS"],
+      "cases": 5,
+      "max_attempts": 10000,
+      "max_spawn_probability": 0.01,
+      "min_pool_mod_count": 100,
+      "case_watchdog_seconds": 180
+    },
+    {
+      "id": "deep-four-low-probability",
+      "corpus": "deep",
+      "goal_count": 4,
+      "side_compositions": ["PPPS", "PPSS", "PSSS"],
+      "cases": 7,
+      "max_attempts": 15000,
+      "max_spawn_probability": 0.01,
+      "min_pool_mod_count": 100,
+      "case_watchdog_seconds": 180
+    }
+  ]
+}

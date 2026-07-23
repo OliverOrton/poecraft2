@@ -276,6 +276,20 @@ uint32_t pc_abi_version(void) {
     return PC_ABI_VERSION;
 }
 
+const char* pc_engine_compiler(void) {
+#if defined(__clang__)
+    return "clang-" __clang_version__;
+#elif defined(_MSC_VER)
+#define PC_STRINGIFY_INNER(value) #value
+#define PC_STRINGIFY(value) PC_STRINGIFY_INNER(value)
+    return "msvc-" PC_STRINGIFY(_MSC_VER);
+#elif defined(__GNUC__)
+    return "gcc-" __VERSION__;
+#else
+    return "unknown";
+#endif
+}
+
 void pc_error_info_init(pc_error_info* error) {
     clear_error(error);
 }

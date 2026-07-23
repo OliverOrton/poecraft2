@@ -50,6 +50,13 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 2 && std::string(argv[1]) ==
+                        "--solver-feasibility-only") {
+        run_solver_feasibility_tests(argv[2]);
+        std::printf("solver feasibility tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     run_bitset_tests();
     run_rng_tests();
     run_item_state_tests();

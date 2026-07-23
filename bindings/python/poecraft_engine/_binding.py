@@ -16,6 +16,7 @@ RESULT_BUFFER_TOO_SMALL = 7
 MAX_FOSSILS = 4
 MOD_NONE = 0xFFFFFFFF
 MOD_SLOT_FRACTURED = 1
+MAX_GOAL_SLOTS = 8
 
 _ACTION_TYPES = {
     "transmute": 0,
@@ -360,6 +361,30 @@ class _ModInfo(ct.Structure):
     ]
 
 
+class _GoalFeasibility(ct.Structure):
+    _fields_ = [
+        ("struct_size", ct.c_uint32),
+        ("abi_version", ct.c_uint32),
+        ("status", ct.c_int32),
+        ("reason", ct.c_int32),
+        ("goal_slot_count", ct.c_uint32),
+        ("required_slot_count", ct.c_uint32),
+        ("eligible_slot_count", ct.c_uint32),
+        ("natural_pool_mod_count", ct.c_uint32),
+        ("natural_prefix_mod_count", ct.c_uint32),
+        ("natural_suffix_mod_count", ct.c_uint32),
+        ("natural_pool_weight", ct.c_uint64),
+        ("natural_prefix_weight", ct.c_uint64),
+        ("natural_suffix_weight", ct.c_uint64),
+        ("witness_action_index", ct.c_uint32),
+        ("witness_action_id", ct.c_char_p),
+        ("witness_mod_ids", ct.c_uint32 * MAX_GOAL_SLOTS),
+        ("slot_natural_mod_counts", ct.c_uint32 * MAX_GOAL_SLOTS),
+        ("slot_natural_weights", ct.c_uint64 * MAX_GOAL_SLOTS),
+        ("slot_single_draw_probabilities", ct.c_double * MAX_GOAL_SLOTS),
+    ]
+
+
 class _SimulationOptions(ct.Structure):
     _fields_ = [
         ("struct_size", ct.c_uint32),
@@ -582,6 +607,7 @@ _lib = _load_library()
 _handle = ct.c_void_p
 
 _lib.pc_abi_version.restype = ct.c_uint32
+_lib.pc_engine_compiler.restype = ct.c_char_p
 _lib.pc_error_info_init.argtypes = [ct.POINTER(_ErrorInfo)]
 _lib.pc_data_load_file.argtypes = [
     ct.c_char_p,
@@ -596,6 +622,29 @@ _lib.pc_data_get_summary.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_data_get_summary.restype = ct.c_int32
+_lib.pc_data_get_base_path.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(ct.c_char_p),
+    ct.POINTER(ct.c_int32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_data_get_base_path.restype = ct.c_int32
+_lib.pc_data_get_base_display.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(ct.c_char_p),
+    ct.POINTER(ct.c_char_p),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_data_get_base_display.restype = ct.c_int32
+_lib.pc_data_get_base_drop_level.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(ct.c_int32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_data_get_base_drop_level.restype = ct.c_int32
 _lib.pc_session_create.argtypes = [
     _handle,
     ct.POINTER(_SessionOptions),
@@ -617,6 +666,31 @@ _lib.pc_session_get_mod_info.argtypes = [
     ct.POINTER(_ErrorInfo),
 ]
 _lib.pc_session_get_mod_info.restype = ct.c_int32
+_lib.pc_session_dump_mod_groups.argtypes = [
+    _handle,
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.c_uint32,
+    ct.POINTER(ct.c_uint32),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_session_dump_mod_groups.restype = ct.c_int32
+_lib.pc_solver_create.argtypes = [
+    _handle,
+    ct.c_char_p,
+    ct.c_size_t,
+    ct.POINTER(_handle),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_solver_create.restype = ct.c_int32
+_lib.pc_solver_destroy.argtypes = [_handle]
+_lib.pc_solver_goal_feasibility.argtypes = [
+    _handle,
+    ct.POINTER(_ItemState),
+    ct.POINTER(_GoalFeasibility),
+    ct.POINTER(_ErrorInfo),
+]
+_lib.pc_solver_goal_feasibility.restype = ct.c_int32
 _lib.pc_action_context_create.argtypes = [
     _handle,
     ct.POINTER(_ContextOptions),
@@ -1084,6 +1158,37 @@ class ModInfo:
 
 
 @dataclass(frozen=True)
+class BaseInfo:
+    index: int
+    metadata_path: str
+    name: str
+    item_class_key: str
+    drop_level: int
+    session_support: int
+
+
+@dataclass(frozen=True)
+class GoalFeasibility:
+    status: str
+    reason: str
+    goal_slot_count: int
+    required_slot_count: int
+    eligible_slot_count: int
+    natural_pool_mod_count: int
+    natural_prefix_mod_count: int
+    natural_suffix_mod_count: int
+    natural_pool_weight: int
+    natural_prefix_weight: int
+    natural_suffix_weight: int
+    witness_action_index: int | None
+    witness_action_id: str | None
+    witness_mod_ids: tuple[int | None, ...]
+    slot_natural_mod_counts: tuple[int, ...]
+    slot_natural_weights: tuple[int, ...]
+    slot_single_draw_probabilities: tuple[float, ...]
+
+
+@dataclass(frozen=True)
 class SimulationOptions:
     target_runs: int
     seed: int = 0
@@ -1219,6 +1324,59 @@ class Data(_OwnedHandle):
             "mod_count": native.mod_count,
             "group_count": native.group_count,
         }
+
+    @property
+    def bases(self) -> tuple[BaseInfo, ...]:
+        values: list[BaseInfo] = []
+        for index in range(int(self.summary["base_item_count"])):
+            path = ct.c_char_p()
+            support = ct.c_int32()
+            name = ct.c_char_p()
+            item_class = ct.c_char_p()
+            drop_level = ct.c_int32()
+            error = _error()
+            _check(
+                _lib.pc_data_get_base_path(
+                    self._handle,
+                    index,
+                    ct.byref(path),
+                    ct.byref(support),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            error = _error()
+            _check(
+                _lib.pc_data_get_base_display(
+                    self._handle,
+                    index,
+                    ct.byref(name),
+                    ct.byref(item_class),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            error = _error()
+            _check(
+                _lib.pc_data_get_base_drop_level(
+                    self._handle,
+                    index,
+                    ct.byref(drop_level),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            values.append(
+                BaseInfo(
+                    index,
+                    _decode(path.value),
+                    _decode(name.value),
+                    _decode(item_class.value),
+                    drop_level.value,
+                    support.value,
+                )
+            )
+        return tuple(values)
 
     @property
     def bestiary_actions(self) -> tuple[BestiaryActionInfo, ...]:
@@ -1372,6 +1530,81 @@ class Session(_OwnedHandle):
         )
         return Strategy(handle, self)
 
+    def goal_feasibility(
+        self,
+        goal: str | Mapping[str, Any],
+        start_item: "Item",
+    ) -> GoalFeasibility:
+        if start_item._session is not self:
+            raise ValueError("item belongs to a different session")
+        encoded = _json_bytes(goal)
+        solver = _handle()
+        error = _error()
+        _check(
+            _lib.pc_solver_create(
+                self._handle,
+                encoded,
+                len(encoded),
+                ct.byref(solver),
+                ct.byref(error),
+            ),
+            error,
+        )
+        try:
+            native = _GoalFeasibility()
+            error = _error()
+            _check(
+                _lib.pc_solver_goal_feasibility(
+                    solver,
+                    ct.byref(start_item._state),
+                    ct.byref(native),
+                    ct.byref(error),
+                ),
+                error,
+            )
+            witness_action_id = _decode(native.witness_action_id) or None
+        finally:
+            _lib.pc_solver_destroy(solver)
+        count = native.goal_slot_count
+        status = ("unknown", "feasible", "infeasible")[native.status]
+        reasons = (
+            "none",
+            "already_satisfied",
+            "natural_reforge_witness",
+            "no_natural_t1",
+            "slot_capacity",
+            "group_conflict",
+            "unsupported_start",
+            "no_admitted_reforge",
+        )
+        return GoalFeasibility(
+            status,
+            reasons[native.reason],
+            count,
+            native.required_slot_count,
+            native.eligible_slot_count,
+            native.natural_pool_mod_count,
+            native.natural_prefix_mod_count,
+            native.natural_suffix_mod_count,
+            native.natural_pool_weight,
+            native.natural_prefix_weight,
+            native.natural_suffix_weight,
+            None if native.witness_action_index == MOD_NONE
+            else native.witness_action_index,
+            witness_action_id,
+            tuple(
+                None if native.witness_mod_ids[index] == MOD_NONE
+                else native.witness_mod_ids[index]
+                for index in range(count)
+            ),
+            tuple(native.slot_natural_mod_counts[index] for index in range(count)),
+            tuple(native.slot_natural_weights[index] for index in range(count)),
+            tuple(
+                native.slot_single_draw_probabilities[index]
+                for index in range(count)
+            ),
+        )
+
     def create_item(
         self, rarity: str = "normal", *, with_implicits: bool = True
     ) -> "Item":
@@ -1459,6 +1692,40 @@ class Session(_OwnedHandle):
             return self._mods_by_key[key]
         except KeyError as exc:
             raise KeyError(f"mod is not in this session: {key}") from exc
+
+    def mod_groups(self, mod: int | str | ModInfo) -> tuple[int, ...]:
+        if isinstance(mod, ModInfo):
+            mod_id = mod.session_mod_id
+        elif isinstance(mod, str):
+            mod_id = self.find_mod(mod).session_mod_id
+        else:
+            mod_id = int(mod)
+        count = ct.c_uint32()
+        error = _error()
+        first = _lib.pc_session_dump_mod_groups(
+            self._handle,
+            mod_id,
+            None,
+            0,
+            ct.byref(count),
+            ct.byref(error),
+        )
+        if first not in (RESULT_OK, RESULT_BUFFER_TOO_SMALL):
+            _check(first, error)
+        values = (ct.c_uint32 * count.value)()
+        error = _error()
+        _check(
+            _lib.pc_session_dump_mod_groups(
+                self._handle,
+                mod_id,
+                values,
+                count.value,
+                ct.byref(count),
+                ct.byref(error),
+            ),
+            error,
+        )
+        return tuple(values[index] for index in range(count.value))
 
 
 class Item:
@@ -2341,3 +2608,15 @@ def load_economy(economy: str | Mapping[str, Any]) -> Economy:
         error,
     )
     return Economy(handle)
+
+
+def engine_compiler() -> str:
+    return _decode(_lib.pc_engine_compiler())
+
+
+def engine_abi_version() -> int:
+    return int(_lib.pc_abi_version())
+
+
+def engine_library_path() -> Path:
+    return Path(str(_lib._name)).resolve()

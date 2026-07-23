@@ -137,6 +137,61 @@ pc_result pc_solver_candidates(
     uint32_t* out_count,
     pc_error_info* out_error);
 
+/* --- natural-T1 corpus feasibility ----------------------------------------- */
+
+typedef enum pc_goal_feasibility_status {
+    PC_GOAL_FEASIBILITY_UNKNOWN = 0,
+    PC_GOAL_FEASIBILITY_FEASIBLE = 1,
+    PC_GOAL_FEASIBILITY_INFEASIBLE = 2
+} pc_goal_feasibility_status;
+
+typedef enum pc_goal_feasibility_reason {
+    PC_GOAL_FEASIBILITY_REASON_NONE = 0,
+    PC_GOAL_FEASIBILITY_REASON_ALREADY_SATISFIED = 1,
+    PC_GOAL_FEASIBILITY_REASON_NATURAL_REFORGE_WITNESS = 2,
+    PC_GOAL_FEASIBILITY_REASON_NO_NATURAL_T1 = 3,
+    PC_GOAL_FEASIBILITY_REASON_SLOT_CAPACITY = 4,
+    PC_GOAL_FEASIBILITY_REASON_GROUP_CONFLICT = 5,
+    PC_GOAL_FEASIBILITY_REASON_UNSUPPORTED_START = 6,
+    PC_GOAL_FEASIBILITY_REASON_NO_ADMITTED_REFORGE = 7
+} pc_goal_feasibility_reason;
+
+/* Engine-owned three-way query used by seeded natural-T1 corpus generation.
+ * A FEASIBLE result is backed by an admitted ordinary reforge with a
+ * positive-weight, capacity-safe, group-compatible T1 assignment. An
+ * INFEASIBLE result is a structural proof. Every unsupported start or proof
+ * gap returns UNKNOWN; bounded solve exhaustion is never consulted.
+ *
+ * witness_action_id is owned by the solver. Unused witness_mod_ids entries
+ * are UINT32_MAX. slot_* arrays correspond to the resolved goal slots. */
+typedef struct pc_goal_feasibility {
+    uint32_t struct_size;
+    uint32_t abi_version;
+    int32_t status; /* pc_goal_feasibility_status */
+    int32_t reason; /* pc_goal_feasibility_reason */
+    uint32_t goal_slot_count;
+    uint32_t required_slot_count;
+    uint32_t eligible_slot_count;
+    uint32_t natural_pool_mod_count;
+    uint32_t natural_prefix_mod_count;
+    uint32_t natural_suffix_mod_count;
+    uint64_t natural_pool_weight;
+    uint64_t natural_prefix_weight;
+    uint64_t natural_suffix_weight;
+    uint32_t witness_action_index;
+    const char* witness_action_id;
+    uint32_t witness_mod_ids[PC_SOLVER_MAX_GOAL_SLOTS];
+    uint32_t slot_natural_mod_counts[PC_SOLVER_MAX_GOAL_SLOTS];
+    uint64_t slot_natural_weights[PC_SOLVER_MAX_GOAL_SLOTS];
+    double slot_single_draw_probabilities[PC_SOLVER_MAX_GOAL_SLOTS];
+} pc_goal_feasibility;
+
+pc_result pc_solver_goal_feasibility(
+    pc_solver_handle solver,
+    const pc_item_state* start_item,
+    pc_goal_feasibility* out_feasibility,
+    pc_error_info* out_error);
+
 /* --- calculation engine (Calculator backend) --------------------------------- */
 
 /* One abstract successor class. state_id is stable for this solver handle

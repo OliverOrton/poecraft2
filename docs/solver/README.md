@@ -5,11 +5,15 @@ and acceptance narratives are archived and do not control current sequencing.
 
 Parent: [Documentation index](../README.md)
 
-Verified against code and action/state-pruning acceptance: 2026-07-21 working tree. Scope:
-native solver, calculation/evaluation engines, public C ABI, policy
-compilation, and the non-visual WASM/worker path. The pinned measurements live
-in [solver-scaling v1](../../fixtures/solver-scaling/v1/README.md); this stamp
-does not claim rendered-browser review or a mechanic ruling.
+Verified against code, action/state-pruning acceptance, and the natural-T1
+feasibility contract: 2026-07-22 working tree. Scope: native solver,
+calculation/evaluation engines, public C ABI, policy compilation, seeded
+corpus generation, and the non-visual WASM/worker path. The pinned scaling
+measurements live in
+[solver-scaling v1](../../fixtures/solver-scaling/v1/README.md), and the
+generated corpus lives in
+[seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
+stamp does not claim rendered-browser review or a mechanic ruling.
 
 ## Purpose
 
@@ -74,6 +78,42 @@ difference. No approximate global compaction exists.
 Code authority:
 `engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,
 `engine/src/solver_abstract.cpp`, and `engine/src/solver_calc.cpp`.
+
+### Natural-T1 corpus feasibility
+
+`pc_solver_goal_feasibility` is a dedicated three-way native query for
+benchmark-corpus construction. It reuses the resolved goal layout, session
+item-level data and base weights, full exclusion groups, rare-item side
+capacity, the goal-relevant candidate set, and action reachability. It returns:
+
+- `feasible` only with a positive-weight natural T1 assignment and an admitted,
+  legal ordinary reforge witness (or when the supplied item already satisfies
+  the natural goal);
+- `infeasible` only for structural proofs such as too few natural T1 slots,
+  side-capacity failure, or exclusion-group conflict; and
+- `unknown` for unsupported starts or when the admitted actions do not supply
+  the required witness.
+
+The query never runs a bounded solve, so cap or watchdog exhaustion cannot be
+misreported as infeasibility. The initial generator proposes only T1
+base-reach prefix/suffix families for its uninfluenced starts, then requires a
+native `feasible` result before emitting a case. Generated slots use family
+keys, whose acquisition-aware family identity prevents a crafted/bench member
+from satisfying a natural-only slot. Bench operations remain available in the
+case's priced product envelope.
+
+The Python generator accepts explicit base paths, a path list, item classes,
+or a named base pool; seeded side composition and goal-count strata; family
+and tag filters; resource caps; and watchdogs. Its manifest pins artifact,
+economy, generator, Git state, compiler, ABI, and native-binary hashes. The
+generation report retains the full acceptance/rejection funnel and deliberate
+feasibility probes. Run records pin the solver build separately so later A/B
+runs reuse the same explicit cases.
+
+Code authority: `engine/include/poecraft/solver.h`,
+`engine/src/solver_api.cpp`,
+`tools/ingest/poecraft_ingest/natural_t1_corpus.py`, and
+`bindings/python/poecraft_engine/_binding.py`.
 
 ## Actions And Planner Operators
 

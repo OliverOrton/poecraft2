@@ -7,6 +7,7 @@
 #include "poecraft/solver.h"
 
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -498,6 +499,101 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_data_destroy(data);
 }
 
+void run_natural_t1_feasibility_gate(const char* artifact_dir) {
+    pc_error_info error;
+    pc_error_info_init(&error);
+    pc_data_handle data = nullptr;
+    const std::string manifest =
+        std::string(artifact_dir) + "/manifest.json";
+    PC_CHECK(pc_data_load_file(manifest.c_str(), &data, &error) ==
+             PC_RESULT_OK);
+    if (data == nullptr) return;
+    PC_CHECK(std::strlen(pc_engine_compiler()) > 0);
+
+    pc_session_options options{};
+    options.struct_size = sizeof(options);
+    options.abi_version = PC_ABI_VERSION;
+    options.base_metadata_path =
+        "Metadata/Items/Armours/Helmets/HelmetDex11";
+    options.item_level = 86;
+    pc_session_handle session = nullptr;
+    PC_CHECK(pc_session_create(data, &options, &session, &error) ==
+             PC_RESULT_OK);
+    if (session == nullptr) {
+        pc_data_destroy(data);
+        return;
+    }
+
+    auto item = [&](const std::uint8_t rarity) {
+        pc_item_state value{};
+        pc_item_init_options init{};
+        init.struct_size = sizeof(init);
+        init.abi_version = PC_ABI_VERSION;
+        init.rarity = rarity;
+        init.with_implicits = 0;
+        PC_CHECK(pc_item_init(session, &init, &value, &error) ==
+                 PC_RESULT_OK);
+        return value;
+    };
+    auto query = [&](const std::string& goal,
+                     const pc_item_state& start) {
+        pc_goal_feasibility feasibility{};
+        pc_solver_handle solver = nullptr;
+        PC_CHECK(pc_solver_create(session, goal.c_str(), goal.size(),
+                                  &solver, &error) == PC_RESULT_OK);
+        if (solver != nullptr) {
+            PC_CHECK(pc_solver_goal_feasibility(
+                         solver, &start, &feasibility, &error) ==
+                     PC_RESULT_OK);
+            pc_solver_destroy(solver);
+        }
+        return feasibility;
+    };
+
+    const std::string natural_three =
+        R"({"version":"v1","rarity":"rare","action_mode":"goal_relevant","min_satisfied_slots":3,"slots":[{"family_mod_key":"ItemFoundRarityIncreasePrefix3","min_tier":1},{"family_mod_key":"IncreasedLife9","min_tier":1},{"family_mod_key":"ChaosResist6","min_tier":1}]})";
+    const pc_goal_feasibility feasible =
+        query(natural_three, item(PC_RARITY_RARE));
+    PC_CHECK(feasible.status == PC_GOAL_FEASIBILITY_FEASIBLE);
+    PC_CHECK(feasible.reason ==
+             PC_GOAL_FEASIBILITY_REASON_NATURAL_REFORGE_WITNESS);
+    PC_CHECK(feasible.goal_slot_count == 3);
+    PC_CHECK(feasible.eligible_slot_count == 3);
+    PC_CHECK(feasible.natural_pool_mod_count > 0);
+    PC_CHECK(feasible.natural_pool_weight > 0);
+    PC_CHECK(feasible.witness_action_index != UINT32_MAX);
+    for (std::uint32_t slot = 0; slot < 3; ++slot) {
+        PC_CHECK(feasible.witness_mod_ids[slot] != UINT32_MAX);
+        PC_CHECK(feasible.slot_natural_mod_counts[slot] > 0);
+        PC_CHECK(feasible.slot_single_draw_probabilities[slot] > 0.0);
+    }
+
+    const std::string bench_goal =
+        R"({"version":"v1","rarity":"rare","action_mode":"goal_relevant","min_satisfied_slots":1,"slots":[{"family_mod_key":"EinharMasterColdResist3__","min_tier":1}]})";
+    const pc_goal_feasibility no_natural =
+        query(bench_goal, item(PC_RARITY_RARE));
+    PC_CHECK(no_natural.status == PC_GOAL_FEASIBILITY_INFEASIBLE);
+    PC_CHECK(no_natural.reason ==
+             PC_GOAL_FEASIBILITY_REASON_NO_NATURAL_T1);
+
+    const std::string four_prefixes =
+        R"({"version":"v1","rarity":"rare","action_mode":"goal_relevant","min_satisfied_slots":4,"slots":[{"family_mod_key":"ItemFoundRarityIncreasePrefix3","min_tier":1},{"family_mod_key":"IncreasedLife9","min_tier":1},{"family_mod_key":"LocalIncreasedEvasionRating8","min_tier":1},{"family_mod_key":"LocalIncreasedEvasionRatingPercent7","min_tier":1}]})";
+    const pc_goal_feasibility capacity =
+        query(four_prefixes, item(PC_RARITY_RARE));
+    PC_CHECK(capacity.status == PC_GOAL_FEASIBILITY_INFEASIBLE);
+    PC_CHECK(capacity.reason ==
+             PC_GOAL_FEASIBILITY_REASON_SLOT_CAPACITY);
+
+    const pc_goal_feasibility unknown =
+        query(natural_three, item(PC_RARITY_MAGIC));
+    PC_CHECK(unknown.status == PC_GOAL_FEASIBILITY_UNKNOWN);
+    PC_CHECK(unknown.reason ==
+             PC_GOAL_FEASIBILITY_REASON_UNSUPPORTED_START);
+
+    pc_session_destroy(session);
+    pc_data_destroy(data);
+}
+
 } // namespace
 
 void run_solver_api_tests(const char* artifact_dir) {
@@ -506,4 +602,13 @@ void run_solver_api_tests(const char* artifact_dir) {
         return;
     }
     run_public_solver_gate(artifact_dir);
+    run_natural_t1_feasibility_gate(artifact_dir);
+}
+
+void run_solver_feasibility_tests(const char* artifact_dir) {
+    if (artifact_dir == nullptr) {
+        std::printf("solver feasibility suite skipped (missing path)\n");
+        return;
+    }
+    run_natural_t1_feasibility_gate(artifact_dir);
 }
