@@ -267,6 +267,52 @@ links with zero missing targets or unreachable documents.
 The exact natural two-T1 oracle did not run, and the economy pipeline was not
 touched or published.
 
+## Configured two-T1 WASM completion follow-up
+
+On 2026-07-24 Oliver requested a current-release two-natural-T1 run to
+completion. The pinned
+`natural-t1-full-two-4e6fa1960d1a` case ran through the real WASM
+begin/step/finish loop with four work items per call and its unchanged
+short-budget targets/caps. This was not the prohibited exact natural two-T1
+oracle.
+
+The accepted release completed in 121.007 seconds at 13,000 expanded / 13,669
+discovered states, 213,914 rows, and 293,112 transitions. It returned
+`bounded_near_optimal` / `target_gap`, firing the requested relative target
+with `L=363.9560704131171`, `U=385.92200606740977`, and a 6.0353% relative
+gap. This is a bounded completion, not exact closure.
+
+At the directly comparable 7,402-state point, the old release had consumed
+890.879 seconds and was approaching its 900-second timeout. The fixed release
+reached the same state count in 38.467 seconds, a 23.16x speedup. The progress
+accounting fix therefore did materially improve the two-goal case even though
+the complete bounded solve still takes about two minutes.
+
+The remaining wall is mostly real focused solve work: focused expansion
+reported 83.875 seconds (69.31%), 81 rounds, and 670 policy evaluations.
+Separately reported constructive-policy and expansion timers were 13.835 and
+11.926 seconds; these timers are not added to the inclusive focused total.
+Two further behavior-identical optimization leads are now quantified:
+
+- fallback start properness took 11.283 seconds, 99.76% of fallback validation
+  and 9.32% of solve wall across 78 calls; and
+- the “fast” CalcContext byte ledger still recursively visited 20,114,971
+  child contexts across 473,139 requests, taking 7.318 seconds (6.05%).
+
+Neither JSON parsing nor WASM heap growth owns the residual: parsing took
+1.013 seconds, and three solve-time heap growth events took 19.2 ms total.
+Step median/p95/max were 0.074 ms / 2.217 ms / 2.598 seconds. Raw output,
+watchdogs, the failed first report-writer attempt, restored harness proof, and
+the concise record are under `build/wasm-progress-fix/`, headed by
+`2t1-configured-completion-summary.json`.
+
+The first attempt reached native `done` but the ignored diagnostic report
+writer exceeded Node's argument limit by spreading 158,153 step values into
+`Math.max`. The replay used a reduction for that summary calculation only,
+then restored `run_headless_wasm.mjs` to its retained SHA-256
+`7f42ea2f7c0275275ed75b8f92c350050070d8d969ef46cf13da4d59eefcc8e6`.
+No tracked source, fixture, cap, default, mechanic, or economy file changed.
+
 ## Historical focused-round Gate 0-1 hard stop (resolved)
 
 The session began on 2026-07-23 with the exact requested preflight:
@@ -1083,7 +1129,8 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
 split, focused-round performance attribution and scheduling, and the
 measurement-only native goal-size scaling and headless-WASM step/progress
-diagnostics, followed by the accepted WASM progress-accounting fix.
+diagnostics, followed by the accepted WASM progress-accounting fix and the
+configured two-T1 WASM completion follow-up.
 
 Exact stopping point: focused diagnostic source is committed at `f28bbb8`; the
 accepted progress-accounting source/evidence milestone is `c58b71a`.
@@ -1096,6 +1143,8 @@ The follow-up raw scaling evidence and report are retained under
 retained under `build/wasm-solver-slowdown/`; accepted fix evidence is retained
 under `build/wasm-progress-fix/` and in
 `fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
+The latest configured two-T1 completion record is
+`build/wasm-progress-fix/2t1-configured-completion-summary.json`.
 No focused scheduling default changed. No implementation plan is active;
 Oliver must select the next chunk before implementation resumes.
 
