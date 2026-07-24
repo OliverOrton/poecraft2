@@ -5,10 +5,14 @@
 and the
 [focused-round performance chunk](docs/archive/2026-07-23-focused-round-performance/README.md)
 are complete and accepted. The follow-up native goal-size scaling diagnostic
-is also complete under `build/solver-scaling-goal-slots/`; it was measurement
-only. Focused diagnostics are committed at `f28bbb8`; the measured result keeps
-the existing scheduling defaults. No implementation boundary is active.
-Oliver must select the next chunk before source work resumes.**
+and the follow-up headless-WASM step/progress diagnostic are also complete
+under `build/solver-scaling-goal-slots/` and
+`build/wasm-solver-slowdown/`; both were measurement only. The WASM diagnostic
+identified the full owned-byte walk in per-step progress as the dominant wall;
+no fix was implemented. Focused diagnostics are committed at `f28bbb8`; the
+measured result keeps the existing scheduling defaults. No implementation
+boundary is active. Oliver must select the next chunk before source work
+resumes.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -162,8 +166,66 @@ were not counted as independent fit points.
 Native plainly did not reproduce the browser wall: the 2-goal solve reached
 8,000 states in 23.59 seconds and 12,529 in 46.68 seconds, while 2/3-goal
 2,000-state solves took 4.46/4.87 seconds. The reported browser slowdown is
-therefore WASM/browser-specific and requires a separate owner-selected WASM
-diagnostic. No fix or new instrumentation was attempted here.
+therefore WASM/browser-specific. The separate owner-selected WASM diagnostic
+described below is now complete. No fix or new instrumentation was attempted
+in this native chunk.
+
+## WASM step/progress diagnostic handoff
+
+On 2026-07-23 Oliver selected a measurement-only follow-up to locate the
+browser-scale slowdown. No tracked engine, WASM, web, default, cap, mechanic,
+fixture, or economy source changed. The exact natural two-T1 oracle did not
+run. Raw reports, watchdog records, machine-readable analysis, evidence hashes,
+and the short report are retained under `build/wasm-solver-slowdown/`.
+
+The diagnostic used the committed release module
+(`poecraft_engine.mjs` SHA-256
+`730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86`;
+`.wasm` SHA-256
+`71e701fb89e7379b5ea14292a9b68208eb82d82a232ffadf268123dabe8e80ac`).
+The loaded module contains neither ASSERTIONS nor SAFE_HEAP machinery. All
+benchmark and auxiliary-build processes ran under the detached 900-second
+watchdog.
+
+Experiment A drove the real WASM begin/step/finish ABI in headless Node with
+four work items. Sixteen of 18 requested cells completed; 2 goals / 8,000
+states timed out at 900 seconds with no survivor after reaching 7,402 states
+in the last sample, and 2 goals / 16,000 was skipped after that timeout. The
+largest completed ratio was 83.94x native at the repeated 4,861-state
+one-goal plateau. Every completed cell reproduced native transition/policy
+hashes and had zero solve-time WASM heap-growth events.
+
+Experiment B held the 2-goal / 2,000-state case fixed. Work-item chunks
+4 / 64 / 1,024 / 8,192 took 25.530 / 7.158 / 5.919 / 5.837 seconds and
+16,397 / 1,025 / 65 / 9 ABI steps. The largest chunk was 1.308x native;
+the four-item path was 5.721x. All outputs and deterministic hashes matched.
+JSON parsing was only 90.2 ms of the four-item run.
+
+The direct measurement-only A/B replayed the slow one-goal / 4,000-state cell
+with an ignored auxiliary release build whose only source overlay changed
+per-step progress from the full selected-owned-byte walk to the existing fast
+owned-byte ledger. The committed release took 257.212 seconds; the overlay
+took 4.468 seconds, a 57.57x speedup and 98.26% wall removal. Both runs used
+25,863 steps and had identical summaries, bounds, state counts, live/peak byte
+values, and transition/policy hashes. The auxiliary JS wrapper was
+byte-identical to the committed wrapper; no auxiliary artifact was copied into
+`bindings/wasm/dist`.
+
+The dominant owner is therefore the step/progress ABI path:
+`pc_solver_solve_step` calls `progress()` after every bounded step, and
+`progress()` calls the full `estimated_owned_bytes()` graph walk. The worker's
+four-item cap multiplies that cost by tens of thousands of progress calls.
+Ordinary WASM compute, heap growth, and JSON parsing are ruled out as dominant.
+Experiment C was not run because A reproduced the wall headlessly. The exact
+reported 450x browser magnitude was not reproduced in Node, so worker yields
+or rendering may add residual browser-only cost, but they are not required for
+the wall.
+
+No fix was implemented. Ranked unselected candidates are: use the existing
+fast ledger for per-step progress while retaining bounded audits; raise or
+adapt the four-item cap / decouple step cadence from detailed progress; and
+separate cheap progress from detailed accounting. Browser-yield/render
+profiling is lower priority after the step-path owner is removed.
 
 ## Historical focused-round Gate 0-1 hard stop (resolved)
 
@@ -980,7 +1042,8 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 
 Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
 split, focused-round performance attribution and scheduling, and the
-measurement-only native goal-size scaling diagnostic.
+measurement-only native goal-size scaling and headless-WASM step/progress
+diagnostics.
 
 Exact stopping point: focused diagnostic source is committed at `f28bbb8`.
 The complete plan and results are archived under
@@ -988,18 +1051,19 @@ The complete plan and results are archived under
 evidence is
 `fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json`.
 The follow-up raw scaling evidence and report are retained under
-`build/solver-scaling-goal-slots/`. No focused scheduling default changed. No
-implementation plan is active; Oliver must select the next chunk before
-implementation resumes.
+`build/solver-scaling-goal-slots/`; the WASM diagnostic evidence and report are
+retained under `build/wasm-solver-slowdown/`. No focused scheduling default
+changed. No implementation plan is active; Oliver must select the next chunk
+before implementation resumes.
 
 The measured leads are explicit but unselected: cooperatively subdivide the
 approximately 11.5-second solve step before reconsidering a larger global
 batch, and consider behavior-identical reuse around fallback
-start-properness validation. The scaling diagnostic adds a separate,
-unselected WASM/browser investigation because native does not reproduce the
-reported wall. The exact natural two-T1 oracle remains prohibited. The
-natural-T1 generator remains intentionally T1-only. Economy repair or
-publishing remains separate and untouched.
+start-properness validation. The completed WASM diagnostic adds the separate,
+unselected per-step fast-ledger and work-item-cadence candidates above. The
+exact natural two-T1 oracle remains prohibited. The natural-T1 generator
+remains intentionally T1-only. Economy repair or publishing remains separate
+and untouched.
 
 The two Strategy Board zoom-floor files are concurrent user work and were
 preserved outside focused-round commits.
