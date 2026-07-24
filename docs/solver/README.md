@@ -6,7 +6,8 @@ and acceptance narratives are archived and do not control current sequencing.
 Parent: [Documentation index](../README.md)
 
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
-split, and focused-round performance acceptance: 2026-07-23 @ `f28bbb8`.
+split, focused-round performance acceptance, and WASM progress-accounting
+acceptance: 2026-07-24 @ `c58b71a`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, benchmark orchestration/analytics, and the non-visual
@@ -269,6 +270,13 @@ Selected-allocation enforcement uses incremental owner ledgers with periodic
 full audits. On the accepted two-T1 product, per-state preparation byte audits
 fell from the 22.47-second baseline to 7.3 ms (0.04% of expansion); audited
 undercount is a hard error.
+
+Stateful solve progress reports the conservative incremental estimate after
+each bounded step, in both native and WASM callers. Whole-graph accounting
+remains authoritative at audit/cap checkpoints, telemetry snapshots,
+finalization, and explicit memory-statistics requests. This distinction keeps
+frequent progress cheap without weakening selected-owned-byte enforcement or
+final reporting.
 
 Transition caches are price-independent and can be reused by a solver handle,
 but the browser's long-lived transfer/reprice lifecycle is not a settled

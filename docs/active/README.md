@@ -1,8 +1,8 @@
 # Active Work
 
 **Status: no implementation boundary is active.** The focused-round
-performance chunk completed on 2026-07-23. Oliver must select the next chunk
-before implementation resumes.
+performance chunk and its selected WASM progress-accounting follow-up are
+complete. Oliver must select the next chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
@@ -16,11 +16,14 @@ The natural-T1 generator intentionally emits T1-only goals; tier-range support
 is not pending work. Economy repair/publishing remains separate and was not
 touched by the completed performance chunk.
 
-The completed
+The accepted WASM progress-accounting source and evidence commit `c58b71a` is
+the latest clean source boundary. It changes only frequent progress accounting,
+its regression coverage, and the rebuilt release module; focused scheduling,
+solver mechanics, caps, and the public ABI remain unchanged. The completed
 [mechanical solver split](../archive/2026-07-22-mechanical-solver-split/README.md)
-is the clean source boundary. The read-only
+and the read-only
 [post-B6 reconnaissance](../archive/2026-07-23-post-b6-reconnaissance/README.md)
-is historical input, not execution authority.
+are historical input, not execution authority.
 
 The bounded policy results and benchmarking plan completed B1 through B6 on
 2026-07-22 and is preserved in its

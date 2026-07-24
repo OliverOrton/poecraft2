@@ -248,6 +248,26 @@ change. The exact natural two-T1 oracle did not run, no candidate required
 exact evaluation or 10,000 simulations, and the economy pipeline was not
 touched.
 
+## WASM Solver Progress Accounting
+
+The 2026-07-24
+[progress-accounting acceptance](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
+implements the dominant owner identified by the headless-WASM diagnostic:
+per-step solve progress now uses the existing conservative owned-byte ledger,
+while full selected-allocation walks remain at exact accounting checkpoints.
+
+The real four-item one-goal/4,000-state replay fell from 257.212 to 7.994
+seconds, a 32.17x speedup and 96.89% wall removal. It retained 25,863 steps,
+4,000 expanded / 10,759 discovered states, identical lower/upper bounds,
+live/peak bytes, status, termination, and transition/policy hashes. The
+accepted release binary matches the earlier 4.468-second diagnostic overlay.
+
+Scoped acceptance passed 497 native solve checks and all 27 release-WASM
+Node-worker smoke checks. It changed no mechanic, scheduling default, cap,
+public ABI, natural-T1 generation, or economy data. This is headless
+Node-WASM evidence and does not establish browser/device throughput or explain
+any residual browser-only rendering/yield cost.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

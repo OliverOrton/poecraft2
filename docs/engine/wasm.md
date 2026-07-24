@@ -6,13 +6,13 @@ evidence boundaries.
 
 Parent: [Engine](README.md)
 
-Verified against code and the rebuilt release module: 2026-07-22 @
-bounded-policy B6 boundary.
+Verified against code and the rebuilt release module: 2026-07-24 @
+`c58b71a`.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`b70d3cf05c0ae9a2a2429bffbde9c279b24b74cad3d670a48090ec6a5b5b77c6`.
+`049b2ef985a5388fb31623153d77aca1ac154b475aab04f9e29de8de1d1a1fb8`.
 
 ## Architecture
 
@@ -134,6 +134,14 @@ rows/transitions/reforge work, and live/peak selected owned bytes. The latter
 fields are observational reporting only. Non-finite unavailable values cross
 the JSON facade as `null`.
 
+Every bounded solve step obtains those progress bytes from the conservative
+incremental selected-owned-byte ledger. Full selected-allocation walks remain
+at audit/cap checkpoints, telemetry snapshots, finalization, and explicit
+memory-statistics requests. Progress can therefore conservatively overestimate
+the audited live selection, but it must never undercount it. This avoids
+repeating a whole-graph accounting walk after each 1–4-item worker step without
+changing cap enforcement or final accounting.
+
 On cancellation the worker returns a cancelled result with its latest
 progress/worker telemetry and calls `pcw_solver_solve_abandon` in cleanup.
 Abandon resets the native in-progress solve while retaining bounded abandoned
@@ -209,6 +217,15 @@ Evidence must be read at the layer it actually exercises:
   follow-up closes solve, compile, and 10,000-run verification in 270 ms with
   two states, one row, a 19.55 ms maximum Worker slice, and no growth from the
   278,396,928-byte starting WASM heap.
+- The
+  [progress-accounting acceptance](../../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
+  replays the previously pathological one-goal/4,000-state solve with the real
+  four-item cadence. Fresh accepted source reduced solve wall from 257.212 to
+  7.994 seconds (32.17x; 96.89% removed) while preserving bounds, status,
+  states, live/peak accounting, and transition/policy hashes. The rebuilt
+  binary exactly matches the earlier 4.468-second measurement overlay; the
+  timing difference is run variance. This is headless Node-WASM evidence, not
+  browser/device timing proof.
 - The tracked release wrapper itself is evidence of the module's current
   assignment/export map.
 

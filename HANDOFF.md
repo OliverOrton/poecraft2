@@ -9,10 +9,12 @@ and the follow-up headless-WASM step/progress diagnostic are also complete
 under `build/solver-scaling-goal-slots/` and
 `build/wasm-solver-slowdown/`; both were measurement only. The WASM diagnostic
 identified the full owned-byte walk in per-step progress as the dominant wall;
-no fix was implemented. Focused diagnostics are committed at `f28bbb8`; the
-measured result keeps the existing scheduling defaults. No implementation
-boundary is active. Oliver must select the next chunk before source work
-resumes.**
+Oliver then selected and accepted the conservative-ledger progress fix at
+`c58b71a`, with tracked evidence in
+`fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
+Focused diagnostics remain at `f28bbb8`, and no scheduling default changed.
+No implementation boundary is active. Oliver must select the next chunk before
+source work resumes.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -221,11 +223,49 @@ reported 450x browser magnitude was not reproduced in Node, so worker yields
 or rendering may add residual browser-only cost, but they are not required for
 the wall.
 
-No fix was implemented. Ranked unselected candidates are: use the existing
-fast ledger for per-step progress while retaining bounded audits; raise or
-adapt the four-item cap / decouple step cadence from detailed progress; and
-separate cheap progress from detailed accounting. Browser-yield/render
-profiling is lower priority after the step-path owner is removed.
+At the diagnostic stopping point no fix was implemented. Oliver subsequently
+selected the existing fast-ledger candidate; its accepted implementation is
+recorded below. Raising/adapting the four-item cap, decoupling detailed
+progress cadence, and browser yield/render profiling remain unselected
+follow-ups.
+
+## WASM progress-accounting fix handoff
+
+On 2026-07-24 Oliver selected the dominant diagnostic owner for a narrowly
+scoped source fix. Accepted commit `c58b71a` changes per-step
+`SolveWork::Impl::progress()` live-memory reporting from the full
+selected-allocation walk to the existing conservative incremental ledger.
+The native regression test requires every stepped progress query to use that
+ledger and verifies that it never reports below the full live estimate.
+
+Full selected-allocation walks remain at audit/cap checkpoints, telemetry
+snapshots, solve finalization, retained-result accounting, and explicit memory
+statistics. The fix changes no solver mechanic, focused scheduling default,
+resource cap, public ABI, natural-T1 generation, or economy input. The rebuilt
+release wrapper remains SHA-256
+`730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86`;
+the accepted `.wasm` SHA-256 is
+`049b2ef985a5388fb31623153d77aca1ac154b475aab04f9e29de8de1d1a1fb8`,
+exactly matching the earlier measurement-only overlay binary.
+
+The fresh real four-item replay of the one-goal/4,000-state case completed in
+7.994 seconds versus the retained 257.212-second release baseline: 32.17x
+faster with 96.89% of wall removed. It retained 25,863 steps, 4,000 expanded /
+10,759 discovered states, identical `L=5.108566990957789`,
+`U=8.090295568791923`, live/peak owned bytes, policy status and termination,
+and transition/policy hashes. The earlier identical overlay measured 4.468
+seconds, so the accepted run does not present one Node timing as a guarantee.
+
+Narrow acceptance ran entirely under detached 900-second watchdogs with zero
+timeouts or survivors: native build; 497/497 solver-solve checks; release WASM
+build; the four-item headless replay; and 27/27 release-WASM Node-worker smoke
+checks. Raw evidence is retained under `build/wasm-progress-fix/`; the concise
+tracked record is
+`fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
+The final Markdown audit covered 122 documentation files and 837 relative
+links with zero missing targets or unreachable documents.
+The exact natural two-T1 oracle did not run, and the economy pipeline was not
+touched or published.
 
 ## Historical focused-round Gate 0-1 hard stop (resolved)
 
@@ -1043,27 +1083,29 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
 split, focused-round performance attribution and scheduling, and the
 measurement-only native goal-size scaling and headless-WASM step/progress
-diagnostics.
+diagnostics, followed by the accepted WASM progress-accounting fix.
 
-Exact stopping point: focused diagnostic source is committed at `f28bbb8`.
+Exact stopping point: focused diagnostic source is committed at `f28bbb8`; the
+accepted progress-accounting source/evidence milestone is `c58b71a`.
 The complete plan and results are archived under
 `docs/archive/2026-07-23-focused-round-performance/`, and the concise tracked
 evidence is
 `fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json`.
 The follow-up raw scaling evidence and report are retained under
 `build/solver-scaling-goal-slots/`; the WASM diagnostic evidence and report are
-retained under `build/wasm-solver-slowdown/`. No focused scheduling default
-changed. No implementation plan is active; Oliver must select the next chunk
-before implementation resumes.
+retained under `build/wasm-solver-slowdown/`; accepted fix evidence is retained
+under `build/wasm-progress-fix/` and in
+`fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
+No focused scheduling default changed. No implementation plan is active;
+Oliver must select the next chunk before implementation resumes.
 
 The measured leads are explicit but unselected: cooperatively subdivide the
 approximately 11.5-second solve step before reconsidering a larger global
 batch, and consider behavior-identical reuse around fallback
-start-properness validation. The completed WASM diagnostic adds the separate,
-unselected per-step fast-ledger and work-item-cadence candidates above. The
-exact natural two-T1 oracle remains prohibited. The natural-T1 generator
-remains intentionally T1-only. Economy repair or publishing remains separate
-and untouched.
+start-properness validation. WASM work-item cadence changes and residual
+browser yield/render profiling remain unselected. The exact natural two-T1
+oracle remains prohibited. The natural-T1 generator remains intentionally
+T1-only. Economy repair or publishing remains separate and untouched.
 
 The two Strategy Board zoom-floor files are concurrent user work and were
 preserved outside focused-round commits.

@@ -29,7 +29,9 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 [Active](active/README.md) records that no implementation boundary is
-selected. The completed
+selected. The accepted WASM progress-accounting follow-up is pinned by its
+[tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
+at source commit `c58b71a`. The completed
 [focused-round performance attribution](archive/2026-07-23-focused-round-performance/README.md)
 is archived with its measured no-default-change result. [HANDOFF](../HANDOFF.md)
 records the exact completed boundary. The completed
