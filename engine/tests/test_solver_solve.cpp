@@ -1,7 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/json.hpp"
-#include "../src/solver_internal.hpp"
+#include "../src/solver_solve_types.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -19,6 +19,61 @@ using namespace poecraft;
 using namespace poecraft::solver;
 
 namespace {
+
+std::shared_ptr<SessionImpl> make_solve_session();
+
+void run_bounded_policy_row_capture_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    CalcContext calc(
+        session, goal, registry,
+        {registry.index_by_id.at("alchemy"),
+         registry.index_by_id.at("chaos"),
+         registry.index_by_id.at("restart")});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t state = calc.intern_item(start);
+    PC_CHECK(!calc.operators().empty());
+
+    SolveTransitionCache source;
+    SparseRow row;
+    row.owner_state = state;
+    source.rows.push_back(row);
+    source.choice_options.push_back(
+        OutcomeChoiceOption{7, state, state, state});
+    std::vector<PricedSparseRow> priced(1);
+    priced[0].operator_index = 0;
+    priced[0].cost = 17.0;
+    priced[0].choice_option_count = 1;
+    const solve_detail::CapturedBoundedPolicyRow captured =
+        solve_detail::capture_bounded_policy_row(
+            calc, source, priced, state, 0, kNoId);
+
+    source.rows[0].owner_state = state + 1;
+    priced[0].operator_index =
+        calc.operators().size() > 1 ? 1 : 0;
+    priced[0].cost = 3.0;
+    source.choice_options[0].mod_id = 2;
+    PC_CHECK(captured.policy.index == 0);
+    PC_CHECK(captured.cost == 17.0);
+    PC_CHECK(captured.choice_options.size() == 1);
+    PC_CHECK(captured.choice_options[0].mod_id == 7);
+    bool stale_row_rejected = false;
+    try {
+        (void)solve_detail::capture_bounded_policy_row(
+            calc, source, priced, state, 0, kNoId);
+    } catch (const std::logic_error&) {
+        stale_row_rejected = true;
+    }
+    PC_CHECK(stale_row_rejected);
+}
 
 /* Same eight-mod weighted universe as test_solver_calc.cpp. */
 std::shared_ptr<SessionImpl> make_solve_session() {
@@ -1209,6 +1264,7 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 } // namespace
 
 void run_solver_solve_tests(const char* artifact_dir) {
+    run_bounded_policy_row_capture_tests();
     run_alt_spam_tests();
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();

@@ -5,6 +5,58 @@ namespace solver {
 
 using namespace solve_detail;
 
+CapturedBoundedPolicyRow solve_detail::capture_bounded_policy_row(
+        const CalcContext& calc,
+        const SolveTransitionCache& transition_cache,
+        const std::vector<PricedSparseRow>& priced_rows,
+        const std::uint32_t state,
+        const std::uint64_t row,
+        const std::uint32_t fallback_operator) {
+        const std::uint64_t no_row =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t selected_operator = fallback_operator;
+        CapturedBoundedPolicyRow captured;
+        if (row != no_row) {
+            if (row >= priced_rows.size() ||
+                row >= transition_cache.rows.size() ||
+                transition_cache.rows[row].owner_state != state) {
+                throw std::logic_error(
+                    "bounded incumbent row does not belong to its state");
+            }
+            const PricedSparseRow& priced = priced_rows[row];
+            selected_operator = priced.operator_index;
+            captured.cost = priced.cost;
+            if (priced.choice_option_offset >
+                    transition_cache.choice_options.size() ||
+                priced.choice_option_count >
+                    transition_cache.choice_options.size() -
+                        priced.choice_option_offset) {
+                throw std::logic_error(
+                    "bounded incumbent row choice payload is out of range");
+            }
+            captured.choice_options.insert(
+                captured.choice_options.end(),
+                transition_cache.choice_options.begin() +
+                    static_cast<std::ptrdiff_t>(
+                        priced.choice_option_offset),
+                transition_cache.choice_options.begin() +
+                    static_cast<std::ptrdiff_t>(
+                        priced.choice_option_offset +
+                        priced.choice_option_count));
+        }
+        if (selected_operator == kNoId ||
+            selected_operator >= calc.operators().size()) {
+            throw std::logic_error(
+                "bounded incumbent has a reachable state without an "
+                "executable action");
+        }
+        const PlannerOperator& planner =
+            calc.operators().at(selected_operator);
+        captured.policy =
+            PolicyOperatorRef{planner.kind, selected_operator};
+        return captured;
+    }
+
  void SolveWork::Impl::identity_mix(
         std::uint64_t& hash, const std::uint64_t value) {
         hash ^= value;
@@ -276,59 +328,99 @@ auto SolveWork::Impl::acquire_focused_fallback() -> FocusedFallbackWitness {
         return {};
     }
 
-void SolveWork::Impl::populate_incumbent_policy(BoundedPolicyIncumbent& candidate) {
-        if (candidate.policy_materialized) return;
+void SolveWork::Impl::capture_incumbent_state(
+        BoundedPolicyIncumbent& candidate,
+        const std::uint32_t state,
+        const std::uint64_t row) {
+        if (state >= candidate.values.size() ||
+            state >= candidate.policy.size() ||
+            state >= candidate.policy_row_costs.size()) {
+            throw std::logic_error(
+                "bounded incumbent capture state is out of range");
+        }
+        std::uint32_t fallback_operator = kNoId;
+        if (row == std::numeric_limits<std::uint64_t>::max()) {
+            if (state < candidate.frontier_operators.size()) {
+                fallback_operator = candidate.frontier_operators[state];
+            }
+            if (fallback_operator == kNoId && candidate.fallback) {
+                fallback_operator = candidate.restart_operator;
+            }
+        }
+        CapturedBoundedPolicyRow captured =
+            capture_bounded_policy_row(
+                calc, *transition_cache, priced_rows, state, row,
+                fallback_operator);
+        candidate.policy[state] = captured.policy;
+        candidate.policy_row_costs[state] = captured.cost;
+
+        const auto source = std::lower_bound(
+            candidate.choice_sources.begin(),
+            candidate.choice_sources.end(), state,
+            [](const BoundedPolicyIncumbent::ChoiceSource& left,
+               const std::uint32_t right) {
+                return left.state < right;
+            });
+        if (captured.choice_options.empty()) {
+            if (source != candidate.choice_sources.end() &&
+                source->state == state) {
+                candidate.choice_sources.erase(source);
+            }
+        } else if (source != candidate.choice_sources.end() &&
+                   source->state == state) {
+            source->choices = std::move(captured.choice_options);
+        } else {
+            candidate.choice_sources.insert(
+                source,
+                BoundedPolicyIncumbent::ChoiceSource{
+                    state, std::move(captured.choice_options)});
+        }
+    }
+
+void SolveWork::Impl::capture_incumbent_policy(
+        BoundedPolicyIncumbent& candidate) {
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         const std::size_t state_count = candidate.values.size();
         candidate.policy.assign(state_count, PolicyOperatorRef{});
-        candidate.unveil_preferences.assign(state_count, {});
-        candidate.option_unveil_preferences.assign(state_count, {});
+        candidate.policy_row_costs.assign(state_count, kInfinity);
+        candidate.choice_sources.clear();
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) continue;
-            std::uint64_t selected_row =
+            const std::uint64_t row =
                 state < candidate.policy_rows.size()
                     ? candidate.policy_rows[state]
                     : no_row;
-            std::uint32_t selected_operator = kNoId;
-            if (selected_row != no_row) {
-                if (selected_row >= priced_rows.size() ||
-                    selected_row >= transition_cache->rows.size() ||
-                    transition_cache->rows[selected_row].owner_state != state) {
-                    throw std::logic_error(
-                        "bounded incumbent row does not belong to its state");
-                }
-                selected_operator =
-                    priced_rows[selected_row].operator_index;
-            } else if (state < candidate.frontier_operators.size()) {
-                selected_operator = candidate.frontier_operators[state];
-            }
-            if (selected_operator == kNoId && candidate.fallback) {
-                selected_operator = candidate.restart_operator;
-            }
-            if (selected_operator == kNoId ||
-                selected_operator >= calc.operators().size()) {
+            capture_incumbent_state(candidate, state, row);
+        }
+    }
+
+void SolveWork::Impl::populate_incumbent_policy(
+        BoundedPolicyIncumbent& candidate) {
+        if (candidate.policy_materialized) return;
+        const std::size_t state_count = candidate.values.size();
+        if (candidate.policy.size() != state_count) {
+            throw std::logic_error(
+                "bounded incumbent captured policy size changed");
+        }
+        candidate.unveil_preferences.assign(state_count, {});
+        candidate.option_unveil_preferences.assign(state_count, {});
+        for (BoundedPolicyIncumbent::ChoiceSource& source :
+             candidate.choice_sources) {
+            const std::uint32_t state = source.state;
+            if (state >= state_count ||
+                candidate.policy[state].index >= calc.operators().size()) {
                 throw std::logic_error(
-                    "bounded incumbent has a reachable state without an "
-                    "executable action");
+                    "bounded incumbent captured choice source is invalid");
             }
             const PlannerOperator& planner =
-                calc.operators().at(selected_operator);
-            candidate.policy[state] =
-                PolicyOperatorRef{planner.kind, selected_operator};
-            if (selected_row == no_row) continue;
-            const PricedSparseRow& row = priced_rows.at(selected_row);
+                calc.operators().at(candidate.policy[state].index);
             if (planner.kind == PlannerOperatorKind::Primitive &&
                 planner.primitive_action < calc.registry().actions.size() &&
                 calc.registry().actions[planner.primitive_action].params.type ==
                     ActionType::Unveil) {
-                std::vector<OutcomeChoiceOption> choices;
-                for (std::uint32_t i = 0; i < row.choice_option_count; ++i) {
-                    choices.push_back(transition_cache->choice_options.at(
-                        row.choice_option_offset + i));
-                }
                 std::sort(
-                    choices.begin(), choices.end(),
+                    source.choices.begin(), source.choices.end(),
                     [&](const OutcomeChoiceOption& left,
                         const OutcomeChoiceOption& right) {
                         const double left_value =
@@ -339,18 +431,15 @@ void SolveWork::Impl::populate_incumbent_policy(BoundedPolicyIncumbent& candidat
                                    ? left_value < right_value
                                    : left.mod_id < right.mod_id;
                     });
-                for (const OutcomeChoiceOption& choice : choices) {
+                for (const OutcomeChoiceOption& choice : source.choices) {
                     candidate.unveil_preferences[state].push_back(
                         choice.mod_id);
                 }
             } else if (planner.kind == PlannerOperatorKind::FixedOption &&
-                       row.choice_option_count != 0) {
+                       !source.choices.empty()) {
                 std::map<std::uint32_t, std::vector<OutcomeChoiceOption>>
                     by_observation;
-                for (std::uint32_t i = 0; i < row.choice_option_count; ++i) {
-                    const OutcomeChoiceOption& choice =
-                        transition_cache->choice_options.at(
-                            row.choice_option_offset + i);
+                for (const OutcomeChoiceOption& choice : source.choices) {
                     by_observation[choice.observation_state].push_back(choice);
                 }
                 for (auto& [observation_state, choices] : by_observation) {
@@ -377,7 +466,29 @@ void SolveWork::Impl::populate_incumbent_policy(BoundedPolicyIncumbent& candidat
                 }
             }
         }
+        candidate.choice_sources = {};
         candidate.policy_materialized = true;
+    }
+
+void SolveWork::Impl::commit_output_incumbent(
+        BoundedPolicyIncumbent candidate) {
+        output_incumbent = std::move(candidate);
+        result.diagnostics.incumbent_kind = output_incumbent->kind;
+        result.diagnostics.incumbent_round = output_incumbent->round;
+        result.diagnostics.incumbent_restart_state =
+            output_incumbent->restart_state;
+        result.diagnostics.incumbent_anchor_state =
+            output_incumbent->fallback_anchor_state;
+        result.diagnostics.incumbent_goal_identity =
+            output_incumbent->goal_identity;
+        result.diagnostics.incumbent_economy_identity =
+            output_incumbent->economy_identity;
+        result.diagnostics.incumbent_action_vocabulary_identity =
+            output_incumbent->action_vocabulary_identity;
+        result.diagnostics.incumbent_graph_identity =
+            output_incumbent->graph_identity;
+        result.diagnostics.incumbent_strict_state_provenance =
+            output_incumbent->strict_state_provenance;
     }
 
 void SolveWork::Impl::install_output_incumbent(
@@ -423,29 +534,12 @@ void SolveWork::Impl::install_output_incumbent(
             result.behavioral_representative_by_state;
         candidate.strict_state_provenance =
             result.behavioral_representative_by_state.empty();
-        /* Values, row IDs, frontier operators, fallback, and provenance are
-         * the atomic same-round source of truth. Policy refs and Unveil
-         * preferences are deterministic derived output; materialize them
-         * once only if this incumbent is ultimately returned. Rebuilding
-         * those full-state vectors on every improving upper round dominated
-         * exact searches without providing search guidance. */
-        output_incumbent = std::move(candidate);
-        result.diagnostics.incumbent_kind = output_incumbent->kind;
-        result.diagnostics.incumbent_round = output_incumbent->round;
-        result.diagnostics.incumbent_restart_state =
-            output_incumbent->restart_state;
-        result.diagnostics.incumbent_anchor_state =
-            output_incumbent->fallback_anchor_state;
-        result.diagnostics.incumbent_goal_identity =
-            output_incumbent->goal_identity;
-        result.diagnostics.incumbent_economy_identity =
-            output_incumbent->economy_identity;
-        result.diagnostics.incumbent_action_vocabulary_identity =
-            output_incumbent->action_vocabulary_identity;
-        result.diagnostics.incumbent_graph_identity =
-            output_incumbent->graph_identity;
-        result.diagnostics.incumbent_strict_state_provenance =
-            output_incumbent->strict_state_provenance;
+        /* Capture graph-relative row decisions while this same-round graph
+         * is still current. Preference sorting and its graph-sized nested
+         * output remain deferred, but finish() must never reinterpret an
+         * incumbent through a replacement graph or a repriced row variant. */
+        capture_incumbent_policy(candidate);
+        commit_output_incumbent(std::move(candidate));
     }
 
 void SolveWork::Impl::install_fallback_output_incumbent(
@@ -500,18 +594,35 @@ void SolveWork::Impl::install_fallback_output_incumbent(
 void SolveWork::Impl::install_direct_output_incumbent(
         const double upper, const std::uint64_t row) {
         if (!output_incumbent.has_value() ||
+            !std::isfinite(upper) || upper < 0.0 ||
+            upper >= output_incumbent->certified_upper_bound -
+                         options.epsilon ||
             row >= priced_rows.size() ||
             row >= transition_cache->rows.size() ||
             transition_cache->rows[row].owner_state != result.start_state) {
             return;
         }
-        std::vector<double> values = output_incumbent->values;
-        std::vector<std::uint64_t> rows = output_incumbent->policy_rows;
-        values[result.start_state] = upper;
-        rows[result.start_state] = row;
-        install_output_incumbent(
-            upper, values, rows, output_incumbent->frontier_operators,
-            output_incumbent->fallback, "direct_executable_row");
+        BoundedPolicyIncumbent candidate = *output_incumbent;
+        candidate.certified_upper_bound = upper;
+        candidate.evaluated_policy_cost = upper;
+        candidate.values[result.start_state] = upper;
+        candidate.policy_rows[result.start_state] = row;
+        candidate.round = result.diagnostics.focused_expansion_rounds;
+        candidate.kind = "direct_executable_row";
+        candidate.goal_identity = goal_identity();
+        candidate.economy_identity = economy_identity();
+        candidate.action_vocabulary_identity =
+            action_vocabulary_identity();
+        candidate.graph_identity = graph_identity();
+        candidate.behavioral_representative_by_state =
+            result.behavioral_representative_by_state;
+        candidate.strict_state_provenance =
+            result.behavioral_representative_by_state.empty();
+        candidate.unveil_preferences.clear();
+        candidate.option_unveil_preferences.clear();
+        candidate.policy_materialized = false;
+        capture_incumbent_state(candidate, result.start_state, row);
+        commit_output_incumbent(std::move(candidate));
     }
 
 SolveGapTarget SolveWork::Impl::satisfied_gap_target() const {

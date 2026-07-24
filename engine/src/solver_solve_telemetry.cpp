@@ -334,7 +334,14 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
             incumbent.kind.capacity() + 1;
         bytes += incumbent.values.capacity() * sizeof(double);
         bytes += incumbent.policy_rows.capacity() * sizeof(std::uint64_t);
+        bytes += incumbent.policy_row_costs.capacity() * sizeof(double);
         bytes += incumbent.policy.capacity() * sizeof(PolicyOperatorRef);
+        bytes += incumbent.choice_sources.capacity() *
+                 sizeof(BoundedPolicyIncumbent::ChoiceSource);
+        for (const auto& source : incumbent.choice_sources) {
+            bytes += source.choices.capacity() *
+                     sizeof(OutcomeChoiceOption);
+        }
         bytes += incumbent.frontier_operators.capacity() *
                  sizeof(std::uint32_t);
         bytes += incumbent.behavioral_representative_by_state.capacity() *

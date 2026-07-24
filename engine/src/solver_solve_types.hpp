@@ -412,6 +412,20 @@ struct SolveTransitionCache {
 
 namespace solve_detail {
 
+struct CapturedBoundedPolicyRow {
+    PolicyOperatorRef policy;
+    double cost = kInfinity;
+    std::vector<OutcomeChoiceOption> choice_options;
+};
+
+CapturedBoundedPolicyRow capture_bounded_policy_row(
+    const CalcContext& calc,
+    const SolveTransitionCache& transition_cache,
+    const std::vector<PricedSparseRow>& priced_rows,
+    std::uint32_t state,
+    std::uint64_t row,
+    std::uint32_t fallback_operator);
+
 std::uint64_t string_vector_owned_bytes(
     const std::vector<std::string>& values);
 
@@ -625,11 +639,17 @@ struct SolveWork::Impl {
         std::shared_ptr<const FocusedFallbackPolicy>;
     FocusedFallbackWitness focused_fallback_policy;
     struct BoundedPolicyIncumbent {
+        struct ChoiceSource {
+            std::uint32_t state = kNoId;
+            std::vector<OutcomeChoiceOption> choices;
+        };
         double certified_upper_bound = kInfinity;
         double evaluated_policy_cost = kInfinity;
         std::vector<double> values;
         std::vector<std::uint64_t> policy_rows;
+        std::vector<double> policy_row_costs;
         std::vector<PolicyOperatorRef> policy;
+        std::vector<ChoiceSource> choice_sources;
         std::vector<std::vector<std::uint32_t>> unveil_preferences;
         std::vector<std::vector<ObservedUnveilPreference>>
             option_unveil_preferences;
@@ -742,7 +762,16 @@ struct SolveWork::Impl {
 
     FocusedFallbackWitness acquire_focused_fallback();
 
+    void capture_incumbent_policy(BoundedPolicyIncumbent& candidate);
+
+    void capture_incumbent_state(
+        BoundedPolicyIncumbent& candidate,
+        std::uint32_t state,
+        std::uint64_t row);
+
     void populate_incumbent_policy(BoundedPolicyIncumbent& candidate);
+
+    void commit_output_incumbent(BoundedPolicyIncumbent candidate);
 
     void install_output_incumbent(
         const double upper,
@@ -1195,6 +1224,10 @@ struct SolveWork::Impl {
     void count_policy_actions(
         const std::vector<std::uint64_t>& rows,
         const std::vector<std::uint32_t>* frontier,
+        std::map<std::string, std::uint64_t>& counts) const;
+
+    void count_policy_actions(
+        const std::vector<PolicyOperatorRef>& policy,
         std::map<std::string, std::uint64_t>& counts) const;
 
     SolveResult finish();

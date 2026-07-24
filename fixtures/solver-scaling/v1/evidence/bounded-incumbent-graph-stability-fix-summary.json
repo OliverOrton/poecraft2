@@ -1,0 +1,227 @@
+{
+  "schema_version": "bounded_incumbent_graph_stability_fix_acceptance_v1",
+  "recorded_date": "2026-07-24",
+  "result": {
+    "decision": "accepted",
+    "change": "Capture bounded-incumbent policy decisions while their same-round transition graph and priced rows are current.",
+    "solver_mechanics_changed": false,
+    "focused_scheduling_changed": false,
+    "public_abi_changed": false,
+    "solver_caps_or_defaults_changed": false,
+    "tracked_input_fixtures_changed": false,
+    "exact_natural_two_t1_oracle_ran": false,
+    "economy_pipeline_touched_or_published": false,
+    "natural_t1_generator_changed": false
+  },
+  "source": {
+    "branch": "codex/bounded-policy-contract",
+    "selected_source_baseline": "042a281d806141a4da9876306109ab59b7f60454",
+    "clean_start_commit": "37e1bee3af2fcff9d8f9fb6476702f0a91b2e72c",
+    "paths": [
+      "bindings/wasm/dist/poecraft_engine.mjs",
+      "bindings/wasm/dist/poecraft_engine.wasm",
+      "engine/src/solver_solve_constructive.cpp",
+      "engine/src/solver_solve_finish.cpp",
+      "engine/src/solver_solve_telemetry.cpp",
+      "engine/src/solver_solve_types.hpp",
+      "engine/tests/test_solver_solve.cpp"
+    ]
+  },
+  "cause": {
+    "failure": "bounded incumbent row does not belong to its state",
+    "old_lifetime": "The incumbent retained graph-relative row indices and finish resolved their operator, choice payload, cost, and action counts through the then-current graph and priced-row table.",
+    "invalidation": "Focused graph growth may replace transition storage, while newly admitted equivalent variants may change a priced row's selected operator and cost.",
+    "hidden_atomicity_issue": "Even when a retained row index still named the same owner, resolving it after repricing could return a different action than the one whose upper bound was certified."
+  },
+  "implementation": {
+    "captured_at_acceptance": [
+      "policy operator reference for every non-goal state",
+      "selected row cost for deterministic policy hashing",
+      "choice-option payload only for selected rows that own one"
+    ],
+    "still_deferred_until_return": [
+      "graph-sized aligned primitive Unveil preference vectors",
+      "graph-sized aligned fixed-option observed preference vectors"
+    ],
+    "finish_uses_capture_for": [
+      "upper-policy action counts",
+      "preference materialization",
+      "policy operator output",
+      "selected row cost hashing"
+    ],
+    "direct_upper_update": "Copies the graph-stable incumbent and replaces only the captured start-state row decision.",
+    "owned_memory_accounting_updated": true
+  },
+  "regression": {
+    "test": "run_bounded_policy_row_capture_tests",
+    "contract": "After the source row owner, selected operator, cost, and choice payload mutate, the captured policy decision remains unchanged and a fresh attempt to resolve the stale source row is rejected."
+  },
+  "inputs": {
+    "artifact_manifest": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1"
+    },
+    "one_t1_case": {
+      "id": "incumbent-row-repro-one-t1-relative-1000",
+      "path": "build/incumbent-row-fix/one-t1-relative-1000.json",
+      "sha256": "0297a90f75c3d71d6193decffa2ee156cd256946995da2a0cbd0331e1ff3b0f3",
+      "natural_t1_goals": 1,
+      "max_relative_optimality_gap": 10,
+      "max_work_items_per_step": 1024
+    },
+    "two_t1_case": {
+      "id": "incumbent-row-repro-two-t1-relative-1000",
+      "path": "build/incumbent-row-fix/two-t1-relative-1000.json",
+      "sha256": "b48c30996d6f71036563a52c163cc6bda8531f8535367d99544f7c392f31fc3a",
+      "natural_t1_goals": 2,
+      "max_relative_optimality_gap": 10,
+      "max_work_items_per_step": 1024,
+      "exact_oracle": false
+    }
+  },
+  "watchdog": {
+    "seconds": 900,
+    "script_path": "build/focused-round/watchdog.py",
+    "script_sha256": "7eb3716cca2ec7903741f440f034e88c14d9270caab4bed6c40940eb4879c9f4",
+    "process_isolation": "CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW",
+    "any_process_timed_out": false,
+    "any_process_left_survivor": false
+  },
+  "commands": [
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "build/incremental-engine",
+        "--target",
+        "poecraft_engine_tests"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/native-build.watchdog.json",
+      "watchdog_sha256": "31b8957371c44d5a9b634de564b46454644e0eb2b7f35dc8e49d86b2b061f13c",
+      "exit_code": 0,
+      "wall_ms": 13604.653199901804
+    },
+    {
+      "command": [
+        "build/incremental-engine/poecraft_engine_tests.exe",
+        "data/compiled/current",
+        "fixtures/spec"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/native-tests.watchdog.json",
+      "watchdog_sha256": "a043c30cf310be04489b1190a14288056deac6e12bee570ae64e51c8fe078ccf",
+      "exit_code": 0,
+      "wall_ms": 59300.52980000619,
+      "checks": 513375,
+      "failures": 0
+    },
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build-wasm.ps1"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/wasm-build.watchdog.json",
+      "watchdog_sha256": "d79e948db69043260ae279cd79cbb226c136137c9e74f8d78ea24da43eb56d10",
+      "exit_code": 0,
+      "wall_ms": 79274.40759993624
+    },
+    {
+      "command": [
+        "node",
+        "build/wasm-solver-slowdown/run_headless_wasm.mjs",
+        "--case",
+        "build/incumbent-row-fix/one-t1-relative-1000.json",
+        "--output",
+        "build/incumbent-row-fix/postfix-one-wasm.json",
+        "--max-work-items",
+        "1024",
+        "--label",
+        "postfix"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/postfix-one-wasm.watchdog.json",
+      "watchdog_sha256": "840e420c6032f32e0ac1ccc8b1e403c22907895abd02b2b0032162472d1cb3d0",
+      "exit_code": 0,
+      "wall_ms": 1569.684399990365
+    },
+    {
+      "command": [
+        "node",
+        "build/wasm-solver-slowdown/run_headless_wasm.mjs",
+        "--case",
+        "build/incumbent-row-fix/two-t1-relative-1000.json",
+        "--output",
+        "build/incumbent-row-fix/postfix-two-wasm.json",
+        "--max-work-items",
+        "1024",
+        "--label",
+        "postfix"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/postfix-two-wasm.watchdog.json",
+      "watchdog_sha256": "0e87e064fe70261d6a7c8939ff84a27599c7680e414572c0987ffaed4a08c936",
+      "exit_code": 0,
+      "wall_ms": 29817.291800049134
+    },
+    {
+      "cwd": "apps/web",
+      "command": [
+        "npx",
+        "tsx",
+        "test/engine-smoke.test.ts"
+      ],
+      "watchdog_path": "build/incumbent-row-fix/web-engine-smoke.watchdog.json",
+      "watchdog_sha256": "a42759a6b8f02272376a07aeb7cc72c1d7ec0008e24068597eb4defb35ca8103",
+      "exit_code": 0,
+      "wall_ms": 7160.744699998759,
+      "checks": 27,
+      "failures": 0
+    }
+  ],
+  "artifacts": {
+    "native_test_executable_sha256": "1caa234bd9a8d447458d502b8bd2c5562b6070f05953183b2d4951a08eb14f82",
+    "release_mjs_sha256": "c524c6b6b276d32f76df5298190079f77181f4f1e9eff06c3ff852e1b81394fa",
+    "release_wasm_sha256": "e51d24b486d67284d7c56026b626357332b6fbeeaf7bd67ae2ee2b6cb8f376fd",
+    "assertions_enabled": false,
+    "safe_heap_enabled": false
+  },
+  "headless_wasm": {
+    "one_t1": {
+      "path": "build/incumbent-row-fix/postfix-one-wasm.json",
+      "sha256": "2fe14cc57ca1dbe23eac1f1d60557fdc3ef0f28f18a53cfac763f6788d7b2df4",
+      "solve_ms": 1043.9259,
+      "step_count": 8,
+      "expanded_states": 514,
+      "lower_bound": 1.2505113489829167,
+      "upper_bound": 12.748000000000005,
+      "policy_status": "bounded_near_optimal",
+      "termination": "target_gap",
+      "transition_bits_hash": "a5cbd8a13a12e08f",
+      "policy_bits_hash": "d6c9780196996d4b",
+      "matches_pre_fix_behavior_and_hashes": true
+    },
+    "two_t1": {
+      "path": "build/incumbent-row-fix/postfix-two-wasm.json",
+      "sha256": "a2c8ca07c3a88689210414fd0e5b5e1961a66ebac5e06facdd960c4c7ca435b2",
+      "solve_ms": 29253.181600000004,
+      "step_count": 480,
+      "expanded_states": 9750,
+      "lower_bound": 35.44310585904713,
+      "upper_bound": 385.92200606740977,
+      "policy_status": "bounded_near_optimal",
+      "termination": "target_gap",
+      "transition_bits_hash": "5c3d07a173b64f67",
+      "policy_bits_hash": "ba1ec7e24e2f2715",
+      "matches_pre_fix_behavior_and_hashes": true,
+      "exact_oracle": false
+    }
+  },
+  "raw_evidence": {
+    "directory": "build/incumbent-row-fix",
+    "report": "build/incumbent-row-fix/report.md",
+    "native_test_log_sha256": "718b249d4c46231d5ccc134d47597d7180ca882ebecf557246445a6737ff87c2",
+    "wasm_build_log_sha256": "d959a6612cdf7e081bf8065d8561dbf6f5d7457d19c2d72ea840a1f4d1165096",
+    "one_t1_log_sha256": "5298b493b46871a25c7747f4abb999bcc06fff823013ba5fdad7ee4d84b98601",
+    "two_t1_log_sha256": "4ee99b998d9a59872b625d1a9eea54b56e5a95f54750b4505b6f4b205ed0dde0",
+    "web_engine_smoke_log_sha256": "0730fcc60ce919dd9bbd50006f940f934b7959fc7582569a4e50d93550910131"
+  }
+}

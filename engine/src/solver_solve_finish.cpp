@@ -35,6 +35,24 @@ void SolveWork::Impl::count_policy_actions(
         }
     }
 
+void SolveWork::Impl::count_policy_actions(
+        const std::vector<PolicyOperatorRef>& policy,
+        std::map<std::string, std::uint64_t>& counts) const {
+        counts.clear();
+        for (std::uint32_t state = 0; state < policy.size(); ++state) {
+            if (state < calc.state_count() &&
+                calc.is_goal_state(calc.state(state))) {
+                continue;
+            }
+            const std::uint32_t operator_index = policy[state].index;
+            if (operator_index == kNoId ||
+                operator_index >= calc.operators().size()) {
+                continue;
+            }
+            ++counts[calc.operators()[operator_index].id];
+        }
+    }
+
 SolveResult SolveWork::Impl::finish() {
         if (phase != SolvePhase::Done) {
             throw std::logic_error("solver work is not finished");
@@ -51,13 +69,14 @@ SolveResult SolveWork::Impl::finish() {
             output_incumbent.has_value() &&
             (target_gap_stop || result.diagnostics.state_cap_hit ||
              result.diagnostics.resource_cap_hit || sweep_cap_hit);
+        std::vector<double> restored_policy_row_costs;
         if (restore_output_incumbent) {
             BoundedPolicyIncumbent& incumbent = *output_incumbent;
             count_policy_actions(
                 policy_rows, nullptr,
                 result.diagnostics.lower_policy_action_states);
             count_policy_actions(
-                incumbent.policy_rows, &incumbent.frontier_operators,
+                incumbent.policy,
                 result.diagnostics.upper_policy_action_states);
             populate_incumbent_policy(incumbent);
             result.values = std::move(incumbent.values);
@@ -85,6 +104,8 @@ SolveResult SolveWork::Impl::finish() {
             result.behavioral_representative_by_state =
                 std::move(incumbent.behavioral_representative_by_state);
             policy_rows = std::move(incumbent.policy_rows);
+            restored_policy_row_costs =
+                std::move(incumbent.policy_row_costs);
             const std::size_t state_count = result.values.size();
             result.goal_states.assign(state_count, 0);
             for (std::uint32_t state = 0; state < state_count; ++state) {
@@ -589,7 +610,13 @@ SolveResult SolveWork::Impl::finish() {
                 mix(state < policy_rows.size() ? policy_rows[state]
                                                : std::uint64_t{0});
                 if (state < policy_rows.size() &&
-                    policy_rows[state] < priced_rows.size()) {
+                    policy_rows[state] !=
+                        std::numeric_limits<std::uint64_t>::max() &&
+                    state < restored_policy_row_costs.size()) {
+                    mix(std::bit_cast<std::uint64_t>(
+                        restored_policy_row_costs[state]));
+                } else if (state < policy_rows.size() &&
+                           policy_rows[state] < priced_rows.size()) {
                     mix(std::bit_cast<std::uint64_t>(
                         priced_rows[policy_rows[state]].cost));
                 }
