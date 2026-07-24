@@ -4,10 +4,11 @@
 [mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md),
 and the
 [focused-round performance chunk](docs/archive/2026-07-23-focused-round-performance/README.md)
-are complete and accepted. Focused diagnostics are committed at `f28bbb8`;
-the measured result keeps the existing scheduling defaults. No implementation
-boundary is active. Oliver must select the next chunk before source work
-resumes.**
+are complete and accepted. The follow-up native goal-size scaling diagnostic
+is also complete under `build/solver-scaling-goal-slots/`; it was measurement
+only. Focused diagnostics are committed at `f28bbb8`; the measured result keeps
+the existing scheduling defaults. No implementation boundary is active.
+Oliver must select the next chunk before source work resumes.**
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -89,6 +90,80 @@ source-path coverage under the detached 900-second watchdog. No candidate was
 selected, so candidate exact policy evaluation and 10,000 simulations were
 not applicable. The exact natural two-T1 oracle never ran. The economy
 pipeline was not touched or published.
+
+## Goal-size scaling diagnostic handoff
+
+On 2026-07-23 Oliver selected a measurement-only follow-up to locate native
+solver cost as expanded states and natural-T1 goal slots increase. No source,
+default, cap, mechanic, tracked fixture, generated WASM, or economy file
+changed. The exact natural two-T1 oracle did not run.
+
+The retained short report is
+`build/solver-scaling-goal-slots/report.md`; machine-readable fits and all
+18 cell medians are in `analysis.json`; `normalized-runs.json` records every
+warmup and measured run with complete timer leaves, bound trace, fallback
+components, solve-step distribution, owned bytes, hashes, status, and cap
+checks. `evidence-manifest.json` audits derivation and the 216 report/log/
+watchdog artifacts.
+
+The selected item-level-86 Vaal Regalia suffix-only cases control base and
+side while varying goal slots:
+
+| Goals | Case | Source SHA-256 |
+| ---: | --- | --- |
+| 1 | `natural-t1-smoke-one-armour-09767fd6f824` | `9b300c87c55084708a0600ff1bdae382d0aff50aefce3ef928c86d391b0a888c` |
+| 2 | `natural-t1-full-two-4e6fa1960d1a` | `5f36852120cdc3fb2274a11c8f0e9d6e8dea1d88ff9155a66abf5647a075e651` |
+| 3 | `natural-t1-full-three-fd56350e21a4` | `38fca2c3871afe1dcc78b773a8f5f1a4d8d5a3fa0cc00dac01314d4eb5caefd8` |
+
+Smoke was preferred, but every smoke 2/3-goal case hit its unchanged
+25,000-discovered-state cap before reaching 500 expanded states. The retained
+watchdog-backed selection pilots establish why the full-short 2/3-goal cases
+were required. Every final derived case changed exactly
+`caps.max_expanded_states`, `caps.max_absolute_optimality_gap`,
+`expected.solve_status`, and `expected.verification_status`; each manifest
+changed only `cases`.
+
+All 18 cells completed one warmup and three measured repetitions: 72 detached
+900-second-watchdog processes, zero timeouts, and zero survivors. The
+benchmark SHA-256 was
+`d2f70e3d20909cc103e763621bb5749146a16c273e21af70fc8633fc076b1707`;
+the artifact-manifest SHA-256 was
+`f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1`.
+Transition and policy hashes repeated exactly within every cell.
+
+Cap-controlled total-solve exponents from log-log OLS against actual expanded
+states were 0.740 / 0.819 / 0.497 for 1/2/3 goals. High-N local slopes reached
+about 1.4-1.6 for 1/2 goals, not 2 or higher. Focused policy evaluation,
+accumulated separately in `focused_expansion.duration_ns`, scaled
+N^1.558 / N^1.830 / N^1.694 and became 39.09% of the 2-goal solve at 8,000
+states. Within `timings_ns`, automatic admission was the fastest material leaf
+for 1/2 goals; strict clean-goal cover was fastest for 3 goals.
+
+Maximum solve-step time was effectively constant with N: approximately
+0.596 / 1.75-1.80 / 1.52 seconds for 1/2/3 goals, far below the archived
+approximately 11.5-second case. The 1-goal focused lower bound began at 1.0,
+reached the cited 3.092 at round 15, and lifted to 7.387 at round 24 against
+U=8.0903; it was weak and slow to lift, but not approximately zero.
+
+Strict clean-goal-cover share did not grow for 2 goals (4.03% at 2k, 1.93% at
+8k, 0.99% at the final memory stop). It rose to 11.40% by 2k for 3 goals, then
+plateaued with the discovery stop. All-unique-N owned-peak exponents were
+0.997 / 0.797 / 0.440, so there was no sustained faster-than-linear memory
+law, although discrete representation cliffs occurred and the 2-goal 16k
+request hit the 256 MiB owned-memory cap at 12,529 states.
+
+The allowed four-field derivation could not force the expanded-state cap to
+own every large request: 1 goal hit the unchanged 0.1 relative-gap target at
+4,861 states; 2 goals hit owned memory at 12,529 for the 16k request; and
+3 goals hit 25,000 discovered states at 2,122 for the 4k/8k/16k requests.
+Those requested cells remain in the table, but duplicate actual-N plateaus
+were not counted as independent fit points.
+
+Native plainly did not reproduce the browser wall: the 2-goal solve reached
+8,000 states in 23.59 seconds and 12,529 in 46.68 seconds, while 2/3-goal
+2,000-state solves took 4.46/4.87 seconds. The reported browser slowdown is
+therefore WASM/browser-specific and requires a separate owner-selected WASM
+diagnostic. No fix or new instrumentation was attempted here.
 
 ## Historical focused-round Gate 0-1 hard stop (resolved)
 
@@ -904,22 +979,27 @@ rendered or screenshot review was performed, per Oliver's ownership boundary.
 ## Exact stopping point
 
 Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
-split, and focused-round performance attribution and scheduling.
+split, focused-round performance attribution and scheduling, and the
+measurement-only native goal-size scaling diagnostic.
 
 Exact stopping point: focused diagnostic source is committed at `f28bbb8`.
 The complete plan and results are archived under
 `docs/archive/2026-07-23-focused-round-performance/`, and the concise tracked
 evidence is
 `fixtures/solver-scaling/v1/evidence/focused-round-performance-summary.json`.
-No focused scheduling default changed. No implementation plan is active;
-Oliver must select the next chunk before implementation resumes.
+The follow-up raw scaling evidence and report are retained under
+`build/solver-scaling-goal-slots/`. No focused scheduling default changed. No
+implementation plan is active; Oliver must select the next chunk before
+implementation resumes.
 
 The measured leads are explicit but unselected: cooperatively subdivide the
 approximately 11.5-second solve step before reconsidering a larger global
 batch, and consider behavior-identical reuse around fallback
-start-properness validation. The exact natural two-T1 oracle remains
-prohibited. The natural-T1 generator remains intentionally T1-only. Economy
-repair or publishing remains separate and untouched.
+start-properness validation. The scaling diagnostic adds a separate,
+unselected WASM/browser investigation because native does not reproduce the
+reported wall. The exact natural two-T1 oracle remains prohibited. The
+natural-T1 generator remains intentionally T1-only. Economy repair or
+publishing remains separate and untouched.
 
 The two Strategy Board zoom-floor files are concurrent user work and were
 preserved outside focused-round commits.
