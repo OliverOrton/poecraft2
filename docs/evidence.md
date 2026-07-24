@@ -268,6 +268,24 @@ public ABI, natural-T1 generation, or economy data. This is headless
 Node-WASM evidence and does not establish browser/device throughput or explain
 any residual browser-only rendering/yield cost.
 
+## Bounded Incumbent Graph Stability
+
+The 2026-07-24
+[graph-stability acceptance](../fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json)
+pins the retained-object lifetime fix for
+`bounded incumbent row does not belong to its state`. Bounded incumbents now
+capture selected policy operators, row costs, and sparse selected choice
+payloads while their same-round graph is current; final output no longer
+resolves retained row IDs through a replacement graph or later row pricing.
+Graph-sized aligned preference output remains deferred.
+
+The complete native suite passed 513,375 checks, release-WASM worker smoke
+passed 27/27 checks, and bounded one-/two-T1 headless replays retained their
+pre-fix bounds, status, termination, step counts, and deterministic transition
+and policy hashes. The two-T1 replay was a loose bounded target, not the
+prohibited exact oracle. No mechanic, schedule, cap/default, ABI, tracked
+input, natural-T1 generator, or economy pipeline changed.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

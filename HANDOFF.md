@@ -12,6 +12,9 @@ identified the full owned-byte walk in per-step progress as the dominant wall;
 Oliver then selected and accepted the conservative-ledger progress fix at
 `c58b71a`, with tracked evidence in
 `fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
+Oliver subsequently selected and accepted the bounded-incumbent graph-lifetime
+fix at `255e8f1`, with tracked evidence in
+`fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json`.
 Focused diagnostics remain at `f28bbb8`, and no scheduling default changed.
 No implementation boundary is active. Oliver must select the next chunk before
 source work resumes.**
@@ -312,6 +315,54 @@ writer exceeded Node's argument limit by spreading 158,153 step values into
 then restored `run_headless_wasm.mjs` to its retained SHA-256
 `7f42ea2f7c0275275ed75b8f92c350050070d8d969ef46cf13da4d59eefcc8e6`.
 No tracked source, fixture, cap, default, mechanic, or economy file changed.
+
+## Bounded incumbent graph-stability fix handoff
+
+On 2026-07-24 Oliver reported the browser error `bounded incumbent row does
+not belong to its state` and selected a real source fix. Accepted commit
+`255e8f1` fixes the retained-object lifetime rather than suppressing the
+validation.
+
+The bounded incumbent previously retained transition-graph row indices and
+deferred resolving their selected operators, row costs, choice payloads, and
+action counts until `finish()`. Focused graph growth is allowed to replace
+transition storage, and later equivalent variants may also change a priced
+row's selected operator/cost. A retained row could therefore fail the owner
+check against a newer graph or, more subtly, resolve to a different action
+than the one whose upper bound was certified.
+
+Incumbent acceptance now captures the stable policy operator and selected row
+cost for every non-goal state, plus choice-option payloads only for selected
+rows that own them. The graph-sized aligned Unveil and fixed-option preference
+vectors remain deferred until the incumbent is actually returned. Final
+upper-policy action counts, preference materialization, operator output, and
+policy cost hashing all use the capture and never dereference an incumbent row
+through a later graph. A direct start-row improvement copies the stable
+incumbent and replaces only the captured start decision. Selected-owned-memory
+accounting includes the new flat vectors and sparse choice payloads.
+
+The regression captures a policy row, mutates its source owner, selected
+operator, cost, and choice payload, proves the captured decision is unchanged,
+and proves that resolving the stale source row again reproduces the rejection.
+The full native suite passed 513,375 checks with zero failures. The release
+WASM was rebuilt without SAFE_HEAP or ASSERTIONS, and the Node-worker smoke
+passed 27/27 checks.
+
+Headless release-WASM replays used loose bounded relative targets, not the
+prohibited exact oracle. The one-T1 case completed in 1.044 seconds at 514
+expanded states; the two-T1 case completed in 29.253 seconds at 9,750 expanded
+states. Both retained their pre-fix bounds, step counts, policy status,
+termination, and transition/policy hashes exactly. Every build and test ran
+under the detached 900-second watchdog with zero timeouts and zero survivors.
+The final documentation audit covered 122 documentation files and 838 relative
+links with zero missing targets or unreachable documents.
+
+Raw evidence and the short report are under `build/incumbent-row-fix/`; the
+tracked acceptance record is
+`fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json`.
+No solver mechanic, focused schedule, cap/default, public ABI, tracked input
+fixture, natural-T1 generator, or economy pipeline changed. The exact natural
+two-T1 oracle did not run.
 
 ## Historical focused-round Gate 0-1 hard stop (resolved)
 
@@ -713,8 +764,10 @@ Monotonic graph and lazy vocabulary extension do not invalidate the witness.
 Refresh on an existing dependency change or validation failure, not on a mere
 focused round, graph/vocabulary extension, or lower-bound update. Direct or
 partial executable upper policies may still replace it atomically when cheaper.
-Concrete policy references and Unveil preferences are materialized once from
-captured same-round source data only when a bounded incumbent is returned.
+Concrete policy references and selected row costs are captured when a
+same-round bounded incumbent is accepted. Sparse selected choice payloads are
+captured with them; graph-sized aligned Unveil/fixed-option preferences are
+materialized only when that incumbent is returned.
 
 ## Open performance note and future profiling chunk
 
@@ -1130,10 +1183,12 @@ Chunks completed with evidence: B1, B2, B3, B4, B5, B6, the mechanical solver
 split, focused-round performance attribution and scheduling, and the
 measurement-only native goal-size scaling and headless-WASM step/progress
 diagnostics, followed by the accepted WASM progress-accounting fix and the
-configured two-T1 WASM completion follow-up.
+configured two-T1 WASM completion follow-up, and the accepted bounded-incumbent
+graph-stability fix.
 
 Exact stopping point: focused diagnostic source is committed at `f28bbb8`; the
 accepted progress-accounting source/evidence milestone is `c58b71a`.
+The bounded-incumbent lifetime source/evidence milestone is `255e8f1`.
 The complete plan and results are archived under
 `docs/archive/2026-07-23-focused-round-performance/`, and the concise tracked
 evidence is
@@ -1145,6 +1200,9 @@ under `build/wasm-progress-fix/` and in
 `fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json`.
 The latest configured two-T1 completion record is
 `build/wasm-progress-fix/2t1-configured-completion-summary.json`.
+The bounded-incumbent raw report is `build/incumbent-row-fix/report.md`, with
+tracked acceptance evidence in
+`fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json`.
 No focused scheduling default changed. No implementation plan is active;
 Oliver must select the next chunk before implementation resumes.
 

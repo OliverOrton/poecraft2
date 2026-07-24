@@ -7,7 +7,8 @@ Parent: [Documentation index](../README.md)
 
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, and WASM progress-accounting
-acceptance: 2026-07-24 @ `c58b71a`.
+acceptance, including the bounded-incumbent graph-stability fix:
+2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, benchmark orchestration/analytics, and the non-visual
@@ -253,11 +254,14 @@ changed existing executable dependency, or failed validation does. The
 retained witness never guides focus, admission, pruning, ties, or Bellman
 comparisons.
 
-The atomic incumbent captures same-round values, selected row IDs, frontier
-operators, fallback, and provenance. Policy references and Unveil preferences
-are deterministic derived output and are materialized once if that incumbent
-is returned. Exact searches therefore do not rebuild full-state output vectors
-on every improving upper round.
+The atomic incumbent captures same-round values, selected row IDs and costs,
+stable policy references, frontier operators, fallback, and provenance while
+the selected transition graph and pricing are still current. It also copies
+choice options only for selected rows that own them. A later graph replacement
+or equivalent-row repricing therefore cannot reinterpret the policy whose
+upper bound was certified. Graph-sized aligned Unveil and fixed-option
+preference vectors remain deterministic derived output and are materialized
+once if that incumbent is returned.
 
 The constructive state certificate is not compaction and does not infer
 equivalence from similarity. Its witness records the executable upper, the
