@@ -223,7 +223,10 @@ SolveProgress SolveWork::Impl::progress() const {
                                              transition_cache
                                                  ->choice_successors.size();
         value.reforge_work = calc.telemetry().reforge_frontier_work;
-        value.live_owned_bytes = estimated_owned_bytes();
+        /* Progress is queried after every bounded C/WASM step. Use the
+         * conservative ledger here; cap/finalization checkpoints retain the
+         * full selected-allocation audits. */
+        value.live_owned_bytes = fast_estimated_owned_bytes();
         value.peak_owned_bytes = std::max(
             peak_owned_bytes, value.live_owned_bytes);
         return value;

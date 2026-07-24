@@ -1,0 +1,182 @@
+{
+  "schema_version": "wasm_solver_progress_accounting_fix_acceptance_v1",
+  "recorded_date": "2026-07-24",
+  "result": {
+    "decision": "accepted",
+    "change": "Use the existing conservative selected-owned-byte ledger for per-step solve progress instead of repeating the full selected-allocation walk.",
+    "exact_audits_retained": true,
+    "solver_mechanics_changed": false,
+    "focused_scheduling_changed": false,
+    "public_abi_changed": false,
+    "exact_natural_two_t1_oracle_ran": false,
+    "economy_pipeline_touched_or_published": false,
+    "natural_t1_generator_changed": false
+  },
+  "source": {
+    "branch": "codex/bounded-policy-contract",
+    "clean_start_commit": "acd8ef24df347cd56add4391e5186434da87769d",
+    "diagnostic_source_commit": "f28bbb8f747af652242a822af96e132884bb27b2",
+    "paths": [
+      "bindings/wasm/dist/poecraft_engine.wasm",
+      "engine/src/solver_solve_telemetry.cpp",
+      "engine/tests/test_solver_solve.cpp"
+    ]
+  },
+  "implementation": {
+    "fast_progress_path": "SolveWork::Impl::progress calls fast_estimated_owned_bytes for live_owned_bytes.",
+    "regression_contract": "Stepped native solves require every progress query to use the ledger and require its conservative live estimate to be at least the full audited SolveWork live estimate.",
+    "unchanged_exact_paths": [
+      "solver owned-byte cap checkpoints",
+      "solve finalization and retained-result accounting",
+      "explicit solver memory statistics",
+      "telemetry snapshots"
+    ]
+  },
+  "inputs": {
+    "artifact_manifest": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1"
+    },
+    "case": {
+      "id": "natural-t1-smoke-one-armour-09767fd6f824",
+      "path": "build/solver-scaling-goal-slots/input-selected/1g/4000/case.json",
+      "sha256": "7c7c62b134454262089b12c889e45fe083bd70d6dec3bbb50b2934bcedf56f94",
+      "natural_t1_goals": 1,
+      "max_expanded_states": 4000,
+      "max_work_items_per_step": 4
+    }
+  },
+  "watchdog": {
+    "seconds": 900,
+    "script_path": "build/focused-round/watchdog.py",
+    "script_sha256": "7eb3716cca2ec7903741f440f034e88c14d9270caab4bed6c40940eb4879c9f4",
+    "process_isolation": "CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW",
+    "any_process_timed_out": false,
+    "any_process_left_survivor": false
+  },
+  "commands": [
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build.ps1"
+      ],
+      "watchdog_path": "build/wasm-progress-fix/native-build.watchdog.json",
+      "watchdog_sha256": "befb47283c9f6fc777c2e39e905a624fc4780173ea26972768078ec425b07deb",
+      "exit_code": 0,
+      "wall_ms": 426297.7637000149
+    },
+    {
+      "command": [
+        "build/engine/poecraft_engine_tests.exe",
+        "--solver-solve-only"
+      ],
+      "watchdog_path": "build/wasm-progress-fix/solver-solve-test.watchdog.json",
+      "watchdog_sha256": "a86a1cffdf8b734851084b5f1d1101f57b2a57183876c01d96f620ab33b8fdb4",
+      "exit_code": 0,
+      "wall_ms": 358.58210001606494,
+      "checks": 497,
+      "failures": 0
+    },
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-File",
+        "scripts/build-wasm.ps1"
+      ],
+      "watchdog_path": "build/wasm-progress-fix/wasm-build.watchdog.json",
+      "watchdog_sha256": "4592399731de2e95f5fc5675e227c612698f60784aa7de4735af47f84b9a2acb",
+      "exit_code": 0,
+      "wall_ms": 144913.12159993686
+    },
+    {
+      "command": [
+        "node",
+        "build/wasm-solver-slowdown/run_headless_wasm.mjs",
+        "--case",
+        "build/solver-scaling-goal-slots/input-selected/1g/4000/case.json",
+        "--max-work-items",
+        "4",
+        "--label",
+        "accepted-source",
+        "--module-dir",
+        "bindings/wasm/dist",
+        "--output",
+        "build/wasm-progress-fix/wasm-1g4000-chunk4.json"
+      ],
+      "watchdog_path": "build/wasm-progress-fix/wasm-1g4000-chunk4.watchdog.json",
+      "watchdog_sha256": "eeeee57baaabf50f264f155b1d938b5588554948a87faa88ce7a04042876f3bb",
+      "exit_code": 0,
+      "wall_ms": 8859.971500001848
+    },
+    {
+      "cwd": "apps/web",
+      "command": [
+        "node",
+        "node_modules/tsx/dist/cli.mjs",
+        "test/engine-smoke.test.ts"
+      ],
+      "watchdog_path": "build/wasm-progress-fix/web-engine-smoke.watchdog.json",
+      "watchdog_sha256": "bfa372d57b9d6b7a71f4f530dacf4ed96e950febd7b14470eeb57e303fa4feb0",
+      "exit_code": 0,
+      "wall_ms": 7012.357600033283,
+      "checks": 27,
+      "failures": 0
+    }
+  ],
+  "artifacts": {
+    "native_test_executable_sha256": "60eb3a0a5d6b00c2777d6cd4c865dd514684df935b56a9485b5496ec2b039417",
+    "release_mjs_sha256": "730f643fb284517dc0d46fcb3c04c915a355fd6d7af0204507a50f5313710f86",
+    "release_wasm_sha256": "049b2ef985a5388fb31623153d77aca1ac154b475aab04f9e29de8de1d1a1fb8",
+    "release_wasm_matches_measurement_overlay": true
+  },
+  "four_item_replay": {
+    "retained_slow_baseline": {
+      "path": "build/wasm-solver-slowdown/experiment-a/1g-cap4000-chunk4.json",
+      "sha256": "31ca4c1ede5a948277ecaa19caa3f807e8c90f614f25ec335da72e704a50d0f8",
+      "solve_ms": 257211.7634,
+      "step_count": 25863,
+      "step_median_ms": 9.3224999999984
+    },
+    "retained_measurement_overlay": {
+      "path": "build/wasm-solver-slowdown/fast-progress-1g4000-chunk4.json",
+      "sha256": "6fcf14c14154619bf369023d93745b1ed9ca16654fb75af1d94ef3cddc90a3a5",
+      "solve_ms": 4467.6011,
+      "step_count": 25863,
+      "step_median_ms": 0.030600000000049477
+    },
+    "accepted_source": {
+      "path": "build/wasm-progress-fix/wasm-1g4000-chunk4.json",
+      "sha256": "ac12f294ecdec9a6f9696bf0a99ced3833c5d3488599cc418c36cbc1bc6a5d57",
+      "solve_ms": 7994.187800000001,
+      "step_count": 25863,
+      "step_median_ms": 0.061700000000200816,
+      "step_p95_ms": 0.39609999999993306,
+      "step_max_ms": 949.7706000000001,
+      "step_ccall_total_ms": 7647.784899999989,
+      "step_json_parse_total_ms": 136.40949999993086,
+      "expanded_states": 4000,
+      "discovered_states": 10759,
+      "lower_bound": 5.108566990957789,
+      "upper_bound": 8.090295568791923,
+      "policy_status": "bounded_feasible",
+      "termination": "refused_resource_cap",
+      "live_owned_bytes": 63898749,
+      "peak_owned_bytes": 92530734,
+      "transition_bits_hash": "f55602c08fb50037",
+      "policy_bits_hash": "b388f735ec7cc6c8"
+    },
+    "slow_baseline_to_accepted_source_speedup": 32.174846255175545,
+    "slow_baseline_wall_removed_percent": 96.89198204066275,
+    "behavior_and_accounting_match": true
+  },
+  "raw_evidence": {
+    "directory": "build/wasm-progress-fix",
+    "solver_solve_test_log_sha256": "d5456c349e1185455726f930013ee71e57fcb97df242b590d7721d19d84fe9b2",
+    "wasm_build_log_sha256": "d959a6612cdf7e081bf8065d8561dbf6f5d7457d19c2d72ea840a1f4d1165096",
+    "headless_replay_log_sha256": "ac4abed4d90c9ca7bd96891a77cd6c1b4142041be03c738681a120e9f36aa07a",
+    "web_engine_smoke_log_sha256": "0730fcc60ce919dd9bbd50006f940f934b7959fc7582569a4e50d93550910131"
+  }
+}

@@ -120,9 +120,20 @@ SolveResult solve_stepped(
     const std::uint32_t budget) {
     SolveWork work(calc, start, prices);
     std::uint32_t progress_events = 0;
-    while (!work.progress().done) {
+    const auto checked_progress = [&]() {
+        const std::uint64_t ledger_requests_before =
+            calc.telemetry().owned_byte_ledger_requests;
+        const SolveProgress progress = work.progress();
+        PC_CHECK(calc.telemetry().owned_byte_ledger_requests >
+                 ledger_requests_before);
+        PC_CHECK(progress.live_owned_bytes >= work.live_owned_bytes());
+        return progress;
+    };
+    SolveProgress progress = checked_progress();
+    while (!progress.done) {
         work.step(budget);
         ++progress_events;
+        progress = checked_progress();
     }
     PC_CHECK(progress_events >= 2);
     return work.finish();
