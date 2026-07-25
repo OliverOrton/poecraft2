@@ -23,6 +23,11 @@ selected active work.
 
 ## 2026-07-22
 
+- [Exact Guided Search Design Review](2026-07-22-exact-guided-search-design/README.md) —
+  archived research correspondence, admissible-lower-bound proposals, and
+  prototype measurements. Only the report was preserved; its scheduling
+  prototypes were not merged, while retained constructive-witness reuse was
+  later implemented under the bounded-policy contract.
 - [Mechanical Solver Split](2026-07-22-mechanical-solver-split/README.md) —
   completed token-equivalent solve-phase source split with native,
   deterministic-hash, performance, rebuilt-WASM, and non-visual web

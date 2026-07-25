@@ -51,11 +51,16 @@ generation, or economy data. Oliver confirmed that the natural-T1 generator is
 intentionally T1-only; tier-range support is not a missing or deferred
 generator change.
 
-The preceding exact constructive-policy milestone remains review evidence only
-on `codex/exact-search-design` at `273831f`. It was not merged, rebased,
-cherry-picked, or used as a source donor. Candidate A/C search guidance remains
-forbidden. The incumbent bundle and retained witness are for executable
-upper-bound/output production only.
+The preceding exact guided-search review from
+`codex/exact-search-design` at `273831f` is now preserved as a
+[documentation-only archive](docs/archive/2026-07-22-exact-guided-search-design/README.md).
+No prototype source from that commit was merged, rebased, cherry-picked, or
+used as a source donor. Its lock-aware scheduler was inert and its post-lock
+quota was rejected. The later bounded-policy implementation independently
+adopted retained constructive-witness reuse with explicit validity boundaries;
+the incumbent bundle and retained witness remain for executable
+upper-bound/output production only. The archived report's historical exact
+two-T1 oracle evidence does not authorize rerunning that prohibited oracle.
 
 ## Focused-round completion handoff
 
