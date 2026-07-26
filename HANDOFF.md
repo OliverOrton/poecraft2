@@ -115,6 +115,42 @@ The Gate 1 machine-readable analysis SHA-256 is
 `02597f7b22c86bd22a343c93dbf5f9050ba6f805bfbb520c23c636cb6e416229`.
 The exact natural two-T1 oracle did not run.
 
+## Gap-directed Gate 2 completed
+
+Gate 2 used run-local 10M, 30M, and 100M `max_reforge_work` variants and
+changed no source. All three corpus-runner watchdogs exited 0 with no timeout
+or survivor. The 30M and 100M results have identical statuses, bounds, counts,
+cap hits, transition hashes, and policy hashes in all five cases, so the
+diagnosis is not an artifact of the reforge allowance.
+
+At the 100M control, every full/deep case hit 200,000 discovered states after
+one expansion with `L=0`, no finite `U`, and only the Restart row retained.
+First-carrier automatic admission considered 213 operators in each such case;
+212 were temporary-bench candidates. Exact local option-kernel generation
+therefore creates the state frontier before the global solver can produce
+either bound.
+
+The Dire Pelt smoke control reached its first finite upper bound after
+20,048.350 ms and stopped at the 256 MiB selected-owned-memory cap after
+36,762.487 ms, 2,301 expansions, and 95,118 discoveries. Its final
+`L=93.7458734898226` and `U=10209.562183559785` leave `U/L=108.91`.
+Constructive-policy work used 26,459.074 ms, including 9,135.904 ms in fallback
+start properness. From the first sample to the stop, `L` improved only
+0.340024 (0.00963 per second); after the first finite policy, `U` improved
+33.893768 (2.02785 per second).
+
+The ranked diagnosis is:
+
+1. eager start-carrier exact automatic-option materialization;
+2. constructive renewal/progressive-fracture upper acquisition and validation;
+3. weak lower-bound lift after a policy exists.
+
+No diagnostic source was added because the cap ladder, automatic-candidate
+by-kind telemetry, bound trace, existing timers, and inspected ownership path
+answered the Gate 1 question. Gate 2 analysis SHA-256 is
+`ed7dcf94426b5b05d5b882200ea5c9c3f973ae639102faba7945b3b401a3d0b0`.
+The exact natural two-T1 oracle did not run.
+
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
