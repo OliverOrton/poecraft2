@@ -182,8 +182,6 @@ export class PcCalculator extends HTMLElement {
     private context = 0;
     private item = 0;
     private solver = 0;
-    private solveSolver = 0;
-    private solveSolverKey = "";
     private modCache: ModInfo[] = [];
     private modifierOptions: ModifierFamilyOption[] = [];
     private modKeyToFamily = new Map<string, string>();
@@ -462,12 +460,6 @@ export class PcCalculator extends HTMLElement {
             this.solver = 0;
             await this.client.closeSolver(solver);
         }
-        if (this.solveSolver) {
-            const solver = this.solveSolver;
-            this.solveSolver = 0;
-            this.solveSolverKey = "";
-            await this.client.closeSolver(solver);
-        }
     }
 
     private async disposeEngine(): Promise<void> {
@@ -487,20 +479,14 @@ export class PcCalculator extends HTMLElement {
         }
         const item = this.item;
         const solver = this.solver;
-        const solveSolver = this.solveSolver;
         const context = this.context;
         const session = this.session;
         this.item = 0;
         this.solver = 0;
-        this.solveSolver = 0;
-        this.solveSolverKey = "";
         this.context = 0;
         this.session = 0;
         if (solver && this.client) {
             await this.client.closeSolver(solver);
-        }
-        if (solveSolver && this.client) {
-            await this.client.closeSolver(solveSolver);
         }
         if (item && this.client) {
             await this.client.closeItem(item);
@@ -742,6 +728,7 @@ export class PcCalculator extends HTMLElement {
         this.renderSolvePanel();
         let economy = 0;
         let envelopeSolver = 0;
+        let solveSolver = 0;
         try {
             /* Build the native product envelope before selecting its priced
              * subset. The ordinary Calculator handle stays exhaustive so
@@ -766,26 +753,17 @@ export class PcCalculator extends HTMLElement {
                 relevantActions.length - candidateIds.length;
             this.solveAdmittedActionIds = [...candidateIds];
             const solveGoal = this.solverGoal(candidateIds, true);
-            const solveKey = JSON.stringify(solveGoal);
-            if (this.solveSolver && this.solveSolverKey !== solveKey) {
-                await this.client.closeSolver(this.solveSolver);
-                this.solveSolver = 0;
-                this.solveSolverKey = "";
-            }
-            if (!this.solveSolver) {
-                this.solveSolver = await this.client.openSolver(
-                    this.session,
-                    solveGoal,
-                );
-                this.solveSolverKey = solveKey;
-            }
+            solveSolver = await this.client.openSolver(
+                this.session,
+                solveGoal,
+            );
             economy = await this.client.loadEconomy(pinned.snapshot);
             const solveOptions = solveGapTargetOptions(
                 this.solveAbsoluteGapTarget,
                 this.solveRelativeGapPercentTarget,
             );
             const result = await this.client.solverSolve(
-                this.solveSolver,
+                solveSolver,
                 this.item,
                 economy,
                 solveOptions,
@@ -814,7 +792,7 @@ export class PcCalculator extends HTMLElement {
             if (!result.converged || result.termination !== "exact_closed") {
                 try {
                     telemetry = await this.client.solverTelemetry(
-                        this.solveSolver,
+                        solveSolver,
                     );
                 } catch {
                     // The solve summary remains usable if telemetry retrieval
@@ -831,7 +809,7 @@ export class PcCalculator extends HTMLElement {
             }
             try {
                 const compiled = await this.client.solverCompileStrategy(
-                    this.solveSolver,
+                    solveSolver,
                 );
                 this.solvedStrategy = prepareSolverStrategy(compiled);
                 this.solvedStrategy.economy = pinned.identity;
@@ -856,10 +834,17 @@ export class PcCalculator extends HTMLElement {
             };
         } finally {
             this.solveAbort = null;
-            if (economy) await this.client.closeEconomy(economy);
-            if (envelopeSolver) {
-                await this.client.closeSolver(envelopeSolver);
+            const releases: Promise<unknown>[] = [];
+            if (solveSolver) {
+                releases.push(this.client.closeSolver(solveSolver));
             }
+            if (envelopeSolver) {
+                releases.push(this.client.closeSolver(envelopeSolver));
+            }
+            if (economy) {
+                releases.push(this.client.closeEconomy(economy));
+            }
+            await Promise.all(releases);
             this.solveRunning = false;
             this.renderSolvePanel();
         }
@@ -897,7 +882,7 @@ export class PcCalculator extends HTMLElement {
             economy = await this.client.loadEconomy(pinned.snapshot);
             strategy = await this.client.compileStrategy(
                 this.session,
-                cloneStrategy(this.solvedStrategy),
+                this.solvedStrategy,
             );
             simulator = await this.client.createSimulator(
                 this.session,

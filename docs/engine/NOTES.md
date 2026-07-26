@@ -11,8 +11,8 @@ No open entries.
 
 ## Build and exports
 
-- 2026-07-19 `#debt` — Open: `scripts/build-wasm.ps1`'s explicit `$Exported`
-  array omits the four stepped solver functions. `EMSCRIPTEN_KEEPALIVE` and
-  the tracked release module currently export them, so product behavior is
-  present; synchronize the script inventory with the public surface. See
-  [WASM export-list drift](wasm.md#export-list-drift).
+- 2026-07-19 `#debt` — Resolved 2026-07-26 by
+  [R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md):
+  `scripts/build-wasm.ps1` now lists the four stepped solver functions and the
+  raw response-transfer surface in its explicit export inventory. See
+  [WASM export inventory](wasm.md#export-inventory).

@@ -77,19 +77,20 @@ the solved native handle and transition closure. Repricing rebuilds the solve.
 No retained-cache mode is added until live-byte telemetry can enforce a product
 memory budget.
 
-**Implementation status:** approved but not implemented at the checked
-baseline. Calculator currently retains its keyed solve handle after strategy
-transfer and can reuse its price-independent transition data on a later Solve.
-See [End-To-End Solver Flow](solver/flow.md#current-repricing-and-lifetime).
+**Implementation status:** implemented by
+[R4 browser transfer and solver lifetime](archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
+on 2026-07-26. Calculator opens a fresh scoped handle for each Solve and closes
+it after summary, telemetry, and raw-byte strategy transfer. See
+[End-To-End Solver Flow](solver/flow.md#current-repricing-and-lifetime).
 
-**Context:** The decision is preserved in the
-[B1/S8 plan](archive/2026-07-19-bestiary-solver-s8/plan.md); delivery remains
-deferred in the [solver roadmap](future/solver-roadmap.md).
+**Context:** The decision originated in the
+[B1/S8 plan](archive/2026-07-19-bestiary-solver-s8/plan.md). R4 supplied the
+transfer path, scoped lifetime, and selected-live-byte evidence.
 
-**Consequences:** Stable docs do not promise cheap in-place browser repricing
-or authorize retaining both large native and JavaScript graph copies as the
-permanent design. Until delivery, implemented-behavior references must still
-state that the handle is currently retained.
+**Consequences:** Stable docs do not promise cheap in-place browser repricing.
+The product rebuilds instead of retaining both the native transition closure
+and redundant JavaScript graph copies. Any future retained-cache mode needs a
+separate budgeted design.
 
 ## 2026-07-19 — Numeric Misses And Stopped Gates Stay Truthful
 

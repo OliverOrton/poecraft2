@@ -38,6 +38,13 @@ import {
     WorkerMessage,
 } from "./engine-protocol";
 
+const jsonEncoder = new TextEncoder();
+const jsonDecoder = new TextDecoder();
+
+function encodeJson(value: unknown): Uint8Array {
+    return jsonEncoder.encode(JSON.stringify(value));
+}
+
 /** Transport abstraction so the same client drives a browser Worker or a
  * Node worker_threads worker (via a small adapter in the test harness). */
 export interface EngineTransport {
@@ -411,10 +418,12 @@ export class EngineClient {
     }
 
     async compileStrategy(session: number, strategy: unknown): Promise<number> {
-        const result = await this.call<{ strategy: number }>("compileStrategy", {
-            session,
-            strategy,
-        });
+        const strategyJson = encodeJson(strategy);
+        const result = await this.call<{ strategy: number }>(
+            "compileStrategy",
+            { session, strategyJson },
+            { transfer: [strategyJson.buffer as ArrayBuffer] },
+        );
         return result.strategy;
     }
 
@@ -429,11 +438,12 @@ export class EngineClient {
         options?: StrategyEvalOptions,
         runOptions?: StrategyEvaluationRunOptions,
     ): Promise<StrategyEvalResult> {
+        const strategyJson = encodeJson(strategy);
         return this.call<StrategyEvalResult>(
             "strategyEvaluate",
             {
                 session,
-                strategy,
+                strategyJson,
                 options,
                 chunkSize: runOptions?.chunkSize,
                 reportProgress: runOptions?.onProgress !== undefined,
@@ -441,6 +451,7 @@ export class EngineClient {
                 reviewProjection: runOptions?.reviewProjection,
             },
             {
+                transfer: [strategyJson.buffer as ArrayBuffer],
                 onEvaluationProgress: runOptions?.onProgress,
                 signal: runOptions?.signal,
             },
@@ -569,11 +580,11 @@ export class EngineClient {
     }
 
     async solverCompileStrategy(solver: number): Promise<unknown> {
-        const result = await this.call<{ strategy: unknown }>(
+        const result = await this.call<{ strategyJson: Uint8Array }>(
             "solverCompileStrategy",
             { solver },
         );
-        return result.strategy;
+        return JSON.parse(jsonDecoder.decode(result.strategyJson)) as unknown;
     }
 
     async solverLog(solver: number): Promise<string> {

@@ -1,54 +1,83 @@
 # Session Handoff
 
-**Status: Oliver selected
-[R4 browser transfer and solver lifetime](docs/active/browser-transfer-lifetime-r4.md)
-on 2026-07-26. Gates 0–5 execute in order on branch
-`codex/browser-transfer-lifetime-r4` from source boundary
-`42e03152f871067e828b595c30950b46de9dd1de`.**
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
-## Main Reconciliation
+## Main State
 
-Local `main` was fast-forwarded from `b55e61a` through the completed
-gap-directed, exact automatic-action, and broad-action research lineage to
-`42e0315`. The entire delta is documentation: archived plans/reports, evidence
-indexing, roadmap updates, and the clean no-active-boundary handoff. No
-diagnostic engine, binding, web, data, fixture, or script change landed on
-`main`.
+Local `main` contains the completed gap-directed, exact automatic-action, and
+broad-action research lineage plus
+[R4 browser transfer and solver lifetime](docs/archive/2026-07-26-browser-transfer-lifetime-r4/README.md).
+The three research milestones contributed documentation and evidence only; no
+diagnostic prototype, engine, binding, web, data, fixture, or script change
+from those experiments was retained. R4 is the subsequent product/runtime
+implementation.
 
-## Objective
+Commits remain local-only. Nothing was pushed.
 
-Replace the Calculator's large solve-to-strategy copy chain with raw
-transferable bytes, then release the scoped native solver and transition
-closure after result/telemetry/strategy handoff. A later solve or repricing
-rebuilds from the goal and pinned economy.
+## Latest Completed Result
 
-The ordinary Calculator odds handle remains separate. Solver algorithms,
-mechanics, action scope, public caps, compiler vocabulary, and strategy
-semantics do not change.
+R4 replaced the Calculator's solve-to-strategy nested JSON/copy chain with raw
+transferable UTF-8 bytes:
 
-## Starting Boundary
+1. native compilation writes the ordinary v1 strategy JSON to the facade
+   response without escaping it inside a second JSON document;
+2. the worker copies once from WASM memory, clears the native response, and
+   transfers the backing buffer;
+3. `EngineClient` decodes and parses once on the main thread;
+4. strategy compile/evaluation inputs use the same transferable-byte
+   ownership model; and
+5. uniquely transferred graphs are adopted, with clones retained only for
+   separate document or persistence owners.
 
-The current product path:
+Calculator now opens a fresh scoped solver for each Solve. It obtains summary,
+telemetry, and compiled strategy, then closes that solver, the envelope solver,
+and economy in terminal cleanup. Later solves and repricing rebuild. The
+ordinary odds/picker solver remains independent and long-lived.
 
-1. compiles strategy JSON into a native string;
-2. escapes that entire document as a string inside a second JSON response;
-3. parses the response and then the embedded document in the worker;
-4. structured-clones the parsed graph to the main thread;
-5. immediately clones it again during Strategy Board preparation; and
-6. retains the solved native handle/transition closure for potential repricing.
-
-Native default compiler limits already match the accepted product corpus:
-100,000 nodes, 400,000 edges, and 64 MiB of strategy JSON. R4 preserves those
-truthful native boundaries rather than inventing an inaccurate frontend size
-estimate.
+The release export inventory now includes raw response transfer and all stepped
+solve functions. Native compiler limits remain 100,000 nodes, 400,000 edges,
+and 64 MiB strategy JSON. Solver behavior, mechanics, action scope, C ABI,
+Python bindings, public caps, and strategy vocabulary did not change.
 
 ## Acceptance
 
-The final gate rebuilds release WASM, then runs `npm test` and
-`npx tsc --noEmit` once. Real Node worker/WASM evidence must cover byte
-transfer, strategy validity, handle release, selected live bytes, linear-memory
-high-water disclosure, and responsiveness. No rendered review is authorized.
+The rebuilt release artifact is 2,337,043 bytes with SHA-256
+`db1789d432ce2c8fe9b5073835b8b941c2bf7602b1e1ceb8e262b9040e87795e`.
 
-Commits are local-only and end with:
+- `powershell -File scripts/build-wasm.ps1` passed.
+- `npm test` in `apps/web` passed, including 27/27 release-WASM worker smoke
+  checks.
+- `npx tsc --noEmit` in `apps/web` passed.
+- Focused real-worker evidence transferred 36,224 strategy bytes in 38.35 ms.
+  Closing the scoped solver changed handles `5 -> 4` and selected native live
+  bytes `15,434,223 -> 3,752`; WASM high-water correctly stayed
+  `278,396,928 -> 278,396,928`. Maximum observed solve step was 56.07 ms.
+- No process survived any watchdog. The first build exposed and then fixed an
+  anonymous-namespace export-linkage error.
+
+This is non-visual release-WASM Node-worker evidence. It does not establish
+browser/device throughput, process RSS, or total JavaScript memory. Strategy
+behavior was unchanged, so the plan did not require a new 10,000-run quality
+campaign. Oliver did not authorize rendered review.
+
+Full commands, hashes, and limitations are in the
+[R4 report](docs/archive/2026-07-26-browser-transfer-lifetime-r4/report.md).
+
+## What Can Be Selected Next
+
+The clearest bounded product continuation is R5 verification presentation:
+truthful terminal/off-policy gates, sampled uncertainty, and remaining
+authored-Unveil evaluator boundaries. It is deferred and unselected in the
+[solver roadmap](docs/future/solver-roadmap.md).
+
+The hard natural-T1 solver research has no accepted production architecture.
+Its latest broad-action result says not to resume by landing either rejected
+prototype, raising caps, or treating the fixed-policy renewal evaluator as a
+general Bellman kernel. A continuation needs either a new exact broad-kernel
+representation preserving continuation observations or a materially narrower
+product objective.
+
+Commits must remain local unless Oliver asks to push and must end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

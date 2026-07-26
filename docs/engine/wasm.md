@@ -6,13 +6,13 @@ evidence boundaries.
 
 Parent: [Engine](README.md)
 
-Verified against code and the rebuilt release module: 2026-07-24 @
-`c58b71a`.
+Verified against code, rebuilt release module, and complete non-visual web
+acceptance: 2026-07-26 @ browser-transfer/lifetime R4 closure.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`049b2ef985a5388fb31623153d77aca1ac154b475aab04f9e29de8de1d1a1fb8`.
+`db1789d432ce2c8fe9b5073835b8b941c2bf7602b1e1ceb8e262b9040e87795e`.
 
 ## Architecture
 
@@ -21,10 +21,12 @@ plus `bindings/wasm/wasm_api.cpp`. That facade exports a handle-and-JSON API
 named `pcw_*`; TypeScript does not call the lower-level `pc_*` C ABI directly.
 
 The web app creates one module inside `engine-worker.ts`. `EngineClient`
-communicates with the worker through request IDs and structured-clone
-messages. The process-level engine service opens one compiled data bundle and
-shares that worker/client within the browser tab. The C++ engine itself is
-single-threaded; isolation from the UI thread comes from the Web Worker.
+communicates with the worker through request IDs, ordinary structured-clone
+messages for small values, and transferable `ArrayBuffer` payloads for
+strategy documents. The process-level engine service opens one compiled data
+bundle and shares that worker/client within the browser tab. The C++ engine
+itself is single-threaded; isolation from the UI thread comes from the Web
+Worker.
 
 The worker retains native handles for data, sessions, contexts, items,
 compiled strategies, economies, simulators, and solvers. TypeScript wrappers
@@ -66,7 +68,8 @@ The tracked release module exports these facade groups:
 | Craft actions | Apply one, run a batch, pool debug, Bestiary apply/calculate |
 | Strategy evaluation | Compile/close, synchronous evaluate, and stepped begin/step/finish/close |
 | Economy/simulation | Economy open/close; simulator open/close/chunk/result |
-| Solver | Open/close, enumerate actions, calculator odds, synchronous solve, stepped solve begin/step/finish/abandon, state value, projection, compile, log, telemetry |
+| Solver | Open/close, enumerate actions, calculator odds, synchronous solve, stepped solve begin/step/finish/abandon, state value, projection, compile, raw compiled-strategy transfer, log, telemetry |
+| Response transfer | Result status, raw response-data pointer/size, and explicit response clear |
 | Diagnostics | Live-handle count and memory statistics |
 | Emscripten plumbing | `malloc`, `free`, and the runtime helpers listed above |
 
@@ -81,6 +84,15 @@ calculator odds, economy handles, stepped exact strategy evaluation, and the
 stepped strategy solver. Long-running product operations use the stepped
 forms so the worker can report progress and process cancellation.
 
+Strategy compilation and exact evaluation inputs are UTF-8 encoded on the
+main thread and their backing buffers are transferred to the worker. Solver
+policy compilation uses `pcw_solver_compile_transfer`: native writes the
+ordinary v1 strategy JSON into the facade response string without nesting it
+inside another escaped JSON document. The worker slices the raw response bytes
+from `HEAPU8`, clears the response string, and transfers the byte buffer to the
+main thread, where `EngineClient` decodes and parses once. Native errors keep
+their result code and JSON detail.
+
 These exports are implemented and bound in `engine-wasm.ts` but have no normal
 current product call site, or exist chiefly for tests/diagnostics:
 
@@ -88,6 +100,7 @@ current product call site, or exist chiefly for tests/diagnostics:
   Bestiary compound checkpoint);
 - `pcw_run_batch`;
 - synchronous `pcw_strategy_evaluate` and synchronous `pcw_solver_solve`;
+- compatibility `pcw_solver_compile` (the product uses the raw transfer form);
 - `pcw_solver_state_value`, `pcw_solver_project`, and `pcw_solver_log`;
 - direct `pcw_live_handle_count` and `pcw_memory_stats` calls;
 - ordinary `pcw_data_close` during a tab's service lifetime.
@@ -193,6 +206,12 @@ it with `HEAPU8.byteLength` as `wasm_memory_bytes`. That byte length is the
 current linear-memory high-water size: Emscripten memory can grow and is not
 shrunk when handles close. It is not live allocation or browser-process RSS.
 
+The raw compiled-strategy path clears the facade response string after the
+worker has copied its bytes, releasing that retained string capacity for C++
+reuse. Closing the scoped product solver also releases its selected-owned
+transition closure. Neither operation promises to shrink the already-grown
+WASM linear memory.
+
 The facade copies large economy JSON through an explicit heap allocation;
 ordinary JSON calls use Emscripten string marshalling and the configured
 stack. The worker drops the raw artifact bytes after building the web catalog,
@@ -211,6 +230,12 @@ Evidence must be read at the layer it actually exercises:
   the memory-safe large-payload path, pool fixture parity, stateful exact
   progress, solve progress, cancellation cleanup/fallback, compilation, and
   simulation.
+- The 2026-07-26
+  [R4 transfer/lifetime evidence](../evidence.md#browser-transfer-and-solver-lifetime-r4)
+  records a 36,224-byte raw compiled strategy, handle count `5 -> 4`,
+  selected native live bytes `15,434,223 -> 3,752`, unchanged
+  `278,396,928`-byte WASM high-water, and a 56.07 ms maximum solve step in the
+  release-WASM Node worker. It is ownership evidence, not browser-process RSS.
 - The [solver-scaling v1 evidence](../../fixtures/solver-scaling/v1/README.md)
   preserves the Q5 non-visual Node/Worker baseline and the rebuilt-module
   action/state-pruning follow-up for the accepted three-slot product. The
@@ -233,10 +258,11 @@ The Q0-Q5 and action/state-pruning acceptances rebuilt the module, ran the
 complete Node worker suite, and emitted product-scale reports. This is real
 WASM integration evidence, but it is not a real-browser/device benchmark.
 
-## Export-list drift
+## Export inventory
 
-The source facade marks all public functions `EMSCRIPTEN_KEEPALIVE`, and the
-tracked release module exports the four stepped solver functions:
+The source facade marks all public functions `EMSCRIPTEN_KEEPALIVE`. The
+explicit `$Exported` array in `scripts/build-wasm.ps1` and the tracked release
+module include the four stepped solver functions:
 
 ```text
 pcw_solver_solve_begin
@@ -245,11 +271,10 @@ pcw_solver_solve_finish
 pcw_solver_solve_abandon
 ```
 
-However, the explicit `$Exported` array in `scripts/build-wasm.ps1` omits
-those four names. `KEEPALIVE` currently preserves them, so the release and
-product capability is present. The script's declared export inventory should
-still be synchronized with the actual public surface; this is recorded as
-debt in [Engine notes](NOTES.md).
+They also include `pcw_response_data`, `pcw_response_size`,
+`pcw_response_clear`, and `pcw_solver_compile_transfer`. The build inventory
+and product-required public surface were synchronized in R4; the tracked
+wrapper remains the release check.
 
 ## Open evidence and product unknowns
 
@@ -258,11 +283,10 @@ The repository does not yet establish:
 - browser/device throughput, peak memory, or worst-step cancellation latency
   for difficult exact evaluations and solves;
 - practical 4 GiB memory availability across supported browsers/devices, or
-  full memory including JavaScript catalogs and structured-clone/JSON copies;
+  full memory including JavaScript catalogs and other transient copies;
 - whether released C++ allocations return reusable heap space in each hard
   workload, beyond the fact that the linear-memory high-water does not shrink;
-- an enforced product-wide live-memory budget and final solver/economy lifetime
-  policy for release/repricing workflows;
+- an enforced product-wide live-memory budget or budgeted retained-cache mode;
 - performance equivalence between native benchmarks, Node WASM workers, and
   browsers.
 

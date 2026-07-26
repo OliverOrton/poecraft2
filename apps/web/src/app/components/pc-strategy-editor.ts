@@ -1442,7 +1442,7 @@ export class PcStrategyEditor extends HTMLElement {
             );
             const result = await this.client.strategyEvaluate(
                 session,
-                cloneStrategy(this.strategy),
+                this.strategy,
                 { include_success_normalized: true },
                 {
                     signal: controller.signal,
@@ -1697,7 +1697,7 @@ export class PcStrategyEditor extends HTMLElement {
             );
             compiled = await this.client.compileStrategy(
                 session,
-                cloneStrategy(this.strategy),
+                this.strategy,
             );
             economy = await this.client.loadEconomy(pinned.snapshot);
             simulator = await this.client.createSimulator(

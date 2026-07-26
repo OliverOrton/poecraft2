@@ -4,8 +4,8 @@
 
 Parent: [Product](README.md)
 
-Verified against code and non-visual B6 acceptance: 2026-07-22 @
-bounded-policy B6 boundary. Scope:
+Verified against code and complete non-visual R4 acceptance: 2026-07-26 @
+browser-transfer/lifetime R4 closure. Scope:
 `pc-calculator`, goal/draft models, solver worker orchestration, exact-outcome
 presentation, and shared economy access. No rendered or visual review was
 performed; that review remains Oliver's.
@@ -88,12 +88,16 @@ The Solve surface is distinct from one-action odds:
 3. Keep only candidates whose complete price vectors resolve. If priced
    Fracture is relevant, require an explicit `base` price because miss recovery
    uses Restart.
-4. Reopen/reuse a solve handle keyed by that scoped goal and run the stateful
-   native begin/step/finish API in the worker with progress and cancellation.
+4. Open a fresh scoped solve handle and run the stateful native
+   begin/step/finish API in the worker with progress and cancellation.
 5. Compile whenever the result has `policy_available`, including bounded cap
-   and target-gap results. Assign missing board positions, attach the economy
-   identity, and allow an unsaved copy to open in Strategy Builder. A
-   non-converged result without a proper executable policy is not compiled.
+   and target-gap results. Transfer the compiled document as one byte buffer,
+   decode/parse it once on the main thread, assign missing board positions,
+   attach the economy identity, and allow an unsaved copy to open in Strategy
+   Builder. A non-converged result without a proper executable policy is not
+   compiled.
+6. Release the scoped solve handle and its transition closure after summary,
+   telemetry, and strategy handoff. A later solve or reprice rebuilds.
 
 Two optional product stopping targets are available: absolute chaos-equivalent
 gap and relative percent gap. Either positive target can stop only after a
@@ -117,11 +121,11 @@ The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,
 is documented in [End-To-End Solver Flow](../solver/flow.md).
 
-The current browser worker adaptively steps solves but caps a call at four work
-items. The Calculator also retains its solve handle after transfer so the
-price-independent transition closure is available to a later solve. Both are
-implemented behavior at this commit, not permanent product promises; the
-deferred lifetime/transfer work is listed in [Product Notes](NOTES.md) and the
+The browser worker adaptively steps solves but caps a call at four work items.
+Calculator does not retain the scoped solve handle after transfer. Strategy
+inputs are also encoded once and transferred to the worker for compilation or
+exact evaluation instead of structured-cloning the full graph. A retained
+transition-cache product mode remains deferred in the
 [solver roadmap](../future/solver-roadmap.md).
 
 Code authority:

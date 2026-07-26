@@ -20,6 +20,29 @@ These fixtures are mechanic/data evidence. Current explanatory authority lives
 in [Mechanics](mechanics/README.md), [Engine](engine/README.md), and
 [Economy](economy/README.md).
 
+## Browser Transfer And Solver Lifetime R4
+
+The 2026-07-26
+[R4 report](archive/2026-07-26-browser-transfer-lifetime-r4/report.md)
+records release-WASM Node-worker evidence for the Calculator's raw
+compiled-strategy transfer and scoped Solve lifetime.
+
+- The transferred v1 strategy document was 36,224 bytes and crossed the worker
+  response boundary in 38.35 ms.
+- Closing the scoped solve handle changed live handles from `5` to `4` and
+  selected native live bytes from `15,434,223` to `3,752`.
+- WASM linear-memory high-water remained `278,396,928` bytes before and after
+  close. That is expected: high-water is not live allocation or
+  browser-process RSS.
+- The maximum observed native solve step was 56.07 ms.
+- The complete web suite and TypeScript check passed against the rebuilt
+  2,337,043-byte release artifact, whose SHA-256 is
+  `db1789d432ce2c8fe9b5073835b8b941c2bf7602b1e1ceb8e262b9040e87795e`.
+
+This proves the exercised worker handle and selected-owned-byte lifecycle. It
+does not establish real-browser/device throughput, total JavaScript/process
+memory, or practical 4 GiB availability.
+
 ## Solver S7 Acceptance
 
 The [S7 archive](archive/2026-07-solver-s7/README.md) preserves the final plan,

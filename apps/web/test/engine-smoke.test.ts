@@ -1364,6 +1364,11 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     const restart = actions.find((action) => action.id === "restart");
     assert.ok(restart?.synthetic);
     assert.deepEqual(restart?.cost_keys, ["base"]);
+    await assert.rejects(
+        client.solverCompileStrategy(solver),
+        /solve|policy|available/i,
+        "raw strategy transfer must preserve native compile errors",
+    );
 
     // Calculator: exact exalt odds before you click.
     const odds = await client.solverCalc(solver, item, "exalt");
@@ -1504,11 +1509,19 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     const log = await client.solverLog(solver);
     assert.ok(log.split("\n").filter(Boolean).length === solve.expanded_states);
 
+    const transferStarted = performance.now();
     const compiled = await client.solverCompileStrategy(solver);
+    const transferMs = performance.now() - transferStarted;
     const compiledTelemetry = await client.solverTelemetry(solver);
+    const compilation = compiledTelemetry.compilation as Record<string, unknown>;
     assert.equal(
-        (compiledTelemetry.compilation as Record<string, unknown>).available,
+        compilation.available,
         true,
+    );
+    assert.ok((compilation.strategy_json_bytes as number) > 0);
+    assert.ok(Number.isFinite(transferMs));
+    console.log(
+        `    solver strategy transfer: ${(compilation.strategy_json_bytes as number).toLocaleString()} bytes in ${transferMs.toFixed(2)} ms`,
     );
     const prepared = prepareSolverStrategy(compiled);
     assert.ok(
@@ -1555,7 +1568,26 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     await client.closeSimulator(simulator);
     await client.closeStrategy(strategy);
     await client.closeEconomy(economy);
+    const beforeSolverClose = await client.memoryStats();
     await client.closeSolver(solver);
+    const afterSolverClose = await client.memoryStats();
+    assert.equal(
+        afterSolverClose.live_handles,
+        beforeSolverClose.live_handles - 1,
+        "closing the scoped solver must release exactly one facade handle",
+    );
+    assert.ok(
+        afterSolverClose.native_live_owned_bytes <
+            beforeSolverClose.native_live_owned_bytes,
+        "closing the scoped solver must release its selected live ownership",
+    );
+    assert.ok(
+        afterSolverClose.wasm_memory_bytes >= beforeSolverClose.wasm_memory_bytes,
+        "WASM linear-memory high-water is not expected to shrink after close",
+    );
+    console.log(
+        `    solver close: handles ${beforeSolverClose.live_handles} -> ${afterSolverClose.live_handles}; live bytes ${beforeSolverClose.native_live_owned_bytes.toLocaleString()} -> ${afterSolverClose.native_live_owned_bytes.toLocaleString()}; peak ${afterSolverClose.native_peak_owned_bytes.toLocaleString()}; WASM high-water ${beforeSolverClose.wasm_memory_bytes.toLocaleString()} -> ${afterSolverClose.wasm_memory_bytes.toLocaleString()}; max solve step ${solve.worker.max_step_ms.toFixed(2)} ms`,
+    );
     await client.closeItem(item);
 });
 

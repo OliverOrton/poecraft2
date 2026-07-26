@@ -1,8 +1,8 @@
 # R4 Browser Transfer And Solver Lifetime
 
-**Status: selected by Oliver on 2026-07-26; Gates 0–5 execute in order.**
+**Status: completed on 2026-07-26; historical execution plan.**
 
-Parent: [Active work](README.md)
+Parent: [Archive index](../README.md)
 
 Source boundary: `42e03152f871067e828b595c30950b46de9dd1de`
 
@@ -64,7 +64,7 @@ Compiled-strategy behavior is unchanged, so this milestone does not require a
 new 10,000-run strategy-quality campaign. Existing automated strategy
 execution remains part of the web suite. Oliver owns rendered review.
 
-## Gate 0 — Boundary And Baseline
+## Gate 0 — Boundary And Baseline — Completed
 
 - Fast-forward local `main` through the three completed research archives and
   verify that the lineage is documentation-only.
@@ -75,7 +75,7 @@ execution remains part of the web suite. Oliver owns rendered review.
 
 Exit: clean selected boundary and an implementation map.
 
-## Gate 1 — Transferable Strategy Bytes
+## Gate 1 — Transferable Strategy Bytes — Completed
 
 - Add a WASM facade path that exposes the native compiled strategy response as
   raw bytes with explicit result status and length.
@@ -88,7 +88,7 @@ Exit: clean selected boundary and an implementation map.
 Exit: no escaped strategy-inside-JSON envelope, worker-side graph parse, or
 full-graph response clone in the product path.
 
-## Gate 2 — Strategy Input And Clone Ownership
+## Gate 2 — Strategy Input And Clone Ownership — Completed
 
 - Encode main-thread strategy documents once and transfer bytes into the
   worker for native compile/evaluation rather than cloning a full graph into
@@ -100,7 +100,7 @@ full-graph response clone in the product path.
 
 Exit: each remaining full graph copy has an explicit owner.
 
-## Gate 3 — Solve Handle Lifetime And Repricing
+## Gate 3 — Solve Handle Lifetime And Repricing — Completed
 
 - Open a fresh scoped solve handle for each product solve.
 - Retrieve required summary, telemetry, and compiled policy before release.
@@ -113,7 +113,7 @@ Exit: each remaining full graph copy has an explicit owner.
 
 Exit: no product transition closure survives merely for optional repricing.
 
-## Gate 4 — Non-Visual Acceptance
+## Gate 4 — Non-Visual Acceptance — Completed
 
 - Add real-worker coverage for raw strategy transfer and round-trip validity.
 - Prove scoped solver handles and selected live bytes return to the expected
@@ -125,7 +125,7 @@ Exit: no product transition closure survives merely for optional repricing.
 
 Exit: green rebuilt-WASM product acceptance with explicit memory evidence.
 
-## Gate 5 — Closure
+## Gate 5 — Closure — Completed
 
 - Update stable WASM, Calculator, solver-flow, evidence, and decision records.
 - Archive this plan with the final report and update `HANDOFF.md`.

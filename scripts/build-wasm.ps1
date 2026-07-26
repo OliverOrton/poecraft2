@@ -46,7 +46,9 @@ $EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
 $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
 $Exported = @(
-    "_pcw_abi_version", "_pcw_data_open", "_pcw_data_summary", "_pcw_data_bases",
+    "_pcw_abi_version", "_pcw_response_data", "_pcw_response_size",
+    "_pcw_response_clear",
+    "_pcw_data_open", "_pcw_data_summary", "_pcw_data_bases",
     "_pcw_bestiary_presentation", "_pcw_bestiary_apply",
     "_pcw_bestiary_calculate",
     "_pcw_data_close",
@@ -65,8 +67,11 @@ $Exported = @(
     "_pcw_simulator_run_chunk", "_pcw_simulator_result",
     "_pcw_solver_open", "_pcw_solver_close", "_pcw_solver_actions",
     "_pcw_solver_calc", "_pcw_solver_solve", "_pcw_solver_state_value",
-    "_pcw_solver_project", "_pcw_solver_compile", "_pcw_solver_log",
+    "_pcw_solver_project", "_pcw_solver_compile",
+    "_pcw_solver_compile_transfer", "_pcw_solver_log",
     "_pcw_solver_telemetry",
+    "_pcw_solver_solve_begin", "_pcw_solver_solve_step",
+    "_pcw_solver_solve_finish", "_pcw_solver_solve_abandon",
     "_malloc", "_free"
 ) -join ","
 

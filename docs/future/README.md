@@ -10,7 +10,7 @@ chunk. Selection requires a fresh active plan under [active](../active/README.md
 
 ## Deferred Designs
 
-- [Solver roadmap](solver-roadmap.md) — unresolved R4–R6, S8.5/S8.6, and
+- [Solver roadmap](solver-roadmap.md) — unresolved R5–R6, S8.5/S8.6, and
   unselected audit candidates without an execution sequence.
 - [Mechanics and Recombinators](mechanics-and-recombinators.md) — deferred
   two-item, trade-leaf, Lock, corruption, and finishing designs.

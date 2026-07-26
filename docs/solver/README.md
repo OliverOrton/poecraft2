@@ -282,11 +282,11 @@ finalization, and explicit memory-statistics requests. This distinction keeps
 frequent progress cheap without weakening selected-owned-byte enforcement or
 final reporting.
 
-Transition caches are price-independent and can be reused by a solver handle,
-but the browser's long-lived transfer/reprice lifecycle is not a settled
-stable promise. The current product retains a solve handle; the deferred
-browser-lifetime work is recorded in the [solver roadmap](../future/solver-roadmap.md)
-and [solver notes](NOTES.md).
+Transition caches are price-independent and can be reused by a solver handle.
+The browser product deliberately does not retain its scoped Solve handle:
+after summary, telemetry, and compiled-strategy transfer it closes the handle
+and rebuilds on a later Solve or reprice. A future retained-cache product mode
+would require an enforced live-memory budget; it is not current behavior.
 
 Code authority: `engine/src/solver_solve_types.hpp` holds shared private solve
 types and declarations; `solver_solve.cpp` retains construction and the solve

@@ -28,10 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records Oliver's selected
-[R4 browser transfer and solver lifetime plan](active/browser-transfer-lifetime-r4.md).
-It changes browser marshalling and scoped solve-handle ownership without
-changing exact solver behavior or product caps. The
+[Active](active/README.md) records that no implementation boundary is selected.
+The completed
+[R4 browser transfer and solver lifetime milestone](archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
+uses transferable strategy bytes, removes redundant graph clones, and releases
+the scoped product Solve handle after handoff. Its rebuilt release-WASM
+non-visual acceptance is indexed in [Evidence](evidence.md).
+
+The preceding
 [broad-action separation and renewal research](archive/2026-07-25-broad-action-separation-research/README.md)
 is archived with a negative architecture result: fixed-policy renewal
 produced exact finite candidates, but cheap separation excluded zero broad
@@ -42,13 +46,14 @@ is archived with a negative Gate 2 qualification result: temporary-bench
 kernel deferral moved the first-carrier 200,000-state failure to the first
 ordinary broad reforge, so no production source was retained. The preceding
 [gap-directed natural-T1 research](archive/2026-07-25-gap-directed-natural-t1-research/README.md)
-is its historical input. The
+is historical input. Those three research lineages retained documentation and
+evidence only; their prototypes were restored. The
 accepted WASM progress-accounting follow-up is pinned by its
 [tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
 at source commit `c58b71a`. The completed
 [focused-round performance attribution](archive/2026-07-23-focused-round-performance/README.md)
 is archived with its measured no-default-change result. [HANDOFF](../HANDOFF.md)
-records the exact completed boundary. The completed
+records the clean no-active boundary and recent result. The completed
 [mechanical solver split](archive/2026-07-22-mechanical-solver-split/README.md)
 is archived, and the read-only
 [post-B6 reconnaissance](archive/2026-07-23-post-b6-reconnaissance/README.md)

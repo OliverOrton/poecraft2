@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-26
+
+- [R4 Browser Transfer And Solver Lifetime](2026-07-26-browser-transfer-lifetime-r4/README.md) —
+  replaced nested compiled-strategy JSON with transferable bytes, removed
+  ownerless full-graph clones, scoped product Solve handles through strategy
+  handoff, synchronized WASM exports, and passed rebuilt release-WASM
+  non-visual acceptance.
+
 ## 2026-07-25
 
 - [Broad-Action Separation And Renewal Research](2026-07-25-broad-action-separation-research/README.md) —

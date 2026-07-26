@@ -22,13 +22,15 @@ that work.
 
 ### 2026-07-19 — #debt — Browser solve transfer and lifetime
 
-Status: promoted to the
-[future solver roadmap](../future/solver-roadmap.md).
+Status: resolved by
+[R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md).
 
-The worker caps solver steps at four work items and Calculator retains the
-solved handle/transition closure after strategy transfer. The approved future
-direction is to remove nested giant-JSON copies, transfer the graph, release
-the solve handle by default, and rebuild on repricing, with live-byte checks.
+The four-work-item adaptive step cap remains scheduling policy. R4 removed the
+nested compiled-strategy JSON envelope and unnecessary full-graph clones,
+transfers graph bytes across the worker boundary, releases the scoped solve
+handle after handoff, and rebuilds on a later solve or reprice. Its Node-WASM
+evidence records selected-live-byte release separately from the unchanged
+linear-memory high-water.
 
 ### 2026-07-19 — #debt — Verification truth and evaluator gaps
 

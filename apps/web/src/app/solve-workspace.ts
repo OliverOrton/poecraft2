@@ -1,6 +1,5 @@
 import type { SolverActionInfo } from "./engine-protocol";
 import {
-    cloneStrategy,
     isStrategyDocument,
     validateStrategy,
     type StrategyDocument,
@@ -76,12 +75,12 @@ export function solvePriceReadiness(
     };
 }
 
-/** Validate, clone, and auto-layout a native solver policy for the workspace. */
+/** Validate, adopt, and auto-layout a uniquely transferred solver policy. */
 export function prepareSolverStrategy(value: unknown): StrategyDocument {
     if (!isStrategyDocument(value)) {
         throw new Error("The solver returned an invalid strategy document.");
     }
-    const strategy = cloneStrategy(value);
+    const strategy = value;
     ensureStrategyPositions(strategy);
     const errors = validateStrategy(strategy).filter(
         (issue) => issue.severity === "error",

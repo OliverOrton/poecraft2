@@ -32,7 +32,7 @@ import { buildHarvestCatalog } from "./harvest-crafts";
 const DEFAULT_CHUNK_SIZE = 1000;
 
 let bindings: EngineBindings;
-let post: (message: WorkerMessage) => void = () => {};
+let post: (message: WorkerMessage, transfer?: ArrayBuffer[]) => void = () => {};
 const cancelled = new Set<number>();
 
 // Raw bundle bytes retained until a catalog is distilled from them, then the
@@ -444,7 +444,7 @@ async function evaluateStrategy(
         }
         strategy = bindings.compileStrategy(
             params.session as number,
-            params.strategy,
+            params.strategyJson as Uint8Array,
         );
         if (params.economy !== undefined) {
             economy = bindings.loadEconomy(params.economy);
@@ -657,7 +657,7 @@ async function dispatch(
             return {
                 strategy: bindings.compileStrategy(
                     params.session as number,
-                    params.strategy,
+                    params.strategyJson as Uint8Array,
                 ),
             };
         case "closeStrategy":
@@ -729,7 +729,7 @@ async function dispatch(
             };
         case "solverCompileStrategy":
             return {
-                strategy: bindings.solverCompileStrategy(
+                strategyJson: bindings.solverCompileStrategy(
                     params.solver as number,
                 ),
             };
@@ -753,7 +753,17 @@ async function handle(message: ClientMessage): Promise<void> {
     const { id, method, params } = message;
     try {
         const result = await dispatch(id, method, params);
-        post({ kind: "response", id, ok: true, result });
+        const strategyJson =
+            method === "solverCompileStrategy" &&
+            result !== null &&
+            typeof result === "object"
+                ? (result as { strategyJson?: unknown }).strategyJson
+                : undefined;
+        const transfer =
+            strategyJson instanceof Uint8Array
+                ? [strategyJson.buffer as ArrayBuffer]
+                : undefined;
+        post({ kind: "response", id, ok: true, result }, transfer);
     } catch (error) {
         const info =
             error instanceof EngineError
@@ -790,10 +800,14 @@ async function main(): Promise<void> {
     bindings = await createEngineBindings();
     if (isBrowserWorker) {
         const scope = globalThis as unknown as {
-            postMessage: (message: unknown) => void;
+            postMessage: (
+                message: unknown,
+                transfer?: ArrayBuffer[],
+            ) => void;
             onmessage: ((event: { data: ClientMessage }) => void) | null;
         };
-        post = (message) => scope.postMessage(message);
+        post = (message, transfer) =>
+            scope.postMessage(message, transfer ?? []);
         scope.onmessage = (event) => {
             void handle(event.data);
         };
@@ -804,7 +818,8 @@ async function main(): Promise<void> {
         if (!parentPort) {
             throw new Error("engine-worker started without a parent port");
         }
-        post = (message) => parentPort.postMessage(message);
+        post = (message, transfer) =>
+            parentPort.postMessage(message, transfer ?? []);
         parentPort.on("message", (data: ClientMessage) => {
             void handle(data);
         });

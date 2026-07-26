@@ -2,11 +2,12 @@
  * WebAssembly facade for the poecraft engine.
  *
  * This is the browser-facing boundary (Phase 8). It is deliberately
- * coarse-grained and string-shaped: every entry point takes and returns a
- * UTF-8 JSON document and operates on small integer handles managed here, so
- * the TypeScript `EngineClient`/worker never have to reach into WASM linear
- * memory or marshal the large `pc_item_state` struct. Data is loaded through
- * the C ABI memory path (`pc_data_load_memory`), the only option a browser has.
+ * coarse-grained and JSON-shaped: most entry points take and return a UTF-8
+ * JSON document and operate on small integer handles managed here. Large
+ * inputs and the compiled-strategy transfer path use explicit heap bytes so
+ * TypeScript never has to marshal the large `pc_item_state` struct. Data is
+ * loaded through the C ABI memory path (`pc_data_load_memory`), the only
+ * option a browser has.
  *
  * The module is single-threaded inside a Web Worker, and Emscripten's `ccall`
  * copies a returned string out via `UTF8ToString` synchronously before the next
@@ -885,6 +886,21 @@ extern "C" {
 
 EMSCRIPTEN_KEEPALIVE
 uint32_t pcw_abi_version(void) { return pc_abi_version(); }
+
+EMSCRIPTEN_KEEPALIVE
+std::uintptr_t pcw_response_data() {
+    return reinterpret_cast<std::uintptr_t>(g_response.data());
+}
+
+EMSCRIPTEN_KEEPALIVE
+std::size_t pcw_response_size() {
+    return g_response.size();
+}
+
+EMSCRIPTEN_KEEPALIVE
+void pcw_response_clear() {
+    std::string{}.swap(g_response);
+}
 
 // `bundle_json` points at a heap buffer the caller (worker) allocated with
 // _malloc and frees afterwards; the compiled data bundle is multi-megabyte, so
@@ -2652,6 +2668,38 @@ const char* pcw_solver_compile(uint32_t solver_id) {
     append_escaped(out, strategy.c_str());
     out.push_back('}');
     return respond(std::move(out));
+}
+
+/* Compile directly into the reusable response buffer without embedding and
+ * escaping the complete strategy as a string in a second JSON document.
+ * TypeScript reads pcw_response_data/size and copies those bytes into one
+ * transferable ArrayBuffer. The numeric return preserves native errors
+ * without forcing the worker to parse a successful strategy graph. */
+EMSCRIPTEN_KEEPALIVE
+int32_t pcw_solver_compile_transfer(uint32_t solver_id) {
+    pc_solver_handle* solver = find(g_solvers, solver_id);
+    if (solver == nullptr) {
+        fail(PC_RESULT_NOT_FOUND, "unknown solver");
+        return static_cast<int32_t>(PC_RESULT_NOT_FOUND);
+    }
+    pc_error_info error = make_error();
+    size_t length = 0;
+    pc_result rc =
+        pc_solver_compile_strategy(*solver, nullptr, 0, &length, &error);
+    if (rc != PC_RESULT_OK) {
+        fail(error);
+        return static_cast<int32_t>(rc);
+    }
+    std::string strategy(length + 1, '\0');
+    rc = pc_solver_compile_strategy(*solver, strategy.data(),
+                                    strategy.size(), &length, &error);
+    if (rc != PC_RESULT_OK) {
+        fail(error);
+        return static_cast<int32_t>(rc);
+    }
+    strategy.resize(length);
+    respond(std::move(strategy));
+    return static_cast<int32_t>(PC_RESULT_OK);
 }
 
 EMSCRIPTEN_KEEPALIVE

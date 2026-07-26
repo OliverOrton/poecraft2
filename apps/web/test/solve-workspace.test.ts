@@ -88,8 +88,10 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         ),
     );
     assert.equal(prepared.nodes[1].expected_cost, 2.9319);
-    assert.notStrictEqual(prepared, compiled);
-    console.log("  ok - compiled policies auto-layout without losing solver values");
+    assert.strictEqual(prepared, compiled);
+    console.log(
+        "  ok - uniquely transferred policies are adopted and auto-laid out without a full clone",
+    );
 }
 
 function action(id: string, costKeys: string[]): SolverActionInfo {

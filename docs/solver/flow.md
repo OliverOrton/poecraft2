@@ -6,8 +6,8 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code and complete non-visual cross-layer tests: 2026-07-22 @
-mechanical-split source commit `042a281`. Scope: Calculator orchestration,
+Verified against code and complete non-visual cross-layer tests: 2026-07-26 @
+browser-transfer/lifetime R4 closure. Scope: Calculator orchestration,
 workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
 solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No rendered review or mechanic ruling
@@ -29,7 +29,7 @@ Calculator / Strategy Builder
   -> pcw_* handle registry and JSON translation
   -> pc_* C ABI
   -> native CalcContext / SolveWork / policy compiler / evaluator
-  -> JSON or summary back through worker structured clone
+  -> JSON summaries or transferable strategy bytes back through the worker
   -> product validation, presentation, and workspace handoff
 ```
 
@@ -64,16 +64,17 @@ solver handle. That handle supplies the action picker and exact one-action odds;
 it is separate from the product Solve handle so Solve can use a narrower priced
 scope without removing actions from the Calculator.
 
-The Calculator currently owns two solver fields:
+The Calculator owns one persistent solver field and opens a separate scoped
+solver inside each Solve invocation:
 
 | Handle | Current purpose | Lifetime |
 | --- | --- | --- |
 | `solver` | Full/current-goal registry and one-action exact outcomes | Reopened when the goal or session changes; closed with the Calculator |
-| `solveSolver` | Priced `goal_relevant` solve scope and its transition closure/latest result | Reused while the serialized solve goal is unchanged; closed on scope/session change or Calculator disposal |
+| Scoped Solve solver | Priced `goal_relevant` solve scope, transition closure, and latest result | Opened fresh for one Solve; closed after summary, telemetry, and compiled strategy transfer or any terminal failure |
 
-Goal edits clear result state, close both handles, open a new ordinary solver,
-and refresh the available action descriptors. Base or item-level changes also
-replace the session, context, item, and solver handles. Draft persistence stores
+Goal edits clear result state, replace the ordinary solver, and refresh the
+available action descriptors. Base or item-level changes also replace the
+session, context, item, and ordinary solver handles. Draft persistence stores
 stable state, not these runtime objects.
 
 Code authority:
@@ -129,9 +130,9 @@ Pressing Solve creates a scoped, priced request before native optimization:
    in the pinned economy. Missing prices exclude an action; they never make it
    free.
 5. The envelope solver closes. Calculator builds a second goal containing the
-   priced action IDs and computes a stable serialized key for that exact scope.
-6. A previous `solveSolver` is reused only when that key matches. Otherwise it
-   closes and a new solver opens.
+   priced action IDs.
+6. Calculator opens a fresh scoped solver for that priced goal. It is not
+   retained for later repricing or Solve invocations.
 7. The pinned economy is loaded into a short-lived native economy handle for
    this solve invocation.
 8. Positive absolute-chaos and relative-percent product targets are converted
@@ -212,10 +213,13 @@ After a solve with `policy_available`:
 
 1. `pc_solver_compile_strategy` expands the chosen primitive and automatic
    operators into ordinary V1 start, router, operation, and terminal nodes.
-2. The WASM facade returns the compiled JSON string; `EngineBindings` parses it
-   into a structured-cloneable object.
-3. `prepareSolverStrategy` checks the V1 shape, clones it, assigns missing board
-   positions, and runs product strategy validation.
+2. The WASM facade exposes the compiled JSON response as raw bytes plus native
+   result status and length. `EngineBindings` slices those bytes from linear
+   memory, clears the reusable native response string, and transfers the
+   resulting `ArrayBuffer` from worker to main thread.
+3. `EngineClient` decodes and parses the document once.
+   `prepareSolverStrategy` adopts that uniquely transferred object, checks its
+   V1 shape, assigns missing board positions, and runs product validation.
 4. Calculator attaches the pinned economy identity and retains an unsaved
    JavaScript strategy document.
 5. “Open strategy” clones that document into Strategy Builder as an unsaved
@@ -239,17 +243,15 @@ Code authority:
 Price changes rerender Calculator cost/readiness information; they do not
 change mechanic outcomes and do not automatically rerun Solve. A later Solve
 invocation pins the then-current economy, creates a new short-lived economy
-handle, and may reuse `solveSolver` when its goal/action-scope key is unchanged.
-That retained solver can keep price-independent transition data and its latest
-result until the goal/session changes or the Calculator closes.
+handle, and opens a fresh scoped solver. After Calculator has obtained the
+summary, telemetry, and compiled strategy bytes, terminal cleanup closes the
+scoped solver, envelope solver, and economy handle. The transition closure and
+latest native result therefore do not remain live merely to support a possible
+reprice.
 
-This retention is current implementation, not the approved destination.
 [Browser Repricing Uses Rebuild By Default](../decisions.md#2026-07-18--browser-repricing-uses-rebuild-by-default)
-records the owner-approved target: after successful strategy transfer, release
-the solved handle/transition closure and rebuild on repricing. Delivery remains
-deferred in the [solver roadmap](../future/solver-roadmap.md). Stable documents
-must label that behavior as decided-but-unimplemented until code inspection
-shows otherwise.
+records this implemented owner choice. A retained-cache product mode remains
+deferred until it has an enforced live-memory budget.
 
 ## Exact Whole-Graph Evaluation
 
@@ -260,8 +262,9 @@ solver handle or solved policy state:
    request.
 2. Product validation rejects malformed graphs before native work.
 3. The editor opens a session for the strategy base/item level, pins the
-   economy, and calls `EngineClient.strategyEvaluate` with a cloned graph.
-4. The worker compiles the graph, optionally loads the economy, opens a
+   economy, and calls `EngineClient.strategyEvaluate`. The client encodes the
+   graph once and transfers its byte buffer to the worker.
+4. The worker compiles those bytes, optionally loads the economy, opens a
    stateful evaluation, and steps discovery, SCC solving, fallback, and
    finalization with progress and event-loop yields.
 5. Worker cleanup always closes evaluation, economy, and compiled-strategy
@@ -310,7 +313,7 @@ different evidence sources.
 | Stale product request | Ignore its result using request/version checks |
 | Cancelled stepped work | Yield, observe cancellation, abandon/destroy native work, and return bounded progress |
 | Document/session change | Close solver handles before replacing their owning session |
-| Strategy handoff | Validate and clone ordinary V1 strategy JSON; do not expose opaque solver operators |
+| Strategy handoff | Transfer bytes, parse once, and validate/adopt the uniquely owned ordinary V1 graph; clone only when creating a separate document owner |
 | Mechanic ambiguity | Stop for Oliver's ruling; this flow has no mechanic authority |
 
 ## Code And Evidence Map
@@ -322,6 +325,7 @@ different evidence sources.
 | Main-thread RPC | `apps/web/src/app/engine-client.ts`, `engine-protocol.ts` |
 | Worker stepping | `apps/web/src/app/engine-worker.ts` |
 | WASM calls | `apps/web/src/app/engine-wasm.ts`, `bindings/wasm/wasm_api.cpp` |
+| Transfer ownership tests | `apps/web/test/engine-client-transfer.test.ts`, `engine-smoke.test.ts` |
 | Public native contract | `engine/include/poecraft/solver.h` |
 | Native API/lifetime | `engine/src/solver_api.cpp` |
 | Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |

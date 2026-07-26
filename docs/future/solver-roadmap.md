@@ -70,15 +70,17 @@ Measurements and the former optimization boundary remain in
 [B1/S8 archive](../archive/2026-07-19-bestiary-solver-s8/README.md). They are
 evidence, not a selected next task.
 
+The completed
+[R4 browser transfer and solver lifetime milestone](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
+replaced nested compiled-strategy JSON with a transferable byte buffer,
+removed redundant full-graph clones, and made product Solve handles scoped.
+Later solves and repricing rebuild; a retained-cache mode remains unselected
+and would require an enforced live-memory budget.
+
 ## Unfinished S8 Delivery
 
 If Oliver selects another one-item solver chunk, the surviving product work is:
 
-- **R4 — browser transfer and lifetime.** Avoid nested giant JSON transfer and
-  unnecessary full clones, align or preflight compile limits, release the
-  solved native handle and transition closure after successful strategy
-  transfer, and rebuild on repricing. Retained-cache mode remains deferred
-  until live-byte telemetry can enforce a product budget.
 - **R5 — verification presentation.** Show the pinned economy and sampled
   uncertainty in product review, keep per-run and independent-retry-normalized
   costs distinct, and decide the remaining authored Unveil-offer evaluator

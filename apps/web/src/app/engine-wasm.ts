@@ -77,15 +77,24 @@ export class EngineBindings {
 
     private callJsonWithHeapString(name: string, value: string): OkEnvelope {
         const encoded = new TextEncoder().encode(value);
-        const ptr = this.module._malloc(encoded.length + 1);
+        return this.callJsonWithHeapBytes(name, [], [], encoded);
+    }
+
+    private callJsonWithHeapBytes(
+        name: string,
+        argTypes: string[],
+        args: unknown[],
+        value: Uint8Array,
+    ): OkEnvelope {
+        const ptr = this.module._malloc(value.length + 1);
         try {
-            this.module.HEAPU8.set(encoded, ptr);
-            this.module.HEAPU8[ptr + encoded.length] = 0;
+            this.module.HEAPU8.set(value, ptr);
+            this.module.HEAPU8[ptr + value.length] = 0;
             const json = this.module.ccall(
                 name,
                 "string",
-                ["number"],
-                [ptr],
+                [...argTypes, "number"],
+                [...args, ptr],
             ) as string;
             return this.parseEnvelope(json);
         } finally {
@@ -321,11 +330,12 @@ export class EngineBindings {
         ).summary as unknown as BatchSummary;
     }
 
-    compileStrategy(session: number, strategy: unknown): number {
-        return this.callJson(
+    compileStrategy(session: number, strategyJson: Uint8Array): number {
+        return this.callJsonWithHeapBytes(
             "pcw_strategy_compile",
-            ["number", "string"],
-            [session, JSON.stringify(strategy)],
+            ["number"],
+            [session],
+            strategyJson,
         ).strategy as number;
     }
 
@@ -572,14 +582,34 @@ export class EngineBindings {
         ).state as number;
     }
 
-    /** Compiled policy as a parsed strategy document (editor/simulator format). */
-    solverCompileStrategy(solver: number): unknown {
-        const strategy = this.callJson(
-            "pcw_solver_compile",
+    /** Raw compiled policy bytes. The worker transfers this buffer without
+     * parsing or structured-cloning the strategy graph. */
+    solverCompileStrategy(solver: number): Uint8Array {
+        const result = this.module.ccall(
+            "pcw_solver_compile_transfer",
+            "number",
             ["number"],
             [solver],
-        ).strategy as string;
-        return JSON.parse(strategy);
+        ) as number;
+        const ptr = this.module.ccall(
+            "pcw_response_data",
+            "number",
+            [],
+            [],
+        ) as number;
+        const length = this.module.ccall(
+            "pcw_response_size",
+            "number",
+            [],
+            [],
+        ) as number;
+        const bytes = this.module.HEAPU8.slice(ptr, ptr + length);
+        this.module.ccall("pcw_response_clear", null, [], []);
+        if (result !== 0) {
+            this.parseEnvelope(new TextDecoder().decode(bytes));
+            throw new EngineError(result, "strategy compilation failed");
+        }
+        return bytes;
     }
 
     solverLog(solver: number): string {
