@@ -125,10 +125,10 @@ diagnosis is not an artifact of the reforge allowance.
 
 At the 100M control, every full/deep case hit 200,000 discovered states after
 one expansion with `L=0`, no finite `U`, and only the Restart row retained.
-First-carrier automatic admission considered 213 operators in each such case;
-212 were temporary-bench candidates. Exact local option-kernel generation
-therefore creates the state frontier before the global solver can produce
-either bound.
+Across the four first carriers, automatic admission considered 211 to 226
+operators, of which 210 to 225 were eligible temporary-bench candidates.
+Exact local option-kernel generation therefore creates the state frontier
+before the global solver can produce either bound.
 
 The Dire Pelt smoke control reached its first finite upper bound after
 20,048.350 ms and stopped at the 256 MiB selected-owned-memory cap after
@@ -150,6 +150,47 @@ by-kind telemetry, bound trace, existing timers, and inspected ownership path
 answered the Gate 1 question. Gate 2 analysis SHA-256 is
 `ed7dcf94426b5b05d5b882200ea5c9c3f973ae639102faba7945b3b401a3d0b0`.
 The exact natural two-T1 oracle did not run.
+
+## Gap-directed Gate 3 completed
+
+Gate 3 studied exactly the two leading Gate 2 paths without changing
+production source. Its isolated positive-cost SSP control separates the
+restricted-action search value from the proof-bearing lower bound. With a
+useful admissible unseen-action envelope, exact separation materialized two of
+four kernels and matched exhaustive value and policy; with the generic zero
+envelope it materialized all four and saved no work. Heuristic-only admission
+missed a hidden optimum, an inadmissible envelope was rejected, and a repriced
+action required envelope invalidation.
+
+The real trace provides no per-candidate cheap admissible envelope. The four
+full/deep first carriers considered 866 eligible automatic candidates in
+total, selected none before stopping, spent 30,534,098 reforge work, and each
+reached the 200,000-state cap. The smoke considered 74,525 eligible automatic
+candidates and selected 101. These non-selection counts are only savings
+ceilings; they are not pruning certificates. A production partial-action
+design must completely enumerate action identities, retain
+`L = min(materialized exact Bellman terms, unseen admissible envelopes)`, and
+materialize every unseen action that can violate the incumbent or Bellman
+certificate.
+
+The compatible secondary candidate is versioned constructive-policy
+properness-proof reuse. The smoke spent 9.136 seconds over 17 start-properness
+checks. If those checks cost equally, reusing all after the first has an
+8.598-second aggregate ceiling. Safe reuse requires an identical goal,
+economy, action vocabulary, fixed policy, and complete referenced transition
+dependency closure; repricing, vocabulary or policy change, or a changed
+referenced successor invalidates it. This optimization cannot create the first
+bound in the four first-expansion stops and cannot improve incumbent quality.
+
+The watched Gate 3 study passed with no timeout or survivor. Machine-readable
+analysis SHA-256 is
+`947ec61aa7ad252a6c511f2a37a1f970934b1bae1d7dc0eed2eb16c806113ea4`;
+the short raw report SHA-256 is
+`a48df66a669caefa5f826fe6cb98b891bb6293a689f76c61ac93b91dff26608a`.
+Gate 4 will run the smallest exact coupled feasibility prototype, but will
+refuse a portfolio candidate comparison if the only real-case envelope remains
+the generic zero bound. No exact natural two-T1 oracle, mechanic research,
+economy work, simulation, or WASM build ran.
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
