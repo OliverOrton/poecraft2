@@ -1,17 +1,20 @@
 # Active Work
 
-**Status: broad-action separation and renewal research selected by Oliver on
-2026-07-25.**
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-The active
-[broad-action separation and renewal research](broad-action-separation-research.md)
-compares generalized exact action descriptors, pre-expansion destructive
-renewal upper acquisition, and compact exact broad-reforge representation.
-It is research-only and does not authorize production integration.
+The
+[broad-action separation and renewal research](../archive/2026-07-25-broad-action-separation-research/README.md)
+closed with a negative architecture result. Exact fixed-policy renewal
+acquisition produced finite candidates, but immediate-price separation
+excluded zero broad actions and the smallest exact compaction still exceeded
+the current reforge-work cap on both three-mod hard cases. No production
+source or generated output was retained. Any continuation is unselected
+[future work](../future/solver-roadmap.md).
 
-Its immediate input is the
+Its immediate historical input is the
 [exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md),
 which closed with a negative Gate 2 qualification result after
 temporary-bench deferral moved the first-carrier 200,000-state failure to an

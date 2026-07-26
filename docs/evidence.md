@@ -313,6 +313,40 @@ Raw local evidence remains under
 ledger SHA-256 is
 `aac7a4ae55e08ef795276d1a72944b1c73a991097e7a44661f644c7292dd331b`.
 
+## Broad-Action Separation And Renewal Research
+
+The 2026-07-25
+[research report](archive/2026-07-25-broad-action-separation-research/report.md)
+records a negative production decision and a reusable fixed-policy result.
+
+- The immediate current action price is an admissible lower envelope for an
+  unresolved ordinary broad action, but it excludes zero actions on all four
+  hard cases. The smallest renewal incumbent is about `575,497.52`, while the
+  largest pinned single primitive price is `14,619`.
+- An exact pre-expansion evaluator accumulated final goal mass without
+  interning failed successors. Goal-targeted destructive Harvest renewals
+  produced finite `c / p` candidates on all four hard cases under a
+  100,000,000 diagnostic reforge-work allowance.
+- The smallest fixed-policy-only compaction preserved all four probabilities.
+  Diagnostic work was 48,409,673 for full-three, 14,815,748 for deep-three,
+  6,789,419 for full-four, and 2,698,559 for deep-four. The two three-mod
+  cases therefore still exceed the current 11,000,000 limit.
+- Goal/failure aggregation is not a general exact Bellman kernel. Under each
+  full admitted action set, the 200,000 broad-reforge successors had zero
+  exact quotient merges and essentially every successor had a witnessed
+  continuation-observation distinction.
+- Chaos retains lower envelope `1`, so certified separation still must
+  materialize the same first kernel and reaches the 200,000-state wall.
+  Diagnostic source was restored; no production behavior or generated output
+  changed.
+
+Raw local evidence remains under
+`build/broad-action-separation-research/`. The compact full-three and
+deep-three ledger SHA-256 values are
+`f41fb5574ee469923b976df565a8df8aa1bee27c54b2019dae544dafdfb1e537`
+and
+`e91ec9a01c8595a4d43e190ab67fd1790ae5c52f72e44dec75a10623541aa55d`.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

@@ -30,19 +30,22 @@ temporary-bench deferral, but rejected production integration when all four
 hard cases transferred the 200,000-state start-carrier failure to their first
 ordinary broad reforge.
 
-If Oliver selects a direct continuation, the evidence supports a new bounded
-research/design chunk rather than landing the automatic-only prototype:
+The subsequent
+[broad-action separation and renewal research](../archive/2026-07-25-broad-action-separation-research/README.md)
+completed that comparison and selected no production architecture.
+Pre-expansion fixed-policy renewal produced exact finite candidates, but the
+immediate-price envelope excluded zero actions and left Chaos as the
+proof-bearing minimum. The smallest exact fixed-policy compaction still used
+48,409,673 and 14,815,748 diagnostic work on the two three-mod hard cases,
+above the current 11,000,000 cap. Full Bellman goal/failure aggregation is
+forbidden because the admitted continuation actions distinguish essentially
+every broad-reforge successor.
 
-- extend exact descriptors and separation to ordinary broad stochastic
-  operators while retaining every unresolved term in the certified lower
-  bound;
-- couple materialization to constructive finite-upper acquisition so cheap
-  immediate prices do not blindly choose enormous kernels; and
-- compare separation with a compact exact outcome/kernel representation for
-  the first broad reforge.
-
-This would materially broaden the rejected milestone. It is unselected and
-requires fresh proof, scope, and acceptance gates.
+A direct continuation is unselected. It requires either a new exact
+broad-kernel representation that preserves the complete continuation-action
+observation contract, or a materially narrower product objective. Do not
+resume by landing either rejected descriptor prototype, raising caps, or
+treating the fixed-policy evaluator as a general Bellman kernel.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)

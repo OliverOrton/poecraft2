@@ -28,11 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records Oliver's selected
-[broad-action separation and renewal research](active/broad-action-separation-research.md).
-It compares generalized exact separation, pre-expansion destructive renewal
-upper acquisition, and compact exact broad-reforge representation without
-authorizing production integration. The
+[Active](active/README.md) records that no implementation boundary is
+selected. The
+[broad-action separation and renewal research](archive/2026-07-25-broad-action-separation-research/README.md)
+is archived with a negative architecture result: fixed-policy renewal
+produced exact finite candidates, but cheap separation excluded zero broad
+actions and the compact evaluator remained over the current reforge-work cap
+on both three-mod hard cases. No production source was retained. The
 [exact automatic-action constraint-generation milestone](archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
 is archived with a negative Gate 2 qualification result: temporary-bench
 kernel deferral moved the first-carrier 200,000-state failure to the first

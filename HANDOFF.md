@@ -1,68 +1,60 @@
 # Session Handoff
 
-**Status: Oliver selected the
-[broad-action separation and renewal research](docs/active/broad-action-separation-research.md)
-on 2026-07-25. Gates 0–5 execute in order on branch
-`codex/broad-action-separation-research` from source boundary
-`bc9ee230d7fb6896425b99b6b7ba8ebe29589559`.**
+**Status: no implementation boundary is active.** Oliver must choose the next
+chunk before implementation resumes.
 
-## Objective
+The broad-action separation and renewal research completed with a negative
+architecture result on branch `codex/broad-action-separation-research`. Its
+[plan and report](docs/archive/2026-07-25-broad-action-separation-research/README.md)
+are archived. No production source or generated output was retained.
 
-Determine whether the first ordinary broad-reforge 200,000-state failure can
-be avoided exactly by combining:
+## Result
 
-1. unresolved descriptors and exact separation for ordinary broad stochastic
-   actions;
-2. a finite destructive-renewal upper before broad successor
-   materialization; and
-3. a compact or symbolic exact reforge-kernel representation.
+The research proved that an exact pre-expansion fixed-policy evaluator can
+accumulate destructive-reforge goal mass without interning failed successors.
+Goal-targeted Harvest renewals produced finite executable-policy candidates on
+all four hard cases under a diagnostic 100,000,000 reforge-work allowance.
 
-This is research-only. Diagnostic native prototypes are allowed, but no
-production integration is authorized.
+That useful primitive does not solve the product failure. Immediate-price
+envelopes exclude zero broad actions even with the incumbent, Chaos remains
+the proof-bearing lower minimum, and its exact materialization still reaches
+200,000 discovered states from the first expansion. The compact fixed-policy
+evaluator needs 48,409,673 and 14,815,748 diagnostic work on the full-three
+and deep-three cases, above the current 11,000,000 cap. Full Bellman
+goal/failure aggregation is not exact under the admitted continuation actions.
 
-## Starting Evidence
+## Evidence
 
-The preceding
-[automatic-action milestone](docs/archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
-deferred every temporary-bench descriptor on the four hard cases and built
-zero exact temporary-bench templates. Each case then expanded only its start
-state, discovered exactly 200,000 states in its first ordinary broad reforge,
-and stopped with `L=0` and no finite `U`.
+Raw evidence remains under `build/broad-action-separation-research/`.
 
-The four reforge frontier-work counts were 10,145,608, 8,153,574, 6,120,150,
-and 6,120,150. Raw evidence remains under
-`build/exact-automatic-action-constraint-generation/`.
+Key SHA-256 records:
 
-## Proof Boundary
+- uncompacted five-case portfolio ledger:
+  `55bf9f2729b7ed60f43d496836ef44b723421c87df990f9f5c17e7031fa9c28a`;
+- compact full-three ledger:
+  `f41fb5574ee469923b976df565a8df8aa1bee27c54b2019dae544dafdfb1e537`;
+- compact deep-three ledger:
+  `e91ec9a01c8595a4d43e190ab67fd1790ae5c52f72e44dec75a10623541aa55d`;
+  and
+- compact-evaluator build watchdog:
+  `a3127207303ee2d8e096d89d82d8f1cb8aed69797c6ca9f01f2e65e289715429`.
 
-- Every unresolved ordinary action remains in the proof-bearing lower
-  minimum through an admissible envelope.
-- An unresolved action is forbidden from an executable upper witness.
-- A destructive-renewal upper must prove its retry carrier is behaviorally
-  identical for the repeated action and must include all setup/restart costs.
-- Goal/failure aggregation may evaluate a fixed renewal policy, but it is not
-  an exact Bellman kernel unless all admitted continuation actions observe
-  every failure state identically.
-- Restricted-action guidance, heuristic pruning, and approximate aggregation
-  cannot be reported as certified.
+All final diagnostic benchmark watchdogs completed without timeout or
+survivor. Prototype engine edits were restored exactly. No engine, ABI,
+strategy, binding, WASM, web, artifact, corpus, mechanic, economy, product
+cap, or scheduling default changed. The exact natural two-T1 oracle did not
+run. The final detached link audit checked 884 local Markdown targets with
+zero missing targets; its watchdog SHA-256 is
+`8d395240f7ea824f07203243afe6c72c73b8606ab6ece0612c2283b2691d6634`.
 
-## Evidence And Stop Contract
+## Next Decision
 
-All builds, benchmarks, evaluations, simulations, and tests use a detached
-900-second watchdog with process-tree termination and survivor checking. New
-raw work belongs under `build/broad-action-separation-research/`. Reuse the
-accepted five-case portfolio with one hard-case worker. The exact natural
-two-T1 oracle must not run.
-
-Stop an axis as soon as proof or systematic measurement shows it only reorders
-an inevitable huge kernel, cannot produce an executable upper, or weakens the
-observation contract. Do not broaden mechanics, actions, prices, caps, ABI,
-strategy vocabulary, corpus, bindings, or UI.
-
-At Gate 5, restore diagnostic source changes, archive the evidence-backed
-recommendation, and leave no active implementation boundary. A retained native
-change would require a separately selected production plan and the standing
-native/rebuilt-WASM acceptance.
+Do not implement separation plus the measured renewal evaluator as the general
+fix. A direct continuation requires either a new exact broad-kernel
+representation that preserves the complete continuation-action observation
+contract, or a materially narrower product objective. Neither is selected by
+this handoff. Oliver may instead choose another item from
+[future solver work](docs/future/solver-roadmap.md).
 
 Commits are local-only and end with:
 

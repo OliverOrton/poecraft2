@@ -1,11 +1,12 @@
 # Broad-Action Separation And Renewal Research
 
-**Status: selected by Oliver on 2026-07-25; Gates 0–5 execute in order.**
+**Status: completed with a negative architecture result on 2026-07-25.**
+Gates 0–5 ran in order; no production source was retained.
 
-Parent: [Active work](README.md)
+Parent: [Archive record](README.md)
 
 Immediate input:
-[Exact automatic-action constraint-generation result](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
+[Exact automatic-action constraint-generation result](../2026-07-25-exact-automatic-action-constraint-generation/README.md)
 
 Source boundary: `bc9ee230d7fb6896425b99b6b7ba8ebe29589559`
 

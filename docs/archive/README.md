@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-25
 
+- [Broad-Action Separation And Renewal Research](2026-07-25-broad-action-separation-research/README.md) —
+  proved exact pre-expansion fixed-renewal candidates, then rejected the
+  combined architecture because cheap separation excluded zero broad actions
+  and the compact evaluator still exceeded current work limits on both
+  three-mod hard cases.
 - [Exact Automatic-Action Constraint Generation](2026-07-25-exact-automatic-action-constraint-generation/README.md) —
   proved a cheap mandatory-setup-price envelope, then rejected the
   automatic-only architecture when all four hard cases transferred the
