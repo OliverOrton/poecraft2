@@ -1,20 +1,26 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: R4 browser transfer and solver lifetime selected by Oliver on
+2026-07-26.**
 
 Parent: [Documentation map](../README.md)
 
-The
+The active
+[R4 browser transfer and solver lifetime plan](browser-transfer-lifetime-r4.md)
+removes nested compiled-strategy JSON copies, transfers graph bytes across the
+worker boundary, and releases the scoped native solve closure after handoff.
+It does not change solver behavior, mechanics, action scope, public caps, or
+strategy vocabulary.
+
+Its immediate historical input is the
 [broad-action separation and renewal research](../archive/2026-07-25-broad-action-separation-research/README.md)
 closed with a negative architecture result. Exact fixed-policy renewal
 acquisition produced finite candidates, but immediate-price separation
 excluded zero broad actions and the smallest exact compaction still exceeded
 the current reforge-work cap on both three-mod hard cases. No production
-source or generated output was retained. Any continuation is unselected
-[future work](../future/solver-roadmap.md).
+source or generated output was retained.
 
-Its immediate historical input is the
+The preceding
 [exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md),
 which closed with a negative Gate 2 qualification result after
 temporary-bench deferral moved the first-carrier 200,000-state failure to an

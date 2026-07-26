@@ -1,60 +1,53 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: Oliver selected
+[R4 browser transfer and solver lifetime](docs/active/browser-transfer-lifetime-r4.md)
+on 2026-07-26. Gates 0–5 execute in order on branch
+`codex/browser-transfer-lifetime-r4` from source boundary
+`42e03152f871067e828b595c30950b46de9dd1de`.**
 
-The broad-action separation and renewal research completed with a negative
-architecture result on branch `codex/broad-action-separation-research`. Its
-[plan and report](docs/archive/2026-07-25-broad-action-separation-research/README.md)
-are archived. No production source or generated output was retained.
+## Main Reconciliation
 
-## Result
+Local `main` was fast-forwarded from `b55e61a` through the completed
+gap-directed, exact automatic-action, and broad-action research lineage to
+`42e0315`. The entire delta is documentation: archived plans/reports, evidence
+indexing, roadmap updates, and the clean no-active-boundary handoff. No
+diagnostic engine, binding, web, data, fixture, or script change landed on
+`main`.
 
-The research proved that an exact pre-expansion fixed-policy evaluator can
-accumulate destructive-reforge goal mass without interning failed successors.
-Goal-targeted Harvest renewals produced finite executable-policy candidates on
-all four hard cases under a diagnostic 100,000,000 reforge-work allowance.
+## Objective
 
-That useful primitive does not solve the product failure. Immediate-price
-envelopes exclude zero broad actions even with the incumbent, Chaos remains
-the proof-bearing lower minimum, and its exact materialization still reaches
-200,000 discovered states from the first expansion. The compact fixed-policy
-evaluator needs 48,409,673 and 14,815,748 diagnostic work on the full-three
-and deep-three cases, above the current 11,000,000 cap. Full Bellman
-goal/failure aggregation is not exact under the admitted continuation actions.
+Replace the Calculator's large solve-to-strategy copy chain with raw
+transferable bytes, then release the scoped native solver and transition
+closure after result/telemetry/strategy handoff. A later solve or repricing
+rebuilds from the goal and pinned economy.
 
-## Evidence
+The ordinary Calculator odds handle remains separate. Solver algorithms,
+mechanics, action scope, public caps, compiler vocabulary, and strategy
+semantics do not change.
 
-Raw evidence remains under `build/broad-action-separation-research/`.
+## Starting Boundary
 
-Key SHA-256 records:
+The current product path:
 
-- uncompacted five-case portfolio ledger:
-  `55bf9f2729b7ed60f43d496836ef44b723421c87df990f9f5c17e7031fa9c28a`;
-- compact full-three ledger:
-  `f41fb5574ee469923b976df565a8df8aa1bee27c54b2019dae544dafdfb1e537`;
-- compact deep-three ledger:
-  `e91ec9a01c8595a4d43e190ab67fd1790ae5c52f72e44dec75a10623541aa55d`;
-  and
-- compact-evaluator build watchdog:
-  `a3127207303ee2d8e096d89d82d8f1cb8aed69797c6ca9f01f2e65e289715429`.
+1. compiles strategy JSON into a native string;
+2. escapes that entire document as a string inside a second JSON response;
+3. parses the response and then the embedded document in the worker;
+4. structured-clones the parsed graph to the main thread;
+5. immediately clones it again during Strategy Board preparation; and
+6. retains the solved native handle/transition closure for potential repricing.
 
-All final diagnostic benchmark watchdogs completed without timeout or
-survivor. Prototype engine edits were restored exactly. No engine, ABI,
-strategy, binding, WASM, web, artifact, corpus, mechanic, economy, product
-cap, or scheduling default changed. The exact natural two-T1 oracle did not
-run. The final detached link audit checked 884 local Markdown targets with
-zero missing targets; its watchdog SHA-256 is
-`8d395240f7ea824f07203243afe6c72c73b8606ab6ece0612c2283b2691d6634`.
+Native default compiler limits already match the accepted product corpus:
+100,000 nodes, 400,000 edges, and 64 MiB of strategy JSON. R4 preserves those
+truthful native boundaries rather than inventing an inaccurate frontend size
+estimate.
 
-## Next Decision
+## Acceptance
 
-Do not implement separation plus the measured renewal evaluator as the general
-fix. A direct continuation requires either a new exact broad-kernel
-representation that preserves the complete continuation-action observation
-contract, or a materially narrower product objective. Neither is selected by
-this handoff. Oliver may instead choose another item from
-[future solver work](docs/future/solver-roadmap.md).
+The final gate rebuilds release WASM, then runs `npm test` and
+`npx tsc --noEmit` once. Real Node worker/WASM evidence must cover byte
+transfer, strategy validity, handle release, selected live bytes, linear-memory
+high-water disclosure, and responsiveness. No rendered review is authorized.
 
 Commits are local-only and end with:
 

@@ -28,8 +28,10 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records that no implementation boundary is
-selected. The
+[Active](active/README.md) records Oliver's selected
+[R4 browser transfer and solver lifetime plan](active/browser-transfer-lifetime-r4.md).
+It changes browser marshalling and scoped solve-handle ownership without
+changing exact solver behavior or product caps. The
 [broad-action separation and renewal research](archive/2026-07-25-broad-action-separation-research/README.md)
 is archived with a negative architecture result: fixed-policy renewal
 produced exact finite candidates, but cheap separation excluded zero broad
