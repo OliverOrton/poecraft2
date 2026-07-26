@@ -61,6 +61,28 @@ reject.
 Keep this file current after every gate. Preserve negative evidence and leave
 the final tree clean.
 
+## Gap-directed Gate 0 completed
+
+Gate 0 completed on branch `codex/gap-directed-natural-t1-research` at clean
+source commit `b55e61ae37670a15caf2e62a2bb2c6e2f703e26d`. The selected
+`28324d7` source baseline is an ancestor, and the only five changed paths are
+the expected active-plan, HANDOFF, documentation-map, active-index, and solver
+roadmap documents from selection commit `b55e61a`. No engine, binding, script,
+tracked fixture, compiled-data, WASM, web, or economy path differs across the
+selection boundary.
+
+The detached watchdog lives under
+`build/gap-directed-natural-t1-research/watchdog.py`, SHA-256
+`47c386d3bae509f76d7ec6cfcb9b2e7054a79e828e73f9b26827c4ea2c710f67`.
+Its success smoke passed, and its forced-timeout smoke killed both the parent
+and inherited child process with no survivor. The Gate 0 manifest SHA-256 is
+`e556860e4a45d64d987187b3741f325212f6f4869922274c9bda0f2474f5a80e`.
+It records PowerShell 5.1.26100.8875, Python 3.14.2, Node 20.20.0, npm 10.8.2,
+GCC 14.2.0, unavailable CMake, solver/benchmark/WASM ownership, and pre-run
+hashes. The run-local portfolio was selected from committed metadata before
+fresh solves; its manifest SHA-256 is
+`a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd`.
+
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
