@@ -1,17 +1,21 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: broad-action separation and renewal research selected by Oliver on
+2026-07-25.**
 
 Parent: [Documentation map](../README.md)
 
-The
-[exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
-closed with a negative Gate 2 qualification result. Complete temporary-bench
-deferral only moved the first-carrier 200,000-state failure to the first
-ordinary broad reforge. No production source or generated output was retained.
-The next broader solver direction is recorded as unselected
-[future work](../future/solver-roadmap.md).
+The active
+[broad-action separation and renewal research](broad-action-separation-research.md)
+compares generalized exact action descriptors, pre-expansion destructive
+renewal upper acquisition, and compact exact broad-reforge representation.
+It is research-only and does not authorize production integration.
+
+Its immediate input is the
+[exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md),
+which closed with a negative Gate 2 qualification result after
+temporary-bench deferral moved the first-carrier 200,000-state failure to an
+ordinary broad reforge.
 
 The completed
 [focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)
