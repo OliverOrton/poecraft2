@@ -1,11 +1,11 @@
 # Gap-Directed Natural-T1 Solver Research
 
-**Status: Gates 0–5 completed on 2026-07-25; the
-[research conclusion](gap-directed-natural-t1-research-report.md) awaits
-Oliver's acceptance. Research and measurement only; no production solver
-change is authorized by this plan.**
+**Status: archived after Oliver accepted the Gates 0–5 conclusion on
+2026-07-25. This historical research plan does not authorize further work.**
 
-Parent: [Active work](README.md)
+Parent: [Archive record](README.md)
+
+Report: [Gap-directed natural-T1 research report](report.md)
 
 ## Objective
 
@@ -53,7 +53,7 @@ Historical evidence is input, not a conclusion:
   was rejected.
 
 See the archived
-[exact guided-search review](../archive/2026-07-22-exact-guided-search-design/README.md).
+[exact guided-search review](../2026-07-22-exact-guided-search-design/README.md).
 The earlier raw scaling report remains under
 `build/solver-scaling-goal-slots/report.md`. Capture fresh baselines before
 accepting any historical cause.

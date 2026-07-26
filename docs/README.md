@@ -28,12 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records the selected
-[gap-directed natural-T1 solver research](active/gap-directed-natural-t1-research.md).
-Its Gates 0–5 are complete, and the
-[research report](active/gap-directed-natural-t1-research-report.md) recommends
-an exact action-constraint-generation milestone for Oliver's decision. The
-plan/report remain active and do not authorize a production solver change. The
+[Active](active/README.md) records Oliver's selected
+[exact automatic-action constraint-generation milestone](active/exact-automatic-action-constraint-generation.md).
+The accepted
+[gap-directed natural-T1 research](archive/2026-07-25-gap-directed-natural-t1-research/README.md)
+is archived. Production integration remains proof-gated on a useful cheap
+admissible descriptor envelope and exact separation. The
 accepted WASM progress-accounting follow-up is pinned by its
 [tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
 at source commit `c58b71a`. The completed

@@ -1,13 +1,14 @@
 # Gap-Directed Natural-T1 Research Report
 
-**Status: Gates 0–5 completed on 2026-07-25. The conclusion awaits Oliver's
-acceptance; this report does not authorize production implementation.**
+**Status: archived after Oliver accepted the Gates 0–5 conclusion on
+2026-07-25. The selected implementation is governed by the current active
+plan, not this report.**
 
-Parent: [Active work](README.md)
+Parent: [Archive record](README.md)
 
-Plan: [Gap-directed natural-T1 solver research](gap-directed-natural-t1-research.md)
+Plan: [Gap-directed natural-T1 solver research](plan.md)
 
-Boundary: [HANDOFF](../../HANDOFF.md)
+Boundary: [HANDOFF](../../../HANDOFF.md)
 
 ## Decision
 

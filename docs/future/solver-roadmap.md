@@ -21,14 +21,12 @@ permit no merge. Approximate compact mode remains forbidden. The completed
 [focused-round performance attribution](../archive/2026-07-23-focused-round-performance/README.md)
 confirmed that the 256-state global batch causes repeated whole-graph work, but
 accepted no default change because every tested tuple exceeded the fixed
-5-second solve-step maximum. Oliver's selected
-[gap-directed natural-T1 solver research](../active/gap-directed-natural-t1-research.md)
-has now completed Gates 0–5. Its
-[report](../active/gap-directed-natural-t1-research-report.md) recommends exact
-state-local automatic-action constraint generation, contingent on proving a
-useful cheap admissible descriptor envelope and exact separation. The
-recommendation awaits Oliver's decision and does not authorize a production
-solver change.
+5-second solve-step maximum. Oliver accepted the completed
+[gap-directed natural-T1 solver research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
+and selected the
+[exact automatic-action constraint-generation milestone](../active/exact-automatic-action-constraint-generation.md).
+Production integration remains contingent on proving a useful cheap
+admissible descriptor envelope and exact separation.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)

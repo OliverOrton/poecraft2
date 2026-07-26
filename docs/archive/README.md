@@ -9,6 +9,13 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-25
+
+- [Gap-Directed Natural-T1 Solver Research](2026-07-25-gap-directed-natural-t1-research/README.md) —
+  completed five-case time-to-gap diagnosis and accepted recommendation to
+  attempt exact state-local automatic-action constraint generation behind a
+  useful-envelope and exact-separation proof gate.
+
 ## 2026-07-23
 
 - [Focused-Round Performance Attribution And Scheduling](2026-07-23-focused-round-performance/README.md) —

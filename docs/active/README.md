@@ -1,22 +1,18 @@
 # Active Work
 
-**Status: gap-directed natural-T1 solver research completed on 2026-07-25;
-conclusion awaiting Oliver's acceptance.** This was a research-and-measurement
-boundary only; no production solver change is authorized.
+**Status: exact automatic-action constraint generation selected by Oliver on
+2026-07-25.** Gates 0–5 execute in order.
 
 Parent: [Documentation map](../README.md)
 
-Oliver selected the
-[gap-directed natural-T1 solver research plan](gap-directed-natural-t1-research.md)
-to determine the smallest exactness-preserving architecture change likely to
-improve certified bounded and near-optimal behavior on three-/four-T1 natural
-goals. It measures upper-policy quality, lower-bound quality, and
-action/outcome graph growth, then studies only the leading causes. The task
-returned an
-[evidence-backed production recommendation](gap-directed-natural-t1-research-report.md):
-exact state-local automatic-action constraint generation, contingent on a
-useful cheap admissible descriptor envelope and exact separation. The plan and
-report remain active until Oliver accepts, rejects, or revises the conclusion.
+Oliver accepted the
+[gap-directed natural-T1 research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
+and selected the
+[exact automatic-action constraint-generation plan](exact-automatic-action-constraint-generation.md).
+The milestone must prove a useful cheap admissible descriptor envelope and
+exact separation before production integration. A generic-zero or
+heuristic-only admission result stops the milestone rather than weakening the
+certificate.
 
 The completed
 [focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)
