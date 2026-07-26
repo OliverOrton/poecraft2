@@ -21,12 +21,28 @@ permit no merge. Approximate compact mode remains forbidden. The completed
 [focused-round performance attribution](../archive/2026-07-23-focused-round-performance/README.md)
 confirmed that the 256-state global batch causes repeated whole-graph work, but
 accepted no default change because every tested tuple exceeded the fixed
-5-second solve-step maximum. Oliver accepted the completed
+5-second solve-step maximum. The completed
 [gap-directed natural-T1 solver research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
-and selected the
-[exact automatic-action constraint-generation milestone](../active/exact-automatic-action-constraint-generation.md).
-Production integration remains contingent on proving a useful cheap
-admissible descriptor envelope and exact separation.
+led to the
+[exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md).
+That milestone proved a cheap mandatory-setup-price envelope and complete
+temporary-bench deferral, but rejected production integration when all four
+hard cases transferred the 200,000-state start-carrier failure to their first
+ordinary broad reforge.
+
+If Oliver selects a direct continuation, the evidence supports a new bounded
+research/design chunk rather than landing the automatic-only prototype:
+
+- extend exact descriptors and separation to ordinary broad stochastic
+  operators while retaining every unresolved term in the certified lower
+  bound;
+- couple materialization to constructive finite-upper acquisition so cheap
+  immediate prices do not blindly choose enormous kernels; and
+- compare separation with a compact exact outcome/kernel representation for
+  the first broad reforge.
+
+This would materially broaden the rejected milestone. It is unselected and
+requires fresh proof, scope, and acceptance gates.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)

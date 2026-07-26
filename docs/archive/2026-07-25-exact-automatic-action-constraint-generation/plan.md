@@ -1,15 +1,29 @@
 # Exact Automatic-Action Constraint Generation
 
-**Status: selected by Oliver on 2026-07-25; Gates 0–5 execute in order.**
+**Status: completed with a negative Gate 2 qualification result on
+2026-07-25.** Gates 3–4 were not entered under the predeclared stop rule;
+Gate 5 restored the clean source boundary and archived the evidence.
 
-Parent: [Active work](README.md)
+Parent: [Archive record](README.md)
 
 Research input:
-[Gap-directed natural-T1 solver research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
+[Gap-directed natural-T1 solver research](../2026-07-25-gap-directed-natural-t1-research/README.md)
 
 Source boundary: `49ce94c5bcee077a8e3cbddb1ab9749f00cf8de5`
 
 Branch: `codex/exact-automatic-action-constraint-generation`
+
+## Closure
+
+Gate 1 proved a cheap admissible envelope from the mandatory first setup
+primitive, but the isolated Gate 2 prototype showed that automatic-action
+separation alone does not address the product failure. It deferred every
+temporary-bench descriptor on all four hard cases, after which the first
+ordinary broad reforge still discovered 200,000 states from the start carrier
+with `L=0` and no finite `U`.
+
+No production source or generated output was retained. The complete result,
+measurements, and next design boundary are in the [final report](report.md).
 
 ## Objective
 

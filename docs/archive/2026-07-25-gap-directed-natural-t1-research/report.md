@@ -1,8 +1,8 @@
 # Gap-Directed Natural-T1 Research Report
 
 **Status: archived after Oliver accepted the Gates 0–5 conclusion on
-2026-07-25. The selected implementation is governed by the current active
-plan, not this report.**
+2026-07-25. The later implementation milestone is preserved as an
+[archived negative result](../2026-07-25-exact-automatic-action-constraint-generation/README.md).**
 
 Parent: [Archive record](README.md)
 

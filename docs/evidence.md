@@ -286,6 +286,33 @@ and policy hashes. The two-T1 replay was a loose bounded target, not the
 prohibited exact oracle. No mechanic, schedule, cap/default, ABI, tracked
 input, natural-T1 generator, or economy pipeline changed.
 
+## Automatic-Action Constraint-Generation Qualification
+
+The 2026-07-25
+[qualification report](archive/2026-07-25-exact-automatic-action-constraint-generation/report.md)
+records a negative production decision with a useful causal result.
+
+- A complete lightweight descriptor prototype deferred 210–225
+  temporary-bench candidates on each of the four hard natural-T1 cases and
+  built zero exact temporary-bench templates.
+- The mandatory first setup primitive's current price is an admissible
+  descriptor lower envelope because every represented program pays it once
+  before any exit or retry and all later costs are nonnegative.
+- After automatic deferral, every hard case still expanded only the start
+  state and discovered exactly 200,000 states in its first ordinary broad
+  reforge. Reforge frontier work ranged from 6,120,150 to 10,145,608; every
+  run stopped at `max_discovered_states` with `L=0` and no finite `U`.
+- The smoke case exceeded its existing 60-second case watchdog. The outer
+  portfolio watchdog recorded no survivor.
+- Gate 2 therefore rejected automatic-only integration. Prototype source was
+  restored; no production source, WASM, generated output, mechanics, caps,
+  ABI, corpus, or economy input changed.
+
+Raw local evidence remains under
+`build/exact-automatic-action-constraint-generation/`. The Gate 2 portfolio
+ledger SHA-256 is
+`aac7a4ae55e08ef795276d1a72944b1c73a991097e7a44661f644c7292dd331b`.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

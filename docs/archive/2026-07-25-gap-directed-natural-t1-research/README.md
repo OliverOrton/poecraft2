@@ -12,6 +12,8 @@ Parent: [Documentation archive](../README.md)
 
 The accepted conclusion was to attempt exact state-local automatic-action
 constraint generation, but only if a cheap useful admissible descriptor
-envelope and exact separation invariant can be proved. Oliver selected that
-implementation milestone on 2026-07-25. The active plan may still reject the
-architecture if its proof or qualification gate fails.
+envelope and exact separation invariant could be proved. Oliver selected that
+implementation milestone on 2026-07-25. Its
+[archived negative result](../2026-07-25-exact-automatic-action-constraint-generation/README.md)
+proved the envelope but rejected the automatic-only architecture at
+qualification.

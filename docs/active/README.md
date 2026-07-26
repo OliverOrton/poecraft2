@@ -1,18 +1,17 @@
 # Active Work
 
-**Status: exact automatic-action constraint generation selected by Oliver on
-2026-07-25.** Gates 0–5 execute in order.
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Oliver accepted the
-[gap-directed natural-T1 research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
-and selected the
-[exact automatic-action constraint-generation plan](exact-automatic-action-constraint-generation.md).
-The milestone must prove a useful cheap admissible descriptor envelope and
-exact separation before production integration. A generic-zero or
-heuristic-only admission result stops the milestone rather than weakening the
-certificate.
+The
+[exact automatic-action constraint-generation milestone](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
+closed with a negative Gate 2 qualification result. Complete temporary-bench
+deferral only moved the first-carrier 200,000-state failure to the first
+ordinary broad reforge. No production source or generated output was retained.
+The next broader solver direction is recorded as unselected
+[future work](../future/solver-roadmap.md).
 
 The completed
 [focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)

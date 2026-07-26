@@ -1,86 +1,70 @@
 # Session Handoff
 
-**Status: Oliver accepted the gap-directed natural-T1 research and selected
-the [exact automatic-action constraint-generation milestone](docs/active/exact-automatic-action-constraint-generation.md)
-on 2026-07-25. Gates 0–5 execute in order on branch
-`codex/exact-automatic-action-constraint-generation` from source boundary
-`49ce94c5bcee077a8e3cbddb1ab9749f00cf8de5`.**
+**Status: no implementation boundary is active.** Oliver must choose the next
+chunk before implementation resumes.
 
-The accepted research plan and report are preserved in the
-[dated archive](docs/archive/2026-07-25-gap-directed-natural-t1-research/README.md).
-Its raw evidence remains under `build/gap-directed-natural-t1-research/`.
+The exact automatic-action constraint-generation milestone completed with a
+negative Gate 2 qualification result on branch
+`codex/exact-automatic-action-constraint-generation`. Its
+[plan and report](docs/archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
+are archived. No production source or generated output was retained.
 
-## Current Objective
+## Result
 
-Separate complete, lightweight state-local automatic-action descriptors from
-expensive exact local-kernel construction. Each unresolved descriptor must
-retain a cheap admissible lower envelope. Exact separation must materialize any
-action that can improve the incumbent or violate the Bellman certificate.
+A complete lightweight descriptor layer can defer every temporary-bench
+kernel while preserving an admissible lower envelope from the mandatory setup
+primitive's price. That proof is valid, but the automatic-only architecture is
+not sufficient.
 
-The implementation must preserve:
+Across the four pinned hard cases, 210–225 temporary-bench descriptors were
+deferred and zero exact temporary-bench templates were built. Each case then
+hit the 200,000-state cap from its first ordinary broad reforge after expanding
+only the start state. Every case still had `L=0` and no finite executable `U`.
+The smoke case exceeded its existing 60-second case watchdog.
 
-- `L <= J_pi <= U`;
-- complete action identity and eventual exact answers;
-- proper executable policy witnesses;
-- deterministic results and hashes;
-- repricing, goal, carrier, and action-vocabulary invalidation; and
-- honest resource stops and resumability.
+The implementation stop rule fired before production integration. Prototype
+engine edits were restored exactly. No engine, ABI, strategy, binding, WASM,
+web, artifact, corpus, mechanic, economy, product cap, or scheduling default
+changed. The exact natural two-T1 oracle did not run.
 
-A restricted-action value is search guidance only. It cannot be reported as a
-certified lower bound while unresolved descriptors remain. Generic zero is
-safe but fails the utility gate. Heuristic-only admission is forbidden.
+## Evidence
 
-## Gate 0 Boundary
+Raw evidence remains under
+`build/exact-automatic-action-constraint-generation/`.
 
-The clean accepted source boundary is commit
-`49ce94c5bcee077a8e3cbddb1ab9749f00cf8de5`. The current branch is
-`codex/exact-automatic-action-constraint-generation`. The documentation
-boundary archives the accepted research and creates the selected active plan.
+Key SHA-256 records:
 
-The first implementation step is proof and ownership mapping, not production
-behavior:
+- Gate 1 full-three 100M ledger:
+  `162dfe8720fabb045ea56861de402b5331065ceca617ab26751f3cded59bdb2f`;
+- Gate 2 portfolio ledger:
+  `aac7a4ae55e08ef795276d1a72944b1c73a991097e7a44661f644c7292dd331b`;
+  and
+- Gate 2 outer watchdog:
+  `6296301cb080b8f14a7c890795e5dc43a18a4d077291d7a2e2797439b9f16d11`.
 
-1. descriptor synthesis and deterministic identity;
-2. exact local option-kernel construction and resource ownership;
-3. incumbent acquisition and solve-phase scheduling;
-4. lower-bound and Bellman-certificate ownership;
-5. price and vocabulary invalidation; and
-6. native/WASM telemetry and acceptance ownership.
+The outer portfolio watchdog completed in 65.143 seconds with the runner's
+aggregate failure status, no outer timeout, and no survivor. The final
+milestone commit is documentation-only, so no WASM rebuild or cross-layer
+runtime suite was required. The final detached link audit checked 871 local
+Markdown targets with zero missing targets; its watchdog SHA-256 is
+`4874fb34cac4f983061cdd493cddac6665e873b1c9606da94eeaa58aa8a411c7`.
 
-No Path of Exile mechanic, action scope, economy price, product default,
-public cap, public ABI, compiler, UI, or tracked corpus change is authorized.
-The exact natural two-T1 oracle must not run.
+## Next Decision
 
-## Evidence Contract
+The recommended next chunk is a bounded research/design milestone, not an
+immediate implementation:
 
-All builds, benchmarks, evaluations, simulations, and tests use a detached
-900-second watchdog with process-tree termination and a survivor check. New raw
-work belongs under
-`build/exact-automatic-action-constraint-generation/`. Reuse the accepted
-five-case portfolio and hashes before solving.
+1. generalize exact descriptor/separation proof obligations to both automatic
+   programs and ordinary broad stochastic reforge kernels;
+2. couple separation to constructive finite-upper acquisition so an immediate
+   price envelope does not blindly select a huge kernel; and
+3. compare that architecture with compact exact outcome/kernel
+   representation for the first broad reforge.
 
-Native portfolio acceptance uses one warmup and three equal-cap measured
-repetitions with one hard-case worker. The smoke baseline first finite upper is
-20,048.350 ms. At the 100M reforge control, the other four cases each reached
-200,000 discovered states during their first carrier with `L=0` and no finite
-upper.
+This is materially broader than the rejected milestone and is not selected by
+this handoff. Oliver may instead select another item from
+[future solver work](docs/future/solver-roadmap.md).
 
-Do not run routine suites between gates. Run the appropriate complete
-acceptance once in Gate 5. Engine solver source changes require rebuilding the
-WASM module. Compiled-strategy verification, if required, uses 10,000 runs.
-Oliver owns rendered and visual review.
-
-## Stop Conditions
-
-Stop and preserve a clean negative result if:
-
-- no useful cheap admissible descriptor envelope can be proved;
-- exact separation cannot keep unresolved actions in the proof-bearing bound;
-- qualification does not materially avoid the measured exact kernels/states;
-  or
-- integration would require an unselected mechanic, action-scope, public-cap,
-  ABI, compiler, UI, corpus, or economy change.
-
-Keep this file current at every gate. Commits are local-only and end with:
+Commits are local-only and end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

@@ -11,6 +11,10 @@ selected active work.
 
 ## 2026-07-25
 
+- [Exact Automatic-Action Constraint Generation](2026-07-25-exact-automatic-action-constraint-generation/README.md) —
+  proved a cheap mandatory-setup-price envelope, then rejected the
+  automatic-only architecture when all four hard cases transferred the
+  first-carrier 200,000-state failure to an ordinary broad reforge.
 - [Gap-Directed Natural-T1 Solver Research](2026-07-25-gap-directed-natural-t1-research/README.md) —
   completed five-case time-to-gap diagnosis and accepted recommendation to
   attempt exact state-local automatic-action constraint generation behind a

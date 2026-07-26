@@ -28,12 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records Oliver's selected
-[exact automatic-action constraint-generation milestone](active/exact-automatic-action-constraint-generation.md).
-The accepted
+[Active](active/README.md) records that no implementation boundary is
+selected. The
+[exact automatic-action constraint-generation milestone](archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
+is archived with a negative Gate 2 qualification result: temporary-bench
+kernel deferral moved the first-carrier 200,000-state failure to the first
+ordinary broad reforge, so no production source was retained. The preceding
 [gap-directed natural-T1 research](archive/2026-07-25-gap-directed-natural-t1-research/README.md)
-is archived. Production integration remains proof-gated on a useful cheap
-admissible descriptor envelope and exact separation. The
+is its historical input. The
 accepted WASM progress-accounting follow-up is pinned by its
 [tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
 at source commit `c58b71a`. The completed
