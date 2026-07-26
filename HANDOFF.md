@@ -187,10 +187,43 @@ analysis SHA-256 is
 `947ec61aa7ad252a6c511f2a37a1f970934b1bae1d7dc0eed2eb16c806113ea4`;
 the short raw report SHA-256 is
 `a48df66a669caefa5f826fe6cb98b891bb6293a689f76c61ac93b91dff26608a`.
-Gate 4 will run the smallest exact coupled feasibility prototype, but will
-refuse a portfolio candidate comparison if the only real-case envelope remains
-the generic zero bound. No exact natural two-T1 oracle, mechanic research,
-economy work, simulation, or WASM build ran.
+Gate 4 therefore proceeded with the smallest exact coupled feasibility
+prototype, with an explicit refusal boundary if the only real-case envelope
+remained the generic zero bound. No exact natural two-T1 oracle, mechanic
+research, economy work, simulation, or WASM build ran.
+
+## Gap-directed Gate 4 completed
+
+Gate 4 compiled an isolated C++20 coupled prototype and ran one warmup plus
+three measured native repetitions under separate detached watchdogs. All four
+semantic outputs were byte-identical with SHA-256
+`282ea1f8ecf8e6e0b65b33984ea2580b133e39f7c241832caa5dd51992ee3b1a`;
+every run exited 0 with no timeout or survivor. The measured watchdog median
+was 25.984 ms.
+
+The useful-envelope synthetic control matched exhaustive `L=U=20` while
+materializing two of four kernels. The generic-zero-envelope control also
+matched exactly but materialized all four kernels, saving no work. The coupled
+proof-key control reduced 17 synthetic properness checks to one check and 16
+reuses, and invalidated on economy, vocabulary, policy, or referenced
+transition-dependency changes. Its inadmissible-envelope adversary was
+rejected.
+
+Across the five real portfolio traces, 75,391 eligible automatic-candidate
+instances have no exported useful cheap envelope. Exact zero-envelope
+separation therefore avoids zero materializations. The real portfolio
+candidate was rejected before a solver trial: selected-only admission would
+weaken exactness, while the zero-envelope candidate is mechanically eager. No
+candidate `L(t), U(t)` curve was fabricated. This is the plan's allowed failed
+prototype result.
+
+Headless release-WASM confirmation was not relevant because no native solver
+candidate or browser-facing delta qualified. Gate 4 analysis SHA-256 is
+`2fa562a96f31c301e8e1efd8e8ad584efd7560491ec89bdb122370b3633b5f3f`;
+the raw report SHA-256 is
+`106ff00068307d23fda12a196d05d71427572cb8620095e2dd498bbc90bdb5d3`.
+No production source, tracked fixture, economy data, or WASM artifact changed.
+The exact natural two-T1 oracle did not run.
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
