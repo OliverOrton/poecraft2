@@ -1,13 +1,13 @@
 # Session Handoff
 
-**Status: Oliver selected
+**Status: Gates 0–5 of the
 [gap-directed natural-T1 solver research](docs/active/gap-directed-natural-t1-research.md)
-on 2026-07-25. This is a research-and-measurement boundary for improving
-certified bounded and near-optimal behavior on three-/four-T1 goals; it
-authorizes no production solver change. The selected source baseline is clean
-`main` commit `28324d7`. Execute on
-`codex/gap-directed-natural-t1-research`, capture fresh baselines before
-instrumentation or prototypes, and complete Gates 0–5 in order.**
+completed on 2026-07-25. The
+[research report](docs/active/gap-directed-natural-t1-research-report.md)
+recommends exact state-local automatic-action constraint generation,
+contingent on a useful cheap admissible descriptor envelope and exact
+separation. The conclusion awaits Oliver's acceptance and authorizes no
+production solver change.**
 
 Previously, B1 through B6, the
 [mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md),
@@ -224,6 +224,36 @@ the raw report SHA-256 is
 `106ff00068307d23fda12a196d05d71427572cb8620095e2dd498bbc90bdb5d3`.
 No production source, tracked fixture, economy data, or WASM artifact changed.
 The exact natural two-T1 oracle did not run.
+
+## Gap-directed Gate 5 completed
+
+The tracked
+[research report](docs/active/gap-directed-natural-t1-research-report.md)
+contains the pinned portfolio and identities, complete baseline/candidate
+table, bound/work/memory trends, causal ranking, rejected ideas,
+counterexamples, primary-source mapping, proof/repricing/WASM obligations,
+ranked candidates, and one production milestone with acceptance cases and
+commands.
+
+The recommendation is exact state-local automatic-action constraint
+generation: completely enumerate lightweight descriptors, prove a useful cheap
+admissible envelope for every unseen action, retain
+`L = min(materialized exact Bellman terms, unseen envelopes)`, and materialize
+every action that can violate the incumbent or Bellman certificate. Stop that
+milestone if its only safe envelope is the zero bound. Versioned
+constructive-policy properness-proof reuse remains a secondary follow-up, not
+part of the first implementation boundary.
+
+The plan and report remain active until Oliver accepts, rejects, or revises the
+conclusion. No production implementation is selected. Gate 5 added
+documentation only; no production source, default, public cap, ABI, tracked
+fixture, compiled data, WASM artifact, mechanic rule, or economy data changed.
+The documentation relative-link/reachability audit and `git diff --check`
+passed. The Gate 5 evidence manifest is retained under
+`build/gap-directed-natural-t1-research/gate5/`. An initial manifest preflight
+exposed a Git-status parsing bug in the raw research script; its watchdog
+exited 1 without timeout or survivor, and the corrected rerun passed. No
+simulation or exact natural two-T1 oracle ran.
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
@@ -1395,7 +1425,8 @@ split, focused-round performance attribution and scheduling, and the
 measurement-only native goal-size scaling and headless-WASM step/progress
 diagnostics, followed by the accepted WASM progress-accounting fix and the
 configured two-T1 WASM completion follow-up, and the accepted bounded-incumbent
-graph-stability fix.
+graph-stability fix, followed by Gates 0–5 of the gap-directed natural-T1
+research.
 
 Exact stopping point: focused diagnostic source is committed at `f28bbb8`; the
 accepted progress-accounting source/evidence milestone is `c58b71a`.
@@ -1414,16 +1445,19 @@ The latest configured two-T1 completion record is
 The bounded-incumbent raw report is `build/incumbent-row-fix/report.md`, with
 tracked acceptance evidence in
 `fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json`.
-No focused scheduling default changed. No implementation plan is active;
-Oliver must select the next chunk before implementation resumes.
+The gap-directed plan and report remain active, unarchived, and awaiting
+Oliver's decision. No implementation plan is active; Oliver must accept,
+reject, or revise the recommended exact action-constraint-generation milestone
+before implementation resumes.
 
-The measured leads are explicit but unselected: cooperatively subdivide the
-approximately 11.5-second solve step before reconsidering a larger global
-batch, and consider behavior-identical reuse around fallback
-start-properness validation. WASM work-item cadence changes and residual
-browser yield/render profiling remain unselected. The exact natural two-T1
-oracle remains prohibited. The natural-T1 generator remains intentionally
-T1-only. Economy repair or publishing remains separate and untouched.
+The latest ranked leads are exact state-local automatic-action constraint
+generation first, contingent on a useful cheap admissible descriptor envelope,
+then behavior-identical properness-proof reuse. Cooperative subdivision of the
+approximately 11.5-second historical solve step, WASM work-item cadence
+changes, and residual browser yield/render profiling remain unselected. The
+exact natural two-T1 oracle remains prohibited. The natural-T1 generator
+remains intentionally T1-only. Economy repair or publishing remains separate
+and untouched.
 
 The two Strategy Board zoom-floor files are concurrent user work and were
 preserved outside focused-round commits.

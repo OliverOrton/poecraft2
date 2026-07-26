@@ -1,7 +1,9 @@
 # Gap-Directed Natural-T1 Solver Research
 
-**Status: selected by Oliver on 2026-07-25. Research and measurement only;
-no production solver change is authorized by this plan.**
+**Status: Gates 0–5 completed on 2026-07-25; the
+[research conclusion](gap-directed-natural-t1-research-report.md) awaits
+Oliver's acceptance. Research and measurement only; no production solver
+change is authorized by this plan.**
 
 Parent: [Active work](README.md)
 

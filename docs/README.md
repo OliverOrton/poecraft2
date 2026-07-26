@@ -30,10 +30,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 [Active](active/README.md) records the selected
 [gap-directed natural-T1 solver research](active/gap-directed-natural-t1-research.md).
-It is a measurement/prototype boundary for improving certified bounded and
-near-optimal behavior on three-/four-T1 goals; it does not authorize a
-production solver change. The accepted WASM progress-accounting follow-up is
-pinned by its
+Its Gates 0–5 are complete, and the
+[research report](active/gap-directed-natural-t1-research-report.md) recommends
+an exact action-constraint-generation milestone for Oliver's decision. The
+plan/report remain active and do not authorize a production solver change. The
+accepted WASM progress-accounting follow-up is pinned by its
 [tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
 at source commit `c58b71a`. The completed
 [focused-round performance attribution](archive/2026-07-23-focused-round-performance/README.md)

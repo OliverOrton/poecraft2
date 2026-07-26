@@ -1,8 +1,8 @@
 # Active Work
 
-**Status: gap-directed natural-T1 solver research selected on 2026-07-25.**
-This is a research-and-measurement boundary only; no production solver change
-is authorized.
+**Status: gap-directed natural-T1 solver research completed on 2026-07-25;
+conclusion awaiting Oliver's acceptance.** This was a research-and-measurement
+boundary only; no production solver change is authorized.
 
 Parent: [Documentation map](../README.md)
 
@@ -12,8 +12,11 @@ to determine the smallest exactness-preserving architecture change likely to
 improve certified bounded and near-optimal behavior on three-/four-T1 natural
 goals. It measures upper-policy quality, lower-bound quality, and
 action/outcome graph growth, then studies only the leading causes. The task
-must return an evidence-backed production recommendation before implementation
-is selected.
+returned an
+[evidence-backed production recommendation](gap-directed-natural-t1-research-report.md):
+exact state-local automatic-action constraint generation, contingent on a
+useful cheap admissible descriptor envelope and exact separation. The plan and
+report remain active until Oliver accepts, rejects, or revises the conclusion.
 
 The completed
 [focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)
