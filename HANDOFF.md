@@ -83,6 +83,38 @@ hashes. The run-local portfolio was selected from committed metadata before
 fresh solves; its manifest SHA-256 is
 `a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd`.
 
+## Gap-directed Gate 1 completed
+
+The fresh native build passed in 251,082.330 ms with no timeout or survivor.
+The benchmark executable SHA-256 is
+`bf5860bde9d16430f79600d81efddf2773422c0ab25c429fdb7bae301f405044`;
+the engine test executable is
+`ee8d2bf746a74e95b0bbeba3477940e04bf19cc5d5fbf160d8b7a72e3110cb4b`;
+and the DLL is
+`b1ad60ed1919e8926c984cab481edd7b3c23cbf57a7959f8ebefef807c330e4d`.
+
+One warmup and three measured native repetitions ran with one hard-case worker
+for the selected five-case portfolio. All four runner watchdogs exited 0 with
+no timeout or survivor. Every case exhausted the unchanged 3,000,000 reforge
+work cap during the first expansion, before producing a finite upper bound or
+lifting the lower bound above zero:
+
+| Case | Median solve | Expanded / discovered | Native result |
+| --- | ---: | ---: | --- |
+| `natural-t1-smoke-dire-pelt-three` | n/a | n/a | harness error exposing `max_reforge_work` before telemetry finalization |
+| `natural-t1-full-three-24920b3b28de` | 425.754 ms | 1 / 48,012 | `refused_resource_cap` |
+| `natural-t1-deep-three-low-probability-af4719c816f3` | 310.679 ms | 1 / 67,896 | `refused_resource_cap` |
+| `natural-t1-full-four-47d8b909aa88` | 225.727 ms | 1 / 96,025 | `refused_resource_cap` |
+| `natural-t1-deep-four-low-probability-1a1102b0e06b` | 226.359 ms | 1 / 96,025 | `refused_resource_cap` |
+
+The primary Gate 1 obstacle is therefore pre-bound reforge graph generation,
+not measured upper-policy quality or lower-bound strength. Gate 2 will first
+run an isolated reforge-cap ladder; source instrumentation is justified only
+if the ladder and retained action/cache telemetry cannot attribute the work.
+The Gate 1 machine-readable analysis SHA-256 is
+`02597f7b22c86bd22a343c93dbf5f9050ba6f805bfbb520c23c636cb6e416229`.
+The exact natural two-T1 oracle did not run.
+
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)
 on 2026-07-22. The branch is `codex/bounded-policy-contract`, based on clean
