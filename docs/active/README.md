@@ -1,10 +1,19 @@
 # Active Work
 
-**Status: no implementation boundary is active.** The focused-round
-performance chunk and its selected WASM progress-accounting follow-up are
-complete. Oliver must select the next chunk before implementation resumes.
+**Status: gap-directed natural-T1 solver research selected on 2026-07-25.**
+This is a research-and-measurement boundary only; no production solver change
+is authorized.
 
 Parent: [Documentation map](../README.md)
+
+Oliver selected the
+[gap-directed natural-T1 solver research plan](gap-directed-natural-t1-research.md)
+to determine the smallest exactness-preserving architecture change likely to
+improve certified bounded and near-optimal behavior on three-/four-T1 natural
+goals. It measures upper-policy quality, lower-bound quality, and
+action/outcome graph growth, then studies only the leading causes. The task
+must return an evidence-backed production recommendation before implementation
+is selected.
 
 The completed
 [focused-round performance plan](../archive/2026-07-23-focused-round-performance/README.md)
@@ -34,4 +43,6 @@ evidence documents linked from the [documentation map](../README.md).
 The preceding exact constructive-policy search established a finite natural
 three-T1 bracket but did not close exact optimality. It is preserved as a
 [historical incomplete milestone](../archive/2026-07-22-exact-constructive-policy-search/README.md)
-and no longer owns sequencing.
+and no longer owns sequencing. The later
+[exact guided-search review](../archive/2026-07-22-exact-guided-search-design/README.md)
+is historical input to the selected research, not implementation authority.

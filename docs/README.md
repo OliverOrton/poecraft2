@@ -28,8 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records that no implementation boundary is
-selected. The accepted WASM progress-accounting follow-up is pinned by its
+[Active](active/README.md) records the selected
+[gap-directed natural-T1 solver research](active/gap-directed-natural-t1-research.md).
+It is a measurement/prototype boundary for improving certified bounded and
+near-optimal behavior on three-/four-T1 goals; it does not authorize a
+production solver change. The accepted WASM progress-accounting follow-up is
+pinned by its
 [tracked evidence](../fixtures/solver-scaling/v1/evidence/wasm-progress-accounting-fix-summary.json)
 at source commit `c58b71a`. The completed
 [focused-round performance attribution](archive/2026-07-23-focused-round-performance/README.md)

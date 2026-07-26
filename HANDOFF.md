@@ -1,6 +1,15 @@
 # Session Handoff
 
-**Status: B1 through B6, the
+**Status: Oliver selected
+[gap-directed natural-T1 solver research](docs/active/gap-directed-natural-t1-research.md)
+on 2026-07-25. This is a research-and-measurement boundary for improving
+certified bounded and near-optimal behavior on three-/four-T1 goals; it
+authorizes no production solver change. The selected source baseline is clean
+`main` commit `28324d7`. Execute on
+`codex/gap-directed-natural-t1-research`, capture fresh baselines before
+instrumentation or prototypes, and complete Gates 0–5 in order.**
+
+Previously, B1 through B6, the
 [mechanical solver split](docs/archive/2026-07-22-mechanical-solver-split/README.md),
 and the
 [focused-round performance chunk](docs/archive/2026-07-23-focused-round-performance/README.md)
@@ -16,8 +25,41 @@ Oliver subsequently selected and accepted the bounded-incumbent graph-lifetime
 fix at `255e8f1`, with tracked evidence in
 `fixtures/solver-scaling/v1/evidence/bounded-incumbent-graph-stability-fix-summary.json`.
 Focused diagnostics remain at `f28bbb8`, and no scheduling default changed.
-No implementation boundary is active. Oliver must select the next chunk before
-source work resumes.**
+The new active research boundary supersedes the prior no-boundary stopping
+state.
+
+## Selected gap-directed natural-T1 research handoff
+
+The task optimizes evidence about time-to-certified-gap, not exhaustive-closure
+runtime. It must separate:
+
+- time and quality of the first/existing executable upper policy;
+- strength and cost of the certified lower bound; and
+- action/outcome/state materialization that does not improve either bound.
+
+Use at least the existing three-goal smoke case, two distinct three-goal
+full/deep cases, and two distinct four-goal full/deep cases selected from
+committed metadata before solving. Pin IDs and hashes in Gate 1. Exact small
+synthetic/regression cases may validate proofs. Never run the exact natural
+two-T1 oracle.
+
+Every build, benchmark, evaluation, simulation, and test process uses the
+detached 900-second watchdog with process-tree termination and a survivor
+check. Raw work belongs under
+`build/gap-directed-natural-t1-research/`. Do not change mechanics, action
+scope, product defaults/caps, tracked fixtures, the T1-only generator, the
+compiler/UI, or the economy pipeline.
+
+Diagnostic-only instrumentation is allowed only after the fresh Gate 1
+baseline identifies an unanswered causal question and must prove
+behavior-identical. Offline/isolated prototypes may study upper policies,
+admissible stochastic abstractions, and partial-action separation, but none
+becomes production source in this task. Gate 5 returns one ranked,
+proof-and-measurement-backed production recommendation for Oliver to select or
+reject.
+
+Keep this file current after every gate. Preserve negative evidence and leave
+the final tree clean.
 
 Oliver selected the now-completed
 [bounded policy results and benchmarking plan](docs/archive/2026-07-22-bounded-policy-and-benchmarking/plan.md)

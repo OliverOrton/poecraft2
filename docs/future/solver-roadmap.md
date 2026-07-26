@@ -21,7 +21,10 @@ permit no merge. Approximate compact mode remains forbidden. The completed
 [focused-round performance attribution](../archive/2026-07-23-focused-round-performance/README.md)
 confirmed that the 256-state global batch causes repeated whole-graph work, but
 accepted no default change because every tested tuple exceeded the fixed
-5-second solve-step maximum. No solver boundary is currently selected.
+5-second solve-step maximum. Oliver has now selected
+[gap-directed natural-T1 solver research](../active/gap-directed-natural-t1-research.md)
+to diagnose certified bounded/near-optimal behavior on three-/four-T1 cases.
+That research does not authorize a production solver change.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
