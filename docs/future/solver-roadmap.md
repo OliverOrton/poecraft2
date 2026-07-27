@@ -41,11 +41,15 @@ above the current 11,000,000 cap. Full Bellman goal/failure aggregation is
 forbidden because the admitted continuation actions distinguish essentially
 every broad-reforge successor.
 
-A direct continuation is unselected. It requires either a new exact
-broad-kernel representation that preserves the complete continuation-action
-observation contract, or a materially narrower product objective. Do not
-resume by landing either rejected descriptor prototype, raising caps, or
-treating the fixed-policy evaluator as a general Bellman kernel.
+The 2026-07-27
+[streaming broad-lower falsification](../archive/2026-07-27-streaming-broad-lower-fold/README.md)
+closed the remaining broad-kernel continuation for this roadmap. Its fixed
+shadow candidate published no fold and was restored; Gate 3B explicitly
+rejects another detached, streamed, compact, or promoted broad-kernel
+representation. This is a product-direction decision, not a theorem that
+every possible expectation fold is impossible. Reopening it requires a new
+Oliver-selected boundary and evidence that changes the failed computability
+setup; it is not deferred momentum.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
@@ -108,10 +112,6 @@ inspection and measurement:
   reconsidering a larger focused global batch; the batch matrix reduced the 2k
   median from 22.54 seconds to as low as 13.15 seconds but made the long step
   the p95;
-- behavior-identical reuse or memoization around fallback start-properness
-  validation, which owned 99.93% of measured fallback-validation component
-  time; economy-identity work was only 0.06%, and the economy pipeline remains
-  outside solver optimization;
 - veiled/Eldritch product action scope and goal-producibility diagnostics;
 - WASM solve-step batching as part of browser delivery work;
 - Fossil candidate selection with price-aware evidence;
@@ -119,9 +119,10 @@ inspection and measurement:
 - remaining preservation, focused-expansion, telemetry, repricing, legality,
   and small performance proposals from the archived audit.
 
-Once durable incomplete trajectories exist and a second real candidate is
-available, a bounded analytics-only milestone may add fixed-horizon linear and
-log-time gap integrals, target-hitting observations with censor metadata,
+Durable incomplete trajectories and a second measured candidate now exist, so
+a bounded analytics-only milestone is eligible for future selection. It may
+add fixed-horizon linear and log-time gap integrals, target-hitting
+observations with censor metadata,
 restricted capped time-to-target, completed-optimum upper/lower-error
 decomposition, paired ratios and instance-level bootstrap intervals, target
 and deterministic-work data profiles, and performance profiles. These are
@@ -136,7 +137,10 @@ Completed, superseded, or false audit items are not backlog: both incremental
 owned-byte ledgers, exact kernel reuse, exact all-action quotienting, shared
 policy compilation, compiler-emitted count-condition evaluation, selected
 product verification, primitive Fracture planning, and concrete compiled start
-items are implemented.
+items are implemented. Versioned solve-local successful fallback
+properness-proof reuse is also implemented: the measured owner replaced 16 of
+17 full start checks and reduced solve wall by 22.3% without changing
+deterministic output.
 
 ## Later Solver Directions
 

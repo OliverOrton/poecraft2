@@ -1,60 +1,61 @@
 # Session Handoff
 
-**Status: active implementation boundary.** Oliver selected
-[Streaming Broad-Lower Fold Falsification](docs/active/plan.md) on
-2026-07-27. Execute Gates 0 through 4 in order on
+**Status: no active implementation boundary.** Oliver must select the next
+bounded chunk before implementation resumes.
+
+## Latest Completed Result
+
+[Streaming Broad-Lower Fold Falsification](docs/archive/2026-07-27-streaming-broad-lower-fold/README.md)
+completed on 2026-07-27 on branch
 `codex/streaming-broad-lower-fold`.
 
-## Current Boundary
+The fixed five-case shadow candidate published no fold. Four hard cases
+entered existing goal-cover/graph work before the standalone traversal and
+stopped at the state cap; the smoke diagnostic crashed. The no-tuning gate
+therefore rejected the candidate, and all measurement-only solver source was
+restored. No detached support, scalar Bellman record, promotion mechanism,
+mechanic change, cap increase, action-scope change, or new broad-kernel
+representation remains.
 
-Test one hypothesis in shadow mode before creating a solver architecture:
+Gate 3B retained versioned successful constructive/fallback
+properness-proof reuse. On the 30M Dire Pelt owner:
 
-```text
-Can c(s,a) + E[H_coarse(X)] be computed before successor interning,
-inside the existing 11M work cap, strongly enough to avoid immediately
-materializing the ordinary broad row?
-```
+- start-properness checks fell from 17 to 1, with 16 cache hits;
+- validation wall fell from 8,902.739 ms to 557.833 ms;
+- solve wall fell from 36,391.471 ms to 28,268.875 ms (22.3%);
+- bounds, states, rows, transitions, reforge work, termination, and
+  transition/policy hashes were identical.
 
-The first implementation is measurement-only. It observes fully constructed
-final `AbstractState` values immediately before `intern_state`, evaluates only
-the graph-independent coarse optimistic lower, retains no successor support,
-and leaves production Bellman behavior, counters, caps, policies, and
-termination unchanged.
+This is a post-incumbent engineering gain. It does not improve the four hard
+11M cases that fail before a finite executable upper exists.
 
-Gate 2 rejects the direction if the fold is incomplete, nonselective, or
-immediately followed by the same exact materialization at worse combined work.
-A raw broad-action lower increase is not success.
+## Acceptance And Evidence
 
-Exactly one Gate 3 path follows:
+The native focused solve suite passed 518/518 checks. The paired 30M
+benchmark and final 11M production portfolio each produced five reports with
+no timeout or survivor. Release WASM was rebuilt; worker smoke passed 27/27,
+the full non-visual web test command passed, and `npx tsc --noEmit` passed.
 
-- a complete pass may integrate one immutable lower-only scalar record, with
-  no detached table or promotion; or
-- any failure restores measurement-only source, rejects further broad-kernel
-  work, and pivots to versioned constructive/fallback properness-proof reuse.
+The final 11M smoke report now preserves an abandoned in-progress snapshot at
+exactly 11,000,000 reforge work after the native step error. No policy changed
+or newly qualified, so the exact natural two-T1 oracle, exact compiled-policy
+evaluation, and 10,000-run simulation were not run.
 
-## Source And Repository State
+Tracked evidence:
+[streaming-broad-lower-fold-summary.json](fixtures/solver-scaling/v1/evidence/streaming-broad-lower-fold-summary.json).
+Wall figures are machine/compiler-bound; deterministic work and hashes are
+the portable comparison.
 
-Local `main` was fast-forwarded to the completed anytime benchmark closure
-`e27b45e` before this branch was created. That milestone supplies durable
-incomplete trajectories, v2 experiment identity, corpus roles, and the fresh
-smoke baseline. Nothing was pushed.
+## Repository State
 
-The current-solver path remains CPU-native. GPU use remains relevant only to
-future ML work. No mechanic, action scope, cap, ABI, data, economy, binding,
-web, or visual change is selected.
+The retained implementation is commit `8da7015`. Final WASM, archive, and
+evidence documentation follow it on the same local branch. Nothing was
+pushed.
 
-## Acceptance Boundary
+The benchmark harness also retains the general failed-step snapshot repair
+and the focused native calculation-test selector from the diagnostic
+milestone.
 
-Pin selected smoke/full/deep cases and identities before the first candidate
-run. Use fixed production caps, one worker, existing watchdog/survivor
-handling, deterministic work counters, and machine/compiler disclosure.
-Do not run the exact natural two-T1 oracle.
-
-Run the appropriate affected acceptance once after the conditional Gate 3
-result. Rebuild WASM only if retained native behavior reaches the browser path.
-Run exact policy evaluation and the standing 10,000 simulations only if a
-retained candidate changes or newly qualifies a policy.
-
-Commits remain local unless Oliver asks to push and must end with:
+Commits must remain local unless Oliver asks to push and must end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

@@ -254,6 +254,16 @@ changed existing executable dependency, or failed validation does. The
 retained witness never guides focus, admission, pruning, ties, or Bellman
 comparisons.
 
+After one retained witness passes full anchor/start properness validation, the
+same solve may reuse that successful proof. Proof version, exact immutable
+policy ownership, semantic policy identity, goal, economy, action-vocabulary
+prefix, graph owner, mechanics owner, and the complete published row,
+successor, probability, choice, and choice-option prefixes must still match.
+Later append-only graph/vocabulary growth is allowed; replacement or mutation
+misses the cache and runs the full validator. The proof is solve-local,
+successful-only, and has no lower-bound, scheduling, admission, pruning, or
+policy-construction authority.
+
 The atomic incumbent captures same-round values, selected row IDs and costs,
 stable policy references, frontier operators, fallback, and provenance while
 the selected transition graph and pricing are still current. It also copies
@@ -404,8 +414,9 @@ Focused diagnostics additionally report per-round and total lower/upper
 candidate counts, quota/fill admissions, selected schedule admissions, and
 global/per-class cap hits. Fallback validation reports one inclusive total and
 mutually exclusive goal, economy, action-vocabulary, structural, anchor-
-properness, and start-properness leaves plus unattributed time; unrelated
-solver timers are not required to sum to solve wall time. Owned-byte
+properness, start-properness, and successful-proof-identity leaves plus cache
+version/check/hit/miss counts and last miss reason. Unrelated solver timers are
+not required to sum to solve wall time. Owned-byte
 diagnostics include recursive child-context visits and maximum depth.
 Benchmark execution records every `pc_solver_solve_step` wall time and reports
 count, total, median, nearest-rank-ceiling p95, and maximum.

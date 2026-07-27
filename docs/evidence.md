@@ -395,6 +395,37 @@ deep-three ledger SHA-256 values are
 and
 `e91ec9a01c8595a4d43e190ab67fd1790ae5c52f72e44dec75a10623541aa55d`.
 
+## Streaming Broad-Lower Rejection And Properness Reuse
+
+The 2026-07-27
+[final report](archive/2026-07-27-streaming-broad-lower-fold/report.md) and
+[tracked summary](../fixtures/solver-scaling/v1/evidence/streaming-broad-lower-fold-summary.json)
+pin one negative candidate and one retained secondary optimization.
+
+- The fixed five-case measurement-only broad-lower candidate published no
+  fold. Four hard cases stopped at the existing state-cap path before the
+  standalone traversal; the smoke diagnostic crashed. The no-tuning gate
+  restored all measurement-only solver source and rejected another
+  broad-kernel representation for this roadmap.
+- Successful fallback properness validation is now solve-local and versioned
+  across immutable policy, goal, economy, vocabulary, graph/mechanics owner,
+  row/pricing, and exact transition payload prefixes.
+- On the 30M Dire Pelt owner, start-properness scans fell from 17 to 1 plus 16
+  validated reuses. Validation fell from 8,902.739 ms to 557.833 ms and solve
+  wall from 36,391.471 ms to 28,268.875 ms, a 22.3% reduction.
+- Bounds, termination, 95,118 discovered / 2,301 expanded states, 61,661
+  rows, 873,813 transitions, 18,349,624 reforge work, and transition/policy
+  hashes were identical. The other four paired cases retained the same
+  deterministic evidence.
+- Final 11M benchmarking produced five reports without timeout or survivor;
+  the smoke step error preserved its abandoned snapshot at exactly 11M
+  reforge work. Native focused tests passed 518/518, release-WASM worker smoke
+  passed 27/27, web tests passed, and TypeScript no-emit passed.
+
+The wall comparison is machine/compiler-bound. The retained optimization
+removes duplicate post-incumbent work and does not improve hard pre-bound
+failure.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

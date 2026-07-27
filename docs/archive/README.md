@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-27
+
+- [Streaming Broad-Lower Fold Falsification](2026-07-27-streaming-broad-lower-fold/README.md) —
+  rejected the fixed shadow candidate after it published no fold, restored
+  measurement-only solver source, and retained behavior-identical versioned
+  fallback properness-proof reuse with a measured 22.3% owner-case wall
+  reduction.
+
 ## 2026-07-26
 
 - [Anytime Benchmark Completion](2026-07-26-anytime-benchmark-completion/README.md) —

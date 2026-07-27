@@ -1,0 +1,112 @@
+{
+  "schema_version": "streaming_broad_lower_fold_summary_v1",
+  "recorded_at": "2026-07-27",
+  "decision": {
+    "streaming_broad_lower": "rejected_no_publishable_fold",
+    "properness_proof_reuse": "accepted",
+    "hard_pre_bound_improvement_claimed": false,
+    "policy_changed_or_newly_qualified": false
+  },
+  "source": {
+    "gate0_commit": "5400255db05b207b8c1a1bc081b1514a5accec5c",
+    "shadow_commit": "699c4671d7f01cced87e237b3e6966ed61fc8986",
+    "retained_implementation_commit": "8da701502e86962cf051731e157891ff4d731c61"
+  },
+  "identity": {
+    "baseline_executable_sha256": "f6e4990d25eb903409caa14606b7b020b788a365f5266846bc5753e6ca2ea27d",
+    "candidate_executable_sha256": "8134b78a90f0b4e10b5888dbaadd857e95f24b08f5a87c6fb59ac75ee8122744",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "economy_content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "compiler": "g++.exe (Rev2, Built by MSYS2 project) 14.2.0",
+    "system": "Windows 11",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "logical_cpu_count": 24
+  },
+  "gate2": {
+    "portfolio_case_count": 5,
+    "candidate_ledger_sha256": "979be757cf6105053ee134258792d36ea994c77c40c1271a9ff8dc0d50a1338d",
+    "hard_case_results": {
+      "count": 4,
+      "status": "refused_state_cap",
+      "folds_published": 0
+    },
+    "smoke_result": {
+      "status": "abnormal_process_termination",
+      "windows_exit_code": 3221225477,
+      "folds_published": 0
+    },
+    "selectivity_measured": false,
+    "refinement_pressure_measured": false,
+    "measurement_only_solver_source_restored": true
+  },
+  "properness_owner_case": {
+    "id": "natural-t1-smoke-dire-pelt-three",
+    "case_sha256": "da358284785064726aa0bcd89de5843c5200d0664b1b94834075eea1eb8dffc5",
+    "baseline_ledger_sha256": "d5c4a9d3e9d6f68f74c2eaf44d75e95ce30792320af7f173f81a349ec6329161",
+    "candidate_ledger_sha256": "85d549cf57ccd9e150688f874bab6b62bfe9c9c7ba8cdd650f61d0a159627837",
+    "baseline_report_sha256": "e0c2117623b080e2f1e892ba2f9fe7c0c08a84d1a94ea241b436982c39dda9dc",
+    "candidate_report_sha256": "19e9d05baf97ef169cc9f5d58291d4529196f1b19e85125e957b2f859ba55184",
+    "caps": {
+      "max_states": 200000,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 25000,
+      "max_state_action_rows": 300000,
+      "max_transitions": 3000000,
+      "max_reforge_work": 30000000,
+      "max_solver_owned_bytes": 268435456
+    },
+    "baseline": {
+      "solve_wall_ms": 36391.4707,
+      "fallback_validation_ms": 8902.739,
+      "start_properness_checks": 17
+    },
+    "candidate": {
+      "solve_wall_ms": 28268.8746,
+      "fallback_validation_ms": 557.833,
+      "start_properness_checks": 1,
+      "proof_cache_checks": 17,
+      "proof_cache_hits": 16,
+      "proof_cache_misses": 1,
+      "proof_identity_ms": 30.456
+    },
+    "delta": {
+      "solve_wall_ms": -8122.5961,
+      "solve_wall_reduction_fraction": 0.22320054517609808,
+      "fallback_validation_ms": -8344.906
+    },
+    "deterministic_parity": {
+      "status": "refused_resource_cap",
+      "termination": "refused_resource_cap",
+      "lower_bound": 93.7458734898226,
+      "upper_bound": 10209.562183559785,
+      "discovered_states": 95118,
+      "expanded_states": 2301,
+      "state_action_rows": 61661,
+      "transition_entries": 873813,
+      "reforge_work": 18349624,
+      "transition_bits_hash": "7bb62e2e3c3b6650",
+      "policy_bits_hash": "ce20fd1456065d18"
+    }
+  },
+  "acceptance": {
+    "native_solver_solve_checks": 518,
+    "native_solver_solve_failures": 0,
+    "production_portfolio_ledger_sha256": "7d95f60dbec05a173f4517431f5c0cdbaf6b38b8345d31e4fe1bd7fc763e2dcc",
+    "production_portfolio_reports": 5,
+    "production_portfolio_timeouts": 0,
+    "production_portfolio_survivors": 0,
+    "wasm_worker_smoke_passed": 27,
+    "wasm_worker_smoke_total": 27,
+    "web_tests": "passed",
+    "typescript_no_emit": "passed",
+    "wasm_module_sha256": "4746fc86ad9ca4e942d55f1348512554a6b879fd9a4832a9e7feb98b632d4c54",
+    "wasm_binary_sha256": "a529d4b1ea74a5f19e1d5bc06ee3d425302b3c19ee3718241b438bbec82ddada"
+  },
+  "limitations": [
+    "Wall-time figures are machine- and compiler-bound.",
+    "The accepted optimization removes repeated post-incumbent validation only.",
+    "The fixed streaming candidate failed before measuring a complete fold and does not prove every possible streaming fold impossible.",
+    "No exact natural two-T1 oracle ran."
+  ]
+}

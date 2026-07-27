@@ -221,3 +221,28 @@ early-incumbent heuristics rather than eventual exactness.
 Gap-integral analytics, target/data profiles, performance profiles, and paired
 uncertainty remain deferred until a second real candidate exists; frozen
 evaluation uses a common fixed stopping policy.
+
+## 2026-07-27 — Broad-Kernel Work Stops; Successful Properness Proofs May Reuse
+
+**Decision:** Do not continue the current solver roadmap with detached,
+streamed, compact, or incrementally promoted broad-kernel representations.
+The fixed streaming-lower candidate published no scalar and was restored under
+its no-tuning gate. This closes the product direction without asserting a
+theorem that every possible expectation fold is impossible.
+
+A successful constructive/fallback properness validation may be reused within
+the same solve only while its versioned immutable policy, goal, economy,
+action-vocabulary prefix, graph/mechanics owner, row/pricing prefix, and exact
+transition payload prefix identities still match. Only success is cached.
+Mismatch executes the full validator. Reuse has no search, lower-bound,
+admission, pruning, policy-construction, or cross-solve authority.
+
+**Context:** [Final report](archive/2026-07-27-streaming-broad-lower-fold/report.md),
+[Solver](solver/README.md), and
+[tracked evidence](../fixtures/solver-scaling/v1/evidence/streaming-broad-lower-fold-summary.json).
+
+**Consequences:** The owner case removes 16 repeated start-properness scans and
+cuts solve wall by 22.3% with identical deterministic results. This is a
+post-incumbent engineering improvement, not progress on the four hard 11M
+pre-bound failures. Reopening broad-kernel work requires a new
+Oliver-selected boundary and materially different evidence.

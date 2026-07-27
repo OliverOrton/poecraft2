@@ -28,13 +28,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Streaming Broad-Lower Fold Falsification](active/plan.md) is active. It first
-measures a shadow-only exact expectation of the standalone coarse lower before
-successor interning. Failure to complete, affect the controlling lower, or
-avoid immediate exact refinement rejects broad-kernel work and pivots to
-versioned properness-proof reuse. No detached successor representation,
-mechanic change, cap increase, upper-policy shortcut, or GPU work is
-authorized.
+There is no active implementation boundary. Oliver must select the next
+bounded chunk before implementation resumes.
+
+The completed
+[Streaming Broad-Lower Fold Falsification milestone](archive/2026-07-27-streaming-broad-lower-fold/README.md)
+restored its failed shadow candidate and retained versioned successful
+fallback properness-proof reuse. The owner case replaced 16 repeated
+start-properness scans with validated reuse and cut solve wall by 22.3% with
+identical deterministic results. It does not improve the hard pre-bound
+failures.
 
 The completed
 [Anytime Benchmark Completion milestone](archive/2026-07-26-anytime-benchmark-completion/README.md)

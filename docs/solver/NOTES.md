@@ -48,7 +48,9 @@ Status: partially resolved. The
 [focused-round performance archive](../archive/2026-07-23-focused-round-performance/README.md)
 records accepted attribution instrumentation and an explicit
 no-scheduling-default-change result. The other candidates remain open with no
-execution authority.
+execution authority. Versioned successful fallback properness-proof reuse was
+completed by the
+[2026-07-27 milestone](../archive/2026-07-27-streaming-broad-lower-fold/README.md).
 
 Preservation-envelope gating, focused-round reuse, telemetry collection
 levels, hash/container cleanups, operator repricing, legality pre-bucketing,
@@ -61,6 +63,6 @@ implemented and are not open items.
 
 The focused-round matrix confirmed that a larger global batch reduces repeated
 whole-graph work, but a batch-only change leaves an approximately 11.5-second
-solve step and fails the fixed responsiveness budget. Start-properness
-validation owned 99.93% of measured fallback-validation component time; it is a
-measured follow-up lead, not selected work.
+solve step and fails the fixed responsiveness budget. The formerly measured
+start-properness owner is no longer an open lead: the retained versioned cache
+reduced its owner case from 17 full checks to one plus 16 validated reuses.

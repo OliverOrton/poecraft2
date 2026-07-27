@@ -1,10 +1,9 @@
 # Streaming Broad-Lower Fold Falsification
 
-**Status: active.** Oliver selected this falsification-first solver pass on
-2026-07-27. Execute Gates 0 through 4 in order, including exactly one
-conditional Gate 3 path.
+**Status: complete.** Oliver selected this falsification-first solver pass on
+2026-07-27. Gates 0 through 4 completed through the Gate 3B rejection path.
 
-Parent: [Active work](README.md)
+Parent: [Archive entry](README.md)
 
 ## Objective
 
