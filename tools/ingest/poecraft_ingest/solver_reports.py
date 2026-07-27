@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
+import copy
 import json
 import math
 from pathlib import Path
@@ -11,7 +12,7 @@ import statistics
 from typing import Any, Iterable, Sequence
 
 
-REPORT_VERSION = "bounded_policy_stratified_report_v1"
+REPORT_VERSION = "bounded_policy_stratified_report_v2"
 POLICY_ORDER = {
     "none": 0,
     "bounded_feasible": 1,
@@ -159,6 +160,13 @@ def _case_dimensions(case: dict[str, Any]) -> dict[str, str]:
         "termination": str(
             _nested(case, "solve_summary", "termination", default="none")
         ),
+        "evaluation_role": str(
+            _nested(case, "_runner", "evaluation_role", default="unassigned")
+            or "unassigned"
+        ),
+        "observation_status": str(
+            _nested(case, "_runner", "status", default="completed")
+        ),
     }
 
 
@@ -176,6 +184,20 @@ def _case_measurements(case: dict[str, Any]) -> dict[str, Any]:
         1
         for sample in samples
         if _nested(sample, "progress_effect", "lowered_upper_bound", default=False)
+    )
+    decreased_lower = sum(
+        1
+        for sample in samples
+        if _nested(
+            sample, "progress_effect", "decreased_lower_bound", default=False
+        )
+    )
+    increased_upper = sum(
+        1
+        for sample in samples
+        if _nested(
+            sample, "progress_effect", "increased_upper_bound", default=False
+        )
     )
     summary = case.get("solve_summary")
     target_met = bool(_nested(summary, "target_met", default=False))
@@ -204,39 +226,55 @@ def _case_measurements(case: dict[str, Any]) -> dict[str, Any]:
                 "memory",
                 "solver_owned_bytes_estimate",
             )
-        ),
+        )
+        or _finite_number(_nested(last_sample, "memory", "peak_bytes")),
         "time_to_incumbent_ms": _finite_number(
             _nested(case, "bound_trace", "time_to_first_incumbent_ms")
         ),
         "time_to_target_ms": time_to_target,
         "start_lower_bound": _finite_number(first_sample.get("lower_bound")),
         "start_upper_bound": _finite_number(first_sample.get("upper_bound")),
-        "final_lower_bound": _finite_number(_nested(summary, "lower_bound")),
-        "final_upper_bound": _finite_number(_nested(summary, "upper_bound")),
+        "final_lower_bound": (
+            _finite_number(_nested(summary, "lower_bound"))
+            or _finite_number(last_sample.get("lower_bound"))
+        ),
+        "final_upper_bound": (
+            _finite_number(_nested(summary, "upper_bound"))
+            or _finite_number(last_sample.get("upper_bound"))
+        ),
         "final_absolute_gap": _finite_number(
             _nested(summary, "absolute_optimality_gap")
-        ),
+        )
+        or _finite_number(last_sample.get("absolute_gap")),
         "final_relative_gap": _finite_number(
             _nested(summary, "relative_optimality_gap")
-        ),
+        )
+        or _finite_number(last_sample.get("relative_gap")),
         "bound_samples": len(samples),
         "lower_raise_samples": raised_lower,
+        "lower_decrease_samples": decreased_lower,
         "upper_lower_samples": lowered_upper,
+        "upper_increase_samples": increased_upper,
         "states": _finite_number(
             _nested(case, "solver_telemetry", "states", "discovered")
-        ),
+        )
+        or _finite_number(_nested(last_sample, "states", "discovered")),
         "expanded_states": _finite_number(
             _nested(case, "solver_telemetry", "states", "expanded")
-        ),
+        )
+        or _finite_number(_nested(last_sample, "states", "expanded")),
         "rows": _finite_number(
             _nested(case, "solver_telemetry", "work", "state_action_rows")
-        ),
+        )
+        or _finite_number(_nested(last_sample, "work", "rows")),
         "transitions": _finite_number(
             _nested(case, "solver_telemetry", "work", "transition_entries")
-        ),
+        )
+        or _finite_number(_nested(last_sample, "work", "transitions")),
         "reforge_work": _finite_number(
             _nested(case, "solver_telemetry", "cache", "reforge", "frontier_work")
-        ),
+        )
+        or _finite_number(_nested(last_sample, "work", "reforge_work")),
         "compiled_nodes": _finite_number(_nested(case, "compiled_graph", "nodes")),
         "compiled_edges": _finite_number(_nested(case, "compiled_graph", "edges")),
         "strategy_json_bytes": _finite_number(
@@ -247,22 +285,38 @@ def _case_measurements(case: dict[str, Any]) -> dict[str, Any]:
 
 
 def _rate_summary(cases: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    count = len(cases)
+    terminal_cases = [
+        case
+        for case in cases
+        if _nested(case, "_runner", "status", default="completed")
+        == "completed"
+    ]
+    count = len(terminal_cases)
     statuses = [
         str(_nested(case, "solve_summary", "policy_status", default="none"))
-        for case in cases
+        for case in terminal_cases
     ]
-    actuals = [str(case.get("actual_status", "not_run")) for case in cases]
+    actuals = [
+        str(case.get("actual_status", "not_run")) for case in terminal_cases
+    ]
     targets_met = [
         bool(_nested(case, "solve_summary", "target_met", default=False))
+        for case in terminal_cases
+    ]
+    observation_statuses = [
+        str(_nested(case, "_runner", "status", default="completed"))
         for case in cases
     ]
 
     def rate(matches: Iterable[bool]) -> float | None:
         return sum(matches) / count if count else None
 
+    def observation_rate(matches: Iterable[bool]) -> float | None:
+        return sum(matches) / len(cases) if cases else None
+
     return {
         "cases": count,
+        "analyzable_observations": len(cases),
         "exact_rate": rate(status == "exact" for status in statuses),
         "near_optimal_rate": rate(
             status == "bounded_near_optimal" for status in statuses
@@ -275,6 +329,25 @@ def _rate_summary(cases: Sequence[dict[str, Any]]) -> dict[str, Any]:
             for actual in actuals
         ),
         "target_reach_rate": rate(targets_met),
+        "completed_measurement_rate": observation_rate(
+            status == "completed" for status in observation_statuses
+        ),
+        "watchdog_censor_rate": observation_rate(
+            status == "watchdog_expired" for status in observation_statuses
+        ),
+        "failure_rate": observation_rate(
+            status
+            in {
+                "failed",
+                "runner_error",
+                "memory_budget_refused",
+                "crash",
+                "oom",
+                "invalid_bound",
+                "cancelled",
+            }
+            for status in observation_statuses
+        ),
     }
 
 
@@ -313,7 +386,9 @@ def _summarize_cases(cases: Sequence[dict[str, Any]]) -> dict[str, Any]:
                 "final_relative_gap",
                 "bound_samples",
                 "lower_raise_samples",
+                "lower_decrease_samples",
                 "upper_lower_samples",
+                "upper_increase_samples",
             )
         },
         "work": {
@@ -349,6 +424,8 @@ def _strata(cases: Sequence[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
         "incumbent",
         "policy_status",
         "termination",
+        "evaluation_role",
+        "observation_status",
     )
     result: dict[str, list[dict[str, Any]]] = {}
     for dimension in dimensions:
@@ -480,9 +557,15 @@ def _outliers(cases: Sequence[dict[str, Any]], limit: int = 20) -> dict[str, Any
                 ),
             }
             for case in sorted(cases, key=lambda item: item["id"])
-            if str(case.get("actual_status", "")).startswith("refused_")
-            or _nested(case, "solve_summary", "policy_status", default="none")
-            == "none"
+            if _nested(case, "_runner", "status", default="completed")
+            == "completed"
+            and (
+                str(case.get("actual_status", "")).startswith("refused_")
+                or _nested(
+                    case, "solve_summary", "policy_status", default="none"
+                )
+                == "none"
+            )
         ],
     }
 
@@ -495,13 +578,44 @@ def load_run(run_directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]
     if not isinstance(ledger_cases, dict):
         raise ValueError(f"{ledger_path} has no cases object")
     cases: list[dict[str, Any]] = []
+    semantic_run_identity = {
+        "corpus": {
+            key: _nested(ledger, "corpus", key)
+            for key in (
+                "sha256",
+                "corpus_id",
+                "schema_version",
+                "generator_config_sha256",
+            )
+        }
+        if isinstance(ledger.get("corpus"), dict)
+        else ledger.get("corpus"),
+        "artifact": {
+            "manifest_sha256": _nested(
+                ledger, "artifact", "manifest_sha256"
+            ),
+            "identity": _nested(ledger, "artifact", "identity"),
+        }
+        if isinstance(ledger.get("artifact"), dict)
+        else ledger.get("artifact"),
+        "machine": ledger.get("machine"),
+        "configuration": ledger.get("configuration"),
+        "executable": ledger.get("executable"),
+    }
     for case_id in sorted(ledger_cases):
         record = ledger_cases[case_id]
-        if not isinstance(record, dict) or record.get("status") != "completed":
+        if not isinstance(record, dict):
             continue
-        path_value = record.get("report_path")
+        if record.get("status") == "completed":
+            path_value = record.get("report_path")
+            observation_kind = "completed_report"
+        elif record.get("partial_observation_available"):
+            path_value = record.get("partial_report_path")
+            observation_kind = "partial_report"
+        else:
+            continue
         if not isinstance(path_value, str):
-            raise ValueError(f"completed case {case_id} has no report path")
+            raise ValueError(f"analyzable case {case_id} has no report path")
         report = _read_json(Path(path_value))
         report_cases = report.get("cases")
         if not isinstance(report_cases, list) or len(report_cases) != 1:
@@ -509,17 +623,68 @@ def load_run(run_directory: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]
         case = report_cases[0]
         if not isinstance(case, dict) or case.get("id") != case_id:
             raise ValueError(f"{path_value} case id does not match ledger")
+        case = copy.deepcopy(case)
+        case["_runner"] = {
+            "status": record.get("status"),
+            "observation_kind": observation_kind,
+            "watchdog_seconds": record.get("watchdog_seconds"),
+            "wall_ms": record.get("wall_ms"),
+            "exit_code": record.get("exit_code"),
+            "evaluation_role": record.get("evaluation_role"),
+            "partial_observation_available": record.get(
+                "partial_observation_available", False
+            ),
+            "run_identity": semantic_run_identity,
+        }
         cases.append(case)
     return ledger, cases
 
 
-def summarize_run(label: str, ledger: dict[str, Any], cases: list[dict[str, Any]]) -> dict[str, Any]:
+def summarize_run(
+    label: str,
+    ledger: dict[str, Any],
+    cases: list[dict[str, Any]],
+) -> dict[str, Any]:
     ledger_cases = ledger.get("cases", {})
     incomplete = {
         case_id: record.get("status")
         for case_id, record in sorted(ledger_cases.items())
         if isinstance(record, dict) and record.get("status") != "completed"
     }
+    status_counts: dict[str, int] = defaultdict(int)
+    for record in ledger_cases.values():
+        if isinstance(record, dict):
+            status_counts[str(record.get("status", "unknown"))] += 1
+    analyzable_watchdogs = sum(
+        1
+        for record in ledger_cases.values()
+        if isinstance(record, dict)
+        and record.get("status") == "watchdog_expired"
+        and record.get("partial_observation_available")
+    )
+    failures = [
+        {
+            "id": case_id,
+            "status": record.get("status"),
+            "failure_kind": record.get("failure_kind"),
+            "partial_observation_available": record.get(
+                "partial_observation_available", False
+            ),
+        }
+        for case_id, record in sorted(ledger_cases.items())
+        if isinstance(record, dict)
+        and record.get("status")
+        in {
+            "failed",
+            "runner_error",
+            "memory_budget_refused",
+            "crash",
+            "oom",
+        }
+    ]
+    native_status_counts: dict[str, int] = defaultdict(int)
+    for case in cases:
+        native_status_counts[str(case.get("actual_status", "unknown"))] += 1
     return {
         "label": label,
         "provenance": {
@@ -529,8 +694,30 @@ def summarize_run(label: str, ledger: dict[str, Any], cases: list[dict[str, Any]
             "artifact": ledger.get("artifact"),
             "configuration": ledger.get("configuration"),
         },
-        "completed_cases": len(cases),
+        "completed_cases": sum(
+            1
+            for record in ledger_cases.values()
+            if isinstance(record, dict) and record.get("status") == "completed"
+        ),
+        "analyzable_cases": len(cases),
+        "partial_cases": sum(
+            1
+            for case in cases
+            if _nested(case, "_runner", "observation_kind") == "partial_report"
+        ),
         "incomplete_cases": incomplete,
+        "termination_accounting": {
+            "status_counts": dict(sorted(status_counts.items())),
+            "administrative_censoring": analyzable_watchdogs,
+            "watchdog_without_trajectory": (
+                status_counts.get("watchdog_expired", 0)
+                - analyzable_watchdogs
+            ),
+            "explicit_failures": failures,
+            "native_status_counts": dict(sorted(native_status_counts.items())),
+            "resource_cap_results_are_completed_measurements": True,
+            "failures_are_not_censoring": True,
+        },
         "overall": _summarize_cases(cases),
         "strata": _strata(cases),
         "action_utility": _aggregate_action_utility(cases),
@@ -580,6 +767,31 @@ def _paired_measurement_delta(
     return deltas
 
 
+def _comparison_identity(case: dict[str, Any]) -> dict[str, Any]:
+    fields = (
+        "comparison_profile",
+        "session",
+        "start",
+        "goal",
+        "caps",
+        "economy",
+        "product_action_envelope",
+        "allowed_mechanic_families",
+        "generation",
+        "corpus",
+    )
+    identity = {
+        f"input.{field}": _nested(case, "input", field)
+        for field in fields
+    }
+    identity["product_action_ids"] = case.get("product_action_ids")
+    run_identity = _nested(case, "_runner", "run_identity")
+    if isinstance(run_identity, dict):
+        for field in ("corpus", "artifact", "machine", "configuration"):
+            identity[f"runtime.{field}"] = run_identity.get(field)
+    return identity
+
+
 def compare_runs(
     baseline_label: str,
     baseline_cases: Sequence[dict[str, Any]],
@@ -592,15 +804,16 @@ def compare_runs(
     pairs: list[dict[str, Any]] = []
     excluded: list[dict[str, Any]] = []
     regressions: list[dict[str, Any]] = []
-    identity_fields = ("session", "start", "goal", "caps")
     for case_id in shared:
         left = baseline[case_id]
         right = candidate[case_id]
+        left_identity = _comparison_identity(left)
+        right_identity = _comparison_identity(right)
         mismatched = [
             field
-            for field in identity_fields
-            if _canonical(_nested(left, "input", field))
-            != _canonical(_nested(right, "input", field))
+            for field in sorted(set(left_identity) | set(right_identity))
+            if _canonical(left_identity.get(field))
+            != _canonical(right_identity.get(field))
         ]
         if mismatched:
             excluded.append({"id": case_id, "reason": "input_mismatch", "fields": mismatched})
@@ -608,9 +821,19 @@ def compare_runs(
         deltas = _paired_measurement_delta(left, right)
         before_policy = str(_nested(left, "solve_summary", "policy_status", default="none"))
         after_policy = str(_nested(right, "solve_summary", "policy_status", default="none"))
+        before = _case_measurements(left)
+        after = _case_measurements(right)
         pair = {
             "id": case_id,
             "dimensions": _case_dimensions(right),
+            "treatments": {
+                "baseline_executable": _nested(
+                    left, "_runner", "run_identity", "executable"
+                ),
+                "candidate_executable": _nested(
+                    right, "_runner", "run_identity", "executable"
+                ),
+            },
             "baseline_status": {
                 "actual": left.get("actual_status"),
                 "policy": before_policy,
@@ -625,8 +848,6 @@ def compare_runs(
         }
         pairs.append(pair)
         reasons: list[str] = []
-        before = _case_measurements(left)
-        after = _case_measurements(right)
         if (
             before["wall_ms"]
             and after["wall_ms"]
@@ -691,6 +912,11 @@ def build_report(
             "resource_caps_are_comparison_controls": True,
             "wall_time_is_performance_and_safety_data": True,
             "action_non_use_is_pruning_certificate": False,
+            "pre_incumbent_gap_is_one": True,
+            "lower_bound_monotonicity_assumed": False,
+            "watchdog_is_censoring_only_with_partial_observation": True,
+            "adaptive_racing_implemented": False,
+            "primary_comparison_metric_selected": False,
         },
         "runs": [
             summarize_run(label, ledger, cases)

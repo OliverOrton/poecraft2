@@ -101,7 +101,9 @@ struct CaseResult {
         std::uint64_t live_owned_bytes = 0;
         std::uint64_t peak_owned_bytes = 0;
         bool raised_lower = false;
+        bool decreased_lower = false;
         bool lowered_upper = false;
+        bool increased_upper = false;
     };
     std::string actual_status = "not_run";
     bool expectation_met = false;
@@ -1186,10 +1188,20 @@ CaseResult run_case(
                 entry.raised_lower =
                     std::isfinite(entry.lower_bound) &&
                     entry.lower_bound > previous.lower_bound;
+                entry.decreased_lower =
+                    std::isfinite(entry.lower_bound) &&
+                    std::isfinite(previous.lower_bound) &&
+                    entry.lower_bound < previous.lower_bound;
                 entry.lowered_upper =
                     std::isfinite(entry.upper_bound) &&
                     (!std::isfinite(previous.upper_bound) ||
                      entry.upper_bound < previous.upper_bound);
+                entry.increased_upper =
+                    entry.incumbent_kind != PC_SOLVE_INCUMBENT_NONE &&
+                    previous.incumbent_kind != PC_SOLVE_INCUMBENT_NONE &&
+                    std::isfinite(entry.upper_bound) &&
+                    std::isfinite(previous.upper_bound) &&
+                    entry.upper_bound > previous.upper_bound;
             }
             report.bound_trace.push_back(entry);
             if (!report.has_time_to_first_incumbent &&
@@ -1997,8 +2009,12 @@ void append_case_report(
         append_cap_ratio("max_solver_owned_bytes", entry.peak_owned_bytes);
         out << "},\"progress_effect\":{\"raised_lower_bound\":"
             << (entry.raised_lower ? "true" : "false")
+            << ",\"decreased_lower_bound\":"
+            << (entry.decreased_lower ? "true" : "false")
             << ",\"lowered_upper_bound\":"
-            << (entry.lowered_upper ? "true" : "false") << "}}";
+            << (entry.lowered_upper ? "true" : "false")
+            << ",\"increased_upper_bound\":"
+            << (entry.increased_upper ? "true" : "false") << "}}";
     }
     out << "]},\n";
     const std::int64_t delta =

@@ -65,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--corpus", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--case", action="append", default=[])
+    parser.add_argument("--evaluation-roles", type=Path)
+    parser.add_argument("--role", action="append", default=[])
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--max-workers", type=int, default=1)
     parser.add_argument("--memory-budget-bytes", type=int, default=0)
@@ -88,6 +90,8 @@ def main(argv: list[str] | None = None) -> int:
         args.corpus,
         case_ids=selected,
         tiers=set(tiers),
+        evaluation_roles_path=args.evaluation_roles,
+        evaluation_roles=set(args.role) or None,
         watchdog_ceiling_seconds=args.watchdog_ceiling_seconds,
     )
     if args.limit > 0:
@@ -103,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
         max_workers=args.max_workers,
         memory_budget_bytes=args.memory_budget_bytes,
         exact_evaluation=bool(stage.get("exact_evaluation")),
+        evaluation_roles_path=args.evaluation_roles,
+        selected_evaluation_roles=set(args.role) or None,
     )
     report = build_report({args.label: load_run(run_directory)})
     report["workflow_stage"] = {

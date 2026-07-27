@@ -1,0 +1,35 @@
+{
+  "schema_version": "solver_corpus_evaluation_roles_v1",
+  "split_unit": "corpus.stratum",
+  "corpus_id": "poecraft2-seeded-natural-t1-v1",
+  "roles": {
+    "development": {
+      "purpose": "Repeated heuristic, analytics, and development-only racing work",
+      "strata": [
+        "smoke-one-armour",
+        "smoke-one-jewellery",
+        "smoke-one-weapon",
+        "smoke-three-dire-pelt",
+        "smoke-two-armour",
+        "smoke-two-jewellery",
+        "smoke-two-weapon",
+        "full-one",
+        "full-two"
+      ]
+    },
+    "validation": {
+      "purpose": "Select among surviving alternatives without touching frozen families",
+      "strata": [
+        "full-three"
+      ]
+    },
+    "frozen_test": {
+      "purpose": "Common fixed-policy evaluation after a decision is made",
+      "strata": [
+        "full-four",
+        "deep-three-low-probability",
+        "deep-four-low-probability"
+      ]
+    }
+  }
+}

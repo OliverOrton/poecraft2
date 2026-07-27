@@ -375,6 +375,9 @@ build/export/memory details are owned by the [engine WASM reference](../engine/w
 
 ## Large-run orchestration and telemetry
 
+The detailed observation, identity, partial-result, and frozen future-metric
+contract lives in [Solver Benchmark Trajectories](benchmarking.md).
+
 `tools/ingest/benchmark_solver_corpus.py` runs any native corpus manifest into
 an arbitrary output directory. Cases launch in deterministic ID order in
 separate process groups, use their pinned watchdogs under a hard 900-second
@@ -407,8 +410,9 @@ diagnostics include recursive child-context visits and maximum depth.
 Benchmark execution records every `pc_solver_solve_step` wall time and reports
 count, total, median, nearest-rank-ceiling p95, and maximum.
 
-`tools/ingest/report_solver_corpus.py` aggregates completed raw reports without
-participating in native or WASM correctness. It reports exclusive policy and
+`tools/ingest/report_solver_corpus.py` aggregates completed raw reports and
+analyzable watchdog sidecars without participating in native or WASM
+correctness. It reports exclusive policy and
 refusal rates, target reach, median/p90/p99 time and memory, lower/upper
 progress, work and graph distributions, exact policy action utility,
 observational action search cost, outliers, and exact-input paired deltas.
@@ -421,8 +425,10 @@ B6-only 10,000-run acceptance subset. Later stages require a green predecessor
 ledger under the same label. Native benchmark exit code 2 is a completed
 measurement when a report was written under the watchdog with no survivor;
 the expectation miss remains visible so no-policy/refusal results are not
-censored. Process, watchdog, survivor, output, and launch failures remain
-incomplete.
+censored. An analyzable watchdog remains explicitly incomplete/right-censored
+and is not included in terminal policy rates. A watchdog without a complete
+step-boundary sample and process, survivor, output, or launch failures remain
+explicit non-censoring failures.
 
 ## Boundaries
 

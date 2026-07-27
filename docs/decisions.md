@@ -205,3 +205,19 @@ intentional rather than a generator gap.
 **Consequences:** The natural-T1 corpus remains a deliberately hard T1 slice.
 Reviews and execution plans must not list tier-range support as missing,
 deferred, or an easy generator improvement.
+
+## 2026-07-26 — Accumulated-Gap Racing Is Rejected
+
+**Decision:** Do not eliminate development runs when their accumulated
+normalized-gap area can no longer beat a baseline. Before the first executable
+incumbent, normalized gap is defined as its maximum value, so the proposed rule
+penalizes time to first incumbent most strongly and selects for
+early-incumbent heuristics rather than eventual exactness.
+
+**Context:** [Solver benchmark trajectories](solver/benchmarking.md) and the
+[active reduced milestone](active/plan.md).
+
+**Consequences:** The durable-trajectory milestone implements no racing.
+Gap-integral analytics, target/data profiles, performance profiles, and paired
+uncertainty remain deferred until a second real candidate exists; frozen
+evaluation uses a common fixed stopping policy.

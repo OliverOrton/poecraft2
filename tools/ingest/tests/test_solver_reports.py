@@ -35,6 +35,14 @@ def _case(
             "start": {"rarity": "rare", "mods": []},
             "goal": {"slots": [{"family_mod_key": "Goal", "min_tier": 1}]},
             "caps": {"max_states": 100, "max_solver_owned_bytes": 1000},
+            "comparison_profile": "test-v1",
+            "economy": {"id": "economy-test", "content_sha256": "aaa"},
+            "product_action_envelope": {"mode": "test"},
+            "allowed_mechanic_families": ["test"],
+            "generation": {
+                "generator_version": "test-v1",
+                "artifact_manifest_sha256": "bbb",
+            },
             "corpus": {
                 "goal_modifier_count": 1,
                 "side_mix": "P",
@@ -42,6 +50,7 @@ def _case(
                 "minimum_single_draw_probability": 0.004,
             },
         },
+        "product_action_ids": ["chaos"],
         "phase_wall_ms": {"solve": wall_ms - 10, "total": wall_ms},
         "execution": {
             "solve_steps": 4,
@@ -158,6 +167,8 @@ def test_stratified_report_includes_rates_work_actions_and_outliers() -> None:
 
     assert report["analytics_boundary"]["separate_from_native_and_wasm_correctness"] is True
     assert report["analytics_boundary"]["action_non_use_is_pruning_certificate"] is False
+    assert report["analytics_boundary"]["primary_comparison_metric_selected"] is False
+    assert report["analytics_boundary"]["adaptive_racing_implemented"] is False
     assert run["overall"]["rates"]["near_optimal_rate"] == 1.0
     assert run["overall"]["time_ms"]["total"]["median"] == 150
     assert run["overall"]["time_ms"]["solve_step_median"]["median"] == 7.5
@@ -196,18 +207,58 @@ def test_paired_comparison_requires_identical_caps_and_flags_regressions() -> No
     mismatched["input"]["caps"]["max_states"] = 101
     excluded = compare_runs("before", [before], "after", [mismatched])
     assert excluded["paired_cases"] == 0
-    assert excluded["excluded"][0]["fields"] == ["caps"]
+    assert excluded["excluded"][0]["fields"] == ["input.caps"]
+
+    generator_before = copy.deepcopy(before)
+    generator_after = copy.deepcopy(before)
+    for case, config_hash in (
+        (generator_before, "config-a"),
+        (generator_after, "config-b"),
+    ):
+        case["_runner"] = {
+            "run_identity": {
+                "corpus": {
+                    "sha256": "corpus",
+                    "generator_config_sha256": config_hash,
+                },
+                "artifact": {"manifest_sha256": "artifact"},
+                "machine": {"machine": "test"},
+                "configuration": {"max_workers": 1},
+                "executable": {"sha256": config_hash},
+            }
+        }
+    generator_excluded = compare_runs(
+        "before", [generator_before], "after", [generator_after]
+    )
+    assert generator_excluded["paired_cases"] == 0
+    assert generator_excluded["excluded"][0]["fields"] == [
+        "runtime.corpus"
+    ]
 
 
-def test_load_run_uses_completed_ledger_reports_only(tmp_path: Path) -> None:
+def test_load_run_includes_analyzable_partial_watchdog_report(
+    tmp_path: Path,
+) -> None:
     report_path = tmp_path / "case.json"
     report_path.write_text(json.dumps({"cases": [_case("done", wall_ms=100, memory=1)]}), encoding="utf-8")
+    partial_path = tmp_path / "partial.json"
+    partial_path.write_text(
+        json.dumps({"cases": [_case("timeout", wall_ms=100, memory=1)]}),
+        encoding="utf-8",
+    )
     (tmp_path / "ledger.json").write_text(
         json.dumps(
             {
                 "cases": {
                     "done": {"status": "completed", "report_path": str(report_path)},
-                    "timeout": {"status": "watchdog_expired"},
+                    "timeout": {
+                        "status": "watchdog_expired",
+                        "partial_observation_available": True,
+                        "partial_report_path": str(partial_path),
+                        "watchdog_seconds": 0.1,
+                        "wall_ms": 100,
+                    },
+                    "failed": {"status": "failed"},
                 }
             }
         ),
@@ -216,8 +267,24 @@ def test_load_run_uses_completed_ledger_reports_only(tmp_path: Path) -> None:
 
     ledger, cases = load_run(tmp_path)
 
-    assert set(ledger["cases"]) == {"done", "timeout"}
-    assert [case["id"] for case in cases] == ["done"]
+    assert set(ledger["cases"]) == {"done", "timeout", "failed"}
+    assert [case["id"] for case in cases] == ["done", "timeout"]
+    assert cases[1]["_runner"]["status"] == "watchdog_expired"
+
+    run = build_report({"baseline": (ledger, cases)})["runs"][0]
+    assert run["completed_cases"] == 1
+    assert run["analyzable_cases"] == 2
+    assert run["partial_cases"] == 1
+    assert run["termination_accounting"]["administrative_censoring"] == 1
+    assert run["termination_accounting"]["watchdog_without_trajectory"] == 0
+    assert run["termination_accounting"]["explicit_failures"] == [
+        {
+            "id": "failed",
+            "status": "failed",
+            "failure_kind": None,
+            "partial_observation_available": False,
+        }
+    ]
 
 
 def test_stage_contract_reserves_acceptance_for_b6() -> None:

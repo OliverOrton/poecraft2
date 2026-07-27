@@ -27,6 +27,11 @@ The checked generator configuration also runs non-corpus feasibility probes
 for each semantic rejection class. Those probes make the funnel observable;
 they are never included in `manifest.json`'s accepted case list.
 
+`evaluation-roles.json` assigns complete generator strata to development,
+validation, or frozen-test roles. It does not alter the v1 cases or the
+smoke/full/deep acceptance tiers. Use the runner's `--evaluation-roles` and
+`--role` options to select one or more roles.
+
 The tracked [B6 acceptance summary](evidence/b6-acceptance-summary.json)
 records the final exact-oracle facts, bounded compiled-policy exact evaluation,
 required 10,000-run corroboration, and complete downstream gates.
@@ -50,7 +55,11 @@ py -3 tools/ingest/benchmark_bounded_policy_stage.py `
 ```
 
 The runner defaults hard-case concurrency to one, uses per-case watchdogs,
-and resumes completed ledgers. Native exit code 2 is a completed measurement
+and resumes only ledgers with identical v2 experiment provenance and
+configuration. Each attempt owns a unique atomic native partial-report
+sidecar. A watchdog is analyzable only when that sidecar contains at least one
+completed step-boundary sample; it remains labelled `watchdog_expired`.
+Native exit code 2 is a completed measurement
 whose case expectations were not met (for example, a resource-cap refusal),
 so it remains in the report rather than censoring no-policy and refusal rates.
 Exit code 1, watchdog expiry, a surviving process, or a missing report remains
