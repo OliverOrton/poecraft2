@@ -29,11 +29,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 ## Execution State
 
 [Anytime Benchmark Completion](active/plan.md) is active. It completes the
-existing bounded-solver trajectory and reporting substrate through fixed-budget
-gap integrals, durable incomplete observations, explicit censoring/failure
-semantics, strict experiment identity, profiles, paired uncertainty, and
-development-only racing. It does not change mechanics, solver proof authority,
-production caps, browser behavior, or current-solver GPU execution.
+existing bounded-solver trajectory substrate through durable incomplete
+step-boundary observations, explicit censoring/failure semantics, strict
+experiment identity, corpus roles, and a freshly run frozen-semantics
+baseline. Pure analytics and profiles are deferred until a second candidate;
+racing is excluded. The milestone does not change mechanics, solver proof
+authority, production caps, browser behavior, or current-solver GPU execution.
 
 The completed
 [R4 browser transfer and solver lifetime milestone](archive/2026-07-26-browser-transfer-lifetime-r4/README.md)

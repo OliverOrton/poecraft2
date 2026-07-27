@@ -1,19 +1,20 @@
 # Anytime Benchmark Completion
 
 **Status: active.** Oliver selected this bounded implementation chunk on
-2026-07-26. Execute Gates 0-5 in order.
+2026-07-26 and reduced it before implementation. Execute Gates 0, 1, 2, and 5
+in order.
 
 Parent: [Active work](README.md)
 
 ## Objective
 
 Complete the existing bounded-solver benchmark substrate so fixed-budget runs,
-including timeouts, remain statistically useful. Make normalized root-gap
-integral the primary development score, retain explicit target-reaching and
-failure evidence as guardrails, strengthen paired experiment identity, and add
-target/performance profiles plus development-only racing. Do not change solver
-mechanics, admitted actions, proof authority, production resource caps, or
-browser behavior.
+including timeouts, retain useful trajectories. Freeze the future metric
+semantics, strengthen experiment identity, and make durable incomplete
+trajectories the core deliverable. Do not implement gap-integral analytics,
+survival summaries, profiles, paired uncertainty, or racing in this milestone.
+Do not change solver mechanics, admitted actions, proof authority, production
+resource caps, or browser behavior.
 
 ## Fixed boundaries
 
@@ -24,20 +25,21 @@ browser behavior.
 - Focused lower-bound monotonicity is not assumed. Existing graph-growth traces
   contain lower-bound decreases; this milestone records and diagnoses them
   without converting a research question into an invariant.
-- The fixed-horizon linear-time normalized root-gap integral is the primary
-  comparison metric. Log-time summaries are supplemental.
 - Exact completion extends a trajectory with zero gap through the common
   horizon. A completed resource-cap result extends its final certified gap.
   Administrative watchdog expiry is right-censored only when a durable partial
   trajectory exists. Crash, OOM, invalid bounds, cancellation, harness error,
   and memory refusal remain distinct failures.
-- Racing may eliminate candidates only on development data. Frozen evaluation
-  uses identical cases, budgets, resource caps, environment, and stopping
-  policy for every candidate.
+- No adaptive racing is implemented. The proposed accumulated-integral rule is
+  rejected because pre-incumbent gap is the maximum value, so it
+  preferentially culls slow-to-first-incumbent runs rather than measuring
+  eventual exactness.
+- Frozen evaluation uses identical cases, budgets, resource caps, environment,
+  and stopping policy for every candidate.
 - Root-action certification, action-level Q intervals, learned guidance,
   persistent solved-state caching, and GPU work are out of scope.
-- Acceptance runs once after Gate 4. Oliver owns visual review; this milestone
-  has no rendered UI surface.
+- Acceptance is limited to affected ingest/benchmark tests after Gate 2.
+  Oliver owns visual review; this milestone has no rendered UI surface.
 - Commits remain local-only and end with
   `Co-authored-by: Codex <codex@openai.com>`.
 
@@ -45,21 +47,27 @@ browser behavior.
 
 1. Freeze normalized-gap, horizon-extension, exactness, censoring, failure,
    target-reaching, and numerical-floor semantics.
-2. Define deterministic piecewise-constant integration from `t=0`.
+2. Define deterministic piecewise-constant integration from `t=0` for a future
+   analytics milestone without selecting it as a primary score.
 3. Preserve explicit lower-bound-decrease and upper-bound-increase diagnostics.
 4. Record the contract in stable solver documentation and tests.
 
 ## Gate 1 - Experiment identity and corpus roles
 
 1. Strengthen comparable-run identity to include session/start/goal/caps,
-   economy, action scope, corpus/data identity, executable identity, and
-   benchmark configuration where available.
+   economy, action scope, corpus/data identity, executable identity, benchmark
+   configuration, and the natural-T1 generator-config hash where available.
 2. Add deterministic development, validation, and frozen-test roles by corpus
    family/template, preserving the existing v1 acceptance corpus.
 3. Refuse or explicitly exclude paired observations whose required identity
    differs.
 
 ## Gate 2 - Durable incomplete trajectories
+
+This is the milestone's core deliverable. The cooperative native snapshot
+mechanism is the highest-risk item and lands before the runner/report changes.
+It must expose step-boundary state without changing solver scheduling,
+decisions, or proof semantics.
 
 1. Give each isolated case an atomic partial-result sidecar owned by the
    runner.
@@ -69,42 +77,22 @@ browser behavior.
 4. Keep resource-cap completion, watchdog expiry, crash, OOM, cancellation,
    and harness failure separate.
 5. Preserve survivor checks and resumability.
+6. Include incomplete analyzable cases and explicit failures in run summaries.
 
-The current native benchmark writes only at process completion and cannot
-observe inside one blocking `pc_solver_solve_step`. Gate 2 may establish
-step-boundary durability without claiming sub-step checkpoints; any required
-cooperative native snapshot mechanism must remain diagnostic-only and must not
-change solver decisions.
+The current native benchmark cannot observe inside one blocking
+`pc_solver_solve_step`. Gate 2 establishes durable step-boundary snapshots and
+states that limitation plainly; it does not claim sub-step checkpoints.
 
-## Gate 3 - Anytime analytics
+## Gate 5 - Acceptance, baseline, evidence, and handoff
 
-1. Add fixed-horizon normalized gap integrals in wall-time and deterministic
-   work units, plus supplemental log-time checkpoint averages.
-2. Add first-hitting observations for 50%, 20%, 10%, 5%, 1%, and exact targets,
-   including right-censor metadata.
-3. Add restricted mean capped time-to-target, target-reaching curves, final
-   gap among non-reachers, and completed-optimum upper/lower error
-   decomposition.
-4. Add paired differences/ratios, win/tie/loss, geometric summaries, and
-   deterministic instance-level bootstrap confidence intervals.
-5. Include incomplete analyzable cases and explicit failures in run summaries.
-
-## Gate 4 - Profiles and development racing
-
-1. Add target/data profiles over fixed time and work budgets.
-2. Add Dolan-Moré-style performance profiles for gap integral and target time,
-   with explicit failure penalties/caps.
-3. Add a development-only racing decision that can stop a run when its
-   accumulated integral lower bound cannot beat a fixed baseline margin.
-4. Keep final/frozen reporting independent of adaptive racing.
-
-## Gate 5 - Acceptance, evidence, and handoff
-
-1. Run the complete affected ingest/benchmark tests once.
-2. Run the repository acceptance pipeline because runner, corpus, analytics,
-   native benchmark output, and stable docs cross the benchmark boundary.
-3. Generate a pinned baseline report from existing or newly produced
-   representative evidence; do not rerun expensive exact cases without need.
+1. Run the affected ingest/benchmark tests once. Do not run the full repository
+   pipeline: this scope does not touch mechanics, SQLite, the compiled
+   artifact, bindings, or web.
+2. Produce the baseline by actually running the benchmark under the new frozen
+   semantics. Existing evidence predates this contract and is not comparable.
+3. Report the fresh baseline in deterministic work units as well as wall time.
+   State plainly that wall-time figures are machine-bound and do not survive a
+   hardware or compiler change.
 4. Update stable solver/corpus/evidence documentation with limitations,
    especially step-boundary sampling and censoring assumptions.
 5. Archive this plan, restore `docs/active/` to no-active status, update
@@ -113,8 +101,8 @@ change solver decisions.
 ## Completion criteria
 
 The milestone is complete when timed-out observations are retained whenever a
-partial trajectory exists; fixed-budget gap integrals and target observations
-have pinned semantics; failures are not hidden as censoring; comparable-run
-identity is strict; profiles and paired uncertainty are reproducible; racing
-cannot affect frozen evaluation; the acceptance suite passes; and the durable
-contract and evidence are archived.
+partial trajectory exists; future gap-integral and target observations have
+pinned semantics without being selected as a primary score; failures are not
+hidden as censoring; comparable-run identity includes the generator-config
+hash; a fresh frozen-semantics baseline records wall and deterministic work;
+the affected tests pass; and the durable contract and evidence are archived.

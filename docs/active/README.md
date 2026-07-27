@@ -1,17 +1,18 @@
 # Active Work
 
 **Status: active implementation boundary.** Oliver selected
-[Anytime Benchmark Completion](plan.md) on 2026-07-26. Execute its Gates 0-5
-in order.
+[Anytime Benchmark Completion](plan.md) on 2026-07-26 and reduced it before
+implementation. Execute Gates 0, 1, 2, and 5 in order.
 
 Parent: [Documentation map](../README.md)
 
-The active milestone completes the existing bounded-solver trajectory and
-reporting substrate: fixed-horizon normalized gap integrals, explicit
-censoring/failure semantics, strict experiment identity, durable incomplete
-observations, target/performance profiles, paired uncertainty, and
-development-only racing. It does not change mechanics, solver proof authority,
-production caps, browser behavior, or current-solver GPU execution.
+The active milestone freezes future metric semantics, strengthens experiment
+identity and corpus roles, and makes durable incomplete step-boundary
+trajectories the core deliverable. It then runs a fresh frozen-semantics
+baseline in wall and deterministic work units. Analytics, profiles, paired
+uncertainty, and racing are not implemented. It does not change mechanics,
+solver proof authority, production caps, browser behavior, or current-solver
+GPU execution.
 
 The most recently completed milestone is
 [R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md).

@@ -1,24 +1,32 @@
 # Session Handoff
 
-**Status: active implementation boundary.** Oliver selected
+**Status: active implementation boundary.** Oliver selected and then reduced
 [Anytime Benchmark Completion](docs/active/plan.md) on 2026-07-26. Execute
-Gates 0-5 in order.
+Gates 0, 1, 2, and 5 in order.
 
 ## Current Boundary
 
-Complete the existing bounded-solver benchmark substrate without changing
-mechanics or solver proof behavior:
+Complete durable incomplete benchmark trajectories without changing mechanics
+or solver proof behavior:
 
-1. freeze gap-integral, target, censoring, failure, and horizon semantics;
-2. strengthen paired experiment identity and corpus roles;
-3. retain analyzable partial trajectories through watchdog termination;
-4. add anytime, paired, profile, and uncertainty analytics;
-5. add development-only racing; then run acceptance and archive the result.
+1. freeze future gap-integral, target, censoring, failure, and horizon semantics
+   without naming a primary metric;
+2. strengthen paired experiment identity, including the natural-T1
+   generator-config hash, and define corpus roles;
+3. land the high-risk cooperative native step-boundary snapshot first, then
+   retain analyzable partial trajectories through watchdog termination and
+   include explicit failures in summaries;
+4. run only affected ingest/benchmark tests; and
+5. run and pin a fresh frozen-semantics baseline in wall and deterministic work
+   units before archiving.
 
 The metric contract treats pre-incumbent gap as `1`, does not assume focused
 lower-bound monotonicity, and distinguishes administrative censoring from
 resource-cap completion and true failures. Root-action certification, ML,
-persistent solver caches, GPU work, and product UI changes are out of scope.
+persistent solver caches, GPU work, product UI changes, anytime analytics,
+profiles, paired uncertainty, and racing are out of scope. The accumulated-
+integral racing rule is explicitly rejected because it selects against runs
+that are slow to their first incumbent.
 
 ## Main State
 

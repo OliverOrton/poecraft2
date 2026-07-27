@@ -119,6 +119,19 @@ inspection and measurement:
 - remaining preservation, focused-expansion, telemetry, repricing, legality,
   and small performance proposals from the archived audit.
 
+Once durable incomplete trajectories exist and a second real candidate is
+available, a bounded analytics-only milestone may add fixed-horizon linear and
+log-time gap integrals, target-hitting observations with censor metadata,
+restricted capped time-to-target, completed-optimum upper/lower-error
+decomposition, paired ratios and instance-level bootstrap intervals, target
+and deterministic-work data profiles, and performance profiles. These are
+pure functions over stored trajectories and should be selected against real
+candidate data rather than guessed before a comparison exists. Frozen
+evaluation must retain a common fixed stopping policy. The previously proposed
+accumulated-gap-integral racing rule is not deferred here: it is rejected
+because pre-incumbent gap is maximal and the rule preferentially eliminates
+slow-to-first-incumbent runs.
+
 Completed, superseded, or false audit items are not backlog: both incremental
 owned-byte ledgers, exact kernel reuse, exact all-action quotienting, shared
 policy compilation, compiler-emitted count-condition evaluation, selected
