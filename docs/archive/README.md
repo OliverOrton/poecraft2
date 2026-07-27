@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [Protected-Core Compression Ceiling Census](2026-07-27-protected-core-ceiling-census/README.md) —
+  rejected cleanup as the next pre-bound architecture because its broadest
+  protected-goal population was at most 5.68% of the observed cap, while
+  preserving a large but unqualified action-local side-factorization signal.
+
 - [Streaming Broad-Lower Fold Falsification](2026-07-27-streaming-broad-lower-fold/README.md) —
   rejected the fixed shadow candidate after it published no fold, restored
   measurement-only solver source, and retained behavior-identical versioned

@@ -1,60 +1,44 @@
 # Session Handoff
 
-**Status: no active implementation boundary.** Oliver must select the next
-bounded chunk before implementation resumes.
+**Status: no active implementation boundary.** Oliver must choose the next
+chunk before implementation resumes.
 
-## Latest Completed Result
+## Latest completed result
 
+The 2026-07-27
+[Protected-Core Compression Ceiling Census](docs/archive/2026-07-27-protected-core-ceiling-census/README.md)
+rejected cleanup as the next pre-bound solver architecture.
+
+On the four frozen full/deep three-/four-target hard cases, impossible free
+prefix/suffix erasure showed a large raw all-state ceiling (`55.5x` to
+`904.8x`). The cleanup-relevant population did not: nonterminal states with at
+least two satisfied goals on one protected side were only `0.14%` to `5.68%`
+of the cap-censored observed stream. Even deleting every one of those states
+for free cannot create material headroom at the first-row 200,000-state
+failure.
+
+The large all-state signal is not discarded, but it is a different question:
+an unselected action-local side-factorization or source-elimination study. It
+would require a complete continuation-observation contract, complete or
+formally bounded kernel coverage, and counterexamples for every erased
+feature. The census does not prove state equivalence, authorize pruning, or
+select a cleanup mechanic.
+
+The
+[tracked evidence](fixtures/solver-natural-t1/v1/evidence/protected-core-ceiling-summary.json)
+pins the four case hashes, projection counts, deterministic work, measurement
+cost, and behavior parity. All measurement-only engine/test source was
+restored. No mechanics, actions, goals, conditions, caps, public ABI,
+compiled artifact, binding, WASM, web, or product behavior changed.
+
+The preceding completed
 [Streaming Broad-Lower Fold Falsification](docs/archive/2026-07-27-streaming-broad-lower-fold/README.md)
-completed on 2026-07-27 on branch
-`codex/streaming-broad-lower-fold`.
+remains the latest production solver change: versioned solve-local successful
+fallback properness-proof reuse cut its owner solve wall by 22.3% with
+identical deterministic results. It does not improve the hard pre-bound
+failures.
 
-The fixed five-case shadow candidate published no fold. Four hard cases
-entered existing goal-cover/graph work before the standalone traversal and
-stopped at the state cap; the smoke diagnostic crashed. The no-tuning gate
-therefore rejected the candidate, and all measurement-only solver source was
-restored. No detached support, scalar Bellman record, promotion mechanism,
-mechanic change, cap increase, action-scope change, or new broad-kernel
-representation remains.
-
-Gate 3B retained versioned successful constructive/fallback
-properness-proof reuse. On the 30M Dire Pelt owner:
-
-- start-properness checks fell from 17 to 1, with 16 cache hits;
-- validation wall fell from 8,902.739 ms to 557.833 ms;
-- solve wall fell from 36,391.471 ms to 28,268.875 ms (22.3%);
-- bounds, states, rows, transitions, reforge work, termination, and
-  transition/policy hashes were identical.
-
-This is a post-incumbent engineering gain. It does not improve the four hard
-11M cases that fail before a finite executable upper exists.
-
-## Acceptance And Evidence
-
-The native focused solve suite passed 518/518 checks. The paired 30M
-benchmark and final 11M production portfolio each produced five reports with
-no timeout or survivor. Release WASM was rebuilt; worker smoke passed 27/27,
-the full non-visual web test command passed, and `npx tsc --noEmit` passed.
-
-The final 11M smoke report now preserves an abandoned in-progress snapshot at
-exactly 11,000,000 reforge work after the native step error. No policy changed
-or newly qualified, so the exact natural two-T1 oracle, exact compiled-policy
-evaluation, and 10,000-run simulation were not run.
-
-Tracked evidence:
-[streaming-broad-lower-fold-summary.json](fixtures/solver-scaling/v1/evidence/streaming-broad-lower-fold-summary.json).
-Wall figures are machine/compiler-bound; deterministic work and hashes are
-the portable comparison.
-
-## Repository State
-
-The retained implementation is commit `8da7015`. Final WASM, archive, and
-evidence documentation follow it on the same local branch. Nothing was
-pushed.
-
-The benchmark harness also retains the general failed-step snapshot repair
-and the focused native calculation-test selector from the diagnostic
-milestone.
+Nothing is pushed.
 
 Commits must remain local unless Oliver asks to push and must end with:
 

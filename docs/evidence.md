@@ -426,6 +426,31 @@ The wall comparison is machine/compiler-bound. The retained optimization
 removes duplicate post-incumbent work and does not improve hard pre-bound
 failure.
 
+## Protected-Core Cleanup Ceiling
+
+The 2026-07-27
+[final report](archive/2026-07-27-protected-core-ceiling-census/report.md) and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/protected-core-ceiling-summary.json)
+pin a cleanup-specific rejection and a separate unselected research signal.
+
+- Four unchanged 11M/200k hard cases exposed 199,952 to 199,969 unique
+  successors before the first Chaos row hit the state cap.
+- Impossible free side erasure reduced those observed sets to 221–893 prefix
+  cores and 817–3,601 suffix cores: `55.5x` to `904.8x` compression.
+- The broadest cleanup-relevant population—nonterminal states with at least
+  two satisfied goals on one protected side—was only 275 to 11,352 states,
+  or `0.14%` to `5.68%` of the observed prefix. Perfect free deletion of that
+  entire population still cannot create material first-row headroom.
+- Every projection used collision-checked full projected-state equality and
+  recorded zero hash collisions. The stream remains cap-censored and the
+  signatures have no equivalence, bound, or pruning authority.
+- Status, state/graph/work counts, reforge work, and transition/policy hashes
+  matched the prior frozen baseline on all four cases.
+
+Measurement-only engine source was restored. The broader all-state signal may
+motivate a future exact action-local factorization study, but it does not
+select cleanup or alter the prior all-action zero-merge evidence.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

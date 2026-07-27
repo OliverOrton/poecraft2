@@ -51,6 +51,23 @@ every possible expectation fold is impossible. Reopening it requires a new
 Oliver-selected boundary and evidence that changes the failed computability
 setup; it is not deferred momentum.
 
+The 2026-07-27
+[protected-core ceiling census](../archive/2026-07-27-protected-core-ceiling-census/README.md)
+rejects a cleanup route as the next pre-bound architecture. Impossible free
+side erasure compressed the cap-censored observed successor sets by `55.5x`
+to `904.8x`, but the broadest nonterminal population with at least two goals
+on one protected side was only `0.14%` to `5.68%` of the observed prefix.
+Even deleting all of those states for free cannot create material first-row
+headroom. No cleanup primitive, stochastic repair, or mechanic ruling is
+deferred from that result.
+
+The large all-state side projection remains a separate unselected research
+lead. Reopening it requires an exact action-local observation or
+source-elimination contract, complete or formally bounded kernel coverage,
+and counterexamples for every continuation feature erased by the projection.
+The census is not evidence of state equivalence and does not weaken the prior
+all-action zero-merge result.
+
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
 supersedes the three-slot discovery bottleneck: exact producibility filtering

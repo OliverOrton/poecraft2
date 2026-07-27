@@ -28,8 +28,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must select the next
-bounded chunk before implementation resumes.
+There is no active implementation boundary. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[Protected-Core Compression Ceiling Census](archive/2026-07-27-protected-core-ceiling-census/README.md)
+rejected cleanup as the next pre-bound architecture. Collision-checked
+impossible side erasure produced very large all-state ceilings, but states
+with at least two goals on one protected side were at most 5.68% of the
+cap-censored observed stream. The broader action-local factorization signal is
+unselected and has no equivalence or pruning authority. All measurement-only
+engine source was restored.
 
 The completed
 [Streaming Broad-Lower Fold Falsification milestone](archive/2026-07-27-streaming-broad-lower-fold/README.md)

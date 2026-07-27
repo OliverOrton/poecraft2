@@ -39,6 +39,11 @@ The later
 [anytime trajectory baseline](evidence/anytime-trajectory-baseline-summary.json)
 pins the v2 identity, fresh 14-case development-smoke run, deterministic work
 and machine-bound wall distributions, and a real censored watchdog snapshot.
+The later
+[protected-core ceiling summary](evidence/protected-core-ceiling-summary.json)
+pins four 11M/200k hard-case observed-prefix projections. It rejects cleanup
+as the next pre-bound architecture while keeping the much larger all-state
+side-factorization signal explicitly unqualified.
 
 ## Benchmark workflow
 
