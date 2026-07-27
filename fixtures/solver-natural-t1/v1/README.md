@@ -35,6 +35,10 @@ smoke/full/deep acceptance tiers. Use the runner's `--evaluation-roles` and
 The tracked [B6 acceptance summary](evidence/b6-acceptance-summary.json)
 records the final exact-oracle facts, bounded compiled-policy exact evaluation,
 required 10,000-run corroboration, and complete downstream gates.
+The later
+[anytime trajectory baseline](evidence/anytime-trajectory-baseline-summary.json)
+pins the v2 identity, fresh 14-case development-smoke run, deterministic work
+and machine-bound wall distributions, and a real censored watchdog snapshot.
 
 ## Benchmark workflow
 

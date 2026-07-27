@@ -1,42 +1,20 @@
 # Active Work
 
-**Status: active implementation boundary.** Oliver selected
-[Anytime Benchmark Completion](plan.md) on 2026-07-26 and reduced it before
-implementation. Execute Gates 0, 1, 2, and 5 in order.
+**Status: no active implementation boundary.** Oliver must select the next
+bounded chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-The active milestone freezes future metric semantics, strengthens experiment
-identity and corpus roles, and makes durable incomplete step-boundary
-trajectories the core deliverable. It then runs a fresh frozen-semantics
-baseline in wall and deterministic work units. Analytics, profiles, paired
-uncertainty, and racing are not implemented. It does not change mechanics,
-solver proof authority, production caps, browser behavior, or current-solver
-GPU execution.
-
 The most recently completed milestone is
-[R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md).
-It replaced nested compiled-strategy JSON with transferable bytes, removed
-ownerless full-graph clones, released the scoped native Solve closure after
-handoff, and rebuilds on a later Solve or reprice. The release-WASM build,
-complete web suite, TypeScript check, and focused Node-worker lifecycle
-evidence passed. It changed no mechanics, solver algorithm, action scope,
-public cap, or strategy vocabulary.
+[Anytime Benchmark Completion](../archive/2026-07-26-anytime-benchmark-completion/README.md).
+It freezes future trajectory semantics without choosing a primary score,
+strengthens experiment identity and corpus roles, and durably preserves valid
+native step-boundary snapshots through watchdog termination. The fresh smoke
+baseline and real timeout probe are indexed in [Evidence](../evidence.md).
 
-The three immediately preceding research milestones are also closed:
-
-- [Broad-action separation and renewal](../archive/2026-07-25-broad-action-separation-research/README.md)
-  rejected production integration because cheap exact separation excluded no
-  broad actions and the smallest exact fixed-policy compaction still exceeded
-  current work limits on both three-mod hard cases.
-- [Exact automatic-action constraint generation](../archive/2026-07-25-exact-automatic-action-constraint-generation/README.md)
-  rejected production integration because automatic-only deferral moved the
-  first-carrier 200,000-state failure to an ordinary broad reforge.
-- [Gap-directed natural-T1 research](../archive/2026-07-25-gap-directed-natural-t1-research/README.md)
-  supplied the diagnosis and exact-separation gates for those follow-ups.
-
-Those research branches contributed documentation and evidence only. Their
-diagnostic prototypes were restored before closure.
+The preceding
+[R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
+completed the transferable-byte and scoped-solver-lifetime product work.
 
 Unselected possibilities remain in [Future work](../future/README.md).
-`future/` and archived plans do not override the active plan.
+`future/` and archived plans are not execution authority.

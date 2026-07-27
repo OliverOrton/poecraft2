@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-26
 
+- [Anytime Benchmark Completion](2026-07-26-anytime-benchmark-completion/README.md) —
+  froze future gap/censoring semantics without choosing a primary score,
+  strengthened experiment identity and corpus roles, preserved atomic native
+  step-boundary snapshots through watchdog termination, and pinned a fresh
+  smoke baseline plus real timeout probe.
 - [R4 Browser Transfer And Solver Lifetime](2026-07-26-browser-transfer-lifetime-r4/README.md) —
   replaced nested compiled-strategy JSON with transferable bytes, removed
   ownerless full-graph clones, scoped product Solve handles through strategy

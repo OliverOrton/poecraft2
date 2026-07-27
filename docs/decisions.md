@@ -215,7 +215,7 @@ penalizes time to first incumbent most strongly and selects for
 early-incumbent heuristics rather than eventual exactness.
 
 **Context:** [Solver benchmark trajectories](solver/benchmarking.md) and the
-[active reduced milestone](active/plan.md).
+[completed reduced milestone](archive/2026-07-26-anytime-benchmark-completion/plan.md).
 
 **Consequences:** The durable-trajectory milestone implements no racing.
 Gap-integral analytics, target/data profiles, performance profiles, and paired

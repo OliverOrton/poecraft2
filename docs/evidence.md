@@ -241,6 +241,31 @@ the returned policy cost, while `L` and `U` bound the unknown optimum. The
 sample is empirical corroboration only. Action-utility and search-cost reports
 remain observational; an unused action is never a pruning certificate.
 
+## Durable Anytime Trajectory Baseline
+
+The 2026-07-26
+[anytime trajectory baseline](../fixtures/solver-natural-t1/v1/evidence/anytime-trajectory-baseline-summary.json)
+pins the first run under the durable partial-observation and v2 experiment-
+identity contract.
+
+- All 14 development-role smoke cases completed as analyzable measurements:
+  two `bounded_near_optimal` and twelve explicit `refused_state_cap` results.
+- Native total wall time ranged from 70.15 to 2,496.58 ms, with a 106.77 ms
+  median. Isolated-process wall ranged from 361.70 to 2,815.83 ms, with a
+  417.77 ms median.
+- Deterministic work ranged from 1 to 3,038 expansions, 10,759 to 25,000
+  discovered states, 1 to 19,132 rows, 1 to 82,498 transitions, and 583,205
+  to 1,530,480 reforge-work units.
+- A real one-second watchdog probe recovered four atomic step-boundary samples,
+  remained labelled `watchdog_expired`, counted as administrative censoring,
+  and left no process survivor.
+
+Wall figures are machine-, load-, build-, and compiler-bound and do not
+survive a hardware or compiler change. This is smoke/development evidence,
+not a candidate comparison, frozen-test result, or exact-policy evaluation.
+The governing semantics and snapshot limitation live in
+[Solver Benchmark Trajectories](solver/benchmarking.md).
+
 ## Focused-Round Performance Attribution
 
 The 2026-07-23

@@ -1,107 +1,73 @@
 # Session Handoff
 
-**Status: active implementation boundary.** Oliver selected and then reduced
-[Anytime Benchmark Completion](docs/active/plan.md) on 2026-07-26. Execute
-Gates 0, 1, 2, and 5 in order.
-
-## Current Boundary
-
-Complete durable incomplete benchmark trajectories without changing mechanics
-or solver proof behavior:
-
-1. freeze future gap-integral, target, censoring, failure, and horizon semantics
-   without naming a primary metric;
-2. strengthen paired experiment identity, including the natural-T1
-   generator-config hash, and define corpus roles;
-3. land the high-risk cooperative native step-boundary snapshot first, then
-   retain analyzable partial trajectories through watchdog termination and
-   include explicit failures in summaries;
-4. run only affected ingest/benchmark tests; and
-5. run and pin a fresh frozen-semantics baseline in wall and deterministic work
-   units before archiving.
-
-The metric contract treats pre-incumbent gap as `1`, does not assume focused
-lower-bound monotonicity, and distinguishes administrative censoring from
-resource-cap completion and true failures. Root-action certification, ML,
-persistent solver caches, GPU work, product UI changes, anytime analytics,
-profiles, paired uncertainty, and racing are out of scope. The accumulated-
-integral racing rule is explicitly rejected because it selects against runs
-that are slow to their first incumbent.
-
-## Main State
-
-Local `main` contains the completed gap-directed, exact automatic-action, and
-broad-action research lineage plus
-[R4 browser transfer and solver lifetime](docs/archive/2026-07-26-browser-transfer-lifetime-r4/README.md).
-The three research milestones contributed documentation and evidence only; no
-diagnostic prototype, engine, binding, web, data, fixture, or script change
-from those experiments was retained. R4 is the subsequent product/runtime
-implementation.
-
-Commits remain local-only. Nothing was pushed.
+**Status: no active implementation boundary.** Oliver must select the next
+bounded chunk before implementation resumes.
 
 ## Latest Completed Result
 
-R4 replaced the Calculator's solve-to-strategy nested JSON/copy chain with raw
-transferable UTF-8 bytes:
+[Anytime Benchmark Completion](docs/archive/2026-07-26-anytime-benchmark-completion/README.md)
+completed on 2026-07-26 on branch
+`codex/anytime-benchmark-completion`.
 
-1. native compilation writes the ordinary v1 strategy JSON to the facade
-   response without escaping it inside a second JSON document;
-2. the worker copies once from WASM memory, clears the native response, and
-   transfers the backing buffer;
-3. `EngineClient` decodes and parses once on the main thread;
-4. strategy compile/evaluation inputs use the same transferable-byte
-   ownership model; and
-5. uniquely transferred graphs are adopted, with clones retained only for
-   separate document or persistence owners.
+The milestone retained only its reduced Gates 0, 1, 2, and 5:
 
-Calculator now opens a fresh scoped solver for each Solve. It obtains summary,
-telemetry, and compiled strategy, then closes that solver, the envelope solver,
-and economy in terminal cleanup. Later solves and repricing rebuild. The
-ordinary odds/picker solver remains independent and long-lived.
+1. Future normalized-gap, horizon, exactness, censoring, failure, target, and
+   numerical-floor semantics are stable, but no primary score is selected.
+2. Runner v2 pins source, executable, corpus, natural-T1 generator config,
+   compiled artifact, machine, benchmark configuration, and whole-stratum
+   development/validation/frozen-test roles.
+3. The native benchmark atomically checkpoints single-case step-boundary
+   snapshots. A watchdog-valid partial remains `watchdog_expired` and
+   analyzable; completed resource-cap results and explicit failures remain
+   separate.
+4. Reporter v2 includes incomplete analyzable observations, watchdogs without
+   trajectories, and explicit failures in run summaries.
 
-The release export inventory now includes raw response transfer and all stepped
-solve functions. Native compiler limits remain 100,000 nodes, 400,000 edges,
-and 64 MiB strategy JSON. Solver behavior, mechanics, action scope, C ABI,
-Python bindings, public caps, and strategy vocabulary did not change.
+The highest-risk path was exercised against a real native process. A
+one-second watchdog recovered four samples from
+`natural-t1-smoke-one-armour-09767fd6f824`, counted one administrative censor,
+and left no survivor. The snapshot stops at the latest completed native solve
+step; there is no sub-step observation.
 
-## Acceptance
+## Acceptance And Baseline
 
-The rebuilt release artifact is 2,337,043 bytes with SHA-256
-`db1789d432ce2c8fe9b5073835b8b941c2bf7602b1e1ceb8e262b9040e87795e`.
+The native build passed. The affected runner/reporter tests passed 13/13 in
+0.77 seconds. The full repository pipeline was intentionally not run because
+this scope did not touch mechanics, SQLite, the compiled artifact, bindings,
+WASM, or web.
 
-- `powershell -File scripts/build-wasm.ps1` passed.
-- `npm test` in `apps/web` passed, including 27/27 release-WASM worker smoke
-  checks.
-- `npx tsc --noEmit` in `apps/web` passed.
-- Focused real-worker evidence transferred 36,224 strategy bytes in 38.35 ms.
-  Closing the scoped solver changed handles `5 -> 4` and selected native live
-  bytes `15,434,223 -> 3,752`; WASM high-water correctly stayed
-  `278,396,928 -> 278,396,928`. Maximum observed solve step was 56.07 ms.
-- No process survived any watchdog. The first build exposed and then fixed an
-  anonymous-namespace export-linkage error.
+A fresh clean-source development-smoke baseline completed 14/14 cases:
+two `bounded_near_optimal` and twelve `refused_state_cap`. Native total wall
+had a 106.77 ms median and 2,496.58 ms maximum; isolated-process wall had a
+417.77 ms median and 2,815.83 ms maximum. Work ranged up to 3,038 expansions,
+25,000 discovered states, 19,132 rows, 82,498 transitions, and 1,530,480
+reforge-work units.
 
-This is non-visual release-WASM Node-worker evidence. It does not establish
-browser/device throughput, process RSS, or total JavaScript memory. Strategy
-behavior was unchanged, so the plan did not require a new 10,000-run quality
-campaign. Oliver did not authorize rendered review.
+Wall figures are machine-, load-, build-, and compiler-bound. They do not
+survive a hardware or compiler change. The tracked
+[evidence summary](fixtures/solver-natural-t1/v1/evidence/anytime-trajectory-baseline-summary.json)
+pins the identities, raw-local hashes, deterministic work, limitations, and
+real timeout probe.
 
-Full commands, hashes, and limitations are in the
-[R4 report](docs/archive/2026-07-26-browser-transfer-lifetime-r4/report.md).
+## Deferred And Rejected Work
 
-## Prior Unselected Directions
+Gap integrals, survival/target summaries, completed-optimum error
+decomposition, paired uncertainty, data profiles, and performance profiles
+remain deferred in the [solver roadmap](docs/future/solver-roadmap.md) until a
+second real candidate exists.
 
-The clearest bounded product continuation is R5 verification presentation:
-truthful terminal/off-policy gates, sampled uncertainty, and remaining
-authored-Unveil evaluator boundaries. It is deferred and unselected in the
-[solver roadmap](docs/future/solver-roadmap.md).
+Accumulated-gap racing is rejected, not deferred. Pre-incumbent normalized gap
+is maximal, so that rule preferentially culls slow-to-first-incumbent runs and
+selects for incumbent timing rather than eventual exactness.
 
-The hard natural-T1 solver research has no accepted production architecture.
-Its latest broad-action result says not to resume by landing either rejected
-prototype, raising caps, or treating the fixed-policy renewal evaluator as a
-general Bellman kernel. A continuation needs either a new exact broad-kernel
-representation preserving continuation observations or a materially narrower
-product objective.
+The current-solver path remains CPU-native. GPU work is relevant only to
+future ML guidance if Oliver later selects it.
+
+## Repository State
+
+The implementation source boundary is clean commit `670e9b7`. Final archive
+and evidence documentation follow it on the same local branch. Nothing was
+pushed.
 
 Commits must remain local unless Oliver asks to push and must end with:
 

@@ -1,8 +1,9 @@
 # Solver Benchmark Trajectories
 
-**Status: stable contract under active verification.** The
-[active milestone](../active/plan.md) owns final acceptance and will replace
-this stamp with its accepted commit and evidence.
+**Status: stable contract verified on 2026-07-26 at source commit
+`670e9b7`.** Checked against `engine/benchmarks/solver_benchmark.cpp`,
+`solver_corpus_runner.py`, `solver_reports.py`, their focused tests, and the
+[fresh baseline evidence](../../fixtures/solver-natural-t1/v1/evidence/anytime-trajectory-baseline-summary.json).
 
 Parent: [Solver](README.md)
 

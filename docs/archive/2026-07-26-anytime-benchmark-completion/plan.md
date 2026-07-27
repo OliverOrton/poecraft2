@@ -1,10 +1,10 @@
 # Anytime Benchmark Completion
 
-**Status: active.** Oliver selected this bounded implementation chunk on
-2026-07-26 and reduced it before implementation. Execute Gates 0, 1, 2, and 5
-in order.
+**Status: completed on 2026-07-26.** Oliver selected this bounded
+implementation chunk on 2026-07-26 and reduced it before implementation.
+Gates 0, 1, 2, and 5 completed in order.
 
-Parent: [Active work](README.md)
+Parent: [Anytime Benchmark Completion archive](README.md)
 
 ## Objective
 

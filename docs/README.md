@@ -28,13 +28,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Anytime Benchmark Completion](active/plan.md) is active. It completes the
-existing bounded-solver trajectory substrate through durable incomplete
-step-boundary observations, explicit censoring/failure semantics, strict
-experiment identity, corpus roles, and a freshly run frozen-semantics
-baseline. Pure analytics and profiles are deferred until a second candidate;
-racing is excluded. The milestone does not change mechanics, solver proof
-authority, production caps, browser behavior, or current-solver GPU execution.
+No implementation boundary is active. Oliver must select the next bounded
+chunk before implementation resumes; [Active work](active/README.md) and
+[HANDOFF](../HANDOFF.md) record that clean stopping state.
+
+The completed
+[Anytime Benchmark Completion milestone](archive/2026-07-26-anytime-benchmark-completion/README.md)
+durably preserves native step-boundary trajectories through watchdog
+termination, separates censoring from failures and completed resource-cap
+measurements, pins stronger experiment identity and corpus roles, and records
+a fresh smoke baseline. Pure analytics remain deferred until a second
+candidate; accumulated-gap racing is rejected.
 
 The completed
 [R4 browser transfer and solver lifetime milestone](archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
