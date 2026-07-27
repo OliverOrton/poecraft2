@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -44,6 +45,7 @@ struct Arguments {
     fs::path artifact;
     fs::path corpus;
     fs::path output;
+    fs::path partial_output;
     fs::path strategy_output;
     std::string case_id;
     bool validate_only = false;
@@ -180,6 +182,33 @@ void write_file(const fs::path& path, const std::string& text) {
     if (!stream) {
         throw std::runtime_error("failed while writing " + path.string());
     }
+}
+
+void write_file_atomic(const fs::path& path, const std::string& text) {
+    fs::path temporary = path;
+    temporary += ".tmp";
+    write_file(temporary, text);
+#if defined(_WIN32)
+    if (!MoveFileExW(
+            temporary.c_str(), path.c_str(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        const DWORD error = GetLastError();
+        std::error_code ignored;
+        fs::remove(temporary, ignored);
+        throw std::runtime_error(
+            "unable to atomically replace " + path.string() +
+            " (Windows error " + std::to_string(error) + ")");
+    }
+#else
+    std::error_code error;
+    fs::rename(temporary, path, error);
+    if (error) {
+        fs::remove(temporary);
+        throw std::runtime_error(
+            "unable to atomically replace " + path.string() +
+            ": " + error.message());
+    }
+#endif
 }
 
 Value parse_json(const std::string& text, const fs::path& path) {
@@ -1009,7 +1038,8 @@ CaseResult run_case(
     const std::uint32_t verification_chunk_runs,
     const double verification_time_limit_seconds,
     const bool exact_strategy_evaluation,
-    const double exact_strategy_evaluation_time_limit_seconds) {
+    const double exact_strategy_evaluation_time_limit_seconds,
+    const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.verification_skipped = skip_verification;
     const auto total_begin = Clock::now();
@@ -1033,6 +1063,7 @@ CaseResult run_case(
 
     NativeHandles handles;
     try {
+        report.actual_status = "running";
         pc_item_state start_item{};
         const auto create_begin = Clock::now();
         create_case_objects(
@@ -1189,6 +1220,10 @@ CaseResult run_case(
                         {threshold, entry.elapsed_ms});
                 }
             }
+            report.solve_ms = entry.elapsed_ms;
+            report.total_ms = milliseconds(total_begin, now);
+            report.working_set_after = process_working_set();
+            if (checkpoint) checkpoint(report);
         };
         do {
             const auto step_begin = Clock::now();
@@ -1683,6 +1718,7 @@ CaseResult run_case(
         skip_verification || report.verification_diagnostic);
     report.working_set_after = process_working_set();
     report.total_ms = milliseconds(total_begin, Clock::now());
+    if (checkpoint) checkpoint(report);
     return report;
 }
 
@@ -2173,6 +2209,35 @@ void append_case_report(
     out << "]\n}";
 }
 
+std::string compiler_name();
+
+void write_partial_case_report(
+    const fs::path& path, const Value& manifest,
+    const std::string& corpus_schema, const fs::path& corpus_path,
+    const fs::path& artifact_manifest, const Value& artifact_json,
+    const Value& specification, const CaseResult& result) {
+    std::ostringstream output;
+    output << "{\n"
+           << "\"schema_version\":\"solver_benchmark_partial_v1\",\n"
+           << "\"run_status\":\"partial\",\n"
+           << "\"runner\":\"native\",\n"
+           << "\"corpus\":{\"id\":"
+           << escape_json(required_string(manifest, "corpus_id"))
+           << ",\"schema_version\":" << escape_json(corpus_schema) << ','
+           << "\"manifest_path\":" << escape_json(corpus_path.string())
+           << ",\"manifest\":" << json_of(manifest) << "},\n"
+           << "\"artifact\":{\"manifest_path\":"
+           << escape_json(artifact_manifest.string())
+           << ",\"manifest\":" << json_of(artifact_json) << "},\n"
+           << "\"environment\":{\"abi_version\":" << pc_abi_version()
+           << ",\"compiler\":" << escape_json(compiler_name())
+           << ",\"process_working_set_bytes\":" << process_working_set()
+           << "},\n\"cases\":[\n";
+    append_case_report(output, specification, result);
+    output << "\n],\n\"all_expectations_met\":false\n}\n";
+    write_file_atomic(fs::absolute(path), output.str());
+}
+
 Arguments parse_arguments(int argc, char** argv) {
     Arguments args;
     for (int index = 1; index < argc; ++index) {
@@ -2186,6 +2251,9 @@ Arguments parse_arguments(int argc, char** argv) {
         if (argument == "--artifact") args.artifact = value("--artifact");
         else if (argument == "--corpus") args.corpus = value("--corpus");
         else if (argument == "--output") args.output = value("--output");
+        else if (argument == "--partial-output") {
+            args.partial_output = value("--partial-output");
+        }
         else if (argument == "--strategy-output") {
             args.strategy_output = value("--strategy-output");
         }
@@ -2235,6 +2303,10 @@ Arguments parse_arguments(int argc, char** argv) {
     if (args.corpus.empty()) throw std::runtime_error("--corpus is required");
     if (!args.validate_only && args.output.empty()) {
         throw std::runtime_error("--output is required unless --validate-only is used");
+    }
+    if (!args.partial_output.empty() && args.case_id.empty()) {
+        throw std::runtime_error(
+            "--partial-output requires exactly one selected --case");
     }
     return args;
 }
@@ -2373,6 +2445,15 @@ int main(int argc, char** argv) {
             bool first = true;
             bool all_expected = true;
             for (const Value& specification : specifications) {
+                const std::function<void(const CaseResult&)> checkpoint =
+                    args.partial_output.empty()
+                        ? std::function<void(const CaseResult&)>{}
+                        : [&](const CaseResult& partial) {
+                              write_partial_case_report(
+                                  args.partial_output, manifest, corpus_schema,
+                                  corpus_path, artifact_manifest, artifact_json,
+                                  specification, partial);
+                          };
                 const CaseResult result = run_case(
                     data, specification, args.skip_verification,
                     args.strategy_output, args.emit_progress,
@@ -2380,7 +2461,8 @@ int main(int argc, char** argv) {
                     args.verification_chunk_runs,
                     args.verification_time_limit_seconds,
                     args.exact_strategy_evaluation,
-                    args.exact_strategy_evaluation_time_limit_seconds);
+                    args.exact_strategy_evaluation_time_limit_seconds,
+                    checkpoint);
                 if (!first) output << ",\n";
                 first = false;
                 append_case_report(output, specification, result);
