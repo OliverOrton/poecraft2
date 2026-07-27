@@ -28,9 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next bounded
-chunk before implementation resumes; [Active work](active/README.md) and
-[HANDOFF](../HANDOFF.md) record that clean stopping state.
+[Streaming Broad-Lower Fold Falsification](active/plan.md) is active. It first
+measures a shadow-only exact expectation of the standalone coarse lower before
+successor interning. Failure to complete, affect the controlling lower, or
+avoid immediate exact refinement rejects broad-kernel work and pivots to
+versioned properness-proof reuse. No detached successor representation,
+mechanic change, cap increase, upper-policy shortcut, or GPU work is
+authorized.
 
 The completed
 [Anytime Benchmark Completion milestone](archive/2026-07-26-anytime-benchmark-completion/README.md)

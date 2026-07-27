@@ -1,74 +1,60 @@
 # Session Handoff
 
-**Status: no active implementation boundary.** Oliver must select the next
-bounded chunk before implementation resumes.
+**Status: active implementation boundary.** Oliver selected
+[Streaming Broad-Lower Fold Falsification](docs/active/plan.md) on
+2026-07-27. Execute Gates 0 through 4 in order on
+`codex/streaming-broad-lower-fold`.
 
-## Latest Completed Result
+## Current Boundary
 
-[Anytime Benchmark Completion](docs/archive/2026-07-26-anytime-benchmark-completion/README.md)
-completed on 2026-07-26 on branch
-`codex/anytime-benchmark-completion`.
+Test one hypothesis in shadow mode before creating a solver architecture:
 
-The milestone retained only its reduced Gates 0, 1, 2, and 5:
+```text
+Can c(s,a) + E[H_coarse(X)] be computed before successor interning,
+inside the existing 11M work cap, strongly enough to avoid immediately
+materializing the ordinary broad row?
+```
 
-1. Future normalized-gap, horizon, exactness, censoring, failure, target, and
-   numerical-floor semantics are stable, but no primary score is selected.
-2. Runner v2 pins source, executable, corpus, natural-T1 generator config,
-   compiled artifact, machine, benchmark configuration, and whole-stratum
-   development/validation/frozen-test roles.
-3. The native benchmark atomically checkpoints single-case step-boundary
-   snapshots. A watchdog-valid partial remains `watchdog_expired` and
-   analyzable; completed resource-cap results and explicit failures remain
-   separate.
-4. Reporter v2 includes incomplete analyzable observations, watchdogs without
-   trajectories, and explicit failures in run summaries.
+The first implementation is measurement-only. It observes fully constructed
+final `AbstractState` values immediately before `intern_state`, evaluates only
+the graph-independent coarse optimistic lower, retains no successor support,
+and leaves production Bellman behavior, counters, caps, policies, and
+termination unchanged.
 
-The highest-risk path was exercised against a real native process. A
-one-second watchdog recovered four samples from
-`natural-t1-smoke-one-armour-09767fd6f824`, counted one administrative censor,
-and left no survivor. The snapshot stops at the latest completed native solve
-step; there is no sub-step observation.
+Gate 2 rejects the direction if the fold is incomplete, nonselective, or
+immediately followed by the same exact materialization at worse combined work.
+A raw broad-action lower increase is not success.
 
-## Acceptance And Baseline
+Exactly one Gate 3 path follows:
 
-The native build passed. The affected runner/reporter tests passed 13/13 in
-0.77 seconds. The full repository pipeline was intentionally not run because
-this scope did not touch mechanics, SQLite, the compiled artifact, bindings,
-WASM, or web.
+- a complete pass may integrate one immutable lower-only scalar record, with
+  no detached table or promotion; or
+- any failure restores measurement-only source, rejects further broad-kernel
+  work, and pivots to versioned constructive/fallback properness-proof reuse.
 
-A fresh clean-source development-smoke baseline completed 14/14 cases:
-two `bounded_near_optimal` and twelve `refused_state_cap`. Native total wall
-had a 106.77 ms median and 2,496.58 ms maximum; isolated-process wall had a
-417.77 ms median and 2,815.83 ms maximum. Work ranged up to 3,038 expansions,
-25,000 discovered states, 19,132 rows, 82,498 transitions, and 1,530,480
-reforge-work units.
+## Source And Repository State
 
-Wall figures are machine-, load-, build-, and compiler-bound. They do not
-survive a hardware or compiler change. The tracked
-[evidence summary](fixtures/solver-natural-t1/v1/evidence/anytime-trajectory-baseline-summary.json)
-pins the identities, raw-local hashes, deterministic work, limitations, and
-real timeout probe.
+Local `main` was fast-forwarded to the completed anytime benchmark closure
+`e27b45e` before this branch was created. That milestone supplies durable
+incomplete trajectories, v2 experiment identity, corpus roles, and the fresh
+smoke baseline. Nothing was pushed.
 
-## Deferred And Rejected Work
+The current-solver path remains CPU-native. GPU use remains relevant only to
+future ML work. No mechanic, action scope, cap, ABI, data, economy, binding,
+web, or visual change is selected.
 
-Gap integrals, survival/target summaries, completed-optimum error
-decomposition, paired uncertainty, data profiles, and performance profiles
-remain deferred in the [solver roadmap](docs/future/solver-roadmap.md) until a
-second real candidate exists.
+## Acceptance Boundary
 
-Accumulated-gap racing is rejected, not deferred. Pre-incumbent normalized gap
-is maximal, so that rule preferentially culls slow-to-first-incumbent runs and
-selects for incumbent timing rather than eventual exactness.
+Pin selected smoke/full/deep cases and identities before the first candidate
+run. Use fixed production caps, one worker, existing watchdog/survivor
+handling, deterministic work counters, and machine/compiler disclosure.
+Do not run the exact natural two-T1 oracle.
 
-The current-solver path remains CPU-native. GPU work is relevant only to
-future ML guidance if Oliver later selects it.
+Run the appropriate affected acceptance once after the conditional Gate 3
+result. Rebuild WASM only if retained native behavior reaches the browser path.
+Run exact policy evaluation and the standing 10,000 simulations only if a
+retained candidate changes or newly qualifies a policy.
 
-## Repository State
-
-The implementation source boundary is clean commit `670e9b7`. Final archive
-and evidence documentation follow it on the same local branch. Nothing was
-pushed.
-
-Commits must remain local unless Oliver asks to push and must end with:
+Commits remain local unless Oliver asks to push and must end with:
 
 `Co-authored-by: Codex <codex@openai.com>`
