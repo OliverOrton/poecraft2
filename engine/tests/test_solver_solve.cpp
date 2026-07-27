@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
 #include <cstdio>
 #include <fstream>
 #include <memory>
@@ -167,20 +166,6 @@ bool valid_json_object(const std::string& text) {
     } catch (const std::exception&) {
         return false;
     }
-}
-
-void set_streaming_broad_lower_diagnostic(const bool enabled) {
-#ifdef _WIN32
-    _putenv_s(
-        "POECRAFT_DIAGNOSTIC_STREAMING_BROAD_LOWER",
-        enabled ? "1" : "");
-#else
-    if (enabled) {
-        setenv("POECRAFT_DIAGNOSTIC_STREAMING_BROAD_LOWER", "1", 1);
-    } else {
-        unsetenv("POECRAFT_DIAGNOSTIC_STREAMING_BROAD_LOWER");
-    }
-#endif
 }
 
 SolveResult solve_stepped(
@@ -557,74 +542,6 @@ void run_alt_spam_tests() {
         PC_CHECK(oracle.policy[below_state] == result.policy[below_state]);
         PC_CHECK(oracle.diagnostics.preservation_rows_considered == 0);
     }
-}
-
-void run_streaming_broad_lower_shadow_tests() {
-    auto session = make_solve_session();
-    ActionRegistry registry = build_action_registry(*session);
-    GoalSpec goal;
-    goal.rarity = PC_RARITY_RARE;
-    GoalSlot slot;
-    slot.family_id = 100;
-    slot.min_tier = 1;
-    goal.slots.push_back(slot);
-    const std::vector<std::uint32_t> candidates{
-        registry.index_by_id.at("alchemy"),
-        registry.index_by_id.at("chaos"),
-        registry.index_by_id.at("restart")};
-    const std::unordered_map<std::string, double> prices{
-        {"alchemy", 0.5}, {"chaos", 1.0}, {"base", 5.0}};
-    pc_item_state start;
-    pc_item_clear(&start);
-    start.rarity = PC_RARITY_RARE;
-
-    set_streaming_broad_lower_diagnostic(false);
-    CalcContext baseline_calc(session, goal, registry, candidates);
-    const SolveResult baseline = solve(
-        baseline_calc, start, prices);
-    const CalcTelemetry baseline_telemetry = baseline_calc.telemetry();
-
-    set_streaming_broad_lower_diagnostic(true);
-    CalcContext shadow_calc(session, goal, registry, candidates);
-    const SolveResult shadow = solve(shadow_calc, start, prices);
-    set_streaming_broad_lower_diagnostic(false);
-
-    const StreamingBroadLowerFoldTelemetry& fold =
-        shadow.diagnostics.streaming_broad_lower_fold;
-    PC_CHECK(fold.enabled);
-    PC_CHECK(fold.attempted);
-    PC_CHECK(fold.eligible);
-    PC_CHECK(fold.traversal_complete);
-    PC_CHECK(fold.mass_valid);
-    PC_CHECK(fold.fold_completed);
-    PC_CHECK(!fold.work_cap_exhausted);
-    PC_CHECK(fold.calc_unchanged);
-    PC_CHECK(fold.fold_outcome_emissions > 0);
-    PC_CHECK(fold.fold_lower_evaluations ==
-             fold.fold_outcome_emissions);
-    PC_CHECK(near(
-        fold.fold_probability_mass, 1.0,
-        fold.fold_mass_tolerance));
-    PC_CHECK(std::isfinite(fold.old_broad_q_lower));
-    PC_CHECK(std::isfinite(fold.streamed_broad_q_lower));
-    PC_CHECK(fold.ordinary_materialization_attempted);
-    PC_CHECK(fold.ordinary_materialization_completed);
-    PC_CHECK(baseline.converged == shadow.converged);
-    PC_CHECK(baseline.policy_available == shadow.policy_available);
-    PC_CHECK(baseline.policy_status == shadow.policy_status);
-    PC_CHECK(baseline.termination == shadow.termination);
-    PC_CHECK(baseline.lower_bound == shadow.lower_bound);
-    PC_CHECK(baseline.upper_bound == shadow.upper_bound);
-    PC_CHECK(baseline.values == shadow.values);
-    PC_CHECK(baseline.policy == shadow.policy);
-    PC_CHECK(baseline.diagnostics.transition_bits_hash ==
-             shadow.diagnostics.transition_bits_hash);
-    PC_CHECK(baseline.diagnostics.policy_bits_hash ==
-             shadow.diagnostics.policy_bits_hash);
-    PC_CHECK(baseline_calc.state_count() == shadow_calc.state_count());
-    PC_CHECK(
-        baseline_telemetry.reforge_frontier_work ==
-        shadow_calc.telemetry().reforge_frontier_work);
 }
 
 /* A crafted-only goal has an exact direct finish. Chaos cannot produce the
@@ -1133,6 +1050,69 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         retained_progressive.diagnostics.fallback_validation.structural
             .checks > 0);
+    PC_CHECK(
+        retained_progressive.diagnostics.fallback_validation
+            .successful_proof_cache_checks ==
+        retained_progressive.diagnostics.fallback_validation.calls);
+    PC_CHECK(
+        retained_progressive.diagnostics.fallback_validation
+            .start_properness.checks +
+            retained_progressive.diagnostics.fallback_validation
+                .successful_proof_cache_hits ==
+        retained_progressive.diagnostics.fallback_validation.calls);
+
+    SolveOptions uncached_progressive_options =
+        retained_progressive_options;
+    uncached_progressive_options.fallback_properness_reuse_control = false;
+    CalcContext cached_parity_fracture_calc(
+        fracture_session, goal, fracture_registry,
+        {fracture_alchemy, fracture_chaos, fracture, fracture_restart});
+    const SolveResult cached_parity_progressive = solve(
+        cached_parity_fracture_calc, start, fracture_prices,
+        retained_progressive_options);
+    CalcContext uncached_fracture_calc(
+        fracture_session, goal, fracture_registry,
+        {fracture_alchemy, fracture_chaos, fracture, fracture_restart});
+    const SolveResult uncached_progressive = solve(
+        uncached_fracture_calc, start, fracture_prices,
+        uncached_progressive_options);
+    PC_CHECK(
+        uncached_progressive.diagnostics.fallback_validation
+            .successful_proof_cache_hits == 0);
+    PC_CHECK(
+        uncached_progressive.diagnostics.fallback_validation
+            .start_properness.checks ==
+        uncached_progressive.diagnostics.fallback_validation.calls);
+    PC_CHECK(
+        uncached_progressive.converged ==
+        cached_parity_progressive.converged);
+    PC_CHECK(
+        uncached_progressive.policy_available ==
+        cached_parity_progressive.policy_available);
+    PC_CHECK(
+        uncached_progressive.policy_status ==
+        cached_parity_progressive.policy_status);
+    PC_CHECK(
+        uncached_progressive.termination ==
+        cached_parity_progressive.termination);
+    PC_CHECK(
+        uncached_progressive.lower_bound ==
+        cached_parity_progressive.lower_bound);
+    PC_CHECK(
+        uncached_progressive.upper_bound ==
+        cached_parity_progressive.upper_bound);
+    PC_CHECK(
+        uncached_progressive.values ==
+        cached_parity_progressive.values);
+    PC_CHECK(
+        uncached_progressive.policy ==
+        cached_parity_progressive.policy);
+    PC_CHECK(
+        uncached_progressive.diagnostics.transition_bits_hash ==
+        cached_parity_progressive.diagnostics.transition_bits_hash);
+    PC_CHECK(
+        uncached_progressive.diagnostics.policy_bits_hash ==
+        cached_parity_progressive.diagnostics.policy_bits_hash);
     const std::string focused_instrumentation =
         serialize_solver_telemetry(
             fracture_calc, &retained_progressive, nullptr,
@@ -1145,6 +1125,10 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(
         focused_instrumentation.find(
             "\"fallback_validation\":{\"timing_contract\":") !=
+        std::string::npos);
+    PC_CHECK(
+        focused_instrumentation.find(
+            "\"successful_proof_cache\":{\"version\":1") !=
         std::string::npos);
 
     fracture_prices["fracture"] = 1000000.0;
@@ -1349,7 +1333,6 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 void run_solver_solve_tests(const char* artifact_dir) {
     run_bounded_policy_row_capture_tests();
     run_alt_spam_tests();
-    run_streaming_broad_lower_shadow_tests();
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();
     run_primitive_destructive_renewal_upper_tests();

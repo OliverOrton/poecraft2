@@ -2127,10 +2127,6 @@ bool SolveWork::Impl::expand_one_unit() {
                     static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
-                if (planner.kind == PlannerOperatorKind::Primitive) {
-                    run_streaming_broad_lower_shadow(
-                        state, priced.index, priced.cost);
-                }
                 const auto row_started = std::chrono::steady_clock::now();
                 const auto kernel_started = row_started;
                 const CalcTelemetry search_before = calc.telemetry();
@@ -2271,32 +2267,8 @@ bool SolveWork::Impl::expand_one_unit() {
                             "no_unfractured_satisfied_goal_carrier";
                         automatic_record->eligible = false;
                     } else {
-                        StreamingBroadLowerFoldTelemetry& fold_diagnostic =
-                            result.diagnostics.streaming_broad_lower_fold;
-                        const bool measured_ordinary_materialization =
-                            fold_diagnostic.attempted &&
-                            state == result.start_state &&
-                            calc.registry().actions.at(action_index).id ==
-                                fold_diagnostic.action_id;
-                        if (measured_ordinary_materialization) {
-                            fold_diagnostic
-                                .ordinary_materialization_attempted = true;
-                        }
                         const OutcomeDistribution& distribution =
                             calc.outcomes(state, action_index);
-                        if (measured_ordinary_materialization) {
-                            fold_diagnostic
-                                .ordinary_materialization_completed = true;
-                            fold_diagnostic
-                                .ordinary_materialization_reforge_work =
-                                calc.telemetry().reforge_frontier_work -
-                                fold_diagnostic
-                                    .production_reforge_work_after;
-                            fold_diagnostic
-                                .ordinary_materialization_discovered_states =
-                                calc.state_count() -
-                                fold_diagnostic.state_count_after;
-                        }
                         if (!distribution.supported) {
                             if (!reported_unsupported[priced.index]) {
                                 reported_unsupported[priced.index] = true;
@@ -2556,23 +2528,6 @@ bool SolveWork::Impl::expand_one_unit() {
                     static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
-                StreamingBroadLowerFoldTelemetry& fold_diagnostic =
-                    result.diagnostics.streaming_broad_lower_fold;
-                if (fold_diagnostic.ordinary_materialization_attempted &&
-                    !fold_diagnostic.ordinary_materialization_completed &&
-                    planner.kind == PlannerOperatorKind::Primitive &&
-                    planner.primitive_action <
-                        calc.registry().actions.size() &&
-                    calc.registry().actions.at(planner.primitive_action).id ==
-                        fold_diagnostic.action_id) {
-                    fold_diagnostic.ordinary_materialization_reforge_work =
-                        calc.telemetry().reforge_frontier_work -
-                        fold_diagnostic.production_reforge_work_after;
-                    fold_diagnostic
-                        .ordinary_materialization_discovered_states =
-                        calc.state_count() -
-                        fold_diagnostic.state_count_after;
-                }
                 const AutomaticTelemetryKind telemetry_kind =
                     automatic_telemetry_kind(planner);
                 if (telemetry_kind != AutomaticTelemetryKind::None) {

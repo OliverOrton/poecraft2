@@ -1,22 +1,9 @@
 #include "solver_solve_types.hpp"
 
-#include <cstdlib>
-#include <string_view>
-
 namespace poecraft {
 namespace solver {
 
 using namespace solve_detail;
-
-namespace {
-
-bool streaming_broad_lower_diagnostic_requested() {
-    const char* value =
-        std::getenv("POECRAFT_DIAGNOSTIC_STREAMING_BROAD_LOWER");
-    return value != nullptr && std::string_view(value) == "1";
-}
-
-} // namespace
 
  std::uint64_t SolveWork::Impl::priced_operator_nested_bytes(
         const PricedOperator& priced) {
@@ -51,8 +38,6 @@ SolveWork::Impl::Impl(
         const auto setup_started = std::chrono::steady_clock::now();
         options.max_expanded_states = std::min(
             options.max_expanded_states, options.max_states);
-        streaming_broad_lower_diagnostic_enabled =
-            streaming_broad_lower_diagnostic_requested();
         calc.reset_solve_telemetry();
         calc.set_solve_resource_caps(
             options.max_discovered_states, options.max_reforge_work);
@@ -65,8 +50,6 @@ SolveWork::Impl::Impl(
             options.max_diagnostic_samples;
         result.diagnostics.telemetry_json_byte_limit =
             options.max_telemetry_json_bytes;
-        result.diagnostics.streaming_broad_lower_fold.enabled =
-            streaming_broad_lower_diagnostic_enabled;
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(

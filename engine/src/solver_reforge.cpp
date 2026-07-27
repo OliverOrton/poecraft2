@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <cmath>
-#include <ctime>
 #include <cstring>
 #include <limits>
 #include <map>
@@ -43,8 +41,6 @@ namespace poecraft {
 namespace solver {
 
 namespace {
-
-struct StreamingReforgeWorkLimit final {};
 
 struct ReforgeBuildTimer {
     CalcTelemetry& telemetry;
@@ -334,62 +330,10 @@ bool CalcContext::exact_reforge_kernel_signature(
     return true;
 }
 
-StreamingReforgeFoldResult CalcContext::stream_reforge_lower(
-    const std::uint32_t state_id,
-    const std::uint32_t action_index,
-    const std::uint64_t max_reforge_work,
-    const std::function<double(const AbstractState&)>& lower) {
-    StreamingReforgeFoldResult fold;
-    fold.max_reforge_work = max_reforge_work;
-    fold.mass_tolerance = 1e-9;
-    if (action_index >= registry_.actions.size()) {
-        return fold;
-    }
-    const ActionDescriptor& action = registry_.actions[action_index];
-    const ActionTransitionFacts facts =
-        action_transition_facts(action.params.type);
-    if (!facts.renewal || action.params.type == ActionType::VeiledChaos ||
-        state_id >= states_.size()) {
-        return fold;
-    }
-    fold.eligible = true;
-    const auto wall_started = std::chrono::steady_clock::now();
-    const std::clock_t cpu_started = std::clock();
-    try {
-        (void)evaluate_reforge(state_id, action_index, &fold, &lower);
-    } catch (const StreamingReforgeWorkLimit&) {
-        fold.work_cap_exhausted = true;
-    }
-    const std::clock_t cpu_finished = std::clock();
-    fold.wall_ns = static_cast<std::uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::steady_clock::now() - wall_started)
-            .count());
-    if (cpu_finished >= cpu_started) {
-        const long double cpu_seconds =
-            static_cast<long double>(cpu_finished - cpu_started) /
-            static_cast<long double>(CLOCKS_PER_SEC);
-        fold.cpu_ns = static_cast<std::uint64_t>(
-            cpu_seconds * 1000000000.0L);
-    }
-    fold.mass_valid =
-        fold.traversal_complete &&
-        std::isfinite(fold.emitted_mass) &&
-        std::abs(fold.emitted_mass - 1.0) <= fold.mass_tolerance;
-    fold.published =
-        fold.eligible && fold.traversal_complete && fold.mass_valid &&
-        std::isfinite(fold.weighted_lower);
-    return fold;
-}
-
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint32_t state_id,
-    std::uint32_t action_index,
-    StreamingReforgeFoldResult* streaming_fold,
-    const std::function<double(const AbstractState&)>* streaming_lower) {
-    const bool streaming =
-        streaming_fold != nullptr && streaming_lower != nullptr;
-    if (!streaming) ++telemetry_.reforge_requests;
+    std::uint32_t action_index) {
+    ++telemetry_.reforge_requests;
     ReforgeBuildTimer telemetry_timer{telemetry_};
     const ActionDescriptor& action = registry_.actions.at(action_index);
     const SessionImpl& session = *session_;
@@ -398,10 +342,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
     pc_item_state item;
     if (!materialize(state_id, item)) {
-        if (!streaming) {
-            ++telemetry_.reforge_misses;
-            telemetry_timer.miss = true;
-        }
+        ++telemetry_.reforge_misses;
+        telemetry_timer.miss = true;
         return std::make_shared<OutcomeDistribution>(std::move(result));
     }
 
@@ -426,54 +368,27 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     /* A reforge's distribution depends only on the preserved base, so
      * states differing only in wiped mods share one roll DP. */
     std::uint64_t base_hash = 0;
-    std::vector<std::uint64_t> base_observation;
-    std::pair<std::uint32_t, std::uint64_t> memo_key{action_index, 0};
-    if (!streaming) {
-        base_observation = reforge_base_observation(base, &base_hash);
-        memo_key.second = base_hash;
-        const auto memo = reforge_cache_.find(memo_key);
-        if (memo != reforge_cache_.end()) {
-            for (const ReforgeCacheMemo& candidate : memo->second) {
-                if (candidate.observation_signature == base_observation) {
-                    ++telemetry_.reforge_hits;
-                    return candidate.distribution;
-                }
+    std::vector<std::uint64_t> base_observation =
+        reforge_base_observation(base, &base_hash);
+    const std::pair<std::uint32_t, std::uint64_t> memo_key{action_index,
+                                                           base_hash};
+    const auto memo = reforge_cache_.find(memo_key);
+    if (memo != reforge_cache_.end()) {
+        for (const ReforgeCacheMemo& candidate : memo->second) {
+            if (candidate.observation_signature == base_observation) {
+                ++telemetry_.reforge_hits;
+                return candidate.distribution;
             }
         }
-        ++telemetry_.reforge_misses;
-        telemetry_timer.miss = true;
     }
+    ++telemetry_.reforge_misses;
+    telemetry_timer.miss = true;
 
     std::unordered_map<std::uint32_t, double> outcome_acc;
-    if (!streaming) outcome_acc.reserve(65536);
+    outcome_acc.reserve(65536);
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
     bool state_dependent = false;
-    const auto emit_streaming =
-        [&](const AbstractState& successor, const double weight) {
-            if (!streaming || weight <= 0.0) return;
-            ++streaming_fold->outcome_emissions;
-            ++streaming_fold->lower_evaluations;
-            streaming_fold->emitted_mass += weight;
-            streaming_fold->weighted_lower +=
-                weight * (*streaming_lower)(successor);
-        };
-    const auto consume_work = [&](const std::uint64_t amount) {
-        if (!streaming) {
-            consume_reforge_work(amount);
-            return;
-        }
-        if (amount >
-            streaming_fold->max_reforge_work -
-                std::min(
-                    streaming_fold->reforge_work,
-                    streaming_fold->max_reforge_work)) {
-            streaming_fold->reforge_work =
-                streaming_fold->max_reforge_work;
-            throw StreamingReforgeWorkLimit{};
-        }
-        streaming_fold->reforge_work += amount;
-    };
     const auto finalize = [&](const bool allow_shared_kernel = false)
         -> std::shared_ptr<const OutcomeDistribution> {
         std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
@@ -521,11 +436,6 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         return finalized;
     };
     const auto unapplied = [&]() -> std::shared_ptr<const OutcomeDistribution> {
-        if (streaming) {
-            emit_streaming(states_.at(state_id), 1.0);
-            streaming_fold->traversal_complete = true;
-            return {};
-        }
         outcome_acc.clear();
         outcome_acc[state_id] = 1.0;
         state_dependent = true;
@@ -834,11 +744,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             successor.flags |= kFlagMirrored;
         }
         if (!veiled_reforge) {
-            if (streaming) {
-                emit_streaming(successor, weight);
-            } else {
-                outcome_acc[intern_state(successor)] += weight;
-            }
+            outcome_acc[intern_state(successor)] += weight;
             return;
         }
 
@@ -946,7 +852,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                    bucket.multiplicity;
         };
         double total = 0.0;
-        consume_work(buckets.size());
+        consume_reforge_work(buckets.size());
         for (std::uint16_t b = 0;
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
             total += guaranteed_remaining(b);
@@ -988,7 +894,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 return left.first < right.first;
             });
         for (const auto& [roll, probability] : ordered_frontier) {
-            consume_work(1 + buckets.size());
+            consume_reforge_work(1 + buckets.size());
             if (stop_here > 0.0) {
                 commit_outcome(roll, probability * stop_here);
             }
@@ -1035,10 +941,6 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
      * retains the distribution object. Unretained exact distributions fall
      * back to the collision-checked content hash in SolveWork; advertising a
      * temporary object's address would leave a dangling identity key. */
-    if (streaming) {
-        streaming_fold->traversal_complete = true;
-        return {};
-    }
     return finalize(true);
 }
 

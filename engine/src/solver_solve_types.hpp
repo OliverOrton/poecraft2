@@ -454,8 +454,6 @@ struct SolveWork::Impl {
     std::uint32_t expansion_state = kNoId;
     std::uint32_t expansion_operator_cursor = 0;
     std::uint32_t peak_queue_size = 0;
-    bool streaming_broad_lower_diagnostic_enabled = false;
-    bool streaming_broad_lower_diagnostic_attempted = false;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
     std::shared_ptr<SolveTransitionCache> transition_cache;
@@ -640,6 +638,37 @@ struct SolveWork::Impl {
     using FocusedFallbackWitness =
         std::shared_ptr<const FocusedFallbackPolicy>;
     FocusedFallbackWitness focused_fallback_policy;
+    /*
+     * A successful validation may outlive later focused-graph appends, but
+     * never a change to the prefix on which it was proved. Sparse rows and
+     * transition payloads are append-only after publication; the stored
+     * counts delimit that immutable prefix. Policy ownership is exact
+     * (shared_ptr identity), while the hashes cover every value read by the
+     * validation and make accidental in-place mutation invalidate reuse.
+     */
+    struct SuccessfulFallbackPropernessProof {
+        static constexpr std::uint64_t kVersion = 1;
+        std::uint64_t version = kVersion;
+        FocusedFallbackWitness policy;
+        const SolveTransitionCache* graph = nullptr;
+        const SessionImpl* mechanics = nullptr;
+        std::uint64_t goal_identity = 0;
+        std::uint64_t economy_identity = 0;
+        std::uint64_t action_vocabulary_identity = 0;
+        std::uint64_t policy_identity = 0;
+        std::uint64_t graph_prefix_identity = 0;
+        std::uint64_t transition_prefix_identity = 0;
+        std::uint32_t action_vocabulary_size = 0;
+        std::uint64_t row_count = 0;
+        std::uint64_t priced_row_count = 0;
+        std::uint64_t successor_count = 0;
+        std::uint64_t probability_count = 0;
+        std::uint64_t choice_count = 0;
+        std::uint64_t choice_successor_count = 0;
+        std::uint64_t choice_option_count = 0;
+    };
+    std::optional<SuccessfulFallbackPropernessProof>
+        successful_fallback_properness_proof;
     struct BoundedPolicyIncumbent {
         struct ChoiceSource {
             std::uint32_t state = kNoId;
@@ -747,6 +776,21 @@ struct SolveWork::Impl {
     std::uint64_t action_vocabulary_identity() const;
 
     std::uint64_t graph_identity() const;
+    std::uint64_t fallback_policy_identity(
+        const FocusedFallbackPolicy& fallback) const;
+    std::uint64_t fallback_graph_prefix_identity(
+        std::uint64_t row_count,
+        std::uint64_t priced_row_count) const;
+    std::uint64_t fallback_transition_prefix_identity(
+        std::uint64_t successor_count,
+        std::uint64_t probability_count,
+        std::uint64_t choice_count,
+        std::uint64_t choice_successor_count,
+        std::uint64_t choice_option_count) const;
+    bool reuse_successful_fallback_properness_proof(
+        const FocusedFallbackPolicy& fallback);
+    void remember_successful_fallback_properness_proof(
+        const FocusedFallbackWitness& fallback);
 
     /* Existing exact closure uses an absolute numerical tolerance. Product
      * gap targets are separate and must never relax this proof. */
@@ -805,8 +849,6 @@ struct SolveWork::Impl {
 
     std::uint32_t satisfied_goal_mask_for_state(
         const std::uint32_t state) const;
-    std::uint32_t satisfied_goal_mask_for_state(
-        const AbstractState& state) const;
 
     double optimistic_completion_cost(
         const std::uint32_t satisfied_mask,
@@ -816,18 +858,9 @@ struct SolveWork::Impl {
         const std::uint8_t carrier_suffixes = 0);
 
     bool clean_goal_cover_eligible(const std::uint32_t state) const;
-    bool clean_goal_cover_eligible(const AbstractState& state) const;
-
-    double coarse_optimistic_completion_cost_for_state(
-        const AbstractState& state);
 
     double optimistic_completion_cost_for_state(
         const std::uint32_t state);
-
-    void run_streaming_broad_lower_shadow(
-        std::uint32_t state,
-        std::uint32_t operator_index,
-        double immediate_cost);
 
     void prepare_strict_clean_goal_cover();
 

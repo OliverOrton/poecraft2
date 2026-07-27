@@ -1123,12 +1123,8 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
 
 std::uint32_t SolveWork::Impl::satisfied_goal_mask_for_state(
         const std::uint32_t state) const {
-        return satisfied_goal_mask_for_state(calc.state(state));
-    }
-
-std::uint32_t SolveWork::Impl::satisfied_goal_mask_for_state(
-        const AbstractState& carrier) const {
         std::uint32_t mask = 0;
+        const AbstractState& carrier = calc.state(state);
         for (std::uint32_t slot = 0;
              slot < calc.layout().slots.size(); ++slot) {
             if (carrier.slot_status[slot] ==
@@ -1179,12 +1175,7 @@ bool SolveWork::Impl::clean_goal_cover_eligible(const std::uint32_t state) const
             result.start_state >= calc.state_count()) {
             return false;
         }
-        return clean_goal_cover_eligible(calc.state(state));
-    }
-
-bool SolveWork::Impl::clean_goal_cover_eligible(
-        const AbstractState& carrier) const {
-        if (result.start_state >= calc.state_count()) return false;
+        const AbstractState& carrier = calc.state(state);
         const AbstractState& start = calc.state(result.start_state);
         if ((carrier.flags & kProtectionFlags) != 0 ||
             carrier.fractured_goal_mask != 0 ||
@@ -1204,20 +1195,14 @@ bool SolveWork::Impl::clean_goal_cover_eligible(
         return true;
     }
 
-double SolveWork::Impl::coarse_optimistic_completion_cost_for_state(
-        const AbstractState& carrier) {
-        return optimistic_completion_cost(
-            satisfied_goal_mask_for_state(carrier),
-            clean_goal_cover_eligible(carrier), carrier.rarity,
-            carrier.prefix_count, carrier.suffix_count);
-    }
-
 double SolveWork::Impl::optimistic_completion_cost_for_state(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
         const AbstractState& carrier = calc.state(state);
-        const double coarse =
-            coarse_optimistic_completion_cost_for_state(carrier);
+        const double coarse = optimistic_completion_cost(
+            satisfied_goal_mask_for_state(state),
+            clean_goal_cover_eligible(state), carrier.rarity,
+            carrier.prefix_count, carrier.suffix_count);
         if (state < strict_clean_goal_cover_cost.size() &&
             std::isfinite(strict_clean_goal_cover_cost[state])) {
             return std::max(coarse, strict_clean_goal_cover_cost[state]);
@@ -1974,162 +1959,6 @@ double SolveWork::Impl::optimistic_operator_lower(
         const double continuation =
             optimistic_completion_cost(optimistic_satisfied);
         return immediate + continuation;
-    }
-
-void SolveWork::Impl::run_streaming_broad_lower_shadow(
-        const std::uint32_t state,
-        const std::uint32_t operator_index,
-        const double immediate_cost) {
-        if (!streaming_broad_lower_diagnostic_enabled ||
-            streaming_broad_lower_diagnostic_attempted ||
-            state != result.start_state ||
-            operator_index >= calc.operators().size()) {
-            return;
-        }
-        const PlannerOperator& planner = calc.operators().at(operator_index);
-        if (planner.kind != PlannerOperatorKind::Primitive ||
-            planner.primitive_action >= calc.registry().actions.size() ||
-            calc.registry().actions.at(planner.primitive_action).params.type !=
-                ActionType::Chaos) {
-            return;
-        }
-
-        streaming_broad_lower_diagnostic_attempted = true;
-        StreamingBroadLowerFoldTelemetry& diagnostic =
-            result.diagnostics.streaming_broad_lower_fold;
-        diagnostic.attempted = true;
-        diagnostic.action_id =
-            calc.registry().actions.at(planner.primitive_action).id;
-        diagnostic.max_reforge_work = 11000000;
-        diagnostic.old_broad_q_lower =
-            optimistic_operator_lower(state, operator_index);
-        diagnostic.next_action_q_lower = kInfinity;
-
-        std::vector<double> other_lowers;
-        other_lowers.reserve(expansion_operator_indices.size());
-        for (const std::uint32_t other : expansion_operator_indices) {
-            if (other == operator_index) continue;
-            const double lower = optimistic_operator_lower(state, other);
-            other_lowers.push_back(lower);
-            diagnostic.next_action_q_lower =
-                std::min(diagnostic.next_action_q_lower, lower);
-        }
-        diagnostic.local_bellman_lower_before = std::min(
-            diagnostic.old_broad_q_lower, diagnostic.next_action_q_lower);
-        const double before_tolerance =
-            value_comparison_tolerance(diagnostic.old_broad_q_lower);
-        diagnostic.controlled_local_lower_before =
-            diagnostic.old_broad_q_lower <=
-            diagnostic.next_action_q_lower + before_tolerance;
-        diagnostic.broad_action_rank_before = 1;
-        for (const double lower : other_lowers) {
-            const double tolerance = options.epsilon *
-                std::max(
-                    {1.0, std::abs(lower),
-                     std::abs(diagnostic.old_broad_q_lower)});
-            if (lower <
-                diagnostic.old_broad_q_lower - tolerance) {
-                ++diagnostic.broad_action_rank_before;
-            }
-        }
-
-        if (output_incumbent.has_value()) {
-            diagnostic.incumbent_upper =
-                output_incumbent->certified_upper_bound;
-        }
-        if (state < certified_state_upper.size()) {
-            diagnostic.incumbent_upper = std::min(
-                diagnostic.incumbent_upper,
-                certified_state_upper[state]);
-        }
-
-        diagnostic.state_count_before = calc.state_count();
-        diagnostic.distribution_cache_before =
-            calc.cached_distribution_count();
-        diagnostic.reforge_cache_before = calc.cached_reforge_count();
-        const CalcTelemetry telemetry_before = calc.telemetry();
-        diagnostic.production_reforge_work_before =
-            telemetry_before.reforge_frontier_work;
-
-        const StreamingReforgeFoldResult fold =
-            calc.stream_reforge_lower(
-                state, planner.primitive_action,
-                diagnostic.max_reforge_work,
-                [&](const AbstractState& successor) {
-                    return coarse_optimistic_completion_cost_for_state(
-                        successor);
-                });
-
-        const CalcTelemetry telemetry_after = calc.telemetry();
-        diagnostic.eligible = fold.eligible;
-        diagnostic.traversal_complete = fold.traversal_complete;
-        diagnostic.mass_valid = fold.mass_valid;
-        diagnostic.fold_completed = fold.published;
-        diagnostic.work_cap_exhausted = fold.work_cap_exhausted;
-        diagnostic.fold_reforge_work = fold.reforge_work;
-        diagnostic.fold_wall_ns = fold.wall_ns;
-        diagnostic.fold_cpu_ns = fold.cpu_ns;
-        diagnostic.fold_outcome_emissions = fold.outcome_emissions;
-        diagnostic.fold_lower_evaluations = fold.lower_evaluations;
-        diagnostic.fold_probability_mass = fold.emitted_mass;
-        diagnostic.fold_mass_tolerance = fold.mass_tolerance;
-        diagnostic.fold_weighted_coarse_lower = fold.weighted_lower;
-        diagnostic.state_count_after = calc.state_count();
-        diagnostic.distribution_cache_after =
-            calc.cached_distribution_count();
-        diagnostic.reforge_cache_after = calc.cached_reforge_count();
-        diagnostic.production_reforge_work_after =
-            telemetry_after.reforge_frontier_work;
-        diagnostic.calc_unchanged =
-            diagnostic.state_count_before == diagnostic.state_count_after &&
-            diagnostic.distribution_cache_before ==
-                diagnostic.distribution_cache_after &&
-            diagnostic.reforge_cache_before ==
-                diagnostic.reforge_cache_after &&
-            telemetry_before == telemetry_after;
-
-        if (!fold.published) return;
-        diagnostic.streamed_broad_q_lower =
-            immediate_cost + fold.weighted_lower;
-        diagnostic.local_bellman_lower_shadow = std::min(
-            diagnostic.streamed_broad_q_lower,
-            diagnostic.next_action_q_lower);
-        const double shadow_tolerance =
-            value_comparison_tolerance(
-                diagnostic.streamed_broad_q_lower);
-        diagnostic.controls_local_lower_shadow =
-            diagnostic.streamed_broad_q_lower <=
-            diagnostic.next_action_q_lower + shadow_tolerance;
-        diagnostic.broad_action_rank_shadow = 1;
-        for (const double lower : other_lowers) {
-            const double tolerance = options.epsilon *
-                std::max(
-                    {1.0, std::abs(lower),
-                     std::abs(diagnostic.streamed_broad_q_lower)});
-            if (lower <
-                diagnostic.streamed_broad_q_lower - tolerance) {
-                ++diagnostic.broad_action_rank_shadow;
-            }
-        }
-        diagnostic.would_be_incumbent_dominated =
-            std::isfinite(diagnostic.incumbent_upper) &&
-            diagnostic.streamed_broad_q_lower >
-                diagnostic.incumbent_upper +
-                    options.epsilon *
-                        std::max(
-                            {1.0,
-                             std::abs(diagnostic.incumbent_upper),
-                             std::abs(
-                                 diagnostic.streamed_broad_q_lower)});
-        /*
-         * The current expansion scheduler orders deterministic finishes and
-         * Restart first, then evaluates every surviving operator. It has no
-         * lower-ranked unresolved-row deferral. A completed Chaos scalar
-         * therefore avoids the immediately following exact row only when the
-         * existing incumbent-pruning rule would remove it.
-         */
-        diagnostic.would_remain_next_refinement =
-            !diagnostic.would_be_incumbent_dominated;
     }
 
 }

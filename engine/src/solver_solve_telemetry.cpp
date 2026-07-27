@@ -1222,117 +1222,6 @@ std::string serialize_solver_telemetry(
                            calc.registry().actions.size()) +
             "}";
 
-    json += ",\"streaming_broad_lower_fold\":";
-    if (diagnostics == nullptr ||
-        !diagnostics->streaming_broad_lower_fold.enabled) {
-        json += "null";
-    } else {
-        const StreamingBroadLowerFoldTelemetry& fold =
-            diagnostics->streaming_broad_lower_fold;
-        const auto append_fold_bound = [&](const double value) {
-            if (std::isfinite(value)) {
-                char buffer[40];
-                std::snprintf(buffer, sizeof(buffer), "%.17g", value);
-                json += buffer;
-            } else {
-                json += "null";
-            }
-        };
-        json += "{\"enabled\":true,\"attempted\":" +
-                std::string(bool_json(fold.attempted));
-        json += ",\"action\":";
-        if (fold.action_id.empty()) {
-            json += "null";
-        } else {
-            append_telemetry_json_string(json, fold.action_id);
-        }
-        json += ",\"eligible\":" + std::string(bool_json(fold.eligible));
-        json += ",\"traversal_complete\":" +
-                std::string(bool_json(fold.traversal_complete));
-        json += ",\"mass_valid\":" +
-                std::string(bool_json(fold.mass_valid));
-        json += ",\"fold_completed\":" +
-                std::string(bool_json(fold.fold_completed));
-        json += ",\"work_cap_exhausted\":" +
-                std::string(bool_json(fold.work_cap_exhausted));
-        json += ",\"arithmetic\":{\"normalization\":\"none_raw_weighted_sum\"";
-        json += ",\"probability\":\"authoritative_double_branch_mass\"";
-        json += ",\"publication\":\"complete_traversal_and_mass_validation\"}";
-        json += ",\"work\":{\"cap\":" +
-                std::to_string(fold.max_reforge_work);
-        json += ",\"reforge\":" +
-                std::to_string(fold.fold_reforge_work);
-        json += ",\"lower_evaluations\":" +
-                std::to_string(fold.fold_lower_evaluations) + "}";
-        json += ",\"timing\":{\"wall_ns\":" +
-                std::to_string(fold.fold_wall_ns);
-        json += ",\"cpu_ns\":" + std::to_string(fold.fold_cpu_ns) + "}";
-        json += ",\"outcome_emissions\":" +
-                std::to_string(fold.fold_outcome_emissions);
-        json += ",\"probability_mass\":";
-        append_fold_bound(fold.fold_probability_mass);
-        json += ",\"mass_tolerance\":";
-        append_fold_bound(fold.fold_mass_tolerance);
-        json += ",\"weighted_coarse_lower\":";
-        append_fold_bound(fold.fold_weighted_coarse_lower);
-        json += ",\"bounds\":{\"q0\":";
-        append_fold_bound(fold.old_broad_q_lower);
-        json += ",\"qF\":";
-        append_fold_bound(fold.streamed_broad_q_lower);
-        json += ",\"q_other\":";
-        append_fold_bound(fold.next_action_q_lower);
-        json += ",\"incumbent_U\":";
-        append_fold_bound(fold.incumbent_upper);
-        json += ",\"local_before\":";
-        append_fold_bound(fold.local_bellman_lower_before);
-        json += ",\"local_shadow\":";
-        append_fold_bound(fold.local_bellman_lower_shadow);
-        json += "}";
-        json += ",\"rank\":{\"before\":" +
-                std::to_string(fold.broad_action_rank_before);
-        json += ",\"shadow\":" +
-                std::to_string(fold.broad_action_rank_shadow) + "}";
-        json += ",\"decision\":{\"controlled_before\":" +
-                std::string(bool_json(fold.controlled_local_lower_before));
-        json += ",\"controls_shadow\":" +
-                std::string(bool_json(fold.controls_local_lower_shadow));
-        json += ",\"incumbent_dominated\":" +
-                std::string(bool_json(fold.would_be_incumbent_dominated));
-        json += ",\"remains_next_refinement\":" +
-                std::string(bool_json(fold.would_remain_next_refinement)) +
-                "}";
-        json += ",\"isolation\":{\"calc_unchanged\":" +
-                std::string(bool_json(fold.calc_unchanged));
-        json += ",\"state_count_before\":" +
-                std::to_string(fold.state_count_before);
-        json += ",\"state_count_after\":" +
-                std::to_string(fold.state_count_after);
-        json += ",\"production_reforge_work_before\":" +
-                std::to_string(fold.production_reforge_work_before);
-        json += ",\"production_reforge_work_after\":" +
-                std::to_string(fold.production_reforge_work_after);
-        json += ",\"distribution_cache_before\":" +
-                std::to_string(fold.distribution_cache_before);
-        json += ",\"distribution_cache_after\":" +
-                std::to_string(fold.distribution_cache_after);
-        json += ",\"reforge_cache_before\":" +
-                std::to_string(fold.reforge_cache_before);
-        json += ",\"reforge_cache_after\":" +
-                std::to_string(fold.reforge_cache_after) + "}";
-        json += ",\"ordinary_materialization\":{\"attempted\":" +
-                std::string(
-                    bool_json(fold.ordinary_materialization_attempted));
-        json += ",\"completed\":" +
-                std::string(
-                    bool_json(fold.ordinary_materialization_completed));
-        json += ",\"reforge_work\":" +
-                std::to_string(
-                    fold.ordinary_materialization_reforge_work);
-        json += ",\"discovered_states\":" +
-                std::to_string(
-                    fold.ordinary_materialization_discovered_states) + "}}";
-    }
-
     json += ",\"abstraction\":{\"discriminating_tags\":" +
             std::to_string(calc.layout().discriminating_tag_ids.size());
     json += ",\"junk_classes\":" +
@@ -1611,6 +1500,7 @@ std::string serialize_solver_telemetry(
             fallback_validation.goal_identity.duration_ns +
             fallback_validation.economy_identity.duration_ns +
             fallback_validation.action_vocabulary_identity.duration_ns +
+            fallback_validation.successful_proof_identity.duration_ns +
             fallback_validation.structural.duration_ns +
             fallback_validation.anchor_properness.duration_ns +
             fallback_validation.start_properness.duration_ns;
@@ -1628,6 +1518,26 @@ std::string serialize_solver_telemetry(
                 std::to_string(fallback_validation.total_ns);
         json += ",\"unattributed_ns\":" +
                 std::to_string(fallback_unattributed_ns);
+        json += ",\"successful_proof_cache\":{\"version\":" +
+                std::to_string(fallback_validation.proof_version);
+        json += ",\"checks\":" +
+                std::to_string(
+                    fallback_validation.successful_proof_cache_checks);
+        json += ",\"hits\":" +
+                std::to_string(
+                    fallback_validation.successful_proof_cache_hits);
+        json += ",\"misses\":" +
+                std::to_string(
+                    fallback_validation.successful_proof_cache_misses);
+        json += ",\"last_miss_reason\":";
+        if (fallback_validation.successful_proof_last_miss_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                fallback_validation.successful_proof_last_miss_reason);
+        }
+        json += "}";
         json += ",\"components\":{";
         const auto append_fallback_component =
             [&](const char* name,
@@ -1649,6 +1559,9 @@ std::string serialize_solver_telemetry(
         append_fallback_component(
             "action_vocabulary_identity",
             fallback_validation.action_vocabulary_identity, false);
+        append_fallback_component(
+            "successful_proof_identity",
+            fallback_validation.successful_proof_identity, false);
         append_fallback_component(
             "structural", fallback_validation.structural, false);
         append_fallback_component(

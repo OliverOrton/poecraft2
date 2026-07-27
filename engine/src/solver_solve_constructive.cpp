@@ -129,6 +129,266 @@ std::uint64_t SolveWork::Impl::graph_identity() const {
         return hash;
     }
 
+std::uint64_t SolveWork::Impl::fallback_policy_identity(
+        const FocusedFallbackPolicy& fallback) const {
+        std::uint64_t hash = 1469598103934665603ULL;
+        const auto mix_double = [&](const double value) {
+            identity_mix(hash, std::bit_cast<std::uint64_t>(value));
+        };
+        identity_mix(hash, fallback.anchor_state);
+        mix_double(fallback.anchor_state_value);
+        identity_mix(hash, fallback.anchor_row);
+        identity_mix(hash, fallback.anchor_operator);
+        mix_double(fallback.renewal_state_value);
+        identity_mix(hash, fallback.renewal_row);
+        identity_mix(hash, fallback.renewal_operator);
+        identity_mix(hash, fallback.finish_action);
+        identity_mix(hash, fallback.renewal_rarity);
+        identity_mix(hash, fallback.renewal_influence_bits);
+        identity_mix(hash, fallback.renewal_searing_exarch_tier);
+        identity_mix(hash, fallback.renewal_eater_of_worlds_tier);
+        identity_mix(hash, fallback.renewal_kernel_signature.size());
+        for (const std::uint64_t value :
+             fallback.renewal_kernel_signature) {
+            identity_mix(hash, value);
+        }
+        identity_mix(hash, fallback.primitive_renewal_modes.size());
+        for (const auto& mode : fallback.primitive_renewal_modes) {
+            mix_double(mode.value);
+            identity_mix(hash, mode.operator_index);
+            identity_mix(hash, mode.kernel_signature.size());
+            for (const std::uint64_t value : mode.kernel_signature) {
+                identity_mix(hash, value);
+            }
+        }
+        std::vector<std::pair<std::uint32_t, double>> progress_values(
+            fallback.progress_state_value.begin(),
+            fallback.progress_state_value.end());
+        std::sort(progress_values.begin(), progress_values.end());
+        identity_mix(hash, progress_values.size());
+        for (const auto& [state, value] : progress_values) {
+            identity_mix(hash, state);
+            mix_double(value);
+        }
+        std::vector<std::pair<std::uint32_t, std::uint32_t>>
+            progress_operators(
+                fallback.progress_state_operator.begin(),
+                fallback.progress_state_operator.end());
+        std::sort(progress_operators.begin(), progress_operators.end());
+        identity_mix(hash, progress_operators.size());
+        for (const auto& [state, op] : progress_operators) {
+            identity_mix(hash, state);
+            identity_mix(hash, op);
+        }
+        identity_mix(hash, fallback.goal_identity);
+        identity_mix(hash, fallback.economy_identity);
+        identity_mix(hash, fallback.action_vocabulary_identity);
+        identity_mix(hash, fallback.action_vocabulary_size);
+        identity_mix(hash, fallback.synthesis_graph_identity);
+        return hash;
+    }
+
+std::uint64_t SolveWork::Impl::fallback_graph_prefix_identity(
+        const std::uint64_t row_count,
+        const std::uint64_t priced_row_count) const {
+        if (row_count > transition_cache->rows.size() ||
+            priced_row_count > priced_rows.size()) {
+            return 0;
+        }
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, row_count);
+        for (std::uint64_t index = 0; index < row_count; ++index) {
+            const SparseRow& row = transition_cache->rows[index];
+            identity_mix(hash, row.owner_state);
+            identity_mix(hash, row.variant_offset);
+            identity_mix(hash, row.variant_count);
+            identity_mix(hash, row.variant_capacity);
+            identity_mix(hash, row.transition_offset);
+            identity_mix(hash, row.transition_count);
+            identity_mix(
+                hash, std::bit_cast<std::uint64_t>(row.self_probability));
+            identity_mix(
+                hash,
+                std::bit_cast<std::uint64_t>(
+                    row.embedded_self_probability));
+            identity_mix(hash, row.self_probability_embedded);
+            identity_mix(hash, row.choice_offset);
+            identity_mix(hash, row.choice_count);
+        }
+        identity_mix(hash, priced_row_count);
+        for (std::uint64_t index = 0;
+             index < priced_row_count; ++index) {
+            const PricedSparseRow& row = priced_rows[index];
+            identity_mix(hash, row.operator_index);
+            identity_mix(hash, std::bit_cast<std::uint64_t>(row.cost));
+            identity_mix(hash, row.choice_option_offset);
+            identity_mix(hash, row.choice_option_count);
+        }
+        return hash;
+    }
+
+std::uint64_t SolveWork::Impl::fallback_transition_prefix_identity(
+        const std::uint64_t successor_count,
+        const std::uint64_t probability_count,
+        const std::uint64_t choice_count,
+        const std::uint64_t choice_successor_count,
+        const std::uint64_t choice_option_count) const {
+        if (successor_count > transition_cache->successors.size() ||
+            probability_count > transition_cache->probabilities.size() ||
+            choice_count > transition_cache->choices.size() ||
+            choice_successor_count >
+                transition_cache->choice_successors.size() ||
+            choice_option_count > transition_cache->choice_options.size()) {
+            return 0;
+        }
+        std::uint64_t hash = 1469598103934665603ULL;
+        identity_mix(hash, successor_count);
+        for (std::uint64_t index = 0;
+             index < successor_count; ++index) {
+            identity_mix(hash, transition_cache->successors[index]);
+        }
+        identity_mix(hash, probability_count);
+        for (std::uint64_t index = 0;
+             index < probability_count; ++index) {
+            identity_mix(
+                hash,
+                std::bit_cast<std::uint64_t>(
+                    transition_cache->probabilities[index]));
+        }
+        identity_mix(hash, choice_count);
+        for (std::uint64_t index = 0; index < choice_count; ++index) {
+            const SparseChoiceGroup& choice =
+                transition_cache->choices[index];
+            identity_mix(hash, choice.successor_offset);
+            identity_mix(hash, choice.successor_count);
+            identity_mix(
+                hash,
+                std::bit_cast<std::uint64_t>(choice.probability));
+            identity_mix(hash, choice.has_self);
+        }
+        identity_mix(hash, choice_successor_count);
+        for (std::uint64_t index = 0;
+             index < choice_successor_count; ++index) {
+            identity_mix(
+                hash, transition_cache->choice_successors[index]);
+        }
+        identity_mix(hash, choice_option_count);
+        for (std::uint64_t index = 0;
+             index < choice_option_count; ++index) {
+            const OutcomeChoiceOption& option =
+                transition_cache->choice_options[index];
+            identity_mix(hash, option.mod_id);
+            identity_mix(hash, option.state);
+            identity_mix(hash, option.observation_state);
+            identity_mix(hash, option.actual_state);
+        }
+        return hash;
+    }
+
+bool SolveWork::Impl::reuse_successful_fallback_properness_proof(
+        const FocusedFallbackPolicy& fallback) {
+        FallbackValidationTelemetry& telemetry =
+            result.diagnostics.fallback_validation;
+        ++telemetry.successful_proof_cache_checks;
+        ++telemetry.successful_proof_identity.checks;
+        const auto started = std::chrono::steady_clock::now();
+        const auto finish = [&](const bool matched, const char* reason) {
+            telemetry.successful_proof_identity.duration_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() - started)
+                        .count());
+            if (matched) {
+                ++telemetry.successful_proof_cache_hits;
+            } else {
+                ++telemetry.successful_proof_cache_misses;
+                telemetry.successful_proof_last_miss_reason = reason;
+            }
+            return matched;
+        };
+        if (!options.fallback_properness_reuse_control) {
+            return finish(false, "disabled");
+        }
+        if (!successful_fallback_properness_proof.has_value()) {
+            return finish(false, "no_successful_proof");
+        }
+        const SuccessfulFallbackPropernessProof& proof =
+            *successful_fallback_properness_proof;
+        if (proof.version !=
+                SuccessfulFallbackPropernessProof::kVersion) {
+            return finish(false, "solver_proof_version_changed");
+        }
+        if (!proof.policy || proof.policy.get() != &fallback ||
+            proof.policy_identity != fallback_policy_identity(fallback)) {
+            return finish(false, "policy_identity_changed");
+        }
+        if (proof.graph != transition_cache.get()) {
+            return finish(false, "graph_owner_changed");
+        }
+        if (proof.mechanics != &session) {
+            return finish(false, "transition_mechanics_changed");
+        }
+        if (proof.goal_identity != goal_identity()) {
+            return finish(false, "goal_identity_changed");
+        }
+        if (proof.economy_identity != economy_identity()) {
+            return finish(false, "economy_identity_changed");
+        }
+        if (operators.size() < proof.action_vocabulary_size ||
+            proof.action_vocabulary_identity !=
+                action_vocabulary_prefix_identity(
+                    proof.action_vocabulary_size)) {
+            return finish(false, "action_vocabulary_prefix_changed");
+        }
+        if (proof.graph_prefix_identity !=
+                fallback_graph_prefix_identity(
+                    proof.row_count, proof.priced_row_count)) {
+            return finish(false, "graph_prefix_changed");
+        }
+        if (proof.transition_prefix_identity !=
+                fallback_transition_prefix_identity(
+                    proof.successor_count, proof.probability_count,
+                    proof.choice_count, proof.choice_successor_count,
+                    proof.choice_option_count)) {
+            return finish(false, "transition_prefix_changed");
+        }
+        return finish(true, nullptr);
+    }
+
+void SolveWork::Impl::remember_successful_fallback_properness_proof(
+        const FocusedFallbackWitness& fallback) {
+        if (!options.fallback_properness_reuse_control || !fallback) return;
+        SuccessfulFallbackPropernessProof proof;
+        proof.policy = fallback;
+        proof.graph = transition_cache.get();
+        proof.mechanics = &session;
+        proof.goal_identity = goal_identity();
+        proof.economy_identity = economy_identity();
+        proof.action_vocabulary_size =
+            static_cast<std::uint32_t>(operators.size());
+        proof.action_vocabulary_identity =
+            action_vocabulary_prefix_identity(
+                proof.action_vocabulary_size);
+        proof.policy_identity = fallback_policy_identity(*fallback);
+        proof.row_count = transition_cache->rows.size();
+        proof.priced_row_count = priced_rows.size();
+        proof.successor_count = transition_cache->successors.size();
+        proof.probability_count = transition_cache->probabilities.size();
+        proof.choice_count = transition_cache->choices.size();
+        proof.choice_successor_count =
+            transition_cache->choice_successors.size();
+        proof.choice_option_count =
+            transition_cache->choice_options.size();
+        proof.graph_prefix_identity = fallback_graph_prefix_identity(
+            proof.row_count, proof.priced_row_count);
+        proof.transition_prefix_identity =
+            fallback_transition_prefix_identity(
+                proof.successor_count, proof.probability_count,
+                proof.choice_count, proof.choice_successor_count,
+                proof.choice_option_count);
+        successful_fallback_properness_proof = std::move(proof);
+    }
+
 void SolveWork::Impl::stamp_fallback_provenance(FocusedFallbackPolicy& fallback) const {
         fallback.goal_identity = goal_identity();
         fallback.economy_identity = economy_identity();
@@ -155,6 +415,10 @@ const char* SolveWork::Impl::retained_fallback_invalid_reason(
             telemetry.total_ns += elapsed_ns(total_started);
             return reason;
         };
+
+        if (reuse_successful_fallback_properness_proof(fallback)) {
+            return finish(nullptr);
+        }
 
         auto component_started = std::chrono::steady_clock::now();
         const std::uint64_t current_goal_identity = goal_identity();
@@ -301,6 +565,7 @@ auto SolveWork::Impl::acquire_focused_fallback() -> FocusedFallbackWitness {
             const char* reason =
                 retained_fallback_invalid_reason(*retained[i]);
             if (reason == nullptr) {
+                remember_successful_fallback_properness_proof(retained[i]);
                 ++result.diagnostics.constructive_policy_reuses;
                 return retained[i];
             }
