@@ -451,6 +451,35 @@ Measurement-only engine source was restored. The broader all-state signal may
 motivate a future exact action-local factorization study, but it does not
 select cleanup or alter the prior all-action zero-merge evidence.
 
+## Action-Local Side Factorization Rejection
+
+The 2026-07-27
+[final report](archive/2026-07-27-action-local-side-factorization/report.md)
+and
+[tracked summary](../fixtures/solver-scaling/v1/evidence/action-local-side-factorization-summary.json)
+pin the exact synthetic rejection selected from the protected-core ceiling.
+
+- Empty-start Chaos had 41 joint outcomes across six fixed side-count cells.
+  The support was rectangular, but the two-prefix/two-suffix cell had maximum
+  2x2 minor `4.7521644443241428e-6` and maximum absolute factorization error
+  `0.00013338996237286091`.
+- An ordinary starting suffix was wiped and matched the empty-start
+  distribution exactly. Marking the same heavy suffix fractured preserved it,
+  changed the exact distribution, and reduced this tiny control to 28 joint
+  outcomes.
+- Making the heavy suffix weight uniform reduced every minor to zero within
+  floating-point noise. This pins the coupling to identity-dependent
+  remaining pool weight under sequential draws from the combined pool.
+- Conditioning on final remaining prefix/suffix weights restored rank one,
+  but split six cells into thirteen and required 31 prefix plus 17 suffix
+  marginal identities for only 41 joint outcomes. An online evaluator would
+  require the same coupling after every pick.
+
+The exploratory probe passed 120,535 focused calculation checks and was
+restored. A narrow regression remains for the independent goal contract: a
+fractured goal plus unrelated fractured junk still satisfies the permissive
+goal predicate.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

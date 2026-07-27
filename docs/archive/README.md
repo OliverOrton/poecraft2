@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [Action-Local Side Factorization Falsification](2026-07-27-action-local-side-factorization/README.md) —
+  rejected simple count-conditioned prefix/suffix convolution after an exact
+  Chaos probability table produced a non-zero 2x2 minor; the immediate
+  remaining-weight refinement was larger than the joint table.
+
 - [Protected-Core Compression Ceiling Census](2026-07-27-protected-core-ceiling-census/README.md) —
   rejected cleanup as the next pre-bound architecture because its broadest
   protected-goal population was at most 5.68% of the observed cap, while

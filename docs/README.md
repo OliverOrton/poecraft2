@@ -32,13 +32,21 @@ There is no active implementation boundary. Oliver must select the next chunk
 before implementation resumes.
 
 The completed
+[Action-Local Side Factorization Falsification](archive/2026-07-27-action-local-side-factorization/README.md)
+rejected simple count-conditioned prefix/suffix convolution after an exact
+Chaos outcome table produced a non-zero probability minor. Conditioning on
+final remaining side weights restored rank one but required more marginal
+identities than the joint table. Measurement source was restored; only a
+fracture/goal regression, documentation, and evidence remain.
+
+The completed
 [Protected-Core Compression Ceiling Census](archive/2026-07-27-protected-core-ceiling-census/README.md)
 rejected cleanup as the next pre-bound architecture. Collision-checked
 impossible side erasure produced very large all-state ceilings, but states
 with at least two goals on one protected side were at most 5.68% of the
-cap-censored observed stream. The broader action-local factorization signal is
-unselected and has no equivalence or pruning authority. All measurement-only
-engine source was restored.
+cap-censored observed stream. Its broader signal led to the action-local test
+above; neither projection has equivalence or pruning authority. All
+measurement-only engine source was restored.
 
 The completed
 [Streaming Broad-Lower Fold Falsification milestone](archive/2026-07-27-streaming-broad-lower-fold/README.md)

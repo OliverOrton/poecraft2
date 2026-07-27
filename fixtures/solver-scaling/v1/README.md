@@ -186,6 +186,17 @@ result: the exact proof did not reach any unsupported or unpriced operator.
 The strict and quotient reports use the same command without exact evaluation
 or simulator verification and select their corresponding case IDs.
 
+## Action-local side-factorization falsification
+
+The
+[tracked summary](evidence/action-local-side-factorization-summary.json)
+records the exact synthetic Chaos counterexample selected after the
+protected-core census. Fixed prefix/suffix counts do not make side identities
+probabilistically independent: the sequential combined-pool denominator
+couples their remaining weights. The ordinary/fractured suffix controls and
+one final-weight refinement are included. No production evaluator or cap
+changed.
+
 The main product timing table is native Windows evidence, not a
 rendered-browser claim. The tracked WASM was rebuilt from the same sources;
 the three-slot Node/Worker report above plus worker smoke, cancellation,

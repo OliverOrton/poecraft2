@@ -1,0 +1,118 @@
+{
+  "schema_version": "action_local_side_factorization_summary_v1",
+  "captured_on": "2026-07-27",
+  "decision": {
+    "simple_count_conditioned_side_convolution": "rejected",
+    "final_remaining_weight_boundary": "rejected_no_compression",
+    "reason": "The exact two-prefix/two-suffix count cell has a non-zero 2x2 probability minor. Conditioning on final remaining side weights restores rank one but requires 48 marginal identities for 41 joint outcomes, before accounting for the required per-step weight trajectory.",
+    "qualification": "This rejects the tested destructive-reforge factorization, not every possible symbolic or algebraic evaluator."
+  },
+  "identity": {
+    "source_commit": "c033cd85947f1351f09262ac4d8af08ec246c0a8",
+    "measurement_executable_sha256": "1a8e9e1474c1e25f59a9f4b470b774752fab95af50b914aa15ccbb8d511c0105",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os": "Microsoft Windows NT 10.0.26200.0",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K"
+    }
+  },
+  "semantics": {
+    "action": "chaos",
+    "target_totals": {
+      "4": 0.3333333333333333,
+      "5": 0.3333333333333333,
+      "6": 0.3333333333333333
+    },
+    "goal_slots": [
+      {"side": "prefix", "family_id": 100, "min_tier": 1},
+      {"side": "suffix", "family_id": 104, "min_tier": 1},
+      {"side": "suffix", "family_id": 105, "min_tier": 1}
+    ],
+    "ordinary_weights": {
+      "prefix_mods_0_through_4": 100,
+      "suffix_mod_5": 100,
+      "suffix_mod_6": 100,
+      "suffix_mod_7": 400
+    },
+    "simple_cell": "final prefix_count, final suffix_count",
+    "richer_cell": "final prefix_count, final suffix_count, final remaining prefix pool weight, final remaining suffix pool weight",
+    "fracture_contract": "Fractured starting affixes are retained in the complete preserved base with exact modifier, group, side, flags, occupancy, goal status, and pool blocking."
+  },
+  "measurements": {
+    "empty_start": {
+      "cells": 6,
+      "prefix_marginal_identities": 21,
+      "suffix_marginal_identities": 12,
+      "joint_support": 41,
+      "cartesian_support": 41,
+      "support_holes": 0,
+      "max_absolute_factorization_error": 0.00013338996237286091,
+      "max_absolute_2x2_minor": 0.000004752164444324143,
+      "witness_cell": {"prefix_count": 2, "suffix_count": 2},
+      "witness_probabilities": [
+        0.008513708513708512,
+        0.00101010101010101,
+        0.03105659772326438,
+        0.003126503126503125
+      ]
+    },
+    "ordinary_suffix_start": {
+      "distribution_matches_empty_start": true,
+      "cells": 6,
+      "joint_support": 41,
+      "max_absolute_factorization_error": 0.00013338996237286091,
+      "max_absolute_2x2_minor": 0.000004752164444324143
+    },
+    "fractured_identical_suffix_start": {
+      "distribution_matches_empty_start": false,
+      "cells": 6,
+      "prefix_marginal_identities": 21,
+      "suffix_marginal_identities": 8,
+      "joint_support": 28,
+      "cartesian_support": 28,
+      "support_holes": 0,
+      "max_absolute_factorization_error": 1.3877787807814457e-17,
+      "max_absolute_2x2_minor": 0.0
+    },
+    "fractured_goal_carrier": {
+      "goal_satisfied_with_unrelated_fractured_junk": true,
+      "cells": 6,
+      "prefix_marginal_identities": 6,
+      "suffix_marginal_identities": 12,
+      "joint_support": 12,
+      "max_absolute_factorization_error": 6.938893903907228e-18,
+      "max_absolute_2x2_minor": 0.0
+    },
+    "uniform_weight_control": {
+      "changed_suffix_mod_7_weight_from": 400,
+      "changed_suffix_mod_7_weight_to": 100,
+      "cells": 6,
+      "joint_support": 41,
+      "max_absolute_factorization_error": 3.469446951953614e-18,
+      "max_absolute_2x2_minor": 0.0
+    },
+    "final_remaining_weight_boundary": {
+      "cells": 13,
+      "prefix_marginal_identities": 31,
+      "suffix_marginal_identities": 17,
+      "total_marginal_identities": 48,
+      "joint_support": 41,
+      "cartesian_support": 41,
+      "support_holes": 0,
+      "max_absolute_factorization_error": 6.938893903907228e-18,
+      "max_absolute_2x2_minor": 0.0
+    }
+  },
+  "verification": {
+    "measurement_solver_calc_checks": 120535,
+    "measurement_failures": 0,
+    "final_retained_solver_calc_checks": 120439,
+    "final_retained_failures": 0,
+    "measurement_source_retained": false,
+    "retained_native_regression": "fractured goal plus unrelated fractured junk remains a goal state",
+    "mechanics_changed": false,
+    "solver_behavior_changed": false,
+    "caps_changed": false,
+    "wasm_rebuilt": false
+  }
+}

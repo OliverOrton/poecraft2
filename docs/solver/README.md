@@ -178,6 +178,15 @@ Calculator outcomes are exact engine evaluations:
 - special evaluators handle implemented Harvest, Veiled, Eldritch, Fracture,
   and other registered one-item mechanics.
 
+The sequential reforge frontier is intentionally joint across prefix and
+suffix rolls. A measured exact counterexample rejects composing independent
+side marginals after conditioning only on final side counts: each next draw
+uses the combined remaining-weight denominator
+`Wprefix(local) + Wsuffix(local)`. Conditioning on final remaining side
+weights restored the tiny table's rank but cost more identities than the
+joint representation and would be required after every pick. See the
+[action-local factorization report](../archive/2026-07-27-action-local-side-factorization/report.md).
+
 Compound Bestiary actions use their own exact calculation API because their
 state includes an optional saved checkpoint. Automatic Imprint retry is still
 an exact solver operator assembled from those native Bestiary transitions.

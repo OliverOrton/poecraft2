@@ -206,6 +206,25 @@ void run_goal_threshold_tests() {
     state.rarity = PC_RARITY_MAGIC;
     PC_CHECK(!calc.is_goal_state(state));
 
+    /* Fracture status is exact carrier/action state, not part of the goal
+     * predicate. A fractured goal satisfies its slot and unrelated
+     * fractured junk does not invalidate the permissive goal. */
+    pc_item_state fractured_item;
+    pc_item_clear(&fractured_item);
+    fractured_item.rarity = PC_RARITY_RARE;
+    place(
+        &fractured_item, PC_SIDE_PREFIX, 0, 10,
+        PC_MOD_SLOT_FRACTURED);
+    place(
+        &fractured_item, PC_SIDE_SUFFIX, 7, 22,
+        PC_MOD_SLOT_FRACTURED);
+    const std::uint32_t fractured_state =
+        calc.intern_item(fractured_item);
+    const AbstractState& fractured = calc.state(fractured_state);
+    PC_CHECK((fractured.fractured_goal_mask & 1u) != 0);
+    PC_CHECK((fractured.flags & kFlagFractured) != 0);
+    PC_CHECK(calc.is_goal_state(fractured));
+
     /* Direct GoalSpec callers retain the old all-slots default. */
     goal.min_satisfied_slots = 0;
     CalcContext all_calc(session, goal, registry, basic_indices(registry));

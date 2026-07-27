@@ -61,11 +61,17 @@ Even deleting all of those states for free cannot create material first-row
 headroom. No cleanup primitive, stochastic repair, or mechanic ruling is
 deferred from that result.
 
-The large all-state side projection remains a separate unselected research
-lead. Reopening it requires an exact action-local observation or
-source-elimination contract, complete or formally bounded kernel coverage,
-and counterexamples for every continuation feature erased by the projection.
-The census is not evidence of state equivalence and does not weaken the prior
+The large all-state side projection led to the completed
+[action-local side-factorization falsification](../archive/2026-07-27-action-local-side-factorization/README.md).
+Simple exact prefix/suffix convolution is rejected: within a fixed
+two-prefix/two-suffix Chaos cell, the exact probability table has a non-zero
+2x2 minor because sequential selection uses the combined
+`Wprefix(x) + Wsuffix(y)` denominator. Final remaining-weight conditioning
+restored rank one only by using 48 marginal identities for 41 joint outcomes,
+before retaining that coupling after every roll step. This does not prove
+every symbolic reforge algorithm impossible, but neither count-conditioned
+side convolution nor its immediate weight refinement remains deferred work.
+The census still is not state equivalence and does not weaken the prior
 all-action zero-merge result.
 
 The 2026-07-21
