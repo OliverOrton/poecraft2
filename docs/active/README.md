@@ -1,9 +1,17 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: active implementation boundary.** Oliver selected
+[Anytime Benchmark Completion](plan.md) on 2026-07-26. Execute its Gates 0-5
+in order.
 
 Parent: [Documentation map](../README.md)
+
+The active milestone completes the existing bounded-solver trajectory and
+reporting substrate: fixed-horizon normalized gap integrals, explicit
+censoring/failure semantics, strict experiment identity, durable incomplete
+observations, target/performance profiles, paired uncertainty, and
+development-only racing. It does not change mechanics, solver proof authority,
+production caps, browser behavior, or current-solver GPU execution.
 
 The most recently completed milestone is
 [R4 browser transfer and solver lifetime](../archive/2026-07-26-browser-transfer-lifetime-r4/README.md).
@@ -30,4 +38,4 @@ Those research branches contributed documentation and evidence only. Their
 diagnostic prototypes were restored before closure.
 
 Unselected possibilities remain in [Future work](../future/README.md).
-`future/` and archived plans do not establish sequence.
+`future/` and archived plans do not override the active plan.

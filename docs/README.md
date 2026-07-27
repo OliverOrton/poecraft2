@@ -28,7 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-[Active](active/README.md) records that no implementation boundary is selected.
+[Anytime Benchmark Completion](active/plan.md) is active. It completes the
+existing bounded-solver trajectory and reporting substrate through fixed-budget
+gap integrals, durable incomplete observations, explicit censoring/failure
+semantics, strict experiment identity, profiles, paired uncertainty, and
+development-only racing. It does not change mechanics, solver proof authority,
+production caps, browser behavior, or current-solver GPU execution.
+
 The completed
 [R4 browser transfer and solver lifetime milestone](archive/2026-07-26-browser-transfer-lifetime-r4/README.md)
 uses transferable strategy bytes, removes redundant graph clones, and releases

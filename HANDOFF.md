@@ -1,7 +1,24 @@
 # Session Handoff
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: active implementation boundary.** Oliver selected
+[Anytime Benchmark Completion](docs/active/plan.md) on 2026-07-26. Execute
+Gates 0-5 in order.
+
+## Current Boundary
+
+Complete the existing bounded-solver benchmark substrate without changing
+mechanics or solver proof behavior:
+
+1. freeze gap-integral, target, censoring, failure, and horizon semantics;
+2. strengthen paired experiment identity and corpus roles;
+3. retain analyzable partial trajectories through watchdog termination;
+4. add anytime, paired, profile, and uncertainty analytics;
+5. add development-only racing; then run acceptance and archive the result.
+
+The metric contract treats pre-incumbent gap as `1`, does not assume focused
+lower-bound monotonicity, and distinguishes administrative censoring from
+resource-cap completion and true failures. Root-action certification, ML,
+persistent solver caches, GPU work, and product UI changes are out of scope.
 
 ## Main State
 
@@ -64,7 +81,7 @@ campaign. Oliver did not authorize rendered review.
 Full commands, hashes, and limitations are in the
 [R4 report](docs/archive/2026-07-26-browser-transfer-lifetime-r4/report.md).
 
-## What Can Be Selected Next
+## Prior Unselected Directions
 
 The clearest bounded product continuation is R5 verification presentation:
 truthful terminal/off-policy gates, sampled uncertainty, and remaining
