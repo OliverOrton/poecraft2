@@ -744,15 +744,70 @@ void run_reforge_tests() {
         pc_item_clear(&rare);
         rare.rarity = PC_RARITY_RARE;
         const std::uint32_t rare_start = calc.intern_item(rare);
+        const std::uint32_t states_before_fold = calc.state_count();
+        const std::uint64_t distributions_before_fold =
+            calc.cached_distribution_count();
+        const std::uint64_t reforges_before_fold =
+            calc.cached_reforge_count();
+        const CalcTelemetry telemetry_before_fold = calc.telemetry();
+        bool saw_only_final_successors = true;
+        const auto test_lower = [&](const AbstractState& successor) {
+            const int total =
+                successor.prefix_count + successor.suffix_count;
+            saw_only_final_successors &=
+                successor.rarity == PC_RARITY_RARE &&
+                total >= 4 && total <= 6;
+            return static_cast<double>(
+                successor.prefix_count + 2 * successor.suffix_count);
+        };
+        const StreamingReforgeFoldResult fold =
+            calc.stream_reforge_lower(
+                rare_start, chaos, 1000000, test_lower);
+        PC_CHECK(fold.eligible);
+        PC_CHECK(fold.traversal_complete);
+        PC_CHECK(fold.mass_valid);
+        PC_CHECK(fold.published);
+        PC_CHECK(!fold.work_cap_exhausted);
+        PC_CHECK(fold.reforge_work > 0);
+        PC_CHECK(fold.outcome_emissions > 0);
+        PC_CHECK(fold.lower_evaluations == fold.outcome_emissions);
+        PC_CHECK(near(fold.emitted_mass, 1.0, fold.mass_tolerance));
+        PC_CHECK(saw_only_final_successors);
+        PC_CHECK(calc.state_count() == states_before_fold);
+        PC_CHECK(calc.cached_distribution_count() ==
+                 distributions_before_fold);
+        PC_CHECK(calc.cached_reforge_count() == reforges_before_fold);
+        PC_CHECK(calc.telemetry() == telemetry_before_fold);
+
+        const StreamingReforgeFoldResult interrupted =
+            calc.stream_reforge_lower(
+                rare_start, chaos, 1, test_lower);
+        PC_CHECK(interrupted.eligible);
+        PC_CHECK(interrupted.work_cap_exhausted);
+        PC_CHECK(!interrupted.traversal_complete);
+        PC_CHECK(!interrupted.mass_valid);
+        PC_CHECK(!interrupted.published);
+        PC_CHECK(calc.state_count() == states_before_fold);
+        PC_CHECK(calc.cached_distribution_count() ==
+                 distributions_before_fold);
+        PC_CHECK(calc.cached_reforge_count() == reforges_before_fold);
+        PC_CHECK(calc.telemetry() == telemetry_before_fold);
+
         const OutcomeDistribution& dist = calc.outcomes(rare_start, chaos);
         PC_CHECK(dist.supported);
+        double merged_expectation = 0.0;
         for (const OutcomeEntry& entry : dist.entries) {
             const AbstractState& successor = calc.state(entry.state);
             const int total =
                 successor.prefix_count + successor.suffix_count;
             PC_CHECK(successor.rarity == PC_RARITY_RARE);
             PC_CHECK(total >= 4 && total <= 6);
+            merged_expectation += entry.probability *
+                static_cast<double>(
+                    successor.prefix_count + 2 * successor.suffix_count);
         }
+        PC_CHECK(near(
+            fold.weighted_lower, merged_expectation, 1e-10));
         mc_cross_check(calc, mc, rare_start, chaos, 50000, 3e-3, 1e-4);
     }
 

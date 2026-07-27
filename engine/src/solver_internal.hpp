@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <map>
 #include <memory>
@@ -175,6 +176,8 @@ struct PrimitiveFamilyTelemetry {
     std::uint64_t build_ns = 0;
     std::uint64_t row_ns = 0;
     std::uint64_t selected_bytes = 0;
+
+    bool operator==(const PrimitiveFamilyTelemetry&) const = default;
 };
 
 enum AutomaticKernelMechanism : std::uint32_t {
@@ -905,6 +908,31 @@ struct CalcTelemetry {
     std::uint64_t owned_byte_ledger_max_overestimate = 0;
     std::array<PrimitiveFamilyTelemetry, kPrimitiveTelemetryFamilyCount>
         primitive_families{};
+
+    bool operator==(const CalcTelemetry&) const = default;
+};
+
+/*
+ * Measurement-only destructive-reforge traversal. The callback observes final
+ * abstract successors before interning. The traversal owns no outcome
+ * support, does not touch CalcTelemetry, and publishes a weighted value only
+ * after complete traversal and raw-mass validation.
+ */
+struct StreamingReforgeFoldResult {
+    bool eligible = false;
+    bool traversal_complete = false;
+    bool mass_valid = false;
+    bool published = false;
+    bool work_cap_exhausted = false;
+    std::uint64_t max_reforge_work = 0;
+    std::uint64_t reforge_work = 0;
+    std::uint64_t outcome_emissions = 0;
+    std::uint64_t lower_evaluations = 0;
+    std::uint64_t wall_ns = 0;
+    std::uint64_t cpu_ns = 0;
+    double emitted_mass = 0.0;
+    double mass_tolerance = 1e-9;
+    double weighted_lower = 0.0;
 };
 
 /* Price-independent sparse closure retained by CalcContext between compatible
@@ -1118,6 +1146,11 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index,
         std::vector<std::uint64_t>& out_signature) const;
+    StreamingReforgeFoldResult stream_reforge_lower(
+        std::uint32_t state_id,
+        std::uint32_t action_index,
+        std::uint64_t max_reforge_work,
+        const std::function<double(const AbstractState&)>& lower);
 
     /* Exact fixed-program or renewal kernel. operator_index must identify a
      * PlannerOperatorKind::FixedOption entry. */
@@ -1304,7 +1337,10 @@ class CalcContext {
         std::uint32_t action_index);
     std::shared_ptr<const OutcomeDistribution> evaluate_reforge(
         std::uint32_t state_id,
-        std::uint32_t action_index);
+        std::uint32_t action_index,
+        StreamingReforgeFoldResult* streaming_fold = nullptr,
+        const std::function<double(const AbstractState&)>*
+            streaming_lower = nullptr);
     std::shared_ptr<const OutcomeDistribution> evaluate_unveil(
         std::uint32_t state_id);
     bool evaluate_pool_add(
@@ -1658,6 +1694,54 @@ struct FallbackValidationTelemetry {
     Component start_properness;
 };
 
+struct StreamingBroadLowerFoldTelemetry {
+    bool enabled = false;
+    bool attempted = false;
+    bool eligible = false;
+    bool traversal_complete = false;
+    bool mass_valid = false;
+    bool fold_completed = false;
+    bool work_cap_exhausted = false;
+    bool calc_unchanged = false;
+    bool ordinary_materialization_attempted = false;
+    bool ordinary_materialization_completed = false;
+    bool would_be_incumbent_dominated = false;
+    bool controlled_local_lower_before = false;
+    bool controls_local_lower_shadow = false;
+    bool would_remain_next_refinement = false;
+    std::string action_id;
+    std::uint64_t max_reforge_work = 0;
+    std::uint64_t fold_reforge_work = 0;
+    std::uint64_t fold_wall_ns = 0;
+    std::uint64_t fold_cpu_ns = 0;
+    std::uint64_t fold_outcome_emissions = 0;
+    std::uint64_t fold_lower_evaluations = 0;
+    std::uint64_t production_reforge_work_before = 0;
+    std::uint64_t production_reforge_work_after = 0;
+    std::uint64_t ordinary_materialization_reforge_work = 0;
+    std::uint32_t state_count_before = 0;
+    std::uint32_t state_count_after = 0;
+    std::uint32_t ordinary_materialization_discovered_states = 0;
+    std::uint64_t distribution_cache_before = 0;
+    std::uint64_t distribution_cache_after = 0;
+    std::uint64_t reforge_cache_before = 0;
+    std::uint64_t reforge_cache_after = 0;
+    std::uint32_t broad_action_rank_before = 0;
+    std::uint32_t broad_action_rank_shadow = 0;
+    double fold_probability_mass = 0.0;
+    double fold_mass_tolerance = 0.0;
+    double fold_weighted_coarse_lower = 0.0;
+    double old_broad_q_lower = std::numeric_limits<double>::infinity();
+    double streamed_broad_q_lower =
+        std::numeric_limits<double>::infinity();
+    double next_action_q_lower = std::numeric_limits<double>::infinity();
+    double incumbent_upper = std::numeric_limits<double>::infinity();
+    double local_bellman_lower_before =
+        std::numeric_limits<double>::infinity();
+    double local_bellman_lower_shadow =
+        std::numeric_limits<double>::infinity();
+};
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -1750,6 +1834,7 @@ struct SolveDiagnostics {
     bool incumbent_strict_state_provenance = true;
     std::uint64_t focused_expansion_ns = 0;
     std::vector<FocusedScheduleRoundTelemetry> focused_schedule_rounds;
+    StreamingBroadLowerFoldTelemetry streaming_broad_lower_fold;
     FallbackValidationTelemetry fallback_validation;
     std::uint64_t constructive_policy_ns = 0;
     std::uint64_t strict_clean_goal_cover_ns = 0;

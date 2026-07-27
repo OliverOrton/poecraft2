@@ -1707,7 +1707,20 @@ CaseResult run_case(
         }
     } catch (const std::exception& ex) {
         report.errors.push_back(ex.what());
-        if (report.actual_status == "not_run") report.actual_status = "harness_error";
+        if (handles.solver != nullptr && report.telemetry_json.empty()) {
+            /*
+             * A failed step can still own a valid in-progress snapshot. Freeze
+             * it before destroying the handle so diagnostic/resource failures
+             * remain analyzable instead of discarding all completed work.
+             */
+            pc_solver_solve_abandon(handles.solver);
+            report.telemetry_json =
+                query_telemetry(handles.solver, report.errors);
+        }
+        if (report.actual_status == "not_run" ||
+            report.actual_status == "running") {
+            report.actual_status = "harness_error";
+        }
     }
 
     if (handles.solver != nullptr) {

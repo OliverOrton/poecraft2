@@ -454,6 +454,8 @@ struct SolveWork::Impl {
     std::uint32_t expansion_state = kNoId;
     std::uint32_t expansion_operator_cursor = 0;
     std::uint32_t peak_queue_size = 0;
+    bool streaming_broad_lower_diagnostic_enabled = false;
+    bool streaming_broad_lower_diagnostic_attempted = false;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
     std::shared_ptr<SolveTransitionCache> transition_cache;
@@ -803,6 +805,8 @@ struct SolveWork::Impl {
 
     std::uint32_t satisfied_goal_mask_for_state(
         const std::uint32_t state) const;
+    std::uint32_t satisfied_goal_mask_for_state(
+        const AbstractState& state) const;
 
     double optimistic_completion_cost(
         const std::uint32_t satisfied_mask,
@@ -812,9 +816,18 @@ struct SolveWork::Impl {
         const std::uint8_t carrier_suffixes = 0);
 
     bool clean_goal_cover_eligible(const std::uint32_t state) const;
+    bool clean_goal_cover_eligible(const AbstractState& state) const;
+
+    double coarse_optimistic_completion_cost_for_state(
+        const AbstractState& state);
 
     double optimistic_completion_cost_for_state(
         const std::uint32_t state);
+
+    void run_streaming_broad_lower_shadow(
+        std::uint32_t state,
+        std::uint32_t operator_index,
+        double immediate_cost);
 
     void prepare_strict_clean_goal_cover();
 
