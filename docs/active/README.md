@@ -1,9 +1,14 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: active measurement-only solver research.**
 
 Parent: [Documentation map](../README.md)
+
+The selected boundary is the
+[True First-Frontier Successor Census](plan.md). It measures the complete
+exact Chaos successor support and composition of the four frozen natural-T1
+hard cases. It does not authorize product cap changes or a compact solver
+representation.
 
 The most recently completed milestone is the
 [Exact Quotient Audit](../archive/2026-07-27-exact-quotient-audit/README.md).

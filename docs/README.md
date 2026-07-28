@@ -28,8 +28,10 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must select the next chunk
-before implementation resumes.
+The active implementation boundary is the measurement-only
+[True First-Frontier Successor Census](active/plan.md). It measures the
+complete exact Chaos support of four frozen natural-T1 hard cases without
+authorizing a cap change or production compaction.
 
 The completed
 [Exact Quotient Audit](archive/2026-07-27-exact-quotient-audit/README.md)
