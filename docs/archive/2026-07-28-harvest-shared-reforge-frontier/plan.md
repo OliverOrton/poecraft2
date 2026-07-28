@@ -1,6 +1,6 @@
 # Harvest Natural Pools And Shared Exact Reforge Frontier
 
-**Status: active (2026-07-28).**
+**Status: final (2026-07-28).**
 
 Owner: Oliver
 
@@ -8,9 +8,10 @@ Branch: `codex/harvest-shared-reforge-frontier`
 
 Starting source: `94fb013` (`main`)
 
-Progress: Gate 1 is complete. The shared targeted-natural Harvest correction
-passed artifact-backed native acceptance (`515,093` checks, zero failures).
-Gate 2 is the current boundary.
+Result: Gate 1 is retained. Gates 2 and 3 produced an exact shared-frontier
+prototype, but Gate 4 rejected and restored it because work remained
+action-additive, the cap boundary did not move, about 47 MiB was retained, and
+total wall time increased. Gate 5 acceptance passed.
 
 ## Objective
 

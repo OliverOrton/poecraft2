@@ -5,7 +5,7 @@ already-eligible modifier receives a selection weight.
 
 Parent: [Engine](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-28 @ `2e65e7c`
 
 [Pools](pools.md) describes eligibility. Mechanic-specific choice and
 sequencing belong in [Mechanics](../mechanics/README.md).
@@ -24,8 +24,7 @@ If no row matches:
 
 A zero or negative matched value is non-positive. A non-positive spawn value
 excludes the row from every current weighted pool. A non-positive generation
-value excludes it from normal and fossil pools but does not affect a Harvest
-spawn-only pool.
+value excludes it from normal, targeted-natural, and fossil pools.
 
 ## Effective tag signatures
 
@@ -64,18 +63,19 @@ pool. The chance of selecting either side is therefore the sum of that side's
 candidate weights divided by the combined total; there is no separate 50/50
 side roll in the generic pool sampler.
 
-## Harvest spawn-only weight
+## Harvest targeted-natural weight
 
-A Harvest-targeted pool first requires the requested classification tag, then
-uses:
+A Harvest-targeted pool first requires the requested classification tag and a
+positive ordinary generation percentage, then uses the ordinary natural
+weight:
 
 ```text
-final_weight = spawn_weight
+final_weight = floor(spawn_weight * generation_pct / 100)
 ```
 
-Generation percent is reported as `100` for the pool row and does not affect
-selection. Classification tags determine targeting; ordered selector tags
-still determine the active spawn weight.
+Classification tags determine targeting; ordered selector tags still
+determine the active spawn and generation values. Harvest does not substitute
+`100` for an explicitly matched zero generation percentage.
 
 ## Fossil weight
 
@@ -153,7 +153,8 @@ the calculation.
 - Ordered weight rows are never sorted or treated as additive.
 - Normal and fossil pools require a positive integer
   `floor(spawn * generation / 100)` result.
-- Harvest targeting never applies generation multipliers.
+- Harvest targeting uses the same spawn/generation product as ordinary
+  natural rolling.
 - Fossil multiplier truncation order is deterministic.
 - Sampling uses 64-bit totals and never selects a zero-weight row.
 

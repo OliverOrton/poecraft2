@@ -6,7 +6,7 @@ gameplay behavior of a craft.
 
 Parent: [Engine](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-28 @ `2e65e7c`
 
 For action sequencing and mechanic exceptions, see
 [Mechanics](../mechanics/README.md). For the exact arithmetic applied after
@@ -106,8 +106,9 @@ action rule, not a different definition of tags or groups.
 `PoolWeightKind` has three implemented values:
 
 - `Normal`: ordered spawn weight multiplied by ordered generation percent.
-- `HarvestSpawnOnly`: the requested classification tag is required and only
-  spawn weight participates.
+- `TargetedNatural`: the requested classification tag is required, and the
+  ordinary positive spawn weight is multiplied by the ordinary positive
+  generation percentage. A zero generation percentage remains unavailable.
 - `Fossil`: normal base weight, then the selected fossil multipliers and any
   `rolls_lucky` level adjustment.
 
@@ -165,7 +166,8 @@ and cache behavior. The WASM facade exposes the pool-debug result as JSON.
 - Normal random-roll membership excludes special-only and implicit outcomes.
 - All exclusivity groups participate in blocking; display family never
   substitutes for group legality.
-- Harvest-targeted pools use spawn-only weights.
+- Harvest-targeted pools use ordinary natural weights and additionally require
+  the requested classification tag.
 - A cached pool is reused only when every input that can affect its candidates
   and weights matches.
 

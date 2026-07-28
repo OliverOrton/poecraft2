@@ -701,6 +701,36 @@ The streaming evaluator was restored. Retained source only corrects
 exception-safe interrupted-row telemetry. No action was deferred, no cap or
 mechanic changed, and unrestricted no-policy hashes remain unchanged.
 
+## Harvest Correction And Shared-Frontier Falsification
+
+The 2026-07-28
+[final report](archive/2026-07-28-harvest-shared-reforge-frontier/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/harvest-shared-reforge-frontier-summary.json)
+pin two separate results.
+
+- Harvest reforge, augment, and resistance conversion now share the
+  target-restricted ordinary naturally rollable pool. Positive spawn and
+  ordinary generation weights are both required, and ordinary final roll
+  weight is authoritative. A positive-spawn/zero-generation regression passes
+  sampled, exact, and debug paths.
+- The shared Chaos structural DAG became exact after successor projection used
+  canonical rather than Fossil-local bucket indices. Lucent and Jagged then
+  matched sequential outcome counts, probability bits, discovered states,
+  transition hashes, and policy hashes.
+- At the product cap, both shared runs stopped on the same first Fossil after
+  the same 192,420 work units and made no additional solver progress.
+- Complete Lucent/Jagged lane times were effectively unchanged, while total
+  shared time increased 26.3% and 32.9%. The dense DAG retained 49,452,673
+  and 49,574,585 bytes.
+- Action-specific scalar probability propagation remained additive. The
+  frontier and its telemetry were restored; no cap or work-accounting change
+  survived.
+
+The Harvest correction passed 515,093 artifact-backed native checks with zero
+failures. Release-WASM and affected non-visual web acceptance are recorded in
+the milestone report.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

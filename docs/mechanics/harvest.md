@@ -4,7 +4,7 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-28 @ active
+Verified against code: 2026-07-28 @ `2e65e7c`
 
 Verification scope: checked-in recipe manifest, generated native allowlist,
 sampled and exact native transitions, solver registry, and Emulator and

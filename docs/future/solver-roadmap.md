@@ -138,7 +138,7 @@ broad-action competition is the immediate measured exact-search wall.
 Partial-state admission remains a possible later wall, but no retained
 partial state has yet been expanded in these captures.
 
-### Canonical cross-action reforge frontier
+### Rejected canonical cross-action reforge frontier
 
 The 2026-07-28
 [root broad-row falsification](../archive/2026-07-28-root-broad-row-falsification/README.md)
@@ -147,7 +147,7 @@ upper at the real remaining-work boundary. Lucent and Jagged produce zero
 proved terminal mass inside 192,420 work. Their complete fixed-repeat values
 are also worse than the retained Chaos incumbents.
 
-The same evidence leaves a narrower cross-action research candidate:
+The same evidence left a narrower cross-action research candidate:
 
 - the measured Lucent pool is a 131-mod strict subset of its 142-mod Chaos
   pool;
@@ -157,31 +157,34 @@ The same evidence leaves a narrower cross-action research candidate:
 - preserved root boundary, affix cap, target-count schedule, and every
   required goal modifier are compatible with Chaos.
 
-A future prototype may therefore build one canonical structural roll DAG and
-apply action-specific bucket-weight vectors. The shared authority must be
-topology, not Chaos probabilities. A canonical bucket key needs side,
-goal/junk classification, blocker mask, complete exclusion-group family, and
-multiplicity. Each action still owns the eligible denominator and normalized
-outgoing probabilities at every node.
+The 2026-07-28
+[Harvest/shared-frontier milestone](../archive/2026-07-28-harvest-shared-reforge-frontier/README.md)
+built that prototype. It used one canonical structural roll DAG and
+action-specific bucket-weight vectors. Each action retained its own eligible
+denominator and normalized outgoing probabilities at every node. After a
+focused canonical-bucket projection correction, shared and sequential
+completion matched exactly on Lucent/full-four and Jagged/deep-four.
 
-Fossil added mods must be represented as topology deltas with cross-conflicts.
-Forced mods are deterministic seed deltas that change side capacity, occupied
-groups, and goal status. Neither is a post-hoc additive probability
-correction. One exact implementation could promote admitted added families
-into a canonical union support and give absent action lanes zero weight.
+The result closes this implementation shape. At the unchanged product cap,
+both cases retained the same states and hashes and stopped on the same first
+Fossil after the same 192,420 lane-work units. The completed Lucent lane took
+430.098 ms shared versus 430.427 ms sequential; Jagged took 381.168 ms shared
+versus 369.127 ms sequential. The shared runs were 26.3% and 32.9% slower
+overall and retained 49,452,673 and 49,574,585 extra bytes. Probability
+propagation remains action-additive, so lockstep iteration would reduce loop
+overhead only; it cannot honestly remove the scalar lane/edge updates that own
+the cap. The prototype and telemetry were restored.
 
-Do not schedule a distribution-cache-only change. Sequential Chaos plus only
-the first Fossil needs 4,691,252 and 5,001,749 work on the frozen cases, above
-the unchanged 3,000,000 cap. The first gate must split deterministic work into
-structural construction, action-lane probability propagation, and successor
-projection/interning, then compare sequential replay with lockstep
-multi-weight propagation. Retain an implementation only if the complete root
-action envelope advances before the same cap; wall-time or memory savings
-alone are useful throughput results but do not close this wall.
+Fossil added-mod topology extensions and forced-mod seeds were left on the
+sequential fallback because the subset cases already falsified the reusable
+DAG. Do not reopen this candidate as a cache/accounting-only change or by
+charging one work unit for arbitrarily many probability lanes.
 
-Harvest reforge is outside this candidate until Oliver rules on the
-spawn-only guaranteed first-pick pool. Do not add a Harvest-specific exception
-to make the structural design fit the current implementation.
+The same milestone resolved the former Harvest uncertainty. Harvest reforge,
+augment, and resistance conversion now use the target-restricted ordinary
+naturally rollable pool: positive spawn and generation weights with ordinary
+final roll weights. This ruling does not rescue the rejected shared-frontier
+resource shape.
 
 ### Deferred bounded Pareto admission design
 

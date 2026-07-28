@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-28
 
+- [Harvest Natural Pools And Shared Exact Reforge Frontier](2026-07-28-harvest-shared-reforge-frontier/README.md) —
+  retained the owner-approved targeted-natural Harvest correction and rejected
+  the exact shared cross-action structural DAG after parity held but work,
+  cap reach, memory, and total wall time did not improve.
+
 - [Root Broad-Row Falsification](2026-07-28-root-broad-row-falsification/README.md) —
   retained exception-safe cap-owner telemetry, rejected a success-only
   Fossil upper after both real remaining-work runs proved zero terminal mass,

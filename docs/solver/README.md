@@ -7,9 +7,10 @@ Parent: [Documentation index](../README.md)
 
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
-bounded-incumbent graph stability, and the goal-progress-gated native/WASM
-acceptance plus the gated root renewal incumbent and interrupted root-row
-ownership acceptance: 2026-07-28. The preceding broad architecture stamp was
+bounded-incumbent graph stability, the goal-progress-gated native/WASM
+acceptance, the gated root renewal incumbent, interrupted root-row ownership,
+the Harvest targeted-natural correction, and the rejected shared-reforge
+frontier prototype: 2026-07-28. The preceding broad architecture stamp was
 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -105,11 +106,17 @@ materializing the first unique carrier's successor distribution.
 
 That memo does not reuse structure across different actions. Reforge bucket
 weights, Fossil-added support, forced modifiers, and mechanic stages remain
-part of each action's exact evaluation. A measured Lucent/Jagged follow-up
-found support-compatible Chaos subsets and records an action-independent
-structural-DAG proposal in the
-[future solver roadmap](../future/solver-roadmap.md); no cross-action frontier
-cache or multi-weight evaluator is implemented.
+part of each action's exact evaluation. A measured Lucent/Jagged prototype
+did build and replay an exact action-independent Chaos structural DAG with
+separate action weights. After correcting canonical-bucket projection, the
+shared and sequential evaluators matched outcome counts, probability bits,
+discovered states, transition hashes, and policy hashes on both frozen cases.
+The candidate was still rejected: faithful lane propagation retained the same
+deterministic work, the product cap stopped on the same root Fossil, the
+complete Fossil lanes were no faster, total wall time increased, and the DAG
+retained about 47 MiB. No cross-action frontier cache or multi-weight evaluator
+is implemented. See the
+[archived report](../archive/2026-07-28-harvest-shared-reforge-frontier/report.md).
 
 Code authority:
 `engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,

@@ -1,0 +1,195 @@
+{
+  "schema_version": "harvest_shared_reforge_frontier_summary_v1",
+  "captured_on": "2026-07-28",
+  "decision": {
+    "harvest_targeted_natural_correction_retained": true,
+    "shared_cross_action_frontier_retained": false,
+    "shared_frontier_telemetry_retained": false,
+    "unrestricted_solver_changed": false,
+    "goal_progress_gated_solver_changed": false,
+    "product_caps_changed": false,
+    "reason": "The exact shared frontier preserved parity but retained action-additive probability work, stopped at the same product cap boundary, added about 47 MiB, and increased total wall time."
+  },
+  "harvest_correction": {
+    "pool_authority": "targeted_natural",
+    "required_positive_weights": [
+      "spawn",
+      "ordinary_generation"
+    ],
+    "selection_weight": "ordinary_final_roll_weight",
+    "affected_operations": [
+      "sampled_harvest_reforge",
+      "exact_harvest_reforge",
+      "sampled_harvest_augment",
+      "exact_harvest_augment",
+      "sampled_harvest_resistance_conversion",
+      "exact_harvest_resistance_conversion",
+      "solver_helpers",
+      "pool_debug_reporting"
+    ],
+    "zero_generation_regression": {
+      "fixture": "positive spawn weight and zero ordinary generation weight",
+      "excluded_from_all_three_operations": true,
+      "sampled_exact_parity_passed": true
+    },
+    "artifact_native_checks": 515093,
+    "artifact_native_failures": 0
+  },
+  "shared_frontier_prototype": {
+    "authority": "action-independent structural roll DAG keyed by preserved base and gated mode",
+    "separate_action_payload": [
+      "cost",
+      "bucket weights",
+      "eligible denominators",
+      "normalized probabilities",
+      "Bellman row"
+    ],
+    "supported_measurement_shape": [
+      "Chaos",
+      "support-compatible filtered Fossil",
+      "Harvest reforge in the focused artifact control"
+    ],
+    "fallbacks": [
+      "Fossil added modifiers",
+      "Fossil forced modifiers",
+      "structurally incompatible support",
+      "non-reforge actions"
+    ],
+    "prototype_patch_git_hash_object": "adb509190b44ea7f535b09e9dd0aada305877452",
+    "measurement_executable_sha256": "c1fdecd434548ece80c2d0d2f4ec65e69af5b21e1f5fe735e6358445dded30c0",
+    "focused_correction": "Shared RollState picks use canonical Chaos bucket indices; successor projection must use the canonical bucket table rather than the action-local subset table.",
+    "exactness": {
+      "full_four_lucent": {
+        "shared_sequential_outcome_count_equal": true,
+        "shared_sequential_terminal_probability_bits_equal": true,
+        "shared_sequential_discovered_states_equal": true,
+        "shared_sequential_transition_hash_equal": true,
+        "shared_sequential_policy_hash_equal": true,
+        "outcomes": 93306,
+        "terminal_probability": 8.16389693564203e-08,
+        "transition_bits_hash": "2bd6f403fefe3574",
+        "policy_bits_hash": "816d94db8a2d0cbd"
+      },
+      "deep_four_jagged": {
+        "shared_sequential_outcome_count_equal": true,
+        "shared_sequential_terminal_probability_bits_equal": true,
+        "shared_sequential_discovered_states_equal": true,
+        "shared_sequential_transition_hash_equal": true,
+        "shared_sequential_policy_hash_equal": true,
+        "outcomes": 97141,
+        "terminal_probability": 3.7206071645216775e-08,
+        "transition_bits_hash": "55053e54bbdeb5fe",
+        "policy_bits_hash": "364d755f6df87bed"
+      }
+    },
+    "unchanged_product_cap": {
+      "max_reforge_work": 3000000,
+      "result": "no additional solver progress",
+      "cases": [
+        {
+          "id": "natural-t1-full-four-47d8b909aa88",
+          "discovered_states": 134508,
+          "expanded_states": 1,
+          "transition_bits_hash": "fe0ea011721ae996",
+          "policy_bits_hash": "816d94db8a2d0cbd",
+          "interrupted_action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+          "interrupted_action_work": 192420,
+          "shared_structural_nodes": 226586,
+          "shared_eligible_edges": 1218309,
+          "shared_scalar_edge_updates_before_cap": 128893,
+          "shared_retained_bytes": 49452673,
+          "total_wall_ms": 1243.802
+        },
+        {
+          "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+          "discovered_states": 123728,
+          "expanded_states": 1,
+          "transition_bits_hash": "5ca6030024523dec",
+          "policy_bits_hash": "364d755f6df87bed",
+          "interrupted_action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+          "interrupted_action_work": 192420,
+          "shared_structural_nodes": 226586,
+          "shared_eligible_edges": 1233548,
+          "shared_scalar_edge_updates_before_cap": 115368,
+          "shared_retained_bytes": 49574585,
+          "total_wall_ms": 1107.965
+        }
+      ]
+    },
+    "completion_ab": [
+      {
+        "id": "natural-t1-full-four-47d8b909aa88",
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "reforge_work_both": 1883672,
+        "shared_action_wall_ms": 430.098,
+        "sequential_action_wall_ms": 430.427,
+        "shared_total_wall_ms": 1700.718,
+        "sequential_total_wall_ms": 1346.745,
+        "shared_total_over_sequential": 1.263,
+        "shared_live_owned_bytes": 118778826,
+        "sequential_live_owned_bytes": 69325977,
+        "shared_retained_structure_bytes": 49452673,
+        "shared_topology_work": 2807580,
+        "shared_propagation_work": 894688,
+        "shared_scalar_edge_updates": 830588,
+        "shared_successor_projections": 382036,
+        "shared_successor_interner_hits": 382036
+      },
+      {
+        "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "reforge_work_both": 2194169,
+        "shared_action_wall_ms": 381.168,
+        "sequential_action_wall_ms": 369.127,
+        "shared_total_wall_ms": 1515.151,
+        "sequential_total_wall_ms": 1140.175,
+        "shared_total_over_sequential": 1.329,
+        "shared_live_owned_bytes": 95901770,
+        "sequential_live_owned_bytes": 46327009,
+        "shared_retained_structure_bytes": 49574585,
+        "shared_topology_work": 2807580,
+        "shared_propagation_work": 1311137,
+        "shared_scalar_edge_updates": 1146717,
+        "shared_successor_projections": 444392,
+        "shared_successor_interner_hits": 444392
+      }
+    ]
+  },
+  "identity": {
+    "starting_source_commit": "94fb013",
+    "plan_commit": "b587c3b",
+    "harvest_correction_commit": "2e65e7c",
+    "portfolio_manifest_sha256": "a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os_build": "Windows 10 Pro 26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "cores": 16,
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "raw_report_sha256": {
+    "shared_initial_full": "d48cfaf10d6a0ec26e7fb2e987959778f4ebb63082d1f957f6a24dc9f2121259",
+    "shared_initial_deep": "eb014dbd68d8ecea39143dc906f2108f0fe0e7836016a1f9cae045108962aab8",
+    "shared_completion_full": "e6a325502c44fb1f2fbcd898d4990d9f309518602c0a810c444e815be4b18215",
+    "shared_completion_deep": "68f144fb4a64476e0d66bff73ce40e2af0fe2f0c5dab3551545e16f556f74f6c",
+    "sequential_completion_full": "a4eef8a00586e0a34990e5d0a491e99d856a1288d9f188868609029dc5211d64",
+    "sequential_completion_deep": "15fb3f80935dfea0c23f23f3e3754bb4cb08c634aca500d42565694f81597f3f",
+    "final_restored_full": "9742d7ebef76ad62fc93ff8e4bb5181549d96e61c5f5b3e6da5f721e0a8965c8",
+    "final_restored_deep": "7b8c911892a0727de97826becab054abefadcd06d37f322f0ea50b66d91389f7"
+  },
+  "verification": {
+    "restored_native_build": "passed",
+    "artifact_native_checks": 515093,
+    "artifact_native_failures": 0,
+    "frozen_restored_hashes": "passed",
+    "release_wasm_rebuilt": true,
+    "web_tests": "passed",
+    "typescript_no_emit": "passed",
+    "known_gcc_optimizer_warning_reproduced": true
+  },
+  "wall_time_qualification": "Wall time is machine/compiler-bound and does not survive a hardware or compiler change. Work, probabilities, outcome counts, and deterministic hashes are the portable evidence."
+}

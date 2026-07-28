@@ -75,6 +75,13 @@ shows that the completed first Chaos row now publishes a finite executable
 repeat-until-goal policy on both cases. The policies compile to four-node
 loops and remain bounded within the opt-in restriction; exact discovery still
 stops on the next competing root reforge.
+The later
+[Harvest/shared-reforge-frontier summary](evidence/harvest-shared-reforge-frontier-summary.json)
+pins the owner-approved targeted-natural Harvest correction and the rejected
+cross-action structural-DAG prototype. Lucent and Jagged shared lanes matched
+sequential outcomes and hashes exactly, but retained the same action-additive
+work, stopped at the same product boundary, added about 47 MiB, and increased
+total wall time. The experimental frontier was restored.
 
 ## Benchmark workflow
 

@@ -1,37 +1,35 @@
 # Session Handoff
 
-**Status: an implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
-Plan:
-[Harvest Natural Pools And Shared Exact Reforge Frontier](docs/active/plan.md)
+Latest archive:
+[Harvest Natural Pools And Shared Exact Reforge Frontier](docs/archive/2026-07-28-harvest-shared-reforge-frontier/README.md)
 
-Branch: `codex/harvest-shared-reforge-frontier`
+## Completed
 
-Starting source: `94fb013` (`main`)
+Oliver's 2026-07-28 Harvest ruling is implemented. Harvest reforge, augment,
+and resistance conversion share the `TargetedNatural` pool: positive spawn
+and ordinary generation weights, requested target tag, and ordinary final
+roll weight. The positive-spawn/zero-generation regression covers sampled,
+exact, and debug paths.
 
-## Current Boundary
+The shared exact reforge-frontier prototype was measured and restored. After
+its canonical bucket projection was corrected, Lucent/full-four and
+Jagged/deep-four matched sequential outcomes, probability bits, discovered
+states, and deterministic hashes. It did not reduce action-lane work, did not
+move the 3,000,000-work product boundary, retained about 47 MiB, and increased
+total wall time by 26–33%.
 
-Proceed through the active plan without another confirmation between phases.
+No shared cross-action frontier, frontier telemetry, cap change, work-account
+change, or solver semantic change survives. The unrestricted solver and
+goal-progress-gated mode retain their prior contracts.
 
-Phase 1 is complete. Oliver's 2026-07-28 ruling now uses one
-`TargetedNatural` pool for Harvest reforge, augment, and resistance
-conversion across sampled, exact, solver-helper, and debug paths. It requires
-positive spawn and generation weights and retains the ordinary final roll
-weight. The positive-spawn/zero-generation regression passes for all three
-operations. Artifact-backed native acceptance passed 515,093 checks with zero
-failures.
+## Current Decision Boundary
 
-Phase 2 now prototypes one shared exact structural reforge frontier for
-compatible Chaos, filtered Fossils, and retained Harvest reforges. Each action
-retains its own probability lane, cost, distribution, and Bellman choice.
-Fossil added mods are topology deltas; forced mods are deterministic seed
-deltas. The sequential evaluator remains the fallback.
-
-Keep initial caps unchanged. Qualify on the frozen full-four and deep-four
-cases plus retained goal-relevant Harvest reforges. If exact parity fails,
-probability propagation remains effectively additive, or memory is
-unacceptable, restore frontier production changes, retain the Harvest
-correction/evidence, and stop.
+Root broad-action competition remains the measured exact-search wall. The
+dense structural-DAG replay shape is closed; do not reopen it as caching,
+lockstep loop accounting, or a cap increase. Oliver must select the next
+solver research or implementation chunk before source work resumes.
 
 Commits remain local unless Oliver asks to push and must end with:
 

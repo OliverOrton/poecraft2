@@ -272,10 +272,11 @@ pc_result pc_action_context_debug_pool(
     pc_error_info* out_error);
 
 /*
- * Build a Harvest-targeted candidate pool restricted to mods carrying the named
- * classification tag, weighted by active spawn weight only (each entry's
- * final_weight == spawn_weight; generation multipliers do not apply).
- * Returns PC_RESULT_NOT_FOUND if the tag name is unknown. side_filter as above.
+ * Build a Harvest-targeted candidate pool restricted to mods carrying the
+ * named classification tag and the ordinary naturally rollable pool. Entries
+ * require positive spawn and generation weights; final_weight is the ordinary
+ * spawn/generation product. Returns PC_RESULT_NOT_FOUND if the tag name is
+ * unknown. side_filter as above.
  */
 pc_result pc_action_context_debug_harvest_pool(
     pc_action_context_handle context,
