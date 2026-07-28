@@ -28,8 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation plan is active. [HANDOFF](../HANDOFF.md) records the
-completed boundary and requires Oliver to select the next chunk.
+The active
+[Chaos-Anchored Incremental Action Generation](active/plan.md)
+milestone evaluates Chaos and inexpensive rows first, immediately releases
+their successor states, and incrementally evaluates delayed exact alternatives
+against restricted Bellman values. An open or resource-limited filtered action
+envelope blocks global exactness.
 
 The completed
 [Harvest Natural Pools And Shared Exact Reforge Frontier](archive/2026-07-28-harvest-shared-reforge-frontier/README.md)

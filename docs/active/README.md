@@ -1,11 +1,16 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-[HANDOFF](../../HANDOFF.md) records the completed implementation boundary.
-Oliver must select the next chunk before source work resumes.
+The active
+[Chaos-Anchored Incremental Action Generation](plan.md)
+milestone replaces atomic all-operator state expansion with an exact
+incremental action-envelope schedule. Chaos and inexpensive rows release
+successors first; delayed Fossil, Harvest reforge, and Essence alternatives
+are evaluated against successively optimized restricted values without
+claiming exactness while the envelope remains open.
 
 The most recently completed milestone is
 [Harvest Natural Pools And Shared Exact Reforge Frontier](../archive/2026-07-28-harvest-shared-reforge-frontier/README.md).

@@ -1,35 +1,34 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.**
+**Status: an implementation boundary is active.**
 
-Latest archive:
-[Harvest Natural Pools And Shared Exact Reforge Frontier](docs/archive/2026-07-28-harvest-shared-reforge-frontier/README.md)
+Plan:
+[Chaos-Anchored Incremental Action Generation](docs/active/plan.md)
 
-## Completed
+Branch: `codex/chaos-anchored-incremental-actions`
 
-Oliver's 2026-07-28 Harvest ruling is implemented. Harvest reforge, augment,
-and resistance conversion share the `TargetedNatural` pool: positive spawn
-and ordinary generation weights, requested target tag, and ordinary final
-roll weight. The positive-spawn/zero-generation regression covers sampled,
-exact, and debug paths.
+Starting source: `f37b4ef` (`main`)
 
-The shared exact reforge-frontier prototype was measured and restored. After
-its canonical bucket projection was corrected, Lucent/full-four and
-Jagged/deep-four matched sequential outcomes, probability bits, discovered
-states, and deterministic hashes. It did not reduce action-lane work, did not
-move the 3,000,000-work product boundary, retained about 47 MiB, and increased
-total wall time by 26–33%.
+## Current Boundary
 
-No shared cross-action frontier, frontier telemetry, cap change, work-account
-change, or solver semantic change survives. The unrestricted solver and
-goal-progress-gated mode retain their prior contracts.
+Proceed through the active plan without another confirmation.
 
-## Current Decision Boundary
+Refactor the solver's atomic all-operator state expansion into an exact
+incremental action envelope. Chaos and inexpensive actions publish successors
+first. Bellman may optimize the admitted restricted graph while filtered
+Fossil, corrected Harvest reforge, and goal-relevant Essence actions remain
+unevaluated. Improving exact rows are admitted and trigger reoptimization;
+support-delta rows must expand their new states before classification.
 
-Root broad-action competition remains the measured exact-search wall. The
-dense structural-DAG replay shape is closed; do not reopen it as caching,
-lockstep loop accounting, or a cap increase. Oliver must select the next
-solver research or implementation chunk before source work resumes.
+A usable bounded policy may be returned while the envelope is open. Global
+exactness is forbidden until every filtered legal action is evaluated or
+safely ruled out. Resource-limited or value-incomplete rows remain explicitly
+unresolved.
+
+Keep initial product caps and probability-work accounting unchanged. Veiled
+and Eldritch work are outside scope. If the architecture cannot preserve exact
+status semantics or make meaningful incremental progress, restore experimental
+production changes and retain the evidence.
 
 Commits remain local unless Oliver asks to push and must end with:
 
