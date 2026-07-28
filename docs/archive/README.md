@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [Certified Root-Action Feasibility](2026-07-27-certified-root-action-feasibility/README.md) —
+  rejected public integration of the existing certificate after all four hard
+  cases completed exact first-action projection without any finite executable
+  incumbent before their first cap-failing Chaos row.
+
 - [True First-Frontier Successor Census](2026-07-27-true-successor-frontier-census/README.md) —
   completed the four cap-censored first Chaos rows at 222,580 to 3,204,323
   successors and found 98.71% to 99.65% dense one-sided support products; no

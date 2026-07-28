@@ -96,6 +96,20 @@ rejected. The complete cleanup population is also insufficient; even the
 closest impossible free-deletion ceiling remains 694 states over the current
 cap.
 
+The subsequent
+[certified root-action feasibility pass](../archive/2026-07-27-certified-root-action-feasibility/README.md)
+tested the narrower product objective directly. The existing constructive
+certificate qualified on its small positive oracle, but all four hard cases
+completed their admitted root envelope and exact first-action projection
+without a finite executable incumbent. They exposed 91 to 107 root-action
+classes and then hit `max_discovered_states` on the first Chaos row. Therefore
+public result, termination, and product work is not deferred momentum: there
+is no hard-case certificate to surface. A future root-action plan must first
+produce a certified executable class upper before broad-row materialization
+and then prove action-class lower separation. The earlier fixed-policy renewal
+upper is evidence, not a ready implementation; it exceeded current work on
+both three-mod cases and the cheap lower left Chaos at `1`.
+
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
 supersedes the three-slot discovery bottleneck: exact producibility filtering

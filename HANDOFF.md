@@ -1,45 +1,52 @@
 # Session Handoff
 
-**Status: Gate 0 active for certified root-action feasibility.**
+**Status: no active implementation boundary.** Oliver must choose the next
+chunk before implementation resumes.
 
-Plan: [Certified Root-Action Feasibility](docs/active/plan.md)
+## Latest completed result
 
-Branch: `codex/certified-root-action-feasibility`
+The 2026-07-27
+[Certified Root-Action Feasibility](docs/archive/2026-07-27-certified-root-action-feasibility/README.md)
+pass tested whether the existing constructive proof machinery could certify a
+next executable craft before the four hard natural-T1 cases entered their
+first cap-failing Chaos row.
 
-Starting source: `0fe0673` (`main`)
+The positive small oracle passed, but every hard case had the same decisive
+pre-row state:
 
-## Current Boundary
+- the admitted root operator envelope was complete;
+- exact first-action projection produced 91 to 107 classes;
+- all isolated admissible class lowers were available; and
+- no finite executable root-class upper existed.
 
-Write and freeze what a certified next craft means before changing solver
-behavior. The certificate groups planner operators by their exact first
-executable primitive request and proves one action class strictly below every
-other admitted class using a certified executable upper and admissible
-action-local lowers.
+Each case then hit `max_discovered_states` at 200,000 states after one
+expansion. The current certificate requires the complete retained row and
+successor constructive uppers, so it cannot avoid the row that blocks it.
+Result, termination, and product plumbing alone would expose only an
+unavailable certificate.
 
-The current constructive state certificate is only a starting proof primitive.
-It is disabled in focused mode, requires a complete constructive row, exists
-to prune remaining operators, and has no durable root-action result,
-termination, first-action grouping, or public/product contract.
+All measurement-only source was restored. The retained changes are
+documentation and
+[tracked evidence](fixtures/solver-natural-t1/v1/evidence/certified-root-action-feasibility-summary.json)
+only. No mechanic, goal, condition, action, transition, solver algorithm,
+product cap, ABI, artifact, binding, WASM, web, or product behavior changed.
 
-## Immediate Next Step
+## Plausible future boundary
 
-Complete the Gate 0 code/identity audit, then add only the Gate 1 shadow
-root-interval diagnostic. It must not change row order, Bellman values, caps,
-policies, or termination.
+Certified next action remains narrower and more product-relevant than exact
+value closure, but a new selected plan must first produce a certified
+executable action-class upper before broad-row materialization and then
+separate it from every competing action-class lower. The archived fixed-policy
+renewal upper is evidence only: it exceeds current work on both three-mod
+cases and its cheap competing lower leaves Chaos at `1`.
 
-Run the frozen smoke/control cases and four established hard representatives.
-Proceed to implementation only if a previously refused hard case obtains a
-strict, complete-scope certificate before its known cap-failing first Chaos
-row. Otherwise restore the diagnostic and close with the measured blocking
-intervals.
+## Repository state
 
-## Standing Boundaries
+- Local `main` contains the completed history through `0fe0673`.
+- This completed evidence/docs pass is on
+  `codex/certified-root-action-feasibility`.
+- Nothing is pushed.
 
-- Do not raise product caps.
-- Do not revive cleanup, quotient, or side-factorization directions.
-- Do not present a stable action, finite incumbent, restricted-action result,
-  or post-cap observation as a certificate.
-- Wall time is machine/compiler-bound; report deterministic work as well.
-- Commits remain local unless Oliver says to push and end with:
+Commits must remain local unless Oliver asks to push and must end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

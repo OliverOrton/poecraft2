@@ -1,17 +1,19 @@
 # Active Work
 
-**Status: certified root-action feasibility is active.**
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Current plan:
-[Certified Root-Action Feasibility](plan.md). It first audits whether the
-existing executable-upper and admissible operator-lower machinery can prove a
-strictly optimal next executable craft before the natural-T1 hard cases enter
-their cap-failing first broad row. Public or product integration is forbidden
-unless the shadow interval audit qualifies a previously refused case.
+The most recently completed milestone is
+[Certified Root-Action Feasibility](../archive/2026-07-27-certified-root-action-feasibility/README.md).
+Its positive oracle proved the shadow audit could observe an existing
+constructive certificate, but all four hard cases completed 91 to 107 exact
+first-action classes without any finite executable incumbent. Each then hit
+the first Chaos state cap. Measurement source was restored; no public
+certificate or solver behavior was retained.
 
-The most recently completed milestone is the
+The preceding completed milestone is the
 [True First-Frontier Successor Census](../archive/2026-07-27-true-successor-frontier-census/README.md).
 It measured complete exact Chaos supports from 222,580 to 3,204,323 states.
 The supports are at least 98.71% dense in their one-sided payload products,

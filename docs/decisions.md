@@ -246,3 +246,24 @@ cuts solve wall by 22.3% with identical deterministic results. This is a
 post-incumbent engineering improvement, not progress on the four hard 11M
 pre-bound failures. Reopening broad-kernel work requires a new
 Oliver-selected boundary and materially different evidence.
+
+## 2026-07-27 â€” Existing Root Certificate Is Not A Product Result
+
+**Decision:** Do not add a public certified-next-action result or early stop
+by merely promoting the existing constructive state certificate. The hard
+natural-T1 cases complete exact first-action projection but have no finite
+executable incumbent before their first cap-failing Chaos row.
+
+Certified root action remains a valid future objective only behind a new
+proof-producing gate: first obtain a certified executable action-class upper
+before broad-row materialization, then prove it strictly below every competing
+class lower. Stable guesses, rankings, restricted scopes, incomplete
+envelopes, and post-cap observations are not certificates.
+
+**Context:** [Final report](archive/2026-07-27-certified-root-action-feasibility/report.md),
+[Solver](solver/README.md), and
+[tracked evidence](../fixtures/solver-natural-t1/v1/evidence/certified-root-action-feasibility-summary.json).
+
+**Consequences:** The shadow probe is restored and no ABI, WASM, or product
+work is selected. A future attempt starts from new exact action-local upper or
+lower mathematics, not result plumbing.

@@ -28,13 +28,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Certified Root-Action Feasibility](active/plan.md) pass first defines the
-proof and product contract, then measures whether existing executable uppers
-and admissible action-local lowers can certify a next craft before a hard
-natural-T1 solve materializes its first cap-failing broad row. Public
-integration is conditional on that shadow audit qualifying a previously
-refused case.
+There is no active implementation boundary. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[Certified Root-Action Feasibility](archive/2026-07-27-certified-root-action-feasibility/README.md)
+pass rejected public integration of the existing proof machinery. All four
+hard cases completed exact first-action projection over 91 to 107 classes
+before broad-row work, but none had a finite executable incumbent; each then
+hit the first Chaos state cap. The positive constructive oracle passed and all
+measurement source was restored.
 
 The completed
 [True First-Frontier Successor Census](archive/2026-07-27-true-successor-frontier-census/README.md)

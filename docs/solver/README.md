@@ -317,6 +317,16 @@ the proof depends on current prices, a partial graph produced by it is never
 retained as the price-independent transition cache; a later reprice rebuilds
 or safely reuses only a separately completed all-action graph.
 
+It is also not a public certified-next-action result. A 2026-07-27 shadow
+audit grouped the complete hard-case root envelopes into 91 to 107 exact first
+executable-action classes. The existing proof qualified on its small
+constructive oracle, but every hard case lacked a finite executable incumbent
+before its first broad row and then hit the 200,000-state cap. A future
+verified-next-action surface therefore requires new pre-expansion
+proof-producing upper/lower work; the current witness cannot simply be
+promoted into an early product result. See the
+[feasibility report](../archive/2026-07-27-certified-root-action-feasibility/report.md).
+
 Selected-allocation enforcement uses incremental owner ledgers with periodic
 full audits. On the accepted two-T1 product, per-state preparation byte audits
 fell from the 22.47-second baseline to 7.3 ms (0.04% of expansion); audited

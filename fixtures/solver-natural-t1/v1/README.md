@@ -50,6 +50,12 @@ completes those four exact Chaos supports at 222,580 to 3,204,323 states. It
 shows that the cap prefix already contained every one-sided/goal projection
 class and that the complete support occupies at least 98.71% of the one-sided
 payload product.
+The later
+[certified root-action feasibility summary](evidence/certified-root-action-feasibility-summary.json)
+shows that all four hard cases complete exact first-action projection over 91
+to 107 classes before broad-row work, but none has a finite executable
+incumbent there. Public certificate integration was rejected and the
+measurement probe was restored.
 
 ## Benchmark workflow
 

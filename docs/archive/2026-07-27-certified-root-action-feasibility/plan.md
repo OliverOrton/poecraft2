@@ -1,12 +1,20 @@
 # Certified Root-Action Feasibility
 
-**Status: active, falsification-first solver research.**
+**Status: complete (2026-07-27), rejected at Gate 1.**
 
 Owner: Oliver
 
 Branch: `codex/certified-root-action-feasibility`
 
 Starting source: `0fe0673` (`main`)
+
+## Outcome
+
+Gate 0 froze the proof and shipping contract. Gate 1 added a
+measurement-only root interval audit and qualified its positive constructive
+oracle, but none of the four hard cases had a finite executable root-class
+upper before its first cap-failing Chaos row. The probe was restored and
+Gates 2 through 4 were not entered. See the [final report](report.md).
 
 ## Decision To Make
 

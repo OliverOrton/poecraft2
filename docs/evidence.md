@@ -545,6 +545,34 @@ architecture: support is a dense joint side product, and the preceding
 factorization experiment already rejected a simple rank-one probability
 representation.
 
+## Certified Root-Action Feasibility Rejection
+
+The 2026-07-27
+[final report](archive/2026-07-27-certified-root-action-feasibility/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/certified-root-action-feasibility-summary.json)
+pin the narrower objective against current machinery.
+
+- The positive constructive-certificate oracle reported strict root-action
+  separation, and the native suite passed 500,601 checks with zero failures.
+- Before ordinary broad-row work, all four hard cases completed their admitted
+  root envelope, exact first-action projection, and isolated admissible class
+  lowers over 91 to 107 action classes.
+- None had a finite executable root-class upper. Certification therefore
+  failed before lower-bound strength was even decisive.
+- Each hard case then reached 200,000 discovered states after one expansion,
+  with 6,119,280 to 10,143,446 deterministic reforge work, and returned
+  `refused_state_cap`.
+- The fixed five-case run had no timeout or survivor. Wall times are
+  machine/compiler-bound; the tracked state, class, row, transition, and
+  reforge-work counts are the portable evidence.
+
+The measurement-only source was restored. No root-certificate result,
+termination, ABI, WASM, product, cap, mechanic, or solver behavior changed.
+Future verified-next-action work must first supply a certified executable
+class upper before broad-row materialization and then separate it from every
+competing class lower.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
