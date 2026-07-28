@@ -925,7 +925,7 @@ ActionOutcome do_harvest_reforge(
     restore_slots(item, kept);
     item->rarity = PC_RARITY_RARE;
     PoolBuildRequest guaranteed;
-    guaranteed.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+    guaranteed.weight_kind = PoolWeightKind::TargetedNatural;
     guaranteed.target_tag_id = tag_id;
     if (!add_random_mod(context, guaranteed, item)) return {};
     int target = std::min<int>(rare_count(context), session.rare_affix_cap * 2);
@@ -946,7 +946,7 @@ ActionOutcome do_harvest_augment(
         return {};
     }
     PoolBuildRequest request;
-    request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+    request.weight_kind = PoolWeightKind::TargetedNatural;
     request.target_tag_id = tag_id;
     std::uint32_t added_id = kNoMod;
     if (!add_random_mod(
@@ -1012,7 +1012,7 @@ ActionOutcome do_harvest_resist(
                                        : item->suffixes[ref.index];
         pc_item_remove_at(item, ref.side, ref.index);
         PoolBuildRequest request;
-        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.weight_kind = PoolWeightKind::TargetedNatural;
         request.target_tag_id = target_tag;
         request.side_filter = ref.side;
         const WeightedPool& pool = get_weighted_pool(context, item, request);

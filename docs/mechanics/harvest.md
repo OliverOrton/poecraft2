@@ -4,7 +4,7 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-28 @ active
 
 Verification scope: checked-in recipe manifest, generated native allowlist,
 sampled and exact native transitions, solver registry, and Emulator and
@@ -31,13 +31,13 @@ The exact allowlist is:
 
 `harvest_reforge:<tag>` requires a rare, non-corrupted, non-mirrored item. It
 preserves fractured affixes and locked sides, adds one guaranteed first
-modifier from the target-tagged positive spawn-weight pool, then fills from the
-ordinary pool toward a random four-to-six-mod rare result. Cannot Roll
-Attack/Caster filters apply to both the guaranteed and filler pools.
+modifier from the target-tagged ordinary naturally rollable pool, then fills
+from the ordinary pool toward a random four-to-six-mod rare result. Cannot
+Roll Attack/Caster filters apply to both the guaranteed and filler pools.
 
 `harvest_augment:<tag>` requires a magic or rare, non-corrupted,
 non-mirrored item with no generic influence and no Eldritch implicit tier. It
-adds one target-tagged modifier from the positive spawn-weight pool, then
+adds one target-tagged modifier from the ordinary naturally rollable pool, then
 samples uniformly from every other non-fractured affix on unlocked sides and
 removes one. If there is no other removable affix, the added modifier remains.
 The add step obeys capacity, group conflicts, and Cannot Roll filters.
@@ -45,17 +45,27 @@ The add step obeys capacity, group conflicts, and Cannot Roll filters.
 `harvest_resist:<source>:<target>` requires magic or rare rarity. It selects an
 eligible non-fractured source modifier on an unlocked side that carries both
 the `resistance` tag and the requested source-element tag. It removes that
-modifier and chooses a positive spawn-weight replacement on the same side with
-the same required level, the `resistance` and target-element tags, and without
-the source-element tag. If a selected source has no replacement, it is restored
-and another distinct source modifier ID may be attempted. The action refuses
-when no complete conversion is possible.
+modifier and chooses an ordinary naturally rollable replacement on the same
+side with the same required level, the `resistance` and target-element tags,
+and without the source-element tag. If a selected source has no replacement,
+it is restored and another distinct source modifier ID may be attempted. The
+action refuses when no complete conversion is possible.
+
+For all three operations, “ordinary naturally rollable” means positive spawn
+weight, positive ordinary generation weight, membership in the requested
+target-tag classification, and the ordinary final roll weight. Zero ordinary
+generation weight always excludes a modifier. Harvest does not replace its
+generation percentage with `100` or revive a zero-generation modifier.
 
 The resistance registry ID contains both source and target. Its economy cost
 key is target-specific: `harvest_resist:<target>`.
 
 ## Dated Oliver Rulings
 
+- **2026-07-28:** Harvest reforge, augment, and resistance conversion all use
+  the target-restricted ordinary naturally rollable pool. Both spawn and
+  ordinary generation weights must be positive, and selection uses ordinary
+  final roll weight. A zero-generation modifier remains unavailable.
 - **2026-07-15:** the checked-in current-core-game recipe manifest is the
   owner-approved engine/web allowlist and price mapping. Arbitrary session tags
   must not become actions; the canonical key is `defences`; resistance prices
@@ -75,7 +85,8 @@ so this reference does not invent one.
   build-time native arrays derived from the fixture.
 - `engine/src/actions_basic.cpp` — sampled reforge, augment, and resistance
   conversion.
-- `engine/src/session_builder.cpp` — spawn-only targeted pool construction.
+- `engine/src/session_builder.cpp` — shared targeted-natural pool
+  construction.
 - `engine/src/solver_registry.cpp` — exact action IDs, legality, and cost keys.
 - `engine/src/solver_reforge.cpp` — exact guaranteed-first reforge distribution.
 - `engine/src/solver_calc.cpp` — exact add-then-remove and resistance
@@ -122,11 +133,6 @@ the versioned recipe manifest.
 
 ## Open Questions Requiring Oliver
 
-- Is the implemented Harvest reforge guarantee correctly defined as one first
-  modifier from the target-tagged positive **spawn-weight-only** pool followed
-  by ordinary generation-weighted filling? Until Oliver confirms this, shared
-  reforge-frontier designs must treat Harvest as unresolved rather than add a
-  Harvest-specific structural exception.
 - Should the C ABI and strategy compiler reject every `harvest_resist` pair
   outside the six owner-approved fire/cold/lightning conversions, matching the
   solver registry and product controls?

@@ -353,10 +353,10 @@ void check_combined(
     PC_CHECK(suffixes == summary.at("suffix_count").as_int());
 }
 
-// Harvest spawn-only targeting: the pool for a classification tag must equal
-// (mods with that tag) intersect (mods with positive spawn weight), weighted by
-// spawn only. Cross-checked against the independent implicit-tag and
-// positive-spawn mask dumps.
+// Harvest targeted-natural selection: the pool for a classification tag must
+// equal (mods with that tag) intersect (ordinary positive final roll weight).
+// Cross-checked against the independent implicit-tag, normal-random, and
+// positive-base mask dumps.
 void check_harvest(
     pc_session_handle session,
     pc_action_context_handle context,
@@ -375,11 +375,16 @@ void check_harvest(
     std::set<uint32_t> actual;
     for (const auto& e : entries) {
         actual.insert(e.session_mod_id);
-        PC_CHECK(e.final_weight == e.spawn_weight); // spawn-only, no gen mult
+        PC_CHECK(
+            e.final_weight ==
+            (static_cast<std::uint64_t>(e.spawn_weight) *
+             e.generation_multiplier_pct) /
+                100);
         PC_CHECK(e.spawn_weight > 0);
+        PC_CHECK(e.generation_multiplier_pct > 0);
     }
 
-    // expected = normal random AND implicit_tag("life") AND positive_spawn.
+    // expected = normal random AND implicit_tag("life") AND positive base.
     // Phase 13 adds unveiled/implicit registries to the same session universe,
     // but Harvest never draws those direct-mechanic rows.
     uint32_t life_n = 0;
@@ -387,13 +392,15 @@ void check_harvest(
     std::vector<uint32_t> life_ids(life_n);
     pc_session_dump_implicit_tag(session, "life", life_ids.data(), life_n,
                                  &life_n, &error);
-    uint32_t spawn_n = 0;
-    pc_session_dump_mask(session, PC_MASK_POSITIVE_SPAWN, nullptr, 0, &spawn_n,
+    uint32_t positive_n = 0;
+    pc_session_dump_mask(session, PC_MASK_POSITIVE_BASE, nullptr, 0,
+                         &positive_n, &error);
+    std::vector<uint32_t> positive_ids(positive_n);
+    pc_session_dump_mask(session, PC_MASK_POSITIVE_BASE,
+                         positive_ids.data(), positive_n, &positive_n,
                          &error);
-    std::vector<uint32_t> spawn_ids(spawn_n);
-    pc_session_dump_mask(session, PC_MASK_POSITIVE_SPAWN, spawn_ids.data(),
-                         spawn_n, &spawn_n, &error);
-    std::set<uint32_t> spawn_set(spawn_ids.begin(), spawn_ids.end());
+    std::set<uint32_t> positive_set(
+        positive_ids.begin(), positive_ids.end());
     uint32_t normal_n = 0;
     pc_session_dump_mask(session, PC_MASK_NORMAL_RANDOM_ROLL, nullptr, 0,
                          &normal_n, &error);
@@ -403,7 +410,7 @@ void check_harvest(
     std::set<uint32_t> normal_set(normal_ids.begin(), normal_ids.end());
     std::set<uint32_t> expected;
     for (uint32_t id : life_ids) {
-        if (spawn_set.count(id) && normal_set.count(id))
+        if (positive_set.count(id) && normal_set.count(id))
             expected.insert(id);
     }
     PC_CHECK(actual == expected);

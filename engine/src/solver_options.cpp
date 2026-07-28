@@ -2210,7 +2210,7 @@ std::vector<std::uint64_t> CalcContext::temporary_followup_eligible_mask(
         break;
     case ActionType::HarvestAugment:
         if (followup.params.target_tag_id == kNoId) return result;
-        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.weight_kind = PoolWeightKind::TargetedNatural;
         request.target_tag_id = followup.params.target_tag_id;
         break;
     case ActionType::VeiledExalt: {
@@ -2277,7 +2277,7 @@ double CalcContext::optimistic_goal_draw_probability(
             action.params.target_tag_id == kNoId) {
             return 0.0;
         }
-        request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        request.weight_kind = PoolWeightKind::TargetedNatural;
         request.target_tag_id = action.params.target_tag_id;
     }
 

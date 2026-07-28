@@ -233,8 +233,9 @@ struct RollBucket {
     std::uint32_t junk_class = kNoId;   /* junk buckets; kNoId = unclassified */
     std::uint32_t block_mask = 0;       /* goal groups a junk pick occupies */
     std::uint64_t weight = 0;           /* per family, normal fill pool */
-    /* Per family weight in the guaranteed first-pick pool (harvest
-     * reforge: spawn-only weights restricted to the target tag). */
+    /* Per-family weight in the guaranteed first-pick pool (Harvest
+     * reforge: ordinary naturally rollable weights restricted to the
+     * target tag). */
     std::uint64_t guaranteed = 0;
     std::uint32_t multiplicity = 1;
     /* Complete generation-group signature. Any overlap with a previously
@@ -577,9 +578,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
 
     /* Aggregate pool weights per complete (side, exclusion-group family)
      * with goal classification. Harvest reforge overlays a
-     * second weight per family: the guaranteed first pick's spawn-only
-     * tag pool. A family can be guaranteed-only (positive spawn weight,
-     * zero normal fill weight). */
+     * second weight per family: the guaranteed first pick's targeted
+     * naturally rollable pool. */
     const bool harvest = action.params.type == ActionType::HarvestReforge;
     struct WeightPair {
         std::uint64_t normal = 0;
@@ -659,7 +659,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     }
     if (harvest) {
         PoolBuildRequest guaranteed_request;
-        guaranteed_request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+        guaranteed_request.weight_kind = PoolWeightKind::TargetedNatural;
         guaranteed_request.target_tag_id = action.params.target_tag_id;
         const WeightedPool& guaranteed_pool =
             get_weighted_pool(context_, &base, guaranteed_request);
@@ -973,7 +973,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (!harvest) {
         frontier.emplace(RollState{}, 1.0);
     } else {
-        /* Guaranteed first pick from the tag-targeted spawn-only pool.
+        /* Guaranteed first pick from the tag-targeted natural pool.
          * An empty pool means the engine action does not apply. */
         const RollState root;
         const std::uint8_t occupied = occupied_mask(root, base_occupied);

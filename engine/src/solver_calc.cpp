@@ -1644,12 +1644,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
             break;
         }
         case ActionType::HarvestAugment: {
-            /* Add one tag-targeted mod (spawn-weight-only pool), then
+            /* Add one tag-targeted naturally rollable mod, then
              * remove one uniform other non-fractured mod on an unlocked
              * side — the add-then-remove semantics are intentional. */
             result.supported = true;
             PoolBuildRequest request;
-            request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+            request.weight_kind = PoolWeightKind::TargetedNatural;
             request.target_tag_id = action.params.target_tag_id;
             const std::uint8_t cap = rarity_affix_cap(session, item.rarity);
             const bool prefix_open = item.prefix_count < cap;
@@ -1746,7 +1746,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                     option.side = side;
                     pc_item_remove_at(&option.removed, side, i);
                     PoolBuildRequest request;
-                    request.weight_kind = PoolWeightKind::HarvestSpawnOnly;
+                    request.weight_kind = PoolWeightKind::TargetedNatural;
                     request.target_tag_id = action.params.target_tag_id;
                     request.side_filter = side;
                     const WeightedPool& pool = get_weighted_pool(

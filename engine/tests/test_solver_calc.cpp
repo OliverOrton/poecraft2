@@ -20,6 +20,8 @@ using namespace poecraft::solver;
 namespace {
 
 constexpr std::uint32_t kTagFire = 3;
+constexpr std::uint32_t kTagCold = 4;
+constexpr std::uint32_t kTagResistance = 6;
 
 /*
  * Same eight ordinary mods as test_solver_abstract.cpp, plus dedicated
@@ -39,7 +41,21 @@ std::shared_ptr<SessionImpl> make_calc_session() {
     data->spawn_tag_ids.assign(10, 0);
     data->spawn_weights = {
         100, 100, 100, 100, 100, 100, 100, 400, 100, 100};
+    data->gen_offsets =
+        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    data->gen_tag_ids.assign(10, 0);
+    data->gen_weights.assign(10, 100);
     data->mod_gen_type_code.assign(10, 0);
+    data->tag_id_by_name = {
+        {"fire", kTagFire},
+        {"cold", kTagCold},
+        {"resistance", kTagResistance},
+    };
+    data->tag_name_by_id = {
+        {kTagFire, "fire"},
+        {kTagCold, "cold"},
+        {kTagResistance, "resistance"},
+    };
 
     auto session = std::make_shared<SessionImpl>();
     session->data = data;
@@ -176,6 +192,175 @@ bool same_distribution(
         }
     }
     return true;
+}
+
+bool item_contains_mod(
+    const pc_item_state& item,
+    const std::uint32_t mod_id) {
+    for (std::uint8_t i = 0; i < item.prefix_count; ++i) {
+        if (item.prefixes[i].mod_id == mod_id) return true;
+    }
+    for (std::uint8_t i = 0; i < item.suffix_count; ++i) {
+        if (item.suffixes[i].mod_id == mod_id) return true;
+    }
+    return false;
+}
+
+void run_harvest_targeted_natural_regression() {
+    constexpr std::uint32_t kGoodFire = 5;
+    constexpr std::uint32_t kColdSource = 6;
+    constexpr std::uint32_t kZeroGenerationFire = 7;
+
+    auto session = make_calc_session();
+    /* Mod 7 remains an ordinary random member with positive spawn weight,
+     * but zero ordinary generation weight. Give it the same target tags as
+     * the valid fire-resistance mod so only the weight contract excludes it. */
+    session->base_gen_pct[kZeroGenerationFire] = 0;
+    session->base_roll_weight[kZeroGenerationFire] = 0;
+    pc_bitset_clear(
+        session->positive_base_weight_mask.data(),
+        kZeroGenerationFire);
+    session->class_tag_ids = {
+        1, 2, kTagFire, kTagResistance, kTagCold, kTagResistance,
+        kTagFire, kTagResistance};
+    session->class_offsets = {0, 0, 0, 0, 1, 2, 4, 6, 8, 8, 8};
+    session->implicit_tag_masks.assign(
+        7, std::vector<std::uint64_t>(session->words, 0));
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        for (std::uint32_t index = session->class_offsets[mod];
+             index < session->class_offsets[mod + 1]; ++index) {
+            pc_bitset_set(
+                session->implicit_tag_masks[
+                    session->class_tag_ids[index]]
+                    .data(),
+                mod);
+        }
+    }
+
+    pc_item_state empty_rare;
+    pc_item_clear(&empty_rare);
+    empty_rare.rarity = PC_RARITY_RARE;
+
+    ActionContextImpl debug_context(1);
+    debug_context.session = session;
+    PoolBuildRequest targeted;
+    targeted.weight_kind = PoolWeightKind::TargetedNatural;
+    targeted.target_tag_id = kTagFire;
+    std::vector<PoolDebugRow> debug_rows;
+    WeightedPool debug_summary;
+    build_pool_debug_rows(
+        debug_context, &empty_rare, targeted, true, debug_rows,
+        &debug_summary, nullptr);
+    PC_CHECK(debug_summary.entries.size() == 1);
+    PC_CHECK(
+        !debug_summary.entries.empty() &&
+        debug_summary.entries.front().session_mod_id == kGoodFire);
+    bool saw_zero_generation_debug = false;
+    for (const PoolDebugRow& row : debug_rows) {
+        if (row.entry.session_mod_id != kZeroGenerationFire) continue;
+        saw_zero_generation_debug = true;
+        PC_CHECK(row.normal_random_member);
+        PC_CHECK(row.mechanic_allowed);
+        PC_CHECK(!row.positively_weighted);
+        PC_CHECK(row.entry.spawn_weight == 400);
+        PC_CHECK(row.entry.generation_pct == 0);
+        PC_CHECK(row.entry.final_weight == 0);
+        PC_CHECK(row.generation_applied);
+        PC_CHECK(row.first_failure == 6);
+    }
+    PC_CHECK(saw_zero_generation_debug);
+
+    ActionRegistry registry;
+    const auto add_action = [&](ActionDescriptor action) {
+        const std::uint32_t index =
+            static_cast<std::uint32_t>(registry.actions.size());
+        registry.index_by_id.emplace(action.id, index);
+        registry.actions.push_back(std::move(action));
+    };
+    ActionDescriptor reforge;
+    reforge.id = "harvest_reforge:fire";
+    reforge.params.type = ActionType::HarvestReforge;
+    reforge.params.target_tag_id = kTagFire;
+    reforge.kind = TransitionKind::Reforge;
+    reforge.cost_keys = {reforge.id};
+    reforge.discriminating_tag_ids = {kTagFire};
+    add_action(reforge);
+
+    ActionDescriptor augment;
+    augment.id = "harvest_augment:fire";
+    augment.params.type = ActionType::HarvestAugment;
+    augment.params.target_tag_id = kTagFire;
+    augment.kind = TransitionKind::Special;
+    augment.cost_keys = {augment.id};
+    augment.discriminating_tag_ids = {kTagFire};
+    add_action(augment);
+
+    ActionDescriptor resist;
+    resist.id = "harvest_resist:cold:fire";
+    resist.params.type = ActionType::HarvestResist;
+    resist.params.source_tag_id = kTagCold;
+    resist.params.target_tag_id = kTagFire;
+    resist.kind = TransitionKind::Special;
+    resist.cost_keys = {"harvest_resist:fire"};
+    resist.discriminating_tag_ids = {
+        kTagCold, kTagFire, kTagResistance};
+    add_action(resist);
+
+    GoalSpec zero_generation_goal;
+    GoalSlot zero_generation_slot;
+    zero_generation_slot.family_id =
+        session->family_id[kZeroGenerationFire];
+    zero_generation_slot.min_tier = 1;
+    zero_generation_goal.slots = {zero_generation_slot};
+    CalcContext calc(session, zero_generation_goal, registry, {});
+
+    pc_item_state augment_start = empty_rare;
+    place(&augment_start, PC_SIDE_PREFIX, 0, 10);
+    pc_item_state resist_start = empty_rare;
+    place(
+        &resist_start, PC_SIDE_SUFFIX, kColdSource,
+        static_cast<std::uint16_t>(
+            session->primary_group[kColdSource]));
+
+    const auto check_exact = [&](const pc_item_state& start,
+                                 const std::uint32_t action_index) {
+        const OutcomeDistribution& distribution =
+            calc.outcomes(calc.intern_item(start), action_index);
+        PC_CHECK(distribution.supported);
+        PC_CHECK(sums_to_one(distribution));
+        PC_CHECK(distribution.slot_satisfied_probability[0] == 0.0);
+        for (const OutcomeEntry& entry : distribution.entries) {
+            pc_item_state successor;
+            PC_CHECK(calc.materialize(entry.state, successor));
+            PC_CHECK(
+                !item_contains_mod(
+                    successor, kZeroGenerationFire));
+            PC_CHECK(item_contains_mod(successor, kGoodFire));
+        }
+    };
+    check_exact(empty_rare, 0);
+    check_exact(augment_start, 1);
+    check_exact(resist_start, 2);
+
+    const std::array<std::pair<ActionParameters, pc_item_state>, 3>
+        sampled_cases = {{
+            {registry.actions[0].params, empty_rare},
+            {registry.actions[1].params, augment_start},
+            {registry.actions[2].params, resist_start},
+        }};
+    for (const auto& [action, start] : sampled_cases) {
+        for (std::uint64_t seed = 1; seed <= 128; ++seed) {
+            ActionContextImpl sampled(seed);
+            sampled.session = session;
+            pc_item_state result = start;
+            const ActionOutcome outcome =
+                apply_action(sampled, &result, action);
+            PC_CHECK(outcome.applied);
+            PC_CHECK(
+                !item_contains_mod(result, kZeroGenerationFire));
+            PC_CHECK(item_contains_mod(result, kGoodFire));
+        }
+    }
 }
 
 void run_goal_threshold_tests() {
@@ -1397,6 +1582,7 @@ void run_artifact_calc_tests(const char* artifact_dir) {
 void run_solver_calc_tests(const char* artifact_dir) {
     run_goal_threshold_tests();
     run_exact_distribution_tests();
+    run_harvest_targeted_natural_regression();
     run_reforge_tests();
     run_special_evaluator_tests();
     run_artifact_calc_tests(artifact_dir);

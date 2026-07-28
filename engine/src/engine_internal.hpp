@@ -434,7 +434,7 @@ struct WeightedPool {
 
 enum class PoolWeightKind : std::uint8_t {
     Normal = 0,
-    HarvestSpawnOnly = 1,
+    TargetedNatural = 1,
     Fossil = 2
 };
 

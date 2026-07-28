@@ -8,6 +8,10 @@ Branch: `codex/harvest-shared-reforge-frontier`
 
 Starting source: `94fb013` (`main`)
 
+Progress: Gate 1 is complete. The shared targeted-natural Harvest correction
+passed artifact-backed native acceptance (`515,093` checks, zero failures).
+Gate 2 is the current boundary.
+
 ## Objective
 
 First implement Oliver's 2026-07-28 Harvest mechanic ruling across sampled,
@@ -43,7 +47,7 @@ Before source edits:
    tests, and documentation;
 2. pin the starting commit, compiled artifact, frozen corpus, caps, compiler,
    and machine;
-3. identify one shared targeted-natural pool authority and every current
+3. identify one shared targeted-natural pool authority and every former
    `HarvestSpawnOnly` caller;
 4. capture sequential Chaos, Lucent, Jagged, and retained goal-relevant
    Harvest reforge evidence for the two frozen four-mod cases; and
@@ -160,4 +164,3 @@ Stop only for:
 - a genuine mechanic ambiguity not answered by Oliver's ruling;
 - a hard exactness/resource falsification in Gates 2–4; or
 - a consequential action outside this boundary.
-

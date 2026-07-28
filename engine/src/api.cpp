@@ -223,7 +223,7 @@ pc_result parse_action_request(
         out_action.target_tag_id = tag->second;
         if (out_pool != nullptr) {
             out_pool->weight_kind =
-                poecraft::PoolWeightKind::HarvestSpawnOnly;
+                poecraft::PoolWeightKind::TargetedNatural;
             out_pool->target_tag_id = tag->second;
         }
     } else if (request.action_type == PC_ACTION_HARVEST_RESIST) {
@@ -972,7 +972,7 @@ pc_result pc_action_context_debug_harvest_pool(
         return PC_RESULT_NOT_FOUND;
     }
     poecraft::PoolBuildRequest request;
-    request.weight_kind = poecraft::PoolWeightKind::HarvestSpawnOnly;
+    request.weight_kind = poecraft::PoolWeightKind::TargetedNatural;
     request.target_tag_id = it->second;
     request.side_filter = side_filter;
     const poecraft::WeightedPool& pool =

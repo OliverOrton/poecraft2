@@ -1174,13 +1174,11 @@ const WeightedPool& get_weighted_pool(
     }
 
     const std::vector<std::uint64_t>* positive =
-        request.weight_kind == PoolWeightKind::HarvestSpawnOnly
-            ? weights.positive_spawn
-            : weights.positive_base;
+        weights.positive_base;
     pc_bitset_and(candidate.data(), candidate.data(), positive->data(),
                   session.words);
 
-    if (request.weight_kind == PoolWeightKind::HarvestSpawnOnly) {
+    if (request.weight_kind == PoolWeightKind::TargetedNatural) {
         if (request.target_tag_id >= session.implicit_tag_masks.size() ||
             session.implicit_tag_masks[request.target_tag_id].empty()) {
             pc_bitset_zero(candidate.data(), session.words);
@@ -1274,10 +1272,7 @@ const WeightedPool& get_weighted_pool(
     pc_bitset_for_each(candidate.data(), session.words, [&](std::size_t raw) {
         if (raw >= session.mod_count) return;
         const std::uint32_t s = static_cast<std::uint32_t>(raw);
-        std::uint64_t final_weight =
-            request.weight_kind == PoolWeightKind::HarvestSpawnOnly
-                ? (*weights.spawn)[s]
-                : (*weights.base)[s];
+        std::uint64_t final_weight = (*weights.base)[s];
         if (request.weight_kind == PoolWeightKind::Fossil) {
             final_weight = apply_fossil_multiplier(
                 final_weight,
@@ -1304,10 +1299,7 @@ const WeightedPool& get_weighted_pool(
         entry.gen_type = session.gen_type[s];
         entry.required_level = session.required_level[s];
         entry.spawn_weight = (*weights.spawn)[s];
-        entry.generation_pct =
-            request.weight_kind == PoolWeightKind::HarvestSpawnOnly
-                ? 100
-                : (*weights.generation)[s];
+        entry.generation_pct = (*weights.generation)[s];
         entry.final_weight = static_cast<std::uint32_t>(
             std::min<std::uint64_t>(
                 final_weight, std::numeric_limits<std::uint32_t>::max()));
@@ -1406,10 +1398,7 @@ void build_pool_debug_rows(
         row.entry.gen_type = session.gen_type[s];
         row.entry.required_level = session.required_level[s];
         row.entry.spawn_weight = (*weights.spawn)[s];
-        row.entry.generation_pct =
-            request.weight_kind == PoolWeightKind::HarvestSpawnOnly
-                ? 100
-                : (*weights.generation)[s];
+        row.entry.generation_pct = (*weights.generation)[s];
         row.normal_random_member =
             mask_test(session.normal_random_roll_mask, s);
         row.side_allowed =
@@ -1451,18 +1440,14 @@ void build_pool_debug_rows(
             row.special_multiplier_pct =
                 fossil_multiplier_debug_pct(fossil_multiplier);
         } else if (request.weight_kind ==
-                   PoolWeightKind::HarvestSpawnOnly) {
+                   PoolWeightKind::TargetedNatural) {
             row.mechanic_allowed =
                 row.normal_random_member &&
                 has_class_tag(session, s, request.target_tag_id) &&
                 mask_test(metamod_allowed, s);
-            row.generation_applied = false;
         }
         row.positively_weighted =
-            request.weight_kind == PoolWeightKind::HarvestSpawnOnly
-                ? (*weights.spawn)[s] > 0
-                : (*weights.base)[s] > 0 &&
-                      fossil_multiplier > 0;
+            (*weights.base)[s] > 0 && fossil_multiplier > 0;
         if (signature_id == 0) {
             row.active_spawn_tag_id =
                 base_active_tag(session, s, false, &row.active_spawn_row);
