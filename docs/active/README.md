@@ -1,9 +1,14 @@
 # Active Work
 
-**Status: no active plan.** Oliver must choose the next chunk before
-implementation resumes.
+**Status: goal-progress-gated reforge implementation is active.**
 
 Parent: [Documentation map](../README.md)
+
+Current plan:
+[Goal-Progress-Gated Reforge Mode](plan.md). It adds an opt-in restricted
+exact mode that groups terminal reforge mass, routes zero-progress outcomes
+through a destructive-reforge-only retry basin, and retains partial-progress
+states exactly. The unrestricted solver remains the default and hard control.
 
 The most recently completed milestone is the
 [Pre-Expansion Probability-Lower Audit](../archive/2026-07-27-pre-expansion-probability-lower-audit/README.md).

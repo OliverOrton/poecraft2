@@ -28,7 +28,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation plan is active. The completed
+The active
+[Goal-Progress-Gated Reforge Mode](active/plan.md) adds an opt-in restricted
+exact solver mode without changing the default unrestricted solver. It groups
+terminal reforge mass, routes zero-satisfied-goal outcomes through a
+destructive-reforge-only retry basin, and preserves partial-progress states
+exactly. First acceptance is limited to the two frozen four-mod cases under
+unchanged product caps.
+
+The completed
 [Pre-Expansion Probability-Lower Audit](archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)
 isolated the graph-free part of the optimistic probability cover and compared
 complete root-action-class lowers against the archived renewal uppers. The
