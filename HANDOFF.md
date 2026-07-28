@@ -42,9 +42,8 @@ cases and its cheap competing lower leaves Chaos at `1`.
 
 ## Repository state
 
-- Local `main` contains the completed history through `0fe0673`.
-- This completed evidence/docs pass is on
-  `codex/certified-root-action-feasibility`.
+- Local `main` contains this completed pass through `ff44e23`.
+- `codex/certified-root-action-feasibility` remains at the same commit.
 - Nothing is pushed.
 
 Commits must remain local unless Oliver asks to push and must end with:
