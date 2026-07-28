@@ -1,9 +1,15 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: pre-expansion probability-lower audit is active.**
 
 Parent: [Documentation map](../README.md)
+
+Current plan:
+[Pre-Expansion Probability-Lower Audit](plan.md). It tests whether an isolated
+probability-only action-class relaxation can strictly separate a known exact
+renewal upper before any hard-case broad row. It may not call exact outcome
+generation, grow the state graph, change solver behavior, or proceed to
+product integration without a hard-case qualification.
 
 The most recently completed milestone is
 [Certified Root-Action Feasibility](../archive/2026-07-27-certified-root-action-feasibility/README.md).

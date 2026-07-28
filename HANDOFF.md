@@ -1,51 +1,43 @@
 # Session Handoff
 
-**Status: no active implementation boundary.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: Gate 0 active for the pre-expansion probability-lower audit.**
 
-## Latest completed result
+Plan: [Pre-Expansion Probability-Lower Audit](docs/active/plan.md)
 
-The 2026-07-27
-[Certified Root-Action Feasibility](docs/archive/2026-07-27-certified-root-action-feasibility/README.md)
-pass tested whether the existing constructive proof machinery could certify a
-next executable craft before the four hard natural-T1 cases entered their
-first cap-failing Chaos row.
+Branch: `codex/pre-expansion-probability-lower-audit`
 
-The positive small oracle passed, but every hard case had the same decisive
-pre-row state:
+Starting source: `8976750` (`main`)
 
-- the admitted root operator envelope was complete;
-- exact first-action projection produced 91 to 107 classes;
-- all isolated admissible class lowers were available; and
-- no finite executable root-class upper existed.
+## Current Boundary
 
-Each case then hit `max_discovered_states` at 200,000 states after one
-expansion. The current certificate requires the complete retained row and
-successor constructive uppers, so it cannot avoid the row that blocks it.
-Result, termination, and product plumbing alone would expose only an
-unavailable certificate.
+Test whether a probability-only action-conditioned relaxation can separate one
+of the archived exact renewal uppers before the frozen hard cases attempt a
+broad row.
 
-All measurement-only source was restored. The retained changes are
-documentation and
-[tracked evidence](fixtures/solver-natural-t1/v1/evidence/certified-root-action-feasibility-summary.json)
-only. No mechanic, goal, condition, action, transition, solver algorithm,
-product cap, ABI, artifact, binding, WASM, web, or product behavior changed.
+The current clean-goal preparation is not graph-free: it calls
+`CalcContext::outcomes` for destructive actions while constructing exact
+relaxed envelopes. The new measurement must use immutable pool/descriptor
+facts only and must leave states, rows, transitions, reforge work, scheduling,
+values, policies, termination, and caps unchanged.
 
-## Plausible future boundary
+## Immediate Next Step
 
-Certified next action remains narrower and more product-relevant than exact
-value closure, but a new selected plan must first produce a certified
-executable action-class upper before broad-row materialization and then
-separate it from every competing action-class lower. The archived fixed-policy
-renewal upper is evidence only: it exceeds current work on both three-mod
-cases and its cheap competing lower leaves Chaos at `1`.
+Finish the Gate 0/1 code and proof audit, define the isolated probability-only
+data flow, and validate it on small exact oracles. Then add only the shadow
+telemetry needed to measure full root-action-class lower tables.
 
-## Repository state
+Run the five frozen product-cap cases only after the small oracle proves both
+admissibility and zero state/work growth. Proceed beyond measurement only if a
+previously refused hard case strictly separates its archived exact renewal
+upper over the complete product action envelope.
 
-- Local `main` contains this completed pass through `ff44e23`.
-- `codex/certified-root-action-feasibility` remains at the same commit.
-- Nothing is pushed.
+## Standing Boundaries
 
-Commits must remain local unless Oliver asks to push and must end with:
+- A finite but non-separating bracket is not a pass.
+- Do not call exact outcome generation from the candidate.
+- Do not raise caps or restrict the action envelope.
+- Unknown/unpriced/unsupported/deferred members block certification.
+- Do not add public, ABI, WASM, worker, or product surfaces in this pass.
+- Commits remain local unless Oliver says to push and end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

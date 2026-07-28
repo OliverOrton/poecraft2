@@ -28,8 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must select the next chunk
-before implementation resumes.
+The active
+[Pre-Expansion Probability-Lower Audit](active/plan.md) is a
+falsification-first measurement pass. It tests a genuinely graph-free,
+action-conditioned probability relaxation against the archived exact renewal
+uppers. Production pruning and root-certificate integration are forbidden
+unless a previously refused hard case obtains strict complete-scope
+separation before broad-row work.
 
 The completed
 [Certified Root-Action Feasibility](archive/2026-07-27-certified-root-action-feasibility/README.md)
