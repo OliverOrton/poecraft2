@@ -1,6 +1,6 @@
 # Root Broad-Row Falsification
 
-**Status: active (2026-07-28).**
+**Status: complete (2026-07-28), production candidate rejected.**
 
 Owner: Oliver
 

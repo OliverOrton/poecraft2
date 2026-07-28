@@ -122,6 +122,11 @@ the versioned recipe manifest.
 
 ## Open Questions Requiring Oliver
 
+- Is the implemented Harvest reforge guarantee correctly defined as one first
+  modifier from the target-tagged positive **spawn-weight-only** pool followed
+  by ordinary generation-weighted filling? Until Oliver confirms this, shared
+  reforge-frontier designs must treat Harvest as unresolved rather than add a
+  Harvest-specific structural exception.
 - Should the C ABI and strategy compiler reject every `harvest_resist` pair
   outside the six owner-approved fire/cold/lightning conversions, matching the
   solver registry and product controls?

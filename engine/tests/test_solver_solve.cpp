@@ -1557,6 +1557,53 @@ void run_goal_progress_gated_reforge_tests() {
         early_renewal.primitive_renewal_witness
             .validated_non_goal_states);
 
+    CalcContext interrupted_row_calc(
+        restricted_session, restricted_goal, restricted_registry,
+        {restricted_chaos});
+    SolveOptions interrupted_row_options;
+    interrupted_row_options.goal_progress_gated_reforges = true;
+    interrupted_row_options.max_reforge_work = 1;
+    interrupted_row_options.state_certificate_control = false;
+    const SolveResult interrupted_row = solve(
+        interrupted_row_calc, full_start, {{"chaos", 1.0}},
+        interrupted_row_options);
+    PC_CHECK(!interrupted_row.converged);
+    PC_CHECK(interrupted_row.diagnostics.resource_cap_hit);
+    const auto interrupted_cost =
+        interrupted_row.diagnostics.action_search_costs.find("chaos");
+    PC_CHECK(
+        interrupted_cost !=
+        interrupted_row.diagnostics.action_search_costs.end());
+    if (interrupted_cost !=
+        interrupted_row.diagnostics.action_search_costs.end()) {
+        PC_CHECK(interrupted_cost->second.rows == 0);
+        PC_CHECK(interrupted_cost->second.reforge_work == 1);
+        PC_CHECK(interrupted_cost->second.interrupted_rows == 1);
+        PC_CHECK(interrupted_cost->second.last_interrupted_state ==
+                 interrupted_row.start_state);
+        PC_CHECK(interrupted_cost->second.last_interrupted_root);
+        PC_CHECK(interrupted_cost->second.last_interrupted_cursor > 0);
+        PC_CHECK(interrupted_cost->second.last_interrupted_cap ==
+                 "max_reforge_work");
+    }
+    const std::string interrupted_telemetry =
+        serialize_solver_telemetry(
+            interrupted_row_calc, &interrupted_row, nullptr,
+            std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(interrupted_telemetry));
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"action_id\":\"chaos\",\"rows\":0") !=
+        std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"interrupted\":{\"rows\":1,\"state\":0,"
+            "\"root\":true") != std::string::npos);
+    PC_CHECK(
+        interrupted_telemetry.find(
+            "\"cap\":\"max_reforge_work\"") !=
+        std::string::npos);
+
     PolicyCompilationTelemetry early_compilation;
     const std::string early_json =
         compile_policy_strategy_json(

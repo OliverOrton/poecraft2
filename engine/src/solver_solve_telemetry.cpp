@@ -79,10 +79,10 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_status.capacity() + 1;
     for (const auto& [id, unused] : diagnostics.action_search_costs) {
-        (void)unused;
         bytes += sizeof(std::pair<const std::string,
                                   SolveDiagnostics::ActionSearchCost>) +
-                 id.capacity() + 1;
+                 id.capacity() + 1 +
+                 unused.last_interrupted_cap.capacity() + 1;
     }
     for (const auto& [id, unused] :
          diagnostics.lower_policy_action_states) {
@@ -1853,7 +1853,28 @@ std::string serialize_solver_telemetry(
                     std::to_string(cost.cache_hits);
             json += ",\"wall_ns\":" + std::to_string(cost.wall_ns);
             json += ",\"retained_bytes\":" +
-                    std::to_string(cost.retained_bytes) + "}";
+                    std::to_string(cost.retained_bytes);
+            json += ",\"interrupted\":";
+            if (cost.interrupted_rows == 0) {
+                json += "null";
+            } else {
+                json += "{\"rows\":" +
+                        std::to_string(cost.interrupted_rows);
+                json += ",\"state\":" +
+                        std::to_string(cost.last_interrupted_state);
+                json += ",\"root\":" +
+                        std::string(
+                            cost.last_interrupted_root ? "true" : "false");
+                json += ",\"operator\":" +
+                        std::to_string(cost.last_interrupted_operator);
+                json += ",\"cursor\":" +
+                        std::to_string(cost.last_interrupted_cursor);
+                json += ",\"cap\":";
+                append_telemetry_json_string(
+                    json, cost.last_interrupted_cap);
+                json += "}";
+            }
+            json += "}";
         }
     }
     json += "],\"lower_upper_policy\":{\"basis\":"

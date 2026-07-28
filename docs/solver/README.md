@@ -8,8 +8,8 @@ Parent: [Documentation index](../README.md)
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, and the goal-progress-gated native/WASM
-acceptance plus the gated root renewal incumbent: 2026-07-28. The preceding
-broad architecture stamp was
+acceptance plus the gated root renewal incumbent and interrupted root-row
+ownership acceptance: 2026-07-28. The preceding broad architecture stamp was
 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -102,6 +102,14 @@ share the roll DP. Sparse expansion reuses that row payload and enqueues its
 fringe once by distribution identity. This saves repeated work after an
 identical kernel exists; it does not merge the outer states or avoid
 materializing the first unique carrier's successor distribution.
+
+That memo does not reuse structure across different actions. Reforge bucket
+weights, Fossil-added support, forced modifiers, and mechanic stages remain
+part of each action's exact evaluation. A measured Lucent/Jagged follow-up
+found support-compatible Chaos subsets and records an action-independent
+structural-DAG proposal in the
+[future solver roadmap](../future/solver-roadmap.md); no cross-action frontier
+cache or multi-weight evaluator is implemented.
 
 Code authority:
 `engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,
@@ -329,6 +337,13 @@ policy cost with `L <= J_pi <= U`. The gap targets are checked only after a
 complete focused lower/upper round; they do not participate in Bellman
 comparisons, ties, admission, pruning, or exact closure. Resource exhaustion
 without an executable proper fallback reports no finite upper bound.
+
+Action-search telemetry attributes completed rows after they return. If a
+row instead throws a solver resource cap, exception-safe attribution records
+the carrier state, root ownership, complete planner action, operator index,
+stable cursor, cap name, work/cache deltas, and wall time before the existing
+cap handler records the same refusal. An interrupted row is not counted as
+retained and does not become a transition or pruning certificate.
 
 The current private focused scheduler admits at most 64 members per fringe
 class, 256 states per global round, and 64 lower-bound states before upper-side

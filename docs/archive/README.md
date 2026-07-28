@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-07-28
 
+- [Root Broad-Row Falsification](2026-07-28-root-broad-row-falsification/README.md) —
+  retained exception-safe cap-owner telemetry, rejected a success-only
+  Fossil upper after both real remaining-work runs proved zero terminal mass,
+  and recorded a separate canonical Chaos structural-frontier assessment
+  without selecting implementation.
+
 - [Gated Root Renewal Incumbent](2026-07-28-gated-root-renewal-incumbent/README.md) —
   retained an exact action-local fixed repeat policy for completed gated root
   destructive-reforge rows. Both frozen four-mod cases now return compact

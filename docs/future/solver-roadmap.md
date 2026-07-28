@@ -138,6 +138,51 @@ broad-action competition is the immediate measured exact-search wall.
 Partial-state admission remains a possible later wall, but no retained
 partial state has yet been expanded in these captures.
 
+### Canonical cross-action reforge frontier
+
+The 2026-07-28
+[root broad-row falsification](../archive/2026-07-28-root-broad-row-falsification/README.md)
+directly identifies the next root rows and rejects a success-only streaming
+upper at the real remaining-work boundary. Lucent and Jagged produce zero
+proved terminal mass inside 192,420 work. Their complete fixed-repeat values
+are also worse than the retained Chaos incumbents.
+
+The same evidence leaves a narrower cross-action research candidate:
+
+- the measured Lucent pool is a 131-mod strict subset of its 142-mod Chaos
+  pool;
+- the measured Jagged pool is a 152-mod strict subset of its 153-mod Chaos
+  pool;
+- neither Fossil has added or forced mod rows; and
+- preserved root boundary, affix cap, target-count schedule, and every
+  required goal modifier are compatible with Chaos.
+
+A future prototype may therefore build one canonical structural roll DAG and
+apply action-specific bucket-weight vectors. The shared authority must be
+topology, not Chaos probabilities. A canonical bucket key needs side,
+goal/junk classification, blocker mask, complete exclusion-group family, and
+multiplicity. Each action still owns the eligible denominator and normalized
+outgoing probabilities at every node.
+
+Fossil added mods must be represented as topology deltas with cross-conflicts.
+Forced mods are deterministic seed deltas that change side capacity, occupied
+groups, and goal status. Neither is a post-hoc additive probability
+correction. One exact implementation could promote admitted added families
+into a canonical union support and give absent action lanes zero weight.
+
+Do not schedule a distribution-cache-only change. Sequential Chaos plus only
+the first Fossil needs 4,691,252 and 5,001,749 work on the frozen cases, above
+the unchanged 3,000,000 cap. The first gate must split deterministic work into
+structural construction, action-lane probability propagation, and successor
+projection/interning, then compare sequential replay with lockstep
+multi-weight propagation. Retain an implementation only if the complete root
+action envelope advances before the same cap; wall-time or memory savings
+alone are useful throughput results but do not close this wall.
+
+Harvest reforge is outside this candidate until Oliver rules on the
+spawn-only guaranteed first-pick pool. Do not add a Harvest-specific exception
+to make the structural design fit the current implementation.
+
 ### Deferred bounded Pareto admission design
 
 Do not merge partial states by satisfied-goal count. This design is not the

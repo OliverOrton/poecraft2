@@ -28,12 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Root Broad-Row Falsification](active/plan.md)
-milestone corrects the interrupted-action telemetry blind spot and tests an
-exact streaming fixed-policy upper for the competing root reforge. It retains
-no production evaluator unless the existing remaining work budget produces a
-strictly better executable result.
+No implementation boundary is active. The completed
+[Root Broad-Row Falsification](archive/2026-07-28-root-broad-row-falsification/README.md)
+milestone retains exception-safe interrupted-action telemetry and rejects its
+success-only Fossil upper after both real remaining-work runs prove zero
+terminal mass. Its read-only follow-up records canonical cross-action reforge
+structure as a credible but unselected research candidate; no production
+evaluator or next implementation was selected.
 
 The completed
 [Gated Root Renewal Incumbent](archive/2026-07-28-gated-root-renewal-incumbent/README.md)

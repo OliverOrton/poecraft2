@@ -2117,6 +2117,15 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
 
 bool SolveWork::Impl::expand_one_unit() {
         const auto started = std::chrono::steady_clock::now();
+        bool row_attempt_active = false;
+        std::uint32_t row_attempt_operator = kNoId;
+        std::uint32_t row_attempt_cursor = 0;
+        std::uint64_t row_attempt_reforge_work = 0;
+        std::uint64_t row_attempt_distribution_requests = 0;
+        std::uint64_t row_attempt_distribution_hits = 0;
+        std::uint64_t row_attempt_reforge_requests = 0;
+        std::uint64_t row_attempt_reforge_hits = 0;
+        std::chrono::steady_clock::time_point row_attempt_started;
         if (!expansion_active) {
             expansion_state = queue.front();
             queue.pop_front();
@@ -2162,6 +2171,20 @@ bool SolveWork::Impl::expand_one_unit() {
                 const auto row_started = std::chrono::steady_clock::now();
                 const auto kernel_started = row_started;
                 const CalcTelemetry search_before = calc.telemetry();
+                row_attempt_active = true;
+                row_attempt_operator = priced.index;
+                row_attempt_cursor = expansion_operator_cursor;
+                row_attempt_reforge_work =
+                    search_before.reforge_frontier_work;
+                row_attempt_distribution_requests =
+                    search_before.distribution_requests;
+                row_attempt_distribution_hits =
+                    search_before.distribution_hits;
+                row_attempt_reforge_requests =
+                    search_before.reforge_requests;
+                row_attempt_reforge_hits =
+                    search_before.reforge_hits;
+                row_attempt_started = row_started;
                 std::uint64_t search_raw_outcomes = 0;
                 std::uint64_t search_retained_transitions = 0;
                 std::uint64_t search_retained_bytes = 0;
@@ -2525,6 +2548,7 @@ bool SolveWork::Impl::expand_one_unit() {
                     calc.record_primitive_row_time(
                         planner.primitive_action, row_ns);
                 }
+                row_attempt_active = false;
                 if (automatic_record.has_value()) {
                     automatic_record->row_ns = row_ns;
                     if (automatic_record->evidence.reason.empty()) {
@@ -2561,18 +2585,44 @@ bool SolveWork::Impl::expand_one_unit() {
                             .count());
             }
         } catch (const SolverResourceLimit& limit) {
-            if (expansion_operator_cursor != 0 &&
-                expansion_operator_cursor <=
-                    expansion_operator_indices.size()) {
+            if (row_attempt_active &&
+                row_attempt_operator < calc.operators().size()) {
                 const std::uint32_t operator_index =
-                    expansion_operator_indices[
-                        expansion_operator_cursor - 1];
+                    row_attempt_operator;
                 const std::int32_t priced_position =
                     priced_operator_position.at(operator_index);
                 const PricedOperator& priced = operators.at(
                     static_cast<std::size_t>(priced_position));
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
+                const CalcTelemetry& search_after = calc.telemetry();
+                SolveDiagnostics::ActionSearchCost& search =
+                    result.diagnostics.action_search_costs[planner.id];
+                search.reforge_work +=
+                    search_after.reforge_frontier_work -
+                    row_attempt_reforge_work;
+                search.cache_requests +=
+                    (search_after.distribution_requests -
+                     row_attempt_distribution_requests) +
+                    (search_after.reforge_requests -
+                     row_attempt_reforge_requests);
+                search.cache_hits +=
+                    (search_after.distribution_hits -
+                     row_attempt_distribution_hits) +
+                    (search_after.reforge_hits -
+                     row_attempt_reforge_hits);
+                search.wall_ns += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        row_attempt_started)
+                        .count());
+                ++search.interrupted_rows;
+                search.last_interrupted_state = state;
+                search.last_interrupted_operator = priced.index;
+                search.last_interrupted_cursor = row_attempt_cursor;
+                search.last_interrupted_root =
+                    state == result.start_state;
+                search.last_interrupted_cap = limit.cap_name();
                 const AutomaticTelemetryKind telemetry_kind =
                     automatic_telemetry_kind(planner);
                 if (telemetry_kind != AutomaticTelemetryKind::None) {

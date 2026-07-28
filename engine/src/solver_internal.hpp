@@ -1880,6 +1880,12 @@ struct SolveDiagnostics {
         std::uint64_t cache_hits = 0;
         std::uint64_t wall_ns = 0;
         std::uint64_t retained_bytes = 0;
+        std::uint64_t interrupted_rows = 0;
+        std::uint32_t last_interrupted_state = kNoId;
+        std::uint32_t last_interrupted_operator = kNoId;
+        std::uint32_t last_interrupted_cursor = 0;
+        bool last_interrupted_root = false;
+        std::string last_interrupted_cap;
     };
     std::map<std::string, ActionSearchCost> action_search_costs;
     std::map<std::string, std::uint64_t> lower_policy_action_states;

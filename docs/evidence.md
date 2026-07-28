@@ -669,6 +669,38 @@ acceptance are recorded in the milestone report. Wall times are
 machine/compiler-bound; work, mass, values, hashes, and compiled sizes are the
 portable evidence.
 
+## Root Broad-Row Falsification
+
+The 2026-07-28
+[final report](archive/2026-07-28-root-broad-row-falsification/report.md) and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/root-broad-row-falsification-summary.json)
+pin the exact owner of the next gated root row and reject the bounded
+success-only candidate.
+
+- Full-four stops in the one-socket Lucent Fossil row; deep-four stops in the
+  one-socket Jagged Fossil row. Both are root state `0`, cursor 11, and consume
+  exactly the final 192,420 units of the unchanged 3,000,000 reforge-work cap.
+- A temporary success-only exact frontier processed 192,416 and 192,415 work.
+  It exactly resolved 4.4289% and 1.8772% of total mass but proved zero goal
+  mass on both cases. Work, probability bits, and hashes repeated exactly.
+- The separate complete census needed 1,883,672 and 2,194,169 work. Lucent's
+  fixed-repeat value was about 102.9 million versus the 60.3-million Chaos
+  incumbent; Jagged's was about 292.2 million versus 185.7 million. Neither
+  improves the executable upper.
+- Pool inspection found strict Chaos support subsets: 131/142 mods for Lucent
+  and 152/153 for Jagged, zero Fossil-only mods, zero added/forced rows, and
+  every required goal mod still supported. This supports a separate
+  action-independent structural-frontier experiment, not reuse of Chaos
+  probabilities.
+- Sequential Chaos plus only the first Fossil costs 4,691,252 and 5,001,749
+  work. A cache-only implementation cannot close the unchanged-cap wall;
+  lockstep action-specific probability propagation must first prove genuine
+  amortization.
+
+The streaming evaluator was restored. Retained source only corrects
+exception-safe interrupted-row telemetry. No action was deferred, no cap or
+mechanic changed, and unrestricted no-policy hashes remain unchanged.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
