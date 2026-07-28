@@ -28,7 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation plan is active. The completed
+The active
+[Root Broad-Row Falsification](active/plan.md)
+milestone corrects the interrupted-action telemetry blind spot and tests an
+exact streaming fixed-policy upper for the competing root reforge. It retains
+no production evaluator unless the existing remaining work budget produces a
+strictly better executable result.
+
+The completed
 [Gated Root Renewal Incumbent](archive/2026-07-28-gated-root-renewal-incumbent/README.md)
 turns a completed gated root Chaos row into an exact fixed
 repeat-until-goal policy and finite bounded incumbent before the next root

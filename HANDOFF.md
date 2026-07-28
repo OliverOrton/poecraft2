@@ -1,32 +1,29 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.**
+**Status: an implementation boundary is active.**
 
-## Current State
+Plan:
+[Root Broad-Row Falsification](docs/active/plan.md)
 
-The completed
-[Gated Root Renewal Incumbent](docs/archive/2026-07-28-gated-root-renewal-incumbent/README.md)
-is retained. A completed gated root primitive destructive-reforge row can now
-publish the exact fixed policy “repeat this reforge until goal” after proving
-action legality and the same complete engine-owned kernel signature on every
-reachable non-goal carrier.
+Branch: `codex/root-broad-row-falsification`
 
-Both frozen four-mod gated cases return finite `bounded_feasible` policies
-within the zero-progress-reroll restriction. They compile to four-node loops.
-The default unrestricted solver is behaviorally unchanged.
+Starting source: `0b72110` (`main`)
 
-## Measured Next Boundary
+## Current Boundary
 
 Both frozen gated runs still have `expanded_states = 1`. The first Chaos row
 uses 2,807,580 of 3,000,000 reforge-work units; the next competing root Fossil
 request consumes the remainder. Root broad-action competition is the
-immediate measured exact-search wall. Partial-state admission remains a
-possible later wall, but no retained partial state has yet been expanded in
-these captures.
+immediate measured exact-search wall.
 
-No next implementation chunk is selected. Oliver must choose one before
-implementation resumes. Do not infer bounded Pareto admission as the next
-step from the older corrected report.
+Proceed through Gates 0 through 5 in order. First correct interrupted-row
+attribution. Then test an exact streaming fixed-policy upper that accumulates
+proved terminal mass without interning failures. Retain a production path only
+if it improves a frozen executable upper within the unchanged remaining work.
+
+Do not implement partial-state admission, raise caps, or silently defer an
+action without an explicit admissible unresolved lower placeholder. The
+unrestricted exact solver remains default.
 
 Commits remain local unless Oliver asks to push and must end with:
 

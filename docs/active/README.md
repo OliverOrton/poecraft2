@@ -1,8 +1,16 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
+
+The active
+[Root Broad-Row Falsification](plan.md)
+milestone first makes interrupted reforge work attributable to the exact
+action that hits the cap. It then tests whether the remaining 192,420 work can
+stream enough proved terminal mass for the next root reforge to improve the
+existing executable Chaos policy without interning failed outcomes. No
+partial-state admission or cap increase is in scope.
 
 The most recently completed milestone is the
 [Gated Root Renewal Incumbent](../archive/2026-07-28-gated-root-renewal-incumbent/README.md).
