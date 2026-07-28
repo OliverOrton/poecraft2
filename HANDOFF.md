@@ -1,59 +1,45 @@
 # Session Handoff
 
-**Status: no active implementation boundary.** Oliver must choose the next
-chunk before implementation resumes.
+**Status: Gate 0 active for certified root-action feasibility.**
 
-## Latest completed result
+Plan: [Certified Root-Action Feasibility](docs/active/plan.md)
 
-The 2026-07-27
-[True First-Frontier Successor Census](docs/archive/2026-07-27-true-successor-frontier-census/README.md)
-completed the live exact primitive-Chaos rows for the four frozen natural-T1
-hard cases.
+Branch: `codex/certified-root-action-feasibility`
 
-Exact support is:
+Starting source: `0fe0673` (`main`)
 
-- full three: 3,204,323 successors and 151,348,836 reforge work;
-- deep three: 712,877 successors and 28,155,816 work; and
-- full/deep four: 222,580 successors and 6,797,580 work each.
+## Current Boundary
 
-Every case completed twice with identical deterministic census objects,
-probability sums within `7.4e-15` of one, zero duplicate successor IDs, and
-matching ordered support/probability hashes.
+Write and freeze what a certified next craft means before changing solver
+behavior. The certificate groups planner operators by their exact first
+executable primitive request and proves one action class strictly below every
+other admitted class using a certified executable upper and admissible
+action-local lowers.
 
-The complete support occupies 98.71% to 99.65% of the collision-checked
-prefix-payload × suffix-payload product. The old 200,000-state prefix had
-already exposed every one-sided and goal-status projection class; completion
-adds dense joint combinations, not a hidden small duplicate population.
-Together with the preceding rank-one probability falsification, this selects
-no compact exact Bellman representation.
+The current constructive state certificate is only a starting proof primitive.
+It is disabled in focused mode, requires a complete constructive row, exists
+to prune remaining operators, and has no durable root-action result,
+termination, first-action grouping, or public/product contract.
 
-The complete cleanup ceiling also remains insufficient. On the closest case,
-full-four, one carrier plus its Chaos support exceeds the 200,000-state cap by
-22,581. Impossible free deletion of every nonterminal successor with at least
-two satisfied goals on one side removes only 21,887, leaving a 694-state
-shortfall before any real cleanup transition, cost, failure, or legality.
+## Immediate Next Step
 
-All measurement-only engine source was restored. The retained changes are
-documentation and
-[tracked evidence](fixtures/solver-natural-t1/v1/evidence/true-successor-frontier-census-summary.json)
-only. No mechanic, goal, condition, action, transition, solver algorithm,
-product cap, ABI, artifact, binding, WASM, web, or product behavior changed.
+Complete the Gate 0 code/identity audit, then add only the Gate 1 shadow
+root-interval diagnostic. It must not change row order, Bellman values, caps,
+policies, or termination.
 
-## Previous result
+Run the frozen smoke/control cases and four established hard representatives.
+Proceed to implementation only if a previously refused hard case obtains a
+strict, complete-scope certificate before its known cap-failing first Chaos
+row. Otherwise restore the diagnostic and close with the measured blocking
+intervals.
 
-The preceding
-[Exact Quotient Audit](docs/archive/2026-07-27-exact-quotient-audit/README.md)
-proved a 10-to-3 completed exact quotient, retained literal Unveil offer
-identity, and corrected cap-stopped shadow diagnostics.
+## Standing Boundaries
 
-## Repository state
-
-- Local `main` contains the completed work through exact-quotient commit
-  `b7740b8`.
-- The successor census is on
-  `codex/true-successor-frontier-census`.
-- Nothing is pushed.
-
-Commits must remain local unless Oliver asks to push and must end with:
+- Do not raise product caps.
+- Do not revive cleanup, quotient, or side-factorization directions.
+- Do not present a stable action, finite incumbent, restricted-action result,
+  or post-cap observation as a certificate.
+- Wall time is machine/compiler-bound; report deterministic work as well.
+- Commits remain local unless Oliver says to push and end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

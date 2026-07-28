@@ -1,9 +1,15 @@
 # Active Work
 
-**Status: no active implementation boundary.** Oliver must select the next
-chunk before implementation resumes.
+**Status: certified root-action feasibility is active.**
 
 Parent: [Documentation map](../README.md)
+
+Current plan:
+[Certified Root-Action Feasibility](plan.md). It first audits whether the
+existing executable-upper and admissible operator-lower machinery can prove a
+strictly optimal next executable craft before the natural-T1 hard cases enter
+their cap-failing first broad row. Public or product integration is forbidden
+unless the shadow interval audit qualifies a previously refused case.
 
 The most recently completed milestone is the
 [True First-Frontier Successor Census](../archive/2026-07-27-true-successor-frontier-census/README.md).
