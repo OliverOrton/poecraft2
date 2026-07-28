@@ -5,14 +5,20 @@
 Parent: [Documentation map](../README.md)
 
 The active
-[Root Broad-Row Falsification](plan.md)
-milestone first makes interrupted reforge work attributable to the exact
-action that hits the cap. It then tests whether the remaining 192,420 work can
-stream enough proved terminal mass for the next root reforge to improve the
-existing executable Chaos policy without interning failed outcomes. No
-partial-state admission or cap increase is in scope.
+[Harvest Natural Pools And Shared Exact Reforge Frontier](plan.md)
+milestone first implements Oliver's ordinary targeted-natural-pool ruling for
+all Harvest reforge, augment, and resistance-conversion paths. After that
+correction passes focused sampled/exact parity, it prototypes a shared exact
+structural reforge frontier with separate action probability lanes for Chaos,
+support-compatible filtered Fossils, and retained Harvest reforges.
 
-The most recently completed milestone is the
+The most recently completed milestone is
+[Root Broad-Row Falsification](../archive/2026-07-28-root-broad-row-falsification/README.md).
+It retained exception-safe cap-owner telemetry, rejected a bounded
+success-only Fossil upper, and recorded the structural-frontier candidate now
+selected by Oliver.
+
+The preceding completed milestone is the
 [Gated Root Renewal Incumbent](../archive/2026-07-28-gated-root-renewal-incumbent/README.md).
 Both frozen four-mod gated cases now return a finite executable
 repeat-until-goal policy after the first Chaos row. Each policy has an exact

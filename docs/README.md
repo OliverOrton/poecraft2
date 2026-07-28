@@ -28,13 +28,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The completed
+The active
+[Harvest Natural Pools And Shared Exact Reforge Frontier](active/plan.md)
+milestone first corrects all Harvest targeted pools to require positive spawn
+and generation weight and use ordinary final roll weight. It then tests an
+action-independent exact structural reforge frontier with separate
+probability lanes for compatible Chaos, Fossil, and Harvest reforges.
+
+The completed
 [Root Broad-Row Falsification](archive/2026-07-28-root-broad-row-falsification/README.md)
 milestone retains exception-safe interrupted-action telemetry and rejects its
 success-only Fossil upper after both real remaining-work runs prove zero
-terminal mass. Its read-only follow-up records canonical cross-action reforge
-structure as a credible but unselected research candidate; no production
-evaluator or next implementation was selected.
+terminal mass. Its structural follow-up is input to the active milestone.
 
 The completed
 [Gated Root Renewal Incumbent](archive/2026-07-28-gated-root-renewal-incumbent/README.md)
