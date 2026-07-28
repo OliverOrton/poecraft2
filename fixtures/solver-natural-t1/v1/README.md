@@ -62,6 +62,12 @@ paired the archived renewal uppers with complete graph-free
 action-conditioned lowers. It kept graph work flat but separated zero of four
 hard cases; cheap non-goal bench-first classes exposed the missing blocker and
 preservation state in a goal-mask-only relaxation.
+The later
+[goal-progress-gated reforge summary](evidence/goal-progress-gated-reforge-summary.json)
+pins the new opt-in restricted policy on the two frozen four-mod cases. Both
+first Chaos rows fit below 200,000 states with exact terminal/retry mass and
+all partial states retained; follow-up partial-state reforge work, not the
+first row, becomes the next unchanged-cap bottleneck.
 
 ## Benchmark workflow
 

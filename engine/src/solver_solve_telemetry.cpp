@@ -72,6 +72,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
                sizeof(FocusedScheduleRoundTelemetry) +
+           diagnostics.solution_scope.capacity() + 1 +
            diagnostics.policy_evaluation_failure.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
@@ -879,6 +880,13 @@ std::string serialize_solver_telemetry(
         json += "\",\"phase\":\"" + std::string(phase) + "\"";
     } else {
         json += "\"status\":\"not_started\",\"phase\":null";
+    }
+    json += ",\"solution_scope\":";
+    if (diagnostics == nullptr) {
+        json += "null";
+    } else {
+        append_telemetry_json_string(
+            json, diagnostics->solution_scope);
     }
     json += "}";
 
@@ -1723,7 +1731,45 @@ std::string serialize_solver_telemetry(
     json += ",\"build_ns\":" +
             std::to_string(cache.reforge_build_ns);
     json += ",\"frontier_work\":" +
-            std::to_string(cache.reforge_frontier_work) + "}";
+            std::to_string(cache.reforge_frontier_work);
+    json += ",\"goal_progress_gated\":{\"rows\":" +
+            std::to_string(cache.gated_reforge_rows);
+    char gated_number[40];
+    std::snprintf(
+        gated_number, sizeof(gated_number), "%.17g",
+        cache.gated_terminal_probability);
+    json += ",\"terminal_probability\":" +
+            std::string(gated_number);
+    std::snprintf(
+        gated_number, sizeof(gated_number), "%.17g",
+        cache.gated_retry_probability);
+    json += ",\"retry_probability\":" +
+            std::string(gated_number);
+    std::snprintf(
+        gated_number, sizeof(gated_number), "%.17g",
+        cache.gated_partial_probability);
+    json += ",\"partial_probability\":" +
+            std::string(gated_number);
+    std::snprintf(
+        gated_number, sizeof(gated_number), "%.17g",
+        cache.gated_terminal_probability +
+            cache.gated_retry_probability +
+            cache.gated_partial_probability);
+    json += ",\"mass_sum\":" + std::string(gated_number);
+    json += ",\"terminal_short_circuits\":" +
+            std::to_string(cache.gated_terminal_short_circuits);
+    json += ",\"retry_short_circuits\":" +
+            std::to_string(cache.gated_retry_short_circuits);
+    json += ",\"partial_states\":" +
+            std::to_string(cache.gated_partial_states);
+    char gated_hash[17];
+    std::snprintf(
+        gated_hash, sizeof(gated_hash), "%016llx",
+        static_cast<unsigned long long>(
+            cache.gated_first_kernel_bits_hash));
+    json += ",\"first_kernel_bits_hash\":\"";
+    json += gated_hash;
+    json += "\"}}";
     json += ",\"primitive_families\":{";
     for (std::size_t i = 0; i < kPrimitiveTelemetryFamilyCount; ++i) {
         if (i != 0) json.push_back(',');
@@ -2164,9 +2210,14 @@ std::string serialize_solver_telemetry(
         json += snapshot->abandoned ? "\"abandoned_before_completion\""
                                     : "\"solve_in_progress\"";
     } else if (result->converged) {
-        json += qualified_action_subset
-                    ? "\"exact_supported_priced_subset_within_tolerance\""
-                    : "\"exact_abstract_within_tolerance\"";
+        if (result->options.goal_progress_gated_reforges) {
+            json +=
+                "\"exact_within_zero_progress_reroll_restriction\"";
+        } else {
+            json += qualified_action_subset
+                        ? "\"exact_supported_priced_subset_within_tolerance\""
+                        : "\"exact_abstract_within_tolerance\"";
+        }
     } else if (result->policy_status ==
                SolvePolicyStatus::BoundedNearOptimal) {
         json += "\"bounded_near_optimal_certificate\"";
@@ -2179,6 +2230,8 @@ std::string serialize_solver_telemetry(
     json += ",\"start_scope\":";
     if (result == nullptr || !result->policy_available) {
         json += "null";
+    } else if (result->options.goal_progress_gated_reforges) {
+        json += "\"zero_progress_reroll_policy_restriction\"";
     } else if (!result->converged) {
         json += "\"executable_returned_policy\"";
     } else {

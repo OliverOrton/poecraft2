@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <map>
@@ -332,7 +334,8 @@ bool CalcContext::exact_reforge_kernel_signature(
 
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint32_t state_id,
-    std::uint32_t action_index) {
+    std::uint32_t action_index,
+    const bool goal_progress_gated) {
     ++telemetry_.reforge_requests;
     ReforgeBuildTimer telemetry_timer{telemetry_};
     const ActionDescriptor& action = registry_.actions.at(action_index);
@@ -370,8 +373,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::uint64_t base_hash = 0;
     std::vector<std::uint64_t> base_observation =
         reforge_base_observation(base, &base_hash);
-    const std::pair<std::uint32_t, std::uint64_t> memo_key{action_index,
-                                                           base_hash};
+    const std::tuple<std::uint32_t, std::uint64_t, bool> memo_key{
+        action_index, base_hash, goal_progress_gated};
     const auto memo = reforge_cache_.find(memo_key);
     if (memo != reforge_cache_.end()) {
         for (const ReforgeCacheMemo& candidate : memo->second) {
@@ -406,8 +409,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             committed = 1.0;
             state_dependent = true;
         }
+        if (goal_progress_gated &&
+            std::abs(committed - 1.0) > 1e-10) {
+            throw std::logic_error(
+                "goal-progress-gated reforge failed probability "
+                "conservation: committed=" + std::to_string(committed));
+        }
         for (const auto& [successor, probability] : ordered_outcomes) {
-            result.entries.push_back({successor, probability / committed});
+            result.entries.push_back({
+                successor,
+                goal_progress_gated ? probability
+                                    : probability / committed});
         }
         for (const OutcomeEntry& entry : result.entries) {
             const AbstractState& successor = states_.at(entry.state);
@@ -418,6 +430,58 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                         entry.probability;
                 }
             }
+        }
+        if (goal_progress_gated) {
+            result.goal_progress_gated = true;
+            for (const OutcomeEntry& entry : result.entries) {
+                if (entry.state == result.gated_terminal_state) {
+                    result.gated_terminal_probability +=
+                        entry.probability;
+                } else if (entry.state == result.gated_retry_state) {
+                    result.gated_retry_probability += entry.probability;
+                } else {
+                    result.gated_partial_probability += entry.probability;
+                    ++result.gated_partial_states;
+                }
+            }
+            std::uint64_t kernel_hash = 1469598103934665603ull;
+            const auto mix_hash = [&](const std::uint64_t value) {
+                kernel_hash ^= value;
+                kernel_hash *= 1099511628211ull;
+            };
+            std::vector<std::pair<std::uint64_t, std::uint64_t>>
+                canonical_kernel_bits;
+            canonical_kernel_bits.reserve(result.entries.size());
+            for (const OutcomeEntry& entry : result.entries) {
+                canonical_kernel_bits.push_back({
+                    abstract_state_hash(states_.at(entry.state)),
+                    std::bit_cast<std::uint64_t>(entry.probability)});
+            }
+            std::sort(
+                canonical_kernel_bits.begin(),
+                canonical_kernel_bits.end());
+            for (const auto& [state_hash, probability_bits] :
+                 canonical_kernel_bits) {
+                mix_hash(state_hash);
+                mix_hash(probability_bits);
+            }
+            result.gated_kernel_bits_hash = kernel_hash;
+            if (telemetry_.gated_reforge_rows == 0) {
+                telemetry_.gated_first_kernel_bits_hash = kernel_hash;
+            }
+            ++telemetry_.gated_reforge_rows;
+            telemetry_.gated_terminal_probability +=
+                result.gated_terminal_probability;
+            telemetry_.gated_retry_probability +=
+                result.gated_retry_probability;
+            telemetry_.gated_partial_probability +=
+                result.gated_partial_probability;
+            telemetry_.gated_terminal_short_circuits +=
+                result.gated_terminal_short_circuits;
+            telemetry_.gated_retry_short_circuits +=
+                result.gated_retry_short_circuits;
+            telemetry_.gated_partial_states +=
+                result.gated_partial_states;
         }
         result.supported = true;
         const bool retain_shared_kernel =
@@ -441,6 +505,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         state_dependent = true;
         return finalize();
     };
+
+    /* The retry carrier predates direct mods: a later destructive reforge
+     * wipes Essence/Fossil direct modifiers together with every other
+     * unpreserved affix. */
+    pc_item_state retry_base = base;
 
     /* --- direct mods (essence guaranteed, fossil forced) ------------------ */
     std::vector<std::uint32_t> directs;
@@ -491,6 +560,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
         }
     }
+    retry_base.item_flags |= special_flags;
 
     /* --- roll pool and buckets --------------------------------------------- */
     PoolBuildRequest request;
@@ -707,6 +777,45 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const int max_target = targets.rbegin()->first;
 
     /* --- forward frontier DP ------------------------------------------------ */
+    std::optional<std::uint32_t> gated_retry_state;
+    const auto retry_state = [&]() {
+        if (!gated_retry_state.has_value()) {
+            AbstractState retry =
+                project_item(session, layout_, retry_base);
+            retry.goal_progress_retry_basin = 1;
+            gated_retry_state = intern_state(retry);
+            result.gated_retry_state = *gated_retry_state;
+        }
+        return *gated_retry_state;
+    };
+    const auto commit_retry = [&](const double weight) {
+        if (!(weight > 0.0)) return;
+        outcome_acc[retry_state()] += weight;
+    };
+    const auto base_satisfied_count = [&]() {
+        std::uint32_t count = 0;
+        for (std::size_t slot = 0; slot < layout_.slots.size(); ++slot) {
+            if (base_state.slot_status[slot] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied)) {
+                ++count;
+            }
+        }
+        return count;
+    }();
+    const auto roll_satisfied_count = [&](const RollState& roll) {
+        return base_satisfied_count +
+               static_cast<std::uint32_t>(
+                   std::popcount(roll.sat_mask));
+    };
+    const auto roll_is_goal = [&](const RollState& roll) {
+        return base_state.rarity == goal_.rarity &&
+               roll_satisfied_count(roll) >=
+                   goal_.required_satisfied_slots();
+    };
+    const auto roll_has_zero_progress = [&](const RollState& roll) {
+        return roll_satisfied_count(roll) == 0;
+    };
     const auto commit_outcome = [&](const RollState& roll, double weight) {
         AbstractState successor = base_state;
         successor.blocked_mask |= roll.blocked_mask;
@@ -742,6 +851,18 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         if (special_flags & PC_ITEM_MIRRORED) {
             successor.flags |= kFlagMirrored;
+        }
+        if (goal_progress_gated && is_goal_state(successor)) {
+            if (result.gated_terminal_state == kNoId) {
+                result.gated_terminal_state = intern_state(successor);
+            }
+            outcome_acc[result.gated_terminal_state] += weight;
+            return;
+        }
+        if (goal_progress_gated &&
+            roll_has_zero_progress(roll)) {
+            commit_retry(weight);
+            return;
         }
         if (!veiled_reforge) {
             outcome_acc[intern_state(successor)] += weight;
@@ -830,6 +951,25 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::unordered_map<RollState, double, RollStateHash> frontier;
     std::vector<std::pair<RollState, double>> ordered_frontier;
     std::vector<double> remaining_by_bucket(bucket_count, 0.0);
+    const auto add_bucket_pick =
+        [&](const RollState& roll, const std::uint16_t b) {
+        const RollBucket& bucket = buckets[b];
+        RollState child = roll;
+        if (bucket.side == 0) {
+            ++child.prefix_picks;
+        } else {
+            ++child.suffix_picks;
+        }
+        child.add_pick(b);
+        if (bucket.kind == BucketKind::GoalSat) {
+            child.sat_mask |= 1u << bucket.slot;
+        } else if (bucket.kind == BucketKind::GoalBelow) {
+            child.below_mask |= 1u << bucket.slot;
+        } else {
+            child.blocked_mask |= bucket.block_mask;
+        }
+        return child;
+    };
     if (!harvest) {
         frontier.emplace(RollState{}, 1.0);
     } else {
@@ -863,20 +1003,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const double remaining = guaranteed_remaining(b);
             if (remaining <= 0.0) continue;
             const RollBucket& bucket = buckets[b];
-            RollState child = root;
-            if (bucket.side == 0) {
-                ++child.prefix_picks;
-            } else {
-                ++child.suffix_picks;
-            }
-            child.add_pick(b);
-            if (bucket.kind == BucketKind::GoalSat) {
-                child.sat_mask |= 1u << bucket.slot;
-            } else if (bucket.kind == BucketKind::GoalBelow) {
-                child.below_mask |= 1u << bucket.slot;
-            } else {
-                child.blocked_mask |= bucket.block_mask;
-            }
+            RollState child = add_bucket_pick(root, b);
             frontier[child] += remaining / total;
         }
     }
@@ -895,6 +1022,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             });
         for (const auto& [roll, probability] : ordered_frontier) {
             consume_reforge_work(1 + buckets.size());
+            if (goal_progress_gated && roll_is_goal(roll)) {
+                commit_outcome(
+                    roll, probability * (stop_here + deeper));
+                ++result.gated_terminal_short_circuits;
+                continue;
+            }
             if (stop_here > 0.0) {
                 commit_outcome(roll, probability * stop_here);
             }
@@ -907,8 +1040,45 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     bucket_remaining(roll, b, occupied);
                 total += remaining_by_bucket[b];
             }
+            if (goal_progress_gated &&
+                roll_has_zero_progress(roll)) {
+                bool can_make_progress = false;
+                for (std::uint16_t b = 0;
+                     b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                    can_make_progress |=
+                        remaining_by_bucket[b] > 0.0 &&
+                        buckets[b].kind == BucketKind::GoalSat;
+                }
+                if (!can_make_progress) {
+                    commit_retry(probability * deeper);
+                    ++result.gated_retry_short_circuits;
+                    continue;
+                }
+            }
             if (total <= 0.0) {
                 commit_outcome(roll, probability * deeper);
+                continue;
+            }
+            if (goal_progress_gated && depth + 1 == max_target) {
+                double retry_weight = 0.0;
+                for (std::uint16_t b = 0;
+                     b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                    const double remaining = remaining_by_bucket[b];
+                    if (remaining <= 0.0) continue;
+                    const double branch_weight =
+                        probability * deeper * (remaining / total);
+                    if (roll_has_zero_progress(roll) &&
+                        buckets[b].kind != BucketKind::GoalSat) {
+                        retry_weight += branch_weight;
+                        continue;
+                    }
+                    commit_outcome(
+                        add_bucket_pick(roll, b), branch_weight);
+                }
+                if (retry_weight > 0.0) {
+                    commit_retry(retry_weight);
+                    ++result.gated_retry_short_circuits;
+                }
                 continue;
             }
             for (std::uint16_t b = 0;
@@ -916,21 +1086,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 const double remaining = remaining_by_bucket[b];
                 if (remaining <= 0.0) continue;
                 const double p = probability * (remaining / total);
-                const RollBucket& bucket = buckets[b];
-                RollState child = roll;
-                if (bucket.side == 0) {
-                    ++child.prefix_picks;
-                } else {
-                    ++child.suffix_picks;
-                }
-                child.add_pick(b);
-                if (bucket.kind == BucketKind::GoalSat) {
-                    child.sat_mask |= 1u << bucket.slot;
-                } else if (bucket.kind == BucketKind::GoalBelow) {
-                    child.below_mask |= 1u << bucket.slot;
-                } else {
-                    child.blocked_mask |= bucket.block_mask;
-                }
+                RollState child = add_bucket_pick(roll, b);
                 next[child] += p;
             }
         }

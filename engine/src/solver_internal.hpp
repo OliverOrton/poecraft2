@@ -9,6 +9,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -731,6 +732,10 @@ struct AbstractState {
      * candidate action can create them, so this identity cannot depend on
      * the action-reachable junk partition. */
     std::uint32_t fractured_metamod_flags = 0;
+    /* Virtual Bellman identity for the opt-in zero-progress-reroll policy.
+     * Materialization is the exact preserved physical boundary, but ordinary
+     * salvage actions are not admitted from this state. */
+    std::uint8_t goal_progress_retry_basin = 0;
     CompactCountVector junk_counts; /* logical size: layout.junk_classes */
     CompactCountVector fractured_junk_counts;
     CompactCountVector crafted_junk_counts;
@@ -802,10 +807,20 @@ struct OutcomeDistribution {
      * immutable absolute successor kernel alive for the solve. Consumers may
      * share storage and route its fringe once by object identity. */
     bool stable_shared_kernel = false;
+    bool goal_progress_gated = false;
     std::vector<OutcomeEntry> entries; /* sorted by state id, sums to 1 */
     std::vector<OutcomeChoiceGroup> choice_groups;
     std::vector<OutcomeChoiceOption> choice_options;
     std::array<double, kMaxGoalSlots> slot_satisfied_probability{};
+    double gated_terminal_probability = 0.0;
+    double gated_retry_probability = 0.0;
+    double gated_partial_probability = 0.0;
+    std::uint32_t gated_terminal_state = kNoId;
+    std::uint32_t gated_retry_state = kNoId;
+    std::uint64_t gated_terminal_short_circuits = 0;
+    std::uint64_t gated_retry_short_circuits = 0;
+    std::uint64_t gated_partial_states = 0;
+    std::uint64_t gated_kernel_bits_hash = 0;
 };
 
 /*
@@ -888,6 +903,14 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::uint64_t gated_reforge_rows = 0;
+    double gated_terminal_probability = 0.0;
+    double gated_retry_probability = 0.0;
+    double gated_partial_probability = 0.0;
+    std::uint64_t gated_terminal_short_circuits = 0;
+    std::uint64_t gated_retry_short_circuits = 0;
+    std::uint64_t gated_partial_states = 0;
+    std::uint64_t gated_first_kernel_bits_hash = 0;
     std::uint64_t protected_retry_checks = 0;
     std::uint64_t protected_retry_certificates = 0;
     std::uint64_t protected_retry_fallbacks = 0;
@@ -1107,7 +1130,8 @@ class CalcContext {
      */
     const OutcomeDistribution& outcomes(
         std::uint32_t state_id,
-        std::uint32_t action_index);
+        std::uint32_t action_index,
+        bool goal_progress_gated = false);
 
     /* Complete collision-checked identity used by the exact reforge memo.
      * The action id is included because two actions with the same preserved
@@ -1147,7 +1171,8 @@ class CalcContext {
     void release_solve_transition_caches();
     void release_outcome(
         std::uint32_t state_id,
-        std::uint32_t action_index);
+        std::uint32_t action_index,
+        bool goal_progress_gated = false);
     void release_option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);
@@ -1236,7 +1261,7 @@ class CalcContext {
      * one roll DP. Hashes select buckets only; the observation vector is the
      * equality authority. */
     std::map<
-        std::pair<std::uint32_t, std::uint64_t>,
+        std::tuple<std::uint32_t, std::uint64_t, bool>,
         std::vector<ReforgeCacheMemo>> reforge_cache_;
     mutable CalcTelemetry telemetry_;
     ActionControlSummary action_control_;
@@ -1301,10 +1326,12 @@ class CalcContext {
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,
-        std::uint32_t action_index);
+        std::uint32_t action_index,
+        bool goal_progress_gated);
     std::shared_ptr<const OutcomeDistribution> evaluate_reforge(
         std::uint32_t state_id,
-        std::uint32_t action_index);
+        std::uint32_t action_index,
+        bool goal_progress_gated);
     std::shared_ptr<const OutcomeDistribution> evaluate_unveil(
         std::uint32_t state_id);
     bool evaluate_pool_add(
@@ -1602,6 +1629,7 @@ struct SolveOptions {
     bool full_evidence = false;
     bool strict_states = false;
     bool kernel_reuse = true;
+    bool goal_progress_gated_reforges = false;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
 };
@@ -1737,6 +1765,7 @@ struct SolveDiagnostics {
     std::uint64_t sparse_transitions = 0;
     std::uint64_t transition_bits_hash = 0;
     std::uint64_t policy_bits_hash = 0;
+    std::string solution_scope = "globally_optimal_unrestricted";
     std::uint64_t algebraic_self_loops = 0;
     bool transition_cache_reused = false;
     bool focused_expansion = false;

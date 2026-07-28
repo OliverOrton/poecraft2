@@ -373,7 +373,12 @@ typedef struct pc_solve_options {
 typedef enum pc_solver_flag {
     PC_SOLVER_FLAG_FULL_EVIDENCE = 1u << 0,
     PC_SOLVER_FLAG_STRICT_STATES = 1u << 1,
-    PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE = 1u << 2
+    PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE = 1u << 2,
+    /* Exact only within the disclosed zero-progress-reroll restriction:
+     * terminal reforge outcomes are grouped, zero-progress outcomes enter a
+     * destructive-reforge-only retry basin, and partial progress remains
+     * exact. The default unrestricted solver is unchanged. */
+    PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES = 1u << 3
 } pc_solver_flag;
 
 typedef enum pc_solve_policy_status {

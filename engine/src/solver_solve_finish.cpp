@@ -138,6 +138,38 @@ SolveResult SolveWork::Impl::finish() {
 
         const std::uint32_t state_count =
             static_cast<std::uint32_t>(result.values.size());
+        /*
+         * A resource cap can now be raised by focused/automatic kernel work
+         * after it has interned successors but before prepare_iteration()
+         * synchronizes every result vector. Finalization must still produce
+         * an analyzable no-policy result instead of indexing the shorter
+         * pre-cap arrays.
+         */
+        if (result.expanded.size() < state_count) {
+            result.expanded.resize(state_count, 0);
+        }
+        const std::size_t prior_goal_count = result.goal_states.size();
+        if (prior_goal_count < state_count) {
+            result.goal_states.resize(state_count, 0);
+            for (std::uint32_t state =
+                     static_cast<std::uint32_t>(prior_goal_count);
+                 state < state_count; ++state) {
+                if (calc.is_goal_state(calc.state(state))) {
+                    result.goal_states[state] = 1;
+                    result.values[state] = 0.0;
+                    ++result.diagnostics.goal_states;
+                }
+            }
+        }
+        if (result.policy.size() < state_count) {
+            result.policy.resize(state_count, PolicyOperatorRef{});
+        }
+        if (result.unveil_preferences.size() < state_count) {
+            result.unveil_preferences.resize(state_count);
+        }
+        if (result.option_unveil_preferences.size() < state_count) {
+            result.option_unveil_preferences.resize(state_count);
+        }
         finalize_preservation_diagnostics();
         const std::uint64_t extraction_base_bytes = estimated_owned_bytes();
         bool finalization_capped =

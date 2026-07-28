@@ -684,6 +684,10 @@ std::size_t abstract_state_hash(const AbstractState& state) {
         mix(0x6d657461u); /* "meta": preserve hashes for ordinary states. */
         mix(state.fractured_metamod_flags);
     }
+    if (state.goal_progress_retry_basin != 0) {
+        mix(0x62617369u); /* "basi": preserve ordinary-state hashes. */
+        mix(state.goal_progress_retry_basin);
+    }
     for (std::uint8_t count : state.junk_counts) mix(count);
     for (std::uint8_t count : state.fractured_junk_counts) mix(count);
     for (std::uint8_t count : state.crafted_junk_counts) mix(count);

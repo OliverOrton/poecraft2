@@ -599,6 +599,41 @@ optimistic pool-probability machinery.
 The probe was restored. No public result, pruning rule, mechanics, cap, ABI,
 WASM, or product behavior changed.
 
+## Goal-Progress-Gated Reforge Acceptance
+
+The 2026-07-27
+[final report](archive/2026-07-27-goal-progress-gated-reforge/report.md) and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/goal-progress-gated-reforge-summary.json)
+pin the opt-in restricted policy against the two frozen four-mod cases.
+
+- Full-four's first Chaos row contains one terminal exit, one retry exit, and
+  134,475 exact partial states. Its masses are
+  `1.6572365216439631e-08`, `0.91351213364415884`, and
+  `0.086487849783493706`; total committed mass is
+  `1.0000000000000178`.
+- Deep-four contains one terminal exit, one retry exit, and 123,695 exact
+  partial states. Its corresponding masses are
+  `5.38535873115097e-09`, `0.91208724024359367`, and
+  `0.087912754371051213`; total is `1.0000000000000036`.
+- Two repetitions per case produced identical states, rows, transitions,
+  reforge work, mass bits, short-circuit counts, canonical first-kernel hash,
+  transition hash, and policy hash.
+- Both first rows fit under 200,000 states, but a later exact partial-state
+  reforge request reaches the unchanged `3,000,000` reforge-work cap before
+  Bellman optimization. No frozen policy or global-optimality result is
+  claimed.
+- Unrestricted controls remain in
+  `globally_optimal_unrestricted` scope, hit their prior incomplete first-row
+  shape at the same cap, and retain transition hash `566809fa56c7e2a4` and
+  policy hash `0cfb7e9c1000a4da`.
+
+The native suite passed 500,825 checks, including an exact grouped-row oracle,
+basin action restriction, ordinary partial-state action availability, exact
+compiled-strategy evaluation, and 10,000 seeded simulator runs. Release WASM
+and non-visual web acceptance are recorded in the milestone report. Wall
+times are machine/compiler-bound; deterministic work, mass, and hashes are
+the portable evidence.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

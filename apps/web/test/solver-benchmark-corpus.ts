@@ -67,6 +67,7 @@ export interface SolverBenchmarkCase {
         full_evidence?: boolean;
         strict_states?: boolean;
         kernel_reuse?: boolean;
+        goal_progress_gated_reforges?: boolean;
         worker_step_ms: number;
         cancel_ack_ms: number;
         [key: string]: number | boolean | undefined;
@@ -168,7 +169,12 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
             throw new Error(`${path}.caps.${key} must be a non-negative number`);
         }
     }
-    for (const key of ["full_evidence", "strict_states", "kernel_reuse"]) {
+    for (const key of [
+        "full_evidence",
+        "strict_states",
+        "kernel_reuse",
+        "goal_progress_gated_reforges",
+    ]) {
         if (key in caps && typeof caps[key] !== "boolean") {
             throw new Error(`${path}.caps.${key} must be boolean`);
         }

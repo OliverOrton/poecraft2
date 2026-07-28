@@ -289,3 +289,26 @@ conditioned lower is only the exact first price plus a free finish.
 action work needs both a cap-compatible executable upper and a lower that
 retains enough non-goal first-action, blocker, and preservation state to
 charge downstream work. A finite bracket alone is not progress.
+
+## 2026-07-27 — Zero-Progress Reroll Is An Explicit Restricted Objective
+
+**Decision:** Keep the unrestricted exact solver as the default. The
+goal-progress-gated reforge mode is opt-in and exact only for a different
+executable policy class: a zero-goal-progress reforge outcome may continue
+only through a legal destructive reforge whose next kernel ignores the
+discarded affixes. Goal outcomes share one terminal exit; zero-progress
+outcomes share one retry basin per preserved boundary; partial-progress
+outcomes remain complete exact states. Probability and resource mass are
+never dropped or renormalized.
+
+**Context:** [Final report](archive/2026-07-27-goal-progress-gated-reforge/report.md),
+[Solver](solver/README.md), and
+[tracked evidence](../fixtures/solver-natural-t1/v1/evidence/goal-progress-gated-reforge-summary.json).
+
+**Consequences:** Gated results must use the
+`exact_within_zero_progress_reroll_restriction` scope and must not be called
+globally optimal over Annul, Exalt, Bench, protection, or other excluded
+zero-progress salvage. Retained partial states keep the full solver action
+envelope. The first frozen four-mod Chaos rows now fit under 200,000 states,
+but follow-up exact partial-state rows exhaust the unchanged reforge-work cap;
+bounded Pareto admission is future design, not part of this decision.

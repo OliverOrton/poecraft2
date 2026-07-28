@@ -669,6 +669,7 @@ export interface SolveOptions {
     full_evidence?: boolean;
     strict_states?: boolean;
     kernel_reuse?: boolean;
+    goal_progress_gated_reforges?: boolean;
 }
 
 export interface EngineMemoryStats {

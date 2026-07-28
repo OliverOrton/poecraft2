@@ -361,6 +361,7 @@ struct SolveTransitionCache {
     std::uint32_t max_diagnostic_samples = 0;
     bool full_evidence = false;
     bool kernel_reuse = true;
+    bool goal_progress_gated_reforges = false;
     std::uint32_t discovered_states = 0;
     std::uint32_t expanded_states = 0;
     std::uint32_t strict_discovered_states = 0;

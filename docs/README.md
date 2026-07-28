@@ -28,13 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Goal-Progress-Gated Reforge Mode](active/plan.md) adds an opt-in restricted
-exact solver mode without changing the default unrestricted solver. It groups
-terminal reforge mass, routes zero-satisfied-goal outcomes through a
-destructive-reforge-only retry basin, and preserves partial-progress states
-exactly. First acceptance is limited to the two frozen four-mod cases under
-unchanged product caps.
+No implementation plan is active. The completed
+[Goal-Progress-Gated Reforge Mode](archive/2026-07-27-goal-progress-gated-reforge/README.md)
+adds an opt-in restricted exact solver mode without changing the default
+unrestricted solver. Both frozen four-mod first Chaos rows now fit under
+200,000 states; exact retained partial states become the next unchanged-cap
+bottleneck before Bellman optimization.
 
 The completed
 [Pre-Expansion Probability-Lower Audit](archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)

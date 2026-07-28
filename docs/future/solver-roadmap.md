@@ -125,6 +125,48 @@ competing lower must retain enough non-goal first-action, blocker, and
 preservation state to charge downstream work. Merely making `L` and `U`
 finite, or publishing the existing probability cover, is closed.
 
+The 2026-07-27
+[goal-progress-gated reforge milestone](../archive/2026-07-27-goal-progress-gated-reforge/README.md)
+adds a separate opt-in restricted objective. It reduces the two frozen
+four-mod first Chaos rows to 134,477 and 123,697 exact exits, below the
+200,000-state cap, by folding only terminal and zero-progress mass. The
+remaining 134,475 and 123,695 partial-progress states are all retained
+exactly. Their subsequent reforge requests exhaust the unchanged 3,000,000
+reforge-work cap before Bellman optimization, so the measured next bottleneck
+is partial-state admission rather than zero-progress composition.
+
+### Deferred bounded Pareto admission design
+
+Do not merge partial states by satisfied-goal count. If Oliver selects a
+follow-up, it should be a bounded-policy construction with these proof
+obligations:
+
+1. Partition only by a complete future-observation signature: goal status and
+   blockers, preserved/crafted/fractured/protection state, side capacity,
+   rarity/influence, action legality/resources, condition observations, and
+   every group/tag effect used by an admitted action. Goal count alone is not
+   a key.
+2. Keep an exact nondominated frontier inside each signature using admissible
+   state lowers and executable state-policy uppers. A state may leave the
+   explicit frontier only with a recorded dominance witness or into an
+   unresolved bounded bucket; similarity is not dominance.
+3. Preserve omitted probability and resource mass in that bucket. Propagate
+   its probability-weighted lower/upper continuation interval through every
+   parent row. Never delete or renormalize it.
+4. Attach each finite upper to a single executable fallback that works for
+   every state represented by the bucket. Without that common policy, the
+   bucket is lower-bound evidence only and cannot support compilation.
+5. Report a bounded result unless every reachable bucket collapses to an exact
+   value. A policy/action may be certified only if it wins for every value in
+   every unresolved interval.
+
+The first falsification gate should replay a small exact oracle and both frozen
+four-mod cases with a fixed per-signature frontier budget. Increasing that
+budget must monotonically tighten the bracket, an unbounded budget must
+reproduce the current gated hashes/value, all mass must remain one, and
+compilation must fail rather than broaden an unresolved bucket. No such rule
+is implemented by the current milestone.
+
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
 supersedes the three-slot discovery bottleneck: exact producibility filtering

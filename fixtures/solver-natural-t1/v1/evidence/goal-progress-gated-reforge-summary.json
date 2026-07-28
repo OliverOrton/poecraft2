@@ -1,0 +1,184 @@
+{
+  "schema_version": "goal_progress_gated_reforge_summary_v1",
+  "captured_on": "2026-07-27",
+  "decision": {
+    "implementation_selected": true,
+    "default_solver_replaced": false,
+    "scope": "exact_within_zero_progress_reroll_restriction",
+    "global_optimality_claim": false,
+    "first_chaos_row_under_200000_states": true,
+    "frozen_policy_produced": false,
+    "next_bottleneck": "Exact follow-up reforge requests from retained partial-progress states exhaust max_reforge_work before Bellman optimization.",
+    "future_work": "Bounded Pareto admission is designed in docs/future/solver-roadmap.md but is not implemented."
+  },
+  "identity": {
+    "starting_source_commit": "f843a9d",
+    "plan_commit": "1c59493",
+    "benchmark_executable_sha256": "083fa6b62a89eac6fe9e53177bc6440fe65d67eecca5043abd563f5405c80a33",
+    "portfolio_manifest_sha256": "a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "economy_content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os_build": "Windows 10 Pro 26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "cores": 16,
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "semantics": {
+    "terminal": "All goal-satisfying outcomes contribute raw probability to one exact terminal exit.",
+    "retry": "All zero-satisfied-goal outcomes contribute raw probability to one virtual retry basin for the exact preserved boundary.",
+    "partial": "Every partial-progress outcome remains its complete exact abstract state.",
+    "basin_actions": "Legal primitive destructive reforges whose next kernel ignores the discarded affixes; no zero-progress salvage.",
+    "mass": "Probability and resource mass are neither deleted nor renormalized.",
+    "short_circuit": "Only exact monotone terminal and no-possible-goal-progress proofs fold unfinished enumeration branches.",
+    "wall_time": "Machine/compiler-bound and not portable. State, row, transition, reforge-work, mass, and hash fields are the portable evidence."
+  },
+  "fixed_caps": {
+    "max_discovered_states": 200000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 300000,
+    "max_transitions": 3000000,
+    "max_reforge_work": 3000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_sweeps": 100000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864
+  },
+  "cases": [
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "actual_status": "refused_resource_cap",
+      "cap_hit": "max_reforge_work",
+      "first_chaos_row": {
+        "exits": 134477,
+        "terminal_exits": 1,
+        "retry_exits": 1,
+        "partial_states": 134475,
+        "terminal_probability": 1.6572365216439631e-08,
+        "retry_probability": 0.91351213364415884,
+        "partial_probability": 0.086487849783493706,
+        "mass_sum": 1.0000000000000178,
+        "terminal_short_circuits": 16,
+        "retry_short_circuits": 30324,
+        "kernel_bits_hash": "54c479dfcd7d14f3"
+      },
+      "final": {
+        "discovered_states": 134508,
+        "expanded_states": 1,
+        "frontier_states": 134507,
+        "state_action_rows": 3,
+        "transition_entries": 134507,
+        "outcome_entries": 152357,
+        "reforge_work": 3000000,
+        "bellman_work_units": 0,
+        "policy_available": false,
+        "transition_bits_hash": "fe0ea011721ae996",
+        "policy_bits_hash": "fb9671fb23d47b6f",
+        "solver_owned_bytes_estimate": 75185451
+      },
+      "repetitions": [
+        {
+          "raw_report_sha256": "fb30f2ebac47f56dd21d3d2b400b5cf52b10b315815e69d07c6807954445d0ea",
+          "solve_wall_ms": 565.202,
+          "total_wall_ms": 620.4738
+        },
+        {
+          "raw_report_sha256": "26011c3dc4ee78e636f11701495833ef85eb2d938bb210aad2a67e72e4f42d01",
+          "solve_wall_ms": 556.0106,
+          "total_wall_ms": 618.9283
+        }
+      ]
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "actual_status": "refused_resource_cap",
+      "cap_hit": "max_reforge_work",
+      "first_chaos_row": {
+        "exits": 123697,
+        "terminal_exits": 1,
+        "retry_exits": 1,
+        "partial_states": 123695,
+        "terminal_probability": 5.38535873115097e-09,
+        "retry_probability": 0.91208724024359367,
+        "partial_probability": 0.087912754371051213,
+        "mass_sum": 1.0000000000000036,
+        "terminal_short_circuits": 23,
+        "retry_short_circuits": 33075,
+        "kernel_bits_hash": "5cfd88b724a36b01"
+      },
+      "final": {
+        "discovered_states": 123728,
+        "expanded_states": 1,
+        "frontier_states": 123727,
+        "state_action_rows": 3,
+        "transition_entries": 123727,
+        "outcome_entries": 143676,
+        "reforge_work": 3000000,
+        "bellman_work_units": 0,
+        "policy_available": false,
+        "transition_bits_hash": "5ca6030024523dec",
+        "policy_bits_hash": "dd81014ef81abe83",
+        "solver_owned_bytes_estimate": 51465842
+      },
+      "repetitions": [
+        {
+          "raw_report_sha256": "09dede88665740b2684ea7e3d1609c3d32d069e307b1f3f0d51f31c64f6d34f1",
+          "solve_wall_ms": 421.8975,
+          "total_wall_ms": 474.6993
+        },
+        {
+          "raw_report_sha256": "09b65cd44ee6eca7e2e82ec1a9f4bada9ce655900441849968d2479316f5b0c3",
+          "solve_wall_ms": 431.8899,
+          "total_wall_ms": 489.2757
+        }
+      ]
+    }
+  ],
+  "unrestricted_controls": [
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "scope": "globally_optimal_unrestricted",
+      "actual_status": "refused_resource_cap",
+      "discovered_states": 96025,
+      "expanded_states": 1,
+      "state_action_rows": 1,
+      "transition_entries": 1,
+      "reforge_work": 3000000,
+      "transition_bits_hash": "566809fa56c7e2a4",
+      "policy_bits_hash": "0cfb7e9c1000a4da",
+      "raw_report_sha256": "c7f1e8671dc61b271fea80cc86d755486674c045ab533d1eda2457a5c2a81912"
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "scope": "globally_optimal_unrestricted",
+      "actual_status": "refused_resource_cap",
+      "discovered_states": 96025,
+      "expanded_states": 1,
+      "state_action_rows": 1,
+      "transition_entries": 1,
+      "reforge_work": 3000000,
+      "transition_bits_hash": "566809fa56c7e2a4",
+      "policy_bits_hash": "0cfb7e9c1000a4da",
+      "raw_report_sha256": "a8c4d1b166719223cc6ff9f27e48199633991959a0df46a548332c51b994f4cf"
+    }
+  ],
+  "verification": {
+    "native_checks": 500825,
+    "native_failures": 0,
+    "compiled_restricted_toy_exact_evaluation": "passed",
+    "compiled_restricted_toy_simulation_runs": 10000,
+    "compiled_restricted_toy_simulation": "passed",
+    "frozen_policy_verification": "not_run_no_policy_available",
+    "release_wasm_rebuilt": true,
+    "web_tests": "passed",
+    "web_typecheck": "passed",
+    "mechanics_changed": false,
+    "product_caps_changed": false,
+    "unrestricted_default_changed": false
+  }
+}

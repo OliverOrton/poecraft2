@@ -6,8 +6,9 @@ and acceptance narratives are archived and do not control current sequencing.
 Parent: [Documentation index](../README.md)
 
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
-split, focused-round performance acceptance, and WASM progress-accounting
-acceptance, including the bounded-incumbent graph-stability fix:
+split, focused-round performance acceptance, WASM progress-accounting,
+bounded-incumbent graph stability, and the goal-progress-gated native/WASM
+acceptance: 2026-07-27. The preceding broad architecture stamp was
 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -228,6 +229,42 @@ implemented public Calculator call is the single-query
 Code authority: `engine/src/solver_calc.cpp` and
 `engine/src/solver_reforge.cpp`.
 
+### Goal-progress-gated reforge mode
+
+The unrestricted exact solver remains the default. An opt-in
+`goal_progress_gated_reforges` solve option changes only primitive destructive
+reforge continuation semantics:
+
+- every goal-satisfying outcome contributes to one exact terminal exit;
+- every outcome with zero satisfied goal modifiers contributes to a virtual
+  retry basin for its exact preserved boundary;
+- every partial-progress outcome remains its complete exact abstract state;
+  and
+- terminal, retry, and partial probability/resource mass is preserved without
+  deletion or renormalization.
+
+The retry basin is not an ordinary physical item state. It may select only a
+legal primitive destructive reforge whose next kernel is independent of the
+discarded zero-progress affixes. It cannot select Annul, Exalt, Bench,
+protection, or another salvage operation. Ordinary retained partial states
+still receive the full admitted action envelope, including removal, addition,
+protection, finishing, reforge switching, and staged side strategies.
+Eldritch Chaos is conservatively excluded from basin actions because its
+preserved side can observe affixes that the basin discards.
+
+Enumeration may fold a remaining branch only after an exact monotone proof:
+the goal is already irrevocably satisfied, or the zero-progress branch has no
+remaining eligible positive-weight goal-satisfying roll. The mode has its own
+cache identity and deterministic kernel-bit hash. Compiled policies, when one
+is available, emit an explicit post-reforge route to the selected basin
+action.
+
+This mode solves a different, restricted executable MDP. Its result scope is
+`exact_within_zero_progress_reroll_restriction`; it is not globally optimal
+over excluded zero-progress salvage routes. Fixed-option kernels keep their
+existing exact program semantics, and the unrestricted mode keeps its prior
+state, transition, hash, and policy contract.
+
 ## Solve And Reprice
 
 A solve performs these implemented stages:
@@ -429,7 +466,7 @@ The public ABI is declared in `engine/include/poecraft/solver.h`:
 | --- | --- |
 | Registry | create/destroy, action count/info/find, candidate indices |
 | Calculator | exact `pc_calc_action_outcomes` for one concrete item/action |
-| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, and live `L`/`U`/gap, round, incumbent, work, and memory progress |
+| Solve | synchronous solve plus begin/step/finish/abandon, product gap targets, opt-in goal-progress-gated reforge scope, and live `L`/`U`/gap, round, incumbent, work, and memory progress |
 | Results | state value/policy, concrete projection, compile, solve log |
 | Diagnostics | versioned telemetry and selected live/peak memory statistics |
 | Exact graph | synchronous evaluate plus begin/step/finish/destroy and memory statistics |

@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-07-27
 
+- [Goal-Progress-Gated Reforge Mode](2026-07-27-goal-progress-gated-reforge/README.md) —
+  retained an opt-in restricted exact mode that folds terminal and
+  zero-progress reforge mass while preserving all partial states; both frozen
+  four-mod first rows fit below 200,000 states, then follow-up exact partial
+  rows reached the unchanged reforge-work cap.
+
 - [Pre-Expansion Probability-Lower Audit](2026-07-27-pre-expansion-probability-lower-audit/README.md) —
   rejected the graph-free goal-progress MDP after complete competing
   action-class lowers overlapped all four archived renewal uppers by five to

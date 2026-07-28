@@ -378,6 +378,8 @@ bool SolveTransitionCache::compatible(
             max_diagnostic_samples != options.max_diagnostic_samples ||
             full_evidence != options.full_evidence ||
             kernel_reuse != options.kernel_reuse ||
+            goal_progress_gated_reforges !=
+                options.goal_progress_gated_reforges ||
             exact_quotient == options.strict_states ||
             operator_indices.size() != priced.size()) {
             return false;
@@ -458,6 +460,36 @@ SolveTransitionCache::AutomaticCandidateRecord SolveWork::Impl::automatic_record
 void SolveWork::Impl::prepare_state_expansion(const std::uint32_t state) {
         const auto prepare_started = std::chrono::steady_clock::now();
         expansion_operator_indices = static_operator_indices;
+        if (options.goal_progress_gated_reforges &&
+            calc.state(state).goal_progress_retry_basin != 0) {
+            expansion_operator_indices.erase(
+                std::remove_if(
+                    expansion_operator_indices.begin(),
+                    expansion_operator_indices.end(),
+                    [&](const std::uint32_t index) {
+                        const PlannerOperator& planner =
+                            calc.operators().at(index);
+                        if (planner.kind !=
+                            PlannerOperatorKind::Primitive) {
+                            return true;
+                        }
+                        const ActionType type =
+                            calc.registry().actions.at(
+                                planner.primitive_action).params.type;
+                        return !action_transition_facts(type).renewal ||
+                               type == ActionType::EldritchChaos;
+                    }),
+                expansion_operator_indices.end());
+            retain_action_reason(
+                "included:zero_progress_retry_basin_destructive_reforges:" +
+                std::to_string(expansion_operator_indices.size()));
+            result.diagnostics.expansion_prepare_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        prepare_started).count());
+            return;
+        }
         expansion_operator_indices.erase(
             std::remove_if(
                 expansion_operator_indices.begin(),
@@ -2268,7 +2300,9 @@ bool SolveWork::Impl::expand_one_unit() {
                         automatic_record->eligible = false;
                     } else {
                         const OutcomeDistribution& distribution =
-                            calc.outcomes(state, action_index);
+                            calc.outcomes(
+                                state, action_index,
+                                options.goal_progress_gated_reforges);
                         if (!distribution.supported) {
                             if (!reported_unsupported[priced.index]) {
                                 reported_unsupported[priced.index] = true;
@@ -2449,7 +2483,8 @@ bool SolveWork::Impl::expand_one_unit() {
                         calc.release_option_kernel(state, priced.index);
                     } else {
                         calc.release_outcome(
-                            state, planner.primitive_action);
+                            state, planner.primitive_action,
+                            options.goal_progress_gated_reforges);
                     }
                     throw;
                 }
@@ -2507,7 +2542,9 @@ bool SolveWork::Impl::expand_one_unit() {
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
                     calc.release_option_kernel(state, priced.index);
                 } else {
-                    calc.release_outcome(state, planner.primitive_action);
+                    calc.release_outcome(
+                        state, planner.primitive_action,
+                        options.goal_progress_gated_reforges);
                 }
                 result.diagnostics.expansion_release_ns +=
                     static_cast<std::uint64_t>(

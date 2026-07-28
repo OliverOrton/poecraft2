@@ -523,6 +523,8 @@ async function runCase(
                         full_evidence: spec.caps.full_evidence,
                         strict_states: spec.caps.strict_states,
                         kernel_reuse: spec.caps.kernel_reuse,
+                        goal_progress_gated_reforges:
+                            spec.caps.goal_progress_gated_reforges,
                     },
                     {
                         chunkSize: spec.caps.solve_step_work_items,
@@ -561,6 +563,8 @@ async function runCase(
                         full_evidence: spec.caps.full_evidence,
                         strict_states: spec.caps.strict_states,
                         kernel_reuse: spec.caps.kernel_reuse,
+                        goal_progress_gated_reforges:
+                            spec.caps.goal_progress_gated_reforges,
                     },
                     { chunkSize: spec.caps.solve_step_work_items },
                 );

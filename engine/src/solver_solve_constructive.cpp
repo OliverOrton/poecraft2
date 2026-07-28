@@ -1386,7 +1386,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                 }
 
                 const OutcomeDistribution& transmute_kernel =
-                    calc.outcomes(restart_state, transmute);
+                    calc.outcomes(
+                        restart_state, transmute,
+                        options.goal_progress_gated_reforges);
                 if (!transmute_kernel.supported ||
                     !transmute_kernel.choice_groups.empty() ||
                     !transmute_kernel.choice_options.empty()) {
@@ -1406,7 +1408,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                 if (no_target_states.empty()) continue;
 
                 const OutcomeDistribution& alteration_kernel =
-                    calc.outcomes(no_target_states.front(), alteration);
+                    calc.outcomes(
+                        no_target_states.front(), alteration,
+                        options.goal_progress_gated_reforges);
                 if (!alteration_kernel.supported ||
                     !alteration_kernel.choice_groups.empty() ||
                     !alteration_kernel.choice_options.empty()) {
@@ -1420,7 +1424,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                             calc.state(state)) ||
                         !same_kernel(
                             alteration_kernel,
-                            calc.outcomes(state, alteration))) {
+                            calc.outcomes(
+                                state, alteration,
+                                options.goal_progress_gated_reforges))) {
                         retry_kernel_exact = false;
                         break;
                     }
@@ -1437,7 +1443,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                         } else if (!same_kernel(
                                        alteration_kernel,
                                        calc.outcomes(
-                                           outcome.state, alteration))) {
+                                           outcome.state, alteration,
+                                           options
+                                               .goal_progress_gated_reforges))) {
                             retry_kernel_exact = false;
                             break;
                         }
@@ -1475,7 +1483,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                             continue;
                         }
                         const OutcomeDistribution& kernel =
-                            calc.outcomes(state, augment);
+                            calc.outcomes(
+                                state, augment,
+                                options.goal_progress_gated_reforges);
                         if (!kernel.supported ||
                             !kernel.choice_groups.empty() ||
                             !kernel.choice_options.empty()) {
@@ -1489,7 +1499,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                             } else if (!same_kernel(
                                            alteration_kernel,
                                            calc.outcomes(
-                                               outcome.state, alteration))) {
+                                               outcome.state, alteration,
+                                               options
+                                                   .goal_progress_gated_reforges))) {
                                 valid = false;
                                 break;
                             }
@@ -1541,7 +1553,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                         std::isfinite(salvage_anchor_guess) &&
                         salvage_active.insert(state).second) {
                         const OutcomeDistribution& kernel =
-                            calc.outcomes(state, exalt);
+                            calc.outcomes(
+                                state, exalt,
+                                options.goal_progress_gated_reforges);
                         bool acyclic = kernel.supported &&
                             kernel.choice_groups.empty() &&
                             kernel.choice_options.empty();
@@ -1613,7 +1627,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                         break;
                     }
                     const OutcomeDistribution& regal_kernel =
-                        calc.outcomes(carrier, regal);
+                        calc.outcomes(
+                            carrier, regal,
+                            options.goal_progress_gated_reforges);
                     if (!regal_kernel.supported ||
                         !regal_kernel.choice_groups.empty() ||
                         !regal_kernel.choice_options.empty()) {
@@ -1647,7 +1663,9 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                             calc.registry().actions.at(finish_action),
                             calc.state(carrier))) {
                         const OutcomeDistribution& bench_kernel =
-                            calc.outcomes(carrier, finish_action);
+                            calc.outcomes(
+                                carrier, finish_action,
+                                options.goal_progress_gated_reforges);
                         if (bench_kernel.supported &&
                             bench_kernel.choice_groups.empty() &&
                             bench_kernel.choice_options.empty() &&
@@ -1662,7 +1680,10 @@ auto SolveWork::Impl::magic_regal_fallback() -> std::optional<FocusedFallbackPol
                                     calc.registry().actions.at(regal),
                                     calc.state(benched))) {
                                 const OutcomeDistribution& early_regal =
-                                    calc.outcomes(benched, regal);
+                                    calc.outcomes(
+                                        benched, regal,
+                                        options
+                                            .goal_progress_gated_reforges);
                                 if (early_regal.supported &&
                                     early_regal.choice_groups.empty() &&
                                     early_regal.choice_options.empty()) {
@@ -2018,7 +2039,8 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                     continue;
                 }
                 const OutcomeDistribution& kernel = calc.outcomes(
-                    result.start_state, renewal_action);
+                    result.start_state, renewal_action,
+                    options.goal_progress_gated_reforges);
                 if (!kernel.supported || !kernel.stable_shared_kernel ||
                     !kernel.choice_groups.empty() ||
                     !kernel.choice_options.empty()) {
@@ -2271,7 +2293,8 @@ auto SolveWork::Impl::progressive_fracture_fallback(
         const ActionDescriptor& fracture_descriptor =
             calc.registry().actions.at(fracture_action);
         const OutcomeDistribution& acquisition_kernel = calc.outcomes(
-            result.start_state, renewal_action);
+            result.start_state, renewal_action,
+            options.goal_progress_gated_reforges);
         if (!acquisition_kernel.supported ||
             !acquisition_kernel.stable_shared_kernel ||
             !acquisition_kernel.choice_groups.empty() ||
@@ -2365,7 +2388,9 @@ auto SolveWork::Impl::progressive_fracture_fallback(
                 return std::nullopt;
             }
             const OutcomeDistribution& kernel =
-                calc.outcomes(state, renewal_action);
+                calc.outcomes(
+                    state, renewal_action,
+                    options.goal_progress_gated_reforges);
             if (!kernel.supported || !kernel.stable_shared_kernel ||
                 !kernel.choice_groups.empty() ||
                 !kernel.choice_options.empty()) {
@@ -2436,7 +2461,9 @@ auto SolveWork::Impl::progressive_fracture_fallback(
                 return std::nullopt;
             }
             const OutcomeDistribution& fractured =
-                calc.outcomes(state, fracture_action);
+                calc.outcomes(
+                    state, fracture_action,
+                    options.goal_progress_gated_reforges);
             if (!fractured.supported ||
                 !fractured.choice_groups.empty() ||
                 !fractured.choice_options.empty()) {

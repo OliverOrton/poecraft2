@@ -328,7 +328,9 @@ double SolveWork::Impl::operator_q(
             return kInfinity;
         }
         const OutcomeDistribution& distribution =
-            calc.outcomes(state, action_index);
+            calc.outcomes(
+                state, action_index,
+                options.goal_progress_gated_reforges);
         if (!distribution.supported) return kInfinity;
         double expected = priced.cost;
         if (!distribution.choice_groups.empty()) {
@@ -1913,6 +1915,7 @@ void SolveWork::Impl::run_bellman_unit() {
     }
 
 void SolveWork::Impl::step(std::uint32_t max_work_items) {
+    try {
         std::uint32_t remaining = std::max<std::uint32_t>(1, max_work_items);
         while (remaining > 0 && phase != SolvePhase::Done) {
             if (phase == SolvePhase::Expanding) {
@@ -2007,6 +2010,40 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 phase = SolvePhase::Done;
             }
         }
+    } catch (const SolverResourceLimit& limit) {
+        if (!options.goal_progress_gated_reforges) {
+            throw;
+        }
+        /*
+         * Exact kernel construction can also be requested by focused
+         * heuristics and automatic admission outside expand_one_unit's
+         * state-row catch. A configured solver cap is still a normal,
+         * analyzable termination there; do not let it escape as a harness
+         * error merely because the request came from a different phase.
+         */
+        record_cap(
+            limit.cap_name(),
+            limit.cap_name() == "max_discovered_states");
+        const std::uint32_t discovered = calc.state_count();
+        transition_cache->discovered_states = discovered;
+        transition_cache->expanded_states = expanded_count;
+        transition_cache->state_rows.resize(discovered);
+        result.diagnostics.discovered_states = discovered;
+        result.diagnostics.strict_discovered_states = discovered;
+        result.diagnostics.quotient_states = discovered;
+        result.diagnostics.expanded_states = expanded_count;
+        result.diagnostics.frontier_states =
+            discovered >= expanded_count ? discovered - expanded_count : 0;
+        result.diagnostics.sparse_rows = transition_cache->rows.size();
+        result.diagnostics.sparse_transitions =
+            transition_cache->successors.size() +
+            transition_cache->choice_successors.size();
+        result.diagnostics.reforge_frontier_work =
+            calc.telemetry().reforge_frontier_work;
+        expansion_active = false;
+        backup_active = false;
+        phase = SolvePhase::Done;
+    }
     }
 
 }

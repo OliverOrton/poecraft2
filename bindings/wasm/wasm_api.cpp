@@ -602,6 +602,14 @@ bool parse_solve_options(
         !kernel_reuse->boolean) {
         options.solver_flags |= PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE;
     }
+    const Value* goal_progress_gated =
+        spec.find("goal_progress_gated_reforges");
+    if (goal_progress_gated != nullptr &&
+        goal_progress_gated->type == Type::Bool &&
+        goal_progress_gated->boolean) {
+        options.solver_flags |=
+            PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+    }
     return true;
 }
 

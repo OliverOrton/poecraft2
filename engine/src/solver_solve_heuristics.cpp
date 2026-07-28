@@ -566,7 +566,9 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             }
             if (carrier == kNoId) continue;
             const OutcomeDistribution& distribution =
-                calc.outcomes(carrier, action);
+                calc.outcomes(
+                    carrier, action,
+                    options.goal_progress_gated_reforges);
             if (!distribution.supported ||
                 !distribution.choice_groups.empty() ||
                 !distribution.choice_options.empty()) {
@@ -1354,7 +1356,9 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                     }
                 }
                 if (distribution_pointer == nullptr) {
-                    distribution_pointer = &calc.outcomes(state, action);
+                    distribution_pointer = &calc.outcomes(
+                        state, action,
+                        options.goal_progress_gated_reforges);
                     if (destructive_kernel_action(action)) {
                         shared_destructive_kernels.emplace(
                             action, distribution_pointer);
@@ -1458,7 +1462,9 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
                     distribution_pointer = shared->second;
                 } else {
                     distribution_pointer =
-                        &calc.outcomes(result.start_state, action);
+                        &calc.outcomes(
+                            result.start_state, action,
+                            options.goal_progress_gated_reforges);
                     shared_destructive_kernels.emplace(
                         action, distribution_pointer);
                 }
@@ -1532,7 +1538,9 @@ void SolveWork::Impl::prepare_strict_clean_goal_cover() {
             const double immediate = action_cost(strict_exalt);
             if (!std::isfinite(immediate)) continue;
             const OutcomeDistribution& distribution =
-                calc.outcomes(state, strict_exalt);
+                calc.outcomes(
+                    state, strict_exalt,
+                    options.goal_progress_gated_reforges);
             if (!distribution.supported ||
                 !distribution.choice_groups.empty() ||
                 !distribution.choice_options.empty()) {

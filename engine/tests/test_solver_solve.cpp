@@ -6,6 +6,7 @@
 #include "poecraft/item_state.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -166,6 +167,33 @@ bool valid_json_object(const std::string& text) {
     } catch (const std::exception&) {
         return false;
     }
+}
+
+std::uint32_t satisfied_goal_count(
+    const AbstractState& state,
+    const GoalSpec& goal) {
+    std::uint32_t count = 0;
+    for (std::size_t slot = 0; slot < goal.slots.size(); ++slot) {
+        count += state.slot_status[slot] ==
+                 static_cast<std::uint8_t>(
+                     GoalSlotStatus::Satisfied);
+    }
+    return count;
+}
+
+std::vector<std::pair<std::size_t, std::uint64_t>>
+distribution_state_probability_bits(
+    const CalcContext& calc,
+    const OutcomeDistribution& distribution) {
+    std::vector<std::pair<std::size_t, std::uint64_t>> result;
+    result.reserve(distribution.entries.size());
+    for (const OutcomeEntry& entry : distribution.entries) {
+        result.push_back({
+            abstract_state_hash(calc.state(entry.state)),
+            std::bit_cast<std::uint64_t>(entry.probability)});
+    }
+    std::sort(result.begin(), result.end());
+    return result;
 }
 
 SolveResult solve_stepped(
@@ -1185,6 +1213,349 @@ void run_primitive_destructive_renewal_upper_tests() {
         fracture_direct_value, 1e-5));
 }
 
+/* Goal-progress gating is an exact partition of the unrestricted reforge
+ * row: terminal and zero-progress classes are each folded to one successor,
+ * while every partial-progress state and its raw probability are retained. */
+void run_goal_progress_gated_reforge_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 102u, 104u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        goal.slots.push_back(slot);
+    }
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    CalcContext calc(session, goal, registry, {chaos});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t start_state = calc.intern_item(start);
+
+    const OutcomeDistribution& unrestricted =
+        calc.outcomes(start_state, chaos);
+    PC_CHECK(unrestricted.supported);
+    PC_CHECK(!unrestricted.goal_progress_gated);
+    const std::vector<OutcomeEntry> unrestricted_entries =
+        unrestricted.entries;
+    std::unordered_map<std::uint32_t, double> partial_probability;
+    double terminal_probability = 0.0;
+    double retry_probability = 0.0;
+    for (const OutcomeEntry& entry : unrestricted_entries) {
+        const AbstractState& state = calc.state(entry.state);
+        if (calc.is_goal_state(state)) {
+            terminal_probability += entry.probability;
+        } else if (satisfied_goal_count(state, goal) == 0) {
+            retry_probability += entry.probability;
+        } else {
+            partial_probability[entry.state] += entry.probability;
+        }
+    }
+    PC_CHECK(terminal_probability > 0.0);
+    PC_CHECK(retry_probability > 0.0);
+    PC_CHECK(!partial_probability.empty());
+
+    const OutcomeDistribution& gated =
+        calc.outcomes(start_state, chaos, true);
+    PC_CHECK(gated.supported);
+    PC_CHECK(gated.goal_progress_gated);
+    PC_CHECK(&calc.outcomes(start_state, chaos, false) ==
+             &unrestricted);
+    PC_CHECK(unrestricted.entries == unrestricted_entries);
+    PC_CHECK(gated.entries.size() < unrestricted.entries.size());
+    PC_CHECK(gated.gated_terminal_state != kNoId);
+    PC_CHECK(gated.gated_retry_state != kNoId);
+    PC_CHECK(calc.is_goal_state(
+        calc.state(gated.gated_terminal_state)));
+    PC_CHECK(calc.state(gated.gated_retry_state)
+                 .goal_progress_retry_basin != 0);
+    PC_CHECK(near(
+        gated.gated_terminal_probability,
+        terminal_probability, 1e-12));
+    PC_CHECK(near(
+        gated.gated_retry_probability,
+        retry_probability, 1e-12));
+
+    double total_probability = 0.0;
+    double partial_total = 0.0;
+    std::uint64_t partial_states = 0;
+    for (const OutcomeEntry& entry : gated.entries) {
+        total_probability += entry.probability;
+        if (entry.state == gated.gated_terminal_state ||
+            entry.state == gated.gated_retry_state) {
+            continue;
+        }
+        const AbstractState& state = calc.state(entry.state);
+        PC_CHECK(!calc.is_goal_state(state));
+        PC_CHECK(state.goal_progress_retry_basin == 0);
+        PC_CHECK(satisfied_goal_count(state, goal) > 0);
+        const auto expected = partial_probability.find(entry.state);
+        PC_CHECK(expected != partial_probability.end());
+        if (expected != partial_probability.end()) {
+            PC_CHECK(near(
+                entry.probability, expected->second, 1e-12));
+        }
+        partial_total += entry.probability;
+        ++partial_states;
+    }
+    PC_CHECK(near(total_probability, 1.0, 1e-12));
+    PC_CHECK(near(
+        gated.gated_partial_probability,
+        partial_total, 1e-12));
+    PC_CHECK(gated.gated_partial_states == partial_states);
+    PC_CHECK(partial_states == partial_probability.size());
+    PC_CHECK(gated.gated_terminal_short_circuits > 0);
+
+    pc_item_state retry_item;
+    PC_CHECK(calc.materialize(
+        gated.gated_retry_state, retry_item));
+    const std::uint32_t ordinary_retry_state =
+        calc.intern_item(retry_item);
+    PC_CHECK(ordinary_retry_state != gated.gated_retry_state);
+    PC_CHECK(calc.state(ordinary_retry_state)
+                 .goal_progress_retry_basin == 0);
+
+    CalcContext deterministic_calc(
+        session, goal, registry, {chaos});
+    const std::uint32_t deterministic_start =
+        deterministic_calc.intern_item(start);
+    const OutcomeDistribution& deterministic =
+        deterministic_calc.outcomes(
+            deterministic_start, chaos, true);
+    PC_CHECK(distribution_state_probability_bits(calc, gated) ==
+             distribution_state_probability_bits(
+                 deterministic_calc, deterministic));
+    PC_CHECK(
+        std::bit_cast<std::uint64_t>(
+            gated.gated_terminal_probability) ==
+        std::bit_cast<std::uint64_t>(
+            deterministic.gated_terminal_probability));
+    PC_CHECK(
+        std::bit_cast<std::uint64_t>(
+            gated.gated_retry_probability) ==
+        std::bit_cast<std::uint64_t>(
+            deterministic.gated_retry_probability));
+    PC_CHECK(gated.gated_kernel_bits_hash ==
+             deterministic.gated_kernel_bits_hash);
+
+    const std::string telemetry = serialize_solver_telemetry(
+        calc, nullptr, nullptr, std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(telemetry));
+    PC_CHECK(telemetry.find(
+                 "\"goal_progress_gated\":{\"rows\":1") !=
+             std::string::npos);
+
+    /* A full zero-progress start cannot Bench. After Chaos misses, the
+     * physical preserved carrier would make a cheap goal Bench legal, but
+     * the virtual basin must still select only destructive reforges. */
+    auto restricted_session = make_solve_session();
+    ActionRegistry restricted_registry =
+        build_action_registry(*restricted_session);
+    restricted_session->bench_mod_ids = {0};
+    ActionDescriptor goal_bench;
+    goal_bench.id = "bench:gated_goal";
+    goal_bench.display_name = "Bench gated goal";
+    goal_bench.params.type = ActionType::Bench;
+    goal_bench.params.mod_id = 0;
+    goal_bench.kind = TransitionKind::Deterministic;
+    goal_bench.cost_keys = {goal_bench.id};
+    goal_bench.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    goal_bench.legality.requires_open_affix = true;
+    goal_bench.sets_flags = kFlagCraftedMod;
+    const std::uint32_t bench_index =
+        static_cast<std::uint32_t>(
+            restricted_registry.actions.size());
+    restricted_registry.index_by_id.emplace(
+        goal_bench.id, bench_index);
+    restricted_registry.actions.push_back(std::move(goal_bench));
+    const std::uint32_t restricted_chaos =
+        restricted_registry.index_by_id.at("chaos");
+
+    GoalSpec restricted_goal;
+    restricted_goal.rarity = PC_RARITY_RARE;
+    GoalSlot restricted_slot;
+    restricted_slot.family_id = 100;
+    restricted_slot.min_tier = 1;
+    restricted_goal.slots.push_back(restricted_slot);
+    CalcContext restricted_calc(
+        restricted_session, restricted_goal, restricted_registry,
+        {restricted_chaos, bench_index});
+    pc_item_state full_start;
+    pc_item_clear(&full_start);
+    full_start.rarity = PC_RARITY_RARE;
+    place(&full_start, PC_SIDE_PREFIX, 2, 10);
+    place(&full_start, PC_SIDE_PREFIX, 3, 12);
+    place(&full_start, PC_SIDE_PREFIX, 4, 13);
+    place(&full_start, PC_SIDE_SUFFIX, 5, 20);
+    place(&full_start, PC_SIDE_SUFFIX, 6, 21);
+    place(&full_start, PC_SIDE_SUFFIX, 7, 22);
+    const std::uint32_t restricted_start_state =
+        restricted_calc.intern_item(full_start);
+    PC_CHECK(
+        restricted_calc.outcomes(
+            restricted_start_state, restricted_chaos, true)
+            .gated_retry_short_circuits > 0);
+    SolveOptions restricted_options;
+    restricted_options.goal_progress_gated_reforges = true;
+    const std::unordered_map<std::string, double> restricted_prices{
+        {"chaos", 1.0}, {"bench:gated_goal", 0.001}};
+    const SolveResult restricted = solve(
+        restricted_calc, full_start, restricted_prices,
+        restricted_options);
+    PC_CHECK(restricted.converged);
+    PC_CHECK(restricted.policy_available);
+    PC_CHECK(restricted.diagnostics.solution_scope ==
+             "exact_within_zero_progress_reroll_restriction");
+    std::uint32_t basin_state = kNoId;
+    for (std::uint32_t state = 0;
+         state < restricted.policy_reachable.size(); ++state) {
+        if (restricted.policy_reachable[state] &&
+            restricted_calc.state(state)
+                    .goal_progress_retry_basin != 0) {
+            basin_state = state;
+            break;
+        }
+    }
+    PC_CHECK(basin_state != kNoId);
+    if (basin_state != kNoId) {
+        const PolicyOperatorRef selected =
+            restricted.policy[basin_state];
+        PC_CHECK(selected != kNoId);
+        const PlannerOperator& planner =
+            restricted_calc.operators().at(selected);
+        PC_CHECK(planner.kind == PlannerOperatorKind::Primitive);
+        PC_CHECK(
+            restricted_calc.registry().actions.at(
+                planner.primitive_action).params.type ==
+            ActionType::Chaos);
+        PC_CHECK(action_legal(
+            *restricted_session,
+            restricted_calc.registry().actions.at(bench_index),
+            restricted_calc.state(basin_state)));
+    }
+
+    PolicyCompilationTelemetry compilation;
+    const std::string restricted_json =
+        compile_policy_strategy_json(
+            restricted_calc, restricted,
+            "goal-progress-gated renewal", &compilation);
+    PC_CHECK(restricted_json.find(
+                 "\"description\":\"Exact within the "
+                 "zero-progress-reroll policy restriction") !=
+             std::string::npos);
+    PC_CHECK(restricted_json.find("_gated_route") !=
+             std::string::npos);
+    const std::shared_ptr<StrategyImpl> restricted_strategy =
+        compile_strategy_json(
+            restricted_session, restricted_json.data(),
+            restricted_json.size());
+    auto restricted_economy = std::make_shared<EconomyImpl>();
+    restricted_economy->id = "goal-progress-gated-test";
+    restricted_economy->prices = restricted_prices;
+    StrategyEvalOptions restricted_eval_options;
+    restricted_eval_options.economy = restricted_economy;
+    const StrategyEvalResult restricted_evaluation =
+        evaluate_strategy(
+            *restricted_strategy, restricted_eval_options);
+    PC_CHECK(restricted_evaluation.converged);
+    PC_CHECK(restricted_evaluation.cost_complete);
+    PC_CHECK(near(
+        restricted_evaluation.total_expected_cost,
+        restricted.values[restricted.start_state], 1e-9));
+    SimulatorImpl restricted_simulator;
+    restricted_simulator.session = restricted_session;
+    restricted_simulator.strategy = restricted_strategy;
+    restricted_simulator.economy = restricted_economy;
+    prepare_simulator_runtime(restricted_simulator);
+    SimulationOptionsInternal restricted_simulation_options;
+    restricted_simulation_options.target_runs = 10000;
+    restricted_simulation_options.seed = 0x4750524752455353ULL;
+    restricted_simulation_options.max_actions_per_run = 100000;
+    run_simulator_chunk(
+        restricted_simulator, restricted_simulation_options, 10000);
+    PC_CHECK(restricted_simulator.summary.completed_runs == 10000);
+    PC_CHECK(restricted_simulator.summary.success_count == 10000);
+    PC_CHECK(
+        restricted_simulator.summary.action_not_applied_count == 0);
+    PC_CHECK(
+        restricted_simulator.summary.no_matching_edge_count == 0);
+
+    /* Retained progress remains an ordinary exact state. A cheap Bench that
+     * finishes a second goal is discoverable there even though it is
+     * deliberately unavailable from the zero-progress basin. */
+    GoalSpec partial_goal;
+    partial_goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {104u, 100u}) {
+        GoalSlot partial_slot;
+        partial_slot.family_id = family;
+        partial_slot.min_tier = 1;
+        partial_goal.slots.push_back(partial_slot);
+    }
+    CalcContext partial_source(
+        restricted_session, partial_goal, restricted_registry,
+        {restricted_chaos, bench_index});
+    pc_item_state empty_rare;
+    pc_item_clear(&empty_rare);
+    empty_rare.rarity = PC_RARITY_RARE;
+    const std::uint32_t empty_state =
+        partial_source.intern_item(empty_rare);
+    const OutcomeDistribution& partial_kernel =
+        partial_source.outcomes(
+            empty_state, restricted_chaos, true);
+    std::uint32_t retained_partial = kNoId;
+    for (const OutcomeEntry& entry : partial_kernel.entries) {
+        const AbstractState& state =
+            partial_source.state(entry.state);
+        if (state.goal_progress_retry_basin == 0 &&
+            !partial_source.is_goal_state(state) &&
+            state.slot_status[0] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied) &&
+            state.slot_status[1] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Absent) &&
+            (state.blocked_mask & (1u << 1)) == 0 &&
+            state.prefix_count < restricted_session->rare_affix_cap) {
+            retained_partial = entry.state;
+            break;
+        }
+    }
+    PC_CHECK(retained_partial != kNoId);
+    if (retained_partial != kNoId) {
+        pc_item_state partial_item;
+        PC_CHECK(partial_source.materialize(
+            retained_partial, partial_item));
+        PC_CHECK(action_legal(
+            *restricted_session,
+            restricted_registry.actions.at(bench_index),
+            partial_source.state(retained_partial)));
+        const OutcomeDistribution& bench_finish =
+            partial_source.outcomes(
+                retained_partial, bench_index);
+        PC_CHECK(bench_finish.supported);
+        PC_CHECK(!bench_finish.entries.empty());
+        CalcContext partial_calc(
+            restricted_session, partial_goal, restricted_registry,
+            {restricted_chaos, bench_index});
+        const SolveResult partial_result = solve(
+            partial_calc, partial_item,
+            {{"chaos", 100.0}, {"bench:gated_goal", 0.001}},
+            restricted_options);
+        PC_CHECK(partial_result.converged);
+        const PlannerOperator& partial_selected =
+            partial_calc.operators().at(
+                partial_result.policy[partial_result.start_state]);
+        PC_CHECK(partial_selected.kind ==
+                 PlannerOperatorKind::Primitive);
+        PC_CHECK(
+            partial_calc.telemetry().primitive_families.at(
+                static_cast<std::size_t>(
+                    PrimitiveTelemetryFamily::Bench)).rows > 0);
+    }
+}
+
 bool read_text_file(const std::string& path, std::string& out) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) return false;
@@ -1382,5 +1753,6 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();
     run_primitive_destructive_renewal_upper_tests();
+    run_goal_progress_gated_reforge_tests();
     run_artifact_solve_tests(artifact_dir);
 }

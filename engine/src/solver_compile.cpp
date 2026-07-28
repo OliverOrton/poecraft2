@@ -892,6 +892,17 @@ std::string compile_policy_strategy_json(
     }
     if (compiled_states.empty()) gap("policy reaches no working states");
 
+    const auto gated_primitive_reforge =
+        [&](const std::uint32_t state_id) {
+        if (!result.options.goal_progress_gated_reforges) return false;
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        return planner.kind == PlannerOperatorKind::Primitive &&
+               action_transition_facts(
+                   calc.registry().actions.at(
+                       planner.primitive_action).params.type).renewal;
+    };
+
     /* Abstract-state ids follow transition discovery order, which is allowed
      * to differ between native and WASM. Canonicalize the compile order and
      * emitted node ids by the exact state predicate so policy compression
@@ -1004,7 +1015,8 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::FracturePrepare ||
              planner.option_kind == FixedOptionKind::ImprintRetry);
         std::uint32_t leader = state_id;
-        if (!primitive_unveil && !state_local_option) {
+        if (!primitive_unveil && !state_local_option &&
+            !gated_primitive_reforge(state_id)) {
             const std::string key =
                 std::to_string(result.policy[state_id].index);
             std::vector<std::uint32_t>& leaders = leaders_by_key[key];
@@ -1048,6 +1060,31 @@ std::string compile_policy_strategy_json(
             restart_region_leader = leader;
         }
     }
+    std::map<std::uint32_t, std::uint32_t> gated_retry_state_by_state;
+    for (const std::uint32_t state_id : compiled_states) {
+        if (!gated_primitive_reforge(state_id)) continue;
+        const PlannerOperator& planner =
+            calc.operators().at(result.policy[state_id]);
+        const OutcomeDistribution& distribution = calc.outcomes(
+            state_id, planner.primitive_action, true);
+        if (!distribution.supported ||
+            !distribution.goal_progress_gated) {
+            gap("selected gated reforge has no gated exact kernel");
+        }
+        if (!(distribution.gated_retry_probability > 0.0)) continue;
+        const std::uint32_t retry_state =
+            distribution.gated_retry_state;
+        if (retry_state == kNoId ||
+            retry_state >= result.policy_reachable.size() ||
+            !result.policy_reachable[retry_state] ||
+            result.goal_states[retry_state] ||
+            result.policy[retry_state] == kNoId ||
+            calc.state(retry_state).goal_progress_retry_basin == 0) {
+            gap("selected gated reforge retry basin is outside the "
+                "executable policy");
+        }
+        gated_retry_state_by_state.emplace(state_id, retry_state);
+    }
     const auto expected_cost_annotation =
         [&](const std::uint32_t leader) -> std::string {
         const auto found = region_expected_cost.find(leader);
@@ -1086,6 +1123,9 @@ std::string compile_policy_strategy_json(
     if (strict_policy_route) {
         policy_route_entries.reserve(compiled_states.size());
         for (const std::uint32_t state : compiled_states) {
+            if (calc.state(state).goal_progress_retry_basin != 0) {
+                continue;
+            }
             const std::uint32_t leader = policy_region_by_state.at(state);
             if (leader != restart_region_leader) {
                 policy_route_entries.push_back({state, leader});
@@ -1293,6 +1333,12 @@ std::string compile_policy_strategy_json(
     /* --- emit --------------------------------------------------------------- */
     std::string json = "{\"version\":\"v1\",\"name\":\"";
     json += json_escape(name);
+    if (result.options.goal_progress_gated_reforges) {
+        json +=
+            "\",\"description\":\"Exact within the zero-progress-reroll "
+            "policy restriction; excluded zero-progress salvage routes are "
+            "not globally optimized";
+    }
     json += "\",\"base_state\":{\"base_key\":\"";
     json += json_escape(
         data.string_at(data.base_metadata_path_sid[session.base_index]));
@@ -1360,6 +1406,14 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::Primitive &&
             calc.registry().actions[planner.primitive_action].params.type ==
                 ActionType::Unveil;
+        const auto gated_retry =
+            gated_retry_state_by_state.find(state_id);
+        if (gated_retry != gated_retry_state_by_state.end()) {
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "_gated_route\",\"kind\":\"router\"}";
+            ++node_count;
+            check_node_cap();
+        }
         if (unveil) {
             if (state_id >= result.unveil_preferences.size() ||
                 result.unveil_preferences[state_id].empty()) {
@@ -1632,6 +1686,9 @@ std::string compile_policy_strategy_json(
     } else {
         for (const std::uint32_t leader : emitted_states) {
             for (const std::uint32_t state : states_by_leader.at(leader)) {
+                if (calc.state(state).goal_progress_retry_basin != 0) {
+                    continue;
+                }
                 edge(
                     "router", state_node(leader), 1,
                     state_conditions.at(state), false);
@@ -1843,8 +1900,36 @@ std::string compile_policy_strategy_json(
                 if (step + 1 < planner.primitive_program.size()) {
                     to = state_node(state_id) + "_o" +
                          std::to_string(step + 1);
+                } else if (
+                    gated_retry_state_by_state.count(state_id) != 0) {
+                    to = state_node(state_id) + "_gated_route";
                 }
                 edge(from, to, 0, "", true);
+            }
+            const auto gated_retry =
+                gated_retry_state_by_state.find(state_id);
+            if (gated_retry != gated_retry_state_by_state.end()) {
+                std::vector<std::string> satisfied;
+                satisfied.reserve(vocabulary.size());
+                for (const SlotVocabulary& slot : vocabulary) {
+                    satisfied.push_back(slot.satisfied);
+                }
+                const std::string zero_progress =
+                    satisfied.empty()
+                        ? "{\"type\":\"always\"}"
+                        : not_of(any_of(satisfied));
+                const std::uint32_t retry_leader =
+                    policy_region_by_state.at(gated_retry->second);
+                if (retry_leader == kNoId) {
+                    gap("gated retry basin has no emitted policy region");
+                }
+                edge(
+                    state_node(state_id) + "_gated_route",
+                    state_node(retry_leader), 0,
+                    zero_progress, false, "retry");
+                edge(
+                    state_node(state_id) + "_gated_route",
+                    "router", 1, "", true);
             }
             continue;
         }

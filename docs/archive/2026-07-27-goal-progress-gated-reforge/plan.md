@@ -1,12 +1,18 @@
 # Goal-Progress-Gated Reforge Mode
 
-**Status: active implementation plan.**
+**Status: complete (2026-07-27).**
 
 Owner: Oliver
 
 Branch: `codex/goal-progress-gated-reforge`
 
 Starting source: `f843a9d` (`main`)
+
+Final result: Gates 0 through 2 and the focused controls passed. Gate 3 put
+both first Chaos rows below 200,000 states, then measured retained exact
+partial states as the next bottleneck at the unchanged reforge-work cap.
+Gate 4 retained the opt-in implementation, stable contract, evidence, and
+future bounded-Pareto design.
 
 ## Objective
 
@@ -67,6 +73,8 @@ its goal and zero-progress states, probability sums to one, repeated runs
 produce identical grouped kernels, and unrestricted controls remain
 bit-identical.
 
+Outcome: passed.
+
 ## Gate 2 - Restricted Bellman And Compilation
 
 1. Expansion of a retry-basin state skips state-local automatic admission and
@@ -88,6 +96,8 @@ Exit: a native toy solve demonstrates that a basin cannot select a cheaper
 salvage action, while an ordinary retained partial state can; its compiled
 strategy agrees with the restricted native policy under 10,000 seeded runs
 when compilation is reached.
+
+Outcome: passed.
 
 ## Gate 3 - Frozen Four-Mod Acceptance
 
@@ -111,6 +121,10 @@ Acceptance:
 Wall times are machine/compiler-bound. Discovered states, rows, transitions,
 reforge work, grouped mass, and hashes are the portable comparison.
 
+Outcome: first-row acceptance passed for both frozen cases. No frozen policy
+was produced; exact follow-up rows from the retained partial states reached
+`max_reforge_work` before Bellman optimization.
+
 ## Gate 4 - Retention And Handoff
 
 1. Update the stable solver contract, decisions, evidence, and corpus index.
@@ -124,6 +138,8 @@ reforge work, grouped mass, and hashes are the portable comparison.
    affected by the new option.
 5. Archive this plan, clear `HANDOFF.md`, and commit locally with the required
    co-author line. Do not push.
+
+Outcome: passed.
 
 ## Stop Rules
 

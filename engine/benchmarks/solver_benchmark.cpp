@@ -51,6 +51,7 @@ struct Arguments {
     bool validate_only = false;
     bool skip_verification = false;
     bool emit_progress = false;
+    bool goal_progress_gated_reforges = false;
     std::uint64_t verification_runs = 0;
     std::uint64_t verification_seed = 0;
     std::uint32_t verification_chunk_runs = 32;
@@ -1039,6 +1040,7 @@ CaseResult run_case(
     const std::uint64_t verification_seed_override,
     const std::uint32_t verification_chunk_runs,
     const double verification_time_limit_seconds,
+    const bool goal_progress_gated_reforges,
     const bool exact_strategy_evaluation,
     const double exact_strategy_evaluation_time_limit_seconds,
     const std::function<void(const CaseResult&)>& checkpoint) {
@@ -1114,6 +1116,15 @@ CaseResult run_case(
         if (!optional_bool(caps, "kernel_reuse", true)) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE;
+        }
+        if (optional_bool(
+                caps, "goal_progress_gated_reforges", false)) {
+            solve_options.solver_flags |=
+                PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        }
+        if (goal_progress_gated_reforges) {
+            solve_options.solver_flags |=
+                PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
         }
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
@@ -2289,6 +2300,9 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--case") args.case_id = value("--case");
         else if (argument == "--validate-only") args.validate_only = true;
         else if (argument == "--progress") args.emit_progress = true;
+        else if (argument == "--goal-progress-gated-reforges") {
+            args.goal_progress_gated_reforges = true;
+        }
         else if (argument == "--verification-runs") {
             args.verification_runs = std::stoull(value("--verification-runs"));
         }
@@ -2489,6 +2503,7 @@ int main(int argc, char** argv) {
                     args.verification_runs, args.verification_seed,
                     args.verification_chunk_runs,
                     args.verification_time_limit_seconds,
+                    args.goal_progress_gated_reforges,
                     args.exact_strategy_evaluation,
                     args.exact_strategy_evaluation_time_limit_seconds,
                     checkpoint);

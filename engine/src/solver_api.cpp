@@ -620,6 +620,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.kernel_reuse =
             (options->solver_flags &
              PC_SOLVER_FLAG_DISABLE_KERNEL_REUSE) == 0;
+        value.goal_progress_gated_reforges =
+            (options->solver_flags &
+             PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {

@@ -1,38 +1,25 @@
 # Session Handoff
 
-**Status: Gate 0 active for goal-progress-gated reforge mode.**
+**Status: no implementation boundary is active.**
 
-Plan: [Goal-Progress-Gated Reforge Mode](docs/active/plan.md)
+The completed
+[Goal-Progress-Gated Reforge Mode](docs/archive/2026-07-27-goal-progress-gated-reforge/README.md)
+is retained on `codex/goal-progress-gated-reforge`. The unrestricted exact
+solver remains the default. Gated results are exact only within the
+zero-progress-reroll restriction.
 
-Branch: `codex/goal-progress-gated-reforge`
+## Final Boundary
 
-Starting source: `f843a9d` (`main`)
+Both frozen four-mod first Chaos rows fit below 200,000 states with all
+terminal, retry, partial, probability, and resource mass preserved. The full
+case retains 134,475 exact partial states; the deep case retains 123,695.
+Follow-up exact reforge requests reach the unchanged 3,000,000-work cap before
+Bellman optimization, so neither frozen case produced a policy.
 
-## Current Boundary
-
-Implement an opt-in solver mode that groups terminal reforge mass, sends
-zero-satisfied-goal outcomes to a preserved-boundary retry basin, and retains
-every partial-progress outcome exactly. Basin actions are restricted to legal
-primitive destructive reforges whose next kernels ignore the discarded
-affixes.
-
-The default unrestricted exact solver must remain behaviorally unchanged.
-Gated results must be labelled exact only within the zero-progress-reroll
-restriction.
-
-## Immediate Next Step
-
-Land the internal basin identity and grouped exact reforge distribution, then
-prove probability conservation and grouped parity against an unrestricted
-small oracle before changing Bellman expansion.
-
-## Standing Boundaries
-
-- Do not merge partial-progress states by goal count.
-- Do not drop or renormalize terminal/retry probability mass.
-- Do not admit salvage actions from a retry basin.
-- Do not raise product caps or change mechanics.
-- Existing unrestricted behavior and hashes are a hard control.
+The separate bounded Pareto admission design is recorded in
+[Solver Roadmap](docs/future/solver-roadmap.md#deferred-bounded-pareto-admission-design).
+It is not selected or implemented. Oliver must choose the next chunk before
+implementation resumes.
 
 Commits remain local unless Oliver asks to push and must end with:
 

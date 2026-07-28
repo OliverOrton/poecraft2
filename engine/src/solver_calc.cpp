@@ -34,6 +34,22 @@ namespace solver {
 
 namespace {
 
+constexpr std::uint32_t kGoalProgressGatedCacheBit = 1u << 31;
+
+std::uint64_t distribution_cache_key(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index,
+    const bool goal_progress_gated) {
+    if (action_index >= kGoalProgressGatedCacheBit) {
+        throw std::length_error(
+            "solver action id exceeds gated distribution key space");
+    }
+    const std::uint32_t keyed_action =
+        action_index |
+        (goal_progress_gated ? kGoalProgressGatedCacheBit : 0u);
+    return (static_cast<std::uint64_t>(state_id) << 32) | keyed_action;
+}
+
 PrimitiveTelemetryFamily primitive_family(const ActionType type) {
     switch (type) {
     case ActionType::Essence:
@@ -428,7 +444,7 @@ std::uint64_t CalcContext::dynamic_shallow_owned_bytes() const {
              (sizeof(std::uint64_t) + 2 * sizeof(void*));
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<
-                   const std::pair<std::uint32_t, std::uint64_t>,
+                   const std::tuple<std::uint32_t, std::uint64_t, bool>,
                    std::vector<ReforgeCacheMemo>>) +
                3 * sizeof(void*));
     bytes += telemetry_rows_.bucket_count() * sizeof(void*);
@@ -993,14 +1009,22 @@ bool CalcContext::materialize(
         carrier->flags |= PC_MOD_SLOT_VEILED;
     }
 
-    return project_item(session, layout_, out) == target;
+    AbstractState materialized = project_item(session, layout_, out);
+    materialized.goal_progress_retry_basin =
+        target.goal_progress_retry_basin;
+    return materialized == target;
 }
 
 const OutcomeDistribution& CalcContext::outcomes(
     std::uint32_t state_id,
-    std::uint32_t action_index) {
-    const std::uint64_t key =
-        (static_cast<std::uint64_t>(state_id) << 32) | action_index;
+    std::uint32_t action_index,
+    bool goal_progress_gated) {
+    goal_progress_gated =
+        goal_progress_gated &&
+        action_transition_facts(
+            registry_.actions.at(action_index).params.type).renewal;
+    const std::uint64_t key = distribution_cache_key(
+        state_id, action_index, goal_progress_gated);
     ++telemetry_.distribution_requests;
     PrimitiveFamilyTelemetry& family =
         telemetry_.primitive_families.at(static_cast<std::size_t>(
@@ -1016,7 +1040,7 @@ const OutcomeDistribution& CalcContext::outcomes(
         ++telemetry_.distribution_misses;
         const auto started = std::chrono::steady_clock::now();
         std::shared_ptr<const OutcomeDistribution> distribution =
-            evaluate(state_id, action_index);
+            evaluate(state_id, action_index, goal_progress_gated);
         const auto build_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
@@ -1149,9 +1173,14 @@ void CalcContext::release_solve_transition_caches() {
 
 void CalcContext::release_outcome(
     const std::uint32_t state_id,
-    const std::uint32_t action_index) {
-    const std::uint64_t key =
-        (static_cast<std::uint64_t>(state_id) << 32) | action_index;
+    const std::uint32_t action_index,
+    bool goal_progress_gated) {
+    goal_progress_gated =
+        goal_progress_gated &&
+        action_transition_facts(
+            registry_.actions.at(action_index).params.type).renewal;
+    const std::uint64_t key = distribution_cache_key(
+        state_id, action_index, goal_progress_gated);
     account_distribution_cache_erase(key);
     distribution_cache_.erase(key);
 }
@@ -1390,7 +1419,7 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
              (sizeof(std::uint64_t) + 2 * sizeof(void*));
     bytes += reforge_cache_.size() *
              (sizeof(std::pair<
-                   const std::pair<std::uint32_t, std::uint64_t>,
+                   const std::tuple<std::uint32_t, std::uint64_t, bool>,
                    std::vector<ReforgeCacheMemo>>) +
                3 * sizeof(void*));
     for (const auto& [unused, memos] : reforge_cache_) {
@@ -1476,7 +1505,8 @@ std::uint64_t CalcContext::audited_estimated_owned_bytes() const {
 
 std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
     std::uint32_t state_id,
-    std::uint32_t action_index) {
+    std::uint32_t action_index,
+    const bool goal_progress_gated) {
     const ActionDescriptor& action = registry_.actions.at(action_index);
     const SessionImpl& session = *session_;
     OutcomeDistribution result;
@@ -1508,7 +1538,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate(
                action.params.type == ActionType::EldritchChaos) {
         /* Sequential multi-mod rolls: the S3 roll DP (harvest adds a
          * guaranteed tag-targeted first pick). */
-        return evaluate_reforge(state_id, action_index);
+        return evaluate_reforge(
+            state_id, action_index, goal_progress_gated);
     } else if (action.params.type == ActionType::Unveil) {
         return evaluate_unveil(state_id);
     } else {

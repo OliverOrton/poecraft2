@@ -170,6 +170,15 @@ The native stages are:
    documented fallback; and
 5. finalize values, policy, bounds, diagnostics, telemetry, and hashes.
 
+Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
+reforge rows fold goal outcomes to one terminal exit and zero-goal-progress
+outcomes to a virtual retry basin while retaining every partial-progress item
+exactly. Basin expansion permits only legal destructive reforges independent
+of the discarded affixes; ordinary partial states retain the normal complete
+action envelope. A completed result is labelled exact only within that
+zero-progress-reroll restriction. Omitting the option preserves the
+unrestricted globally optimal solve contract.
+
 The worker starts from the requested/default work count, adapts each step to a
 roughly 12 ms slice, and clamps Solve to one through four native work items.
 It rebases to one item at phase changes, emits progress at phase boundaries or

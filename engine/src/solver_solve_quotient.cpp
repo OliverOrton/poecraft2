@@ -420,6 +420,8 @@ std::vector<std::uint64_t> SolveWork::Impl::state_behavior_signature(
         std::vector<std::uint64_t> out;
         out.push_back(calc.is_goal_state(calc.state(state)) ? 1u : 0u);
         out.push_back(
+            calc.state(state).goal_progress_retry_basin != 0 ? 1u : 0u);
+        out.push_back(
             state < graph.expanded.size() && graph.expanded[state] ? 1u : 0u);
         /* Refinement is monotone: a round may split an existing candidate
          * class but can never merge two classes that the exact coarse
@@ -452,7 +454,9 @@ std::vector<std::uint64_t> SolveWork::Impl::coarse_state_signature(
          * round. Starting from the literal representation would make the
          * monotone refinement unable to prove an unobserved difference
          * irrelevant. */
-        return {calc.is_goal_state(state) ? 1u : 0u};
+        return {
+            calc.is_goal_state(state) ? 1u : 0u,
+            state.goal_progress_retry_basin != 0 ? 1u : 0u};
     }
 
 std::vector<std::uint64_t> SolveWork::Impl::focused_schedule_signature(
@@ -464,6 +468,7 @@ std::vector<std::uint64_t> SolveWork::Impl::focused_schedule_signature(
          * make its most common zero-progress carriers monopolize a round. */
         return {
             calc.is_goal_state(state) ? 1u : 0u,
+            state.goal_progress_retry_basin != 0 ? 1u : 0u,
             satisfied_goal_mask_for_state(state_id),
             carrier_facts(state).goal_family_mask,
             state.blocked_mask,

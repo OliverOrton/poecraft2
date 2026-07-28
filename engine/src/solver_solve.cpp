@@ -50,6 +50,10 @@ SolveWork::Impl::Impl(
             options.max_diagnostic_samples;
         result.diagnostics.telemetry_json_byte_limit =
             options.max_telemetry_json_bytes;
+        result.diagnostics.solution_scope =
+            options.goal_progress_gated_reforges
+                ? "exact_within_zero_progress_reroll_restriction"
+                : "globally_optimal_unrestricted";
         result.diagnostics.registry_actions = static_cast<std::uint32_t>(
             calc.registry().actions.size());
         result.diagnostics.candidate_actions = static_cast<std::uint32_t>(
@@ -245,6 +249,8 @@ SolveWork::Impl::Impl(
                 options.max_diagnostic_samples;
             transition_cache->full_evidence = options.full_evidence;
             transition_cache->kernel_reuse = options.kernel_reuse;
+            transition_cache->goal_progress_gated_reforges =
+                options.goal_progress_gated_reforges;
             for (const PricedOperator& priced : operators) {
                 transition_cache->operator_indices.push_back(priced.index);
             }
