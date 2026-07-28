@@ -515,6 +515,36 @@ The native fallback build passed. Focused solver-solve tests passed 532/532 and
 solver-compile tests passed 359/359. No mechanic, algorithm, cap, ABI, artifact,
 binding, WASM, web, or product behavior changed.
 
+## Complete First-Frontier Successor Census
+
+The 2026-07-27
+[final report](archive/2026-07-27-true-successor-frontier-census/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/true-successor-frontier-census-summary.json)
+replace 200,000-state ceiling guesses with complete exact first-Chaos rows.
+
+- Exact support is 3,204,323 for full-three, 712,877 for deep-three, and
+  222,580 for both four-mod cases.
+- The old prefix covered only 6.24%, 28.05%, and 89.84% of those supports.
+- Complete reforge work is 151,348,836, 28,155,816, and 6,797,580
+  respectively.
+- The support occupies 98.71% to 99.65% of the collision-checked
+  prefix-payload × suffix-payload product. Every one-sided and goal-status
+  class was already present in the 200,000-state prefix.
+- Complete cleanup-pattern counts remain insufficient. The closest case,
+  full-four, needs 22,581 states removed to fit one carrier plus its Chaos
+  support under the cap; impossible free deletion of every nonterminal state
+  with at least two goals on one side removes only 21,887, leaving a
+  694-state shortfall.
+- Two repetitions per case produced identical deterministic census objects,
+  including probability sums, work, histograms, projection classes, selected
+  bytes, and ordered support/probability hashes.
+
+Measurement-only source was restored. The census selects no production
+architecture: support is a dense joint side product, and the preceding
+factorization experiment already rejected a simple rank-one probability
+representation.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

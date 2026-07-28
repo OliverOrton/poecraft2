@@ -82,6 +82,20 @@ The census still is not state equivalence. The cap-truncated all-action
 studies retained strict working identities and ran only the incomplete shadow
 diagnostic; they did not establish a completed all-action zero-merge result.
 
+The later
+[true first-frontier successor census](../archive/2026-07-27-true-successor-frontier-census/README.md)
+completed the live Chaos row itself. Exact supports are 3,204,323,
+712,877, and 222,580 states (the last for both four-mod cases), requiring
+151,348,836, 28,155,816, and 6,797,580 deterministic reforge work. The support
+is 98.71% to 99.65% dense in the Cartesian product of the one-sided payload
+projections, and every one-sided/goal class was already present before the
+200,000-state cap. This closes the unknown true-count question without
+selecting compaction: support-only side projection leaves a dense joint
+continuation expectation, while simple probability factorization was already
+rejected. The complete cleanup population is also insufficient; even the
+closest impossible free-deletion ceiling remains 694 states over the current
+cap.
+
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
 supersedes the three-slot discovery bottleneck: exact producibility filtering

@@ -1,52 +1,59 @@
 # Session Handoff
 
-**Status: active measurement-only solver boundary.**
+**Status: no active implementation boundary.** Oliver must choose the next
+chunk before implementation resumes.
 
-## Selected work
+## Latest completed result
 
-Execute the
-[True First-Frontier Successor Census](docs/active/plan.md) on branch
-`codex/true-successor-frontier-census`, starting from local-main commit
-`b7740b8`.
+The 2026-07-27
+[True First-Frontier Successor Census](docs/archive/2026-07-27-true-successor-frontier-census/README.md)
+completed the live exact primitive-Chaos rows for the four frozen natural-T1
+hard cases.
 
-The milestone measures the complete exact primitive-Chaos successor support
-from the unchanged empty rare start of four frozen natural-T1 hard cases:
+Exact support is:
 
-- `natural-t1-full-three-24920b3b28de`;
-- `natural-t1-deep-three-low-probability-af4719c816f3`;
-- `natural-t1-full-four-47d8b909aa88`; and
-- `natural-t1-deep-four-low-probability-1a1102b0e06b`.
+- full three: 3,204,323 successors and 151,348,836 reforge work;
+- deep three: 712,877 successors and 28,155,816 work; and
+- full/deep four: 222,580 successors and 6,797,580 work each.
 
-The current 200,000-state evidence is cap-censored. It gives neither the true
-successor count nor a completed exact quotient result. Measure the live exact
-reforge evaluator to completion, record deterministic work and composition,
-and interpret collision-checked projections only as ceilings unless a full
-continuation-observation proof exists.
+Every case completed twice with identical deterministic census objects,
+probability sums within `7.4e-15` of one, zero duplicate successor IDs, and
+matching ordered support/probability hashes.
 
-## Current stopping point
+The complete support occupies 98.71% to 99.65% of the collision-checked
+prefix-payload × suffix-payload product. The old 200,000-state prefix had
+already exposed every one-sided and goal-status projection class; completion
+adds dense joint combinations, not a hidden small duplicate population.
+Together with the preceding rank-one probability falsification, this selects
+no compact exact Bellman representation.
 
-Gate 0 is complete. The completed exact-quotient audit is on local `main`, the
-census branch and active plan exist, and the four case/action identities are
-frozen. Gate 1 begins at the live exact reforge completion point in
-`engine/src/solver_reforge.cpp`. No solver source has changed.
+The complete cleanup ceiling also remains insufficient. On the closest case,
+full-four, one carrier plus its Chaos support exceeds the 200,000-state cap by
+22,581. Impossible free deletion of every nonterminal successor with at least
+two satisfied goals on one side removes only 21,887, leaving a 694-state
+shortfall before any real cleanup transition, cost, failure, or legality.
 
-## Constraints
-
-- Measurement only; do not raise product defaults.
-- Do not change mechanics, goals, conditions, ABI, artifact, bindings, WASM,
-  web, or product behavior.
-- Restore exploratory instrumentation unless a retained regression has
-  independent value.
-- Run the four hard cases serially.
-- Keep commits local unless Oliver asks to push.
-- End commits with:
-
-  `Co-authored-by: Codex <codex@openai.com>`
+All measurement-only engine source was restored. The retained changes are
+documentation and
+[tracked evidence](fixtures/solver-natural-t1/v1/evidence/true-successor-frontier-census-summary.json)
+only. No mechanic, goal, condition, action, transition, solver algorithm,
+product cap, ABI, artifact, binding, WASM, web, or product behavior changed.
 
 ## Previous result
 
-The completed
+The preceding
 [Exact Quotient Audit](docs/archive/2026-07-27-exact-quotient-audit/README.md)
-proved a 10-to-3 completed quotient reduction, retained literal Unveil offer
-identity, and corrected cap-stopped shadow diagnostics. Commit `b7740b8` is on
-local `main`; nothing is pushed.
+proved a 10-to-3 completed exact quotient, retained literal Unveil offer
+identity, and corrected cap-stopped shadow diagnostics.
+
+## Repository state
+
+- Local `main` contains the completed work through exact-quotient commit
+  `b7740b8`.
+- The successor census is on
+  `codex/true-successor-frontier-census`.
+- Nothing is pushed.
+
+Commits must remain local unless Oliver asks to push and must end with:
+
+`Co-authored-by: Codex <codex@openai.com>`

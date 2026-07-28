@@ -28,10 +28,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active implementation boundary is the measurement-only
-[True First-Frontier Successor Census](active/plan.md). It measures the
-complete exact Chaos support of four frozen natural-T1 hard cases without
-authorizing a cap change or production compaction.
+There is no active implementation boundary. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[True First-Frontier Successor Census](archive/2026-07-27-true-successor-frontier-census/README.md)
+measured complete exact Chaos supports from 222,580 to 3,204,323 states. Their
+one-sided projection products are 98.71% to 99.65% occupied, so completion
+reveals dense joint combinations rather than a hidden small duplicate class.
+No production architecture or behavior change was selected.
 
 The completed
 [Exact Quotient Audit](archive/2026-07-27-exact-quotient-audit/README.md)

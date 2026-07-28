@@ -44,6 +44,12 @@ The later
 pins four 11M/200k hard-case observed-prefix projections. It rejects cleanup
 as the next pre-bound architecture while keeping the much larger all-state
 side-factorization signal explicitly unqualified.
+The later
+[true first-frontier census](evidence/true-successor-frontier-census-summary.json)
+completes those four exact Chaos supports at 222,580 to 3,204,323 states. It
+shows that the cap prefix already contained every one-sided/goal projection
+class and that the complete support occupies at least 98.71% of the one-sided
+payload product.
 
 ## Benchmark workflow
 

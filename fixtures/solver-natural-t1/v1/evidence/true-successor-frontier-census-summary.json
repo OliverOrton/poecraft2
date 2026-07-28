@@ -1,0 +1,293 @@
+{
+  "schema_version": "true_successor_frontier_census_summary_v1",
+  "captured_on": "2026-07-27",
+  "decision": {
+    "complete_first_chaos_support_measured": true,
+    "production_change_selected": false,
+    "hidden_exact_reduction_found": false,
+    "reason": "The complete supports are 98.71% to 99.65% dense in the Cartesian product of their one-sided payload projections. The cap prefix already contained every one-sided and goal-status projection class. Completing the row adds joint combinations, not a missing small family of exact duplicates.",
+    "cleanup_reopened": false,
+    "cleanup_reason": "On the closest case, full-four, impossible free deletion of every nonterminal successor with at least two satisfied goals on one side removes 21887 states, but 22581 must disappear merely to fit one carrier plus its Chaos support under max_discovered_states=200000. The optimistic population is still 694 states short before any real cleanup transition, cost, failure, or legality.",
+    "next_hypothesis": "No new production hypothesis is selected. A future exact compact row would need a proof over the dense joint continuation-value expectation, not support-only side projection or the already-falsified rank-one probability factorization."
+  },
+  "identity": {
+    "source_commit": "0819dec919630182a7bbeb62aabeb2ec89a77500",
+    "measurement_patch_git_blob_sha1": "6c1a0180023fe1cc86fefa6af5d6fc377f9ba6b5",
+    "measurement_executable_sha256": "8b53df37a1c0cb72bd04843ff013b93d929f3c9fb47e4a75a7673f20134b05d7",
+    "portfolio_manifest_sha256": "a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "economy_content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os": "Microsoft Windows 11 Pro 10.0.26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "semantics": {
+    "action": "primitive chaos",
+    "carrier": "unchanged empty rare start item",
+    "successor_identity": "live collision-checked solver AbstractState interning",
+    "completion": "The environment-gated diagnostic lifted only its private one-action state and reforge-work allowances, completed the exact OutcomeDistribution, recorded it, then stopped with diagnostic_first_reforge_census_complete before sparse-row retention or successor expansion.",
+    "probability": "Every completed distribution has probability sum within 7.4e-15 of one and zero duplicate successor ids.",
+    "projection": "Prefix and suffix payload keys retain that side's affix count, goal-slot statuses, and exact junk-class counts while omitting cross-side blocker provenance. Goal-status keys retain all goal-slot statuses. Keys are collision-checked byte strings and are ceilings, not Bellman equivalence.",
+    "side_product_density": "support_states / (prefix_payload_classes * suffix_payload_classes)",
+    "product_cap_excess": "support_states + one carrier - max_discovered_states",
+    "memory": "selected_owned_bytes_at_completion covers the action-local context before finish. native_peak_owned_bytes includes subsequent diagnostic result construction. Process working-set fields are snapshots, not sampled peaks.",
+    "wall_time": "Machine/compiler-bound and not portable. Reforge frontier work is deterministic."
+  },
+  "fixed_product_reference": {
+    "max_discovered_states": 200000,
+    "max_reforge_work": 11000000,
+    "max_solver_owned_bytes": 1073741824
+  },
+  "oracle": {
+    "case_id": "natural-t1-smoke-one-armour-09767fd6f824",
+    "raw_report_sha256": "3d5a564768a4f7ab1cd0f58620f1e75644291b3c3e03ad9353f723f3526ab39d",
+    "support_states": 9870,
+    "reported_support_states": 9870,
+    "probability_sum": 1.0000000000000009,
+    "duplicate_successor_ids": 0,
+    "reforge_frontier_work": 192384,
+    "ordered_support_probability_hash": "3783e9e94770c61c"
+  },
+  "cases": [
+    {
+      "id": "natural-t1-full-three-24920b3b28de",
+      "case_sha256": "f64a5723b6786672c1140d950fe939873a3a85d156068a0e30bc1271d78a6232",
+      "side_mix": "SSS",
+      "support_states": 3204323,
+      "states_with_carrier": 3204324,
+      "product_cap_excess": 3004324,
+      "probability_sum": 1.0000000000000036,
+      "duplicate_successor_ids": 0,
+      "goal_states": 893,
+      "goal_probability": 2.917546158770869e-7,
+      "reforge_frontier_work": 151348836,
+      "roll_bucket_count": 46,
+      "roll_frontier_peak_states": 2328144,
+      "selected_owned_bytes_at_completion": 905334214,
+      "native_live_owned_bytes": 1049756393,
+      "native_peak_owned_bytes": 1174647235,
+      "ordered_support_probability_hash": "bc5a62cea0f3595f",
+      "observed_prefix_states": 199952,
+      "observed_prefix_fraction_of_support": 0.062400700553595874,
+      "observed_work_fraction_of_complete": 0.06702031061540506,
+      "projection_classes": {
+        "prefix_payload": 893,
+        "suffix_payload": 3601,
+        "goal_status": 27,
+        "side_product": 3215693,
+        "side_product_missing_pairs": 11370,
+        "side_product_density": 0.9964642147120387
+      },
+      "cleanup_ceiling": {
+        "nonterminal_progress_states": 868830,
+        "one_short_states": 64242,
+        "protected_two_plus_nonterminal_states": 64242,
+        "protected_two_plus_fraction": 0.02004854067458243,
+        "protected_complete_nonterminal_states": 0,
+        "removal_shortfall_to_fit_product_cap": 2940082
+      },
+      "repeat_reports": [
+        {
+          "raw_report_sha256": "c61619bbbd8495451650358dcbb0aa182029cfe66e77451360d567abbb0ddb0c",
+          "total_wall_ms": 19419.1111,
+          "solve_wall_ms": 16538.6348,
+          "process_working_set_after_bytes": 1138970624
+        },
+        {
+          "raw_report_sha256": "755a8e97486d86c66503aed812761f91cdaec9a6236ca205d094aff5f07ddf8a",
+          "total_wall_ms": 18879.3094,
+          "solve_wall_ms": 16026.8423,
+          "process_working_set_after_bytes": 1138847744
+        }
+      ]
+    },
+    {
+      "id": "natural-t1-deep-three-low-probability-af4719c816f3",
+      "case_sha256": "d847d6e52035a24ae78f6d0d4087f49935dbd8d26b425ef62464db9ed509a280",
+      "side_mix": "PSS",
+      "support_states": 712877,
+      "states_with_carrier": 712878,
+      "product_cap_excess": 512878,
+      "probability_sum": 0.9999999999999987,
+      "duplicate_successor_ids": 0,
+      "goal_states": 1103,
+      "goal_probability": 4.898616765925715e-7,
+      "reforge_frontier_work": 28155816,
+      "roll_bucket_count": 38,
+      "roll_frontier_peak_states": 448500,
+      "selected_owned_bytes_at_completion": 221414592,
+      "native_live_owned_bytes": 252445853,
+      "native_peak_owned_bytes": 281445020,
+      "ordered_support_probability_hash": "881377a9360183b6",
+      "observed_prefix_states": 199960,
+      "observed_prefix_fraction_of_support": 0.28049719657107747,
+      "observed_work_fraction_of_complete": 0.2895349223762508,
+      "projection_classes": {
+        "prefix_payload": 221,
+        "suffix_payload": 3251,
+        "goal_status": 27,
+        "side_product": 718471,
+        "side_product_missing_pairs": 5594,
+        "side_product_density": 0.9922140211643894
+      },
+      "cleanup_ceiling": {
+        "nonterminal_progress_states": 256774,
+        "one_short_states": 31814,
+        "protected_two_plus_nonterminal_states": 4190,
+        "protected_two_plus_fraction": 0.005877591786521377,
+        "protected_complete_nonterminal_states": 4190,
+        "removal_shortfall_to_fit_product_cap": 508688
+      },
+      "repeat_reports": [
+        {
+          "raw_report_sha256": "e615d11bd080cab679d2f9fe64190fc9ed2282b513f867dcf638dbf83970bb79",
+          "total_wall_ms": 3630.0645,
+          "solve_wall_ms": 2956.108,
+          "process_working_set_after_bytes": 277479424
+        },
+        {
+          "raw_report_sha256": "ef7831eb9a315571c7ca20000b05a670b8e9c57c652f5aeb4cc466356ccb5efd",
+          "total_wall_ms": 3669.5138,
+          "solve_wall_ms": 2981.3684,
+          "process_working_set_after_bytes": 277504000
+        }
+      ]
+    },
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "case_sha256": "70bddf1759d971bcaefb856fc8bf9e428d75f291d9c4f3a3dec81ea6e6272a5b",
+      "side_mix": "PPPS",
+      "support_states": 222580,
+      "states_with_carrier": 222581,
+      "product_cap_excess": 22581,
+      "probability_sum": 0.999999999999993,
+      "duplicate_successor_ids": 0,
+      "goal_states": 121,
+      "goal_probability": 1.657236521644033e-8,
+      "reforge_frontier_work": 6797580,
+      "roll_bucket_count": 29,
+      "roll_frontier_peak_states": 133000,
+      "selected_owned_bytes_at_completion": 58083741,
+      "native_live_owned_bytes": 68847752,
+      "native_peak_owned_bytes": 76933894,
+      "ordered_support_probability_hash": "b6b9048ba8ace409",
+      "observed_prefix_states": 199969,
+      "observed_prefix_fraction_of_support": 0.8984140533740678,
+      "observed_work_fraction_of_complete": 0.9002144880972346,
+      "projection_classes": {
+        "prefix_payload": 276,
+        "suffix_payload": 817,
+        "goal_status": 54,
+        "side_product": 225492,
+        "side_product_missing_pairs": 2912,
+        "side_product_density": 0.9870860163553474
+      },
+      "cleanup_ceiling": {
+        "nonterminal_progress_states": 134475,
+        "one_short_states": 3839,
+        "protected_two_plus_nonterminal_states": 21887,
+        "protected_two_plus_fraction": 0.09833318357444515,
+        "protected_complete_nonterminal_states": 696,
+        "removal_shortfall_to_fit_product_cap": 694
+      },
+      "repeat_reports": [
+        {
+          "raw_report_sha256": "9c13c1b48c17c68328de3f0c710a5bbcf2a55cc601e928a9bb2310980941860d",
+          "total_wall_ms": 967.9797,
+          "solve_wall_ms": 773.3902,
+          "process_working_set_after_bytes": 111419392
+        },
+        {
+          "raw_report_sha256": "dac83907a93a29a439af8f4c8140b6483c4eb3a1353dae9663edf511c94b33ae",
+          "total_wall_ms": 958.7416,
+          "solve_wall_ms": 765.6707,
+          "process_working_set_after_bytes": 111394816
+        }
+      ]
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "case_sha256": "d4d02a79d856a699877ab704a75ad68687a255a5792471c9b14abab25a0dbd9d",
+      "side_mix": "PPSS",
+      "support_states": 222580,
+      "states_with_carrier": 222581,
+      "product_cap_excess": 22581,
+      "probability_sum": 1.0000000000000073,
+      "duplicate_successor_ids": 0,
+      "goal_states": 135,
+      "goal_probability": 5.385358731150648e-9,
+      "reforge_frontier_work": 6797580,
+      "roll_bucket_count": 29,
+      "roll_frontier_peak_states": 133000,
+      "selected_owned_bytes_at_completion": 58110125,
+      "native_live_owned_bytes": 68874136,
+      "native_peak_owned_bytes": 76960543,
+      "ordered_support_probability_hash": "59710a2a0c2c73c2",
+      "observed_prefix_states": 199969,
+      "observed_prefix_fraction_of_support": 0.8984140533740678,
+      "observed_work_fraction_of_complete": 0.9002144880972346,
+      "projection_classes": {
+        "prefix_payload": 276,
+        "suffix_payload": 817,
+        "goal_status": 54,
+        "side_product": 225492,
+        "side_product_missing_pairs": 2912,
+        "side_product_density": 0.9870860163553474
+      },
+      "cleanup_ceiling": {
+        "nonterminal_progress_states": 123695,
+        "one_short_states": 3419,
+        "protected_two_plus_nonterminal_states": 11194,
+        "protected_two_plus_fraction": 0.05029202983197053,
+        "protected_complete_nonterminal_states": 11194,
+        "removal_shortfall_to_fit_product_cap": 11387
+      },
+      "repeat_reports": [
+        {
+          "raw_report_sha256": "a9dc73fc02fa7fe324de198f0ff713e9e2fb9124618422c875aa5b934bf84441",
+          "total_wall_ms": 903.9585,
+          "solve_wall_ms": 707.1791,
+          "process_working_set_after_bytes": 110514176
+        },
+        {
+          "raw_report_sha256": "49d80555332c85b9cb36a8125ed643f50b32c4b808c75f31fc04db1e712d21be",
+          "total_wall_ms": 906.0827,
+          "solve_wall_ms": 710.9738,
+          "process_working_set_after_bytes": 110522368
+        }
+      ]
+    }
+  ],
+  "repeatability": {
+    "completed_runs": 8,
+    "per_case_repetitions": 2,
+    "deterministic_census_objects_identical": true,
+    "identical_fields_include": [
+      "support_states",
+      "probability_sum",
+      "goal and affix histograms",
+      "reforge frontier work",
+      "roll frontier peak",
+      "projection classes",
+      "cleanup population",
+      "selected owned bytes",
+      "ordered support/probability hash"
+    ]
+  },
+  "verification": {
+    "small_live_distribution_oracle": "passed",
+    "all_four_completed": true,
+    "timeouts": 0,
+    "surviving_processes": 0,
+    "measurement_source_retained": false,
+    "mechanics_changed": false,
+    "solver_behavior_changed": false,
+    "product_caps_changed": false,
+    "wasm_rebuilt": false
+  }
+}

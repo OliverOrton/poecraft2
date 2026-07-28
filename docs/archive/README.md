@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [True First-Frontier Successor Census](2026-07-27-true-successor-frontier-census/README.md) —
+  completed the four cap-censored first Chaos rows at 222,580 to 3,204,323
+  successors and found 98.71% to 99.65% dense one-sided support products; no
+  compact exact Bellman representation was selected.
+
 - [Exact Quotient Audit](2026-07-27-exact-quotient-audit/README.md) —
   pinned a fast completed 10-to-3 exact merge, proved literal Unveil choice
   identity is executable behavior, and corrected cap-stopped shadow-only

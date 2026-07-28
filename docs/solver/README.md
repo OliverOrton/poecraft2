@@ -205,6 +205,16 @@ weights restored the tiny table's rank but cost more identities than the
 joint representation and would be required after every pick. See the
 [action-local factorization report](../archive/2026-07-27-action-local-side-factorization/report.md).
 
+The later
+[complete first-frontier census](../archive/2026-07-27-true-successor-frontier-census/report.md)
+measured the live exact Chaos supports of four hard cases. Their supports
+contain 98.71% to 99.65% of the Cartesian products formed by collision-checked
+one-sided payload projections. The earlier 200,000-state prefix had already
+exposed every one-sided and goal-status class; completion adds joint
+combinations inside those classes. Support factorization therefore does not
+remove the joint Bellman continuation terms, and no compact row authority
+follows from the projection.
+
 Compound Bestiary actions use their own exact calculation API because their
 state includes an optional saved checkpoint. Automatic Imprint retry is still
 an exact solver operator assembled from those native Bestiary transitions.

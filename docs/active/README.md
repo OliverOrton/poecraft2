@@ -1,16 +1,18 @@
 # Active Work
 
-**Status: active measurement-only solver research.**
+**Status: no active implementation boundary.** Oliver must select the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-The selected boundary is the
-[True First-Frontier Successor Census](plan.md). It measures the complete
-exact Chaos successor support and composition of the four frozen natural-T1
-hard cases. It does not authorize product cap changes or a compact solver
-representation.
-
 The most recently completed milestone is the
+[True First-Frontier Successor Census](../archive/2026-07-27-true-successor-frontier-census/README.md).
+It measured complete exact Chaos supports from 222,580 to 3,204,323 states.
+The supports are at least 98.71% dense in their one-sided payload products,
+selecting no compact exact Bellman representation. Measurement source was
+restored.
+
+The preceding completed milestone is the
 [Exact Quotient Audit](../archive/2026-07-27-exact-quotient-audit/README.md).
 It pinned a fast 10-to-3 completed merge, retained literal Unveil choice
 identity as executable policy behavior, and corrected cap-stopped evidence

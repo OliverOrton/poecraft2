@@ -1,6 +1,6 @@
 # True First-Frontier Successor Census
 
-**Status: active measurement-only solver research.**
+**Status: completed measurement-only solver research.**
 
 Owner: Oliver
 
