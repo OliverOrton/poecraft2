@@ -1,29 +1,32 @@
 # Session Handoff
 
-**Status: an implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
-Plan:
-[Gated Root Renewal Incumbent](docs/active/plan.md)
+## Current State
 
-Branch: `codex/gated-root-renewal-incumbent`
+The completed
+[Gated Root Renewal Incumbent](docs/archive/2026-07-28-gated-root-renewal-incumbent/README.md)
+is retained. A completed gated root primitive destructive-reforge row can now
+publish the exact fixed policy “repeat this reforge until goal” after proving
+action legality and the same complete engine-owned kernel signature on every
+reachable non-goal carrier.
 
-Starting source: `c8109d1` (`main`)
+Both frozen four-mod gated cases return finite `bounded_feasible` policies
+within the zero-progress-reroll restriction. They compile to four-node loops.
+The default unrestricted solver is behaviorally unchanged.
 
-## Current Boundary
+## Measured Next Boundary
 
-Gate 0 is selected. Corrected raw telemetry shows both frozen gated runs stop
-while expanding the start state: the completed Chaos row consumes 2,807,580
-of 3,000,000 reforge-work units, then the next root Fossil request consumes
-the remainder. No retained partial state has been expanded.
+Both frozen gated runs still have `expanded_states = 1`. The first Chaos row
+uses 2,807,580 of 3,000,000 reforge-work units; the next competing root Fossil
+request consumes the remainder. Root broad-action competition is the
+immediate measured exact-search wall. Partial-state admission remains a
+possible later wall, but no retained partial state has yet been expanded in
+these captures.
 
-Proceed through Gates 0 through 5 in order. The candidate is an early
-executable upper from repeating one completed destructive reforge until the
-goal. It must preserve the full competing lower envelope, remain bounded
-within the zero-progress-reroll restriction, and compile only after an
-independent exact action-local kernel proof.
-
-Do not implement bounded Pareto admission or raise caps in this milestone.
-The unrestricted exact solver remains unchanged and default.
+No next implementation chunk is selected. Oliver must choose one before
+implementation resumes. Do not infer bounded Pareto admission as the next
+step from the older corrected report.
 
 Commits remain local unless Oliver asks to push and must end with:
 

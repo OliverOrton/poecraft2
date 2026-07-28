@@ -70,6 +70,8 @@ SolveResult SolveWork::Impl::finish() {
             (target_gap_stop || result.diagnostics.state_cap_hit ||
              result.diagnostics.resource_cap_hit || sweep_cap_hit);
         std::vector<double> restored_policy_row_costs;
+        std::vector<std::uint8_t> restored_policy_reachable;
+        bool explicit_restored_policy_reachable = false;
         if (restore_output_incumbent) {
             BoundedPolicyIncumbent& incumbent = *output_incumbent;
             count_policy_actions(
@@ -103,6 +105,12 @@ SolveResult SolveWork::Impl::finish() {
             }
             result.behavioral_representative_by_state =
                 std::move(incumbent.behavioral_representative_by_state);
+            explicit_restored_policy_reachable =
+                !incumbent.policy_reachable.empty();
+            restored_policy_reachable =
+                std::move(incumbent.policy_reachable);
+            result.primitive_renewal_witness =
+                std::move(incumbent.primitive_renewal_witness);
             policy_rows = std::move(incumbent.policy_rows);
             restored_policy_row_costs =
                 std::move(incumbent.policy_row_costs);
@@ -376,7 +384,19 @@ SolveResult SolveWork::Impl::finish() {
             finalization_capped = true;
         }
         if (!finalization_capped) {
-            result.policy_reachable.assign(state_count, 0);
+            if (restore_output_incumbent &&
+                !restored_policy_reachable.empty()) {
+                if (restored_policy_reachable.size() != state_count ||
+                    !restored_policy_reachable[result.start_state]) {
+                    throw std::logic_error(
+                        "bounded incumbent reachability changed before "
+                        "finalization");
+                }
+                result.policy_reachable =
+                    std::move(restored_policy_reachable);
+            } else {
+                result.policy_reachable.assign(state_count, 0);
+            }
         } else {
             result.policy_reachable.clear();
         }
@@ -384,7 +404,17 @@ SolveResult SolveWork::Impl::finish() {
         if (!finalization_capped && restore_output_incumbent) {
             result.diagnostics.policy_reachable_states = 0;
             for (std::uint32_t state = 0; state < state_count; ++state) {
-                result.policy_reachable[state] = 1;
+                if (result.policy_reachable.empty()) {
+                    throw std::logic_error(
+                        "bounded incumbent reachability is unavailable");
+                }
+                if (explicit_restored_policy_reachable &&
+                    !result.policy_reachable[state]) {
+                    continue;
+                }
+                if (!explicit_restored_policy_reachable) {
+                    result.policy_reachable[state] = 1;
+                }
                 ++result.diagnostics.policy_reachable_states;
                 if (!result.goal_states[state] &&
                     result.policy[state] == kNoId) {

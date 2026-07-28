@@ -1,27 +1,26 @@
 # Active Work
 
-**Status: one implementation plan is active.**
+**Status: no implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-The active
-[Gated Root Renewal Incumbent](plan.md)
-milestone corrects the immediate post-row boundary and tests a gated-only
-early executable upper. Both frozen runs are still expanding the start state:
-Chaos consumes 2,807,580 of 3,000,000 reforge-work units, and the next root
-Fossil request consumes the remainder before any partial state is expanded.
-The candidate repeats one proved action-local-equivalent destructive reforge
-until success; it must remain bounded, preserve all competing lowers, and
-compile as an exact compact fixed policy.
-
 The most recently completed milestone is the
+[Gated Root Renewal Incumbent](../archive/2026-07-28-gated-root-renewal-incumbent/README.md).
+Both frozen four-mod gated cases now return a finite executable
+repeat-until-goal policy after the first Chaos row. Each policy has an exact
+action-local kernel witness, remains bounded within the restricted objective,
+and compiles to four nodes. The next competing root broad reforge still
+reaches the unchanged work cap before any partial state is expanded.
+
+The preceding completed milestone is the
 [Goal-Progress-Gated Reforge Mode](../archive/2026-07-27-goal-progress-gated-reforge/README.md).
 It retained an opt-in restricted exact mode while leaving the unrestricted
 solver as the default. Both frozen four-mod first Chaos rows now fit under
-200,000 states; exact follow-up rows from 123,695 to 134,475 retained partial
-states reach the unchanged reforge-work cap before Bellman optimization.
+200,000 states. Corrected root telemetry shows the next competing root broad
+reforge reaches the unchanged work cap before any retained partial state is
+expanded.
 
-The preceding completed milestone is the
+The earlier completed milestone is the
 [Pre-Expansion Probability-Lower Audit](../archive/2026-07-27-pre-expansion-probability-lower-audit/README.md).
 Its graph-free probability MDP passed the small exact oracle and kept all
 state/row/transition/reforge counters flat, but zero of four hard cases

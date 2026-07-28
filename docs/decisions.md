@@ -310,5 +310,25 @@ never dropped or renormalized.
 globally optimal over Annul, Exalt, Bench, protection, or other excluded
 zero-progress salvage. Retained partial states keep the full solver action
 envelope. The first frozen four-mod Chaos rows now fit under 200,000 states,
-but follow-up exact partial-state rows exhaust the unchanged reforge-work cap;
-bounded Pareto admission is future design, not part of this decision.
+but corrected telemetry shows the next competing broad root reforge exhausts
+the unchanged reforge-work cap before any partial state is expanded. Bounded
+Pareto admission is deferred future design, not part of this decision.
+
+## 2026-07-28 — Gated Root Renewal Is An Early Bounded Incumbent
+
+**Decision:** Retain the gated-only fixed primitive renewal path. After a
+completed gated root destructive-reforge row, the solver may publish the
+executable policy “repeat the same reforge until goal” at `c / p` only after
+proving action legality and the same complete engine-owned reforge-kernel
+signature for every positive-probability non-goal exit.
+
+**Context:** [Final report](archive/2026-07-28-gated-root-renewal-incumbent/report.md),
+[Solver](solver/README.md), and
+[tracked evidence](../fixtures/solver-natural-t1/v1/evidence/gated-root-renewal-incumbent-summary.json).
+
+**Consequences:** This is an upper-bound witness exact within the
+zero-progress-reroll policy restriction, not a globally optimal result and
+not a state-equivalence claim. Competing actions remain in discovery and the
+lower-bound problem. Compilation must independently revalidate the witness
+and may then use one compact goal-or-repeat loop. The default unrestricted
+solver is behaviorally unchanged.

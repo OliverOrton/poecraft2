@@ -1026,6 +1026,23 @@ void run_primitive_destructive_renewal_upper_tests() {
                    std::string::npos;
         }));
 
+    ActionRegistry illegal_gated_registry = registry;
+    illegal_gated_registry.actions.at(chaos)
+        .legality.requires_open_affix = true;
+    CalcContext illegal_gated_calc(
+        session, goal, std::move(illegal_gated_registry),
+        {alchemy, chaos, restart});
+    SolveOptions illegal_gated_options = options;
+    illegal_gated_options.goal_progress_gated_reforges = true;
+    illegal_gated_options.max_expanded_states = 1;
+    const SolveResult illegal_gated = solve(
+        illegal_gated_calc, start, prices, illegal_gated_options);
+    PC_CHECK(!illegal_gated.primitive_renewal_witness.valid);
+    PC_CHECK(
+        illegal_gated.diagnostics.gated_root_renewal_candidates > 0);
+    PC_CHECK(
+        illegal_gated.diagnostics.gated_root_renewal_rejections > 0);
+
     auto fracture_session = make_solve_session();
     for (std::uint32_t mod = 0;
          mod < fracture_session->base_spawn_weight.size(); ++mod) {
@@ -1481,6 +1498,124 @@ void run_goal_progress_gated_reforge_tests() {
         restricted_simulator.summary.action_not_applied_count == 0);
     PC_CHECK(
         restricted_simulator.summary.no_matching_edge_count == 0);
+
+    /*
+     * Stop after the start carrier. A completed gated Chaos row must publish
+     * the exact fixed policy "repeat Chaos until the goal" before later
+     * frontier expansion. The compact compiler independently rechecks every
+     * policy-reachable carrier's action-local kernel signature.
+     */
+    CalcContext early_renewal_calc(
+        restricted_session, restricted_goal, restricted_registry,
+        {restricted_chaos, bench_index});
+    SolveOptions early_renewal_options;
+    early_renewal_options.goal_progress_gated_reforges = true;
+    early_renewal_options.max_expanded_states = 1;
+    early_renewal_options.state_certificate_control = false;
+    const SolveResult early_renewal = solve(
+        early_renewal_calc, full_start, restricted_prices,
+        early_renewal_options);
+    PC_CHECK(!early_renewal.converged);
+    PC_CHECK(early_renewal.policy_available);
+    PC_CHECK(
+        early_renewal.policy_status ==
+        SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(
+        early_renewal.termination ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(early_renewal.diagnostics.state_cap_hit);
+    PC_CHECK(early_renewal.lower_bound <=
+             early_renewal.evaluated_policy_cost + 1e-9);
+    PC_CHECK(near(
+        early_renewal.evaluated_policy_cost,
+        early_renewal.upper_bound, 1e-9));
+    PC_CHECK(early_renewal.primitive_renewal_witness.valid);
+    PC_CHECK(
+        early_renewal.primitive_renewal_witness.primitive_action ==
+        restricted_chaos);
+    PC_CHECK(
+        early_renewal.primitive_renewal_witness.witness_hash != 0);
+    PC_CHECK(
+        early_renewal.diagnostics
+            .gated_root_renewal_validated_non_goal_states ==
+        early_renewal.primitive_renewal_witness
+            .validated_non_goal_states);
+    std::uint64_t reachable_non_goal = 0;
+    for (std::uint32_t state = 0;
+         state < early_renewal.policy_reachable.size(); ++state) {
+        if (early_renewal.policy_reachable[state] &&
+            !early_renewal.goal_states[state]) {
+            ++reachable_non_goal;
+            PC_CHECK(
+                early_renewal.policy[state].index ==
+                early_renewal.primitive_renewal_witness
+                    .operator_index);
+        }
+    }
+    PC_CHECK(
+        reachable_non_goal ==
+        early_renewal.primitive_renewal_witness
+            .validated_non_goal_states);
+
+    PolicyCompilationTelemetry early_compilation;
+    const std::string early_json =
+        compile_policy_strategy_json(
+            early_renewal_calc, early_renewal,
+            "early gated destructive renewal",
+            &early_compilation);
+    PC_CHECK(early_compilation.nodes == 4);
+    PC_CHECK(early_compilation.edges == 4);
+    PC_CHECK(early_compilation.policy_regions == 1);
+    PC_CHECK(early_json.find(
+                 "\"description\":\"Bounded executable fixed "
+                 "destructive-renewal policy exact within the "
+                 "zero-progress-reroll restriction") !=
+             std::string::npos);
+    PC_CHECK(early_json.find("_gated_route") == std::string::npos);
+    const std::shared_ptr<StrategyImpl> early_strategy =
+        compile_strategy_json(
+            restricted_session, early_json.data(),
+            early_json.size());
+    StrategyEvalOptions early_eval_options;
+    early_eval_options.economy = restricted_economy;
+    const StrategyEvalResult early_evaluation =
+        evaluate_strategy(*early_strategy, early_eval_options);
+    PC_CHECK(early_evaluation.converged);
+    PC_CHECK(early_evaluation.cost_complete);
+    PC_CHECK(near(
+        early_evaluation.total_expected_cost,
+        early_renewal.evaluated_policy_cost, 1e-9));
+    SimulatorImpl early_simulator;
+    early_simulator.session = restricted_session;
+    early_simulator.strategy = early_strategy;
+    early_simulator.economy = restricted_economy;
+    prepare_simulator_runtime(early_simulator);
+    SimulationOptionsInternal early_simulation_options;
+    early_simulation_options.target_runs = 10000;
+    early_simulation_options.seed = 0x45524c5952454e45ULL;
+    early_simulation_options.max_actions_per_run = 100000;
+    run_simulator_chunk(
+        early_simulator, early_simulation_options, 10000);
+    PC_CHECK(early_simulator.summary.completed_runs == 10000);
+    PC_CHECK(early_simulator.summary.success_count == 10000);
+    PC_CHECK(early_simulator.summary.action_not_applied_count == 0);
+    PC_CHECK(early_simulator.summary.no_matching_edge_count == 0);
+
+    SolveResult stale_renewal = early_renewal;
+    PC_CHECK(
+        !stale_renewal.primitive_renewal_witness
+             .kernel_signature.empty());
+    stale_renewal.primitive_renewal_witness
+        .kernel_signature.front() ^= 1;
+    bool stale_renewal_refused = false;
+    try {
+        (void)compile_policy_strategy_json(
+            early_renewal_calc, stale_renewal,
+            "stale gated destructive renewal");
+    } catch (const std::runtime_error&) {
+        stale_renewal_refused = true;
+    }
+    PC_CHECK(stale_renewal_refused);
 
     /* Retained progress remains an ordinary exact state. A cheap Bench that
      * finishes a second goal is discoverable there even though it is

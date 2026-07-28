@@ -1,0 +1,213 @@
+{
+  "schema_version": "gated_root_renewal_incumbent_summary_v1",
+  "captured_on": "2026-07-28",
+  "decision": {
+    "implementation_selected": true,
+    "default_solver_replaced": false,
+    "scope": "exact_within_zero_progress_reroll_restriction",
+    "global_optimality_claim": false,
+    "policy_status": "bounded_feasible",
+    "fixed_policy": "Repeat the selected primitive destructive reforge until the goal is satisfied.",
+    "exact_search_improved": false,
+    "immediate_exact_search_wall": "The next competing broad reforge on the root consumes the remaining max_reforge_work budget.",
+    "partial_state_admission": "Deferred and unmeasured because both frozen runs have expanded_states = 1."
+  },
+  "identity": {
+    "starting_source_commit": "c8109d1",
+    "plan_commit": "e42ee25f102740eb5e1978ba3a38d177ca93ac92",
+    "benchmark_executable_sha256": "c8417dd0dab64d347f9ef71c068d11d3c17315d5d5161bcdb2c4eea9912c9648",
+    "portfolio_manifest_sha256": "a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "economy_content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os_build": "Windows 10 Pro 26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "cores": 16,
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "proof_contract": {
+    "root_only": "The candidate is installed only from a completed row owned by the solve start state.",
+    "action": "The selected operator is one priced primitive destructive reforge.",
+    "success": "The gated kernel has positive exact terminal probability.",
+    "retry": "Every positive-probability non-goal exit can legally repeat the same action and has the same complete engine-owned exact reforge-kernel signature as the root.",
+    "value": "For immediate cost c and terminal probability p, the executable fixed policy has J = c + (1-p)J = c/p.",
+    "search": "The full competing action envelope remains in discovery and the lower-bound problem.",
+    "compilation": "The compiler independently revalidates legality and the exact signature on every policy-reachable non-goal carrier before emitting a compact loop.",
+    "non_claim": "The witness is not a Bellman state equivalence and does not prove global optimality over excluded zero-progress salvage."
+  },
+  "fixed_caps": {
+    "max_discovered_states": 200000,
+    "max_expanded_states": 25000,
+    "max_state_action_rows": 300000,
+    "max_transitions": 3000000,
+    "max_reforge_work": 3000000,
+    "max_solver_owned_bytes": 268435456,
+    "max_sweeps": 100000,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "max_strategy_json_bytes": 67108864
+  },
+  "cases": [
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "actual_status": "refused_resource_cap",
+      "cap_hit": "max_reforge_work",
+      "scope": "exact_within_zero_progress_reroll_restriction",
+      "policy_status": "bounded_feasible",
+      "lower_bound": 0.0,
+      "upper_bound": 60341416.98784247,
+      "evaluated_policy_cost": 60341416.98784247,
+      "first_chaos": {
+        "success_probability": 1.6572365216439631e-08,
+        "kernel_bits_hash": "54c479dfcd7d14f3",
+        "reforge_work": 2807580,
+        "partial_states": 134475
+      },
+      "renewal_witness": {
+        "candidates": 1,
+        "rejections": 0,
+        "validated_non_goal_states": 134477,
+        "witness_hash": "1b6c5bec239f461a"
+      },
+      "final": {
+        "discovered_states": 134508,
+        "expanded_states": 1,
+        "state_action_rows": 3,
+        "transition_entries": 134507,
+        "reforge_work": 3000000,
+        "transition_bits_hash": "fe0ea011721ae996",
+        "policy_bits_hash": "816d94db8a2d0cbd",
+        "solver_owned_bytes_live": 67233567,
+        "solver_owned_bytes_peak": 76807547,
+        "solver_owned_bytes_estimate": 76800752
+      },
+      "compiled": {
+        "nodes": 4,
+        "edges": 4,
+        "policy_regions": 1,
+        "strategy_json_bytes": 1397,
+        "strategy_sha256": "ed5a0dbe12089d04e680a4a05280033736ae797eb8fd152e1e417d93021bb324"
+      },
+      "repetitions": [
+        {
+          "raw_report_sha256": "0a11acd3a20fcb94a7f978de98285789d3e1a384b85979b44ac769e8f6d23650",
+          "solve_wall_ms": 1000.1636,
+          "total_wall_ms": 1351.0776
+        },
+        {
+          "raw_report_sha256": "3a5e460baf69e63d39eb1221622beb5f3ec5e5ce84a2ca0306039546589df07d",
+          "solve_wall_ms": 1034.7581,
+          "total_wall_ms": 1379.6675
+        }
+      ]
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "actual_status": "refused_resource_cap",
+      "cap_hit": "max_reforge_work",
+      "scope": "exact_within_zero_progress_reroll_restriction",
+      "policy_status": "bounded_feasible",
+      "lower_bound": 0.0,
+      "upper_bound": 185688651.38279814,
+      "evaluated_policy_cost": 185688651.38279814,
+      "first_chaos": {
+        "success_probability": 5.38535873115097e-09,
+        "kernel_bits_hash": "5cfd88b724a36b01",
+        "reforge_work": 2807580,
+        "partial_states": 123695
+      },
+      "renewal_witness": {
+        "candidates": 1,
+        "rejections": 0,
+        "validated_non_goal_states": 123697,
+        "witness_hash": "3a7f727b64af1731"
+      },
+      "final": {
+        "discovered_states": 123728,
+        "expanded_states": 1,
+        "state_action_rows": 3,
+        "transition_entries": 123727,
+        "reforge_work": 3000000,
+        "transition_bits_hash": "5ca6030024523dec",
+        "policy_bits_hash": "364d755f6df87bed",
+        "solver_owned_bytes_live": 44234835,
+        "solver_owned_bytes_peak": 52958821,
+        "solver_owned_bytes_estimate": 52951783
+      },
+      "compiled": {
+        "nodes": 4,
+        "edges": 4,
+        "policy_regions": 1,
+        "strategy_json_bytes": 1418,
+        "strategy_sha256": "573168bd26988073489d421e68bb849eaf3b144f1197c7f8ba5c9d6f3ffb85a9"
+      },
+      "repetitions": [
+        {
+          "raw_report_sha256": "72dfc9c43ee47911cd97d2f47a62e73b71ebb9daf2984b2a0a006e2858ed42c2",
+          "solve_wall_ms": 795.8401,
+          "total_wall_ms": 1091.3575
+        },
+        {
+          "raw_report_sha256": "d22f669f747759f4c4c54abf0548142b9f9dbb43945a6569b3da181dc1dc6251",
+          "solve_wall_ms": 864.5747,
+          "total_wall_ms": 1187.6217
+        }
+      ]
+    }
+  ],
+  "unrestricted_controls": [
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "scope": "globally_optimal_unrestricted",
+      "actual_status": "refused_resource_cap",
+      "policy_available": false,
+      "discovered_states": 96025,
+      "expanded_states": 1,
+      "state_action_rows": 1,
+      "transition_entries": 1,
+      "reforge_work": 3000000,
+      "transition_bits_hash": "566809fa56c7e2a4",
+      "policy_bits_hash": "0cfb7e9c1000a4da",
+      "renewal_candidates": 0,
+      "raw_report_sha256": "fefa64747c318c41776a77fb311d8d0e9a16761c336db6484198599ba363cf30"
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "scope": "globally_optimal_unrestricted",
+      "actual_status": "refused_resource_cap",
+      "policy_available": false,
+      "discovered_states": 96025,
+      "expanded_states": 1,
+      "state_action_rows": 1,
+      "transition_entries": 1,
+      "reforge_work": 3000000,
+      "transition_bits_hash": "566809fa56c7e2a4",
+      "policy_bits_hash": "0cfb7e9c1000a4da",
+      "renewal_candidates": 0,
+      "raw_report_sha256": "a42fa5e90a5131e7b4da973309e701c50e4def5ad344acf3f170f7c5e0820c6e"
+    }
+  ],
+  "verification": {
+    "native_checks": 513858,
+    "native_failures": 0,
+    "compiled_toy_exact_evaluation": "passed",
+    "compiled_toy_simulation_runs": 10000,
+    "compiled_toy_simulation": "passed",
+    "illegal_retry_rejection": "passed",
+    "stale_witness_compilation_rejection": "passed",
+    "frozen_simulation": "not_run_terminal_probabilities_imply_prohibitive_action_counts",
+    "release_wasm_rebuilt": true,
+    "release_wasm_module_sha256": "fcee42df5a398e92533144ac58ec778d0f7ffcd439853fe55801b9efab103c26",
+    "release_wasm_binary_sha256": "ce755f14f2a695975c5b54f53588d3fa6f0dbe619f8d214985e60903d5e019a9",
+    "web_tests": "passed",
+    "web_typecheck": "passed",
+    "mechanics_changed": false,
+    "product_caps_changed": false,
+    "unrestricted_default_changed": false
+  },
+  "wall_time_qualification": "All wall-time fields are machine/compiler-bound and do not survive a hardware or compiler change. Deterministic work, mass, values, hashes, and compiled sizes are the portable evidence."
+}

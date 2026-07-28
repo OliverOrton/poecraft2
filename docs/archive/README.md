@@ -9,13 +9,22 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-28
+
+- [Gated Root Renewal Incumbent](2026-07-28-gated-root-renewal-incumbent/README.md) —
+  retained an exact action-local fixed repeat policy for completed gated root
+  destructive-reforge rows. Both frozen four-mod cases now return compact
+  finite bounded policies; the next competing root reforge remains the
+  unchanged-cap exact-search wall.
+
 ## 2026-07-27
 
 - [Goal-Progress-Gated Reforge Mode](2026-07-27-goal-progress-gated-reforge/README.md) —
   retained an opt-in restricted exact mode that folds terminal and
   zero-progress reforge mass while preserving all partial states; both frozen
-  four-mod first rows fit below 200,000 states, then follow-up exact partial
-  rows reached the unchanged reforge-work cap.
+  four-mod first rows fit below 200,000 states. A later audit corrected the
+  immediate next wall to a competing root broad reforge before any partial
+  state is expanded.
 
 - [Pre-Expansion Probability-Lower Audit](2026-07-27-pre-expansion-probability-lower-audit/README.md) —
   rejected the graph-free goal-progress MDP after complete competing

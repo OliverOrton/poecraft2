@@ -122,6 +122,8 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
     }
     bytes += result.behavioral_representative_by_state.capacity() *
              sizeof(std::uint32_t);
+    bytes += result.primitive_renewal_witness.kernel_signature.capacity() *
+             sizeof(std::uint64_t);
     bytes += diagnostics_owned_bytes(result.diagnostics);
     return bytes;
 }
@@ -347,6 +349,11 @@ std::uint64_t SolveWork::Impl::output_incumbent_owned_bytes() const {
                  sizeof(std::uint32_t);
         bytes += incumbent.behavioral_representative_by_state.capacity() *
                  sizeof(std::uint32_t);
+        bytes += incumbent.policy_reachable.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += incumbent.primitive_renewal_witness
+                     .kernel_signature.capacity() *
+                 sizeof(std::uint64_t);
         bytes += incumbent.unveil_preferences.capacity() *
                  sizeof(std::vector<std::uint32_t>);
         for (const auto& preferences : incumbent.unveil_preferences) {
@@ -511,6 +518,9 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
                  sizeof(std::vector<ObservedUnveilPreference>);
         bytes += result.behavioral_representative_by_state.capacity() *
                  sizeof(std::uint32_t);
+        bytes += result.primitive_renewal_witness
+                     .kernel_signature.capacity() *
+                 sizeof(std::uint64_t);
         bytes += owned_result_nested_bytes;
         bytes += output_incumbent_owned_bytes();
         /* Diagnostic samples are strictly bounded and are not graph-sized.
@@ -662,6 +672,9 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         }
         bytes += result.behavioral_representative_by_state.capacity() *
                  sizeof(std::uint32_t);
+        bytes += result.primitive_renewal_witness
+                     .kernel_signature.capacity() *
+                 sizeof(std::uint64_t);
         bytes += output_incumbent_owned_bytes();
         bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;
@@ -1621,6 +1634,27 @@ std::string serialize_solver_telemetry(
         json += ",\"start_value\":";
         append_bound(diagnostics->destructive_renewal_start_value);
         json += "}";
+        json += ",\"gated_root_renewal\":{\"candidates\":" +
+                std::to_string(
+                    diagnostics->gated_root_renewal_candidates);
+        json += ",\"rejections\":" + std::to_string(
+            diagnostics->gated_root_renewal_rejections);
+        json += ",\"validated_non_goal_states\":" +
+                std::to_string(
+                    diagnostics
+                        ->gated_root_renewal_validated_non_goal_states);
+        json += ",\"success_probability\":";
+        append_bound(
+            diagnostics->gated_root_renewal_success_probability);
+        char renewal_witness_hash[17];
+        std::snprintf(
+            renewal_witness_hash, sizeof(renewal_witness_hash),
+            "%016llx",
+            static_cast<unsigned long long>(
+                diagnostics->gated_root_renewal_witness_hash));
+        json += ",\"witness_hash\":\"";
+        json += renewal_witness_hash;
+        json += "\"}";
         json += ",\"progressive_fracture\":{\"roll_action\":";
         if (diagnostics->progressive_fracture_roll_action_id.empty()) {
             json += "null";

@@ -1,6 +1,7 @@
 #include "solver_internal.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <functional>
 #include <limits>
@@ -863,6 +864,226 @@ std::string compile_policy_strategy_json(
     for (std::size_t i = 0; i < layout.slots.size(); ++i) {
         vocabulary.push_back(
             slot_vocabulary(session, layout.slots[i], i));
+    }
+
+    /*
+     * A witnessed fixed destructive renewal has one action-local behavior:
+     * apply the selected reforge, succeed on the goal, otherwise repeat.
+     * The native incumbent already proved the complete gated row. Recheck
+     * action legality and the engine-owned preserved-boundary signature for
+     * every policy-reachable non-goal carrier before emitting the compact
+     * loop. This is a fixed-policy proof, not Bellman state equivalence.
+     */
+    if (result.primitive_renewal_witness.valid) {
+        const PrimitiveRenewalWitness& witness =
+            result.primitive_renewal_witness;
+        const bool bounded =
+            result.policy_status == SolvePolicyStatus::BoundedFeasible ||
+            result.policy_status ==
+                SolvePolicyStatus::BoundedNearOptimal;
+        if (!bounded ||
+            !result.options.goal_progress_gated_reforges ||
+            witness.operator_index >= calc.operators().size() ||
+            witness.primitive_action >=
+                calc.registry().actions.size() ||
+            witness.kernel_signature.empty() ||
+            !(witness.success_probability > 0.0) ||
+            !std::isfinite(witness.value) ||
+            witness.value < 0.0 ||
+            result.start_state >= result.policy_reachable.size() ||
+            !result.policy_reachable[result.start_state] ||
+            result.policy_reachable.size() != result.values.size() ||
+            result.goal_states.size() != result.values.size() ||
+            result.policy.size() != result.values.size()) {
+            gap("gated primitive renewal witness is incomplete");
+        }
+        const PlannerOperator& planner =
+            calc.operators().at(witness.operator_index);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action != witness.primitive_action ||
+            result.policy[result.start_state].index !=
+                witness.operator_index ||
+            result.policy[result.start_state].kind != planner.kind) {
+            gap("gated primitive renewal witness action changed");
+        }
+        const ActionDescriptor& descriptor =
+            calc.registry().actions.at(witness.primitive_action);
+        if (!action_transition_facts(descriptor.params.type).renewal) {
+            gap("gated primitive renewal witness is not destructive");
+        }
+        std::uint64_t working_states = 0;
+        for (std::uint32_t state = 0;
+             state < result.values.size(); ++state) {
+            if (!result.policy_reachable[state] ||
+                result.goal_states[state]) {
+                continue;
+            }
+            ++working_states;
+            if (result.policy[state].index != witness.operator_index ||
+                result.policy[state].kind != planner.kind ||
+                !action_legal(session, descriptor, calc.state(state))) {
+                gap("gated primitive renewal policy changed on a "
+                    "reachable carrier");
+            }
+            std::vector<std::uint64_t> signature;
+            if (!calc.exact_reforge_kernel_signature(
+                    state, witness.primitive_action, signature) ||
+                signature != witness.kernel_signature) {
+                gap("gated primitive renewal kernel signature changed");
+            }
+        }
+        if (working_states == 0 ||
+            working_states !=
+                witness.validated_non_goal_states) {
+            gap("gated primitive renewal reachable domain changed");
+        }
+        const double value_tolerance =
+            1e-9 * std::max(1.0, std::abs(witness.value));
+        if (!std::isfinite(result.evaluated_policy_cost) ||
+            std::abs(
+                result.evaluated_policy_cost -
+                witness.value) > value_tolerance ||
+            !std::isfinite(result.upper_bound) ||
+            std::abs(
+                result.upper_bound - witness.value) >
+                value_tolerance) {
+            gap("gated primitive renewal value changed");
+        }
+
+        pc_item_state start_item;
+        if (!calc.materialize(result.start_state, start_item)) {
+            gap("gated primitive renewal start cannot be materialized");
+        }
+        std::vector<std::string> goal_parts{
+            rarity_condition(calc.goal().rarity)};
+        std::vector<std::string> satisfied;
+        satisfied.reserve(vocabulary.size());
+        for (const SlotVocabulary& slot : vocabulary) {
+            satisfied.push_back(slot.satisfied);
+        }
+        goal_parts.push_back(
+            calc.goal().required_satisfied_slots() ==
+                    satisfied.size()
+                ? all_of(satisfied)
+                : at_least(
+                      calc.goal().required_satisfied_slots(),
+                      satisfied));
+        const std::string goal_condition = all_of(goal_parts);
+
+        std::string json =
+            "{\"version\":\"v1\",\"name\":\"" +
+            json_escape(name) +
+            "\",\"description\":\"Bounded executable fixed "
+            "destructive-renewal policy exact within the "
+            "zero-progress-reroll restriction; not a global optimum\","
+            "\"base_state\":{\"base_key\":\"" +
+            json_escape(
+                data.string_at(
+                    data.base_metadata_path_sid[session.base_index])) +
+            "\",\"item_level\":" +
+            std::to_string(session.item_level) +
+            ",\"rarity\":\"" + rarity_name(start_item.rarity) + "\"";
+        std::uint32_t item_flags = 0;
+        if (start_item.item_flags & PC_ITEM_CORRUPTED) {
+            item_flags |= PC_ITEM_CORRUPTED;
+        }
+        if (start_item.item_flags & PC_ITEM_MIRRORED) {
+            item_flags |= PC_ITEM_MIRRORED;
+        }
+        if (start_item.item_flags & PC_ITEM_SPLIT) {
+            item_flags |= PC_ITEM_SPLIT;
+        }
+        if (start_item.item_flags & PC_ITEM_SYNTHESISED) {
+            item_flags |= PC_ITEM_SYNTHESISED;
+        }
+        json += ",\"item_flags\":" + std::to_string(item_flags);
+        json += ",\"generic_influence_bits\":" +
+                std::to_string(start_item.generic_influence_bits);
+        json += ",\"searing_exarch_tier\":" +
+                std::to_string(start_item.searing_exarch_tier);
+        json += ",\"eater_of_worlds_tier\":" +
+                std::to_string(start_item.eater_of_worlds_tier);
+        const auto append_start_mods =
+            [&](const char* field, const pc_mod_slot* mods,
+                const std::uint8_t count) {
+                json += ",\"";
+                json += field;
+                json += "\":[";
+                for (std::uint8_t i = 0; i < count; ++i) {
+                    if (i != 0) json += ',';
+                    json += "{\"mod_key\":\"" +
+                            json_escape(mod_key_of(
+                                session, mods[i].mod_id)) + "\"";
+                    if ((mods[i].flags &
+                         PC_MOD_SLOT_FRACTURED) != 0) {
+                        json += ",\"fractured\":true";
+                    }
+                    if ((mods[i].flags &
+                         PC_MOD_SLOT_CRAFTED) != 0) {
+                        json += ",\"crafted\":true";
+                    }
+                    json += '}';
+                }
+                json += ']';
+            };
+        append_start_mods(
+            "prefixes", start_item.prefixes,
+            start_item.prefix_count);
+        append_start_mods(
+            "suffixes", start_item.suffixes,
+            start_item.suffix_count);
+        json +=
+            "},\"start_node_id\":\"start\",\"nodes\":["
+            "{\"id\":\"start\",\"kind\":\"start\"},"
+            "{\"id\":\"router\",\"kind\":\"router\"},"
+            "{\"id\":\"goal\",\"kind\":\"terminal\","
+            "\"terminal\":\"success\"},"
+            "{\"id\":\"renewal\",\"kind\":\"operation\","
+            "\"expected_cost\":" +
+            number(witness.value) +
+            ",\"operation\":" +
+            operation_json(session, descriptor) +
+            "}],\"edges\":["
+            "{\"id\":\"e0\",\"from\":\"start\",\"to\":\"router\","
+            "\"priority\":0,\"is_default\":true},"
+            "{\"id\":\"e1\",\"from\":\"router\",\"to\":\"goal\","
+            "\"priority\":0,\"condition\":" +
+            goal_condition +
+            "},"
+            "{\"id\":\"e2\",\"from\":\"router\",\"to\":\"renewal\","
+            "\"priority\":1,\"is_default\":true},"
+            "{\"id\":\"e3\",\"from\":\"renewal\",\"to\":\"router\","
+            "\"priority\":0,\"is_default\":true}]}";
+        constexpr std::uint32_t kNodes = 4;
+        constexpr std::uint32_t kEdges = 4;
+        if (kNodes > result.options.max_compiled_nodes) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_compiled_nodes";
+            }
+            gap("compiled fixed renewal exceeded max_compiled_nodes");
+        }
+        if (kEdges > result.options.max_compiled_edges) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_compiled_edges";
+            }
+            gap("compiled fixed renewal exceeded max_compiled_edges");
+        }
+        if (json.size() > result.options.max_strategy_json_bytes) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_strategy_json_bytes";
+            }
+            gap("compiled fixed renewal exceeded "
+                "max_strategy_json_bytes");
+        }
+        if (telemetry != nullptr) {
+            telemetry->working_states =
+                static_cast<std::uint32_t>(working_states);
+            telemetry->policy_regions = 1;
+            telemetry->nodes = kNodes;
+            telemetry->edges = kEdges;
+            telemetry->strategy_json_bytes = json.size();
+        }
+        return json;
     }
 
     /* Collect and validate the policy-reachable working states. */

@@ -54,10 +54,16 @@ Committed mass sums are `1.0000000000000178` and
 per case reproduced every deterministic state/work/mass/hash field.
 
 Neither case reached Bellman optimization or a policy. After completing the
-first Chaos row and other cheap root rows, a later exact reforge request from
-the retained partial-state graph exhausted `max_reforge_work`. This is the
-measured next bottleneck. Raising caps or merging partials by goal count was
-not attempted.
+first Chaos row and other cheap root rows, a later exact reforge request
+exhausted `max_reforge_work`. Raising caps or merging partials by goal count
+was not attempted.
+
+**2026-07-28 correction:** the raw reports have `expanded_states = 1`, so the
+later request above is a competing broad reforge on the root, not a row from
+the retained partial-state graph. The first Chaos row uses 2,807,580 of the
+3,000,000 reforge-work units; the next root Fossil request consumes the
+remainder. Root broad-action competition is the immediate measured wall.
+Partial-state admission is later and unmeasured.
 
 Unrestricted controls remained in global scope and reproduced their incomplete
 first-row control hashes: transition `566809fa56c7e2a4`, policy
@@ -103,9 +109,8 @@ portable fields are pinned in the tracked summary.
 
 ## Consequence
 
-The zero-progress composition wall is removed for the two frozen cases. The
-remaining graph is dominated by exact partial-progress states, so the
-separately documented bounded Pareto admission design is the eligible future
-direction. It must preserve omitted mass in certified intervals and return a
-bounded result unless every reachable interval closes; it is not part of this
-implementation.
+The zero-progress composition wall is removed for the two frozen cases.
+Corrected root-level telemetry selects competing broad root actions as the
+next measured exact-search wall. Exact partial-progress states remain large
+and may justify a later bounded Pareto design after the solver actually begins
+expanding them; they are not the current measured owner.

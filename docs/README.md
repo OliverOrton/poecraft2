@@ -28,12 +28,15 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Gated Root Renewal Incumbent](active/plan.md)
-milestone tests whether the first completed gated root Chaos row can publish
-an exact fixed repeat-until-goal policy as a finite bounded incumbent before
-the next root broad action reaches the unchanged reforge-work cap. The
-completed
+No implementation plan is active. The completed
+[Gated Root Renewal Incumbent](archive/2026-07-28-gated-root-renewal-incumbent/README.md)
+turns a completed gated root Chaos row into an exact fixed
+repeat-until-goal policy and finite bounded incumbent before the next root
+broad action reaches the unchanged reforge-work cap. Both frozen four-mod
+cases now return executable four-node policies; exact discovery still stops
+on the competing root reforge.
+
+The preceding completed
 [Goal-Progress-Gated Reforge Mode](archive/2026-07-27-goal-progress-gated-reforge/README.md)
 adds an opt-in restricted exact solver mode without changing the default
 unrestricted solver. Both frozen four-mod first Chaos rows now fit under

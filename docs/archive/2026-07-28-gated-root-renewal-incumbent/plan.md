@@ -1,6 +1,6 @@
 # Gated Root Renewal Incumbent
 
-**Status: active (2026-07-28).**
+**Status: complete (2026-07-28), implementation retained.**
 
 Owner: Oliver
 

@@ -8,8 +8,14 @@
     "global_optimality_claim": false,
     "first_chaos_row_under_200000_states": true,
     "frozen_policy_produced": false,
-    "next_bottleneck": "Exact follow-up reforge requests from retained partial-progress states exhaust max_reforge_work before Bellman optimization.",
-    "future_work": "Bounded Pareto admission is designed in docs/future/solver-roadmap.md but is not implemented."
+    "next_bottleneck": "Superseded by post_capture_correction: a competing broad reforge on the root exhausts max_reforge_work before any retained partial state is expanded.",
+    "future_work": "Bounded Pareto admission remains deferred and unmeasured; current evidence selects root broad-action competition first."
+  },
+  "post_capture_correction": {
+    "captured_on": "2026-07-28",
+    "evidence": "Both frozen reports have expanded_states = 1. The first Chaos row uses 2807580 of 3000000 reforge-work units, then a root Fossil request consumes the remainder.",
+    "immediate_wall": "Competing broad reforge rows on the start state.",
+    "partial_state_admission": "Possible later wall; no retained partial state was expanded in these captures."
   },
   "identity": {
     "starting_source_commit": "f843a9d",

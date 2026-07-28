@@ -688,6 +688,8 @@ struct SolveWork::Impl {
         std::vector<std::uint32_t> frontier_operators;
         FocusedFallbackWitness fallback;
         std::vector<std::uint32_t> behavioral_representative_by_state;
+        std::vector<std::uint8_t> policy_reachable;
+        PrimitiveRenewalWitness primitive_renewal_witness;
         std::uint32_t restart_operator = kNoId;
         std::uint32_t restart_state = kNoId;
         std::uint32_t fallback_anchor_state = kNoId;
@@ -826,13 +828,22 @@ struct SolveWork::Impl {
         const std::vector<std::uint64_t>& selected_rows,
         const std::vector<std::uint32_t>& frontier_operators,
         const FocusedFallbackWitness& fallback,
-        std::string kind);
+        std::string kind,
+        const std::vector<std::uint8_t>* policy_reachable = nullptr,
+        const PrimitiveRenewalWitness* primitive_renewal_witness = nullptr,
+        bool replace_equal_incumbent = false);
 
     void install_fallback_output_incumbent(
         const FocusedFallbackWitness& witness);
 
     void install_direct_output_incumbent(
         const double upper, const std::uint64_t row);
+
+    void try_install_gated_root_renewal_incumbent(
+        std::uint32_t state,
+        std::uint64_t row,
+        const PricedOperator& priced,
+        const OutcomeDistribution& kernel);
 
     SolveGapTarget satisfied_gap_target() const;
 

@@ -634,6 +634,41 @@ and non-visual web acceptance are recorded in the milestone report. Wall
 times are machine/compiler-bound; deterministic work, mass, and hashes are
 the portable evidence.
 
+## Gated Root Renewal Incumbent Acceptance
+
+The 2026-07-28
+[final report](archive/2026-07-28-gated-root-renewal-incumbent/report.md) and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/gated-root-renewal-incumbent-summary.json)
+pin the early bounded incumbent against the same two frozen four-mod cases.
+
+- Both gated runs complete the same first Chaos kernels as the prior
+  milestone, including terminal probabilities
+  `1.6572365216439631e-08` and `5.38535873115097e-09` and kernel hashes
+  `54c479dfcd7d14f3` and `5cfd88b724a36b01`.
+- The solver validates 134,477 and 123,697 reachable non-goal carriers,
+  respectively, then publishes exact fixed-policy values
+  `60,341,416.98784247` and `185,688,651.38279814` chaos. The lower bound
+  remains zero, so both results are bounded feasible within the
+  zero-progress-reroll restriction rather than exact.
+- Each policy compiles to four nodes and four edges. The compiler independently
+  rechecks action legality and the complete kernel signature on every
+  reachable non-goal carrier.
+- Both solves still expand only the root. Chaos consumes 2,807,580 reforge
+  work and the next root Fossil request reaches the unchanged 3,000,000 cap.
+  The new incumbent supplies an executable answer but does not remove the
+  competing-root-action exact-search wall.
+- Two repetitions per case retain deterministic policy and witness hashes.
+  Unrestricted controls retain their prior no-policy shape and hashes.
+
+Native acceptance passed 513,858 checks, including exact strategy evaluation,
+10,000 seeded simulator runs on the tractable oracle, an illegal-retry
+rejection, and a stale-witness compilation rejection. Frozen simulation was
+not attempted: the proved terminal probabilities imply roughly 60 million
+and 186 million actions per successful run. Release-WASM and non-visual web
+acceptance are recorded in the milestone report. Wall times are
+machine/compiler-bound; work, mass, values, hashes, and compiled sizes are the
+portable evidence.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

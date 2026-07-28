@@ -652,6 +652,11 @@ void SolveWork::Impl::capture_incumbent_policy(
         candidate.choice_sources.clear();
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (calc.is_goal_state(calc.state(state))) continue;
+            if (!candidate.policy_reachable.empty() &&
+                (state >= candidate.policy_reachable.size() ||
+                 !candidate.policy_reachable[state])) {
+                continue;
+            }
             const std::uint64_t row =
                 state < candidate.policy_rows.size()
                     ? candidate.policy_rows[state]
@@ -762,15 +767,22 @@ void SolveWork::Impl::install_output_incumbent(
         const std::vector<std::uint64_t>& selected_rows,
         const std::vector<std::uint32_t>& frontier_operators,
         const FocusedFallbackWitness& fallback,
-        std::string kind) {
+        std::string kind,
+        const std::vector<std::uint8_t>* policy_reachable,
+        const PrimitiveRenewalWitness* primitive_renewal_witness,
+        const bool replace_equal_incumbent) {
         if (!std::isfinite(upper) || upper < 0.0 ||
             result.start_state >= values.size()) {
             return;
         }
-        if (output_incumbent.has_value() &&
-            upper >= output_incumbent->certified_upper_bound -
-                         options.epsilon) {
-            return;
+        if (output_incumbent.has_value()) {
+            const double incumbent_upper =
+                output_incumbent->certified_upper_bound;
+            if (upper > incumbent_upper + options.epsilon ||
+                (!replace_equal_incumbent &&
+                 upper >= incumbent_upper - options.epsilon)) {
+                return;
+            }
         }
         BoundedPolicyIncumbent candidate;
         candidate.certified_upper_bound = upper;
@@ -797,6 +809,18 @@ void SolveWork::Impl::install_output_incumbent(
         candidate.graph_identity = graph_identity();
         candidate.behavioral_representative_by_state =
             result.behavioral_representative_by_state;
+        if (policy_reachable != nullptr) {
+            if (policy_reachable->size() != candidate.values.size() ||
+                !(*policy_reachable)[result.start_state]) {
+                throw std::logic_error(
+                    "bounded incumbent reachability witness is invalid");
+            }
+            candidate.policy_reachable = *policy_reachable;
+        }
+        if (primitive_renewal_witness != nullptr) {
+            candidate.primitive_renewal_witness =
+                *primitive_renewal_witness;
+        }
         candidate.strict_state_provenance =
             result.behavioral_representative_by_state.empty();
         /* Capture graph-relative row decisions while this same-round graph
@@ -888,6 +912,183 @@ void SolveWork::Impl::install_direct_output_incumbent(
         candidate.policy_materialized = false;
         capture_incumbent_state(candidate, result.start_state, row);
         commit_output_incumbent(std::move(candidate));
+    }
+
+void SolveWork::Impl::try_install_gated_root_renewal_incumbent(
+        const std::uint32_t state,
+        const std::uint64_t row,
+        const PricedOperator& priced,
+        const OutcomeDistribution& kernel) {
+        if (!options.goal_progress_gated_reforges ||
+            state != result.start_state ||
+            priced.index >= calc.operators().size() ||
+            row >= transition_cache->rows.size() ||
+            transition_cache->rows[row].owner_state != state ||
+            !kernel.supported || !kernel.stable_shared_kernel ||
+            !kernel.goal_progress_gated ||
+            !kernel.choice_groups.empty() ||
+            !kernel.choice_options.empty() ||
+            !(kernel.gated_terminal_probability > 0.0) ||
+            !std::isfinite(priced.cost) || priced.cost < 0.0) {
+            return;
+        }
+        const PlannerOperator& planner =
+            calc.operators().at(priced.index);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action >= calc.registry().actions.size()) {
+            return;
+        }
+        const std::uint32_t action_index = planner.primitive_action;
+        const ActionDescriptor& descriptor =
+            calc.registry().actions.at(action_index);
+        if (!action_transition_facts(descriptor.params.type).renewal ||
+            !action_legal(session, descriptor, calc.state(state))) {
+            return;
+        }
+
+        ++result.diagnostics.gated_root_renewal_candidates;
+        std::vector<std::uint64_t> kernel_signature;
+        if (!calc.exact_reforge_kernel_signature(
+                state, action_index, kernel_signature) ||
+            kernel_signature.empty()) {
+            ++result.diagnostics.gated_root_renewal_rejections;
+            return;
+        }
+
+        double success_probability = 0.0;
+        std::vector<std::uint8_t> policy_reachable(
+            calc.state_count(), 0);
+        policy_reachable[state] = 1;
+        bool exact_retry = true;
+        for (const OutcomeEntry& outcome : kernel.entries) {
+            if (!(outcome.probability > 0.0) ||
+                outcome.state >= calc.state_count()) {
+                continue;
+            }
+            policy_reachable[outcome.state] = 1;
+            if (calc.is_goal_state(calc.state(outcome.state))) {
+                success_probability += outcome.probability;
+                continue;
+            }
+            std::vector<std::uint64_t> retry_signature;
+            if (!action_legal(
+                    session, descriptor, calc.state(outcome.state)) ||
+                !calc.exact_reforge_kernel_signature(
+                    outcome.state, action_index, retry_signature) ||
+                retry_signature != kernel_signature) {
+                exact_retry = false;
+                break;
+            }
+        }
+        const double probability_tolerance =
+            1e-12 * std::max(
+                1.0, std::abs(kernel.gated_terminal_probability));
+        if (!exact_retry || !(success_probability > 0.0) ||
+            std::abs(
+                success_probability -
+                kernel.gated_terminal_probability) >
+                probability_tolerance) {
+            ++result.diagnostics.gated_root_renewal_rejections;
+            return;
+        }
+        const double value = priced.cost / success_probability;
+        if (!std::isfinite(value) || value < 0.0 ||
+            value >= kValueCeiling) {
+            ++result.diagnostics.gated_root_renewal_rejections;
+            return;
+        }
+
+        std::vector<double> values(
+            policy_reachable.size(), kInfinity);
+        std::vector<std::uint64_t> selected_rows(
+            policy_reachable.size(),
+            std::numeric_limits<std::uint64_t>::max());
+        std::vector<std::uint32_t> frontier(
+            policy_reachable.size(), kNoId);
+        std::uint64_t validated_non_goal_states = 0;
+        for (std::uint32_t candidate = 0;
+             candidate < policy_reachable.size(); ++candidate) {
+            if (!policy_reachable[candidate]) continue;
+            if (calc.is_goal_state(calc.state(candidate))) {
+                values[candidate] = 0.0;
+                continue;
+            }
+            values[candidate] = value;
+            frontier[candidate] = priced.index;
+            ++validated_non_goal_states;
+        }
+        selected_rows[state] = row;
+
+        PrimitiveRenewalWitness witness;
+        witness.valid = true;
+        witness.operator_index = priced.index;
+        witness.primitive_action = action_index;
+        witness.success_probability = success_probability;
+        witness.value = value;
+        witness.gated_kernel_bits_hash =
+            kernel.gated_kernel_bits_hash;
+        witness.validated_non_goal_states =
+            validated_non_goal_states;
+        witness.kernel_signature = kernel_signature;
+        std::uint64_t witness_hash = 1469598103934665603ULL;
+        identity_mix(witness_hash, priced.index);
+        identity_mix(witness_hash, action_index);
+        identity_mix(
+            witness_hash,
+            std::bit_cast<std::uint64_t>(success_probability));
+        identity_mix(
+            witness_hash, std::bit_cast<std::uint64_t>(value));
+        identity_mix(
+            witness_hash, kernel.gated_kernel_bits_hash);
+        identity_mix(
+            witness_hash, validated_non_goal_states);
+        for (const std::uint64_t part : kernel_signature) {
+            identity_mix(witness_hash, part);
+        }
+        witness.witness_hash = witness_hash;
+
+        std::uint32_t incumbent_root_operator = kNoId;
+        if (output_incumbent.has_value() &&
+            result.start_state <
+                output_incumbent->frontier_operators.size()) {
+            incumbent_root_operator =
+                output_incumbent
+                    ->frontier_operators[result.start_state];
+        }
+        const bool better =
+            !output_incumbent.has_value() ||
+            value < output_incumbent->certified_upper_bound -
+                        options.epsilon ||
+            (std::abs(
+                 value -
+                 output_incumbent->certified_upper_bound) <=
+                 options.epsilon &&
+             priced.index < incumbent_root_operator);
+        if (!better) return;
+        install_output_incumbent(
+            value, values, selected_rows, frontier, {},
+            "gated_primitive_destructive_renewal",
+            &policy_reachable, &witness, true);
+        result.diagnostics.focused_upper_bound = value;
+        result.diagnostics.destructive_renewal_action_id =
+            planner.id;
+        result.diagnostics.destructive_renewal_value = value;
+        result.diagnostics.destructive_renewal_anchor_value = value;
+        result.diagnostics.destructive_renewal_start_value = value;
+        result.diagnostics
+            .gated_root_renewal_validated_non_goal_states =
+            validated_non_goal_states;
+        result.diagnostics.gated_root_renewal_witness_hash =
+            witness_hash;
+        result.diagnostics
+            .gated_root_renewal_success_probability =
+            success_probability;
+        retain_action_reason(
+            "included:gated_root_primitive_destructive_renewal:" +
+            planner.id + ":success=" +
+            finite_json(success_probability) + ":value=" +
+            finite_json(value) + ":validated_non_goal_states=" +
+            std::to_string(validated_non_goal_states));
     }
 
 SolveGapTarget SolveWork::Impl::satisfied_gap_target() const {

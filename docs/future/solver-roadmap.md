@@ -131,15 +131,19 @@ adds a separate opt-in restricted objective. It reduces the two frozen
 four-mod first Chaos rows to 134,477 and 123,697 exact exits, below the
 200,000-state cap, by folding only terminal and zero-progress mass. The
 remaining 134,475 and 123,695 partial-progress states are all retained
-exactly. Their subsequent reforge requests exhaust the unchanged 3,000,000
-reforge-work cap before Bellman optimization, so the measured next bottleneck
-is partial-state admission rather than zero-progress composition.
+exactly. Corrected raw telemetry shows `expanded_states = 1`: the first Chaos
+row consumes 2,807,580 of the unchanged 3,000,000 reforge-work units and the
+next competing broad reforge on the root consumes the remainder. Root
+broad-action competition is the immediate measured exact-search wall.
+Partial-state admission remains a possible later wall, but no retained
+partial state has yet been expanded in these captures.
 
 ### Deferred bounded Pareto admission design
 
-Do not merge partial states by satisfied-goal count. If Oliver selects a
-follow-up, it should be a bounded-policy construction with these proof
-obligations:
+Do not merge partial states by satisfied-goal count. This design is not the
+immediate follow-up selected by current evidence. If later captures actually
+show partial-state admission is the wall and Oliver selects it, use a
+bounded-policy construction with these proof obligations:
 
 1. Partition only by a complete future-observation signature: goal status and
    blockers, preserved/crafted/fractured/protection state, side capacity,

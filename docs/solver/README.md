@@ -8,7 +8,8 @@ Parent: [Documentation index](../README.md)
 Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, and the goal-progress-gated native/WASM
-acceptance: 2026-07-27. The preceding broad architecture stamp was
+acceptance plus the gated root renewal incumbent: 2026-07-28. The preceding
+broad architecture stamp was
 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -264,6 +265,30 @@ This mode solves a different, restricted executable MDP. Its result scope is
 over excluded zero-progress salvage routes. Fixed-option kernels keep their
 existing exact program semantics, and the unrestricted mode keeps its prior
 state, transition, hash, and policy contract.
+
+After a complete gated root row for a priced primitive destructive reforge,
+the solver can publish an early bounded incumbent for the fixed policy
+“repeat this reforge until the goal.” It does so only when every
+positive-probability non-goal exit can legally repeat the same action and the
+engine-owned exact reforge-kernel signature matches the root signature. With
+terminal probability `p` and immediate action cost `c`, the proved executable
+policy has value `c / p`. This action-local witness does not merge retry or
+partial states and does not assert that their other available actions are
+equivalent.
+
+The incumbent is an upper bound within the gated policy restriction. All
+competing actions remain in the lower-bound and discovery problem, so a
+resource-capped solve reports a bounded feasible policy rather than exactness.
+Only the root plus the fixed policy's reachable gated exits belong to its
+authoritative policy domain; unrelated diagnostic states do not receive a
+fabricated action.
+
+Compilation independently rechecks action legality and the exact kernel
+signature on every reachable non-goal carrier. A valid witness compiles to a
+four-node loop: route goal states to success and every other proved carrier
+back through the selected reforge. This compact form is an exact compilation
+of the witnessed fixed policy, not a Bellman quotient or a global-optimality
+claim.
 
 ## Solve And Reprice
 

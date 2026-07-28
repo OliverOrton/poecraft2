@@ -66,8 +66,15 @@ The later
 [goal-progress-gated reforge summary](evidence/goal-progress-gated-reforge-summary.json)
 pins the new opt-in restricted policy on the two frozen four-mod cases. Both
 first Chaos rows fit below 200,000 states with exact terminal/retry mass and
-all partial states retained; follow-up partial-state reforge work, not the
-first row, becomes the next unchanged-cap bottleneck.
+all partial states retained. A 2026-07-28 audit corrected the next boundary:
+both runs have only the root expanded, so a competing root broad reforge, not
+a partial-state row, consumes the remaining unchanged reforge-work budget.
+The subsequent
+[gated root renewal incumbent summary](evidence/gated-root-renewal-incumbent-summary.json)
+shows that the completed first Chaos row now publishes a finite executable
+repeat-until-goal policy on both cases. The policies compile to four-node
+loops and remain bounded within the opt-in restriction; exact discovery still
+stops on the next competing root reforge.
 
 ## Benchmark workflow
 

@@ -6,8 +6,8 @@ work or define crafting mechanics.
 
 Parent: [Solver](README.md)
 
-Verified against code and complete non-visual cross-layer tests: 2026-07-26 @
-browser-transfer/lifetime R4 closure. Scope: Calculator orchestration,
+Verified against code and complete non-visual cross-layer tests: 2026-07-28 @
+gated root renewal incumbent closure. Scope: Calculator orchestration,
 workspace strategy handoff, `EngineClient`, worker protocol, WASM facade,
 solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No rendered review or mechanic ruling
@@ -178,6 +178,15 @@ of the discarded affixes; ordinary partial states retain the normal complete
 action envelope. A completed result is labelled exact only within that
 zero-progress-reroll restriction. Omitting the option preserves the
 unrestricted globally optimal solve contract.
+
+When a completed gated root destructive-reforge row has positive terminal
+mass and every non-goal exit proves the same legal exact action-local kernel,
+Solve immediately records the executable fixed policy “repeat that reforge
+until goal” at value `cost / terminal_probability`. It retains the entire
+competing action envelope and continues discovery, so a cap-stopped result is
+bounded within the gated restriction rather than exact. The compiler
+independently revalidates the witness and emits a compact goal-or-repeat loop;
+it does not enumerate one strategy node per retained partial state.
 
 The worker starts from the requested/default work count, adapts each step to a
 roughly 12 ms slice, and clamps Solve to one through four native work items.

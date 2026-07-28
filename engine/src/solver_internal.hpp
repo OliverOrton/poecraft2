@@ -1808,6 +1808,11 @@ struct SolveDiagnostics {
         std::numeric_limits<double>::infinity();
     double destructive_renewal_start_value =
         std::numeric_limits<double>::infinity();
+    std::uint64_t gated_root_renewal_candidates = 0;
+    std::uint64_t gated_root_renewal_rejections = 0;
+    std::uint64_t gated_root_renewal_validated_non_goal_states = 0;
+    std::uint64_t gated_root_renewal_witness_hash = 0;
+    double gated_root_renewal_success_probability = 0.0;
     std::string progressive_fracture_roll_action_id;
     std::string progressive_fracture_status;
     double progressive_fracture_value =
@@ -1884,6 +1889,24 @@ struct SolveDiagnostics {
 };
 
 /*
+ * Exact action-local witness for one executable fixed policy: repeat the
+ * selected primitive destructive reforge until the configured goal is
+ * reached. It is an upper-bound witness only. The complete action envelope
+ * remains authoritative for lower bounds and exactness.
+ */
+struct PrimitiveRenewalWitness {
+    bool valid = false;
+    std::uint32_t operator_index = kNoId;
+    std::uint32_t primitive_action = kNoId;
+    double success_probability = 0.0;
+    double value = std::numeric_limits<double>::infinity();
+    std::uint64_t gated_kernel_bits_hash = 0;
+    std::uint64_t witness_hash = 0;
+    std::uint64_t validated_non_goal_states = 0;
+    std::vector<std::uint64_t> kernel_signature;
+};
+
+/*
  * Value table and policy over the reachable abstract state set. Vectors are
  * indexed by CalcContext state id; states never expanded (past the cap)
  * keep an infinite value and no policy action.
@@ -1922,6 +1945,7 @@ struct SolveResult {
      * every strict state maps deterministically to one representative strict
      * state id; representatives own Bellman rows and compiled policy. */
     std::vector<std::uint32_t> behavioral_representative_by_state;
+    PrimitiveRenewalWitness primitive_renewal_witness;
     SolveDiagnostics diagnostics;
     SolveOptions options;
 };

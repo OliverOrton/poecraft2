@@ -2170,6 +2170,8 @@ bool SolveWork::Impl::expand_one_unit() {
                 pending.state = state;
                 pending.operator_index = priced.index;
                 pending.resources = &planner.resource_quantities;
+                const OutcomeDistribution* primitive_distribution =
+                    nullptr;
                 std::optional<SolveTransitionCache::AutomaticCandidateRecord>
                     automatic_record;
                 const AutomaticTelemetryKind telemetry_kind =
@@ -2303,6 +2305,7 @@ bool SolveWork::Impl::expand_one_unit() {
                             calc.outcomes(
                                 state, action_index,
                                 options.goal_progress_gated_reforges);
+                        primitive_distribution = &distribution;
                         if (!distribution.supported) {
                             if (!reported_unsupported[priced.index]) {
                                 reported_unsupported[priced.index] = true;
@@ -2477,6 +2480,11 @@ bool SolveWork::Impl::expand_one_unit() {
                         }
                         try_constructive_state_certificate(
                             state, appended_row);
+                        if (primitive_distribution != nullptr) {
+                            try_install_gated_root_renewal_incumbent(
+                                state, appended_row, priced,
+                                *primitive_distribution);
+                        }
                     }
                 } catch (...) {
                     if (planner.kind == PlannerOperatorKind::FixedOption) {

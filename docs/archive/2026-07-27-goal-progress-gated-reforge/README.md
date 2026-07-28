@@ -17,4 +17,9 @@ Both frozen four-mod first Chaos rows now fit below 200,000 states. Full-four
 retains 134,475 partial states and deep-four retains 123,695. The next exact
 reforge request reaches the unchanged 3,000,000 reforge-work cap before
 Bellman optimization, so no frozen policy or global-optimality claim is made.
-The future bounded Pareto admission design remains unimplemented.
+
+**2026-07-28 correction:** both captured runs have `expanded_states = 1`.
+After the first Chaos row, the next request is another broad reforge on the
+root, not a row from a retained partial state. Competing root broad rows are
+therefore the immediate measured exact-search wall. Partial-state admission
+remains a possible later wall, but it has not yet been measured.
