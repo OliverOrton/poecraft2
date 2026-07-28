@@ -99,6 +99,12 @@ std::vector<std::uint64_t> SolveWork::Impl::row_observation_cache_key(
                 const auto observed_class = [&](const std::uint32_t state) {
                     return state == kNoId ? kNoId : partition.at(state);
                 };
+                /* The offered modifier is an observable choice label, not a
+                 * successor identity. Extraction lifts one representative's
+                 * literal preference list to every quotient member, and the
+                 * compiler emits both has_unveil_option(mod_id) and
+                 * unveil(mod_id). Project the three state identities, but
+                 * retain the concrete offered modifier. */
                 tokens.push_back(choice.mod_id);
                 tokens.push_back(observed_class(choice.state));
                 tokens.push_back(observed_class(choice.observation_state));
@@ -571,6 +577,10 @@ void SolveWork::Impl::collect_action_observation_cardinalities(
 std::vector<std::uint64_t> SolveWork::Impl::shadow_state_signature(
         const SolveTransitionCache& graph,
         const std::uint32_t state) const {
+        /* This incomplete-graph diagnostic deliberately retains literal row
+         * slices and strict successor/choice identities. It groups identical
+         * observed payloads only; it is not partition refinement and neither
+         * equality nor reduction here proves a completed exact quotient. */
         std::vector<std::uint64_t> out;
         out.push_back(calc.is_goal_state(calc.state(state)) ? 1u : 0u);
         out.push_back(

@@ -71,9 +71,16 @@ reforge-work allowance but accepted no constructive certificate.
 The production-cap run stopped after 40.7 seconds at exactly 200,000
 discovered states, with 55,088 expanded, 144,912 still on the frontier,
 1,152,570 rows, 9,304,122 reforge work, and 725,411,658 selected-owned bytes.
-The exact quotient found no merge. Focused expansion completed 19 rounds and
-raised the lower bound to `5.3503139241737685`; the executable upper remained
-infinite, so no value, policy, compilation, or verification is claimed.
+Because the graph was incomplete, no exact quotient ran. Full-evidence
+telemetry correctly recorded `shadow_only=true`, retained 200,000 strict
+working identities, and reported 55,090 literal shadow payload classes over
+55,088 expanded states. The first-expansion report likewise retained 74,563
+strict identities and reported two shadow classes with only one expanded
+state. Those shadow counts do not establish either exact merges or exact
+non-merges for the unfinished frontier. Focused expansion completed 19 rounds
+and raised the lower bound to `5.3503139241737685`; the executable upper
+remained infinite, so no value, policy, compilation, or verification is
+claimed.
 
 Automatic admission consumed 13.644 seconds. Temporary-bench synthesis was
 the largest named component: 659,762 carrier candidates expanded into
@@ -196,6 +203,20 @@ probabilistically independent: the sequential combined-pool denominator
 couples their remaining weights. The ordinary/fractured suffix controls and
 one final-weight refinement are included. No production evaluator or cap
 changed.
+
+## Exact quotient audit
+
+The
+[tracked summary](evidence/exact-quotient-audit-summary.json)
+records the 2026-07-27 completed/incomplete quotient audit. A fast completed
+oracle now requires 10 strict states to reduce to 3 exact classes. The
+observe-then-decide witness retains literal modifier IDs because compiled
+execution tests and selects those exact offers.
+
+The real-three-T1 cap reports are shadow-only, not completed quotient evidence:
+74,563 strict working states produced 2 shadow classes with one expanded state,
+and 200,000 produced 55,090 with 55,088 expanded. Exact merges/non-merges for
+their unfinished frontiers remain unknown.
 
 The main product timing table is native Windows evidence, not a
 rendered-browser claim. The tracked WASM was rebuilt from the same sources;

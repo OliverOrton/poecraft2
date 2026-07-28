@@ -32,6 +32,13 @@ There is no active implementation boundary. Oliver must select the next chunk
 before implementation resumes.
 
 The completed
+[Exact Quotient Audit](archive/2026-07-27-exact-quotient-audit/README.md)
+proved the live completed quotient path with a fast 10-to-3 merge regression,
+retained raw Unveil modifier identity because compiled execution observes it,
+and corrected historical cap-stopped claims: incomplete shadow grouping is
+not a completed exact quotient. No production behavior changed.
+
+The completed
 [Action-Local Side Factorization Falsification](archive/2026-07-27-action-local-side-factorization/README.md)
 rejected simple count-conditioned prefix/suffix convolution after an exact
 Chaos outcome table produced a non-zero probability minor. Conditioning on

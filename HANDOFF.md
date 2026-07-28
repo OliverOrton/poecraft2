@@ -6,6 +6,37 @@ chunk before implementation resumes.
 ## Latest completed result
 
 The 2026-07-27
+[Exact Quotient Audit](docs/archive/2026-07-27-exact-quotient-audit/README.md)
+found no production quotient defect.
+
+The retained fast oracle now requires a completed reduction from 10 strict
+states to 3 exact classes with 7 applied merges, value/action parity, and zero
+signature mismatches. A cap-stopped full-evidence oracle separately requires
+`shadow_only=true`, strict working identities, no representative map, and zero
+applied exact merges.
+
+The suspected raw `choice.mod_id` distinction is required. The completed
+observe-then-decide witness has eight concrete Unveil offers, including seven
+that share one projected successor class, while compilation must emit every
+literal offer as both `has_unveil_option(mod_id)` and `unveil(mod_id)`.
+
+Historical cap-stopped language was corrected. The real three-T1 200,000-state
+run had 55,090 literal shadow classes over 55,088 expanded states; no completed
+quotient ran, so equal strict/working counts prove neither merges nor
+non-merges. The same correction applies to the four hard natural-T1
+cap-truncated reports.
+
+Exact action-relative reforge reuse already keys by action plus complete
+preserved base and shares the roll distribution, sparse payload, successor
+envelope, and fringe enqueue. It remains a throughput optimization and cannot
+avoid the first unique carrier's successor materialization.
+
+The native fallback build passed. Focused solver-solve tests passed 532/532 and
+solver-compile tests passed 359/359. No mechanics, solver algorithm, cap, ABI,
+artifact, binding, WASM, web, or product behavior changed. Tracked evidence:
+[exact-quotient-audit-summary.json](fixtures/solver-scaling/v1/evidence/exact-quotient-audit-summary.json).
+
+The preceding 2026-07-27
 [Action-Local Side Factorization Falsification](docs/archive/2026-07-27-action-local-side-factorization/README.md)
 rejected simple count-conditioned prefix/suffix convolution for the exact
 destructive-reforge evaluator.

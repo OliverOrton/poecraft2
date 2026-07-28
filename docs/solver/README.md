@@ -81,7 +81,25 @@ successor classes must all match before states merge. The strict layout is the
 oracle; unknown or mismatched observations remain distinct. The bounded Chaos
 control merges 57,722 strict states to 3 classes, while both accepted complete
 product envelopes merge none because their larger action sets observe every
-difference. No approximate global compaction exists.
+difference. A choice option's concrete modifier ID is intentionally retained
+even when its successor state projects to another class: extraction lifts the
+representative's literal preference list, and compilation emits that modifier
+both as `has_unveil_option` and as the selected Unveil operation.
+
+Exact refinement runs only after graph closure. A cap-stopped full-evidence run
+instead reports `shadow_only=true`, retains strict states as its working
+`quotient_states`, and may group literal observed row payloads in the
+historically named `shadow_behavioral_classes` field. Unexpanded states have no
+completed action rows, so neither equality nor reduction in that field proves
+an exact completed-graph quotient. No approximate global compaction exists.
+
+Action-relative destructive-reforge reuse is separate and already implemented.
+The collision-checked reforge memo keys one immutable roll distribution by
+action plus complete preserved base, so states differing only in wiped junk
+share the roll DP. Sparse expansion reuses that row payload and enqueues its
+fringe once by distribution identity. This saves repeated work after an
+identical kernel exists; it does not merge the outer states or avoid
+materializing the first unique carrier's successor distribution.
 
 Code authority:
 `engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,

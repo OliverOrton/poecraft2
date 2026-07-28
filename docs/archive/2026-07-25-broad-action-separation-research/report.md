@@ -96,12 +96,15 @@ raise `L` above the true optimum. In these traces, Chaos retains lower term
 `1`; lifting the start lower bound requires its exact row. The prior baseline
 then proves that materialization reaches the same 200,000-state wall.
 
-The existing 200,000-successor observation study reinforces this limit. Under
-the full admitted action sets, strict and quotient counts were both 200,000
-with zero exact merges. The four cases recorded 199,981, 199,967, 199,983,
-and 199,976 witnessed non-equivalences respectively. Generalized separation
-can reorder work, but the available cheap descriptor cannot avoid the first
-huge kernel or produce a stronger certified lower bound.
+The existing 200,000-successor observation study reinforces the materialization
+limit, but a 2026-07-27 quotient audit corrected its interpretation. All four
+graphs were incomplete, so exact quotient refinement did not run: the working
+count remained at the 200,000 strict identities. The recorded 199,981,
+199,967, 199,983, and 199,976 counters are incomplete shadow splits against
+literal observed row payloads, not completed exact non-equivalence proofs.
+Generalized separation can reorder work, but the available cheap descriptor
+still cannot avoid the first huge kernel or produce a stronger certified lower
+bound.
 
 ## Gate 2 — Exact Fixed Renewal
 
@@ -172,8 +175,9 @@ destructive action. During that calculation only, junk choices in the same
 exclusion-group family with the same later-roll goal-block mask can be summed.
 Bellman continuation cannot use this compaction: admitted follow-up actions
 can distinguish mod identity, groups, sides, tags, counts, and legality, and
-the prior exact observation study found no merges across the 200,000
-successors.
+the cap-stopped observation study supplied no completed quotient result across
+the 200,000 successors. The fixed-policy result itself does not establish
+Bellman-state equivalence.
 
 The fixed-policy compaction preserved every measured probability. It reduced
 only full-three work materially:

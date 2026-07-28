@@ -173,7 +173,11 @@ corrects the scope of the seeded value-`3` carrier. With the same three slots,
   transitions, and consumed 7,863,354 reforge-work units;
 - the full bounded run stopped at 200,000 discovered / 55,088 expanded states,
   1,152,570 rows, 9,304,122 reforge work, and 725,411,658 selected-owned bytes;
-- strict and quotient state counts were both 200,000 with zero exact merges;
+- the incomplete run did not execute exact quotient refinement:
+  `shadow_only=true`, `strict_states=quotient_states=200,000`,
+  `shadow_behavioral_classes=55,090`, and
+  `shadow_expanded_states_observed=55,088`; these fields do not prove zero
+  completed-graph merges;
 - focused lower reached `5.3503139241737685`, but the executable upper remained
   infinite after 19 rounds, so there is no exact value or policy; and
 - temporary-bench synthesis accounted for 659,762 candidates and 5,133,587
@@ -449,7 +453,8 @@ pin a cleanup-specific rejection and a separate unselected research signal.
 
 Measurement-only engine source was restored. The broader all-state signal may
 motivate a future exact action-local factorization study, but it does not
-select cleanup or alter the prior all-action zero-merge evidence.
+select cleanup or supply a completed all-action quotient result for the
+cap-censored hard cases.
 
 ## Action-Local Side Factorization Rejection
 
@@ -479,6 +484,36 @@ The exploratory probe passed 120,535 focused calculation checks and was
 restored. A narrow regression remains for the independent goal contract: a
 fractured goal plus unrelated fractured junk still satisfies the permissive
 goal predicate.
+
+## Exact Quotient Audit
+
+The 2026-07-27
+[final report](archive/2026-07-27-exact-quotient-audit/report.md) and
+[tracked summary](../fixtures/solver-scaling/v1/evidence/exact-quotient-audit-summary.json)
+pin the completed- versus incomplete-graph distinction.
+
+- The fast completed alt-spam oracle reduces 10 strict states to 3 exact
+  quotient classes with 7 merges, value/action parity, a non-identity
+  representative map, and zero observation-signature mismatches.
+- The completed observe-then-decide witness has 8 literal Unveil offers. Two
+  projected successor classes contain multiple literal offers, with 7 in the
+  largest, and compilation emits every literal offer as both a condition and
+  operation. Raw `choice.mod_id` remains required.
+- The cap-stopped regression retains 10 strict working states, reports 3
+  literal shadow classes, sets `shadow_only=true`, applies zero exact merges,
+  and publishes no representative map.
+- Historical real-three-T1 evidence is now explicit: the one-expansion
+  74,563-state report had 2 shadow classes with 1 expanded state; the
+  production 200,000-state report had 55,090 shadow classes with 55,088
+  expanded states. Neither ran completed quotient refinement.
+- Exact action-relative reforge reuse was already present: action plus complete
+  preserved base shares the roll distribution, sparse row payload, successor
+  envelope, and fringe enqueue. It does not eliminate first-carrier
+  materialization.
+
+The native fallback build passed. Focused solver-solve tests passed 532/532 and
+solver-compile tests passed 359/359. No mechanic, algorithm, cap, ABI, artifact,
+binding, WASM, web, or product behavior changed.
 
 ## Engine And WASM Evidence Boundaries
 

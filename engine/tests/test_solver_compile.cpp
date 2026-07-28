@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <fstream>
 #include <memory>
+#include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -709,11 +711,66 @@ void run_artifact_gate(const char* artifact_dir) {
             option_calc, rare, {{"veiled_chaos", 1.0}});
         PC_CHECK(solved.converged);
         PC_CHECK(!solved.option_unveil_preferences[state].empty());
+        PC_CHECK(!solved.behavioral_representative_by_state.empty());
+        std::map<std::uint32_t, std::set<std::uint32_t>>
+            offered_mods_by_projected_successor;
+        for (const ObservedUnveilPreference& observation :
+             solved.option_unveil_preferences[state]) {
+            for (const ObservedUnveilChoice& choice : observation.choices) {
+                PC_CHECK(
+                    choice.successor_state <
+                    solved.behavioral_representative_by_state.size());
+                if (choice.successor_state >=
+                    solved.behavioral_representative_by_state.size()) {
+                    continue;
+                }
+                offered_mods_by_projected_successor[
+                    solved.behavioral_representative_by_state[
+                        choice.successor_state]]
+                    .insert(choice.mod_id);
+            }
+        }
+        bool projected_successor_has_distinct_offered_mods = false;
+        std::size_t max_offered_mods_per_projected_successor = 0;
+        std::uint32_t projected_collision_classes = 0;
+        for (const auto& [unused_successor, offered_mods] :
+             offered_mods_by_projected_successor) {
+            (void)unused_successor;
+            max_offered_mods_per_projected_successor = std::max(
+                max_offered_mods_per_projected_successor,
+                offered_mods.size());
+            if (offered_mods.size() > 1) {
+                projected_successor_has_distinct_offered_mods = true;
+                ++projected_collision_classes;
+            }
+        }
+        PC_CHECK(projected_successor_has_distinct_offered_mods);
         const std::string strategy = compile_policy_strategy_json(
             option_calc, solved, "observed-unveil-renewal");
         PC_CHECK(strategy.find("has_unveil_option") != std::string::npos);
         PC_CHECK(strategy.find("\"type\":\"veiled_chaos\"") !=
                  std::string::npos);
+        std::set<std::uint32_t> compiled_offered_mods;
+        for (const ObservedUnveilPreference& observation :
+             solved.option_unveil_preferences[state]) {
+            for (const ObservedUnveilChoice& choice : observation.choices) {
+                compiled_offered_mods.insert(choice.mod_id);
+            }
+        }
+        PC_CHECK(compiled_offered_mods.size() > 1);
+        for (const std::uint32_t mod_id : compiled_offered_mods) {
+            const std::string marker =
+                "\"mod_key\":\"" +
+                observed_session->data->string_at(
+                    observed_session->data->mod_key_sid.at(mod_id)) +
+                "\"";
+            PC_CHECK(strategy.find(marker) != std::string::npos);
+        }
+        std::printf(
+            "solver quotient choice audit: offered=%zu "
+            "projected_collision_classes=%u max_offered_per_class=%zu\n",
+            compiled_offered_mods.size(), projected_collision_classes,
+            max_offered_mods_per_projected_successor);
     }
 
     /* Pick one ordinary crafted prefix and suffix with no group conflict, then

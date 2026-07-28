@@ -5,7 +5,13 @@ chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-The most recently completed milestone is
+The most recently completed milestone is the
+[Exact Quotient Audit](../archive/2026-07-27-exact-quotient-audit/README.md).
+It pinned a fast 10-to-3 completed merge, retained literal Unveil choice
+identity as executable policy behavior, and corrected cap-stopped evidence
+that had mistaken shadow-only working counts for completed quotient results.
+
+The preceding completed milestone is
 [Action-Local Side Factorization Falsification](../archive/2026-07-27-action-local-side-factorization/README.md).
 It rejected simple count-conditioned prefix/suffix convolution: sequential
 combined-pool weights produce an exact non-zero probability minor. Final

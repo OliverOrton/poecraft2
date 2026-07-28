@@ -18,6 +18,13 @@ resource and compiler caps stayed fixed.
 Exact quotienting is useful but action-scope dependent: the bounded Chaos
 oracle reduces 57,722 strict states to 3, while the complete product envelopes
 permit no merge. Approximate compact mode remains forbidden. The completed
+[exact quotient audit](../archive/2026-07-27-exact-quotient-audit/README.md)
+adds a fast 10-to-3 regression and confirms that literal Unveil choice IDs are
+required by compiled execution. It also corrects the hard-case interpretation:
+cap-stopped shadow diagnostics do not establish completed quotient merges or
+non-merges. Exact preserved-boundary reforge caching, shared sparse payloads,
+and one-time fringe enqueue are already implemented; they do not avoid the
+first unique carrier's successor materialization. The completed
 [focused-round performance attribution](../archive/2026-07-23-focused-round-performance/README.md)
 confirmed that the 256-state global batch causes repeated whole-graph work, but
 accepted no default change because every tested tuple exceeded the fixed
@@ -71,8 +78,9 @@ restored rank one only by using 48 marginal identities for 41 joint outcomes,
 before retaining that coupling after every roll step. This does not prove
 every symbolic reforge algorithm impossible, but neither count-conditioned
 side convolution nor its immediate weight refinement remains deferred work.
-The census still is not state equivalence and does not weaken the prior
-all-action zero-merge result.
+The census still is not state equivalence. The cap-truncated all-action
+studies retained strict working identities and ran only the incomplete shadow
+diagnostic; they did not establish a completed all-action zero-merge result.
 
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
@@ -85,12 +93,13 @@ active continuation.
 The 2026-07-21
 [real three-T1 diagnostic](../archive/2026-07-21-real-three-t1-diagnostic/README.md)
 separates the seeded carrier from a genuine empty-rare start. The real case
-hits 200,000 discovered states with no finite executable upper and no exact
-quotient merge. If Oliver selects its optimization, the measured order of
-attack is: construct an exact compositional renewal/finish policy to supply a
-finite upper; use that upper for exact frontier/state dominance; and reduce
-temporary-bench synthesis through carrier-signature reuse or earlier exact
-rejection. A cap-only continuation is not supported by the evidence.
+hits 200,000 discovered states with no finite executable upper. Its incomplete
+graph ran only the shadow diagnostic, so it establishes neither exact quotient
+merges nor exact non-merges. If Oliver selects its optimization, the measured
+order of attack is: construct an exact compositional renewal/finish policy to
+supply a finite upper; use that upper for exact frontier/state dominance; and
+reduce temporary-bench synthesis through carrier-signature reuse or earlier
+exact rejection. A cap-only continuation is not supported by the evidence.
 
 Measurements and the former optimization boundary remain in
 [the evidence index](../evidence.md) and the

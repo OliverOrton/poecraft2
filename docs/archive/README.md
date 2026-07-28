@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [Exact Quotient Audit](2026-07-27-exact-quotient-audit/README.md) —
+  pinned a fast completed 10-to-3 exact merge, proved literal Unveil choice
+  identity is executable behavior, and corrected cap-stopped shadow-only
+  evidence that had been described as a zero-merge quotient result.
+
 - [Action-Local Side Factorization Falsification](2026-07-27-action-local-side-factorization/README.md) —
   rejected simple count-conditioned prefix/suffix convolution after an exact
   Chaos probability table produced a non-zero 2x2 minor; the immediate

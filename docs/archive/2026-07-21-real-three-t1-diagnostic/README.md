@@ -12,7 +12,10 @@ starting goal modifiers.
 The first expansion discovered 74,563 states. The unchanged-cap run stopped
 at 200,000 discovered / 55,088 expanded states with 1,152,570 rows. Its lower
 bound reached `5.3503139241737685`; its executable upper remained infinite.
-No exact value, compiled strategy, or verification is claimed.
+No exact value, compiled strategy, or verification is claimed. A 2026-07-27
+audit clarified that these incomplete runs retained their strict working
+identities and produced shadow diagnostics only; they did not run a completed
+exact quotient.
 
 See the [completed plan](plan.md), [final handoff](handoff.md), and
 [concise evidence](../../../fixtures/solver-scaling/v1/evidence/real-three-t1-from-scratch-summary.json).

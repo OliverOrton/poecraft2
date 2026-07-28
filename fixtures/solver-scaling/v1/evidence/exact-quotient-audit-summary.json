@@ -1,0 +1,117 @@
+{
+  "schema_version": "exact_quotient_audit_summary_v1",
+  "captured_on": "2026-07-27",
+  "decision": {
+    "completed_exact_quotient": "healthy_and_now_regression_protected",
+    "raw_observation_choice_mod_id": "retained_as_required_executable_observation",
+    "incomplete_shadow_interpretation": "corrected",
+    "production_solver_behavior_changed": false,
+    "reason": "A fast completed graph reduces 10 strict states to 3 exact classes with value/action parity. Distinct literal Unveil offers can share projected Bellman successors, but the compiled policy must still test and select each offered modifier. Cap-stopped runs execute only the literal shadow diagnostic and cannot prove exact merges or non-merges."
+  },
+  "identity": {
+    "source_base_commit": "3fc0eac",
+    "measurement_executable_sha256": "772ca734833b3a16eb0f128b3b21fe05cc789908f58f5f7286da9c900681a937",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os": "Microsoft Windows 11 Pro 10.0.26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "cores": 16,
+      "logical_processors": 24
+    }
+  },
+  "completed_positive_merge_witness": {
+    "fixture": "synthetic alt-spam solve oracle",
+    "completed": true,
+    "converged": true,
+    "strict_states": 10,
+    "quotient_states": 3,
+    "exact_behavioral_merges": 7,
+    "shadow_only": false,
+    "non_identity_representative": true,
+    "strict_quotient_start_value_parity": true,
+    "strict_quotient_start_action_parity": true,
+    "observation_signature_mismatches": 0
+  },
+  "observation_choice_witness": {
+    "fixture": "synthetic observed Veiled Chaos plus Unveil renewal",
+    "completed": true,
+    "compiled": true,
+    "literal_offered_modifiers": 8,
+    "projected_successor_classes_with_multiple_literal_offers": 2,
+    "maximum_literal_offers_in_one_projected_successor_class": 7,
+    "all_literal_offers_emitted_in_strategy": true,
+    "required_compiler_uses": [
+      "has_unveil_option(mod_id)",
+      "unveil(mod_id)"
+    ],
+    "conclusion": "Project successor state identities, but retain choice.mod_id. Lifting one representative's preference list across states with different concrete offered menus would make the compiled policy non-executable."
+  },
+  "incomplete_shadow_witness": {
+    "fixture": "cap-stopped synthetic alt-spam full-evidence solve",
+    "completed": false,
+    "state_cap_hit": true,
+    "strict_states": 10,
+    "working_quotient_states": 10,
+    "shadow_only": true,
+    "shadow_behavioral_classes": 3,
+    "quotient_refinement_rounds_field": 1,
+    "exact_behavioral_merges": 0,
+    "behavioral_representative_map_present": false,
+    "interpretation": "The shadow grouping is a literal observed-payload diagnostic. It is not completed partition refinement."
+  },
+  "historical_cap_stopped_records": {
+    "real_three_t1_first_expansion": {
+      "source": "real-three-t1-from-scratch-first-expansion.json",
+      "strict_states": 74563,
+      "working_quotient_states": 74563,
+      "expanded_states": 1,
+      "shadow_only": true,
+      "shadow_behavioral_classes": 2,
+      "shadow_expanded_states_observed": 1
+    },
+    "real_three_t1_production_caps": {
+      "source": "real-three-t1-from-scratch-production-caps.json",
+      "strict_states": 200000,
+      "working_quotient_states": 200000,
+      "expanded_states": 55088,
+      "shadow_only": true,
+      "shadow_behavioral_classes": 55090,
+      "shadow_expanded_states_observed": 55088,
+      "exact_behavioral_merges_applied": 0,
+      "completed_zero_merge_proved": false
+    },
+    "four_natural_t1_hard_cases": {
+      "source": "2026-07-25 broad-action separation report",
+      "status": "cap_stopped_incomplete",
+      "prior_claim": "200000 strict and quotient states with zero exact merges",
+      "corrected_interpretation": "The 200000 working identities and witnessed split counters came from the incomplete shadow path. No completed quotient result exists for those frontiers."
+    }
+  },
+  "action_relative_reforge_reuse": {
+    "status": "already_implemented_before_this_audit",
+    "key": "action plus collision-checked complete preserved reforge base",
+    "shared_work": [
+      "immutable exact roll distribution",
+      "sparse row payload",
+      "successor envelope",
+      "one fringe enqueue per shared distribution identity"
+    ],
+    "limitation": "This avoids repeated work after an identical kernel exists. It does not merge outer states or avoid materializing the first unique carrier's successor distribution."
+  },
+  "verification": {
+    "fallback_native_build": "passed",
+    "solver_solve_command": "build/engine/poecraft_engine_tests.exe --solver-solve-only",
+    "solver_solve_checks": 532,
+    "solver_solve_failures": 0,
+    "solver_compile_command": "build/engine/poecraft_engine_tests.exe --solver-compile-only data/compiled/current",
+    "solver_compile_checks": 359,
+    "solver_compile_failures": 0,
+    "mechanics_changed": false,
+    "solver_algorithm_changed": false,
+    "caps_changed": false,
+    "abi_changed": false,
+    "compiled_artifact_changed": false,
+    "wasm_rebuilt": false,
+    "web_tests_run": false
+  }
+}

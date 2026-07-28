@@ -391,13 +391,59 @@ void run_alt_spam_tests() {
                  strict.policy[strict.start_state]);
         PC_CHECK(quotient.policy[quotient.start_state] ==
                  no_reuse.policy[no_reuse.start_state]);
-        PC_CHECK(quotient.diagnostics.strict_discovered_states >=
+        PC_CHECK(quotient.diagnostics.strict_discovered_states >
                  quotient.diagnostics.quotient_states);
+        PC_CHECK(
+            quotient.diagnostics.exact_behavioral_merges ==
+            quotient.diagnostics.strict_discovered_states -
+                quotient.diagnostics.quotient_states);
+        PC_CHECK(!quotient.diagnostics.state_scaling_shadow_only);
+        PC_CHECK(!quotient.behavioral_representative_by_state.empty());
+        bool has_non_identity_representative = false;
+        for (std::uint32_t state = 0;
+             state < quotient.behavioral_representative_by_state.size();
+             ++state) {
+            has_non_identity_representative |=
+                quotient.behavioral_representative_by_state[state] != state;
+        }
+        PC_CHECK(has_non_identity_representative);
         PC_CHECK(quotient.diagnostics.observation_signature_mismatches == 0);
         PC_CHECK(strict.behavioral_representative_by_state.empty());
         PC_CHECK(no_reuse.diagnostics.exact_kernel_payload_reuses == 0);
         PC_CHECK(quotient.diagnostics.solve_owned_byte_ledger_requests > 0);
         PC_CHECK(quotient.diagnostics.solve_owned_byte_reconciliations > 0);
+
+        SolveOptions shadow_options = evidence_options;
+        shadow_options.max_states = 1;
+        const SolveResult shadow =
+            solve(calc, start, prices, shadow_options);
+        PC_CHECK(!shadow.converged);
+        PC_CHECK(shadow.diagnostics.state_cap_hit);
+        PC_CHECK(shadow.diagnostics.state_scaling_shadow_only);
+        PC_CHECK(
+            shadow.diagnostics.strict_discovered_states ==
+            shadow.diagnostics.quotient_states);
+        PC_CHECK(
+            shadow.diagnostics.shadow_behavioral_classes <=
+            shadow.diagnostics.strict_discovered_states);
+        PC_CHECK(shadow.diagnostics.quotient_refinement_rounds == 1);
+        PC_CHECK(shadow.diagnostics.exact_behavioral_merges == 0);
+        PC_CHECK(shadow.behavioral_representative_by_state.empty());
+        const std::string shadow_telemetry = serialize_solver_telemetry(
+            calc, &shadow, nullptr, std::nullopt, nullptr);
+        PC_CHECK(valid_json_object(shadow_telemetry));
+        PC_CHECK(
+            shadow_telemetry.find("\"shadow_only\":true") !=
+            std::string::npos);
+        std::printf(
+            "solver quotient audit: completed=%u/%u merges=%llu "
+            "shadow=%u/%u\n",
+            quotient.diagnostics.strict_discovered_states,
+            quotient.diagnostics.quotient_states,
+            static_cast<unsigned long long>(
+                quotient.diagnostics.exact_behavioral_merges),
+            shadow.diagnostics.strict_discovered_states,
+            shadow.diagnostics.shadow_behavioral_classes);
 
         SolveOptions diagnostic_caps;
         diagnostic_caps.max_diagnostic_samples = 1;
