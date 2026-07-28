@@ -1,25 +1,29 @@
 # Session Handoff
 
-**Status: no implementation boundary is active.**
+**Status: an implementation boundary is active.**
 
-The completed
-[Goal-Progress-Gated Reforge Mode](docs/archive/2026-07-27-goal-progress-gated-reforge/README.md)
-is retained on `codex/goal-progress-gated-reforge`. The unrestricted exact
-solver remains the default. Gated results are exact only within the
-zero-progress-reroll restriction.
+Plan:
+[Gated Root Renewal Incumbent](docs/active/plan.md)
 
-## Final Boundary
+Branch: `codex/gated-root-renewal-incumbent`
 
-Both frozen four-mod first Chaos rows fit below 200,000 states with all
-terminal, retry, partial, probability, and resource mass preserved. The full
-case retains 134,475 exact partial states; the deep case retains 123,695.
-Follow-up exact reforge requests reach the unchanged 3,000,000-work cap before
-Bellman optimization, so neither frozen case produced a policy.
+Starting source: `c8109d1` (`main`)
 
-The separate bounded Pareto admission design is recorded in
-[Solver Roadmap](docs/future/solver-roadmap.md#deferred-bounded-pareto-admission-design).
-It is not selected or implemented. Oliver must choose the next chunk before
-implementation resumes.
+## Current Boundary
+
+Gate 0 is selected. Corrected raw telemetry shows both frozen gated runs stop
+while expanding the start state: the completed Chaos row consumes 2,807,580
+of 3,000,000 reforge-work units, then the next root Fossil request consumes
+the remainder. No retained partial state has been expanded.
+
+Proceed through Gates 0 through 5 in order. The candidate is an early
+executable upper from repeating one completed destructive reforge until the
+goal. It must preserve the full competing lower envelope, remain bounded
+within the zero-progress-reroll restriction, and compile only after an
+independent exact action-local kernel proof.
+
+Do not implement bounded Pareto admission or raise caps in this milestone.
+The unrestricted exact solver remains unchanged and default.
 
 Commits remain local unless Oliver asks to push and must end with:
 

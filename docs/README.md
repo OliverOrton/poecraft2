@@ -28,12 +28,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation plan is active. The completed
+The active
+[Gated Root Renewal Incumbent](active/plan.md)
+milestone tests whether the first completed gated root Chaos row can publish
+an exact fixed repeat-until-goal policy as a finite bounded incumbent before
+the next root broad action reaches the unchanged reforge-work cap. The
+completed
 [Goal-Progress-Gated Reforge Mode](archive/2026-07-27-goal-progress-gated-reforge/README.md)
 adds an opt-in restricted exact solver mode without changing the default
 unrestricted solver. Both frozen four-mod first Chaos rows now fit under
-200,000 states; exact retained partial states become the next unchanged-cap
-bottleneck before Bellman optimization.
+200,000 states. Corrected raw telemetry shows that another root broad reforge,
+not partial-state expansion, is the immediate unchanged-cap bottleneck.
 
 The completed
 [Pre-Expansion Probability-Lower Audit](archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)

@@ -1,8 +1,18 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
+
+The active
+[Gated Root Renewal Incumbent](plan.md)
+milestone corrects the immediate post-row boundary and tests a gated-only
+early executable upper. Both frozen runs are still expanding the start state:
+Chaos consumes 2,807,580 of 3,000,000 reforge-work units, and the next root
+Fossil request consumes the remainder before any partial state is expanded.
+The candidate repeats one proved action-local-equivalent destructive reforge
+until success; it must remain bounded, preserve all competing lowers, and
+compile as an exact compact fixed policy.
 
 The most recently completed milestone is the
 [Goal-Progress-Gated Reforge Mode](../archive/2026-07-27-goal-progress-gated-reforge/README.md).
