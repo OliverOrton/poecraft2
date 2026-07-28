@@ -1,12 +1,17 @@
 # Pre-Expansion Probability-Lower Audit
 
-**Status: active, falsification-first solver research.**
+**Status: completed negative result; archived 2026-07-27.**
 
 Owner: Oliver
 
 Branch: `codex/pre-expansion-probability-lower-audit`
 
 Starting source: `8976750` (`main`)
+
+Final outcome: Gate 3 rejected the candidate. The isolated probability MDP
+kept graph work flat and supplied complete class lowers, but zero of four hard
+cases separated its archived renewal upper. Measurement-only source was
+restored; only documentation and tracked evidence were retained.
 
 ## Decision To Make
 

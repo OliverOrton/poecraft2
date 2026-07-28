@@ -28,13 +28,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Pre-Expansion Probability-Lower Audit](active/plan.md) is a
-falsification-first measurement pass. It tests a genuinely graph-free,
-action-conditioned probability relaxation against the archived exact renewal
-uppers. Production pruning and root-certificate integration are forbidden
-unless a previously refused hard case obtains strict complete-scope
-separation before broad-row work.
+No implementation plan is active. The completed
+[Pre-Expansion Probability-Lower Audit](archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)
+isolated the graph-free part of the optimistic probability cover and compared
+complete root-action-class lowers against the archived renewal uppers. The
+probe kept graph work flat but separated zero of four hard cases; cheap
+junk-bench-first classes remained at `0.005872` or `0.01477` chaos.
+Measurement source was restored.
 
 The completed
 [Certified Root-Action Feasibility](archive/2026-07-27-certified-root-action-feasibility/README.md)

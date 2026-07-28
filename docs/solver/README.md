@@ -327,6 +327,15 @@ proof-producing upper/lower work; the current witness cannot simply be
 promoted into an early product result. See the
 [feasibility report](../archive/2026-07-27-certified-root-action-feasibility/report.md).
 
+A follow-up
+[graph-free probability-lower audit](../archive/2026-07-27-pre-expansion-probability-lower-audit/report.md)
+then paired the archived fixed-renewal uppers with complete root-action-class
+lowers. The probability MDP changed no graph-work counter, but all four hard
+cases overlapped. Non-goal bench-first classes fell back to their exact first
+price because the goal-mask/count abstraction does not retain the blocker
+effect needed to charge continuation work. That audit source was restored;
+the production solver still uses its prior cover and certificate behavior.
+
 Selected-allocation enforcement uses incremental owner ledgers with periodic
 full audits. On the accepted two-T1 product, per-state preparation byte audits
 fell from the 22.47-second baseline to 7.3 ms (0.04% of expansion); audited

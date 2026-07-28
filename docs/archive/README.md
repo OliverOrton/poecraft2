@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-27
 
+- [Pre-Expansion Probability-Lower Audit](2026-07-27-pre-expansion-probability-lower-audit/README.md) —
+  rejected the graph-free goal-progress MDP after complete competing
+  action-class lowers overlapped all four archived renewal uppers by five to
+  ten orders of magnitude; measurement source was restored.
+
 - [Certified Root-Action Feasibility](2026-07-27-certified-root-action-feasibility/README.md) —
   rejected public integration of the existing certificate after all four hard
   cases completed exact first-action projection without any finite executable

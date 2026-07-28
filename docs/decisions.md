@@ -267,3 +267,25 @@ envelopes, and post-cap observations are not certificates.
 **Consequences:** The shadow probe is restored and no ABI, WASM, or product
 work is selected. A future attempt starts from new exact action-local upper or
 lower mathematics, not result plumbing.
+
+## 2026-07-27 — Goal-Mask Probability Lower Is Not Root Separation
+
+**Decision:** Do not wire the current optimistic pool-probability machinery
+into root pruning or a verified-next-action result. Its isolated graph-free
+goal-progress MDP separated zero of four hard cases from the archived exact
+renewal uppers.
+
+The candidate may remain mathematical input to a future proof, but a
+goal-mask/rarity/affix-count state is not enough for complete action-class
+separation. Non-goal first crafts such as junk benches can change blockers
+without advancing a goal slot. When that effect is erased, the universal
+conditioned lower is only the exact first price plus a free finish.
+
+**Context:** [Final report](archive/2026-07-27-pre-expansion-probability-lower-audit/report.md),
+[Solver](solver/README.md), and
+[tracked evidence](../fixtures/solver-natural-t1/v1/evidence/pre-expansion-probability-lower-audit-summary.json).
+
+**Consequences:** All measurement source is restored. Later verified-next-
+action work needs both a cap-compatible executable upper and a lower that
+retains enough non-goal first-action, blocker, and preservation state to
+charge downstream work. A finite bracket alone is not progress.

@@ -1,17 +1,18 @@
 # Active Work
 
-**Status: pre-expansion probability-lower audit is active.**
+**Status: no active plan.** Oliver must choose the next chunk before
+implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Current plan:
-[Pre-Expansion Probability-Lower Audit](plan.md). It tests whether an isolated
-probability-only action-class relaxation can strictly separate a known exact
-renewal upper before any hard-case broad row. It may not call exact outcome
-generation, grow the state graph, change solver behavior, or proceed to
-product integration without a hard-case qualification.
+The most recently completed milestone is the
+[Pre-Expansion Probability-Lower Audit](../archive/2026-07-27-pre-expansion-probability-lower-audit/README.md).
+Its graph-free probability MDP passed the small exact oracle and kept all
+state/row/transition/reforge counters flat, but zero of four hard cases
+separated an archived renewal upper. Complete competing envelopes were
+blocked at `0.005872` or `0.01477` chaos. Measurement source was restored.
 
-The most recently completed milestone is
+The preceding completed milestone is
 [Certified Root-Action Feasibility](../archive/2026-07-27-certified-root-action-feasibility/README.md).
 Its positive oracle proved the shadow audit could observe an existing
 constructive certificate, but all four hard cases completed 91 to 107 exact

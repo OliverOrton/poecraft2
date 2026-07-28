@@ -56,6 +56,12 @@ shows that all four hard cases complete exact first-action projection over 91
 to 107 classes before broad-row work, but none has a finite executable
 incumbent there. Public certificate integration was rejected and the
 measurement probe was restored.
+The subsequent
+[pre-expansion probability-lower audit](evidence/pre-expansion-probability-lower-audit-summary.json)
+paired the archived renewal uppers with complete graph-free
+action-conditioned lowers. It kept graph work flat but separated zero of four
+hard cases; cheap non-goal bench-first classes exposed the missing blocker and
+preservation state in a goal-mask-only relaxation.
 
 ## Benchmark workflow
 

@@ -1,43 +1,56 @@
 # Session Handoff
 
-**Status: Gate 0 active for the pre-expansion probability-lower audit.**
+**Status: no active implementation boundary.** Oliver must choose the next
+chunk before implementation resumes.
 
-Plan: [Pre-Expansion Probability-Lower Audit](docs/active/plan.md)
+## Latest completed result
 
-Branch: `codex/pre-expansion-probability-lower-audit`
+The 2026-07-27
+[Pre-Expansion Probability-Lower Audit](docs/archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)
+tested whether an isolated graph-free probability relaxation could pair with
+the archived exact renewal uppers to certify a hard-case next action before
+broad-row work.
 
-Starting source: `8976750` (`main`)
+The candidate passed its exact small oracle and changed no solver state, row,
+transition, or reforge-work counter at the pre-row boundary. All four hard
+cases had complete legal action scope and finite class lowers, but none
+separated:
 
-## Current Boundary
+- relaxed start lowers were 15.98 to 431.4 chaos;
+- archived exact renewal uppers were 575,497 to 193,266,777 chaos; and
+- cheap junk-bench-first classes remained at `0.005872` or `0.01477` chaos.
 
-Test whether a probability-only action-conditioned relaxation can separate one
-of the archived exact renewal uppers before the frozen hard cases attempt a
-broad row.
+The goal-mask/count relaxation erases the blocker effect of a non-goal first
+craft. Its universal complete-scope fallback can therefore charge only the
+exact first price and grant a free finish. Direct integration of this lower is
+closed.
 
-The current clean-goal preparation is not graph-free: it calls
-`CalcContext::outcomes` for destructive actions while constructing exact
-relaxed envelopes. The new measurement must use immutable pool/descriptor
-facts only and must leave states, rows, transitions, reforge work, scheduling,
-values, policies, termination, and caps unchanged.
+Every measurement-only engine and test edit was restored. The retained
+changes are documentation and
+[tracked evidence](fixtures/solver-natural-t1/v1/evidence/pre-expansion-probability-lower-audit-summary.json)
+only. No mechanic, condition, action, transition, solver algorithm, product
+cap, ABI, artifact, binding, WASM, web, or product behavior changed.
 
-## Immediate Next Step
+## Plausible future boundary
 
-Finish the Gate 0/1 code and proof audit, define the isolated probability-only
-data flow, and validate it on small exact oracles. Then add only the shadow
-telemetry needed to measure full root-action-class lower tables.
+Verified next action remains possible in principle, but a new selected plan
+must address both sides at once:
 
-Run the five frozen product-cap cases only after the small oracle proves both
-admissibility and zero state/work growth. Proceed beyond measurement only if a
-previously refused hard case strictly separates its archived exact renewal
-upper over the complete product action envelope.
+1. produce a certified executable upper inside the product computation
+   boundary; and
+2. retain enough non-goal first-action, blocker, and preservation state in the
+   competing lower to charge downstream work.
 
-## Standing Boundaries
+Making the root bracket merely finite, publishing the current probability
+cover, raising caps, or re-running goal-mask-only variants is not supported by
+the completed evidence.
 
-- A finite but non-separating bracket is not a pass.
-- Do not call exact outcome generation from the candidate.
-- Do not raise caps or restrict the action envelope.
-- Unknown/unpriced/unsupported/deferred members block certification.
-- Do not add public, ABI, WASM, worker, or product surfaces in this pass.
-- Commits remain local unless Oliver says to push and end with:
+## Repository state
+
+- Local `main` contains the completed audit after the final fast-forward.
+- `codex/pre-expansion-probability-lower-audit` remains at the same commit.
+- Nothing is pushed.
+
+Commits remain local unless Oliver asks to push and must end with:
 
 `Co-authored-by: Codex <codex@openai.com>`

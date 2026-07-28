@@ -110,6 +110,21 @@ and then prove action-class lower separation. The earlier fixed-policy renewal
 upper is evidence, not a ready implementation; it exceeded current work on
 both three-mod cases and the cheap lower left Chaos at `1`.
 
+The later
+[pre-expansion probability-lower audit](../archive/2026-07-27-pre-expansion-probability-lower-audit/README.md)
+assembled those archived uppers with an isolated graph-free probability MDP.
+It kept graph work flat and produced finite start lowers from 15.98 to 431.4
+chaos, but separated zero of four hard cases. Complete envelopes were blocked
+by junk-bench-first classes at `0.005872` or `0.01477` chaos because the
+goal-mask abstraction discards non-goal blocker effects. Do not schedule
+direct integration of that lower.
+
+A fresh verified-next-action proposal must now address two independent gaps:
+the executable upper must fit the product computation boundary, and the
+competing lower must retain enough non-goal first-action, blocker, and
+preservation state to charge downstream work. Merely making `L` and `U`
+finite, or publishing the existing probability cover, is closed.
+
 The 2026-07-21
 [action/state pruning archive](../archive/2026-07-21-solver-action-state-pruning/README.md)
 supersedes the three-slot discovery bottleneck: exact producibility filtering

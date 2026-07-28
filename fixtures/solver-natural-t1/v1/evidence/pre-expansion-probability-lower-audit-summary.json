@@ -1,0 +1,183 @@
+{
+  "schema_version": "pre_expansion_probability_lower_audit_summary_v1",
+  "captured_on": "2026-07-27",
+  "decision": {
+    "gate_3": "rejected",
+    "production_integration_selected": false,
+    "hard_cases_separated": 0,
+    "hard_cases_measured": 4,
+    "reason": "The graph-free probability MDP produced finite action-conditioned lowers with complete scope and zero graph-work growth, but every archived renewal upper overlapped a competing first-action class by at least five orders of magnitude. Cheap junk-bench-first classes required the universally sound exact-first-price/free-finish fallback and attained 0.005872 or 0.01477 chaos.",
+    "next_required_capability": "Any later verified-next-action attempt needs a cap-compatible executable upper and a lower that preserves enough non-goal first-action and blocker state to charge downstream work. A goal-mask-only probability relaxation is not sufficient."
+  },
+  "identity": {
+    "starting_source_commit": "8976750ce86de97184f17005bca0029fdcaa78a0",
+    "gate_0_plan_commit": "323b05b63c524c43d0039e2db226c91e0f5b842a",
+    "measurement_executable_sha256": "9c07b9f2a0386a18bb35c3a4de6927067a9cd04e79bb63862aebaa11789a7b61",
+    "portfolio_manifest_sha256": "a4f080e680499b95d2b6b5e635c4bc9fd6678a82f4ce698ea8c6882b37fb3efd",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "economy_content_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+    "stage_ledger_sha256": {
+      "smoke": "9f11ca026007dc2872729d95aa11a83de31f451c2eefb2b069bb9316e2f9322d",
+      "full_short": "28e332fc69f517c2a2b63d1c5c06e7a439d747640572c3c53d6aa48eaf9fd0ff",
+      "deep": "48bf5bf7987a7ca1f6fcdb2e1bb3f3d3e51b4fbe5d7a1355c53adb93c1aae2d0"
+    },
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os": "Microsoft Windows 11 Pro 10.0.26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "semantics": {
+    "measurement_point": "root_pre_row_after_automatic_admission",
+    "graph_free": "The shadow skipped exact destructive envelopes and called no CalcContext::outcomes or transition evaluator. It used the unchanged concrete start, action descriptors, prices, goal masks, pool weights, exclusion groups, and optimistic pool-probability helper.",
+    "weighted_placement": "Each stochastic draw used an upper probability from the optimistic clean pool and blocker envelope.",
+    "essence": "The guaranteed Essence modifier was granted deterministically and ordinary rare-item additions used an optimistic three-draws-per-side envelope.",
+    "fossil": "Forced Fossil modifiers were granted deterministically; added and ordinary pool modifiers used Fossil-weighted optimistic probabilities.",
+    "harvest": "Each slot used the larger optimistic probability from the normal or guaranteed-tag pool.",
+    "bench": "A goal bench was deterministic. A non-goal bench with no represented goal-progress transition used exact first price plus a free terminal continuation.",
+    "class_lower": "Force the exact first legal registry action, then use the graph-free probability MDP. When the MDP had no represented transition, charge only the exact first action and grant a free finish.",
+    "qualification": "The archived exact upper for the selected renewal action plus tolerance had to be strictly below every complete-scope competing action-class lower.",
+    "wall_time": "Machine/compiler-bound and not portable. Evaluator operations and ordinary solver state/row/transition/reforge counts are deterministic."
+  },
+  "controls": {
+    "small_exact_oracle": {
+      "description": "Two deterministic goal benches on a clean empty rare item.",
+      "exact_value": 8.0,
+      "relaxed_start_lower": 8.0,
+      "control_audit_value_policy_parity": true,
+      "no_graph_work_growth": true
+    },
+    "focused_native_checks": 545,
+    "focused_native_failures": 0,
+    "restored_source_focused_native_checks": 532,
+    "restored_source_focused_native_failures": 0,
+    "measurement_source_retained": false,
+    "solver_behavior_changed": false,
+    "mechanics_changed": false,
+    "caps_changed": false,
+    "public_abi_changed": false,
+    "wasm_rebuilt": false
+  },
+  "cases": [
+    {
+      "id": "natural-t1-smoke-dire-pelt-three",
+      "raw_report_sha256": "22fd010dc9341e9d84877ddcd896b9550da5f7087e3bf8c427e3a951b9dc0701",
+      "actual_status": "harness_error",
+      "audit_reason": "no_archived_selected_upper",
+      "root_action_class_count": 104,
+      "relaxed_start_lower": 144.30957894972872,
+      "archived_exact_upper": null,
+      "blocking_action": "bench:HelenaMasterColdResist1_",
+      "blocking_lower": 0.005872,
+      "evaluator_operations": 6727754,
+      "evaluator_wall_ns": 5635471100,
+      "complete_scope": true,
+      "no_graph_work_growth": true,
+      "final": {
+        "discovered_states": 85380,
+        "expanded_states": 1,
+        "reforge_work": 11000000,
+        "cap_hit": "max_reforge_work"
+      }
+    },
+    {
+      "id": "natural-t1-full-three-24920b3b28de",
+      "raw_report_sha256": "073ceacff373f0e5897faf9b65a1960ca3fa087eb85f52b2426c4f177373f763",
+      "actual_status": "refused_state_cap",
+      "audit_reason": "overlapping_competing_lower",
+      "selected_action": "harvest_reforge:lightning",
+      "selected_action_lower": 435.3085077563765,
+      "root_action_class_count": 100,
+      "relaxed_start_lower": 431.4,
+      "archived_exact_upper": 1918267.5087923806,
+      "blocking_action": "bench:HelenaMasterColdResist1_",
+      "blocking_lower": 0.005872,
+      "strict_margin": -1918267.5029203806,
+      "evaluator_operations": 2534560,
+      "evaluator_wall_ns": 1868890100,
+      "complete_scope": true,
+      "no_graph_work_growth": true,
+      "final": {
+        "discovered_states": 200000,
+        "expanded_states": 1,
+        "reforge_work": 10143446,
+        "cap_hit": "max_discovered_states"
+      }
+    },
+    {
+      "id": "natural-t1-deep-three-low-probability-af4719c816f3",
+      "raw_report_sha256": "90b78d5a63729e19e7be665c0a7475f3970d552fab8c719f8ef805bfd7b34d74",
+      "actual_status": "refused_state_cap",
+      "audit_reason": "overlapping_competing_lower",
+      "selected_action": "harvest_reforge:fire",
+      "selected_action_lower": 19.443476386978453,
+      "root_action_class_count": 96,
+      "relaxed_start_lower": 15.980173240335375,
+      "archived_exact_upper": 575497.5226241279,
+      "blocking_action": "bench:HelenaMasterColdResist1_",
+      "blocking_lower": 0.005872,
+      "strict_margin": -575497.5167521279,
+      "evaluator_operations": 124910,
+      "evaluator_wall_ns": 130230100,
+      "complete_scope": true,
+      "no_graph_work_growth": true,
+      "final": {
+        "discovered_states": 200000,
+        "expanded_states": 1,
+        "reforge_work": 8152092,
+        "cap_hit": "max_discovered_states"
+      }
+    },
+    {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "raw_report_sha256": "c3123ab11f40c85f9124fea08469e37456c67e3479ef46ee9d402fbadf79f89c",
+      "actual_status": "refused_state_cap",
+      "audit_reason": "overlapping_competing_lower",
+      "selected_action": "harvest_reforge:attack",
+      "selected_action_lower": 455.7253911264973,
+      "root_action_class_count": 84,
+      "relaxed_start_lower": 431.4,
+      "archived_exact_upper": 193266777.27582425,
+      "blocking_action": "bench:HelenaMasterDexterity1",
+      "blocking_lower": 0.01477,
+      "strict_margin": -193266777.26105425,
+      "evaluator_operations": 5418575,
+      "evaluator_wall_ns": 3547421200,
+      "complete_scope": true,
+      "no_graph_work_growth": true,
+      "final": {
+        "discovered_states": 200000,
+        "expanded_states": 1,
+        "reforge_work": 6119280,
+        "cap_hit": "max_discovered_states"
+      }
+    },
+    {
+      "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+      "raw_report_sha256": "4e5f0ad29449cb27d783d1b45ea2b079c69fc5fb21fd3bad482f4b98a4575bb9",
+      "actual_status": "refused_state_cap",
+      "audit_reason": "overlapping_competing_lower",
+      "selected_action": "harvest_reforge:fire",
+      "selected_action_lower": 443.68236623363634,
+      "root_action_class_count": 90,
+      "relaxed_start_lower": 431.4,
+      "archived_exact_upper": 175126199.48640418,
+      "blocking_action": "bench:HelenaMasterDexterity1",
+      "blocking_lower": 0.01477,
+      "strict_margin": -175126199.47163418,
+      "evaluator_operations": 7483074,
+      "evaluator_wall_ns": 6451945400,
+      "complete_scope": true,
+      "no_graph_work_growth": true,
+      "final": {
+        "discovered_states": 200000,
+        "expanded_states": 1,
+        "reforge_work": 6119280,
+        "cap_hit": "max_discovered_states"
+      }
+    }
+  ]
+}

@@ -573,6 +573,32 @@ Future verified-next-action work must first supply a certified executable
 class upper before broad-row materialization and then separate it from every
 competing class lower.
 
+## Pre-Expansion Probability-Lower Rejection
+
+The subsequent 2026-07-27
+[final report](archive/2026-07-27-pre-expansion-probability-lower-audit/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/pre-expansion-probability-lower-audit-summary.json)
+test the proposed assembly of archived renewal uppers and the current
+optimistic pool-probability machinery.
+
+- A two-bench exact oracle returned control value 8, audited value 8, and
+  relaxed lower 8 with identical graph work.
+- The hard cases exposed 84 to 100 complete legal root-action classes. The
+  graph-free probability MDP produced finite start lowers from 15.98 to 431.4
+  chaos without changing state, row, transition, or reforge-work counters.
+- Every archived renewal upper still overlapped a competing class. The
+  strict margins ranged from approximately -575 thousand to -193 million
+  chaos.
+- The lowest competing classes were non-goal junk-bench-first programs. Since
+  the goal-progress abstraction erases their blocker effect, their complete
+  sound fallback lowers were only `0.005872` or `0.01477` chaos.
+- All four cases reproduced the prior baseline's final deterministic
+  discovered-state, expanded-state, and reforge-work counts.
+
+The probe was restored. No public result, pruning rule, mechanics, cap, ABI,
+WASM, or product behavior changed.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
