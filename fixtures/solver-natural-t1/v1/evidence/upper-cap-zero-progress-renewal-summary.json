@@ -1,0 +1,335 @@
+{
+  "version": "upper-cap-zero-progress-renewal-v1",
+  "status": "completed_no_additional_canonicalization",
+  "branch": "codex/upper-cap-zero-progress-renewal",
+  "starting_commit": "19cd3e11e3a2397c2ad76e2fd8c1ae75273882d2",
+  "recovered_patch_sha256": "3bc21c3fc5cf5cf1b91607cb6c89102eaf7ffd651ed94c602b585bd7143f3501",
+  "qualification": {
+    "primary_case": "natural-t1-full-four-47d8b909aa88",
+    "required_reduction_percent": 10.0,
+    "strict_admission_achieved": null,
+    "strict_admission_status": "not_established_by_finalized_200k_or_time_censored_long_run",
+    "largest_observed_root_reduction_absolute": 4.07634049654007,
+    "largest_observed_root_reduction_percent": 0.00000675546034552249,
+    "qualified": false
+  },
+  "reproduced_200k": {
+    "actual_status": "refused_state_cap",
+    "expectation_met": true,
+    "root": {
+      "lower": 432.40685295343258,
+      "upper": 60341416.98784247
+    },
+    "states": {
+      "discovered": 200000,
+      "expanded": 160,
+      "frontier": 199840
+    },
+    "focused_upper_passes": {
+      "requested": 5,
+      "started": 5,
+      "proper": 5,
+      "rejected": 0
+    },
+    "q_refinement": {
+      "rounds": 2,
+      "states_selected": 144,
+      "rows_reconsidered": 2946,
+      "upper_policy_updates": 0,
+      "completed_rows_recomputed": 0
+    },
+    "actions": {
+      "admitted": 0,
+      "evaluated_non_improving": 0,
+      "unresolved": 1057,
+      "unevaluated": 2815
+    },
+    "work": {
+      "rows": 2228,
+      "transitions": 842726,
+      "reforge": 16746695,
+      "unique_kernels": 14,
+      "carrier_reuse": 1203
+    },
+    "memory": {
+      "live_owned_bytes": 83936943,
+      "peak_owned_bytes": 134297160
+    },
+    "wall_total_ms": 12408.6214,
+    "cap": "max_discovered_states",
+    "transition_hash": "d4346e90f923332c",
+    "policy_hash": "8b2a568f3c9cfd35",
+    "benchmark_binary_sha256": "bf9f3f5be618cc28ecc9710071f72e3c119d673d95182d92606fa22c4a5481b5"
+  },
+  "cap_sensitivity": {
+    "initial_400k": {
+      "status": "harness_error",
+      "discovered": 313642,
+      "expanded": 6688,
+      "rows": 57268,
+      "transitions": 3160605,
+      "reforge": 49443214,
+      "proper_passes": 60,
+      "wall_ms": 264605.7973,
+      "error": "bounded incumbent has a reachable state without an executable action"
+    },
+    "initial_600k": {
+      "status": "harness_error",
+      "discovered": 313642,
+      "expanded": 6688,
+      "rows": 57268,
+      "transitions": 3160605,
+      "reforge": 49443214,
+      "proper_passes": 60,
+      "wall_ms": 243517.5623,
+      "error": "bounded incumbent has a reachable state without an executable action"
+    },
+    "corrected_400k_request": {
+      "status": "time_censored_by_owner",
+      "elapsed_ms": 2197242.1795,
+      "root_lower": 432.40685295343258,
+      "root_upper": 60341412.911501974,
+      "absolute_upper_reduction": 4.07634049654007,
+      "upper_reduction_percent": 0.00000675546034552249,
+      "discovered": 387556,
+      "expanded": 19360,
+      "rows": 118664,
+      "transitions": 3521080,
+      "reforge": 49443214,
+      "live_owned_bytes": 340631496,
+      "peak_owned_bytes": 380246517,
+      "cap_hit": null,
+      "note": "Preserved partial snapshot; this is not reported as a 400000-state cap hit."
+    },
+    "corrected_600k_request": {
+      "status": "not_repeated_by_owner_direction",
+      "reason": "avoid hours in the already diminishing strict-carrier tail"
+    },
+    "optional_800k": {
+      "status": "not_justified"
+    }
+  },
+  "root_successor_coverage_200k": {
+    "rows": 6,
+    "successors": 569976,
+    "total_probability_mass": 5.999999999999596,
+    "non_restart_probability_mass": 5.999999999999596,
+    "fallback_probability_mass": {
+      "local_exact": 0.0,
+      "restart": 0.0,
+      "chaos": 5.999999758046422,
+      "other": 2.4195317357562616e-7
+    },
+    "total_upper_q_contribution": 362048487.32723629,
+    "ranks": [
+      {
+        "rank": 32,
+        "probability_mass": 5.352635556205077,
+        "upper_q_contribution": 322985614.08092278,
+        "contribution_fraction": 0.8921059620088768
+      },
+      {
+        "rank": 128,
+        "probability_mass": 5.369417485794238,
+        "upper_q_contribution": 323998259.49212271,
+        "contribution_fraction": 0.8949029503865265
+      },
+      {
+        "rank": 512,
+        "probability_mass": 5.411376098921418,
+        "upper_q_contribution": 326530101.6630612,
+        "contribution_fraction": 0.9018960528563902
+      },
+      {
+        "rank": 2048,
+        "probability_mass": 5.495569539500234,
+        "upper_q_contribution": 331610453.16866767,
+        "contribution_fraction": 0.9159282935187151
+      }
+    ],
+    "actions": [
+      {
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "successors": 93306,
+        "lower_q": 440.6346504848839,
+        "upper_q": 60341420.46413261
+      },
+      {
+        "action": "harvest_reforge:attack",
+        "successors": 134400,
+        "lower_q": 434.7225946216303,
+        "upper_q": 60341418.63180959
+      },
+      {
+        "action": "harvest_reforge:cold",
+        "successors": 63619,
+        "lower_q": 445.9290532830591,
+        "upper_q": 60341428.5593793
+      },
+      {
+        "action": "harvest_reforge:elemental",
+        "successors": 105872,
+        "lower_q": 479.1076560067963,
+        "upper_q": 60341463.11912154
+      },
+      {
+        "action": "harvest_reforge:mana",
+        "successors": 66241,
+        "lower_q": 520.6537143967446,
+        "upper_q": 60341500.47141495
+      },
+      {
+        "action": "harvest_reforge:physical",
+        "successors": 106538,
+        "lower_q": 445.9307369070396,
+        "upper_q": 60341429.2781554
+      }
+    ]
+  },
+  "zero_progress_audit_200k": {
+    "states": 1031,
+    "ordinary": 1030,
+    "retry_basin": 1,
+    "live_renewable": 1031,
+    "certified_dead_or_irreversible": 0,
+    "no_legal_renewal": 0,
+    "nonrenewal_observer": 1030,
+    "features": {
+      "explicit_affixes": 1028,
+      "fractured": 0,
+      "crafted": 0,
+      "metamod_or_protection": 0,
+      "influenced": 0,
+      "corrupted_or_mirrored": 0,
+      "eldritch": 0,
+      "veiled": 0,
+      "persistent_setup": 0
+    },
+    "observer_actions": {
+      "annul": 1028,
+      "exalt": 1029,
+      "fracture": 909,
+      "harvest_augment_attack": 1029,
+      "harvest_augment_cold": 1029,
+      "harvest_augment_physical": 1029,
+      "scour": 1029,
+      "state_local_automatic_candidates": 1030
+    },
+    "renewal_signatures": [
+      {
+        "hash": "f7daf74de711fd2a",
+        "states": 1030,
+        "safe_states": 1,
+        "retry_basin_states": 1,
+        "explicit_affix_states": 1028
+      },
+      {
+        "hash": "165082ddcef889b8",
+        "states": 1,
+        "safe_states": 0,
+        "retry_basin_states": 0,
+        "explicit_affix_states": 0
+      }
+    ],
+    "canonicalization": {
+      "existing_retry_basin_states": 1,
+      "safe_equivalent_states": 1,
+      "additional_canonicalizable_states": 0,
+      "discarded_explicit_equivalent_states": 0,
+      "merge_applied": false,
+      "reason": "no_new_state_passed_exact_renewal_and_nonrenewal_observer_contract"
+    },
+    "fanout": [
+      {
+        "family": "chaos",
+        "rows": 160,
+        "successor_entries": 21516320,
+        "max_row_fanout": 134477
+      },
+      {
+        "family": "harvest_reforge",
+        "rows": 880,
+        "successor_entries": 77896720,
+        "max_row_fanout": 134400
+      },
+      {
+        "family": "fossil",
+        "rows": 176,
+        "successor_entries": 15330064,
+        "max_row_fanout": 93306
+      },
+      {
+        "family": "add_remove",
+        "rows": 694,
+        "successor_entries": 10652,
+        "max_row_fanout": 68
+      },
+      {
+        "family": "fracture",
+        "rows": 158,
+        "successor_entries": 706,
+        "max_row_fanout": 6
+      },
+      {
+        "family": "restart",
+        "rows": 160,
+        "successor_entries": 160,
+        "max_row_fanout": 1
+      }
+    ]
+  },
+  "retained_changes": {
+    "native_benchmark_only_scheduler": true,
+    "finalization_only_audit": true,
+    "explicit_incumbent_reachability": true,
+    "effective_cap_override_reporting": true,
+    "additional_state_merge": false,
+    "product_default_changed": false,
+    "public_abi_changed": false,
+    "wasm_protocol_changed": false,
+    "strategy_vocabulary_changed": false,
+    "compiled_policy_changed": false,
+    "simulator_10000_run_gate": "not_applicable_no_material_policy_change"
+  },
+  "acceptance": {
+    "status": "passed_after_diagnostic_test_fix",
+    "date": "2026-07-29",
+    "native_build": {
+      "command": "powershell -File scripts/build.ps1",
+      "status": "passed",
+      "configuration": "compiler_fallback_cmake_unavailable"
+    },
+    "native_tests": {
+      "command": "build/engine/poecraft_engine_tests.exe data/compiled/current",
+      "checks": 502270,
+      "failures": 0,
+      "binary_sha256": "f900894b63873ab4acd69568fc05f01b0a291c3869c87f98feb6b722c0772f11",
+      "first_run_note": "The first complete invocation had four new audit-presence assertion failures because finalization incorrectly required incremental-action generation. Removing that diagnostic-only guard was followed by a complete passing rerun."
+    },
+    "benchmark_manifest_validation": {
+      "command": "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus <manifest> --validate-only",
+      "solver_benchmarks_cases": 12,
+      "natural_t1_cases": 146,
+      "status": "passed",
+      "binary_sha256": "116c922ce1d5b6111f16f0697c271094c0aa49d5d2642073dae733a6afc207a0"
+    },
+    "wasm_build": {
+      "command": "powershell -File scripts/build-wasm.ps1",
+      "status": "passed",
+      "mjs_bytes": 35362,
+      "mjs_sha256": "040cfc14077b8c277813d9133a4d071be79368f7002c6794319a3db6ad7c007c",
+      "wasm_bytes": 2561916,
+      "wasm_sha256": "7169a8126ca5a7cc76e6336e52376edca2b6f8b62ff5a1b28b625a62a0e53e53"
+    },
+    "web_tests": {
+      "command": "npm test",
+      "status": "passed",
+      "engine_smoke_checks": 27
+    },
+    "typescript": {
+      "command": "npx tsc --noEmit",
+      "status": "passed"
+    },
+    "rendered_visual_review": "not_run_owner_owned"
+  }
+}

@@ -31,6 +31,94 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
     if (!incremental_action_generation || incremental_envelope_closed) {
         return false;
     }
+    if (options.high_impact_executable_uppers) {
+        const std::size_t carrier_checkpoint =
+            std::min<std::size_t>(
+                options.max_expanded_states,
+                128);
+        if (!incremental_alternative_rows.empty() &&
+            incremental_carriers.size() < carrier_checkpoint) {
+            return false;
+        }
+        const auto schedule_pair =
+            [&](const std::uint32_t state,
+                const std::uint32_t operator_index) {
+                if (incremental_unevaluated_actions != 0) {
+                    --incremental_unevaluated_actions;
+                }
+                expansion_state = state;
+                expansion_operator_indices.assign(1, operator_index);
+                expansion_operator_cursor = 0;
+                expansion_active = true;
+                expansion_prepared = true;
+                expansion_is_incremental_alternative = true;
+                expansion_incremental_resource_limited = false;
+                expansion_appended_row =
+                    std::numeric_limits<std::uint64_t>::max();
+                expansion_states_outside_chaos_support = 0;
+                if (incremental_first_alternative_expanded_states == 0) {
+                    incremental_first_alternative_expanded_states =
+                        expanded_count;
+                }
+                phase = SolvePhase::Expanding;
+            };
+        if (incremental_priority_task_cursor <
+            incremental_priority_tasks.size()) {
+            const IncrementalPriorityTask task =
+                incremental_priority_tasks[
+                    incremental_priority_task_cursor++];
+            schedule_pair(task.state, task.operator_index);
+            return true;
+        }
+        if (!incremental_priority_tasks.empty()) {
+            incremental_priority_tasks.clear();
+            incremental_priority_task_cursor = 0;
+        }
+        /*
+         * Global operator-major state/action scheduling. The first delayed
+         * operator is evaluated at the root, then across every currently
+         * materialized carrier before the next operator is considered.
+         * This exposes multi-action continuation rows without exhausting the
+         * root envelope or expanding an unrelated broad fringe first.
+         */
+        while (incremental_operator_cursor <
+               delayed_operator_indices.size()) {
+            if (incremental_carrier_cursor >=
+                incremental_carriers.size()) {
+                if (incremental_operator_cursor == 0 &&
+                    !incremental_high_impact_continuation_refined) {
+                    incremental_high_impact_continuation_refined = true;
+                    schedule_high_impact_continuation_refinement();
+                    if (incremental_carrier_cursor <
+                        incremental_carriers.size()) {
+                        continue;
+                    }
+                }
+                if (incremental_operator_cursor == 0 &&
+                    incremental_high_impact_wave < 4 &&
+                    prepare_high_impact_policy_wave(
+                        incremental_high_impact_wave)) {
+                    ++incremental_high_impact_wave;
+                    const IncrementalPriorityTask task =
+                        incremental_priority_tasks[
+                            incremental_priority_task_cursor++];
+                    schedule_pair(
+                        task.state, task.operator_index);
+                    return true;
+                }
+                incremental_carrier_cursor = 0;
+                ++incremental_operator_cursor;
+                continue;
+            }
+            const std::uint32_t state =
+                incremental_carriers[incremental_carrier_cursor++];
+            const std::uint32_t operator_index =
+                delayed_operator_indices[incremental_operator_cursor];
+            schedule_pair(state, operator_index);
+            return true;
+        }
+        return false;
+    }
     while (incremental_carrier_cursor < incremental_carriers.size()) {
         const std::uint32_t state =
             incremental_carriers[incremental_carrier_cursor];
@@ -101,6 +189,287 @@ bool SolveWork::Impl::schedule_next_incremental_alternative() {
         return true;
     }
     return false;
+}
+
+bool SolveWork::Impl::begin_incremental_upper_policy_pass() {
+    if (!options.high_impact_executable_uppers ||
+        !incremental_action_generation ||
+        incremental_envelope_closed ||
+        !incremental_upper_policy_dirty ||
+        incremental_upper_policy_pass ||
+        !output_incumbent.has_value()) {
+        return false;
+    }
+    ++incremental_upper_policy_passes_requested;
+    retain_action_reason(
+        "included:high_impact_executable_uppers:policy_pass_requested");
+    incremental_upper_policy_pass = true;
+    incremental_upper_policy_prior_bound =
+        output_incumbent->certified_upper_bound;
+    incremental_upper_temporary_rows.clear();
+    for (const IncrementalAlternativeRow& candidate :
+         incremental_alternative_rows) {
+        if (candidate.status ==
+                IncrementalAlternativeRow::Status::Admitted ||
+            candidate.row_index >= transition_cache->rows.size()) {
+            continue;
+        }
+        SparseRow& row =
+            transition_cache->rows[candidate.row_index];
+        if (!row.admitted) {
+            row.admitted = true;
+            incremental_upper_temporary_rows.push_back(
+                candidate.row_index);
+        }
+    }
+    if (!begin_focused_upper_solve()) {
+        ++incremental_upper_policy_passes_rejected;
+        retain_action_reason(
+            "rejected:high_impact_executable_uppers:policy_pass_seed");
+        incremental_upper_policy_pass = false;
+        for (const std::uint64_t row :
+             incremental_upper_temporary_rows) {
+            transition_cache->rows.at(row).admitted = false;
+        }
+        incremental_upper_temporary_rows.clear();
+        return false;
+    }
+    ++incremental_upper_policy_passes_started;
+    retain_action_reason(
+        "included:high_impact_executable_uppers:policy_pass_started");
+    incremental_upper_policy_dirty = false;
+    phase = SolvePhase::Expanding;
+    return true;
+}
+
+bool SolveWork::Impl::schedule_high_impact_continuation_refinement() {
+    if (!options.high_impact_executable_uppers ||
+        incremental_refinement_active) {
+        return false;
+    }
+    const std::size_t state_count = calc.state_count();
+    std::vector<double> priority(state_count, 0.0);
+    for (std::uint32_t owner = 0;
+         owner < expanded.size(); ++owner) {
+        if (!expanded[owner] ||
+            calc.is_goal_state(calc.state(owner))) {
+            continue;
+        }
+        for (const std::uint64_t row_index :
+             state_row_indices(*transition_cache, owner)) {
+            const SparseRow& row =
+                transition_cache->rows.at(row_index);
+            if (!row.admitted || row_index >= priced_rows.size()) {
+                continue;
+            }
+            const std::uint32_t operator_index =
+                priced_rows[row_index].operator_index;
+            if (operator_index >= calc.operators().size()) continue;
+            const PlannerOperator& planner =
+                calc.operators()[operator_index];
+            bool fracture = planner.automatic_kind ==
+                AutomaticCandidateKind::Fracture;
+            if (!fracture &&
+                planner.kind == PlannerOperatorKind::Primitive &&
+                planner.primitive_action <
+                    calc.registry().actions.size()) {
+                fracture =
+                    calc.registry()
+                        .actions[planner.primitive_action]
+                        .params.type == ActionType::Fracture;
+            }
+            if (!fracture) continue;
+            for (std::uint32_t i = 0;
+                 i < row.transition_count; ++i) {
+                const std::uint64_t offset =
+                    row.transition_offset + i;
+                const std::uint32_t successor =
+                    transition_cache->successors.at(offset);
+                if (successor >= state_count ||
+                    calc.is_goal_state(calc.state(successor)) ||
+                    (successor < expanded.size() &&
+                     expanded[successor])) {
+                    continue;
+                }
+                const AbstractState& state = calc.state(successor);
+                const std::uint32_t preserved =
+                    std::popcount(state.fractured_goal_mask);
+                const std::uint32_t satisfied =
+                    std::popcount(
+                        satisfied_goal_mask_for_state(successor));
+                const double influence =
+                    transition_cache->probabilities.at(offset);
+                priority[successor] += influence *
+                    (1.0 + 1024.0 * preserved +
+                     64.0 * satisfied);
+            }
+        }
+    }
+    std::vector<std::uint32_t> ranked;
+    for (std::uint32_t state = 0;
+         state < state_count; ++state) {
+        if (priority[state] > 0.0) ranked.push_back(state);
+    }
+    std::stable_sort(
+        ranked.begin(), ranked.end(),
+        [&](const std::uint32_t left,
+            const std::uint32_t right) {
+            return priority[left] != priority[right]
+                       ? priority[left] > priority[right]
+                       : left < right;
+        });
+    const std::size_t batch = std::min<std::size_t>(
+        ranked.size(), 16);
+    if (batch == 0) return false;
+    ranked.resize(batch);
+    double selected_influence = 0.0;
+    for (const std::uint32_t state : ranked) {
+        selected_influence += priority[state];
+        retain_incremental_carrier(state);
+    }
+    ++incremental_refinement_rounds;
+    incremental_refinement_states_selected += batch;
+    incremental_refinement_uncertainty += selected_influence;
+    incremental_upper_policy_dirty = true;
+    incremental_reclassify_all = true;
+    return true;
+}
+
+bool SolveWork::Impl::prepare_high_impact_policy_wave(
+        const std::uint32_t wave) {
+    const bool fracture_wave = wave % 2 == 0;
+    const std::uint32_t required_fractures = wave / 2 + 1;
+    std::uint32_t target_operator = kNoId;
+    if (fracture_wave) {
+        for (const PricedOperator& priced : operators) {
+            const PlannerOperator& planner =
+                calc.operators().at(priced.index);
+            if (planner.automatic_kind ==
+                AutomaticCandidateKind::Fracture) {
+                target_operator = priced.index;
+                break;
+            }
+            if (planner.kind == PlannerOperatorKind::Primitive &&
+                planner.primitive_action <
+                    calc.registry().actions.size() &&
+                calc.registry()
+                        .actions[planner.primitive_action]
+                        .params.type == ActionType::Fracture) {
+                target_operator = priced.index;
+                break;
+            }
+        }
+    } else if (!delayed_operator_indices.empty()) {
+        target_operator = delayed_operator_indices.front();
+    }
+    if (target_operator == kNoId) return false;
+
+    std::vector<double> priority(calc.state_count(), 0.0);
+    for (const IncrementalAlternativeRow& source :
+         incremental_alternative_rows) {
+        if (source.row_index >= transition_cache->rows.size() ||
+            source.operator_index >= calc.operators().size()) {
+            continue;
+        }
+        const AbstractState& owner = calc.state(source.state);
+        const std::uint32_t owner_fractures =
+            std::popcount(owner.fractured_goal_mask);
+        const bool source_is_harvest =
+            calc.operators()[source.operator_index].kind ==
+                PlannerOperatorKind::Primitive &&
+            calc.operators()[source.operator_index].primitive_action <
+                calc.registry().actions.size() &&
+            calc.registry()
+                    .actions[calc.operators()[source.operator_index]
+                                 .primitive_action]
+                    .params.type == ActionType::HarvestReforge;
+        const bool source_is_fracture =
+            calc.operators()[source.operator_index].automatic_kind ==
+                AutomaticCandidateKind::Fracture ||
+            (calc.operators()[source.operator_index].kind ==
+                 PlannerOperatorKind::Primitive &&
+             calc.operators()[source.operator_index].primitive_action <
+                 calc.registry().actions.size() &&
+             calc.registry()
+                     .actions[calc.operators()[source.operator_index]
+                                  .primitive_action]
+                     .params.type == ActionType::Fracture);
+        if ((fracture_wave &&
+             (!source_is_harvest ||
+              owner_fractures < required_fractures)) ||
+            (!fracture_wave &&
+             (!source_is_fracture ||
+              owner_fractures + 1 < required_fractures + 1))) {
+            continue;
+        }
+        const SparseRow& row =
+            transition_cache->rows[source.row_index];
+        for (std::uint32_t i = 0;
+             i < row.transition_count; ++i) {
+            const std::uint64_t offset =
+                row.transition_offset + i;
+            const std::uint32_t successor =
+                transition_cache->successors.at(offset);
+            if (successor >= priority.size() ||
+                calc.is_goal_state(calc.state(successor))) {
+                continue;
+            }
+            const AbstractState& state = calc.state(successor);
+            const std::uint32_t fractures =
+                std::popcount(state.fractured_goal_mask);
+            const std::uint32_t satisfied =
+                std::popcount(
+                    satisfied_goal_mask_for_state(successor));
+            if (fracture_wave) {
+                if (fractures < required_fractures ||
+                    satisfied <= fractures) {
+                    continue;
+                }
+                const PlannerOperator& target =
+                    calc.operators()[target_operator];
+                if (target.kind !=
+                        PlannerOperatorKind::Primitive ||
+                    target.primitive_action >=
+                        calc.registry().actions.size() ||
+                    !action_legal(
+                        session,
+                        calc.registry()
+                            .actions[target.primitive_action],
+                        state)) {
+                    continue;
+                }
+            } else if (fractures < required_fractures + 1) {
+                continue;
+            }
+            priority[successor] +=
+                transition_cache->probabilities.at(offset) *
+                (1.0 + 4096.0 * fractures +
+                 256.0 * satisfied);
+        }
+    }
+    std::vector<std::uint32_t> ranked;
+    for (std::uint32_t state = 0;
+         state < priority.size(); ++state) {
+        if (priority[state] > 0.0) ranked.push_back(state);
+    }
+    std::stable_sort(
+        ranked.begin(), ranked.end(),
+        [&](const std::uint32_t left,
+            const std::uint32_t right) {
+            return priority[left] != priority[right]
+                       ? priority[left] > priority[right]
+                       : left < right;
+        });
+    if (ranked.size() > 16) ranked.resize(16);
+    incremental_priority_tasks.clear();
+    incremental_priority_task_cursor = 0;
+    incremental_priority_tasks.reserve(ranked.size());
+    for (const std::uint32_t state : ranked) {
+        incremental_priority_tasks.push_back(
+            {state, target_operator});
+        ++incremental_unevaluated_actions;
+    }
+    return !incremental_priority_tasks.empty();
 }
 
 double SolveWork::Impl::sparse_row_q_for_values(
@@ -518,12 +887,16 @@ bool SolveWork::Impl::schedule_incremental_refinement(
         options.max_expanded_states > expanded_count
             ? options.max_expanded_states - expanded_count
             : 0;
+    const std::uint32_t refinement_batch =
+        options.high_impact_executable_uppers
+            ? 128
+            : std::max<std::uint32_t>(
+                  1024, options.focused_expansion_batch_states);
     const std::size_t batch = std::min<std::size_t>(
         ranked.size(),
         std::min<std::uint32_t>(
             remaining_capacity,
-            std::max<std::uint32_t>(
-                1024, options.focused_expansion_batch_states)));
+            refinement_batch));
     if (batch == 0) return false;
     ranked.resize(batch);
 
@@ -586,10 +959,19 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         upper_values = &output_incumbent->values;
     }
 
+    const bool reclassify_all =
+        !options.high_impact_executable_uppers ||
+        incremental_reclassify_all;
+    incremental_reclassify_all = false;
     for (IncrementalAlternativeRow& candidate :
          incremental_alternative_rows) {
         if (candidate.status ==
             IncrementalAlternativeRow::Status::Admitted) {
+            continue;
+        }
+        if (!reclassify_all &&
+            candidate.status ==
+                IncrementalAlternativeRow::Status::Unresolved) {
             continue;
         }
         candidate.status =
@@ -701,7 +1083,18 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
 
 void SolveWork::Impl::restart_incremental_optimization() {
     ++incremental_reoptimizations;
-    refresh_incremental_upper_incumbent();
+    if (options.high_impact_executable_uppers) {
+        /*
+         * The experimental path publishes an upper only after the shared
+         * fixed-policy evaluator has proved the whole selected policy
+         * proper. The legacy local super-solution refresh remains unchanged
+         * for default solves.
+         */
+        incremental_upper_policy_dirty = true;
+        incremental_reclassify_all = true;
+    } else {
+        refresh_incremental_upper_incumbent();
+    }
     focused_bound_proved = false;
     focused_closure_proved = false;
     policy_initialized = false;
@@ -748,6 +1141,16 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
         incremental_rows_reconsidered;
     diagnostics.incremental_upper_policy_updates =
         incremental_upper_policy_updates;
+    diagnostics.incremental_upper_policy_passes_requested =
+        incremental_upper_policy_passes_requested;
+    diagnostics.incremental_upper_policy_passes_started =
+        incremental_upper_policy_passes_started;
+    diagnostics.incremental_upper_policy_passes_proper =
+        incremental_upper_policy_passes_proper;
+    diagnostics.incremental_upper_policy_passes_rejected =
+        incremental_upper_policy_passes_rejected;
+    diagnostics.incremental_upper_policy_last_failure =
+        incremental_upper_policy_last_failure;
     diagnostics.incremental_refinement_uncertainty =
         incremental_refinement_uncertainty;
     diagnostics.incremental_action_witnesses.clear();
@@ -843,8 +1246,7 @@ void SolveWork::Impl::finalize_upper_policy_provenance() {
         if (op == kNoId || op >= calc.operators().size()) return false;
         const std::string& id = calc.operators()[op].id;
         return id.find("fossil") != std::string::npos ||
-               id.find("harvest") != std::string::npos ||
-               id.find("essence") != std::string::npos;
+               id.find("harvest") != std::string::npos;
     };
     const auto better_candidate =
         [&](const Candidate& left, const Candidate& right) {

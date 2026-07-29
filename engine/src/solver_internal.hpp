@@ -1633,6 +1633,9 @@ struct SolveOptions {
     bool strict_states = false;
     bool kernel_reuse = true;
     bool goal_progress_gated_reforges = false;
+    /* Native benchmark investigation only; not exposed by the public ABI or
+     * product bindings. */
+    bool high_impact_executable_uppers = false;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
 };
@@ -1846,6 +1849,11 @@ struct SolveDiagnostics {
     std::uint64_t incremental_refinement_states_selected = 0;
     std::uint64_t incremental_rows_reconsidered = 0;
     std::uint64_t incremental_upper_policy_updates = 0;
+    std::uint64_t incremental_upper_policy_passes_requested = 0;
+    std::uint64_t incremental_upper_policy_passes_started = 0;
+    std::uint64_t incremental_upper_policy_passes_proper = 0;
+    std::uint64_t incremental_upper_policy_passes_rejected = 0;
+    std::string incremental_upper_policy_last_failure;
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
@@ -1860,6 +1868,9 @@ struct SolveDiagnostics {
     std::uint64_t upper_policy_provenance_samples_omitted = 0;
     std::uint64_t upper_policy_provenance_candidate_count = 0;
     std::uint64_t upper_policy_provenance_retained_bytes = 0;
+    /* Finalization-only aggregate for the run-local cap/renewal
+     * investigation. Empty for ordinary product solves. */
+    std::string upper_cap_zero_progress_audit_json;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;
     std::uint64_t solve_setup_ns = 0;

@@ -474,6 +474,30 @@ progress-preserving policy search. Proper compatible candidates produced no
 strict admission or 10% completed-row reduction, so every experimental
 scheduler, focused-upper lifecycle, and interface change was restored.
 
+The subsequent
+[upper-cap and zero-progress renewal audit](../archive/2026-07-29-upper-cap-zero-progress-renewal/report.md)
+recovered that strongest scheduler behind a private native-benchmark flag.
+The 200,000-state result reproduced exactly, while a corrected long run
+reached 387,556 states and lowered the 60.3-million executable upper by only
+`4.07634` before an owner-approved time-censored stop. The diagnostic remains
+default-disabled and has no public option or product caller.
+
+Its finalization-only audit distinguishes exact renewal equivalence from
+solver-state equivalence. In the frozen full-four case, 1,030 states shared
+the main renewal signature, but legal Annul, Exalt, Fracture, Harvest Augment,
+Scour, and state-local automatic candidates observed the ordinary carriers.
+Only the existing gated retry basin passed the combined renewal and
+non-renewal-observer contract; no new merge was applied. Same-carrier renewal
+continues to pay its crafting currency without a base purchase. Mandatory
+Restart remains reserved for a certified dead carrier, and optional economic
+Restart remains an ordinary priced action.
+
+The recovered focused-upper incumbent now captures an explicit policy-walk
+reachability mask. Finalization validates only those selected-policy states,
+not every unrelated state interned by diagnostic graph growth. Benchmark
+`--max-discovered-states` overrides are also emitted as effective run
+overrides and used by cap checks and proximity.
+
 The current private focused scheduler admits at most 64 members per fringe
 class, 256 states per global round, and 64 lower-bound states before upper-side
 admission. These are implementation defaults, not public caps. A fresh

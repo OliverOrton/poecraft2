@@ -5,6 +5,7 @@
 #include "poecraft/solver.h"
 
 #include "json.hpp"
+#include "solver_diagnostic_options.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -52,6 +53,7 @@ struct Arguments {
     bool skip_verification = false;
     bool emit_progress = false;
     bool goal_progress_gated_reforges = false;
+    std::uint32_t max_discovered_states_override = 0;
     std::uint64_t verification_runs = 0;
     std::uint64_t verification_seed = 0;
     std::uint32_t verification_chunk_runs = 32;
@@ -161,6 +163,7 @@ struct CaseResult {
     double time_to_first_incumbent_ms = 0.0;
     std::vector<std::pair<double, double>> absolute_gap_milestones;
     std::vector<std::pair<double, double>> relative_gap_milestones;
+    std::uint32_t max_discovered_states_override = 0;
     std::vector<std::pair<std::string, bool>> cap_checks;
     std::vector<std::string> errors;
 };
@@ -706,13 +709,17 @@ const Value* nested_member(
 void add_cap_check(
     CaseResult& report, const Value& telemetry,
     std::initializer_list<const char*> metric_path, const Value& caps,
-    const char* cap_name) {
+    const char* cap_name, const double cap_override = 0.0) {
     const Value* metric = nested_member(telemetry, metric_path);
     const Value* cap = optional(caps, cap_name, Type::Number);
-    if (metric == nullptr || metric->type != Type::Number || cap == nullptr) {
+    if (metric == nullptr || metric->type != Type::Number ||
+        (cap == nullptr && cap_override <= 0.0)) {
         return;
     }
-    report.cap_checks.emplace_back(cap_name, metric->number <= cap->number);
+    report.cap_checks.emplace_back(
+        cap_name,
+        metric->number <=
+            (cap_override > 0.0 ? cap_override : cap->number));
 }
 
 void evaluate_cap_checks(const Value& specification, CaseResult& report) {
@@ -725,7 +732,8 @@ void evaluate_cap_checks(const Value& specification, CaseResult& report) {
             report.telemetry_json.data(), report.telemetry_json.size()).parse();
         const Value& caps = required(specification, "caps", Type::Object);
         add_cap_check(report, telemetry, {"states", "discovered"}, caps,
-                      "max_discovered_states");
+                      "max_discovered_states",
+                      report.max_discovered_states_override);
         add_cap_check(report, telemetry, {"states", "expanded"}, caps,
                       "max_expanded_states");
         add_cap_check(report, telemetry, {"work", "state_action_rows"}, caps,
@@ -1041,11 +1049,14 @@ CaseResult run_case(
     const std::uint32_t verification_chunk_runs,
     const double verification_time_limit_seconds,
     const bool goal_progress_gated_reforges,
+    const std::uint32_t max_discovered_states_override,
     const bool exact_strategy_evaluation,
     const double exact_strategy_evaluation_time_limit_seconds,
     const std::function<void(const CaseResult&)>& checkpoint) {
     CaseResult report;
     report.verification_skipped = skip_verification;
+    report.max_discovered_states_override =
+        max_discovered_states_override;
     const auto total_begin = Clock::now();
     report.working_set_before = process_working_set();
     const std::string backend =
@@ -1083,6 +1094,12 @@ CaseResult run_case(
         solve_options.max_sweeps = optional_u32(caps, "max_sweeps", 100000);
         solve_options.max_discovered_states = optional_u32(
             caps, "max_discovered_states", solve_options.max_states);
+        if (max_discovered_states_override != 0) {
+            solve_options.max_states =
+                max_discovered_states_override;
+            solve_options.max_discovered_states =
+                max_discovered_states_override;
+        }
         solve_options.max_expanded_states = optional_u32(
             caps, "max_expanded_states", solve_options.max_states);
         solve_options.max_state_action_rows = optional_u64(
@@ -1125,6 +1142,12 @@ CaseResult run_case(
         if (goal_progress_gated_reforges) {
             solve_options.solver_flags |=
                 PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES;
+        }
+        if (optional_bool(
+                caps, "high_impact_executable_uppers", false)) {
+            solve_options.solver_flags |=
+                poecraft::solver::
+                    kHighImpactExecutableUppersDiagnosticFlag;
         }
         const std::uint32_t work_items =
             optional_u32(caps, "solve_step_work_items", 1);
@@ -1858,6 +1881,11 @@ void append_case_report(
         first_input = false;
         out << escape_json(key) << ':' << json_of(*value);
     }
+    if (result.max_discovered_states_override != 0) {
+        if (!first_input) out << ',';
+        out << "\"run_overrides\":{\"max_discovered_states\":"
+            << result.max_discovered_states_override << '}';
+    }
     out << "},\n";
     out << "  \"phase_wall_ms\":{\"registry_layout\":";
     append_nullable_number(out, measured, result.registry_layout_ms);
@@ -1959,6 +1987,14 @@ void append_case_report(
     const Value* caps_for_trace = specification.find("caps");
     const auto append_cap_ratio = [&](const char* name,
                                       const std::uint64_t current) {
+        if (std::string_view(name) == "max_discovered_states" &&
+            result.max_discovered_states_override != 0) {
+            append_nullable_number(
+                out, true,
+                static_cast<double>(current) /
+                    result.max_discovered_states_override);
+            return;
+        }
         if (caps_for_trace == nullptr ||
             caps_for_trace->type != Type::Object) {
             out << "null";
@@ -2312,6 +2348,15 @@ Arguments parse_arguments(int argc, char** argv) {
         else if (argument == "--goal-progress-gated-reforges") {
             args.goal_progress_gated_reforges = true;
         }
+        else if (argument == "--max-discovered-states") {
+            args.max_discovered_states_override =
+                static_cast<std::uint32_t>(
+                    std::stoul(value("--max-discovered-states")));
+            if (args.max_discovered_states_override == 0) {
+                throw std::runtime_error(
+                    "--max-discovered-states must be positive");
+            }
+        }
         else if (argument == "--verification-runs") {
             args.verification_runs = std::stoull(value("--verification-runs"));
         }
@@ -2513,6 +2558,7 @@ int main(int argc, char** argv) {
                     args.verification_chunk_runs,
                     args.verification_time_limit_seconds,
                     args.goal_progress_gated_reforges,
+                    args.max_discovered_states_override,
                     args.exact_strategy_evaluation,
                     args.exact_strategy_evaluation_time_limit_seconds,
                     checkpoint);

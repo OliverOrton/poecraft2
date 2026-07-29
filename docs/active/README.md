@@ -1,15 +1,15 @@
 # Active Work
 
-**Status: one implementation plan is active.**
+**Status: no implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Upper-Cap Sensitivity And Zero-Progress Live Renewal](upper-cap-zero-progress-renewal.md).
-It recovers the strongest rejected high-impact scheduler, measures discovered-
-state scaling through 600,000 states, audits zero-goal-progress carriers, and
-retains live-renewal canonicalization only where exact renewal authority and
-the filtered action set prove equivalence.
+The completed
+[Upper-Cap Sensitivity And Zero-Progress Renewal Audit](../archive/2026-07-29-upper-cap-zero-progress-renewal/README.md)
+reproduced the rejected scheduler, measured its higher-cap tail, and found no
+sound additional live-renewal merge beyond the existing retry basin.
+
+Oliver must select the next implementation boundary before work resumes.
 
 Historical input is the rejected
 [High-Impact Partial-State Executable Upper Policies](../archive/2026-07-29-high-impact-executable-uppers/README.md)

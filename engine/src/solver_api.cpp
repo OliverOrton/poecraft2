@@ -18,6 +18,7 @@
 #include "handles_internal.hpp"
 #include "json.hpp"
 #include "solver_internal.hpp"
+#include "solver_diagnostic_options.hpp"
 
 /*
  * C ABI for the solver/calculation engine. Thin translation layer: goal
@@ -623,6 +624,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.goal_progress_gated_reforges =
             (options->solver_flags &
              PC_SOLVER_FLAG_GOAL_PROGRESS_GATED_REFORGES) != 0;
+        value.high_impact_executable_uppers =
+            (options->solver_flags &
+             solver::kHighImpactExecutableUppersDiagnosticFlag) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {

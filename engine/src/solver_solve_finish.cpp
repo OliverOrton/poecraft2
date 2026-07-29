@@ -68,9 +68,14 @@ SolveResult SolveWork::Impl::finish() {
          * SolveDiagnostics until final accounting is frozen.
          */
         finalize_upper_policy_provenance();
+        finalize_upper_cap_zero_progress_audit();
         std::vector<std::string> upper_policy_provenance_samples =
             std::move(
                 result.diagnostics.upper_policy_provenance_samples);
+        std::string upper_cap_zero_progress_audit_json =
+            std::move(
+                result.diagnostics
+                    .upper_cap_zero_progress_audit_json);
         const std::uint64_t
             upper_policy_provenance_samples_omitted =
                 result.diagnostics
@@ -86,6 +91,7 @@ SolveResult SolveWork::Impl::finish() {
         result.diagnostics.upper_policy_provenance_samples_omitted = 0;
         result.diagnostics.upper_policy_provenance_candidate_count = 0;
         result.diagnostics.upper_policy_provenance_retained_bytes = 0;
+        result.diagnostics.upper_cap_zero_progress_audit_json.clear();
 
         const bool sweep_cap_hit =
             sweeps >= options.max_sweeps && !optimization_converged();
@@ -740,6 +746,8 @@ SolveResult SolveWork::Impl::finish() {
             upper_policy_provenance_candidate_count;
         result.diagnostics.upper_policy_provenance_retained_bytes =
             upper_policy_provenance_retained_bytes;
+        result.diagnostics.upper_cap_zero_progress_audit_json =
+            std::move(upper_cap_zero_progress_audit_json);
         consumed = true;
         return std::move(result);
     }

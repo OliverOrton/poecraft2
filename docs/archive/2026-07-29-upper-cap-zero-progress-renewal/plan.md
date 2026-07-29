@@ -84,7 +84,7 @@ The implementation qualifies its executable-upper work only through either:
    Fossil or Harvest row through one compatible proper executable policy.
 
 The frozen root and qualifying upper-Q values remain those in the
-[preceding plan](../archive/2026-07-29-high-impact-executable-uppers/plan.md).
+[preceding plan](../2026-07-29-high-impact-executable-uppers/plan.md).
 Movement below 10% is measured evidence, not qualification.
 
 An independently sound and measurable live-renewal optimization may be

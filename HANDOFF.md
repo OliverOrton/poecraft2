@@ -1,25 +1,20 @@
 # Session Handoff
 
-**Status: active implementation boundary.**
+**Status: no active implementation boundary.**
 
-Active plan:
-[Upper-Cap Sensitivity And Zero-Progress Live Renewal](docs/active/upper-cap-zero-progress-renewal.md).
+The upper-cap and zero-progress renewal investigation is complete and archived
+at
+[Upper-Cap Sensitivity And Zero-Progress Renewal Audit](docs/archive/2026-07-29-upper-cap-zero-progress-renewal/README.md).
 
-Starting source is clean commit
-`19cd3e11e3a2397c2ad76e2fd8c1ae75273882d2` on branch
-`codex/upper-cap-zero-progress-renewal`.
+The recovered 200,000-state candidate reproduced exactly. A corrected long
+run reached 387,556 discovered states before an owner-approved time-censored
+stop and reduced the 60.3-million executable upper by only `4.07634`
+(`0.00000676%`). The zero-progress audit found no sound additional
+canonicalization: retained non-renewal actions observed all 1,030 ordinary
+carriers, so only the existing gated retry basin passed the complete contract.
 
-The immediate boundary is Phase 1: preserve and recover the rejected
-high-impact scheduler patch, reconstruct only its run-local opt-in plumbing,
-and reproduce the 200,000-state candidate before changing scheduling or
-renewal identity. Then run the fixed 200,000/400,000/600,000 cap matrix and a
-complete zero-goal-progress audit.
+The recovered scheduler and audit remain native-benchmark-only diagnostics.
+Product defaults, the public ABI and bindings, strategy vocabulary, compiled
+policies, and unrestricted solving remain unchanged.
 
-Do not treat a live zero-progress carrier as Restart. Retain canonical
-live-renewal sharing only when exact renewal signatures, legality, resources,
-fallback/compilation behavior, and the remaining filtered non-renewal actions
-prove discarded affixes unobservable. Unrestricted all-actions behavior and
-product default caps remain unchanged.
-
-The recovered patch SHA-256 is
-`3bc21c3fc5cf5cf1b91607cb6c89102eaf7ffd651ed94c602b585bd7143f3501`.
+Oliver must choose the next chunk before implementation resumes.

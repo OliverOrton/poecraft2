@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-07-29
 
+- [Upper-Cap Sensitivity And Zero-Progress Renewal Audit](2026-07-29-upper-cap-zero-progress-renewal/README.md) —
+  reproduced the rejected scheduler, measured a real but microscopic
+  `4.07634` upper reduction at a time-censored 387,556 states, and rejected
+  additional live-renewal canonicalization because retained non-renewal
+  actions observed every ordinary candidate.
+
 - [High-Impact Partial-State Executable Upper Policies](2026-07-29-high-impact-executable-uppers/README.md) —
   rejected after proper progress-preserving state/action policy waves produced
   no qualifying Fossil/Harvest upper-Q reduction. Experimental behavior was

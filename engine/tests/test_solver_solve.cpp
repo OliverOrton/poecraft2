@@ -6,6 +6,7 @@
 #include "poecraft/item_state.h"
 
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cmath>
 #include <cstdio>
@@ -835,6 +836,41 @@ void run_primitive_destructive_renewal_upper_tests() {
         retry_state, chaos, retry_signature));
     PC_CHECK(start_signature == retry_signature);
 
+    /*
+     * Ordinary zero-progress carriers remain strict states, but disposable
+     * explicit junk is invisible to the exact same-carrier Chaos renewal
+     * authority. Both rows therefore use the same renewal signature and the
+     * same virtual retry representative without becoming Restart.
+     */
+    pc_item_state junk_left = start;
+    pc_item_state junk_right = start;
+    place(&junk_left, PC_SIDE_PREFIX, 2, 10);
+    place(&junk_right, PC_SIDE_SUFFIX, 6, 21);
+    const std::uint32_t junk_left_state =
+        calc.intern_item(junk_left);
+    const std::uint32_t junk_right_state =
+        calc.intern_item(junk_right);
+    PC_CHECK(junk_left_state != junk_right_state);
+    std::vector<std::uint64_t> junk_left_signature;
+    std::vector<std::uint64_t> junk_right_signature;
+    PC_CHECK(calc.exact_reforge_kernel_signature(
+        junk_left_state, chaos, junk_left_signature));
+    PC_CHECK(calc.exact_reforge_kernel_signature(
+        junk_right_state, chaos, junk_right_signature));
+    PC_CHECK(junk_left_signature == start_signature);
+    PC_CHECK(junk_right_signature == start_signature);
+    const OutcomeDistribution& gated_junk_left =
+        calc.outcomes(junk_left_state, chaos, true);
+    const OutcomeDistribution& gated_junk_right =
+        calc.outcomes(junk_right_state, chaos, true);
+    PC_CHECK(gated_junk_left.gated_retry_state != kNoId);
+    PC_CHECK(
+        gated_junk_left.gated_retry_state ==
+        gated_junk_right.gated_retry_state);
+    PC_CHECK(
+        calc.state(gated_junk_left.gated_retry_state)
+                .goal_progress_retry_basin != 0);
+
     pc_item_state fractured = start;
     place(&fractured, PC_SIDE_PREFIX, 3, 12);
     fractured.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
@@ -842,6 +878,107 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(calc.exact_reforge_kernel_signature(
         calc.intern_item(fractured), chaos, fractured_signature));
     PC_CHECK(fractured_signature != start_signature);
+
+    /*
+     * Persistent carrier features never enter the retry basin merely because
+     * they currently satisfy no goal. A crafted affix also remains observable
+     * by the retained non-renewal cleanup action even when Chaos would discard
+     * it, while Fracture, protection, influence, corruption, and Eldritch
+     * state retain distinct strict identities.
+     */
+    auto feature_session = make_solve_session();
+    const std::shared_ptr<DataImpl> feature_data =
+        std::const_pointer_cast<DataImpl>(feature_session->data);
+    feature_data->metamod_prefixes_locked_code = 3;
+    feature_session->metamod_type[4] =
+        feature_data->metamod_prefixes_locked_code;
+    ActionRegistry feature_registry =
+        build_action_registry(*feature_session);
+    const std::uint32_t feature_chaos =
+        feature_registry.index_by_id.at("chaos");
+    const std::uint32_t remove_crafted =
+        feature_registry.index_by_id.at(
+            "remove_crafted_modifiers");
+    CalcContext feature_calc(
+        feature_session, goal, feature_registry,
+        {feature_chaos, remove_crafted});
+    pc_item_state feature_clean = start;
+    pc_item_state feature_crafted = start;
+    place(&feature_crafted, PC_SIDE_PREFIX, 2, 10);
+    feature_crafted.prefixes[0].flags |= PC_MOD_SLOT_CRAFTED;
+    pc_item_state feature_protected = start;
+    place(&feature_protected, PC_SIDE_PREFIX, 4, 13);
+    feature_protected.prefixes[0].flags |= PC_MOD_SLOT_CRAFTED;
+    pc_item_state feature_influenced = start;
+    feature_influenced.generic_influence_bits = 1;
+    pc_item_state feature_corrupted = start;
+    feature_corrupted.item_flags = PC_ITEM_CORRUPTED;
+    pc_item_state feature_eldritch = start;
+    feature_eldritch.searing_exarch_tier = 2;
+    feature_eldritch.eater_of_worlds_tier = 1;
+    const std::array<pc_item_state, 6> feature_items{
+        feature_clean, feature_crafted, feature_protected,
+        feature_influenced, feature_corrupted, feature_eldritch};
+    std::array<std::uint32_t, 6> feature_states{};
+    for (std::size_t i = 0; i < feature_items.size(); ++i) {
+        feature_states[i] =
+            feature_calc.intern_item(feature_items[i]);
+        PC_CHECK(
+            feature_calc.state(feature_states[i])
+                    .goal_progress_retry_basin == 0);
+        if (i != 0) {
+            PC_CHECK(feature_states[i] != feature_states[0]);
+        }
+    }
+    PC_CHECK(
+        (feature_calc.state(feature_states[1]).flags &
+         kFlagCraftedMod) != 0);
+    PC_CHECK(
+        (feature_calc.state(feature_states[2]).flags &
+         kProtectionFlags) != 0);
+    PC_CHECK(
+        (feature_calc.state(feature_states[3]).flags &
+         kFlagInfluenced) != 0);
+    PC_CHECK(
+        (feature_calc.state(feature_states[4]).flags &
+         kFlagCorrupted) != 0);
+    PC_CHECK(
+        (feature_calc.state(feature_states[5]).flags &
+         kFlagEldritchImplicit) != 0);
+    PC_CHECK(action_legal(
+        *feature_session,
+        feature_registry.actions.at(remove_crafted),
+        feature_calc.state(feature_states[1])));
+    PC_CHECK(!action_legal(
+        *feature_session,
+        feature_registry.actions.at(remove_crafted),
+        feature_calc.state(feature_states[0])));
+
+    /*
+     * One fractured junk prefix makes a three-prefix goal infeasible under
+     * every same-carrier renewal in this toy. Restart is the executable
+     * dead-carrier fallback; it is not the live retry representative.
+     */
+    GoalSpec dead_goal;
+    dead_goal.rarity = PC_RARITY_RARE;
+    for (const std::uint32_t family : {100u, 102u, 103u}) {
+        GoalSlot slot;
+        slot.family_id = family;
+        slot.min_tier = 1;
+        dead_goal.slots.push_back(slot);
+    }
+    CalcContext dead_calc(
+        session, dead_goal, registry, {alchemy, chaos, restart});
+    pc_item_state dead_carrier = start;
+    place(&dead_carrier, PC_SIDE_PREFIX, 2, 10);
+    dead_carrier.prefixes[0].flags |= PC_MOD_SLOT_FRACTURED;
+    const SolveResult dead_result = solve(
+        dead_calc, dead_carrier,
+        {{"alchemy", 0.5}, {"chaos", 1.0}, {"base", 1.0}});
+    PC_CHECK(dead_result.converged);
+    PC_CHECK(
+        dead_result.policy[dead_result.start_state].index ==
+        restart);
 
     SolveOptions options;
     options.max_expanded_states = 2;
@@ -1429,7 +1566,9 @@ void run_goal_progress_gated_reforge_tests() {
     SolveOptions restricted_options;
     restricted_options.goal_progress_gated_reforges = true;
     const std::unordered_map<std::string, double> restricted_prices{
-        {"chaos", 1.0}, {"bench:gated_goal", 0.001}};
+        {"chaos", 1.0},
+        {"bench:gated_goal", 0.001},
+        {"base", 1000000000.0}};
     const SolveResult restricted = solve(
         restricted_calc, full_start, restricted_prices,
         restricted_options);
@@ -1437,6 +1576,14 @@ void run_goal_progress_gated_reforge_tests() {
     PC_CHECK(restricted.policy_available);
     PC_CHECK(restricted.diagnostics.solution_scope ==
              "exact_within_zero_progress_reroll_restriction");
+    const double restricted_success_probability =
+        restricted_calc.outcomes(
+            restricted_start_state, restricted_chaos, true)
+            .gated_terminal_probability;
+    PC_CHECK(restricted_success_probability > 0.0);
+    PC_CHECK(near(
+        restricted.values[restricted.start_state],
+        1.0 / restricted_success_probability, 1e-9));
     std::uint32_t basin_state = kNoId;
     for (std::uint32_t state = 0;
          state < restricted.policy_reachable.size(); ++state) {
@@ -1520,8 +1667,18 @@ void run_goal_progress_gated_reforge_tests() {
     CalcContext early_renewal_calc(
         restricted_session, restricted_goal, restricted_registry,
         {restricted_chaos, bench_index});
+    pc_item_state observer_rare;
+    pc_item_clear(&observer_rare);
+    observer_rare.rarity = PC_RARITY_RARE;
+    const std::uint32_t observer_state =
+        early_renewal_calc.intern_item(observer_rare);
+    PC_CHECK(action_legal(
+        *restricted_session,
+        restricted_registry.actions.at(bench_index),
+        early_renewal_calc.state(observer_state)));
     SolveOptions early_renewal_options;
     early_renewal_options.goal_progress_gated_reforges = true;
+    early_renewal_options.high_impact_executable_uppers = true;
     early_renewal_options.max_expanded_states = 1;
     early_renewal_options.state_certificate_control = false;
     const SolveResult early_renewal = solve(
@@ -1552,6 +1709,8 @@ void run_goal_progress_gated_reforge_tests() {
             .gated_root_renewal_validated_non_goal_states ==
         early_renewal.primitive_renewal_witness
             .validated_non_goal_states);
+    PC_CHECK(observer_state < early_renewal.policy_reachable.size());
+    PC_CHECK(!early_renewal.policy_reachable[observer_state]);
     std::uint64_t reachable_non_goal = 0;
     for (std::uint32_t state = 0;
          state < early_renewal.policy_reachable.size(); ++state) {
@@ -1568,6 +1727,29 @@ void run_goal_progress_gated_reforge_tests() {
         reachable_non_goal ==
         early_renewal.primitive_renewal_witness
             .validated_non_goal_states);
+    const std::string early_telemetry =
+        serialize_solver_telemetry(
+            early_renewal_calc, &early_renewal, nullptr,
+            std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(early_telemetry));
+    PC_CHECK(
+        early_telemetry.find(
+            "\"upper_cap_zero_progress_audit\":{"
+            "\"version\":1,\"observational\":true") !=
+        std::string::npos);
+    PC_CHECK(
+        early_telemetry.find(
+            "\"canonicalization\":{\"existing_retry_basin_states\":1") !=
+        std::string::npos);
+    PC_CHECK(
+        early_telemetry.find(
+            "\"merge_applied\":false") !=
+        std::string::npos);
+    PC_CHECK(
+        early_telemetry.find(
+            "\"nonrenewal_observer_actions\":[{"
+            "\"action\":\"bench:gated_goal\"") !=
+        std::string::npos);
 
     CalcContext interrupted_row_calc(
         restricted_session, restricted_goal, restricted_registry,

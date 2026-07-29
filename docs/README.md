@@ -28,12 +28,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active implementation boundary is
-[Upper-Cap Sensitivity And Zero-Progress Live Renewal](active/upper-cap-zero-progress-renewal.md).
-It recovers the preceding candidate, measures the frozen full-four case at
-200,000/400,000/600,000 discovered states, audits exact zero-progress carrier
-identity, and permits no live-renewal merge without action-level equivalence.
-[HANDOFF](../HANDOFF.md) records the exact boundary.
+There is no active implementation boundary. Oliver must choose the next chunk
+before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
+boundary.
+
+The completed
+[Upper-Cap Sensitivity And Zero-Progress Renewal Audit](archive/2026-07-29-upper-cap-zero-progress-renewal/README.md)
+reproduced the rejected 200,000-state scheduler exactly. A corrected long run
+found a real but microscopic `4.07634` upper reduction at 387,556 states, and
+the exact audit rejected every additional ordinary carrier merge because
+retained non-renewal actions observed them. Only the existing retry basin
+passes the full renewal contract.
 
 The preceding rejected
 [High-Impact Partial-State Executable Upper Policies](archive/2026-07-29-high-impact-executable-uppers/README.md)

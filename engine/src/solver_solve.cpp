@@ -192,6 +192,10 @@ SolveWork::Impl::Impl(
         }
         incremental_action_generation =
             options.goal_progress_gated_reforges;
+        if (options.high_impact_executable_uppers) {
+            retain_action_reason(
+                "included:high_impact_executable_uppers:enabled");
+        }
         if (incremental_action_generation) {
             std::vector<std::uint32_t> anchors;
             anchors.reserve(static_operator_indices.size());
@@ -221,19 +225,30 @@ SolveWork::Impl::Impl(
                     return calc.registry().actions.at(
                         planner.primitive_action).params.type;
                 };
-                const auto first_fossil = std::find_if(
-                    delayed_operator_indices.begin(),
-                    delayed_operator_indices.end(),
-                    [&](const std::uint32_t index) {
-                        return action_type(index) == ActionType::Fossil;
-                    });
+                const auto first_fossil =
+                    options.high_impact_executable_uppers
+                        ? delayed_operator_indices.end()
+                        : std::find_if(
+                              delayed_operator_indices.begin(),
+                              delayed_operator_indices.end(),
+                              [&](const std::uint32_t index) {
+                                  return action_type(index) ==
+                                         ActionType::Fossil;
+                              });
                 if (first_fossil != delayed_operator_indices.end()) {
                     ordered.push_back(*first_fossil);
                 }
-                for (const ActionType family :
-                     {ActionType::HarvestReforge,
-                      ActionType::Essence,
-                      ActionType::Fossil}) {
+                const std::array<ActionType, 3> family_order =
+                    options.high_impact_executable_uppers
+                        ? std::array<ActionType, 3>{
+                              ActionType::HarvestReforge,
+                              ActionType::Essence,
+                              ActionType::Fossil}
+                        : std::array<ActionType, 3>{
+                              ActionType::HarvestReforge,
+                              ActionType::Essence,
+                              ActionType::Fossil};
+                for (const ActionType family : family_order) {
                     for (const std::uint32_t index :
                          delayed_operator_indices) {
                         if (index == (first_fossil ==

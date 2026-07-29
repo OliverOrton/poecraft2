@@ -517,6 +517,19 @@ struct SolveWork::Impl {
     bool incremental_action_generation = false;
     bool incremental_envelope_closed = false;
     bool incremental_restricted_values_ready = false;
+    bool incremental_reclassify_all = false;
+    bool incremental_high_impact_continuation_refined = false;
+    struct IncrementalPriorityTask {
+        std::uint32_t state = kNoId;
+        std::uint32_t operator_index = kNoId;
+    };
+    std::vector<IncrementalPriorityTask> incremental_priority_tasks;
+    std::size_t incremental_priority_task_cursor = 0;
+    std::uint32_t incremental_high_impact_wave = 0;
+    bool incremental_upper_policy_dirty = true;
+    bool incremental_upper_policy_pass = false;
+    double incremental_upper_policy_prior_bound = kInfinity;
+    std::vector<std::uint64_t> incremental_upper_temporary_rows;
     std::vector<std::uint32_t> incremental_carriers;
     std::size_t incremental_carrier_cursor = 0;
     std::size_t incremental_operator_cursor = 0;
@@ -554,6 +567,11 @@ struct SolveWork::Impl {
     std::uint64_t incremental_refinement_states_selected = 0;
     std::uint64_t incremental_rows_reconsidered = 0;
     std::uint64_t incremental_upper_policy_updates = 0;
+    std::uint64_t incremental_upper_policy_passes_requested = 0;
+    std::uint64_t incremental_upper_policy_passes_started = 0;
+    std::uint64_t incremental_upper_policy_passes_proper = 0;
+    std::uint64_t incremental_upper_policy_passes_rejected = 0;
+    std::string incremental_upper_policy_last_failure;
     double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
     std::vector<std::uint8_t> incremental_chaos_support;
@@ -1116,6 +1134,12 @@ struct SolveWork::Impl {
 
     bool schedule_incremental_refinement(bool force = false);
 
+    bool schedule_high_impact_continuation_refinement();
+
+    bool prepare_high_impact_policy_wave(std::uint32_t wave);
+
+    bool begin_incremental_upper_policy_pass();
+
     void refresh_incremental_upper_incumbent();
 
     void restart_incremental_optimization();
@@ -1123,6 +1147,8 @@ struct SolveWork::Impl {
     void finalize_incremental_diagnostics();
 
     void finalize_upper_policy_provenance();
+
+    void finalize_upper_cap_zero_progress_audit();
 
     bool priced_variant_cost(
         const SparseVariant& variant,
@@ -1340,7 +1366,8 @@ struct SolveWork::Impl {
     bool collect_focused_fringe(
         std::vector<std::uint32_t>& fringe,
         std::vector<double>& priority,
-        const std::vector<double>* gap_lower_values = nullptr);
+        const std::vector<double>* gap_lower_values = nullptr,
+        std::vector<std::uint8_t>* policy_reachable = nullptr);
 
     std::pair<double, std::uint32_t> constructive_direct_action_upper(
         const std::uint32_t state,

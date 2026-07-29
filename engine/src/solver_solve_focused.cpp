@@ -126,11 +126,13 @@ void SolveWork::Impl::begin_focused_lower_solve() {
 bool SolveWork::Impl::collect_focused_fringe(
         std::vector<std::uint32_t>& fringe,
         std::vector<double>& priority,
-        const std::vector<double>* gap_lower_values ) {
+        const std::vector<double>* gap_lower_values,
+        std::vector<std::uint8_t>* policy_reachable) {
         const std::uint64_t no_row =
             std::numeric_limits<std::uint64_t>::max();
         if (result.start_state >= result.values.size()) return false;
         std::vector<std::uint8_t> visited(result.values.size(), 0);
+        std::vector<std::uint8_t> reachable(result.values.size(), 0);
         std::vector<std::uint8_t> queued_fringe(result.values.size(), 0);
         priority.assign(result.values.size(), 0.0);
         std::vector<double> path_mass(result.values.size(), 0.0);
@@ -139,6 +141,7 @@ bool SolveWork::Impl::collect_focused_fringe(
         std::deque<std::uint32_t> walk{result.start_state};
         const auto route = [&](const std::uint32_t successor,
                                const double mass) {
+            reachable[successor] = 1;
             if (result.goal_states[successor]) return;
             if (!result.expanded[successor]) {
                 double contribution = mass;
@@ -194,6 +197,7 @@ bool SolveWork::Impl::collect_focused_fringe(
         while (!walk.empty()) {
             const std::uint32_t state = walk.front();
             walk.pop_front();
+            reachable[state] = 1;
             if (visited[state] || result.goal_states[state]) continue;
             visited[state] = 1;
             if (!result.expanded[state] || state >= policy_rows.size() ||
@@ -251,6 +255,9 @@ bool SolveWork::Impl::collect_focused_fringe(
                     route(selected, normalization * choice.probability);
                 }
             }
+        }
+        if (policy_reachable != nullptr) {
+            *policy_reachable = std::move(reachable);
         }
         return true;
     }
@@ -543,41 +550,74 @@ void SolveWork::Impl::schedule_next_focused_expansion(
     }
 
 bool SolveWork::Impl::begin_focused_upper_solve() {
-        if (!focused_fallback_policy ||
+        const bool from_incremental_incumbent =
+            incremental_upper_policy_pass &&
+            output_incumbent.has_value();
+        if ((!focused_fallback_policy && !from_incremental_incumbent) ||
             focused_strict_transition_cache != nullptr ||
-            !std::isfinite(restart_cost) || restart_cost < 0.0) {
+            (!from_incremental_incumbent &&
+             (!std::isfinite(restart_cost) || restart_cost < 0.0))) {
             return false;
         }
-        const FocusedFallbackPolicy& fallback = *focused_fallback_policy;
-        const double frontier_upper =
-            restart_cost + fallback.anchor_state_value;
-        if (!std::isfinite(frontier_upper) ||
-            frontier_upper >= kValueCeiling) {
-            return false;
-        }
+        const FocusedFallbackPolicy* fallback =
+            focused_fallback_policy.get();
         focused_round_lower_values = std::move(result.values);
         focused_round_lower_policy_rows = std::move(policy_rows);
         reset_focused_optimization_state();
-        result.values.assign(calc.state_count(), frontier_upper);
-        focused_frontier_upper_operator.assign(
-            calc.state_count(), restart_operator_index);
+        if (from_incremental_incumbent) {
+            result.values = output_incumbent->values;
+            result.values.resize(calc.state_count(), kInfinity);
+            focused_frontier_upper_operator =
+                output_incumbent->frontier_operators;
+            focused_frontier_upper_operator.resize(
+                calc.state_count(), kNoId);
+            result.expanded.resize(calc.state_count(), 0);
+            for (const std::uint64_t row :
+                 incremental_upper_temporary_rows) {
+                if (row < transition_cache->rows.size()) {
+                    const std::uint32_t owner =
+                        transition_cache->rows[row].owner_state;
+                    if (owner < result.expanded.size()) {
+                        result.expanded[owner] = 1;
+                    }
+                }
+            }
+        } else {
+            const double frontier_upper =
+                restart_cost + fallback->anchor_state_value;
+            if (!std::isfinite(frontier_upper) ||
+                frontier_upper >= kValueCeiling) {
+                result.values =
+                    std::move(focused_round_lower_values);
+                policy_rows =
+                    std::move(focused_round_lower_policy_rows);
+                return false;
+            }
+            result.values.assign(calc.state_count(), frontier_upper);
+            focused_frontier_upper_operator.assign(
+                calc.state_count(), restart_operator_index);
+        }
         for (std::uint32_t state = 0; state < result.values.size(); ++state) {
             if (result.goal_states[state]) {
                 result.values[state] = 0.0;
                 focused_frontier_upper_operator[state] = kNoId;
                 continue;
             }
-            std::uint32_t terminal_operator = kNoId;
-            const double terminal = fallback_terminal_upper(
-                state, fallback, &terminal_operator);
-            if (terminal < result.values[state]) {
-                result.values[state] = terminal;
-                focused_frontier_upper_operator[state] = terminal_operator;
+            if (!from_incremental_incumbent && fallback != nullptr) {
+                std::uint32_t terminal_operator = kNoId;
+                const double terminal = fallback_terminal_upper(
+                    state, *fallback, &terminal_operator);
+                if (terminal < result.values[state]) {
+                    result.values[state] = terminal;
+                    focused_frontier_upper_operator[state] =
+                        terminal_operator;
+                }
             }
         }
-        if (fallback.anchor_state < result.values.size()) {
-            result.values[fallback.anchor_state] =
-                fallback.anchor_state_value;
+        if (!from_incremental_incumbent && fallback != nullptr &&
+            fallback->anchor_state < result.values.size()) {
+            result.values[fallback->anchor_state] =
+                fallback->anchor_state_value;
         }
         /* Every finite frontier terminal means the executable policy
          * `Restart; fallback-at-anchor`. Howard iteration is therefore
@@ -923,6 +963,16 @@ void SolveWork::Impl::finish_focused_lower_solve(
     }
 
 void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
+        const bool incremental_pass = incremental_upper_policy_pass;
+        if (incremental_pass) {
+            if (succeeded) {
+                ++incremental_upper_policy_passes_proper;
+            } else {
+                ++incremental_upper_policy_passes_rejected;
+                incremental_upper_policy_last_failure =
+                    result.diagnostics.policy_evaluation_failure;
+            }
+        }
         result.diagnostics.focused_expansion_ns +=
             result.diagnostics.optimization_ns;
         focused_pending_upper_fringe.clear();
@@ -930,10 +980,12 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
         focused_pending_upper_complete = false;
         if (succeeded && result.start_state < result.values.size() &&
             std::isfinite(result.values[result.start_state])) {
+            std::vector<std::uint8_t> upper_policy_reachable;
             focused_pending_upper_complete = collect_focused_fringe(
                 focused_pending_upper_fringe,
                 focused_pending_upper_priority,
-                &focused_round_lower_values);
+                &focused_round_lower_values,
+                &upper_policy_reachable);
             if (focused_pending_upper_complete) {
                 focused_partial_upper_bound =
                     result.values[result.start_state];
@@ -958,7 +1010,8 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
                 install_output_incumbent(
                     focused_partial_upper_bound, result.values, policy_rows,
                     focused_frontier_upper_operator,
-                    focused_fallback_policy, std::move(incumbent_kind));
+                    focused_fallback_policy, std::move(incumbent_kind),
+                    &upper_policy_reachable);
                 result.diagnostics.focused_upper_bound =
                     output_incumbent.has_value()
                         ? output_incumbent->certified_upper_bound
@@ -972,15 +1025,77 @@ void SolveWork::Impl::finish_focused_upper_solve(const bool succeeded) {
         const bool target_reached =
             succeeded && focused_pending_upper_complete &&
             stop_for_satisfied_gap_target();
+        if (incremental_pass) {
+            const bool improved =
+                succeeded && focused_pending_upper_complete &&
+                output_incumbent.has_value() &&
+                output_incumbent->certified_upper_bound <
+                    incremental_upper_policy_prior_bound -
+                        value_comparison_tolerance(
+                            incremental_upper_policy_prior_bound);
+            std::unordered_set<std::uint64_t> selected_temporary;
+            if (improved) {
+                for (const std::uint64_t row : policy_rows) {
+                    if (row !=
+                        std::numeric_limits<std::uint64_t>::max()) {
+                        selected_temporary.insert(row);
+                    }
+                }
+            }
+            for (const std::uint64_t row :
+                 incremental_upper_temporary_rows) {
+                const bool promote =
+                    improved && selected_temporary.contains(row);
+                transition_cache->rows.at(row).admitted = promote;
+                if (!promote) continue;
+                for (IncrementalAlternativeRow& candidate :
+                     incremental_alternative_rows) {
+                    if (candidate.row_index != row) continue;
+                    candidate.status =
+                        IncrementalAlternativeRow::Status::Admitted;
+                    candidate.improvement_margin =
+                        incremental_upper_policy_prior_bound -
+                        output_incumbent->certified_upper_bound;
+                    ++incremental_upper_policy_updates;
+                    break;
+                }
+            }
+            incremental_upper_temporary_rows.clear();
+            incremental_reclassify_all = true;
+        }
         result.values = std::move(focused_round_lower_values);
         policy_rows = std::move(focused_round_lower_policy_rows);
+        if (incremental_pass) {
+            result.expanded = expanded;
+            result.expanded.resize(calc.state_count(), 0);
+        }
         focused_frontier_upper_operator.clear();
         focused_upper_mode = false;
+        incremental_upper_policy_pass = false;
         policy_iteration_failed = false;
         policy_initialized = true;
         policy_stable = true;
         reset_policy_iteration_units();
-        if (!target_reached) finish_focused_lower_solve(false);
+        if (target_reached) return;
+        if (incremental_pass) {
+            focus_optimizing = false;
+            focused_lower_mode = false;
+            incremental_restricted_values_ready = true;
+            if (classify_incremental_alternatives()) {
+                restart_incremental_optimization();
+            } else if (options.high_impact_executable_uppers &&
+                       schedule_next_incremental_alternative()) {
+                return;
+            } else if (schedule_incremental_refinement()) {
+                return;
+            } else if (!schedule_next_incremental_alternative()) {
+                if (!schedule_incremental_refinement(true)) {
+                    phase = SolvePhase::Done;
+                }
+            }
+            return;
+        }
+        finish_focused_lower_solve(false);
     }
 
 void SolveWork::Impl::run_focused_lower_unit() {
@@ -988,6 +1103,17 @@ void SolveWork::Impl::run_focused_lower_unit() {
             if (!run_policy_iteration_unit()) {
                 if (focused_upper_mode) {
                     finish_focused_upper_solve(false);
+                    return;
+                }
+                /*
+                 * An incomplete lower policy is still a valid lower-bound
+                 * snapshot. The high-impact experiment can independently
+                 * evaluate its complete executable upper witness before the
+                 * legacy focused fallback releases the broad fringe.
+                 */
+                if (incremental_action_generation &&
+                    !incremental_envelope_closed &&
+                    begin_incremental_upper_policy_pass()) {
                     return;
                 }
                 /* Focused lower bounds cannot use the descending prioritized
@@ -1032,11 +1158,15 @@ void SolveWork::Impl::run_focused_lower_unit() {
                         result.diagnostics.focused_upper_bound -
                             result.diagnostics.focused_lower_bound);
                 }
+                if (begin_incremental_upper_policy_pass()) return;
                 focus_optimizing = false;
                 focused_lower_mode = false;
                 incremental_restricted_values_ready = true;
                 if (classify_incremental_alternatives()) {
                     restart_incremental_optimization();
+                } else if (options.high_impact_executable_uppers &&
+                           schedule_next_incremental_alternative()) {
+                    return;
                 } else if (schedule_incremental_refinement()) {
                     return;
                 } else if (!schedule_next_incremental_alternative()) {

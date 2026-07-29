@@ -9,7 +9,8 @@ namespace solve_detail {
 
 constexpr std::uint64_t kUpperPolicyProvenanceStructuralBytes =
     sizeof(std::vector<std::string>) +
-    3 * sizeof(std::uint64_t);
+    3 * sizeof(std::uint64_t) +
+    sizeof(std::string);
 /*
  * Solve-owned accounting observes the retained result through two structural
  * shells. The finalization-only provenance fields belong to neither resource
@@ -339,6 +340,20 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             incremental_rows_reconsidered;
         snapshot.diagnostics.incremental_upper_policy_updates =
             incremental_upper_policy_updates;
+        snapshot.diagnostics
+            .incremental_upper_policy_passes_requested =
+            incremental_upper_policy_passes_requested;
+        snapshot.diagnostics
+            .incremental_upper_policy_passes_started =
+            incremental_upper_policy_passes_started;
+        snapshot.diagnostics
+            .incremental_upper_policy_passes_proper =
+            incremental_upper_policy_passes_proper;
+        snapshot.diagnostics
+            .incremental_upper_policy_passes_rejected =
+            incremental_upper_policy_passes_rejected;
+        snapshot.diagnostics.incremental_upper_policy_last_failure =
+            incremental_upper_policy_last_failure;
         snapshot.diagnostics.incremental_refinement_uncertainty =
             incremental_refinement_uncertainty;
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
@@ -1993,6 +2008,27 @@ std::string serialize_solver_telemetry(
                                ->incremental_refinement_uncertainty)
                      : std::string("null"));
         json += ",\"completed_rows_recomputed\":0}";
+        json += ",\"upper_policy_passes\":{\"requested\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_upper_policy_passes_requested);
+        json += ",\"started\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_upper_policy_passes_started);
+        json += ",\"proper\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_upper_policy_passes_proper);
+        json += ",\"rejected\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_upper_policy_passes_rejected);
+        json += ",\"last_failure\":";
+        append_telemetry_json_string(
+            json,
+            diagnostics->incremental_upper_policy_last_failure);
+        json += "}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(
                     diagnostics->incremental_actions_unevaluated +
@@ -2043,7 +2079,14 @@ std::string serialize_solver_telemetry(
         json += ",\"telemetry_json_byte_limit\":" +
                 std::to_string(
                     diagnostics->telemetry_json_byte_limit);
-        json += "}}";
+        json += "}";
+        if (!diagnostics
+                 ->upper_cap_zero_progress_audit_json.empty()) {
+            json += ",\"upper_cap_zero_progress_audit\":";
+            json += diagnostics
+                        ->upper_cap_zero_progress_audit_json;
+        }
+        json += "}";
     }
 
     json += ",\"action_analysis\":{\"semantics\":{"

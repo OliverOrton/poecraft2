@@ -822,6 +822,33 @@ record the frozen qualification rejection.
   observational provenance telemetry and its deterministic native checks are
   retained.
 
+## Upper-Cap And Zero-Progress Renewal Audit
+
+The 2026-07-29
+[final report](archive/2026-07-29-upper-cap-zero-progress-renewal/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/upper-cap-zero-progress-renewal-summary.json)
+record the recovered scheduler's cap sensitivity and the exact carrier audit.
+
+- The final-binary 200,000-state run reproduced the rejected candidate's
+  bounds, five proper passes, 144 selected states, work counts, zero
+  recomputation, and deterministic hashes exactly.
+- A reachability correction eliminated a harness failure that had treated
+  unrelated discovered states as incumbent-policy reachable.
+- The corrected long run reached 387,556 discovered states in 2,197 seconds
+  before an owner-approved time-censored stop. Its upper reduction was
+  `4.07634`, or `0.00000676%`; this is real movement but not qualification.
+- Six root rows contributed 569,976 successor entries. The top 32 already
+  represented 89.21% of upper-Q contribution, while almost all unfinished
+  mass still used the Chaos renewal fallback and none used Restart.
+- Of 1,031 zero-progress states, 1,030 ordinary carriers were observed by
+  retained non-renewal actions. Only the existing gated retry-basin state
+  passed exact renewal plus observer equivalence, so no new merge was applied.
+
+The corrected 400,000 request is explicitly right-censored, not a cap hit.
+Oliver allowed the increasingly slow tail to stop, so a corrected 600,000
+rerun and optional 800,000 run were not performed.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

@@ -593,9 +593,22 @@ bool SolveWork::Impl::initialize_focused_proper_policy() {
                         if (!valid || successor == state) return;
                         if (successor >= result.values.size()) {
                             valid = false;
-                        } else if (result.goal_states[successor] ||
-                                   !result.expanded[successor] ||
-                                   assigned[successor]) {
+                        } else if (result.goal_states[successor]) {
+                            exits_rank = true;
+                        } else if (!result.expanded[successor]) {
+                            if (incremental_upper_policy_pass &&
+                                (!std::isfinite(
+                                     result.values[successor]) ||
+                                 successor >=
+                                     focused_frontier_upper_operator
+                                         .size() ||
+                                 focused_frontier_upper_operator[
+                                     successor] == kNoId)) {
+                                valid = false;
+                            } else {
+                                exits_rank = true;
+                            }
+                        } else if (assigned[successor]) {
                             exits_rank = true;
                         } else {
                             valid = false;
@@ -698,7 +711,11 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
                     std::uint32_t current_work = 0;
                     const double current = sparse_row_q(
                         policy_rows[state], current_work);
-                    improving = best < current - options.epsilon;
+                    const double tolerance =
+                        incremental_upper_policy_pass
+                            ? value_comparison_tolerance(current)
+                            : options.epsilon;
+                    improving = best < current - tolerance;
                 }
                 if (improving) {
                     policy_rows[state] = best_row;
@@ -1801,6 +1818,20 @@ bool SolveWork::Impl::run_policy_iteration_unit() {
             return false;
         }
         if (policy_unit_stage == PolicyUnitStage::Evaluate) {
+            if (incremental_upper_policy_pass &&
+                residual <= acceptable_residual()) {
+                /*
+                 * The current policy has just been evaluated exactly and
+                 * proved proper. At executable-upper scale, a residual below
+                 * the ordinary relative convergence tolerance is enough to
+                 * publish that feasible policy; upper qualification does not
+                 * claim an optimal policy on the partial graph.
+                 */
+                policy_stable = true;
+                backup_active = false;
+                finish_unit();
+                return true;
+            }
             policy_unit_stage = PolicyUnitStage::ImproveSelect;
             backup_active = true;
             finish_unit();
@@ -1989,11 +2020,16 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                          * and are selected by the following Q refinement.
                          */
                         incremental_restricted_values_ready = false;
+                        incremental_upper_policy_dirty = true;
                         begin_focused_lower_solve();
                         continue;
                     }
                     if (classify_incremental_alternatives()) {
                         restart_incremental_optimization();
+                        continue;
+                    }
+                    if (options.high_impact_executable_uppers &&
+                        schedule_next_incremental_alternative()) {
                         continue;
                     }
                     if (schedule_incremental_refinement()) {
@@ -2016,6 +2052,7 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         incremental_refinement_target_expanded) {
                     incremental_refinement_active = false;
                     incremental_restricted_values_ready = false;
+                    incremental_upper_policy_dirty = true;
                     begin_focused_lower_solve();
                     continue;
                 }
@@ -2069,8 +2106,15 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 if (incremental_action_generation &&
                     !incremental_envelope_closed) {
                     incremental_restricted_values_ready = true;
+                    if (begin_incremental_upper_policy_pass()) {
+                        continue;
+                    }
                     if (classify_incremental_alternatives()) {
                         restart_incremental_optimization();
+                        continue;
+                    }
+                    if (options.high_impact_executable_uppers &&
+                        schedule_next_incremental_alternative()) {
                         continue;
                     }
                     if (schedule_incremental_refinement()) {
@@ -2100,6 +2144,9 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 if (incremental_action_generation &&
                     !incremental_envelope_closed) {
                     incremental_restricted_values_ready = true;
+                    if (begin_incremental_upper_policy_pass()) {
+                        continue;
+                    }
                     if (classify_incremental_alternatives()) {
                         restart_incremental_optimization();
                         continue;
@@ -2151,6 +2198,16 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
         backup_active = false;
         phase = SolvePhase::Done;
     }
+        /*
+         * Resource refusal ends graph growth, not executable-policy
+         * evaluation on the graph already retained. Keep the experimental
+         * pass resumable by reopening the ordinary focused work phase before
+         * progress() can publish Done.
+         */
+        if (phase == SolvePhase::Done &&
+            begin_incremental_upper_policy_pass()) {
+            phase = SolvePhase::Expanding;
+        }
     }
 
 }

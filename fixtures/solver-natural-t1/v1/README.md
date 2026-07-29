@@ -97,6 +97,13 @@ completed alternative lower-Q values to roughly 433–520 chaos; the upper
 interval ends remain overlapping. The same acceptance records an exact
 exceptional-support gate, artifact-backed split-side armour policy, exact
 compiled strategy evaluation, and 10,000 simulator runs.
+The 2026-07-29
+[upper-cap and zero-progress renewal summary](evidence/upper-cap-zero-progress-renewal-summary.json)
+reproduces the rejected 200,000-state scheduler exactly, records its
+time-censored 387,556-state tail, and pins the audit that rejected every
+additional ordinary carrier merge because retained non-renewal actions
+observed those states. Only the existing gated retry basin passes the complete
+renewal contract.
 
 ## Benchmark workflow
 
