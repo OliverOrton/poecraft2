@@ -456,6 +456,24 @@ stable cursor, cap name, work/cache deltas, and wall time before the existing
 cap handler records the same refusal. An interrupted row is not counted as
 retained and does not become a transition or pruning certificate.
 
+Finalization-only upper-policy provenance samples explain why high-impact
+successors of completed Fossil, Harvest, and goal-relevant Essence rows retain
+their current executable upper. Samples include exact carrier/progress state,
+parent-row probability influence and upper-Q contribution, materialized local
+actions, the selected row or fallback, and the retained executable witness
+identity/properness status. Deterministic impact ordering is capped by
+`max_diagnostic_samples` and one quarter of `max_telemetry_json_bytes`, with
+explicit candidate, retained, omitted, and retained-byte counts. Collection
+runs only after solve behavior, hashes, caps, and solver-owned accounting are
+frozen and has no scheduling, admission, proof, or resource authority.
+
+The archived
+[high-impact executable-upper report](../archive/2026-07-29-high-impact-executable-uppers/report.md)
+records a rejected attempt to turn this diagnosis into bounded
+progress-preserving policy search. Proper compatible candidates produced no
+strict admission or 10% completed-row reduction, so every experimental
+scheduler, focused-upper lifecycle, and interface change was restored.
+
 The current private focused scheduler admits at most 64 members per fringe
 class, 256 states per global round, and 64 lower-bound states before upper-side
 admission. These are implementation defaults, not public caps. A fresh

@@ -1122,6 +1122,8 @@ struct SolveWork::Impl {
 
     void finalize_incremental_diagnostics();
 
+    void finalize_upper_policy_provenance();
+
     bool priced_variant_cost(
         const SparseVariant& variant,
         double& cost) const;

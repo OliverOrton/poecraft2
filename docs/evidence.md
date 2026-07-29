@@ -797,6 +797,31 @@ options.
 No frozen row is forced into admitted or non-improving status. Product caps,
 the unrestricted solver, and manual Eldritch surfaces remain unchanged.
 
+## High-Impact Executable Upper Rejection
+
+The 2026-07-29
+[final report](archive/2026-07-29-high-impact-executable-uppers/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/high-impact-executable-uppers-rejection-summary.json)
+record the frozen qualification rejection.
+
+- The behavior-disabled Gate 1 control preserves the full-four root bracket,
+  all completed row intervals, graph/work/lifecycle counts, cap, solver-owned
+  accounting, and transition/policy hashes.
+- Bounded provenance ranked `569970` candidates, retained `32`, omitted
+  `569938`, and used `42800` bytes under the existing telemetry cap.
+- Five proper compatible-policy evaluations over bounded Harvest/Fracture
+  state/action waves produced zero strict admissions and zero qualifying
+  upper-Q reduction.
+- The primary root upper and completed `harvest_reforge:attack` upper remained
+  `60341416.98784247` and `60341418.63180959`; completed distributions were
+  never recomputed.
+- The one bounded deep-four snapshot hit its pinned 25,000-state cap during
+  root expansion before an upper pass or executable policy was available.
+- All experimental behavior and interface changes were restored. Only
+  observational provenance telemetry and its deterministic native checks are
+  retained.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

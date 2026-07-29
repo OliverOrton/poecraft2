@@ -1849,6 +1849,17 @@ struct SolveDiagnostics {
     double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
+    /*
+     * Finalization-only observational samples explaining the executable
+     * upper inherited by high-impact successors of completed root
+     * Fossil/Harvest rows. These strings are appended after solve resource
+     * accounting is frozen, so collecting them cannot change scheduling or a
+     * cap boundary.
+     */
+    std::vector<std::string> upper_policy_provenance_samples;
+    std::uint64_t upper_policy_provenance_samples_omitted = 0;
+    std::uint64_t upper_policy_provenance_candidate_count = 0;
+    std::uint64_t upper_policy_provenance_retained_bytes = 0;
     std::uint64_t bellman_work_units = 0;
     std::uint32_t max_bellman_unit_transitions = 0;
     std::uint64_t solve_setup_ns = 0;

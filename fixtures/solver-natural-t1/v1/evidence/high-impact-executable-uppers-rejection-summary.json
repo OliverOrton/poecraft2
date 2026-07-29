@@ -1,0 +1,210 @@
+{
+  "version": "high-impact-executable-uppers-rejection-v1",
+  "status": "rejected",
+  "branch": "codex/high-impact-executable-uppers",
+  "starting_commit": "3a6d191668f837090717295c8650ef7bbb5e0c0e",
+  "qualification": {
+    "primary_case": "natural-t1-full-four-47d8b909aa88",
+    "secondary_case": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+    "required_reduction_percent": 10.0,
+    "strict_admission_achieved": false,
+    "largest_qualifying_reduction_percent": 0.0,
+    "qualified": false,
+    "decision": "restore_experimental_behavior"
+  },
+  "frozen_baseline": {
+    "root": {
+      "lower": 432.4068529534326,
+      "upper": 60341416.98784247
+    },
+    "qualifying_rows": [
+      {
+        "action": "lucent_fossil",
+        "lower_q": 439.802286464883,
+        "upper_q": 60341420.46413261
+      },
+      {
+        "action": "harvest_reforge_attack",
+        "lower_q": 433.790212170739,
+        "upper_q": 60341418.63180959
+      },
+      {
+        "action": "harvest_reforge_cold",
+        "lower_q": 444.9999006934262,
+        "upper_q": 60341428.5593793
+      },
+      {
+        "action": "harvest_reforge_elemental",
+        "lower_q": 478.1739685343979,
+        "upper_q": 60341463.119121544
+      },
+      {
+        "action": "harvest_reforge_mana",
+        "lower_q": 519.8297640859563,
+        "upper_q": 60341500.471414946
+      },
+      {
+        "action": "harvest_reforge_physical",
+        "lower_q": 444.9999347168957,
+        "upper_q": 60341429.2781554
+      }
+    ],
+    "determinism": {
+      "discovered_states": 200000,
+      "expanded_states": 8908,
+      "rows": 56413,
+      "transitions": 1188077,
+      "reforge_work": 14246493,
+      "q_refinement_rounds": 9,
+      "q_refinement_states": 9216,
+      "rows_reconsidered": 75,
+      "completed_rows_recomputed": 0,
+      "unique_kernels": 8,
+      "carrier_reuse": 8907,
+      "actions_admitted": 0,
+      "actions_non_improving": 0,
+      "actions_unresolved": 7,
+      "actions_unevaluated": 195969,
+      "cap": "max_discovered_states",
+      "transition_hash": "d3c8789915cd57b4",
+      "policy_hash": "8b2a568f3c9cfd35"
+    }
+  },
+  "gate1_observational_control": {
+    "parity": true,
+    "behavior_enabled": false,
+    "provenance": {
+      "candidates": 569970,
+      "retained": 32,
+      "omitted": 569938,
+      "retained_bytes": 42800,
+      "sample_limit": 32,
+      "telemetry_json_byte_limit": 1048576
+    },
+    "resource_accounting_contract": "structural fields and retained strings excluded from solver-owned accounting"
+  },
+  "final_primary_candidate": {
+    "actual_status": "refused_state_cap",
+    "root": {
+      "lower": 432.4068529534326,
+      "upper": 60341416.98784247,
+      "absolute_upper_change": 0.0,
+      "upper_reduction_percent": 0.0
+    },
+    "completed_qualifying_rows": [
+      {
+        "action": "harvest_reforge_attack",
+        "lower_q": 434.7225946216303,
+        "upper_q": 60341418.63180959,
+        "baseline_upper_q": 60341418.63180959,
+        "absolute_upper_change": 0.0,
+        "upper_reduction_percent": 0.0,
+        "status": "unresolved"
+      }
+    ],
+    "installed_continuation_states": [],
+    "selected_continuation_actions": [],
+    "preserved_progress": null,
+    "expected_policy_occupancy": null,
+    "policy_witness": null,
+    "focused_upper_passes": {
+      "requested": 5,
+      "proper": 5,
+      "rejected": 0
+    },
+    "completed_rows_recomputed": 0,
+    "actions": {
+      "admitted": 0,
+      "unresolved": 1057,
+      "unevaluated": 2815
+    },
+    "states": {
+      "scheduled_partial_states": 144,
+      "broadly_expanded_states": 160
+    },
+    "work": {
+      "rows": 2228,
+      "transitions": 842726,
+      "reforge": 16746695,
+      "bellman_backups": 176,
+      "bellman_action_evaluations": 2213,
+      "unique_kernels": 14,
+      "carrier_reuse": 1203
+    },
+    "memory": {
+      "native_live_owned_bytes": 84002959,
+      "native_peak_owned_bytes": 134297256
+    },
+    "wall_ms": {
+      "solve": 13379.0494,
+      "total": 13950.6397
+    },
+    "cap": "max_discovered_states",
+    "transition_hash": "d4346e90f923332c",
+    "policy_hash": "8b2a568f3c9cfd35"
+  },
+  "secondary_snapshot": {
+    "actual_status": "refused_state_cap",
+    "expectation_met": false,
+    "root_lower": 0.0,
+    "root_upper": null,
+    "policy_available": false,
+    "discovered_states": 25000,
+    "expanded_states": 1,
+    "rows": 0,
+    "transitions": 0,
+    "reforge_work": 1915409,
+    "actions_unresolved": 1,
+    "actions_unevaluated": 21,
+    "completed_rows_recomputed": 0,
+    "cap": "max_discovered_states",
+    "transition_hash": "14650fb0739d0383",
+    "policy_hash": "f5142aa3d30d9ac3",
+    "wall_total_ms": 6625.0894
+  },
+  "retained_changes": {
+    "observational_provenance_telemetry": true,
+    "native_deterministic_cap_tests": true,
+    "solver_behavior_changed": false,
+    "public_abi_changed": false,
+    "wasm_protocol_changed": false,
+    "typescript_protocol_changed": false,
+    "compiled_policy_changed": false,
+    "simulator_10000_run_gate": "not_applicable"
+  },
+  "acceptance": {
+    "status": "passed",
+    "date": "2026-07-29",
+    "native_build": {
+      "command": "powershell -File scripts/build.ps1",
+      "status": "passed"
+    },
+    "native_tests": {
+      "command": "build/engine/poecraft_engine_tests.exe data/compiled/current",
+      "checks": 502232,
+      "failures": 0
+    },
+    "benchmark_manifest_validation": {
+      "command": "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus <manifest> --validate-only",
+      "solver_benchmarks_cases": 12,
+      "natural_t1_cases": 146,
+      "status": "passed"
+    },
+    "wasm_build": {
+      "command": "powershell -File scripts/build-wasm.ps1",
+      "status": "passed",
+      "mjs_sha256": "719752718633a89aae74c813c78a84d8c2b7d12e957f718afc338d96eba98e5b",
+      "wasm_sha256": "e48aa0483cabe5d4840c88dcc0d535c2384c4422207c8dcba083ef9ee5b6e453"
+    },
+    "web_tests": {
+      "command": "npm test",
+      "status": "passed",
+      "note": "The first run stopped on a transient fallback-cancellation timing assertion. The isolated 27-check smoke file and the subsequent complete suite both passed without source changes."
+    },
+    "typescript": {
+      "command": "npx tsc --noEmit",
+      "status": "passed"
+    },
+    "rendered_visual_review": "not_run_owner_owned"
+  }
+}

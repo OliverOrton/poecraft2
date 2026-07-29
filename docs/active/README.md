@@ -1,18 +1,14 @@
 # Active Work
 
-**Status: an implementation plan is active.**
+**Status: no implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-Current plan:
-[High-Impact Partial-State Executable Upper Policies](high-impact-executable-uppers.md).
-Root [HANDOFF](../../HANDOFF.md) records its exact boundary and current branch.
-
-The most recently completed milestone is
-[Q-Directed Deep Solving And Automatic Eldritch Side Actions](../archive/2026-07-28-q-directed-eldritch-side-actions/README.md).
-It retains completed-row Q refinement and four automatic real-resource
-Eldritch side options. Frozen lower information and expansion improve, but
-wide intervals leave the action envelope honestly unresolved.
+The most recently completed boundary is the rejected
+[High-Impact Partial-State Executable Upper Policies](../archive/2026-07-29-high-impact-executable-uppers/README.md)
+milestone. It restored all experimental behavior after producing no qualifying
+upper-Q reduction, while retaining bounded observational provenance telemetry.
+Oliver must select the next chunk before implementation resumes.
 
 The preceding
 [Chaos-Anchored Incremental Action Generation](../archive/2026-07-28-chaos-anchored-incremental-actions/README.md)

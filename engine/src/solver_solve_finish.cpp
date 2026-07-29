@@ -62,6 +62,30 @@ SolveResult SolveWork::Impl::finish() {
         }
         const auto extraction_started = std::chrono::steady_clock::now();
         finalize_incremental_diagnostics();
+        /*
+         * Capture provenance while the incumbent still owns its complete
+         * selected-row/value witness. Keep the optional strings outside
+         * SolveDiagnostics until final accounting is frozen.
+         */
+        finalize_upper_policy_provenance();
+        std::vector<std::string> upper_policy_provenance_samples =
+            std::move(
+                result.diagnostics.upper_policy_provenance_samples);
+        const std::uint64_t
+            upper_policy_provenance_samples_omitted =
+                result.diagnostics
+                    .upper_policy_provenance_samples_omitted;
+        const std::uint64_t
+            upper_policy_provenance_candidate_count =
+                result.diagnostics
+                    .upper_policy_provenance_candidate_count;
+        const std::uint64_t
+            upper_policy_provenance_retained_bytes =
+                result.diagnostics
+                    .upper_policy_provenance_retained_bytes;
+        result.diagnostics.upper_policy_provenance_samples_omitted = 0;
+        result.diagnostics.upper_policy_provenance_candidate_count = 0;
+        result.diagnostics.upper_policy_provenance_retained_bytes = 0;
 
         const bool sweep_cap_hit =
             sweeps >= options.max_sweeps && !optimization_converged();
@@ -708,6 +732,14 @@ SolveResult SolveWork::Impl::finish() {
             estimated_retained_solver_bytes(calc, &result);
         result.diagnostics.diagnostics_retained_bytes_estimate =
             diagnostics_owned_bytes(result.diagnostics);
+        result.diagnostics.upper_policy_provenance_samples =
+            std::move(upper_policy_provenance_samples);
+        result.diagnostics.upper_policy_provenance_samples_omitted =
+            upper_policy_provenance_samples_omitted;
+        result.diagnostics.upper_policy_provenance_candidate_count =
+            upper_policy_provenance_candidate_count;
+        result.diagnostics.upper_policy_provenance_retained_bytes =
+            upper_policy_provenance_retained_bytes;
         consumed = true;
         return std::move(result);
     }

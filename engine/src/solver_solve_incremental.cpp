@@ -813,5 +813,362 @@ void SolveWork::Impl::finalize_incremental_diagnostics() {
     }
 }
 
+void SolveWork::Impl::finalize_upper_policy_provenance() {
+    SolveDiagnostics& diagnostics = result.diagnostics;
+    diagnostics.upper_policy_provenance_samples.clear();
+    diagnostics.upper_policy_provenance_samples_omitted = 0;
+    diagnostics.upper_policy_provenance_candidate_count = 0;
+    diagnostics.upper_policy_provenance_retained_bytes = 0;
+    if (!incremental_action_generation || !output_incumbent.has_value() ||
+        transition_cache == nullptr) {
+        return;
+    }
+
+    const BoundedPolicyIncumbent& incumbent = *output_incumbent;
+    const std::uint64_t no_row =
+        std::numeric_limits<std::uint64_t>::max();
+    struct Candidate {
+        double contribution = 0.0;
+        double influence = 0.0;
+        std::uint32_t state = kNoId;
+        std::uint64_t parent_row =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t parent_operator = kNoId;
+        const char* influence_kind = "root_transition_probability";
+    };
+    std::vector<Candidate> candidates;
+    const std::uint64_t sample_limit = options.max_diagnostic_samples;
+
+    const auto is_promising_family = [&](const std::uint32_t op) {
+        if (op == kNoId || op >= calc.operators().size()) return false;
+        const std::string& id = calc.operators()[op].id;
+        return id.find("fossil") != std::string::npos ||
+               id.find("harvest") != std::string::npos ||
+               id.find("essence") != std::string::npos;
+    };
+    const auto better_candidate =
+        [&](const Candidate& left, const Candidate& right) {
+            if (left.contribution != right.contribution) {
+                return left.contribution > right.contribution;
+            }
+            if (left.state != right.state) return left.state < right.state;
+            const std::string& left_id =
+                calc.operators()[left.parent_operator].id;
+            const std::string& right_id =
+                calc.operators()[right.parent_operator].id;
+            if (left_id != right_id) return left_id < right_id;
+            return left.parent_row < right.parent_row;
+        };
+    const auto add_candidate = [&](const std::uint32_t state,
+                                   const double influence,
+                                   const std::uint64_t parent_row,
+                                   const std::uint32_t parent_operator,
+                                   const char* influence_kind) {
+        if (state == result.start_state || state >= calc.state_count() ||
+            calc.is_goal_state(calc.state(state)) ||
+            influence <= 0.0 || !std::isfinite(influence)) {
+            return;
+        }
+        const double upper =
+            state < incumbent.values.size()
+                ? incumbent.values[state]
+                : kInfinity;
+        if (!std::isfinite(upper) || upper < 0.0) return;
+        ++diagnostics.upper_policy_provenance_candidate_count;
+        Candidate next{
+            influence * upper, influence, state, parent_row,
+            parent_operator, influence_kind};
+        if (sample_limit == 0) return;
+        if (candidates.size() < sample_limit) {
+            candidates.push_back(std::move(next));
+            return;
+        }
+        auto worst = candidates.begin();
+        for (auto candidate = candidates.begin() + 1;
+             candidate != candidates.end(); ++candidate) {
+            if (better_candidate(*worst, *candidate)) {
+                worst = candidate;
+            }
+        }
+        if (better_candidate(next, *worst)) {
+            *worst = std::move(next);
+        }
+    };
+
+    for (const IncrementalAlternativeRow& retained :
+         incremental_alternative_rows) {
+        if (retained.state != result.start_state ||
+            retained.row_index >= transition_cache->rows.size() ||
+            !is_promising_family(retained.operator_index)) {
+            continue;
+        }
+        const SparseRow& row =
+            transition_cache->rows[retained.row_index];
+        for (std::uint32_t i = 0; i < row.transition_count; ++i) {
+            const std::uint64_t offset = row.transition_offset + i;
+            add_candidate(
+                transition_cache->successors[offset],
+                transition_cache->probabilities[offset],
+                retained.row_index, retained.operator_index,
+                "root_transition_probability");
+        }
+        for (std::uint32_t i = 0; i < row.choice_count; ++i) {
+            const SparseChoiceGroup& group =
+                transition_cache->choices[row.choice_offset + i];
+            std::uint32_t selected =
+                group.has_self ? result.start_state : kNoId;
+            double selected_upper =
+                group.has_self &&
+                        result.start_state < incumbent.values.size()
+                    ? incumbent.values[result.start_state]
+                    : kInfinity;
+            for (std::uint32_t s = 0; s < group.successor_count; ++s) {
+                const std::uint32_t successor =
+                    transition_cache->choice_successors[
+                        group.successor_offset + s];
+                const double upper =
+                    successor < incumbent.values.size()
+                        ? incumbent.values[successor]
+                        : kInfinity;
+                if (upper < selected_upper - options.epsilon ||
+                    (std::abs(upper - selected_upper) <= options.epsilon &&
+                     successor < selected)) {
+                    selected = successor;
+                    selected_upper = upper;
+                }
+            }
+            add_candidate(
+                selected, group.probability, retained.row_index,
+                retained.operator_index, "root_choice_probability");
+        }
+    }
+
+    std::stable_sort(
+        candidates.begin(), candidates.end(),
+        better_candidate);
+    diagnostics.upper_policy_provenance_samples_omitted =
+        diagnostics.upper_policy_provenance_candidate_count -
+        candidates.size();
+
+    std::uint64_t witness_identity = 1469598103934665603ULL;
+    const auto mix = [&](const std::uint64_t value) {
+        witness_identity ^= value;
+        witness_identity *= 1099511628211ULL;
+    };
+    mix(1); /* provenance/witness schema version */
+    mix(incumbent.graph_identity);
+    mix(incumbent.goal_identity);
+    mix(incumbent.economy_identity);
+    mix(incumbent.action_vocabulary_identity);
+    mix(incumbent.restart_operator);
+    mix(incumbent.restart_state);
+    mix(incumbent.fallback_anchor_state);
+    for (std::uint32_t state = 0;
+         state < incumbent.policy_rows.size(); ++state) {
+        const std::uint64_t row = incumbent.policy_rows[state];
+        if (row == no_row) continue;
+        mix(state);
+        mix(row);
+        if (state < incumbent.values.size()) {
+            mix(std::bit_cast<std::uint64_t>(incumbent.values[state]));
+        }
+    }
+
+    /*
+     * Keep this optional section bounded independently as well as by the
+     * serializer's hard whole-document limit. One quarter leaves room for
+     * the existing stable telemetry fields even under deliberately small
+     * diagnostic limits.
+     */
+    const std::uint64_t byte_budget =
+        options.max_telemetry_json_bytes / 4;
+    for (const Candidate& candidate : candidates) {
+        if (diagnostics.upper_policy_provenance_samples.size() >=
+            sample_limit) {
+            ++diagnostics.upper_policy_provenance_samples_omitted;
+            continue;
+        }
+        const AbstractState& state = calc.state(candidate.state);
+        const double current_upper =
+            candidate.state < incumbent.values.size()
+                ? incumbent.values[candidate.state]
+                : kInfinity;
+        const std::uint64_t selected_row =
+            candidate.state < incumbent.policy_rows.size()
+                ? incumbent.policy_rows[candidate.state]
+                : no_row;
+        std::uint32_t selected_operator = kNoId;
+        if (selected_row != no_row && selected_row < priced_rows.size()) {
+            selected_operator =
+                priced_rows[selected_row].operator_index;
+        } else if (candidate.state <
+                   incumbent.frontier_operators.size()) {
+            selected_operator =
+                incumbent.frontier_operators[candidate.state];
+        }
+        const bool local_continuation =
+            selected_row != no_row &&
+            selected_row < transition_cache->rows.size();
+        const bool restart_fallback =
+            selected_operator == incumbent.restart_operator;
+
+        std::vector<std::string> materialized;
+        for (const std::uint64_t row :
+             state_row_indices(*transition_cache, candidate.state)) {
+            if (row >= priced_rows.size()) continue;
+            const std::uint32_t op = priced_rows[row].operator_index;
+            if (op == kNoId || op >= calc.operators().size()) continue;
+            materialized.push_back(calc.operators()[op].id);
+        }
+        std::sort(materialized.begin(), materialized.end());
+        materialized.erase(
+            std::unique(materialized.begin(), materialized.end()),
+            materialized.end());
+        const std::size_t materialized_limit =
+            std::min<std::size_t>(
+                materialized.size(), options.max_diagnostic_samples);
+
+        std::string sample = "{\"state\":";
+        sample += std::to_string(candidate.state);
+        sample += ",\"satisfied_goal_subset\":" +
+                  std::to_string(
+                      satisfied_goal_mask_for_state(candidate.state));
+        sample += ",\"carrier\":{\"rarity\":" +
+                  std::to_string(state.rarity);
+        sample += ",\"prefix_count\":" +
+                  std::to_string(state.prefix_count);
+        sample += ",\"suffix_count\":" +
+                  std::to_string(state.suffix_count);
+        sample += ",\"blocked_goal_mask\":" +
+                  std::to_string(state.blocked_mask);
+        sample += ",\"fractured_goal_mask\":" +
+                  std::to_string(state.fractured_goal_mask);
+        sample += ",\"crafted_goal_mask\":" +
+                  std::to_string(state.crafted_goal_mask);
+        sample += ",\"fractured_metamod_flags\":" +
+                  std::to_string(state.fractured_metamod_flags);
+        sample += ",\"flags\":" + std::to_string(state.flags);
+        sample += ",\"prefixes_locked\":" +
+                  std::string(
+                      state.flags & kFlagPrefixesLocked
+                          ? "true" : "false");
+        sample += ",\"suffixes_locked\":" +
+                  std::string(
+                      state.flags & kFlagSuffixesLocked
+                          ? "true" : "false");
+        sample += ",\"influence_bits\":" +
+                  std::to_string(state.influence_bits);
+        sample += ",\"searing_exarch_tier\":" +
+                  std::to_string(state.searing_exarch_tier);
+        sample += ",\"eater_of_worlds_tier\":" +
+                  std::to_string(state.eater_of_worlds_tier);
+        sample += ",\"retry_basin\":" +
+                  std::to_string(state.goal_progress_retry_basin);
+        sample += "},\"promising_parent_action\":";
+        append_json_string(
+            sample,
+            calc.operators()[candidate.parent_operator].id);
+        sample += ",\"promising_parent_row\":" +
+                  std::to_string(candidate.parent_row);
+        sample += ",\"influence_kind\":";
+        append_json_string(sample, candidate.influence_kind);
+        sample += ",\"influence\":" +
+                  finite_json(candidate.influence);
+        sample += ",\"current_executable_upper\":" +
+                  finite_json(current_upper);
+        sample += ",\"parent_upper_q_contribution\":" +
+                  finite_json(candidate.contribution);
+        sample += ",\"selected_upper_policy_row\":";
+        sample += selected_row == no_row
+                      ? "null"
+                      : std::to_string(selected_row);
+        sample += ",\"selected_upper_policy_action\":";
+        if (selected_operator == kNoId ||
+            selected_operator >= calc.operators().size()) {
+            sample += "null";
+        } else {
+            append_json_string(
+                sample, calc.operators()[selected_operator].id);
+        }
+        sample += ",\"fallback_source\":";
+        if (local_continuation) {
+            append_json_string(sample, "local_exact_row");
+        } else if (restart_fallback) {
+            append_json_string(sample, "restart_then_chaos_fallback");
+        } else {
+            append_json_string(
+                sample, "constructive_terminal_fallback");
+        }
+        sample += ",\"uses_local_continuation\":" +
+                  std::string(local_continuation ? "true" : "false");
+        sample += ",\"uses_restart_chaos\":" +
+                  std::string(restart_fallback ? "true" : "false");
+        sample += ",\"materialized_candidate_actions\":[";
+        for (std::size_t i = 0; i < materialized_limit; ++i) {
+            if (i != 0) sample += ',';
+            append_json_string(sample, materialized[i]);
+        }
+        sample += "],\"materialized_candidate_actions_omitted\":" +
+                  std::to_string(
+                      materialized.size() - materialized_limit);
+        sample += ",\"no_cheaper_continuation_reason\":";
+        if (local_continuation) {
+            append_json_string(
+                sample, "local_continuation_selected");
+        } else if (materialized.empty()) {
+            append_json_string(
+                sample, "no_materialized_local_action");
+        } else {
+            append_json_string(
+                sample,
+                "materialized_rows_not_strictly_cheaper_than_fallback");
+        }
+        sample += ",\"policy_witness\":{\"version\":1";
+        char hash_buffer[17]{};
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(witness_identity));
+        sample += ",\"identity\":\"";
+        sample += hash_buffer;
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(incumbent.graph_identity));
+        sample += "\",\"graph_identity\":\"";
+        sample += hash_buffer;
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(incumbent.goal_identity));
+        sample += "\",\"goal_identity\":\"";
+        sample += hash_buffer;
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(incumbent.economy_identity));
+        sample += "\",\"economy_identity\":\"";
+        sample += hash_buffer;
+        std::snprintf(
+            hash_buffer, sizeof(hash_buffer), "%016llx",
+            static_cast<unsigned long long>(
+                incumbent.action_vocabulary_identity));
+        sample += "\",\"action_vocabulary_identity\":\"";
+        sample += hash_buffer;
+        sample += "\",\"proper\":true";
+        sample += ",\"properness_status\":";
+        append_json_string(
+            sample, "existing_executable_fallback_witness");
+        sample += "}}";
+
+        if (sample.size() > byte_budget ||
+            diagnostics.upper_policy_provenance_retained_bytes >
+                byte_budget - sample.size()) {
+            ++diagnostics.upper_policy_provenance_samples_omitted;
+            continue;
+        }
+        diagnostics.upper_policy_provenance_retained_bytes +=
+            sample.size();
+        diagnostics.upper_policy_provenance_samples.push_back(
+            std::move(sample));
+    }
+}
+
 } // namespace solver
 } // namespace poecraft

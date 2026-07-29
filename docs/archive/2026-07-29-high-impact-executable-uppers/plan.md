@@ -1,6 +1,6 @@
 # High-Impact Partial-State Executable Upper Policies
 
-**Status: active implementation boundary.**
+**Status: archived final rejection boundary.**
 
 Owner: Oliver
 

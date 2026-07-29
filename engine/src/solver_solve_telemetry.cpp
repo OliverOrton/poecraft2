@@ -7,6 +7,18 @@ using namespace solve_detail;
 
 namespace solve_detail {
 
+constexpr std::uint64_t kUpperPolicyProvenanceStructuralBytes =
+    sizeof(std::vector<std::string>) +
+    3 * sizeof(std::uint64_t);
+/*
+ * Solve-owned accounting observes the retained result through two structural
+ * shells. The finalization-only provenance fields belong to neither resource
+ * boundary, so remove both static footprints as well as excluding their
+ * dynamic strings below.
+ */
+constexpr std::uint64_t kUpperPolicyProvenanceAccountingOffset =
+    2 * kUpperPolicyProvenanceStructuralBytes;
+
 std::uint64_t SparseVariantArena::selected_bytes() const {
         return sizeof(*this) +
                variants.capacity() * sizeof(SparseVariant) +
@@ -104,7 +116,9 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
 }
 
 std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
-    std::uint64_t bytes = sizeof(result);
+    std::uint64_t bytes =
+        sizeof(result) -
+        kUpperPolicyProvenanceAccountingOffset;
     bytes += result.values.capacity() * sizeof(double);
     bytes += result.policy.capacity() * sizeof(PolicyOperatorRef);
     bytes += result.expanded.capacity() * sizeof(std::uint8_t);
@@ -455,7 +469,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes() const {
 
 std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         const std::uint64_t calc_bytes) const {
-        std::uint64_t bytes = sizeof(*this) + calc_bytes;
+        std::uint64_t bytes =
+            sizeof(*this) -
+            kUpperPolicyProvenanceAccountingOffset +
+            calc_bytes;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
                  (sizeof(std::pair<const std::string, double>) +
@@ -597,7 +614,10 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
 
 std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         const std::uint64_t calc_bytes) const {
-        std::uint64_t bytes = sizeof(*this) + calc_bytes;
+        std::uint64_t bytes =
+            sizeof(*this) -
+            kUpperPolicyProvenanceAccountingOffset +
+            calc_bytes;
         bytes += prices.bucket_count() * sizeof(void*);
         bytes += prices.size() *
                  (sizeof(std::pair<const std::string, double>) +
@@ -1993,7 +2013,37 @@ std::string serialize_solver_telemetry(
                         ->incremental_action_witnesses_omitted);
         json += ",\"limit\":" +
                 std::to_string(diagnostics->diagnostic_sample_limit) +
-                "}}";
+                "}";
+        json += ",\"upper_policy_provenance\":{\"observational\":true";
+        json += ",\"samples\":[";
+        for (std::size_t i = 0;
+             i < diagnostics->upper_policy_provenance_samples.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += diagnostics->upper_policy_provenance_samples[i];
+        }
+        json += "],\"sample_counts\":{\"candidates\":" +
+                std::to_string(
+                    diagnostics
+                        ->upper_policy_provenance_candidate_count);
+        json += ",\"retained\":" +
+                std::to_string(
+                    diagnostics
+                        ->upper_policy_provenance_samples.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    diagnostics
+                        ->upper_policy_provenance_samples_omitted);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) +
+                "}";
+        json += ",\"retained_bytes\":" +
+                std::to_string(
+                    diagnostics
+                        ->upper_policy_provenance_retained_bytes);
+        json += ",\"telemetry_json_byte_limit\":" +
+                std::to_string(
+                    diagnostics->telemetry_json_byte_limit);
+        json += "}}";
     }
 
     json += ",\"action_analysis\":{\"semantics\":{"

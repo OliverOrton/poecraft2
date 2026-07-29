@@ -9,6 +9,13 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-29
+
+- [High-Impact Partial-State Executable Upper Policies](2026-07-29-high-impact-executable-uppers/README.md) —
+  rejected after proper progress-preserving state/action policy waves produced
+  no qualifying Fossil/Harvest upper-Q reduction. Experimental behavior was
+  restored; bounded observational provenance telemetry remains.
+
 ## 2026-07-28
 
 - [Q-Directed Deep Solving And Automatic Eldritch Side Actions](2026-07-28-q-directed-eldritch-side-actions/README.md) —

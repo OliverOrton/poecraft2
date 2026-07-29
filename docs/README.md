@@ -28,12 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[High-Impact Partial-State Executable Upper Policies](active/high-impact-executable-uppers.md)
-boundary targets proper progress-preserving continuations from the partial
-states that dominate completed frozen Fossil and Harvest upper Q values. Its
-qualification rule, baselines, controls, rollback, and two-commit contract are
-frozen in the active plan and [HANDOFF](../HANDOFF.md).
+No implementation boundary is active. The rejected
+[High-Impact Partial-State Executable Upper Policies](archive/2026-07-29-high-impact-executable-uppers/README.md)
+milestone restored its experimental behavior after no completed frozen row
+met the strict-admission or 10% upper-Q gate. It retains bounded observational
+upper-policy provenance telemetry. Oliver must choose the next chunk before
+implementation resumes; [HANDOFF](../HANDOFF.md) records that boundary state.
 
 The completed
 [Q-Directed Deep Solving And Automatic Eldritch Side Actions](archive/2026-07-28-q-directed-eldritch-side-actions/README.md)

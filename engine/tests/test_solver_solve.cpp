@@ -1852,6 +1852,29 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         telemetry.find("\"completed_rows_recomputed\":0") !=
         std::string::npos);
+    PC_CHECK(
+        telemetry.find("\"upper_policy_provenance\":{"
+                       "\"observational\":true") !=
+        std::string::npos);
+    PC_CHECK(
+        result.diagnostics.upper_policy_provenance_samples.size() <=
+        options.max_diagnostic_samples);
+    PC_CHECK(
+        result.diagnostics
+            .upper_policy_provenance_candidate_count ==
+        result.diagnostics.upper_policy_provenance_samples.size() +
+            result.diagnostics
+                .upper_policy_provenance_samples_omitted);
+    for (const std::string& sample :
+         result.diagnostics.upper_policy_provenance_samples) {
+        PC_CHECK(valid_json_object(sample));
+        PC_CHECK(
+            sample.find("\"policy_witness\":{") !=
+            std::string::npos);
+        PC_CHECK(
+            sample.find("\"proper\":true") !=
+            std::string::npos);
+    }
     CalcContext repeat_calc(
         session, goal, registry,
         {chaos, good_essence, bad_essence});
@@ -1866,6 +1889,30 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         result.diagnostics.policy_bits_hash ==
         repeat.diagnostics.policy_bits_hash);
+    PC_CHECK(
+        result.diagnostics.upper_policy_provenance_samples ==
+        repeat.diagnostics.upper_policy_provenance_samples);
+    PC_CHECK(
+        result.diagnostics
+            .upper_policy_provenance_samples_omitted ==
+        repeat.diagnostics
+            .upper_policy_provenance_samples_omitted);
+
+    CalcContext sampled_calc(
+        session, goal, registry,
+        {chaos, good_essence, bad_essence});
+    SolveOptions sampled_options = options;
+    sampled_options.max_diagnostic_samples = 1;
+    const SolveResult sampled =
+        solve(sampled_calc, start, prices, sampled_options);
+    PC_CHECK(
+        sampled.diagnostics.upper_policy_provenance_samples.size() <= 1);
+    PC_CHECK(
+        sampled.diagnostics
+            .upper_policy_provenance_candidate_count ==
+        sampled.diagnostics.upper_policy_provenance_samples.size() +
+            sampled.diagnostics
+                .upper_policy_provenance_samples_omitted);
 
     CalcContext capped_calc(
         session, goal, registry,
