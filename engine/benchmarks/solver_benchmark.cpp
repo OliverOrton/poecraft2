@@ -1144,6 +1144,9 @@ CaseResult run_case(
         const bool bounded_first_expansion =
             optional_string(specification, "benchmark_mode") ==
             "bounded_first_expansion";
+        const bool bounded_incremental_diagnostic =
+            optional_string(specification, "benchmark_mode") ==
+            "bounded_incremental_diagnostic";
         const bool stop_after_bellman_entry =
             optional_string(specification, "benchmark_mode") ==
             "stop_after_bellman_entry";
@@ -1306,7 +1309,9 @@ CaseResult run_case(
                     "focused_gate_after_complete_expansion";
                 break;
             }
-            if (bounded_first_expansion && !progress.done &&
+            if ((bounded_first_expansion ||
+                 bounded_incremental_diagnostic) &&
+                !progress.done &&
                 report.diagnostic_work_limit != 0 &&
                 report.solve_steps >= report.diagnostic_work_limit) {
                 pc_solver_solve_abandon(handles.solver);
@@ -1315,7 +1320,9 @@ CaseResult run_case(
                     "max_diagnostic_work_items";
                 break;
             }
-            if (bounded_first_expansion && !progress.done &&
+            if ((bounded_first_expansion ||
+                 bounded_incremental_diagnostic) &&
+                !progress.done &&
                 Clock::now() >= diagnostic_deadline) {
                 pc_solver_solve_abandon(handles.solver);
                 report.actual_status = "diagnostic_time_cap";
@@ -1327,7 +1334,9 @@ CaseResult run_case(
         report.solve_ms = milliseconds(solve_begin, Clock::now());
 
         const bool diagnostic_abandoned =
-            (bounded_first_expansion || stop_after_bellman_entry) &&
+            (bounded_first_expansion ||
+             bounded_incremental_diagnostic ||
+             stop_after_bellman_entry) &&
             !progress.done;
         if (!cancel_after_first && !diagnostic_abandoned) {
             report.solve_summary = {};

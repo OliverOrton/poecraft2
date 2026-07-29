@@ -121,7 +121,18 @@ void SolveWork::Impl::prepare_iteration() {
             transition_cache->state_rows.resize(
                 transition_cache->discovered_states);
         }
-        if (price_bound_state_pruning) {
+        if (incremental_action_generation &&
+            !incremental_envelope_closed) {
+            const std::uint32_t state_count =
+                transition_cache->discovered_states;
+            result.diagnostics.strict_discovered_states = state_count;
+            result.diagnostics.quotient_states = state_count;
+            transition_cache->strict_discovered_states = state_count;
+            transition_cache->quotient_states = state_count;
+            transition_cache->exact_quotient = false;
+            transition_cache->behavioral_representative_by_state.clear();
+            result.behavioral_representative_by_state.clear();
+        } else if (price_bound_state_pruning) {
             /* Certified graphs contain every row needed by the exact current
              * optimum, but deliberately omit price-dominated action rows.
              * Keep their concrete state identities and never present the
@@ -244,19 +255,22 @@ void SolveWork::Impl::prepare_iteration() {
         /* The solve now owns the compact CSR rows used by every later phase;
          * release evaluator distributions so transitions are stored once. A
          * reusable price-only context is the separate S7.5 cache-reuse pass. */
-        calc.release_solve_transition_caches();
-        if (!cache_pending && !result.diagnostics.state_cap_hit &&
-            !result.diagnostics.resource_cap_hit &&
-            queue.empty() && !focused_bound_proved &&
-            !price_bound_state_pruning) {
-            transition_cache->focused_partial = focused_mode;
-            calc.retain_solve_transition_cache(transition_cache);
+        if (!incremental_action_generation ||
+            incremental_envelope_closed) {
+            calc.release_solve_transition_caches();
+            if (!cache_pending && !result.diagnostics.state_cap_hit &&
+                !result.diagnostics.resource_cap_hit &&
+                queue.empty() && !focused_bound_proved &&
+                !price_bound_state_pruning) {
+                transition_cache->focused_partial = focused_mode;
+                calc.retain_solve_transition_cache(transition_cache);
+            }
+            kernel_rows_by_hash.clear();
+            kernel_rows_by_hash.rehash(0);
+            owned_kernel_row_bucket_bytes = 0;
+            shared_kernel_rows.clear();
+            shared_kernel_rows.rehash(0);
         }
-        kernel_rows_by_hash.clear();
-        kernel_rows_by_hash.rehash(0);
-        owned_kernel_row_bucket_bytes = 0;
-        shared_kernel_rows.clear();
-        shared_kernel_rows.rehash(0);
         cache_pending = false;
         const auto peak_byte_audit_started =
             std::chrono::steady_clock::now();
@@ -277,7 +291,11 @@ void SolveWork::Impl::prepare_iteration() {
             std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now() - started)
                 .count());
-        if (focused_bound_proved) phase = SolvePhase::Done;
+        if (focused_bound_proved &&
+            (!incremental_action_generation ||
+             incremental_envelope_closed)) {
+            phase = SolvePhase::Done;
+        }
     }
 
 double SolveWork::Impl::operator_q(
@@ -561,16 +579,14 @@ bool SolveWork::Impl::initialize_focused_proper_policy() {
             progress = false;
             for (const std::uint32_t state : order) {
                 if (assigned[state]) continue;
-                const StateRowSpan& span =
-                    transition_cache->state_rows.at(state);
                 std::uint64_t best_row =
                     std::numeric_limits<std::uint64_t>::max();
-                for (std::uint32_t relative = 0;
-                     relative < span.count; ++relative) {
-                    const std::uint64_t absolute = span.offset + relative;
+                for (const std::uint64_t absolute :
+                     state_row_indices(*transition_cache, state)) {
                     if (preservation_prunes(absolute)) continue;
                     const SparseRow& row =
                         transition_cache->rows.at(absolute);
+                    if (!row.admitted) continue;
                     bool valid = true;
                     bool exits_rank = false;
                     const auto route = [&](const std::uint32_t successor) {
@@ -656,12 +672,12 @@ bool SolveWork::Impl::advance_policy_selection(bool& improved) {
              active < end; ++active) {
             const std::uint32_t state = policy_selection_states[active];
             if (!result.expanded[state] || result.goal_states[state]) continue;
-            const StateRowSpan& span = transition_cache->state_rows.at(state);
             double best = kInfinity;
             std::uint64_t best_row = no_row;
-            for (std::uint32_t row = 0; row < span.count; ++row) {
+            for (const std::uint64_t absolute :
+                 state_row_indices(*transition_cache, state)) {
                 std::uint32_t work = 0;
-                const std::uint64_t absolute = span.offset + row;
+                if (!transition_cache->rows.at(absolute).admitted) continue;
                 if (preservation_prunes(absolute)) continue;
                 const double q = sparse_row_q(absolute, work);
                 ++result.diagnostics.bellman_action_evaluations;
@@ -1608,12 +1624,12 @@ bool SolveWork::Impl::repair_improper_policy() {
             double best_q = kInfinity;
             std::uint64_t best_row =
                 std::numeric_limits<std::uint64_t>::max();
-            const StateRowSpan& span = transition_cache->state_rows.at(state);
-            for (std::uint32_t i = 0; i < span.count; ++i) {
-                const std::uint64_t row_index = span.offset + i;
+            for (const std::uint64_t row_index :
+                 state_row_indices(*transition_cache, state)) {
                 if (policy_rows[state] == row_index) continue;
                 if (preservation_prunes(row_index)) continue;
                 const SparseRow& row = transition_cache->rows.at(row_index);
+                if (!row.admitted) continue;
                 bool exits = false;
                 for (std::uint32_t transition = 0;
                      transition < row.transition_count; ++transition) {
@@ -1817,13 +1833,14 @@ double SolveWork::Impl::backup_state(
         std::uint32_t& transition_work) {
         double best = kInfinity;
         transition_work = 0;
-        const StateRowSpan& span = transition_cache->state_rows.at(state);
         ++result.diagnostics.bellman_backups;
-        for (std::uint32_t row = 0; row < span.count; ++row) {
+        for (const std::uint64_t row :
+             state_row_indices(*transition_cache, state)) {
             std::uint32_t row_work = 0;
-            if (preservation_prunes(span.offset + row)) continue;
+            if (!transition_cache->rows.at(row).admitted) continue;
+            if (preservation_prunes(row)) continue;
             best = std::min(
-                best, sparse_row_q(span.offset + row, row_work));
+                best, sparse_row_q(row, row_work));
             transition_work += row_work;
             ++result.diagnostics.bellman_action_evaluations;
         }
@@ -1941,13 +1958,43 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                      expanded_count >= options.max_expanded_states) ||
                     focused_closure_proved) {
                     prepare_iteration();
-                    if (result.diagnostics.resource_cap_hit) {
+                    if (result.diagnostics.resource_cap_hit &&
+                        (!incremental_action_generation ||
+                         incremental_envelope_closed)) {
                         phase = SolvePhase::Done;
                     }
                     break; /* expose the phase boundary to callers */
                 }
+                const bool alternative_unit =
+                    expansion_is_incremental_alternative;
+                const std::size_t cap_count_before_unit =
+                    result.diagnostics.cap_hits.size();
                 const bool completed_state = expand_one_unit();
                 --remaining;
+                if (completed_state && alternative_unit) {
+                    if (expansion_incremental_resource_limited ||
+                        result.diagnostics.cap_hits.size() >
+                            cap_count_before_unit) {
+                        phase = SolvePhase::Done;
+                        break;
+                    }
+                    const bool action_added_states =
+                        !incremental_alternative_rows.empty() &&
+                        incremental_alternative_rows.back().states_added != 0;
+                    if (action_added_states && !queue.empty()) {
+                        incremental_restricted_values_ready = false;
+                        continue;
+                    }
+                    if (classify_incremental_alternatives()) {
+                        restart_incremental_optimization();
+                        continue;
+                    }
+                    if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                    phase = SolvePhase::Done;
+                    break;
+                }
                 if (completed_state && !focused_mode &&
                     expanded_count >= next_focus_checkpoint &&
                     queue.size() >
@@ -1958,7 +2005,9 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 }
                 if (result.diagnostics.resource_cap_hit) {
                     prepare_iteration();
-                    if (result.diagnostics.resource_cap_hit) {
+                    if (result.diagnostics.resource_cap_hit &&
+                        (!incremental_action_generation ||
+                         incremental_envelope_closed)) {
                         phase = SolvePhase::Done;
                     }
                     break;
@@ -1993,6 +2042,17 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             if (!backup_active &&
                 (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {
+                if (incremental_action_generation &&
+                    !incremental_envelope_closed) {
+                    incremental_restricted_values_ready = true;
+                    if (classify_incremental_alternatives()) {
+                        restart_incremental_optimization();
+                        continue;
+                    }
+                    if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                }
                 phase = SolvePhase::Done;
                 break;
             }
@@ -2007,6 +2067,17 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
             if (!backup_active &&
                 (optimization_converged() ||
                  sweeps >= options.max_sweeps)) {
+                if (incremental_action_generation &&
+                    !incremental_envelope_closed) {
+                    incremental_restricted_values_ready = true;
+                    if (classify_incremental_alternatives()) {
+                        restart_incremental_optimization();
+                        continue;
+                    }
+                    if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                }
                 phase = SolvePhase::Done;
             }
         }

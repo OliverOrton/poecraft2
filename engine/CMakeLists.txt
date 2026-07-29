@@ -65,6 +65,7 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_options.cpp
     src/solver_solve.cpp
     src/solver_solve_expand.cpp
+    src/solver_solve_incremental.cpp
     src/solver_solve_bellman.cpp
     src/solver_solve_focused.cpp
     src/solver_solve_constructive.cpp

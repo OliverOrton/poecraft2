@@ -1,6 +1,6 @@
 # Chaos-Anchored Incremental Action Generation
 
-**Status: active (2026-07-28).**
+**Status: completed (2026-07-28).**
 
 Owner: Oliver
 

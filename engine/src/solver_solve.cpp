@@ -190,6 +190,70 @@ SolveWork::Impl::Impl(
                 static_operator_indices.push_back(index);
             }
         }
+        incremental_action_generation =
+            options.goal_progress_gated_reforges;
+        if (incremental_action_generation) {
+            std::vector<std::uint32_t> anchors;
+            anchors.reserve(static_operator_indices.size());
+            delayed_operator_indices.reserve(
+                static_operator_indices.size());
+            for (const std::uint32_t index : static_operator_indices) {
+                if (incremental_alternative_type(index)) {
+                    delayed_operator_indices.push_back(index);
+                } else {
+                    anchors.push_back(index);
+                }
+            }
+            static_operator_indices = std::move(anchors);
+            if (!delayed_operator_indices.empty()) {
+                /*
+                 * Establish one exact Fossil comparison first (the existing
+                 * goal-relevant order selects Lucent/Jagged on the frozen
+                 * controls), then sample the other delayed mechanic families
+                 * before returning to the remaining Fossil loadouts. This is
+                 * only a deterministic evaluation order.
+                 */
+                std::vector<std::uint32_t> ordered;
+                ordered.reserve(delayed_operator_indices.size());
+                const auto action_type = [&](const std::uint32_t index) {
+                    const PlannerOperator& planner =
+                        calc.operators().at(index);
+                    return calc.registry().actions.at(
+                        planner.primitive_action).params.type;
+                };
+                const auto first_fossil = std::find_if(
+                    delayed_operator_indices.begin(),
+                    delayed_operator_indices.end(),
+                    [&](const std::uint32_t index) {
+                        return action_type(index) == ActionType::Fossil;
+                    });
+                if (first_fossil != delayed_operator_indices.end()) {
+                    ordered.push_back(*first_fossil);
+                }
+                for (const ActionType family :
+                     {ActionType::HarvestReforge,
+                      ActionType::Essence,
+                      ActionType::Fossil}) {
+                    for (const std::uint32_t index :
+                         delayed_operator_indices) {
+                        if (index == (first_fossil ==
+                                         delayed_operator_indices.end()
+                                     ? kNoId
+                                     : *first_fossil)) {
+                            continue;
+                        }
+                        if (action_type(index) == family) {
+                            ordered.push_back(index);
+                        }
+                    }
+                }
+                delayed_operator_indices = std::move(ordered);
+            }
+            if (delayed_operator_indices.empty()) {
+                incremental_action_generation = false;
+                incremental_envelope_closed = true;
+            }
+        }
 
         result.start_state = calc.intern_item(start_item);
         const bool has_constructive_renewal = std::any_of(
@@ -214,6 +278,20 @@ SolveWork::Impl::Impl(
                                     : std::max<std::uint32_t>(
                                           1,
                                           options.focused_expansion_checkpoint);
+        if (incremental_action_generation &&
+            options.max_expanded_states > 1) {
+            /*
+             * The legacy renewal schedule switches to focused proof work
+             * after the root. Incremental mode first releases a real batch
+             * of Chaos successors, then uses the configured focus checkpoint
+             * to establish bounded fringe values before the discovery cap
+             * can fill with cheap-action deltas.
+             */
+            next_focus_checkpoint = std::min(
+                options.max_expanded_states - 1,
+                std::max<std::uint32_t>(
+                    2, options.focused_expansion_checkpoint));
+        }
         priced_operator_position.assign(calc.operators().size(), -1);
         for (std::uint32_t i = 0; i < operators.size(); ++i) {
             priced_operator_position[operators[i].index] =

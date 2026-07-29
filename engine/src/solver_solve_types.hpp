@@ -118,6 +118,14 @@ struct CarrierEffectSummary {
 
 struct SparseRow {
     std::uint32_t owner_state = kNoId;
+    /*
+     * Rows were originally appended as one contiguous block per state.  The
+     * incremental action scheduler may admit another row after other states
+     * have published theirs, so row ownership is now an index-stable linked
+     * chain.  Global row ids and every transition arena offset remain stable.
+     */
+    std::uint64_t next_owner_row =
+        std::numeric_limits<std::uint64_t>::max();
     std::uint64_t variant_offset = 0;
     std::uint32_t variant_count = 0;
     std::uint32_t variant_capacity = 0;
@@ -129,10 +137,12 @@ struct SparseRow {
     std::uint64_t choice_offset = 0;
     std::uint32_t choice_count = 0;
     CarrierEffectSummary preservation_effect;
+    bool admitted = true;
 };
 
 struct StateRowSpan {
     std::uint64_t offset = 0;
+    std::uint64_t tail = 0;
     std::uint32_t count = 0;
 };
 
@@ -146,6 +156,8 @@ struct PendingSparseRow {
     const OutcomeDistribution* shared_kernel_identity = nullptr;
     std::optional<std::size_t> exact_kernel_hash;
     bool entry_relative_self = false;
+    bool admitted = true;
+    bool collapse_equivalent = true;
 };
 
 struct PricedSparseRow {
@@ -411,6 +423,49 @@ struct SolveTransitionCache {
     std::uint64_t estimated_owned_bytes() const;
 };
 
+/*
+ * Iterate the stable global row ids owned by one state.  The first rows of a
+ * freshly expanded state are normally adjacent, but late incremental actions
+ * are not required to be contiguous.
+ */
+struct StateRowIndexIterator {
+    const std::vector<SparseRow>* rows = nullptr;
+    std::uint64_t current = 0;
+    std::uint32_t remaining = 0;
+
+    std::uint64_t operator*() const { return current; }
+    bool operator!=(const StateRowIndexIterator& other) const {
+        return remaining != other.remaining;
+    }
+    StateRowIndexIterator& operator++() {
+        if (remaining != 0) {
+            --remaining;
+            if (remaining != 0) {
+                current = rows->at(current).next_owner_row;
+            }
+        }
+        return *this;
+    }
+};
+
+struct StateRowIndexRange {
+    const std::vector<SparseRow>* rows = nullptr;
+    StateRowSpan span;
+
+    StateRowIndexIterator begin() const {
+        return {rows, span.offset, span.count};
+    }
+    StateRowIndexIterator end() const {
+        return {rows, 0, 0};
+    }
+};
+
+inline StateRowIndexRange state_row_indices(
+        const SolveTransitionCache& cache,
+        const std::uint32_t state) {
+    return {&cache.rows, cache.state_rows.at(state)};
+}
+
 namespace solve_detail {
 
 struct CapturedBoundedPolicyRow {
@@ -444,6 +499,7 @@ struct SolveWork::Impl {
     SolveResult result;
     std::vector<PricedOperator> operators;
     std::vector<std::uint32_t> static_operator_indices;
+    std::vector<std::uint32_t> delayed_operator_indices;
     std::vector<std::uint32_t> expansion_operator_indices;
     std::vector<bool> reported_unsupported;
     std::vector<std::uint8_t> expanded;
@@ -454,6 +510,47 @@ struct SolveWork::Impl {
     bool expansion_prepared = false;
     std::uint32_t expansion_state = kNoId;
     std::uint32_t expansion_operator_cursor = 0;
+    bool expansion_is_incremental_alternative = false;
+    bool expansion_incremental_resource_limited = false;
+    std::uint64_t expansion_appended_row =
+        std::numeric_limits<std::uint64_t>::max();
+    bool incremental_action_generation = false;
+    bool incremental_envelope_closed = false;
+    bool incremental_restricted_values_ready = false;
+    std::vector<std::uint32_t> incremental_carriers;
+    std::size_t incremental_carrier_cursor = 0;
+    std::size_t incremental_operator_cursor = 0;
+    bool incremental_dynamic_prepared = false;
+    std::size_t incremental_dynamic_operator_cursor = 0;
+    std::vector<std::uint32_t> incremental_dynamic_operator_indices;
+    struct IncrementalAlternativeRow {
+        enum class Status : std::uint8_t {
+            PendingValues,
+            Admitted,
+            NonImproving,
+            Unresolved,
+        };
+        std::uint32_t state = kNoId;
+        std::uint32_t operator_index = kNoId;
+        std::uint64_t row_index =
+            std::numeric_limits<std::uint64_t>::max();
+        Status status = Status::PendingValues;
+        double lower_q = kInfinity;
+        double upper_q = kInfinity;
+        double improvement_margin = 0.0;
+        std::uint32_t states_added = 0;
+    };
+    std::vector<IncrementalAlternativeRow> incremental_alternative_rows;
+    std::uint64_t incremental_unevaluated_actions = 0;
+    std::uint64_t incremental_inapplicable_actions = 0;
+    std::uint64_t incremental_resource_unresolved_actions = 0;
+    std::uint64_t incremental_unique_kernel_evaluations = 0;
+    std::uint64_t incremental_carrier_kernel_reuses = 0;
+    std::uint64_t incremental_reoptimizations = 0;
+    std::uint32_t incremental_first_alternative_expanded_states = 0;
+    std::uint32_t expansion_states_outside_chaos_support = 0;
+    std::vector<std::uint8_t> incremental_chaos_support;
+    std::vector<std::uint8_t> incremental_nonchaos_states_seen;
     std::uint32_t peak_queue_size = 0;
     std::uint32_t sweeps = 0;
     double residual = kValueCeiling;
@@ -892,7 +989,9 @@ struct SolveWork::Impl {
         const std::uint32_t state,
         const StateLocalAutomaticCandidate& decision) const;
 
-    void prepare_state_expansion(const std::uint32_t state);
+    void prepare_state_expansion(
+        const std::uint32_t state,
+        bool include_state_local_automatic = true);
 
     double acceptable_residual() const;
 
@@ -992,6 +1091,23 @@ struct SolveWork::Impl {
         PendingSparseRow pending);
 
     bool expand_one_unit();
+
+    bool incremental_alternative_type(
+        const std::uint32_t operator_index) const;
+
+    void retain_incremental_carrier(const std::uint32_t state);
+
+    bool schedule_next_incremental_alternative();
+
+    bool classify_incremental_alternatives();
+
+    double sparse_row_q_for_values(
+        std::size_t row_index,
+        const std::vector<double>& values) const;
+
+    void restart_incremental_optimization();
+
+    void finalize_incremental_diagnostics();
 
     bool priced_variant_cost(
         const SparseVariant& variant,

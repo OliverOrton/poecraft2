@@ -14,10 +14,12 @@ void SolveWork::Impl::begin_focused_lower_solve() {
         transition_cache->state_rows.resize(state_count);
         std::vector<double> previous_values = std::move(result.values);
         result.values.assign(state_count, 0.0);
-        for (std::uint32_t state = 0; state < state_count; ++state) {
-            if (calc.is_goal_state(calc.state(state))) continue;
-            result.values[state] =
-                optimistic_completion_cost_for_state(state);
+        if (!incremental_action_generation) {
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (calc.is_goal_state(calc.state(state))) continue;
+                result.values[state] =
+                    optimistic_completion_cost_for_state(state);
+            }
         }
         /* Expanding a previously zero-valued frontier can only raise the
          * focused lower bound. Preserve the last round's admissible values
@@ -94,13 +96,11 @@ void SolveWork::Impl::begin_focused_lower_solve() {
             const std::uint64_t no_row =
                 std::numeric_limits<std::uint64_t>::max();
             policy_rows.assign(state_count, no_row);
-            const StateRowSpan& span = transition_cache->state_rows.at(
-                result.start_state);
             double best = kInfinity;
             std::uint64_t best_row = no_row;
-            for (std::uint32_t relative = 0;
-                 relative < span.count; ++relative) {
-                const std::uint64_t absolute = span.offset + relative;
+            for (const std::uint64_t absolute :
+                 state_row_indices(*transition_cache, result.start_state)) {
+                if (!transition_cache->rows.at(absolute).admitted) continue;
                 if (preservation_prunes(absolute)) continue;
                 std::uint32_t work = 0;
                 const double candidate = sparse_row_q(absolute, work);
@@ -272,11 +272,10 @@ double SolveWork::Impl::focused_start_upper_bound(
                 failure_value, fallback_terminal_upper(state, fallback));
         };
         double best = continuation_upper(result.start_state);
-        const StateRowSpan& span =
-            transition_cache->state_rows.at(result.start_state);
-        for (std::uint32_t relative = 0; relative < span.count; ++relative) {
-            const std::uint64_t absolute = span.offset + relative;
+        for (const std::uint64_t absolute :
+             state_row_indices(*transition_cache, result.start_state)) {
             const SparseRow& row = transition_cache->rows.at(absolute);
+            if (!row.admitted) continue;
             const PricedSparseRow& priced = priced_rows.at(absolute);
             if (priced.operator_index == kNoId ||
                 !std::isfinite(priced.cost) || priced.cost < 0.0) {
@@ -357,11 +356,10 @@ std::pair<double, std::uint64_t> SolveWork::Impl::focused_direct_state_upper(
         }
         double best = kInfinity;
         std::uint64_t best_row = no_row;
-        const StateRowSpan& span =
-            transition_cache->state_rows.at(state);
-        for (std::uint32_t relative = 0; relative < span.count; ++relative) {
-            const std::uint64_t absolute = span.offset + relative;
+        for (const std::uint64_t absolute :
+             state_row_indices(*transition_cache, state)) {
             const SparseRow& row = transition_cache->rows.at(absolute);
+            if (!row.admitted) continue;
             const PricedSparseRow& priced = priced_rows.at(absolute);
             if (priced.operator_index == kNoId ||
                 !std::isfinite(priced.cost) || priced.cost < 0.0) {
@@ -1023,6 +1021,27 @@ void SolveWork::Impl::run_focused_lower_unit() {
         if (!backup_active && optimization_converged()) {
             if (focused_upper_mode) {
                 finish_focused_upper_solve(true);
+            } else if (incremental_action_generation &&
+                       !incremental_envelope_closed) {
+                ++result.diagnostics.focused_expansion_rounds;
+                result.diagnostics.focused_lower_bound =
+                    result.values.at(result.start_state);
+                if (output_incumbent.has_value()) {
+                    result.diagnostics.focused_upper_bound =
+                        output_incumbent->certified_upper_bound;
+                    result.diagnostics.focused_optimality_gap = std::max(
+                        0.0,
+                        result.diagnostics.focused_upper_bound -
+                            result.diagnostics.focused_lower_bound);
+                }
+                focus_optimizing = false;
+                focused_lower_mode = false;
+                incremental_restricted_values_ready = true;
+                if (classify_incremental_alternatives()) {
+                    restart_incremental_optimization();
+                } else if (!schedule_next_incremental_alternative()) {
+                    phase = SolvePhase::Done;
+                }
             } else {
                 finish_focused_lower_solve();
             }

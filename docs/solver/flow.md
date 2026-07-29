@@ -188,6 +188,17 @@ bounded within the gated restriction rather than exact. The compiler
 independently revalidates the witness and emits a compact goal-or-repeat loop;
 it does not enumerate one strategy node per retained partial state.
 
+Goal-progress-gated solves also use a Chaos-anchored incremental action
+envelope. A completed Chaos row releases and queues its exact partial
+successors before filtered Fossil, corrected Harvest reforge, and
+goal-relevant Essence alternatives finish. Bellman may optimize the admitted
+subset, then exact delayed Q rows are admitted and reoptimized, proved
+non-improving, or retained as unresolved. Compatible outcomes use ordinary
+Chaos-created state IDs rather than a stored cross-action structural DAG.
+Support-delta states are queued and expanded before the action can be
+classified. The envelope is applied at every reached compatible carrier, and
+an open or resource-limited envelope blocks an exact result.
+
 The worker starts from the requested/default work count, adapts each step to a
 roughly 12 ms slice, and clamps Solve to one through four native work items.
 It rebases to one item at phase changes, emits progress at phase boundaries or

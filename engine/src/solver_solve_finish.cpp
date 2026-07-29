@@ -61,6 +61,7 @@ SolveResult SolveWork::Impl::finish() {
             throw std::logic_error("solver work was already finished");
         }
         const auto extraction_started = std::chrono::steady_clock::now();
+        finalize_incremental_diagnostics();
 
         const bool sweep_cap_hit =
             sweeps >= options.max_sweeps && !optimization_converged();
@@ -196,13 +197,11 @@ SolveResult SolveWork::Impl::finish() {
             double best_variance = kInfinity;
             std::uint32_t best_operator = kNoId;
             std::uint64_t best_row_index = std::numeric_limits<std::uint64_t>::max();
-            const StateRowSpan& span =
-                transition_cache->state_rows.at(state);
-            for (std::uint32_t row_index = 0; row_index < span.count;
-                 ++row_index) {
-                const std::uint64_t absolute_row = span.offset + row_index;
+            for (const std::uint64_t absolute_row :
+                 state_row_indices(*transition_cache, state)) {
                 if (preservation_prunes(absolute_row)) continue;
                 const SparseRow& row = transition_cache->rows.at(absolute_row);
+                if (!row.admitted) continue;
                 const std::uint64_t variance_scratch_bytes =
                     (static_cast<std::uint64_t>(row.transition_count) +
                      row.choice_count + 1) *
@@ -443,13 +442,13 @@ SolveResult SolveWork::Impl::finish() {
                     }
                     continue;
                 }
-                const StateRowSpan& span =
-                    transition_cache->state_rows.at(state);
                 const SparseRow* selected = nullptr;
-                for (std::uint32_t i = 0; i < span.count; ++i) {
+                for (const std::uint64_t row_index :
+                     state_row_indices(*transition_cache, state)) {
                     const SparseRow& row =
-                        transition_cache->rows.at(span.offset + i);
-                    if (priced_rows[span.offset + i].operator_index ==
+                        transition_cache->rows.at(row_index);
+                    if (!row.admitted) continue;
+                    if (priced_rows[row_index].operator_index ==
                         operator_index) {
                         selected = &row;
                         break;
@@ -545,6 +544,8 @@ SolveResult SolveWork::Impl::finish() {
             exact_gap_proof_tolerance();
         const bool final_optimization_converged = optimization_converged();
         result.converged = focused_exact &&
+                           (!incremental_action_generation ||
+                            incremental_envelope_closed) &&
                            !result.diagnostics.state_cap_hit &&
                            !result.diagnostics.resource_cap_hit &&
                            final_optimization_converged &&

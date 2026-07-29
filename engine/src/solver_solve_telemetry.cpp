@@ -69,6 +69,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                diagnostics.constructive_state_witnesses) +
            string_vector_owned_bytes(
                diagnostics.automatic_candidate_witnesses) +
+           string_vector_owned_bytes(
+               diagnostics.incremental_action_witnesses) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
                sizeof(FocusedScheduleRoundTelemetry) +
@@ -272,6 +274,47 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             transition_cache->automatic_admission_phases;
         snapshot.diagnostics.automatic_candidate_witnesses_omitted =
             snapshot.diagnostics.automatic_rows_considered;
+        snapshot.diagnostics.incremental_action_generation =
+            incremental_action_generation;
+        snapshot.diagnostics.incremental_action_envelope_closed =
+            !incremental_action_generation || incremental_envelope_closed;
+        snapshot.diagnostics.incremental_actions_unevaluated =
+            incremental_unevaluated_actions;
+        snapshot.diagnostics.incremental_actions_evaluating =
+            expansion_active && expansion_is_incremental_alternative ? 1 : 0;
+        snapshot.diagnostics.incremental_actions_unresolved =
+            incremental_resource_unresolved_actions;
+        snapshot.diagnostics.incremental_actions_inapplicable =
+            incremental_inapplicable_actions;
+        snapshot.diagnostics.incremental_actions_admitted = 0;
+        snapshot.diagnostics.incremental_actions_non_improving = 0;
+        snapshot.diagnostics
+            .incremental_states_outside_chaos_support = 0;
+        for (const IncrementalAlternativeRow& candidate :
+             incremental_alternative_rows) {
+            if (candidate.status ==
+                IncrementalAlternativeRow::Status::Admitted) {
+                ++snapshot.diagnostics.incremental_actions_admitted;
+            } else if (candidate.status ==
+                       IncrementalAlternativeRow::Status::NonImproving) {
+                ++snapshot.diagnostics
+                    .incremental_actions_non_improving;
+            } else {
+                ++snapshot.diagnostics.incremental_actions_unresolved;
+            }
+            snapshot.diagnostics
+                .incremental_states_outside_chaos_support +=
+                candidate.states_added;
+        }
+        snapshot.diagnostics.incremental_unique_kernel_evaluations =
+            incremental_unique_kernel_evaluations;
+        snapshot.diagnostics.incremental_carrier_kernel_reuses =
+            incremental_carrier_kernel_reuses;
+        snapshot.diagnostics.incremental_bellman_reoptimizations =
+            incremental_reoptimizations;
+        snapshot.diagnostics
+            .incremental_first_alternative_expanded_states =
+            incremental_first_alternative_expanded_states;
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
             owned_byte_ledger_requests;
         snapshot.diagnostics.solve_owned_byte_reconciliations =
@@ -410,8 +453,19 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += owned_operators_nested_bytes;
         bytes += (reported_unsupported.capacity() + 7) / 8;
         bytes += static_operator_indices.capacity() * sizeof(std::uint32_t);
+        bytes += delayed_operator_indices.capacity() *
+                 sizeof(std::uint32_t);
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
+        bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_dynamic_operator_indices.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_alternative_rows.capacity() *
+                 sizeof(IncrementalAlternativeRow);
+        bytes += incremental_chaos_support.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += incremental_nonchaos_states_seen.capacity() *
+                 sizeof(std::uint8_t);
         bytes += expanded.capacity() * sizeof(std::uint8_t);
         bytes += queued.capacity() * sizeof(std::uint8_t);
         bytes += static_cast<std::uint64_t>(peak_queue_size) *
@@ -551,8 +605,19 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         }
         bytes += (reported_unsupported.capacity() + 7) / 8;
         bytes += static_operator_indices.capacity() * sizeof(std::uint32_t);
+        bytes += delayed_operator_indices.capacity() *
+                 sizeof(std::uint32_t);
         bytes += expansion_operator_indices.capacity() *
                  sizeof(std::uint32_t);
+        bytes += incremental_carriers.capacity() * sizeof(std::uint32_t);
+        bytes += incremental_dynamic_operator_indices.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += incremental_alternative_rows.capacity() *
+                 sizeof(IncrementalAlternativeRow);
+        bytes += incremental_chaos_support.capacity() *
+                 sizeof(std::uint8_t);
+        bytes += incremental_nonchaos_states_seen.capacity() *
+                 sizeof(std::uint8_t);
         bytes += expanded.capacity() * sizeof(std::uint8_t);
         bytes += queued.capacity() * sizeof(std::uint8_t);
         bytes += static_cast<std::uint64_t>(peak_queue_size) *
@@ -1828,6 +1893,74 @@ std::string serialize_solver_telemetry(
                 std::to_string(values.selected_bytes) + "}";
     }
     json += "}}";
+
+    json += ",\"incremental_action_envelope\":";
+    if (diagnostics == nullptr) {
+        json += "null";
+    } else {
+        json += "{\"enabled\":" +
+                std::string(bool_json(
+                    diagnostics->incremental_action_generation));
+        json += ",\"closed\":" +
+                std::string(bool_json(
+                    diagnostics->incremental_action_envelope_closed));
+        json += ",\"actions\":{\"admitted\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_admitted);
+        json += ",\"evaluated_non_improving\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_non_improving);
+        json += ",\"unevaluated\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_unevaluated);
+        json += ",\"evaluating\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_evaluating);
+        json += ",\"unresolved\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_unresolved);
+        json += ",\"inapplicable\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_inapplicable) + "}";
+        json += ",\"kernels\":{\"unique_evaluations\":" +
+                std::to_string(
+                    diagnostics->incremental_unique_kernel_evaluations);
+        json += ",\"carrier_reuses\":" +
+                std::to_string(
+                    diagnostics->incremental_carrier_kernel_reuses) + "}";
+        json += ",\"states_outside_chaos_support\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_states_outside_chaos_support);
+        json += ",\"bellman_reoptimizations\":" +
+                std::to_string(
+                    diagnostics->incremental_bellman_reoptimizations);
+        json += ",\"first_alternative_expanded_states\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_first_alternative_expanded_states);
+        json += ",\"remaining_action_envelope\":" +
+                std::to_string(
+                    diagnostics->incremental_actions_unevaluated +
+                    diagnostics->incremental_actions_evaluating +
+                    diagnostics->incremental_actions_unresolved);
+        json += ",\"witnesses\":[";
+        for (std::size_t i = 0;
+             i < diagnostics->incremental_action_witnesses.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += diagnostics->incremental_action_witnesses[i];
+        }
+        json += "],\"witness_samples\":{\"retained\":" +
+                std::to_string(
+                    diagnostics->incremental_action_witnesses.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_action_witnesses_omitted);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) +
+                "}}";
+    }
 
     json += ",\"action_analysis\":{\"semantics\":{"
             "\"search_cost_is_observational\":true,"

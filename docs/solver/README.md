@@ -305,6 +305,40 @@ back through the selected reforge. This compact form is an exact compilation
 of the witnessed fixed policy, not a Bellman quotient or a global-optimality
 claim.
 
+#### Chaos-anchored incremental action envelope
+
+In goal-progress-gated mode, the solver no longer requires every filtered
+operator for a carrier to finish before releasing that carrier's successors.
+It completes Chaos and inexpensive ordinary rows first, immediately interns
+and queues their successors, and optimizes the currently admitted restricted
+graph. Filtered Fossil, corrected Harvest reforge, and goal-relevant Essence
+rows are then evaluated exactly as delayed alternatives at every reached
+compatible state.
+
+Sparse rows retain stable owner links, so a delayed row may be appended after
+Bellman work has begun without relying on per-state contiguous storage. A
+completed alternative is admitted when its exact Q interval proves an
+improvement and then triggers Bellman reoptimization. It is marked
+non-improving only when its complete exact Q value cannot improve the final
+restricted value. New support introduced by Fossil added/forced modifiers or
+Essence guarantees is interned and expanded before classification. Otherwise
+the row remains unresolved.
+
+Chaos support is a state-ID membership authority, not a retained structural
+DAG. Collision-checked exact reforge-kernel signatures can reuse a completed
+distribution across equivalent carriers; action-specific probabilities are
+still calculated and charged. Compatible Fossil and Harvest outcomes resolve
+through the ordinary state interner. Telemetry reports action lifecycle
+counts, exact Q intervals, unique kernel evaluations, carrier reuse,
+outside-Chaos states, Bellman reoptimizations, and the remaining envelope.
+
+The solver may return the existing executable gated incumbent while the
+envelope is open, but that result is bounded and incomplete. Exact closure
+within the zero-progress-reroll restriction is allowed only after every
+filtered action is admitted, proved non-improving, or inapplicable.
+Unrestricted mode retains its previous atomic complete-envelope behavior and
+global exactness contract.
+
 ## Solve And Reprice
 
 A solve performs these implemented stages:

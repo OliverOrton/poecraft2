@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-28
 
+- [Chaos-Anchored Incremental Action Generation](2026-07-28-chaos-anchored-incremental-actions/README.md) —
+  retained an opt-in gated action-envelope scheduler that expands
+  Chaos-derived partial states before delayed Fossil/Harvest/Essence rows,
+  while open alternatives continue to block exactness.
+
 - [Harvest Natural Pools And Shared Exact Reforge Frontier](2026-07-28-harvest-shared-reforge-frontier/README.md) —
   retained the owner-approved targeted-natural Harvest correction and rejected
   the exact shared cross-action structural DAG after parity held but work,

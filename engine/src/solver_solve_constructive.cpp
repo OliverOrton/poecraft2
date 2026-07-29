@@ -2200,12 +2200,10 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
         best.anchor_state = restart_state;
         double best_start = kInfinity;
         std::unordered_set<std::uint32_t> inspected_renewals;
-        const StateRowSpan& renewal_span =
-            transition_cache->state_rows.at(result.start_state);
-        for (std::uint32_t relative = 0;
-             relative < renewal_span.count; ++relative) {
-            const std::uint64_t absolute = renewal_span.offset + relative;
+        for (const std::uint64_t absolute :
+             state_row_indices(*transition_cache, result.start_state)) {
             const SparseRow& row = transition_cache->rows.at(absolute);
+            if (!row.admitted) continue;
             if (row.choice_count != 0) continue;
             for (std::uint32_t variant_offset = 0;
                  variant_offset < row.variant_count; ++variant_offset) {
@@ -2303,15 +2301,12 @@ auto SolveWork::Impl::primitive_destructive_renewal_fallback() -> std::optional<
                     anchor_value = renewal_value;
                     anchor_operator = variant.operator_index;
                 } else {
-                    const StateRowSpan& anchor_span =
-                        transition_cache->state_rows.at(restart_state);
-                    for (std::uint32_t setup_relative = 0;
-                         setup_relative < anchor_span.count;
-                         ++setup_relative) {
-                        const std::uint64_t setup_absolute =
-                            anchor_span.offset + setup_relative;
+                    for (const std::uint64_t setup_absolute :
+                         state_row_indices(
+                             *transition_cache, restart_state)) {
                         const SparseRow& setup_row =
                             transition_cache->rows.at(setup_absolute);
+                        if (!setup_row.admitted) continue;
                         if (setup_row.choice_count != 0) continue;
                         for (std::uint32_t setup_variant_offset = 0;
                              setup_variant_offset < setup_row.variant_count;
@@ -2726,14 +2721,12 @@ auto SolveWork::Impl::progressive_fracture_fallback(
             return std::nullopt;
         }
         const std::uint32_t setup_operator = setup_operator_found->second;
-        const StateRowSpan& anchor_span =
-            transition_cache->state_rows.at(restart_state);
         const SparseRow* setup_row = nullptr;
         double setup_cost = kInfinity;
-        for (std::uint32_t relative = 0;
-             relative < anchor_span.count; ++relative) {
-            const SparseRow& row = transition_cache->rows.at(
-                anchor_span.offset + relative);
+        for (const std::uint64_t row_index :
+             state_row_indices(*transition_cache, restart_state)) {
+            const SparseRow& row = transition_cache->rows.at(row_index);
+            if (!row.admitted) continue;
             if (row.choice_count != 0) continue;
             for (std::uint32_t variant_offset = 0;
                  variant_offset < row.variant_count; ++variant_offset) {
@@ -2923,8 +2916,6 @@ auto SolveWork::Impl::focused_fallback() -> std::optional<FocusedFallbackPolicy>
             if (count != 0) return progress_fallback;
         }
         ++result.diagnostics.constructive_policy_anchor_eligible;
-        const StateRowSpan& span =
-            transition_cache->state_rows.at(renewal_source);
         FocusedFallbackPolicy best;
         best.anchor_state = restart_state;
         best.renewal_rarity = renewal_carrier.rarity;
@@ -2933,9 +2924,10 @@ auto SolveWork::Impl::focused_fallback() -> std::optional<FocusedFallbackPolicy>
             renewal_carrier.searing_exarch_tier;
         best.renewal_eater_of_worlds_tier =
             renewal_carrier.eater_of_worlds_tier;
-        for (std::uint32_t relative = 0; relative < span.count; ++relative) {
-            const std::uint64_t absolute = span.offset + relative;
+        for (const std::uint64_t absolute :
+             state_row_indices(*transition_cache, renewal_source)) {
             const SparseRow& row = transition_cache->rows.at(absolute);
+            if (!row.admitted) continue;
             if (row.choice_count != 0) continue;
             for (std::uint32_t variant_offset = 0;
                  variant_offset < row.variant_count; ++variant_offset) {
@@ -3033,12 +3025,10 @@ auto SolveWork::Impl::focused_fallback() -> std::optional<FocusedFallbackPolicy>
          * have the rarity of the diagnostic start. Compose an exact setup row
          * at that carrier with the renewable rare-state fallback; never
          * substitute the original start state for Restart's successor. */
-        const StateRowSpan& anchor_span =
-            transition_cache->state_rows.at(best.anchor_state);
-        for (std::uint32_t relative = 0;
-             relative < anchor_span.count; ++relative) {
-            const std::uint64_t absolute = anchor_span.offset + relative;
+        for (const std::uint64_t absolute :
+             state_row_indices(*transition_cache, best.anchor_state)) {
             const SparseRow& row = transition_cache->rows.at(absolute);
+            if (!row.admitted) continue;
             const PricedSparseRow& priced = priced_rows.at(absolute);
             if (priced.operator_index == kNoId ||
                 !std::isfinite(priced.cost) || priced.cost < 0.0) {

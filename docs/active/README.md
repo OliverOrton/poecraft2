@@ -1,28 +1,20 @@
 # Active Work
 
-**Status: one implementation plan is active.**
+**Status: no implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-The active
-[Chaos-Anchored Incremental Action Generation](plan.md)
-milestone replaces atomic all-operator state expansion with an exact
-incremental action-envelope schedule. Chaos and inexpensive rows release
-successors first; delayed Fossil, Harvest reforge, and Essence alternatives
-are evaluated against successively optimized restricted values without
-claiming exactness while the envelope remains open.
-
 The most recently completed milestone is
-[Harvest Natural Pools And Shared Exact Reforge Frontier](../archive/2026-07-28-harvest-shared-reforge-frontier/README.md).
-It retained the owner-approved targeted-natural Harvest correction. Its exact
-shared cross-action frontier matched sequential outcomes and hashes, but it
-retained action-additive work, stopped at the same product cap, added about
-47 MiB, and increased total wall time, so the prototype was restored.
+[Chaos-Anchored Incremental Action Generation](../archive/2026-07-28-chaos-anchored-incremental-actions/README.md).
+It retains an opt-in gated scheduler that releases and expands Chaos
+successors before delayed exact alternatives. The frozen cases now evaluate
+their selected Fossil and a corrected-Harvest row under a diagnostic cap, but
+wide Bellman intervals leave the action envelope honestly unresolved.
 
 The preceding
-[Root Broad-Row Falsification](../archive/2026-07-28-root-broad-row-falsification/README.md)
-retained exception-safe cap-owner telemetry and selected the structural
-frontier candidate now tested and closed above.
+[Harvest Natural Pools And Shared Exact Reforge Frontier](../archive/2026-07-28-harvest-shared-reforge-frontier/README.md)
+retained the Harvest mechanic correction and rejected the dense shared
+cross-action structural DAG.
 
 Older completed milestones are indexed in the
 [documentation archive](../archive/README.md). Unselected possibilities remain

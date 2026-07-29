@@ -1,0 +1,242 @@
+{
+  "schema_version": "chaos_anchored_incremental_actions_summary_v1",
+  "captured_on": "2026-07-28",
+  "decision": {
+    "retained": true,
+    "scope": "goal_progress_gated_reforges_only",
+    "unrestricted_solver_changed": false,
+    "product_caps_changed": false,
+    "dense_cross_action_dag_retained": false,
+    "probability_work_discounted": false,
+    "frozen_policy_improved": false,
+    "reason": "The exact toy gates pass and both frozen cases expand Chaos-derived partial states before delayed actions. Exact Fossil and corrected-Harvest rows can reuse Chaos-created state IDs, but their value intervals remain unresolved."
+  },
+  "architecture": {
+    "anchor": "chaos_then_inexpensive_ordinary_actions",
+    "delayed_families": [
+      "fossil",
+      "harvest_reforge",
+      "goal_relevant_essence",
+      "state_local_automatic_candidates"
+    ],
+    "row_storage": "stable_per_owner_linked_rows",
+    "chaos_support_authority": "state_id_membership_not_structural_dag",
+    "alternative_value": "exact_cost_plus_probability_dot_successor_value",
+    "exactness_gate": "all_filtered_actions_admitted_non_improving_or_inapplicable",
+    "open_or_resource_limited_result": "bounded_incomplete"
+  },
+  "toy_oracles": {
+    "native_checks": 515143,
+    "native_failures": 0,
+    "proved": [
+      "chaos_successor_release_before_alternatives_finish",
+      "better_alternative_admitted",
+      "worse_alternative_non_improving",
+      "admission_triggers_reoptimization",
+      "exceptional_support_states_added_and_expanded",
+      "incomplete_envelope_never_exact",
+      "carrier_specific_action_choice",
+      "deterministic_repeat_hashes"
+    ],
+    "exact_closed_oracle": {
+      "admitted": 3,
+      "evaluated_non_improving": 1,
+      "unresolved": 0,
+      "bellman_reoptimizations": 3,
+      "expanded_states_before_first_alternative": 3
+    },
+    "exceptional_support_oracle": {
+      "states_outside_chaos_support": 4,
+      "all_non_goal_states_expanded": true,
+      "envelope_closed": true
+    }
+  },
+  "unchanged_product_work_cap": {
+    "max_reforge_work": 3000000,
+    "diagnostic_only_discovered_state_ceiling": 200000,
+    "reason_for_state_ceiling": "Already measured complete gated Chaos supports exceed the source cases' 25000 discovered-state cap.",
+    "cases": [
+      {
+        "id": "natural-t1-full-four-47d8b909aa88",
+        "states_discovered": 134943,
+        "states_expanded": 32,
+        "rows": 248,
+        "transitions": 137024,
+        "reforge_work": 3000000,
+        "first_alternative_expanded_states": 32,
+        "unique_kernel_evaluations": 2,
+        "carrier_reuses": 31,
+        "unevaluated_actions": 703,
+        "unresolved_actions": 1,
+        "remaining_action_envelope": 704,
+        "lower_bound": 1,
+        "upper_bound": 60341416.98784247,
+        "transition_hash": "bce4dcb2b11cb4a4",
+        "policy_hash": "8b2a568f3c9cfd35",
+        "live_owned_bytes": 62297859,
+        "peak_owned_bytes": 82883280,
+        "wall_ms": 935.9038,
+        "raw_report_sha256": "a3437ab9cc4770dc9cdea5e45655cc87a46109edd2785255a18b49148544a806"
+      },
+      {
+        "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+        "states_discovered": 124161,
+        "states_expanded": 32,
+        "rows": 248,
+        "transitions": 125854,
+        "reforge_work": 3000000,
+        "first_alternative_expanded_states": 32,
+        "unique_kernel_evaluations": 2,
+        "carrier_reuses": 31,
+        "unevaluated_actions": 703,
+        "unresolved_actions": 1,
+        "remaining_action_envelope": 704,
+        "lower_bound": 1,
+        "upper_bound": 185688651.38279814,
+        "transition_hash": "8742c67f473d06b5",
+        "policy_hash": "a7b433c931dabaf5",
+        "live_owned_bytes": 38977614,
+        "peak_owned_bytes": 57814962,
+        "wall_ms": 771.2603,
+        "raw_report_sha256": "878ae8dec4debb7b0e392e073e7505825ac83d9eadeafedfb6a0eb10e17aeec7"
+      }
+    ]
+  },
+  "action_envelope_qualification": {
+    "diagnostic_caps": {
+      "max_reforge_work": 8000000,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 25000,
+      "max_solver_owned_bytes": 268435456,
+      "focused_checkpoint_states": 32,
+      "solve_step_work_items": 1
+    },
+    "cases": [
+      {
+        "id": "natural-t1-full-four-47d8b909aa88",
+        "states_discovered": 134943,
+        "states_expanded": 32,
+        "rows": 250,
+        "transitions": 364730,
+        "reforge_work": 8000000,
+        "completed_delayed_rows": [
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+            "label": "Lucent",
+            "reforge_work": 1883672,
+            "lower_q": 9.23043308034204,
+            "upper_q": 60341420.46413261,
+            "states_outside_chaos_support": 0,
+            "status": "unresolved"
+          },
+          {
+            "action": "harvest_reforge:attack",
+            "reforge_work": 2800289,
+            "lower_q": 3.316418998221694,
+            "upper_q": 60341418.63180959,
+            "states_outside_chaos_support": 0,
+            "status": "unresolved"
+          }
+        ],
+        "interrupted_action": "harvest_reforge:cold",
+        "interrupted_action_work": 508459,
+        "actions": {
+          "admitted": 0,
+          "evaluated_non_improving": 0,
+          "unevaluated": 701,
+          "unresolved": 3,
+          "remaining_envelope": 704
+        },
+        "unique_kernel_evaluations": 4,
+        "carrier_reuses": 31,
+        "states_outside_chaos_support": 0,
+        "transition_hash": "2d624705bb704ffc",
+        "policy_hash": "8b2a568f3c9cfd35",
+        "live_owned_bytes": 68591265,
+        "peak_owned_bytes": 83978031,
+        "wall_ms": [1787.9458, 1792.7838],
+        "raw_report_sha256": [
+          "db9a9a30269b6485b5b203fb1e231a672cf3f6f533da536a5ebab478c1684222",
+          "538431ccd01d3c1361447b50bab50d6ef2478c2bd52da193d65cc0e142aad9b4"
+        ]
+      },
+      {
+        "id": "natural-t1-deep-four-low-probability-1a1102b0e06b",
+        "states_discovered": 124161,
+        "states_expanded": 32,
+        "rows": 250,
+        "transitions": 346692,
+        "reforge_work": 8000000,
+        "completed_delayed_rows": [
+          {
+            "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+            "label": "Jagged",
+            "reforge_work": 2194169,
+            "lower_q": 11.592413790388758,
+            "upper_q": 185688655.34654388,
+            "states_outside_chaos_support": 0,
+            "status": "unresolved"
+          },
+          {
+            "action": "harvest_reforge:attack",
+            "reforge_work": 2799809,
+            "lower_q": 3.2938370956250465,
+            "upper_q": 185688652.52784011,
+            "states_outside_chaos_support": 0,
+            "status": "unresolved"
+          }
+        ],
+        "interrupted_action": "harvest_reforge:elemental",
+        "interrupted_action_work": 198442,
+        "actions": {
+          "admitted": 0,
+          "evaluated_non_improving": 0,
+          "unevaluated": 701,
+          "unresolved": 3,
+          "remaining_envelope": 704
+        },
+        "unique_kernel_evaluations": 4,
+        "carrier_reuses": 31,
+        "states_outside_chaos_support": 0,
+        "transition_hash": "08ee41675365b7fc",
+        "policy_hash": "a7b433c931dabaf5",
+        "live_owned_bytes": 43173873,
+        "peak_owned_bytes": 57814962,
+        "wall_ms": [1413.6316, 1416.4591],
+        "raw_report_sha256": [
+          "43cf55d4c153e327bcdeaf9a6d54340d928c61e7d45780c4b2d2c6924433baab",
+          "1805bba67149831f110b9da62c5b036ebefb1c2ab4c309ca3f55c65156eb8623"
+        ]
+      }
+    ]
+  },
+  "identity": {
+    "starting_source_commit": "f37b4ef",
+    "plan_commit": "97eac1c",
+    "artifact_manifest_sha256": "f363ed784539c32a8ef333df87d2c3a0e3b58f3accf4d89222eff8fce08445f1",
+    "corpus_manifest_sha256": "88570c7306ffaaab242c37896f4dbe2d529ad23e4f9e77e041012fb3d9f4822f",
+    "generator_config_sha256": "6c9acf7f3512b07776c5d0342f0fea24ee1dbe303ce2b198361d197ff6579512",
+    "compiler": "gcc-14.2.0",
+    "machine": {
+      "os_build": "Windows 10 Pro 26200",
+      "cpu": "13th Gen Intel(R) Core(TM) i7-13700K",
+      "cores": 16,
+      "logical_processors": 24,
+      "physical_memory_bytes": 68396957696
+    }
+  },
+  "verification": {
+    "release_native_checks": 515143,
+    "release_native_failures": 0,
+    "benchmark_spec_validation": {
+      "standard_cases": 12,
+      "natural_t1_cases": 146,
+      "passed": true
+    },
+    "release_wasm_rebuilt": true,
+    "web_tests": "passed",
+    "typescript_no_emit": "passed",
+    "known_gcc_optimizer_warning_reproduced": true
+  },
+  "wall_time_qualification": "Wall time is machine/compiler-bound and does not survive a hardware or compiler change. Work, states, lifecycle counts, Q witnesses, and deterministic hashes are the portable evidence."
+}

@@ -433,9 +433,13 @@ std::vector<std::uint64_t> SolveWork::Impl::state_behavior_signature(
                                       : StateRowSpan{};
         std::vector<std::uint32_t> rows;
         rows.reserve(span.count);
-        for (std::uint32_t i = 0; i < span.count; ++i) {
+        if (state < graph.state_rows.size()) {
+            for (const std::uint64_t row_index :
+                 state_row_indices(graph, state)) {
+            if (!graph.rows.at(row_index).admitted) continue;
             rows.push_back(intern_row_behavior(
-                graph, span.offset + i, partition, *cache));
+                graph, row_index, partition, *cache));
+            }
         }
         std::sort(rows.begin(), rows.end());
         out.push_back(rows.size());
@@ -501,12 +505,20 @@ std::string SolveWork::Impl::first_equivalence_witness(
         const auto first_action = [&](const StateRowSpan span)
             -> std::string {
             if (span.count == 0) return {};
-            const SparseRow& row = graph.rows.at(span.offset);
-            if (row.variant_count == 0) return {};
-            const SparseVariant& variant = graph.variant_arena->variants.at(
-                graph.variant_arena->row_variant_indices.at(
-                    row.variant_offset));
-            return calc.operators().at(variant.operator_index).id;
+            std::uint64_t row_index = span.offset;
+            for (std::uint32_t i = 0; i < span.count; ++i) {
+                const SparseRow& row = graph.rows.at(row_index);
+                if (row.admitted && row.variant_count != 0) {
+                    const SparseVariant& variant =
+                        graph.variant_arena->variants.at(
+                            graph.variant_arena->row_variant_indices.at(
+                                row.variant_offset));
+                    return calc.operators().at(
+                        variant.operator_index).id;
+                }
+                row_index = row.next_owner_row;
+            }
+            return {};
         };
         const std::string left_action = first_action(left_span);
         const std::string right_action = first_action(right_span);
@@ -524,6 +536,7 @@ void SolveWork::Impl::collect_action_observation_cardinalities(
             std::uint64_t, std::vector<std::vector<std::uint64_t>>>;
         std::vector<ExactBuckets> observed(calc.operators().size());
         for (const SparseRow& row : graph.rows) {
+            if (!row.admitted) continue;
             for (std::uint32_t i = 0; i < row.variant_count; ++i) {
                 const SparseVariant& variant =
                     graph.variant_arena->variants.at(
@@ -595,8 +608,11 @@ std::vector<std::uint64_t> SolveWork::Impl::shadow_state_signature(
                                       : StateRowSpan{};
         std::vector<std::vector<std::uint64_t>> rows;
         rows.reserve(span.count);
-        for (std::uint32_t r = 0; r < span.count; ++r) {
-            const SparseRow& row = graph.rows.at(span.offset + r);
+        if (state < graph.state_rows.size()) {
+            for (const std::uint64_t row_index :
+                 state_row_indices(graph, state)) {
+            const SparseRow& row = graph.rows.at(row_index);
+            if (!row.admitted) continue;
             std::vector<std::uint64_t> signature{
                 row.transition_offset,
                 row.transition_count,
@@ -629,6 +645,7 @@ std::vector<std::uint64_t> SolveWork::Impl::shadow_state_signature(
                 }
             }
             rows.push_back(std::move(signature));
+            }
         }
         std::sort(rows.begin(), rows.end());
         out.push_back(rows.size());
@@ -729,14 +746,16 @@ void SolveWork::Impl::build_quotient_graph(
             }
             quotient->expanded[owner] = 1;
             ++representative_expanded;
-            const StateRowSpan source_span = strict->state_rows.at(owner);
             StateRowSpan& target_span = quotient->state_rows[owner];
-            target_span.offset = quotient->rows.size();
-            for (std::uint32_t r = 0; r < source_span.count; ++r) {
+            for (const std::uint64_t source_row_index :
+                 state_row_indices(*strict, owner)) {
                 const SparseRow& source =
-                    strict->rows.at(source_span.offset + r);
+                    strict->rows.at(source_row_index);
+                if (!source.admitted) continue;
                 SparseRow row = source;
                 row.owner_state = owner;
+                row.next_owner_row =
+                    std::numeric_limits<std::uint64_t>::max();
                 const auto source_transition_span = std::make_pair(
                     source.transition_offset, source.transition_count);
                 auto projected = projected_transition_spans.find(
@@ -825,7 +844,7 @@ void SolveWork::Impl::build_quotient_graph(
                         throw std::logic_error(
                             "exact quotient source row has no operator: state=" +
                             std::to_string(owner) + " row=" +
-                            std::to_string(source_span.offset + r));
+                            std::to_string(source_row_index));
                     }
                 }
                 row.variant_count = source.variant_count;
@@ -837,6 +856,15 @@ void SolveWork::Impl::build_quotient_graph(
                         ++quotient->algebraic_self_loops;
                     }
                 }
+                const std::uint64_t target_row_index =
+                    quotient->rows.size();
+                if (target_span.count == 0) {
+                    target_span.offset = target_row_index;
+                } else {
+                    quotient->rows.at(target_span.tail).next_owner_row =
+                        target_row_index;
+                }
+                target_span.tail = target_row_index;
                 quotient->rows.push_back(row);
                 ++target_span.count;
             }

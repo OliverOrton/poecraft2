@@ -82,6 +82,13 @@ cross-action structural-DAG prototype. Lucent and Jagged shared lanes matched
 sequential outcomes and hashes exactly, but retained the same action-additive
 work, stopped at the same product boundary, added about 47 MiB, and increased
 total wall time. The experimental frontier was restored.
+The subsequent
+[Chaos-anchored incremental-action summary](evidence/chaos-anchored-incremental-actions-summary.json)
+pins the retained gated scheduler. Both frozen cases now expand 32
+Chaos-derived states before evaluating delayed actions. At a diagnostic 8M
+work cap each completes its selected exact Fossil plus one corrected-Harvest
+row using only Chaos-created state IDs, then honestly retains the overlapping
+Q rows and remaining envelope as unresolved.
 
 ## Benchmark workflow
 

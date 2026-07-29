@@ -1738,6 +1738,262 @@ void run_goal_progress_gated_reforge_tests() {
     }
 }
 
+void run_incremental_action_generation_tests() {
+    auto session = make_solve_session();
+    session->essence_guaranteed_mod_ids = {0, 2};
+    ActionRegistry registry = build_action_registry(*session);
+    const auto add_essence =
+        [&](const char* id, const std::uint32_t essence_index) {
+            ActionDescriptor action;
+            action.id = id;
+            action.display_name = id;
+            action.params.type = ActionType::Essence;
+            action.params.essence_index = essence_index;
+            action.kind = TransitionKind::Reforge;
+            action.cost_keys = {id};
+            action.legality.rarity_mask = 1u << PC_RARITY_RARE;
+            action.preservation.destructive_renewal = true;
+            action.preservation.preserves_fractured_affixes = true;
+            const std::uint32_t index =
+                static_cast<std::uint32_t>(registry.actions.size());
+            registry.index_by_id.emplace(id, index);
+            registry.actions.push_back(std::move(action));
+            return index;
+        };
+    const std::uint32_t good_essence =
+        add_essence("essence:incremental_goal", 0);
+    const std::uint32_t bad_essence =
+        add_essence("essence:incremental_junk", 1);
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 10.0},
+        {"essence:incremental_goal", 0.01},
+        {"essence:incremental_junk", 1000.0}};
+
+    CalcContext calc(
+        session, goal, registry,
+        {chaos, good_essence, bad_essence});
+    SolveOptions options;
+    options.goal_progress_gated_reforges = true;
+    options.focused_expansion_queue_threshold = 1000000;
+    const SolveResult result = solve(calc, start, prices, options);
+    std::printf(
+        "solver incremental action oracle: converged=%d closed=%d "
+        "admitted=%llu rejected=%llu unresolved=%llu unevaluated=%llu "
+        "reopts=%llu expanded=%u failure=%s\n",
+        result.converged ? 1 : 0,
+        result.diagnostics.incremental_action_envelope_closed ? 1 : 0,
+        static_cast<unsigned long long>(
+            result.diagnostics.incremental_actions_admitted),
+        static_cast<unsigned long long>(
+            result.diagnostics.incremental_actions_non_improving),
+        static_cast<unsigned long long>(
+            result.diagnostics.incremental_actions_unresolved),
+        static_cast<unsigned long long>(
+            result.diagnostics.incremental_actions_unevaluated),
+        static_cast<unsigned long long>(
+            result.diagnostics.incremental_bellman_reoptimizations),
+        result.diagnostics.expanded_states,
+        result.diagnostics.policy_evaluation_failure.c_str());
+    PC_CHECK(result.converged);
+    PC_CHECK(result.policy_status == SolvePolicyStatus::Exact);
+    PC_CHECK(result.diagnostics.incremental_action_generation);
+    PC_CHECK(
+        result.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(result.diagnostics.incremental_actions_admitted > 0);
+    PC_CHECK(
+        result.diagnostics.incremental_actions_non_improving > 0);
+    PC_CHECK(
+        result.diagnostics.incremental_bellman_reoptimizations > 0);
+    PC_CHECK(
+        result.diagnostics
+            .incremental_first_alternative_expanded_states > 1);
+    PC_CHECK(result.policy[result.start_state].index == good_essence);
+    const std::string telemetry = serialize_solver_telemetry(
+        calc, &result, nullptr, std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(telemetry));
+    PC_CHECK(
+        telemetry.find("\"incremental_action_envelope\":{"
+                       "\"enabled\":true,\"closed\":true") !=
+        std::string::npos);
+    CalcContext repeat_calc(
+        session, goal, registry,
+        {chaos, good_essence, bad_essence});
+    const SolveResult repeat =
+        solve(repeat_calc, start, prices, options);
+    PC_CHECK(identical_solve(result, repeat));
+    PC_CHECK(result.diagnostics.transition_bits_hash != 0);
+    PC_CHECK(result.diagnostics.policy_bits_hash != 0);
+    PC_CHECK(
+        result.diagnostics.transition_bits_hash ==
+        repeat.diagnostics.transition_bits_hash);
+    PC_CHECK(
+        result.diagnostics.policy_bits_hash ==
+        repeat.diagnostics.policy_bits_hash);
+
+    CalcContext capped_calc(
+        session, goal, registry,
+        {chaos, good_essence, bad_essence});
+    SolveOptions capped_options = options;
+    capped_options.max_expanded_states = 1;
+    capped_options.max_state_action_rows = 1;
+    const SolveResult capped =
+        solve(capped_calc, start, prices, capped_options);
+    PC_CHECK(!capped.converged);
+    PC_CHECK(capped.policy_available);
+    PC_CHECK(
+        capped.policy_status == SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(
+        !capped.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(capped.diagnostics.incremental_actions_unresolved > 0);
+    PC_CHECK(capped.termination == SolveTermination::RefusedResourceCap);
+
+    auto delta_session = make_solve_session();
+    pc_bitset_clear(
+        delta_session->normal_random_roll_mask.data(), 0);
+    pc_bitset_clear(
+        delta_session->positive_spawn_weight_mask.data(), 0);
+    pc_bitset_clear(
+        delta_session->positive_base_weight_mask.data(), 0);
+    delta_session->base_spawn_weight[0] = 0;
+    delta_session->base_roll_weight[0] = 0;
+    delta_session->essence_guaranteed_mod_ids = {0};
+    ActionRegistry delta_registry =
+        build_action_registry(*delta_session);
+    ActionDescriptor delta_essence;
+    delta_essence.id = "essence:incremental_delta";
+    delta_essence.display_name = delta_essence.id;
+    delta_essence.params.type = ActionType::Essence;
+    delta_essence.params.essence_index = 0;
+    delta_essence.kind = TransitionKind::Reforge;
+    delta_essence.cost_keys = {delta_essence.id};
+    delta_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    delta_essence.preservation.destructive_renewal = true;
+    delta_essence.preservation.preserves_fractured_affixes = true;
+    const std::uint32_t delta_essence_index =
+        static_cast<std::uint32_t>(
+            delta_registry.actions.size());
+    delta_registry.index_by_id.emplace(
+        delta_essence.id, delta_essence_index);
+    delta_registry.actions.push_back(std::move(delta_essence));
+    const std::uint32_t delta_chaos =
+        delta_registry.index_by_id.at("chaos");
+    GoalSpec delta_goal;
+    delta_goal.rarity = PC_RARITY_RARE;
+    GoalSlot delta_prefix;
+    delta_prefix.family_id = 100;
+    delta_prefix.min_tier = 1;
+    delta_goal.slots.push_back(delta_prefix);
+    GoalSlot delta_suffix;
+    delta_suffix.family_id = 104;
+    delta_suffix.min_tier = 1;
+    delta_goal.slots.push_back(delta_suffix);
+    CalcContext delta_calc(
+        delta_session, delta_goal, delta_registry,
+        {delta_chaos, delta_essence_index});
+    const SolveResult delta = solve(
+        delta_calc, start,
+        {{"chaos", 10.0}, {"essence:incremental_delta", 1.0}},
+        options);
+    std::printf(
+        "solver incremental delta oracle: closed=%d admitted=%llu "
+        "rejected=%llu outside=%llu states=%u witnesses=%zu\n",
+        delta.diagnostics.incremental_action_envelope_closed ? 1 : 0,
+        static_cast<unsigned long long>(
+            delta.diagnostics.incremental_actions_admitted),
+        static_cast<unsigned long long>(
+            delta.diagnostics.incremental_actions_non_improving),
+        static_cast<unsigned long long>(
+            delta.diagnostics.incremental_states_outside_chaos_support),
+        delta.diagnostics.discovered_states,
+        delta.diagnostics.incremental_action_witnesses.size());
+    PC_CHECK(delta.converged);
+    PC_CHECK(
+        delta.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(
+        delta.diagnostics
+            .incremental_states_outside_chaos_support > 0);
+    for (std::uint32_t state = 0;
+         state < delta.expanded.size(); ++state) {
+        if (!delta.goal_states[state]) {
+            PC_CHECK(delta.expanded[state]);
+        }
+    }
+
+    auto varying_session = make_solve_session();
+    varying_session->essence_guaranteed_mod_ids = {0};
+    ActionRegistry varying_registry =
+        build_action_registry(*varying_session);
+    ActionDescriptor inert_essence;
+    inert_essence.id = "essence:incremental_inapplicable";
+    inert_essence.display_name = inert_essence.id;
+    inert_essence.params.type = ActionType::Essence;
+    inert_essence.params.essence_index = 0;
+    inert_essence.kind = TransitionKind::Reforge;
+    inert_essence.cost_keys = {inert_essence.id};
+    inert_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    inert_essence.preservation.destructive_renewal = true;
+    inert_essence.preservation.preserves_fractured_affixes = true;
+    const std::uint32_t inert_essence_index =
+        static_cast<std::uint32_t>(
+            varying_registry.actions.size());
+    varying_registry.index_by_id.emplace(
+        inert_essence.id, inert_essence_index);
+    varying_registry.actions.push_back(std::move(inert_essence));
+    const std::uint32_t varying_transmute =
+        varying_registry.index_by_id.at("transmute");
+    const std::uint32_t varying_alteration =
+        varying_registry.index_by_id.at("alteration");
+    GoalSpec varying_goal;
+    varying_goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot varying_slot;
+    varying_slot.family_id = 100;
+    varying_slot.min_tier = 1;
+    varying_goal.slots.push_back(varying_slot);
+    GoalSlot varying_second_slot;
+    varying_second_slot.family_id = 104;
+    varying_second_slot.min_tier = 1;
+    varying_goal.slots.push_back(varying_second_slot);
+    CalcContext varying_calc(
+        varying_session, varying_goal, varying_registry,
+        {varying_transmute, varying_alteration,
+         inert_essence_index});
+    pc_item_state varying_start;
+    pc_item_clear(&varying_start);
+    pc_item_state varying_magic;
+    pc_item_clear(&varying_magic);
+    varying_magic.rarity = PC_RARITY_MAGIC;
+    place(&varying_magic, PC_SIDE_PREFIX, 0, 10);
+    const std::uint32_t varying_magic_state =
+        varying_calc.intern_item(varying_magic);
+    const SolveResult varying = solve(
+        varying_calc, varying_start,
+        {{"transmute", 1.0},
+         {"alteration", 1.0},
+         {"essence:incremental_inapplicable", 1000.0}},
+        options);
+    PC_CHECK(varying.converged);
+    PC_CHECK(varying.diagnostics.incremental_action_generation);
+    PC_CHECK(
+        varying.diagnostics.incremental_action_envelope_closed);
+    PC_CHECK(
+        varying.policy[varying.start_state].index ==
+        varying_transmute);
+    PC_CHECK(
+        varying.policy[varying_magic_state].index ==
+        varying_alteration);
+}
+
 bool read_text_file(const std::string& path, std::string& out) {
     std::ifstream stream(path, std::ios::binary);
     if (!stream) return false;
@@ -1936,5 +2192,6 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_constructive_renewal_upper_tests();
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
+    run_incremental_action_generation_tests();
     run_artifact_solve_tests(artifact_dir);
 }

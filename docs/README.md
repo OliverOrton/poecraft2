@@ -28,12 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Chaos-Anchored Incremental Action Generation](active/plan.md)
-milestone evaluates Chaos and inexpensive rows first, immediately releases
-their successor states, and incrementally evaluates delayed exact alternatives
-against restricted Bellman values. An open or resource-limited filtered action
-envelope blocks global exactness.
+No implementation boundary is active. Oliver must select the next chunk
+before implementation resumes.
+
+The completed
+[Chaos-Anchored Incremental Action Generation](archive/2026-07-28-chaos-anchored-incremental-actions/README.md)
+milestone retains an opt-in gated scheduler that releases and expands Chaos
+successors before delayed Fossil, corrected-Harvest, and goal-relevant Essence
+rows. Open alternatives remain explicitly unresolved and block exactness.
 
 The completed
 [Harvest Natural Pools And Shared Exact Reforge Frontier](archive/2026-07-28-harvest-shared-reforge-frontier/README.md)

@@ -457,7 +457,29 @@ SolveTransitionCache::AutomaticCandidateRecord SolveWork::Impl::automatic_record
         return record;
     }
 
-void SolveWork::Impl::prepare_state_expansion(const std::uint32_t state) {
+bool SolveWork::Impl::incremental_alternative_type(
+        const std::uint32_t operator_index) const {
+        if (operator_index >= calc.operators().size()) return false;
+        const PlannerOperator& planner =
+            calc.operators().at(operator_index);
+        if (planner.kind != PlannerOperatorKind::Primitive ||
+            planner.primitive_action >= calc.registry().actions.size()) {
+            return false;
+        }
+        switch (calc.registry().actions.at(
+                    planner.primitive_action).params.type) {
+        case ActionType::Essence:
+        case ActionType::Fossil:
+        case ActionType::HarvestReforge:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+void SolveWork::Impl::prepare_state_expansion(
+        const std::uint32_t state,
+        const bool include_state_local_automatic) {
         const auto prepare_started = std::chrono::steady_clock::now();
         expansion_operator_indices = static_operator_indices;
         if (options.goal_progress_gated_reforges &&
@@ -502,6 +524,50 @@ void SolveWork::Impl::prepare_state_expansion(const std::uint32_t state) {
                            restart_state != kNoId && state != restart_state;
                 }),
             expansion_operator_indices.end());
+        if (!include_state_local_automatic) {
+            /*
+             * Incremental mode publishes the exact primitive anchor graph
+             * before state-local compound candidates are synthesized. Those
+             * candidates are generated later for this carrier and enter the
+             * same delayed Q-value lifecycle; skipping them here is a
+             * schedule change, not an action-envelope reduction.
+             */
+            const auto priority = [&](const std::uint32_t index) {
+                const PlannerOperator& planner =
+                    calc.operators().at(index);
+                if (planner.kind == PlannerOperatorKind::Primitive &&
+                    calc.registry().actions.at(
+                        planner.primitive_action).params.type ==
+                        ActionType::Chaos) {
+                    return 0;
+                }
+                if (planner.automatic_kind ==
+                        AutomaticCandidateKind::PermanentBench ||
+                    (planner.kind == PlannerOperatorKind::Primitive &&
+                     calc.registry().actions.at(
+                         planner.primitive_action).params.type ==
+                         ActionType::Bench &&
+                     planner_goal_reach_mask(index) != 0)) {
+                    return 1;
+                }
+                if (index == restart_operator_index) return 2;
+                return 3;
+            };
+            std::stable_sort(
+                expansion_operator_indices.begin(),
+                expansion_operator_indices.end(),
+                [&](const std::uint32_t left,
+                    const std::uint32_t right) {
+                    return priority(left) < priority(right);
+                });
+            result.diagnostics.expansion_prepare_ns +=
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        prepare_started)
+                        .count());
+            return;
+        }
         AutomaticAdmissionLimits limits;
         limits.max_discovered_states = options.max_discovered_states;
         limits.max_state_action_rows = options.max_state_action_rows;
@@ -1517,9 +1583,9 @@ void SolveWork::Impl::finalize_preservation_diagnostics() {
         if (!options.preservation_control) return;
         for (std::uint32_t state = 0;
              state < transition_cache->state_rows.size(); ++state) {
-            const StateRowSpan& span = transition_cache->state_rows[state];
-            for (std::uint32_t i = 0; i < span.count; ++i) {
-                const std::uint64_t row_index = span.offset + i;
+            for (const std::uint64_t row_index :
+                 state_row_indices(*transition_cache, state)) {
+                if (!transition_cache->rows.at(row_index).admitted) continue;
                 const PreservationDecision decision =
                     preservation_decision(row_index);
                 if (decision.disposition ==
@@ -1756,9 +1822,10 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
             }
         }
         SparseRow* equivalent = nullptr;
-        if (shared_kernel != nullptr) {
+        if (pending.collapse_equivalent && shared_kernel != nullptr) {
+            std::uint64_t row_index = span.offset;
             for (std::uint32_t i = 0; i < span.count; ++i) {
-                SparseRow& stored = transition_cache->rows.at(span.offset + i);
+                SparseRow& stored = transition_cache->rows.at(row_index);
                 if (stored.transition_offset !=
                         shared_kernel->transition_offset ||
                     stored.transition_count !=
@@ -1766,17 +1833,20 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
                     stored.choice_offset != shared_kernel->choice_offset ||
                     stored.choice_count != shared_kernel->choice_count ||
                     stored.self_probability != self_probability) {
+                    row_index = stored.next_owner_row;
                     continue;
                 }
                 equivalent = &stored;
                 break;
             }
-        } else {
+        } else if (pending.collapse_equivalent) {
+            std::uint64_t row_index = span.offset;
             for (std::uint32_t i = 0; i < span.count; ++i) {
-                SparseRow& stored = transition_cache->rows.at(span.offset + i);
+                SparseRow& stored = transition_cache->rows.at(row_index);
                 if (!same_kernel(
                         stored, pending, kernel_transition_count,
                         self_probability)) {
+                    row_index = stored.next_owner_row;
                     continue;
                 }
                 equivalent = &stored;
@@ -1793,6 +1863,7 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
         if (stored_row == nullptr) {
             SparseRow row;
             row.owner_state = state;
+            row.admitted = pending.admitted;
             row.variant_offset = transition_cache->variant_arena
                                      ->row_variant_indices.size();
             row.self_probability = self_probability;
@@ -1925,7 +1996,15 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
                     ++transition_cache->algebraic_self_loops;
                 }
             }
-            if (span.count == 0) span.offset = transition_cache->rows.size();
+            const std::uint64_t appended_index =
+                transition_cache->rows.size();
+            if (span.count == 0) {
+                span.offset = appended_index;
+            } else {
+                transition_cache->rows.at(span.tail).next_owner_row =
+                    appended_index;
+            }
+            span.tail = appended_index;
             reserve_selected_growth(transition_cache->rows, 1);
             transition_cache->rows.push_back(row);
             stored_row = &transition_cache->rows.back();
@@ -2094,7 +2173,8 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
         if (enqueue_fringe) {
             for (const OutcomeEntry& entry : transitions) {
                 if (is_self(entry.state)) continue;
-                if (pending.operator_index == restart_operator_index) {
+                if (pending.operator_index == restart_operator_index &&
+                    !incremental_action_generation) {
                     /* Establish the executable clean-base continuation before
                      * the broad stochastic fringe. This changes only the work
                      * schedule; every strict state and all-action row remains
@@ -2118,6 +2198,7 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
 bool SolveWork::Impl::expand_one_unit() {
         const auto started = std::chrono::steady_clock::now();
         bool row_attempt_active = false;
+        bool row_resource_limited = false;
         std::uint32_t row_attempt_operator = kNoId;
         std::uint32_t row_attempt_cursor = 0;
         std::uint64_t row_attempt_reforge_work = 0;
@@ -2137,7 +2218,11 @@ bool SolveWork::Impl::expand_one_unit() {
             expansion_operator_cursor = 0;
             expansion_active = true;
             expansion_prepared = false;
+            expansion_is_incremental_alternative = false;
+            expansion_appended_row =
+                std::numeric_limits<std::uint64_t>::max();
             expansion_operator_indices.clear();
+            retain_incremental_carrier(expansion_state);
         }
         const std::uint32_t state = expansion_state;
         if (calc.is_goal_state(calc.state(state))) {
@@ -2151,7 +2236,8 @@ bool SolveWork::Impl::expand_one_unit() {
 
         try {
             if (!expansion_prepared) {
-                prepare_state_expansion(state);
+                prepare_state_expansion(
+                    state, !incremental_action_generation);
                 expansion_prepared = true;
             }
             if (expansion_operator_cursor <
@@ -2193,6 +2279,10 @@ bool SolveWork::Impl::expand_one_unit() {
                 pending.state = state;
                 pending.operator_index = priced.index;
                 pending.resources = &planner.resource_quantities;
+                if (expansion_is_incremental_alternative) {
+                    pending.admitted = false;
+                    pending.collapse_equivalent = false;
+                }
                 const OutcomeDistribution* primitive_distribution =
                     nullptr;
                 std::optional<SolveTransitionCache::AutomaticCandidateRecord>
@@ -2463,6 +2553,81 @@ bool SolveWork::Impl::expand_one_unit() {
                         }
                         const auto [collapsed, appended_row] =
                             append_sparse_row(state, std::move(pending));
+                        if (expansion_is_incremental_alternative) {
+                            expansion_appended_row = appended_row;
+                        }
+                        if (incremental_action_generation &&
+                            planner.kind ==
+                                PlannerOperatorKind::Primitive) {
+                            const ActionType action_type =
+                                calc.registry().actions.at(
+                                    planner.primitive_action).params.type;
+                            const SparseRow& appended =
+                                transition_cache->rows.at(appended_row);
+                            std::vector<std::uint32_t> successor_ids;
+                            successor_ids.reserve(
+                                appended.transition_count +
+                                appended.choice_count);
+                            for (std::uint32_t i = 0;
+                                 i < appended.transition_count; ++i) {
+                                successor_ids.push_back(
+                                    transition_cache->successors.at(
+                                        appended.transition_offset + i));
+                            }
+                            for (std::uint32_t i = 0;
+                                 i < appended.choice_count; ++i) {
+                                const SparseChoiceGroup& group =
+                                    transition_cache->choices.at(
+                                        appended.choice_offset + i);
+                                for (std::uint32_t s = 0;
+                                     s < group.successor_count; ++s) {
+                                    successor_ids.push_back(
+                                        transition_cache
+                                            ->choice_successors.at(
+                                                group.successor_offset + s));
+                                }
+                            }
+                            std::sort(
+                                successor_ids.begin(), successor_ids.end());
+                            successor_ids.erase(
+                                std::unique(
+                                    successor_ids.begin(),
+                                    successor_ids.end()),
+                                successor_ids.end());
+                            if (action_type == ActionType::Chaos) {
+                                if (incremental_chaos_support.size() <
+                                    calc.state_count()) {
+                                    incremental_chaos_support.resize(
+                                        calc.state_count(), 0);
+                                }
+                                for (const std::uint32_t successor :
+                                     successor_ids) {
+                                    incremental_chaos_support.at(successor) =
+                                        1;
+                                }
+                            } else if (
+                                expansion_is_incremental_alternative) {
+                                for (const std::uint32_t successor :
+                                     successor_ids) {
+                                    if (successor >=
+                                            incremental_chaos_support.size() ||
+                                        !incremental_chaos_support[
+                                            successor]) {
+                                        if (incremental_nonchaos_states_seen
+                                                .size() <= successor) {
+                                            incremental_nonchaos_states_seen
+                                                .resize(successor + 1, 0);
+                                        }
+                                        if (!incremental_nonchaos_states_seen[
+                                                successor]) {
+                                            incremental_nonchaos_states_seen[
+                                                successor] = 1;
+                                            ++expansion_states_outside_chaos_support;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         search_row_retained = true;
                         search_retained_transitions =
                             transition_cache->successors.size() +
@@ -2501,9 +2666,12 @@ bool SolveWork::Impl::expand_one_unit() {
                             automatic_record->selected_bytes +=
                                 search_retained_bytes;
                         }
-                        try_constructive_state_certificate(
-                            state, appended_row);
-                        if (primitive_distribution != nullptr) {
+                        if (!expansion_is_incremental_alternative) {
+                            try_constructive_state_certificate(
+                                state, appended_row);
+                        }
+                        if (!expansion_is_incremental_alternative &&
+                            primitive_distribution != nullptr) {
                             try_install_gated_root_renewal_incumbent(
                                 state, appended_row, priced,
                                 *primitive_distribution);
@@ -2524,6 +2692,17 @@ bool SolveWork::Impl::expand_one_unit() {
                         std::chrono::steady_clock::now() - row_started)
                         .count());
                 const CalcTelemetry& search_after = calc.telemetry();
+                if (incremental_action_generation) {
+                    const std::uint64_t requests =
+                        search_after.reforge_requests -
+                        search_before.reforge_requests;
+                    const std::uint64_t hits =
+                        search_after.reforge_hits -
+                        search_before.reforge_hits;
+                    incremental_unique_kernel_evaluations +=
+                        requests >= hits ? requests - hits : 0;
+                    incremental_carrier_kernel_reuses += hits;
+                }
                 SolveDiagnostics::ActionSearchCost& search =
                     result.diagnostics.action_search_costs[planner.id];
                 search.rows += search_row_retained ? 1 : 0;
@@ -2569,6 +2748,9 @@ bool SolveWork::Impl::expand_one_unit() {
                                 diagnostics_started)
                                 .count());
                 }
+                if (expansion_is_incremental_alternative && !append) {
+                    ++incremental_inapplicable_actions;
+                }
                 const auto release_started =
                     std::chrono::steady_clock::now();
                 if (planner.kind == PlannerOperatorKind::FixedOption) {
@@ -2585,6 +2767,10 @@ bool SolveWork::Impl::expand_one_unit() {
                             .count());
             }
         } catch (const SolverResourceLimit& limit) {
+            row_resource_limited = true;
+            if (expansion_is_incremental_alternative) {
+                expansion_incremental_resource_limited = true;
+            }
             if (row_attempt_active &&
                 row_attempt_operator < calc.operators().size()) {
                 const std::uint32_t operator_index =
@@ -2596,6 +2782,17 @@ bool SolveWork::Impl::expand_one_unit() {
                 const PlannerOperator& planner =
                     calc.operators().at(priced.index);
                 const CalcTelemetry& search_after = calc.telemetry();
+                if (incremental_action_generation) {
+                    const std::uint64_t requests =
+                        search_after.reforge_requests -
+                        row_attempt_reforge_requests;
+                    const std::uint64_t hits =
+                        search_after.reforge_hits -
+                        row_attempt_reforge_hits;
+                    incremental_unique_kernel_evaluations +=
+                        requests >= hits ? requests - hits : 0;
+                    incremental_carrier_kernel_reuses += hits;
+                }
                 SolveDiagnostics::ActionSearchCost& search =
                     result.diagnostics.action_search_costs[planner.id];
                 search.reforge_work +=
@@ -2650,9 +2847,24 @@ bool SolveWork::Impl::expand_one_unit() {
                 limit.cap_name(),
                 limit.cap_name() == "max_discovered_states");
         }
-        const bool completed = result.diagnostics.resource_cap_hit ||
+        const bool completed = row_resource_limited ||
                                expansion_operator_cursor >=
                                    expansion_operator_indices.size();
+        if (completed && expansion_is_incremental_alternative) {
+            if (expansion_appended_row !=
+                std::numeric_limits<std::uint64_t>::max()) {
+                IncrementalAlternativeRow candidate;
+                candidate.state = state;
+                candidate.operator_index =
+                    expansion_operator_indices.front();
+                candidate.row_index = expansion_appended_row;
+                candidate.states_added =
+                    expansion_states_outside_chaos_support;
+                incremental_alternative_rows.push_back(candidate);
+            } else if (row_resource_limited) {
+                ++incremental_resource_unresolved_actions;
+            }
+        }
         if (completed) expansion_active = false;
         if (completed && !result.diagnostics.resource_cap_hit &&
             expanded_count % 64 == 0) {

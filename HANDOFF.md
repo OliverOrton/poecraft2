@@ -1,34 +1,40 @@
 # Session Handoff
 
-**Status: an implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
-Plan:
-[Chaos-Anchored Incremental Action Generation](docs/active/plan.md)
+Most recently completed:
+[Chaos-Anchored Incremental Action Generation](docs/archive/2026-07-28-chaos-anchored-incremental-actions/README.md)
 
-Branch: `codex/chaos-anchored-incremental-actions`
+Branch at handoff: `codex/chaos-anchored-incremental-actions`
 
 Starting source: `f37b4ef` (`main`)
 
-## Current Boundary
+## Completed Result
 
-Proceed through the active plan without another confirmation.
+The opt-in goal-progress-gated solver now releases and expands Chaos
+successors before filtered Fossil, corrected Harvest reforge, and
+goal-relevant Essence alternatives finish. Delayed exact rows have explicit
+lifecycle state, append safely after Bellman begins, and may admit/reoptimize,
+be proved non-improving, or remain unresolved. New support states are expanded
+before classification. An open envelope blocks exactness.
 
-Refactor the solver's atomic all-operator state expansion into an exact
-incremental action envelope. Chaos and inexpensive actions publish successors
-first. Bellman may optimize the admitted restricted graph while filtered
-Fossil, corrected Harvest reforge, and goal-relevant Essence actions remain
-unevaluated. Improving exact rows are admitted and trigger reoptimization;
-support-delta rows must expand their new states before classification.
+Both frozen four-mod cases expand 32 states under the unchanged 3M
+reforge-work cap before starting their selected Fossil. At an 8M diagnostic
+cap, each completes that Fossil and one corrected-Harvest row using only
+Chaos-created state IDs, then stops during the next Harvest row. The exact Q
+intervals still overlap the existing gated incumbent because most reached
+states remain unexpanded, so no frozen alternative was falsely admitted or
+rejected.
 
-A usable bounded policy may be returned while the envelope is open. Global
-exactness is forbidden until every filtered legal action is evaluated or
-safely ruled out. Resource-limited or value-incomplete rows remain explicitly
-unresolved.
+Product caps and unrestricted behavior remain unchanged. No dense shared
+structural DAG or discounted probability accounting was introduced. Veiled
+and Eldritch work remain outside the implementation.
 
-Keep initial product caps and probability-work accounting unchanged. Veiled
-and Eldritch work are outside scope. If the architecture cannot preserve exact
-status semantics or make meaningful incremental progress, restore experimental
-production changes and retain the evidence.
+Oliver must choose the next chunk before implementation resumes. The measured
+boundary is value precision on the large remaining restricted fringe, not
+state-ID compatibility or root action scheduling. Raising the work cap alone
+would evaluate more rows without resolving the wide successor-value
+intervals.
 
 Commits remain local unless Oliver asks to push and must end with:
 

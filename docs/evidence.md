@@ -731,6 +731,39 @@ The Harvest correction passed 515,093 artifact-backed native checks with zero
 failures. Release-WASM and affected non-visual web acceptance are recorded in
 the milestone report.
 
+## Chaos-Anchored Incremental Action Generation
+
+The 2026-07-28
+[final report](archive/2026-07-28-chaos-anchored-incremental-actions/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/chaos-anchored-incremental-actions-summary.json)
+retain the incremental action envelope in the opt-in gated solver.
+
+- Exact toy oracles prove immediate Chaos-successor release, admission of a
+  better delayed action, safe rejection of a worse one, repeated Bellman
+  optimization, exact support-delta expansion, carrier-varying action choice,
+  and an incomplete envelope that cannot report exactness.
+- At the unchanged 3,000,000 reforge-work cap, both frozen cases expand 32
+  states before beginning the first delayed Fossil. The preceding production
+  shape expanded only the root and stopped inside that same Fossil.
+- At an 8,000,000 diagnostic cap, full-four completes exact Lucent and
+  corrected `harvest_reforge:attack` rows; deep-four completes exact Jagged
+  and the same corrected Harvest row. The next Harvest row reaches the cap.
+- Every completed Lucent, Jagged, and Harvest outcome in these runs resolves
+  to an existing Chaos-support state ID. No cross-action structural DAG is
+  retained and no probability work is discounted.
+- The alternative Q intervals overlap the incumbent because most reached
+  states remain unexpanded. The rows are therefore unresolved, the remaining
+  action envelope is explicit, and both returned policies remain bounded
+  within the zero-progress-reroll restriction rather than exact.
+- Two 8M repetitions preserve states, expansions, rows, transitions, reforge
+  work, lifecycle counts, exact-Q witnesses, transition hashes, and policy
+  hashes.
+
+Product caps and unrestricted behavior are unchanged. Wall time is
+machine/compiler-bound; deterministic work, lifecycle counts, and hashes are
+the portable evidence.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
