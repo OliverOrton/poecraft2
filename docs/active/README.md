@@ -1,8 +1,14 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
+
+The active
+[Q-Directed Deep Solving And Automatic Eldritch Side Actions](plan.md)
+milestone prioritizes exact fringe refinement by unresolved Q contribution,
+retains completed probability rows across Bellman changes, and adds four real
+compiled Eldritch prefix/suffix Chaos/Annul options on eligible armour.
 
 The most recently completed milestone is
 [Chaos-Anchored Incremental Action Generation](../archive/2026-07-28-chaos-anchored-incremental-actions/README.md).

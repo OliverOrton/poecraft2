@@ -28,8 +28,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. Oliver must select the next chunk
-before implementation resumes.
+The active
+[Q-Directed Deep Solving And Automatic Eldritch Side Actions](active/plan.md)
+milestone refines the states with the greatest exact contribution to
+unresolved action Q intervals and adds four automatic, real-resource Eldritch
+side-intent options for eligible armour.
 
 The completed
 [Chaos-Anchored Incremental Action Generation](archive/2026-07-28-chaos-anchored-incremental-actions/README.md)
