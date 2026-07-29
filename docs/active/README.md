@@ -1,14 +1,20 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-The most recently completed boundary is the rejected
+Current boundary:
+[Upper-Cap Sensitivity And Zero-Progress Live Renewal](upper-cap-zero-progress-renewal.md).
+It recovers the strongest rejected high-impact scheduler, measures discovered-
+state scaling through 600,000 states, audits zero-goal-progress carriers, and
+retains live-renewal canonicalization only where exact renewal authority and
+the filtered action set prove equivalence.
+
+Historical input is the rejected
 [High-Impact Partial-State Executable Upper Policies](../archive/2026-07-29-high-impact-executable-uppers/README.md)
 milestone. It restored all experimental behavior after producing no qualifying
 upper-Q reduction, while retaining bounded observational provenance telemetry.
-Oliver must select the next chunk before implementation resumes.
 
 The preceding
 [Chaos-Anchored Incremental Action Generation](../archive/2026-07-28-chaos-anchored-incremental-actions/README.md)

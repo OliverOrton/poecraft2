@@ -28,12 +28,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The rejected
+The active implementation boundary is
+[Upper-Cap Sensitivity And Zero-Progress Live Renewal](active/upper-cap-zero-progress-renewal.md).
+It recovers the preceding candidate, measures the frozen full-four case at
+200,000/400,000/600,000 discovered states, audits exact zero-progress carrier
+identity, and permits no live-renewal merge without action-level equivalence.
+[HANDOFF](../HANDOFF.md) records the exact boundary.
+
+The preceding rejected
 [High-Impact Partial-State Executable Upper Policies](archive/2026-07-29-high-impact-executable-uppers/README.md)
 milestone restored its experimental behavior after no completed frozen row
 met the strict-admission or 10% upper-Q gate. It retains bounded observational
-upper-policy provenance telemetry. Oliver must choose the next chunk before
-implementation resumes; [HANDOFF](../HANDOFF.md) records that boundary state.
+upper-policy provenance telemetry.
 
 The completed
 [Q-Directed Deep Solving And Automatic Eldritch Side Actions](archive/2026-07-28-q-directed-eldritch-side-actions/README.md)
