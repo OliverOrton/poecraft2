@@ -1,11 +1,12 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: an implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-Oliver must choose the next chunk before implementation resumes. Root
-[HANDOFF](../../HANDOFF.md) records the completed boundary and current branch.
+Current plan:
+[High-Impact Partial-State Executable Upper Policies](high-impact-executable-uppers.md).
+Root [HANDOFF](../../HANDOFF.md) records its exact boundary and current branch.
 
 The most recently completed milestone is
 [Q-Directed Deep Solving And Automatic Eldritch Side Actions](../archive/2026-07-28-q-directed-eldritch-side-actions/README.md).
