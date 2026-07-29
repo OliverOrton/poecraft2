@@ -73,6 +73,7 @@ enum class AutomaticCandidateKind : std::uint8_t {
     MultimodFinish = 5,
     Imprint = 6,
     ConstructiveRenewal = 7,
+    EldritchSide = 8,
 };
 
 /* R3A retention/accounting categories. These are deliberately independent
@@ -88,7 +89,8 @@ enum class AutomaticTelemetryKind : std::uint8_t {
     PermanentBench = 5,
     MultimodFinish = 6,
     PrimitiveFracture = 7,
-    Count = 8,
+    EldritchSide = 8,
+    Count = 9,
     None = 255,
 };
 
@@ -186,6 +188,7 @@ enum AutomaticKernelMechanism : std::uint32_t {
     kAutomaticCarrierFracture = 1u << 4,
     kAutomaticDeterministicFinish = 1u << 5,
     kAutomaticImprintCheckpoint = 1u << 6,
+    kAutomaticEldritchDominance = 1u << 7,
 };
 
 /*
@@ -1839,6 +1842,11 @@ struct SolveDiagnostics {
     std::uint64_t incremental_states_outside_chaos_support = 0;
     std::uint64_t incremental_bellman_reoptimizations = 0;
     std::uint32_t incremental_first_alternative_expanded_states = 0;
+    std::uint64_t incremental_refinement_rounds = 0;
+    std::uint64_t incremental_refinement_states_selected = 0;
+    std::uint64_t incremental_rows_reconsidered = 0;
+    std::uint64_t incremental_upper_policy_updates = 0;
+    double incremental_refinement_uncertainty = 0.0;
     std::vector<std::string> incremental_action_witnesses;
     std::uint64_t incremental_action_witnesses_omitted = 0;
     std::uint64_t bellman_work_units = 0;
@@ -2049,6 +2057,9 @@ SolveResult solve(
     const pc_item_state& start_item,
     const std::unordered_map<std::string, double>& prices,
     const SolveOptions& options = {});
+
+double q_directed_uncertainty_contribution(
+    double probability, double lower, double upper);
 
 /*
  * ML corpus line format (docs/solver/crafting-solver-plan.md, ML Data Logging):

@@ -718,15 +718,15 @@ std::uint32_t CalcContext::intern_state(const AbstractState& state) {
             if (states_[id] == state) return id;
         }
     }
-    if (state_cap_.has_value() && states_.size() >= *state_cap_) {
-        throw std::length_error(
-            "calculation context exceeded max_states (" +
-            std::to_string(*state_cap_) + ")");
-    }
     if (solve_discovered_state_cap_.has_value() &&
         states_.size() >= *solve_discovered_state_cap_) {
         throw SolverResourceLimit(
             "max_discovered_states", *solve_discovered_state_cap_);
+    }
+    if (state_cap_.has_value() && states_.size() >= *state_cap_) {
+        throw std::length_error(
+            "calculation context exceeded max_states (" +
+            std::to_string(*state_cap_) + ")");
     }
     if (states_.size() >= std::numeric_limits<std::uint32_t>::max()) {
         throw std::length_error("calculation context state id space exhausted");

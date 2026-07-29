@@ -332,3 +332,30 @@ not a state-equivalence claim. Competing actions remain in discovery and the
 lower-bound problem. Compilation must independently revalidate the witness
 and may then use one compact goal-or-repeat loop. The default unrestricted
 solver is behaviorally unchanged.
+
+## 2026-07-28 — Q-Directed Rows Stay Exact; Eldritch Setup Stays Real
+
+**Decision:** Retain completed delayed action distributions for the lifetime
+of a gated solve and direct further expansion by their exact
+probability-weighted Q uncertainty. Reprice stored rows after continuation
+values change; do not recompute their probability kernels. Exceptional-
+support successors must be expanded before their action is admitted or
+rejected. An open or overlapping envelope remains bounded and incomplete.
+
+Expose exactly four automatic goal-relevant Eldritch compound candidates on
+engine-certified eligible rare armour: Annul Prefix/Suffix and Chaos
+Prefix/Suffix. Existing dominance uses the final currency directly. Missing
+dominance must use and charge real Ember/Ichor setup, preserve the resulting
+implicit tiers, and compile to every real operation.
+
+**Context:** [Final report](archive/2026-07-28-q-directed-eldritch-side-actions/report.md),
+[Solver](solver/README.md),
+[Eldritch mechanics](mechanics/eldritch-and-influence.md), and
+[tracked evidence](../fixtures/solver-natural-t1/v1/evidence/q-directed-eldritch-side-actions-summary.json).
+
+**Consequences:** The full frozen case expands 8,908 states and raises
+completed alternative lower-Q values by roughly one to two orders of
+magnitude, but their upper ends still overlap the Chaos incumbent. No frozen
+classification or exactness is claimed. Automatic standalone implicits,
+Eldritch Exalt, Veiled, Influence Exalt, product cap changes, and the default
+unrestricted solver remain outside the decision.

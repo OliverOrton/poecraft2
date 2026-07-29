@@ -11,6 +11,11 @@ selected active work.
 
 ## 2026-07-28
 
+- [Q-Directed Deep Solving And Automatic Eldritch Side Actions](2026-07-28-q-directed-eldritch-side-actions/README.md) —
+  retained stored-row Q-directed refinement and four automatic real-resource
+  Eldritch side options. Frozen lower information and deep expansion improve,
+  while overlapping intervals remain honestly unresolved.
+
 - [Chaos-Anchored Incremental Action Generation](2026-07-28-chaos-anchored-incremental-actions/README.md) —
   retained an opt-in gated action-envelope scheduler that expands
   Chaos-derived partial states before delayed Fossil/Harvest/Essence rows,

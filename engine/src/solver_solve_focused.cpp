@@ -14,12 +14,10 @@ void SolveWork::Impl::begin_focused_lower_solve() {
         transition_cache->state_rows.resize(state_count);
         std::vector<double> previous_values = std::move(result.values);
         result.values.assign(state_count, 0.0);
-        if (!incremental_action_generation) {
-            for (std::uint32_t state = 0; state < state_count; ++state) {
-                if (calc.is_goal_state(calc.state(state))) continue;
-                result.values[state] =
-                    optimistic_completion_cost_for_state(state);
-            }
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (calc.is_goal_state(calc.state(state))) continue;
+            result.values[state] =
+                optimistic_completion_cost_for_state(state);
         }
         /* Expanding a previously zero-valued frontier can only raise the
          * focused lower bound. Preserve the last round's admissible values
@@ -1039,8 +1037,12 @@ void SolveWork::Impl::run_focused_lower_unit() {
                 incremental_restricted_values_ready = true;
                 if (classify_incremental_alternatives()) {
                     restart_incremental_optimization();
+                } else if (schedule_incremental_refinement()) {
+                    return;
                 } else if (!schedule_next_incremental_alternative()) {
-                    phase = SolvePhase::Done;
+                    if (!schedule_incremental_refinement(true)) {
+                        phase = SolvePhase::Done;
+                    }
                 }
             } else {
                 finish_focused_lower_solve();

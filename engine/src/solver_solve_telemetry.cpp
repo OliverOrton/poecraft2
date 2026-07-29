@@ -27,6 +27,8 @@ const char* automatic_telemetry_kind_name(
     case AutomaticTelemetryKind::MultimodFinish: return "multimod_finish";
     case AutomaticTelemetryKind::PrimitiveFracture:
         return "primitive_fracture";
+    case AutomaticTelemetryKind::EldritchSide:
+        return "eldritch_side";
     case AutomaticTelemetryKind::Count:
     case AutomaticTelemetryKind::None:
         return "none";
@@ -315,6 +317,16 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
         snapshot.diagnostics
             .incremental_first_alternative_expanded_states =
             incremental_first_alternative_expanded_states;
+        snapshot.diagnostics.incremental_refinement_rounds =
+            incremental_refinement_rounds;
+        snapshot.diagnostics.incremental_refinement_states_selected =
+            incremental_refinement_states_selected;
+        snapshot.diagnostics.incremental_rows_reconsidered =
+            incremental_rows_reconsidered;
+        snapshot.diagnostics.incremental_upper_policy_updates =
+            incremental_upper_policy_updates;
+        snapshot.diagnostics.incremental_refinement_uncertainty =
+            incremental_refinement_uncertainty;
         snapshot.diagnostics.solve_owned_byte_ledger_requests =
             owned_byte_ledger_requests;
         snapshot.diagnostics.solve_owned_byte_reconciliations =
@@ -1939,6 +1951,28 @@ std::string serialize_solver_telemetry(
                 std::to_string(
                     diagnostics
                         ->incremental_first_alternative_expanded_states);
+        json += ",\"q_refinement\":{\"rounds\":" +
+                std::to_string(
+                    diagnostics->incremental_refinement_rounds);
+        json += ",\"states_selected\":" +
+                std::to_string(
+                    diagnostics
+                        ->incremental_refinement_states_selected);
+        json += ",\"rows_reconsidered\":" +
+                std::to_string(
+                    diagnostics->incremental_rows_reconsidered);
+        json += ",\"upper_policy_updates\":" +
+                std::to_string(
+                    diagnostics->incremental_upper_policy_updates);
+        json += ",\"selected_uncertainty\":" +
+                (std::isfinite(
+                     diagnostics
+                         ->incremental_refinement_uncertainty)
+                     ? std::to_string(
+                           diagnostics
+                               ->incremental_refinement_uncertainty)
+                     : std::string("null"));
+        json += ",\"completed_rows_recomputed\":0}";
         json += ",\"remaining_action_envelope\":" +
                 std::to_string(
                     diagnostics->incremental_actions_unevaluated +

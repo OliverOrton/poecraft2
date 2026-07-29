@@ -247,7 +247,7 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
                 : known_suffix_blockers;
             double probability = 1.0;
             for (std::size_t side = 0; side < by_side.size(); ++side) {
-                auto slots = by_side[side];
+                auto& slots = by_side[side];
                 if (slots.empty()) continue;
                 std::sort(slots.begin(), slots.end());
                 double best_order = 0.0;
@@ -531,7 +531,18 @@ void SolveWork::Impl::prepare_goal_cover_cost() {
             exact_destructive_envelopes;
         const AbstractState& probability_anchor =
             calc.state(result.start_state);
-        for (const std::uint32_t action : relaxation_actions) {
+        /*
+         * Incremental generation deliberately establishes the Chaos support
+         * before delayed destructive rows. Calling calc.outcomes here would
+         * defeat that boundary by materializing those rows while merely
+         * preparing a lower bound. The analytic probability envelopes below
+         * are already an admissible relaxation; reserve exact destructive
+         * envelopes for the ordinary all-actions solver.
+         */
+        for (const std::uint32_t action :
+             incremental_action_generation
+                 ? std::vector<std::uint32_t>{}
+                 : relaxation_actions) {
             const ActionDescriptor& descriptor =
                 calc.registry().actions.at(action);
             const auto [draws, unused_one_total] =
@@ -1200,16 +1211,34 @@ bool SolveWork::Impl::clean_goal_cover_eligible(const std::uint32_t state) const
 double SolveWork::Impl::optimistic_completion_cost_for_state(
         const std::uint32_t state) {
         if (state >= calc.state_count()) return 0.0;
+        /*
+         * Automatic Eldritch side-intent options are state-local compound
+         * actions and are not yet actions in the clean-carrier abstraction.
+         * Until that abstraction explicitly grants their one-side
+         * preservation, zero is the only universally safe seed on eligible
+         * equipment. Exact partial-graph Bellman backups can still raise it.
+         */
+        if (session.eldritch_eligible) return 0.0;
         const AbstractState& carrier = calc.state(state);
-        const double coarse = optimistic_completion_cost(
+        double lower = optimistic_completion_cost(
             satisfied_goal_mask_for_state(state),
             clean_goal_cover_eligible(state), carrier.rarity,
             carrier.prefix_count, carrier.suffix_count);
         if (state < strict_clean_goal_cover_cost.size() &&
             std::isfinite(strict_clean_goal_cover_cost[state])) {
-            return std::max(coarse, strict_clean_goal_cover_cost[state]);
+            lower = std::max(
+                lower, strict_clean_goal_cover_cost[state]);
         }
-        return coarse;
+        /*
+         * An infinite abstract value means the finite relaxation omitted a
+         * carrier shape; it is not proof that the concrete state cannot
+         * restart or otherwise finish. Fall back to the universal zero
+         * lower rather than turning abstraction coverage into a false
+         * non-improvement certificate.
+         */
+        return std::isfinite(lower) && lower < kValueCeiling
+            ? lower
+            : 0.0;
     }
 
 void SolveWork::Impl::prepare_strict_clean_goal_cover() {

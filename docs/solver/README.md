@@ -339,6 +339,76 @@ filtered action is admitted, proved non-improving, or inapplicable.
 Unrestricted mode retains its previous atomic complete-envelope behavior and
 global exactness contract.
 
+#### Q-directed deep refinement
+
+Completed delayed rows are retained for the lifetime of a gated solve.
+Continuation-value changes recalculate their lower and upper Q values against
+the stored sparse distribution; they never trigger probability
+re-enumeration. Telemetry exposes the invariant as
+`completed_rows_recomputed: 0`.
+
+For an ordinary transition, refinement begins with the exact uncertainty
+weight
+
+`P(s' | s, a) * (U(s') - L(s'))`.
+
+The row's exact Q width supplies self-loop and retry normalization. Choice
+groups retain every successor that can still be the best observed choice.
+Contributions are summed across unresolved rows, sorted deterministically,
+and expanded in bounded batches of the states most capable of deciding an
+action comparison. No state or probability mass is discarded.
+
+After each batch, admissible state lowers and executable state uppers are
+propagated, Bellman is rerun, and every completed row is reconsidered. A row
+is admitted only if its complete upper Q strictly improves the current
+executable state upper. A row is non-improving only if its complete lower Q
+cannot beat that upper. Overlap remains unresolved. Several admissions can
+therefore compose into a policy and change which later rows are useful.
+
+The incremental lower uses the existing probability-aware optimistic clean
+goal cover where it is finite and admissible. A currently improper
+restricted graph's infinity is never presented as a global lower; the solver
+falls back to the independently admissible state heuristic or zero. Eldritch-
+eligible sessions currently use zero for this clean cover because automatic
+side actions are not represented in that relaxation.
+
+Exceptional-support successors receive priority over ordinary Q refinement.
+Fossil added/forced mods, Essence guarantees, and automatic Eldritch side
+actions are interned in the parent state layout. A delayed row cannot be
+admitted or rejected while any nonterminal successor outside Chaos support
+remains unexpanded.
+
+#### Automatic Eldritch side options
+
+When automatic candidates are requested, an engine-certified
+Eldritch-eligible rare carrier may synthesize at most four goal-relevant
+compound options:
+
+- Eldritch Annul Prefix;
+- Eldritch Annul Suffix;
+- Eldritch Chaos Prefix; and
+- Eldritch Chaos Suffix.
+
+The carrier's stored implicit tiers determine dominance. If the requested
+side already dominates, the option contains only the real final currency.
+Otherwise the solver chooses the cheapest priced legal real Ember/Ichor setup
+that establishes dominance, charges it, then performs the real final
+currency. The option retains the resulting implicit tiers and full item state.
+Compilation emits each real setup operation followed by real Eldritch Annul
+or Chaos.
+
+These options are evaluated directly against the parent exact carrier rather
+than an option-specific temporary abstraction, so preserved-side support
+deltas keep authoritative state IDs. They are absent from ineligible bases
+and retry-basin carriers, and are generated only when the targeted or
+preserved side can affect the remaining explicit goal. Bellman chooses among
+them and every other admitted action; no route is prescribed.
+
+Automatic standalone Ember, Ichor, Eldritch Exalt, arbitrary implicit
+rolling, Veiled crafting, and Influence Exalt remain outside this scope.
+Manual actions and user-authored `eldritch_side_intent` options retain their
+existing behavior.
+
 ## Solve And Reprice
 
 A solve performs these implemented stages:

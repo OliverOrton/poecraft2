@@ -764,6 +764,39 @@ Product caps and unrestricted behavior are unchanged. Wall time is
 machine/compiler-bound; deterministic work, lifecycle counts, and hashes are
 the portable evidence.
 
+## Q-Directed Refinement And Automatic Eldritch Acceptance
+
+The 2026-07-28
+[final report](archive/2026-07-28-q-directed-eldritch-side-actions/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/q-directed-eldritch-side-actions-summary.json)
+qualify the next gated refinement and the four automatic Eldritch side
+options.
+
+- Completed delayed distributions remain retained across Bellman changes;
+  telemetry records zero probability-row recomputations.
+- Exact probability-weighted Q attribution moves the full frozen case from
+  32 to 8,908 expanded states. Completed Lucent and Harvest lower-Q values
+  rise from roughly `3`–`89` to `433`–`520` chaos, while their upper ends
+  remain close to the 60.3-million Chaos incumbent.
+- The bounded deep snapshot reaches 11,570 expanded states, raises the root
+  lower to `432.410495`, and improves the executable upper by `17.611161`
+  chaos. It is a partial diagnostic, not a final classification.
+- An exact synthetic exceptional-support gate discovers 186 states outside
+  Chaos and expands all 337 discovered states before envelope closure.
+- Automatic Eldritch candidates are restricted to eligible rare helmets,
+  body armour, gloves, and boots; real setup resources and implicit tiers are
+  retained and compiled.
+- The compiled automatic Eldritch oracle evaluates to `10.473684`; 10,000
+  deterministic simulator executions average `10.571800` with no failures,
+  unapplied actions, or unmatched edges.
+- An artifact-backed split-side Vaal Regalia control lets Bellman select a
+  suffix repair while preserving the completed prefix, without a prescribed
+  crafting sequence.
+
+No frozen row is forced into admitted or non-improving status. Product caps,
+the unrestricted solver, and manual Eldritch surfaces remain unchanged.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

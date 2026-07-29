@@ -1981,19 +1981,43 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     const bool action_added_states =
                         !incremental_alternative_rows.empty() &&
                         incremental_alternative_rows.back().states_added != 0;
-                    if (action_added_states && !queue.empty()) {
+                    if (action_added_states) {
+                        /*
+                         * Publish late support into the value vectors before
+                         * classification. Goal terminals need no expansion;
+                         * non-goal deltas remain zero/feasible-bound fringe
+                         * and are selected by the following Q refinement.
+                         */
                         incremental_restricted_values_ready = false;
+                        begin_focused_lower_solve();
                         continue;
                     }
                     if (classify_incremental_alternatives()) {
                         restart_incremental_optimization();
                         continue;
                     }
+                    if (schedule_incremental_refinement()) {
+                        incremental_restricted_values_ready = false;
+                        continue;
+                    }
                     if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                    if (schedule_incremental_refinement(true)) {
+                        incremental_restricted_values_ready = false;
                         continue;
                     }
                     phase = SolvePhase::Done;
                     break;
+                }
+                if (completed_state &&
+                    incremental_refinement_active &&
+                    expanded_count >=
+                        incremental_refinement_target_expanded) {
+                    incremental_refinement_active = false;
+                    incremental_restricted_values_ready = false;
+                    begin_focused_lower_solve();
+                    continue;
                 }
                 if (completed_state && !focused_mode &&
                     expanded_count >= next_focus_checkpoint &&
@@ -2049,7 +2073,13 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         restart_incremental_optimization();
                         continue;
                     }
+                    if (schedule_incremental_refinement()) {
+                        continue;
+                    }
                     if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                    if (schedule_incremental_refinement(true)) {
                         continue;
                     }
                 }
@@ -2074,7 +2104,13 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                         restart_incremental_optimization();
                         continue;
                     }
+                    if (schedule_incremental_refinement()) {
+                        continue;
+                    }
                     if (schedule_next_incremental_alternative()) {
+                        continue;
+                    }
+                    if (schedule_incremental_refinement(true)) {
                         continue;
                     }
                 }

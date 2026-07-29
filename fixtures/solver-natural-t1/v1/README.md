@@ -89,6 +89,14 @@ Chaos-derived states before evaluating delayed actions. At a diagnostic 8M
 work cap each completes its selected exact Fossil plus one corrected-Harvest
 row using only Chaos-created state IDs, then honestly retains the overlapping
 Q rows and remaining envelope as unresolved.
+The later
+[Q-directed Eldritch-side summary](evidence/q-directed-eldritch-side-actions-summary.json)
+pins retained completed-row Q refinement and four automatic real-resource
+Eldritch side candidates. Full-four reaches 8,908 expanded states and raises
+completed alternative lower-Q values to roughly 433–520 chaos; the upper
+interval ends remain overlapping. The same acceptance records an exact
+exceptional-support gate, artifact-backed split-side armour policy, exact
+compiled strategy evaluation, and 10,000 simulator runs.
 
 ## Benchmark workflow
 

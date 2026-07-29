@@ -80,6 +80,17 @@ void run_bounded_policy_row_capture_tests() {
 std::shared_ptr<SessionImpl> make_solve_session() {
     auto data = std::make_shared<DataImpl>();
     data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7};
+    data->spawn_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    data->spawn_tag_ids.assign(8, 0);
+    data->spawn_weights =
+        {100, 100, 100, 100, 100, 100, 100, 400};
+    data->mod_gen_type_code.assign(8, 0);
+    data->gen_searing_implicit_code = 2;
+    data->gen_eater_implicit_code = 3;
+    data->mod_gen_type_code[0] =
+        data->gen_searing_implicit_code;
+    data->mod_gen_type_code[5] =
+        data->gen_eater_implicit_code;
     data->strings = {
         "", "synthetic/base", "mod0", "mod1", "mod2",
         "mod3", "mod4", "mod5", "mod6", "mod7"};
@@ -118,6 +129,7 @@ std::shared_ptr<SessionImpl> make_solve_session() {
     session->base_spawn_weight = {100, 100, 100, 100, 100, 100, 100, 400};
     session->base_gen_pct.assign(8, 100);
     session->base_roll_weight = session->base_spawn_weight;
+    session->effective_base_tag_ids = {0};
 
     const std::size_t words = session->words;
     session->normal_random_roll_mask.assign(words, 0);
@@ -1739,6 +1751,15 @@ void run_goal_progress_gated_reforge_tests() {
 }
 
 void run_incremental_action_generation_tests() {
+    PC_CHECK(near(
+        q_directed_uncertainty_contribution(
+            0.9, 10.0, 12.0),
+        1.8));
+    PC_CHECK(
+        q_directed_uncertainty_contribution(
+            0.9, 10.0, 12.0) >
+        q_directed_uncertainty_contribution(
+            0.1, 0.0, 10.0));
     auto session = make_solve_session();
     session->essence_guaranteed_mod_ids = {0, 2};
     ActionRegistry registry = build_action_registry(*session);
@@ -1816,6 +1837,8 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         result.diagnostics.incremental_bellman_reoptimizations > 0);
     PC_CHECK(
+        result.diagnostics.incremental_upper_policy_updates > 0);
+    PC_CHECK(
         result.diagnostics
             .incremental_first_alternative_expanded_states > 1);
     PC_CHECK(result.policy[result.start_state].index == good_essence);
@@ -1825,6 +1848,9 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         telemetry.find("\"incremental_action_envelope\":{"
                        "\"enabled\":true,\"closed\":true") !=
+        std::string::npos);
+    PC_CHECK(
+        telemetry.find("\"completed_rows_recomputed\":0") !=
         std::string::npos);
     CalcContext repeat_calc(
         session, goal, registry,
@@ -1907,7 +1933,8 @@ void run_incremental_action_generation_tests() {
         options);
     std::printf(
         "solver incremental delta oracle: closed=%d admitted=%llu "
-        "rejected=%llu outside=%llu states=%u witnesses=%zu\n",
+        "rejected=%llu outside=%llu states=%u expanded=%u witnesses=%zu "
+        "failure=%s\n",
         delta.diagnostics.incremental_action_envelope_closed ? 1 : 0,
         static_cast<unsigned long long>(
             delta.diagnostics.incremental_actions_admitted),
@@ -1916,7 +1943,9 @@ void run_incremental_action_generation_tests() {
         static_cast<unsigned long long>(
             delta.diagnostics.incremental_states_outside_chaos_support),
         delta.diagnostics.discovered_states,
-        delta.diagnostics.incremental_action_witnesses.size());
+        delta.diagnostics.expanded_states,
+        delta.diagnostics.incremental_action_witnesses.size(),
+        delta.diagnostics.policy_evaluation_failure.c_str());
     PC_CHECK(delta.converged);
     PC_CHECK(
         delta.diagnostics.incremental_action_envelope_closed);
@@ -1992,6 +2021,419 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         varying.policy[varying_magic_state].index ==
         varying_alteration);
+}
+
+void run_automatic_eldritch_side_tests() {
+    auto session = make_solve_session();
+    session->eldritch_eligible = true;
+    session->eldritch_searing_tier_mod_ids.resize(5);
+    session->eldritch_eater_tier_mod_ids.resize(5);
+    for (std::uint32_t tier = 1; tier <= 4; ++tier) {
+        session->eldritch_searing_tier_mod_ids[tier] = {0};
+        session->eldritch_eater_tier_mod_ids[tier] = {5};
+    }
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    goal.automatic_candidates = true;
+    GoalSlot prefix;
+    prefix.family_id = 100;
+    prefix.min_tier = 1;
+    goal.slots.push_back(prefix);
+    GoalSlot suffix;
+    suffix.family_id = 104;
+    suffix.min_tier = 1;
+    goal.slots.push_back(suffix);
+    const std::vector<std::uint32_t> candidates{
+        registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("annul")};
+    std::unordered_map<std::string, double> prices{
+        {"chaos", 10.0},
+        {"annul", 10.0},
+        {"eldritch_chaos", 3.0},
+        {"eldritch_annul", 2.0},
+        {"eldritch_ember:1", 9.0},
+        {"eldritch_ember:2", 1.0},
+        {"eldritch_ember:3", 4.0},
+        {"eldritch_ember:4", 5.0},
+        {"eldritch_ichor:1", 8.0},
+        {"eldritch_ichor:2", 1.5},
+        {"eldritch_ichor:3", 4.5},
+        {"eldritch_ichor:4", 5.5}};
+    AutomaticAdmissionLimits limits;
+    limits.max_discovered_states = 10000;
+    limits.max_state_action_rows = 10000;
+    limits.max_transitions = 100000;
+    limits.max_reforge_work = 1000000;
+    limits.max_solver_owned_bytes = 256ull * 1024ull * 1024ull;
+    limits.max_imprint_program_depth = 3;
+    limits.max_imprint_program_work = 256;
+    limits.prices = &prices;
+
+    pc_item_state repair_prefix;
+    pc_item_clear(&repair_prefix);
+    repair_prefix.rarity = PC_RARITY_RARE;
+    place(
+        &repair_prefix, PC_SIDE_PREFIX, 2,
+        session->primary_group[2]);
+    place(
+        &repair_prefix, PC_SIDE_SUFFIX, 5,
+        session->primary_group[5]);
+    repair_prefix.eater_of_worlds_tier = 1;
+    CalcContext prefix_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t prefix_state =
+        prefix_calc.intern_item(repair_prefix);
+    const StateLocalAutomaticBatch prefix_batch =
+        prefix_calc.admit_state_local_automatic_candidates(
+            prefix_state, limits);
+    std::vector<std::uint32_t> prefix_eldritch;
+    for (const StateLocalAutomaticCandidate& decision :
+         prefix_batch.decisions) {
+        if (decision.kind ==
+                AutomaticCandidateKind::EldritchSide &&
+            decision.admitted) {
+            prefix_eldritch.push_back(decision.operator_index);
+        }
+    }
+    PC_CHECK(prefix_eldritch.size() == 2);
+    bool saw_prefix_annul = false;
+    bool saw_prefix_chaos = false;
+    for (const std::uint32_t op : prefix_eldritch) {
+        const PlannerOperator& planner =
+            prefix_calc.operators().at(op);
+        PC_CHECK(planner.intended_side == PC_SIDE_PREFIX);
+        PC_CHECK(planner.automatic_kind ==
+                 AutomaticCandidateKind::EldritchSide);
+        PC_CHECK(planner.primitive_program.size() == 2);
+        PC_CHECK(
+            registry.actions.at(planner.primitive_program.front()).id ==
+            "eldritch_ember:2");
+        const ActionType final = registry.actions.at(
+            planner.primitive_program.back()).params.type;
+        saw_prefix_annul |= final == ActionType::EldritchAnnul;
+        saw_prefix_chaos |= final == ActionType::EldritchChaos;
+        const OptionKernel& kernel =
+            prefix_calc.option_kernel(prefix_state, op);
+        PC_CHECK(kernel.automatic.eligible);
+        PC_CHECK(kernel.expected_primitive_actions == 2.0);
+        PC_CHECK(
+            kernel.automatic.kernel_change_mechanisms &
+            kAutomaticEldritchDominance);
+        for (const OutcomeEntry& exit : kernel.exits) {
+            pc_item_state item;
+            PC_CHECK(prefix_calc.materialize(exit.state, item));
+            bool suffix_preserved = false;
+            for (std::uint8_t i = 0; i < item.suffix_count; ++i) {
+                suffix_preserved |= item.suffixes[i].mod_id == 5;
+            }
+            PC_CHECK(suffix_preserved);
+            PC_CHECK(item.searing_exarch_tier >
+                     item.eater_of_worlds_tier);
+            if (final == ActionType::EldritchAnnul) {
+                PC_CHECK(item.prefix_count == 0);
+            }
+        }
+    }
+    PC_CHECK(saw_prefix_annul);
+    PC_CHECK(saw_prefix_chaos);
+
+    /*
+     * The side intent is an ordinary Bellman choice, not a prescribed route.
+     * With the completed suffix worth preserving and Eldritch setup priced
+     * below full Chaos, the exact restricted solver must discover a prefix
+     * side action and compilation must lower it to the real setup currency
+     * followed by the real Eldritch currency.
+     */
+    CalcContext prefix_solve_calc(
+        session, goal, registry, candidates);
+    SolveOptions prefix_solve_options;
+    prefix_solve_options.goal_progress_gated_reforges = true;
+    prefix_solve_options.focused_expansion_queue_threshold = 1000000;
+    const SolveResult prefix_solved = solve(
+        prefix_solve_calc, repair_prefix, prices,
+        prefix_solve_options);
+    PC_CHECK(prefix_solved.policy_available);
+    const PolicyOperatorRef prefix_selected =
+        prefix_solved.policy_available
+            ? prefix_solved.policy[prefix_solved.start_state]
+            : PolicyOperatorRef{};
+    PC_CHECK(prefix_selected != kNoId);
+    if (prefix_selected != kNoId) {
+        const PlannerOperator& planner =
+            prefix_solve_calc.operators().at(prefix_selected.index);
+        PC_CHECK(
+            planner.automatic_kind ==
+            AutomaticCandidateKind::EldritchSide);
+        PC_CHECK(planner.intended_side == PC_SIDE_PREFIX);
+    }
+    if (prefix_solved.policy_available) {
+        const std::string strategy_json = compile_policy_strategy_json(
+            prefix_solve_calc, prefix_solved,
+            "automatic Eldritch prefix repair");
+        PC_CHECK(
+            strategy_json.find(
+                "\"type\":\"eldritch_ember\",\"tier\":2") !=
+                 std::string::npos);
+        PC_CHECK(
+            strategy_json.find("\"type\":\"eldritch_chaos\"") !=
+                std::string::npos ||
+            strategy_json.find("\"type\":\"eldritch_annul\"") !=
+                std::string::npos);
+        const std::shared_ptr<StrategyImpl> strategy =
+            compile_strategy_json(
+                session, strategy_json.data(), strategy_json.size());
+        auto economy = std::make_shared<EconomyImpl>();
+        economy->id = "automatic-eldritch-side-test";
+        economy->prices = prices;
+        StrategyEvalOptions evaluation_options;
+        evaluation_options.economy = economy;
+        const StrategyEvalResult evaluation =
+            evaluate_strategy(*strategy, evaluation_options);
+        PC_CHECK(evaluation.converged);
+        PC_CHECK(evaluation.cost_complete);
+        PC_CHECK(near(
+            evaluation.total_expected_cost,
+            prefix_solved.evaluated_policy_cost, 1e-8));
+
+        SimulatorImpl simulator;
+        simulator.session = session;
+        simulator.strategy = strategy;
+        simulator.economy = economy;
+        prepare_simulator_runtime(simulator);
+        SimulationOptionsInternal simulation_options;
+        simulation_options.target_runs = 10000;
+        simulation_options.seed = 0x454c445249544348ULL;
+        simulation_options.max_actions_per_run = 100000;
+        run_simulator_chunk(simulator, simulation_options, 10000);
+        PC_CHECK(simulator.summary.completed_runs == 10000);
+        PC_CHECK(simulator.summary.success_count == 10000);
+        PC_CHECK(simulator.summary.action_not_applied_count == 0);
+        PC_CHECK(simulator.summary.no_matching_edge_count == 0);
+        const double empirical_cost =
+            simulator.summary.known_total_cost / 10000.0;
+        PC_CHECK(
+            std::abs(
+                empirical_cost -
+                evaluation.total_expected_cost) <=
+            std::max(
+                0.5,
+                evaluation.total_expected_cost * 0.10));
+        std::printf(
+            "solver automatic Eldritch compiled policy: "
+            "exact=%.6f empirical=%.6f runs=10000\n",
+            evaluation.total_expected_cost, empirical_cost);
+    }
+    CalcContext prefix_repeat_calc(
+        session, goal, registry, candidates);
+    const SolveResult prefix_repeated = solve(
+        prefix_repeat_calc, repair_prefix, prices,
+        prefix_solve_options);
+    PC_CHECK(identical_solve(prefix_solved, prefix_repeated));
+    PC_CHECK(
+        prefix_solved.diagnostics.transition_bits_hash ==
+        prefix_repeated.diagnostics.transition_bits_hash);
+    PC_CHECK(
+        prefix_solved.diagnostics.policy_bits_hash ==
+        prefix_repeated.diagnostics.policy_bits_hash);
+
+    pc_item_state dominant = repair_prefix;
+    dominant.searing_exarch_tier = 2;
+    dominant.eater_of_worlds_tier = 1;
+    CalcContext dominant_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t dominant_state =
+        dominant_calc.intern_item(dominant);
+    const StateLocalAutomaticBatch dominant_batch =
+        dominant_calc.admit_state_local_automatic_candidates(
+            dominant_state, limits);
+    std::uint32_t direct_count = 0;
+    for (const StateLocalAutomaticCandidate& decision :
+         dominant_batch.decisions) {
+        if (decision.kind !=
+                AutomaticCandidateKind::EldritchSide ||
+            !decision.admitted) {
+            continue;
+        }
+        const PlannerOperator& planner =
+            dominant_calc.operators().at(decision.operator_index);
+        PC_CHECK(planner.primitive_program.size() == 1);
+        PC_CHECK(planner.id.find(":direct") != std::string::npos);
+        const OptionKernel& kernel = dominant_calc.option_kernel(
+            dominant_state, decision.operator_index);
+        PC_CHECK(kernel.expected_primitive_actions == 1.0);
+        ++direct_count;
+    }
+    PC_CHECK(direct_count == 2);
+
+    pc_item_state repair_suffix;
+    pc_item_clear(&repair_suffix);
+    repair_suffix.rarity = PC_RARITY_RARE;
+    place(
+        &repair_suffix, PC_SIDE_PREFIX, 0,
+        session->primary_group[0]);
+    place(
+        &repair_suffix, PC_SIDE_SUFFIX, 6,
+        session->primary_group[6]);
+    repair_suffix.searing_exarch_tier = 1;
+    CalcContext suffix_calc(
+        session, goal, registry, candidates);
+    const std::uint32_t suffix_state =
+        suffix_calc.intern_item(repair_suffix);
+    const StateLocalAutomaticBatch suffix_batch =
+        suffix_calc.admit_state_local_automatic_candidates(
+            suffix_state, limits);
+    std::uint32_t suffix_count = 0;
+    for (const StateLocalAutomaticCandidate& decision :
+         suffix_batch.decisions) {
+        if (decision.kind !=
+                AutomaticCandidateKind::EldritchSide ||
+            !decision.admitted) {
+            continue;
+        }
+        const PlannerOperator& planner =
+            suffix_calc.operators().at(decision.operator_index);
+        PC_CHECK(planner.intended_side == PC_SIDE_SUFFIX);
+        PC_CHECK(
+            registry.actions.at(planner.primitive_program.front()).id ==
+            "eldritch_ichor:2");
+        ++suffix_count;
+    }
+    PC_CHECK(suffix_count == 2);
+
+    /*
+     * Remove the completed prefix from ordinary random support. Chaos can no
+     * longer recreate it, while an Eldritch suffix action deliberately
+     * preserves it. The resulting states are therefore true support deltas
+     * and must be interned and expanded before the side action is classified.
+     */
+    auto delta_session = make_solve_session();
+    delta_session->eldritch_eligible = true;
+    delta_session->eldritch_searing_tier_mod_ids.resize(5);
+    delta_session->eldritch_eater_tier_mod_ids.resize(5);
+    for (std::uint32_t tier = 1; tier <= 4; ++tier) {
+        delta_session->eldritch_searing_tier_mod_ids[tier] = {0};
+        delta_session->eldritch_eater_tier_mod_ids[tier] = {5};
+    }
+    pc_bitset_clear(
+        delta_session->normal_random_roll_mask.data(), 0);
+    pc_bitset_clear(
+        delta_session->positive_spawn_weight_mask.data(), 0);
+    pc_bitset_clear(
+        delta_session->positive_base_weight_mask.data(), 0);
+    delta_session->base_spawn_weight[0] = 0;
+    delta_session->base_roll_weight[0] = 0;
+    delta_session->essence_guaranteed_mod_ids = {5};
+    ActionRegistry delta_registry =
+        build_action_registry(*delta_session);
+    ActionDescriptor delta_essence;
+    delta_essence.id = "essence:eldritch_delta_anchor";
+    delta_essence.display_name = delta_essence.id;
+    delta_essence.params.type = ActionType::Essence;
+    delta_essence.params.essence_index = 0;
+    delta_essence.kind = TransitionKind::Reforge;
+    delta_essence.cost_keys = {delta_essence.id};
+    delta_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    delta_essence.preservation.destructive_renewal = true;
+    delta_essence.preservation.preserves_fractured_affixes = true;
+    const std::uint32_t delta_essence_index =
+        static_cast<std::uint32_t>(
+            delta_registry.actions.size());
+    delta_registry.index_by_id.emplace(
+        delta_essence.id, delta_essence_index);
+    delta_registry.actions.push_back(std::move(delta_essence));
+    const std::vector<std::uint32_t> delta_candidates{
+        delta_registry.index_by_id.at("chaos"),
+        delta_registry.index_by_id.at("annul"),
+        delta_essence_index};
+    CalcContext delta_calc(
+        delta_session, goal, delta_registry, delta_candidates);
+    SolveOptions delta_options = prefix_solve_options;
+    auto delta_prices = prices;
+    delta_prices["essence:eldritch_delta_anchor"] =
+        1000000.0;
+    const SolveResult delta_solved = solve(
+        delta_calc, repair_suffix, delta_prices, delta_options);
+    std::printf(
+        "solver automatic Eldritch delta: closed=%d outside=%llu "
+        "states=%u expanded=%u admitted=%llu rejected=%llu "
+        "unresolved=%llu\n",
+        delta_solved.diagnostics
+                .incremental_action_envelope_closed
+            ? 1
+            : 0,
+        static_cast<unsigned long long>(
+            delta_solved.diagnostics
+                .incremental_states_outside_chaos_support),
+        delta_solved.diagnostics.discovered_states,
+        delta_solved.diagnostics.expanded_states,
+        static_cast<unsigned long long>(
+            delta_solved.diagnostics.incremental_actions_admitted),
+        static_cast<unsigned long long>(
+            delta_solved.diagnostics
+                .incremental_actions_non_improving),
+        static_cast<unsigned long long>(
+            delta_solved.diagnostics.incremental_actions_unresolved));
+    PC_CHECK(delta_solved.policy_available);
+    PC_CHECK(
+        delta_solved.diagnostics
+            .incremental_states_outside_chaos_support > 0);
+    PC_CHECK(
+        delta_solved.diagnostics
+            .incremental_action_envelope_closed);
+    const StateLocalAutomaticBatch delta_batch =
+        delta_calc.admit_state_local_automatic_candidates(
+            delta_solved.start_state, limits);
+    bool checked_delta_eldritch_exit = false;
+    for (const std::uint32_t operator_index :
+         delta_batch.admitted_operators) {
+        const PlannerOperator& planner =
+            delta_calc.operators().at(operator_index);
+        if (planner.automatic_kind !=
+                AutomaticCandidateKind::EldritchSide ||
+            planner.intended_side != PC_SIDE_SUFFIX) {
+            continue;
+        }
+        const OptionKernel& kernel =
+            delta_calc.option_kernel(
+                delta_solved.start_state, operator_index);
+        for (const OutcomeEntry& exit : kernel.exits) {
+            if (delta_calc.is_goal_state(
+                    delta_calc.state(exit.state))) {
+                continue;
+            }
+            checked_delta_eldritch_exit = true;
+            PC_CHECK(exit.state < delta_solved.expanded.size());
+            if (exit.state < delta_solved.expanded.size()) {
+                PC_CHECK(delta_solved.expanded[exit.state]);
+            }
+        }
+    }
+    PC_CHECK(checked_delta_eldritch_exit);
+    if (delta_solved.policy_available) {
+        const PolicyOperatorRef selected =
+            delta_solved.policy[delta_solved.start_state];
+        PC_CHECK(selected != kNoId);
+        if (selected != kNoId) {
+            const PlannerOperator& planner =
+                delta_calc.operators().at(selected.index);
+            PC_CHECK(
+                planner.automatic_kind ==
+                AutomaticCandidateKind::EldritchSide);
+            PC_CHECK(planner.intended_side == PC_SIDE_SUFFIX);
+        }
+    }
+
+    auto ineligible = make_solve_session();
+    ineligible->eldritch_eligible = false;
+    ActionRegistry ineligible_registry =
+        build_action_registry(*ineligible);
+    PC_CHECK(
+        !ineligible_registry.index_by_id.contains(
+            "eldritch_chaos"));
+    PC_CHECK(
+        !ineligible_registry.index_by_id.contains(
+            "eldritch_annul"));
 }
 
 bool read_text_file(const std::string& path, std::string& out) {
@@ -2139,6 +2581,211 @@ void run_artifact_solve_tests(const char* artifact_dir) {
         PC_CHECK(identical_solve(first, stepped));
     }
 
+    /*
+     * Artifact-backed split-side control. Keep one real prefix goal, put
+     * unrelated junk on the suffix side, and require a real suffix goal.
+     * Automatic Eldritch planning must be available on this Body Armour and
+     * Bellman remains free to choose the exact suffix-side repair.
+     */
+    PC_CHECK(session->eldritch_eligible);
+    std::uint32_t artifact_prefix_goal = kNoId;
+    std::uint32_t artifact_suffix_goal = kNoId;
+    std::uint32_t artifact_suffix_junk = kNoId;
+    const auto pure_family_side =
+        [&](const std::uint32_t family) {
+            std::int8_t side = -1;
+            for (std::uint32_t candidate = 0;
+                 candidate < session->mod_count; ++candidate) {
+                if (session->family_id[candidate] != family) continue;
+                const std::int8_t candidate_side =
+                    session->gen_type[candidate];
+                if (candidate_side != PC_SIDE_PREFIX &&
+                    candidate_side != PC_SIDE_SUFFIX) {
+                    continue;
+                }
+                if (side == -1) {
+                    side = candidate_side;
+                } else if (side != candidate_side) {
+                    return static_cast<std::int8_t>(-1);
+                }
+            }
+            return side;
+        };
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        if (!pc_bitset_test(
+                session->normal_random_roll_mask.data(), mod) ||
+            !pc_bitset_test(
+                session->positive_base_weight_mask.data(), mod) ||
+            session->primary_group[mod] == kNoId ||
+            session->family_id[mod] == kNoId) {
+            continue;
+        }
+        const std::int8_t family_side =
+            pure_family_side(session->family_id[mod]);
+        if (family_side == PC_SIDE_PREFIX &&
+            artifact_prefix_goal == kNoId) {
+            artifact_prefix_goal = mod;
+        } else if (family_side == PC_SIDE_SUFFIX) {
+            if (artifact_suffix_goal == kNoId) {
+                artifact_suffix_goal = mod;
+            } else if (
+                session->family_id[mod] !=
+                    session->family_id[artifact_suffix_goal]) {
+                artifact_suffix_junk = mod;
+                break;
+            }
+        }
+    }
+    PC_CHECK(artifact_prefix_goal != kNoId);
+    PC_CHECK(artifact_suffix_goal != kNoId);
+    PC_CHECK(artifact_suffix_junk != kNoId);
+    if (artifact_prefix_goal != kNoId &&
+        artifact_suffix_goal != kNoId &&
+        artifact_suffix_junk != kNoId) {
+        GoalSpec split_goal;
+        split_goal.rarity = PC_RARITY_RARE;
+        split_goal.automatic_candidates = true;
+        GoalSlot split_prefix;
+        split_prefix.family_id =
+            session->family_id[artifact_prefix_goal];
+        split_goal.slots.push_back(split_prefix);
+        GoalSlot split_suffix;
+        split_suffix.family_id =
+            session->family_id[artifact_suffix_goal];
+        split_goal.slots.push_back(split_suffix);
+        const std::vector<std::uint32_t> split_candidates{
+            registry.index_by_id.at("chaos"),
+            registry.index_by_id.at("annul"),
+            registry.index_by_id.at("restart")};
+        std::unordered_map<std::string, double> split_prices{
+            {"chaos", 1000.0},
+            {"annul", 1000.0},
+            {"base", 1000.0},
+            {"eldritch_chaos", 1.0},
+            {"eldritch_annul", 1.0},
+            {"eldritch_ember:1", 0.4},
+            {"eldritch_ember:2", 0.3},
+            {"eldritch_ember:3", 0.2},
+            {"eldritch_ember:4", 0.1},
+            {"eldritch_ichor:1", 0.4},
+            {"eldritch_ichor:2", 0.3},
+            {"eldritch_ichor:3", 0.2},
+            {"eldritch_ichor:4", 0.1}};
+        pc_item_state split_start;
+        pc_item_clear(&split_start);
+        split_start.rarity = PC_RARITY_RARE;
+        place(
+            &split_start, PC_SIDE_PREFIX, artifact_prefix_goal,
+            session->primary_group[artifact_prefix_goal]);
+        place(
+            &split_start, PC_SIDE_SUFFIX, artifact_suffix_junk,
+            session->primary_group[artifact_suffix_junk]);
+        split_start.searing_exarch_tier = 1;
+        split_start.eater_of_worlds_tier = 2;
+
+        CalcContext split_calc(
+            session, split_goal, registry, split_candidates);
+        const std::uint32_t split_start_state =
+            split_calc.intern_item(split_start);
+        const AbstractState& split_abstract =
+            split_calc.state(split_start_state);
+        PC_CHECK(!split_calc.is_goal_state(split_abstract));
+        PC_CHECK(
+            split_abstract.slot_status[0] ==
+            static_cast<std::uint8_t>(
+                GoalSlotStatus::Satisfied));
+        PC_CHECK(
+            split_abstract.slot_status[1] ==
+            static_cast<std::uint8_t>(
+                GoalSlotStatus::Absent));
+        PC_CHECK(
+            registry.index_by_id.contains(
+                "eldritch_ember:1"));
+        PC_CHECK(
+            registry.index_by_id.contains(
+                "eldritch_ichor:1"));
+        pc_item_state split_materialized;
+        const bool split_materialized_ok =
+            split_calc.materialize(
+                split_start_state, split_materialized);
+        const OutcomeDistribution& raw_split_annul =
+            split_calc.outcomes(
+                split_start_state,
+                registry.index_by_id.at("eldritch_annul"));
+        const OutcomeDistribution& raw_split_chaos =
+            split_calc.outcomes(
+                split_start_state,
+                registry.index_by_id.at("eldritch_chaos"));
+        PC_CHECK(split_materialized_ok);
+        PC_CHECK(
+            split_materialized.searing_exarch_tier == 1);
+        PC_CHECK(
+            split_materialized.eater_of_worlds_tier == 2);
+        PC_CHECK(raw_split_annul.supported);
+        PC_CHECK(!raw_split_annul.entries.empty());
+        PC_CHECK(raw_split_chaos.supported);
+        PC_CHECK(!raw_split_chaos.entries.empty());
+        AutomaticAdmissionLimits split_limits;
+        split_limits.max_discovered_states = 200000;
+        split_limits.max_state_action_rows = 300000;
+        split_limits.max_transitions = 10000000;
+        split_limits.max_reforge_work = 100000000;
+        split_limits.max_solver_owned_bytes =
+            512ull * 1024ull * 1024ull;
+        split_limits.prices = &split_prices;
+        const StateLocalAutomaticBatch split_batch =
+            split_calc.admit_state_local_automatic_candidates(
+                split_start_state, split_limits);
+        bool saw_artifact_suffix_side = false;
+        for (const StateLocalAutomaticCandidate& decision :
+             split_batch.decisions) {
+            if (!decision.admitted ||
+                decision.kind !=
+                    AutomaticCandidateKind::EldritchSide) {
+                continue;
+            }
+            const PlannerOperator& planner =
+                split_calc.operators().at(decision.operator_index);
+            saw_artifact_suffix_side |=
+                planner.intended_side == PC_SIDE_SUFFIX;
+        }
+        PC_CHECK(saw_artifact_suffix_side);
+
+        CalcContext split_solve_calc(
+            session, split_goal, registry, split_candidates);
+        SolveOptions split_options;
+        split_options.goal_progress_gated_reforges = true;
+        split_options.max_discovered_states = 200000;
+        split_options.max_expanded_states = 25000;
+        split_options.max_reforge_work = 100000000;
+        split_options.max_solver_owned_bytes =
+            512ull * 1024ull * 1024ull;
+        const SolveResult split_solved = solve(
+            split_solve_calc, split_start, split_prices,
+            split_options);
+        PC_CHECK(split_solved.policy_available);
+        if (split_solved.policy_available) {
+            const PolicyOperatorRef selected =
+                split_solved.policy[split_solved.start_state];
+            PC_CHECK(selected != kNoId);
+            if (selected != kNoId) {
+                const PlannerOperator& planner =
+                    split_solve_calc.operators().at(selected.index);
+                PC_CHECK(
+                    planner.automatic_kind ==
+                    AutomaticCandidateKind::EldritchSide);
+                PC_CHECK(planner.intended_side == PC_SIDE_SUFFIX);
+            }
+        }
+        std::printf(
+            "solver artifact Eldritch split-side: policy=%d "
+            "status=%u states=%u expanded=%u\n",
+            split_solved.policy_available ? 1 : 0,
+            static_cast<unsigned>(split_solved.policy_status),
+            split_solved.diagnostics.discovered_states,
+            split_solved.diagnostics.expanded_states);
+    }
+
     /* Real-artifact S8.2 reduction gate. Reprice only Chaos far above the
      * genuine Restart route. Progressed rare carriers must drop Chaos with a
      * strict bound witness, while the controlled and exhaustive envelopes
@@ -2193,5 +2840,6 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
     run_incremental_action_generation_tests();
+    run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);
 }

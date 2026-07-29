@@ -1,6 +1,6 @@
 # Q-Directed Deep Solving And Automatic Eldritch Side Actions
 
-**Status: active (2026-07-28).**
+**Status: completed (2026-07-28).**
 
 Owner: Oliver
 

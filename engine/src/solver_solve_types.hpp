@@ -548,6 +548,13 @@ struct SolveWork::Impl {
     std::uint64_t incremental_carrier_kernel_reuses = 0;
     std::uint64_t incremental_reoptimizations = 0;
     std::uint32_t incremental_first_alternative_expanded_states = 0;
+    bool incremental_refinement_active = false;
+    std::uint32_t incremental_refinement_target_expanded = 0;
+    std::uint64_t incremental_refinement_rounds = 0;
+    std::uint64_t incremental_refinement_states_selected = 0;
+    std::uint64_t incremental_rows_reconsidered = 0;
+    std::uint64_t incremental_upper_policy_updates = 0;
+    double incremental_refinement_uncertainty = 0.0;
     std::uint32_t expansion_states_outside_chaos_support = 0;
     std::vector<std::uint8_t> incremental_chaos_support;
     std::vector<std::uint8_t> incremental_nonchaos_states_seen;
@@ -1104,6 +1111,12 @@ struct SolveWork::Impl {
     double sparse_row_q_for_values(
         std::size_t row_index,
         const std::vector<double>& values) const;
+
+    std::vector<double> certified_incremental_lower_values();
+
+    bool schedule_incremental_refinement(bool force = false);
+
+    void refresh_incremental_upper_incumbent();
 
     void restart_incremental_optimization();
 

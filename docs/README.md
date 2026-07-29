@@ -28,11 +28,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active
-[Q-Directed Deep Solving And Automatic Eldritch Side Actions](active/plan.md)
-milestone refines the states with the greatest exact contribution to
-unresolved action Q intervals and adds four automatic, real-resource Eldritch
-side-intent options for eligible armour.
+No implementation boundary is active. Oliver must select the next chunk before
+implementation resumes.
+
+The completed
+[Q-Directed Deep Solving And Automatic Eldritch Side Actions](archive/2026-07-28-q-directed-eldritch-side-actions/README.md)
+milestone retains stored-row Q refinement, exceptional-support expansion, and
+four automatic real-resource Eldritch side options for eligible armour. The
+frozen lower bounds improve materially, but the action intervals remain open.
 
 The completed
 [Chaos-Anchored Incremental Action Generation](archive/2026-07-28-chaos-anchored-incremental-actions/README.md)

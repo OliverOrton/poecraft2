@@ -1,37 +1,38 @@
 # Session Handoff
 
-**Status: an implementation boundary is active.**
+**Status: no implementation boundary is active.**
 
-Plan:
-[Q-Directed Deep Solving And Automatic Eldritch Side Actions](docs/active/plan.md)
+Completed milestone:
+[Q-Directed Deep Solving And Automatic Eldritch Side Actions](docs/archive/2026-07-28-q-directed-eldritch-side-actions/README.md)
 
 Branch: `codex/q-directed-eldritch-side-actions`
 
 Starting source: `85e9ac4`
 
-## Current Boundary
+## Completed Boundary
 
-Proceed through the active plan without another confirmation.
+The opt-in goal-progress-gated solver now retains completed delayed rows,
+directs bounded refinement by probability-weighted Q uncertainty, refreshes
+executable upper policies, and reconsiders stored rows without recomputing
+their probability distributions. Exceptional-support successors are expanded
+before action classification.
 
-First run both frozen four-mod cases under the specified diagnostic-only 100M
-reforge-work controls. Then implement exact probability-weighted attribution
-of unresolved Q uncertainty, bounded high-impact state refinement, retained
-completed rows, repeated lower/upper propagation, and action
-reconsideration/admission cycles.
+Eligible rare helmets, body armour, gloves, and boots receive four automatic
+goal-relevant compound options: Eldritch Annul Prefix/Suffix and Eldritch
+Chaos Prefix/Suffix. Existing dominance avoids setup; missing dominance uses,
+charges, retains, and compiles real Ember/Ichor setup before the real final
+currency.
 
-After exact toys and useful frozen interval movement, add exactly four
-automatic goal-relevant compound options on engine-certified eligible armour:
-Eldritch Annul Prefix/Suffix and Eldritch Chaos Prefix/Suffix. They must use
-real existing dominance setup, resource charging, state transitions, and
-strategy operations. Preserve current target-side metamod and raw Annul
-legality behavior. Keep Veiled, Influence Exalt automation, standalone
-implicit automation, dense shared DAGs, goal-count merging, and product cap
-changes outside scope.
+The full frozen case expands 8,908 states and raises completed alternative
+lower-Q values to roughly 433–520 chaos, but its intervals and action envelope
+remain open. A bounded deep snapshot reaches 11,570 expanded states and
+improves both root bounds without producing a final classification. Product
+defaults and unrestricted behavior are unchanged.
 
-An open envelope, unvalued delta state, overlap, or cap blocks exactness but
-may retain an independently executable bounded policy. If one refinement is
-falsified, restore only it, preserve its evidence, and continue within the
-boundary.
+Oliver must choose the next chunk before implementation resumes. Likely future
+research should address executable upper quality over high-impact partial
+states; it must not describe the remaining Q overlap as a rejection or revive
+the previously falsified dense shared DAG or goal-count merge.
 
 Commits remain local unless Oliver asks to push and must end with:
 

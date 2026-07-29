@@ -4,7 +4,7 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-28 @ Q-directed Eldritch milestone
 
 Verification scope: native Eldritch implicit and explicit-currency actions,
 influence-exalt application, exact calculator, solver registry/options, and
@@ -98,6 +98,27 @@ The user-authored `eldritch_side_intent` option can apply real implicit setup
 actions and then one Eldritch Exalt, Chaos, or Annul. It retains the resulting
 implicit tiers and charges setup resources. No hidden dominance flag or silent
 implicit restoration is used.
+
+When solver automatic candidates are enabled, rare carriers in
+engine-certified eligible sessions may also receive exactly four
+goal-relevant high-level candidates: Eldritch Annul Prefix/Suffix and
+Eldritch Chaos Prefix/Suffix. Session eligibility remains owned by
+`session_builder.cpp` and is true only for helmets, body armour, gloves, and
+boots.
+
+Each automatic candidate reads the carrier's real implicit tiers. Existing
+requested-side dominance avoids setup. Missing dominance uses the cheapest
+priced legal real Ember/Ichor sequence supported by the same side-intent
+machinery, then performs the real Annul or Chaos. Every setup resource is
+charged, resulting implicit tiers remain in item state, and compilation emits
+the real setup operations followed by the real final currency.
+
+The candidates are filtered by whether their targeted or preserved explicit
+side can matter to the remaining goal. This is only action admission; Bellman
+chooses the route. Automatic standalone Ember, Ichor, Eldritch Exalt,
+arbitrary implicit rolling, Veiled crafting, and Influence Exalt are not
+added. Eldritch Chaos is excluded from the gated zero-progress retry basin
+because its preserved side observes the discarded carrier.
 
 ## Calculator Support
 

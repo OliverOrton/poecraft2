@@ -38,6 +38,8 @@ AutomaticTelemetryKind telemetry_kind_for_candidate(
         return AutomaticTelemetryKind::PrimitiveFracture;
     case AutomaticCandidateKind::ConstructiveRenewal:
         return AutomaticTelemetryKind::Renewal;
+    case AutomaticCandidateKind::EldritchSide:
+        return AutomaticTelemetryKind::EldritchSide;
     case AutomaticCandidateKind::None:
         return AutomaticTelemetryKind::None;
     }
@@ -402,6 +404,154 @@ AutomaticOptionSynthesis synthesize_automatic_options(
     };
     const std::vector<std::uint32_t>& goal_bench =
         calc.automatic_goal_bench_actions();
+
+    /*
+     * Product Eldritch planning exposes only four state-local side intents.
+     * Setup is selected here because prices and the exact carrier dominance
+     * are both available. The resulting fixed option is still an ordinary
+     * sequence of real currency operations; no hidden dominance flag enters
+     * the state or evaluator.
+     */
+    if (session.eldritch_eligible &&
+        state.rarity == PC_RARITY_RARE) {
+        const auto action_cost =
+            [&](const std::uint32_t action) {
+                if (!action_has_prices(action)) {
+                    return std::numeric_limits<double>::infinity();
+                }
+                double cost = 0.0;
+                if (prices != nullptr) {
+                    for (const std::string& key :
+                         registry.actions.at(action).cost_keys) {
+                        cost += prices->at(key);
+                    }
+                }
+                return cost;
+            };
+        const auto setup_for_side =
+            [&](const std::int8_t side)
+                -> std::optional<std::vector<std::string>> {
+                if (eldritch_dominates(state, side)) {
+                    return std::vector<std::string>{};
+                }
+                const char* desired =
+                    side == PC_SIDE_PREFIX
+                        ? "eldritch_ember:"
+                        : "eldritch_ichor:";
+                const char* opposite =
+                    side == PC_SIDE_PREFIX
+                        ? "eldritch_ichor:"
+                        : "eldritch_ember:";
+                const std::uint32_t opposing_tier =
+                    side == PC_SIDE_PREFIX
+                        ? state.eater_of_worlds_tier
+                        : state.searing_exarch_tier;
+                double best_cost =
+                    std::numeric_limits<double>::infinity();
+                std::vector<std::string> best;
+                const auto consider =
+                    [&](std::vector<std::string> ids) {
+                        double cost = 0.0;
+                        for (const std::string& id : ids) {
+                            const auto found =
+                                registry.index_by_id.find(id);
+                            if (found == registry.index_by_id.end()) {
+                                return;
+                            }
+                            const double part = action_cost(found->second);
+                            if (!std::isfinite(part)) return;
+                            cost += part;
+                        }
+                        if (cost < best_cost ||
+                            (cost == best_cost &&
+                             (best.empty() || ids < best))) {
+                            best_cost = cost;
+                            best = std::move(ids);
+                        }
+                    };
+                for (std::uint32_t desired_tier = 1;
+                     desired_tier <= 4; ++desired_tier) {
+                    if (desired_tier > opposing_tier) {
+                        consider({
+                            std::string(desired) +
+                            std::to_string(desired_tier)});
+                    }
+                }
+                for (std::uint32_t opposing = 1;
+                     opposing <= 4; ++opposing) {
+                    for (std::uint32_t desired_tier = opposing + 1;
+                         desired_tier <= 4; ++desired_tier) {
+                        consider({
+                            std::string(opposite) +
+                                std::to_string(opposing),
+                            std::string(desired) +
+                                std::to_string(desired_tier)});
+                    }
+                }
+                if (!std::isfinite(best_cost)) return std::nullopt;
+                return best;
+            };
+
+        const std::uint32_t satisfied = satisfied_goal_mask(state);
+        const std::uint8_t cap =
+            rarity_affix_cap(session, state.rarity);
+        for (const std::int8_t side :
+             {static_cast<std::int8_t>(PC_SIDE_PREFIX),
+              static_cast<std::int8_t>(PC_SIDE_SUFFIX)}) {
+            std::uint32_t side_goal_mask = 0;
+            std::uint32_t opposite_goal_mask = 0;
+            for (std::uint32_t slot = 0;
+                 slot < goal.slots.size(); ++slot) {
+                if (goal_slot_side(
+                        session, goal.slots[slot]) == side) {
+                    side_goal_mask |= 1u << slot;
+                } else {
+                    opposite_goal_mask |= 1u << slot;
+                }
+            }
+            const std::uint32_t missing =
+                side_goal_mask & ~satisfied;
+            const std::uint32_t preserved =
+                opposite_goal_mask & satisfied;
+            const std::uint8_t count =
+                side == PC_SIDE_PREFIX
+                    ? state.prefix_count
+                    : state.suffix_count;
+            const std::uint32_t satisfied_on_side =
+                std::popcount(side_goal_mask & satisfied);
+            const bool has_unwanted =
+                count > satisfied_on_side;
+            const bool opens_goal_capacity =
+                missing != 0 && count >= cap;
+            const bool relevant =
+                missing != 0 ||
+                (preserved != 0 && has_unwanted) ||
+                opens_goal_capacity;
+            if (!relevant) continue;
+            const auto setup = setup_for_side(side);
+            if (!setup.has_value()) continue;
+            for (const char* final_id :
+                 {"eldritch_annul", "eldritch_chaos"}) {
+                const auto final =
+                    registry.index_by_id.find(final_id);
+                if (final == registry.index_by_id.end() ||
+                    !action_has_prices(final->second)) {
+                    continue;
+                }
+                FixedOptionSpec option;
+                option.kind =
+                    FixedOptionKind::EldritchSideIntent;
+                option.side = side;
+                option.action_id = final_id;
+                option.setup_action_ids = *setup;
+                option.automatic_kind =
+                    AutomaticCandidateKind::EldritchSide;
+                option.relevant_goal_mask =
+                    side_goal_mask | preserved;
+                result.push_back(std::move(option));
+            }
+        }
+    }
 
     /* Deterministic Multimod finishes are generated only for pairs of legal
      * permanent goal crafts. The fixed kernel retains native group, crafted
@@ -1314,7 +1464,9 @@ std::vector<PlannerOperator> build_planner_operators(
         }
         case FixedOptionKind::EldritchSideIntent: {
             require_side(spec);
-            if (spec.setup_action_ids.empty()) {
+            if (spec.setup_action_ids.empty() &&
+                spec.automatic_kind !=
+                    AutomaticCandidateKind::EldritchSide) {
                 throw std::runtime_error(
                     "fixed option: Eldritch side intent needs an explicit "
                     "non-empty setup array");
@@ -1345,12 +1497,29 @@ std::vector<PlannerOperator> build_planner_operators(
             option.id =
                 std::string("option:eldritch_side_intent:") +
                 side_name(spec.side) + ':' + craft.id + ':' +
-                join_ids(registry, std::vector<std::uint32_t>(
-                    option.primitive_program.begin(),
-                    option.primitive_program.end() - 1));
-            option.display_name =
-                std::string("Eldritch ") + side_name(spec.side) +
-                " intent: " + craft.display_name;
+                (option.primitive_program.size() == 1
+                     ? std::string("direct")
+                     : join_ids(
+                           registry,
+                           std::vector<std::uint32_t>(
+                               option.primitive_program.begin(),
+                               option.primitive_program.end() - 1)));
+            if (spec.automatic_kind ==
+                AutomaticCandidateKind::EldritchSide) {
+                option.display_name =
+                    std::string("Eldritch ") +
+                    (craft.params.type == ActionType::EldritchAnnul
+                         ? "Annul "
+                         : "Chaos ") +
+                    (spec.side == PC_SIDE_PREFIX
+                         ? "Prefix"
+                         : "Suffix");
+            } else {
+                option.display_name =
+                    std::string("Eldritch ") +
+                    side_name(spec.side) +
+                    " intent: " + craft.display_name;
+            }
             break;
         }
         case FixedOptionKind::ProtectedSide: {
@@ -2440,6 +2609,26 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     AutomaticOptionSynthesis synthesis =
         synthesize_automatic_options(
             *this, state_id, carrier, limits.prices);
+    /*
+     * Eldritch side intents operate on the parent carrier's exact preserved
+     * side and can add parent-layout delta states. Do not reproject them
+     * through the temporary admission context: an option-specific finer junk
+     * partition can choose a different representative and fail to
+     * rematerialize even though the parent raw actions are exact. Evaluate
+     * these four one-shot compounds directly on the parent state lifecycle.
+     */
+    std::vector<FixedOptionSpec> parent_eldritch_specs;
+    for (auto it = synthesis.specs.begin();
+         it != synthesis.specs.end();) {
+        if (it->kind == FixedOptionKind::EldritchSideIntent &&
+            it->automatic_kind ==
+                AutomaticCandidateKind::EldritchSide) {
+            parent_eldritch_specs.push_back(std::move(*it));
+            it = synthesis.specs.erase(it);
+        } else {
+            ++it;
+        }
+    }
     batch.phases.carriers = 1;
     batch.phases.synthesis_ns = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2646,6 +2835,107 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                (planner.conditional_action == kNoId ||
                 action_has_prices(planner.conditional_action));
     };
+    if (!parent_eldritch_specs.empty()) {
+        GoalSpec parent_goal = goal_;
+        parent_goal.automatic_candidates = false;
+        parent_goal.fixed_options =
+            std::move(parent_eldritch_specs);
+        std::vector<PlannerOperator> parent_options =
+            build_planner_operators(
+                *session_, parent_goal, registry_, candidates_);
+        for (std::uint32_t local_index =
+                 static_cast<std::uint32_t>(registry_.actions.size());
+             local_index < parent_options.size(); ++local_index) {
+            PlannerOperator& proposed =
+                parent_options[local_index];
+            if (proposed.option_kind !=
+                    FixedOptionKind::EldritchSideIntent ||
+                proposed.automatic_kind !=
+                    AutomaticCandidateKind::EldritchSide) {
+                continue;
+            }
+            StateLocalAutomaticCandidate decision;
+            decision.id = proposed.id;
+            decision.kind =
+                AutomaticCandidateKind::EldritchSide;
+            decision.telemetry_kind =
+                AutomaticTelemetryKind::EldritchSide;
+            const auto existing = std::find_if(
+                operators_.begin(), operators_.end(),
+                [&](const PlannerOperator& candidate) {
+                    return candidate.id == proposed.id &&
+                           candidate.kind == proposed.kind &&
+                           candidate.option_kind ==
+                               proposed.option_kind &&
+                           candidate.intended_side ==
+                               proposed.intended_side &&
+                           candidate.primitive_program ==
+                               proposed.primitive_program;
+                });
+            std::uint32_t operator_index = kNoId;
+            if (existing == operators_.end()) {
+                operator_index = static_cast<std::uint32_t>(
+                    operators_.size());
+                operators_.push_back(std::move(proposed));
+                account_new_operator(operators_.back());
+                decision.selected_bytes =
+                    sizeof(PlannerOperator);
+            } else {
+                operator_index = static_cast<std::uint32_t>(
+                    std::distance(operators_.begin(), existing));
+            }
+            decision.operator_index = operator_index;
+            const PlannerOperator& planner =
+                operators_.at(operator_index);
+            const auto kernel_started =
+                std::chrono::steady_clock::now();
+            const OptionKernel& kernel =
+                option_kernel(state_id, operator_index);
+            decision.kernel_evaluation_ns =
+                static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<
+                        std::chrono::nanoseconds>(
+                        std::chrono::steady_clock::now() -
+                        kernel_started)
+                        .count());
+            decision.raw_outcomes = outcome_count(kernel);
+            decision.evidence = kernel.automatic;
+            decision.selected_bytes +=
+                option_kernel_selected_bytes(kernel);
+            if (!program_has_prices(planner)) {
+                decision.missing_price = true;
+                decision.evidence.eligible = false;
+                decision.evidence.legality_result =
+                    "not_admitted_missing_price";
+                decision.evidence.reason =
+                    "automatic_candidate_missing_price";
+            } else if (decision.evidence.eligible) {
+                decision.admitted = true;
+                admit_operator(operator_index);
+                state_local_automatic_operator_indices_.insert(
+                    operator_index);
+                for (const std::uint32_t dependency :
+                     planner.primitive_program) {
+                    add_dependency(dependency);
+                }
+            }
+            batch.decisions.push_back(std::move(decision));
+            if (limits.max_state_action_rows != 0 &&
+                telemetry_.state_action_rows >
+                    limits.max_state_action_rows) {
+                throw SolverResourceLimit(
+                    "max_state_action_rows",
+                    limits.max_state_action_rows);
+            }
+            if (limits.max_transitions != 0 &&
+                telemetry_.transition_entries >
+                    limits.max_transitions) {
+                throw SolverResourceLimit(
+                    "max_transitions", limits.max_transitions);
+            }
+            check_limits(true);
+        }
+    }
     bool local_work_merged = false;
     const auto merge_local_work = [&]() {
         if (local_work_merged) return;
@@ -4396,6 +4686,14 @@ const OptionKernel& CalcContext::option_kernel(
             if (!action_legal(*session_, action, abstract)) {
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                if (option.option_kind ==
+                        FixedOptionKind::EldritchSideIntent &&
+                    option.automatic_kind ==
+                        AutomaticCandidateKind::EldritchSide) {
+                    result->automatic.reason =
+                        "eldritch_side_program_step_illegal:" +
+                        action.id;
+                }
                 frontier.clear();
                 break;
             }
@@ -4406,6 +4704,12 @@ const OptionKernel& CalcContext::option_kernel(
                     entry_state)) {
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                if (option.automatic_kind ==
+                    AutomaticCandidateKind::EldritchSide) {
+                    result->automatic.reason =
+                        "eldritch_side_intended_dominance_illegal:" +
+                        action.id;
+                }
                 frontier.clear();
                 break;
             }
@@ -4417,8 +4721,28 @@ const OptionKernel& CalcContext::option_kernel(
                 result->supported = false;
                 result->legal = false;
                 result->terminates_almost_surely = false;
+                if (option.option_kind ==
+                        FixedOptionKind::EldritchSideIntent &&
+                    option.automatic_kind ==
+                        AutomaticCandidateKind::EldritchSide) {
+                    result->automatic.reason =
+                        !distribution.supported
+                            ? "eldritch_side_distribution_unsupported:" +
+                                  action.id
+                            : "eldritch_side_choice_distribution_unsupported:" +
+                                  action.id;
+                }
                 frontier.clear();
                 break;
+            }
+            if (distribution.entries.empty() &&
+                option.option_kind ==
+                    FixedOptionKind::EldritchSideIntent &&
+                option.automatic_kind ==
+                    AutomaticCandidateKind::EldritchSide) {
+                result->automatic.reason =
+                    "eldritch_side_distribution_empty:" +
+                    action.id;
             }
             for (const OutcomeEntry& exit : distribution.entries) {
                 /* Lock and Multimod setup primitives must actually apply.
@@ -4501,6 +4825,33 @@ const OptionKernel& CalcContext::option_kernel(
             } else {
                 result->automatic.reason =
                     "legal_exact_multimod_goal_finish";
+            }
+        } else if (
+            option.option_kind ==
+                FixedOptionKind::EldritchSideIntent &&
+            option.automatic_kind ==
+                AutomaticCandidateKind::EldritchSide) {
+            result->automatic.kernel_changed = true;
+            result->automatic.kernel_change_mechanisms =
+                kAutomaticEldritchDominance |
+                (option.intended_side == PC_SIDE_PREFIX
+                     ? kAutomaticPrefixSlot
+                     : kAutomaticSuffixSlot);
+            result->automatic.setup_complete =
+                result->legal && result->supported;
+            result->automatic.cleanup_complete = true;
+            if (!result->automatic.exits_complete) {
+                result->legal = false;
+                result->terminates_almost_surely = false;
+                if (result->automatic.reason.empty()) {
+                    result->automatic.reason =
+                        "eldritch_side_exit_coverage_incomplete";
+                }
+            } else {
+                result->automatic.reason =
+                    option.primitive_program.size() == 1
+                        ? "existing_dominance_exact_side_action"
+                        : "exact_paid_dominance_setup_and_side_action";
             }
         } else if (option.option_kind == FixedOptionKind::ProtectedSide) {
             std::uint32_t protected_mask = 0;

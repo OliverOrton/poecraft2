@@ -41,6 +41,12 @@ AutomaticTelemetryKind automatic_telemetry_kind(
             return AutomaticTelemetryKind::FracturePrepare;
         case FixedOptionKind::MultimodFinish:
             return AutomaticTelemetryKind::MultimodFinish;
+        case FixedOptionKind::EldritchSideIntent:
+            if (planner.automatic_kind ==
+                AutomaticCandidateKind::EldritchSide) {
+                return AutomaticTelemetryKind::EldritchSide;
+            }
+            break;
         default:
             break;
         }
@@ -60,6 +66,8 @@ AutomaticTelemetryKind automatic_telemetry_kind(
         return AutomaticTelemetryKind::ProtectedSide;
     case AutomaticCandidateKind::ConstructiveRenewal:
         return AutomaticTelemetryKind::Renewal;
+    case AutomaticCandidateKind::EldritchSide:
+        return AutomaticTelemetryKind::EldritchSide;
     case AutomaticCandidateKind::None:
         break;
     }
@@ -1264,6 +1272,8 @@ std::string SolveWork::Impl::preservation_witness_json(
             return "imprint";
         case AutomaticCandidateKind::ConstructiveRenewal:
             return "constructive_renewal";
+        case AutomaticCandidateKind::EldritchSide:
+            return "eldritch_side";
         case AutomaticCandidateKind::None:
             return "none";
         }
@@ -1287,6 +1297,7 @@ std::string SolveWork::Impl::preservation_witness_json(
         add(kAutomaticCarrierFracture, "carrier_exact_fracture");
         add(kAutomaticDeterministicFinish, "deterministic_finish");
         add(kAutomaticImprintCheckpoint, "imprint_checkpoint_restore");
+        add(kAutomaticEldritchDominance, "eldritch_dominance");
         out.push_back(']');
         return out;
     }
@@ -2556,12 +2567,13 @@ bool SolveWork::Impl::expand_one_unit() {
                         if (expansion_is_incremental_alternative) {
                             expansion_appended_row = appended_row;
                         }
-                        if (incremental_action_generation &&
-                            planner.kind ==
-                                PlannerOperatorKind::Primitive) {
-                            const ActionType action_type =
+                        if (incremental_action_generation) {
+                            const bool chaos_anchor =
+                                planner.kind ==
+                                    PlannerOperatorKind::Primitive &&
                                 calc.registry().actions.at(
-                                    planner.primitive_action).params.type;
+                                    planner.primitive_action).params.type ==
+                                    ActionType::Chaos;
                             const SparseRow& appended =
                                 transition_cache->rows.at(appended_row);
                             std::vector<std::uint32_t> successor_ids;
@@ -2594,7 +2606,7 @@ bool SolveWork::Impl::expand_one_unit() {
                                     successor_ids.begin(),
                                     successor_ids.end()),
                                 successor_ids.end());
-                            if (action_type == ActionType::Chaos) {
+                            if (chaos_anchor) {
                                 if (incremental_chaos_support.size() <
                                     calc.state_count()) {
                                     incremental_chaos_support.resize(
