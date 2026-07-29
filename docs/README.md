@@ -33,6 +33,17 @@ before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
 boundary.
 
 The completed
+[Practical Exact Four-Goal Solving Research](archive/2026-07-29-practical-four-goal-solving-research/README.md)
+finds that the 1,030 ordinary zero-goal carriers do not generate the broad-row
+work. Fracture independently changes the action-driven parent from 6 junk
+classes and 217 projected root Chaos carriers to 105 classes and 134,477
+carriers; the public constructor also forces complete group identity.
+Dependency-only cleanup would have the same counterfactual effect but is not
+in this case's parent `layout_actions`. The report recommends a
+Fracture-local coarse-parent prototype; it is not active until Oliver selects
+it.
+
+The preceding
 [Upper-Cap Sensitivity And Zero-Progress Renewal Audit](archive/2026-07-29-upper-cap-zero-progress-renewal/README.md)
 reproduced the rejected 200,000-state scheduler exactly. A corrected long run
 found a real but microscopic `4.07634` upper reduction at 387,556 states, and

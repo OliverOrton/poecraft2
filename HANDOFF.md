@@ -2,19 +2,22 @@
 
 **Status: no active implementation boundary.**
 
-The upper-cap and zero-progress renewal investigation is complete and archived
-at
-[Upper-Cap Sensitivity And Zero-Progress Renewal Audit](docs/archive/2026-07-29-upper-cap-zero-progress-renewal/README.md).
+The independent four-goal architecture research is complete and archived at
+[Practical Exact Four-Goal Solving Research](docs/archive/2026-07-29-practical-four-goal-solving-research/README.md).
 
-The recovered 200,000-state candidate reproduced exactly. A corrected long
-run reached 387,556 discovered states before an owner-approved time-censored
-stop and reduced the 60.3-million executable upper by only `4.07634`
-(`0.00000676%`). The zero-progress audit found no sound additional
-canonicalization: retained non-renewal actions observed all 1,030 ordinary
-carriers, so only the existing gated retry basin passed the complete contract.
+The first 200,000 states show that ordinary zero-goal carriers are not the
+broad-row work source. A deterministic ablation projects the completed root
+Chaos distribution from `134,477` strict carriers to `217` core carriers and
+attributes the entire expansion back to complete group-exclusion identity:
+Fracture alone enables it, while the public solver constructor also forces it.
+Dependency-only Remove Crafted Modifiers would independently do the same but
+is not present in the actual parent `layout_actions`; temporary cleanup stays
+inside state-local exact child contexts.
 
-The recovered scheduler and audit remain native-benchmark-only diagnostics.
-Product defaults, the public ABI and bindings, strategy vocabulary, compiled
-policies, and unrestricted solving remain unchanged.
+The report recommends an owner-selectable
+[Fracture-local coarse-parent prototype](docs/archive/2026-07-29-practical-four-goal-solving-research/handoff.md).
+It is not active. The retained changes are native finalization-only,
+benchmark-only diagnostics; no optimization, product default, public ABI,
+binding, strategy vocabulary, mechanic, or compiled policy changed.
 
 Oliver must choose the next chunk before implementation resumes.

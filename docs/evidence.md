@@ -849,6 +849,40 @@ The corrected 400,000 request is explicitly right-censored, not a cap hit.
 Oliver allowed the increasingly slow tail to stop, so a corrected 600,000
 rerun and optional 800,000 run were not performed.
 
+## Practical Exact Four-Goal Solving Research
+
+The 2026-07-29
+[research report](archive/2026-07-29-practical-four-goal-solving-research/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/practical-four-goal-solving-research-summary.json)
+attribute the frozen PPPS full-four run without implementing an optimization.
+
+- The bounded run reproduced `200,000` discovered, `160` expanded, `2,228`
+  rows, `842,726` retained transitions, `16,746,695` reforge work, and the
+  existing transition/policy hashes.
+- Zero-goal states are `1,031` IDs and two expansions. Broad row work instead
+  starts almost entirely from one-goal carriers: `158/160` Chaos,
+  `870/880` Harvest, and `174/176` Fossil rows.
+- Every completed Mana-Fossil and Harvest root support is wholly shared with
+  the 134,477-state Chaos support; the carrier IDs are reused with different
+  probabilities and zero exceptional, persistent, or shape-only support.
+- The deterministic layout ablation projects the existing Chaos row to 217
+  carriers under six core junk classes. Adding Fracture alone restores 105
+  classes and all 134,477 carriers. Dependency-only cleanup has the same
+  counterfactual effect but is absent from the actual parent layout.
+- Uniform executable anchor sensitivity values of 10,000, 1,000, and 500
+  reprice root Chaos to `10,011.56`, `1,011.56`, and `511.56`. These are
+  labelled oracle scenarios, not available policies; one-goal anchors are
+  required before the effect can reach the root.
+- The recommendation is a Fracture-local coarse-parent prototype with exact
+  goal-hit witnesses and one aggregate dead-miss branch to priced Restart.
+  Calculator/Emulator Fracture, public interfaces, and product defaults remain
+  unchanged.
+
+The retained audit is finalization-only, benchmark-only, and default-disabled.
+The raw report remains a reproducible build artifact rather than a tracked
+source of product authority.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

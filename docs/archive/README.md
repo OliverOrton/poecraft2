@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-07-29
 
+- [Practical Exact Four-Goal Solving Research](2026-07-29-practical-four-goal-solving-research/README.md) —
+  attributed the 200,000-state PPPS run, measured Fracture's independent
+  `217 -> 134,477` root-carrier identity expansion, found dependency-only
+  cleanup absent from the parent layout, and recommended a Fracture-local
+  coarse-parent prototype. No optimization was implemented.
+
 - [Upper-Cap Sensitivity And Zero-Progress Renewal Audit](2026-07-29-upper-cap-zero-progress-renewal/README.md) —
   reproduced the rejected scheduler, measured a real but microscopic
   `4.07634` upper reduction at a time-censored 387,556 states, and rejected

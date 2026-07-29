@@ -1,0 +1,472 @@
+{
+  "version": "practical-four-goal-solving-research-v1",
+  "status": "completed_research_no_optimization",
+  "date": "2026-07-29",
+  "branch": "codex/upper-cap-zero-progress-renewal",
+  "starting_commit": "fc8787750445b89c7dadc37db7b4007bc7c74b87",
+  "primary_case": "natural-t1-full-four-47d8b909aa88",
+  "run": {
+    "actual_status": "refused_state_cap",
+    "lower_bound": 432.40685295343258,
+    "upper_bound": 60341416.98784247,
+    "discovered_states": 200000,
+    "expanded_states": 160,
+    "state_action_rows": 2228,
+    "retained_transition_entries": 842726,
+    "outcome_entries": 114754781,
+    "reforge_work": 16746695,
+    "unique_reforge_kernels": 14,
+    "carrier_kernel_reuses": 1203,
+    "live_owned_bytes": 83929484,
+    "peak_owned_bytes": 134289701,
+    "wall_total_ms": 14601.3912,
+    "transition_hash": "d4346e90f923332c",
+    "policy_hash": "8b2a568f3c9cfd35",
+    "benchmark_binary_sha256": "cd4a7bfd54fe60ebbc97b20ac0b0cd8ddb6044e8a5d103edcf079bc57b22f3af",
+    "raw_report_sha256": "21898aea472da0f6c7e2dd46d47e73f84d93cac1064e87e3a0fb127d798ae35e",
+    "raw_report_path": "build/four-goal-anchor-research-200k.json"
+  },
+  "state_census_by_goal_count": [
+    {
+      "count": 0,
+      "states": 1031,
+      "expanded": 2,
+      "root_probability_mass": 5.3455008328483986,
+      "root_upper_q_contribution": 322555094.76376438
+    },
+    {
+      "count": 1,
+      "states": 144595,
+      "expanded": 158,
+      "root_probability_mass": 0.6318681250789725,
+      "root_upper_q_contribution": 38127818.016714573
+    },
+    {
+      "count": 2,
+      "states": 47377,
+      "expanded": 0,
+      "root_probability_mass": 0.022458834205251122,
+      "root_upper_q_contribution": 1355197.8798397274
+    },
+    {
+      "count": 3,
+      "states": 6994,
+      "expanded": 0,
+      "root_probability_mass": 0.00017196591431258842,
+      "root_upper_q_contribution": 10376.666943231668
+    },
+    {
+      "count": 4,
+      "states": 3,
+      "expanded": 0,
+      "root_probability_mass": 2.41953173575626e-7,
+      "root_upper_q_contribution": 0.0
+    }
+  ],
+  "state_census_by_goal_mask": {
+    "mask_order": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "states": [
+      1031, 33346, 41620, 11151, 34814, 8978, 6323, 2179,
+      34815, 8978, 6323, 2179, 5624, 1937, 699, 3
+    ],
+    "expanded": [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "root_probability_mass": [
+      5.3455008328483986,
+      0.30775546781696755,
+      0.23717824555392045,
+      0.014832643474983625,
+      0.053241679887901447,
+      0.0028570110670980155,
+      0.0015883957484690225,
+      0.0000919182136095588,
+      0.033692731820137371,
+      0.0017043218391480529,
+      0.0011979936274373491,
+      0.0000619359045355012,
+      0.0002784684481137967,
+      0.0000129998330833064,
+      0.00000511196308422507,
+      2.41953173575626e-7
+    ]
+  },
+  "state_census_by_below_tier_mask": [
+    {"mask": 0, "states": 133702, "expanded": 69},
+    {"mask": 1, "states": 16228, "expanded": 0},
+    {"mask": 4, "states": 21218, "expanded": 13},
+    {"mask": 5, "states": 2061, "expanded": 0},
+    {"mask": 8, "states": 21756, "expanded": 70},
+    {"mask": 9, "states": 2061, "expanded": 0},
+    {"mask": 12, "states": 2853, "expanded": 8},
+    {"mask": 13, "states": 121, "expanded": 0}
+  ],
+  "state_census_by_occupancy": [
+    {"prefixes": 0, "suffixes": 0, "states": 3, "expanded": 2},
+    {"prefixes": 0, "suffixes": 1, "states": 17, "expanded": 0},
+    {"prefixes": 0, "suffixes": 3, "states": 30, "expanded": 0},
+    {"prefixes": 1, "suffixes": 0, "states": 12, "expanded": 0},
+    {"prefixes": 1, "suffixes": 2, "states": 74, "expanded": 0},
+    {"prefixes": 1, "suffixes": 3, "states": 6189, "expanded": 30},
+    {"prefixes": 2, "suffixes": 1, "states": 84, "expanded": 0},
+    {"prefixes": 2, "suffixes": 2, "states": 7567, "expanded": 30},
+    {"prefixes": 2, "suffixes": 3, "states": 29236, "expanded": 0},
+    {"prefixes": 3, "suffixes": 0, "states": 10, "expanded": 0},
+    {"prefixes": 3, "suffixes": 1, "states": 2893, "expanded": 49},
+    {"prefixes": 3, "suffixes": 2, "states": 20040, "expanded": 24},
+    {"prefixes": 3, "suffixes": 3, "states": 133845, "expanded": 25}
+  ],
+  "state_census_by_nonzero_junk_classes": [
+    {"nonzero_classes": 0, "states": 24, "expanded": 2},
+    {"nonzero_classes": 1, "states": 860, "expanded": 8},
+    {"nonzero_classes": 2, "states": 12146, "expanded": 46},
+    {"nonzero_classes": 3, "states": 50731, "expanded": 72},
+    {"nonzero_classes": 4, "states": 75729, "expanded": 27},
+    {"nonzero_classes": 5, "states": 60510, "expanded": 5}
+  ],
+  "state_features": {
+    "fractured": {"states": 33660, "expanded": 0},
+    "crafted": {"states": 0, "expanded": 0},
+    "protected_or_metamod": {"states": 0, "expanded": 0},
+    "eldritch": {"states": 0, "expanded": 0},
+    "persistent": {"states": 33661, "expanded": 1}
+  },
+  "fanout_by_family_and_source_goal_count": [
+    {
+      "family": "chaos",
+      "rows": 160,
+      "successor_entries": 21516320,
+      "max_row_fanout": 134477,
+      "source_goal_0": {"rows": 2, "entries": 268954},
+      "source_goal_1": {"rows": 158, "entries": 21247366}
+    },
+    {
+      "family": "harvest_reforge",
+      "rows": 880,
+      "successor_entries": 77896720,
+      "max_row_fanout": 134400,
+      "source_goal_0": {"rows": 10, "entries": 953340},
+      "source_goal_1": {"rows": 870, "entries": 76943380}
+    },
+    {
+      "family": "fossil",
+      "rows": 176,
+      "successor_entries": 15330064,
+      "max_row_fanout": 93306,
+      "source_goal_0": {"rows": 2, "entries": 186612},
+      "source_goal_1": {"rows": 174, "entries": 15143452}
+    },
+    {
+      "family": "add_remove",
+      "rows": 694,
+      "successor_entries": 10652,
+      "max_row_fanout": 68,
+      "source_goal_0": {"rows": 4, "entries": 56},
+      "source_goal_1": {"rows": 690, "entries": 10596}
+    },
+    {
+      "family": "fracture",
+      "rows": 158,
+      "successor_entries": 706,
+      "max_row_fanout": 6,
+      "source_goal_0": {"rows": 0, "entries": 0},
+      "source_goal_1": {"rows": 158, "entries": 706}
+    },
+    {
+      "family": "restart",
+      "rows": 160,
+      "successor_entries": 160,
+      "max_row_fanout": 1,
+      "source_goal_0": {"rows": 2, "entries": 2},
+      "source_goal_1": {"rows": 158, "entries": 158}
+    }
+  ],
+  "zero_progress": {
+    "states": 1031,
+    "ordinary": 1030,
+    "retry_basin": 1,
+    "live_renewable": 1031,
+    "certified_dead_or_irreversible": 0,
+    "nonrenewal_observer": 1030,
+    "expanded_zero_goal_states": 2,
+    "conclusion": "small retained population and not the source of broad-row expansion"
+  },
+  "root_support": {
+    "mask_order": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "actions": [
+      {
+        "action": "chaos",
+        "support": 134477,
+        "shared_with_chaos": 134477,
+        "exceptional": 0,
+        "persistent": 0,
+        "rarity_or_shape": 0,
+        "goal_mask_probability": [
+          0.91351213364415884,
+          0.020779261048341151,
+          0.050094679246961836,
+          0.0011029399405425881,
+          0.0087143888130438683,
+          0.00019381847883483976,
+          0.0003180526539442548,
+          0.0000068735399974789332,
+          0.0049252396300272583,
+          0.00011024649730634845,
+          0.000198198568568153,
+          0.000004311761935298583,
+          0.000038229976544243882,
+          8.3848208483246315e-7,
+          7.7114536015260106e-7,
+          1.6572365216439631e-8
+        ]
+      },
+      {
+        "action": "fossil:Metadata/Items/Currency/CurrencyDelveCraftingMana",
+        "support": 93306,
+        "shared_with_chaos": 93306,
+        "goal_mask_probability": [
+          0.8266582176988968, 0.11048064620597915,
+          0.043193034154730497, 0.0057217840154734842,
+          0.007556884638528309, 0.0010060173080370062,
+          0.00026307598370943204, 0.0000347461005355192,
+          0.0042900693538039667, 0.0005727021241798099,
+          0.00016431440373654063, 0.0000217838076388338,
+          0.0000317923268010453, 0.00000423415094233071,
+          6.16088042975635e-7, 8.16389693564203e-8
+        ]
+      },
+      {
+        "action": "harvest_reforge:attack",
+        "support": 134400,
+        "shared_with_chaos": 134400,
+        "goal_mask_probability": [
+          0.92600795198103769, 0.018124202459845942,
+          0.040163559216873791, 0.00074935646946857107,
+          0.0090816037642711123, 0.00017551865912618844,
+          0.00026334434831799396, 0.00000490023996600033,
+          0.0051188760405800043, 0.0000995985174685718,
+          0.00016568417207906612, 0.00000311098726833096,
+          0.0000408343748143781, 7.86122324037489e-7,
+          6.6027892514666e-7, 1.23676196896931e-8
+        ]
+      },
+      {
+        "action": "harvest_reforge:cold",
+        "support": 63619,
+        "shared_with_chaos": 63619,
+        "goal_mask_probability": [
+          0.92278508447408591, 0.019710287645020395,
+          0.038415362063526019, 0.00079167503861417841,
+          0.0070753873490173261, 0.00014678012480432912,
+          0.00015004905203252385, 0.00000304415581387564,
+          0.010190264736523777, 0.00021765961816587099,
+          0.00042421872217390826, 0.00000874242373929762,
+          0.00007813311182964, 0.00000162088481379014,
+          0.00000165698339667817, 3.36164445704058e-8
+        ]
+      },
+      {
+        "action": "harvest_reforge:elemental",
+        "support": 105872,
+        "shared_with_chaos": 105872,
+        "goal_mask_probability": [
+          0.92729001399707045, 0.019777670524743236,
+          0.038343884769583239, 0.00078927581108497987,
+          0.0070648641622384064, 0.00014638005507015462,
+          0.00014898538438640736, 0.0000030195770303927,
+          0.0060614055362129028, 0.00012791510141588295,
+          0.00020203965742345741, 0.00000414821648755461,
+          0.0000390552508329415, 8.06284075411838e-7,
+          5.25020887279703e-7, 1.06514860625193e-8
+        ]
+      },
+      {
+        "action": "harvest_reforge:mana",
+        "support": 66241,
+        "shared_with_chaos": 66241,
+        "goal_mask_probability": [
+          0.8183007655946487, 0.12093525757804902,
+          0.041154151723511057, 0.0060843533152224244,
+          0.0072369107991322292, 0.001070084788646249,
+          0.00024224571802283984, 0.000035839200864053,
+          0.0041220945221221109, 0.0006095545837935235,
+          0.00015179353533602752, 0.000022460319680323,
+          0.0000294887867100235, 0.00000436403235080103,
+          5.53527890053166e-7, 8.19740332984819e-8
+        ]
+      },
+      {
+        "action": "harvest_reforge:physical",
+        "support": 106538,
+        "shared_with_chaos": 106538,
+        "goal_mask_probability": [
+          0.92445879910265827, 0.018727403403323916,
+          0.035908253625699084, 0.00069619882512003402,
+          0.015226029174712585, 0.00031223013141415715,
+          0.00052069526199980797, 0.0000103689393997177,
+          0.0039100216308941794, 0.0000768918941244314,
+          0.0000899431366883498, 0.00000169014972116043,
+          0.0000591645971257577, 0.00000118835857693515,
+          0.00000110006394209175, 2.17046205981058e-8
+        ]
+      }
+    ],
+    "all_non_chaos_exceptional_persistent_or_shape_only": 0,
+    "all_shared_probabilities_differ_from_chaos": true,
+    "essence_status": "no_relevant_root_essence_row_completed"
+  },
+  "abstraction_ablation": {
+    "actual_parent": {
+      "layout_actions": 36,
+      "dependency_cleanup_in_layout_actions": false,
+      "caller_forced_exact_group_effects": true,
+      "action_exact_drivers": ["fracture"],
+      "junk_classes": 105
+    },
+    "columns": [
+      "name", "actions", "exact_drivers", "discriminating_tags",
+      "coarse_classes", "action_driven_classes", "forced_classes",
+      "coarse_chaos_support", "action_driven_chaos_support",
+      "forced_chaos_support"
+    ],
+    "rows": [
+      ["core", 35, [], [], 6, 6, 105, 217, 217, 134477],
+      ["core_plus_fracture", 36, ["fracture"], [], 6, 105, 105, 217, 134477, 134477],
+      ["core_plus_remove_crafted_modifiers", 36, ["remove_crafted_modifiers"], [], 6, 105, 105, 217, 134477, 134477],
+      ["core_plus_automatic_temporary_bench_programs", 184, ["remove_crafted_modifiers"], ["attack", "caster"], 11, 114, 114, 543, 134477, 134477],
+      ["core_plus_harvest_resistance_conversion", 35, [], [], 6, 6, 105, 217, 217, 134477],
+      ["core_plus_unveil", 36, ["unveil"], [], 6, 105, 105, 217, 134477, 134477],
+      ["core_plus_fracture_plus_automatic_temporary_bench_programs", 185, ["remove_crafted_modifiers", "fracture"], ["attack", "caster"], 11, 114, 114, 543, 134477, 134477],
+      ["complete_current_product_vocabulary", 185, ["remove_crafted_modifiers", "fracture"], ["attack", "caster"], 11, 114, 114, 543, 134477, 134477]
+    ],
+    "projection_materialization_failures": 0
+  },
+  "fracture": {
+    "exact_rows": 158,
+    "exact_entries": 706,
+    "source_goal_count": 1,
+    "acceptable_goal_hit_entries": 158,
+    "aggregate_miss_entries": 158,
+    "proposed_local_entries": 316,
+    "direct_entries_saved": 390,
+    "direct_saving_percent": 55.24079320113314,
+    "maximum_direct_miss_ids_avoided": 548,
+    "fractured_successors_expanded": 0,
+    "progressive_non_goal_miss_policy": "restart_cost_plus_anchor",
+    "calculator_emulator_primitive_change": false
+  },
+  "temporary_bench_archived_root_probe": {
+    "source": "build/goal-progress-gated-reforge/final-evidence/full-four-default.json",
+    "carriers": 1,
+    "precompiled_classes": 429,
+    "candidate_variants": 481,
+    "effect_classes": 58,
+    "collapsed_variants": 423,
+    "candidates": 212,
+    "eligible": 212,
+    "raw_outcomes": 1610,
+    "unique_templates": 15,
+    "template_hits": 197,
+    "rows": 0,
+    "retained_transitions": 0,
+    "time_ns": 35488700
+  },
+  "anchor_oracle": {
+    "chaos_cost": 1.0,
+    "zero_goal_probability_mass": 0.91351213364415884,
+    "partial_one_to_three_probability_mass": 0.086487866355857396,
+    "partial_mass_composition": {
+      "one_goal_fraction": 0.9771725480039,
+      "two_goal_fraction": 0.022679321370582,
+      "three_goal_fraction": 0.000147939010601989,
+      "two_plus_three_fraction": 0.022827260381184
+    },
+    "ten_percent_root_target": 54307275.289058223,
+    "maximum_uniform_anchor_for_ten_percent_reduction": 54307263.7267325,
+    "scenarios": [
+      {
+        "name": "current_fallback",
+        "anchor": 60341416.98784247,
+        "repriced_chaos": 60341428.550169326,
+        "reduction_percent": -0.0000191615103408776,
+        "crosses_ten_percent": false
+      },
+      {
+        "name": "anchor_10000",
+        "anchor": 10000,
+        "repriced_chaos": 10011.562315528146,
+        "reduction_percent": 99.983408473291988,
+        "crosses_ten_percent": true,
+        "minimum_partial_mass_fraction": 0.10001676675895
+      },
+      {
+        "name": "anchor_1000",
+        "anchor": 1000,
+        "repriced_chaos": 1011.5623155264565,
+        "reduction_percent": 99.998323601986783,
+        "crosses_ten_percent": true,
+        "minimum_partial_mass_fraction": 0.100001848882247
+      },
+      {
+        "name": "anchor_500",
+        "anchor": 500,
+        "repriced_chaos": 511.56231552636262,
+        "reduction_percent": 99.999152220247609,
+        "crosses_ten_percent": true,
+        "minimum_partial_mass_fraction": 0.100001020241799
+      },
+      {
+        "name": "anchor_zero_ceiling",
+        "anchor": 0,
+        "repriced_chaos": 11.562315526268764,
+        "reduction_percent": 99.999980838508435,
+        "crosses_ten_percent": true,
+        "minimum_partial_mass_fraction": 0.100000191615085
+      }
+    ]
+  },
+  "recommendation": {
+    "choice": "A_clarified_fracture_local_coarse_parent_prototype",
+    "parent_junk_class_gate": 6,
+    "projected_root_chaos_support_gate": 217,
+    "local_fracture_entry_gate": 316,
+    "required_conditions": [
+      "remove_or_narrow_unconditional_parent_force_exact",
+      "keep_exact_calculator_emulator_fracture_unchanged",
+      "aggregate_only_owner_ruled_dead_non_goal_misses",
+      "keep_temporary_cleanup_in_exact_state_local_child",
+      "reuse_completed_reforge_distributions",
+      "publish_proper_executable_policy_witnesses"
+    ]
+  },
+  "retained_changes": {
+    "finalization_only_audit": true,
+    "benchmark_only": true,
+    "default_enabled": false,
+    "optimization_implemented": false,
+    "product_default_changed": false,
+    "public_abi_changed": false,
+    "wasm_protocol_changed": false,
+    "strategy_vocabulary_changed": false,
+    "compiled_policy_changed": false
+  },
+  "acceptance": {
+    "native_build": "passed",
+    "native_tests": {
+      "status": "passed",
+      "checks": 502270,
+      "failures": 0
+    },
+    "benchmark_manifest_validation": {
+      "status": "passed",
+      "solver_benchmarks_cases": 12,
+      "natural_t1_cases": 146
+    },
+    "changed_document_link_audit": {
+      "status": "passed",
+      "targets_checked": 200,
+      "missing": 0
+    },
+    "wasm_build": "not_required_no_abi_strategy_or_browser_behavior_change",
+    "simulator_10000_run_gate": "not_applicable_no_compiled_policy_change",
+    "rendered_visual_review": "not_run_owner_owned"
+  }
+}

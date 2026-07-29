@@ -10,7 +10,8 @@ split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, the goal-progress-gated native/WASM
 acceptance, the gated root renewal incumbent, interrupted root-row ownership,
 the Harvest targeted-natural correction, and the rejected shared-reforge
-frontier prototype: 2026-07-28. The preceding broad architecture stamp was
+frontier prototype, plus the finalization-only four-goal abstraction audit:
+2026-07-29 @ `fc8787750445b89c7dadc37db7b4007bc7c74b87`. The preceding broad architecture stamp was
 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -706,6 +707,17 @@ not required to sum to solve wall time. Owned-byte
 diagnostics include recursive child-context visits and maximum depth.
 Benchmark execution records every `pc_solver_solve_step` wall time and reports
 count, total, median, nearest-rank-ceiling p95, and maximum.
+
+When the existing default-disabled high-impact-upper benchmark option is
+enabled, finalization also emits an observational four-goal audit. It groups
+states and completed-row work by satisfied and below-tier masks, occupancy,
+shell width, persistent features, producer family, and source progress;
+profiles completed root supports against Chaos; projects that completed
+support through action-vocabulary layout ablations; and performs explicitly
+labelled anchor-value sensitivity repricing. The projection does not recompute
+completed distributions and has no policy, transition, cap, ABI, or product
+authority. Its pinned use and interpretation are recorded in
+[Practical Exact Four-Goal Solving Research](../archive/2026-07-29-practical-four-goal-solving-research/report.md).
 
 `tools/ingest/report_solver_corpus.py` aggregates completed raw reports and
 analyzable watchdog sidecars without participating in native or WASM
