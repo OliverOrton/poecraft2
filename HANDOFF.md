@@ -23,3 +23,8 @@ open, so this milestone does not claim unrestricted exact optimality.
 The next owner-selectable boundary is the deferred three-/two-/one-goal
 executable anchor library. It is not active. Oliver must choose the next chunk
 before implementation resumes.
+
+Post-milestone maintenance on 2026-07-30 raises the unspecified solver
+reforge-work default from 11,000,000 to 20,000,000. The selected solver-owned
+memory default remains 1 GiB; native and WASM callers can already override it
+per solve.

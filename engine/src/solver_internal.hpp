@@ -1608,7 +1608,7 @@ struct SolveOptions {
     std::uint32_t max_expanded_states = 200000;
     std::uint64_t max_state_action_rows = 1215000;
     std::uint64_t max_transitions = 10000000;
-    std::uint64_t max_reforge_work = 11000000;
+    std::uint64_t max_reforge_work = 20000000;
     std::uint64_t max_solver_owned_bytes = 1073741824;
     std::uint32_t max_compiled_nodes = 100000;
     std::uint32_t max_compiled_edges = 400000;

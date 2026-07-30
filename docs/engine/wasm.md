@@ -7,12 +7,12 @@ evidence boundaries.
 Parent: [Engine](README.md)
 
 Verified against code, rebuilt release module, and complete non-visual web
-acceptance: 2026-07-26 @ browser-transfer/lifetime R4 closure.
+acceptance: 2026-07-30 on `codex/fracture-local-coarse-parent`.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`db1789d432ce2c8fe9b5073835b8b941c2bf7602b1e1ceb8e262b9040e87795e`.
+`b31ce207fe17af8db650a6ffeeeab94c66b682e11a9ac831c66d0f009d039227`.
 
 ## Architecture
 
@@ -189,16 +189,23 @@ When product code omits native overrides, exact evaluation defaults include
 100,000 states and sweeps, 1,000,000 state/node pairs, 10,000,000 transitions,
 16 top classes per node, a 512 MiB selected-owned-allocation cap, and a 64 MiB
 output-JSON cap. Strategy solve defaults include 200,000-state/search limits,
-1,215,000 state/action rows, 10,000,000 transitions, 11,000,000 reforge work,
+1,215,000 state/action rows, 10,000,000 transitions, 20,000,000 reforge work,
 a 1 GiB selected-solver-owned cap, 100,000 compiled nodes, 400,000 compiled
 edges, a 64 MiB strategy-JSON cap, and a 1 MiB telemetry-JSON cap. Only the
-state/search, row, and reforge limits changed in the Q4 scaling checkpoint;
-the transition, memory, compiler, and JSON caps did not.
+state/search and row limits retain the Q4 scaling values; Oliver raised the
+default reforge-work allowance from 11,000,000 to 20,000,000 on 2026-07-30.
+The transition, memory, compiler, and JSON caps did not change.
 
 Those native caps cover selected allocations accounted by the evaluator or
 solver. They are not limits on the entire WASM heap, Emscripten stack, facade
 registries, response-string capacity, parsed data, TypeScript objects,
 structured-clone messages, or JSON copies.
+
+`max_solver_owned_bytes` is already an optional per-solve native and WASM
+override. Its 1 GiB default can be raised independently, but the value accounts
+only selected native solver allocations; it does not reserve or cap the whole
+WASM heap. Browser headroom must also cover compiled data, facade state,
+response strings, JavaScript objects, and transient copies.
 
 `pcw_memory_stats` estimates facade handle registries, the reusable response
 string, and selected solver/evaluator-owned allocations. TypeScript augments

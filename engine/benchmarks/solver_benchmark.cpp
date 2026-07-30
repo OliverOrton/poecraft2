@@ -1107,7 +1107,7 @@ CaseResult run_case(
         solve_options.max_transitions = optional_u64(
             caps, "max_transitions", 10000000);
         solve_options.max_reforge_work = optional_u64(
-            caps, "max_reforge_work", 11000000);
+            caps, "max_reforge_work", 20000000);
         solve_options.max_solver_owned_bytes = optional_u64(
             caps, "max_solver_owned_bytes", 1073741824);
         solve_options.max_compiled_nodes = optional_u32(

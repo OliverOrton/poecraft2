@@ -359,3 +359,24 @@ magnitude, but their upper ends still overlap the Chaos incumbent. No frozen
 classification or exactness is claimed. Automatic standalone implicits,
 Eldritch Exalt, Veiled, Influence Exalt, product cap changes, and the default
 unrestricted solver remain outside the decision.
+
+## 2026-07-30 — Default Reforge Work Increases To 20 Million
+
+**Decision:** Raise the default solver reforge-work allowance from 11,000,000
+to 20,000,000. Explicit fixture, benchmark-case, and caller overrides remain
+authoritative and are not rewritten.
+
+Keep the selected solver-owned memory default at 1 GiB for now. Native and
+WASM callers may already raise `max_solver_owned_bytes` per solve; changing
+the default requires a separately chosen target and browser-headroom
+acceptance.
+
+**Context:** Oliver selected this cap-only maintenance change after the
+[Fracture-local coarse-parent milestone](archive/2026-07-29-fracture-local-coarse-parent/README.md).
+The public solve-options shape already exposes both caps.
+
+**Consequences:** Unspecified native, product, and benchmark solves may perform
+up to 20,000,000 reforge-work units. Historical fixtures and evidence that
+pin 11,000,000 retain their original experiment identity. The memory cap still
+accounts selected native allocations rather than total WASM heap or browser
+process memory.
