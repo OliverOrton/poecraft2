@@ -28,9 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must choose the next chunk
-before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
-boundary.
+The
+[Fracture-Local Coarse-Parent Prototype](active/fracture-local-coarse-parent.md)
+is active. It replaces the product solver's globally strict Fracture observer
+with a coarse ordinary/reforge parent plus an exact solver-local goal-hit and
+priced-Restart composition. Exact primitive Fracture behavior and product
+surfaces remain unchanged.
 
 The completed
 [Practical Exact Four-Goal Solving Research](archive/2026-07-29-practical-four-goal-solving-research/README.md)
@@ -40,8 +43,7 @@ classes and 217 projected root Chaos carriers to 105 classes and 134,477
 carriers; the public constructor also forces complete group identity.
 Dependency-only cleanup would have the same counterfactual effect but is not
 in this case's parent `layout_actions`. The report recommends a
-Fracture-local coarse-parent prototype; it is not active until Oliver selects
-it.
+Fracture-local coarse-parent prototype, which Oliver has now selected.
 
 The preceding
 [Upper-Cap Sensitivity And Zero-Progress Renewal Audit](archive/2026-07-29-upper-cap-zero-progress-renewal/README.md)

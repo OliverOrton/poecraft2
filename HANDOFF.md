@@ -1,23 +1,24 @@
 # Session Handoff
 
-**Status: no active implementation boundary.**
+**Status: active implementation boundary.**
 
-The independent four-goal architecture research is complete and archived at
-[Practical Exact Four-Goal Solving Research](docs/archive/2026-07-29-practical-four-goal-solving-research/README.md).
+Active plan:
+[Fracture-Local Coarse-Parent Prototype](docs/active/fracture-local-coarse-parent.md).
 
-The first 200,000 states show that ordinary zero-goal carriers are not the
-broad-row work source. A deterministic ablation projects the completed root
-Chaos distribution from `134,477` strict carriers to `217` core carriers and
-attributes the entire expansion back to complete group-exclusion identity:
-Fracture alone enables it, while the public solver constructor also forces it.
-Dependency-only Remove Crafted Modifiers would independently do the same but
-is not present in the actual parent `layout_actions`; temporary cleanup stays
-inside state-local exact child contexts.
+Branch: `codex/fracture-local-coarse-parent`
 
-The report recommends an owner-selectable
-[Fracture-local coarse-parent prototype](docs/archive/2026-07-29-practical-four-goal-solving-research/handoff.md).
-It is not active. The retained changes are native finalization-only,
-benchmark-only diagnostics; no optimization, product default, public ABI,
-binding, strategy vocabulary, mechanic, or compiled policy changed.
+Starting source: `490b9f77d7f143d9f14bba888ea229f47bd6919b`
 
-Oliver must choose the next chunk before implementation resumes.
+The clean starting boundary and research artifacts are committed. The next
+checkpoint is to reproduce or load the frozen 200,000-state control, then
+separate product-parent precision from exact primitive and action-local child
+precision. The frozen gates are 6 parent junk classes, 217 online root Chaos
+successors, local Fracture goal-hit plus aggregate priced-Restart rows, no
+parent junk-miss IDs, unchanged primitive parity, zero completed-row
+recomputation, deterministic hashes, proper executable policy, and a
+materially later solve boundary.
+
+Stop rather than broaden if physical goal-hit identity, dead-miss semantics,
+coarse equivalence for a retained non-Fracture action, safe exact-child
+projection, existing strategy vocabulary, completed-row reuse, online root
+support, or properness cannot be proved.

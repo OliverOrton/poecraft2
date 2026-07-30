@@ -1,15 +1,20 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-The completed
-[Upper-Cap Sensitivity And Zero-Progress Renewal Audit](../archive/2026-07-29-upper-cap-zero-progress-renewal/README.md)
-reproduced the rejected scheduler, measured its higher-cap tail, and found no
-sound additional live-renewal merge beyond the existing retry basin.
+Current boundary:
+[Fracture-Local Coarse-Parent Prototype](fracture-local-coarse-parent.md).
+It replaces the product solver's globally strict Fracture-driven parent with a
+coarse ordinary/reforge parent and an exact solver-local goal-hit plus
+priced-Restart Fracture composition. Exact primitive mechanics and product
+surfaces remain unchanged.
 
-Oliver must select the next implementation boundary before work resumes.
+The governing research is the completed
+[Practical Exact Four-Goal Solving Research](../archive/2026-07-29-practical-four-goal-solving-research/README.md).
+It measured the exact `105 -> 6` junk-class and `134,477 -> 217` root-support
+opportunity selected by Oliver for this prototype.
 
 Historical input is the rejected
 [High-Impact Partial-State Executable Upper Policies](../archive/2026-07-29-high-impact-executable-uppers/README.md)
