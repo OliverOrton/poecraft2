@@ -1,0 +1,132 @@
+{
+  "schema_version": "fracture_local_coarse_parent_evidence_v1",
+  "date": "2026-07-29",
+  "decision": "qualified",
+  "source": {
+    "branch": "codex/fracture-local-coarse-parent",
+    "clean_start_commit": "490b9f77d7f143d9f14bba888ea229f47bd6919b",
+    "plan_commit": "23a670cbcf02db43742aa06e6233ccb84f98c8a2"
+  },
+  "case": {
+    "id": "natural-t1-full-four-47d8b909aa88",
+    "side_mix": "PPPS",
+    "mode": "goal_progress_gated_reforges",
+    "max_discovered_states": 200000
+  },
+  "strict_baseline": {
+    "parent_junk_classes": 105,
+    "root_chaos_support": 134477,
+    "discovered_states": 200000,
+    "expanded_states": 160,
+    "fracture_rows": 158,
+    "fracture_entries": 706,
+    "lower_bound": 432.40685295343258,
+    "upper_bound": 60341416.98784247,
+    "transition_bits_hash": "d4346e90f923332c",
+    "policy_bits_hash": "8b2a568f3c9cfd35"
+  },
+  "qualification": {
+    "status": "bounded_near_optimal",
+    "termination": "target_gap",
+    "scope": "zero_progress_reroll_policy_restriction",
+    "parent_junk_classes": 6,
+    "root_chaos_support": 217,
+    "discovered_states": 927,
+    "expanded_states": 927,
+    "frontier_states": 0,
+    "goal_states": 30,
+    "policy_reachable_states": 319,
+    "lower_bound": 65715.029067523152,
+    "upper_bound": 65715.029067523152,
+    "evaluated_policy_cost": 65715.029067523152,
+    "state_action_rows": 8015,
+    "transition_entries": 16899,
+    "outcome_entries": 344040,
+    "reforge_work": 3407700,
+    "completed_rows_recomputed": 0,
+    "transition_bits_hash": "04a66ba6c6dfcabf",
+    "policy_bits_hash": "3e5d7530e7aed5fb",
+    "incremental_action_envelope_closed": false,
+    "unrestricted_exact_optimality_claimed": false
+  },
+  "product_fracture_local": {
+    "rows": 215,
+    "raw_physical_outcomes": 1029,
+    "retained_hit_entries": 352,
+    "retained_miss_entries": 215,
+    "parent_miss_states_interned": 0,
+    "max_probability_error": 0.0,
+    "miss_route": "priced_restart",
+    "primitive_evaluator": "exact_unchanged",
+    "selected_policy": {
+      "rows": 29,
+      "properness_checked": 29,
+      "proper": 29,
+      "improper": 0,
+      "unproved": 0
+    },
+    "shape_rows": [
+      {"n": 4, "k": 1, "rows": 47},
+      {"n": 4, "k": 2, "rows": 34},
+      {"n": 4, "k": 3, "rows": 10},
+      {"n": 5, "k": 1, "rows": 38},
+      {"n": 5, "k": 2, "rows": 31},
+      {"n": 5, "k": 3, "rows": 10},
+      {"n": 6, "k": 1, "rows": 20},
+      {"n": 6, "k": 2, "rows": 18},
+      {"n": 6, "k": 3, "rows": 7}
+    ]
+  },
+  "strict_projection_control": {
+    "strict_junk_classes": 105,
+    "strict_outcomes": 134477,
+    "projected_outcomes": 217,
+    "product_junk_classes": 6,
+    "product_outcomes": 217,
+    "max_probability_error": 6.94e-17,
+    "product_reforge_work": 518056,
+    "strict_reforge_work": 2807580
+  },
+  "compiled_policy": {
+    "nodes": 229,
+    "edges": 571,
+    "strategy_json_bytes": 466506,
+    "selected_fracture_routers": 29,
+    "canonical_restart_nodes_for_fracture_miss": 1,
+    "sha256": "e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e"
+  },
+  "determinism": {
+    "equivalent_runs": 2,
+    "first_report_sha256": "153e3f00c10544395f665f54cf696d33ad790a0a903df44a919d11977938fe69",
+    "second_report_sha256": "286003edbce13a44ec0588262aa30e55c0377817cad725cbbf959e69f2a296bd",
+    "transition_hash_equal": true,
+    "policy_hash_equal": true,
+    "compiled_strategy_sha256_equal": true
+  },
+  "simulator_verification": {
+    "requested_runs": 10000,
+    "seed": 20260850,
+    "finished": true,
+    "diagnostic": true,
+    "verification_passed": true,
+    "success_count": 962,
+    "action_limit_failure_count": 9038,
+    "off_policy_failures": 0,
+    "mean_cost_parity_claimed": false
+  },
+  "acceptance": {
+    "qualification_artifacts_predate_progress_only_contract_repair": true,
+    "progress_only_contract_repair_changes_crafting_or_policy_semantics": false,
+    "focused_solver_checks": 1148,
+    "solver_api_checks": 508,
+    "complete_native_checks": 470205,
+    "native_failures": 0,
+    "standard_manifest_cases_validated": 12,
+    "natural_t1_manifest_cases_validated": 146,
+    "release_wasm_bytes": 2750079,
+    "release_wasm_sha256": "739450c782089c15f678cecd65092d77269cb7fa94b82dca059a2256946767f5",
+    "web_non_visual_passed": true,
+    "typescript_no_emit_passed": true,
+    "rendered_visual_review_run": false
+  }
+}

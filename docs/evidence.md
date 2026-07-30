@@ -883,6 +883,36 @@ The retained audit is finalization-only, benchmark-only, and default-disabled.
 The raw report remains a reproducible build artifact rather than a tracked
 source of product authority.
 
+## Fracture-Local Coarse-Parent Qualification
+
+The 2026-07-29
+[final report](archive/2026-07-29-fracture-local-coarse-parent/report.md)
+and
+[tracked summary](../fixtures/solver-natural-t1/v1/evidence/fracture-local-coarse-parent-summary.json)
+record the qualified implementation.
+
+- The automatic product parent changes from 105 to six junk classes while
+  strict Calculator and primitive contexts remain exact.
+- The frozen gated full-four root Chaos row has exactly 217 online successors,
+  and its carrier graph closes at 927 discovered / expanded states with no
+  frontier instead of stopping at 200,000 / 160.
+- Product-local Fracture records 215 rows, 1,029 raw physical outcomes, 352
+  retained goal-hit entries, 215 aggregate priced-Restart misses, and zero
+  parent miss-state IDs.
+- All 29 selected Fracture rows are proved proper. Compilation uses 29 local
+  routers whose misses share one canonical Restart operation without adding
+  strategy vocabulary.
+- Repeated qualification preserves transition hash `04a66ba6c6dfcabf`,
+  policy hash `3e5d7530e7aed5fb`, and compiled-strategy SHA-256
+  `e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e`.
+- The returned `65715.029067523152` zero-width bracket is a proper bounded
+  certificate within the existing zero-progress reroll restriction. The
+  incremental action envelope remains open, so unrestricted exact optimality
+  is not claimed.
+- The 10,000-run diagnostic reports zero off-policy failures and a passed
+  routing verification, but 9,038 runs hit its action limit. It is therefore
+  not cited as sampled mean-cost parity.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

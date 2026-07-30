@@ -1,15 +1,17 @@
 # Active Work
 
-**Status: one implementation plan is active.**
+**Status: no implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Fracture-Local Coarse-Parent Prototype](fracture-local-coarse-parent.md).
-It replaces the product solver's globally strict Fracture-driven parent with a
-coarse ordinary/reforge parent and an exact solver-local goal-hit plus
-priced-Restart Fracture composition. Exact primitive mechanics and product
-surfaces remain unchanged.
+The completed
+[Fracture-Local Coarse-Parent Prototype](../archive/2026-07-29-fracture-local-coarse-parent/README.md)
+replaces the product solver's globally strict Fracture-driven parent with a
+six-class ordinary/reforge parent and an exact solver-local goal-hit plus
+priced-Restart Fracture composition. The frozen carrier graph closes at 927
+states instead of stopping at 200,000.
+
+Oliver must select the next implementation boundary before work resumes.
 
 The governing research is the completed
 [Practical Exact Four-Goal Solving Research](../archive/2026-07-29-practical-four-goal-solving-research/README.md).

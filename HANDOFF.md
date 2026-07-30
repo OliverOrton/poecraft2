@@ -1,24 +1,25 @@
 # Session Handoff
 
-**Status: active implementation boundary.**
+**Status: no active implementation boundary.**
 
-Active plan:
-[Fracture-Local Coarse-Parent Prototype](docs/active/fracture-local-coarse-parent.md).
+The
+[Fracture-Local Coarse-Parent Prototype](docs/archive/2026-07-29-fracture-local-coarse-parent/README.md)
+is implemented and qualified on branch
+`codex/fracture-local-coarse-parent`, starting from clean source
+`490b9f77d7f143d9f14bba888ea229f47bd6919b`.
 
-Branch: `codex/fracture-local-coarse-parent`
+The frozen full-four carrier graph now uses six parent junk classes, has
+exactly 217 online root Chaos successors, and closes at 927 discovered /
+expanded states with no frontier. Product-local Fracture retains exact
+physical goal-hit branches, aggregates every dead miss through priced
+Restart, interns zero parent junk-miss states, and compiles all selected miss
+routes to one canonical Restart node. Calculator, primitive Fracture,
+simulator, and authored strategy semantics remain exact and unchanged.
 
-Starting source: `490b9f77d7f143d9f14bba888ea229f47bd6919b`
+The returned policy is proper and bounded within the existing
+goal-progress-gated restriction. The incremental action envelope remains
+open, so this milestone does not claim unrestricted exact optimality.
 
-The clean starting boundary and research artifacts are committed. The next
-checkpoint is to reproduce or load the frozen 200,000-state control, then
-separate product-parent precision from exact primitive and action-local child
-precision. The frozen gates are 6 parent junk classes, 217 online root Chaos
-successors, local Fracture goal-hit plus aggregate priced-Restart rows, no
-parent junk-miss IDs, unchanged primitive parity, zero completed-row
-recomputation, deterministic hashes, proper executable policy, and a
-materially later solve boundary.
-
-Stop rather than broaden if physical goal-hit identity, dead-miss semantics,
-coarse equivalence for a retained non-Fracture action, safe exact-child
-projection, existing strategy vocabulary, completed-row reuse, online root
-support, or properness cannot be proved.
+The next owner-selectable boundary is the deferred three-/two-/one-goal
+executable anchor library. It is not active. Oliver must choose the next chunk
+before implementation resumes.

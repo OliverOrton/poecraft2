@@ -9,10 +9,12 @@ Verified against code, the bounded-policy B6 acceptance, the mechanical solve
 split, focused-round performance acceptance, WASM progress-accounting,
 bounded-incumbent graph stability, the goal-progress-gated native/WASM
 acceptance, the gated root renewal incumbent, interrupted root-row ownership,
-the Harvest targeted-natural correction, and the rejected shared-reforge
-frontier prototype, plus the finalization-only four-goal abstraction audit:
-2026-07-29 @ `fc8787750445b89c7dadc37db7b4007bc7c74b87`. The preceding broad architecture stamp was
-2026-07-24 @ `255e8f1`.
+the Harvest targeted-natural correction, the rejected shared-reforge
+frontier prototype, the finalization-only four-goal abstraction audit, and
+the qualified Fracture-local coarse-parent milestone: 2026-07-29 on
+`codex/fracture-local-coarse-parent`, starting from
+`490b9f77d7f143d9f14bba888ea229f47bd6919b`. The preceding broad architecture
+stamp was 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
 corpus generation, benchmark orchestration/analytics, and the non-visual
@@ -70,25 +72,36 @@ set. An abstract state records:
 Non-goal affixes share a junk class only when the admitted actions cannot
 distinguish them. Classes include side, relevant tag signature, goal-blocking
 effects, and—when exact group effects are required—the complete exclusion
-effect on later pools. `CalcContext` forces the strict exclusion-effect form
-when Unveil, Harvest resistance conversion, Fracture, or remove-crafted-mods
-participates. Because automatic product mode admits Fracture, the current
-product solve does not match the old claim that strict partitioning is
-evaluator-only. Automatic-candidate layouts also retain ordinary affix identity
-needed to materialize the current carrier exactly, even when the explicit
-primitive envelope cannot roll those affixes.
+effect on later pools. Exact primitive, Calculator, feasibility, and local
+child contexts retain that strict form when Unveil, Harvest resistance
+conversion, Fracture, or remove-crafted-modifiers can observe it.
 
-After strict reachability closes, the solver refines a collision-checked
+The automatic goal-relevant product solver has a narrower parent contract. It
+excludes Fracture from global observer derivation and uses the coarse
+ordinary/reforge partition. Product Fracture is evaluated by an exact
+solver-local physical-hit kernel described below. A lazily created strict
+context remains the authority for public Calculator outcomes and exact child
+programs, so coarse parent identity never changes the primitive result.
+Automatic-candidate layouts still retain ordinary affix identity needed to
+materialize the current carrier exactly, even when the explicit primitive
+envelope cannot roll those affixes.
+
+After working reachability closes, the solver refines a collision-checked
 behavioral partition across every admitted action. Legality, automatic
 admission, resource identity, exact probability, choices, and projected
-successor classes must all match before states merge. The strict layout is the
-oracle; unknown or mismatched observations remain distinct. The bounded Chaos
-control merges 57,722 strict states to 3 classes, while both accepted complete
-product envelopes merge none because their larger action sets observe every
-difference. A choice option's concrete modifier ID is intentionally retained
-even when its successor state projects to another class: extraction lifts the
-representative's literal preference list, and compilation emits that modifier
-both as `has_unveil_option` and as the selected Unveil operation.
+successor classes must all match before states merge. In strict contexts the
+strict layout is the oracle; unknown or mismatched observations remain
+distinct. The coarse product-parent reduction is established earlier by its
+ordinary/reforge symmetry proof and exact local observer boundaries, not by
+post-closure quotient refinement.
+
+The bounded Chaos control merges 57,722 strict states to 3 classes, while both
+accepted complete strict product envelopes merge none because their larger
+action sets observe every difference. A choice option's concrete modifier ID
+is intentionally retained even when its successor state projects to another
+class: extraction lifts the representative's literal preference list, and
+compilation emits that modifier both as `has_unveil_option` and as the
+selected Unveil operation.
 
 Exact refinement runs only after graph closure. A cap-stopped full-evidence run
 instead reports `shadow_only=true`, retains strict states as its working
@@ -190,6 +203,14 @@ programs. They carry complete exit distributions, resource quantities, choice
 groups, and compilation recipes. They never become opaque simulator actions:
 a selected option compiles back into ordinary strategy operations and routers.
 
+Product-local Fracture is the one deliberate parent/local composition. For a
+coarse carrier with `n` live affixes and `k` provably distinct acceptable
+physical goal affixes, it emits one `1/n` hit per acceptable affix and one
+`(n-k)/n` miss through priced Restart. It refuses ambiguous physical identity,
+overlapping goal satisfaction, or non-uniform persistent identity. No
+fractured-junk miss state is interned. Compilation uses the existing Fracture,
+condition-router, and Restart vocabulary; primitive Fracture remains exact.
+
 The goal-relevant product envelope intentionally excludes Veiled and Eldritch
 families at this commit even though their primitive actions and exact
 evaluators exist for explicit/manual scopes. The registry makes that a bounded
@@ -213,6 +234,14 @@ Calculator outcomes are exact engine evaluations:
   removal, target-count mixing, and mechanic-specific stages; and
 - special evaluators handle implemented Harvest, Veiled, Eldritch, Fracture,
   and other registered one-item mechanics.
+
+Within the coarse product parent, the ordinary/reforge frontier may aggregate
+junk-only exclusion families only after proving they are externally
+group-disjoint and identical for side, relevant tags, goal blocking, and
+weight. Strict contexts retain the individual buckets. A collision-checked
+control projects the frozen 105-class / 134,477-outcome strict Chaos row to
+the same 217 carriers produced online by the six-class product row, with
+maximum probability error `6.94e-17`.
 
 The sequential reforge frontier is intentionally joint across prefix and
 suffix rolls. A measured exact counterexample rejects composing independent
@@ -696,6 +725,15 @@ reforge work, cache requests/hits, wall time, and retained selected-allocation
 growth to action IDs. It also compares lower- and executable-upper-policy
 selected abstract-state counts. These are profiling observations only:
 benchmark action non-use is explicitly never a pruning certificate.
+
+Product-local Fracture telemetry separately records source rows, raw physical
+outcomes, retained hit and aggregate-miss entries, miss-state IDs, shape
+counts by `n` and `k`, normalization error, costs, fallback provenance, and
+selected-policy properness. The qualified full-four run records 215 rows,
+352 hit entries, 215 miss entries, zero miss-state IDs, and 29/29 selected
+rows proper. The dated
+[Fracture-local report](../archive/2026-07-29-fracture-local-coarse-parent/report.md)
+owns the frozen interpretation.
 
 Focused diagnostics additionally report per-round and total lower/upper
 candidate counts, quota/fill admissions, selected schedule admissions, and

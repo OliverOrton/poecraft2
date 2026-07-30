@@ -85,6 +85,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            string_vector_owned_bytes(
                diagnostics.automatic_candidate_witnesses) +
            string_vector_owned_bytes(
+               diagnostics.product_fracture_witnesses) +
+           string_vector_owned_bytes(
                diagnostics.incremental_action_witnesses) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
@@ -177,6 +179,8 @@ std::uint64_t SolveTransitionCache::shallow_estimated_owned_bytes() const {
         bytes += choice_options.capacity() * sizeof(OutcomeChoiceOption);
         bytes += automatic_candidate_samples.capacity() *
                  sizeof(AutomaticCandidateRecord);
+        bytes += product_fracture_rows.capacity() *
+                 sizeof(ProductFractureRowWitness);
         return bytes;
     }
 
@@ -219,6 +223,33 @@ SolveProgress SolveWork::Impl::progress() const {
         } else {
             value.lower_bound = 0.0;
             value.upper_bound = value.start_value_bound;
+            bool full_non_goal_closure = value.done;
+            if (full_non_goal_closure) {
+                for (std::uint32_t state = 0;
+                     state < result.values.size(); ++state) {
+                    if (!result.behavioral_representative_by_state.empty() &&
+                        result.behavioral_representative_by_state[state] !=
+                            state) {
+                        continue;
+                    }
+                    if (!result.expanded[state] &&
+                        !calc.is_goal_state(calc.state(state))) {
+                        full_non_goal_closure = false;
+                        break;
+                    }
+                }
+            }
+            const bool exact_closed =
+                full_non_goal_closure && !target_gap_stop &&
+                !result.diagnostics.state_cap_hit &&
+                !result.diagnostics.resource_cap_hit &&
+                (!incremental_action_generation ||
+                 incremental_envelope_closed) &&
+                optimization_converged() &&
+                value.start_value_bound < kValueCeiling;
+            if (exact_closed) {
+                value.lower_bound = value.start_value_bound;
+            }
         }
         if (std::isfinite(value.lower_bound) &&
             std::isfinite(value.upper_bound)) {
@@ -291,6 +322,35 @@ SolveTelemetrySnapshot SolveWork::Impl::telemetry_snapshot(bool abandoned) const
             transition_cache->automatic_admission_phases;
         snapshot.diagnostics.automatic_candidate_witnesses_omitted =
             snapshot.diagnostics.automatic_rows_considered;
+        snapshot.diagnostics.product_fracture_rows =
+            transition_cache->product_fracture_rows.size();
+        snapshot.diagnostics.product_fracture_raw_outcomes = 0;
+        snapshot.diagnostics.product_fracture_hit_entries = 0;
+        snapshot.diagnostics.product_fracture_miss_entries = 0;
+        snapshot.diagnostics
+            .product_fracture_parent_miss_states_interned = 0;
+        snapshot.diagnostics.product_fracture_max_probability_error = 0.0;
+        snapshot.diagnostics.product_fracture_witnesses.clear();
+        for (const auto& witness :
+             transition_cache->product_fracture_rows) {
+            snapshot.diagnostics.product_fracture_raw_outcomes +=
+                witness.raw_affix_count;
+            snapshot.diagnostics.product_fracture_hit_entries +=
+                witness.hit_state_count;
+            snapshot.diagnostics.product_fracture_miss_entries +=
+                witness.miss_probability > 0.0 ? 1 : 0;
+            snapshot.diagnostics
+                .product_fracture_parent_miss_states_interned +=
+                witness.parent_miss_state_count;
+            snapshot.diagnostics
+                .product_fracture_max_probability_error =
+                std::max(
+                    snapshot.diagnostics
+                        .product_fracture_max_probability_error,
+                    std::abs(witness.probability_sum - 1.0));
+        }
+        snapshot.diagnostics.product_fracture_witnesses_omitted =
+            snapshot.diagnostics.product_fracture_rows;
         snapshot.diagnostics.incremental_action_generation =
             incremental_action_generation;
         snapshot.diagnostics.incremental_action_envelope_closed =
@@ -1200,7 +1260,9 @@ std::string serialize_solver_telemetry(
         calc.action_control().automatic_dependency_primitives);
     if (diagnostics == nullptr) {
         json += ",\"rows\":null,\"admission_phases\":null";
-        json += ",\"by_kind\":null,\"witnesses\":[]";
+        json +=
+            ",\"by_kind\":null,\"product_fracture_local\":null,"
+            "\"witnesses\":[]";
     } else {
         json += ",\"rows\":{\"considered\":" + std::to_string(
             diagnostics->automatic_rows_considered);
@@ -1329,6 +1391,82 @@ std::string serialize_solver_telemetry(
                     std::to_string(values.selected_bytes) + "}";
         }
         json += "}";
+        json += ",\"product_fracture_local\":{\"rows\":" +
+                std::to_string(diagnostics->product_fracture_rows);
+        json += ",\"raw_physical_outcomes\":" +
+                std::to_string(
+                    diagnostics->product_fracture_raw_outcomes);
+        json += ",\"retained_hit_entries\":" +
+                std::to_string(
+                    diagnostics->product_fracture_hit_entries);
+        json += ",\"retained_miss_entries\":" +
+                std::to_string(
+                    diagnostics->product_fracture_miss_entries);
+        json += ",\"parent_miss_states_interned\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_parent_miss_states_interned);
+        json += ",\"selected_policy\":{\"rows\":" +
+                std::to_string(
+                    diagnostics->product_fracture_selected_rows);
+        json += ",\"properness_checked\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_selected_properness_checked);
+        json += ",\"proper\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_selected_proper_rows);
+        json += ",\"improper\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_selected_improper_rows);
+        json += ",\"unproved\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_selected_unproved_rows) +
+                "}";
+        json += ",\"max_probability_error\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_max_probability_error);
+        json += ",\"shape_rows\":[";
+        bool first_shape = true;
+        for (std::size_t n = 0;
+             n < diagnostics->product_fracture_shape_rows.size(); ++n) {
+            for (std::size_t k = 0;
+                 k < diagnostics->product_fracture_shape_rows[n].size();
+                 ++k) {
+                const std::uint64_t rows =
+                    diagnostics->product_fracture_shape_rows[n][k];
+                if (rows == 0) continue;
+                if (!first_shape) json.push_back(',');
+                first_shape = false;
+                json += "{\"n\":" + std::to_string(n) +
+                        ",\"k\":" + std::to_string(k) +
+                        ",\"rows\":" + std::to_string(rows) + "}";
+            }
+        }
+        json += "]";
+        json +=
+            ",\"miss_route\":\"priced_restart\","
+            "\"primitive_evaluator\":\"exact_unchanged\","
+            "\"witnesses\":[";
+        for (std::size_t i = 0;
+             i < diagnostics->product_fracture_witnesses.size(); ++i) {
+            if (i != 0) json.push_back(',');
+            json += diagnostics->product_fracture_witnesses[i];
+        }
+        json += "],\"witness_samples\":{\"retained\":" +
+                std::to_string(
+                    diagnostics->product_fracture_witnesses.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    diagnostics
+                        ->product_fracture_witnesses_omitted);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) +
+                "}}";
         json += ",\"witnesses\":[";
         for (std::size_t i = 0;
              i < diagnostics->automatic_candidate_witnesses.size(); ++i) {
@@ -2114,6 +2252,12 @@ std::string serialize_solver_telemetry(
             json += ",\"wall_ns\":" + std::to_string(cost.wall_ns);
             json += ",\"retained_bytes\":" +
                     std::to_string(cost.retained_bytes);
+            json += ",\"root\":{\"rows\":" +
+                    std::to_string(cost.root_rows);
+            json += ",\"raw_outcomes\":" +
+                    std::to_string(cost.root_raw_outcomes);
+            json += ",\"retained_transitions\":" +
+                    std::to_string(cost.root_retained_transitions) + "}";
             json += ",\"interrupted\":";
             if (cost.interrupted_rows == 0) {
                 json += "null";

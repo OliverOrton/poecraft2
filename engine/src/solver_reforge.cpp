@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <map>
+#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -238,6 +239,11 @@ struct RollBucket {
      * target tag). */
     std::uint64_t guaranteed = 0;
     std::uint32_t multiplicity = 1;
+    /* Product-parent symmetry compression may give one aggregate bucket
+     * multiple interchangeable physical families. Ordinary buckets retain
+     * the original per-bucket availability and conflict semantics. */
+    std::uint32_t family_class = kNoId;
+    bool interchangeable_family_class = false;
     /* Complete generation-group signature. Any overlap with a previously
      * picked bucket makes this family unavailable, matching pool blocking. */
     std::vector<std::uint32_t> exclusion_groups;
@@ -669,8 +675,101 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
     }
 
+    /*
+     * Product-parent reforge compression.
+     *
+     * A junk-only exclusion family whose groups overlap no other family has
+     * no interaction beyond consuming itself. Families with the same side,
+     * coarse junk observation, block mask, and per-family weights are exact
+     * exchangeable twins. Represent them as one availability class with a
+     * multiplicity rather than building a strict physical-family frontier.
+     *
+     * This deliberately excludes goal, below-tier, multi-observation, and
+     * externally conflicting families. Those retain their complete group
+     * identity, making this a proved symmetry reduction rather than an
+     * approximation.
+     */
+    using AggregateKey = std::tuple<
+        std::int8_t, std::uint32_t, std::uint32_t,
+        std::uint64_t, std::uint64_t>;
+    std::vector<const std::pair<const FamilyKey, FamilyAgg>*> ordered_families;
+    ordered_families.reserve(families.size());
+    for (const auto& family : families) {
+        ordered_families.push_back(&family);
+    }
+    const auto group_sets_intersect = [](
+            const std::vector<std::uint32_t>& lhs,
+            const std::vector<std::uint32_t>& rhs) {
+        std::size_t a = 0;
+        std::size_t b = 0;
+        while (a < lhs.size() && b < rhs.size()) {
+            if (lhs[a] == rhs[b]) return true;
+            if (lhs[a] < rhs[b]) ++a;
+            else ++b;
+        }
+        return false;
+    };
+    std::vector<std::optional<AggregateKey>> aggregate_key_by_family(
+        ordered_families.size());
+    std::map<AggregateKey, std::uint32_t> aggregate_multiplicity;
+    if (product_solver_parent_) {
+        for (std::size_t i = 0; i < ordered_families.size(); ++i) {
+            const auto& [family_key, family] = *ordered_families[i];
+            bool goal_observed = false;
+            for (std::size_t slot = 0; slot < layout_.slots.size(); ++slot) {
+                goal_observed |= family.sat[slot].normal != 0 ||
+                                 family.sat[slot].guaranteed != 0 ||
+                                 family.below[slot].normal != 0 ||
+                                 family.below[slot].guaranteed != 0;
+            }
+            if (goal_observed || family.junk.size() != 1) continue;
+            bool externally_disjoint = true;
+            for (std::size_t j = 0; j < ordered_families.size(); ++j) {
+                if (i == j) continue;
+                if (group_sets_intersect(
+                        family_key.second,
+                        ordered_families[j]->first.second)) {
+                    externally_disjoint = false;
+                    break;
+                }
+            }
+            if (!externally_disjoint) continue;
+            const auto& [junk_key, weights] = *family.junk.begin();
+            const AggregateKey aggregate{
+                family_key.first, junk_key.first, junk_key.second,
+                weights.normal, weights.guaranteed};
+            aggregate_key_by_family[i] = aggregate;
+            ++aggregate_multiplicity[aggregate];
+        }
+    }
+
     std::vector<RollBucket> buckets;
-    for (const auto& [key, family] : families) {
+    std::set<AggregateKey> emitted_aggregates;
+    std::uint32_t next_family_class = 0;
+    for (std::size_t family_index = 0;
+         family_index < ordered_families.size(); ++family_index) {
+        const auto& [key, family] = *ordered_families[family_index];
+        if (aggregate_key_by_family[family_index].has_value()) {
+            const AggregateKey& aggregate =
+                *aggregate_key_by_family[family_index];
+            if (!emitted_aggregates.insert(aggregate).second) continue;
+            const auto& [junk_key, weights] = *family.junk.begin();
+            RollBucket bucket;
+            bucket.side = key.first;
+            bucket.kind = BucketKind::Junk;
+            bucket.junk_class = junk_key.first;
+            bucket.block_mask = junk_key.second;
+            bucket.weight = weights.normal;
+            bucket.guaranteed = weights.guaranteed;
+            bucket.multiplicity =
+                aggregate_multiplicity.at(aggregate);
+            bucket.family_class = next_family_class++;
+            bucket.interchangeable_family_class = true;
+            /* Proven externally disjoint above. */
+            buckets.push_back(std::move(bucket));
+            continue;
+        }
+        const std::uint32_t family_class = next_family_class++;
         for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
             if (family.sat[s].normal > 0 ||
                 family.sat[s].guaranteed > 0) {
@@ -681,6 +780,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 bucket.weight = family.sat[s].normal;
                 bucket.guaranteed = family.sat[s].guaranteed;
                 bucket.exclusion_groups = key.second;
+                bucket.family_class = family_class;
                 buckets.push_back(std::move(bucket));
             }
             if (family.below[s].normal > 0 ||
@@ -692,6 +792,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 bucket.weight = family.below[s].normal;
                 bucket.guaranteed = family.below[s].guaranteed;
                 bucket.exclusion_groups = key.second;
+                bucket.family_class = family_class;
                 buckets.push_back(std::move(bucket));
             }
         }
@@ -704,6 +805,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             bucket.weight = weights.normal;
             bucket.guaranteed = weights.guaranteed;
             bucket.exclusion_groups = key.second;
+            bucket.family_class = family_class;
             buckets.push_back(std::move(bucket));
         }
     }
@@ -715,6 +817,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         bucket_count * bucket_count, 0);
     for (std::size_t left = 0; left < bucket_count; ++left) {
         for (std::size_t right = left; right < bucket_count; ++right) {
+            if (left == right &&
+                buckets[left].interchangeable_family_class) {
+                continue;
+            }
             const auto& a = buckets[left].exclusion_groups;
             const auto& b = buckets[right].exclusion_groups;
             std::size_t ai = 0;
@@ -942,7 +1048,16 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 return 0.0;
             }
         }
-        const std::uint32_t used = roll.picks_of(b);
+        std::uint32_t used = roll.picks_of(b);
+        if (bucket.interchangeable_family_class) {
+            used = 0;
+            for (std::uint8_t pick = 0; pick < roll.pick_count; ++pick) {
+                if (buckets[roll.picks[pick].first].family_class ==
+                    bucket.family_class) {
+                    used += roll.picks[pick].second;
+                }
+            }
+        }
         if (used >= bucket.multiplicity) return 0.0;
         return static_cast<double>(bucket.weight) *
                (bucket.multiplicity - used);

@@ -6,6 +6,7 @@
 #include "poecraft/simulator.h"
 #include "poecraft/solver.h"
 
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -279,6 +280,88 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(saw_essence_metadata);
     PC_CHECK(saw_respecting_reforge);
 
+    /*
+     * A product solver owns a coarse planning parent, but Calculator queries
+     * must still use the exact primitive Fracture observer. Four concrete
+     * affixes therefore remain four uniform physical outcomes through the
+     * public C ABI.
+    */
+    pc_item_state fracture_item = item;
+    std::uint32_t fracture_prefixes = 0;
+    std::uint32_t fracture_suffixes = 0;
+    std::vector<pc_pool_entry> fracture_pool(4096);
+    while (fracture_prefixes + fracture_suffixes < 4) {
+        std::uint32_t fracture_pool_count = 0;
+        PC_CHECK(pc_action_context_debug_pool(
+                     context, &fracture_item, -1, fracture_pool.data(),
+                     static_cast<std::uint32_t>(fracture_pool.size()),
+                     &fracture_pool_count, &error) == PC_RESULT_OK);
+        bool added = false;
+        for (std::uint32_t i = 0; i < fracture_pool_count; ++i) {
+            const int side = fracture_pool[i].generation_type;
+            if ((side == PC_SIDE_PREFIX && fracture_prefixes >= 2) ||
+                (side == PC_SIDE_SUFFIX && fracture_suffixes >= 2)) {
+                continue;
+            }
+            const std::uint16_t group = static_cast<std::uint16_t>(
+                fracture_pool[i].primary_group_id);
+            if (pc_item_add_mod(
+                    &fracture_item, side,
+                    fracture_pool[i].session_mod_id, group, 0,
+                    nullptr) != PC_RESULT_OK) {
+                continue;
+            }
+            if (side == PC_SIDE_PREFIX) {
+                ++fracture_prefixes;
+            } else {
+                ++fracture_suffixes;
+            }
+            added = true;
+            break;
+        }
+        if (!added) break;
+    }
+    PC_CHECK(fracture_prefixes + fracture_suffixes == 4);
+    const std::string fracture_goal_json =
+        std::string("{\"version\":\"v1\",\"rarity\":\"rare\",\"slots\":["
+                    "{\"family_mod_key\":\"") +
+        mod_info.key +
+        "\",\"min_tier\":0}],\"action_mode\":\"goal_relevant\"}";
+    pc_solver_handle fracture_solver = nullptr;
+    PC_CHECK(pc_solver_create(
+                 session, fracture_goal_json.c_str(),
+                 fracture_goal_json.size(), &fracture_solver,
+                 &error) == PC_RESULT_OK);
+    if (fracture_solver != nullptr) {
+        std::uint32_t fracture_action = 0;
+        PC_CHECK(pc_solver_find_action(
+                     fracture_solver, "fracture", &fracture_action,
+                     &error) == PC_RESULT_OK);
+        std::array<pc_calc_outcome, 8> fracture_outcomes{};
+        std::uint32_t fracture_outcome_count = 0;
+        pc_calc_summary fracture_summary{};
+        PC_CHECK(pc_calc_action_outcomes(
+                     fracture_solver, &fracture_item, fracture_action,
+                     fracture_outcomes.data(),
+                     static_cast<std::uint32_t>(
+                         fracture_outcomes.size()),
+                     &fracture_outcome_count, &fracture_summary,
+                     &error) == PC_RESULT_OK);
+        PC_CHECK(fracture_summary.supported == 1);
+        PC_CHECK(fracture_summary.legal == 1);
+        PC_CHECK(fracture_outcome_count == 4);
+        double fracture_probability = 0.0;
+        for (std::uint32_t i = 0;
+             i < fracture_outcome_count; ++i) {
+            PC_CHECK(std::fabs(
+                         fracture_outcomes[i].probability - 0.25) <
+                     1e-12);
+            fracture_probability += fracture_outcomes[i].probability;
+        }
+        PC_CHECK(std::fabs(fracture_probability - 1.0) < 1e-12);
+        pc_solver_destroy(fracture_solver);
+    }
+
     /* Calculator: exact exalt odds on the empty rare. */
     std::vector<pc_calc_outcome> outcomes(256);
     uint32_t outcome_count = 0;
@@ -384,6 +467,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_progress.live_owned_bytes > 0);
     PC_CHECK(solve_progress.peak_owned_bytes >=
              solve_progress.live_owned_bytes);
+    PC_CHECK(solve_progress.lower_bound == solve_summary.start_value);
+    PC_CHECK(solve_progress.upper_bound == solve_summary.start_value);
 
     pc_solve_summary stepped_summary{};
     PC_CHECK(pc_solver_solve_finish(solver, &stepped_summary, &error) ==
@@ -424,7 +509,7 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solved_telemetry.find(
                  "\"non_use_is_pruning_certificate\":false") !=
              std::string::npos);
-    PC_CHECK(solved_telemetry.find("\"search_cost\":[{") !=
+    PC_CHECK(solved_telemetry.find("\"search_cost\":[") !=
              std::string::npos);
 
     uint32_t start_state = 0;

@@ -1827,7 +1827,8 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
             std::string(
                 dependency_cleanup_in_layout_actions
                     ? "true" : "false");
-    json += ",\"caller_forced_exact_group_effects\":true";
+    json += ",\"caller_forced_exact_group_effects\":";
+    json += calc.product_solver_parent() ? "false" : "true";
     json += ",\"action_driven_exact_group_effects\":";
     bool current_action_driven_exact = false;
     std::vector<std::string> current_exact_drivers;
@@ -1838,7 +1839,8 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
         const ActionType type = action.params.type;
         if (type == ActionType::Unveil ||
             type == ActionType::HarvestResist ||
-            type == ActionType::Fracture ||
+            (type == ActionType::Fracture &&
+             !calc.product_solver_parent()) ||
             type == ActionType::RemoveCraftedModifiers) {
             current_action_driven_exact = true;
             current_exact_drivers.push_back(action.id);

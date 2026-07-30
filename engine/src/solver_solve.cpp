@@ -128,6 +128,28 @@ SolveWork::Impl::Impl(
                 cost += quantity * found->second;
                 resource_prices.push_back({key, found->second});
             }
+            /*
+             * A product-local Fracture row prices its aggregate miss as a
+             * conditional Restart. Keep the primitive Fracture cost unchanged,
+             * but retain the base unit price so the state-local quantity
+             * (miss probability) can be priced in the sparse variant.
+             */
+            if (priced && calc.product_solver_parent() &&
+                planner.kind == PlannerOperatorKind::Primitive &&
+                planner.automatic_kind ==
+                    AutomaticCandidateKind::Fracture) {
+                const auto base = prices.find("base");
+                if (base == prices.end()) {
+                    priced = false;
+                } else if (std::none_of(
+                               resource_prices.begin(),
+                               resource_prices.end(),
+                               [](const auto& entry) {
+                                   return entry.first == "base";
+                               })) {
+                    resource_prices.push_back({"base", base->second});
+                }
+            }
             if (!priced) {
                 record_skipped_missing_price(planner.id);
                 add_action_reason(

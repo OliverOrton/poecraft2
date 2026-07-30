@@ -1118,10 +1118,11 @@ std::string compile_policy_strategy_json(
         if (!result.options.goal_progress_gated_reforges) return false;
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
-        return planner.kind == PlannerOperatorKind::Primitive &&
-               action_transition_facts(
-                   calc.registry().actions.at(
-                       planner.primitive_action).params.type).renewal;
+        if (planner.kind != PlannerOperatorKind::Primitive) return false;
+        const ActionDescriptor& action =
+            calc.registry().actions.at(planner.primitive_action);
+        return !action.synthetic &&
+               action_transition_facts(action.params.type).renewal;
     };
 
     /* Abstract-state ids follow transition discovery order, which is allowed
@@ -1228,6 +1229,10 @@ std::string compile_policy_strategy_json(
             planner.kind == PlannerOperatorKind::Primitive &&
             calc.registry().actions[planner.primitive_action].params.type ==
                 ActionType::Unveil;
+        const bool product_local_fracture =
+            calc.product_solver_parent() &&
+            planner.kind == PlannerOperatorKind::Primitive &&
+            planner.automatic_kind == AutomaticCandidateKind::Fracture;
         const bool state_local_option =
             planner.kind == PlannerOperatorKind::FixedOption &&
             (planner.option_kind == FixedOptionKind::Renewal ||
@@ -1236,7 +1241,8 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::FracturePrepare ||
              planner.option_kind == FixedOptionKind::ImprintRetry);
         std::uint32_t leader = state_id;
-        if (!primitive_unveil && !state_local_option &&
+        if (!primitive_unveil && !product_local_fracture &&
+            !state_local_option &&
             !gated_primitive_reforge(state_id)) {
             const std::string key =
                 std::to_string(result.policy[state_id].index);
@@ -1371,6 +1377,38 @@ std::string compile_policy_strategy_json(
             gap("bounded policy has no explicit safe Restart default");
         }
     }
+    std::uint32_t product_fracture_restart_action = kNoId;
+    const bool selected_product_fracture = std::any_of(
+        emitted_states.begin(), emitted_states.end(),
+        [&](const std::uint32_t state) {
+            const PlannerOperator& planner =
+                calc.operators().at(result.policy[state]);
+            return calc.product_solver_parent() &&
+                   planner.kind == PlannerOperatorKind::Primitive &&
+                   planner.automatic_kind ==
+                       AutomaticCandidateKind::Fracture;
+        });
+    if (selected_product_fracture) {
+        for (std::uint32_t action = 0;
+             action < calc.registry().actions.size(); ++action) {
+            if (calc.registry().actions[action].synthetic) {
+                product_fracture_restart_action = action;
+                break;
+            }
+        }
+        if (product_fracture_restart_action == kNoId) {
+            gap("product-local Fracture route has no Restart operation");
+        }
+    }
+    const bool dedicated_product_fracture_restart =
+        selected_product_fracture && restart_region_leader == kNoId &&
+        bounded_default_restart_action == kNoId;
+    const std::string product_fracture_restart_node =
+        restart_region_leader != kNoId
+            ? state_node(restart_region_leader)
+            : bounded_default_restart_action != kNoId
+                  ? "bounded_default_restart"
+                  : "product_fracture_restart";
     const std::string policy_route_default_node =
         strict_policy_route && restart_region_leader != kNoId
             ? state_node(restart_region_leader)
@@ -1535,7 +1573,8 @@ std::string compile_policy_strategy_json(
     }
     std::uint32_t node_count =
         4 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
-        (bounded_default_restart_action != kNoId ? 1u : 0u);
+        (bounded_default_restart_action != kNoId ? 1u : 0u) +
+        (dedicated_product_fracture_restart ? 1u : 0u);
     const auto check_node_cap = [&]() {
         if (node_count > result.options.max_compiled_nodes) {
             if (telemetry != nullptr) telemetry->cap_hit = "max_compiled_nodes";
@@ -1615,6 +1654,14 @@ std::string compile_policy_strategy_json(
         json += "\"operation\":" + operation_json(
             session,
             calc.registry().actions.at(bounded_default_restart_action));
+        json += "}";
+    }
+    if (dedicated_product_fracture_restart) {
+        json +=
+            ",{\"id\":\"product_fracture_restart\",\"kind\":\"operation\",";
+        json += "\"operation\":" + operation_json(
+            session,
+            calc.registry().actions.at(product_fracture_restart_action));
         json += "}";
     }
     for (const PolicyRouteNode& route : policy_route_nodes) {
@@ -1814,6 +1861,30 @@ std::string compile_policy_strategy_json(
             check_node_cap();
             continue;
         }
+        const bool product_local_fracture =
+            calc.product_solver_parent() &&
+            planner.kind == PlannerOperatorKind::Primitive &&
+            planner.automatic_kind == AutomaticCandidateKind::Fracture;
+        if (product_local_fracture) {
+            if (planner.primitive_program.size() != 1) {
+                gap("product-local Fracture must be one primitive operation");
+            }
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "\",\"kind\":\"operation\"" +
+                    expected_cost_annotation(state_id) +
+                    ",\"operation\":" +
+                    operation_json(
+                        session,
+                        calc.registry().actions.at(
+                            planner.primitive_program.front())) +
+                    accounting_roles_json(
+                        planner, planner.primitive_program.front()) + "}";
+            json += ",{\"id\":\"" + state_node(state_id) +
+                    "_fracture_route\",\"kind\":\"router\"}";
+            node_count += 2;
+            check_node_cap();
+            continue;
+        }
         const std::vector<std::uint32_t>& program =
             planner.primitive_program;
         if (program.empty()) {
@@ -1928,6 +1999,9 @@ std::string compile_policy_strategy_json(
     }
     if (bounded_default_restart_action != kNoId) {
         edge("bounded_default_restart", "router", 0, "", true);
+    }
+    if (dedicated_product_fracture_restart) {
+        edge("product_fracture_restart", "router", 0, "", true, "retry");
     }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
@@ -2110,6 +2184,37 @@ std::string compile_policy_strategy_json(
             edge(
                 state_node(state_id) + "_fracture", "router",
                 0, "", true);
+            continue;
+        }
+        const bool product_local_fracture =
+            calc.product_solver_parent() &&
+            planner.kind == PlannerOperatorKind::Primitive &&
+            planner.automatic_kind == AutomaticCandidateKind::Fracture;
+        if (product_local_fracture) {
+            const AbstractState& source = calc.state(state_id);
+            std::vector<std::string> acceptable_hits;
+            for (std::uint32_t slot = 0;
+                 slot < layout.slots.size(); ++slot) {
+                const std::uint32_t bit = 1u << slot;
+                if ((planner.relevant_goal_mask & bit) != 0 &&
+                    source.slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::Satisfied) &&
+                    (source.fractured_goal_mask & bit) == 0) {
+                    acceptable_hits.push_back(with_slot_flags(
+                        vocabulary[slot].satisfied, true, false));
+                }
+            }
+            if (acceptable_hits.empty()) {
+                gap("selected product-local Fracture has no acceptable hit");
+            }
+            const std::string base = state_node(state_id);
+            const std::string route = base + "_fracture_route";
+            edge(base, route, 0, "", true);
+            edge(route, "router", 0, any_of(acceptable_hits), false);
+            edge(
+                route, product_fracture_restart_node,
+                1, "", true, "retry");
             continue;
         }
         if (!unveil) {

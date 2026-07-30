@@ -672,6 +672,13 @@ SolveResult SolveWork::Impl::finish() {
             result.absolute_optimality_gap = kInfinity;
             result.relative_optimality_gap = kInfinity;
         }
+        /*
+         * The first pass retains and accounts diagnostic payloads before the
+         * final byte-cap checks. Refresh policy dispositions now that the
+         * executable-policy gate has decided whether this policy is actually
+         * published.
+         */
+        finalize_automatic_candidate_diagnostics();
         {
             std::uint64_t hash = 1469598103934665603ULL;
             const auto mix = [&hash](const std::uint64_t value) {

@@ -108,6 +108,38 @@ CarrierFacts carrier_facts(const AbstractState& state) {
     return facts;
 }
 
+bool session_mods_share_group(
+    const SessionImpl& session,
+    const std::uint32_t lhs,
+    const std::uint32_t rhs) {
+    for (std::uint32_t a = session.group_offsets[lhs];
+         a < session.group_offsets[lhs + 1]; ++a) {
+        for (std::uint32_t b = session.group_offsets[rhs];
+             b < session.group_offsets[rhs + 1]; ++b) {
+            if (session.group_ids[a] == session.group_ids[b]) return true;
+        }
+    }
+    return false;
+}
+
+std::uint32_t session_metamod_flag(
+    const SessionImpl& session,
+    const std::uint32_t mod) {
+    const std::int32_t type = session.metamod_type[mod];
+    if (type < 0) return 0;
+    const DataImpl& data = *session.data;
+    if (type == data.metamod_multimod_code) return kFlagMultimod;
+    if (type == data.metamod_no_attack_code) return kFlagNoAttack;
+    if (type == data.metamod_no_caster_code) return kFlagNoCaster;
+    if (type == data.metamod_prefixes_locked_code) {
+        return kFlagPrefixesLocked;
+    }
+    if (type == data.metamod_suffixes_locked_code) {
+        return kFlagSuffixesLocked;
+    }
+    return 0;
+}
+
 void classify_slot_mask(
     const std::uint32_t source,
     const std::uint32_t all_successors,
@@ -1354,8 +1386,28 @@ std::string SolveWork::Impl::automatic_candidate_witness_json(
                std::to_string(record.evidence.baseline_kernel_hash) +
                ",\"candidate_hash\":" +
                std::to_string(record.evidence.candidate_kernel_hash) +
-               ",\"mechanisms\":" + automatic_mechanisms_json(
-                   record.evidence.kernel_change_mechanisms) + "}";
+                ",\"mechanisms\":" + automatic_mechanisms_json(
+                    record.evidence.kernel_change_mechanisms) + "}";
+        if (record.evidence.fracture_raw_affix_count != 0) {
+            out += ",\"product_fracture_local\":{\"raw_affixes\":" +
+                   std::to_string(
+                       record.evidence.fracture_raw_affix_count);
+            out += ",\"acceptable_affixes\":" +
+                   std::to_string(
+                       record.evidence.fracture_acceptable_affix_count);
+            out += ",\"hit_probability\":" +
+                   finite_json(record.evidence.fracture_hit_probability);
+            out += ",\"miss_probability\":" +
+                   finite_json(record.evidence.fracture_miss_probability);
+            out += ",\"probability_sum\":" +
+                   finite_json(record.evidence.fracture_probability_sum);
+            out += ",\"restart_state\":" +
+                   std::to_string(
+                       record.evidence.fracture_restart_state);
+            out +=
+                ",\"miss_route\":\"priced_restart\","
+                "\"parent_miss_states_interned\":0}";
+        }
         out += ",\"setup_operations\":[";
         if (!record.setup_action_id.empty()) {
             append_json_string(out, record.setup_action_id);
@@ -1582,6 +1634,145 @@ void SolveWork::Impl::finalize_automatic_candidate_diagnostics() {
                 automatic_candidate_witness_json(
                     record, disposition, reason));
         }
+        result.diagnostics.product_fracture_rows =
+            transition_cache->product_fracture_rows.size();
+        result.diagnostics.product_fracture_raw_outcomes = 0;
+        result.diagnostics.product_fracture_hit_entries = 0;
+        result.diagnostics.product_fracture_miss_entries = 0;
+        result.diagnostics.product_fracture_parent_miss_states_interned = 0;
+        result.diagnostics.product_fracture_selected_rows = 0;
+        result.diagnostics
+            .product_fracture_selected_properness_checked = 0;
+        result.diagnostics.product_fracture_selected_proper_rows = 0;
+        result.diagnostics.product_fracture_selected_improper_rows = 0;
+        result.diagnostics.product_fracture_selected_unproved_rows = 0;
+        result.diagnostics.product_fracture_max_probability_error = 0.0;
+        result.diagnostics.product_fracture_shape_rows = {};
+        result.diagnostics.product_fracture_witnesses.clear();
+        for (auto& witness :
+            transition_cache->product_fracture_rows) {
+            witness.selected_in_policy =
+                result.policy_available &&
+                witness.source_state < result.policy.size() &&
+                result.policy[witness.source_state].index ==
+                    witness.operator_index;
+            witness.properness_checked =
+                witness.selected_in_policy && result.policy_available;
+            witness.proper =
+                witness.properness_checked &&
+                improper_policy_states.empty();
+            if (witness.selected_in_policy) {
+                ++result.diagnostics.product_fracture_selected_rows;
+                if (witness.properness_checked) {
+                    ++result.diagnostics
+                          .product_fracture_selected_properness_checked;
+                    if (witness.proper) {
+                        ++result.diagnostics
+                              .product_fracture_selected_proper_rows;
+                    } else {
+                        ++result.diagnostics
+                              .product_fracture_selected_improper_rows;
+                    }
+                } else {
+                    ++result.diagnostics
+                          .product_fracture_selected_unproved_rows;
+                }
+            }
+            result.diagnostics.product_fracture_raw_outcomes +=
+                witness.raw_affix_count;
+            result.diagnostics.product_fracture_hit_entries +=
+                witness.hit_state_count;
+            result.diagnostics.product_fracture_miss_entries +=
+                witness.miss_probability > 0.0 ? 1 : 0;
+            result.diagnostics.product_fracture_parent_miss_states_interned +=
+                witness.parent_miss_state_count;
+            result.diagnostics.product_fracture_max_probability_error =
+                std::max(
+                    result.diagnostics
+                        .product_fracture_max_probability_error,
+                    std::abs(witness.probability_sum - 1.0));
+            if (witness.raw_affix_count <
+                    result.diagnostics.product_fracture_shape_rows.size() &&
+                witness.acceptable_affix_count <=
+                    kMaxGoalSlots) {
+                ++result.diagnostics.product_fracture_shape_rows
+                      [witness.raw_affix_count]
+                      [witness.acceptable_affix_count];
+            }
+            if (result.diagnostics.product_fracture_witnesses.size() >=
+                options.max_diagnostic_samples) {
+                continue;
+            }
+            std::string json =
+                "{\"source_state\":" +
+                std::to_string(witness.source_state) +
+                ",\"row\":" + std::to_string(witness.row_index) +
+                ",\"operator\":" +
+                std::to_string(witness.operator_index) +
+                ",\"raw_affixes\":" +
+                std::to_string(witness.raw_affix_count) +
+                ",\"acceptable_affixes\":" +
+                std::to_string(witness.acceptable_affix_count) +
+                ",\"acceptable_goal_mask\":" +
+                std::to_string(witness.acceptable_goal_mask) +
+                ",\"hit_probability\":" +
+                finite_json(witness.hit_probability) +
+                ",\"miss_probability\":" +
+                finite_json(witness.miss_probability) +
+                ",\"probability_sum\":" +
+                finite_json(witness.probability_sum) +
+                ",\"restart_state\":" +
+                std::to_string(witness.restart_state) +
+                ",\"costs\":{\"fracture_action\":" +
+                finite_json(witness.fracture_action_cost) +
+                ",\"restart_action\":" +
+                finite_json(witness.restart_action_cost) +
+                ",\"base_unit\":" +
+                finite_json(witness.base_unit_cost) +
+                "},\"resources\":{\"base\":" +
+                finite_json(witness.restart_resource_quantity) +
+                "},\"fallback_provenance\":{\"restart_operator\":" +
+                std::to_string(witness.restart_operator_index) +
+                ",\"restart_state\":" +
+                std::to_string(witness.restart_state) +
+                ",\"action_vocabulary_identity\":" +
+                std::to_string(witness.action_vocabulary_identity) +
+                ",\"kernel_identity\":" +
+                std::to_string(witness.kernel_identity) +
+                "},\"hit_states\":[";
+            for (std::uint32_t i = 0;
+                 i < witness.hit_state_count; ++i) {
+                if (i != 0) json.push_back(',');
+                json += "{\"state\":" +
+                        std::to_string(witness.hit_states[i]) +
+                        ",\"probability\":" +
+                        finite_json(witness.hit_probabilities[i]) + "}";
+            }
+            json +=
+                "],\"miss_route\":\"priced_restart\","
+                "\"parent_miss_states_interned\":" +
+                std::to_string(witness.parent_miss_state_count) +
+                ",\"retry_semantics\":\"restart_then_policy_router\","
+                "\"selected_in_policy\":" +
+                std::string(
+                    witness.selected_in_policy ? "true" : "false") +
+                ",\"properness_checked\":" +
+                std::string(
+                    witness.properness_checked ? "true" : "false") +
+                ",\"proper\":" +
+                std::string(witness.proper ? "true" : "false") +
+                ",\"properness_result\":\"" +
+                (witness.selected_in_policy
+                     ? (witness.proper ? "selected_policy_proper"
+                                       : "selected_policy_not_proved")
+                     : "not_selected_not_required") +
+                "\"}";
+            result.diagnostics.product_fracture_witnesses.push_back(
+                std::move(json));
+        }
+        result.diagnostics.product_fracture_witnesses_omitted =
+            result.diagnostics.product_fracture_rows -
+            result.diagnostics.product_fracture_witnesses.size();
     }
 
 void SolveWork::Impl::finalize_preservation_diagnostics() {
@@ -2206,6 +2397,164 @@ std::pair<bool, std::uint64_t> SolveWork::Impl::append_sparse_row(
             static_cast<std::uint64_t>(stored_row_index)};
     }
 
+ProductFractureKernel SolveWork::Impl::product_fracture_kernel(
+        const std::uint32_t state,
+        const std::uint32_t relevant_goal_mask) {
+    if (!calc.product_solver_parent()) {
+        throw std::logic_error(
+            "product Fracture quotient requested outside product parent");
+    }
+
+    const AbstractState source = calc.state(state);
+    ProductFractureKernel kernel;
+    kernel.raw_affix_count =
+        static_cast<std::uint32_t>(source.prefix_count) +
+        static_cast<std::uint32_t>(source.suffix_count);
+    if (kernel.raw_affix_count == 0) return kernel;
+
+    std::array<std::uint32_t, kMaxGoalSlots> slot_metamod_flags{};
+    std::vector<std::uint32_t> accepted_slots;
+    for (std::uint32_t slot = 0; slot < calc.layout().slots.size(); ++slot) {
+        const std::uint32_t bit = 1u << slot;
+        if ((relevant_goal_mask & bit) == 0 ||
+            source.slot_status[slot] !=
+                static_cast<std::uint8_t>(GoalSlotStatus::Satisfied) ||
+            (source.fractured_goal_mask & bit) != 0) {
+            continue;
+        }
+
+        /*
+         * The local k/n observation is valid only when this goal slot denotes
+         * at most one physical affix. Prove that every pair of satisfying
+         * members shares an exclusion group; otherwise a collapsed state could
+         * hide multiple acceptable physical affixes and the prototype must
+         * refuse rather than guess.
+         */
+        std::vector<std::uint32_t> members;
+        pc_bitset_for_each(
+            calc.layout().slots[slot].satisfying_mask.data(),
+            session.words,
+            [&](const std::size_t mod) {
+                members.push_back(static_cast<std::uint32_t>(mod));
+            });
+        for (std::size_t a = 0; a < members.size(); ++a) {
+            for (std::size_t b = a + 1; b < members.size(); ++b) {
+                if (!session_mods_share_group(
+                        session, members[a], members[b])) {
+                    throw std::runtime_error(
+                        "coarse product Fracture observer cannot prove one "
+                        "physical affix for goal slot " +
+                        std::to_string(slot));
+                }
+            }
+        }
+
+        /*
+         * One physical affix satisfying multiple active goal slots is not
+         * countable from this carrier without an explicit physical-hit
+         * identity. Refuse that overlap instead of counting the affix once per
+         * slot and overstating k.
+         */
+        for (const std::uint32_t accepted_slot : accepted_slots) {
+            bool overlaps = false;
+            for (std::size_t word = 0; word < session.words; ++word) {
+                overlaps |=
+                    (calc.layout().slots[slot].satisfying_mask[word] &
+                     calc.layout()
+                         .slots[accepted_slot]
+                         .satisfying_mask[word]) != 0;
+            }
+            if (overlaps) {
+                throw std::runtime_error(
+                    "coarse product Fracture observer cannot recover "
+                    "physical hit identity across goal slots " +
+                    std::to_string(accepted_slot) + " and " +
+                    std::to_string(slot));
+            }
+        }
+
+        bool first_metamod = true;
+        std::uint32_t uniform_metamod = 0;
+        for (const std::uint32_t mod : members) {
+            const std::uint32_t flag = session_metamod_flag(session, mod);
+            if (first_metamod) {
+                first_metamod = false;
+                uniform_metamod = flag;
+            } else if (flag != uniform_metamod) {
+                throw std::runtime_error(
+                    "coarse product Fracture observer loses metamod identity "
+                    "for goal slot " +
+                    std::to_string(slot));
+            }
+        }
+        slot_metamod_flags[slot] = uniform_metamod;
+        kernel.acceptable_goal_mask |= bit;
+        ++kernel.acceptable_affix_count;
+        accepted_slots.push_back(slot);
+    }
+
+    if (kernel.acceptable_affix_count == 0) return kernel;
+    if (kernel.acceptable_affix_count > kernel.raw_affix_count) {
+        throw std::runtime_error(
+            "coarse product Fracture observer counted more acceptable "
+            "physical affixes than explicit affixes");
+    }
+
+    kernel.hit_probability =
+        1.0 / static_cast<double>(kernel.raw_affix_count);
+    kernel.miss_probability =
+        static_cast<double>(
+            kernel.raw_affix_count - kernel.acceptable_affix_count) /
+        static_cast<double>(kernel.raw_affix_count);
+    kernel.exits.reserve(
+        kernel.acceptable_affix_count +
+        (kernel.miss_probability > 0.0 ? 1u : 0u));
+
+    for (std::uint32_t slot = 0; slot < calc.layout().slots.size(); ++slot) {
+        const std::uint32_t bit = 1u << slot;
+        if ((kernel.acceptable_goal_mask & bit) == 0) continue;
+        AbstractState success = source;
+        success.fractured_goal_mask |= bit;
+        success.flags |= kFlagFractured;
+        success.fractured_metamod_flags |= slot_metamod_flags[slot];
+        kernel.exits.push_back(
+            {calc.intern_state(success), kernel.hit_probability});
+    }
+
+    pc_item_state fresh;
+    pc_item_clear(&fresh);
+    kernel.restart_state = calc.intern_item(fresh);
+    restart_state = kernel.restart_state;
+    if (kernel.miss_probability > 0.0) {
+        kernel.exits.push_back(
+            {kernel.restart_state, kernel.miss_probability});
+    }
+    std::sort(
+        kernel.exits.begin(), kernel.exits.end(),
+        [](const OutcomeEntry& lhs, const OutcomeEntry& rhs) {
+            return lhs.state < rhs.state;
+        });
+    std::vector<OutcomeEntry> merged;
+    merged.reserve(kernel.exits.size());
+    for (const OutcomeEntry& exit : kernel.exits) {
+        if (!merged.empty() && merged.back().state == exit.state) {
+            merged.back().probability += exit.probability;
+        } else {
+            merged.push_back(exit);
+        }
+    }
+    kernel.exits = std::move(merged);
+    for (const OutcomeEntry& exit : kernel.exits) {
+        kernel.probability_sum += exit.probability;
+    }
+    if (std::abs(kernel.probability_sum - 1.0) > 1e-12) {
+        throw std::runtime_error(
+            "coarse product Fracture probabilities do not normalize");
+    }
+    kernel.eligible = true;
+    return kernel;
+}
+
 bool SolveWork::Impl::expand_one_unit() {
         const auto started = std::chrono::steady_clock::now();
         bool row_attempt_active = false;
@@ -2284,6 +2633,7 @@ bool SolveWork::Impl::expand_one_unit() {
                 row_attempt_started = row_started;
                 std::uint64_t search_raw_outcomes = 0;
                 std::uint64_t search_retained_transitions = 0;
+                std::uint64_t search_root_retained_transitions = 0;
                 std::uint64_t search_retained_bytes = 0;
                 bool search_row_retained = false;
                 PendingSparseRow pending;
@@ -2296,6 +2646,9 @@ bool SolveWork::Impl::expand_one_unit() {
                 }
                 const OutcomeDistribution* primitive_distribution =
                     nullptr;
+                std::optional<ProductFractureKernel> product_fracture;
+                std::vector<std::pair<std::string, double>>
+                    product_fracture_resources;
                 std::optional<SolveTransitionCache::AutomaticCandidateRecord>
                     automatic_record;
                 const AutomaticTelemetryKind telemetry_kind =
@@ -2424,6 +2777,74 @@ bool SolveWork::Impl::expand_one_unit() {
                         evidence.reason =
                             "no_unfractured_satisfied_goal_carrier";
                         automatic_record->eligible = false;
+                    } else if (
+                        calc.product_solver_parent() &&
+                        planner.automatic_kind ==
+                            AutomaticCandidateKind::Fracture) {
+                        product_fracture = product_fracture_kernel(
+                            state, fracture_relevant_mask);
+                        if (!product_fracture->eligible) {
+                            append = false;
+                            OptionKernel::AutomaticEvidence& evidence =
+                                automatic_record->evidence;
+                            evidence.eligible = false;
+                            evidence.legality_result = "irrelevant";
+                            evidence.reason =
+                                "no_unfractured_satisfied_goal_carrier";
+                            automatic_record->eligible = false;
+                        } else {
+                            product_fracture_resources =
+                                planner.resource_quantities;
+                            const auto base = std::find_if(
+                                product_fracture_resources.begin(),
+                                product_fracture_resources.end(),
+                                [](const auto& resource) {
+                                    return resource.first == "base";
+                                });
+                            if (base == product_fracture_resources.end()) {
+                                product_fracture_resources.push_back(
+                                    {"base",
+                                     product_fracture->miss_probability});
+                            } else {
+                                base->second +=
+                                    product_fracture->miss_probability;
+                            }
+                            pending.resources =
+                                &product_fracture_resources;
+                            pending.transitions =
+                                &product_fracture->exits;
+
+                            OptionKernel::AutomaticEvidence& evidence =
+                                automatic_record->evidence;
+                            evidence.eligible = true;
+                            evidence.kernel_changed = true;
+                            evidence.setup_complete = true;
+                            evidence.cleanup_complete = true;
+                            evidence.recovery_complete = true;
+                            evidence.exits_complete = true;
+                            evidence.kernel_change_mechanisms =
+                                kAutomaticCarrierFracture;
+                            evidence.legality_result = "legal";
+                            evidence.relevant_goal_mask =
+                                product_fracture->acceptable_goal_mask;
+                            evidence.fracture_raw_affix_count =
+                                product_fracture->raw_affix_count;
+                            evidence.fracture_acceptable_affix_count =
+                                product_fracture->acceptable_affix_count;
+                            evidence.fracture_restart_state =
+                                product_fracture->restart_state;
+                            evidence.fracture_hit_probability =
+                                product_fracture->hit_probability;
+                            evidence.fracture_miss_probability =
+                                product_fracture->miss_probability;
+                            evidence.fracture_probability_sum =
+                                product_fracture->probability_sum;
+                            evidence.reason =
+                                "product_local_goal_hits_plus_priced_restart_miss";
+                            automatic_record->eligible = true;
+                            automatic_record->raw_outcomes =
+                                product_fracture->raw_affix_count;
+                        }
                     } else {
                         const OutcomeDistribution& distribution =
                             calc.outcomes(
@@ -2562,8 +2983,28 @@ bool SolveWork::Impl::expand_one_unit() {
                                 search_raw_outcomes += group.states.size();
                             }
                         }
+                        if (product_fracture.has_value() &&
+                            product_fracture->eligible) {
+                            search_raw_outcomes =
+                                product_fracture->raw_affix_count;
+                        }
                         const auto [collapsed, appended_row] =
                             append_sparse_row(state, std::move(pending));
+                        if (state == result.start_state) {
+                            const SparseRow& root_row =
+                                transition_cache->rows.at(appended_row);
+                            search_root_retained_transitions =
+                                root_row.transition_count;
+                            for (std::uint32_t choice = 0;
+                                 choice < root_row.choice_count; ++choice) {
+                                const SparseChoiceGroup& group =
+                                    transition_cache->choices.at(
+                                        root_row.choice_offset + choice);
+                                search_root_retained_transitions +=
+                                    group.successor_count +
+                                    (group.has_self ? 1u : 0u);
+                            }
+                        }
                         if (expansion_is_incremental_alternative) {
                             expansion_appended_row = appended_row;
                         }
@@ -2652,6 +3093,68 @@ bool SolveWork::Impl::expand_one_unit() {
                                     std::chrono::steady_clock::now() -
                                     sparse_row_started)
                                     .count());
+                        if (product_fracture.has_value() &&
+                            product_fracture->eligible) {
+                            reserve_selected_growth(
+                                transition_cache->product_fracture_rows, 1);
+                            SolveTransitionCache::ProductFractureRowWitness
+                                witness;
+                            witness.source_state = state;
+                            witness.row_index = appended_row;
+                            witness.operator_index = priced.index;
+                            witness.raw_affix_count =
+                                product_fracture->raw_affix_count;
+                            witness.acceptable_affix_count =
+                                product_fracture->acceptable_affix_count;
+                            witness.acceptable_goal_mask =
+                                product_fracture->acceptable_goal_mask;
+                            witness.restart_state =
+                                product_fracture->restart_state;
+                            witness.hit_probability =
+                                product_fracture->hit_probability;
+                            witness.miss_probability =
+                                product_fracture->miss_probability;
+                            witness.probability_sum =
+                                product_fracture->probability_sum;
+                            witness.restart_resource_quantity =
+                                product_fracture->miss_probability;
+                            witness.fracture_action_cost = priced.cost;
+                            witness.restart_action_cost = restart_cost;
+                            witness.restart_operator_index =
+                                restart_operator_index;
+                            const auto base_price = prices.find("base");
+                            witness.base_unit_cost =
+                                base_price == prices.end()
+                                    ? kInfinity
+                                    : base_price->second;
+                            witness.action_vocabulary_identity =
+                                action_vocabulary_identity();
+                            witness.kernel_identity =
+                                automatic_record.has_value()
+                                    ? automatic_record->evidence
+                                          .candidate_kernel_hash
+                                    : 0;
+                            for (const OutcomeEntry& exit :
+                                 product_fracture->exits) {
+                                if (exit.state ==
+                                        product_fracture->restart_state &&
+                                    product_fracture->miss_probability > 0.0) {
+                                    continue;
+                                }
+                                if (witness.hit_state_count >=
+                                    witness.hit_states.size()) {
+                                    throw std::logic_error(
+                                        "product Fracture hit witness overflow");
+                                }
+                                witness.hit_states[
+                                    witness.hit_state_count++] = exit.state;
+                                witness.hit_probabilities[
+                                    witness.hit_state_count - 1] =
+                                    exit.probability;
+                            }
+                            transition_cache->product_fracture_rows.push_back(
+                                witness);
+                        }
                         const auto selected_byte_audit_started =
                             std::chrono::steady_clock::now();
                         const std::uint64_t bytes_after =
@@ -2720,6 +3223,12 @@ bool SolveWork::Impl::expand_one_unit() {
                 search.rows += search_row_retained ? 1 : 0;
                 search.raw_outcomes += search_raw_outcomes;
                 search.retained_transitions += search_retained_transitions;
+                if (state == result.start_state && search_row_retained) {
+                    ++search.root_rows;
+                    search.root_raw_outcomes += search_raw_outcomes;
+                    search.root_retained_transitions +=
+                        search_root_retained_transitions;
+                }
                 search.reforge_work +=
                     search_after.reforge_frontier_work -
                     search_before.reforge_frontier_work;

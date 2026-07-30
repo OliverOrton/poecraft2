@@ -265,13 +265,15 @@ CalcContext::CalcContext(
     bool empty_actions_mean_all,
     bool distinguish_junk_exclusion_effects,
     std::optional<std::uint32_t> state_cap,
-    const std::vector<CountObservation>& count_observations)
+    const std::vector<CountObservation>& count_observations,
+    const bool product_solver_parent)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
       candidates_(action_indices),
       context_(0),
-      state_cap_(state_cap) {
+      state_cap_(state_cap),
+      product_solver_parent_(product_solver_parent) {
     if (candidates_.empty() && empty_actions_mean_all) {
         candidates_.reserve(registry_.actions.size());
         for (std::uint32_t i = 0; i < registry_.actions.size(); ++i) {
@@ -353,7 +355,8 @@ CalcContext::CalcContext(
                     registry_.actions.at(index).params.type;
                 return type == ActionType::Unveil ||
                        type == ActionType::HarvestResist ||
-                       type == ActionType::Fracture ||
+                       (type == ActionType::Fracture &&
+                        !product_solver_parent_) ||
                        type == ActionType::RemoveCraftedModifiers;
             });
     const auto layout_started = std::chrono::steady_clock::now();

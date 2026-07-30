@@ -28,12 +28,18 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The
-[Fracture-Local Coarse-Parent Prototype](active/fracture-local-coarse-parent.md)
-is active. It replaces the product solver's globally strict Fracture observer
-with a coarse ordinary/reforge parent plus an exact solver-local goal-hit and
-priced-Restart composition. Exact primitive Fracture behavior and product
-surfaces remain unchanged.
+There is no active implementation boundary. Oliver must choose the next chunk
+before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
+boundary.
+
+The completed
+[Fracture-Local Coarse-Parent Prototype](archive/2026-07-29-fracture-local-coarse-parent/README.md)
+replaces the product solver's globally strict Fracture observer with a
+six-class ordinary/reforge parent plus an exact solver-local goal-hit and
+priced-Restart composition. The frozen full-four carrier graph closes at 927
+states with exactly 217 root Chaos successors, zero Fracture miss-state IDs,
+and a proper compiled bounded policy. Exact primitive Fracture behavior and
+product surfaces remain unchanged.
 
 The completed
 [Practical Exact Four-Goal Solving Research](archive/2026-07-29-practical-four-goal-solving-research/README.md)

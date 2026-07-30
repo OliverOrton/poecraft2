@@ -60,6 +60,21 @@ struct PricedOperator {
     std::vector<std::pair<std::string, double>> resource_prices;
 };
 
+/* Solver-local quotient for an automatic product-goal Fracture row. The
+ * primitive evaluator remains exact; this kernel exists only at the coarse
+ * product parent and never interns the physical non-goal Fracture outcomes. */
+struct ProductFractureKernel {
+    bool eligible = false;
+    std::uint32_t raw_affix_count = 0;
+    std::uint32_t acceptable_affix_count = 0;
+    std::uint32_t acceptable_goal_mask = 0;
+    std::uint32_t restart_state = kNoId;
+    double hit_probability = 0.0;
+    double miss_probability = 0.0;
+    double probability_sum = 0.0;
+    std::vector<OutcomeEntry> exits;
+};
+
 struct SparseChoiceGroup {
     std::uint64_t successor_offset = 0;
     std::uint32_t successor_count = 0;
@@ -316,6 +331,34 @@ using namespace solve_detail;
  * relative prices without rebuilding transitions or reusing a stale action
  * representative. */
 struct SolveTransitionCache {
+    struct ProductFractureRowWitness {
+        std::uint32_t source_state = kNoId;
+        std::uint64_t row_index =
+            std::numeric_limits<std::uint64_t>::max();
+        std::uint32_t operator_index = kNoId;
+        std::uint32_t raw_affix_count = 0;
+        std::uint32_t acceptable_affix_count = 0;
+        std::uint32_t acceptable_goal_mask = 0;
+        std::uint32_t restart_state = kNoId;
+        std::array<std::uint32_t, kMaxGoalSlots> hit_states{};
+        std::array<double, kMaxGoalSlots> hit_probabilities{};
+        std::uint32_t hit_state_count = 0;
+        double hit_probability = 0.0;
+        double miss_probability = 0.0;
+        double probability_sum = 0.0;
+        double restart_resource_quantity = 0.0;
+        double fracture_action_cost = kInfinity;
+        double restart_action_cost = kInfinity;
+        double base_unit_cost = kInfinity;
+        std::uint32_t restart_operator_index = kNoId;
+        std::uint64_t action_vocabulary_identity = 0;
+        std::uint64_t kernel_identity = 0;
+        bool selected_in_policy = false;
+        bool properness_checked = false;
+        bool proper = false;
+        std::uint32_t parent_miss_state_count = 0;
+    };
+
     struct AutomaticCandidateRecord {
         std::uint32_t state_id = kNoId;
         std::uint32_t operator_index = kNoId;
@@ -401,6 +444,9 @@ struct SolveTransitionCache {
     AutomaticAdmissionPhaseTelemetry automatic_admission_phases;
     std::vector<AutomaticCandidateRecord> automatic_candidate_samples;
     std::uint64_t owned_automatic_sample_nested_bytes = 0;
+    /* Full fixed-width provenance: one record for every retained product-local
+     * Fracture candidate row, independent of the diagnostic sample cap. */
+    std::vector<ProductFractureRowWitness> product_fracture_rows;
     std::uint64_t algebraic_self_loops = 0;
     bool focused_partial = false;
 
@@ -1009,6 +1055,10 @@ struct SolveWork::Impl {
     bool try_constructive_state_certificate(
         const std::uint32_t state,
         const std::uint64_t row_index);
+
+    ProductFractureKernel product_fracture_kernel(
+        std::uint32_t state,
+        std::uint32_t relevant_goal_mask);
 
     SolveTransitionCache::AutomaticCandidateRecord automatic_record_from(
         const std::uint32_t state,

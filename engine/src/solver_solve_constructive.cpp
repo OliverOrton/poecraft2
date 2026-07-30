@@ -2656,20 +2656,44 @@ auto SolveWork::Impl::progressive_fracture_fallback(
             if (acquisition_class(state) != selected_class) {
                 return std::nullopt;
             }
-            const OutcomeDistribution& fractured =
-                calc.outcomes(
-                    state, fracture_action,
-                    options.goal_progress_gated_reforges);
-            if (!fractured.supported ||
-                !fractured.choice_groups.empty() ||
-                !fractured.choice_options.empty()) {
-                result.diagnostics.progressive_fracture_status =
-                    "fracture_kernel_refused";
-                return std::nullopt;
-            }
             FractureBranch branch{fracture_cost, 0.0};
-            for (const OutcomeEntry& outcome : fractured.entries) {
+            std::optional<ProductFractureKernel> local_fracture;
+            const std::vector<OutcomeEntry>* fracture_entries = nullptr;
+            if (calc.product_solver_parent()) {
+                local_fracture = product_fracture_kernel(
+                    state,
+                    calc.operators()
+                        .at(fracture_operator)
+                        .relevant_goal_mask);
+                if (!local_fracture->eligible) {
+                    result.diagnostics.progressive_fracture_status =
+                        "fracture_local_kernel_refused";
+                    return std::nullopt;
+                }
+                fracture_entries = &local_fracture->exits;
+            } else {
+                const OutcomeDistribution& fractured =
+                    calc.outcomes(
+                        state, fracture_action,
+                        options.goal_progress_gated_reforges);
+                if (!fractured.supported ||
+                    !fractured.choice_groups.empty() ||
+                    !fractured.choice_options.empty()) {
+                    result.diagnostics.progressive_fracture_status =
+                        "fracture_kernel_refused";
+                    return std::nullopt;
+                }
+                fracture_entries = &fractured.entries;
+            }
+            for (const OutcomeEntry& outcome : *fracture_entries) {
                 if (calc.is_goal_state(calc.state(outcome.state))) continue;
+                if (local_fracture.has_value() &&
+                    outcome.state == local_fracture->restart_state) {
+                    branch.constant +=
+                        outcome.probability * restart_cost;
+                    branch.anchor_coefficient += outcome.probability;
+                    continue;
+                }
                 const std::uint32_t fractured_satisfied =
                     calc.state(outcome.state).fractured_goal_mask &
                     satisfied_goal_mask_for_state(outcome.state);
@@ -2681,7 +2705,9 @@ auto SolveWork::Impl::progressive_fracture_fallback(
                 } else {
                     branch.constant += outcome.probability * restart_cost;
                     branch.anchor_coefficient += outcome.probability;
-                    failed_fracture_states.insert(outcome.state);
+                    if (!local_fracture.has_value()) {
+                        failed_fracture_states.insert(outcome.state);
+                    }
                 }
             }
             branch_by_state.emplace(state, branch);

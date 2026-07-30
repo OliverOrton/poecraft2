@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-07-29
 
+- [Fracture-Local Coarse-Parent Prototype](2026-07-29-fracture-local-coarse-parent/README.md) —
+  qualified a six-class product parent, exact local Fracture goal-hit plus
+  priced-Restart miss rows, and a 927-state closed carrier graph with
+  deterministic compiled policy routing. Primitive and Calculator Fracture
+  remain exact.
+
 - [Practical Exact Four-Goal Solving Research](2026-07-29-practical-four-goal-solving-research/README.md) —
   attributed the 200,000-state PPPS run, measured Fracture's independent
   `217 -> 134,477` root-carrier identity expansion, found dependency-only

@@ -1215,7 +1215,7 @@ void run_primitive_destructive_renewal_upper_tests() {
         {fracture_alchemy, fracture_chaos, fracture, fracture_restart});
     const std::uint32_t fracture_start_state =
         fracture_calc.intern_item(start);
-    const OutcomeDistribution& fracture_direct_kernel =
+    const OutcomeDistribution fracture_direct_kernel =
         fracture_calc.outcomes(fracture_start_state, fracture_chaos);
     double fracture_direct_probability = 0.0;
     for (const OutcomeEntry& outcome : fracture_direct_kernel.entries) {
@@ -1255,6 +1255,194 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(std::isfinite(
         progressive.diagnostics.progressive_fracture_start_value));
     PC_CHECK(progressive.diagnostics.progressive_fracture_post_modes > 0);
+
+    /*
+     * The product solver's coarse parent retains only goal-hit Fracture
+     * successors plus one priced Restart miss. The ordinary exact context
+     * above remains the strict primitive oracle.
+     */
+    CalcContext product_fracture_calc(
+        fracture_session, goal, fracture_registry,
+        {fracture_alchemy, fracture_chaos, fracture, fracture_restart},
+        false, true, false, std::nullopt, {}, true);
+    PC_CHECK(product_fracture_calc.product_solver_parent());
+    PC_CHECK(
+        product_fracture_calc.layout().junk_classes.size() <
+        fracture_calc.layout().junk_classes.size());
+
+    /*
+     * The product-only reforge symmetry compression must be an exact quotient
+     * of the strict physical-family frontier. Project every strict Chaos exit
+     * through a concrete representative, then compare the entire probability
+     * distribution with the online coarse evaluator.
+     */
+    const std::uint32_t product_fracture_start_state =
+        product_fracture_calc.intern_item(start);
+    std::unordered_map<std::uint32_t, double> projected_strict_chaos;
+    for (const OutcomeEntry& outcome : fracture_direct_kernel.entries) {
+        pc_item_state concrete;
+        PC_CHECK(fracture_calc.materialize(outcome.state, concrete));
+        projected_strict_chaos[
+            product_fracture_calc.intern_item(concrete)] +=
+            outcome.probability;
+    }
+    const OutcomeDistribution product_chaos_kernel =
+        product_fracture_calc.outcomes(
+            product_fracture_start_state, fracture_chaos);
+    PC_CHECK(
+        product_chaos_kernel.entries.size() ==
+        projected_strict_chaos.size());
+    PC_CHECK(
+        product_chaos_kernel.entries.size() <
+        fracture_direct_kernel.entries.size());
+    for (const OutcomeEntry& outcome : product_chaos_kernel.entries) {
+        const auto expected = projected_strict_chaos.find(outcome.state);
+        PC_CHECK(expected != projected_strict_chaos.end());
+        if (expected != projected_strict_chaos.end()) {
+            PC_CHECK(near(
+                outcome.probability, expected->second, 1e-12));
+        }
+    }
+
+    SolveOptions product_fracture_options;
+    product_fracture_options.max_expanded_states = 512;
+    product_fracture_options.max_discovered_states = 4096;
+    product_fracture_options.state_certificate_control = false;
+    const SolveResult product_fracture_result = solve(
+        product_fracture_calc, start, fracture_prices,
+        product_fracture_options);
+    PC_CHECK(
+        product_fracture_result.diagnostics.product_fracture_rows > 0);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_parent_miss_states_interned == 0);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_max_probability_error <= 1e-12);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_raw_outcomes >=
+        product_fracture_result.diagnostics
+                .product_fracture_hit_entries +
+            product_fracture_result.diagnostics
+                .product_fracture_miss_entries);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_selected_properness_checked ==
+        product_fracture_result.diagnostics
+                .product_fracture_selected_rows);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_selected_proper_rows ==
+        product_fracture_result.diagnostics
+                .product_fracture_selected_rows);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_selected_improper_rows == 0);
+    PC_CHECK(
+        product_fracture_result.diagnostics
+                .product_fracture_selected_unproved_rows == 0);
+    PC_CHECK(
+        !product_fracture_result.diagnostics
+             .product_fracture_witnesses.empty());
+    PC_CHECK(
+        product_fracture_result.diagnostics.action_search_costs.at(
+            "fracture").cache_requests == 0);
+    PC_CHECK(
+        product_fracture_result.diagnostics.action_search_costs.at(
+            "chaos").root_retained_transitions ==
+        product_chaos_kernel.entries.size());
+    std::uint64_t zero_hit_rows = 0;
+    std::uint64_t single_hit_rows = 0;
+    std::uint64_t multiple_hit_rows = 0;
+    for (std::size_t n = 0;
+         n < product_fracture_result.diagnostics
+                 .product_fracture_shape_rows.size();
+         ++n) {
+        zero_hit_rows +=
+            product_fracture_result.diagnostics
+                .product_fracture_shape_rows[n][0];
+        single_hit_rows +=
+            product_fracture_result.diagnostics
+                .product_fracture_shape_rows[n][1];
+        for (std::size_t k = 2;
+             k < product_fracture_result.diagnostics
+                     .product_fracture_shape_rows[n].size();
+             ++k) {
+            multiple_hit_rows +=
+                product_fracture_result.diagnostics
+                    .product_fracture_shape_rows[n][k];
+        }
+    }
+    PC_CHECK(zero_hit_rows == 0);
+    PC_CHECK(single_hit_rows > 0);
+    PC_CHECK(multiple_hit_rows > 0);
+    for (std::size_t n = 4; n <= 6; ++n) {
+        std::uint64_t rows = 0;
+        for (const std::uint64_t count :
+             product_fracture_result.diagnostics
+                 .product_fracture_shape_rows[n]) {
+            rows += count;
+        }
+        PC_CHECK(rows > 0);
+    }
+
+    /*
+     * If two goal slots can name the same physical affix, the coarse carrier
+     * cannot decide whether k counts one affix or two. The prototype must
+     * refuse that observer collision instead of overcounting it.
+     */
+    pc_item_state overlap_carrier;
+    bool found_overlap_carrier = false;
+    for (const OutcomeEntry& outcome : fracture_direct_kernel.entries) {
+        const AbstractState& candidate =
+            fracture_calc.state(outcome.state);
+        if (candidate.prefix_count + candidate.suffix_count < 4 ||
+            candidate.slot_status[0] !=
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied) ||
+            candidate.slot_status[1] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied) ||
+            candidate.slot_status[2] ==
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied)) {
+            continue;
+        }
+        found_overlap_carrier =
+            fracture_calc.materialize(
+                outcome.state, overlap_carrier);
+        if (found_overlap_carrier) break;
+    }
+    PC_CHECK(found_overlap_carrier);
+    if (found_overlap_carrier) {
+        GoalSpec overlap_goal = goal;
+        overlap_goal.slots[1] = overlap_goal.slots[0];
+        bool overlap_refused = false;
+        try {
+            CalcContext overlap_calc(
+                fracture_session, overlap_goal, fracture_registry,
+                {fracture_alchemy, fracture_chaos, fracture,
+                 fracture_restart},
+                false, true, false, std::nullopt, {}, true);
+            SolveOptions overlap_options;
+            overlap_options.max_expanded_states = 32;
+            overlap_options.max_discovered_states = 1024;
+            overlap_options.state_certificate_control = false;
+            (void)solve(
+                overlap_calc, overlap_carrier, fracture_prices,
+                overlap_options);
+        } catch (const std::runtime_error& exception) {
+            const std::string message = exception.what();
+            overlap_refused =
+                message.find("overlapping members") !=
+                    std::string::npos ||
+                message.find(
+                    "physical hit identity across goal slots") !=
+                    std::string::npos;
+        }
+        PC_CHECK(overlap_refused);
+    }
 
     SolveOptions retained_progressive_options = options;
     retained_progressive_options.max_expanded_states = 8;

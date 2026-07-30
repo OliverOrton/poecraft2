@@ -868,6 +868,12 @@ struct OptionKernel {
         std::uint32_t kernel_change_mechanisms = 0;
         std::uint64_t baseline_kernel_hash = 0;
         std::uint64_t candidate_kernel_hash = 0;
+        std::uint32_t fracture_raw_affix_count = 0;
+        std::uint32_t fracture_acceptable_affix_count = 0;
+        std::uint32_t fracture_restart_state = kNoId;
+        double fracture_hit_probability = 0.0;
+        double fracture_miss_probability = 0.0;
+        double fracture_probability_sum = 0.0;
         std::string legality_result;
         std::string reason;
     } automatic;
@@ -1055,7 +1061,8 @@ class CalcContext {
         bool empty_actions_mean_all = true,
         bool distinguish_junk_exclusion_effects = false,
         std::optional<std::uint32_t> state_cap = std::nullopt,
-        const std::vector<CountObservation>& count_observations = {});
+        const std::vector<CountObservation>& count_observations = {},
+        bool product_solver_parent = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -1064,6 +1071,7 @@ class CalcContext {
         return operators_;
     }
     const GoalSpec& goal() const { return goal_; }
+    bool product_solver_parent() const { return product_solver_parent_; }
     /* The candidate action subset the layout was derived for. Normal solver
      * construction defaults an empty input to every registry action; an
      * operation-free strategy evaluation deliberately retains an empty set. */
@@ -1292,6 +1300,7 @@ class CalcContext {
     std::uint64_t owned_reforge_payload_bytes_ = 0;
     std::uint64_t retained_reforge_distribution_bytes_ = 0;
     bool owned_bytes_ledger_initialized_ = false;
+    bool product_solver_parent_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();
@@ -1760,6 +1769,22 @@ struct SolveDiagnostics {
     AutomaticAdmissionPhaseTelemetry automatic_admission_phases;
     std::vector<std::string> automatic_candidate_witnesses;
     std::uint64_t automatic_candidate_witnesses_omitted = 0;
+    std::uint64_t product_fracture_rows = 0;
+    std::uint64_t product_fracture_raw_outcomes = 0;
+    std::uint64_t product_fracture_hit_entries = 0;
+    std::uint64_t product_fracture_miss_entries = 0;
+    std::uint64_t product_fracture_parent_miss_states_interned = 0;
+    std::uint64_t product_fracture_selected_rows = 0;
+    std::uint64_t product_fracture_selected_properness_checked = 0;
+    std::uint64_t product_fracture_selected_proper_rows = 0;
+    std::uint64_t product_fracture_selected_improper_rows = 0;
+    std::uint64_t product_fracture_selected_unproved_rows = 0;
+    double product_fracture_max_probability_error = 0.0;
+    std::array<
+        std::array<std::uint64_t, kMaxGoalSlots + 1>,
+        7> product_fracture_shape_rows{};
+    std::vector<std::string> product_fracture_witnesses;
+    std::uint64_t product_fracture_witnesses_omitted = 0;
     std::uint32_t discovered_states = 0;
     std::uint32_t frontier_states = 0;
     std::uint32_t goal_states = 0;
@@ -1925,6 +1950,9 @@ struct SolveDiagnostics {
         std::uint64_t cache_hits = 0;
         std::uint64_t wall_ns = 0;
         std::uint64_t retained_bytes = 0;
+        std::uint64_t root_rows = 0;
+        std::uint64_t root_raw_outcomes = 0;
+        std::uint64_t root_retained_transitions = 0;
         std::uint64_t interrupted_rows = 0;
         std::uint32_t last_interrupted_state = kNoId;
         std::uint32_t last_interrupted_operator = kNoId;

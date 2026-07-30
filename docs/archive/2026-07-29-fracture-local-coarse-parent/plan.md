@@ -1,6 +1,6 @@
 # Fracture-Local Coarse-Parent Prototype
 
-**Status: active implementation and qualification boundary.**
+**Status: completed and archived; this plan no longer controls sequencing.**
 
 Owner: Oliver
 
@@ -9,7 +9,7 @@ Branch: `codex/fracture-local-coarse-parent`
 Starting source: `490b9f77d7f143d9f14bba888ea229f47bd6919b`
 
 Governing specification:
-[archived Fracture-local handoff](../archive/2026-07-29-practical-four-goal-solving-research/handoff.md)
+[archived Fracture-local handoff](../2026-07-29-practical-four-goal-solving-research/handoff.md)
 
 ## Objective
 

@@ -536,6 +536,10 @@ solver::GoalSpec parse_goal(
 struct pc_solver {
     std::shared_ptr<const poecraft::SessionImpl> session;
     std::unique_ptr<solver::CalcContext> calc;
+    /* Product solving may use a deliberately coarse parent abstraction.
+     * Calculator queries remain strict and lazily allocate their own exact
+     * context so primitive semantics and outcome identities do not change. */
+    std::unique_ptr<solver::CalcContext> exact_calc;
     std::unique_ptr<solver::SolveWork> solve_work;
     std::optional<solver::SolveResult> solved;
     std::optional<std::uint64_t> registry_generation_ns;
@@ -830,7 +834,9 @@ pc_result pc_solver_create(
             registry);
         holder->calc = std::make_unique<solver::CalcContext>(
             holder->session, goal, std::move(registry), candidates, false,
-            !goal.primitive_actions_explicit, true);
+            !goal.primitive_actions_explicit, false, std::nullopt,
+            std::vector<solver::CountObservation>{},
+            goal.automatic_candidates);
         *out_solver = holder.release();
         clear_error(out_error);
         return PC_RESULT_OK;
@@ -963,7 +969,16 @@ pc_result pc_solver_goal_feasibility(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
-        solver::CalcContext& calc = *solver->calc;
+        if (solver->calc->product_solver_parent() &&
+            solver->exact_calc == nullptr) {
+            solver->exact_calc = std::make_unique<solver::CalcContext>(
+                solver->session, solver->calc->goal(),
+                solver->calc->registry(), solver->calc->candidates(), false,
+                false, true);
+        }
+        solver::CalcContext& calc =
+            solver->exact_calc != nullptr ? *solver->exact_calc
+                                          : *solver->calc;
         const poecraft::SessionImpl& session = calc.session();
         const auto& slots = calc.layout().slots;
         const std::size_t required =
@@ -1199,7 +1214,16 @@ pc_result pc_calc_action_outcomes(
         return PC_RESULT_NOT_FOUND;
     }
     try {
-        solver::CalcContext& calc = *solver->calc;
+        if (solver->calc->product_solver_parent() &&
+            solver->exact_calc == nullptr) {
+            solver->exact_calc = std::make_unique<solver::CalcContext>(
+                solver->session, solver->calc->goal(),
+                solver->calc->registry(), solver->calc->candidates(), false,
+                false, true);
+        }
+        solver::CalcContext& calc =
+            solver->exact_calc != nullptr ? *solver->exact_calc
+                                          : *solver->calc;
         const std::uint32_t state_id = calc.intern_item(*item);
         const solver::OutcomeDistribution& distribution =
             calc.outcomes(state_id, action_index);

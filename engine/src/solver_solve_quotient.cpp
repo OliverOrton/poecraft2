@@ -720,6 +720,8 @@ void SolveWork::Impl::build_quotient_graph(
         }
         quotient->automatic_rows_considered =
             strict->automatic_rows_considered;
+        quotient->product_fracture_rows =
+            strict->product_fracture_rows;
         quotient->automatic_rows_eligible = strict->automatic_rows_eligible;
         quotient->automatic_rows_rejected = strict->automatic_rows_rejected;
         quotient->automatic_rows_collapsed = strict->automatic_rows_collapsed;
