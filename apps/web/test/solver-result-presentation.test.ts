@@ -135,6 +135,39 @@ import {
 
 {
     const summary = solveSummary({
+        converged: false,
+        policy_available: true,
+        policy_status: "bounded_feasible",
+        termination: "exact_closed",
+        stop_cause: "exact_closed",
+        start_value: 125,
+        lower_bound: 0,
+        upper_bound: 125,
+        evaluated_policy_cost: 125,
+        absolute_optimality_gap: 125,
+        relative_optimality_gap: null,
+    });
+    const detail = solveTerminationDetail(summary, null);
+    const markup = solveResultMarkup({
+        summary,
+        admittedActionIds: ["regal"],
+        excludedActions: 0,
+        economyLabel: "Test economy",
+        terminationDetail: detail,
+        hasCompiledStrategy: true,
+        busy: false,
+        verification: null,
+    });
+    assert.match(markup, /Bounded feasible policy/);
+    assert.match(markup, /Coarse discovery closed/);
+    assert.match(detail, /exact state refinement/i);
+    assert.doesNotMatch(markup, /Exact proof closed/);
+    assert.doesNotMatch(markup, /Exact optimum certified/);
+    console.log("  ok - refined bounded policies do not inherit a coarse exactness claim");
+}
+
+{
+    const summary = solveSummary({
         converged: true,
         policy_available: true,
         policy_status: "exact",

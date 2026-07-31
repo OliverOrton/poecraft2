@@ -10,6 +10,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -44,6 +45,48 @@ namespace poecraft {
 namespace solver {
 
 namespace {
+
+std::uint64_t saturated_add(
+    const std::uint64_t left,
+    const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+std::uint64_t saturated_bytes(
+    const std::size_t count,
+    const std::uint64_t element_size) {
+    if (element_size != 0 &&
+        count > std::numeric_limits<std::uint64_t>::max() /
+                    element_size) {
+        return std::numeric_limits<std::uint64_t>::max();
+    }
+    return static_cast<std::uint64_t>(count) * element_size;
+}
+
+std::uint64_t unordered_storage_bytes(
+    const std::size_t entries,
+    const std::size_t value_size) {
+    /*
+     * Selected-allocation upper estimate: one value plus three pointers of
+     * node/link/hash-table overhead, and up to two bucket pointers per entry.
+     * The same deliberately conservative convention is used by CalcContext's
+     * retained-owned-byte ledger.
+     */
+    const std::uint64_t node_size = saturated_add(
+        value_size, 3 * sizeof(void*));
+    return saturated_add(
+        saturated_bytes(entries, node_size),
+        saturated_bytes(entries, 2 * sizeof(void*)));
+}
+
+std::uint64_t ordered_storage_bytes(
+    const std::size_t entries,
+    const std::size_t value_size) {
+    return saturated_bytes(
+        entries, saturated_add(value_size, 3 * sizeof(void*)));
+}
 
 struct ReforgeBuildTimer {
     CalcTelemetry& telemetry;
@@ -228,9 +271,18 @@ bool direct_add(
 enum class BucketKind : std::uint8_t { GoalSat = 0, GoalBelow = 1, Junk = 2 };
 
 struct RollBucket {
+    struct RawChoice {
+        std::uint32_t mod_id = kNoId;
+        std::uint32_t goal_member_class_token = 0;
+        std::uint32_t junk_class = kNoId;
+        std::uint64_t weight = 0;
+        std::uint64_t guaranteed = 0;
+    };
+
     std::int8_t side = 0;
     BucketKind kind = BucketKind::Junk;
     std::uint8_t slot = 0;              /* goal buckets */
+    std::uint32_t goal_member_class_token = 0; /* exact goal buckets */
     std::uint32_t junk_class = kNoId;   /* junk buckets; kNoId = unclassified */
     std::uint32_t block_mask = 0;       /* goal groups a junk pick occupies */
     std::uint64_t weight = 0;           /* per family, normal fill pool */
@@ -244,6 +296,14 @@ struct RollBucket {
      * the original per-bucket availability and conflict semantics. */
     std::uint32_t family_class = kNoId;
     bool interchangeable_family_class = false;
+    /*
+     * An identity-witness layout gives every literal modifier its own goal
+     * token or junk class. Reforge availability, however, depends on the
+     * physical exclusion family rather than the selected tier identity.
+     * `raw_choices` delays that literal choice until an absorbing roll state;
+     * every expanded successor still carries its singleton identity.
+     */
+    std::vector<RawChoice> raw_choices;
     /* Complete generation-group signature. Any overlap with a previously
      * picked bucket makes this family unavailable, matching pool blocking. */
     std::vector<std::uint32_t> exclusion_groups;
@@ -253,9 +313,14 @@ struct RollState {
     std::uint8_t sat_mask = 0;
     std::uint8_t below_mask = 0;
     std::uint8_t blocked_mask = 0;
+    std::array<std::uint32_t, kMaxGoalSlots>
+        goal_member_class_tokens{};
     std::uint8_t prefix_picks = 0;
     std::uint8_t suffix_picks = 0;
     std::uint8_t pick_count = 0;
+    /* Only Harvest Reforge has a distinct guaranteed first-pick weight. */
+    std::uint16_t guaranteed_bucket =
+        std::numeric_limits<std::uint16_t>::max();
     /* sorted (bucket index, count), at most six picks total */
     std::array<std::pair<std::uint16_t, std::uint8_t>, 6> picks{};
 
@@ -263,11 +328,13 @@ struct RollState {
 
     bool operator<(const RollState& other) const {
         return std::tie(
-                   sat_mask, below_mask, blocked_mask, prefix_picks,
-                   suffix_picks, pick_count, picks) <
+                   sat_mask, below_mask, blocked_mask,
+                   goal_member_class_tokens, prefix_picks, suffix_picks,
+                   guaranteed_bucket, pick_count, picks) <
                std::tie(
                    other.sat_mask, other.below_mask, other.blocked_mask,
-                   other.prefix_picks, other.suffix_picks,
+                   other.goal_member_class_tokens, other.prefix_picks,
+                   other.suffix_picks, other.guaranteed_bucket,
                    other.pick_count, other.picks);
     }
 
@@ -304,8 +371,23 @@ struct RollStateHash {
         mix(state.sat_mask);
         mix(state.below_mask);
         mix(state.blocked_mask);
+        if (std::any_of(
+                state.goal_member_class_tokens.begin(),
+                state.goal_member_class_tokens.end(),
+                [](const std::uint32_t token) { return token != 0; })) {
+            mix(0x67636c73u); /* preserve coarse frontier hash behavior */
+            for (const std::uint32_t token :
+                 state.goal_member_class_tokens) {
+                mix(token);
+            }
+        }
         mix(state.prefix_picks);
         mix(state.suffix_picks);
+        if (state.guaranteed_bucket !=
+            std::numeric_limits<std::uint16_t>::max()) {
+            mix(0x67756172u); /* "guar": identity-witness Harvest only. */
+            mix(state.guaranteed_bucket);
+        }
         for (std::uint8_t i = 0; i < state.pick_count; ++i) {
             mix((static_cast<std::uint64_t>(state.picks[i].first) << 8) |
                 state.picks[i].second);
@@ -395,7 +477,55 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     telemetry_timer.miss = true;
 
     std::unordered_map<std::uint32_t, double> outcome_acc;
-    outcome_acc.reserve(65536);
+    std::size_t outcome_reserve = 65536;
+    if (state_cap_.has_value()) {
+        outcome_reserve = std::min<std::size_t>(
+            outcome_reserve, *state_cap_);
+    }
+    if (solve_discovered_state_cap_.has_value()) {
+        outcome_reserve = std::min<std::size_t>(
+            outcome_reserve, *solve_discovered_state_cap_);
+    }
+    outcome_reserve = std::max<std::size_t>(1, outcome_reserve);
+    const std::uint64_t outcome_storage_budget =
+        unordered_storage_bytes(
+            outcome_reserve,
+            sizeof(decltype(outcome_acc)::value_type));
+    require_reforge_scratch_bytes(outcome_storage_budget);
+    outcome_acc.reserve(outcome_reserve);
+    std::size_t outcome_preflight_entries = outcome_reserve;
+    std::uint64_t stationary_reforge_scratch_bytes = 0;
+    std::uint64_t active_frontier_scratch_bytes = 0;
+    const auto accumulate_outcome =
+        [&](const std::uint32_t state,
+            const double probability) {
+            const auto found = outcome_acc.find(state);
+            if (found != outcome_acc.end()) {
+                found->second += probability;
+                return;
+            }
+            const std::size_t required = outcome_acc.size() + 1;
+            if (required > outcome_preflight_entries) {
+                const std::size_t doubled =
+                    outcome_preflight_entries >
+                            std::numeric_limits<std::size_t>::max() / 2
+                        ? std::numeric_limits<std::size_t>::max()
+                        : outcome_preflight_entries * 2;
+                outcome_preflight_entries =
+                    std::max(required, doubled);
+                const std::uint64_t projected =
+                    saturated_add(
+                        saturated_add(
+                            stationary_reforge_scratch_bytes,
+                            active_frontier_scratch_bytes),
+                        unordered_storage_bytes(
+                            outcome_preflight_entries,
+                            sizeof(decltype(outcome_acc)::value_type)));
+                require_reforge_scratch_bytes(projected);
+                outcome_acc.reserve(outcome_preflight_entries);
+            }
+            outcome_acc.emplace(state, probability);
+        };
     /* Self-loop results reference the querying state and must not be
      * shared through the base memo. */
     bool state_dependent = false;
@@ -411,7 +541,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         if (committed <= 0.0) {
             outcome_acc.clear();
-            outcome_acc[state_id] = 1.0;
+            accumulate_outcome(state_id, 1.0);
             ordered_outcomes.assign({{state_id, 1.0}});
             committed = 1.0;
             state_dependent = true;
@@ -508,7 +638,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     };
     const auto unapplied = [&]() -> std::shared_ptr<const OutcomeDistribution> {
         outcome_acc.clear();
-        outcome_acc[state_id] = 1.0;
+        accumulate_outcome(state_id, 1.0);
         state_dependent = true;
         return finalize();
     };
@@ -587,13 +717,23 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
      * second weight per family: the guaranteed first pick's targeted
      * naturally rollable pool. */
     const bool harvest = action.params.type == ActionType::HarvestReforge;
+    const bool defer_identity_choice =
+        distinguishes_modifier_identity() && !product_solver_parent_;
     struct WeightPair {
+        struct RawWeight {
+            std::uint32_t mod_id = kNoId;
+            std::uint64_t normal = 0;
+            std::uint64_t guaranteed = 0;
+        };
         std::uint64_t normal = 0;
         std::uint64_t guaranteed = 0;
+        std::vector<RawWeight> raw_weights;
     };
     struct FamilyAgg {
-        std::array<WeightPair, kMaxGoalSlots> sat{};
-        std::array<WeightPair, kMaxGoalSlots> below{};
+        std::array<std::map<std::uint32_t, WeightPair>, kMaxGoalSlots>
+            sat{};
+        std::array<std::map<std::uint32_t, WeightPair>, kMaxGoalSlots>
+            below{};
         std::map<std::pair<std::uint32_t, std::uint32_t>, WeightPair>
             junk; /* (class, block mask) -> weights */
     };
@@ -623,15 +763,57 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             } else {
                 pair.normal += entry.final_weight;
             }
+            if (!defer_identity_choice) return;
+            /*
+             * Identity metadata is bounded work too. Charging before the
+             * vector search/allocation prevents a strict kernel from building
+             * an unmetered raw-choice table ahead of the frontier cap.
+             */
+            consume_reforge_work(1);
+            const auto found = std::lower_bound(
+                pair.raw_weights.begin(), pair.raw_weights.end(), mod,
+                [](const WeightPair::RawWeight& candidate,
+                   const std::uint32_t target) {
+                    return candidate.mod_id < target;
+                });
+            WeightPair::RawWeight* raw = nullptr;
+            if (found == pair.raw_weights.end() ||
+                found->mod_id != mod) {
+                raw = &*pair.raw_weights.insert(
+                    found, WeightPair::RawWeight{mod});
+            } else {
+                raw = &*found;
+            }
+            if (guaranteed) {
+                raw->guaranteed += entry.final_weight;
+            } else {
+                raw->normal += entry.final_weight;
+            }
         };
         for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
             if (pc_bitset_test(layout_.slots[s].satisfying_mask.data(),
                                mod)) {
-                credit(family.sat[s]);
+                const auto& tokens =
+                    layout_.slots[s].member_class_token_by_mod;
+                const std::uint32_t token =
+                    tokens.empty() ? 0 : tokens[mod];
+                if (!tokens.empty() && token == 0) {
+                    throw std::logic_error(
+                        "exact goal member has no refinement class");
+                }
+                credit(family.sat[s][token]);
                 return;
             }
             if (pc_bitset_test(layout_.slots[s].member_mask.data(), mod)) {
-                credit(family.below[s]);
+                const auto& tokens =
+                    layout_.slots[s].member_class_token_by_mod;
+                const std::uint32_t token =
+                    tokens.empty() ? 0 : tokens[mod];
+                if (!tokens.empty() && token == 0) {
+                    throw std::logic_error(
+                        "exact goal member has no refinement class");
+                }
+                credit(family.below[s][token]);
                 return;
             }
         }
@@ -717,10 +899,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const auto& [family_key, family] = *ordered_families[i];
             bool goal_observed = false;
             for (std::size_t slot = 0; slot < layout_.slots.size(); ++slot) {
-                goal_observed |= family.sat[slot].normal != 0 ||
-                                 family.sat[slot].guaranteed != 0 ||
-                                 family.below[slot].normal != 0 ||
-                                 family.below[slot].guaranteed != 0;
+                const auto has_weight =
+                    [](const std::map<std::uint32_t, WeightPair>& classes) {
+                        return std::any_of(
+                            classes.begin(), classes.end(),
+                            [](const auto& entry) {
+                                return entry.second.normal != 0 ||
+                                       entry.second.guaranteed != 0;
+                            });
+                    };
+                goal_observed |= has_weight(family.sat[slot]) ||
+                                 has_weight(family.below[slot]);
             }
             if (goal_observed || family.junk.size() != 1) continue;
             bool externally_disjoint = true;
@@ -770,27 +959,132 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             continue;
         }
         const std::uint32_t family_class = next_family_class++;
+        /*
+         * A non-empty exact group vector makes every modifier in this family
+         * mutually exclusive. On an identity-witness layout, defer the
+         * literal tier choice while retaining the structural roll effect.
+         * Later availability and every denominator depend only on this
+         * family, side, goal status, and block mask. The raw choice is expanded
+         * at commit, before an AbstractState is interned.
+         *
+         * Empty-group modifiers are intentionally left as singleton buckets:
+         * they can co-exist, so selecting one changes which literal choices
+         * remain available.
+         */
+        if (defer_identity_choice && !key.second.empty()) {
+            const auto append_raw_choices =
+                [](RollBucket& bucket,
+                   const WeightPair& weights,
+                   const std::uint32_t goal_token,
+                   const std::uint32_t junk_class) {
+                    bucket.weight += weights.normal;
+                    bucket.guaranteed += weights.guaranteed;
+                    for (const WeightPair::RawWeight& raw :
+                         weights.raw_weights) {
+                        bucket.raw_choices.push_back({
+                            raw.mod_id, goal_token, junk_class,
+                            raw.normal, raw.guaranteed});
+                    }
+                };
+            const auto finish_bucket =
+                [&](RollBucket bucket) {
+                    if (bucket.weight == 0 &&
+                        bucket.guaranteed == 0) {
+                        return;
+                    }
+                    std::sort(
+                        bucket.raw_choices.begin(),
+                        bucket.raw_choices.end(),
+                        [](const RollBucket::RawChoice& left,
+                           const RollBucket::RawChoice& right) {
+                            return left.mod_id < right.mod_id;
+                        });
+                    if (bucket.raw_choices.empty() ||
+                        std::adjacent_find(
+                            bucket.raw_choices.begin(),
+                            bucket.raw_choices.end(),
+                            [](const RollBucket::RawChoice& left,
+                               const RollBucket::RawChoice& right) {
+                                return left.mod_id == right.mod_id;
+                            }) != bucket.raw_choices.end()) {
+                        throw std::logic_error(
+                            "identity-witness reforge bucket has invalid "
+                            "raw modifier choices");
+                    }
+                    buckets.push_back(std::move(bucket));
+                };
+            for (std::size_t s = 0;
+                 s < layout_.slots.size(); ++s) {
+                RollBucket satisfied;
+                satisfied.side = key.first;
+                satisfied.kind = BucketKind::GoalSat;
+                satisfied.slot = static_cast<std::uint8_t>(s);
+                satisfied.exclusion_groups = key.second;
+                satisfied.family_class = family_class;
+                for (const auto& [token, weights] :
+                     family.sat[s]) {
+                    append_raw_choices(
+                        satisfied, weights, token, kNoId);
+                }
+                finish_bucket(std::move(satisfied));
+
+                RollBucket below;
+                below.side = key.first;
+                below.kind = BucketKind::GoalBelow;
+                below.slot = static_cast<std::uint8_t>(s);
+                below.exclusion_groups = key.second;
+                below.family_class = family_class;
+                for (const auto& [token, weights] :
+                     family.below[s]) {
+                    append_raw_choices(
+                        below, weights, token, kNoId);
+                }
+                finish_bucket(std::move(below));
+            }
+            std::map<std::uint32_t, RollBucket> junk_by_block;
+            for (const auto& [junk_key, weights] : family.junk) {
+                RollBucket& bucket = junk_by_block[junk_key.second];
+                bucket.side = key.first;
+                bucket.kind = BucketKind::Junk;
+                bucket.block_mask = junk_key.second;
+                bucket.exclusion_groups = key.second;
+                bucket.family_class = family_class;
+                append_raw_choices(
+                    bucket, weights, 0, junk_key.first);
+            }
+            for (auto& [unused, bucket] : junk_by_block) {
+                (void)unused;
+                finish_bucket(std::move(bucket));
+            }
+            continue;
+        }
         for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
-            if (family.sat[s].normal > 0 ||
-                family.sat[s].guaranteed > 0) {
+            for (const auto& [token, weights] : family.sat[s]) {
+                if (weights.normal == 0 && weights.guaranteed == 0) {
+                    continue;
+                }
                 RollBucket bucket;
                 bucket.side = key.first;
                 bucket.kind = BucketKind::GoalSat;
                 bucket.slot = static_cast<std::uint8_t>(s);
-                bucket.weight = family.sat[s].normal;
-                bucket.guaranteed = family.sat[s].guaranteed;
+                bucket.goal_member_class_token = token;
+                bucket.weight = weights.normal;
+                bucket.guaranteed = weights.guaranteed;
                 bucket.exclusion_groups = key.second;
                 bucket.family_class = family_class;
                 buckets.push_back(std::move(bucket));
             }
-            if (family.below[s].normal > 0 ||
-                family.below[s].guaranteed > 0) {
+            for (const auto& [token, weights] : family.below[s]) {
+                if (weights.normal == 0 && weights.guaranteed == 0) {
+                    continue;
+                }
                 RollBucket bucket;
                 bucket.side = key.first;
                 bucket.kind = BucketKind::GoalBelow;
                 bucket.slot = static_cast<std::uint8_t>(s);
-                bucket.weight = family.below[s].normal;
-                bucket.guaranteed = family.below[s].guaranteed;
+                bucket.goal_member_class_token = token;
+                bucket.weight = weights.normal;
+                bucket.guaranteed = weights.guaranteed;
                 bucket.exclusion_groups = key.second;
                 bucket.family_class = family_class;
                 buckets.push_back(std::move(bucket));
@@ -813,6 +1107,81 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
      * pairwise relation once instead of repeatedly intersecting sorted group
      * vectors in every frontier state and candidate-bucket visit. */
     const std::size_t bucket_count = buckets.size();
+    if (bucket_count >
+        std::numeric_limits<std::uint16_t>::max()) {
+        throw SolverResourceLimit(
+            "max_reforge_buckets",
+            std::numeric_limits<std::uint16_t>::max());
+    }
+    stationary_reforge_scratch_bytes = 0;
+    const auto add_stationary =
+        [&](const std::uint64_t bytes) {
+            stationary_reforge_scratch_bytes =
+                saturated_add(
+                    stationary_reforge_scratch_bytes, bytes);
+        };
+    add_stationary(ordered_storage_bytes(
+        families.size(),
+        sizeof(decltype(families)::value_type)));
+    for (const auto& [family_key, family] : families) {
+        add_stationary(saturated_bytes(
+            family_key.second.capacity(),
+            sizeof(std::uint32_t)));
+        const auto add_weight_map =
+            [&](const auto& weights) {
+                add_stationary(ordered_storage_bytes(
+                    weights.size(),
+                    sizeof(typename std::decay_t<
+                        decltype(weights)>::value_type)));
+                for (const auto& [unused, pair] : weights) {
+                    (void)unused;
+                    add_stationary(saturated_bytes(
+                        pair.raw_weights.capacity(),
+                        sizeof(WeightPair::RawWeight)));
+                }
+            };
+        for (std::size_t slot = 0;
+             slot < layout_.slots.size(); ++slot) {
+            add_weight_map(family.sat[slot]);
+            add_weight_map(family.below[slot]);
+        }
+        add_weight_map(family.junk);
+    }
+    add_stationary(saturated_bytes(
+        ordered_families.capacity(),
+        sizeof(decltype(ordered_families)::value_type)));
+    add_stationary(saturated_bytes(
+        aggregate_key_by_family.capacity(),
+        sizeof(decltype(aggregate_key_by_family)::value_type)));
+    add_stationary(ordered_storage_bytes(
+        aggregate_multiplicity.size(),
+        sizeof(decltype(aggregate_multiplicity)::value_type)));
+    add_stationary(ordered_storage_bytes(
+        emitted_aggregates.size(),
+        sizeof(decltype(emitted_aggregates)::value_type)));
+    add_stationary(saturated_bytes(
+        buckets.capacity(), sizeof(RollBucket)));
+    for (const RollBucket& bucket : buckets) {
+        add_stationary(saturated_bytes(
+            bucket.raw_choices.capacity(),
+            sizeof(RollBucket::RawChoice)));
+        add_stationary(saturated_bytes(
+            bucket.exclusion_groups.capacity(),
+            sizeof(std::uint32_t)));
+    }
+    const std::uint64_t conflict_bytes =
+        saturated_bytes(
+            bucket_count,
+            saturated_bytes(
+                bucket_count, sizeof(std::uint8_t)));
+    add_stationary(conflict_bytes);
+    add_stationary(saturated_bytes(
+        bucket_count, sizeof(double)));
+    require_reforge_scratch_bytes(saturated_add(
+        stationary_reforge_scratch_bytes,
+        unordered_storage_bytes(
+            outcome_preflight_entries,
+            sizeof(decltype(outcome_acc)::value_type))));
     std::vector<std::uint8_t> buckets_conflict(
         bucket_count * bucket_count, 0);
     for (std::size_t left = 0; left < bucket_count; ++left) {
@@ -896,7 +1265,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     };
     const auto commit_retry = [&](const double weight) {
         if (!(weight > 0.0)) return;
-        outcome_acc[retry_state()] += weight;
+        accumulate_outcome(retry_state(), weight);
     };
     const auto base_satisfied_count = [&]() {
         std::uint32_t count = 0;
@@ -922,36 +1291,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const auto roll_has_zero_progress = [&](const RollState& roll) {
         return roll_satisfied_count(roll) == 0;
     };
-    const auto commit_outcome = [&](const RollState& roll, double weight) {
-        AbstractState successor = base_state;
-        successor.blocked_mask |= roll.blocked_mask;
-        for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
-            const std::uint8_t bit = 1u << s;
-            if (roll.sat_mask & bit) {
-                successor.slot_status[s] = static_cast<std::uint8_t>(
-                    GoalSlotStatus::Satisfied);
-            } else if ((roll.below_mask & bit) &&
-                       successor.slot_status[s] !=
-                           static_cast<std::uint8_t>(
-                               GoalSlotStatus::Satisfied)) {
-                successor.slot_status[s] = static_cast<std::uint8_t>(
-                    GoalSlotStatus::PresentBelowTier);
-            }
-        }
-        successor.prefix_count =
-            static_cast<std::uint8_t>(base.prefix_count + roll.prefix_picks);
-        successor.suffix_count =
-            static_cast<std::uint8_t>(base.suffix_count + roll.suffix_picks);
-        for (std::uint8_t i = 0; i < roll.pick_count; ++i) {
-            const RollBucket& bucket = buckets[roll.picks[i].first];
-            if (bucket.kind == BucketKind::Junk &&
-                bucket.junk_class != kNoId) {
-                successor.junk_counts[bucket.junk_class] = static_cast<
-                    std::uint8_t>(
-                    successor.junk_counts[bucket.junk_class] +
-                    roll.picks[i].second);
-            }
-        }
+    const auto commit_successor =
+        [&](AbstractState successor,
+            const double weight,
+            const bool zero_progress) {
         if (special_flags & PC_ITEM_CORRUPTED) {
             successor.flags |= kFlagCorrupted;
         }
@@ -962,16 +1305,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             if (result.gated_terminal_state == kNoId) {
                 result.gated_terminal_state = intern_state(successor);
             }
-            outcome_acc[result.gated_terminal_state] += weight;
+            accumulate_outcome(
+                result.gated_terminal_state, weight);
             return;
         }
-        if (goal_progress_gated &&
-            roll_has_zero_progress(roll)) {
+        if (goal_progress_gated && zero_progress) {
             commit_retry(weight);
             return;
         }
         if (!veiled_reforge) {
-            outcome_acc[intern_state(successor)] += weight;
+            accumulate_outcome(
+                intern_state(successor), weight);
             return;
         }
 
@@ -996,19 +1340,142 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     static_cast<std::uint16_t>(
                         session.primary_group[mod_id]),
                     PC_MOD_SLOT_VEILED, nullptr) != PC_RESULT_OK) {
-                outcome_acc[state_id] += weight * side_probability;
+                accumulate_outcome(
+                    state_id, weight * side_probability);
                 state_dependent = true;
                 return;
             }
-            outcome_acc[intern_item(concrete)] +=
-                weight * side_probability;
+            accumulate_outcome(
+                intern_item(concrete),
+                weight * side_probability);
         };
         add_veiled(PC_SIDE_PREFIX, prefix_open);
         add_veiled(PC_SIDE_SUFFIX, suffix_open);
         if (!prefix_open && !suffix_open) {
-            outcome_acc[state_id] += weight;
+            accumulate_outcome(state_id, weight);
             state_dependent = true;
         }
+    };
+    const auto commit_outcome = [&](const RollState& roll, double weight) {
+        const bool zero_progress = roll_has_zero_progress(roll);
+        AbstractState successor = base_state;
+        successor.blocked_mask |= roll.blocked_mask;
+        for (std::size_t s = 0; s < layout_.slots.size(); ++s) {
+            const std::uint8_t bit = 1u << s;
+            if (roll.sat_mask & bit) {
+                successor.slot_status[s] = static_cast<std::uint8_t>(
+                    GoalSlotStatus::Satisfied);
+                successor.goal_member_class_tokens[s] =
+                    roll.goal_member_class_tokens[s];
+            } else if ((roll.below_mask & bit) &&
+                       successor.slot_status[s] !=
+                           static_cast<std::uint8_t>(
+                               GoalSlotStatus::Satisfied)) {
+                successor.slot_status[s] = static_cast<std::uint8_t>(
+                    GoalSlotStatus::PresentBelowTier);
+                successor.goal_member_class_tokens[s] =
+                    roll.goal_member_class_tokens[s];
+            }
+        }
+        successor.prefix_count =
+            static_cast<std::uint8_t>(base.prefix_count + roll.prefix_picks);
+        successor.suffix_count =
+            static_cast<std::uint8_t>(base.suffix_count + roll.suffix_picks);
+        std::vector<std::uint16_t> deferred_picks;
+        deferred_picks.reserve(roll.pick_count);
+        for (std::uint8_t i = 0; i < roll.pick_count; ++i) {
+            const std::uint16_t bucket_index = roll.picks[i].first;
+            const RollBucket& bucket = buckets[bucket_index];
+            if (!bucket.raw_choices.empty()) {
+                if (roll.picks[i].second != 1) {
+                    throw std::logic_error(
+                        "identity-witness reforge selected one physical "
+                        "family more than once");
+                }
+                deferred_picks.push_back(bucket_index);
+                continue;
+            }
+            if (bucket.kind == BucketKind::Junk &&
+                bucket.junk_class != kNoId) {
+                successor.junk_counts[bucket.junk_class] = static_cast<
+                    std::uint8_t>(
+                    successor.junk_counts[bucket.junk_class] +
+                    roll.picks[i].second);
+            }
+        }
+        if (deferred_picks.empty()) {
+            commit_successor(
+                std::move(successor), weight, zero_progress);
+            return;
+        }
+
+        /*
+         * Expand raw identities only at absorption. Conditional identity
+         * weights factor across picked physical families because choosing one
+         * member disables exactly the same group vector and therefore cannot
+         * affect any later denominator.
+         */
+        const auto expand =
+            [&](auto&& self,
+                const std::size_t pick,
+                AbstractState expanded,
+                const double probability) -> void {
+                /*
+                 * Count the complete expansion tree, not only emitted
+                 * leaves. This bounds internal branching and successor-copy
+                 * work under the same exact-kernel resource cap.
+                 */
+                consume_reforge_work(1);
+                if (pick == deferred_picks.size()) {
+                    commit_successor(
+                        std::move(expanded), probability, zero_progress);
+                    return;
+                }
+                const std::uint16_t bucket_index =
+                    deferred_picks[pick];
+                const RollBucket& bucket = buckets[bucket_index];
+                const bool guaranteed =
+                    roll.guaranteed_bucket == bucket_index;
+                const std::uint64_t total =
+                    guaranteed ? bucket.guaranteed : bucket.weight;
+                if (total == 0) {
+                    throw std::logic_error(
+                        "identity-witness reforge has an empty raw choice "
+                        "channel");
+                }
+                for (const RollBucket::RawChoice& raw :
+                     bucket.raw_choices) {
+                    const std::uint64_t raw_weight =
+                        guaranteed ? raw.guaranteed : raw.weight;
+                    if (raw_weight == 0) continue;
+                    AbstractState child = expanded;
+                    if (bucket.kind == BucketKind::GoalSat ||
+                        bucket.kind == BucketKind::GoalBelow) {
+                        if (raw.goal_member_class_token == 0) {
+                            throw std::logic_error(
+                                "identity-witness goal choice has no exact "
+                                "member token");
+                        }
+                        child.goal_member_class_tokens[bucket.slot] =
+                            raw.goal_member_class_token;
+                    } else {
+                        if (raw.junk_class == kNoId) {
+                            throw std::logic_error(
+                                "identity-witness junk choice has no exact "
+                                "class");
+                        }
+                        child.junk_counts[raw.junk_class] =
+                            static_cast<std::uint8_t>(
+                                child.junk_counts[raw.junk_class] + 1);
+                    }
+                    self(
+                        self, pick + 1, std::move(child),
+                        probability *
+                            (static_cast<double>(raw_weight) /
+                             static_cast<double>(total)));
+                }
+            };
+        expand(expand, 0, std::move(successor), weight);
     };
 
     /*
@@ -1066,8 +1533,26 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::unordered_map<RollState, double, RollStateHash> frontier;
     std::vector<std::pair<RollState, double>> ordered_frontier;
     std::vector<double> remaining_by_bucket(bucket_count, 0.0);
+    std::size_t frontier_preflight_entries =
+        std::max<std::size_t>(
+            1, harvest ? bucket_count : 1);
+    active_frontier_scratch_bytes =
+        unordered_storage_bytes(
+            frontier_preflight_entries,
+            sizeof(decltype(frontier)::value_type));
+    require_reforge_scratch_bytes(
+        saturated_add(
+            saturated_add(
+                stationary_reforge_scratch_bytes,
+                active_frontier_scratch_bytes),
+            unordered_storage_bytes(
+                outcome_preflight_entries,
+                sizeof(decltype(outcome_acc)::value_type))));
+    frontier.reserve(frontier_preflight_entries);
     const auto add_bucket_pick =
-        [&](const RollState& roll, const std::uint16_t b) {
+        [&](const RollState& roll,
+            const std::uint16_t b,
+            const bool guaranteed_pick = false) {
         const RollBucket& bucket = buckets[b];
         RollState child = roll;
         if (bucket.side == 0) {
@@ -1076,10 +1561,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             ++child.suffix_picks;
         }
         child.add_pick(b);
+        if (guaranteed_pick && !bucket.raw_choices.empty()) {
+            child.guaranteed_bucket = b;
+        }
         if (bucket.kind == BucketKind::GoalSat) {
             child.sat_mask |= 1u << bucket.slot;
+            child.goal_member_class_tokens[bucket.slot] =
+                bucket.goal_member_class_token;
         } else if (bucket.kind == BucketKind::GoalBelow) {
             child.below_mask |= 1u << bucket.slot;
+            child.goal_member_class_tokens[bucket.slot] =
+                bucket.goal_member_class_token;
         } else {
             child.blocked_mask |= bucket.block_mask;
         }
@@ -1117,9 +1609,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
             const double remaining = guaranteed_remaining(b);
             if (remaining <= 0.0) continue;
-            const RollBucket& bucket = buckets[b];
-            RollState child = add_bucket_pick(root, b);
-            frontier[child] += remaining / total;
+            RollState child =
+                add_bucket_pick(root, b, defer_identity_choice);
+            auto [found, inserted] =
+                frontier.try_emplace(child, 0.0);
+            (void)inserted;
+            found->second += remaining / total;
         }
     }
     for (int depth = first_depth; depth <= max_target; ++depth) {
@@ -1128,7 +1623,46 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             exact != targets.end() ? exact->second : 0.0;
         const double deeper = target_suffix(depth);
         std::unordered_map<RollState, double, RollStateHash> next;
-        next.reserve(frontier.size() * 2);
+        if (frontier.size() >
+            std::numeric_limits<std::size_t>::max() / 2) {
+            require_reforge_scratch_bytes(
+                std::numeric_limits<std::uint64_t>::max());
+            throw std::length_error(
+                "reforge frontier reserve overflow");
+        }
+        std::size_t next_preflight_entries =
+            std::max<std::size_t>(1, frontier.size() * 2);
+        const std::size_t ordered_preflight_entries =
+            std::max(
+                ordered_frontier.capacity(), frontier.size());
+        const auto update_frontier_preflight =
+            [&]() {
+                active_frontier_scratch_bytes =
+                    saturated_add(
+                        saturated_add(
+                            unordered_storage_bytes(
+                                frontier_preflight_entries,
+                                sizeof(decltype(frontier)::value_type)),
+                            unordered_storage_bytes(
+                                next_preflight_entries,
+                                sizeof(decltype(next)::value_type))),
+                        saturated_bytes(
+                            ordered_preflight_entries,
+                            sizeof(decltype(
+                                ordered_frontier)::value_type)));
+                require_reforge_scratch_bytes(
+                    saturated_add(
+                        saturated_add(
+                            stationary_reforge_scratch_bytes,
+                            active_frontier_scratch_bytes),
+                        unordered_storage_bytes(
+                            outcome_preflight_entries,
+                            sizeof(decltype(outcome_acc)::value_type))));
+            };
+        update_frontier_preflight();
+        next.reserve(next_preflight_entries);
+        ordered_frontier.reserve(
+            ordered_preflight_entries);
         ordered_frontier.assign(frontier.begin(), frontier.end());
         std::sort(
             ordered_frontier.begin(), ordered_frontier.end(),
@@ -1202,10 +1736,29 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 if (remaining <= 0.0) continue;
                 const double p = probability * (remaining / total);
                 RollState child = add_bucket_pick(roll, b);
-                next[child] += p;
+                const auto existing = next.find(child);
+                if (existing != next.end()) {
+                    existing->second += p;
+                    continue;
+                }
+                const std::size_t required = next.size() + 1;
+                if (required > next_preflight_entries) {
+                    const std::size_t doubled =
+                        next_preflight_entries >
+                                std::numeric_limits<std::size_t>::max() / 2
+                            ? std::numeric_limits<std::size_t>::max()
+                            : next_preflight_entries * 2;
+                    next_preflight_entries =
+                        std::max(required, doubled);
+                    update_frontier_preflight();
+                    next.reserve(next_preflight_entries);
+                }
+                next.emplace(std::move(child), p);
             }
         }
         frontier = std::move(next);
+        frontier_preflight_entries =
+            next_preflight_entries;
     }
 
     /* Pointer-identity kernel reuse is valid only while the reforge cache

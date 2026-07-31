@@ -124,13 +124,25 @@ Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.
 
 The product publishes a Strategy Board document only when the selected policy
-has exact executable identity. A coarse-parent pool-add or preserved-renewal
-route that needs unrepresented exclusion-group identity is refused with its
-state, action, and compatibility reason. A capped destructive renewal without
-an exact fixed-renewal witness is likewise refused, as is a fixed renewal
-whose expected action count exceeds the product Simulator's 100,000-action
-run limit. These are publication checks after search, not new action filters
-or changes to Bellman comparisons.
+has exact executable identity. When a coarse-parent action or downstream route
+needs discarded modifier/exclusion identity, the native solver now treats
+that compatibility witness as a request for lazy exact refinement. It visits
+only policy-reachable strict carriers, emits class-local exact routers when
+one decision remains sound, and locally re-optimizes affected subclasses when
+their exact action values differ. The returned artifact must compile,
+exact-evaluate as a proper absorbing policy, and reconcile with the displayed
+policy cost before `policy_available` remains true. A named refinement cap or
+a witnessed renewal whose expected action count exceeds the product
+Simulator's 100,000-action run limit can still withhold publication. An action
+with an unsupported or incomplete observation/preservation/destruction
+contract is rejected during native admission before solving, rather than
+becoming a post-solve publication refusal. These are native proof boundaries,
+not frontend crafting rules.
+
+For a fixed program with an observed choice, the returned exact strategy keeps
+each offer ordering scoped to the native pre-choice observation carrier. An
+equal modifier offer reached from another carrier does not reuse that choice
+group, and Calculator does not reconstruct or broaden the match.
 
 The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,

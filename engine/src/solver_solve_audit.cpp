@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_sparse_policy.hpp"
 
 #include <array>
 #include <bit>
@@ -359,10 +360,9 @@ void SolveWork::Impl::finalize_upper_cap_zero_progress_audit() {
                     successor < incumbent.values.size()
                         ? incumbent.values[successor]
                         : kInfinity;
-                if (upper < selected_upper - options.epsilon ||
-                    (std::abs(upper - selected_upper) <=
-                         options.epsilon &&
-                     successor < selected)) {
+                if (sparse_policy_choice_precedes(
+                        upper, successor,
+                        selected_upper, selected)) {
                     selected = successor;
                     selected_upper = upper;
                 }

@@ -506,6 +506,830 @@ ActionDescriptor base_descriptor(
     return descriptor;
 }
 
+using Feature = RefinementFeature;
+using FeatureMask = RefinementFeatureMask;
+
+constexpr FeatureMask feature(const Feature value) {
+    return refinement_feature(value);
+}
+
+constexpr FeatureMask kAffixCountFeatures =
+    feature(Feature::PrefixCount) |
+    feature(Feature::SuffixCount);
+
+constexpr FeatureMask kCraftedSummaryFeatures =
+    feature(Feature::HasCraftedModifier) |
+    feature(Feature::Multimod) |
+    feature(Feature::PrefixLock) |
+    feature(Feature::SuffixLock) |
+    feature(Feature::CannotRollAttack) |
+    feature(Feature::CannotRollCaster);
+
+void may_rewrite_item_features(
+    ActionRefinementContract& contract,
+    const FeatureMask features) {
+    contract.destroyed_item_features |= features;
+    const auto add_dependency =
+        [&](const FeatureMask item_features,
+            const FeatureMask affix_features) {
+            const FeatureMask relevant =
+                features & item_features;
+            if (relevant != 0) {
+                contract.item_affix_dependencies.push_back(
+                    {relevant, affix_features});
+            }
+        };
+    add_dependency(
+        feature(Feature::Rarity) |
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount),
+        feature(Feature::ModifierSide));
+    add_dependency(
+        feature(Feature::HasCraftedModifier),
+        feature(Feature::ModifierCrafted));
+    add_dependency(
+        feature(Feature::HasFracturedModifier),
+        feature(Feature::ModifierFractured));
+    add_dependency(
+        feature(Feature::HasVeiledModifier),
+        feature(Feature::ModifierVeiled));
+    add_dependency(
+        feature(Feature::Multimod) |
+            feature(Feature::PrefixLock) |
+            feature(Feature::SuffixLock) |
+            feature(Feature::CannotRollAttack) |
+            feature(Feature::CannotRollCaster),
+        feature(Feature::ModifierMetamodRole));
+}
+
+void replace_item_features(
+    ActionRefinementContract& contract,
+    const FeatureMask features) {
+    contract.destroyed_item_features |= features;
+    contract.preserved_item_features &= ~features;
+    for (RefinementItemAffixDependency& dependency :
+         contract.item_affix_dependencies) {
+        dependency.item_features &= ~features;
+    }
+}
+
+RefinementAffixSelector affixes(
+    const std::uint16_t required = 0,
+    const std::uint16_t forbidden = 0,
+    const std::uint8_t required_item = 0,
+    const std::uint8_t forbidden_item = 0,
+    std::vector<std::uint32_t> required_tags = {}) {
+    RefinementAffixSelector selector;
+    selector.required_affix_traits = required;
+    selector.forbidden_affix_traits = forbidden;
+    selector.required_item_traits = required_item;
+    selector.forbidden_item_traits = forbidden_item;
+    selector.required_tag_ids = std::move(required_tags);
+    return selector;
+}
+
+bool selector_less(
+    const RefinementAffixSelector& lhs,
+    const RefinementAffixSelector& rhs) {
+    return std::tie(
+               lhs.required_affix_traits, lhs.forbidden_affix_traits,
+               lhs.required_item_traits, lhs.forbidden_item_traits,
+               lhs.required_tag_ids) <
+           std::tie(
+               rhs.required_affix_traits, rhs.forbidden_affix_traits,
+               rhs.required_item_traits, rhs.forbidden_item_traits,
+               rhs.required_tag_ids);
+}
+
+void canonicalize_selector(RefinementAffixSelector& selector) {
+    std::sort(
+        selector.required_tag_ids.begin(),
+        selector.required_tag_ids.end());
+    selector.required_tag_ids.erase(
+        std::unique(
+            selector.required_tag_ids.begin(),
+            selector.required_tag_ids.end()),
+        selector.required_tag_ids.end());
+}
+
+void canonicalize_selectors(
+    std::vector<RefinementAffixSelector>& selectors) {
+    for (RefinementAffixSelector& selector : selectors) {
+        canonicalize_selector(selector);
+    }
+    std::sort(selectors.begin(), selectors.end(), selector_less);
+    selectors.erase(
+        std::unique(selectors.begin(), selectors.end()), selectors.end());
+}
+
+void observe_affixes(
+    ActionRefinementContract& contract,
+    const FeatureMask features,
+    RefinementAffixSelector selector = {}) {
+    if (features == 0) return;
+    canonicalize_selector(selector);
+    contract.affix_observations.push_back(
+        RefinementAffixObservation{features, std::move(selector)});
+}
+
+void add_selector_observations(
+    ActionRefinementContract& contract,
+    const RefinementAffixSelector& selector) {
+    const std::uint16_t traits =
+        selector.required_affix_traits |
+        selector.forbidden_affix_traits;
+    FeatureMask affix_features = 0;
+    if ((traits &
+         (kRefinementAffixPrefix | kRefinementAffixSuffix |
+          kRefinementAffixOnLockedSide |
+          kRefinementAffixOnEldritchDominantSide |
+          kRefinementAffixOnEldritchNonDominantSide)) != 0) {
+        affix_features |= feature(Feature::ModifierSide);
+    }
+    if ((traits & kRefinementAffixCrafted) != 0) {
+        affix_features |= feature(Feature::ModifierCrafted);
+    }
+    if ((traits & kRefinementAffixFractured) != 0) {
+        affix_features |= feature(Feature::ModifierFractured);
+    }
+    if ((traits & kRefinementAffixVeiled) != 0) {
+        affix_features |= feature(Feature::ModifierVeiled);
+    }
+    if (!selector.required_tag_ids.empty()) {
+        affix_features |= feature(Feature::ModifierClassificationTags);
+        contract.observed_modifier_tag_ids.insert(
+            contract.observed_modifier_tag_ids.end(),
+            selector.required_tag_ids.begin(),
+            selector.required_tag_ids.end());
+    }
+    if (affix_features != 0) {
+        /* Selector membership itself is an observation over every occupied
+         * explicit, not only over the members that happen to match. */
+        observe_affixes(contract, affix_features);
+    }
+    if ((traits & kRefinementAffixOnLockedSide) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::PrefixLock) |
+            feature(Feature::SuffixLock);
+    }
+    if ((traits &
+         (kRefinementAffixOnEldritchDominantSide |
+          kRefinementAffixOnEldritchNonDominantSide)) != 0 ||
+        ((selector.required_item_traits |
+          selector.forbidden_item_traits) &
+         kRefinementItemHasEldritchDominance) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::EldritchDominance);
+    }
+    if (((selector.required_item_traits |
+          selector.forbidden_item_traits) &
+         kRefinementItemExactlyOneSideLocked) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::PrefixLock) |
+            feature(Feature::SuffixLock);
+    }
+}
+
+bool observation_less(
+    const RefinementAffixObservation& lhs,
+    const RefinementAffixObservation& rhs) {
+    if (selector_less(lhs.selector, rhs.selector)) return true;
+    if (selector_less(rhs.selector, lhs.selector)) return false;
+    return lhs.features < rhs.features;
+}
+
+bool flow_less(
+    const RefinementAffixFlow& lhs,
+    const RefinementAffixFlow& rhs) {
+    if (selector_less(lhs.source_selector, rhs.source_selector)) return true;
+    if (selector_less(rhs.source_selector, lhs.source_selector)) return false;
+    return std::tie(
+               lhs.set_affix_traits,
+               lhs.cleared_affix_traits,
+               lhs.preserved_features,
+               lhs.preserves_modifier_classification) <
+           std::tie(
+               rhs.set_affix_traits,
+               rhs.cleared_affix_traits,
+               rhs.preserved_features,
+               rhs.preserves_modifier_classification);
+}
+
+bool dependency_less(
+    const RefinementItemAffixDependency& lhs,
+    const RefinementItemAffixDependency& rhs) {
+    return std::tie(
+               lhs.item_features,
+               lhs.survivor_affix_features) <
+           std::tie(
+               rhs.item_features,
+               rhs.survivor_affix_features);
+}
+
+RefinementAffixFlow identity_affix_flow(
+    RefinementAffixSelector selector) {
+    return {
+        std::move(selector),
+        0,
+        0,
+        kAllRefinementAffixFeatures,
+        true};
+}
+
+void canonicalize_contract(ActionRefinementContract& contract) {
+    contract.item_affix_dependencies.erase(
+        std::remove_if(
+            contract.item_affix_dependencies.begin(),
+            contract.item_affix_dependencies.end(),
+            [](const RefinementItemAffixDependency& dependency) {
+                return dependency.item_features == 0 ||
+                       dependency.survivor_affix_features == 0;
+            }),
+        contract.item_affix_dependencies.end());
+    std::sort(
+        contract.item_affix_dependencies.begin(),
+        contract.item_affix_dependencies.end(),
+        dependency_less);
+    contract.item_affix_dependencies.erase(
+        std::unique(
+            contract.item_affix_dependencies.begin(),
+            contract.item_affix_dependencies.end()),
+        contract.item_affix_dependencies.end());
+    canonicalize_selectors(contract.preserved_affixes);
+    canonicalize_selectors(contract.destroyed_affixes);
+    if (contract.affix_flows.empty()) {
+        contract.affix_flows.reserve(
+            contract.preserved_affixes.size());
+        for (const RefinementAffixSelector& selector :
+             contract.preserved_affixes) {
+            contract.affix_flows.push_back(
+                identity_affix_flow(selector));
+        }
+    }
+    for (RefinementAffixFlow& flow : contract.affix_flows) {
+        canonicalize_selector(flow.source_selector);
+    }
+    std::sort(
+        contract.affix_flows.begin(),
+        contract.affix_flows.end(), flow_less);
+    contract.affix_flows.erase(
+        std::unique(
+            contract.affix_flows.begin(),
+            contract.affix_flows.end()),
+        contract.affix_flows.end());
+    for (const RefinementAffixSelector& selector :
+         contract.preserved_affixes) {
+        add_selector_observations(contract, selector);
+    }
+    for (const RefinementAffixSelector& selector :
+         contract.destroyed_affixes) {
+        add_selector_observations(contract, selector);
+    }
+    for (const RefinementAffixFlow& flow : contract.affix_flows) {
+        add_selector_observations(
+            contract, flow.source_selector);
+    }
+    for (RefinementAffixObservation& observation :
+         contract.affix_observations) {
+        canonicalize_selector(observation.selector);
+    }
+    std::sort(
+        contract.affix_observations.begin(),
+        contract.affix_observations.end(), observation_less);
+    std::vector<RefinementAffixObservation> merged;
+    for (RefinementAffixObservation observation :
+         contract.affix_observations) {
+        if (!merged.empty() &&
+            merged.back().selector == observation.selector) {
+            merged.back().features |= observation.features;
+        } else {
+            merged.push_back(std::move(observation));
+        }
+    }
+    contract.affix_observations = std::move(merged);
+    std::sort(
+        contract.observed_modifier_tag_ids.begin(),
+        contract.observed_modifier_tag_ids.end());
+    contract.observed_modifier_tag_ids.erase(
+        std::unique(
+            contract.observed_modifier_tag_ids.begin(),
+            contract.observed_modifier_tag_ids.end()),
+        contract.observed_modifier_tag_ids.end());
+}
+
+void observe_legality(
+    ActionRefinementContract& contract,
+    const LegalityPredicate& legality) {
+    if (legality.rarity_mask != kRarityAny) {
+        contract.observed_item_features |= feature(Feature::Rarity);
+    }
+    if (legality.requires_open_affix ||
+        legality.requires_removable_affix ||
+        legality.min_total_affixes != 0) {
+        contract.observed_item_features |=
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount);
+    }
+    const std::uint32_t flags =
+        legality.required_flags | legality.forbidden_flags;
+    if ((flags & kFlagCorrupted) != 0) {
+        contract.observed_item_features |= feature(Feature::Corrupted);
+    }
+    if ((flags & kFlagMirrored) != 0) {
+        contract.observed_item_features |= feature(Feature::Mirrored);
+    }
+    if ((flags & kFlagSplit) != 0) {
+        contract.observed_item_features |= feature(Feature::Split);
+    }
+    if ((flags & kFlagSynthesised) != 0) {
+        contract.observed_item_features |= feature(Feature::Synthesised);
+    }
+    if ((flags & kFlagFractured) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::HasFracturedModifier);
+    }
+    if ((flags & kFlagCraftedMod) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::HasCraftedModifier);
+    }
+    if ((flags & kFlagVeiledMod) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::HasVeiledModifier);
+    }
+    if ((flags & kFlagMultimod) != 0) {
+        contract.observed_item_features |= feature(Feature::Multimod);
+    }
+    if ((flags & kFlagNoAttack) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::CannotRollAttack);
+    }
+    if ((flags & kFlagNoCaster) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::CannotRollCaster);
+    }
+    if ((flags & kFlagPrefixesLocked) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::PrefixLock);
+    }
+    if ((flags & kFlagSuffixesLocked) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::SuffixLock);
+    }
+    if ((flags & kFlagInfluenced) != 0) {
+        contract.observed_item_features |= feature(Feature::Influence);
+    }
+    if ((flags & kFlagEldritchImplicit) != 0) {
+        contract.observed_item_features |=
+            feature(Feature::EldritchPresence);
+    }
+}
+
+void observe_pool_add(
+    ActionRefinementContract& contract,
+    const RefinementAffixSelector& selector = {}) {
+    contract.observed_item_features |=
+        feature(Feature::Rarity) |
+        feature(Feature::PrefixCount) |
+        feature(Feature::SuffixCount) |
+        feature(Feature::CannotRollAttack) |
+        feature(Feature::CannotRollCaster) |
+        feature(Feature::Influence);
+    /* This selector is intentionally over every occupied explicit, including
+     * goal-slot members. A coarse goal status is not an exclusion signature. */
+    observe_affixes(
+        contract, feature(Feature::ModifierExclusionSignature), selector);
+}
+
+void set_standard_renewal(
+    ActionRefinementContract& contract,
+    const ActionTransitionFacts facts) {
+    may_rewrite_item_features(
+        contract,
+        kAffixCountFeatures |
+            kCraftedSummaryFeatures |
+            feature(Feature::HasVeiledModifier));
+    contract.observed_item_features |=
+        feature(Feature::PrefixCount) |
+        feature(Feature::SuffixCount) |
+        feature(Feature::Influence);
+    if (facts.respects_metamod_pool_blocks) {
+        contract.observed_item_features |=
+            feature(Feature::CannotRollAttack) |
+            feature(Feature::CannotRollCaster);
+    }
+    std::uint16_t destroyed_forbidden = 0;
+    if (facts.preserves_fractured_affixes) {
+        const RefinementAffixSelector fractured =
+            affixes(kRefinementAffixFractured);
+        contract.preserved_affixes.push_back(fractured);
+        FeatureMask preserved_features =
+            feature(Feature::ModifierExclusionSignature) |
+            feature(Feature::ModifierSide);
+        if (facts.respects_metamod_pool_blocks) {
+            preserved_features |=
+                feature(Feature::ModifierMetamodRole);
+        }
+        observe_affixes(
+            contract, preserved_features, fractured);
+        destroyed_forbidden |= kRefinementAffixFractured;
+    }
+    if (facts.respects_metamod_side_locks) {
+        const RefinementAffixSelector locked =
+            affixes(kRefinementAffixOnLockedSide);
+        contract.preserved_affixes.push_back(locked);
+        FeatureMask preserved_features =
+            feature(Feature::ModifierExclusionSignature);
+        if (facts.respects_metamod_pool_blocks) {
+            preserved_features |=
+                feature(Feature::ModifierMetamodRole);
+        }
+        observe_affixes(
+            contract, preserved_features, locked);
+        destroyed_forbidden |= kRefinementAffixOnLockedSide;
+    }
+    contract.destroyed_affixes.push_back(
+        affixes(0, destroyed_forbidden));
+}
+
+ActionRefinementContract derive_refinement_contract(
+    const SessionImpl& session,
+    const ActionDescriptor& action) {
+    ActionRefinementContract contract;
+    contract.preserved_item_features =
+        kAllRefinementItemFeatures;
+    observe_legality(contract, action.legality);
+
+    if (action.synthetic) {
+        contract.schema_version = kActionRefinementContractVersion;
+        contract.preserved_item_features = 0;
+        contract.destroyed_item_features =
+            kAllRefinementItemFeatures;
+        contract.resets_to_fresh_item = true;
+        contract.destroyed_affixes.push_back(affixes());
+        canonicalize_contract(contract);
+        return contract;
+    }
+
+    const ActionTransitionFacts transition =
+        action_transition_facts(action.params.type);
+    switch (action.params.type) {
+    case ActionType::Transmute:
+    case ActionType::Alteration:
+    case ActionType::Alchemy:
+    case ActionType::Chaos:
+    case ActionType::Essence:
+    case ActionType::Fossil:
+    case ActionType::VeiledChaos:
+    case ActionType::HarvestReforge:
+        set_standard_renewal(contract, transition);
+        if (action.params.type == ActionType::Transmute ||
+            action.params.type == ActionType::Alchemy ||
+            action.params.type == ActionType::Essence ||
+            action.params.type == ActionType::Fossil) {
+            replace_item_features(
+                contract, feature(Feature::Rarity));
+        }
+        if (action.params.type == ActionType::VeiledChaos) {
+            replace_item_features(
+                contract,
+                feature(Feature::HasVeiledModifier));
+        }
+        if (action.params.type == ActionType::Fossil) {
+            bool can_corrupt = false;
+            bool can_mirror = false;
+            for (const std::uint32_t fossil :
+                 action.params.fossil_indices) {
+                if (fossil >= session.data->fossil_count) continue;
+                can_mirror =
+                    can_mirror ||
+                    (fossil <
+                         session.data->fossil_mirrors.size() &&
+                     session.data->fossil_mirrors[fossil] != 0);
+                can_corrupt =
+                    can_corrupt ||
+                    session.data->string_at(
+                        session.data->fossil_name_sids[fossil]) ==
+                        "Bloodstained Fossil";
+            }
+            if (can_corrupt) {
+                may_rewrite_item_features(
+                    contract, feature(Feature::Corrupted));
+            }
+            if (can_mirror) {
+                may_rewrite_item_features(
+                    contract, feature(Feature::Mirrored));
+            }
+        }
+        break;
+
+    case ActionType::EldritchChaos: {
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures |
+                feature(Feature::HasVeiledModifier));
+        contract.observed_item_features |=
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount) |
+            feature(Feature::Influence) |
+            feature(Feature::CannotRollAttack) |
+            feature(Feature::CannotRollCaster) |
+            feature(Feature::EldritchDominance);
+        const RefinementAffixSelector fractured =
+            affixes(kRefinementAffixFractured);
+        const RefinementAffixSelector nondominant = affixes(
+            kRefinementAffixOnEldritchNonDominantSide, 0,
+            kRefinementItemHasEldritchDominance);
+        const RefinementAffixSelector locked_without_dominance = affixes(
+            kRefinementAffixOnLockedSide, 0, 0,
+            kRefinementItemHasEldritchDominance);
+        contract.preserved_affixes = {
+            fractured, nondominant, locked_without_dominance};
+        for (const RefinementAffixSelector& selector :
+             contract.preserved_affixes) {
+            observe_affixes(
+                contract,
+                feature(Feature::ModifierExclusionSignature) |
+                    feature(Feature::ModifierSide) |
+                    feature(Feature::ModifierMetamodRole),
+                selector);
+        }
+        contract.destroyed_affixes = {
+            affixes(
+                kRefinementAffixOnEldritchDominantSide,
+                kRefinementAffixFractured,
+                kRefinementItemHasEldritchDominance),
+            affixes(
+                0,
+                kRefinementAffixFractured |
+                    kRefinementAffixOnLockedSide,
+                0, kRefinementItemHasEldritchDominance)};
+        break;
+    }
+
+    case ActionType::Augment:
+    case ActionType::Regal:
+    case ActionType::Exalt:
+    case ActionType::InfluenceExalt:
+        contract.preserved_affixes.push_back(affixes());
+        observe_pool_add(contract);
+        may_rewrite_item_features(contract, kAffixCountFeatures);
+        if (action.params.type == ActionType::Regal) {
+            replace_item_features(
+                contract, feature(Feature::Rarity));
+        } else if (
+            action.params.type == ActionType::InfluenceExalt) {
+            replace_item_features(
+                contract, feature(Feature::Influence));
+        }
+        break;
+
+    case ActionType::VeiledExalt:
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(contract, kAffixCountFeatures);
+        replace_item_features(
+            contract, feature(Feature::HasVeiledModifier));
+        contract.observed_item_features |=
+            feature(Feature::Rarity) |
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount);
+        /* The sampled engine creates the unveil offer immediately. */
+        observe_affixes(
+            contract, feature(Feature::ModifierExclusionSignature));
+        break;
+
+    case ActionType::EldritchExalt:
+        contract.preserved_affixes.push_back(affixes());
+        observe_pool_add(contract);
+        may_rewrite_item_features(contract, kAffixCountFeatures);
+        contract.observed_item_features |=
+            feature(Feature::EldritchDominance);
+        break;
+
+    case ActionType::Annul:
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures |
+                feature(Feature::HasVeiledModifier));
+        contract.destroyed_affixes.push_back(affixes(
+            0, kRefinementAffixFractured |
+                   kRefinementAffixOnLockedSide));
+        break;
+
+    case ActionType::EldritchAnnul:
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures |
+                feature(Feature::HasVeiledModifier));
+        contract.destroyed_affixes = {
+            affixes(
+                kRefinementAffixOnEldritchDominantSide,
+                kRefinementAffixFractured,
+                kRefinementItemHasEldritchDominance),
+            affixes(
+                0,
+                kRefinementAffixFractured |
+                    kRefinementAffixOnLockedSide,
+                0, kRefinementItemHasEldritchDominance)};
+        break;
+
+    case ActionType::Scour:
+        may_rewrite_item_features(
+            contract,
+                feature(Feature::Rarity) |
+                kAffixCountFeatures |
+                kCraftedSummaryFeatures |
+                feature(Feature::HasFracturedModifier) |
+                feature(Feature::HasVeiledModifier));
+        contract.preserved_affixes = {
+            affixes(
+                kRefinementAffixOnLockedSide, 0,
+                kRefinementItemExactlyOneSideLocked),
+            affixes(
+                kRefinementAffixFractured, 0, 0,
+                kRefinementItemExactlyOneSideLocked)};
+        contract.destroyed_affixes = {
+            affixes(
+                0, kRefinementAffixOnLockedSide,
+                kRefinementItemExactlyOneSideLocked),
+            affixes(
+                0, kRefinementAffixFractured, 0,
+                kRefinementItemExactlyOneSideLocked)};
+        observe_affixes(
+            contract, feature(Feature::ModifierSide));
+        break;
+
+    case ActionType::RemoveCraftedModifiers:
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures);
+        contract.preserved_affixes = {
+            affixes(0, kRefinementAffixCrafted),
+            affixes(kRefinementAffixFractured)};
+        contract.destroyed_affixes.push_back(
+            affixes(
+                kRefinementAffixCrafted,
+                kRefinementAffixFractured));
+        observe_affixes(
+            contract,
+            feature(Feature::ModifierSide),
+            affixes(
+                kRefinementAffixCrafted,
+                kRefinementAffixFractured));
+        break;
+
+    case ActionType::Bench:
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures);
+        contract.observed_item_features |=
+            feature(Feature::Rarity) |
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount) |
+            feature(Feature::Multimod);
+        observe_affixes(
+            contract,
+            feature(Feature::ModifierExclusionSignature) |
+                feature(Feature::ModifierCrafted));
+        break;
+
+    case ActionType::Unveil:
+        contract.outcome_observation =
+            RefinementOutcomeObservation::ModifierOffer;
+        replace_item_features(
+            contract, feature(Feature::HasVeiledModifier));
+        {
+            const RefinementAffixSelector ordinary =
+                affixes(0, kRefinementAffixVeiled);
+            const RefinementAffixSelector veiled =
+                affixes(kRefinementAffixVeiled);
+            contract.preserved_affixes.push_back(ordinary);
+            contract.destroyed_affixes.push_back(veiled);
+            contract.affix_flows = {
+                identity_affix_flow(ordinary),
+                {
+                    veiled,
+                    0,
+                    kRefinementAffixVeiled,
+                    feature(Feature::ModifierSide) |
+                        feature(Feature::ModifierCrafted) |
+                        feature(Feature::ModifierFractured),
+                    false,
+                }};
+        }
+        observe_affixes(
+            contract,
+            feature(Feature::ModifierExclusionSignature) |
+                feature(Feature::ModifierSide));
+        break;
+
+    case ActionType::HarvestAugment:
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(
+            contract,
+            kAffixCountFeatures |
+                kCraftedSummaryFeatures |
+                feature(Feature::HasVeiledModifier));
+        contract.destroyed_affixes.push_back(affixes(
+            0, kRefinementAffixFractured |
+                   kRefinementAffixOnLockedSide));
+        observe_pool_add(contract);
+        break;
+
+    case ActionType::HarvestResist: {
+        contract.preserved_affixes.push_back(affixes());
+        may_rewrite_item_features(
+            contract,
+            kCraftedSummaryFeatures |
+                feature(Feature::HasVeiledModifier));
+        const std::uint32_t resistance =
+            tag_id(session, "resistance");
+        std::vector<std::uint32_t> source_tags = {
+            action.params.source_tag_id};
+        if (resistance != kNoId) source_tags.push_back(resistance);
+        const RefinementAffixSelector source = affixes(
+            0, kRefinementAffixFractured |
+                   kRefinementAffixOnLockedSide,
+            0, 0, std::move(source_tags));
+        contract.destroyed_affixes.push_back(source);
+        contract.affix_flows = {
+            identity_affix_flow(affixes()),
+            {
+                source,
+                0,
+                kRefinementAffixCrafted |
+                    kRefinementAffixFractured |
+                    kRefinementAffixVeiled,
+                feature(Feature::ModifierSide) |
+                    feature(Feature::ModifierRequiredLevel),
+                false,
+            }};
+        observe_affixes(
+            contract,
+            feature(Feature::ModifierRequiredLevel), source);
+        observe_pool_add(contract);
+        break;
+    }
+
+    case ActionType::EldritchEmber:
+        contract.observed_item_features |=
+            feature(Feature::EaterOfWorldsTier);
+        replace_item_features(
+            contract,
+            feature(Feature::SearingExarchTier) |
+                feature(Feature::EldritchPresence) |
+                feature(Feature::EldritchDominance));
+        contract.preserved_affixes.push_back(affixes());
+        break;
+
+    case ActionType::EldritchIchor:
+        contract.observed_item_features |=
+            feature(Feature::SearingExarchTier);
+        replace_item_features(
+            contract,
+            feature(Feature::EaterOfWorldsTier) |
+                feature(Feature::EldritchPresence) |
+                feature(Feature::EldritchDominance));
+        contract.preserved_affixes.push_back(affixes());
+        break;
+
+    case ActionType::Fracture:
+        contract.preserved_affixes.push_back(affixes());
+        contract.affix_flows = {
+            identity_affix_flow(affixes()),
+            {
+                affixes(0, kRefinementAffixFractured),
+                kRefinementAffixFractured,
+                0,
+                kAllRefinementAffixFeatures &
+                    ~feature(Feature::ModifierFractured),
+                true,
+            }};
+        replace_item_features(
+            contract, feature(Feature::HasFracturedModifier));
+        contract.observed_item_features |=
+            feature(Feature::PrefixCount) |
+            feature(Feature::SuffixCount);
+        break;
+
+    default:
+        /* A newly admitted engine action must add its semantics above. The
+         * registry validator rejects this incomplete contract before solve. */
+        canonicalize_contract(contract);
+        return contract;
+    }
+    contract.schema_version = kActionRefinementContractVersion;
+    canonicalize_contract(contract);
+    return contract;
+}
+
 ActionPreservationMetadata derive_preservation_metadata(
     const SessionImpl& session,
     const ActionDescriptor& action) {
@@ -1150,6 +1974,504 @@ void add_structural(ActionRegistry& registry) {
 
 } // namespace
 
+ActionRefinementContract derive_action_refinement_contract(
+    const SessionImpl& session,
+    const ActionDescriptor& action) {
+    return derive_refinement_contract(session, action);
+}
+
+std::vector<std::uint64_t> modifier_exclusion_effect_signature(
+    const SessionImpl& session,
+    const std::uint32_t mod_id) {
+    std::vector<std::uint64_t> signature(session.words, 0);
+    if (mod_id >= session.mod_count ||
+        mod_id + 1 >= session.group_offsets.size()) {
+        return signature;
+    }
+    for (std::uint32_t offset = session.group_offsets[mod_id];
+         offset < session.group_offsets[mod_id + 1]; ++offset) {
+        const std::uint32_t group = session.group_ids[offset];
+        if (group >= session.group_masks.size() ||
+            session.group_masks[group].empty()) {
+            continue;
+        }
+        pc_bitset_or(
+            signature.data(), signature.data(),
+            session.group_masks[group].data(), session.words);
+    }
+    return signature;
+}
+
+bool modifier_is_veiled_template(
+    const SessionImpl& session,
+    const std::uint32_t mod_id) {
+    if (mod_id == session.veiled_prefix_mod_id ||
+        mod_id == session.veiled_suffix_mod_id) {
+        return true;
+    }
+    return mod_id < session.mod_count &&
+           session.veiled_template_mask.size() >= session.words &&
+           pc_bitset_test(
+               session.veiled_template_mask.data(), mod_id);
+}
+
+std::vector<std::uint64_t> action_refinement_contract_signature(
+    const ActionRefinementContract& contract) {
+    std::vector<std::uint64_t> signature;
+    signature.reserve(
+        8 + contract.observed_modifier_tag_ids.size() +
+        contract.affix_observations.size() * 3 +
+        contract.item_affix_dependencies.size() * 2 +
+        contract.affix_flows.size() * 6 +
+        contract.preserved_affixes.size() * 2 +
+        contract.destroyed_affixes.size() * 2);
+    signature.push_back(contract.schema_version);
+    signature.push_back(contract.observed_item_features);
+    signature.push_back(contract.preserved_item_features);
+    signature.push_back(contract.destroyed_item_features);
+    /* Preserve the existing signature token for every non-choice action so
+     * qualified identities remain stable. */
+    signature.push_back(
+        (contract.resets_to_fresh_item ? 1ull : 0ull) |
+        (static_cast<std::uint64_t>(contract.outcome_observation) << 8));
+    signature.push_back(contract.observed_modifier_tag_ids.size());
+    for (const std::uint32_t tag :
+         contract.observed_modifier_tag_ids) {
+        signature.push_back(tag);
+    }
+    const auto append_selector =
+        [&](const RefinementAffixSelector& selector) {
+            signature.push_back(
+                static_cast<std::uint64_t>(
+                    selector.required_affix_traits) |
+                (static_cast<std::uint64_t>(
+                     selector.forbidden_affix_traits)
+                 << 16) |
+                (static_cast<std::uint64_t>(
+                     selector.required_item_traits)
+                 << 32) |
+                (static_cast<std::uint64_t>(
+                     selector.forbidden_item_traits)
+                 << 40));
+            signature.push_back(selector.required_tag_ids.size());
+            for (const std::uint32_t tag :
+                 selector.required_tag_ids) {
+                signature.push_back(tag);
+            }
+        };
+    signature.push_back(contract.affix_observations.size());
+    for (const RefinementAffixObservation& observation :
+         contract.affix_observations) {
+        signature.push_back(observation.features);
+        append_selector(observation.selector);
+    }
+    signature.push_back(
+        contract.item_affix_dependencies.size());
+    for (const RefinementItemAffixDependency& dependency :
+         contract.item_affix_dependencies) {
+        signature.push_back(dependency.item_features);
+        signature.push_back(
+            dependency.survivor_affix_features);
+    }
+    signature.push_back(contract.affix_flows.size());
+    for (const RefinementAffixFlow& flow :
+         contract.affix_flows) {
+        append_selector(flow.source_selector);
+        signature.push_back(flow.set_affix_traits);
+        signature.push_back(flow.cleared_affix_traits);
+        signature.push_back(flow.preserved_features);
+        signature.push_back(
+            flow.preserves_modifier_classification ? 1 : 0);
+    }
+    signature.push_back(contract.preserved_affixes.size());
+    for (const RefinementAffixSelector& selector :
+         contract.preserved_affixes) {
+        append_selector(selector);
+    }
+    signature.push_back(contract.destroyed_affixes.size());
+    for (const RefinementAffixSelector& selector :
+         contract.destroyed_affixes) {
+        append_selector(selector);
+    }
+    return signature;
+}
+
+void validate_action_refinement_contract(
+    const ActionDescriptor& action) {
+    const ActionRefinementContract& contract = action.refinement;
+    const auto fail = [&](const char* reason) {
+        throw std::logic_error(
+            "action '" + action.id +
+            "' has incomplete refinement contract: " + reason);
+    };
+    if (!contract.complete()) fail("unsupported schema");
+    if (contract.outcome_observation !=
+            RefinementOutcomeObservation::None &&
+        contract.outcome_observation !=
+            RefinementOutcomeObservation::ModifierOffer) {
+        fail("unsupported outcome observation");
+    }
+    if (contract.outcome_observation !=
+        calc_outcome_observation(action)) {
+        fail("outcome observation disagrees with exact calculator handler");
+    }
+    if (contract.resets_to_fresh_item &&
+        contract.outcome_observation !=
+            RefinementOutcomeObservation::None) {
+        fail("fresh reset cannot expose an observed choice");
+    }
+    if ((contract.observed_item_features &
+         ~kAllRefinementItemFeatures) != 0) {
+        fail("affix feature recorded as an item observation");
+    }
+    if (((contract.preserved_item_features |
+          contract.destroyed_item_features) &
+         ~kAllRefinementItemFeatures) != 0 ||
+        (contract.preserved_item_features |
+         contract.destroyed_item_features) !=
+            kAllRefinementItemFeatures) {
+        fail("item feature effects are incomplete");
+    }
+    const auto validate_selector =
+        [&](const RefinementAffixSelector& selector) {
+            if (((selector.required_affix_traits |
+                  selector.forbidden_affix_traits) &
+                 ~kAllRefinementAffixTraits) != 0 ||
+                ((selector.required_item_traits |
+                  selector.forbidden_item_traits) &
+                 ~kAllRefinementItemTraits) != 0) {
+                fail("selector contains unknown traits");
+            }
+            if ((selector.required_affix_traits &
+                 selector.forbidden_affix_traits) != 0 ||
+                (selector.required_item_traits &
+                 selector.forbidden_item_traits) != 0) {
+                fail("contradictory selector traits");
+            }
+            if ((selector.required_affix_traits &
+                 (kRefinementAffixPrefix |
+                  kRefinementAffixSuffix)) ==
+                (kRefinementAffixPrefix |
+                 kRefinementAffixSuffix)) {
+                fail("selector requires both affix sides");
+            }
+            if ((selector.required_affix_traits &
+                 (kRefinementAffixOnEldritchDominantSide |
+                  kRefinementAffixOnEldritchNonDominantSide)) ==
+                (kRefinementAffixOnEldritchDominantSide |
+                 kRefinementAffixOnEldritchNonDominantSide)) {
+                fail("selector requires both Eldritch sides");
+            }
+            if (!std::is_sorted(
+                    selector.required_tag_ids.begin(),
+                    selector.required_tag_ids.end()) ||
+                std::adjacent_find(
+                    selector.required_tag_ids.begin(),
+                    selector.required_tag_ids.end()) !=
+                    selector.required_tag_ids.end() ||
+                std::find(
+                    selector.required_tag_ids.begin(),
+                    selector.required_tag_ids.end(), kNoId) !=
+                    selector.required_tag_ids.end()) {
+                fail("non-canonical selector tags");
+            }
+        };
+    if (!std::is_sorted(
+            contract.observed_modifier_tag_ids.begin(),
+            contract.observed_modifier_tag_ids.end()) ||
+        std::adjacent_find(
+            contract.observed_modifier_tag_ids.begin(),
+            contract.observed_modifier_tag_ids.end()) !=
+            contract.observed_modifier_tag_ids.end() ||
+        std::find(
+            contract.observed_modifier_tag_ids.begin(),
+            contract.observed_modifier_tag_ids.end(), kNoId) !=
+            contract.observed_modifier_tag_ids.end()) {
+        fail("non-canonical observed tags");
+    }
+    for (const RefinementAffixObservation& observation :
+         contract.affix_observations) {
+        if (observation.features == 0 ||
+            (observation.features &
+             ~kAllRefinementAffixFeatures) != 0) {
+            fail("invalid affix observation feature");
+        }
+        validate_selector(observation.selector);
+    }
+    for (const RefinementItemAffixDependency& dependency :
+         contract.item_affix_dependencies) {
+        if (dependency.item_features == 0 ||
+            (dependency.item_features &
+             ~kAllRefinementItemFeatures) != 0 ||
+            (dependency.item_features &
+             ~(contract.preserved_item_features &
+               contract.destroyed_item_features)) != 0 ||
+            dependency.survivor_affix_features == 0 ||
+            (dependency.survivor_affix_features &
+             ~kAllRefinementAffixFeatures) != 0) {
+            fail("invalid rewritten-item affix dependency");
+        }
+    }
+    for (const RefinementAffixFlow& flow :
+         contract.affix_flows) {
+        validate_selector(flow.source_selector);
+        if (flow.preserved_features == 0 ||
+            (flow.preserved_features &
+             ~kAllRefinementAffixFeatures) != 0) {
+            fail("invalid affix-flow feature mask");
+        }
+        if (((flow.set_affix_traits |
+              flow.cleared_affix_traits) &
+             ~kAllRefinementAffixTraits) != 0 ||
+            (flow.set_affix_traits &
+             flow.cleared_affix_traits) != 0) {
+            fail("invalid affix-flow trait mutation");
+        }
+        if (!flow.preserves_modifier_classification &&
+            (flow.preserved_features &
+             feature(
+                 RefinementFeature::
+                     ModifierClassificationTags)) != 0) {
+            fail("replacement flow preserves classification feature");
+        }
+    }
+    for (const RefinementAffixSelector& selector :
+         contract.preserved_affixes) {
+        validate_selector(selector);
+    }
+    for (const RefinementAffixSelector& selector :
+         contract.destroyed_affixes) {
+        validate_selector(selector);
+    }
+    if (!std::is_sorted(
+            contract.affix_observations.begin(),
+            contract.affix_observations.end(), observation_less) ||
+        std::adjacent_find(
+            contract.affix_observations.begin(),
+            contract.affix_observations.end(),
+            [](const RefinementAffixObservation& lhs,
+               const RefinementAffixObservation& rhs) {
+                return lhs.selector == rhs.selector;
+            }) != contract.affix_observations.end() ||
+        !std::is_sorted(
+            contract.preserved_affixes.begin(),
+            contract.preserved_affixes.end(), selector_less) ||
+        std::adjacent_find(
+            contract.preserved_affixes.begin(),
+            contract.preserved_affixes.end()) !=
+            contract.preserved_affixes.end() ||
+        !std::is_sorted(
+            contract.destroyed_affixes.begin(),
+            contract.destroyed_affixes.end(), selector_less) ||
+        std::adjacent_find(
+            contract.destroyed_affixes.begin(),
+            contract.destroyed_affixes.end()) !=
+            contract.destroyed_affixes.end() ||
+        !std::is_sorted(
+            contract.affix_flows.begin(),
+            contract.affix_flows.end(), flow_less) ||
+        std::adjacent_find(
+            contract.affix_flows.begin(),
+            contract.affix_flows.end()) !=
+            contract.affix_flows.end() ||
+        !std::is_sorted(
+            contract.item_affix_dependencies.begin(),
+            contract.item_affix_dependencies.end(),
+            dependency_less) ||
+        std::adjacent_find(
+            contract.item_affix_dependencies.begin(),
+            contract.item_affix_dependencies.end()) !=
+            contract.item_affix_dependencies.end()) {
+        fail("non-canonical selector order");
+    }
+    const bool observes_tags = std::any_of(
+        contract.affix_observations.begin(),
+        contract.affix_observations.end(),
+        [](const RefinementAffixObservation& observation) {
+            return (observation.features &
+                    refinement_feature(
+                        RefinementFeature::
+                            ModifierClassificationTags)) != 0;
+        });
+    if (observes_tags !=
+        !contract.observed_modifier_tag_ids.empty()) {
+        fail("tag observation vocabulary is incomplete");
+    }
+    const auto selector_tags_are_observed =
+        [&](const RefinementAffixSelector& selector) {
+            return std::all_of(
+                selector.required_tag_ids.begin(),
+                selector.required_tag_ids.end(),
+                [&](const std::uint32_t tag) {
+                    return std::binary_search(
+                        contract.observed_modifier_tag_ids.begin(),
+                        contract.observed_modifier_tag_ids.end(), tag);
+                });
+        };
+    const bool selectors_have_observed_tags =
+        std::all_of(
+            contract.affix_observations.begin(),
+            contract.affix_observations.end(),
+            [&](const RefinementAffixObservation& observation) {
+                return selector_tags_are_observed(
+                    observation.selector);
+            }) &&
+        std::all_of(
+            contract.affix_flows.begin(),
+            contract.affix_flows.end(),
+            [&](const RefinementAffixFlow& flow) {
+                return selector_tags_are_observed(
+                    flow.source_selector);
+            }) &&
+        std::all_of(
+            contract.preserved_affixes.begin(),
+            contract.preserved_affixes.end(),
+            selector_tags_are_observed) &&
+        std::all_of(
+            contract.destroyed_affixes.begin(),
+            contract.destroyed_affixes.end(),
+            selector_tags_are_observed);
+    if (!selectors_have_observed_tags) {
+        fail("selector tag is absent from the observation vocabulary");
+    }
+    if (contract.resets_to_fresh_item) {
+        if (contract.preserved_item_features != 0 ||
+            contract.destroyed_item_features !=
+                kAllRefinementItemFeatures ||
+            !contract.affix_flows.empty() ||
+            !contract.preserved_affixes.empty() ||
+            contract.destroyed_affixes.size() != 1 ||
+            contract.destroyed_affixes.front() !=
+                RefinementAffixSelector{}) {
+            fail("fresh reset must destroy every exact affix");
+        }
+        return;
+    }
+
+    /*
+     * Admission proves that the finite source trait domain is total. Tags are
+     * intentionally not enumerated: a tag-scoped destruction is accompanied
+     * by an unscoped survivor flow for its complement in every current
+     * mechanic, and selectors cannot express a forbidden tag.
+     */
+    for (std::uint16_t affix_traits = 0;
+         affix_traits <= kAllRefinementAffixTraits;
+         ++affix_traits) {
+        const std::uint16_t sides =
+            affix_traits &
+            (kRefinementAffixPrefix |
+             kRefinementAffixSuffix);
+        if (sides != kRefinementAffixPrefix &&
+            sides != kRefinementAffixSuffix) {
+            continue;
+        }
+        for (std::uint8_t item_traits = 0;
+             item_traits <= kAllRefinementItemTraits;
+             ++item_traits) {
+            const std::uint16_t eldritch_sides =
+                affix_traits &
+                (kRefinementAffixOnEldritchDominantSide |
+                 kRefinementAffixOnEldritchNonDominantSide);
+            const bool has_dominance =
+                (item_traits &
+                 kRefinementItemHasEldritchDominance) != 0;
+            if ((!has_dominance && eldritch_sides != 0) ||
+                (has_dominance &&
+                 eldritch_sides !=
+                     kRefinementAffixOnEldritchDominantSide &&
+                 eldritch_sides !=
+                     kRefinementAffixOnEldritchNonDominantSide)) {
+                continue;
+            }
+
+            bool covered = refinement_selectors_match(
+                contract.destroyed_affixes,
+                affix_traits, item_traits);
+            for (const RefinementAffixFlow& flow :
+                 contract.affix_flows) {
+                if (!refinement_selector_matches(
+                        flow.source_selector,
+                        affix_traits, item_traits)) {
+                    continue;
+                }
+                covered = true;
+                const std::uint16_t target_traits =
+                    static_cast<std::uint16_t>(
+                        (affix_traits |
+                         flow.set_affix_traits) &
+                        ~flow.cleared_affix_traits);
+                const auto preserved =
+                    [&](const RefinementFeature feature) {
+                        return (flow.preserved_features &
+                                refinement_feature(feature)) != 0;
+                    };
+                const auto trait_changed =
+                    [&](const std::uint16_t mask) {
+                        return (affix_traits & mask) !=
+                               (target_traits & mask);
+                    };
+                if ((preserved(RefinementFeature::ModifierSide) &&
+                     trait_changed(
+                         kRefinementAffixPrefix |
+                         kRefinementAffixSuffix)) ||
+                    (preserved(RefinementFeature::ModifierCrafted) &&
+                     trait_changed(kRefinementAffixCrafted)) ||
+                    (preserved(RefinementFeature::ModifierFractured) &&
+                     trait_changed(kRefinementAffixFractured)) ||
+                    (preserved(RefinementFeature::ModifierVeiled) &&
+                     trait_changed(kRefinementAffixVeiled))) {
+                    fail("affix flow mutates a preserved feature");
+                }
+                const std::uint16_t target_sides =
+                    target_traits &
+                    (kRefinementAffixPrefix |
+                     kRefinementAffixSuffix);
+                if (target_sides != kRefinementAffixPrefix &&
+                    target_sides != kRefinementAffixSuffix) {
+                    fail("affix flow produces invalid side traits");
+                }
+                const std::uint16_t target_eldritch_sides =
+                    target_traits &
+                    (kRefinementAffixOnEldritchDominantSide |
+                     kRefinementAffixOnEldritchNonDominantSide);
+                if ((!has_dominance &&
+                     target_eldritch_sides != 0) ||
+                    (has_dominance &&
+                     target_eldritch_sides !=
+                         kRefinementAffixOnEldritchDominantSide &&
+                     target_eldritch_sides !=
+                         kRefinementAffixOnEldritchNonDominantSide)) {
+                    fail("affix flow produces invalid Eldritch traits");
+                }
+            }
+            if (!covered) {
+                fail("affix effect domain is incomplete");
+            }
+        }
+    }
+}
+
+void canonicalize_and_validate_action_refinement_contract(
+        ActionDescriptor& action) {
+    canonicalize_contract(action.refinement);
+    validate_action_refinement_contract(action);
+}
+
+void canonicalize_and_validate_action_refinement_contract(
+        const SessionImpl& session,
+        ActionDescriptor& action) {
+    canonicalize_and_validate_action_refinement_contract(action);
+    for (const std::uint32_t tag :
+         action.refinement.observed_modifier_tag_ids) {
+        if (tag >= session.implicit_tag_masks.size()) {
+            throw std::logic_error(
+                "action '" + action.id +
+                "' has incomplete refinement contract: observed tag is "
+                "outside the session vocabulary");
+        }
+    }
+}
+
 ActionRegistry build_action_registry(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options) {
@@ -1164,6 +2486,10 @@ ActionRegistry build_action_registry(
     add_influence_exalts(session, registry);
     add_structural(registry);
     for (ActionDescriptor& action : registry.actions) {
+        action.refinement =
+            derive_action_refinement_contract(session, action);
+        canonicalize_and_validate_action_refinement_contract(
+            session, action);
         action.preservation =
             derive_preservation_metadata(session, action);
     }

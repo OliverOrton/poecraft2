@@ -4,7 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-31 through Policy-Guided Exact State
+Refinement.
 
 Verification scope: strategy compiler and simulator parsers, condition
 compiler/evaluator, exact whole-graph evaluator, solver registry/request
@@ -53,6 +54,7 @@ The compiler and simulator accept these leaf conditions:
 - `influence_bits`;
 - `eldritch_tier`;
 - `has_unveil_option`;
+- `observation_signature` (versioned, engine-authored exact-policy routing);
 - `rarity_is`;
 - `open_prefix_count` and `open_suffix_count`; and
 - `prefix_count_range` and `suffix_count_range`.
@@ -68,7 +70,37 @@ and `eldritch_implicit`.
 The visual condition editor directly authors only `has_mod_family`,
 `item_flag`, `eldritch_tier`, `rarity_is`, `open_prefix_count`,
 `open_suffix_count`, `prefix_count_range`, `suffix_count_range`, and `always`.
-The other supported compiler/simulator forms require imported or advanced JSON.
+The other supported compiler/simulator forms require imported or advanced
+JSON. `observation_signature` is not a user-authored mechanic condition: the
+web model accepts and round-trips it opaquely, while the native compiler and
+evaluator own its version, shape, and meaning.
+
+### Action refinement contracts
+
+Every admitted solver action has a versioned engine-owned observation,
+preservation, and destruction contract. Its vocabulary covers only mechanic
+facts that the action actually reads or can carry forward: item rarity and
+side occupancy; modifier side and exclusion-effect signature; goal/tier
+status; crafted, fractured, Veiled, and metamod state; locks; influence; and
+Eldritch state. Equivalent modifier IDs remain mergeable when all observed
+effects match.
+
+The same admitted contract is authoritative for policy refinement, strategy
+compilation, and exact graph evaluation. Those layers do not maintain
+independent action-name preservation tables. Missing, contradictory, or
+incomplete contracts are registry-admission errors before solving begins.
+
+Compound planner operators expose every engine-authorized primitive execution
+path. The shared refinement engine reverse-composes downstream observations
+through those paths, retaining only features that may survive. Full
+destructive rerolls and Restart collapse discarded identity; side-preserving
+actions retain only their declared survivor scope.
+
+Registry admission rejects an action whose contract is missing, internally
+contradictory, or incomplete for a reachable source-affix trait class. Adding
+an ordinary future action therefore requires its mechanic descriptor,
+semantic contract, and focused tests; it does not require a Regal/Exalt-style
+branch in refinement, compilation, or exact evaluation.
 
 ### Solver action IDs
 
@@ -113,6 +145,11 @@ A `renewal` program is deliberately bounded. Its valid forms are one of
 Alteration, Chaos, Essence, Fossil, Harvest reforge, or Veiled Chaos; Scour
 followed by Alchemy; or Veiled Chaos followed by an observed Unveil. Invalid
 sequences are rejected rather than treated as a generic macro language.
+
+An observed-Unveil fixed program retains the exact pre-Unveil carrier identity
+on every choice group. A preference or compiled branch for one observation
+carrier never matches an offer from a different carrier solely because the
+offered modifier ID or projected successor is equal.
 
 Every selected option compiles to primitive strategy operations and routers.
 The simulator never executes an opaque option action.

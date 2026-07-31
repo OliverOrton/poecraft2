@@ -4,7 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-31 through Policy-Guided Exact State
+Refinement.
 
 Verification scope: approved Bestiary fixtures, canonical/compiled recipe
 descriptors, native companion-state actions and exact calculation, WASM facade,
@@ -65,7 +66,9 @@ Bestiary companion state, so cloning does not duplicate a checkpoint.
 - `engine/src/api.cpp` — dedicated Bestiary calculation and presentation.
 - `engine/src/solver_options.cpp`, `solver_api.cpp`, and `solver_compile.cpp` —
   automatic Imprint discovery, exact retry kernel, and primitive graph output.
-- `engine/src/simulator.cpp` — create/restore strategy operations.
+- `engine/src/solver_eval.cpp` and `engine/src/simulator.cpp` — shared typed
+  operation resolution, exact checkpoint-aware graph evaluation, and
+  create/restore strategy execution and accounting.
 - `bindings/wasm/wasm_api.cpp` — Bestiary presentation/apply/calculate facade
   and clone checkpoint reset.
 
@@ -83,6 +86,15 @@ generation discovers bounded state-local Imprint attempt programs at reachable
 magic carriers, evaluates their exact create/attempt/route/restore retry kernel,
 and compiles a selected option to the two Bestiary operations plus ordinary
 attempt and routing nodes.
+
+The compiled whole-graph evaluator resolves those two nodes through their
+Bestiary descriptors rather than through default ordinary action parameters.
+Its exact pair identity carries the optional saved state: creation stores the
+current carrier, ordinary crafting preserves it, restore replaces the live
+carrier and consumes it, and Restart clears it. Beast prices, action totals,
+and simulator accounting use the same typed descriptor authority, so a
+published Imprint policy is subject to the same exact cost reconciliation as
+an ordinary policy.
 
 User-authored `imprint_retry` programs and exits are rejected. Automatic-only
 discovery may use a renewal attempt program or ordinary add/upgrade actions,

@@ -4,9 +4,10 @@
 
 Parent: [Product](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3. Scope: web strategy document,
-authoring/validation, native compile/run/evaluate semantics, board degradation,
-and current runner presentation. No rendered or visual review was performed.
+Verified against code: 2026-07-31 through Policy-Guided Exact State
+Refinement. Scope: web strategy document, authoring/validation, native
+compile/run/evaluate semantics, board degradation, and current runner
+presentation. No rendered or visual review was performed.
 
 ## Strategy Document
 
@@ -64,6 +65,8 @@ The native stored vocabulary at d5e38e3 includes:
   fractured, veiled side, metamods, influence, and Eldritch presence;
 - exact generic influence bits and Searing/Eater tier ranges;
 - current Unveil-offer membership;
+- engine-authored versioned `observation_signature` programs for exact policy
+  routing;
 - rarity;
 - open prefix/suffix and occupied prefix/suffix count ranges; and
 - nested `all`, `any`, `not`, and `at_least` expressions.
@@ -71,8 +74,16 @@ The native stored vocabulary at d5e38e3 includes:
 The visual condition editor exposes family, item flag, Eldritch tier, rarity,
 open/occupied side counts, `always`, and nested ALL/ANY/AT LEAST/NOT groups.
 Advanced compiler conditions (`mod_count`, `mod_family_count`, exact influence
-bits, and Unveil offers) remain valid stored JSON without appearing as ordinary
-leaf choices.
+bits, Unveil offers, and `observation_signature`) remain valid stored JSON
+without appearing as ordinary leaf choices. The web model preserves an
+`observation_signature` payload opaquely; native compilation and evaluation
+remain its shape and semantic authority.
+
+Solver-generated fixed-program Unveil routers bind an offer test to the exact
+pre-Unveil observation carrier that produced its choice group. The same
+modifier offered from another carrier does not match that branch. This
+observation identity is engine-authored inside the routing program and is not
+editable crafting logic in the visual condition editor.
 
 This corrects the historical statement that the ordinary editor supports only
 AND rows and requires separate edges for OR: the current editor has a nested
@@ -146,10 +157,12 @@ and accounting/review projections. Price edits update displayed cost rows from
 the existing quantities and shared economy; they do not define routing.
 
 Unsupported graph vocabulary is refused with the native gap message. Exact
-evaluation now represents compiler-emitted `mod_count` and
-`mod_family_count`, including crafted/fractured requirements. Authored concrete
-Unveil-offer selection remains the explicit gap; solver-compiled ordinary
-decision DAGs are evaluable.
+evaluation represents compiler-emitted `mod_count`, `mod_family_count`, and
+versioned `observation_signature` routing, including crafted/fractured
+requirements and the engine-owned action
+observation/preservation/destruction contract. Authored
+concrete Unveil-offer selection remains the explicit gap; solver-compiled
+ordinary decision DAGs are evaluable.
 
 Code authority:
 `engine/src/solver_eval.cpp`,

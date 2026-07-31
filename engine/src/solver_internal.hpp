@@ -1,6 +1,7 @@
 #ifndef POECRAFT_SRC_SOLVER_INTERNAL_HPP
 #define POECRAFT_SRC_SOLVER_INTERNAL_HPP
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <limits>
@@ -29,6 +30,10 @@
  */
 namespace poecraft {
 namespace solver {
+
+namespace refinement {
+struct RefinedPolicyCompileRouting;
+}
 
 inline constexpr std::uint32_t kNoId = std::numeric_limits<std::uint32_t>::max();
 inline constexpr std::uint32_t kMaxGoalSlots = 8;
@@ -285,6 +290,287 @@ struct LegalityPredicate {
     std::uint8_t min_total_affixes = 0;
 };
 
+/*
+ * Exact-refinement observation vocabulary.
+ *
+ * These are semantic features, not fields copied from AbstractState. A future
+ * refinement engine can therefore derive its key from an admitted action's
+ * contract without switching on the action id/type. Item features describe
+ * scalar item observations. Affix features describe one occupied explicit
+ * and are scoped by RefinementAffixSelector below.
+ *
+ * GoalStatusTierClass is also the terminal/objective observer vocabulary. It
+ * deliberately distinguishes goal membership/tier without requiring raw
+ * modifier identity. ModifierExclusionSignature is the complete engine group
+ * exclusion effect; equal signatures remain mergeable even when modifier ids
+ * differ.
+ */
+enum class RefinementFeature : std::uint8_t {
+    Rarity = 0,
+    PrefixCount,
+    SuffixCount,
+    HasCraftedModifier,
+    HasFracturedModifier,
+    HasVeiledModifier,
+    Multimod,
+    PrefixLock,
+    SuffixLock,
+    CannotRollAttack,
+    CannotRollCaster,
+    Influence,
+    SearingExarchTier,
+    EaterOfWorldsTier,
+    EldritchPresence,
+    EldritchDominance,
+    Corrupted,
+    Mirrored,
+    Split,
+    Synthesised,
+    ModifierSide,
+    ModifierExclusionSignature,
+    GoalStatusTierClass,
+    ModifierCrafted,
+    ModifierFractured,
+    ModifierVeiled,
+    ModifierClassificationTags,
+    ModifierRequiredLevel,
+    /* Membership vector over AbstractLayout::count_observations. This is the
+     * engine-owned observer for compiled mod_count/mod_family_count routing;
+     * it is semantic class identity, never a representative modifier id. */
+    CountObservationMembership,
+    /* Engine semantic role for crafted metamods (multimod, side locks, and
+     * cannot-roll blockers). Equal exclusion signatures do not imply equal
+     * refill behavior when this role differs. */
+    ModifierMetamodRole,
+    Count
+};
+
+using RefinementFeatureMask = std::uint64_t;
+
+inline constexpr RefinementFeatureMask refinement_feature(
+    const RefinementFeature feature) {
+    return RefinementFeatureMask{1}
+           << static_cast<std::uint8_t>(feature);
+}
+
+inline constexpr RefinementFeatureMask kAllRefinementItemFeatures =
+    (refinement_feature(RefinementFeature::ModifierSide) - 1);
+inline constexpr RefinementFeatureMask kAllRefinementAffixFeatures =
+    ((refinement_feature(RefinementFeature::Count) - 1) &
+     ~kAllRefinementItemFeatures);
+static_assert(
+    static_cast<std::uint8_t>(RefinementFeature::Count) <
+    std::numeric_limits<RefinementFeatureMask>::digits);
+
+/*
+ * Affix selectors are conjunctions of required/forbidden traits. A vector of
+ * selectors is a union, which is enough to express fractured-or-locked
+ * preservation and Eldritch dominance without baking action names into the
+ * refinement algorithm.
+ */
+enum RefinementAffixTrait : std::uint16_t {
+    kRefinementAffixPrefix = 1u << 0,
+    kRefinementAffixSuffix = 1u << 1,
+    kRefinementAffixCrafted = 1u << 2,
+    kRefinementAffixFractured = 1u << 3,
+    kRefinementAffixVeiled = 1u << 4,
+    kRefinementAffixOnLockedSide = 1u << 5,
+    kRefinementAffixOnEldritchDominantSide = 1u << 6,
+    kRefinementAffixOnEldritchNonDominantSide = 1u << 7,
+};
+inline constexpr std::uint16_t kAllRefinementAffixTraits =
+    kRefinementAffixPrefix |
+    kRefinementAffixSuffix |
+    kRefinementAffixCrafted |
+    kRefinementAffixFractured |
+    kRefinementAffixVeiled |
+    kRefinementAffixOnLockedSide |
+    kRefinementAffixOnEldritchDominantSide |
+    kRefinementAffixOnEldritchNonDominantSide;
+
+enum RefinementItemTrait : std::uint8_t {
+    kRefinementItemHasEldritchDominance = 1u << 0,
+    /* Scour preserves the locked side only when exactly one side is locked;
+     * with neither or both locks it instead preserves fractured affixes. */
+    kRefinementItemExactlyOneSideLocked = 1u << 1,
+};
+inline constexpr std::uint8_t kAllRefinementItemTraits =
+    kRefinementItemHasEldritchDominance |
+    kRefinementItemExactlyOneSideLocked;
+
+struct RefinementAffixSelector {
+    std::uint16_t required_affix_traits = 0;
+    std::uint16_t forbidden_affix_traits = 0;
+    std::uint8_t required_item_traits = 0;
+    std::uint8_t forbidden_item_traits = 0;
+    /* Existing-mod classification tags required by this selector. Sorted. */
+    std::vector<std::uint32_t> required_tag_ids;
+
+    bool operator==(const RefinementAffixSelector&) const = default;
+};
+
+struct RefinementAffixObservation {
+    RefinementFeatureMask features = 0;
+    RefinementAffixSelector selector;
+
+    bool operator==(const RefinementAffixObservation&) const = default;
+};
+
+/*
+ * One possible existing-affix flow through an action. `source_selector`
+ * identifies carriers that can survive. The target traits are obtained by
+ * setting and clearing the declared bits; `preserved_features` names only
+ * semantic values that remain equal across that flow.
+ *
+ * This is deliberately relational rather than an action-name switch. It can
+ * express identity-preserving survival, Fracture's unfractured->fractured
+ * carrier mutation, and Unveil's identity replacement while retaining
+ * side/crafted/fractured carrier properties. When modifier classification is
+ * not preserved, downstream tag scopes are widened to the source selector:
+ * the replacement kernel, rather than a representative source id, determines
+ * target tag membership.
+ */
+struct RefinementAffixFlow {
+    RefinementAffixSelector source_selector;
+    std::uint16_t set_affix_traits = 0;
+    std::uint16_t cleared_affix_traits = 0;
+    RefinementFeatureMask preserved_features = 0;
+    bool preserves_modifier_classification = true;
+
+    bool operator==(const RefinementAffixFlow&) const = default;
+};
+
+/*
+ * A conditionally rewritten scalar may depend on the multiset of surviving
+ * carriers rather than only on its old scalar value. Each dependency maps
+ * downstream item observations to source-affix observations through the same
+ * affix flows (for example Scour rarity -> survivor side/count structure).
+ */
+struct RefinementItemAffixDependency {
+    RefinementFeatureMask item_features = 0;
+    RefinementFeatureMask survivor_affix_features = 0;
+
+    bool operator==(const RefinementItemAffixDependency&) const = default;
+};
+
+inline bool refinement_selector_matches(
+    const RefinementAffixSelector& selector,
+    const std::uint16_t affix_traits,
+    const std::uint8_t item_traits,
+    const std::vector<std::uint32_t>& affix_tag_ids = {}) {
+    if ((affix_traits & selector.required_affix_traits) !=
+            selector.required_affix_traits ||
+        (affix_traits & selector.forbidden_affix_traits) != 0 ||
+        (item_traits & selector.required_item_traits) !=
+            selector.required_item_traits ||
+        (item_traits & selector.forbidden_item_traits) != 0) {
+        return false;
+    }
+    return std::all_of(
+        selector.required_tag_ids.begin(),
+        selector.required_tag_ids.end(),
+        [&](const std::uint32_t tag) {
+            return std::binary_search(
+                affix_tag_ids.begin(), affix_tag_ids.end(), tag);
+        });
+}
+
+inline bool refinement_selectors_match(
+    const std::vector<RefinementAffixSelector>& selectors,
+    const std::uint16_t affix_traits,
+    const std::uint8_t item_traits,
+    const std::vector<std::uint32_t>& affix_tag_ids = {}) {
+    return std::any_of(
+        selectors.begin(), selectors.end(),
+        [&](const RefinementAffixSelector& selector) {
+            return refinement_selector_matches(
+                selector, affix_traits, item_traits, affix_tag_ids);
+        });
+}
+
+inline constexpr std::uint32_t kActionRefinementContractVersion = 2;
+
+/*
+ * A primitive may expose a sampled observation before the strategy chooses
+ * its concrete operation parameter.  The legacy implementation names the
+ * current modifier-offer sidecars after Unveil, but this contract is the
+ * semantic authority: consumers must not infer observed choice from an
+ * ActionType.  Future actions that expose the same modifier-offer vocabulary
+ * opt in here and automatically reuse the solve/compile/evaluation path.
+ */
+enum class RefinementOutcomeObservation : std::uint8_t {
+    None = 0,
+    ModifierOffer = 1,
+};
+
+struct ActionRefinementContract {
+    /* Zero means admission has not supplied a complete semantic contract. */
+    std::uint32_t schema_version = 0;
+    RefinementFeatureMask observed_item_features = 0;
+    /* Source scalar values that can respectively survive or be rewritten.
+     * Conditional/stochastic transforms may set a bit in both masks. */
+    RefinementFeatureMask preserved_item_features = 0;
+    RefinementFeatureMask destroyed_item_features = 0;
+    /* Existing-mod tags read by the action, independent of selector tags.
+     * Sorted. Action parameters that only choose a new roll pool do not
+     * belong here. */
+    std::vector<std::uint32_t> observed_modifier_tag_ids;
+    /* Exact-affix observations. Separate scoped terms prevent, for example,
+     * a destructive reforge from retaining exclusion effects of affixes it
+     * first destroys. */
+    std::vector<RefinementAffixObservation> affix_observations;
+    std::vector<RefinementItemAffixDependency>
+        item_affix_dependencies;
+    /* Feature-specific survivor relations used by the shared backward
+     * refinement engine. Compatibility selectors below remain the compact
+     * may-survive/may-destroy summary consumed by older diagnostics. */
+    std::vector<RefinementAffixFlow> affix_flows;
+    /* Exact affixes whose identity may survive the action. */
+    std::vector<RefinementAffixSelector> preserved_affixes;
+    /* Exact affixes whose identity may be destroyed by the action. */
+    std::vector<RefinementAffixSelector> destroyed_affixes;
+    /* Restart is the one admitted operation that replaces the complete item
+     * rather than transforming its current explicit state. */
+    bool resets_to_fresh_item = false;
+    RefinementOutcomeObservation outcome_observation =
+        RefinementOutcomeObservation::None;
+
+    bool complete() const {
+        return schema_version == kActionRefinementContractVersion;
+    }
+};
+
+inline bool refinement_contract_observes_modifier_offer(
+    const ActionRefinementContract& contract) {
+    return contract.outcome_observation ==
+           RefinementOutcomeObservation::ModifierOffer;
+}
+
+inline bool refinement_contract_observes_item(
+    const ActionRefinementContract& contract,
+    const RefinementFeature feature) {
+    return (contract.observed_item_features &
+            refinement_feature(feature)) != 0;
+}
+
+inline bool refinement_contract_observes_affix(
+    const ActionRefinementContract& contract,
+    const RefinementFeature feature,
+    const std::uint16_t affix_traits,
+    const std::uint8_t item_traits,
+    const std::vector<std::uint32_t>& affix_tag_ids = {}) {
+    const RefinementFeatureMask bit = refinement_feature(feature);
+    return std::any_of(
+        contract.affix_observations.begin(),
+        contract.affix_observations.end(),
+        [&](const RefinementAffixObservation& observation) {
+            return (observation.features & bit) != 0 &&
+                   refinement_selector_matches(
+                       observation.selector, affix_traits, item_traits,
+                       affix_tag_ids);
+        });
+}
+
 /* Symbolic carrier vocabulary for S8.2 preservation control. Descriptor
  * masks are conservative action capabilities; state-local witnesses refine
  * them to exact goal-slot masks, counts, flags, and transition outcomes. */
@@ -340,6 +626,7 @@ struct ActionDescriptor {
     std::vector<std::uint32_t> discriminating_tag_ids;
     std::uint32_t sets_flags = 0;   /* AbstractFlag bits the action can set */
     std::uint32_t clears_flags = 0; /* AbstractFlag bits it can clear */
+    ActionRefinementContract refinement;
     ActionPreservationMetadata preservation;
     /* Reserved for future two-item techniques (imprint/recombinator inside
      * the item-level solver). Nothing planned sets it; see plan. */
@@ -349,6 +636,12 @@ struct ActionDescriptor {
      * not independently selectable unless the caller explicitly names it. */
     bool automatic_dependency_only = false;
 };
+
+inline bool action_observes_modifier_offer(
+    const ActionDescriptor& action) {
+    return refinement_contract_observes_modifier_offer(
+        action.refinement);
+}
 
 struct ActionRegistry {
     std::vector<ActionDescriptor> actions;
@@ -397,26 +690,89 @@ struct PlannerOperator {
     std::string display_name;
     PlannerOperatorKind kind = PlannerOperatorKind::Primitive;
     FixedOptionKind option_kind = FixedOptionKind::ScourAlchemy;
+    /*
+     * Numeric action references are context-local execution handles. Their
+     * adjacent ids are the context-independent semantic authority used when
+     * an operator is compared with or imported into another CalcContext.
+     * Every populated numeric reference must have a populated id companion,
+     * and vice versa.
+     */
     std::uint32_t primitive_action = kNoId;
+    std::string primitive_action_id;
     std::vector<std::uint32_t> primitive_program;
+    std::vector<std::string> primitive_program_action_ids;
     std::int8_t intended_side = -1;
     std::vector<std::uint32_t> exit_goal_slots;
     std::uint32_t exit_min_satisfied = 0;
     std::uint32_t carrier_goal_slot = kNoId;
     std::uint32_t conditional_action = kNoId; /* Fracture after preparation */
+    std::string conditional_action_id;
     std::uint32_t bestiary_create_action = kNoId;
+    std::string bestiary_create_action_id;
     std::uint32_t bestiary_restore_action = kNoId;
+    std::string bestiary_restore_action_id;
     AutomaticCandidateKind automatic_kind = AutomaticCandidateKind::None;
     std::uint32_t relevant_goal_mask = 0;
     std::uint32_t setup_action = kNoId;
+    std::string setup_action_id;
     std::uint32_t followup_action = kNoId;
+    std::string followup_action_id;
     std::uint32_t cleanup_action = kNoId;
+    std::string cleanup_action_id;
     std::uint32_t constructive_finish_action = kNoId;
+    std::string constructive_finish_action_id;
     /* Sorted dependency quantities. S7.3 fixed programs execute each entry
      * exactly once; S7.4 kernels return the exact state-dependent expected
      * quantities used for pricing conditional and observed paths. */
     std::vector<std::pair<std::string, double>> resource_quantities;
 };
+
+/*
+ * Collision-free serialization and equality for operator behavior/pricing.
+ * Presentation fields and context-local numeric handles are deliberately
+ * excluded; every action dependency is represented by its canonical id.
+ */
+std::vector<std::uint64_t> planner_operator_semantic_key(
+    const PlannerOperator& planner);
+bool planner_operator_structurally_equal(
+    const PlannerOperator& left,
+    const PlannerOperator& right);
+
+struct PlannerOperatorRuntimeStep {
+    std::uint32_t action = kNoId;
+    ActionRefinementContract refinement;
+};
+
+/*
+ * Runtime semantic authority for one planner operator. `ordered_program`
+ * retains the longest canonical execution order; `execution_paths` names the
+ * possible prefixes/conditional paths used for composable backward
+ * observation/preimage analysis. Dependencies are the same ordinary registry
+ * actions sorted and unique in the current CalcContext.
+ *
+ * `compatibility_refinement` is only a conservative flat union for direct
+ * product-parent compatibility triggering. It is not a sequential
+ * preservation/flow proof: callers proving downstream equivalence must
+ * reverse-compose `execution_paths` instead. Proof-only synthesis metadata
+ * (notably constructive_finish_action) is intentionally excluded throughout.
+ */
+struct PlannerOperatorRuntimeSemantics {
+    std::vector<PlannerOperatorRuntimeStep> ordered_program;
+    /*
+     * Every engine-authorized runtime path through the operator. Fixed
+     * programs may exit after a prefix; an optional conditional action may
+     * run alone or after preparation. Backward observation authority merges
+     * the preimages of these paths rather than pretending every transition
+     * executed the longest program.
+     */
+    std::vector<std::vector<PlannerOperatorRuntimeStep>> execution_paths;
+    std::vector<std::uint32_t> action_dependencies;
+    ActionRefinementContract compatibility_refinement;
+};
+
+PlannerOperatorRuntimeSemantics planner_operator_runtime_semantics(
+    const PlannerOperator& planner,
+    const ActionRegistry& registry);
 
 /* Selected policy reference. The index resolves in CalcContext::operators();
  * the explicit kind tag prevents an appended option from masquerading as a
@@ -452,6 +808,44 @@ ActionRegistry build_action_registry(
     const SessionImpl& session,
     const ActionRegistryBuildOptions& options = {});
 
+/* Complete exclusion effect of one exact modifier. This is shared authority
+ * for junk and occupied-goal refinement: pool-add actions observe both. */
+std::vector<std::uint64_t> modifier_exclusion_effect_signature(
+    const SessionImpl& session,
+    std::uint32_t mod_id);
+
+/* Engine-owned Veiled-template identity used by strict carrier partitioning
+ * and refinement feature extraction. */
+bool modifier_is_veiled_template(
+    const SessionImpl& session,
+    std::uint32_t mod_id);
+
+/* Derive one descriptor's semantic contract. Registry admission calls this
+ * for every action, then validates the result before exposing the registry. */
+ActionRefinementContract derive_action_refinement_contract(
+    const SessionImpl& session,
+    const ActionDescriptor& action);
+
+/* Stable semantic signature used to intern/compare contracts. It excludes
+ * action id and prices: equal action-state observers intentionally share it. */
+std::vector<std::uint64_t> action_refinement_contract_signature(
+    const ActionRefinementContract& contract);
+
+/* Throws std::logic_error when an action reaches registry admission without a
+ * complete/canonical semantic contract. */
+void validate_action_refinement_contract(const ActionDescriptor& action);
+
+/* The single admission path for authored/internal action contracts. It
+ * canonicalizes equivalent selector/flow spellings, synthesizes compatibility
+ * identity flows where appropriate, then performs the complete structural
+ * proof. Callers must use this before exposing a descriptor to CalcContext or
+ * planner runtime semantics. */
+void canonicalize_and_validate_action_refinement_contract(
+    ActionDescriptor& action);
+void canonicalize_and_validate_action_refinement_contract(
+    const SessionImpl& session,
+    ActionDescriptor& action);
+
 /* Resolve the goal's explicitly selected fixed options. The returned vector
  * begins with one primitive wrapper per registry action at the same index. */
 std::vector<PlannerOperator> build_planner_operators(
@@ -462,15 +856,6 @@ std::vector<PlannerOperator> build_planner_operators(
 
 // --- goal resolution and abstract layout --------------------------------------
 
-struct ResolvedGoalSlot {
-    GoalSlot spec;
-    std::vector<std::uint64_t> member_mask;     /* any-tier group/family mods */
-    std::vector<std::uint64_t> satisfying_mask; /* members at/above min_tier */
-    /* Exclusivity groups covering the satisfying mods; a non-member explicit
-     * occupying any of them blocks this slot. Sorted. */
-    std::vector<std::uint32_t> blocking_group_ids;
-};
-
 enum class GoalSlotStatus : std::uint8_t {
     Absent = 0,
     PresentBelowTier = 1,
@@ -478,11 +863,43 @@ enum class GoalSlotStatus : std::uint8_t {
 };
 
 /*
+ * One occupied-goal equivalence class in an exact-evaluation layout.
+ * Modifier identity is intentionally absent: members remain merged when
+ * every admitted observer sees the same side, tier status, restricted tag
+ * signature, Veiled-template role, selector-conditioned required level and
+ * exclusion effect, and compiled count-observation membership.
+ */
+struct GoalMemberClass {
+    GoalSlotStatus status = GoalSlotStatus::Absent;
+    std::int8_t gen_type = 0; /* 0 prefix, 1 suffix */
+    std::vector<std::uint64_t> exclusion_effect_mask;
+    std::vector<std::uint64_t> count_observation_bits;
+    std::vector<std::uint64_t> member_mask;
+    std::uint32_t member_count = 0;
+};
+
+struct ResolvedGoalSlot {
+    GoalSlot spec;
+    std::vector<std::uint64_t> member_mask;     /* any-tier group/family mods */
+    std::vector<std::uint64_t> satisfying_mask; /* members at/above min_tier */
+    /* Exclusivity groups covering the satisfying mods; a non-member explicit
+     * occupying any of them blocks this slot. Sorted. */
+    std::vector<std::uint32_t> blocking_group_ids;
+    /* Exact layouts only. Token n addresses member_classes[n - 1]; token zero
+     * means absent (or that the coarse layout deliberately omits identity).
+     * Both vectors remain empty in product/coarse layouts. */
+    std::vector<GoalMemberClass> member_classes;
+    std::vector<std::uint32_t> member_class_token_by_mod;
+};
+
+/*
  * One junk equivalence class. Two non-goal mods share a class iff every
  * candidate action treats them identically: same generation side, same
  * restricted tag signature (classification tags intersected with the
- * candidate actions' discriminating tags), blocking the same goal slots, and
- * (when relevant) the same veiled-template role.
+ * candidate actions' discriminating/observed tags), blocking the same goal
+ * slots, and (when relevant) the same Veiled-template role. Exact layouts
+ * additionally apply selector-conditioned required-level and exclusion
+ * observations plus compiled count-observation membership.
  */
 struct JunkClass {
     std::int8_t gen_type = 0;           /* 0 prefix, 1 suffix */
@@ -556,7 +973,10 @@ AbstractLayout build_abstract_layout(
     bool allow_empty_goal = false,
     bool empty_actions_mean_all = true,
     bool distinguish_junk_exclusion_effects = false,
-    const std::vector<CountObservation>& count_observations = {});
+    const std::vector<CountObservation>& count_observations = {},
+    const std::vector<std::uint64_t>&
+        required_reachable_mod_mask = {},
+    bool distinguish_modifier_identity = false);
 
 // --- abstract state -----------------------------------------------------------
 
@@ -713,6 +1133,10 @@ class CompactCountVector {
 
 struct AbstractState {
     std::array<std::uint8_t, kMaxGoalSlots> slot_status{}; /* GoalSlotStatus */
+    /* Exact occupied-goal observation class. Zero in coarse layouts and for
+     * absent slots; otherwise token n addresses
+     * AbstractLayout::slots[i].member_classes[n - 1]. */
+    std::array<std::uint32_t, kMaxGoalSlots> goal_member_class_tokens{};
     /* Exact carrier identity for slot-local mechanics. Bit i means the
      * modifier occupying goal slot i carries the corresponding slot flag. */
     std::uint32_t fractured_goal_mask = 0;
@@ -784,6 +1208,10 @@ struct OutcomeEntry {
 struct OutcomeChoiceGroup {
     double probability = 0.0;
     std::vector<std::uint32_t> states;
+    /* State on which this offered successor set was observed. Primitive
+     * observed actions use their entry state; fixed programs retain the
+     * intermediate carrier. kNoId is reserved for legacy/non-observed rows. */
+    std::uint32_t observation_state = kNoId;
 
     bool operator==(const OutcomeChoiceGroup&) const = default;
 };
@@ -892,6 +1320,52 @@ struct ObservedUnveilPreference {
     std::vector<ObservedUnveilChoice> choices;
 
     bool operator==(const ObservedUnveilPreference&) const = default;
+};
+
+/* Legacy sidecar names remain stable, while this shared finalizer is keyed by
+ * the action's semantic outcome-observation contract. */
+void order_observed_modifier_choices(
+    const ActionDescriptor& action,
+    std::vector<OutcomeChoiceOption>& choices,
+    const std::vector<double>& values);
+
+/*
+ * Collision-free exact state serialization shared by refinement and
+ * executable-option routing. `coarse_parent` is a caller-owned namespace
+ * component; zero denotes a context-independent strict-state key.
+ */
+std::vector<std::uint64_t> exact_abstract_state_key(
+    const AbstractState& state,
+    std::uint32_t coarse_parent);
+
+struct ExecutableFixedOptionChoice {
+    std::uint32_t mod_id = kNoId;
+    bool retry_local = false;
+
+    bool operator==(const ExecutableFixedOptionChoice&) const = default;
+};
+
+struct ExecutableFixedOptionOffer {
+    std::vector<std::uint64_t> observation_state_key;
+    std::vector<std::uint32_t> offered_mod_ids;
+    std::vector<ExecutableFixedOptionChoice> ordered_choices;
+
+    bool operator==(const ExecutableFixedOptionOffer&) const = default;
+};
+
+/*
+ * The context-independent control recipe actually emitted for one fixed
+ * option. Outer exit probabilities and expected resources belong to exact
+ * evaluation, not routing identity. State keys are structural, never
+ * CalcContext-local numeric handles.
+ */
+struct ExecutableFixedOptionRecipe {
+    bool entry_continues = false;
+    std::vector<std::vector<std::uint64_t>> retry_state_keys;
+    std::vector<std::vector<std::uint64_t>> continuation_state_keys;
+    std::vector<ExecutableFixedOptionOffer> offers;
+
+    bool operator==(const ExecutableFixedOptionRecipe&) const = default;
 };
 
 /* Per-solve transition-provider telemetry. The distribution cache itself
@@ -1043,6 +1517,12 @@ struct TemporaryBenchEffectClass {
  * independent of the current state. */
 bool calc_supports(const ActionDescriptor& action);
 
+/* Outcome-observation capability of the exact calculator handler. Contract
+ * admission cross-checks this against ActionRefinementContract so an action
+ * cannot advertise a choice protocol its mechanic kernel never emits. */
+RefinementOutcomeObservation calc_outcome_observation(
+    const ActionDescriptor& action);
+
 /*
  * The solver's inner loop and the Calculator's backend: from abstract state
  * s, applying action a, the exact distribution over abstract successors.
@@ -1062,7 +1542,10 @@ class CalcContext {
         bool distinguish_junk_exclusion_effects = false,
         std::optional<std::uint32_t> state_cap = std::nullopt,
         const std::vector<CountObservation>& count_observations = {},
-        bool product_solver_parent = false);
+        bool product_solver_parent = false,
+        const std::vector<std::uint64_t>&
+            required_reachable_mod_mask = {},
+        bool distinguish_modifier_identity = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -1072,6 +1555,9 @@ class CalcContext {
     }
     const GoalSpec& goal() const { return goal_; }
     bool product_solver_parent() const { return product_solver_parent_; }
+    bool distinguishes_modifier_identity() const {
+        return distinguish_modifier_identity_;
+    }
     /* The candidate action subset the layout was derived for. Normal solver
      * construction defaults an empty input to every registry action; an
      * operation-free strategy evaluation deliberately retains an empty set. */
@@ -1112,6 +1598,16 @@ class CalcContext {
     std::size_t static_candidate_operator_count() const {
         return static_candidate_operator_count_;
     }
+    /*
+     * Read-only membership in the already-filtered planner vocabulary.
+     * Static/non-state-local candidates are admitted for every valid state.
+     * A generated state-local automatic candidate is admitted only for a
+     * state whose retained admission batch contains that operator. This never
+     * synthesizes candidates or populates the state-local admission cache.
+     */
+    bool is_candidate_operator_admitted_for_state(
+        std::uint32_t state_id,
+        std::uint32_t operator_index) const;
     StateLocalAutomaticBatch admit_state_local_automatic_candidates(
         std::uint32_t state_id,
         const AutomaticAdmissionLimits& limits);
@@ -1159,6 +1655,15 @@ class CalcContext {
     const OptionKernel& option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);
+    /*
+     * Import one context-independent operator. Primitive dependencies are
+     * resolved by canonical id in this registry; numeric index parity with
+     * the source context is never assumed. Structurally equal operators are
+     * interned. `state_local` marks dynamically admitted automatic options.
+     */
+    std::uint32_t import_planner_operator(
+        const PlannerOperator& planner,
+        bool state_local);
     bool option_kernel_template_hit(
         std::uint32_t state_id,
         std::uint32_t operator_index) const {
@@ -1174,7 +1679,8 @@ class CalcContext {
     void set_solve_resource_caps(
         std::uint32_t max_discovered_states,
         std::uint64_t max_reforge_work,
-        bool reserve_storage = true);
+        bool reserve_storage = true,
+        std::optional<std::uint64_t> max_owned_bytes = std::nullopt);
     void consume_reforge_work(std::uint64_t amount);
     void record_primitive_row_time(
         std::uint32_t action_index,
@@ -1237,6 +1743,7 @@ class CalcContext {
     std::optional<std::uint32_t> state_cap_;
     std::optional<std::uint32_t> solve_discovered_state_cap_;
     std::optional<std::uint64_t> solve_reforge_work_cap_;
+    std::optional<std::uint64_t> solve_owned_bytes_cap_;
     struct StateHashBucket {
         std::uint32_t first = kNoId;
         std::vector<std::uint32_t> collisions;
@@ -1301,6 +1808,7 @@ class CalcContext {
     std::uint64_t retained_reforge_distribution_bytes_ = 0;
     bool owned_bytes_ledger_initialized_ = false;
     bool product_solver_parent_ = false;
+    bool distinguish_modifier_identity_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();
@@ -1335,6 +1843,8 @@ class CalcContext {
         const ReforgeCacheMemo& value);
     bool can_retain_reforge_distribution(
         const OutcomeDistribution& value) const;
+    void require_reforge_scratch_bytes(
+        std::uint64_t scratch_bytes) const;
 
     std::shared_ptr<const OutcomeDistribution> evaluate(
         std::uint32_t state_id,
@@ -1352,12 +1862,40 @@ class CalcContext {
         std::map<std::uint32_t, double>& accumulated);
 };
 
+/*
+ * Shared fixed-option execution authority used by policy refinement and
+ * strategy compilation. The optional quotient projection is used only for
+ * an already-completed policy; an empty projection means exact state
+ * identity. Invalid or incomplete choice sidecars are rejected.
+ */
+bool fixed_option_choice_retries_locally(
+    std::uint32_t entry_state,
+    const OptionKernel& kernel,
+    std::uint32_t successor_state,
+    std::uint32_t actual_state,
+    const std::vector<std::uint32_t>&
+        behavioral_representative_by_state = {});
+ExecutableFixedOptionRecipe fixed_option_executable_recipe(
+    const CalcContext& calc,
+    std::uint32_t entry_state,
+    const PlannerOperator& planner,
+    const OptionKernel& kernel,
+    const std::vector<ObservedUnveilPreference>& preferences,
+    const std::vector<std::uint32_t>&
+        behavioral_representative_by_state = {});
+std::vector<std::uint64_t> fixed_option_executable_recipe_key(
+    const ExecutableFixedOptionRecipe& recipe);
+
 // --- exact compiled-strategy evaluator ---------------------------------------
 
 struct StrategyEvalOptions {
     double epsilon = 1e-12;
     std::uint32_t max_sweeps = 100000;
     std::uint32_t max_states = 100000;
+    /* `max_pairs` bounds the refined executable quotient. Raw operation/state
+     * discovery remains bounded by max_states, max_transitions, and the owned
+     * byte cap so semantically equivalent witnesses may merge before this
+     * product limit is applied. */
     std::uint32_t max_pairs = 1000000;
     std::uint32_t max_transitions = 10000000;
     std::uint32_t top_classes_per_node = 16;
@@ -1366,6 +1904,10 @@ struct StrategyEvalOptions {
     bool include_success_normalized = false;
     std::uint64_t max_owned_bytes = 536870912;
     std::uint64_t max_output_json_bytes = 67108864;
+    /* Internal publication budget. Public standalone evaluation retains its
+     * historical effectively-unbounded default. */
+    std::uint64_t max_reforge_work =
+        std::numeric_limits<std::uint64_t>::max();
 };
 
 enum class StrategyEvalPhase {
@@ -1475,11 +2017,13 @@ struct StrategyEvalReviewSection {
     std::map<std::string, double> techniques;
 };
 
-/* Retained exact state-action occupancy. `state` indexes occupancy_states and
- * `node`/`action` preserve the deterministic compiled-policy control choice.
- * Reward is the immediate priced cost of one applied action; the expected
- * contribution is expected_applied * immediate_reward. These records remain
- * internal until B4 adds the action-utility report surface. */
+/* Retained exact state-operation occupancy. `state` indexes occupancy_states,
+ * `node` preserves the typed compiled-operation authority, and `action`
+ * preserves the ordinary ActionRegistry index when one exists (kNoId for a
+ * companion-state operation). Reward is the immediate priced cost of one
+ * applied operation; the expected contribution is expected_applied *
+ * immediate_reward. These records remain internal until B4 adds the
+ * action-utility report surface. */
 struct StrategyEvalOccupancyEntry {
     std::uint32_t state = kNoId;
     std::uint32_t node = kNoId;
@@ -1537,6 +2081,11 @@ struct StrategyEvalResult {
     std::uint64_t peak_owned_bytes_estimate = 0;
     std::uint64_t max_owned_bytes = 0;
     std::uint64_t max_output_json_bytes = 0;
+    std::uint64_t reforge_work = 0;
+    std::uint32_t raw_pairs_discovered = 0;
+    std::uint32_t refined_pairs = 0;
+    std::uint32_t pair_refinement_rounds = 0;
+    std::uint64_t pair_lumpability_checks = 0;
 };
 
 class StrategyEvalUnsupported : public std::runtime_error {
@@ -1570,8 +2119,37 @@ class StrategyEvalWork {
         const StrategyEvalOptions& options);
 };
 
-/* Resolve one compiled operation to its registry descriptor. kNoId means no
- * exact parameter match exists. Restart resolves to the synthetic descriptor. */
+enum class ResolvedStrategyOperationKind : std::uint8_t {
+    None = 0,
+    Ordinary = 1,
+    Restart = 2,
+    Bestiary = 3,
+};
+
+/* Engine-owned semantic authority for one parsed strategy operation.
+ * Ordinary/Restart indices address ActionRegistry::actions; Bestiary indices
+ * address DataImpl::bestiary_actions. The parser has already resolved
+ * Bestiary JSON to its descriptor index, so no action-name switch is needed. */
+struct ResolvedStrategyOperation {
+    ResolvedStrategyOperationKind kind =
+        ResolvedStrategyOperationKind::None;
+    std::uint32_t descriptor_index = kNoId;
+
+    bool resolved() const {
+        return kind != ResolvedStrategyOperationKind::None &&
+               descriptor_index != kNoId;
+    }
+};
+
+ResolvedStrategyOperation resolve_strategy_operation(
+    const StrategyNode& node,
+    const ActionRegistry& registry,
+    const SessionImpl& session);
+
+/* Resolve one compiled ordinary operation to its registry descriptor. kNoId
+ * means no exact parameter match exists. Restart resolves to the synthetic
+ * descriptor; companion-state operations deliberately do not alias an
+ * ordinary ActionParameters default. */
 std::uint32_t resolve_strategy_action(
     const StrategyNode& node,
     const ActionRegistry& registry);
@@ -1664,6 +2242,15 @@ enum class SolveTermination : std::uint8_t {
     NoExecutablePolicy,
 };
 
+/*
+ * Exact refinement changes publication proof, not the coarse solve's genuine
+ * stopping cause. This helper is only for a successfully retained executable
+ * lift; consequently it can never return NoExecutablePolicy.
+ */
+SolveTermination successful_refined_publication_termination(
+    SolveTermination coarse_termination,
+    bool resource_cap_hit);
+
 enum class SolveGapTarget : std::uint8_t {
     None,
     Absolute,
@@ -1710,6 +2297,87 @@ struct FallbackValidationTelemetry {
     Component start_properness;
 };
 
+/*
+ * Bounded policy-guided exact-refinement telemetry. Counters are aggregate;
+ * retained samples are capped by SolveDiagnostics::diagnostic_sample_limit
+ * at the producer and report their omitted population explicitly.
+ */
+struct PolicyRefinementTelemetry {
+    std::uint64_t triggers = 0;
+    /* Structured compatibility witnesses consumed by exact refinement. The
+     * vector is unique, deterministic in discovery order, and bounded by the
+     * already resource-capped coarse policy table; local refinement never
+     * parses JSON samples. */
+    std::vector<std::uint32_t> trigger_coarse_states;
+    std::uint64_t trigger_coarse_states_omitted = 0;
+    /* Stable publication-stage status; "not_run" means no policy required
+     * exact refinement or assertion yet. */
+    std::string status = "not_run";
+    /* Canonical public Solve cap name, never an internal refinement alias. */
+    std::string resource_cap;
+    std::uint64_t policy_reachable_coarse_states = 0;
+    /* Cumulative strict carrier materializations across lift/re-opt passes. */
+    std::uint64_t exact_states = 0;
+    /* States retained by the final shared refinement graph. */
+    std::uint64_t retained_exact_states = 0;
+    std::uint64_t exact_classes = 0;
+    std::uint64_t initial_observation_classes = 0;
+    std::uint64_t behavior_splits = 0;
+    std::uint64_t merged_exact_states = 0;
+    std::uint64_t exact_transitions = 0;
+    std::uint64_t exact_kernels = 0;
+    std::uint64_t exact_kernel_cache_hits = 0;
+    std::uint64_t memory_bytes = 0;
+    std::uint64_t peak_memory_bytes = 0;
+    std::uint64_t memory_limit_bytes = 0;
+    std::uint64_t retained_artifact_bytes = 0;
+    /* Exact-state interner reuse is not an identity-destruction collapse. */
+    std::uint64_t exact_state_reuses = 0;
+    std::uint64_t collapse_events = 0;
+    RefinementFeatureMask collapse_destroyed_feature_mask = 0;
+    RefinementFeatureMask collapse_preserved_feature_mask = 0;
+    std::array<
+        std::uint64_t,
+        static_cast<std::size_t>(RefinementFeature::Count)>
+        collapse_events_by_feature{};
+    std::array<
+        std::uint64_t,
+        static_cast<std::size_t>(RefinementFeature::Count)>
+        preservation_events_by_feature{};
+    std::uint64_t refinement_rounds = 0;
+    std::uint64_t backward_observation_rounds = 0;
+    std::uint64_t selected_action_routing_rounds = 0;
+    std::uint64_t observation_propagation_rounds = 0;
+    std::uint64_t partition_refinement_rounds = 0;
+    std::uint64_t local_reoptimization_rounds = 0;
+    std::uint64_t local_state_action_rows_scheduled = 0;
+    std::uint64_t local_state_action_rows_evaluated = 0;
+    std::uint64_t local_reoptimizations = 0;
+    std::uint64_t local_policy_changes = 0;
+    std::uint64_t local_value_changes = 0;
+    std::uint64_t lumpability_checks = 0;
+    bool fixed_point_checked = false;
+    bool fixed_point_complete = false;
+    bool lumpability_checked = false;
+    bool lumpable = false;
+    bool class_policy_checked = false;
+    bool class_policy_proper = false;
+    bool compiled_assertion_checked = false;
+    bool compiled_policy_proper = false;
+    bool zero_off_policy = false;
+    bool cost_reconciled = false;
+    bool policy_changed = false;
+    bool coarse_value_reconciled = false;
+    std::uint64_t counterexamples = 0;
+    /* Each retained counterexample is one complete JSON object. */
+    std::vector<std::string> counterexample_samples;
+    std::uint64_t counterexample_samples_omitted = 0;
+    std::uint64_t refusal_causes = 0;
+    /* Refusal causes are stable engine-owned reason strings. */
+    std::vector<std::string> refusal_cause_samples;
+    std::uint64_t refusal_cause_samples_omitted = 0;
+};
+
 struct SolveDiagnostics {
     /* Actions the solve planned without, and why. */
     std::vector<std::string> skipped_missing_price;
@@ -1720,6 +2388,8 @@ struct SolveDiagnostics {
     std::uint32_t policy_compatibility_state = kNoId;
     std::string policy_compatibility_action;
     std::string policy_compatibility_reason;
+    std::string policy_publication_failure_reason;
+    PolicyRefinementTelemetry policy_refinement;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;
     std::uint32_t policy_improvement_rounds = 0;
@@ -1990,6 +2660,20 @@ struct PrimitiveRenewalWitness {
 };
 
 /*
+ * A policy-guided exact lift is compiled and independently evaluated while
+ * its strict child CalcContext is alive. Retain that proven ordinary strategy
+ * artifact so the public compiler returns the exact routers that were
+ * certified instead of recompiling the rejected coarse parent.
+ */
+struct RetainedCompiledPolicyArtifact {
+    std::string strategy_json;
+    std::uint32_t working_states = 0;
+    std::uint32_t policy_regions = 0;
+    std::uint32_t nodes = 0;
+    std::uint32_t edges = 0;
+};
+
+/*
  * Value table and policy over the reachable abstract state set. Vectors are
  * indexed by CalcContext state id; states never expanded (past the cap)
  * keep an infinite value and no policy action.
@@ -2009,6 +2693,14 @@ struct SolveResult {
     double requested_absolute_optimality_gap = 0.0;
     double requested_relative_optimality_gap = 0.0;
     std::uint32_t start_state = kNoId;
+    /*
+     * Preserve the caller-authored concrete starting carrier for strategy
+     * emission. A strict semantic class may intentionally merge modifier ids
+     * that every admitted observer treats equivalently; materializing an
+     * arbitrary member of that class must not rewrite the authored item.
+     */
+    bool has_exact_start_item = false;
+    pc_item_state exact_start_item{};
     std::vector<double> values;
     /* Planner operator index or kNoId. Primitive operator indices are exactly
      * their registry action indices; appended options are tagged by kind. */
@@ -2029,6 +2721,7 @@ struct SolveResult {
      * state id; representatives own Bellman rows and compiled policy. */
     std::vector<std::uint32_t> behavioral_representative_by_state;
     PrimitiveRenewalWitness primitive_renewal_witness;
+    RetainedCompiledPolicyArtifact refined_policy_artifact;
     SolveDiagnostics diagnostics;
     SolveOptions options;
 };
@@ -2132,6 +2825,10 @@ struct PolicyCompilationTelemetry {
     std::uint32_t nodes = 0;
     std::uint32_t edges = 0;
     std::uint64_t strategy_json_bytes = 0;
+    /* Peak compiler-owned buffers, excluding the retained CalcContext and
+     * SolveResult charged by the caller. Structured refinement includes its
+     * parent/member condition programs as well as the growing JSON document. */
+    std::uint64_t peak_owned_bytes = 0;
     std::string cap_hit;
 };
 
@@ -2167,7 +2864,13 @@ std::string compile_policy_strategy_json(
     CalcContext& calc,
     const SolveResult& result,
     const std::string& name,
-    PolicyCompilationTelemetry* telemetry = nullptr);
+    PolicyCompilationTelemetry* telemetry = nullptr,
+    std::uint64_t max_strategy_json_bytes =
+        std::numeric_limits<std::uint64_t>::max(),
+    const refinement::RefinedPolicyCompileRouting* refined_routing =
+        nullptr,
+    std::uint64_t max_compiler_owned_bytes =
+        std::numeric_limits<std::uint64_t>::max());
 
 } // namespace solver
 } // namespace poecraft

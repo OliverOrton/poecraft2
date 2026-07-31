@@ -2,6 +2,7 @@
 
 #include "../src/handles_internal.hpp"
 #include "../src/solver_internal.hpp"
+#include "../src/solver_refinement.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/solver.h"
 
@@ -234,6 +235,284 @@ void check_reference_parity(
                      edge.expected_traversals -
                      edge_value(reference, edge.id)) < 1e-9);
     }
+}
+
+std::string affix_observation_signature_condition(
+        const RefinementFeature feature,
+        const std::string& value,
+        const std::uint32_t count_observation_count = 0,
+        const std::string&
+            count_observation_membership_by_mod = "[]") {
+    const RefinementFeatureMask features =
+        refinement_feature(feature);
+    return
+        std::string{
+            "{\"type\":\"observation_signature\",\"version\":1,"
+            "\"requirement\":{\"item_features\":0,"
+            "\"modifier_tag_ids\":[],\"affix_observations\":["
+            "{\"features\":"} +
+        std::to_string(features) +
+        ",\"selector\":{\"required_affix_traits\":0,"
+        "\"forbidden_affix_traits\":0,\"required_item_traits\":0,"
+        "\"forbidden_item_traits\":0,\"required_tag_ids\":[]}}]},"
+        "\"signature\":[{\"feature\":" +
+        std::to_string(static_cast<std::uint8_t>(feature)) +
+        ",\"subject\":0,\"value\":[\"" + value +
+        "\"]}],\"goal_status_tier_class_by_mod\":[],"
+        "\"count_observation_count\":" +
+        std::to_string(count_observation_count) +
+        ",\"count_observation_membership_by_mod\":" +
+        count_observation_membership_by_mod + "}";
+}
+
+std::string observation_router_strategy(
+        const std::string& name,
+        const std::string& prefix_mod,
+        const std::string& routing_edges) {
+    return shell(
+        name, "rare",
+        R"JSON({"id":"start","kind":"start"},
+{"id":"success","kind":"terminal","terminal":"success"},
+{"id":"failure","kind":"terminal","terminal":"failure"})JSON",
+        routing_edges,
+        ",\"prefixes\":[\"" + prefix_mod + "\"]");
+}
+
+void expect_observation_program_refusal(
+        const std::shared_ptr<const SessionImpl>& session,
+        const std::string& condition,
+        const std::string& expected) {
+    const std::string strategy = observation_router_strategy(
+        "invalid observation program", "mod0",
+        std::string{
+            "{\"id\":\"route\",\"from\":\"start\","
+            "\"to\":\"success\",\"priority\":0,\"condition\":"} +
+            condition +
+            "},{\"id\":\"miss\",\"from\":\"start\","
+            "\"to\":\"failure\",\"priority\":999,"
+            "\"is_default\":true}");
+    bool refused = false;
+    try {
+        (void)compile(session, strategy);
+    } catch (const std::exception& error) {
+        refused =
+            std::string(error.what()).find(expected) !=
+            std::string::npos;
+    }
+    PC_CHECK(refused);
+}
+
+std::string replace_once(
+        std::string value,
+        const std::string& before,
+        const std::string& after) {
+    const std::size_t position = value.find(before);
+    PC_CHECK(position != std::string::npos);
+    if (position != std::string::npos) {
+        value.replace(position, before.size(), after);
+    }
+    return value;
+}
+
+pc_item_state observation_item(
+        const SessionImpl& session,
+        const std::uint32_t mod) {
+    pc_item_state item;
+    pc_item_clear(&item);
+    item.rarity = PC_RARITY_RARE;
+    PC_CHECK(
+        pc_item_add_mod(
+            &item, PC_SIDE_PREFIX, mod,
+            session.primary_group.at(mod), 0, nullptr) ==
+        PC_RESULT_OK);
+    return item;
+}
+
+void run_observation_signature_condition_tests() {
+    auto session = make_eval_session();
+    const std::string exclusion_g10 =
+        affix_observation_signature_condition(
+            RefinementFeature::ModifierExclusionSignature,
+            "0000000000000003");
+    const std::string exclusion_g11 =
+        affix_observation_signature_condition(
+            RefinementFeature::ModifierExclusionSignature,
+            "0000000000000004");
+
+    /* Modifier ids 0 and 1 are distinct raw ids but have the same complete
+     * group-exclusion effect. The shared observer must route them
+     * identically, while mod 2 remains distinguishable. */
+    const auto equal_strategy = compile(
+        session,
+        observation_router_strategy(
+            "equal semantic exclusion signature", "mod0",
+            std::string{
+                "{\"id\":\"equal\",\"from\":\"start\","
+                "\"to\":\"success\",\"priority\":0,\"condition\":"} +
+                exclusion_g10 +
+                "},{\"id\":\"miss\",\"from\":\"start\","
+                "\"to\":\"failure\",\"priority\":999,"
+                "\"is_default\":true}"));
+    const CompiledCondition& equal_condition =
+        equal_strategy->nodes.at(equal_strategy->start_node)
+            .edges.front().condition;
+    PC_CHECK(evaluate_compiled_condition(
+        equal_condition, *session, observation_item(*session, 0)));
+    PC_CHECK(evaluate_compiled_condition(
+        equal_condition, *session, observation_item(*session, 1)));
+    PC_CHECK(!evaluate_compiled_condition(
+        equal_condition, *session, observation_item(*session, 2)));
+
+    for (const char* const mod : {"mod0", "mod1"}) {
+        const auto strategy = compile(
+            session,
+            observation_router_strategy(
+                std::string{"equivalent raw modifier route "} + mod,
+                mod,
+                std::string{
+                    "{\"id\":\"equal\",\"from\":\"start\","
+                    "\"to\":\"success\",\"priority\":0,"
+                    "\"condition\":"} +
+                    exclusion_g10 +
+                    "},{\"id\":\"miss\",\"from\":\"start\","
+                    "\"to\":\"failure\",\"priority\":999,"
+                    "\"is_default\":true}"));
+        const StrategyEvalResult exact =
+            evaluate_strategy(*strategy);
+        const SimulationSummaryInternal simulated =
+            simulate(session, strategy, 64, 20260731);
+        PC_CHECK(exact.converged);
+        PC_CHECK(near(exact.success_probability, 1.0));
+        PC_CHECK(near(exact.failure_probability, 0.0));
+        PC_CHECK(simulated.completed_runs == 64);
+        PC_CHECK(simulated.success_count == 64);
+        PC_CHECK(simulated.failure_count == 0);
+        check_reference_parity(*strategy, exact);
+    }
+
+    const auto separated_strategy = compile(
+        session,
+        observation_router_strategy(
+            "different semantic exclusion signature", "mod2",
+            std::string{
+                "{\"id\":\"wrong\",\"from\":\"start\","
+                "\"to\":\"failure\",\"priority\":0,\"condition\":"} +
+                exclusion_g10 +
+                "},{\"id\":\"right\",\"from\":\"start\","
+                "\"to\":\"success\",\"priority\":1,\"condition\":" +
+                exclusion_g11 +
+                "},{\"id\":\"miss\",\"from\":\"start\","
+                "\"to\":\"failure\",\"priority\":999,"
+                "\"is_default\":true}"));
+    const StrategyEvalResult separated_exact =
+        evaluate_strategy(*separated_strategy);
+    const SimulationSummaryInternal separated_simulated =
+        simulate(session, separated_strategy, 64, 20260732);
+    PC_CHECK(separated_exact.converged);
+    PC_CHECK(near(separated_exact.success_probability, 1.0));
+    PC_CHECK(near(separated_exact.failure_probability, 0.0));
+    PC_CHECK(separated_simulated.success_count == 64);
+    PC_CHECK(separated_simulated.failure_count == 0);
+    PC_CHECK(near(
+        edge_value(separated_exact, "wrong"), 0.0));
+    PC_CHECK(near(
+        edge_value(separated_exact, "right"), 1.0));
+    check_reference_parity(
+        *separated_strategy, separated_exact);
+
+    /* An omitted all-zero membership entry is normalized to the declared
+     * observation width, not to an empty vector. This is the exact parser,
+     * simulator, and evaluator parity guard for sparse count context. */
+    const std::string zero_count_membership =
+        affix_observation_signature_condition(
+            RefinementFeature::CountObservationMembership,
+            "0000000000000000", 1,
+            R"JSON([{"mod_key":"mod0","value":["0000000000000001"]}])JSON");
+    const auto count_strategy = compile(
+        session,
+        observation_router_strategy(
+            "all-zero count membership normalization", "mod1",
+            std::string{
+                "{\"id\":\"zero\",\"from\":\"start\","
+                "\"to\":\"success\",\"priority\":0,\"condition\":"} +
+                zero_count_membership +
+                "},{\"id\":\"miss\",\"from\":\"start\","
+                "\"to\":\"failure\",\"priority\":999,"
+                "\"is_default\":true}"));
+    const StrategyEvalResult count_exact =
+        evaluate_strategy(*count_strategy);
+    const SimulationSummaryInternal count_simulated =
+        simulate(session, count_strategy, 64, 20260733);
+    PC_CHECK(count_exact.converged);
+    PC_CHECK(near(count_exact.success_probability, 1.0));
+    PC_CHECK(count_simulated.success_count == 64);
+    check_reference_parity(*count_strategy, count_exact);
+
+    /* The v1 program is closed and canonical at admission. Overflow is
+     * checked before narrowing into its u16/u8 selector fields. */
+    expect_observation_program_refusal(
+        session,
+        replace_once(
+            exclusion_g10, "\"version\":1", "\"version\":2"),
+        "unsupported observation_signature version");
+    expect_observation_program_refusal(
+        session,
+        replace_once(
+            exclusion_g10, "\"modifier_tag_ids\":[]",
+            "\"modifier_tag_ids\":[2,1]"),
+        "must be sorted and unique");
+    expect_observation_program_refusal(
+        session,
+        replace_once(
+            exclusion_g10,
+            "\"required_affix_traits\":0",
+            "\"required_affix_traits\":65536"),
+        "selector traits are invalid");
+    expect_observation_program_refusal(
+        session,
+        replace_once(
+            exclusion_g10,
+            "\"required_item_traits\":0",
+            "\"required_item_traits\":256"),
+        "selector traits are invalid");
+
+    const std::string duplicate_signature = replace_once(
+        exclusion_g10,
+        "\"signature\":[{\"feature\":21,\"subject\":0,"
+        "\"value\":[\"0000000000000003\"]}]",
+        "\"signature\":[{\"feature\":21,\"subject\":0,"
+        "\"value\":[\"0000000000000003\"]},"
+        "{\"feature\":21,\"subject\":0,"
+        "\"value\":[\"0000000000000003\"]}]");
+    expect_observation_program_refusal(
+        session, duplicate_signature,
+        "signature is not canonical");
+
+    const std::string duplicate_requirement = replace_once(
+        exclusion_g10,
+        "\"affix_observations\":[{\"features\":2097152,"
+        "\"selector\":{\"required_affix_traits\":0,"
+        "\"forbidden_affix_traits\":0,\"required_item_traits\":0,"
+        "\"forbidden_item_traits\":0,\"required_tag_ids\":[]}}]",
+        "\"affix_observations\":[{\"features\":2097152,"
+        "\"selector\":{\"required_affix_traits\":0,"
+        "\"forbidden_affix_traits\":0,\"required_item_traits\":0,"
+        "\"forbidden_item_traits\":0,\"required_tag_ids\":[]}},"
+        "{\"features\":134217728,\"selector\":{"
+        "\"required_affix_traits\":0,"
+        "\"forbidden_affix_traits\":0,\"required_item_traits\":0,"
+        "\"forbidden_item_traits\":0,\"required_tag_ids\":[]}}]");
+    expect_observation_program_refusal(
+        session, duplicate_requirement,
+        "requirement is not canonical");
+
+    const std::string malformed_count_context = replace_once(
+        zero_count_membership,
+        "\"value\":[\"0000000000000001\"]",
+        "\"value\":[]");
+    expect_observation_program_refusal(
+        session, malformed_count_context,
+        "invalid semantic membership vector");
 }
 
 void run_closed_form_tests() {
@@ -845,6 +1124,42 @@ void run_condition_parity_tests() {
                  evaluate_compiled_condition(
                      condition, *session, counted_item));
     }
+
+    /* Exact count routing may select one concrete member inside an occupied
+     * goal tier-status partition. The goal class token, not the shared status
+     * byte, supplies that contribution. */
+    GoalSpec any_tier_goal;
+    GoalSlot any_tier_family;
+    any_tier_family.family_id = 100;
+    any_tier_family.min_tier = 0;
+    any_tier_goal.slots.push_back(any_tier_family);
+    CountObservation exact_mod_observation;
+    exact_mod_observation.ids = {0};
+    CalcContext exact_goal_count(
+        session, any_tier_goal, registry, actions,
+        false, true, true, std::nullopt, {exact_mod_observation});
+    CompiledCondition exact_mod_count;
+    exact_mod_count.kind = ConditionKind::ModCount;
+    exact_mod_count.mod_ids = {0};
+    exact_mod_count.min_value = 1;
+    exact_mod_count.max_value = 1;
+    const auto exact_goal_state = [&](const std::uint32_t mod) {
+        pc_item_state exact_item;
+        pc_item_clear(&exact_item);
+        exact_item.rarity = PC_RARITY_MAGIC;
+        exact_item.prefix_count = 1;
+        exact_item.prefixes[0].mod_id = mod;
+        exact_item.prefixes[0].group_id = 10;
+        return exact_goal_count.intern_item(exact_item);
+    };
+    const std::uint32_t exact_zero = exact_goal_state(0);
+    const std::uint32_t exact_one = exact_goal_state(1);
+    PC_CHECK(evaluate_abstract_condition(
+        exact_mod_count, *session, exact_goal_count.layout(),
+        exact_goal_count.state(exact_zero)));
+    PC_CHECK(!evaluate_abstract_condition(
+        exact_mod_count, *session, exact_goal_count.layout(),
+        exact_goal_count.state(exact_one)));
 }
 
 void run_mc_gate() {
@@ -1064,6 +1379,428 @@ void run_refusal_and_unresolved_tests() {
     PC_CHECK(near(router_unresolved.unresolved_by_node[0].mass, 1.0));
 }
 
+void run_destructive_refinement_cycle_test() {
+    auto session = make_eval_session();
+
+    /*
+     * Keep three effective prefix groups:
+     *   g10 = mod0/mod1, g11 = mod2, g12 = mod3
+     * and four suffix groups:
+     *   g20..g23 = mod5..mod8.
+     *
+     * This produces 94 strict Chaos layouts. Of those, 52 non-satisfied,
+     * non-full layouts reach Exalt. Exalt misses produce 22 exact layouts
+     * that return to Chaos. A strict (node,state) evaluator therefore needs
+     * 1 start + 52 Exalt + 23 Chaos = 76 pairs. Contract-guided destruction
+     * collapse needs at most 60, so max_pairs=64 is a deliberate red/green
+     * boundary.
+     */
+    pc_bitset_zero(
+        session->normal_random_roll_mask.data(), session->words);
+    pc_bitset_zero(
+        session->positive_spawn_weight_mask.data(), session->words);
+    pc_bitset_zero(
+        session->positive_base_weight_mask.data(), session->words);
+    pc_bitset_zero(
+        session->influence_masks[0].data(), session->words);
+    session->base_spawn_weight.assign(session->mod_count, 0);
+    session->base_roll_weight.assign(session->mod_count, 0);
+    for (const std::uint32_t mod :
+         {0u, 1u, 2u, 3u, 5u, 6u, 7u, 8u}) {
+        pc_bitset_set(session->normal_random_roll_mask.data(), mod);
+        pc_bitset_set(session->positive_spawn_weight_mask.data(), mod);
+        pc_bitset_set(session->positive_base_weight_mask.data(), mod);
+        pc_bitset_set(session->influence_masks[0].data(), mod);
+        session->base_spawn_weight[mod] = 100;
+        session->base_roll_weight[mod] = 100;
+    }
+
+    const auto strategy = compile(
+        session,
+        shell(
+            "strict destructive chaos exalt cycle", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"chaos","kind":"operation","operation":{"type":"chaos","params":{}}},
+{"id":"exalt","kind":"operation","operation":{"type":"exalt","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"chaos","priority":0,"condition":{"type":"always"}},
+{"id":"chaos_hit","from":"chaos","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"chaos_to_exalt","from":"chaos","to":"exalt","priority":1,"condition":{"type":"any","conditions":[{"type":"open_prefix_count","min":1,"max":3},{"type":"open_suffix_count","min":1,"max":3}]}},
+{"id":"chaos_full_retry","from":"chaos","to":"chaos","priority":999,"is_default":true},
+{"id":"exalt_hit","from":"exalt","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","min_tier":1}},
+{"id":"exalt_retry","from":"exalt","to":"chaos","priority":999,"is_default":true})JSON"));
+
+    StrategyEvalOptions options;
+    options.epsilon = 1e-12;
+    options.max_sweeps = 10000;
+    options.max_states = 128;
+    options.max_pairs = 64;
+    options.max_transitions = 1024;
+    options.max_owned_bytes = 64ull * 1024ull * 1024ull;
+
+    StrategyEvalWork work(strategy, options);
+    while (!work.progress().done) {
+        work.step(1024);
+    }
+    const StrategyEvalProgress progress = work.progress();
+    PC_CHECK(progress.pending_pairs == 0);
+
+    const StrategyEvalResult& exact = work.result();
+    PC_CHECK(
+        progress.discovered_pairs == exact.refined_pairs);
+    PC_CHECK(exact.raw_pairs_discovered == 76);
+    PC_CHECK(exact.refined_pairs == 57);
+    PC_CHECK(
+        exact.raw_pairs_discovered > exact.refined_pairs);
+    PC_CHECK(exact.converged);
+    PC_CHECK(exact.sweeps == 0);
+    PC_CHECK(near(exact.success_probability, 1.0, 1e-10));
+    PC_CHECK(near(exact.failure_probability, 0.0, 1e-12));
+    PC_CHECK(near(exact.action_not_applied_probability, 0.0, 1e-12));
+    PC_CHECK(near(exact.no_matching_edge_probability, 0.0, 1e-12));
+    PC_CHECK(exact.max_mass_conservation_error < 1e-10);
+
+    /*
+     * Pair refinement temporarily retains the discovered evaluator graph
+     * while the shared closed-partition proof owns its canonical graph and
+     * scratch. A cap that exactly admits deterministic discovery must be
+     * rejected by that next phase under the public max_owned_bytes name.
+     */
+    StrategyEvalWork discovery_memory(strategy, options);
+    while (discovery_memory.progress().pending_pairs != 0) {
+        discovery_memory.step(1);
+    }
+    PC_CHECK(discovery_memory.progress().pending_pairs == 0);
+    const std::uint64_t discovery_memory_cap = std::max(
+        discovery_memory.live_owned_bytes(),
+        discovery_memory.peak_owned_bytes());
+    StrategyEvalOptions partition_memory_options = options;
+    partition_memory_options.max_owned_bytes = discovery_memory_cap;
+    StrategyEvalWork partition_memory(
+        strategy, partition_memory_options);
+    while (partition_memory.progress().pending_pairs != 0) {
+        partition_memory.step(1);
+    }
+    bool partition_memory_capped = false;
+    try {
+        partition_memory.step(1);
+    } catch (const std::length_error& error) {
+        partition_memory_capped =
+            std::string(error.what()).find("max_owned_bytes") !=
+            std::string::npos;
+    }
+    PC_CHECK(partition_memory_capped);
+
+    /* Exact carriers still exist; only the destructive operation boundary
+     * collapses them. A coarse global layout would be far below this. */
+    PC_CHECK(exact.occupancy_states.size() == 95);
+
+    const StrategyEvalActionTotal* chaos =
+        action_total(exact, "chaos");
+    const StrategyEvalActionTotal* exalt =
+        action_total(exact, "exalt");
+    PC_CHECK(chaos != nullptr);
+    PC_CHECK(exalt != nullptr);
+
+    /* The behavioral quotient still collapses Chaos to four carriers, but
+     * retained accounting must disaggregate its visits onto all 23 exact
+     * input states rather than assigning them to a representative. Exalt
+     * retains all 52 strict exclusion layouts in both views. This graph also
+     * exercises directed source->cycle SCC attribution order. */
+    PC_CHECK(chaos != nullptr && chaos->reachable_states == 23);
+    PC_CHECK(exalt != nullptr && exalt->reachable_states == 52);
+    PC_CHECK(
+        chaos != nullptr && exalt != nullptr &&
+        exalt->reachable_states > 2 * chaos->reachable_states);
+
+    PC_CHECK(edge_value(exact, "chaos_to_exalt") > 0.0);
+    PC_CHECK(edge_value(exact, "chaos_full_retry") > 0.0);
+    PC_CHECK(edge_value(exact, "exalt_retry") > 0.0);
+    PC_CHECK(near(
+        edge_value(exact, "chaos_hit") +
+            edge_value(exact, "exalt_hit"),
+        1.0, 1e-10));
+    PC_CHECK(exact.expected_consumption.at("chaos") > 1.0);
+    PC_CHECK(exact.expected_consumption.at("exalt") > 0.0);
+
+    check_reference_parity(*strategy, exact, options);
+
+    StrategyEvalOptions quotient_guard = options;
+    quotient_guard.max_pairs = 56;
+    bool quotient_cap_failed = false;
+    try {
+        (void)evaluate_strategy(*strategy, quotient_guard);
+    } catch (const std::length_error& ex) {
+        quotient_cap_failed =
+            std::string(ex.what()).find("max_pairs") !=
+            std::string::npos;
+    }
+    PC_CHECK(quotient_cap_failed);
+
+    StrategyEvalOptions observation_round_guard = options;
+    observation_round_guard.max_sweeps = 1;
+    bool observation_round_cap_failed = false;
+    try {
+        StrategyEvalWork capped(strategy, observation_round_guard);
+        (void)capped;
+    } catch (const std::length_error& ex) {
+        observation_round_cap_failed =
+            std::string(ex.what()).find("max_sweeps") !=
+            std::string::npos;
+    }
+    PC_CHECK(observation_round_cap_failed);
+
+    StrategyEvalWork observation_memory(strategy, options);
+    const std::uint64_t observation_live =
+        observation_memory.live_owned_bytes();
+    const std::uint64_t observation_peak =
+        observation_memory.peak_owned_bytes();
+    PC_CHECK(observation_peak > observation_live);
+    if (observation_peak > observation_live) {
+        StrategyEvalOptions observation_memory_guard = options;
+        observation_memory_guard.max_owned_bytes = observation_peak - 1;
+        bool observation_memory_cap_failed = false;
+        try {
+            StrategyEvalWork capped(strategy, observation_memory_guard);
+            (void)capped;
+        } catch (const std::length_error& ex) {
+            observation_memory_cap_failed =
+                std::string(ex.what()).find("max_owned_bytes") !=
+                std::string::npos;
+        }
+        PC_CHECK(observation_memory_cap_failed);
+    }
+}
+
+void run_observation_partition_delayed_split_tests() {
+    auto session = make_eval_session();
+    ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t fracture =
+        registry.index_by_id.at("fracture");
+    const std::uint32_t scour =
+        registry.index_by_id.at("scour");
+
+    /*
+     * Fracture produces four states that differ only in which affix is
+     * fractured. With no downstream condition, Scour's observation
+     * signature intentionally omits that preserved identity. Its raw exact
+     * kernel nevertheless differs: each state keeps a different fractured
+     * modifier. Equal observations therefore cannot authorize row reuse.
+     */
+    GoalSpec empty_goal;
+    std::vector<std::uint64_t> authored_mods(session->words, 0);
+    for (const std::uint32_t mod : {0u, 2u, 5u, 6u}) {
+        pc_bitset_set(authored_mods.data(), mod);
+    }
+    CalcContext strict(
+        session, empty_goal, registry, {fracture, scour},
+        true, false, true, std::nullopt, {}, false,
+        authored_mods, true);
+    pc_item_state carrier;
+    pc_item_clear(&carrier);
+    carrier.rarity = PC_RARITY_RARE;
+    PC_CHECK(
+        pc_item_add_mod(
+            &carrier, PC_SIDE_PREFIX, 0,
+            session->primary_group[0], 0, nullptr) ==
+        PC_RESULT_OK);
+    PC_CHECK(
+        pc_item_add_mod(
+            &carrier, PC_SIDE_PREFIX, 2,
+            session->primary_group[2], 0, nullptr) ==
+        PC_RESULT_OK);
+    PC_CHECK(
+        pc_item_add_mod(
+            &carrier, PC_SIDE_SUFFIX, 5,
+            session->primary_group[5], 0, nullptr) ==
+        PC_RESULT_OK);
+    PC_CHECK(
+        pc_item_add_mod(
+            &carrier, PC_SIDE_SUFFIX, 6,
+            session->primary_group[6], 0, nullptr) ==
+        PC_RESULT_OK);
+
+    refinement::SelectedAction selected;
+    selected.action_id = scour;
+    selected.semantic_key = {1};
+    selected.contract = registry.actions[scour].refinement;
+    std::vector<refinement::StableKey> signatures;
+    std::vector<std::vector<OutcomeEntry>> kernels;
+    const std::array<std::pair<int, std::uint32_t>, 4>
+        fractured_slots{{
+            {PC_SIDE_PREFIX, 0},
+            {PC_SIDE_PREFIX, 1},
+            {PC_SIDE_SUFFIX, 0},
+            {PC_SIDE_SUFFIX, 1},
+        }};
+    for (const auto& [side, index] : fractured_slots) {
+        pc_item_state exact = carrier;
+        pc_mod_slot* slot =
+            side == PC_SIDE_PREFIX
+                ? &exact.prefixes[index]
+                : &exact.suffixes[index];
+        slot->flags |= PC_MOD_SLOT_FRACTURED;
+        const std::uint32_t state = strict.intern_item(exact);
+        const auto signature =
+            refinement::canonical_operation_state_signature(
+                *session, strict.layout(), strict.state(state),
+                selected);
+        PC_CHECK(signature.has_value());
+        if (signature.has_value()) {
+            signatures.push_back(*signature);
+        }
+        const OutcomeDistribution& kernel =
+            strict.outcomes(state, scour);
+        PC_CHECK(kernel.supported);
+        PC_CHECK(kernel.entries.size() == 1);
+        PC_CHECK(
+            kernel.entries.size() == 1 &&
+            near(kernel.entries.front().probability, 1.0));
+        kernels.push_back(kernel.entries);
+    }
+    PC_CHECK(signatures.size() == 4);
+    PC_CHECK(signatures[0] == signatures[1]);
+    PC_CHECK(signatures[2] == signatures[3]);
+    PC_CHECK(signatures[0] != signatures[2]);
+    PC_CHECK(kernels.size() == 4);
+    for (std::size_t i = 0; i < kernels.size(); ++i) {
+        for (std::size_t j = i + 1; j < kernels.size(); ++j) {
+            PC_CHECK(kernels[i] != kernels[j]);
+        }
+    }
+
+    /*
+     * A downstream fractured-family observer must keep the hit carrier apart
+     * even though every Scour input begins in the same observation class and
+     * the raw one-step kernels differ only beyond that class. This is the
+     * delayed-split guard: refinement must be split-only to a fixed point.
+     */
+    const auto observed_strategy = compile(
+        session,
+        shell(
+            "downstream observer fracture scour", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"fracture","kind":"operation","operation":{"type":"fracture","params":{}}},
+{"id":"scour","kind":"operation","operation":{"type":"scour","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"},
+{"id":"failure","kind":"terminal","terminal":"failure"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"fracture","priority":0,"condition":{"type":"always"}},
+{"id":"fractured","from":"fracture","to":"scour","priority":0,"condition":{"type":"always"}},
+{"id":"observed_hit","from":"scour","to":"success","priority":0,"condition":{"type":"has_mod_family","family_mod_key":"mod0","fractured":true}},
+{"id":"observed_miss","from":"scour","to":"failure","priority":999,"is_default":true})JSON",
+            R"JSON(,"prefixes":["mod0","mod2"],"suffixes":["mod5","mod6"])JSON"));
+    const StrategyEvalResult observed =
+        evaluate_strategy(*observed_strategy);
+    PC_CHECK(observed.converged);
+    PC_CHECK(near(observed.success_probability, 0.25, 1e-12));
+    PC_CHECK(near(observed.failure_probability, 0.75, 1e-12));
+    PC_CHECK(near(observed.expected_actions, 2.0, 1e-12));
+    const StrategyEvalActionTotal* fracture_total =
+        action_total(observed, "fracture");
+    const StrategyEvalActionTotal* scour_total =
+        action_total(observed, "scour");
+    PC_CHECK(fracture_total != nullptr);
+    PC_CHECK(scour_total != nullptr);
+    PC_CHECK(
+        fracture_total != nullptr &&
+        fracture_total->reachable_states == 1);
+    PC_CHECK(
+        scour_total != nullptr &&
+        scour_total->reachable_states == 3);
+    /*
+     * Semantic-strict discovery may canonicalize observer-equivalent modifier
+     * ids before the closed partition sees them.  The partition may merge
+     * further, but it must never manufacture more classes than discovered
+     * semantic pairs.
+     */
+    PC_CHECK(
+        observed.raw_pairs_discovered >=
+        observed.refined_pairs);
+    PC_CHECK(
+        edge_value(observed, "observed_hit") > 0.0);
+    PC_CHECK(
+        edge_value(observed, "observed_miss") > 0.0);
+    check_reference_parity(
+        *observed_strategy, observed, StrategyEvalOptions{});
+
+    /*
+     * With an unconditional terminal continuation, same-side fractured
+     * identities have equal immediate behavior and equal probability into
+     * the same absorption category. They must merge despite their unequal
+     * concrete Scour successor ids, while the prefix/suffix distinction that
+     * Scour observes and preserves remains exact.
+     */
+    const auto unconditional_strategy = compile(
+        session,
+        shell(
+            "unconditional fracture scour collapse", "rare",
+            R"JSON({"id":"start","kind":"start"},
+{"id":"fracture","kind":"operation","operation":{"type":"fracture","params":{}}},
+{"id":"scour","kind":"operation","operation":{"type":"scour","params":{}}},
+{"id":"success","kind":"terminal","terminal":"success"})JSON",
+            R"JSON({"id":"begin","from":"start","to":"fracture","priority":0,"condition":{"type":"always"}},
+{"id":"fractured","from":"fracture","to":"scour","priority":0,"condition":{"type":"always"}},
+{"id":"done","from":"scour","to":"success","priority":0,"condition":{"type":"always"}})JSON",
+            R"JSON(,"prefixes":["mod0","mod2"],"suffixes":["mod5","mod6"])JSON"));
+    const StrategyEvalResult unconditional =
+        evaluate_strategy(*unconditional_strategy);
+    PC_CHECK(unconditional.converged);
+    PC_CHECK(near(
+        unconditional.success_probability, 1.0, 1e-12));
+    PC_CHECK(near(
+        unconditional.failure_probability, 0.0, 1e-12));
+    PC_CHECK(near(
+        unconditional.expected_actions, 2.0, 1e-12));
+    const StrategyEvalActionTotal* unconditional_scour =
+        action_total(unconditional, "scour");
+    if (unconditional_scour == nullptr ||
+        unconditional_scour->reachable_states != 2 ||
+        scour_total == nullptr ||
+        scour_total->reachable_states != 3 ||
+        unconditional.raw_pairs_discovered <
+            unconditional.refined_pairs) {
+        std::printf(
+            "fracture/scour partition diagnostics: observed_scour=%u "
+            "unconditional_scour=%u unconditional_raw=%u "
+            "unconditional_refined=%u\n",
+            scour_total == nullptr
+                ? 0u
+                : scour_total->reachable_states,
+            unconditional_scour == nullptr
+                ? 0u
+                : unconditional_scour->reachable_states,
+            unconditional.raw_pairs_discovered,
+            unconditional.refined_pairs);
+    }
+    PC_CHECK(unconditional_scour != nullptr);
+    PC_CHECK(
+        unconditional_scour != nullptr &&
+        unconditional_scour->reachable_states == 2);
+    PC_CHECK(
+        scour_total != nullptr &&
+        scour_total->reachable_states == 3);
+    PC_CHECK(
+        unconditional.raw_pairs_discovered >=
+        unconditional.refined_pairs);
+    PC_CHECK(unconditional.refined_pairs == 4);
+    const auto success_node = std::find_if(
+        unconditional.nodes.begin(), unconditional.nodes.end(),
+        [](const StrategyEvalNode& node) {
+            return node.id == "success";
+        });
+    PC_CHECK(success_node != unconditional.nodes.end());
+    PC_CHECK(
+        success_node != unconditional.nodes.end() &&
+        success_node->classes.size() == 2);
+    PC_CHECK(near(
+        edge_value(unconditional, "fractured"), 1.0, 1e-12));
+    PC_CHECK(near(
+        edge_value(unconditional, "done"), 1.0, 1e-12));
+    check_reference_parity(
+        *unconditional_strategy, unconditional,
+        StrategyEvalOptions{});
+}
+
 void run_scale_and_fallback_tests() {
     auto session = make_eval_session();
     std::ostringstream nodes;
@@ -1123,7 +1860,12 @@ void run_scale_and_fallback_tests() {
     try {
         (void)evaluate_strategy(*pair_guard, state_guard);
     } catch (const std::length_error& ex) {
-        failed = std::string(ex.what()).find("max_states") != std::string::npos;
+        failed =
+            std::string(ex.what()).find("max_states") !=
+                std::string::npos ||
+            std::string(ex.what()).find(
+                "max_discovered_states") !=
+                std::string::npos;
     }
     PC_CHECK(failed);
 
@@ -1283,7 +2025,12 @@ void run_c_abi_tests() {
         step_result = pc_strategy_eval_step(work, 1, &progress, &error);
     }
     PC_CHECK(step_result == PC_RESULT_CAPACITY_EXCEEDED);
-    PC_CHECK(std::string(error.message).find("max_states") != std::string::npos);
+    PC_CHECK(
+        std::string(error.message).find("max_states") !=
+            std::string::npos ||
+        std::string(error.message).find(
+            "max_discovered_states") !=
+            std::string::npos);
     PC_CHECK(std::string(error.message).find("bad_alloc") == std::string::npos);
     pc_strategy_eval_destroy(work);
 
@@ -1446,6 +2193,30 @@ std::string operation_json(
     return "{\"type\":\"" + type + "\",\"params\":{" + params + "}}";
 }
 
+void run_modifier_offer_resolution_tests() {
+    ActionRegistry registry;
+    ActionDescriptor first;
+    first.id = "test:offer:first";
+    first.params.type = ActionType::Unveil;
+    first.params.target_tag_id = 1;
+    first.refinement.outcome_observation =
+        RefinementOutcomeObservation::ModifierOffer;
+    ActionDescriptor second = first;
+    second.id = "test:offer:second";
+    second.params.target_tag_id = 2;
+    registry.index_by_id.emplace(first.id, 0);
+    registry.actions.push_back(first);
+    registry.index_by_id.emplace(second.id, 1);
+    registry.actions.push_back(second);
+
+    StrategyNode node;
+    node.kind = StrategyNodeKind::Operation;
+    node.action_type = static_cast<int>(ActionType::Unveil);
+    node.action = second.params;
+    node.action.mod_id = 7; /* sampled concrete choice, not template identity */
+    PC_CHECK(resolve_strategy_action(node, registry) == 1);
+}
+
 void run_artifact_and_registry_tests(const char* artifact_dir) {
     std::shared_ptr<SessionImpl> session;
     try {
@@ -1586,6 +2357,18 @@ void run_solver_eval_tests(const char* artifact_dir) {
         }
     };
     stage("closed form", [&] { run_closed_form_tests(); });
+    stage("modifier offer resolution", [&] {
+        run_modifier_offer_resolution_tests();
+    });
+    stage("observation signature condition", [&] {
+        run_observation_signature_condition_tests();
+    });
+    stage("destructive refinement cycle", [&] {
+        run_destructive_refinement_cycle_test();
+    });
+    stage("observation partition delayed split", [&] {
+        run_observation_partition_delayed_split_tests();
+    });
     stage("condition parity", [&] { run_condition_parity_tests(); });
     stage("mc gate", [&] { run_mc_gate(); });
     stage("simulator semantics", [&] { run_simulator_semantics_tests(); });

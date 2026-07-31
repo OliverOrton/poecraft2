@@ -240,6 +240,67 @@ import type { Catalog } from "../src/app/engine-protocol";
 }
 
 {
+    const observationSignature = {
+        type: "observation_signature",
+        version: 1,
+        requirement: {
+            item_features: 1,
+            modifier_tag_ids: [7],
+            affix_observations: [
+                {
+                    features: 3,
+                    selector: {
+                        required_affix_traits: 1,
+                        forbidden_affix_traits: 0,
+                        required_item_traits: 0,
+                        forbidden_item_traits: 0,
+                        required_tag_ids: [7],
+                    },
+                },
+            ],
+        },
+        signature: [
+            {
+                feature: 0,
+                subject: 0,
+                value: ["0000000000000002"],
+            },
+        ],
+        goal_status_tier_class_by_mod: [
+            {
+                mod_key: "Metadata/Mods/TestGoal",
+                value: ["0000000000000001", "0000000000000002"],
+            },
+        ],
+        count_observation_count: 1,
+        count_observation_membership_by_mod: [
+            {
+                mod_key: "Metadata/Mods/TestCountMember",
+                value: ["0000000000000001"],
+            },
+        ],
+    };
+    assert.deepEqual(
+        compileConditionTree(parseConditionTree(observationSignature)),
+        observationSignature,
+    );
+    const strategy = createDefaultStrategy();
+    strategy.edges[1].condition = structuredClone(observationSignature);
+    assert.deepEqual(
+        validateStrategy(strategy).filter((issue) => issue.severity === "error"),
+        [],
+    );
+    assert.equal(conditionLabel(strategy.edges[1].condition), "exact policy state");
+    assert.deepEqual(
+        cloneStrategy(strategy).edges[1].condition,
+        observationSignature,
+    );
+    console.log(
+        "  ok - engine-authored observation signatures validate and round-trip opaquely",
+    );
+}
+
+{
     const modifiers = [
         {
             type: "has_mod_family",

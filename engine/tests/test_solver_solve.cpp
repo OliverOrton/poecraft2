@@ -1,6 +1,8 @@
 #include "tests.hpp"
 
 #include "../src/json.hpp"
+#include "../src/solver_policy_refinement.hpp"
+#include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
@@ -10,8 +12,11 @@
 #include <bit>
 #include <cmath>
 #include <cstdio>
+#include <deque>
 #include <fstream>
+#include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -22,7 +27,8 @@ using namespace poecraft::solver;
 
 namespace {
 
-std::shared_ptr<SessionImpl> make_solve_session();
+std::shared_ptr<SessionImpl> make_solve_session(
+    const std::vector<std::string>& essence_keys = {});
 
 void run_bounded_policy_row_capture_tests() {
     auto session = make_solve_session();
@@ -77,8 +83,390 @@ void run_bounded_policy_row_capture_tests() {
     PC_CHECK(stale_row_rejected);
 }
 
+void run_shared_sparse_policy_kernel_tests() {
+    SolveTransitionCache graph;
+    std::vector<PricedSparseRow> priced;
+    solve_detail::SparsePolicyRowInput first_row;
+    first_row.owner_state = 0;
+    first_row.cost = 10.0;
+    first_row.transitions = {{0, 0.5}, {1, 0.5}};
+    PC_CHECK(
+        solve_detail::append_sparse_policy_row(
+            graph, priced, first_row) == 0);
+    solve_detail::SparsePolicyRowInput tied_row;
+    tied_row.owner_state = 0;
+    tied_row.cost = 24.0;
+    PC_CHECK(
+        solve_detail::append_sparse_policy_row(
+            graph, priced, tied_row) == 1);
+    PC_CHECK(graph.state_rows.size() == 1);
+    PC_CHECK(graph.state_rows[0].count == 2);
+    PC_CHECK(graph.rows[0].next_owner_row == 1);
+    PC_CHECK(graph.rows[0].self_probability == 0.5);
+    const std::vector<double> values{0.0, 4.0, 3.0005};
+
+    std::uint32_t transition_work = 0;
+    const double row_q = solve_detail::evaluate_sparse_policy_row(
+        graph, priced, values, 0, transition_work);
+    PC_CHECK(std::abs(row_q - 24.0) <= 1e-12);
+    PC_CHECK(transition_work == 1);
+
+    const auto tied = solve_detail::select_sparse_policy_row(
+        graph, 0, 1e-3,
+        [](const std::uint64_t) { return true; },
+        [](const std::uint64_t row, std::uint32_t& work) {
+            work = 1;
+            return row == 0 ? 24.0 : 23.9995;
+        });
+    PC_CHECK(tied.row == 0);
+    PC_CHECK(tied.evaluated_rows == 2);
+    PC_CHECK(tied.transition_work == 2);
+    const auto improving = solve_detail::select_sparse_policy_row(
+        graph, 0, 1e-3,
+        [](const std::uint64_t) { return true; },
+        [](const std::uint64_t row, std::uint32_t& work) {
+            work = 0;
+            return row == 0 ? 24.0 : 23.9;
+        });
+    PC_CHECK(improving.row == 1);
+
+    graph.choice_successors = {2, 1};
+    SparseChoiceGroup choice;
+    choice.successor_offset = 0;
+    choice.successor_count = 2;
+    const std::vector<double> choice_values{0.0, 3.0, 3.0005};
+    const std::uint32_t selected =
+        solve_detail::select_sparse_policy_choice_successor(
+            graph, choice, 0, choice_values);
+    PC_CHECK(selected == 1);
+    graph.choice_successors = {1, 2};
+    const std::vector<double> near_choice_values{
+        0.0, 3.0 + 5e-10, 3.0};
+    PC_CHECK(
+        solve_detail::select_sparse_policy_choice_successor(
+            graph, choice, 0, near_choice_values) == 2);
+    graph.choice_successors = {2, 1};
+    const std::vector<double> infinite_choice_values{
+        0.0, kInfinity, kInfinity};
+    PC_CHECK(
+        solve_detail::select_sparse_policy_choice_successor(
+            graph, choice, 0, infinite_choice_values) ==
+        1);
+    SparseChoiceGroup empty_choice;
+    PC_CHECK(
+        solve_detail::select_sparse_policy_choice_successor(
+            graph, empty_choice, 0, infinite_choice_values) ==
+        kNoId);
+
+    std::vector<PolicyRow> policy_rows(3);
+    std::vector<PolicyEdge> policy_edges{
+        {1, 1.0}, {0, 1.0}};
+    policy_rows[0].edge_offset = 0;
+    policy_rows[0].edge_count = 1;
+    policy_rows[1].edge_offset = 1;
+    policy_rows[1].edge_count = 1;
+    const std::vector<std::uint32_t> active_states{0, 1};
+    const std::vector<std::uint8_t> active{1, 1, 0};
+    const std::vector<std::uint8_t> terminal{0, 0, 0};
+    const std::vector<std::uint64_t> selected_rows{
+        0, 1, std::numeric_limits<std::uint64_t>::max()};
+    const std::vector<std::uint32_t> representatives{0, 1, 2};
+    solve_detail::SparsePolicyComponentWorkspace components;
+    const solve_detail::SparsePolicyTarjanView tarjan{
+        active_states,
+        active,
+        terminal,
+        selected_rows,
+        representatives,
+        policy_rows,
+        policy_edges};
+    for (std::uint32_t step = 0;
+         step < 32 && !components.components_ready; ++step) {
+        (void)solve_detail::advance_sparse_policy_components(
+            tarjan, components, 1);
+    }
+    PC_CHECK(components.components_ready);
+    PC_CHECK(components.components.size() == 1);
+    PC_CHECK(components.components.front() ==
+             std::vector<std::uint32_t>({0, 1}));
+
+    policy_edges[0].probability = 0.5;
+    policy_edges[1].probability = 0.25;
+    components.local = {0, 1, -1};
+    const std::vector<double> rhs{1.0, 2.0};
+    const std::vector<double> previous{0.0, 0.0, 0.0};
+    std::unique_ptr<solve_detail::SparsePolicyResume> resume;
+    const solve_detail::SparsePolicyComponentView component{
+        components.components.front(),
+        0,
+        components.component_by_state,
+        components.local,
+        policy_rows,
+        policy_edges,
+        rhs,
+        previous,
+        100000};
+    const solve_detail::SparsePolicyComponentResult solved =
+        solve_detail::advance_sparse_policy_component(
+            component, resume);
+    PC_CHECK(
+        solved.status ==
+        solve_detail::SparsePolicyComponentStatus::Complete);
+    PC_CHECK(solved.values.size() == 2);
+    PC_CHECK(std::abs(solved.values[0] - 16.0 / 7.0) <= 1e-12);
+    PC_CHECK(std::abs(solved.values[1] - 18.0 / 7.0) <= 1e-12);
+
+    /* The smallest representable exit below one is still a genuine finite
+     * stored-model probability. It must neither be rounded into an infinite
+     * row-local fixed point nor rejected by the dense component solve. A small
+     * action cost keeps the finite value below the solver product ceiling. */
+    const double rare_self_probability =
+        std::nextafter(1.0, 0.0);
+    const double rare_exit_probability =
+        1.0 - rare_self_probability;
+    constexpr double kRareStepCost = 1e-6;
+    const double rare_expected_value =
+        kRareStepCost / rare_exit_probability;
+    PC_CHECK(std::isfinite(rare_expected_value));
+    PC_CHECK(rare_expected_value < kValueCeiling);
+    PC_CHECK(
+        solve_detail::sparse_policy_exit_probability(
+            solve_detail::WideFloat{rare_self_probability}) ==
+        rare_exit_probability);
+
+    SolveTransitionCache rare_graph;
+    std::vector<PricedSparseRow> rare_priced;
+    solve_detail::SparsePolicyRowInput rare_row;
+    rare_row.owner_state = 0;
+    rare_row.cost = kRareStepCost;
+    rare_row.transitions = {
+        {0, rare_self_probability},
+        {1, rare_exit_probability}};
+    solve_detail::append_sparse_policy_row(
+        rare_graph, rare_priced, rare_row);
+    std::uint32_t rare_transition_work = 0;
+    const double rare_row_value =
+        solve_detail::evaluate_sparse_policy_row(
+            rare_graph, rare_priced, {0.0, 0.0}, 0,
+            rare_transition_work);
+    PC_CHECK(std::isfinite(rare_row_value));
+    PC_CHECK(
+        std::abs(rare_row_value - rare_expected_value) <=
+        rare_expected_value * 1e-15);
+
+    const std::vector<std::uint32_t> rare_members{0};
+    const std::vector<std::uint32_t> rare_component_by_state{0};
+    const std::vector<std::int32_t> rare_local_by_state{0};
+    std::vector<PolicyRow> rare_policy_rows(1);
+    rare_policy_rows[0].edge_offset = 0;
+    rare_policy_rows[0].edge_count = 1;
+    const std::vector<PolicyEdge> rare_policy_edges{
+        {0, rare_self_probability}};
+    const std::vector<double> rare_rhs{kRareStepCost};
+    const std::vector<double> rare_previous{0.0};
+    std::unique_ptr<solve_detail::SparsePolicyResume> rare_resume;
+    const solve_detail::SparsePolicyComponentResult rare_solved =
+        solve_detail::advance_sparse_policy_component(
+            solve_detail::SparsePolicyComponentView{
+                rare_members,
+                0,
+                rare_component_by_state,
+                rare_local_by_state,
+                rare_policy_rows,
+                rare_policy_edges,
+                rare_rhs,
+                rare_previous,
+                100000},
+            rare_resume);
+    PC_CHECK(
+        rare_solved.status ==
+        solve_detail::SparsePolicyComponentStatus::Complete);
+    PC_CHECK(rare_solved.values.size() == 1);
+    PC_CHECK(std::isfinite(rare_solved.values.front()));
+    PC_CHECK(
+        std::abs(rare_solved.values.front() - rare_expected_value) <=
+        rare_expected_value * 1e-15);
+
+    constexpr std::size_t kSparseRingSize =
+        kDensePolicyComponentLimit + 1;
+    constexpr double kAbsorptionProbability = 1.0 / 128.0;
+    constexpr double kRingProbability =
+        1.0 - kAbsorptionProbability;
+    constexpr double kRingStepCost = 0.5;
+    constexpr double kExpectedRingValue =
+        kRingStepCost / kAbsorptionProbability;
+    std::vector<std::uint32_t> ring_members(kSparseRingSize);
+    std::vector<std::uint32_t> ring_component_by_state(
+        kSparseRingSize, 0);
+    std::vector<std::int32_t> ring_local_by_state(kSparseRingSize);
+    std::vector<PolicyRow> ring_rows(kSparseRingSize);
+    std::vector<PolicyEdge> ring_edges;
+    ring_edges.reserve(kSparseRingSize);
+    std::vector<double> ring_rhs(kSparseRingSize, kRingStepCost);
+    std::vector<double> ring_previous(kSparseRingSize);
+    for (std::size_t index = 0; index < kSparseRingSize; ++index) {
+        ring_members[index] = static_cast<std::uint32_t>(index);
+        ring_local_by_state[index] =
+            static_cast<std::int32_t>(index);
+        ring_rows[index].edge_offset =
+            static_cast<std::uint32_t>(ring_edges.size());
+        ring_rows[index].edge_count = 1;
+        ring_edges.push_back(PolicyEdge{
+            static_cast<std::uint32_t>(
+                (index + 1) % kSparseRingSize),
+            kRingProbability});
+        const double perturbation =
+            static_cast<double>((index * 37) % kSparseRingSize) -
+            static_cast<double>(kSparseRingSize / 2);
+        ring_previous[index] =
+            kExpectedRingValue + perturbation * 0.5;
+    }
+    const solve_detail::SparsePolicyComponentView ring_component{
+        ring_members,
+        0,
+        ring_component_by_state,
+        ring_local_by_state,
+        ring_rows,
+        ring_edges,
+        ring_rhs,
+        ring_previous,
+        100000};
+    std::unique_ptr<solve_detail::SparsePolicyResume> ring_resume;
+    solve_detail::SparsePolicyComponentResult ring_solved;
+    std::uint32_t ring_work_units = 0;
+    std::uint32_t ring_incomplete_work_units = 0;
+    do {
+        ring_solved = solve_detail::advance_sparse_policy_component(
+            ring_component, ring_resume);
+        ++ring_work_units;
+        PC_CHECK(ring_solved.iterations <= 4);
+        if (ring_solved.status ==
+            solve_detail::SparsePolicyComponentStatus::Incomplete) {
+            ++ring_incomplete_work_units;
+            PC_CHECK(ring_resume != nullptr);
+            PC_CHECK(ring_solved.values.empty());
+        }
+    } while (
+        ring_solved.status ==
+            solve_detail::SparsePolicyComponentStatus::Incomplete &&
+        ring_work_units < 4096);
+    PC_CHECK(ring_incomplete_work_units > 0);
+    PC_CHECK(ring_work_units < 4096);
+    PC_CHECK(
+        ring_solved.status ==
+        solve_detail::SparsePolicyComponentStatus::Complete);
+    PC_CHECK(ring_resume == nullptr);
+    PC_CHECK(ring_solved.values.size() == kSparseRingSize);
+    PC_CHECK(ring_solved.total_iterations <= 20000);
+    double max_ring_value_error = 0.0;
+    double max_ring_residual = 0.0;
+    for (std::size_t index = 0;
+         index < ring_solved.values.size(); ++index) {
+        max_ring_value_error = std::max(
+            max_ring_value_error,
+            std::abs(
+                ring_solved.values[index] - kExpectedRingValue));
+        const std::size_t successor =
+            (index + 1) % ring_solved.values.size();
+        max_ring_residual = std::max(
+            max_ring_residual,
+            std::abs(
+                ring_solved.values[index] -
+                kRingProbability * ring_solved.values[successor] -
+                kRingStepCost));
+    }
+    PC_CHECK(max_ring_value_error <= 1e-9);
+    PC_CHECK(max_ring_residual <= 1e-11);
+
+    /* A closed cycle with positive cost is inconsistent: A*x=b has no
+     * solution. Its constant first residual makes BiCGSTAB break down on the
+     * zero denominator. The shared solver must switch to deterministic
+     * Gauss-Seidel, remain resumable in four-sweep units, and exhaust the
+     * caller's declared limit without claiming convergence. */
+    std::vector<PolicyEdge> closed_ring_edges = ring_edges;
+    for (PolicyEdge& edge : closed_ring_edges) {
+        edge.probability = 1.0;
+    }
+    const std::vector<double> closed_ring_rhs(kSparseRingSize, 1.0);
+    const std::vector<double> closed_ring_previous(kSparseRingSize, 0.0);
+    const solve_detail::SparsePolicyComponentView closed_ring_component{
+        ring_members,
+        0,
+        ring_component_by_state,
+        ring_local_by_state,
+        ring_rows,
+        closed_ring_edges,
+        closed_ring_rhs,
+        closed_ring_previous,
+        1000};
+    std::unique_ptr<solve_detail::SparsePolicyResume>
+        closed_ring_resume;
+    solve_detail::SparsePolicyComponentResult closed_ring_solved;
+    bool saw_gauss_seidel_fallback = false;
+    std::uint32_t closed_ring_work_units = 0;
+    do {
+        closed_ring_solved =
+            solve_detail::advance_sparse_policy_component(
+                closed_ring_component, closed_ring_resume);
+        ++closed_ring_work_units;
+        PC_CHECK(closed_ring_solved.iterations <= 4);
+        if (closed_ring_resume != nullptr) {
+            saw_gauss_seidel_fallback =
+                saw_gauss_seidel_fallback ||
+                closed_ring_resume->mode ==
+                    solve_detail::SparsePolicySolveMode::GaussSeidel;
+        }
+    } while (
+        closed_ring_solved.status ==
+            solve_detail::SparsePolicyComponentStatus::Incomplete &&
+        closed_ring_work_units < 300);
+    PC_CHECK(saw_gauss_seidel_fallback);
+    PC_CHECK(closed_ring_work_units == 250);
+    PC_CHECK(
+        closed_ring_solved.status ==
+        solve_detail::SparsePolicyComponentStatus::DidNotConverge);
+    PC_CHECK(closed_ring_solved.total_iterations == 1000);
+    PC_CHECK(closed_ring_solved.values.empty());
+    PC_CHECK(closed_ring_resume == nullptr);
+
+    PC_CHECK(
+        solve_detail::sparse_policy_component_scratch_bytes(
+            2, false) ==
+        8 * sizeof(solve_detail::WideFloat) +
+            2 * sizeof(double));
+    constexpr std::size_t kSparseScratchOrder =
+        kDensePolicyComponentLimit + 1;
+    const std::uint64_t sparse_broad_scratch_expected =
+        kSparseScratchOrder *
+            (16 * sizeof(solve_detail::WideFloat) +
+             sizeof(double) + sizeof(std::uint32_t)) +
+        sizeof(solve_detail::SparsePolicyResume);
+    PC_CHECK(
+        solve_detail::sparse_policy_component_scratch_bytes(
+            kSparseScratchOrder, false) ==
+        sparse_broad_scratch_expected);
+    const std::uint64_t sparse_retained_result_scratch_expected =
+        sparse_broad_scratch_expected +
+        kSparseScratchOrder * sizeof(double);
+    PC_CHECK(
+        solve_detail::sparse_policy_component_scratch_bytes(
+            kSparseScratchOrder, true) ==
+        sparse_retained_result_scratch_expected);
+    if constexpr (sizeof(std::size_t) >= sizeof(std::uint64_t)) {
+        PC_CHECK(
+            solve_detail::sparse_policy_component_scratch_bytes(
+                std::numeric_limits<std::size_t>::max(), false) ==
+            std::numeric_limits<std::uint64_t>::max());
+        PC_CHECK(
+            solve_detail::sparse_policy_component_scratch_bytes(
+                std::numeric_limits<std::size_t>::max(), true) ==
+            std::numeric_limits<std::uint64_t>::max());
+    }
+}
+
 /* Same eight-mod weighted universe as test_solver_calc.cpp. */
-std::shared_ptr<SessionImpl> make_solve_session() {
+std::shared_ptr<SessionImpl> make_solve_session(
+    const std::vector<std::string>& essence_keys) {
     auto data = std::make_shared<DataImpl>();
     data->mod_global_ids = {0, 1, 2, 3, 4, 5, 6, 7};
     data->spawn_offsets = {0, 1, 2, 3, 4, 5, 6, 7, 8};
@@ -98,6 +486,18 @@ std::shared_ptr<SessionImpl> make_solve_session() {
     data->base_count = 1;
     data->base_metadata_path_sid = {1};
     data->mod_key_sid = {2, 3, 4, 5, 6, 7, 8, 9};
+    data->essence_count =
+        static_cast<std::uint32_t>(essence_keys.size());
+    data->essence_item_level_restrictions.assign(
+        essence_keys.size(), -1);
+    for (std::uint32_t index = 0;
+         index < essence_keys.size(); ++index) {
+        const std::uint32_t sid =
+            static_cast<std::uint32_t>(data->strings.size());
+        data->strings.push_back(essence_keys[index]);
+        data->essence_key_sids.push_back(sid);
+        data->essence_by_key.emplace(essence_keys[index], index);
+    }
     for (std::uint32_t mod = 0; mod < 8; ++mod) {
         data->mod_pos_by_key.emplace(
             "mod" + std::to_string(mod), mod);
@@ -374,6 +774,161 @@ void run_alt_spam_tests() {
                      "\"full_request_status\":\"incomplete_action_subset\"") !=
                  std::string::npos);
 
+        SolveResult refinement_sample = subset;
+        PolicyRefinementTelemetry& refinement =
+            refinement_sample.diagnostics.policy_refinement;
+        refinement.triggers = 1;
+        refinement.status = "complete";
+        refinement.policy_reachable_coarse_states = 2;
+        refinement.exact_states = 3;
+        refinement.retained_exact_states = 4;
+        refinement.exact_classes = 5;
+        refinement.initial_observation_classes = 6;
+        refinement.behavior_splits = 7;
+        refinement.merged_exact_states = 8;
+        refinement.exact_transitions = 9;
+        refinement.exact_kernels = 10;
+        refinement.exact_kernel_cache_hits = 11;
+        refinement.memory_bytes = 12;
+        refinement.peak_memory_bytes = 13;
+        refinement.memory_limit_bytes = 14;
+        refinement.retained_artifact_bytes = 15;
+        refinement.exact_state_reuses = 16;
+        refinement.collapse_events = 17;
+        refinement.collapse_destroyed_feature_mask = 1;
+        refinement.collapse_preserved_feature_mask = 2;
+        refinement.collapse_events_by_feature[0] = 2;
+        refinement.preservation_events_by_feature[0] = 3;
+        refinement.refinement_rounds = 18;
+        refinement.backward_observation_rounds = 1;
+        refinement.selected_action_routing_rounds = 2;
+        refinement.observation_propagation_rounds = 3;
+        refinement.partition_refinement_rounds = 4;
+        refinement.local_reoptimization_rounds = 5;
+        refinement.local_state_action_rows_scheduled = 24;
+        refinement.local_state_action_rows_evaluated = 23;
+        refinement.local_reoptimizations = 6;
+        refinement.local_policy_changes = 22;
+        refinement.local_value_changes = 21;
+        refinement.lumpability_checks = 7;
+        refinement.fixed_point_checked = true;
+        refinement.fixed_point_complete = true;
+        refinement.lumpability_checked = true;
+        refinement.lumpable = true;
+        refinement.class_policy_checked = true;
+        refinement.class_policy_proper = true;
+        refinement.compiled_assertion_checked = true;
+        refinement.compiled_policy_proper = true;
+        refinement.zero_off_policy = true;
+        refinement.cost_reconciled = true;
+        refinement.policy_changed = true;
+        refinement.coarse_value_reconciled = true;
+        refinement.counterexamples = 19;
+        refinement.counterexample_samples = {
+            "{\"kind\":\"observation\"}"};
+        refinement.counterexample_samples_omitted = 20;
+        refinement.refusal_causes = 21;
+        refinement.refusal_cause_samples = {
+            "max_exact_states"};
+        refinement.refusal_cause_samples_omitted = 22;
+        PolicyCompilationTelemetry compilation_sample;
+        compilation_sample.working_states = 23;
+        compilation_sample.policy_regions = 24;
+        compilation_sample.nodes = 25;
+        compilation_sample.edges = 26;
+        compilation_sample.strategy_json_bytes = 27;
+        compilation_sample.peak_owned_bytes = 28;
+        const std::string refinement_telemetry =
+            serialize_solver_telemetry(
+                calc, &refinement_sample, nullptr, std::nullopt,
+                &compilation_sample);
+        PC_CHECK(valid_json_object(refinement_telemetry));
+        PC_CHECK(refinement_telemetry.find(
+                     "\"policy_refinement\":{\"triggers\":1,"
+                     "\"status\":\"complete\",\"resource_cap\":null,"
+                     "\"policy_reachable_coarse_states\":2,"
+                     "\"exact_states\":3,\"retained_exact_states\":4,"
+                     "\"exact_classes\":5") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"initial_observation_classes\":6,"
+                     "\"behavior_splits\":7,\"merged_exact_states\":8,"
+                     "\"exact_transitions\":9,\"exact_kernels\":10,"
+                     "\"exact_kernel_cache_hits\":11") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"memory_bytes\":12,\"peak_memory_bytes\":13,"
+                     "\"memory_limit_bytes\":14,"
+                     "\"retained_artifact_bytes\":15,"
+                     "\"exact_state_reuses\":16,"
+                     "\"collapse_events\":17,"
+                     "\"collapse_destroyed_feature_mask\":1,"
+                     "\"collapse_preserved_feature_mask\":2,"
+                     "\"collapse_events_by_feature\":[2,0") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"preservation_events_by_feature\":[3,0") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"refinement_rounds\":18") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"backward_observation_rounds\":1,"
+                     "\"selected_action_routing_rounds\":2,"
+                     "\"observation_propagation_rounds\":3,"
+                     "\"partition_refinement_rounds\":4,"
+                     "\"local_reoptimization_rounds\":5,"
+                     "\"local_state_action_rows_scheduled\":24,"
+                     "\"local_state_action_rows_evaluated\":23,"
+                     "\"local_reoptimizations\":6,"
+                     "\"local_policy_changes\":22,"
+                     "\"local_value_changes\":21") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"fixed_point\":{\"checked\":true,"
+                     "\"complete\":true,\"lumpability_checked\":true,"
+                     "\"lumpable\":true,\"lumpability_checks\":7},"
+                     "\"class_policy\":{\"checked\":true,"
+                     "\"proper\":true},"
+                     "\"compiled_assertion\":{\"checked\":true,"
+                     "\"proper\":true,\"zero_off_policy\":true,"
+                     "\"cost_reconciled\":true},"
+                     "\"policy_changed\":true,"
+                     "\"coarse_value_reconciled\":true") !=
+                 std::string::npos);
+        const std::string sample_limit = std::to_string(
+            refinement_sample.diagnostics.diagnostic_sample_limit);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"counterexamples\":{\"count\":19,"
+                     "\"samples\":[{\"kind\":\"observation\"}],"
+                     "\"retained\":1,\"omitted\":20,\"limit\":" +
+                     sample_limit + "}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"refusal_causes\":{\"count\":21,"
+                     "\"samples\":[\"max_exact_states\"],"
+                     "\"retained\":1,\"omitted\":22,\"limit\":" +
+                     sample_limit + "}") !=
+                 std::string::npos);
+        PC_CHECK(refinement_telemetry.find(
+                     "\"compilation\":{\"available\":true,"
+                     "\"working_states\":23,\"policy_regions\":24,"
+                     "\"nodes\":25,\"edges\":26,"
+                     "\"strategy_json_bytes\":27,"
+                     "\"peak_owned_bytes\":28,\"cap_hit\":null}") !=
+                 std::string::npos);
+        refinement.status = "resource_cap";
+        refinement.resource_cap = "max_sweeps";
+        const std::string refinement_cap_telemetry =
+            serialize_solver_telemetry(
+                calc, &refinement_sample, nullptr, std::nullopt,
+                &compilation_sample);
+        PC_CHECK(refinement_cap_telemetry.find(
+                     "\"policy_refinement\":{\"triggers\":1,"
+                     "\"status\":\"resource_cap\","
+                     "\"resource_cap\":\"max_sweeps\"") !=
+                 std::string::npos);
+
         SolveOptions capped_options;
         capped_options.max_states = 1;
         const SolveResult capped = solve(calc, start, prices, capped_options);
@@ -526,6 +1081,68 @@ void run_alt_spam_tests() {
         unsupported.cost_keys = {"fracture"};
         const std::uint32_t unsupported_index =
             static_cast<std::uint32_t>(unsupported_registry.actions.size());
+        /*
+         * Runtime-contract admission precedes evaluator support filtering.
+         * A future action with no semantic contract must fail while planner
+         * operators are built, not after a policy selects it.
+         */
+        {
+            ActionRegistry incomplete_registry = unsupported_registry;
+            incomplete_registry.index_by_id.emplace(
+                unsupported.id, unsupported_index);
+            incomplete_registry.actions.push_back(unsupported);
+            bool incomplete_rejected = false;
+            try {
+                CalcContext incomplete_calc(
+                    session, goal, std::move(incomplete_registry),
+                    {transmute, alteration, restart,
+                     unsupported_index});
+                (void)incomplete_calc;
+            } catch (const std::logic_error& error) {
+                incomplete_rejected =
+                    std::string(error.what()).find(
+                        "complete refinement contract") !=
+                    std::string::npos;
+            }
+            PC_CHECK(incomplete_rejected);
+        }
+        {
+            ActionRegistry malformed_registry = unsupported_registry;
+            ActionDescriptor malformed = unsupported;
+            malformed.refinement.schema_version =
+                kActionRefinementContractVersion;
+            malformed.refinement.preserved_item_features =
+                kAllRefinementItemFeatures;
+            /* No flow and no destruction covers occupied exact affixes. */
+            malformed_registry.index_by_id.emplace(
+                malformed.id, unsupported_index);
+            malformed_registry.actions.push_back(
+                std::move(malformed));
+            bool malformed_rejected = false;
+            try {
+                CalcContext malformed_calc(
+                    session, goal, std::move(malformed_registry),
+                    {transmute, alteration, restart,
+                     unsupported_index});
+                (void)malformed_calc;
+            } catch (const std::logic_error& error) {
+                malformed_rejected =
+                    std::string(error.what()).find(
+                        "affix effect domain is incomplete") !=
+                    std::string::npos;
+            }
+            PC_CHECK(malformed_rejected);
+        }
+        /*
+         * Keep the older unsupported-evaluator coverage with an explicitly
+         * complete inert semantic contract. The action remains unevaluable
+         * and therefore cannot enter a selected executable policy.
+         */
+        unsupported.refinement.schema_version =
+            kActionRefinementContractVersion;
+        unsupported.refinement.preserved_item_features =
+            kAllRefinementItemFeatures;
+        unsupported.refinement.preserved_affixes.push_back({});
         unsupported_registry.index_by_id.emplace(
             unsupported.id, unsupported_index);
         unsupported_registry.actions.push_back(std::move(unsupported));
@@ -631,6 +1248,1404 @@ void run_alt_spam_tests() {
     }
 }
 
+std::uint32_t reachable_nonterminal_refinement_classes(
+        const refinement::PolicyExactLiftCertificate& lifted) {
+    std::uint32_t result = 0;
+    for (const refinement::RefinedClassValue& value :
+         lifted.class_evaluation.class_values) {
+        if (value.class_id < lifted.refinement.classes.size() &&
+            !lifted.refinement.classes[value.class_id].terminal) {
+            ++result;
+        }
+    }
+    return result;
+}
+
+void report_lift_failure(
+        const char* label,
+        const refinement::PolicyExactLiftCertificate& lifted) {
+    if (lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete) {
+        return;
+    }
+    std::printf(
+        "policy lift failure [%s]: status=%s reason=%s cap=%s "
+        "refinement=%u evaluation=%u compiled=%u rows=%llu/%llu "
+        "reopts=%llu policy_changes=%llu\n",
+        label,
+        refinement::policy_exact_lift_status_name(lifted.status),
+        lifted.failure_reason.c_str(),
+        lifted.resource_cap.c_str(),
+        static_cast<unsigned>(lifted.refinement.status),
+        static_cast<unsigned>(lifted.class_evaluation.status),
+        static_cast<unsigned>(lifted.compiled.status),
+        static_cast<unsigned long long>(
+            lifted.adapter.local_state_action_rows_evaluated),
+        static_cast<unsigned long long>(
+            lifted.adapter.local_state_action_rows_scheduled),
+        static_cast<unsigned long long>(
+            lifted.adapter.local_reoptimizations),
+        static_cast<unsigned long long>(
+            lifted.adapter.local_policy_changes));
+}
+
+void report_solve_issue(
+        const char* label,
+        const SolveResult& solved,
+        const bool require_converged = false) {
+    if (solved.policy_available &&
+        (!require_converged || solved.converged)) {
+        return;
+    }
+    const std::string cap =
+        solved.diagnostics.cap_hits.empty()
+            ? std::string{}
+            : solved.diagnostics.cap_hits.front();
+    std::printf(
+        "solver issue [%s]: available=%u converged=%u status=%u "
+        "termination=%u publication=%s evaluation=%s "
+        "compatibility=%s cap=%s states=%u/%u\n",
+        label,
+        solved.policy_available ? 1u : 0u,
+        solved.converged ? 1u : 0u,
+        static_cast<unsigned>(solved.policy_status),
+        static_cast<unsigned>(solved.termination),
+        solved.diagnostics.policy_publication_failure_reason.c_str(),
+        solved.diagnostics.policy_evaluation_failure.c_str(),
+        solved.diagnostics.policy_compatibility_reason.c_str(),
+        cap.c_str(),
+        solved.diagnostics.expanded_states,
+        solved.diagnostics.discovered_states);
+    const std::size_t detail_count = std::min<std::size_t>(
+        16, solved.values.size());
+    for (std::size_t state = 0; state < detail_count; ++state) {
+        const PolicyOperatorRef policy =
+            state < solved.policy.size()
+                ? solved.policy[state]
+                : PolicyOperatorRef{};
+        std::printf(
+            "  state=%zu value=%.17g policy=%u:%u expanded=%u "
+            "goal=%u reachable=%u\n",
+            state, solved.values[state],
+            static_cast<unsigned>(policy.kind), policy.index,
+            state < solved.expanded.size()
+                ? static_cast<unsigned>(solved.expanded[state])
+                : 0u,
+            state < solved.goal_states.size()
+                ? static_cast<unsigned>(solved.goal_states[state])
+                : 0u,
+            state < solved.policy_reachable.size()
+                ? static_cast<unsigned>(
+                      solved.policy_reachable[state])
+                : 0u);
+    }
+}
+
+void run_policy_guided_exact_lift_tests() {
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::ExactClosed, false) ==
+        SolveTermination::ExactClosed);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::RefusedResourceCap, false) ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::None, true) ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::TargetGap, false) ==
+        SolveTermination::TargetGap);
+    PC_CHECK(
+        successful_refined_publication_termination(
+            SolveTermination::NoExecutablePolicy, false) ==
+        SolveTermination::ExactClosed);
+
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 104; /* suffix mod 5 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+
+    const std::uint32_t alchemy =
+        registry.index_by_id.at("alchemy");
+    const std::uint32_t chaos =
+        registry.index_by_id.at("chaos");
+    const std::uint32_t regal =
+        registry.index_by_id.at("regal");
+    const std::uint32_t restart =
+        registry.index_by_id.at("restart");
+    const std::vector<std::uint32_t> candidates{
+        alchemy, chaos, regal, restart};
+    CalcContext calc(
+        session, goal, registry, candidates,
+        false, true, false, std::nullopt, {}, true);
+    PC_CHECK(calc.product_solver_parent());
+
+    /*
+     * The coarse parent merges ordinary prefix mods 0..4 even though their
+     * group/exclusion effects differ. Regal observes that identity. Starting
+     * with the deterministic first member makes the old representative
+     * kernel numerically sound for this root, while the policy still requires
+     * a genuine strict lift before publication. A failed Regal attempt enters
+     * the destructive Chaos renewal, which also exercises identity collapse.
+     */
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_MAGIC;
+    place(&start, PC_SIDE_PREFIX, 0, 10);
+    const std::unordered_map<std::string, double> prices{
+        {"alchemy", 1.0},
+        {"chaos", 1.0},
+        {"regal", 0.01},
+        {"base", 10.0}};
+    SolveOptions options;
+    const SolveResult solved =
+        solve(calc, start, prices, options);
+
+    PC_CHECK(solved.policy_available);
+    PC_CHECK(!solved.converged);
+    PC_CHECK(
+        solved.policy_status ==
+        SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(
+        solved.termination ==
+        SolveTermination::ExactClosed);
+    PC_CHECK(
+        solved.termination !=
+        SolveTermination::NoExecutablePolicy);
+    PC_CHECK(solved.diagnostics.policy_refinement.triggers > 0);
+    const PolicyRefinementTelemetry& refinement_telemetry =
+        solved.diagnostics.policy_refinement;
+    PC_CHECK(refinement_telemetry.status == "complete");
+    PC_CHECK(refinement_telemetry.resource_cap.empty());
+    PC_CHECK(
+        refinement_telemetry.policy_reachable_coarse_states > 0);
+    PC_CHECK(refinement_telemetry.exact_states > 0);
+    PC_CHECK(refinement_telemetry.retained_exact_states > 0);
+    PC_CHECK(refinement_telemetry.exact_classes > 0);
+    PC_CHECK(refinement_telemetry.exact_transitions > 0);
+    PC_CHECK(refinement_telemetry.exact_kernels > 0);
+    PC_CHECK(refinement_telemetry.exact_state_reuses > 0);
+    PC_CHECK(refinement_telemetry.collapse_events > 0);
+    PC_CHECK(
+        refinement_telemetry.memory_limit_bytes ==
+        options.max_solver_owned_bytes);
+    PC_CHECK(refinement_telemetry.retained_artifact_bytes > 0);
+    PC_CHECK(refinement_telemetry.fixed_point_checked);
+    PC_CHECK(refinement_telemetry.fixed_point_complete);
+    PC_CHECK(refinement_telemetry.lumpability_checked);
+    PC_CHECK(refinement_telemetry.lumpable);
+    PC_CHECK(refinement_telemetry.lumpability_checks > 0);
+    PC_CHECK(refinement_telemetry.class_policy_checked);
+    PC_CHECK(refinement_telemetry.class_policy_proper);
+    PC_CHECK(refinement_telemetry.compiled_assertion_checked);
+    PC_CHECK(refinement_telemetry.compiled_policy_proper);
+    PC_CHECK(refinement_telemetry.zero_off_policy);
+    PC_CHECK(refinement_telemetry.cost_reconciled);
+    PC_CHECK(refinement_telemetry.coarse_value_reconciled);
+    PC_CHECK(
+        solved.policy[solved.start_state].index == regal);
+    PC_CHECK(
+        solved.diagnostics.policy_compatibility_supported);
+    PC_CHECK(
+        !solved.refined_policy_artifact.strategy_json.empty());
+
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, solved, start, prices, options,
+            "focused policy-guided exact lift");
+    report_lift_failure("Regal lift", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.lumpable);
+    PC_CHECK(!lifted.policy_changed);
+    PC_CHECK(lifted.coarse_value_reconciled);
+    PC_CHECK(
+        lifted.refinement.status ==
+        refinement::RefinementStatus::Complete);
+    PC_CHECK(
+        lifted.class_evaluation.status ==
+        refinement::PolicyEvaluationStatus::Complete);
+    PC_CHECK(lifted.class_evaluation.proper);
+    PC_CHECK(lifted.class_evaluation.converged);
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.proper);
+    PC_CHECK(lifted.compiled.zero_off_policy);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(
+        lifted.compiled.compilation.working_states ==
+        reachable_nonterminal_refinement_classes(lifted));
+    PC_CHECK(
+        lifted.compiled.off_policy_probability <= 1e-10);
+    PC_CHECK(
+        lifted.compiled.evaluation.success_probability >=
+        1.0 - 1e-10);
+    PC_CHECK(near(
+        lifted.exact_start_cost,
+        solved.evaluated_policy_cost, 1e-7));
+    PC_CHECK(
+        !lifted.compiled.strategy_json.empty());
+    PC_CHECK(
+        lifted.refinement.telemetry.merged_exact_states > 0);
+    PC_CHECK(
+        lifted.refinement.telemetry.lumpability_checks > 0);
+    PC_CHECK(
+        lifted.adapter.canonical_successor_collapses > 0);
+
+    PolicyCompilationTelemetry retained_telemetry;
+    const std::string retained =
+        compile_policy_strategy_json(
+            calc, solved, "retained exact lift",
+            &retained_telemetry);
+    PC_CHECK(
+        retained ==
+        solved.refined_policy_artifact.strategy_json);
+    PC_CHECK(
+        retained_telemetry.working_states ==
+        solved.refined_policy_artifact.working_states);
+    PC_CHECK(
+        retained_telemetry.policy_regions ==
+        solved.refined_policy_artifact.policy_regions);
+    PC_CHECK(
+        retained_telemetry.nodes ==
+        solved.refined_policy_artifact.nodes);
+    PC_CHECK(
+        retained_telemetry.edges ==
+        solved.refined_policy_artifact.edges);
+
+    const std::shared_ptr<StrategyImpl> retained_strategy =
+        compile_strategy_json(
+            session, retained.data(), retained.size());
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "focused-policy-lift";
+    economy->prices = prices;
+    StrategyEvalOptions evaluation_options;
+    evaluation_options.economy = economy;
+    const StrategyEvalResult retained_evaluation =
+        evaluate_strategy(
+            *retained_strategy, evaluation_options);
+    const double retained_off_policy =
+        retained_evaluation.failure_probability +
+        retained_evaluation.stop_probability +
+        retained_evaluation.action_not_applied_probability +
+        retained_evaluation.no_matching_edge_probability +
+        retained_evaluation.unresolved_probability;
+    PC_CHECK(retained_evaluation.converged);
+    PC_CHECK(retained_evaluation.cost_complete);
+    PC_CHECK(
+        retained_evaluation.success_probability >=
+        1.0 - 1e-10);
+    PC_CHECK(retained_off_policy <= 1e-10);
+    PC_CHECK(near(
+        retained_evaluation.total_expected_cost,
+        solved.evaluated_policy_cost, 1e-7));
+}
+
+void run_policy_guided_exalt_lift_tests() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 104; /* suffix mod 5 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+
+    const std::uint32_t chaos =
+        registry.index_by_id.at("chaos");
+    const std::uint32_t exalt =
+        registry.index_by_id.at("exalt");
+    const std::uint32_t restart =
+        registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry,
+        {chaos, exalt, restart},
+        false, true, false, std::nullopt, {}, true);
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    place(&start, PC_SIDE_PREFIX, 0, 10);
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 1.0},
+        {"exalt", 0.01},
+        {"base", 10.0}};
+    SolveOptions options;
+    const SolveResult solved =
+        solve(calc, start, prices, options);
+
+    PC_CHECK(solved.policy_available);
+    PC_CHECK(!solved.converged);
+    PC_CHECK(
+        solved.policy_status ==
+        SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(
+        solved.termination ==
+        SolveTermination::ExactClosed);
+    PC_CHECK(
+        solved.termination !=
+        SolveTermination::NoExecutablePolicy);
+    PC_CHECK(
+        solved.policy[solved.start_state].index == exalt);
+    PC_CHECK(
+        solved.diagnostics.policy_refinement.triggers > 0);
+    PC_CHECK(
+        solved.diagnostics.policy_compatibility_supported);
+    PC_CHECK(
+        !solved.refined_policy_artifact.strategy_json.empty());
+
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, solved, start, prices, options,
+            "focused one-goal suffix Exalt lift");
+    report_lift_failure("Exalt lift", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.lumpable);
+    PC_CHECK(
+        lifted.refinement.status ==
+        refinement::RefinementStatus::Complete);
+    PC_CHECK(
+        lifted.class_evaluation.status ==
+        refinement::PolicyEvaluationStatus::Complete);
+    PC_CHECK(lifted.class_evaluation.proper);
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.proper);
+    PC_CHECK(lifted.compiled.zero_off_policy);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(
+        lifted.compiled.compilation.working_states ==
+        reachable_nonterminal_refinement_classes(lifted));
+    PC_CHECK(
+        lifted.compiled.evaluation.success_probability >=
+        1.0 - 1e-10);
+    PC_CHECK(near(
+        lifted.compiled.exact_cost,
+        lifted.exact_start_cost, 1e-7));
+
+    const std::string& retained =
+        solved.refined_policy_artifact.strategy_json;
+    const std::shared_ptr<StrategyImpl> retained_strategy =
+        compile_strategy_json(
+            session, retained.data(), retained.size());
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "focused-exalt-lift";
+    economy->prices = prices;
+    StrategyEvalOptions evaluation_options;
+    evaluation_options.economy = economy;
+    const StrategyEvalResult retained_evaluation =
+        evaluate_strategy(
+            *retained_strategy, evaluation_options);
+    PC_CHECK(retained_evaluation.converged);
+    PC_CHECK(retained_evaluation.cost_complete);
+    PC_CHECK(
+        retained_evaluation.success_probability >=
+        1.0 - 1e-10);
+    PC_CHECK(near(
+        retained_evaluation.total_expected_cost,
+        solved.evaluated_policy_cost, 1e-7));
+}
+
+/*
+ * Production Gate 3 control: one coarse magic-prefix junk carrier merges
+ * exact modifiers with very different exclusion effects. The authored
+ * coarse policy Regals every such carrier. Under strict kernels, blocking
+ * the high-weight prefix group makes Regal attractive, while a different
+ * member is cheaper to Alteration-reroll first. The local optimizer must
+ * retain both decisions under the same coarse parent.
+ */
+void run_policy_guided_local_reoptimization_tests() {
+    auto session = make_solve_session();
+    const std::vector<std::uint32_t> weights{
+        1000, 1000, 1000, 1, 1, 100, 1, 1};
+    session->base_spawn_weight = weights;
+    session->base_roll_weight = weights;
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 104; /* suffix mod 5 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+
+    const std::uint32_t transmute =
+        registry.index_by_id.at("transmute");
+    const std::uint32_t alteration =
+        registry.index_by_id.at("alteration");
+    const std::uint32_t regal =
+        registry.index_by_id.at("regal");
+    const std::uint32_t chaos =
+        registry.index_by_id.at("chaos");
+    CalcContext calc(
+        session, goal, registry,
+        {transmute, alteration, regal, chaos},
+        false, true, false, std::nullopt, {}, true);
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_NORMAL;
+    const std::uint32_t start_state =
+        calc.intern_item(start);
+    std::set<std::uint32_t> pending{start_state};
+    std::map<std::uint32_t, std::uint32_t> selected_by_state;
+    while (!pending.empty()) {
+        const std::uint32_t state = *pending.begin();
+        pending.erase(pending.begin());
+        if (calc.is_goal_state(calc.state(state)) ||
+            selected_by_state.contains(state)) {
+            continue;
+        }
+        std::uint32_t action = kNoId;
+        switch (calc.state(state).rarity) {
+        case PC_RARITY_NORMAL:
+            action = transmute;
+            break;
+        case PC_RARITY_MAGIC:
+            action = regal;
+            break;
+        case PC_RARITY_RARE:
+            action = chaos;
+            break;
+        default:
+            break;
+        }
+        PC_CHECK(action != kNoId);
+        if (action == kNoId) return;
+        const OutcomeDistribution& distribution =
+            calc.outcomes(state, action, false);
+        PC_CHECK(distribution.supported);
+        PC_CHECK(distribution.choice_groups.empty());
+        if (!distribution.supported ||
+            !distribution.choice_groups.empty()) {
+            return;
+        }
+        selected_by_state.emplace(state, action);
+        for (const OutcomeEntry& entry :
+             distribution.entries) {
+            if (entry.probability > 0.0 &&
+                !calc.is_goal_state(
+                    calc.state(entry.state))) {
+                pending.insert(entry.state);
+            }
+        }
+        PC_CHECK(calc.state_count() < 5000);
+        if (calc.state_count() >= 5000) return;
+    }
+
+    SolveOptions options;
+    SolveResult authored;
+    authored.converged = true;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::Exact;
+    authored.termination = SolveTermination::ExactClosed;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    authored.lower_bound = 0.0;
+    authored.upper_bound = 0.0;
+    authored.evaluated_policy_cost = 0.0;
+    authored.absolute_optimality_gap = 0.0;
+    authored.relative_optimality_gap = 0.0;
+    authored.options = options;
+    const std::uint32_t state_count = calc.state_count();
+    authored.values.assign(state_count, 0.0);
+    authored.policy.assign(state_count, PolicyOperatorRef{});
+    authored.expanded.assign(state_count, 1);
+    authored.goal_states.assign(state_count, 0);
+    authored.policy_reachable.assign(state_count, 1);
+    authored.unveil_preferences.resize(state_count);
+    authored.option_unveil_preferences.resize(state_count);
+    for (std::uint32_t state = 0;
+         state < state_count; ++state) {
+        authored.goal_states[state] =
+            calc.is_goal_state(calc.state(state)) ? 1 : 0;
+    }
+    for (const auto& [state, action] :
+         selected_by_state) {
+        authored.policy[state] = PolicyOperatorRef{
+            PlannerOperatorKind::Primitive, action};
+    }
+
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 0.1},
+        {"alteration", 0.3},
+        {"regal", 4.7},
+        {"chaos", 10.0}};
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "focused local exact policy improvement");
+    report_lift_failure("local action reoptimization", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(
+        lifted.compiled.strategy_json.find(
+            "\"id\":\"refined_parent_") !=
+        std::string::npos);
+    PC_CHECK(
+        lifted.compiled.compilation.working_states ==
+        reachable_nonterminal_refinement_classes(lifted));
+    PC_CHECK(lifted.adapter.local_reoptimizations > 0);
+    PC_CHECK(
+        lifted.adapter.local_state_action_rows_scheduled > 0);
+    PC_CHECK(
+        lifted.adapter.local_state_action_rows_evaluated > 0);
+    PC_CHECK(lifted.adapter.local_policy_changes > 0);
+    PC_CHECK(lifted.adapter.local_value_changes > 0);
+    PC_CHECK(lifted.policy_changed);
+    PC_CHECK(!lifted.coarse_value_reconciled);
+    PC_CHECK(
+        lifted.adapter.local_reoptimization_rounds > 0);
+    PC_CHECK(lifted.exact_start_cost > 0.0);
+    PC_CHECK(near(
+        lifted.compiled.exact_cost,
+        lifted.exact_start_cost, 1e-7));
+
+    std::map<std::uint32_t, std::set<std::uint32_t>>
+        actions_by_coarse_parent;
+    for (const refinement::RefinedPolicyClass& policy_class :
+         lifted.refinement.classes) {
+        if (policy_class.selected_action.has_value()) {
+            actions_by_coarse_parent[
+                policy_class.coarse_state]
+                    .insert(
+                        policy_class.selected_action->action_id);
+        }
+    }
+    bool divergent_subclasses = false;
+    for (const auto& [unused, actions] :
+         actions_by_coarse_parent) {
+        (void)unused;
+        if (actions.size() > 1) {
+            divergent_subclasses = true;
+            break;
+        }
+    }
+    PC_CHECK(divergent_subclasses);
+
+    refinement::RefinementLimits capped_limits;
+    capped_limits.max_estimated_memory_bytes = 1;
+    const refinement::PolicyExactLiftCertificate capped =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "capped local exact policy improvement",
+            &capped_limits);
+    PC_CHECK(
+        capped.status ==
+        refinement::PolicyExactLiftStatus::ResourceCap);
+    PC_CHECK(
+        capped.resource_cap ==
+        "max_estimated_memory_bytes");
+}
+
+/*
+ * A destructive incumbent can legitimately merge concrete members that an
+ * alternative action must split.  Chaos has the same row for every member of
+ * one rare coarse parent.  Exalt preserves and observes the existing prefix:
+ * prefix mod 0 leaves the dominant junk prefix in its pool (Exalt is worse
+ * than Chaos), while prefix mod 3 excludes that junk group (Exalt is better).
+ * The canonical first member is therefore not a sound proxy for the class.
+ */
+void run_candidate_induced_exact_subclass_tests() {
+    auto session = make_solve_session();
+    const std::vector<std::uint32_t> weights{
+        1, 1, 1, 10000, 1, 100, 1, 1};
+    session->base_spawn_weight = weights;
+    session->base_roll_weight = weights;
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 104; /* suffix mod 5 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+
+    const std::uint32_t transmute =
+        registry.index_by_id.at("transmute");
+    const std::uint32_t regal =
+        registry.index_by_id.at("regal");
+    const std::uint32_t chaos =
+        registry.index_by_id.at("chaos");
+    const std::uint32_t exalt =
+        registry.index_by_id.at("exalt");
+    CalcContext calc(
+        session, goal, registry,
+        {transmute, regal, chaos, exalt},
+        false, true, false, std::nullopt, {}, true);
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_NORMAL;
+    const std::uint32_t start_state = calc.intern_item(start);
+    std::set<std::uint32_t> pending{start_state};
+    std::map<std::uint32_t, std::uint32_t> selected_by_state;
+    std::uint32_t triggered_rare_parent = kNoId;
+    while (!pending.empty()) {
+        const std::uint32_t state = *pending.begin();
+        pending.erase(pending.begin());
+        if (calc.is_goal_state(calc.state(state)) ||
+            selected_by_state.contains(state)) {
+            continue;
+        }
+        std::uint32_t action = kNoId;
+        switch (calc.state(state).rarity) {
+        case PC_RARITY_NORMAL:
+            action = transmute;
+            break;
+        case PC_RARITY_MAGIC:
+            action = regal;
+            break;
+        case PC_RARITY_RARE:
+            action = chaos;
+            break;
+        default:
+            break;
+        }
+        PC_CHECK(action != kNoId);
+        if (action == kNoId) return;
+        const OutcomeDistribution& distribution =
+            calc.outcomes(state, action, false);
+        PC_CHECK(distribution.supported);
+        PC_CHECK(distribution.choice_groups.empty());
+        if (!distribution.supported ||
+            !distribution.choice_groups.empty()) {
+            return;
+        }
+        selected_by_state.emplace(state, action);
+        for (const OutcomeEntry& entry : distribution.entries) {
+            if (entry.probability <= 0.0 ||
+                calc.is_goal_state(calc.state(entry.state))) {
+                continue;
+            }
+            if (action == regal &&
+                triggered_rare_parent == kNoId &&
+                calc.state(entry.state).rarity == PC_RARITY_RARE) {
+                triggered_rare_parent = entry.state;
+            }
+            pending.insert(entry.state);
+        }
+        PC_CHECK(calc.state_count() < 5000);
+        if (calc.state_count() >= 5000) return;
+    }
+    PC_CHECK(triggered_rare_parent != kNoId);
+    if (triggered_rare_parent == kNoId) return;
+
+    SolveOptions options;
+    SolveResult authored;
+    authored.converged = true;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::Exact;
+    authored.termination = SolveTermination::ExactClosed;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    authored.lower_bound = 0.0;
+    authored.upper_bound = kInfinity;
+    authored.evaluated_policy_cost = kInfinity;
+    authored.absolute_optimality_gap = kInfinity;
+    authored.relative_optimality_gap = kInfinity;
+    authored.options = options;
+    const std::uint32_t state_count = calc.state_count();
+    authored.values.assign(state_count, kInfinity);
+    authored.policy.assign(state_count, PolicyOperatorRef{});
+    authored.expanded.assign(state_count, 1);
+    authored.goal_states.assign(state_count, 0);
+    authored.policy_reachable.assign(state_count, 1);
+    authored.unveil_preferences.resize(state_count);
+    authored.option_unveil_preferences.resize(state_count);
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        authored.goal_states[state] =
+            calc.is_goal_state(calc.state(state)) ? 1 : 0;
+    }
+    for (const auto& [state, action] : selected_by_state) {
+        authored.policy[state] = PolicyOperatorRef{
+            PlannerOperatorKind::Primitive, action};
+    }
+    authored.diagnostics.policy_refinement.triggers = 1;
+    authored.diagnostics.policy_refinement.status = "triggered";
+    authored.diagnostics.policy_refinement
+        .trigger_coarse_states.push_back(triggered_rare_parent);
+    authored.diagnostics.policy_compatibility_state =
+        triggered_rare_parent;
+
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 0.01},
+        {"regal", 0.01},
+        {"chaos", 1.0},
+        {"exalt", 0.1}};
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "candidate-induced exact subclass");
+    report_lift_failure("candidate-induced subclass", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(lifted.policy_changed);
+    PC_CHECK(lifted.adapter.local_reoptimizations > 0);
+    PC_CHECK(
+        lifted.adapter.local_state_action_rows_scheduled > 0);
+    PC_CHECK(
+        lifted.adapter.local_state_action_rows_evaluated > 0);
+    PC_CHECK(lifted.adapter.local_policy_changes > 0);
+    PC_CHECK(lifted.adapter.local_value_changes > 0);
+
+    std::set<std::uint32_t> target_actions;
+    for (const refinement::RefinedPolicyClass& policy_class :
+         lifted.refinement.classes) {
+        if (policy_class.coarse_state == triggered_rare_parent &&
+            policy_class.selected_action.has_value()) {
+            target_actions.insert(
+                policy_class.selected_action->action_id);
+        }
+    }
+    /* Transmute and Regal are illegal on this rare parent, so the only
+     * possible two admitted decisions are the incumbent Chaos and Exalt. */
+    PC_CHECK(target_actions.size() > 1);
+}
+
+/*
+ * The authored coarse row deliberately carries a stale Unveil preference:
+ * its value assumes the goal option, while its sidecar selects a non-goal
+ * option and then pays a bench finish. Exact refinement must treat the
+ * preference as part of the selected decision, observe the value mismatch,
+ * and install the single Bellman-greedy exact ordering for that carrier.
+ */
+void run_policy_guided_primitive_choice_reoptimization_tests() {
+    auto session = make_solve_session();
+    session->veiled_prefix_mod_id = 2;
+    session->unveiled_generic_mask.assign(session->words, 0);
+    pc_bitset_set(
+        session->unveiled_generic_mask.data(), 0);
+    pc_bitset_set(
+        session->unveiled_generic_mask.data(), 3);
+    pc_bitset_set(
+        session->unveiled_generic_mask.data(), 4);
+    pc_bitset_set(session->unveiled_mask.data(), 0);
+    pc_bitset_set(session->unveiled_mask.data(), 3);
+    pc_bitset_set(session->unveiled_mask.data(), 4);
+    session->bench_mod_ids = {0};
+    session->flags[0] |= 1u << 1;
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 100; /* unveiled prefix mod 0 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    const std::uint32_t unveil =
+        registry.index_by_id.at("unveil");
+    const std::uint32_t bench =
+        registry.index_by_id.at("bench:mod0");
+    CalcContext calc(
+        session, goal, registry, {unveil, bench},
+        false, true, false, std::nullopt, {}, true);
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    PC_CHECK(
+        pc_item_add_mod(
+            &start, PC_SIDE_PREFIX, 2,
+            static_cast<std::uint16_t>(
+                session->primary_group[2]),
+            PC_MOD_SLOT_VEILED, nullptr) ==
+        PC_RESULT_OK);
+    const std::uint32_t start_state =
+        calc.intern_item(start);
+    const OutcomeDistribution& offered =
+        calc.outcomes(start_state, unveil, false);
+    PC_CHECK(offered.supported);
+    PC_CHECK(!offered.choice_groups.empty());
+    PC_CHECK(offered.choice_options.size() == 3);
+
+    std::map<std::uint32_t, std::uint32_t>
+        successor_by_mod;
+    for (const OutcomeChoiceOption& option :
+         offered.choice_options) {
+        successor_by_mod.emplace(
+            option.mod_id, option.state);
+    }
+    PC_CHECK(successor_by_mod.contains(0));
+    PC_CHECK(successor_by_mod.contains(3));
+    PC_CHECK(successor_by_mod.contains(4));
+    for (const auto& [mod, successor] :
+         successor_by_mod) {
+        (void)mod;
+        if (!calc.is_goal_state(calc.state(successor))) {
+            const OutcomeDistribution& finish =
+                calc.outcomes(successor, bench, false);
+            PC_CHECK(finish.supported);
+            PC_CHECK(finish.entries.size() == 1);
+            PC_CHECK(calc.is_goal_state(
+                calc.state(finish.entries.front().state)));
+        }
+    }
+
+    SolveOptions options;
+    SolveResult authored;
+    authored.converged = true;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::Exact;
+    authored.termination = SolveTermination::ExactClosed;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    authored.lower_bound = 0.0;
+    authored.upper_bound = 0.0;
+    authored.evaluated_policy_cost = 0.0;
+    authored.absolute_optimality_gap = 0.0;
+    authored.relative_optimality_gap = 0.0;
+    authored.options = options;
+    const std::uint32_t state_count = calc.state_count();
+    authored.values.assign(state_count, 0.0);
+    authored.policy.assign(
+        state_count, PolicyOperatorRef{});
+    authored.expanded.assign(state_count, 1);
+    authored.goal_states.assign(state_count, 0);
+    authored.policy_reachable.assign(state_count, 1);
+    authored.unveil_preferences.resize(state_count);
+    authored.option_unveil_preferences.resize(state_count);
+    authored.policy[start_state] = PolicyOperatorRef{
+        PlannerOperatorKind::Primitive, unveil};
+    authored.unveil_preferences[start_state] = {3, 0, 4};
+    for (const auto& [unused_mod, successor] :
+         successor_by_mod) {
+        (void)unused_mod;
+        if (calc.is_goal_state(calc.state(successor))) {
+            authored.goal_states[successor] = 1;
+            continue;
+        }
+        authored.values[successor] = 5.0;
+        authored.policy[successor] = PolicyOperatorRef{
+            PlannerOperatorKind::Primitive, bench};
+        const OutcomeDistribution& finish =
+            calc.outcomes(successor, bench, false);
+        authored.goal_states[
+            finish.entries.front().state] = 1;
+    }
+
+    const std::unordered_map<std::string, double> prices{
+        {"bench:mod0", 5.0}};
+
+    /*
+     * A valid authored prefix need not enumerate strict-only offers absent
+     * from the coarse sidecar.  Seed completion must retain mod0 first and
+     * append every exact offer through the shared sparse-choice authority;
+     * the resulting program remains executable without local repair.
+     */
+    SolveResult partial_sidecar = authored;
+    partial_sidecar.unveil_preferences[start_state] = {0};
+    const refinement::PolicyExactLiftCertificate completed_tail =
+        refinement::lift_policy_exact(
+            calc, partial_sidecar, start, prices, options,
+            "focused primitive strict-only offer completion");
+    report_lift_failure(
+        "primitive strict-only offer completion", completed_tail);
+    PC_CHECK(
+        completed_tail.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(completed_tail.executable);
+    PC_CHECK(completed_tail.lumpable);
+    PC_CHECK(!completed_tail.policy_changed);
+    PC_CHECK(completed_tail.coarse_value_reconciled);
+    PC_CHECK(completed_tail.adapter.local_reoptimizations == 0);
+    PC_CHECK(near(completed_tail.exact_start_cost, 0.0, 1e-12));
+    PC_CHECK(completed_tail.compiled.executable);
+    PC_CHECK(completed_tail.compiled.cost_reconciled);
+    const std::string mod0_guard =
+        "\"type\":\"has_unveil_option\",\"mod_key\":\"mod0\"";
+    const std::string mod3_guard =
+        "\"type\":\"has_unveil_option\",\"mod_key\":\"mod3\"";
+    const std::string mod4_guard =
+        "\"type\":\"has_unveil_option\",\"mod_key\":\"mod4\"";
+    const std::size_t mod0_position =
+        completed_tail.compiled.strategy_json.find(mod0_guard);
+    const std::size_t mod3_position =
+        completed_tail.compiled.strategy_json.find(mod3_guard);
+    const std::size_t mod4_position =
+        completed_tail.compiled.strategy_json.find(mod4_guard);
+    PC_CHECK(mod0_position != std::string::npos);
+    PC_CHECK(mod3_position != std::string::npos);
+    PC_CHECK(mod4_position != std::string::npos);
+    PC_CHECK(mod0_position < mod3_position);
+    PC_CHECK(mod0_position < mod4_position);
+
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "focused primitive exact-choice reoptimization");
+    report_lift_failure("primitive choice reoptimization", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.lumpable);
+    PC_CHECK(lifted.policy_changed);
+    PC_CHECK(lifted.coarse_value_reconciled);
+    PC_CHECK(
+        lifted.adapter.local_reoptimizations > 0);
+    PC_CHECK(near(lifted.exact_start_cost, 0.0, 1e-12));
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+
+    /*
+     * A primitive modifier id is one observed decision identity.  Poison the
+     * coarse kernel so mod0 also names a distinct non-goal successor and
+     * require seed admission to reject it before representative selection.
+     */
+    auto& poisoned = const_cast<OutcomeDistribution&>(
+        calc.outcomes(start_state, unveil, false));
+    const auto non_goal_offer = std::find_if(
+        poisoned.choice_options.begin(),
+        poisoned.choice_options.end(),
+        [&](const OutcomeChoiceOption& option) {
+            return option.mod_id != 0 &&
+                   !calc.is_goal_state(calc.state(option.state));
+        });
+    PC_CHECK(non_goal_offer != poisoned.choice_options.end());
+    PC_CHECK(
+        non_goal_offer->state != successor_by_mod.at(0));
+    OutcomeChoiceOption duplicate = *non_goal_offer;
+    duplicate.mod_id = 0;
+    poisoned.choice_options.push_back(duplicate);
+    const refinement::PolicyExactLiftCertificate duplicate_rejected =
+        refinement::lift_policy_exact(
+            calc, partial_sidecar, start, prices, options,
+            "focused primitive duplicate-mod rejection");
+    PC_CHECK(
+        duplicate_rejected.status ==
+        refinement::PolicyExactLiftStatus::
+            UnsupportedPrimitiveKernel);
+    PC_CHECK(
+        duplicate_rejected.failure_reason.find(
+            "one primitive observed modifier has multiple semantic "
+            "successors") != std::string::npos);
+}
+
+/*
+ * Observed-choice primitives use their admitted semantic contract throughout
+ * finalization and fixed-program runtime semantics.
+ */
+void run_future_observed_choice_finalization_tests() {
+    auto session = make_solve_session();
+    session->veiled_prefix_mod_id = 2;
+    session->veiled_suffix_mod_id = 7;
+    ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t unveil =
+        registry.index_by_id.at("unveil");
+    ActionDescriptor future = registry.actions.at(unveil);
+    future.id = "test:future_observed_modifier_offer";
+    future.display_name = "future observed modifier offer";
+    canonicalize_and_validate_action_refinement_contract(
+        *session, future);
+    PC_CHECK(action_observes_modifier_offer(future));
+
+    std::vector<OutcomeChoiceOption> choices{
+        {4, 0}, {3, 2}, {0, 1}};
+    const std::vector<double> values{5.0, 1.0, 1.0};
+    order_observed_modifier_choices(future, choices, values);
+    PC_CHECK(choices.size() == 3);
+    PC_CHECK(choices[0].mod_id == 0);
+    PC_CHECK(choices[1].mod_id == 3);
+    PC_CHECK(choices[2].mod_id == 4);
+
+    std::vector<OutcomeChoiceOption> near_choices{
+        {0, 2}, {3, 1}};
+    const std::vector<double> near_values{
+        0.0, 1.0, 1.0 + 5e-10};
+    order_observed_modifier_choices(
+        future, near_choices, near_values);
+    PC_CHECK(near_choices.front().mod_id == 3);
+
+    ActionDescriptor undeclared = future;
+    undeclared.refinement.outcome_observation =
+        RefinementOutcomeObservation::None;
+    bool rejected_undeclared = false;
+    try {
+        order_observed_modifier_choices(
+            undeclared, choices, values);
+    } catch (const std::logic_error&) {
+        rejected_undeclared = true;
+    }
+    PC_CHECK(rejected_undeclared);
+
+    const std::uint32_t future_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    registry.index_by_id.emplace(future.id, future_index);
+    registry.actions.push_back(std::move(future));
+    PlannerOperator option;
+    option.kind = PlannerOperatorKind::FixedOption;
+    option.option_kind = FixedOptionKind::Renewal;
+    option.primitive_program = {
+        registry.index_by_id.at("veiled_chaos"), future_index};
+    option.primitive_program_action_ids = {
+        "veiled_chaos", "test:future_observed_modifier_offer"};
+    const PlannerOperatorRuntimeSemantics runtime =
+        planner_operator_runtime_semantics(option, registry);
+    PC_CHECK(runtime.execution_paths.size() == 2);
+    PC_CHECK(runtime.execution_paths[0].size() == 1);
+    PC_CHECK(runtime.execution_paths[1].size() == 2);
+    PC_CHECK(refinement_contract_observes_modifier_offer(
+        runtime.compatibility_refinement));
+}
+
+/*
+ * The fixed-option analogue starts from a valid solved renewal, then changes
+ * only its observed-choice sidecar so every prefix offer rejects the goal and
+ * retries. The resulting exact policy is improper. Local repair must evaluate
+ * that retry continuation as infinite, retain finite goal continuations, and
+ * restore one greedy recipe for the same admitted fixed operator.
+ */
+void run_policy_guided_fixed_choice_reoptimization_tests() {
+    auto session = make_solve_session();
+    session->veiled_prefix_mod_id = 2;
+    session->veiled_suffix_mod_id = 7;
+    pc_bitset_clear(
+        session->normal_random_roll_mask.data(), 2);
+    pc_bitset_clear(
+        session->positive_spawn_weight_mask.data(), 2);
+    pc_bitset_clear(
+        session->positive_base_weight_mask.data(), 2);
+    pc_bitset_clear(
+        session->normal_random_roll_mask.data(), 7);
+    pc_bitset_clear(
+        session->positive_spawn_weight_mask.data(), 7);
+    pc_bitset_clear(
+        session->positive_base_weight_mask.data(), 7);
+    /* Keep the synthetic renewal closed without adding a fallback operator.
+     * Ordinary rolls may consume only group-10 prefix members and suffix
+     * mod5; the remaining prefix Unveil offer contains goal mod3 and retry
+     * mod4, while suffix offers remain valid retries. Clearing only the
+     * normal-roll authority retains the actual Unveil offer vocabulary. */
+    for (const std::uint32_t mod : {3u, 4u, 6u}) {
+        pc_bitset_clear(
+            session->normal_random_roll_mask.data(), mod);
+    }
+    session->unveiled_generic_mask.assign(session->words, 0);
+    for (const std::uint32_t mod : {0u, 3u, 4u, 5u, 6u}) {
+        pc_bitset_set(
+            session->unveiled_generic_mask.data(), mod);
+        pc_bitset_set(
+            session->unveiled_mask.data(), mod);
+    }
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot slot;
+    slot.family_id = 102; /* unveiled prefix mod 3 */
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+    FixedOptionSpec renewal;
+    renewal.kind = FixedOptionKind::Renewal;
+    renewal.program_action_ids = {
+        "veiled_chaos", "unveil"};
+    renewal.exit_goal_slots = {0};
+    renewal.exit_min_satisfied = 1;
+    goal.fixed_options.push_back(renewal);
+
+    CalcContext calc(
+        session, goal, registry, {}, false, false);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t start_state = calc.intern_item(start);
+    const std::uint32_t option_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    const OptionKernel& renewal_kernel =
+        calc.option_kernel(start_state, option_index);
+    PC_CHECK(renewal_kernel.legal);
+    PC_CHECK(renewal_kernel.exits.empty());
+    PC_CHECK(!renewal_kernel.observation_choice_groups.empty());
+    bool mixed_goal_retry_offer = false;
+    for (const OutcomeChoiceGroup& group :
+         renewal_kernel.observation_choice_groups) {
+        PC_CHECK(group.observation_state != kNoId);
+        bool has_goal = false;
+        bool has_retry = false;
+        for (const std::uint32_t successor : group.states) {
+            has_retry |= successor == kNoId;
+            has_goal |= successor != kNoId &&
+                        calc.is_goal_state(calc.state(successor));
+            PC_CHECK(
+                successor == kNoId ||
+                calc.is_goal_state(calc.state(successor)));
+        }
+        mixed_goal_retry_offer |= has_goal && has_retry;
+    }
+    PC_CHECK(mixed_goal_retry_offer);
+    const std::unordered_map<std::string, double> prices{
+        {"veiled_chaos", 1.0}};
+    SolveOptions options;
+    const SolveResult solved =
+        solve(calc, start, prices, options);
+    report_solve_issue(
+        "fixed choice reoptimization coarse solve",
+        solved, true);
+    PC_CHECK(solved.policy_available);
+    PC_CHECK(solved.converged);
+    const PolicyOperatorRef expected_option{
+        PlannerOperatorKind::FixedOption,
+        option_index};
+    PC_CHECK(
+        solved.policy[solved.start_state] ==
+        expected_option);
+    PC_CHECK(
+        !solved.option_unveil_preferences[
+             solved.start_state]
+             .empty());
+
+    SolveResult authored = solved;
+    std::uint32_t goal_observations = 0;
+    std::uint32_t rejected_goal_observations = 0;
+    for (ObservedUnveilPreference& observation :
+         authored.option_unveil_preferences[
+             authored.start_state]) {
+        const auto goal_choice = std::find_if(
+            observation.choices.begin(),
+            observation.choices.end(),
+            [&](const ObservedUnveilChoice& choice) {
+                return choice.successor_state <
+                           calc.state_count() &&
+                       calc.is_goal_state(
+                           calc.state(
+                               choice.successor_state));
+            });
+        if (goal_choice == observation.choices.end() ||
+            observation.choices.size() < 2) {
+            continue;
+        }
+        ++goal_observations;
+        const auto retry_choice = std::find_if(
+            observation.choices.begin(),
+            observation.choices.end(),
+            [&](const ObservedUnveilChoice& choice) {
+                return choice.successor_state <
+                           calc.state_count() &&
+                       !calc.is_goal_state(
+                           calc.state(
+                               choice.successor_state));
+            });
+        if (retry_choice ==
+            observation.choices.end()) {
+            continue;
+        }
+        std::iter_swap(
+            observation.choices.begin(),
+            retry_choice);
+        ++rejected_goal_observations;
+    }
+    PC_CHECK(goal_observations > 0);
+    PC_CHECK(rejected_goal_observations == goal_observations);
+
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "focused fixed exact-choice reoptimization");
+    report_lift_failure("fixed choice reoptimization", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.lumpable);
+    PC_CHECK(lifted.policy_changed);
+    PC_CHECK(lifted.coarse_value_reconciled);
+    PC_CHECK(
+        lifted.adapter.local_reoptimizations > 0);
+    for (const refinement::RefinedPolicyClass& policy_class :
+         lifted.refinement.classes) {
+        if (!policy_class.terminal &&
+            policy_class.selected_action.has_value()) {
+            PC_CHECK(
+                policy_class.selected_action->action_id ==
+                option_index);
+        }
+    }
+    PC_CHECK(near(
+        lifted.exact_start_cost,
+        solved.evaluated_policy_cost, 1e-8));
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+}
+
+/*
+ * Transmute and Scour form a legal two-carrier bottom SCC when only one
+ * explicit can roll. The first canonical member's only alternative is an
+ * equivalent Transmute, so its first transaction leaves the SCC closed.
+ * Recursive repair must retain that mutation and replace Scour on the magic
+ * member with a deterministic bench finish. This is a properness
+ * counterexample, not an illegal-action counterexample.
+ */
+void run_policy_guided_improper_cycle_repair_tests() {
+    auto session = make_solve_session();
+    session->base_spawn_weight.assign(session->mod_count, 0);
+    session->base_roll_weight.assign(session->mod_count, 0);
+    session->base_spawn_weight[0] = 100;
+    session->base_roll_weight[0] = 100;
+    pc_bitset_zero(
+        session->normal_random_roll_mask.data(),
+        session->words);
+    pc_bitset_zero(
+        session->positive_spawn_weight_mask.data(),
+        session->words);
+    pc_bitset_zero(
+        session->positive_base_weight_mask.data(),
+        session->words);
+    pc_bitset_set(session->normal_random_roll_mask.data(), 0);
+    pc_bitset_set(session->positive_spawn_weight_mask.data(), 0);
+    pc_bitset_set(session->positive_base_weight_mask.data(), 0);
+    session->bench_mod_ids = {5};
+    session->flags[5] |= 1u << 1;
+    ActionRegistry registry = build_action_registry(*session);
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_MAGIC;
+    GoalSlot slot;
+    slot.family_id = 104;
+    slot.min_tier = 1;
+    goal.slots.push_back(slot);
+
+    const std::uint32_t transmute =
+        registry.index_by_id.at("transmute");
+    const std::uint32_t scour =
+        registry.index_by_id.at("scour");
+    const std::uint32_t bench =
+        registry.index_by_id.at("bench:mod5");
+    ActionDescriptor alternate_transmute =
+        registry.actions.at(transmute);
+    alternate_transmute.id = "transmute:transaction-control";
+    alternate_transmute.display_name =
+        "Transmute transaction control";
+    alternate_transmute.cost_keys = {
+        alternate_transmute.id};
+    const std::uint32_t alternate_transmute_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    registry.index_by_id.emplace(
+        alternate_transmute.id, alternate_transmute_index);
+    registry.actions.push_back(
+        std::move(alternate_transmute));
+    CalcContext calc(
+        session, goal, registry,
+        {transmute, scour, bench, alternate_transmute_index},
+        false, true, false, std::nullopt, {}, true);
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_NORMAL;
+    const std::uint32_t start_state = calc.intern_item(start);
+    const OutcomeDistribution& transmute_outcomes =
+        calc.outcomes(start_state, transmute, false);
+    PC_CHECK(transmute_outcomes.supported);
+    PC_CHECK(transmute_outcomes.choice_groups.empty());
+    PC_CHECK(transmute_outcomes.entries.size() == 1);
+    PC_CHECK(
+        near(
+            transmute_outcomes.entries.front().probability,
+            1.0, 1e-12));
+    const std::uint32_t magic_state =
+        transmute_outcomes.entries.front().state;
+    PC_CHECK(magic_state != start_state);
+    PC_CHECK(
+        calc.state(magic_state).rarity == PC_RARITY_MAGIC);
+    const OutcomeDistribution& scour_outcomes =
+        calc.outcomes(magic_state, scour, false);
+    PC_CHECK(scour_outcomes.supported);
+    PC_CHECK(scour_outcomes.choice_groups.empty());
+    PC_CHECK(scour_outcomes.entries.size() == 1);
+    PC_CHECK(near(
+        scour_outcomes.entries.front().probability, 1.0, 1e-12));
+    PC_CHECK(
+        scour_outcomes.entries.front().state == start_state);
+    const OutcomeDistribution& bench_outcomes =
+        calc.outcomes(magic_state, bench, false);
+    PC_CHECK(bench_outcomes.supported);
+    PC_CHECK(bench_outcomes.choice_groups.empty());
+    PC_CHECK(bench_outcomes.entries.size() == 1);
+    PC_CHECK(near(
+        bench_outcomes.entries.front().probability, 1.0, 1e-12));
+    PC_CHECK(calc.is_goal_state(
+        calc.state(bench_outcomes.entries.front().state)));
+
+    SolveOptions options;
+    SolveResult authored;
+    authored.converged = true;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::Exact;
+    authored.termination = SolveTermination::ExactClosed;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    authored.lower_bound = 0.0;
+    authored.upper_bound = 0.0;
+    authored.evaluated_policy_cost = 0.0;
+    authored.absolute_optimality_gap = 0.0;
+    authored.relative_optimality_gap = 0.0;
+    authored.options = options;
+    authored.values.assign(calc.state_count(), 0.0);
+    authored.policy.assign(
+        calc.state_count(), PolicyOperatorRef{});
+    authored.expanded.assign(calc.state_count(), 1);
+    authored.goal_states.assign(calc.state_count(), 0);
+    authored.policy_reachable.assign(calc.state_count(), 1);
+    authored.unveil_preferences.resize(calc.state_count());
+    authored.option_unveil_preferences.resize(calc.state_count());
+    authored.policy[start_state] = PolicyOperatorRef{
+        PlannerOperatorKind::Primitive, transmute};
+    authored.policy[magic_state] = PolicyOperatorRef{
+        PlannerOperatorKind::Primitive, scour};
+
+    const std::unordered_map<std::string, double> prices{
+        {"transmute", 0.5},
+        {"scour", 0.25},
+        {"bench:mod5", 2.0},
+        {"transmute:transaction-control", 0.5}};
+    const refinement::PolicyExactLiftCertificate lifted =
+        refinement::lift_policy_exact(
+            calc, authored, start, prices, options,
+            "focused improper-cycle exact repair");
+    report_lift_failure("improper-cycle repair", lifted);
+    PC_CHECK(
+        lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(lifted.executable);
+    PC_CHECK(lifted.lumpable);
+    PC_CHECK(lifted.policy_changed);
+    PC_CHECK(lifted.adapter.local_reoptimizations >= 2);
+    PC_CHECK(
+        lifted.adapter.local_reoptimization_rounds > 0);
+    PC_CHECK(
+        lifted.class_evaluation.status ==
+        refinement::PolicyEvaluationStatus::Complete);
+    PC_CHECK(lifted.class_evaluation.proper);
+    PC_CHECK(lifted.compiled.executable);
+    PC_CHECK(lifted.compiled.proper);
+    PC_CHECK(lifted.compiled.cost_reconciled);
+    PC_CHECK(near(lifted.exact_start_cost, 2.5, 1e-9));
+}
+
 /* A crafted-only goal has an exact direct finish. Chaos cannot produce the
  * target mod after it is removed from the normal-roll mask, so every Chaos
  * route must still pay the bench cost later. The constructive certificate
@@ -639,25 +2654,11 @@ void run_alt_spam_tests() {
 void run_constructive_state_certificate_tests() {
     auto session = make_solve_session();
     pc_bitset_clear(session->normal_random_roll_mask.data(), 0);
-
-    ActionRegistry registry = build_action_registry(*session);
     session->bench_mod_ids = {0};
     session->flags[0] |= 1u << 1;
-    ActionDescriptor bench;
-    bench.id = "bench:test_goal";
-    bench.display_name = "Bench test goal";
-    bench.params.type = ActionType::Bench;
-    bench.params.mod_id = 0;
-    bench.kind = TransitionKind::Deterministic;
-    bench.cost_keys = {"bench:test_goal"};
-    bench.legality.rarity_mask =
-        (1u << PC_RARITY_MAGIC) | (1u << PC_RARITY_RARE);
-    bench.legality.requires_open_affix = true;
-    bench.sets_flags = kFlagCraftedMod;
+    ActionRegistry registry = build_action_registry(*session);
     const std::uint32_t bench_index =
-        static_cast<std::uint32_t>(registry.actions.size());
-    registry.index_by_id.emplace(bench.id, bench_index);
-    registry.actions.push_back(std::move(bench));
+        registry.index_by_id.at("bench:mod0");
 
     GoalSpec goal;
     GoalSlot slot;
@@ -674,7 +2675,7 @@ void run_constructive_state_certificate_tests() {
     pc_item_clear(&start);
     start.rarity = PC_RARITY_RARE;
     const std::unordered_map<std::string, double> prices{
-        {"chaos", 0.5}, {"base", 1.0}, {"bench:test_goal", 3.0}};
+        {"chaos", 0.5}, {"base", 1.0}, {"bench:mod0", 3.0}};
 
     const SolveResult certified = solve(calc, start, prices);
     PC_CHECK(certified.converged);
@@ -742,6 +2743,9 @@ void run_constructive_renewal_upper_tests() {
     bench.legality.rarity_mask = 1u << PC_RARITY_RARE;
     bench.legality.requires_open_affix = true;
     bench.sets_flags = kFlagCraftedMod;
+    bench.refinement =
+        derive_action_refinement_contract(*session, bench);
+    validate_action_refinement_contract(bench);
     const std::uint32_t bench_index =
         static_cast<std::uint32_t>(registry.actions.size());
     registry.index_by_id.emplace(bench.id, bench_index);
@@ -1735,6 +3739,10 @@ void run_goal_progress_gated_reforge_tests() {
     goal_bench.legality.rarity_mask = 1u << PC_RARITY_RARE;
     goal_bench.legality.requires_open_affix = true;
     goal_bench.sets_flags = kFlagCraftedMod;
+    goal_bench.refinement =
+        derive_action_refinement_contract(
+            *restricted_session, goal_bench);
+    validate_action_refinement_contract(goal_bench);
     const std::uint32_t bench_index =
         static_cast<std::uint32_t>(
             restricted_registry.actions.size());
@@ -1817,11 +3825,27 @@ void run_goal_progress_gated_reforge_tests() {
             restricted_calc.state(basin_state)));
     }
 
-    PolicyCompilationTelemetry compilation;
-    const std::string restricted_json =
-        compile_policy_strategy_json(
-            restricted_calc, restricted,
-            "goal-progress-gated renewal", &compilation);
+    const refinement::PolicyExactLiftCertificate restricted_lifted =
+        refinement::lift_policy_exact(
+            restricted_calc, restricted, full_start,
+            restricted_prices, restricted_options,
+            "goal-progress-gated refined renewal");
+    report_lift_failure(
+        "goal-progress-gated refined renewal",
+        restricted_lifted);
+    PC_CHECK(
+        restricted_lifted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(restricted_lifted.executable);
+    PC_CHECK(restricted_lifted.compiled.executable);
+    PC_CHECK(restricted_lifted.compiled.proper);
+    PC_CHECK(restricted_lifted.compiled.zero_off_policy);
+    PC_CHECK(restricted_lifted.compiled.cost_reconciled);
+    PC_CHECK(near(
+        restricted_lifted.compiled.exact_cost,
+        restricted.values[restricted.start_state], 1e-9));
+    const std::string& restricted_json =
+        restricted_lifted.compiled.strategy_json;
     PC_CHECK(restricted_json.find(
                  "\"description\":\"Exact within the "
                  "zero-progress-reroll policy restriction") !=
@@ -1856,6 +3880,41 @@ void run_goal_progress_gated_reforge_tests() {
     restricted_simulation_options.max_actions_per_run = 100000;
     run_simulator_chunk(
         restricted_simulator, restricted_simulation_options, 10000);
+    if (restricted_simulator.summary.success_count != 10000) {
+        std::printf(
+            "goal-progress-gated refined simulation: completed=%llu "
+            "success=%llu failure=%llu stop=%llu actions=%llu "
+            "action_limit=%llu cost_limit=%llu step_limit=%llu "
+            "no_edge=%llu not_applied=%llu\n",
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.completed_runs),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.success_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.failure_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.stop_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.total_actions),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.action_limit_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.cost_limit_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.step_limit_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.no_matching_edge_count),
+            static_cast<unsigned long long>(
+                restricted_simulator.summary.action_not_applied_count));
+        for (const FailureSummaryInternal& failure :
+             restricted_simulator.failure_summaries) {
+            std::printf(
+                "  failure reason=%d node=%s count=%llu detail=%s\n",
+                failure.failure_reason, failure.node_id.c_str(),
+                static_cast<unsigned long long>(failure.count),
+                failure.detail.c_str());
+        }
+    }
     PC_CHECK(restricted_simulator.summary.completed_runs == 10000);
     PC_CHECK(restricted_simulator.summary.success_count == 10000);
     PC_CHECK(
@@ -2124,6 +4183,9 @@ void run_goal_progress_gated_reforge_tests() {
             partial_calc, partial_item,
             {{"chaos", 100.0}, {"bench:gated_goal", 0.001}},
             restricted_options);
+        report_solve_issue(
+            "retained-progress bench solve",
+            partial_result, true);
         PC_CHECK(partial_result.converged);
         const PlannerOperator& partial_selected =
             partial_calc.operators().at(
@@ -2147,31 +4209,14 @@ void run_incremental_action_generation_tests() {
             0.9, 10.0, 12.0) >
         q_directed_uncertainty_contribution(
             0.1, 0.0, 10.0));
-    auto session = make_solve_session();
+    auto session = make_solve_session(
+        {"incremental_goal", "incremental_junk"});
     session->essence_guaranteed_mod_ids = {0, 2};
     ActionRegistry registry = build_action_registry(*session);
-    const auto add_essence =
-        [&](const char* id, const std::uint32_t essence_index) {
-            ActionDescriptor action;
-            action.id = id;
-            action.display_name = id;
-            action.params.type = ActionType::Essence;
-            action.params.essence_index = essence_index;
-            action.kind = TransitionKind::Reforge;
-            action.cost_keys = {id};
-            action.legality.rarity_mask = 1u << PC_RARITY_RARE;
-            action.preservation.destructive_renewal = true;
-            action.preservation.preserves_fractured_affixes = true;
-            const std::uint32_t index =
-                static_cast<std::uint32_t>(registry.actions.size());
-            registry.index_by_id.emplace(id, index);
-            registry.actions.push_back(std::move(action));
-            return index;
-        };
     const std::uint32_t good_essence =
-        add_essence("essence:incremental_goal", 0);
+        registry.index_by_id.at("essence:incremental_goal");
     const std::uint32_t bad_essence =
-        add_essence("essence:incremental_junk", 1);
+        registry.index_by_id.at("essence:incremental_junk");
     const std::uint32_t chaos = registry.index_by_id.at("chaos");
 
     GoalSpec goal;
@@ -2309,10 +4354,13 @@ void run_incremental_action_generation_tests() {
     capped_options.max_state_action_rows = 1;
     const SolveResult capped =
         solve(capped_calc, start, prices, capped_options);
+    /* A bounded incumbent is not returned when the same declared row cap
+     * cannot certify its compiled exact policy. */
     PC_CHECK(!capped.converged);
-    PC_CHECK(capped.policy_available);
+    PC_CHECK(!capped.policy_available);
     PC_CHECK(
-        capped.policy_status == SolvePolicyStatus::BoundedFeasible);
+        capped.policy_status == SolvePolicyStatus::None);
+    PC_CHECK(!capped.diagnostics.policy_compatibility_supported);
     PC_CHECK(
         !capped.diagnostics.incremental_action_envelope_closed);
     PC_CHECK(
@@ -2321,7 +4369,8 @@ void run_incremental_action_generation_tests() {
         0);
     PC_CHECK(capped.termination == SolveTermination::RefusedResourceCap);
 
-    auto delta_session = make_solve_session();
+    auto delta_session = make_solve_session(
+        {"incremental_delta"});
     pc_bitset_clear(
         delta_session->normal_random_roll_mask.data(), 0);
     pc_bitset_clear(
@@ -2333,22 +4382,9 @@ void run_incremental_action_generation_tests() {
     delta_session->essence_guaranteed_mod_ids = {0};
     ActionRegistry delta_registry =
         build_action_registry(*delta_session);
-    ActionDescriptor delta_essence;
-    delta_essence.id = "essence:incremental_delta";
-    delta_essence.display_name = delta_essence.id;
-    delta_essence.params.type = ActionType::Essence;
-    delta_essence.params.essence_index = 0;
-    delta_essence.kind = TransitionKind::Reforge;
-    delta_essence.cost_keys = {delta_essence.id};
-    delta_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
-    delta_essence.preservation.destructive_renewal = true;
-    delta_essence.preservation.preserves_fractured_affixes = true;
     const std::uint32_t delta_essence_index =
-        static_cast<std::uint32_t>(
-            delta_registry.actions.size());
-    delta_registry.index_by_id.emplace(
-        delta_essence.id, delta_essence_index);
-    delta_registry.actions.push_back(std::move(delta_essence));
+        delta_registry.index_by_id.at(
+            "essence:incremental_delta");
     const std::uint32_t delta_chaos =
         delta_registry.index_by_id.at("chaos");
     GoalSpec delta_goal;
@@ -2396,26 +4432,22 @@ void run_incremental_action_generation_tests() {
         }
     }
 
-    auto varying_session = make_solve_session();
+    auto varying_session = make_solve_session(
+        {"incremental_inapplicable"});
     varying_session->essence_guaranteed_mod_ids = {0};
     ActionRegistry varying_registry =
         build_action_registry(*varying_session);
-    ActionDescriptor inert_essence;
-    inert_essence.id = "essence:incremental_inapplicable";
-    inert_essence.display_name = inert_essence.id;
-    inert_essence.params.type = ActionType::Essence;
-    inert_essence.params.essence_index = 0;
-    inert_essence.kind = TransitionKind::Reforge;
-    inert_essence.cost_keys = {inert_essence.id};
-    inert_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
-    inert_essence.preservation.destructive_renewal = true;
-    inert_essence.preservation.preserves_fractured_affixes = true;
     const std::uint32_t inert_essence_index =
-        static_cast<std::uint32_t>(
-            varying_registry.actions.size());
-    varying_registry.index_by_id.emplace(
-        inert_essence.id, inert_essence_index);
-    varying_registry.actions.push_back(std::move(inert_essence));
+        varying_registry.index_by_id.at(
+            "essence:incremental_inapplicable");
+    ActionDescriptor& inert_essence =
+        varying_registry.actions.at(inert_essence_index);
+    inert_essence.legality.rarity_mask =
+        1u << PC_RARITY_RARE;
+    inert_essence.refinement =
+        derive_action_refinement_contract(
+            *varying_session, inert_essence);
+    validate_action_refinement_contract(inert_essence);
     const std::uint32_t varying_transmute =
         varying_registry.index_by_id.at("transmute");
     const std::uint32_t varying_alteration =
@@ -2864,7 +4896,8 @@ void run_automatic_eldritch_side_tests() {
      * preserves it. The resulting states are therefore true support deltas
      * and must be interned and expanded before the side action is classified.
      */
-    auto delta_session = make_solve_session();
+    auto delta_session = make_solve_session(
+        {"incremental_goal"});
     delta_session->eldritch_eligible = true;
     delta_session->eldritch_searing_tier_mod_ids.resize(5);
     delta_session->eldritch_eater_tier_mod_ids.resize(5);
@@ -2883,22 +4916,9 @@ void run_automatic_eldritch_side_tests() {
     delta_session->essence_guaranteed_mod_ids = {5};
     ActionRegistry delta_registry =
         build_action_registry(*delta_session);
-    ActionDescriptor delta_essence;
-    delta_essence.id = "essence:eldritch_delta_anchor";
-    delta_essence.display_name = delta_essence.id;
-    delta_essence.params.type = ActionType::Essence;
-    delta_essence.params.essence_index = 0;
-    delta_essence.kind = TransitionKind::Reforge;
-    delta_essence.cost_keys = {delta_essence.id};
-    delta_essence.legality.rarity_mask = 1u << PC_RARITY_RARE;
-    delta_essence.preservation.destructive_renewal = true;
-    delta_essence.preservation.preserves_fractured_affixes = true;
     const std::uint32_t delta_essence_index =
-        static_cast<std::uint32_t>(
-            delta_registry.actions.size());
-    delta_registry.index_by_id.emplace(
-        delta_essence.id, delta_essence_index);
-    delta_registry.actions.push_back(std::move(delta_essence));
+        delta_registry.index_by_id.at(
+            "essence:incremental_goal");
     const std::vector<std::uint32_t> delta_candidates{
         delta_registry.index_by_id.at("chaos"),
         delta_registry.index_by_id.at("annul"),
@@ -2907,7 +4927,7 @@ void run_automatic_eldritch_side_tests() {
         delta_session, goal, delta_registry, delta_candidates);
     SolveOptions delta_options = prefix_solve_options;
     auto delta_prices = prices;
-    delta_prices["essence:eldritch_delta_anchor"] =
+    delta_prices["essence:incremental_goal"] =
         1000000.0;
     const SolveResult delta_solved = solve(
         delta_calc, repair_suffix, delta_prices, delta_options);
@@ -3389,6 +5409,19 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 
 } // namespace
 
+void run_solver_policy_refinement_tests() {
+    run_shared_sparse_policy_kernel_tests();
+    run_policy_guided_exact_lift_tests();
+    run_policy_guided_exalt_lift_tests();
+    run_policy_guided_local_reoptimization_tests();
+    run_candidate_induced_exact_subclass_tests();
+    run_policy_guided_primitive_choice_reoptimization_tests();
+    run_future_observed_choice_finalization_tests();
+    run_policy_guided_fixed_choice_reoptimization_tests();
+    run_policy_guided_improper_cycle_repair_tests();
+    run_mixed_side_rare_cap_reporting_regression();
+}
+
 void run_solver_solve_tests(const char* artifact_dir) {
     const SolveOptions default_options;
     PC_CHECK(default_options.max_reforge_work == 20000000);
@@ -3397,12 +5430,12 @@ void run_solver_solve_tests(const char* artifact_dir) {
         1024ull * 1024ull * 1024ull);
     run_bounded_policy_row_capture_tests();
     run_alt_spam_tests();
+    run_solver_policy_refinement_tests();
     run_constructive_state_certificate_tests();
     run_constructive_renewal_upper_tests();
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
     run_incremental_action_generation_tests();
-    run_mixed_side_rare_cap_reporting_regression();
     run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);
 }

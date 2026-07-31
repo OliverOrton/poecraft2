@@ -13,6 +13,11 @@ solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No rendered review or mechanic ruling
 was performed.
 
+The policy-guided refinement steps below define the selected native
+publication contract. Their portfolio qualification remains owned by the
+[active boundary](../active/policy-guided-exact-refinement.md); this page does
+not claim its final availability or refusal counts.
+
 ## Purpose
 
 The [Solver reference](README.md) owns the planning abstraction, exact
@@ -162,13 +167,20 @@ pcw_solver_solve_begin
 
 The native stages are:
 
-1. project the concrete start item and expand reachable abstract states;
+1. derive, canonicalize, and validate the one engine-owned
+   observation/preservation/destruction contract for every candidate action;
+   reject incomplete descriptors before admission, then project the concrete
+   start item and expand reachable abstract states;
 2. admit state-local primitive and automatic operators and build exact sparse
    transition rows within configured work/memory/output caps;
 3. price operators against the pinned economy;
 4. optimize cyclic components using SCC-based policy iteration with the
-   documented fallback; and
-5. finalize values, policy, bounds, diagnostics, telemetry, and hashes.
+   documented fallback;
+5. lift any coarse selected-policy region through native policy-guided exact
+   refinement, locally re-optimize counterexample classes when required, and
+   prove selected-kernel lumpability; and
+6. finalize values, executable policy, bounds, diagnostics, telemetry, and
+   hashes.
 
 Callers may opt into `goal_progress_gated_reforges`. In that scope, primitive
 reforge rows fold goal outcomes to one terminal exit and zero-goal-progress
@@ -236,12 +248,47 @@ Code authority:
 the native `engine/src/solver_solve*.cpp` phase family with its private
 `solver_solve_types.hpp` declarations.
 
+Policy-guided refinement stays entirely inside the native solve. It starts
+from the concrete item, visits only policy-reachable strict refinements, and
+derives routing features from the admitted action contracts. Distinguishing
+predicates are local to the exact policy classes that select different
+decisions; they are not one graph-wide feature union. Cyclic observation
+propagation and successor-class partitioning run to a deterministic fixed
+point. States merge only when selected action, immediate cost, and exact
+probability into every successor class agree. A mismatch is a native
+counterexample for witness-local Bellman re-optimization; it is not a signal
+for TypeScript to select a recipe or fallback.
+
+Observed-choice fixed programs retain the exact pre-choice carrier on each
+choice group. Preference lookup, refinement, and compiled routing require that
+observation identity to match; an equal offered modifier or projected
+successor from another observation carrier cannot satisfy the branch.
+
+When an action destroys every source feature needed by downstream routing, the
+native refinement collapses that path back to the coarse parent. Preserving
+actions retain only their declared side/lock/fracture scope, and modifier IDs
+with equal exclusion-effect signatures remain merged. Named refinement caps
+and bounded counterexample/refusal telemetry cross the ABI as diagnostics.
+The publication ledger distinguishes cumulative strict materialization/kernel
+work from final retained states and classes, records contract-driven collapse
+separately from state/cache reuse, and exposes the fixed-point, lumpability,
+class-policy properness, and compiled exact-cost assertions. Its memory fields
+distinguish live phase estimates, peak, declared limit, and the retained exact
+strategy payload. Feature masks and count arrays use native
+`RefinementFeature` bit/declaration order. Separate counters expose locally
+scheduled/evaluated state-action rows and accepted policy/value changes. The
+frontend gains no observation, preservation, exclusion, or lumpability logic.
+
 ## Policy To Editable Strategy
 
 After a solve with `policy_available`:
 
-1. `pc_solver_compile_strategy` expands the chosen primitive and automatic
-   operators into ordinary V1 start, router, operation, and terminal nodes.
+1. `pc_solver_compile_strategy` expands the exact refined primitive and
+   automatic policy classes into ordinary V1 start, router, operation, and
+   terminal nodes. Router predicates come from the shared native observation
+   vocabulary, not action-name compiler cases. Fixed-program observed-choice
+   routers remain scoped to the exact observation carrier that produced the
+   offer.
 2. The WASM facade exposes the compiled JSON response as raw bytes plus native
    result status and length. `EngineBindings` slices those bytes from linear
    memory, clears the reusable native response string, and transfers the
@@ -304,7 +351,10 @@ solver handle or solved policy state:
 
 Evaluation refuses unsupported action/condition vocabulary rather than using
 sampling. Its exact state is `(strategy node, abstract item state)`, distinct
-from the solver's action-selection policy state.
+from the solver's action-selection policy state. The evaluator derives which
+source features can cross an operation from the same admitted action contract
+used by solving and compilation; it does not maintain an independent list of
+full versus side-preserving rerolls.
 
 Code authority:
 `apps/web/src/app/components/pc-strategy-editor.ts`,
@@ -338,6 +388,7 @@ different evidence sources.
 | --- | --- |
 | Unknown/unpriced action | Exclude or diagnose; never assign zero cost silently |
 | Unsupported exact vocabulary | Refuse exact calculation/evaluation; never sample silently |
+| Coarse selected-policy incompatibility | Feed the native observation witness into exact refinement/local re-optimization; withhold publication only for a named refinement cap or separately named unsupported exact vocabulary. Incomplete action contracts fail admission before search |
 | Cap or incomplete solve | Report termination and bounds; compile only an independently certified executable incumbent |
 | Stale product request | Ignore its result using request/version checks |
 | Cancelled stepped work | Yield, observe cancellation, abandon/destroy native work, and return bounded progress |
@@ -358,7 +409,8 @@ different evidence sources.
 | Public native contract | `engine/include/poecraft/solver.h` |
 | Native API/lifetime | `engine/src/solver_api.cpp` |
 | Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
-| Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_solve_bellman.cpp` |
+| Action observation/refinement contract | `engine/src/solver_internal.hpp`, `solver_registry.cpp`, `solver_refinement.cpp` |
+| Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
 | Focused, constructive, and heuristic phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp` |
 | Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |
 | Policy compilation | `engine/src/solver_compile.cpp` |

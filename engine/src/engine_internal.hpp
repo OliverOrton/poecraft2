@@ -819,7 +819,8 @@ enum class ConditionKind : std::uint8_t {
       InfluenceBits = 14,
       EldritchTier = 15,
       HasUnveilOption = 16,
-      ModFamilyCount = 17
+      ModFamilyCount = 17,
+      ObservationSignature = 18
   };
 
 enum class ItemFlagKind : std::uint8_t {
@@ -841,6 +842,64 @@ enum class ItemFlagKind : std::uint8_t {
     EldritchImplicit,
 };
 
+inline constexpr std::uint32_t kObservationSignatureConditionVersion = 1;
+
+struct CompiledObservationAffixSelector {
+    std::uint16_t required_affix_traits = 0;
+    std::uint16_t forbidden_affix_traits = 0;
+    std::uint8_t required_item_traits = 0;
+    std::uint8_t forbidden_item_traits = 0;
+    std::vector<std::uint32_t> required_tag_ids;
+
+    bool operator==(
+        const CompiledObservationAffixSelector&) const = default;
+};
+
+struct CompiledObservationAffixRequirement {
+    std::uint64_t features = 0;
+    CompiledObservationAffixSelector selector;
+
+    bool operator==(
+        const CompiledObservationAffixRequirement&) const = default;
+};
+
+struct CompiledObservationAtom {
+    std::uint8_t feature = 0;
+    std::uint32_t subject = 0;
+    std::vector<std::uint64_t> value;
+
+    bool operator==(const CompiledObservationAtom&) const = default;
+};
+
+struct CompiledObservationModValue {
+    std::uint32_t mod_id = std::numeric_limits<std::uint32_t>::max();
+    std::vector<std::uint64_t> value;
+
+    bool operator==(const CompiledObservationModValue&) const = default;
+};
+
+struct CompiledObservationSignature {
+    std::uint32_t version = 0;
+    std::uint64_t item_features = 0;
+    std::vector<std::uint32_t> modifier_tag_ids;
+    std::vector<CompiledObservationAffixRequirement>
+        affix_observations;
+    std::vector<CompiledObservationAtom> atoms;
+    std::vector<CompiledObservationModValue>
+        goal_status_tier_class_by_mod;
+    std::uint32_t count_observation_count = 0;
+    std::vector<CompiledObservationModValue>
+        count_observation_membership_by_mod;
+
+    bool operator==(const CompiledObservationSignature&) const = default;
+};
+
+namespace solver {
+namespace refinement {
+struct CompiledObservationProgram;
+}
+}
+
 struct CompiledCondition {
     ConditionKind kind = ConditionKind::Always;
     std::uint32_t group_id = std::numeric_limits<std::uint32_t>::max();
@@ -852,6 +911,10 @@ struct CompiledCondition {
     int max_value = 0;
     std::vector<std::uint32_t> mod_ids;
     std::vector<std::uint32_t> family_ids;
+    CompiledObservationSignature observation_signature;
+    std::shared_ptr<
+        const solver::refinement::CompiledObservationProgram>
+        observation_program;
     std::vector<CompiledCondition> children;
     /* Structurally identical predicates share a per-strategy memo slot. */
     std::uint32_t memo_slot = std::numeric_limits<std::uint32_t>::max();

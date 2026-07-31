@@ -137,9 +137,98 @@ bool mask_equals(const std::vector<std::uint64_t>& mask,
     return mask.size() == 1 && mask[0] == expected;
 }
 
+bool same_partition(const AbstractLayout& left,
+                    const AbstractLayout& right) {
+    if (left.discriminating_tag_ids != right.discriminating_tag_ids ||
+        left.junk_class_by_mod != right.junk_class_by_mod ||
+        left.junk_classes.size() != right.junk_classes.size() ||
+        left.slots.size() != right.slots.size()) {
+        return false;
+    }
+    for (std::size_t i = 0; i < left.junk_classes.size(); ++i) {
+        const JunkClass& a = left.junk_classes[i];
+        const JunkClass& b = right.junk_classes[i];
+        if (a.gen_type != b.gen_type ||
+            a.tag_bits != b.tag_bits ||
+            a.goal_block_mask != b.goal_block_mask ||
+            a.exclusion_effect_mask != b.exclusion_effect_mask ||
+            a.count_observation_bits != b.count_observation_bits ||
+            a.member_mask != b.member_mask ||
+            a.member_count != b.member_count) {
+            return false;
+        }
+    }
+    for (std::size_t i = 0; i < left.slots.size(); ++i) {
+        const ResolvedGoalSlot& a = left.slots[i];
+        const ResolvedGoalSlot& b = right.slots[i];
+        if (a.member_mask != b.member_mask ||
+            a.satisfying_mask != b.satisfying_mask ||
+            a.blocking_group_ids != b.blocking_group_ids ||
+            a.member_class_token_by_mod !=
+                b.member_class_token_by_mod ||
+            a.member_classes.size() != b.member_classes.size()) {
+            return false;
+        }
+        for (std::size_t c = 0; c < a.member_classes.size(); ++c) {
+            const GoalMemberClass& ac = a.member_classes[c];
+            const GoalMemberClass& bc = b.member_classes[c];
+            if (ac.status != bc.status ||
+                ac.gen_type != bc.gen_type ||
+                ac.exclusion_effect_mask !=
+                    bc.exclusion_effect_mask ||
+                ac.count_observation_bits !=
+                    bc.count_observation_bits ||
+                ac.member_mask != bc.member_mask ||
+                ac.member_count != bc.member_count) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void set_single_group(SessionImpl& session,
+                      const std::uint32_t mod,
+                      const std::uint32_t group) {
+    const std::uint32_t begin = session.group_offsets.at(mod);
+    const std::uint32_t end = session.group_offsets.at(mod + 1);
+    PC_CHECK(end == begin + 1);
+    if (end != begin + 1) return;
+    session.primary_group.at(mod) = group;
+    session.group_ids.at(begin) = group;
+}
+
+void rebuild_group_masks(SessionImpl& session) {
+    const std::uint32_t largest_group =
+        *std::max_element(
+            session.group_ids.begin(), session.group_ids.end());
+    session.group_masks.assign(
+        static_cast<std::size_t>(largest_group) + 1,
+        std::vector<std::uint64_t>(session.words, 0));
+    for (std::uint32_t mod = 0; mod < session.mod_count; ++mod) {
+        for (std::uint32_t i = session.group_offsets[mod];
+             i < session.group_offsets[mod + 1]; ++i) {
+            pc_bitset_set(
+                session.group_masks[session.group_ids[i]].data(), mod);
+        }
+    }
+}
+
 void place(pc_item_state* item, int side, std::uint32_t mod_id,
            std::uint16_t group, std::uint8_t flags = 0) {
     pc_item_add_mod(item, side, mod_id, group, flags, nullptr);
+}
+
+bool item_contains_mod(
+        const pc_item_state& item,
+        const std::uint32_t mod_id) {
+    for (std::uint8_t i = 0; i < item.prefix_count; ++i) {
+        if (item.prefixes[i].mod_id == mod_id) return true;
+    }
+    for (std::uint8_t i = 0; i < item.suffix_count; ++i) {
+        if (item.suffixes[i].mod_id == mod_id) return true;
+    }
+    return false;
 }
 
 void run_registry_tests(const SessionImpl& session) {
@@ -187,6 +276,927 @@ void run_registry_tests(const SessionImpl& session) {
     PC_CHECK(remove_crafted.cost_keys ==
              std::vector<std::string>{"scour"});
     PC_CHECK(remove_crafted.legality.required_flags == kFlagCraftedMod);
+}
+
+void run_refinement_contract_tests(const SessionImpl& session) {
+    const ActionRegistry registry = build_action_registry(session);
+    const ActionRegistry repeated = build_action_registry(session);
+    PC_CHECK(registry.actions.size() == repeated.actions.size());
+    for (const ActionDescriptor& action : registry.actions) {
+        PC_CHECK(action.refinement.complete());
+        bool validated = true;
+        try {
+            validate_action_refinement_contract(action);
+        } catch (...) {
+            validated = false;
+        }
+        PC_CHECK(validated);
+        const ActionDescriptor& same =
+            repeated.actions.at(repeated.index_by_id.at(action.id));
+        PC_CHECK(
+            action_refinement_contract_signature(action.refinement) ==
+            action_refinement_contract_signature(same.refinement));
+    }
+
+    /* Complete modifier exclusion effects are deterministic and merge exact
+     * ids only when they block the same future pool. */
+    PC_CHECK(
+        modifier_exclusion_effect_signature(session, 0) ==
+        modifier_exclusion_effect_signature(session, 1));
+    PC_CHECK(
+        modifier_exclusion_effect_signature(session, 3) !=
+        modifier_exclusion_effect_signature(session, 4));
+
+    const auto descriptor = [&](const char* id) -> const ActionDescriptor& {
+        return registry.actions.at(registry.index_by_id.at(id));
+    };
+    const auto observes_affix =
+        [](const ActionDescriptor& action,
+           const RefinementFeature feature,
+           const std::uint16_t traits,
+           const std::uint8_t item_traits = 0,
+           const std::vector<std::uint32_t>& tags =
+               std::vector<std::uint32_t>{}) {
+            return refinement_contract_observes_affix(
+                action.refinement, feature, traits, item_traits, tags);
+        };
+    const auto preserves =
+        [](const ActionDescriptor& action,
+           const std::uint16_t traits,
+           const std::uint8_t item_traits = 0,
+           const std::vector<std::uint32_t>& tags =
+               std::vector<std::uint32_t>{}) {
+            return refinement_selectors_match(
+                action.refinement.preserved_affixes, traits, item_traits,
+                tags);
+        };
+    const auto destroys =
+        [](const ActionDescriptor& action,
+           const std::uint16_t traits,
+           const std::uint8_t item_traits = 0,
+           const std::vector<std::uint32_t>& tags =
+               std::vector<std::uint32_t>{}) {
+            return refinement_selectors_match(
+                action.refinement.destroyed_affixes, traits, item_traits,
+                tags);
+        };
+    const auto has_flow =
+        [](const ActionDescriptor& action,
+           const std::uint16_t source_traits,
+           const std::uint8_t item_traits,
+           const std::uint16_t set_traits,
+           const std::uint16_t cleared_traits,
+           const RefinementFeature feature,
+           const std::vector<std::uint32_t>& tags =
+               std::vector<std::uint32_t>{}) {
+            return std::any_of(
+                action.refinement.affix_flows.begin(),
+                action.refinement.affix_flows.end(),
+                [&](const RefinementAffixFlow& flow) {
+                    return refinement_selector_matches(
+                               flow.source_selector,
+                               source_traits, item_traits,
+                               tags) &&
+                           flow.set_affix_traits == set_traits &&
+                           flow.cleared_affix_traits ==
+                               cleared_traits &&
+                           (flow.preserved_features &
+                            refinement_feature(feature)) != 0;
+                });
+        };
+
+    const std::uint16_t ordinary_prefix =
+        kRefinementAffixPrefix;
+    const std::uint16_t fractured_prefix =
+        kRefinementAffixPrefix | kRefinementAffixFractured;
+    const std::uint16_t crafted_prefix =
+        kRefinementAffixPrefix | kRefinementAffixCrafted;
+    const std::uint16_t fractured_crafted_prefix =
+        crafted_prefix | kRefinementAffixFractured;
+    const std::uint16_t locked_suffix =
+        kRefinementAffixSuffix |
+        kRefinementAffixOnLockedSide;
+
+    /* Add-to-pool actions read the exclusion effect of every occupied
+     * explicit, including exact members represented by a coarse goal slot.
+     * Goal/tier/crafted/fractured/Veiled identity is preserved for downstream
+     * observers but is not read by Exalt itself. */
+    const ActionDescriptor& exalt = descriptor("exalt");
+    PC_CHECK(observes_affix(
+        exalt, RefinementFeature::ModifierExclusionSignature,
+        ordinary_prefix));
+    PC_CHECK(!observes_affix(
+        exalt, RefinementFeature::GoalStatusTierClass,
+        ordinary_prefix));
+    PC_CHECK(!observes_affix(
+        exalt, RefinementFeature::ModifierCrafted,
+        ordinary_prefix));
+    PC_CHECK(!observes_affix(
+        exalt, RefinementFeature::ModifierFractured,
+        fractured_prefix));
+    PC_CHECK(preserves(exalt, ordinary_prefix));
+    PC_CHECK(!destroys(exalt, ordinary_prefix));
+
+    /* A lock-respecting renewal reads exclusion identity only on exact
+     * carriers it preserves. Destroyed ordinary identity collapses. */
+    const ActionDescriptor& chaos = descriptor("chaos");
+    PC_CHECK(preserves(chaos, fractured_prefix));
+    PC_CHECK(preserves(chaos, locked_suffix));
+    PC_CHECK(!preserves(chaos, ordinary_prefix));
+    PC_CHECK(!destroys(chaos, fractured_prefix));
+    PC_CHECK(!destroys(chaos, locked_suffix));
+    PC_CHECK(destroys(chaos, ordinary_prefix));
+    PC_CHECK(observes_affix(
+        chaos, RefinementFeature::ModifierExclusionSignature,
+        fractured_prefix));
+    PC_CHECK(observes_affix(
+        chaos, RefinementFeature::ModifierExclusionSignature,
+        locked_suffix));
+    PC_CHECK(!observes_affix(
+        chaos, RefinementFeature::ModifierExclusionSignature,
+        ordinary_prefix));
+    PC_CHECK(refinement_contract_observes_item(
+        chaos.refinement, RefinementFeature::PrefixLock));
+    PC_CHECK(refinement_contract_observes_item(
+        chaos.refinement, RefinementFeature::CannotRollAttack));
+    PC_CHECK(observes_affix(
+        chaos, RefinementFeature::ModifierMetamodRole,
+        fractured_prefix));
+    PC_CHECK(observes_affix(
+        chaos, RefinementFeature::ModifierMetamodRole,
+        locked_suffix));
+
+    /* Fossils ignore side locks. A non-fractured locked-side modifier is
+     * destroyed and cannot widen the exact refinement key. */
+    const ActionDescriptor& fossil = descriptor("fossil:fossil_a");
+    PC_CHECK(preserves(fossil, fractured_prefix));
+    PC_CHECK(!preserves(fossil, locked_suffix));
+    PC_CHECK(destroys(fossil, locked_suffix));
+    PC_CHECK(!observes_affix(
+        fossil, RefinementFeature::ModifierExclusionSignature,
+        locked_suffix));
+    PC_CHECK(observes_affix(
+        fossil, RefinementFeature::ModifierSide,
+        fractured_prefix));
+    PC_CHECK(!observes_affix(
+        fossil, RefinementFeature::ModifierMetamodRole,
+        fractured_prefix));
+
+    const ActionDescriptor& scour = descriptor("scour");
+    const std::uint8_t exactly_one_lock =
+        kRefinementItemExactlyOneSideLocked;
+    /* With neither or both sides locked, Scour preserves only fractured
+     * affixes. With exactly one side locked, the lock takes authority:
+     * every affix on that side survives and every affix on the opposite
+     * side is removed, including fractured ones. */
+    PC_CHECK(preserves(scour, fractured_prefix, 0));
+    PC_CHECK(!destroys(scour, fractured_prefix, 0));
+    PC_CHECK(preserves(scour, locked_suffix, exactly_one_lock));
+    PC_CHECK(!destroys(scour, locked_suffix, exactly_one_lock));
+    PC_CHECK(!preserves(scour, locked_suffix, 0));
+    PC_CHECK(destroys(scour, locked_suffix, 0));
+    PC_CHECK(!preserves(scour, fractured_prefix, exactly_one_lock));
+    PC_CHECK(destroys(scour, fractured_prefix, exactly_one_lock));
+    PC_CHECK(destroys(scour, ordinary_prefix, 0));
+    PC_CHECK(refinement_contract_observes_item(
+        scour.refinement, RefinementFeature::PrefixLock));
+    PC_CHECK(refinement_contract_observes_item(
+        scour.refinement, RefinementFeature::SuffixLock));
+    PC_CHECK(!observes_affix(
+        scour, RefinementFeature::ModifierExclusionSignature,
+        fractured_prefix));
+    PC_CHECK(
+        (scour.refinement.destroyed_item_features &
+         refinement_feature(
+             RefinementFeature::HasFracturedModifier)) != 0);
+    PC_CHECK(std::any_of(
+        scour.refinement.item_affix_dependencies.begin(),
+        scour.refinement.item_affix_dependencies.end(),
+        [](const RefinementItemAffixDependency& dependency) {
+            return (dependency.item_features &
+                    refinement_feature(
+                        RefinementFeature::Rarity)) != 0 &&
+                   (dependency.survivor_affix_features &
+                    refinement_feature(
+                        RefinementFeature::ModifierSide)) != 0;
+        }));
+
+    const ActionDescriptor& remove_crafted =
+        descriptor("remove_crafted_modifiers");
+    PC_CHECK(preserves(remove_crafted, ordinary_prefix));
+    PC_CHECK(!destroys(remove_crafted, ordinary_prefix));
+    PC_CHECK(!preserves(remove_crafted, crafted_prefix));
+    PC_CHECK(destroys(remove_crafted, crafted_prefix));
+    PC_CHECK(preserves(
+        remove_crafted, fractured_crafted_prefix));
+    PC_CHECK(!destroys(
+        remove_crafted, fractured_crafted_prefix));
+    PC_CHECK(observes_affix(
+        remove_crafted, RefinementFeature::ModifierCrafted,
+        ordinary_prefix));
+    PC_CHECK(observes_affix(
+        remove_crafted, RefinementFeature::ModifierFractured,
+        ordinary_prefix));
+    PC_CHECK(observes_affix(
+        remove_crafted, RefinementFeature::ModifierSide,
+        crafted_prefix));
+
+    const ActionDescriptor& fracture = descriptor("fracture");
+    PC_CHECK(has_flow(
+        fracture, ordinary_prefix, 0,
+        kRefinementAffixFractured, 0,
+        RefinementFeature::ModifierExclusionSignature));
+    PC_CHECK(!has_flow(
+        fracture, ordinary_prefix, 0,
+        kRefinementAffixFractured, 0,
+        RefinementFeature::ModifierFractured));
+
+    ActionDescriptor unveil;
+    unveil.id = "test:unveil";
+    unveil.params.type = ActionType::Unveil;
+    unveil.kind = TransitionKind::SingleSlot;
+    unveil.refinement =
+        derive_action_refinement_contract(session, unveil);
+    validate_action_refinement_contract(unveil);
+    PC_CHECK(action_observes_modifier_offer(unveil));
+    PC_CHECK(has_flow(
+        unveil,
+        ordinary_prefix | kRefinementAffixVeiled,
+        0, 0, kRefinementAffixVeiled,
+        RefinementFeature::ModifierSide));
+    PC_CHECK(has_flow(
+        unveil,
+        ordinary_prefix | kRefinementAffixVeiled,
+        0, 0, kRefinementAffixVeiled,
+        RefinementFeature::ModifierFractured));
+    PC_CHECK(!has_flow(
+        unveil,
+        ordinary_prefix | kRefinementAffixVeiled,
+        0, 0, kRefinementAffixVeiled,
+        RefinementFeature::ModifierExclusionSignature));
+
+    /* Applying one Eldritch implicit observes the opposite side's tier,
+     * because that tier determines the resulting dominance relation. */
+    ActionDescriptor ember;
+    ember.id = "test:eldritch_ember";
+    ember.params.type = ActionType::EldritchEmber;
+    ember.kind = TransitionKind::Deterministic;
+    ember.refinement =
+        derive_action_refinement_contract(session, ember);
+    validate_action_refinement_contract(ember);
+    PC_CHECK(refinement_contract_observes_item(
+        ember.refinement, RefinementFeature::EaterOfWorldsTier));
+
+    ActionDescriptor ichor;
+    ichor.id = "test:eldritch_ichor";
+    ichor.params.type = ActionType::EldritchIchor;
+    ichor.kind = TransitionKind::Deterministic;
+    ichor.refinement =
+        derive_action_refinement_contract(session, ichor);
+    validate_action_refinement_contract(ichor);
+    PC_CHECK(refinement_contract_observes_item(
+        ichor.refinement, RefinementFeature::SearingExarchTier));
+
+    const ActionDescriptor& restart = descriptor("restart");
+    PC_CHECK(restart.refinement.resets_to_fresh_item);
+    PC_CHECK(restart.refinement.observed_item_features == 0);
+    PC_CHECK(restart.refinement.preserved_item_features == 0);
+    PC_CHECK(
+        restart.refinement.destroyed_item_features ==
+        kAllRefinementItemFeatures);
+    PC_CHECK(restart.refinement.affix_observations.empty());
+    PC_CHECK(!preserves(restart, ordinary_prefix));
+    PC_CHECK(destroys(restart, ordinary_prefix));
+
+    /* Eldritch Chaos resolves its conditional side semantics through generic
+     * affix/item traits. The future refinement algorithm need not know the
+     * action name. */
+    ActionDescriptor eldritch;
+    eldritch.id = "test:eldritch_chaos";
+    eldritch.params.type = ActionType::EldritchChaos;
+    eldritch.kind = TransitionKind::Reforge;
+    eldritch.legality.rarity_mask = 1u << PC_RARITY_RARE;
+    eldritch.refinement =
+        derive_action_refinement_contract(session, eldritch);
+    validate_action_refinement_contract(eldritch);
+    const std::uint8_t dominance =
+        kRefinementItemHasEldritchDominance;
+    const std::uint16_t dominant_prefix =
+        kRefinementAffixPrefix |
+        kRefinementAffixOnEldritchDominantSide;
+    const std::uint16_t nondominant_suffix =
+        kRefinementAffixSuffix |
+        kRefinementAffixOnEldritchNonDominantSide;
+    PC_CHECK(preserves(eldritch, nondominant_suffix, dominance));
+    PC_CHECK(!destroys(eldritch, nondominant_suffix, dominance));
+    PC_CHECK(!preserves(eldritch, dominant_prefix, dominance));
+    PC_CHECK(destroys(eldritch, dominant_prefix, dominance));
+    PC_CHECK(preserves(
+        eldritch,
+        dominant_prefix | kRefinementAffixFractured,
+        dominance));
+    PC_CHECK(preserves(eldritch, locked_suffix, 0));
+    PC_CHECK(!preserves(eldritch, ordinary_prefix, 0));
+    PC_CHECK(observes_affix(
+        eldritch, RefinementFeature::ModifierExclusionSignature,
+        nondominant_suffix, dominance));
+    PC_CHECK(!observes_affix(
+        eldritch, RefinementFeature::ModifierExclusionSignature,
+        dominant_prefix, dominance));
+
+    /* Resistance conversion observes only the declared source tag,
+     * required-level class, side/locks/fracture, and survivor exclusions. */
+    ActionDescriptor resist;
+    resist.id = "test:harvest_resist";
+    resist.params.type = ActionType::HarvestResist;
+    resist.params.source_tag_id = kTagFire;
+    resist.params.target_tag_id = 4;
+    resist.kind = TransitionKind::SingleSlot;
+    resist.legality.rarity_mask =
+        (1u << PC_RARITY_MAGIC) | (1u << PC_RARITY_RARE);
+    resist.refinement =
+        derive_action_refinement_contract(session, resist);
+    validate_action_refinement_contract(resist);
+    PC_CHECK(std::find(
+        resist.refinement.observed_modifier_tag_ids.begin(),
+        resist.refinement.observed_modifier_tag_ids.end(),
+        kTagFire) !=
+        resist.refinement.observed_modifier_tag_ids.end());
+    PC_CHECK(observes_affix(
+        resist, RefinementFeature::ModifierRequiredLevel,
+        ordinary_prefix, 0, {kTagFire}));
+    PC_CHECK(!observes_affix(
+        resist, RefinementFeature::ModifierRequiredLevel,
+        ordinary_prefix, 0, {4}));
+    PC_CHECK(observes_affix(
+        resist, RefinementFeature::ModifierExclusionSignature,
+        ordinary_prefix));
+    PC_CHECK(has_flow(
+        resist,
+        ordinary_prefix, 0, 0,
+        kRefinementAffixCrafted |
+            kRefinementAffixFractured |
+            kRefinementAffixVeiled,
+        RefinementFeature::ModifierRequiredLevel,
+        {kTagFire, 6}));
+    PC_CHECK(!has_flow(
+        resist,
+        ordinary_prefix, 0, 0,
+        kRefinementAffixCrafted |
+            kRefinementAffixFractured |
+            kRefinementAffixVeiled,
+        RefinementFeature::ModifierExclusionSignature,
+        {kTagFire, 6}));
+
+    /* An engine action cannot enter a registry with an omitted contract. */
+    ActionDescriptor future;
+    future.id = "test:future_action";
+    future.params.type = static_cast<ActionType>(999);
+    future.refinement =
+        derive_action_refinement_contract(session, future);
+    PC_CHECK(!future.refinement.complete());
+    bool rejected = false;
+    try {
+        validate_action_refinement_contract(future);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    /* A complete schema is not enough: every valid occupied source trait
+     * combination must have a survivor flow or explicit destruction. */
+    ActionDescriptor gap;
+    gap.id = "test:incomplete_affix_domain";
+    gap.refinement.schema_version =
+        kActionRefinementContractVersion;
+    gap.refinement.preserved_item_features =
+        kAllRefinementItemFeatures;
+    RefinementAffixFlow only_plain_prefix;
+    only_plain_prefix.source_selector.required_affix_traits =
+        kRefinementAffixPrefix;
+    only_plain_prefix.source_selector.forbidden_affix_traits =
+        kRefinementAffixCrafted;
+    only_plain_prefix.preserved_features =
+        kAllRefinementAffixFeatures;
+    gap.refinement.affix_flows.push_back(
+        only_plain_prefix);
+    RefinementAffixSelector suffix;
+    suffix.required_affix_traits =
+        kRefinementAffixSuffix;
+    gap.refinement.destroyed_affixes.push_back(
+        std::move(suffix));
+    rejected = false;
+    try {
+        validate_action_refinement_contract(gap);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    /* Observation declarations and exact calculator capability are admitted
+     * together. Copying a valid offer contract onto a deterministic mechanic
+     * is rejected before planner construction. */
+    ActionDescriptor mismatched_offer = descriptor("unveil");
+    mismatched_offer.id = "test:mismatched_modifier_offer";
+    mismatched_offer.params.type = ActionType::Bench;
+    rejected = false;
+    try {
+        canonicalize_and_validate_action_refinement_contract(
+            session, mismatched_offer);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    /* Authored and internal contracts use the same admission path. Equivalent
+     * compatibility summaries are canonicalized once and receive an explicit
+     * identity flow before any runtime consumer sees them. */
+    ActionDescriptor canonical_identity;
+    canonical_identity.id = "test:canonical_identity";
+    canonical_identity.refinement.schema_version =
+        kActionRefinementContractVersion;
+    canonical_identity.refinement.preserved_item_features =
+        kAllRefinementItemFeatures;
+    canonical_identity.refinement.preserved_affixes = {{}, {}};
+    canonicalize_and_validate_action_refinement_contract(
+        canonical_identity);
+    PC_CHECK(
+        canonical_identity.refinement.preserved_affixes.size() == 1);
+    PC_CHECK(canonical_identity.refinement.affix_flows.size() == 1);
+    PC_CHECK(
+        canonical_identity.refinement.affix_flows.front()
+                .preserved_features ==
+            kAllRefinementAffixFeatures);
+
+    /* A supported schema number cannot conceal unknown selector vocabulary. */
+    ActionDescriptor unknown_trait = canonical_identity;
+    unknown_trait.id = "test:unknown_refinement_trait";
+    unknown_trait.refinement.affix_flows.front()
+        .source_selector.required_affix_traits = 1u << 15;
+    rejected = false;
+    try {
+        canonicalize_and_validate_action_refinement_contract(
+            unknown_trait);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    ActionDescriptor unknown_tag = canonical_identity;
+    unknown_tag.id = "test:unknown_refinement_tag";
+    unknown_tag.refinement.observed_modifier_tag_ids.push_back(
+        static_cast<std::uint32_t>(session.implicit_tag_masks.size()));
+    unknown_tag.refinement.affix_observations.push_back({
+        refinement_feature(
+            RefinementFeature::ModifierClassificationTags),
+        {}});
+    rejected = false;
+    try {
+        canonicalize_and_validate_action_refinement_contract(
+            session, unknown_tag);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    /* Flow preservation claims are semantic equalities, so admission rejects
+     * a transform that rewrites one of the values it claims to preserve. */
+    ActionDescriptor contradictory_flow;
+    contradictory_flow.id = "test:contradictory_affix_flow";
+    contradictory_flow.refinement.schema_version =
+        kActionRefinementContractVersion;
+    contradictory_flow.refinement.preserved_item_features =
+        kAllRefinementItemFeatures;
+    RefinementAffixFlow fractures_every_affix;
+    fractures_every_affix.set_affix_traits =
+        kRefinementAffixFractured;
+    fractures_every_affix.preserved_features =
+        kAllRefinementAffixFeatures;
+    contradictory_flow.refinement.affix_flows.push_back(
+        fractures_every_affix);
+    contradictory_flow.refinement.preserved_affixes.push_back({});
+    rejected = false;
+    try {
+        canonicalize_and_validate_action_refinement_contract(
+            contradictory_flow);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+
+    /* Fresh reset is a complete destruction contract, not an overlapping
+     * preserved/destroyed item mask with a reset flag attached. */
+    ActionDescriptor contradictory_reset;
+    contradictory_reset.id = "test:contradictory_fresh_reset";
+    contradictory_reset.refinement.schema_version =
+        kActionRefinementContractVersion;
+    contradictory_reset.refinement.preserved_item_features =
+        kAllRefinementItemFeatures;
+    contradictory_reset.refinement.destroyed_item_features =
+        kAllRefinementItemFeatures;
+    contradictory_reset.refinement.resets_to_fresh_item = true;
+    contradictory_reset.refinement.destroyed_affixes.push_back({});
+    rejected = false;
+    try {
+        canonicalize_and_validate_action_refinement_contract(
+            contradictory_reset);
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
+    PC_CHECK(rejected);
+}
+
+void run_exact_goal_member_class_tests() {
+    const auto session = make_solver_session();
+    session->family_id[0] = 999;
+    session->family_id[1] = 999;
+    session->family_id[3] = 999;
+    session->family_id[4] = 999;
+    const ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    GoalSlot slot;
+    slot.family_id = 999;
+    slot.min_tier = 0;
+    goal.slots.push_back(slot);
+
+    const AbstractLayout coarse = build_abstract_layout(
+        *session, goal, registry, basic_indices(registry));
+    const AbstractLayout exact = build_abstract_layout(
+        *session, goal, registry, basic_indices(registry),
+        false, true, true);
+    PC_CHECK(coarse.slots[0].member_classes.empty());
+    PC_CHECK(coarse.slots[0].member_class_token_by_mod.empty());
+    PC_CHECK(exact.slots[0].member_classes.size() == 3);
+    PC_CHECK(
+        exact.slots[0].member_class_token_by_mod[0] ==
+        exact.slots[0].member_class_token_by_mod[1]);
+    PC_CHECK(
+        exact.slots[0].member_class_token_by_mod[3] !=
+        exact.slots[0].member_class_token_by_mod[4]);
+
+    const auto project_mod = [&](const AbstractLayout& layout,
+                                 const std::uint32_t mod) {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_MAGIC;
+        place(
+            &item, PC_SIDE_PREFIX, mod,
+            static_cast<std::uint16_t>(session->primary_group[mod]));
+        return project_item(*session, layout, item);
+    };
+    const AbstractState coarse_zero = project_mod(coarse, 0);
+    const AbstractState coarse_one = project_mod(coarse, 1);
+    PC_CHECK(coarse_zero.goal_member_class_tokens[0] == 0);
+    PC_CHECK(coarse_one.goal_member_class_tokens[0] == 0);
+    PC_CHECK(coarse_zero == coarse_one);
+    PC_CHECK(
+        abstract_state_hash(coarse_zero) ==
+        abstract_state_hash(coarse_one));
+
+    const AbstractState exact_zero = project_mod(exact, 0);
+    const AbstractState exact_one = project_mod(exact, 1);
+    const AbstractState exact_three = project_mod(exact, 3);
+    const AbstractState exact_four = project_mod(exact, 4);
+    PC_CHECK(exact_zero.goal_member_class_tokens[0] != 0);
+    PC_CHECK(exact_zero == exact_one);
+    PC_CHECK(!(exact_three == exact_four));
+    PC_CHECK(
+        abstract_state_hash(exact_three) !=
+        abstract_state_hash(exact_four));
+
+    /* A compiled exact-id count observation may split otherwise equivalent
+     * exclusion classes, and no representative goal identity is selected. */
+    CountObservation observes_zero;
+    observes_zero.ids = {0};
+    const AbstractLayout routed = build_abstract_layout(
+        *session, goal, registry, basic_indices(registry),
+        false, true, true, {observes_zero});
+    PC_CHECK(routed.slots[0].member_classes.size() == 4);
+    PC_CHECK(
+        routed.slots[0].member_class_token_by_mod[0] !=
+        routed.slots[0].member_class_token_by_mod[1]);
+}
+
+void run_selector_conditioned_strict_partition_tests() {
+    /*
+     * A tag named only by the semantic refinement contract must not widen
+     * the product/coarse carrier. The same admitted observer does split the
+     * strict carrier because its future action can distinguish the mods.
+     */
+    {
+        auto session = make_solver_session();
+        set_single_group(*session, 4, 12);
+        rebuild_group_masks(*session);
+        const ActionRegistry built = build_action_registry(*session);
+        ActionDescriptor baseline =
+            built.actions[built.index_by_id.at("exalt")];
+        baseline.id = "test:baseline_observer";
+        baseline.discriminating_tag_ids.clear();
+
+        ActionRegistry baseline_registry;
+        baseline_registry.index_by_id.emplace(baseline.id, 0);
+        baseline_registry.actions.push_back(baseline);
+
+        ActionDescriptor tagged = baseline;
+        tagged.id = "test:contract_tag_observer";
+        tagged.refinement.observed_modifier_tag_ids = {kTagAttack};
+        PC_CHECK(tagged.refinement.affix_observations.size() == 1);
+        tagged.refinement.affix_observations.front().features |=
+            refinement_feature(
+                RefinementFeature::ModifierClassificationTags);
+        validate_action_refinement_contract(tagged);
+        PC_CHECK(tagged.discriminating_tag_ids.empty());
+
+        ActionRegistry tagged_registry;
+        tagged_registry.index_by_id.emplace(tagged.id, 0);
+        tagged_registry.actions.push_back(tagged);
+
+        const GoalSpec goal = family_goal(100, 0);
+        const AbstractLayout baseline_coarse = build_abstract_layout(
+            *session, goal, baseline_registry, {0});
+        const AbstractLayout tagged_coarse = build_abstract_layout(
+            *session, goal, tagged_registry, {0});
+        PC_CHECK(same_partition(baseline_coarse, tagged_coarse));
+        PC_CHECK(tagged_coarse.discriminating_tag_ids.empty());
+        PC_CHECK(
+            tagged_coarse.junk_class_by_mod[3] ==
+            tagged_coarse.junk_class_by_mod[4]);
+
+        const auto project_mod =
+            [&](const AbstractLayout& layout,
+                const std::uint32_t mod) {
+                pc_item_state item;
+                pc_item_clear(&item);
+                item.rarity = PC_RARITY_MAGIC;
+                place(
+                    &item, PC_SIDE_PREFIX, mod,
+                    static_cast<std::uint16_t>(
+                        session->primary_group[mod]));
+                return project_item(*session, layout, item);
+            };
+        const AbstractState baseline_attack =
+            project_mod(baseline_coarse, 3);
+        const AbstractState tagged_attack =
+            project_mod(tagged_coarse, 3);
+        const AbstractState tagged_caster =
+            project_mod(tagged_coarse, 4);
+        PC_CHECK(baseline_attack == tagged_attack);
+        PC_CHECK(tagged_attack == tagged_caster);
+        PC_CHECK(
+            abstract_state_hash(baseline_attack) ==
+            abstract_state_hash(tagged_attack));
+        PC_CHECK(
+            abstract_state_hash(tagged_attack) ==
+            abstract_state_hash(tagged_caster));
+
+        const AbstractLayout tagged_strict = build_abstract_layout(
+            *session, goal, tagged_registry, {0},
+            false, true, true);
+        PC_CHECK(
+            tagged_strict.discriminating_tag_ids ==
+            std::vector<std::uint32_t>{kTagAttack});
+        PC_CHECK(
+            tagged_strict.junk_class_by_mod[3] !=
+            tagged_strict.junk_class_by_mod[4]);
+    }
+
+    /*
+     * Harvest resistance conversion declares required-level observation
+     * only for affixes carrying its source tag. Equal-effect source affixes
+     * therefore split by level; non-source affixes stay merged even when
+     * their levels differ.
+     */
+    {
+        auto session = make_solver_session();
+        constexpr std::uint32_t kTagResistance = 6;
+        set_single_group(*session, 4, 12);
+        set_single_group(*session, 6, 20);
+        rebuild_group_masks(*session);
+        session->required_level[3] = 31;
+        session->required_level[4] = 47;
+        session->required_level[5] = 55;
+        session->required_level[6] = 72;
+
+        const ActionRegistry built = build_action_registry(*session);
+        ActionDescriptor chaos =
+            built.actions[built.index_by_id.at("chaos")];
+        chaos.id = "test:strict_chaos";
+        ActionDescriptor resist;
+        resist.id = "test:strict_harvest_resist";
+        resist.params.type = ActionType::HarvestResist;
+        resist.params.source_tag_id = kTagResistance;
+        resist.params.target_tag_id = kTagFire;
+        resist.kind = TransitionKind::SingleSlot;
+        resist.cost_keys = {"test:strict_harvest_resist"};
+        resist.legality.rarity_mask =
+            (1u << PC_RARITY_MAGIC) | (1u << PC_RARITY_RARE);
+        resist.refinement =
+            derive_action_refinement_contract(*session, resist);
+        validate_action_refinement_contract(resist);
+
+        ActionRegistry custom;
+        custom.index_by_id.emplace(chaos.id, 0);
+        custom.actions.push_back(chaos);
+        custom.index_by_id.emplace(resist.id, 1);
+        custom.actions.push_back(resist);
+
+        const GoalSpec goal = family_goal(100, 1);
+        const AbstractLayout strict = build_abstract_layout(
+            *session, goal, custom, {0, 1},
+            false, true, true);
+        PC_CHECK(
+            strict.discriminating_tag_ids ==
+            std::vector<std::uint32_t>{kTagResistance});
+        PC_CHECK(
+            strict.junk_class_by_mod[5] !=
+            strict.junk_class_by_mod[6]);
+        PC_CHECK(
+            strict.junk_class_by_mod[3] ==
+            strict.junk_class_by_mod[4]);
+
+        const AbstractLayout repeated = build_abstract_layout(
+            *session, goal, custom, {0, 1},
+            false, true, true);
+        const AbstractLayout reversed = build_abstract_layout(
+            *session, goal, custom, {1, 0},
+            false, true, true);
+        PC_CHECK(same_partition(strict, repeated));
+        PC_CHECK(same_partition(strict, reversed));
+
+        /* Representative materialization may pick either member of a merged
+         * class, but projection must recover the exact strict class token. */
+        CalcContext calc(
+            session, goal, custom, {0, 1},
+            false, true, true);
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_RARE;
+        place(&item, PC_SIDE_PREFIX, 0, 10);
+        place(&item, PC_SIDE_PREFIX, 3, 12);
+        place(&item, PC_SIDE_SUFFIX, 5, 20);
+        const std::uint32_t state_id = calc.intern_item(item);
+        const AbstractState before = calc.state(state_id);
+        pc_item_state materialized;
+        PC_CHECK(calc.materialize(state_id, materialized));
+        const AbstractState after =
+            project_item(*session, calc.layout(), materialized);
+        PC_CHECK(before == after);
+        PC_CHECK(abstract_state_hash(before) ==
+                 abstract_state_hash(after));
+        PC_CHECK(calc.intern_item(materialized) == state_id);
+    }
+
+    /*
+     * Static Veiled-template recognition is mask-authoritative. A template
+     * outside the two convenience carrier ids must join the same strict
+     * observation class as an otherwise equivalent named template.
+     */
+    {
+        auto session = make_solver_session();
+        set_single_group(*session, 4, 12);
+        rebuild_group_masks(*session);
+        session->family_id[3] = 999;
+        session->family_id[4] = 999;
+        session->veiled_prefix_mod_id = 3;
+        session->veiled_suffix_mod_id = 5;
+        session->veiled_template_mask.assign(session->words, 0);
+        pc_bitset_set(session->veiled_template_mask.data(), 4);
+        PC_CHECK(modifier_is_veiled_template(*session, 3));
+        PC_CHECK(modifier_is_veiled_template(*session, 4));
+        PC_CHECK(modifier_is_veiled_template(*session, 5));
+        PC_CHECK(!modifier_is_veiled_template(*session, 7));
+
+        const ActionRegistry built = build_action_registry(*session);
+        const std::vector<std::uint64_t> unveil_carriers =
+            action_explicit_affix_reachable_mask(
+                *session,
+                built.actions.at(
+                    built.index_by_id.at("unveil")));
+        PC_CHECK(pc_bitset_test(unveil_carriers.data(), 3));
+        PC_CHECK(pc_bitset_test(unveil_carriers.data(), 4));
+        PC_CHECK(pc_bitset_test(unveil_carriers.data(), 5));
+        ActionDescriptor observes_veiled =
+            built.actions[built.index_by_id.at("exalt")];
+        observes_veiled.id = "test:veiled_observer";
+        PC_CHECK(
+            observes_veiled.refinement.affix_observations.size() == 1);
+        RefinementAffixObservation veiled_observation;
+        veiled_observation.features =
+            refinement_feature(RefinementFeature::ModifierVeiled);
+        veiled_observation.selector.required_affix_traits =
+            kRefinementAffixVeiled;
+        observes_veiled.refinement.affix_observations.push_back(
+            std::move(veiled_observation));
+        validate_action_refinement_contract(observes_veiled);
+        const std::vector<std::uint64_t> observed_carriers =
+            action_explicit_affix_reachable_mask(
+                *session, observes_veiled);
+        PC_CHECK(pc_bitset_test(observed_carriers.data(), 3));
+        PC_CHECK(pc_bitset_test(observed_carriers.data(), 4));
+        PC_CHECK(pc_bitset_test(observed_carriers.data(), 5));
+        ActionRegistry custom;
+        custom.index_by_id.emplace(observes_veiled.id, 0);
+        custom.actions.push_back(observes_veiled);
+
+        const AbstractLayout strict = build_abstract_layout(
+            *session, family_goal(999, 0), custom, {0},
+            false, true, true);
+        PC_CHECK(strict.slots[0].member_classes.size() == 1);
+        PC_CHECK(
+            strict.slots[0].member_class_token_by_mod[3] != 0);
+        PC_CHECK(
+            strict.slots[0].member_class_token_by_mod[3] ==
+            strict.slots[0].member_class_token_by_mod[4]);
+    }
+
+    /*
+     * Metamod role is strict carrier semantics even when two literal mods
+     * otherwise have the same side, tags, goal blocking and complete
+     * exclusion effect. The qualified coarse parent deliberately remains
+     * unchanged.
+     */
+    {
+        auto session = make_solver_session();
+        set_single_group(*session, 4, 12);
+        rebuild_group_masks(*session);
+        session->metamod_type[3] = 17;
+        const ActionRegistry registry =
+            build_action_registry(*session);
+        const GoalSpec goal = family_goal(100, 0);
+        const std::vector<std::uint32_t> actions =
+            basic_indices(registry);
+        const AbstractLayout coarse = build_abstract_layout(
+            *session, goal, registry, actions);
+        const AbstractLayout strict = build_abstract_layout(
+            *session, goal, registry, actions,
+            false, true, true);
+        PC_CHECK(
+            coarse.junk_class_by_mod[3] ==
+            coarse.junk_class_by_mod[4]);
+        PC_CHECK(
+            strict.junk_class_by_mod[3] !=
+            strict.junk_class_by_mod[4]);
+    }
+
+    /*
+     * Policy refinement and exact strategy evaluation keep concrete
+     * modifier identities only until the shared kernel partition proves
+     * them equivalent. This local proof layout must therefore have one
+     * carrier per concrete mod even when the ordinary strict semantic
+     * layout deliberately merges equal exclusion effects.
+     */
+    {
+        auto session = make_solver_session();
+        set_single_group(*session, 4, 12);
+        rebuild_group_masks(*session);
+        const ActionRegistry registry =
+            build_action_registry(*session);
+        const GoalSpec goal = family_goal(100, 0);
+        const std::vector<std::uint32_t> actions =
+            basic_indices(registry);
+        const AbstractLayout semantic = build_abstract_layout(
+            *session, goal, registry, actions,
+            false, true, true);
+        const AbstractLayout concrete = build_abstract_layout(
+            *session, goal, registry, actions,
+            false, true, true, {}, {}, true);
+        PC_CHECK(
+            semantic.junk_class_by_mod[3] ==
+            semantic.junk_class_by_mod[4]);
+        PC_CHECK(
+            concrete.junk_class_by_mod[3] !=
+            concrete.junk_class_by_mod[4]);
+        PC_CHECK(
+            semantic.slots[0].member_class_token_by_mod[0] ==
+            semantic.slots[0].member_class_token_by_mod[1]);
+        PC_CHECK(
+            concrete.slots[0].member_class_token_by_mod[0] !=
+            concrete.slots[0].member_class_token_by_mod[1]);
+        for (const JunkClass& junk : concrete.junk_classes) {
+            PC_CHECK(junk.member_count == 1);
+        }
+        for (const GoalMemberClass& member :
+             concrete.slots[0].member_classes) {
+            PC_CHECK(member.member_count == 1);
+        }
+
+        CalcContext calc(
+            session, goal, registry, actions,
+            false, true, true, std::nullopt, {}, false, {}, true);
+        pc_item_state authored;
+        pc_item_clear(&authored);
+        authored.rarity = PC_RARITY_RARE;
+        place(&authored, PC_SIDE_PREFIX, 1, 10);
+        place(&authored, PC_SIDE_PREFIX, 4, 12);
+        place(&authored, PC_SIDE_SUFFIX, 6, 21);
+        const std::uint32_t state = calc.intern_item(authored);
+        pc_item_state materialized;
+        PC_CHECK(calc.materialize(state, materialized));
+        PC_CHECK(item_contains_mod(materialized, 1));
+        PC_CHECK(item_contains_mod(materialized, 4));
+        PC_CHECK(item_contains_mod(materialized, 6));
+        PC_CHECK(calc.intern_item(materialized) == state);
+    }
 }
 
 void run_junk_class_tests(const std::shared_ptr<SessionImpl>& session) {
@@ -239,6 +1249,9 @@ void run_junk_class_tests(const std::shared_ptr<SessionImpl>& session) {
         fossil.kind = TransitionKind::Reforge;
         fossil.cost_keys = {"fossil:test", "resonator:1"};
         fossil.discriminating_tag_ids = {kTagAttack};
+        fossil.refinement =
+            derive_action_refinement_contract(*session, fossil);
+        validate_action_refinement_contract(fossil);
         custom.actions.push_back(fossil);
 
         const AbstractLayout layout = build_abstract_layout(
@@ -271,6 +1284,9 @@ void run_junk_class_tests(const std::shared_ptr<SessionImpl>& session) {
         harvest.kind = TransitionKind::Reforge;
         harvest.cost_keys = {harvest.id};
         harvest.discriminating_tag_ids = {kTagFire};
+        harvest.refinement =
+            derive_action_refinement_contract(*session, harvest);
+        validate_action_refinement_contract(harvest);
         custom.actions.push_back(harvest);
 
         const AbstractLayout layout = build_abstract_layout(
@@ -698,6 +1714,9 @@ void run_artifact_registry_tests(const char* artifact_dir) {
 void run_solver_abstract_tests(const char* artifact_dir) {
     auto session = make_solver_session();
     run_registry_tests(*session);
+    run_refinement_contract_tests(*session);
+    run_exact_goal_member_class_tests();
+    run_selector_conditioned_strict_partition_tests();
     run_junk_class_tests(session);
     run_projection_tests(session);
     run_exact_essence_relevance_test();

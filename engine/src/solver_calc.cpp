@@ -87,8 +87,22 @@ std::uint64_t selected_string_bytes(const std::string& value) {
 std::uint64_t planner_operator_nested_bytes(const PlannerOperator& value) {
     std::uint64_t bytes =
         selected_string_bytes(value.id) +
-        selected_string_bytes(value.display_name);
+        selected_string_bytes(value.display_name) +
+        selected_string_bytes(value.primitive_action_id) +
+        selected_string_bytes(value.conditional_action_id) +
+        selected_string_bytes(value.bestiary_create_action_id) +
+        selected_string_bytes(value.bestiary_restore_action_id) +
+        selected_string_bytes(value.setup_action_id) +
+        selected_string_bytes(value.followup_action_id) +
+        selected_string_bytes(value.cleanup_action_id) +
+        selected_string_bytes(value.constructive_finish_action_id);
     bytes += value.primitive_program.capacity() * sizeof(std::uint32_t);
+    bytes += value.primitive_program_action_ids.capacity() *
+             sizeof(std::string);
+    for (const std::string& id :
+         value.primitive_program_action_ids) {
+        bytes += selected_string_bytes(id);
+    }
     bytes += value.exit_goal_slots.capacity() * sizeof(std::uint32_t);
     bytes += value.resource_quantities.capacity() *
              sizeof(std::pair<std::string, double>);
@@ -254,6 +268,56 @@ std::uint32_t unveil_weight(
     return 0;
 }
 
+/*
+ * Some contracts transform or inspect a carrier property that the broad
+ * six-class parent deliberately does not materialize. Derive activation of
+ * the semantic carrier partition from that contract vocabulary so a future
+ * action needs no action-type branch in the abstraction machinery.
+ *
+ * Exclusion-signature observation alone is intentionally absent: broad
+ * discovery may merge those signatures and the policy-guided strict child
+ * restores them lazily. Trait-changing/reclassifying flows, Veiled-template
+ * observation, required-level observation, and selective crafted removal
+ * need semantic carriers even to execute the action's primitive kernel.
+ */
+bool contract_requires_semantic_carrier_partition(
+    const ActionRefinementContract& contract) {
+    if (!contract.observed_modifier_tag_ids.empty()) {
+        return true;
+    }
+    const RefinementFeatureMask carrier_observations =
+        refinement_feature(RefinementFeature::ModifierVeiled) |
+        refinement_feature(
+            RefinementFeature::ModifierClassificationTags) |
+        refinement_feature(RefinementFeature::ModifierRequiredLevel);
+    if (std::any_of(
+            contract.affix_observations.begin(),
+            contract.affix_observations.end(),
+            [&](const RefinementAffixObservation& observation) {
+                return (observation.features &
+                        carrier_observations) != 0;
+            })) {
+        return true;
+    }
+    if (std::any_of(
+            contract.affix_flows.begin(),
+            contract.affix_flows.end(),
+            [](const RefinementAffixFlow& flow) {
+                return flow.set_affix_traits != 0 ||
+                       flow.cleared_affix_traits != 0 ||
+                       !flow.preserves_modifier_classification;
+            })) {
+        return true;
+    }
+    return std::any_of(
+        contract.destroyed_affixes.begin(),
+        contract.destroyed_affixes.end(),
+        [](const RefinementAffixSelector& selector) {
+            return (selector.required_affix_traits &
+                    kRefinementAffixCrafted) != 0;
+        });
+}
+
 } // namespace
 
 CalcContext::CalcContext(
@@ -266,14 +330,26 @@ CalcContext::CalcContext(
     bool distinguish_junk_exclusion_effects,
     std::optional<std::uint32_t> state_cap,
     const std::vector<CountObservation>& count_observations,
-    const bool product_solver_parent)
+    const bool product_solver_parent,
+    const std::vector<std::uint64_t>&
+        required_reachable_mod_mask,
+    const bool distinguish_modifier_identity)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
       candidates_(action_indices),
       context_(0),
       state_cap_(state_cap),
-      product_solver_parent_(product_solver_parent) {
+      product_solver_parent_(product_solver_parent),
+      distinguish_modifier_identity_(distinguish_modifier_identity) {
+    /* Action registries are public construction inputs in native tests and
+     * future integrations, not only products of build_action_registry().
+     * Canonicalize and prove every contract at the CalcContext boundary so a
+     * matching schema number can never masquerade as semantic admission. */
+    for (ActionDescriptor& action : registry_.actions) {
+        canonicalize_and_validate_action_refinement_contract(
+            *session_, action);
+    }
     if (candidates_.empty() && empty_actions_mean_all) {
         candidates_.reserve(registry_.actions.size());
         for (std::uint32_t i = 0; i < registry_.actions.size(); ++i) {
@@ -348,21 +424,19 @@ CalcContext::CalcContext(
     static_candidate_operator_count_ = candidate_operators_.size();
     const bool exact_group_effects =
         distinguish_junk_exclusion_effects ||
-        std::any_of(
-            layout_actions.begin(), layout_actions.end(),
-            [&](std::uint32_t index) {
-                const ActionType type =
-                    registry_.actions.at(index).params.type;
-                return type == ActionType::Unveil ||
-                       type == ActionType::HarvestResist ||
-                       (type == ActionType::Fracture &&
-                        !product_solver_parent_) ||
-                       type == ActionType::RemoveCraftedModifiers;
-            });
+        (!product_solver_parent_ &&
+         std::any_of(
+             layout_actions.begin(), layout_actions.end(),
+             [&](std::uint32_t index) {
+                 return contract_requires_semantic_carrier_partition(
+                     registry_.actions.at(index).refinement);
+             }));
     const auto layout_started = std::chrono::steady_clock::now();
     layout_ = build_abstract_layout(
         *session_, goal_, registry_, layout_actions, allow_empty_goal,
-        false, exact_group_effects, count_observations);
+        false, exact_group_effects, count_observations,
+        required_reachable_mod_mask,
+        distinguish_modifier_identity);
     layout_build_ns_ = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now() - layout_started)
@@ -698,6 +772,19 @@ bool calc_supports(const ActionDescriptor& action) {
     }
 }
 
+RefinementOutcomeObservation calc_outcome_observation(
+        const ActionDescriptor& action) {
+    if (action.synthetic) {
+        return RefinementOutcomeObservation::None;
+    }
+    switch (action.params.type) {
+    case ActionType::Unveil:
+        return RefinementOutcomeObservation::ModifierOffer;
+    default:
+        return RefinementOutcomeObservation::None;
+    }
+}
+
 bool CalcContext::is_goal_state(const AbstractState& state) const {
     if (state.rarity != goal_.rarity) return false;
     std::size_t satisfied = 0;
@@ -800,29 +887,52 @@ bool CalcContext::materialize(
     std::vector<std::uint32_t> occupied_groups;
     std::vector<std::uint32_t> used_mods;
     std::vector<std::uint32_t> scratch_groups;
+    bool veiled_carrier_added = false;
     const auto try_add = [&](std::uint32_t mod, std::uint8_t flags) {
         if (std::find(used_mods.begin(), used_mods.end(), mod) !=
             used_mods.end()) {
             return false;
         }
-        scratch_groups.clear();
-        mod_group_list(session, mod, scratch_groups);
-        for (std::uint32_t group : scratch_groups) {
-            if (std::find(occupied_groups.begin(), occupied_groups.end(),
-                          group) != occupied_groups.end()) {
-                return false;
-            }
-        }
         const std::int8_t gen = session.gen_type[mod];
         if (gen != 0 && gen != 1) return false;
+        /*
+         * A Veiled placeholder is a transient replacement slot, not an
+         * ordinary member of the live exclusion set. VeiledChaos authority
+         * may place it beside an affix with the same group; Unveil removes
+         * that placeholder before checking candidate conflicts. Reconstruct
+         * exactly one such carrier without weakening ordinary-vs-ordinary
+         * group exclusion.
+         */
+        const bool transient_veiled_carrier =
+            !veiled_carrier_added &&
+            (target.flags & kFlagVeiledMod) != 0 &&
+            gen == target.veiled_side &&
+            modifier_is_veiled_template(session, mod);
+        scratch_groups.clear();
+        mod_group_list(session, mod, scratch_groups);
+        if (!transient_veiled_carrier) {
+            for (std::uint32_t group : scratch_groups) {
+                if (std::find(
+                        occupied_groups.begin(),
+                        occupied_groups.end(), group) !=
+                    occupied_groups.end()) {
+                    return false;
+                }
+            }
+        }
         if (pc_item_add_mod(
                 &out, gen == 0 ? PC_SIDE_PREFIX : PC_SIDE_SUFFIX, mod,
                 static_cast<std::uint16_t>(session.primary_group[mod]), flags,
                 nullptr) != PC_RESULT_OK) {
             return false;
         }
-        occupied_groups.insert(occupied_groups.end(), scratch_groups.begin(),
-                               scratch_groups.end());
+        if (transient_veiled_carrier) {
+            veiled_carrier_added = true;
+        } else {
+            occupied_groups.insert(
+                occupied_groups.end(), scratch_groups.begin(),
+                scratch_groups.end());
+        }
         used_mods.push_back(mod);
         return true;
     };
@@ -849,7 +959,12 @@ bool CalcContext::materialize(
         const ResolvedGoalSlot& slot = layout_.slots[i];
         const auto status =
             static_cast<GoalSlotStatus>(target.slot_status[i]);
-        if (status == GoalSlotStatus::Absent) continue;
+        const std::uint32_t member_class_token =
+            target.goal_member_class_tokens[i];
+        if (status == GoalSlotStatus::Absent) {
+            if (member_class_token != 0) return false;
+            continue;
+        }
         const bool satisfied = status == GoalSlotStatus::Satisfied;
         std::uint8_t slot_flags = 0;
         if ((target.fractured_goal_mask & (1u << i)) != 0) {
@@ -858,9 +973,28 @@ bool CalcContext::materialize(
         if ((target.crafted_goal_mask & (1u << i)) != 0) {
             slot_flags |= PC_MOD_SLOT_CRAFTED;
         }
+        const std::vector<std::uint64_t>* exact_member_mask = nullptr;
+        if (!slot.member_classes.empty()) {
+            if (member_class_token == 0 ||
+                member_class_token > slot.member_classes.size()) {
+                return false;
+            }
+            const GoalMemberClass& member_class =
+                slot.member_classes[member_class_token - 1];
+            if (member_class.status != status) return false;
+            exact_member_mask = &member_class.member_mask;
+        } else if (member_class_token != 0) {
+            return false;
+        }
         if (!first_from_mask(
-                satisfied ? slot.satisfying_mask : slot.member_mask,
-                satisfied ? nullptr : &slot.satisfying_mask, slot_flags)) {
+                exact_member_mask != nullptr
+                    ? *exact_member_mask
+                    : (satisfied ? slot.satisfying_mask
+                                 : slot.member_mask),
+                exact_member_mask != nullptr || satisfied
+                    ? nullptr
+                    : &slot.satisfying_mask,
+                slot_flags)) {
             return false;
         }
         const pc_mod_slot& added = session.gen_type[used_mods.back()] == 0
@@ -997,13 +1131,10 @@ bool CalcContext::materialize(
                                        ? out.suffix_count
                                        : out.prefix_count;
         if (count == 0) return false;
-        const std::uint32_t expected =
-            target.veiled_side == PC_SIDE_SUFFIX
-                ? session.veiled_suffix_mod_id
-                : session.veiled_prefix_mod_id;
         pc_mod_slot* carrier = nullptr;
         for (std::uint8_t i = 0; i < count; ++i) {
-            if (slots[i].mod_id == expected) {
+            if (modifier_is_veiled_template(
+                    session, slots[i].mod_id)) {
                 carrier = &slots[i];
                 break;
             }
@@ -1112,9 +1243,11 @@ void CalcContext::reset_solve_telemetry() {
 void CalcContext::set_solve_resource_caps(
     const std::uint32_t max_discovered_states,
     const std::uint64_t max_reforge_work,
-    const bool reserve_storage) {
+    const bool reserve_storage,
+    const std::optional<std::uint64_t> max_owned_bytes) {
     solve_discovered_state_cap_ = max_discovered_states;
     solve_reforge_work_cap_ = max_reforge_work;
+    solve_owned_bytes_cap_ = max_owned_bytes;
     if (!reserve_storage) return;
     const std::size_t practical_reserve = std::min<std::size_t>(
         max_discovered_states, 65536);
@@ -1132,6 +1265,16 @@ void CalcContext::consume_reforge_work(const std::uint64_t amount) {
             "max_reforge_work", *solve_reforge_work_cap_);
     }
     telemetry_.reforge_frontier_work += amount;
+}
+
+void CalcContext::require_reforge_scratch_bytes(
+    const std::uint64_t scratch_bytes) const {
+    if (!solve_owned_bytes_cap_.has_value()) return;
+    const std::uint64_t cap = *solve_owned_bytes_cap_;
+    const std::uint64_t owned = fast_estimated_owned_bytes();
+    if (owned >= cap || scratch_bytes > cap - owned) {
+        throw SolverResourceLimit("max_owned_bytes", cap);
+    }
 }
 
 void CalcContext::record_primitive_row_time(
@@ -1258,21 +1401,24 @@ std::uint64_t CalcContext::calculate_owned_bytes() const {
              (sizeof(std::uint32_t) + 2 * sizeof(void*));
     bytes += operators_.capacity() * sizeof(PlannerOperator);
     for (const PlannerOperator& op : operators_) {
-        bytes += string_bytes(op.id) + string_bytes(op.display_name);
-        bytes += op.primitive_program.capacity() * sizeof(std::uint32_t);
-        bytes += op.exit_goal_slots.capacity() * sizeof(std::uint32_t);
-        bytes += op.resource_quantities.capacity() *
-                 sizeof(std::pair<std::string, double>);
-        for (const auto& [key, quantity] : op.resource_quantities) {
-            (void)quantity;
-            bytes += string_bytes(key);
-        }
+        bytes += planner_operator_nested_bytes(op);
     }
     bytes += layout_.slots.capacity() * sizeof(ResolvedGoalSlot);
     for (const ResolvedGoalSlot& slot : layout_.slots) {
         bytes += slot.member_mask.capacity() * sizeof(std::uint64_t);
         bytes += slot.satisfying_mask.capacity() * sizeof(std::uint64_t);
         bytes += slot.blocking_group_ids.capacity() * sizeof(std::uint32_t);
+        bytes += slot.member_classes.capacity() * sizeof(GoalMemberClass);
+        for (const GoalMemberClass& member_class : slot.member_classes) {
+            bytes += member_class.exclusion_effect_mask.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += member_class.count_observation_bits.capacity() *
+                     sizeof(std::uint64_t);
+            bytes += member_class.member_mask.capacity() *
+                     sizeof(std::uint64_t);
+        }
+        bytes += slot.member_class_token_by_mod.capacity() *
+                 sizeof(std::uint32_t);
     }
     bytes += layout_.discriminating_tag_ids.capacity() *
              sizeof(std::uint32_t);
@@ -1955,7 +2101,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_unveil(
         });
     for (const Candidate& candidate : candidates) {
         result.choice_options.push_back(
-            {candidate.mod_id, candidate.state});
+            {candidate.mod_id, candidate.state, state_id,
+             candidate.state});
     }
 
     /* The engine samples up to three weighted options without replacement.
@@ -2015,7 +2162,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_unveil(
         return left_score != right_score ? left_score > right_score : a < b;
     };
     for (const auto& [states, probability] : offered) {
-        result.choice_groups.push_back({probability, states});
+        result.choice_groups.push_back(
+            {probability, states, state_id});
         std::uint32_t chosen = states.front();
         for (std::uint32_t successor : states) {
             if (immediate_better(successor, chosen)) chosen = successor;

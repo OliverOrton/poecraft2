@@ -1,0 +1,249 @@
+{
+  "schema_version": "policy_guided_exact_refinement_gate0_evidence_v1",
+  "date": "2026-07-30",
+  "decision": "pre_implementation_baseline_frozen",
+  "source": {
+    "source_branch": "codex/cross-base-strategy-reliability",
+    "source_commit": "71e1ad05e07949aafe6312fe0e50f49fb685dba3",
+    "implementation_branch": "codex/policy-guided-exact-refinement",
+    "boundary_commit": "69d7a0abda4ddd8809439c09f3c8803fc978c4f1",
+    "active_plan_commit": "69d7a0abda4ddd8809439c09f3c8803fc978c4f1",
+    "reproduction_commit": "69d7a0abda4ddd8809439c09f3c8803fc978c4f1",
+    "reproduction_worktree_clean": true
+  },
+  "reproduction_inputs": {
+    "corpus": {
+      "path": "fixtures/solver-reliability/v1/manifest.json",
+      "schema_version": "cross_base_reliability_corpus_v1",
+      "corpus_id": "poecraft2-cross-base-reliability-v1",
+      "sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f",
+      "generator_config_sha256": "5fb0dab4f1f72c04834374ec6fcd92dad0f055fd660af4bc6c73e1346ce91707"
+    },
+    "compiled_artifact": {
+      "path": "data/compiled/current",
+      "manifest_sha256": "ba1feb596d6f07903dfa992d4ba42184bee30c18660ab56c84dad1c5cadc8a27",
+      "artifact_schema_version": 4,
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+    },
+    "native_benchmark": {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "sha256": "1fdf82736d78d9c57625dcbc3c87cc8736edad1ff618e94bf45355b0338b6542"
+    },
+    "runner": {
+      "exact_evaluation": true,
+      "goal_progress_gated_reforges": true,
+      "run_verification": false,
+      "max_workers": 1
+    }
+  },
+  "portfolio_baseline": {
+    "case_count": 49,
+    "policy_availability": {
+      "available": 4,
+      "unavailable": 45
+    },
+    "actual_status_counts": {
+      "converged": 1,
+      "refused_resource_cap": 5,
+      "refused_state_cap": 7,
+      "refused_unsupported_action": 36
+    },
+    "no_policy_cause_counts": {
+      "coarse_parent_requires_exact_exclusion_identity": 36,
+      "coarse_parent_capped_renewal_without_exact_witness": 3,
+      "primitive_renewal_expected_actions_exceed_simulator_cap": 4,
+      "without_policy_compatibility_witness": 2
+    },
+    "exact_exclusion_action_counts": {
+      "regal": 28,
+      "exalt": 7,
+      "restart": 1
+    },
+    "published_policy_ids": [
+      "reliability-class-ring",
+      "reliability-selected-gloves-10k",
+      "reliability-selected-ring-10k",
+      "reliability-start-influenced"
+    ],
+    "native_stage_reports": [
+      {
+        "stage": "smoke",
+        "path": "build/acceptance/cross-base-reliability/native-acceptance-final-v4/smoke/stratified-report.json",
+        "sha256": "ab7ffeb517878ab9f252e1e5df175888d17c814c3c08914675d826e8a81e2047"
+      },
+      {
+        "stage": "breadth",
+        "path": "build/acceptance/cross-base-reliability/native-acceptance-final-v4/breadth/stratified-report.json",
+        "sha256": "cc1b0e306b6de567935851d6006c8f5dc5ed2e2da3e7a40ffd46abaa4d9e1abb"
+      },
+      {
+        "stage": "representative",
+        "path": "build/acceptance/cross-base-reliability/native-acceptance-final-v4/representative/stratified-report.json",
+        "sha256": "e57c8f724c98b11e156284b837ef0240ad427c70431609c5ae156547abc099a0"
+      },
+      {
+        "stage": "deep",
+        "path": "build/acceptance/cross-base-reliability/native-acceptance-final-v4/deep/stratified-report.json",
+        "sha256": "acf667e39bde1d3a2e65147282f154d76ad6d6efe61a57bea86ac24d4b69b832"
+      },
+      {
+        "stage": "selected_10000",
+        "path": "build/acceptance/cross-base-reliability/native-acceptance-final-v4/selected_10000/stratified-report.json",
+        "sha256": "b614981c551b68b195baa6daf8495f1517f1bce078984da5a61a55a4f4f3c2c4"
+      }
+    ],
+    "release_wasm_report": {
+      "path": "build/acceptance/cross-base-reliability/wasm-report-final-v2.json",
+      "sha256": "deab7b023dd0211b9c3fb681a2828246eb2c7a8fdf3c78b20e3547e6bce57c0e",
+      "schema_version": "solver_benchmark_report_v1",
+      "runner": "wasm_worker",
+      "case_count": 49,
+      "all_expectations_met": true,
+      "distribution_matches_native": true
+    }
+  },
+  "focused_reproductions": [
+    {
+      "role": "one_goal_prefix_regal_refusal",
+      "case_id": "reliability-class-belt",
+      "report": {
+        "path": "build/acceptance/policy-guided-exact-refinement/gate0-repros/cases/reliability-class-belt.json",
+        "sha256": "12a96f81ed524e7fae28cb1b77f3f0d65eec428dff51ba3775352c2988fd4c53",
+        "schema_version": "solver_benchmark_report_v1",
+        "runner": "native",
+        "all_expectations_met": true
+      },
+      "session": {
+        "base_metadata_path": "Metadata/Items/Belts/Belt1",
+        "base_name": "Rustic Sash",
+        "item_class_key": "Belt",
+        "item_level": 86
+      },
+      "goal": {
+        "side_mix": "P",
+        "slot_count": 1,
+        "slots": [
+          {
+            "family_mod_key": "AttackerTakesDamage2",
+            "min_tier": 1
+          }
+        ]
+      },
+      "result": {
+        "actual_status": "refused_unsupported_action",
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "no_executable_policy",
+        "start_value": 9.1437925778953471,
+        "discovered_states": 51,
+        "expanded_states": 51,
+        "policy_reachable_states": 9,
+        "transition_bits_hash": "ce5a144282753b26",
+        "policy_bits_hash": "6bee45662f66d2e4"
+      },
+      "compatibility_witness": {
+        "supported": false,
+        "state_id": 8,
+        "action": "regal",
+        "reason": "coarse_parent_requires_exact_exclusion_identity"
+      }
+    },
+    {
+      "role": "two_goal_suffix_exalt_refusal",
+      "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+      "report": {
+        "path": "build/acceptance/policy-guided-exact-refinement/gate0-repros/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+        "sha256": "6232913588dbd4d49899009de40215402625e2dccfba8a5b86c7edc3060633ae",
+        "schema_version": "solver_benchmark_report_v1",
+        "runner": "native",
+        "all_expectations_met": true
+      },
+      "session": {
+        "base_metadata_path": "Metadata/Items/Amulets/Talismans/Talisman2_5",
+        "base_name": "Clutching Talisman",
+        "item_class_key": "Amulet",
+        "item_level": 86
+      },
+      "goal": {
+        "side_mix": "SS",
+        "slot_count": 2,
+        "slots": [
+          {
+            "family_mod_key": "IncreasedCastSpeed4",
+            "min_tier": 1
+          },
+          {
+            "family_mod_key": "LifeRegeneration8_",
+            "min_tier": 1
+          }
+        ]
+      },
+      "result": {
+        "actual_status": "refused_unsupported_action",
+        "policy_available": false,
+        "policy_status": "none",
+        "termination": "no_executable_policy",
+        "start_value": 752.90090756637869,
+        "discovered_states": 171,
+        "expanded_states": 171,
+        "policy_reachable_states": 14,
+        "transition_bits_hash": "4f26d305a908c59f",
+        "policy_bits_hash": "3e384d3eb52f9ab7"
+      },
+      "compatibility_witness": {
+        "supported": false,
+        "state_id": 18,
+        "action": "exalt",
+        "reason": "coarse_parent_requires_exact_exclusion_identity"
+      }
+    }
+  ],
+  "fracture_non_regression": {
+    "tracked_evidence": {
+      "path": "fixtures/solver-natural-t1/v1/evidence/fracture-local-coarse-parent-summary.json",
+      "sha256": "33d75eca0d6e231d27f04de7de0ae06a83b8f0e96525328598478d38be2435ef",
+      "schema_version": "fracture_local_coarse_parent_evidence_v1",
+      "decision": "qualified"
+    },
+    "case": {
+      "id": "natural-t1-full-four-47d8b909aa88",
+      "side_mix": "PPPS",
+      "mode": "goal_progress_gated_reforges"
+    },
+    "qualified_invariants": {
+      "parent_junk_classes": 6,
+      "root_chaos_support": 217,
+      "discovered_states": 927,
+      "expanded_states": 927,
+      "frontier_states": 0,
+      "policy_reachable_states": 319,
+      "state_action_rows": 8015,
+      "transition_entries": 16899,
+      "outcome_entries": 344040,
+      "reforge_work": 3407700,
+      "completed_rows_recomputed": 0,
+      "product_fracture_parent_miss_states_interned": 0,
+      "selected_fracture_rows": 29,
+      "selected_fracture_rows_proper": 29,
+      "transition_bits_hash": "04a66ba6c6dfcabf",
+      "policy_bits_hash": "3e5d7530e7aed5fb"
+    },
+    "compiled_policy": {
+      "nodes": 229,
+      "edges": 571,
+      "strategy_json_bytes": 466506,
+      "canonical_restart_nodes_for_fracture_miss": 1,
+      "sha256": "e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e"
+    },
+    "determinism": {
+      "equivalent_runs": 2,
+      "first_report_sha256": "153e3f00c10544395f665f54cf696d33ad790a0a903df44a919d11977938fe69",
+      "second_report_sha256": "286003edbce13a44ec0588262aa30e55c0377817cad725cbbf959e69f2a296bd",
+      "transition_hash_equal": true,
+      "policy_hash_equal": true,
+      "compiled_strategy_sha256_equal": true
+    }
+  }
+}

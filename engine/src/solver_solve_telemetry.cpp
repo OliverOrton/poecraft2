@@ -88,6 +88,14 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                diagnostics.product_fracture_witnesses) +
            string_vector_owned_bytes(
                diagnostics.incremental_action_witnesses) +
+           string_vector_owned_bytes(
+               diagnostics.policy_refinement.counterexample_samples) +
+           string_vector_owned_bytes(
+               diagnostics.policy_refinement.refusal_cause_samples) +
+           diagnostics.policy_refinement.trigger_coarse_states.capacity() *
+               sizeof(std::uint32_t) +
+           diagnostics.policy_refinement.status.capacity() + 1 +
+           diagnostics.policy_refinement.resource_cap.capacity() + 1 +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
                sizeof(FocusedScheduleRoundTelemetry) +
@@ -95,6 +103,7 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
            diagnostics.policy_evaluation_failure.capacity() + 1 +
            diagnostics.policy_compatibility_action.capacity() + 1 +
            diagnostics.policy_compatibility_reason.capacity() + 1 +
+           diagnostics.policy_publication_failure_reason.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
@@ -147,6 +156,7 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result) {
              sizeof(std::uint32_t);
     bytes += result.primitive_renewal_witness.kernel_signature.capacity() *
              sizeof(std::uint64_t);
+    bytes += result.refined_policy_artifact.strategy_json.capacity() + 1;
     bytes += diagnostics_owned_bytes(result.diagnostics);
     return bytes;
 }
@@ -681,6 +691,8 @@ std::uint64_t SolveWork::Impl::fast_estimated_owned_bytes_with_calc(
         bytes += result.primitive_renewal_witness
                      .kernel_signature.capacity() *
                  sizeof(std::uint64_t);
+        bytes +=
+            result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += owned_result_nested_bytes;
         bytes += output_incumbent_owned_bytes();
         /* Diagnostic samples are strictly bounded and are not graph-sized.
@@ -849,6 +861,8 @@ std::uint64_t SolveWork::Impl::estimated_owned_bytes_with_calc(
         bytes += result.primitive_renewal_witness
                      .kernel_signature.capacity() *
                  sizeof(std::uint64_t);
+        bytes +=
+            result.refined_policy_artifact.strategy_json.capacity() + 1;
         bytes += output_incumbent_owned_bytes();
         bytes += diagnostics_owned_bytes(result.diagnostics);
         return bytes;
@@ -1044,6 +1058,16 @@ std::string serialize_solver_telemetry(
             ? SolveOptions{}.max_telemetry_json_bytes
             : diagnostics->telemetry_json_byte_limit;
     BoundedTelemetryJson json(output_limit);
+    const auto append_refinement_feature_counts =
+        [&](const auto& counts) {
+            json += '[';
+            for (std::size_t feature = 0;
+                 feature < counts.size(); ++feature) {
+                if (feature != 0) json += ',';
+                json += std::to_string(counts[feature]);
+            }
+            json += ']';
+        };
     json += "{\"version\":\"solver_telemetry_v1\"";
     json += ",\"availability\":{";
     json += "\"evaluator_support\":\"applied_before_expansion\"";
@@ -1142,7 +1166,8 @@ std::string serialize_solver_telemetry(
     json += ",\"policy_compatibility\":{";
     if (diagnostics == nullptr) {
         json += "\"supported\":null,\"state_id\":null,"
-                "\"action\":null,\"reason\":null";
+                "\"action\":null,\"reason\":null,"
+                "\"publication_failure_reason\":null";
     } else {
         json += "\"supported\":" + std::string(bool_json(
             diagnostics->policy_compatibility_supported));
@@ -1167,6 +1192,215 @@ std::string serialize_solver_telemetry(
             append_telemetry_json_string(
                 json, diagnostics->policy_compatibility_reason);
         }
+        json += ",\"publication_failure_reason\":";
+        if (diagnostics->policy_publication_failure_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json,
+                diagnostics->policy_publication_failure_reason);
+        }
+    }
+    json += "}";
+
+    json += ",\"policy_refinement\":{";
+    if (diagnostics == nullptr) {
+        json += "\"triggers\":null,\"status\":null,\"resource_cap\":null";
+        json += ",\"policy_reachable_coarse_states\":null";
+        json += ",\"exact_states\":null,\"retained_exact_states\":null";
+        json += ",\"exact_classes\":null";
+        json += ",\"initial_observation_classes\":null";
+        json += ",\"behavior_splits\":null,\"merged_exact_states\":null";
+        json += ",\"exact_transitions\":null,\"exact_kernels\":null";
+        json += ",\"exact_kernel_cache_hits\":null";
+        json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
+        json += ",\"memory_limit_bytes\":null";
+        json += ",\"retained_artifact_bytes\":null";
+        json += ",\"exact_state_reuses\":null,\"collapse_events\":null";
+        json += ",\"collapse_destroyed_feature_mask\":null";
+        json += ",\"collapse_preserved_feature_mask\":null";
+        json += ",\"collapse_events_by_feature\":null";
+        json += ",\"preservation_events_by_feature\":null";
+        json += ",\"refinement_rounds\":null";
+        json += ",\"backward_observation_rounds\":null";
+        json += ",\"selected_action_routing_rounds\":null";
+        json += ",\"observation_propagation_rounds\":null";
+        json += ",\"partition_refinement_rounds\":null";
+        json += ",\"local_reoptimization_rounds\":null";
+        json += ",\"local_state_action_rows_scheduled\":null";
+        json += ",\"local_state_action_rows_evaluated\":null";
+        json += ",\"local_reoptimizations\":null";
+        json += ",\"local_policy_changes\":null";
+        json += ",\"local_value_changes\":null";
+        json += ",\"fixed_point\":{"
+                "\"checked\":null,\"complete\":null,"
+                "\"lumpability_checked\":null,\"lumpable\":null,"
+                "\"lumpability_checks\":null}";
+        json += ",\"class_policy\":{"
+                "\"checked\":null,\"proper\":null}";
+        json += ",\"compiled_assertion\":{"
+                "\"checked\":null,\"proper\":null,"
+                "\"zero_off_policy\":null,\"cost_reconciled\":null}";
+        json += ",\"policy_changed\":null";
+        json += ",\"coarse_value_reconciled\":null";
+        json += ",\"counterexamples\":{"
+                "\"count\":null,\"samples\":[],\"retained\":null,"
+                "\"omitted\":null,\"limit\":null}";
+        json += ",\"refusal_causes\":{"
+                "\"count\":null,\"samples\":[],\"retained\":null,"
+                "\"omitted\":null,\"limit\":null}";
+    } else {
+        const PolicyRefinementTelemetry& refinement =
+            diagnostics->policy_refinement;
+        json += "\"triggers\":" +
+                std::to_string(refinement.triggers);
+        json += ",\"status\":";
+        append_telemetry_json_string(json, refinement.status);
+        json += ",\"resource_cap\":";
+        if (refinement.resource_cap.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(json, refinement.resource_cap);
+        }
+        json += ",\"policy_reachable_coarse_states\":" +
+                std::to_string(
+                    refinement.policy_reachable_coarse_states);
+        json += ",\"exact_states\":" +
+                std::to_string(refinement.exact_states);
+        json += ",\"retained_exact_states\":" +
+                std::to_string(refinement.retained_exact_states);
+        json += ",\"exact_classes\":" +
+                std::to_string(refinement.exact_classes);
+        json += ",\"initial_observation_classes\":" +
+                std::to_string(
+                    refinement.initial_observation_classes);
+        json += ",\"behavior_splits\":" +
+                std::to_string(refinement.behavior_splits);
+        json += ",\"merged_exact_states\":" +
+                std::to_string(refinement.merged_exact_states);
+        json += ",\"exact_transitions\":" +
+                std::to_string(refinement.exact_transitions);
+        json += ",\"exact_kernels\":" +
+                std::to_string(refinement.exact_kernels);
+        json += ",\"exact_kernel_cache_hits\":" +
+                std::to_string(refinement.exact_kernel_cache_hits);
+        json += ",\"memory_bytes\":" +
+                std::to_string(refinement.memory_bytes);
+        json += ",\"peak_memory_bytes\":" +
+                std::to_string(refinement.peak_memory_bytes);
+        json += ",\"memory_limit_bytes\":" +
+                std::to_string(refinement.memory_limit_bytes);
+        json += ",\"retained_artifact_bytes\":" +
+                std::to_string(refinement.retained_artifact_bytes);
+        json += ",\"exact_state_reuses\":" +
+                std::to_string(refinement.exact_state_reuses);
+        json += ",\"collapse_events\":" +
+                std::to_string(refinement.collapse_events);
+        json += ",\"collapse_destroyed_feature_mask\":" +
+                std::to_string(
+                    refinement.collapse_destroyed_feature_mask);
+        json += ",\"collapse_preserved_feature_mask\":" +
+                std::to_string(
+                    refinement.collapse_preserved_feature_mask);
+        json += ",\"collapse_events_by_feature\":";
+        append_refinement_feature_counts(
+            refinement.collapse_events_by_feature);
+        json += ",\"preservation_events_by_feature\":";
+        append_refinement_feature_counts(
+            refinement.preservation_events_by_feature);
+        json += ",\"refinement_rounds\":" +
+                std::to_string(refinement.refinement_rounds);
+        json += ",\"backward_observation_rounds\":" +
+                std::to_string(
+                    refinement.backward_observation_rounds);
+        json += ",\"selected_action_routing_rounds\":" +
+                std::to_string(
+                    refinement.selected_action_routing_rounds);
+        json += ",\"observation_propagation_rounds\":" +
+                std::to_string(
+                    refinement.observation_propagation_rounds);
+        json += ",\"partition_refinement_rounds\":" +
+                std::to_string(
+                    refinement.partition_refinement_rounds);
+        json += ",\"local_reoptimization_rounds\":" +
+                std::to_string(
+                    refinement.local_reoptimization_rounds);
+        json += ",\"local_state_action_rows_scheduled\":" +
+                std::to_string(
+                    refinement.local_state_action_rows_scheduled);
+        json += ",\"local_state_action_rows_evaluated\":" +
+                std::to_string(
+                    refinement.local_state_action_rows_evaluated);
+        json += ",\"local_reoptimizations\":" +
+                std::to_string(refinement.local_reoptimizations);
+        json += ",\"local_policy_changes\":" +
+                std::to_string(refinement.local_policy_changes);
+        json += ",\"local_value_changes\":" +
+                std::to_string(refinement.local_value_changes);
+        json += ",\"fixed_point\":{\"checked\":" +
+                std::string(bool_json(refinement.fixed_point_checked));
+        json += ",\"complete\":" +
+                std::string(bool_json(refinement.fixed_point_complete));
+        json += ",\"lumpability_checked\":" +
+                std::string(bool_json(refinement.lumpability_checked));
+        json += ",\"lumpable\":" +
+                std::string(bool_json(refinement.lumpable));
+        json += ",\"lumpability_checks\":" +
+                std::to_string(refinement.lumpability_checks) + "}";
+        json += ",\"class_policy\":{\"checked\":" +
+                std::string(bool_json(refinement.class_policy_checked));
+        json += ",\"proper\":" +
+                std::string(bool_json(refinement.class_policy_proper)) +
+                "}";
+        json += ",\"compiled_assertion\":{\"checked\":" +
+                std::string(
+                    bool_json(refinement.compiled_assertion_checked));
+        json += ",\"proper\":" +
+                std::string(bool_json(refinement.compiled_policy_proper));
+        json += ",\"zero_off_policy\":" +
+                std::string(bool_json(refinement.zero_off_policy));
+        json += ",\"cost_reconciled\":" +
+                std::string(bool_json(refinement.cost_reconciled)) + "}";
+        json += ",\"policy_changed\":" +
+                std::string(bool_json(refinement.policy_changed));
+        json += ",\"coarse_value_reconciled\":" +
+                std::string(
+                    bool_json(refinement.coarse_value_reconciled));
+        json += ",\"counterexamples\":{\"count\":" +
+                std::to_string(refinement.counterexamples);
+        json += ",\"samples\":[";
+        for (std::size_t i = 0;
+             i < refinement.counterexample_samples.size(); ++i) {
+            if (i != 0) json += ',';
+            json += refinement.counterexample_samples[i];
+        }
+        json += "],\"retained\":" +
+                std::to_string(
+                    refinement.counterexample_samples.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    refinement.counterexample_samples_omitted);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) +
+                "}";
+        json += ",\"refusal_causes\":{\"count\":" +
+                std::to_string(refinement.refusal_causes);
+        json += ",\"samples\":[";
+        for (std::size_t i = 0;
+             i < refinement.refusal_cause_samples.size(); ++i) {
+            if (i != 0) json += ',';
+            append_telemetry_json_string(
+                json, refinement.refusal_cause_samples[i]);
+        }
+        json += "],\"retained\":" +
+                std::to_string(
+                    refinement.refusal_cause_samples.size());
+        json += ",\"omitted\":" +
+                std::to_string(
+                    refinement.refusal_cause_samples_omitted);
+        json += ",\"limit\":" +
+                std::to_string(diagnostics->diagnostic_sample_limit) +
+                "}";
     }
     json += "}";
 
@@ -2667,6 +2901,7 @@ std::string serialize_solver_telemetry(
         json += ",\"policy_regions\":null";
         json += ",\"nodes\":null,\"edges\":null";
         json += ",\"strategy_json_bytes\":null";
+        json += ",\"peak_owned_bytes\":null";
         json += ",\"cap_hit\":null";
     } else {
         json += "\"available\":true,\"working_states\":" +
@@ -2677,6 +2912,8 @@ std::string serialize_solver_telemetry(
         json += ",\"edges\":" + std::to_string(compilation->edges);
         json += ",\"strategy_json_bytes\":" +
                 std::to_string(compilation->strategy_json_bytes);
+        json += ",\"peak_owned_bytes\":" +
+                std::to_string(compilation->peak_owned_bytes);
         json += ",\"cap_hit\":";
         if (compilation->cap_hit.empty()) {
             json += "null";

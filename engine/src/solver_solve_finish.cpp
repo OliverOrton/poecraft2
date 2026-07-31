@@ -1,9 +1,62 @@
 #include "solver_solve_types.hpp"
+#include "solver_policy_refinement.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
 
 using namespace solve_detail;
+
+void order_observed_modifier_choices(
+        const ActionDescriptor& action,
+        std::vector<OutcomeChoiceOption>& choices,
+        const std::vector<double>& values) {
+    if (!action_observes_modifier_offer(action)) {
+        throw std::logic_error(
+            "observed-choice finalization requires an admitted "
+            "outcome-observation contract");
+    }
+    std::sort(
+        choices.begin(), choices.end(),
+        [&](const OutcomeChoiceOption& left,
+            const OutcomeChoiceOption& right) {
+            if (left.state >= values.size() ||
+                right.state >= values.size()) {
+                throw std::logic_error(
+                    "observed-choice finalization references a state "
+                    "outside the value table");
+            }
+            const double left_value = values[left.state];
+            const double right_value = values[right.state];
+            if (left.state == right.state) {
+                return left.mod_id < right.mod_id;
+            }
+            return sparse_policy_choice_precedes(
+                left_value, left.state,
+                right_value, right.state);
+        });
+}
+
+SolveTermination successful_refined_publication_termination(
+        const SolveTermination coarse_termination,
+        const bool resource_cap_hit) {
+    if (coarse_termination == SolveTermination::ExactClosed) {
+        return SolveTermination::ExactClosed;
+    }
+    if (coarse_termination ==
+            SolveTermination::RefusedResourceCap ||
+        resource_cap_hit) {
+        return SolveTermination::RefusedResourceCap;
+    }
+    if (coarse_termination == SolveTermination::TargetGap) {
+        return SolveTermination::TargetGap;
+    }
+    /*
+     * The caller has retained an exact executable strategy, so None and
+     * NoExecutablePolicy cannot remain the published stopping cause.
+     */
+    return SolveTermination::ExactClosed;
+}
 
 void SolveWork::Impl::count_policy_actions(
         const std::vector<std::uint64_t>& rows,
@@ -345,14 +398,27 @@ SolveResult SolveWork::Impl::finish() {
                     : PolicyOperatorRef{
                           calc.operators()[best_operator].kind,
                           best_operator};
-            if (best_operator != kNoId &&
-                best_row_index != std::numeric_limits<std::uint64_t>::max() &&
+            const bool selected_primitive =
+                best_operator != kNoId &&
+                best_row_index !=
+                    std::numeric_limits<std::uint64_t>::max() &&
                 calc.operators()[best_operator].kind ==
-                    PlannerOperatorKind::Primitive &&
-                calc.registry()
-                        .actions[calc.operators()[best_operator]
-                                     .primitive_action]
-                        .params.type == ActionType::Unveil) {
+                    PlannerOperatorKind::Primitive;
+            const bool primitive_observes_modifier_offer =
+                selected_primitive &&
+                action_observes_modifier_offer(
+                    calc.registry().actions.at(
+                        calc.operators()[best_operator]
+                            .primitive_action));
+            if (selected_primitive &&
+                (transition_cache->rows[best_row_index].choice_count != 0 ||
+                 priced_rows[best_row_index].choice_option_count != 0) &&
+                !primitive_observes_modifier_offer) {
+                throw std::logic_error(
+                    "primitive exact row exposes observed choices without "
+                    "an admitted outcome-observation contract");
+            }
+            if (primitive_observes_modifier_offer) {
                 std::vector<OutcomeChoiceOption> choice_options;
                 const PricedSparseRow& best_row = priced_rows.at(
                     best_row_index);
@@ -369,15 +435,11 @@ SolveResult SolveWork::Impl::finish() {
                         transition_cache->choice_options.at(
                             best_row.choice_option_offset + i));
                 }
-                std::sort(
-                    choice_options.begin(), choice_options.end(),
-                    [&](const OutcomeChoiceOption& a,
-                        const OutcomeChoiceOption& b) {
-                        const double left = result.values[a.state];
-                        const double right = result.values[b.state];
-                        return left != right ? left < right
-                                             : a.mod_id < b.mod_id;
-                    });
+                order_observed_modifier_choices(
+                    calc.registry().actions.at(
+                        calc.operators()[best_operator]
+                            .primitive_action),
+                    choice_options, result.values);
                 for (const OutcomeChoiceOption& option : choice_options) {
                     auto& preferences = result.unveil_preferences[state];
                     const std::size_t old_capacity = preferences.capacity();
@@ -392,6 +454,18 @@ SolveResult SolveWork::Impl::finish() {
                        calc.operators()[best_operator].kind ==
                            PlannerOperatorKind::FixedOption &&
                        priced_rows[best_row_index].choice_option_count != 0) {
+                const PlannerOperator& selected =
+                    calc.operators()[best_operator];
+                if (selected.primitive_program.empty() ||
+                    selected.primitive_program.back() >=
+                        calc.registry().actions.size() ||
+                    !action_observes_modifier_offer(
+                        calc.registry().actions[
+                            selected.primitive_program.back()])) {
+                    throw std::logic_error(
+                        "fixed exact row exposes observed choices without "
+                        "an admitted outcome-observation contract");
+                }
                 std::map<std::uint32_t, std::vector<OutcomeChoiceOption>>
                     by_observation;
                 const PricedSparseRow& best_row = priced_rows.at(
@@ -411,15 +485,10 @@ SolveResult SolveWork::Impl::finish() {
                         choice);
                 }
                 for (auto& [observation_state, choices] : by_observation) {
-                    std::sort(
-                        choices.begin(), choices.end(),
-                        [&](const OutcomeChoiceOption& a,
-                            const OutcomeChoiceOption& b) {
-                            const double left = result.values[a.state];
-                            const double right = result.values[b.state];
-                            return left != right ? left < right
-                                                 : a.mod_id < b.mod_id;
-                        });
+                    order_observed_modifier_choices(
+                        calc.registry().actions.at(
+                            selected.primitive_program.back()),
+                        choices, result.values);
                     ObservedUnveilPreference preference;
                     preference.observation_state = observation_state;
                     for (const OutcomeChoiceOption& choice : choices) {
@@ -540,22 +609,10 @@ SolveResult SolveWork::Impl::finish() {
                     const SparseChoiceGroup& group =
                         transition_cache->choices.at(
                             selected->choice_offset + i);
-                    std::uint32_t chosen = group.has_self ? state : kNoId;
-                    double chosen_value =
-                        group.has_self ? result.values[state] : kInfinity;
-                    for (std::uint32_t s = 0; s < group.successor_count; ++s) {
-                        const std::uint32_t successor =
-                            transition_cache->choice_successors.at(
-                                group.successor_offset + s);
-                        const double successor_value = result.values[successor];
-                        if (successor_value < chosen_value - options.epsilon ||
-                            (std::abs(successor_value - chosen_value) <=
-                                 options.epsilon &&
-                             successor < chosen)) {
-                            chosen = successor;
-                            chosen_value = successor_value;
-                        }
-                    }
+                    const std::uint32_t chosen =
+                        select_sparse_policy_choice_successor(
+                            *transition_cache, group, state,
+                            result.values);
                     /* An observation choice follows only the policy-selected
                      * successor. Unselected unveil alternatives are not
                      * policy-reachable and may intentionally have no action. */
@@ -652,39 +709,14 @@ SolveResult SolveWork::Impl::finish() {
         }
         /*
          * The deliberately coarse product parent does not retain complete
-         * exclusion-group identity. Renewal rows that wipe the ambiguous
-         * carrier remain exact, but a selected pool-add row (or a renewal
-         * preserving that carrier) would compile to the concrete engine and
-         * can have a different value. Do not publish such a policy as
-         * executable. This is a compatibility refusal, not a new planner
-         * action filter or a change to the qualified parent transitions.
+         * exclusion-group identity. Treat an exact feature observed or
+         * preserved by the selected policy as a refinement counterexample.
+         * Publication is rejected only for an actual named resource/product
+         * limit below; ordinary identity witnesses continue to the shared
+         * policy-guided exact evaluator.
          */
         bool executable_policy_abstraction_supported = true;
         if (calc.product_solver_parent()) {
-            const auto exclusion_signature =
-                [&](const std::uint32_t mod) {
-                    std::vector<std::uint64_t> signature(
-                        session.words, 0);
-                    if (mod + 1 >= session.group_offsets.size()) {
-                        return signature;
-                    }
-                    for (std::uint32_t offset =
-                             session.group_offsets[mod];
-                         offset < session.group_offsets[mod + 1];
-                         ++offset) {
-                        const std::uint32_t group =
-                            session.group_ids[offset];
-                        if (group >= session.group_masks.size() ||
-                            session.group_masks[group].empty()) {
-                            continue;
-                        }
-                        pc_bitset_or(
-                            signature.data(), signature.data(),
-                            session.group_masks[group].data(),
-                            session.words);
-                    }
-                    return signature;
-                };
             const auto ambiguous_members =
                 [&](const std::vector<std::uint64_t>& members,
                     const std::vector<std::uint64_t>* excluded) {
@@ -700,7 +732,8 @@ SolveResult SolveWork::Impl::finish() {
                                 return;
                             }
                             std::vector<std::uint64_t> signature =
-                                exclusion_signature(
+                                modifier_exclusion_effect_signature(
+                                    session,
                                     static_cast<std::uint32_t>(bit));
                             if (!first.has_value()) {
                                 first = std::move(signature);
@@ -742,30 +775,147 @@ SolveResult SolveWork::Impl::finish() {
                         ? 1
                         : 0;
             }
-            const auto state_has_ambiguous_identity =
-                [&](const AbstractState& state,
-                    const bool preserved_only) {
+            const auto affix_needs_exclusion_identity =
+                [&](const refinement::ObservationRequirement& requirement,
+                    const std::uint16_t affix_traits,
+                    const std::uint8_t item_traits,
+                    const std::vector<std::uint32_t>& tag_ids) {
+                    const RefinementFeatureMask exclusion =
+                        refinement_feature(
+                            RefinementFeature::
+                                ModifierExclusionSignature);
+                    return std::any_of(
+                        requirement.affix_observations.begin(),
+                        requirement.affix_observations.end(),
+                        [&](const RefinementAffixObservation&
+                                observation) {
+                            return (observation.features &
+                                    exclusion) != 0 &&
+                                   refinement_selector_matches(
+                                       observation.selector,
+                                       affix_traits,
+                                       item_traits,
+                                       tag_ids);
+                        });
+                };
+            const auto state_has_observable_ambiguous_identity =
+                [&](const refinement::ObservationRequirement& requirement,
+                    const AbstractState& state) {
+                    const bool has_eldritch_dominance =
+                        state.searing_exarch_tier !=
+                        state.eater_of_worlds_tier;
+                    std::uint8_t item_traits =
+                        has_eldritch_dominance
+                            ? kRefinementItemHasEldritchDominance
+                            : 0;
+                    const bool prefix_locked =
+                        (state.flags & kFlagPrefixesLocked) != 0;
+                    const bool suffix_locked =
+                        (state.flags & kFlagSuffixesLocked) != 0;
+                    if (prefix_locked != suffix_locked) {
+                        item_traits |=
+                            kRefinementItemExactlyOneSideLocked;
+                    }
+                    const std::int8_t dominant_side =
+                        state.searing_exarch_tier >
+                                state.eater_of_worlds_tier
+                            ? PC_SIDE_PREFIX
+                            : (state.eater_of_worlds_tier >
+                                       state.searing_exarch_tier
+                                   ? PC_SIDE_SUFFIX
+                                   : -1);
+                    const auto side_traits =
+                        [&](const std::int8_t side) {
+                            std::uint16_t traits =
+                                side == PC_SIDE_PREFIX
+                                    ? kRefinementAffixPrefix
+                                    : kRefinementAffixSuffix;
+                            const bool locked =
+                                (side == PC_SIDE_PREFIX &&
+                                 (state.flags &
+                                  kFlagPrefixesLocked) != 0) ||
+                                (side == PC_SIDE_SUFFIX &&
+                                 (state.flags &
+                                  kFlagSuffixesLocked) != 0);
+                            if (locked) {
+                                traits |=
+                                    kRefinementAffixOnLockedSide;
+                            }
+                            if (dominant_side >= 0) {
+                                traits |=
+                                    side == dominant_side
+                                        ? kRefinementAffixOnEldritchDominantSide
+                                        : kRefinementAffixOnEldritchNonDominantSide;
+                            }
+                            return traits;
+                        };
                     for (std::size_t junk = 0;
                          junk < ambiguous_junk.size(); ++junk) {
                         if (!ambiguous_junk[junk]) continue;
                         const JunkClass& klass =
                             calc.layout().junk_classes[junk];
-                        const bool locked =
-                            (klass.gen_type == PC_SIDE_PREFIX &&
-                             (state.flags & kFlagPrefixesLocked)) ||
-                            (klass.gen_type == PC_SIDE_SUFFIX &&
-                             (state.flags & kFlagSuffixesLocked));
-                        const std::uint8_t count =
-                            preserved_only
-                                ? state.fractured_junk_counts[junk] +
-                                      (locked
-                                           ? state.junk_counts[junk] -
-                                                 state
-                                                     .fractured_junk_counts[
-                                                         junk]
-                                           : 0)
-                                : state.junk_counts[junk];
-                        if (count != 0) return true;
+                        std::vector<std::uint32_t> tag_ids;
+                        for (std::size_t tag = 0;
+                             tag <
+                             calc.layout()
+                                 .discriminating_tag_ids.size();
+                             ++tag) {
+                            if ((klass.tag_bits &
+                                 (std::uint64_t{1} << tag)) != 0) {
+                                tag_ids.push_back(
+                                    calc.layout()
+                                        .discriminating_tag_ids[tag]);
+                            }
+                        }
+                        const std::uint8_t total =
+                            state.junk_counts[junk];
+                        const std::uint8_t fractured =
+                            state.fractured_junk_counts[junk];
+                        const std::uint8_t crafted =
+                            state.crafted_junk_counts[junk];
+                        const std::uint8_t both =
+                            state.fractured_crafted_junk_counts[junk];
+                        const std::array<std::pair<
+                            std::uint8_t, std::uint16_t>, 4>
+                            carriers{{
+                                {static_cast<std::uint8_t>(
+                                     total - fractured - crafted + both),
+                                 0},
+                                {static_cast<std::uint8_t>(
+                                     fractured - both),
+                                 kRefinementAffixFractured},
+                                {static_cast<std::uint8_t>(
+                                     crafted - both),
+                                 kRefinementAffixCrafted},
+                                {both,
+                                 static_cast<std::uint16_t>(
+                                     kRefinementAffixFractured |
+                                     kRefinementAffixCrafted)},
+                            }};
+                        for (const auto& [count, flags] : carriers) {
+                            if (count == 0) continue;
+                            std::uint16_t traits =
+                                side_traits(klass.gen_type) | flags;
+                            bool veiled = false;
+                            pc_bitset_for_each(
+                                klass.member_mask.data(), session.words,
+                                [&](const std::size_t bit) {
+                                    veiled =
+                                        veiled ||
+                                        modifier_is_veiled_template(
+                                            session,
+                                            static_cast<std::uint32_t>(
+                                                bit));
+                                });
+                            if (veiled) {
+                                traits |= kRefinementAffixVeiled;
+                            }
+                            if (affix_needs_exclusion_identity(
+                                    requirement, traits, item_traits,
+                                    tag_ids)) {
+                                return true;
+                            }
+                        }
                     }
                     for (std::size_t slot = 0;
                          slot < ambiguous_goal.size(); ++slot) {
@@ -775,28 +925,62 @@ SolveResult SolveWork::Impl::finish() {
                                 static_cast<std::size_t>(status)]) {
                             continue;
                         }
-                        if (!preserved_only ||
-                            (state.fractured_goal_mask & (1u << slot)) != 0) {
+                        std::uint16_t traits = 0;
+                        const ResolvedGoalSlot& resolved =
+                            calc.layout().slots[slot];
+                        pc_bitset_for_each(
+                            resolved.member_mask.data(), session.words,
+                            [&](const std::size_t bit) {
+                                const std::int8_t side =
+                                    session.gen_type[
+                                        static_cast<std::uint32_t>(bit)];
+                                if (side == PC_SIDE_PREFIX ||
+                                    side == PC_SIDE_SUFFIX) {
+                                    traits |= side_traits(side);
+                                }
+                            });
+                        if ((state.fractured_goal_mask &
+                             (1u << slot)) != 0) {
+                            traits |= kRefinementAffixFractured;
+                        }
+                        if ((state.crafted_goal_mask &
+                             (1u << slot)) != 0) {
+                            traits |= kRefinementAffixCrafted;
+                        }
+                        if (affix_needs_exclusion_identity(
+                                requirement, traits, item_traits, {})) {
                             return true;
                         }
                     }
                     return false;
                 };
-            const auto action_needs_identity =
-                [&](const ActionDescriptor& action,
-                    const AbstractState& state) {
-                    switch (action.params.type) {
-                    case ActionType::Augment:
-                    case ActionType::Regal:
-                    case ActionType::Exalt:
-                        return state_has_ambiguous_identity(state, false);
-                    default:
-                        break;
+            const auto record_refinement_trigger_parent =
+                [&](const std::uint32_t coarse_state) {
+                    if (coarse_state == kNoId) return;
+                    PolicyRefinementTelemetry& refinement =
+                        result.diagnostics.policy_refinement;
+                    if (std::find(
+                            refinement.trigger_coarse_states.begin(),
+                            refinement.trigger_coarse_states.end(),
+                            coarse_state) !=
+                        refinement.trigger_coarse_states.end()) {
+                        return;
                     }
-                    if (action_transition_facts(action.params.type).renewal) {
-                        return state_has_ambiguous_identity(state, true);
+                    if (refinement.trigger_coarse_states.size() <
+                        result.policy.size()) {
+                        refinement.trigger_coarse_states.push_back(
+                            coarse_state);
+                    } else {
+                        ++refinement.trigger_coarse_states_omitted;
                     }
-                    return false;
+                    /* Preserve the first witness for existing diagnostic
+                     * consumers while exact refinement consumes the bounded
+                     * structured collection above. */
+                    if (result.diagnostics.policy_compatibility_state ==
+                        kNoId) {
+                        result.diagnostics.policy_compatibility_state =
+                            coarse_state;
+                    }
                 };
             constexpr double kProductSimulatorActionLimit = 100000.0;
             if (restore_output_incumbent &&
@@ -855,28 +1039,28 @@ SolveResult SolveWork::Impl::finish() {
                         if (action_transition_facts(
                                 action.params.type)
                                 .renewal) {
-                            executable_policy_abstraction_supported =
-                                false;
-                            const std::string reason =
-                                "coarse_parent_capped_renewal_without_"
-                                "exact_witness";
-                            result.diagnostics
-                                .policy_compatibility_supported = false;
-                            result.diagnostics
-                                .policy_compatibility_state =
-                                result.start_state;
-                            result.diagnostics
-                                .policy_compatibility_action =
-                                action.id;
-                            result.diagnostics
-                                .policy_compatibility_reason =
-                                reason;
-                            record_skipped_unsupported(action.id);
-                            add_action_reason(
-                                "unsupported", action.id,
-                                reason + "_at_state_" +
-                                    std::to_string(
-                                        result.start_state));
+                            PolicyRefinementTelemetry& refinement =
+                                result.diagnostics.policy_refinement;
+                            ++refinement.triggers;
+                            record_refinement_trigger_parent(
+                                result.start_state);
+                            refinement.status = "triggered";
+                            ++refinement.counterexamples;
+                            const std::string witness =
+                                "{\"source\":\"compatibility\","
+                                "\"kind\":\"capped_policy_lift\","
+                                "\"coarse_state\":" +
+                                std::to_string(result.start_state) +
+                                ",\"action\":\"" + action.id + "\"}";
+                            if (refinement.counterexample_samples.size() <
+                                result.diagnostics
+                                    .diagnostic_sample_limit) {
+                                refinement.counterexample_samples.push_back(
+                                    witness);
+                            } else {
+                                ++refinement
+                                      .counterexample_samples_omitted;
+                            }
                         }
                     }
                 }
@@ -916,41 +1100,127 @@ SolveResult SolveWork::Impl::finish() {
                 }
                 const PlannerOperator& planner =
                     calc.operators()[selected.index];
-                std::vector<std::uint32_t> actions =
-                    planner.kind == PlannerOperatorKind::Primitive
-                        ? std::vector<std::uint32_t>{
-                              planner.primitive_action}
-                        : planner.primitive_program;
-                if (planner.conditional_action != kNoId) {
-                    actions.push_back(planner.conditional_action);
+                /*
+                 * The engine-owned ordered runtime program composes every
+                 * internal observation and the full-program exclusion
+                 * survivor preimage at the operator entry. This admits both
+                 * primitive and fixed policies to the same witness-driven
+                 * lift without action-name switches or treating any internal
+                 * primitive as the representative action.
+                 */
+                const PlannerOperatorRuntimeSemantics runtime =
+                    planner_operator_runtime_semantics(
+                        planner, calc.registry());
+                refinement::SelectedAction runtime_selection;
+                runtime_selection.contract =
+                    runtime.compatibility_refinement;
+                runtime_selection.ordered_program.reserve(
+                    runtime.ordered_program.size());
+                for (const PlannerOperatorRuntimeStep& step :
+                     runtime.ordered_program) {
+                    runtime_selection.ordered_program.push_back(
+                        step.refinement);
                 }
-                for (const std::uint32_t action_index : actions) {
-                    if (action_index >=
-                            calc.registry().actions.size() ||
-                        !action_needs_identity(
-                            calc.registry().actions[action_index],
-                            calc.state(state_id))) {
-                        continue;
+                runtime_selection.execution_paths.reserve(
+                    runtime.execution_paths.size());
+                for (const std::vector<
+                         PlannerOperatorRuntimeStep>& path :
+                     runtime.execution_paths) {
+                    std::vector<ActionRefinementContract> contracts;
+                    contracts.reserve(path.size());
+                    for (const PlannerOperatorRuntimeStep& step :
+                         path) {
+                        contracts.push_back(step.refinement);
                     }
-                    executable_policy_abstraction_supported = false;
-                    const std::string& action_id =
-                        calc.registry().actions[action_index].id;
-                    const std::string reason =
-                        "coarse_parent_requires_exact_exclusion_identity";
-                    result.diagnostics.policy_compatibility_supported =
-                        false;
-                    result.diagnostics.policy_compatibility_state =
-                        state_id;
-                    result.diagnostics.policy_compatibility_action =
-                        action_id;
-                    result.diagnostics.policy_compatibility_reason =
-                        reason;
-                    record_skipped_unsupported(action_id);
-                    add_action_reason(
-                        "unsupported", action_id,
-                        reason + "_at_state_" +
-                            std::to_string(state_id));
-                    break;
+                    runtime_selection.execution_paths.push_back(
+                        std::move(contracts));
+                }
+                const refinement::ObservationRequirement
+                    direct_requirement =
+                        refinement::
+                            observation_requirement_from_selected_action(
+                                runtime_selection);
+                refinement::ObservationRequirement
+                    downstream_exclusion;
+                downstream_exclusion.affix_observations.push_back(
+                    {
+                        refinement_feature(
+                            RefinementFeature::
+                                ModifierExclusionSignature),
+                        {}});
+                const refinement::ObservationRequirement
+                    preserved_exclusion =
+                        refinement::
+                            preserved_observation_requirement(
+                                downstream_exclusion,
+                                runtime_selection);
+                const refinement::ObservationRequirement
+                    compatibility_requirement =
+                        refinement::
+                            merge_observation_requirements(
+                                direct_requirement,
+                                preserved_exclusion);
+                const refinement::AbstractFeatureExtraction
+                    compatibility_extraction =
+                        refinement::
+                            extract_strict_abstract_features(
+                                session,
+                                calc.layout(),
+                                calc.state(state_id),
+                                compatibility_requirement);
+                const bool unavailable_compatibility_observation =
+                    !compatibility_extraction.complete();
+                if (!unavailable_compatibility_observation &&
+                    !state_has_observable_ambiguous_identity(
+                        compatibility_requirement,
+                        calc.state(state_id))) {
+                    continue;
+                }
+                PolicyRefinementTelemetry& refinement =
+                    result.diagnostics.policy_refinement;
+                ++refinement.triggers;
+                record_refinement_trigger_parent(state_id);
+                refinement.status = "triggered";
+                ++refinement.counterexamples;
+                RefinementFeatureMask required_feature_mask =
+                    compatibility_requirement.item_features;
+                for (const RefinementAffixObservation& observation :
+                     compatibility_requirement.affix_observations) {
+                    required_feature_mask |= observation.features;
+                }
+                const bool preserved_exclusion_observed =
+                    preserved_exclusion.item_features != 0 ||
+                    !preserved_exclusion.modifier_tag_ids.empty() ||
+                    !preserved_exclusion.affix_observations.empty();
+                const std::string witness =
+                    "{\"source\":\"compatibility\","
+                    "\"kind\":\"observation\","
+                    "\"coarse_state\":" +
+                    std::to_string(state_id) +
+                    ",\"action\":\"" + planner.id +
+                    "\",\"operator_kind\":\"" +
+                    (planner.kind ==
+                             PlannerOperatorKind::Primitive
+                         ? "primitive"
+                         : "fixed_option") +
+                    "\",\"runtime_dependency_count\":" +
+                    std::to_string(
+                        runtime.action_dependencies.size()) +
+                    ",\"unavailable_feature_mask\":" +
+                    std::to_string(
+                        compatibility_extraction
+                            .unavailable_features) +
+                    ",\"required_feature_mask\":" +
+                    std::to_string(required_feature_mask) +
+                    ",\"preserved_exclusion_witness\":" +
+                    (preserved_exclusion_observed ? "true" : "false") +
+                    "}";
+                if (refinement.counterexample_samples.size() <
+                    result.diagnostics.diagnostic_sample_limit) {
+                    refinement.counterexample_samples.push_back(
+                        witness);
+                } else {
+                    ++refinement.counterexample_samples_omitted;
                 }
             }
         }
@@ -1024,6 +1294,674 @@ SolveResult SolveWork::Impl::finish() {
             result.absolute_optimality_gap = kInfinity;
             result.relative_optimality_gap = kInfinity;
         }
+
+        const auto canonical_publication_cap =
+            [](std::string cap) {
+                if (cap == "max_pairs" ||
+                    cap == "max_exact_kernels") {
+                    return std::string{"max_state_action_rows"};
+                }
+                if (cap == "max_classes" ||
+                    cap == "max_refinement_classes" ||
+                    cap == "max_reachable_classes" ||
+                    cap == "max_exact_states" ||
+                    cap == "max_coarse_states") {
+                    return std::string{"max_discovered_states"};
+                }
+                if (cap == "max_owned_bytes" ||
+                    cap == "max_estimated_memory_bytes") {
+                    return std::string{"max_solver_owned_bytes"};
+                }
+                if (cap == "max_refinement_rounds" ||
+                    cap == "max_component_iterations") {
+                    return std::string{"max_sweeps"};
+                }
+                if (cap == "max_output_json_bytes") {
+                    return std::string{"max_strategy_json_bytes"};
+                }
+                return cap;
+            };
+        const auto record_refinement_refusal =
+            [&](const std::string& cause) {
+                PolicyRefinementTelemetry& telemetry =
+                    result.diagnostics.policy_refinement;
+                ++telemetry.refusal_causes;
+                if (telemetry.refusal_cause_samples.size() <
+                    result.diagnostics.diagnostic_sample_limit) {
+                    telemetry.refusal_cause_samples.push_back(cause);
+                } else {
+                    ++telemetry.refusal_cause_samples_omitted;
+                }
+            };
+        const auto revoke_publication =
+            [&](const std::string& reason,
+                const std::string& resource_cap = std::string{}) {
+                if (!resource_cap.empty()) {
+                    const std::string solve_cap =
+                        canonical_publication_cap(resource_cap);
+                    result.diagnostics.policy_refinement.resource_cap =
+                        solve_cap;
+                    record_cap(solve_cap);
+                }
+                result.refined_policy_artifact = {};
+                result.diagnostics.policy_refinement
+                    .retained_artifact_bytes = 0;
+                result.diagnostics.policy_compatibility_supported =
+                    false;
+                if (result.diagnostics.policy_compatibility_state ==
+                    kNoId) {
+                    result.diagnostics.policy_compatibility_state =
+                        result.start_state;
+                }
+                if (result.diagnostics
+                        .policy_compatibility_action.empty() &&
+                    result.start_state < result.policy.size()) {
+                    const PolicyOperatorRef selected =
+                        result.policy[result.start_state];
+                    if (selected.index < calc.operators().size()) {
+                        result.diagnostics
+                            .policy_compatibility_action =
+                            calc.operators()[selected.index].id;
+                    }
+                }
+                result.diagnostics
+                    .policy_publication_failure_reason =
+                    reason;
+                if (result.diagnostics
+                        .policy_compatibility_reason.empty()) {
+                    result.diagnostics.policy_compatibility_reason =
+                        reason;
+                }
+                executable_policy_abstraction_supported = false;
+                result.converged = false;
+                result.policy_available = false;
+                result.policy_status = SolvePolicyStatus::None;
+                result.target_met = false;
+                result.target_fired = SolveGapTarget::None;
+                result.termination =
+                    result.diagnostics.resource_cap_hit
+                        ? SolveTermination::RefusedResourceCap
+                        : SolveTermination::NoExecutablePolicy;
+                result.lower_bound =
+                    result.diagnostics.focused_expansion
+                        ? result.diagnostics.focused_lower_bound
+                        : 0.0;
+                result.upper_bound = kInfinity;
+                result.evaluated_policy_cost = kInfinity;
+                result.absolute_optimality_gap = kInfinity;
+                result.relative_optimality_gap = kInfinity;
+            };
+        const auto publication_options_for_live =
+            [&](const std::uint64_t live_bytes)
+                -> std::optional<SolveOptions> {
+                if (live_bytes >=
+                    options.max_solver_owned_bytes) {
+                    return std::nullopt;
+                }
+                const std::uint64_t retained =
+                    estimated_retained_solver_bytes(calc, &result);
+                const std::uint64_t external_live =
+                    live_bytes > retained
+                        ? live_bytes - retained
+                        : 0;
+                if (external_live >=
+                    options.max_solver_owned_bytes) {
+                    return std::nullopt;
+                }
+                SolveOptions scoped = options;
+                scoped.max_solver_owned_bytes =
+                    options.max_solver_owned_bytes - external_live;
+                const std::uint64_t coarse_reforge_work =
+                    std::min(
+                        calc.telemetry().reforge_frontier_work,
+                        options.max_reforge_work);
+                scoped.max_reforge_work =
+                    options.max_reforge_work -
+                    coarse_reforge_work;
+                return scoped;
+            };
+        if (result.policy_available &&
+            result.diagnostics.policy_refinement.triggers != 0) {
+            /*
+             * Exact lifting changes the publication proof, not the stopping
+             * cause of the coarse solve that supplied the incumbent.
+             */
+            const SolveTermination coarse_solve_termination =
+                result.termination;
+            /*
+             * A coarse compatibility witness is now a request for bounded
+             * exact lifting. The adapter uses the authored start carrier,
+             * strict mechanics kernels, the shared observation partition,
+             * and the shared proper-policy evaluator. Publication retains
+             * only the strict strategy artifact that independently compiles,
+             * exact-evaluates, and reconciles.
+             */
+            const std::uint64_t publication_live_bytes =
+                estimated_owned_bytes();
+            const std::uint64_t publication_retained_solver_bytes =
+                estimated_retained_solver_bytes(calc, &result);
+            const std::uint64_t publication_external_live_bytes =
+                publication_live_bytes >
+                        publication_retained_solver_bytes
+                    ? publication_live_bytes -
+                          publication_retained_solver_bytes
+                    : 0;
+            const std::optional<SolveOptions> lift_options =
+                publication_options_for_live(
+                    publication_live_bytes);
+            refinement::PolicyExactLiftCertificate certificate;
+            if (lift_options.has_value()) {
+                certificate = refinement::lift_policy_exact(
+                    calc, result, exact_start_item, prices,
+                    *lift_options, "solved policy");
+            } else {
+                certificate.status =
+                    refinement::PolicyExactLiftStatus::ResourceCap;
+                certificate.resource_cap =
+                    "max_solver_owned_bytes";
+                certificate.failure_reason =
+                    "coarse live solve leaves no memory for exact "
+                    "publication refinement";
+            }
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            telemetry.status =
+                refinement::policy_exact_lift_status_name(
+                    certificate.status);
+            telemetry.memory_limit_bytes =
+                options.max_solver_owned_bytes;
+            telemetry.policy_reachable_coarse_states =
+                certificate.refinement.telemetry
+                    .policy_reachable_coarse_states;
+            telemetry.exact_states =
+                certificate.adapter.strict_carriers_materialized;
+            telemetry.retained_exact_states =
+                certificate.refinement.telemetry.exact_states;
+            telemetry.exact_classes =
+                certificate.refinement.telemetry
+                    .final_refinement_classes;
+            telemetry.initial_observation_classes =
+                certificate.refinement.telemetry
+                    .initial_observation_classes;
+            telemetry.behavior_splits =
+                certificate.refinement.telemetry.behavior_splits;
+            telemetry.merged_exact_states =
+                certificate.refinement.telemetry.merged_exact_states;
+            telemetry.exact_transitions =
+                certificate.adapter.strict_transitions_built;
+            telemetry.exact_kernels =
+                certificate.adapter.strict_kernels_built;
+            telemetry.exact_kernel_cache_hits =
+                certificate.adapter.strict_kernel_cache_hits;
+            telemetry.exact_state_reuses =
+                certificate.adapter.canonical_successor_collapses;
+            telemetry.collapse_events =
+                certificate.refinement.telemetry.collapse_events;
+            telemetry.collapse_destroyed_feature_mask =
+                certificate.refinement.telemetry
+                    .collapse_destroyed_feature_mask;
+            telemetry.collapse_preserved_feature_mask =
+                certificate.refinement.telemetry
+                    .collapse_preserved_feature_mask;
+            telemetry.collapse_events_by_feature =
+                certificate.refinement.telemetry
+                    .collapse_events_by_feature;
+            telemetry.preservation_events_by_feature =
+                certificate.refinement.telemetry
+                    .preservation_events_by_feature;
+            telemetry.backward_observation_rounds =
+                certificate.adapter.backward_observation_rounds;
+            telemetry.selected_action_routing_rounds =
+                certificate.refinement.telemetry
+                    .selected_action_routing_rounds;
+            telemetry.observation_propagation_rounds =
+                certificate.refinement.telemetry
+                    .observation_propagation_rounds;
+            telemetry.partition_refinement_rounds =
+                certificate.refinement.telemetry
+                    .partition_refinement_rounds;
+            telemetry.local_reoptimization_rounds =
+                certificate.adapter.local_reoptimization_rounds;
+            telemetry.local_state_action_rows_scheduled =
+                certificate.adapter
+                    .local_state_action_rows_scheduled;
+            telemetry.local_state_action_rows_evaluated =
+                certificate.adapter
+                    .local_state_action_rows_evaluated;
+            telemetry.refinement_rounds =
+                static_cast<std::uint64_t>(
+                    certificate.adapter.backward_observation_rounds) +
+                certificate.adapter.exact_fixed_point_rounds +
+                certificate.adapter.local_reoptimization_rounds;
+            telemetry.local_reoptimizations =
+                certificate.adapter.local_reoptimizations;
+            telemetry.local_policy_changes =
+                certificate.adapter.local_policy_changes;
+            telemetry.local_value_changes =
+                certificate.adapter.local_value_changes;
+            telemetry.lumpability_checks =
+                certificate.refinement.telemetry.lumpability_checks;
+            telemetry.fixed_point_checked =
+                certificate.refinement.status !=
+                refinement::RefinementStatus::EmptyRequest;
+            telemetry.fixed_point_complete =
+                certificate.refinement.status ==
+                refinement::RefinementStatus::Complete;
+            telemetry.lumpability_checked =
+                telemetry.fixed_point_complete ||
+                telemetry.lumpability_checks != 0;
+            telemetry.lumpable = certificate.refinement.lumpable;
+            telemetry.class_policy_checked =
+                telemetry.fixed_point_complete;
+            telemetry.class_policy_proper =
+                certificate.class_evaluation.proper;
+            telemetry.compiled_assertion_checked =
+                certificate.compiled.status !=
+                refinement::CompiledPolicyAssertionStatus::NotRun;
+            telemetry.compiled_policy_proper =
+                certificate.compiled.proper;
+            telemetry.zero_off_policy =
+                certificate.compiled.zero_off_policy;
+            telemetry.cost_reconciled =
+                certificate.compiled.cost_reconciled;
+            telemetry.policy_changed = certificate.policy_changed;
+            telemetry.coarse_value_reconciled =
+                certificate.coarse_value_reconciled;
+            const auto saturated_add =
+                [](const std::uint64_t lhs,
+                   const std::uint64_t rhs) {
+                    return rhs >
+                                   std::numeric_limits<
+                                       std::uint64_t>::max() -
+                                       lhs
+                               ? std::numeric_limits<
+                                     std::uint64_t>::max()
+                               : lhs + rhs;
+                };
+            const auto counterexample_kind_name =
+                [](const refinement::CounterexampleKind kind) {
+                    switch (kind) {
+                    case refinement::CounterexampleKind::Observation:
+                        return "observation";
+                    case refinement::CounterexampleKind::SelectedAction:
+                        return "selected_action";
+                    case refinement::CounterexampleKind::ActionCost:
+                        return "action_cost";
+                    case refinement::CounterexampleKind::
+                            SuccessorProjection:
+                        return "successor_projection";
+                    }
+                    return "observation";
+                };
+            telemetry.counterexamples = saturated_add(
+                telemetry.counterexamples,
+                saturated_add(
+                    certificate.refinement.counterexamples.size(),
+                    certificate.refinement.telemetry
+                        .witnesses_omitted));
+            for (const refinement::RefinementCounterexample& witness :
+                 certificate.refinement.counterexamples) {
+                RefinementFeatureMask differing_feature_mask = 0;
+                for (const refinement::FeatureAtom& atom :
+                     witness.differing_features) {
+                    differing_feature_mask |=
+                        refinement_feature(atom.feature);
+                }
+                const std::string sample =
+                    "{\"source\":\"refinement\",\"kind\":\"" +
+                    std::string{counterexample_kind_name(witness.kind)} +
+                    "\",\"coarse_state\":" +
+                    std::to_string(witness.coarse_state) +
+                    ",\"differing_feature_mask\":" +
+                    std::to_string(differing_feature_mask) + "}";
+                if (telemetry.counterexample_samples.size() <
+                    result.diagnostics.diagnostic_sample_limit) {
+                    telemetry.counterexample_samples.push_back(sample);
+                } else {
+                    ++telemetry.counterexample_samples_omitted;
+                }
+            }
+            telemetry.counterexample_samples_omitted = saturated_add(
+                telemetry.counterexample_samples_omitted,
+                certificate.refinement.telemetry.witnesses_omitted);
+            result.diagnostics.reforge_frontier_work =
+                certificate.resource_cap == "max_reforge_work"
+                    ? options.max_reforge_work
+                    : std::min(
+                          options.max_reforge_work,
+                          saturated_add(
+                              result.diagnostics.reforge_frontier_work,
+                              saturated_add(
+                                  certificate.adapter
+                                      .strict_reforge_work,
+                                  certificate.compiled.evaluation
+                                      .reforge_work)));
+            const std::uint64_t adapter_memory = std::max(
+                certificate.adapter.adapter_owned_bytes,
+                certificate.adapter.strict_calc_owned_bytes);
+            const std::uint64_t adapter_peak = std::max(
+                certificate.adapter.peak_adapter_owned_bytes,
+                adapter_memory);
+            const std::uint64_t refinement_memory = std::max(
+                certificate.refinement.telemetry
+                    .estimated_memory_bytes,
+                adapter_memory);
+            const std::uint64_t refinement_peak = std::max(
+                certificate.refinement.telemetry
+                    .peak_estimated_memory_bytes,
+                adapter_peak);
+            const std::uint64_t refinement_phase_memory =
+                saturated_add(
+                    publication_live_bytes,
+                    refinement_memory);
+            const std::uint64_t refinement_phase_peak =
+                saturated_add(
+                    publication_live_bytes,
+                    refinement_peak);
+            const std::uint64_t compiled_phase_memory =
+                saturated_add(
+                    publication_live_bytes,
+                    saturated_add(
+                        certificate.compiled.retained_solver_bytes,
+                        saturated_add(
+                            certificate.compiled.parsed_strategy_bytes,
+                            saturated_add(
+                                certificate.compiled.economy_bytes,
+                                saturated_add(
+                                    certificate.compiled.evaluation
+                                        .owned_bytes_estimate,
+                                    certificate.compiled.strategy_json
+                                            .capacity() +
+                                        1)))));
+            const std::uint64_t compiled_phase_peak =
+                saturated_add(
+                    publication_live_bytes,
+                    saturated_add(
+                        certificate.compiled.retained_solver_bytes,
+                        saturated_add(
+                            certificate.compiled.parsed_strategy_bytes,
+                            saturated_add(
+                                certificate.compiled.economy_bytes,
+                                saturated_add(
+                                    certificate.compiled.evaluation
+                                        .peak_owned_bytes_estimate,
+                                     certificate.compiled.strategy_json
+                                             .capacity() +
+                                         1)))));
+            const std::uint64_t reported_compiled_phase_peak =
+                saturated_add(
+                    publication_external_live_bytes,
+                    certificate.compiled
+                        .publication_peak_owned_bytes);
+            telemetry.memory_bytes = std::max(
+                refinement_phase_memory, compiled_phase_memory);
+            telemetry.peak_memory_bytes = std::max(
+                refinement_phase_peak,
+                std::max(
+                    compiled_phase_peak,
+                    reported_compiled_phase_peak));
+            peak_owned_bytes = std::max(
+                peak_owned_bytes, telemetry.peak_memory_bytes);
+
+            bool lift_complete =
+                certificate.status ==
+                    refinement::PolicyExactLiftStatus::Complete &&
+                certificate.executable &&
+                certificate.lumpable &&
+                certificate.compiled.executable;
+            if (lift_complete) {
+                RetainedCompiledPolicyArtifact artifact;
+                artifact.strategy_json =
+                    std::move(certificate.compiled.strategy_json);
+                artifact.working_states =
+                    certificate.compiled.compilation.working_states;
+                artifact.policy_regions =
+                    certificate.compiled.compilation.policy_regions;
+                artifact.nodes =
+                    certificate.compiled.compilation.nodes;
+                artifact.edges =
+                    certificate.compiled.compilation.edges;
+                result.refined_policy_artifact =
+                    std::move(artifact);
+                telemetry.retained_artifact_bytes =
+                    result.refined_policy_artifact
+                            .strategy_json.capacity() +
+                    1;
+                if (estimated_owned_bytes() >
+                    options.max_solver_owned_bytes) {
+                    result.refined_policy_artifact = {};
+                    telemetry.retained_artifact_bytes = 0;
+                    certificate.status =
+                        refinement::PolicyExactLiftStatus::ResourceCap;
+                    certificate.resource_cap =
+                        "max_solver_owned_bytes";
+                    certificate.failure_reason =
+                        "retaining the exact refined strategy reached "
+                        "max_solver_owned_bytes";
+                    lift_complete = false;
+                }
+                if (lift_complete) {
+                    /*
+                     * The retained artifact is an exact, proper executable
+                     * policy. Compatibility-triggered lifting proves that
+                     * fixed policy, not global optimality over every exact
+                     * subclass and admitted alternative. Publish its exact
+                     * cost as a feasible upper bound and discard the coarse
+                     * exactness claim even when the lifted value happens to
+                     * reconcile and no local action changed.
+                     */
+                    if (!std::isfinite(
+                            certificate.exact_start_cost) ||
+                        certificate.exact_start_cost < 0.0) {
+                        throw std::logic_error(
+                            "completed exact policy refinement returned "
+                            "an invalid start cost");
+                    }
+                    const double exact_policy_cost =
+                        certificate.exact_start_cost;
+                    result.converged = false;
+                    result.policy_status =
+                        SolvePolicyStatus::BoundedFeasible;
+                    result.target_met = false;
+                    result.target_fired = SolveGapTarget::None;
+                    result.lower_bound = 0.0;
+                    result.upper_bound = exact_policy_cost;
+                    result.evaluated_policy_cost =
+                        exact_policy_cost;
+                    result.absolute_optimality_gap =
+                        exact_policy_cost;
+                    result.relative_optimality_gap = kInfinity;
+                    if (result.start_state <
+                        result.values.size()) {
+                        result.values[result.start_state] =
+                            exact_policy_cost;
+                    }
+                    result.diagnostics.focused_lower_bound = 0.0;
+                    result.diagnostics.focused_upper_bound =
+                        exact_policy_cost;
+                    result.diagnostics
+                        .focused_partial_policy_upper_bound =
+                        exact_policy_cost;
+                    result.diagnostics.focused_optimality_gap =
+                        exact_policy_cost;
+                    result.diagnostics.solution_scope =
+                        "policy_guided_exact_refinement_bounded";
+                    result.diagnostics.incumbent_kind =
+                        "policy_guided_exact_refinement";
+                    result.termination =
+                        successful_refined_publication_termination(
+                            coarse_solve_termination,
+                            result.diagnostics.resource_cap_hit);
+                }
+            }
+            if (!lift_complete) {
+                const std::string status =
+                    refinement::policy_exact_lift_status_name(
+                        certificate.status);
+                telemetry.status = status;
+                const std::string reason =
+                    "policy_exact_refinement_" + status;
+                record_refinement_refusal(reason);
+                revoke_publication(
+                    certificate.failure_reason.empty()
+                        ? reason
+                        : reason + ": " +
+                              certificate.failure_reason,
+                    certificate.resource_cap);
+            }
+        }
+        if (result.policy_available &&
+            result.diagnostics.policy_refinement.triggers == 0) {
+            /*
+             * Compatibility-triggered lifting is lazy, but publication proof
+             * is unconditional. A zero-trigger policy still has to compile,
+             * parse, exact-evaluate as a proper absorbing strategy, and
+             * reconcile with the solver value.
+             */
+            const std::uint64_t publication_live_bytes =
+                estimated_owned_bytes();
+            const std::uint64_t publication_retained_solver_bytes =
+                estimated_retained_solver_bytes(calc, &result);
+            const std::uint64_t publication_external_live_bytes =
+                publication_live_bytes >
+                        publication_retained_solver_bytes
+                    ? publication_live_bytes -
+                          publication_retained_solver_bytes
+                    : 0;
+            const std::optional<SolveOptions> assertion_options =
+                publication_options_for_live(
+                    publication_live_bytes);
+            refinement::CompiledPolicyAssertion assertion;
+            if (assertion_options.has_value()) {
+                assertion =
+                    refinement::assert_compiled_policy_exact(
+                        calc, result, prices, *assertion_options,
+                        "solved policy");
+            } else {
+                assertion.status =
+                    refinement::CompiledPolicyAssertionStatus::
+                        ResourceCap;
+                assertion.resource_cap =
+                    "max_solver_owned_bytes";
+                assertion.failure_reason =
+                    "coarse live solve leaves no memory for exact "
+                    "publication assertion";
+            }
+            const auto saturated_add =
+                [](const std::uint64_t lhs,
+                   const std::uint64_t rhs) {
+                    return rhs >
+                                   std::numeric_limits<
+                                       std::uint64_t>::max() -
+                                       lhs
+                               ? std::numeric_limits<
+                                     std::uint64_t>::max()
+                               : lhs + rhs;
+                };
+            result.diagnostics.reforge_frontier_work =
+                assertion.resource_cap == "max_reforge_work"
+                    ? options.max_reforge_work
+                    : std::min(
+                          options.max_reforge_work,
+                          saturated_add(
+                              result.diagnostics.reforge_frontier_work,
+                              assertion.evaluation.reforge_work));
+            PolicyRefinementTelemetry& telemetry =
+                result.diagnostics.policy_refinement;
+            telemetry.memory_limit_bytes =
+                options.max_solver_owned_bytes;
+            telemetry.compiled_assertion_checked =
+                assertion.status !=
+                refinement::CompiledPolicyAssertionStatus::NotRun;
+            telemetry.compiled_policy_proper = assertion.proper;
+            telemetry.zero_off_policy = assertion.zero_off_policy;
+            telemetry.cost_reconciled = assertion.cost_reconciled;
+            const auto assertion_status_name =
+                [](const refinement::CompiledPolicyAssertionStatus status) {
+                    switch (status) {
+                    case refinement::CompiledPolicyAssertionStatus::NotRun:
+                        return "not_run";
+                    case refinement::CompiledPolicyAssertionStatus::Complete:
+                        return "complete";
+                    case refinement::CompiledPolicyAssertionStatus::NoPolicy:
+                        return "no_policy";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            ResourceCap:
+                        return "resource_cap";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            CompilationFailure:
+                        return "compilation_failure";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            ExactEvaluationFailure:
+                        return "exact_evaluation_failure";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            ImproperPolicy:
+                        return "improper_policy";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            IncompleteCost:
+                        return "incomplete_cost";
+                    case refinement::CompiledPolicyAssertionStatus::
+                            CostMismatch:
+                        return "cost_mismatch";
+                    }
+                    return "not_run";
+                };
+            const std::string assertion_status =
+                assertion_status_name(assertion.status);
+            telemetry.status =
+                "exact_assertion_" + assertion_status;
+            const std::uint64_t assertion_memory =
+                saturated_add(
+                    publication_live_bytes,
+                    saturated_add(
+                        assertion.strategy_json.capacity() + 1,
+                        saturated_add(
+                            assertion.parsed_strategy_bytes,
+                            saturated_add(
+                                assertion.economy_bytes,
+                                assertion.evaluation
+                                    .owned_bytes_estimate))));
+            const std::uint64_t assertion_peak =
+                saturated_add(
+                    publication_live_bytes,
+                    saturated_add(
+                        assertion.strategy_json.capacity() + 1,
+                        saturated_add(
+                            assertion.parsed_strategy_bytes,
+                            saturated_add(
+                                assertion.economy_bytes,
+                                assertion.evaluation
+                                    .peak_owned_bytes_estimate))));
+            const std::uint64_t reported_assertion_peak =
+                saturated_add(
+                    publication_external_live_bytes,
+                    assertion.publication_peak_owned_bytes);
+            telemetry.memory_bytes =
+                std::max(telemetry.memory_bytes, assertion_memory);
+            telemetry.peak_memory_bytes =
+                std::max(
+                    telemetry.peak_memory_bytes,
+                    std::max(
+                        assertion_peak,
+                        reported_assertion_peak));
+            peak_owned_bytes =
+                std::max(peak_owned_bytes, telemetry.peak_memory_bytes);
+            if (assertion.status !=
+                    refinement::CompiledPolicyAssertionStatus::
+                        Complete ||
+                !assertion.executable) {
+                const std::string reason =
+                    "policy_exact_publication_assertion: " +
+                    (assertion.failure_reason.empty()
+                         ? std::string{"incomplete"}
+                         : assertion.failure_reason);
+                record_refinement_refusal(
+                    "policy_exact_publication_assertion_" +
+                    assertion_status);
+                revoke_publication(
+                    reason, assertion.resource_cap);
+            }
+        }
         /*
          * The first pass retains and accounts diagnostic payloads before the
          * final byte-cap checks. Refresh policy dispositions now that the
@@ -1085,11 +2023,34 @@ SolveResult SolveWork::Impl::finish() {
             owned_byte_reconciliations;
         result.diagnostics.solve_owned_byte_ledger_max_overestimate =
             owned_byte_ledger_max_overestimate;
-        const std::uint64_t final_live_bytes = estimated_owned_bytes();
+        std::uint64_t final_live_bytes = estimated_owned_bytes();
         peak_owned_bytes = std::max(peak_owned_bytes, final_live_bytes);
+        bool publication_revoked_at_final_cap = false;
         if (final_live_bytes > options.max_solver_owned_bytes) {
-            record_cap("max_solver_owned_bytes");
-            result.converged = false;
+            if (result.policy_available) {
+                result.diagnostics.policy_refinement.status =
+                    "retained_memory_resource_cap";
+                record_refinement_refusal(
+                    "policy_publication_retained_memory_resource_cap");
+                revoke_publication(
+                    "retained solve result reached "
+                    "max_solver_owned_bytes",
+                    "max_solver_owned_bytes");
+                publication_revoked_at_final_cap = true;
+            } else {
+                record_cap("max_solver_owned_bytes");
+                result.converged = false;
+            }
+        }
+        if (publication_revoked_at_final_cap) {
+            finalize_automatic_candidate_diagnostics();
+            final_live_bytes = estimated_owned_bytes();
+            peak_owned_bytes =
+                std::max(peak_owned_bytes, final_live_bytes);
+            if (final_live_bytes > options.max_solver_owned_bytes) {
+                record_cap("max_solver_owned_bytes");
+                result.converged = false;
+            }
         }
         result.diagnostics.solver_owned_bytes_estimate =
             std::max(peak_owned_bytes, estimated_owned_bytes());

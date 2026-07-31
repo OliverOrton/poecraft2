@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 && std::string(argv[1]) == "--solver-eval-only") {
-        run_solver_eval_tests(nullptr);
+        run_solver_eval_tests(argc > 2 ? argv[2] : nullptr);
         std::printf("solver evaluator tests: %d checks, %d failures\n",
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
@@ -44,9 +44,29 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 1 &&
+        std::string(argv[1]) == "--solver-policy-refinement-only") {
+        run_solver_policy_refinement_tests();
+        std::printf(
+            "solver policy-refinement tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     if (argc > 1 && std::string(argv[1]) == "--solver-calc-only") {
         run_solver_calc_tests(nullptr);
         std::printf("solver calc tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-abstract-only") {
+        run_solver_abstract_tests(argc > 2 ? argv[2] : nullptr);
+        std::printf("solver abstract tests: %d checks, %d failures\n",
+                    pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--solver-refinement-only") {
+        run_solver_refinement_tests();
+        std::printf("solver refinement tests: %d checks, %d failures\n",
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
@@ -94,6 +114,7 @@ int main(int argc, char** argv) {
     run_solver_eval_tests(artifact_dir);
     run_solver_api_tests(artifact_dir);
     run_solver_s8_3_tests();
+    run_solver_refinement_tests();
 
     std::printf("engine tests: %d checks, %d failures\n", pctest::g_checks,
                 pctest::g_failures);

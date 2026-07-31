@@ -309,6 +309,12 @@ void run_temporary_blocker_price_flip() {
         add_mod(start, *session, mod);
     }
     const std::uint32_t state = calc.intern_item(start);
+    PC_CHECK(calc.is_candidate_operator_admitted_for_state(state, exalt));
+    PC_CHECK(calc.is_candidate_operator_admitted_for_state(state, restart));
+    PC_CHECK(!calc.is_candidate_operator_admitted_for_state(
+        state, static_cast<std::uint32_t>(calc.operators().size())));
+    PC_CHECK(!calc.is_candidate_operator_admitted_for_state(
+        static_cast<std::uint32_t>(calc.state_count()), exalt));
     check_owned_byte_ledger(calc);
     const StateLocalAutomaticBatch blocker_batch = admit_automatic(calc, state, {
         {"exalt", 10.0},
@@ -334,6 +340,29 @@ void run_temporary_blocker_price_flip() {
     PC_CHECK(blocker != kNoId);
     PC_CHECK(neutral == kNoId);
     if (blocker == kNoId) return;
+    PC_CHECK(calc.is_candidate_operator_admitted_for_state(state, blocker));
+    pc_item_state unrelated;
+    pc_item_clear(&unrelated);
+    unrelated.rarity = PC_RARITY_RARE;
+    const std::uint32_t unrelated_state = calc.intern_item(unrelated);
+    PC_CHECK(calc.is_candidate_operator_admitted_for_state(
+        unrelated_state, exalt));
+    PC_CHECK(!calc.is_candidate_operator_admitted_for_state(
+        unrelated_state, blocker));
+    const StateLocalAutomaticBatch unrelated_batch = admit_automatic(
+        calc, unrelated_state,
+        {{"exalt", 10.0},
+         {"base", 100.0},
+         {"scour", 1.0},
+         {"bench:s83_mod_8", 2.0}});
+    PC_CHECK(!unrelated_batch.cached);
+    PC_CHECK(
+        calc.is_candidate_operator_admitted_for_state(
+            unrelated_state, blocker) ==
+        (std::find(
+             unrelated_batch.admitted_operators.begin(),
+             unrelated_batch.admitted_operators.end(),
+             blocker) != unrelated_batch.admitted_operators.end()));
     const OptionKernel& blocker_kernel = calc.option_kernel(state, blocker);
     check_owned_byte_ledger(calc);
     PC_CHECK(blocker_kernel.legal);
@@ -638,6 +667,9 @@ void run_protected_price_flip() {
         action.cost_keys = {action.id};
         action.preservation.destructive_renewal = true;
         action.preservation.preserves_fractured_affixes = true;
+        action.refinement =
+            derive_action_refinement_contract(*session, action);
+        validate_action_refinement_contract(action);
         unsupported.index_by_id.emplace(
             action.id,
             static_cast<std::uint32_t>(unsupported.actions.size()));
@@ -997,6 +1029,551 @@ void run_carrier_relative_renewal_templates() {
     PC_CHECK(&fractured_kernel != &blocked_kernel);
 }
 
+void run_fixed_option_product_parent_refinement_trigger() {
+    auto session = make_automatic_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(false, true);
+    goal.automatic_candidates = false;
+    FixedOptionSpec protected_side;
+    protected_side.kind = FixedOptionKind::ProtectedSide;
+    protected_side.side = PC_SIDE_PREFIX;
+    protected_side.action_id = "chaos";
+    goal.fixed_options.push_back(protected_side);
+
+    const std::uint32_t restart =
+        registry.index_by_id.at("restart");
+    CalcContext calc(
+        session, goal, registry, {restart},
+        false, true, false, std::nullopt, {}, true);
+    PC_CHECK(calc.product_solver_parent());
+    const std::uint32_t protected_chaos =
+        operator_by_fragment(
+            calc, "option:protected_side:prefix:chaos");
+    PC_CHECK(protected_chaos != kNoId);
+    if (protected_chaos == kNoId) return;
+
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    add_mod(start, *session, kPrefixJunkA);
+    const SolveResult solved = solve(
+        calc, start,
+        {{"base", 100.0},
+         {"chaos", 1.0},
+         {"bench:s83_mod_9", 1.0}});
+
+    PC_CHECK(solved.policy_available);
+    PC_CHECK(
+        solved.policy[solved.start_state].kind ==
+        PlannerOperatorKind::FixedOption);
+    PC_CHECK(
+        solved.policy[solved.start_state].index ==
+        protected_chaos);
+    PC_CHECK(
+        solved.diagnostics.policy_refinement.triggers > 0);
+    PC_CHECK(std::any_of(
+        solved.diagnostics.policy_refinement
+            .counterexample_samples.begin(),
+        solved.diagnostics.policy_refinement
+            .counterexample_samples.end(),
+        [](const std::string& witness) {
+            return witness.find(
+                       "\"operator_kind\":\"fixed_option\"") !=
+                   std::string::npos;
+        }));
+    PC_CHECK(
+        solved.diagnostics.policy_compatibility_supported);
+    PC_CHECK(
+        !solved.refined_policy_artifact.strategy_json.empty());
+    PC_CHECK(
+        solved.termination ==
+        SolveTermination::ExactClosed);
+}
+
+void run_planner_operator_import_authority() {
+    auto session = make_automatic_session(true);
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal = automatic_goal(false, true);
+    goal.automatic_candidates = false;
+    FixedOptionSpec renewal;
+    renewal.kind = FixedOptionKind::Renewal;
+    renewal.program_action_ids = {"scour", "alchemy"};
+    renewal.exit_goal_slots = {0};
+    renewal.exit_min_satisfied = 1;
+    renewal.automatic_kind =
+        AutomaticCandidateKind::ConstructiveRenewal;
+    renewal.relevant_goal_mask = 1;
+    renewal.constructive_finish_action_id = "bench:s83_mod_6";
+    goal.fixed_options.push_back(renewal);
+
+    const auto candidates_for =
+        [](const ActionRegistry& value) {
+        return std::vector<std::uint32_t>{
+            value.index_by_id.at("scour"),
+            value.index_by_id.at("alchemy"),
+            value.index_by_id.at("restart")};
+    };
+    CalcContext source(
+        session, goal, registry, candidates_for(registry),
+        false, true, true);
+    const std::uint32_t source_option = operator_by_fragment(
+        source, "option:renewal:scour+alchemy");
+    PC_CHECK(source_option != kNoId);
+    if (source_option == kNoId) return;
+    const PlannerOperator& source_planner =
+        source.operators().at(source_option);
+    PC_CHECK(
+        source_planner.constructive_finish_action_id ==
+        "bench:s83_mod_6");
+    PC_CHECK(
+        source_planner.primitive_program_action_ids ==
+        std::vector<std::string>({"scour", "alchemy"}));
+    const PlannerOperatorRuntimeSemantics source_runtime =
+        planner_operator_runtime_semantics(
+            source_planner, registry);
+    PC_CHECK(source_runtime.ordered_program.size() == 2);
+    PC_CHECK(
+        source_runtime.ordered_program[0].action ==
+        source_planner.primitive_program[0]);
+    PC_CHECK(
+        source_runtime.ordered_program[1].action ==
+        source_planner.primitive_program[1]);
+    PC_CHECK(
+        source_runtime.ordered_program[0].refinement.complete());
+    PC_CHECK(
+        source_runtime.ordered_program[1].refinement.complete());
+    PC_CHECK(source_runtime.execution_paths.size() == 1);
+    PC_CHECK(
+        source_runtime.execution_paths.front().size() ==
+        source_runtime.ordered_program.size());
+    for (std::size_t step = 0;
+         step < source_runtime.ordered_program.size(); ++step) {
+        PC_CHECK(
+            source_runtime.execution_paths.front()[step].action ==
+            source_runtime.ordered_program[step].action);
+    }
+    std::vector<std::uint32_t> expected_dependencies =
+        source_planner.primitive_program;
+    std::sort(
+        expected_dependencies.begin(),
+        expected_dependencies.end());
+    expected_dependencies.erase(
+        std::unique(
+            expected_dependencies.begin(),
+            expected_dependencies.end()),
+        expected_dependencies.end());
+    PC_CHECK(
+        source_runtime.action_dependencies ==
+        expected_dependencies);
+    PC_CHECK(
+        std::find(
+            source_runtime.action_dependencies.begin(),
+            source_runtime.action_dependencies.end(),
+            source_planner.constructive_finish_action) ==
+        source_runtime.action_dependencies.end());
+    PC_CHECK(
+        source_runtime.compatibility_refinement.complete());
+
+    PlannerOperator reversed_program = source_planner;
+    std::reverse(
+        reversed_program.primitive_program.begin(),
+        reversed_program.primitive_program.end());
+    std::reverse(
+        reversed_program.primitive_program_action_ids.begin(),
+        reversed_program.primitive_program_action_ids.end());
+    const PlannerOperatorRuntimeSemantics reversed_runtime =
+        planner_operator_runtime_semantics(
+            reversed_program, registry);
+    PC_CHECK(
+        reversed_runtime.ordered_program.front().action ==
+        reversed_program.primitive_program.front());
+    PC_CHECK(
+        reversed_runtime.ordered_program.back().action ==
+        reversed_program.primitive_program.back());
+    PC_CHECK(
+        reversed_runtime.action_dependencies ==
+        source_runtime.action_dependencies);
+    PC_CHECK(
+        action_refinement_contract_signature(
+            reversed_runtime.compatibility_refinement) ==
+        action_refinement_contract_signature(
+            source_runtime.compatibility_refinement));
+
+    const std::uint32_t source_chaos =
+        registry.index_by_id.at("chaos");
+    PlannerOperator conditional_program = source_planner;
+    conditional_program.conditional_action = source_chaos;
+    conditional_program.conditional_action_id = "chaos";
+    const PlannerOperatorRuntimeSemantics conditional_runtime =
+        planner_operator_runtime_semantics(
+            conditional_program, registry);
+    PC_CHECK(
+        conditional_runtime.ordered_program.size() ==
+        source_runtime.ordered_program.size() + 1);
+    PC_CHECK(
+        conditional_runtime.ordered_program.back().action ==
+        source_chaos);
+    const auto has_runtime_path =
+        [](const PlannerOperatorRuntimeSemantics& runtime,
+           const std::vector<std::uint32_t>& actions) {
+            return std::any_of(
+                runtime.execution_paths.begin(),
+                runtime.execution_paths.end(),
+                [&](const std::vector<
+                        PlannerOperatorRuntimeStep>& path) {
+                    if (path.size() != actions.size()) return false;
+                    for (std::size_t index = 0;
+                         index < path.size(); ++index) {
+                        if (path[index].action != actions[index]) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+        };
+    PC_CHECK(conditional_runtime.execution_paths.size() == 3);
+    PC_CHECK(has_runtime_path(
+        conditional_runtime, {source_chaos}));
+    PC_CHECK(has_runtime_path(
+        conditional_runtime,
+        source_planner.primitive_program));
+    std::vector<std::uint32_t> prepared_then_conditional =
+        source_planner.primitive_program;
+    prepared_then_conditional.push_back(source_chaos);
+    PC_CHECK(has_runtime_path(
+        conditional_runtime,
+        prepared_then_conditional));
+    conditional_program.primitive_program.push_back(
+        source_chaos);
+    conditional_program.primitive_program_action_ids.push_back(
+        "chaos");
+    const PlannerOperatorRuntimeSemantics included_conditional_runtime =
+        planner_operator_runtime_semantics(
+            conditional_program, registry);
+    PC_CHECK(
+        included_conditional_runtime.ordered_program.size() ==
+        conditional_program.primitive_program.size());
+
+    ActionRegistry permuted = registry;
+    std::reverse(
+        permuted.actions.begin(), permuted.actions.end());
+    permuted.index_by_id.clear();
+    for (std::uint32_t index = 0;
+         index < permuted.actions.size(); ++index) {
+        permuted.index_by_id.emplace(
+            permuted.actions[index].id, index);
+    }
+    CalcContext destination(
+        session, goal, permuted, candidates_for(permuted),
+        false, true, true);
+    const std::uint32_t destination_option =
+        destination.import_planner_operator(
+            source_planner, false);
+    PC_CHECK(
+        destination_option <
+        destination.operators().size());
+    const PlannerOperator& destination_planner =
+        destination.operators().at(destination_option);
+    PC_CHECK(planner_operator_structurally_equal(
+        source_planner, destination_planner));
+    PC_CHECK(
+        planner_operator_semantic_key(source_planner) ==
+        planner_operator_semantic_key(destination_planner));
+    PC_CHECK(
+        source_planner.primitive_program !=
+        destination_planner.primitive_program);
+    for (std::size_t i = 0;
+         i < destination_planner.primitive_program.size(); ++i) {
+        PC_CHECK(
+            permuted.actions.at(
+                destination_planner.primitive_program[i]).id ==
+            destination_planner
+                .primitive_program_action_ids[i]);
+    }
+
+    const std::uint32_t destination_chaos =
+        destination.import_planner_operator(
+            source.operators().at(source_chaos), false);
+    PC_CHECK(
+        destination_chaos ==
+        permuted.index_by_id.at("chaos"));
+    PC_CHECK(destination_chaos != source_chaos);
+    PC_CHECK(
+        destination.operators()
+            .at(destination_chaos)
+            .primitive_action_id == "chaos");
+    const PlannerOperatorRuntimeSemantics primitive_runtime =
+        planner_operator_runtime_semantics(
+            source.operators().at(source_chaos), registry);
+    PC_CHECK(primitive_runtime.ordered_program.size() == 1);
+    PC_CHECK(primitive_runtime.execution_paths.size() == 1);
+    PC_CHECK(
+        primitive_runtime.execution_paths.front().size() == 1);
+    PC_CHECK(
+        primitive_runtime.execution_paths.front().front().action ==
+        source_chaos);
+    PC_CHECK(
+        primitive_runtime.ordered_program.front().action ==
+        source_chaos);
+    PC_CHECK(
+        primitive_runtime.action_dependencies ==
+        std::vector<std::uint32_t>{source_chaos});
+    PC_CHECK(
+        action_refinement_contract_signature(
+            primitive_runtime.compatibility_refinement) ==
+        action_refinement_contract_signature(
+            registry.actions.at(source_chaos).refinement));
+
+    PlannerOperator imprint_runtime_planner;
+    imprint_runtime_planner.id = "option:test_imprint_runtime";
+    imprint_runtime_planner.kind =
+        PlannerOperatorKind::FixedOption;
+    imprint_runtime_planner.option_kind =
+        FixedOptionKind::ImprintRetry;
+    imprint_runtime_planner.primitive_program = {source_chaos};
+    imprint_runtime_planner.primitive_program_action_ids = {
+        "chaos"};
+    imprint_runtime_planner.bestiary_create_action = 0;
+    imprint_runtime_planner.bestiary_create_action_id =
+        "bestiary:imprint";
+    imprint_runtime_planner.bestiary_restore_action = 1;
+    imprint_runtime_planner.bestiary_restore_action_id =
+        "bestiary:restore_imprint";
+    const PlannerOperatorRuntimeSemantics imprint_runtime =
+        planner_operator_runtime_semantics(
+            imprint_runtime_planner, registry);
+    PC_CHECK(imprint_runtime.ordered_program.size() == 2);
+    PC_CHECK(
+        imprint_runtime.ordered_program.front().action == kNoId);
+    PC_CHECK(
+        (imprint_runtime.ordered_program.front()
+             .refinement.observed_item_features &
+         refinement_feature(RefinementFeature::Rarity)) != 0);
+    PC_CHECK(
+        (imprint_runtime.ordered_program.front()
+             .refinement.observed_item_features &
+         refinement_feature(RefinementFeature::Corrupted)) != 0);
+    PC_CHECK(
+        (imprint_runtime.ordered_program.front()
+             .refinement.observed_item_features &
+         refinement_feature(RefinementFeature::Mirrored)) != 0);
+    PC_CHECK(imprint_runtime.execution_paths.size() == 1);
+    PC_CHECK(
+        imprint_runtime.execution_paths.front().size() ==
+        imprint_runtime.ordered_program.size());
+    PC_CHECK(
+        imprint_runtime.action_dependencies ==
+        std::vector<std::uint32_t>{source_chaos});
+
+    PlannerOperator presentation = source_planner;
+    presentation.id = "presentation-only-id";
+    presentation.display_name = "Presentation only";
+    presentation.primitive_program.assign(
+        presentation.primitive_program.size(), kNoId - 1);
+    presentation.constructive_finish_action = kNoId - 2;
+    PC_CHECK(planner_operator_structurally_equal(
+        source_planner, presentation));
+    PC_CHECK(
+        planner_operator_semantic_key(source_planner) ==
+        planner_operator_semantic_key(presentation));
+
+    const auto expect_distinct =
+        [&](const PlannerOperator& changed) {
+        PC_CHECK(!planner_operator_structurally_equal(
+            source_planner, changed));
+        PC_CHECK(
+            planner_operator_semantic_key(source_planner) !=
+            planner_operator_semantic_key(changed));
+    };
+    {
+        PlannerOperator changed = source_planner;
+        changed.kind = PlannerOperatorKind::Primitive;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.option_kind = FixedOptionKind::ProtectedRepeat;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.primitive_action_id = "chaos";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.primitive_program_action_ids.push_back("chaos");
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.intended_side = PC_SIDE_PREFIX;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.exit_goal_slots.push_back(7);
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        ++changed.exit_min_satisfied;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.carrier_goal_slot = 0;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.conditional_action_id = "fracture";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.bestiary_create_action_id =
+            "bestiary:create";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.bestiary_restore_action_id =
+            "bestiary:restore";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.automatic_kind =
+            AutomaticCandidateKind::Imprint;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.relevant_goal_mask ^= 2;
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.setup_action_id = "scour";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.followup_action_id = "alchemy";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.cleanup_action_id = "scour";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.constructive_finish_action_id =
+            "bench:s83_mod_7";
+        expect_distinct(changed);
+    }
+    {
+        PlannerOperator changed = source_planner;
+        changed.resource_quantities.front().second += 1.0;
+        expect_distinct(changed);
+    }
+
+    const std::size_t before_import =
+        destination.operators().size();
+    PlannerOperator alternate_finish = source_planner;
+    alternate_finish.constructive_finish_action =
+        registry.index_by_id.at("bench:s83_mod_7");
+    alternate_finish.constructive_finish_action_id =
+        "bench:s83_mod_7";
+    const PlannerOperatorRuntimeSemantics alternate_finish_runtime =
+        planner_operator_runtime_semantics(
+            alternate_finish, registry);
+    PC_CHECK(
+        alternate_finish_runtime.action_dependencies ==
+        source_runtime.action_dependencies);
+    PC_CHECK(
+        alternate_finish_runtime.ordered_program.size() ==
+        source_runtime.ordered_program.size());
+    for (std::size_t i = 0;
+         i < source_runtime.ordered_program.size(); ++i) {
+        PC_CHECK(
+            alternate_finish_runtime.ordered_program[i].action ==
+            source_runtime.ordered_program[i].action);
+        PC_CHECK(
+            action_refinement_contract_signature(
+                alternate_finish_runtime
+                    .ordered_program[i]
+                    .refinement) ==
+            action_refinement_contract_signature(
+                source_runtime.ordered_program[i].refinement));
+    }
+    PC_CHECK(
+        action_refinement_contract_signature(
+            alternate_finish_runtime.compatibility_refinement) ==
+        action_refinement_contract_signature(
+            source_runtime.compatibility_refinement));
+    const std::uint32_t imported =
+        destination.import_planner_operator(
+            alternate_finish, true);
+    PC_CHECK(imported == before_import);
+    PC_CHECK(
+        destination.operators().size() ==
+        before_import + 1);
+    PC_CHECK(
+        destination.is_state_local_automatic_operator(
+            imported));
+    PC_CHECK(
+        destination.registry().actions.at(
+            destination.operators().at(imported)
+                .constructive_finish_action).id ==
+        "bench:s83_mod_7");
+    PC_CHECK(
+        destination.import_planner_operator(
+            alternate_finish, true) == imported);
+    PC_CHECK(
+        destination.operators().size() ==
+        before_import + 1);
+    check_owned_byte_ledger(destination);
+
+    bool incomplete_refused = false;
+    try {
+        PlannerOperator incomplete = alternate_finish;
+        incomplete.constructive_finish_action_id.clear();
+        (void)destination.import_planner_operator(
+            incomplete, true);
+    } catch (const std::invalid_argument&) {
+        incomplete_refused = true;
+    }
+    PC_CHECK(incomplete_refused);
+
+    bool unknown_refused = false;
+    try {
+        PlannerOperator unknown = alternate_finish;
+        unknown.constructive_finish_action_id =
+            "bench:not-in-registry";
+        (void)destination.import_planner_operator(
+            unknown, true);
+    } catch (const std::invalid_argument&) {
+        unknown_refused = true;
+    }
+    PC_CHECK(unknown_refused);
+
+    bool invalid_runtime_role_refused = false;
+    try {
+        PlannerOperator invalid_runtime_role =
+            source_planner;
+        invalid_runtime_role.setup_action = source_chaos;
+        invalid_runtime_role.setup_action_id = "chaos";
+        (void)destination.import_planner_operator(
+            invalid_runtime_role, true);
+    } catch (const std::invalid_argument&) {
+        invalid_runtime_role_refused = true;
+    }
+    PC_CHECK(invalid_runtime_role_refused);
+}
+
 } // namespace
 
 void run_solver_s8_3_tests() {
@@ -1006,4 +1583,6 @@ void run_solver_s8_3_tests() {
     run_fracture_price_flip();
     run_incomplete_dependency_refusals();
     run_carrier_relative_renewal_templates();
+    run_fixed_option_product_parent_refinement_trigger();
+    run_planner_operator_import_authority();
 }

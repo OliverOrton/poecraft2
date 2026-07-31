@@ -26,6 +26,13 @@ generated corpus lives in
 [seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
 stamp does not claim rendered-browser review or a mechanic ruling.
 
+The action-observation and policy-guided refinement sections below are the
+durable contract selected by the current
+[active boundary](../active/policy-guided-exact-refinement.md). Portfolio
+availability, refusal-count, and compiled-reconciliation results remain
+qualification evidence for that boundary and are not claimed on this page
+until its final archive exists.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,
@@ -223,6 +230,11 @@ Fixed and automatic options are solver operators over exact primitive
 programs. They carry complete exit distributions, resource quantities, choice
 groups, and compilation recipes. They never become opaque simulator actions:
 a selected option compiles back into ordinary strategy operations and routers.
+An observed-choice fixed program keys every choice group by the exact
+pre-choice observation carrier as well as the offered modifier and successor.
+Preferences and compiled branches from one observation carrier never match an
+offer from another carrier, even when the modifier ID or projected successor
+class is otherwise equal.
 
 Product-local Fracture is the one deliberate parent/local composition. For a
 coarse carrier with `n` live affixes and `k` provably distinct acceptable
@@ -242,6 +254,64 @@ recorded as deferred scope work in the
 Code authority:
 `engine/src/solver_registry.cpp`, `engine/src/solver_options.cpp`, and
 `engine/src/solver_internal.hpp`.
+
+### Action Observation And Refinement Contract
+
+Every admitted action descriptor carries one versioned, engine-owned
+refinement contract. Registry construction derives and canonicalizes the
+contract from the action type and parameters, then validates it before the
+action can enter Calculator or Solve. A missing schema, contradictory
+selector, unclassified item feature, or otherwise incomplete contract is an
+admission error. A future ordinary action therefore adds its mechanic
+semantics and focused contract tests; it does not add a branch to the
+refinement, compiler, or evaluator algorithms.
+
+This is one shared authority, not parallel solver, compiler, and evaluator
+tables. Policy lifting, local Bellman repair, strategy routing, and exact graph
+evaluation all consume the admitted descriptor contract. Contract validation
+therefore rejects incomplete future mechanics before search can select them,
+instead of turning a produced policy into a late compatibility refusal.
+
+The shared feature vocabulary separates what an action reads from what source
+state can survive it:
+
+- item observations include rarity and side counts, crafted/fractured/Veiled
+  summaries, metamod locks and pool blocks, influence, separate Eldritch
+  tiers/presence/dominance, and the item flags used by legality;
+- affix observations include side, complete modifier-group exclusion effect,
+  goal status/tier class, crafted/fractured/Veiled state, the declared
+  classification-tag dimensions, and required-level class;
+- scoped affix selectors are unions of conjunctions over side,
+  crafted/fractured/Veiled state, locked side, Eldritch dominant or
+  non-dominant side, and required tags; and
+- preservation and destruction classify source values, not values newly
+  created by the action. Their scopes may overlap when one stochastic outcome
+  removes a carrier and another preserves it.
+
+The contract is intentionally minimal. An action does not retain a feature
+merely because the engine can name it. Downstream goal or router observations
+propagate backward only through source features the selected action can
+preserve. Conditional mechanics remain declarative: for example, Eldritch
+Chaos selects dominant/non-dominant sides through generic traits, while
+lock-respecting renewals select fractured-or-locked carriers. The refinement
+algorithm never switches on `regal`, `exalt`, or another action name.
+
+`modifier_exclusion_effect_signature` is the shared exact group authority. It
+is the complete set of modifiers excluded by an occupied modifier's groups.
+Different modifier IDs with equal signatures remain mergeable. Pool-add
+actions observe the signatures of every occupied explicit, including a
+modifier represented by a goal slot; they never choose a representative goal
+or junk modifier. Goal status/tier remains a separate terminal and routing
+observation.
+
+This contract belongs to the native engine. TypeScript may select a returned
+action descriptor, require complete pricing, display telemetry, and transfer
+compiled strategy JSON. It does not infer observation features, preservation
+scopes, exclusion equivalence, or collapse rules.
+
+Code authority:
+`engine/src/solver_internal.hpp`, `engine/src/solver_registry.cpp`, and
+`engine/src/solver_refinement.cpp`.
 
 ## Exact Transition Provider
 
@@ -489,6 +559,53 @@ A solve performs these implemented stages:
 7. Extract deterministic policy choices, observation-owned Unveil choices,
    values, reachability, diagnostics, hashes, and optional solve-log records.
 
+### Policy-Guided Exact Publication Refinement
+
+Broad discovery may use the qualified coarse product parent, but publication
+must not materialize one representative modifier identity from a coarse
+class. The publication-refinement contract is:
+
+1. Start from the concrete solve item and enumerate strict refinements only
+   for policy-reachable coarse states.
+2. Form each state/action observation signature from the selected action's
+   contract, terminal goal status, and downstream policy-router observations.
+   Different selected decisions receive class-local distinguishing predicates;
+   a feature needed for one pair is not unioned into unrelated policy states.
+   Propagate required observations backward through preservation scopes to a
+   deterministic fixed point. This propagation is over policy/state pairs, so
+   cycles do not stop after one pass.
+3. Merge exact carriers only after proving lumpability: the selected semantic
+   operator and immediate cost match, and its exact kernel has equal
+   probability mass into every successor refinement class. Literal modifier
+   IDs are not a merge key when their observed exclusion and goal/tier
+   signatures are equal.
+4. If one selected action and continuation is sound for the whole class,
+   retain the coarse discovery value and compile an exact router over the
+   refined classes.
+5. If exact carriers have different kernels, values, or best actions, record
+   the differing feature as a counterexample, schedule only that affected
+   state/action region, and reuse the ordinary sparse-row materialization,
+   observed-choice tie rule, Bellman row evaluation, and Howard selection.
+   The shared refinement evaluator proves exact SCC properness for each trial;
+   the compiled whole-graph evaluator remains the final independent
+   reconciliation assertion. Propagate changed values through the existing
+   graph and repeat to the same fixed point.
+
+The effect contract also owns collapse. Restart and a full destructive reroll
+return to the coarse parent whenever no downstream-observed source feature
+survives. A side-preserving action retains only the selected preserved side;
+a lock- or fracture-preserving renewal retains only matching carriers.
+Equivalent exclusion signatures stay merged. Values, kernels, or policy
+witnesses from incompatible refinement classes are never combined.
+
+Refinement is bounded by named state, class, transition, exact-kernel,
+memory, and round limits. Telemetry reports triggers, exact work, classes,
+collapse events, local re-optimizations, counterexamples, and refusal causes
+with bounded samples. Reaching a declared limit may withhold publication; a
+coarse exclusion-identity witness by itself is input to refinement, not a
+successful compatibility refusal. The compatibility audit remains a final
+assertion over the refined executable policy.
+
 Focused expansion computes finite constructive upper bounds and global lower
 bounds while extending relevant fringe states. A zero gap is an exact closure
 proof and may finish directly without a separate outer Bellman phase. A
@@ -698,15 +815,22 @@ base.
 
 Compilation refuses a policy when the ordinary strategy vocabulary cannot
 represent it or when configured graph/output caps are exceeded. It does not
-invent a second execution format.
+invent a second execution format. Its telemetry reports `peak_owned_bytes`
+for compiler-owned working buffers, including structured refinement condition
+programs and the growing JSON document, but excluding the retained calculator
+and Solve result charged by the caller.
 
-Publication adds an exact-executability check for the deliberately coarse
-product parent. Pool-add actions and preserving renewals that observe
-unrepresented exclusion identity are refused with
-`coarse_parent_requires_exact_exclusion_identity`. A resource-capped renewal
-without the exact fixed-renewal witness is refused with
-`coarse_parent_capped_renewal_without_exact_witness`. A witnessed primitive
-renewal whose expected action count exceeds the product Simulator's
+Publication applies the policy-guided exact-refinement contract before this
+compiler boundary. The compiler consumes refined policy classes and emits
+ordinary deterministic routers; it does not choose a representative modifier
+identity or special-case the semantics of Regal, Exalt, or another pool
+action. The compatibility audit is a final assertion that every selected
+action and continuation has an exact route. An exclusion-identity witness
+feeds refinement rather than serving as the normal completed result.
+
+A resource-capped renewal without the exact fixed-renewal witness is refused
+with `coarse_parent_capped_renewal_without_exact_witness`. A witnessed
+primitive renewal whose expected action count exceeds the product Simulator's
 100,000-action run limit is refused with
 `primitive_renewal_expected_actions_exceed_simulator_cap`. These checks do not
 remove candidates, alter transitions, or change the solver objective; they
@@ -721,9 +845,13 @@ Code authority: `engine/src/solver_compile.cpp`,
 The exact evaluator derives a strict layout from the compiled graph's actions,
 family/mod count observations, and condition targets; discovers `(graph node,
 abstract state)` pairs; and solves the resulting absorbing graph by SCC. It
-contracts compiler-generated policy routing without losing exact node/edge
-flow and uses dense, rank-one, or matrix-free preconditioned component solves
-as appropriate. It reports terminal probability,
+uses semantic exact-state keys rather than discovery-order state IDs for
+deterministic quotient identities. Compiler-generated policy routing can be
+contracted for the value solve, while exact member and absorption attribution
+is retained separately so node/edge flow, terminal input states, and
+occupancy are not assigned to a representative carrier. Dense, rank-one, or
+matrix-free preconditioned component solves are used as appropriate. It
+reports terminal probability,
 action-not-applied/no-edge/unresolved attribution, expected actions and
 materials, node/edge flow, incoming state classes, and S8.4 accounting and
 review projections. The evaluator internally retains exact abstract-state,
@@ -747,12 +875,13 @@ resampled or approximated. The stateful API has
 begin/step/finish/destroy calls, cooperative progress, owned/output byte caps,
 and live/peak memory statistics.
 
-For a clean start and a compiled graph containing only full destructive
-renewals (or Restart to that same clean start), exact evaluation may reuse the
-coarse renewal layout: every operation replaces all explicit affixes before a
-router can observe them, so cross-operation exclusion identity is absent. Any
-authored carrier, pool-add/protection action, partial-side renewal, Veiled
-route, or other observing vocabulary retains strict group identity.
+For a clean start and a compiled graph whose shared action contracts destroy
+every downstream-observed explicit feature before routing (including Restart
+to that same clean start), exact evaluation may reuse the coarse renewal
+layout. Any authored carrier, pool-add/protection action, partial-side
+renewal, Veiled route, or other observing vocabulary retains the exact
+features its contract requires. This boundary is derived from the same
+contract as Solve and compilation, not from an evaluator action-name list.
 
 Code authority: `engine/src/solver_eval.cpp` and
 `engine/src/solver_api.cpp`.
@@ -809,6 +938,48 @@ reforge work, cache requests/hits, wall time, and retained selected-allocation
 growth to action IDs. It also compares lower- and executable-upper-policy
 selected abstract-state counts. These are profiling observations only:
 benchmark action non-use is explicitly never a pruning certificate.
+
+The versioned telemetry object `policy_refinement` is the bounded publication
+refinement ledger. `status` names the completed or failed publication stage;
+`resource_cap` is null unless that stage reached a declared public Solve cap.
+`exact_states`, `exact_transitions`, and `exact_kernels` are cumulative strict
+work across lift and local-re-optimization passes, while
+`retained_exact_states` and `exact_classes` describe the final shared
+refinement graph. Kernel cache hits and exact-state interner reuses are
+reported separately. Neither is an identity-collapse event: `collapse_events`
+counts only contract-driven loss of a downstream observation after an action
+destroys it.
+
+The feature telemetry uses the same numeric authority as the contract.
+`collapse_destroyed_feature_mask` and `collapse_preserved_feature_mask` use
+`RefinementFeature` bit positions. `collapse_events_by_feature` and
+`preservation_events_by_feature` are dense arrays indexed by that enum's
+declaration order, from `Rarity` through `ModifierMetamodRole`; the terminal
+`Count` value has no array entry. Consumers must not infer a different field
+order or index those arrays by frontend names.
+
+The ledger reports backward-observation, selected-action routing,
+observation-propagation, probabilistic-partition, and local-re-optimization
+rounds separately, as well as their bounded aggregate. Its fixed-point object
+records completion and lumpability proof work; the class-policy and compiled
+assertion objects independently record properness, zero off-policy mass, and
+exact cost reconciliation. `memory_bytes` is the largest live end-of-phase
+estimate while publication work coexists with the retained solve—not a
+post-return allocation count—while `peak_memory_bytes`,
+`memory_limit_bytes`, and `retained_artifact_bytes` expose the peak, declared
+limit, and retained exact strategy payload. Retained counterexample objects
+and engine-owned refusal strings obey the diagnostic sample cap and report
+retained, omitted, and limit counts. These fields describe exact work and
+named limits; they do not authorize a frontend fallback or weaken cost
+reconciliation.
+
+Local repair work is explicit: `local_state_action_rows_scheduled` counts
+witness-selected exact rows offered to repair,
+`local_state_action_rows_evaluated` counts rows actually evaluated, and
+`local_policy_changes` and `local_value_changes` count accepted exact policy
+and value mutations. `local_reoptimizations` and
+`local_reoptimization_rounds` retain their operator- and round-level totals;
+none of these counters includes broad coarse discovery.
 
 Product-local Fracture telemetry separately records source rows, raw physical
 outcomes, retained hit and aggregate-miss entries, miss-state IDs, shape

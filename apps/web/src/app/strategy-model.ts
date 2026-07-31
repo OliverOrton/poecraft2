@@ -636,6 +636,8 @@ export function conditionLabel(condition?: StrategyCondition, fallback = ""): st
             return rangeLabel("matching mods", condition);
         case "has_unveil_option":
             return condition.mod_key ? "has preferred unveil option" : "has unveil option";
+        case "observation_signature":
+            return "exact policy state";
         case "all":
         case "all_of":
             return compositeConditionLabel("ALL", childConditions(condition));
@@ -1096,6 +1098,12 @@ function validateCondition(
         "influence_bits",
         "eldritch_tier",
         "has_unveil_option",
+        /*
+         * Engine-authored exact-policy routers carry a versioned observation
+         * program. Preserve and accept that payload opaquely; native strategy
+         * compilation remains its shape and semantic authority.
+         */
+        "observation_signature",
         "rarity_is",
         "open_prefix_count",
         "open_suffix_count",

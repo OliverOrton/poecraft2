@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "poecraft/session.h"
 #include "solver_internal.hpp"
+#include "solver_refinement.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -54,6 +55,91 @@ int int_member(const Value& object, const char* key, int fallback) {
         invalid(std::string(key) + " must be a number");
     }
     return static_cast<int>(value->number);
+}
+
+std::uint32_t uint_member(
+        const Value& object,
+        const char* key,
+        const std::uint32_t fallback) {
+    const Value* value = object.find(key);
+    if (value == nullptr) return fallback;
+    if (value->type != Type::Number ||
+        !std::isfinite(value->number) ||
+        value->number < 0.0 ||
+        value->number >
+            static_cast<double>(
+                std::numeric_limits<std::uint32_t>::max()) ||
+        std::floor(value->number) != value->number) {
+        invalid(std::string(key) + " must be an unsigned integer");
+    }
+    return static_cast<std::uint32_t>(value->number);
+}
+
+std::uint64_t parse_hex_u64(
+        const Value& value,
+        const char* subject) {
+    if (value.type != Type::String || value.string.size() != 16) {
+        invalid(std::string(subject) +
+                " must be a 16-digit lowercase hexadecimal string");
+    }
+    std::uint64_t parsed = 0;
+    for (const char character : value.string) {
+        std::uint8_t digit = 0;
+        if (character >= '0' && character <= '9') {
+            digit = static_cast<std::uint8_t>(character - '0');
+        } else if (character >= 'a' && character <= 'f') {
+            digit = static_cast<std::uint8_t>(
+                character - 'a' + 10);
+        } else {
+            invalid(std::string(subject) +
+                    " must use lowercase hexadecimal digits");
+        }
+        parsed = (parsed << 4) | digit;
+    }
+    return parsed;
+}
+
+std::vector<std::uint64_t> parse_hex_vector(
+        const Value& object,
+        const char* key) {
+    const Value& values =
+        require_object_member(object, key, Type::Array);
+    std::vector<std::uint64_t> parsed;
+    parsed.reserve(values.array.size());
+    for (const Value& value : values.array) {
+        parsed.push_back(parse_hex_u64(value, key));
+    }
+    return parsed;
+}
+
+std::vector<std::uint32_t> parse_sorted_u32_array(
+        const Value& object,
+        const char* key) {
+    const Value& values =
+        require_object_member(object, key, Type::Array);
+    std::vector<std::uint32_t> parsed;
+    parsed.reserve(values.array.size());
+    for (const Value& value : values.array) {
+        if (value.type != Type::Number ||
+            !std::isfinite(value.number) ||
+            value.number < 0.0 ||
+            value.number >
+                static_cast<double>(
+                    std::numeric_limits<std::uint32_t>::max()) ||
+            std::floor(value.number) != value.number) {
+            invalid(std::string(key) +
+                    " entries must be unsigned integers");
+        }
+        parsed.push_back(
+            static_cast<std::uint32_t>(value.number));
+    }
+    if (!std::is_sorted(parsed.begin(), parsed.end()) ||
+        std::adjacent_find(
+            parsed.begin(), parsed.end()) != parsed.end()) {
+        invalid(std::string(key) +
+                " must be sorted and unique");
+    }
+    return parsed;
 }
 
 bool bool_member(const Value& object, const char* key, bool fallback) {
@@ -308,6 +394,234 @@ CompiledCondition compile_condition(
         }
         return session_mod->second;
     };
+    if (type == "observation_signature") {
+        const Value& requirement_value =
+            require_object_member(value, "requirement", Type::Object);
+        out.kind = ConditionKind::ObservationSignature;
+        CompiledObservationSignature& compiled =
+            out.observation_signature;
+        compiled.version =
+            uint_member(value, "version", 0);
+        if (compiled.version !=
+            kObservationSignatureConditionVersion) {
+            invalid("unsupported observation_signature version");
+        }
+        compiled.item_features =
+            uint_member(requirement_value, "item_features", 0);
+        if ((compiled.item_features &
+             ~solver::kAllRefinementItemFeatures) != 0) {
+            invalid(
+                "observation_signature item_features contains "
+                "unknown or affix features");
+        }
+        compiled.modifier_tag_ids =
+            parse_sorted_u32_array(
+                requirement_value, "modifier_tag_ids");
+        const Value& observations = require_object_member(
+            requirement_value, "affix_observations", Type::Array);
+        compiled.affix_observations.reserve(
+            observations.array.size());
+        for (const Value& observation_value :
+             observations.array) {
+            if (observation_value.type != Type::Object) {
+                invalid(
+                    "observation_signature affix observation must "
+                    "be an object");
+            }
+            CompiledObservationAffixRequirement observation;
+            observation.features =
+                uint_member(observation_value, "features", 0);
+            if (observation.features == 0 ||
+                (observation.features &
+                 ~solver::kAllRefinementAffixFeatures) != 0) {
+                invalid(
+                    "observation_signature affix features are "
+                    "empty or invalid");
+            }
+            const Value& selector = require_object_member(
+                observation_value, "selector", Type::Object);
+            const std::uint32_t required_affix_traits =
+                uint_member(
+                    selector, "required_affix_traits", 0);
+            const std::uint32_t forbidden_affix_traits =
+                uint_member(
+                    selector, "forbidden_affix_traits", 0);
+            const std::uint32_t required_item_traits =
+                uint_member(
+                    selector, "required_item_traits", 0);
+            const std::uint32_t forbidden_item_traits =
+                uint_member(
+                    selector, "forbidden_item_traits", 0);
+            if (required_affix_traits >
+                    std::numeric_limits<std::uint16_t>::max() ||
+                forbidden_affix_traits >
+                    std::numeric_limits<std::uint16_t>::max() ||
+                required_item_traits >
+                    std::numeric_limits<std::uint8_t>::max() ||
+                forbidden_item_traits >
+                    std::numeric_limits<std::uint8_t>::max() ||
+                (required_affix_traits &
+                 ~solver::kAllRefinementAffixTraits) != 0 ||
+                (forbidden_affix_traits &
+                 ~solver::kAllRefinementAffixTraits) != 0 ||
+                (required_item_traits &
+                 ~solver::kAllRefinementItemTraits) != 0 ||
+                (forbidden_item_traits &
+                 ~solver::kAllRefinementItemTraits) != 0) {
+                invalid(
+                    "observation_signature selector traits are "
+                    "invalid");
+            }
+            observation.selector.required_affix_traits =
+                static_cast<std::uint16_t>(
+                    required_affix_traits);
+            observation.selector.forbidden_affix_traits =
+                static_cast<std::uint16_t>(
+                    forbidden_affix_traits);
+            observation.selector.required_item_traits =
+                static_cast<std::uint8_t>(
+                    required_item_traits);
+            observation.selector.forbidden_item_traits =
+                static_cast<std::uint8_t>(
+                    forbidden_item_traits);
+            observation.selector.required_tag_ids =
+                parse_sorted_u32_array(
+                    selector, "required_tag_ids");
+            compiled.affix_observations.push_back(
+                std::move(observation));
+        }
+        const Value& atoms =
+            require_object_member(value, "signature", Type::Array);
+        compiled.atoms.reserve(atoms.array.size());
+        for (const Value& atom_value : atoms.array) {
+            if (atom_value.type != Type::Object) {
+                invalid(
+                    "observation_signature atom must be an object");
+            }
+            const std::uint32_t feature =
+                uint_member(atom_value, "feature", solver::kNoId);
+            if (feature >= static_cast<std::uint8_t>(
+                               solver::RefinementFeature::Count)) {
+                invalid(
+                    "observation_signature atom feature is invalid");
+            }
+            CompiledObservationAtom atom;
+            atom.feature = static_cast<std::uint8_t>(feature);
+            atom.subject =
+                uint_member(atom_value, "subject", 0);
+            atom.value =
+                parse_hex_vector(atom_value, "value");
+            compiled.atoms.push_back(std::move(atom));
+        }
+        const auto parse_mod_values =
+            [&](const char* key,
+                std::vector<CompiledObservationModValue>& output) {
+                const Value& entries =
+                    require_object_member(value, key, Type::Array);
+                output.reserve(entries.array.size());
+                for (const Value& entry : entries.array) {
+                    if (entry.type != Type::Object) {
+                        invalid(
+                            std::string(key) +
+                            " entry must be an object");
+                    }
+                    const std::string mod_key =
+                        string_member(entry, "mod_key");
+                    if (mod_key.empty()) {
+                        invalid(
+                            std::string(key) +
+                            " entry requires mod_key");
+                    }
+                    output.push_back({
+                        resolve_mod_key(
+                            mod_key,
+                            "observation_signature modifier"),
+                        parse_hex_vector(entry, "value")});
+                }
+                if (!std::is_sorted(
+                        output.begin(), output.end(),
+                        [](const CompiledObservationModValue& left,
+                           const CompiledObservationModValue& right) {
+                            return left.mod_id < right.mod_id;
+                        }) ||
+                    std::adjacent_find(
+                        output.begin(), output.end(),
+                        [](const CompiledObservationModValue& left,
+                           const CompiledObservationModValue& right) {
+                            return left.mod_id == right.mod_id;
+                        }) != output.end()) {
+                    invalid(
+                        std::string(key) +
+                        " must resolve to sorted unique modifiers");
+                }
+            };
+        parse_mod_values(
+            "goal_status_tier_class_by_mod",
+            compiled.goal_status_tier_class_by_mod);
+        compiled.count_observation_count =
+            uint_member(
+                value, "count_observation_count", 0);
+        parse_mod_values(
+            "count_observation_membership_by_mod",
+            compiled.count_observation_membership_by_mod);
+
+        solver::refinement::ObservationRequirement requirement;
+        requirement.item_features = compiled.item_features;
+        requirement.modifier_tag_ids =
+            compiled.modifier_tag_ids;
+        for (const CompiledObservationAffixRequirement& observation :
+             compiled.affix_observations) {
+            solver::RefinementAffixObservation converted;
+            converted.features = observation.features;
+            converted.selector.required_affix_traits =
+                observation.selector.required_affix_traits;
+            converted.selector.forbidden_affix_traits =
+                observation.selector.forbidden_affix_traits;
+            converted.selector.required_item_traits =
+                observation.selector.required_item_traits;
+            converted.selector.forbidden_item_traits =
+                observation.selector.forbidden_item_traits;
+            converted.selector.required_tag_ids =
+                observation.selector.required_tag_ids;
+            requirement.affix_observations.push_back(
+                std::move(converted));
+        }
+        if (solver::refinement::canonical_observation_requirement(
+                requirement) != requirement) {
+            invalid(
+                "observation_signature requirement is not canonical");
+        }
+        solver::refinement::FeatureSignature signature;
+        signature.reserve(compiled.atoms.size());
+        for (const CompiledObservationAtom& atom :
+             compiled.atoms) {
+            signature.push_back({
+                static_cast<solver::RefinementFeature>(
+                    atom.feature),
+                atom.subject,
+                atom.value,
+                0,
+                0,
+                {}});
+        }
+        if (solver::refinement::canonical_feature_signature(
+                signature) != signature) {
+            invalid(
+                "observation_signature signature is not canonical");
+        }
+        try {
+            out.observation_program =
+                solver::refinement::
+                    make_compiled_observation_program(
+                        session, compiled);
+        } catch (const std::exception& error) {
+            invalid(
+                std::string{
+                    "invalid observation_signature program: "} +
+                error.what());
+        }
+        return out;
+    }
     if (type == "mod_count") {
         const Value* keys = value.find("mod_keys");
         if (keys == nullptr || keys->type != Type::Array ||
@@ -523,6 +837,54 @@ std::size_t condition_hash(const CompiledCondition& condition) {
     for (const std::uint32_t family_id : condition.family_ids) {
         combine(family_id);
     }
+    const CompiledObservationSignature& observation =
+        condition.observation_signature;
+    combine(observation.version);
+    combine(observation.item_features);
+    combine(observation.modifier_tag_ids.size());
+    for (const std::uint32_t tag : observation.modifier_tag_ids) {
+        combine(tag);
+    }
+    combine(observation.affix_observations.size());
+    for (const CompiledObservationAffixRequirement& affix :
+         observation.affix_observations) {
+        combine(affix.features);
+        combine(affix.selector.required_affix_traits);
+        combine(affix.selector.forbidden_affix_traits);
+        combine(affix.selector.required_item_traits);
+        combine(affix.selector.forbidden_item_traits);
+        combine(affix.selector.required_tag_ids.size());
+        for (const std::uint32_t tag :
+             affix.selector.required_tag_ids) {
+            combine(tag);
+        }
+    }
+    combine(observation.atoms.size());
+    for (const CompiledObservationAtom& atom :
+         observation.atoms) {
+        combine(atom.feature);
+        combine(atom.subject);
+        combine(atom.value.size());
+        for (const std::uint64_t value : atom.value) {
+            combine(value);
+        }
+    }
+    const auto combine_mod_values =
+        [&](const std::vector<CompiledObservationModValue>& values) {
+            combine(values.size());
+            for (const CompiledObservationModValue& value : values) {
+                combine(value.mod_id);
+                combine(value.value.size());
+                for (const std::uint64_t token : value.value) {
+                    combine(token);
+                }
+            }
+        };
+    combine_mod_values(
+        observation.goal_status_tier_class_by_mod);
+    combine(observation.count_observation_count);
+    combine_mod_values(
+        observation.count_observation_membership_by_mod);
     combine(condition.children.size());
     for (const CompiledCondition& child : condition.children) {
         combine(condition_hash(child));
@@ -542,6 +904,8 @@ bool condition_equal(
         left.max_value != right.max_value ||
         left.mod_ids != right.mod_ids ||
         left.family_ids != right.family_ids ||
+        left.observation_signature !=
+            right.observation_signature ||
         left.children.size() != right.children.size()) {
         return false;
     }
@@ -655,6 +1019,9 @@ std::size_t direct_feature_hash(const CompiledCondition& condition) {
     case ConditionKind::HasUnveilOption:
         for (const std::uint32_t mod : condition.mod_ids) combine(mod);
         break;
+    case ConditionKind::ObservationSignature:
+        combine(condition_hash(condition));
+        break;
     default:
         break;
     }
@@ -686,6 +1053,9 @@ bool direct_feature_equal(
         return left.eldritch_side == right.eldritch_side;
     case ConditionKind::HasUnveilOption:
         return left.mod_ids == right.mod_ids;
+    case ConditionKind::ObservationSignature:
+        return left.observation_signature ==
+               right.observation_signature;
     default:
         return true;
     }
@@ -701,6 +1071,7 @@ bool direct_required_value(
     case ConditionKind::HasModFamily:
     case ConditionKind::ItemFlag:
     case ConditionKind::HasUnveilOption:
+    case ConditionKind::ObservationSignature:
         value = expected ? 1 : 0;
         return true;
     case ConditionKind::RarityIs:
@@ -1522,6 +1893,17 @@ bool evaluate_condition_impl(
     case ConditionKind::HasUnveilOption:
         return !condition.mod_ids.empty() &&
                has_unveil_option(item, condition.mod_ids.front());
+    case ConditionKind::ObservationSignature:
+        if (condition.observation_program == nullptr) {
+            throw std::logic_error(
+                "observation-signature condition has no program");
+        }
+        return solver::refinement::observe_exact_item_features(
+                   session,
+                   item,
+                   condition.observation_program->requirement,
+                   condition.observation_program->context) ==
+               condition.observation_program->signature;
     case ConditionKind::All:
         return std::all_of(
             condition.children.begin(),
@@ -1597,6 +1979,7 @@ std::int16_t direct_dispatch_feature_value(
     case ConditionKind::HasModFamily:
     case ConditionKind::ItemFlag:
     case ConditionKind::HasUnveilOption:
+    case ConditionKind::ObservationSignature:
         return evaluate_condition_cached(
                    condition, session, item, &simulator)
                    ? 1
@@ -2259,11 +2642,19 @@ void prepare_simulator_runtime(SimulatorImpl& simulator) {
     const solver::ActionRegistry accounting_registry =
         solver::build_action_registry(*simulator.session);
     for (std::size_t node_index = 0; node_index < node_count; ++node_index) {
-        const std::uint32_t descriptor = solver::resolve_strategy_action(
-            simulator.strategy->nodes[node_index], accounting_registry);
-        if (descriptor != solver::kNoId) {
+        const solver::ResolvedStrategyOperation operation =
+            solver::resolve_strategy_operation(
+                simulator.strategy->nodes[node_index],
+                accounting_registry, *simulator.session);
+        if (operation.kind ==
+                solver::ResolvedStrategyOperationKind::Bestiary) {
             simulator.action_descriptor_ids[node_index] =
-                accounting_registry.actions[descriptor].id;
+                simulator.session->data->bestiary_actions.at(
+                    operation.descriptor_index).id;
+        } else if (operation.resolved()) {
+            simulator.action_descriptor_ids[node_index] =
+                accounting_registry.actions[
+                    operation.descriptor_index].id;
         }
     }
     simulator.node_prices.assign(node_count, 0.0);

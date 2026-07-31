@@ -56,7 +56,9 @@ function policyQualityLabel(summary: SolveSummary): string {
 function terminationLabel(summary: SolveSummary): string {
     switch (summary.termination) {
         case "exact_closed":
-            return "Exact proof closed";
+            return summary.converged && summary.policy_status === "exact"
+                ? "Exact proof closed"
+                : "Coarse discovery closed";
         case "target_gap":
             return "Requested gap target met";
         case "refused_resource_cap":
@@ -164,7 +166,9 @@ export function solveTerminationDetail(
         return "The solve stopped after a completed lower/upper round satisfied the requested certificate target.";
     }
     if (summary.termination === "exact_closed") {
-        return "The lower and upper bounds closed within the named numerical proof tolerance.";
+        return summary.converged && summary.policy_status === "exact"
+            ? "The lower and upper bounds closed within the named numerical proof tolerance."
+            : "Broad coarse discovery closed, then exact state refinement produced the returned bounded executable policy. Its displayed lower and upper bounds are authoritative.";
     }
     if (summary.termination === "no_executable_policy") {
         return "The solver could not establish a proper executable fallback, so no finite policy upper bound is claimed.";
@@ -175,7 +179,9 @@ export function solveTerminationDetail(
 function stopCauseLabel(summary: SolveSummary): string {
     switch (summary.stop_cause) {
         case "exact_closed":
-            return "Exact proof closed";
+            return summary.converged && summary.policy_status === "exact"
+                ? "Exact proof closed"
+                : "Coarse discovery closed";
         case "target_gap":
             return "Requested gap target met";
         case "state_cap":

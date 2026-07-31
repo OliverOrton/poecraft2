@@ -198,6 +198,26 @@ struct PolicyTarjanFrame {
     std::uint32_t next_edge = 0;
 };
 
+/*
+ * Shared fixed-policy workspace. The broad SolveWork and policy-guided exact
+ * refinement both operate on the same sparse policy equations, so SCC
+ * discovery and resumed sparse linear solves must have one implementation and
+ * one deterministic state representation.
+ */
+struct SparsePolicyComponentWorkspace {
+    bool components_ready = false;
+    std::vector<std::vector<std::uint32_t>> components;
+    std::vector<std::uint32_t> component_by_state;
+    std::vector<std::int32_t> local;
+    std::vector<std::uint32_t> tarjan_index;
+    std::vector<std::uint32_t> tarjan_lowlink;
+    std::vector<std::uint8_t> tarjan_on_stack;
+    std::vector<std::uint32_t> tarjan_stack;
+    std::vector<PolicyTarjanFrame> tarjan_dfs;
+    std::uint32_t tarjan_next_index = 0;
+    std::uint32_t tarjan_root_cursor = 0;
+};
+
 template <typename T>
 std::size_t selected_growth_capacity(
     const std::vector<T>& values, const std::size_t additional);
@@ -321,6 +341,31 @@ WideFloat operator*(const double a, const WideFloat b);
 WideFloat operator*(const WideFloat a, const double b);
 
 WideFloat operator/(const WideFloat numerator, const WideFloat denominator);
+
+enum class SparsePolicySolveMode : std::uint8_t {
+    BiCGSTAB,
+    GaussSeidel,
+};
+
+struct SparsePolicyResume {
+    std::vector<std::uint32_t> members;
+    std::vector<WideFloat> b;
+    std::vector<WideFloat> x;
+    std::vector<WideFloat> r;
+    std::vector<WideFloat> r0;
+    std::vector<WideFloat> p;
+    std::vector<WideFloat> v;
+    std::vector<WideFloat> s;
+    std::vector<WideFloat> t;
+    WideFloat rho_previous = 1.0;
+    WideFloat alpha = 1.0;
+    WideFloat omega = 1.0;
+    std::uint32_t iterations = 0;
+    SparsePolicySolveMode mode = SparsePolicySolveMode::BiCGSTAB;
+    double last_true_residual =
+        std::numeric_limits<double>::infinity();
+    std::uint8_t true_residual_stagnation = 0;
+};
 
 } // namespace
 
@@ -540,6 +585,9 @@ std::uint64_t solve_result_owned_bytes(const SolveResult& result);
 struct SolveWork::Impl {
     CalcContext& calc;
     const SessionImpl& session;
+    /* Preserve the exact solve input for policy-guided publication
+     * refinement. The coarse parent state is not an exact substitute. */
+    pc_item_state exact_start_item{};
     SolveOptions options;
     std::unordered_map<std::string, double> prices;
     SolveResult result;
@@ -667,28 +715,12 @@ struct SolveWork::Impl {
     bool policy_stable = false;
     bool policy_iteration_failed = false;
     bool policy_evaluation_incomplete = false;
-    struct SparsePolicyResume {
-        std::vector<std::uint32_t> members;
-        std::vector<WideFloat> b;
-        std::vector<WideFloat> x;
-        std::vector<WideFloat> r;
-        std::vector<WideFloat> r0;
-        std::vector<WideFloat> p;
-        std::vector<WideFloat> v;
-        std::vector<WideFloat> s;
-        std::vector<WideFloat> t;
-        WideFloat rho_previous = 1.0;
-        WideFloat alpha = 1.0;
-        WideFloat omega = 1.0;
-        std::uint32_t iterations = 0;
-        std::uint32_t refinement_count = 0;
-    };
     std::unique_ptr<SparsePolicyResume> sparse_policy_resume;
     struct SharedPolicyKernelRepresentative {
         std::uint32_t state = kNoId;
         std::vector<std::uint64_t> exact_signature;
     };
-    struct PolicyKernelPreparation {
+    struct PolicyKernelPreparation : SparsePolicyComponentWorkspace {
         std::size_t state_count = 0;
         std::vector<std::uint32_t> active_states;
         std::uint32_t cursor = 0;
@@ -706,18 +738,7 @@ struct SolveWork::Impl {
         std::uint32_t grouping_cursor = 0;
         std::uint32_t quotient_cursor = 0;
         bool source_kernels_released = false;
-        bool components_ready = false;
-        std::vector<std::vector<std::uint32_t>> components;
-        std::vector<std::uint32_t> component_by_state;
-        std::vector<std::int32_t> local;
         std::uint32_t component_cursor = 0;
-        std::vector<std::uint32_t> tarjan_index;
-        std::vector<std::uint32_t> tarjan_lowlink;
-        std::vector<std::uint8_t> tarjan_on_stack;
-        std::vector<std::uint32_t> tarjan_stack;
-        std::vector<PolicyTarjanFrame> tarjan_dfs;
-        std::uint32_t tarjan_next_index = 0;
-        std::uint32_t tarjan_root_cursor = 0;
     };
     std::unique_ptr<PolicyKernelPreparation> policy_kernel_preparation;
     enum class PolicyUnitStage : std::uint8_t {

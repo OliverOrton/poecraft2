@@ -4,9 +4,11 @@
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -194,6 +196,19 @@ bool same_distribution(
     return true;
 }
 
+std::map<std::uint32_t, double> project_distribution(
+    CalcContext& source,
+    CalcContext& semantic,
+    const OutcomeDistribution& distribution) {
+    std::map<std::uint32_t, double> projected;
+    for (const OutcomeEntry& entry : distribution.entries) {
+        pc_item_state item;
+        PC_CHECK(source.materialize(entry.state, item));
+        projected[semantic.intern_item(item)] += entry.probability;
+    }
+    return projected;
+}
+
 bool item_contains_mod(
     const pc_item_state& item,
     const std::uint32_t mod_id) {
@@ -204,6 +219,368 @@ bool item_contains_mod(
         if (item.suffixes[i].mod_id == mod_id) return true;
     }
     return false;
+}
+
+void run_semantic_exclusion_equivalence_tests() {
+    auto session = make_calc_session();
+    /*
+     * Mods 3 and 4 remain distinct modifier ids but acquire the same complete
+     * group-exclusion effect. The semantic projection may merge them only
+     * when every admitted action kernel remains identical after projection;
+     * the production raw-witness partition performs the final proof.
+     */
+    session->primary_group[4] = session->primary_group[3];
+    session->group_ids[session->group_offsets[4]] =
+        session->primary_group[3];
+    for (std::vector<std::uint64_t>& mask :
+         session->group_masks) {
+        std::fill(mask.begin(), mask.end(), 0);
+    }
+    for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+        for (std::uint32_t group = session->group_offsets[mod];
+             group < session->group_offsets[mod + 1]; ++group) {
+            std::vector<std::uint64_t>& mask =
+                session->group_masks[session->group_ids[group]];
+            if (mask.empty()) mask.assign(session->words, 0);
+            pc_bitset_set(mask.data(), mod);
+        }
+    }
+
+    const ActionRegistry registry = build_action_registry(*session);
+    const std::vector<std::uint32_t> actions{
+        registry.index_by_id.at("chaos"),
+        registry.index_by_id.at("exalt"),
+        registry.index_by_id.at("annul"),
+        registry.index_by_id.at("scour")};
+    const GoalSpec goal = family_goal_100();
+    CalcContext semantic(
+        session, goal, registry, actions,
+        false, false, true, std::nullopt, {}, true);
+    CalcContext concrete(
+        session, goal, registry, actions,
+        false, false, true, std::nullopt, {}, true, {}, true);
+
+    pc_item_state left;
+    pc_item_clear(&left);
+    left.rarity = PC_RARITY_RARE;
+    place(
+        &left, PC_SIDE_PREFIX, 3,
+        static_cast<std::uint16_t>(session->primary_group[3]));
+    pc_item_state right;
+    pc_item_clear(&right);
+    right.rarity = PC_RARITY_RARE;
+    place(
+        &right, PC_SIDE_PREFIX, 4,
+        static_cast<std::uint16_t>(session->primary_group[4]));
+
+    PC_CHECK(
+        semantic.intern_item(left) ==
+        semantic.intern_item(right));
+    const std::uint32_t concrete_left =
+        concrete.intern_item(left);
+    const std::uint32_t concrete_right =
+        concrete.intern_item(right);
+    PC_CHECK(concrete_left != concrete_right);
+    for (const std::uint32_t action : actions) {
+        const OutcomeDistribution& left_distribution =
+            concrete.outcomes(concrete_left, action);
+        const OutcomeDistribution& right_distribution =
+            concrete.outcomes(concrete_right, action);
+        PC_CHECK(left_distribution.supported);
+        PC_CHECK(right_distribution.supported);
+        const auto projected_left = project_distribution(
+            concrete, semantic, left_distribution);
+        const auto projected_right = project_distribution(
+            concrete, semantic, right_distribution);
+        PC_CHECK(projected_left.size() == projected_right.size());
+        for (const auto& [state, probability] : projected_left) {
+            const auto found = projected_right.find(state);
+            PC_CHECK(found != projected_right.end());
+            if (found != projected_right.end()) {
+                PC_CHECK(near(probability, found->second));
+            }
+        }
+    }
+
+    /*
+     * Semantic carrier activation is contract-driven. This future-shaped
+     * Exalt descriptor keeps its ordinary primitive type but declares that it
+     * observes Veiled carriers. A template known only through the complete
+     * session mask must therefore split without adding an action-type branch
+     * to CalcContext.
+     */
+    session->veiled_template_mask.assign(session->words, 0);
+    pc_bitset_set(session->veiled_template_mask.data(), 4);
+    ActionDescriptor observes_veiled =
+        registry.actions.at(registry.index_by_id.at("exalt"));
+    observes_veiled.id = "test:contract-veiled-observer";
+    PC_CHECK(
+        observes_veiled.refinement.affix_observations.size() == 1);
+    observes_veiled.refinement.affix_observations.front().features |=
+        refinement_feature(RefinementFeature::ModifierVeiled);
+    validate_action_refinement_contract(observes_veiled);
+    ActionRegistry observer_registry;
+    observer_registry.index_by_id.emplace(observes_veiled.id, 0);
+    observer_registry.actions.push_back(observes_veiled);
+    CalcContext observed(
+        session, goal, observer_registry, {0},
+        false, false, false);
+    PC_CHECK(
+        observed.layout().junk_class_by_mod[3] !=
+        observed.layout().junk_class_by_mod[4]);
+}
+
+void run_identity_reforge_factorization_tests() {
+    const auto make_shared_exclusion_session = [] {
+        auto session = make_calc_session();
+        session->primary_group[4] = session->primary_group[3];
+        session->group_ids[session->group_offsets[4]] =
+            session->primary_group[3];
+        for (std::vector<std::uint64_t>& mask :
+             session->group_masks) {
+            std::fill(mask.begin(), mask.end(), 0);
+        }
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            for (std::uint32_t group = session->group_offsets[mod];
+                 group < session->group_offsets[mod + 1]; ++group) {
+                std::vector<std::uint64_t>& mask =
+                    session->group_masks[session->group_ids[group]];
+                if (mask.empty()) mask.assign(session->words, 0);
+                pc_bitset_set(mask.data(), mod);
+            }
+        }
+        return session;
+    };
+    const auto compare_projected =
+        [](CalcContext& exact,
+           CalcContext& semantic,
+           const OutcomeDistribution& exact_distribution,
+           const OutcomeDistribution& semantic_distribution) {
+            const auto projected = project_distribution(
+                exact, semantic, exact_distribution);
+            PC_CHECK(
+                projected.size() ==
+                semantic_distribution.entries.size());
+            for (const OutcomeEntry& entry :
+                 semantic_distribution.entries) {
+                const auto found = projected.find(entry.state);
+                PC_CHECK(found != projected.end());
+                if (found != projected.end()) {
+                    PC_CHECK(near(
+                        found->second, entry.probability, 1e-12));
+                }
+            }
+        };
+
+    /*
+     * Chaos uses one structural bucket for the shared physical exclusion
+     * family, but the exact evaluator must still emit both literal modifier
+     * witnesses. Projecting those witnesses back through the semantic layout
+     * must reproduce its complete kernel.
+     */
+    {
+        const auto session = make_shared_exclusion_session();
+        const ActionRegistry registry = build_action_registry(*session);
+        const std::vector<std::uint32_t> actions{
+            registry.index_by_id.at("chaos")};
+        CalcContext semantic(
+            session, family_goal_100(), registry, actions,
+            false, false, true);
+        CalcContext exact(
+            session, family_goal_100(), registry, actions,
+            false, false, true, std::nullopt, {}, false, {}, true);
+        PC_CHECK(!semantic.distinguishes_modifier_identity());
+        PC_CHECK(exact.distinguishes_modifier_identity());
+
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const OutcomeDistribution& exact_distribution =
+            exact.outcomes(exact.intern_item(rare), actions.front());
+        const OutcomeDistribution& semantic_distribution =
+            semantic.outcomes(
+                semantic.intern_item(rare), actions.front());
+        PC_CHECK(exact_distribution.supported);
+        PC_CHECK(semantic_distribution.supported);
+        PC_CHECK(sums_to_one(exact_distribution));
+        compare_projected(
+            exact, semantic, exact_distribution,
+            semantic_distribution);
+
+        std::map<std::uint32_t, std::uint32_t> witnesses_per_class;
+        for (const OutcomeEntry& entry : exact_distribution.entries) {
+            pc_item_state item;
+            PC_CHECK(exact.materialize(entry.state, item));
+            ++witnesses_per_class[semantic.intern_item(item)];
+        }
+        PC_CHECK(std::any_of(
+            witnesses_per_class.begin(), witnesses_per_class.end(),
+            [](const auto& entry) { return entry.second > 1; }));
+
+        CalcContext capped(
+            session, family_goal_100(), registry, actions,
+            false, false, true, std::nullopt, {}, false, {}, true);
+        capped.set_solve_resource_caps(100000, 1, false);
+        bool reforge_cap_hit = false;
+        try {
+            (void)capped.outcomes(
+                capped.intern_item(rare), actions.front());
+        } catch (const SolverResourceLimit& error) {
+            reforge_cap_hit =
+                error.cap_name() == "max_reforge_work";
+        }
+        PC_CHECK(reforge_cap_hit);
+
+        /*
+         * Exact reforge scratch shares the calculator's owned-byte budget.
+         * A cap below the first outcome-map reserve must refuse with the
+         * stable named cap before attempting that reserve.
+         */
+        CalcContext reserve_capped(
+            session, family_goal_100(), registry, actions,
+            false, false, true, std::nullopt, {}, false, {}, true);
+        const std::uint32_t reserve_state =
+            reserve_capped.intern_item(rare);
+        const std::uint64_t reserve_owned =
+            reserve_capped.fast_estimated_owned_bytes();
+        reserve_capped.set_solve_resource_caps(
+            100000,
+            std::numeric_limits<std::uint64_t>::max(),
+            false,
+            reserve_owned + 1);
+        bool reserve_cap_hit = false;
+        try {
+            (void)reserve_capped.outcomes(
+                reserve_state, actions.front());
+        } catch (const SolverResourceLimit& error) {
+            reserve_cap_hit =
+                error.cap_name() == "max_owned_bytes";
+        }
+        PC_CHECK(reserve_cap_hit);
+
+        /*
+         * With a one-state outcome reserve, leave exactly enough budget for
+         * that map plus one byte. Raw family classification then runs, but
+         * the stationary bucket/conflict-matrix preflight must refuse before
+         * allocating the projected matrix.
+         */
+        CalcContext matrix_capped(
+            session, family_goal_100(), registry, actions,
+            false, false, true, std::nullopt, {}, false, {}, true);
+        const std::uint32_t matrix_state =
+            matrix_capped.intern_item(rare);
+        const std::uint64_t matrix_owned =
+            matrix_capped.fast_estimated_owned_bytes();
+        constexpr std::uint64_t one_outcome_entry_bytes =
+            sizeof(std::pair<const std::uint32_t, double>) +
+            5 * sizeof(void*);
+        matrix_capped.set_solve_resource_caps(
+            1,
+            std::numeric_limits<std::uint64_t>::max(),
+            false,
+            matrix_owned + one_outcome_entry_bytes + 1);
+        bool matrix_cap_hit = false;
+        try {
+            (void)matrix_capped.outcomes(
+                matrix_state, actions.front());
+        } catch (const SolverResourceLimit& error) {
+            matrix_cap_hit =
+                error.cap_name() == "max_owned_bytes";
+        }
+        PC_CHECK(matrix_cap_hit);
+        PC_CHECK(
+            matrix_capped.telemetry().reforge_frontier_work > 0);
+
+        /*
+         * A sufficient cap is observational only: exact raw witnesses and
+         * their semantic projection remain byte-for-byte deterministic.
+         */
+        CalcContext memory_bounded(
+            session, family_goal_100(), registry, actions,
+            false, false, true, std::nullopt, {}, false, {}, true);
+        const std::uint32_t bounded_state =
+            memory_bounded.intern_item(rare);
+        const std::uint64_t bounded_owned =
+            memory_bounded.fast_estimated_owned_bytes();
+        memory_bounded.set_solve_resource_caps(
+            100000,
+            std::numeric_limits<std::uint64_t>::max(),
+            false,
+            bounded_owned + 64ull * 1024ull * 1024ull);
+        const OutcomeDistribution& bounded_distribution =
+            memory_bounded.outcomes(
+                bounded_state, actions.front());
+        PC_CHECK(bounded_distribution.supported);
+        PC_CHECK(sums_to_one(bounded_distribution));
+        compare_projected(
+            memory_bounded, semantic, bounded_distribution,
+            semantic_distribution);
+    }
+
+    /*
+     * Harvest's guaranteed first draw has a narrower raw-identity channel
+     * than the subsequent ordinary draws. Mod 3 is the sole fire member;
+     * mod 4 shares its complete exclusion family but is not fire. A sound
+     * deferred expansion must therefore remember that the family was picked
+     * by the guaranteed channel and never substitute mod 4 at commit.
+     */
+    {
+        const auto session = make_shared_exclusion_session();
+        session->class_tag_ids[0] = kTagFire;
+        session->class_tag_ids[2] = 1;
+        session->implicit_tag_masks.assign(
+            7, std::vector<std::uint64_t>(session->words, 0));
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            for (std::uint32_t index = session->class_offsets[mod];
+                 index < session->class_offsets[mod + 1]; ++index) {
+                pc_bitset_set(
+                    session->implicit_tag_masks[
+                        session->class_tag_ids[index]]
+                        .data(),
+                    mod);
+            }
+        }
+
+        ActionRegistry registry;
+        ActionDescriptor reforge;
+        reforge.id = "harvest_reforge:fire";
+        reforge.params.type = ActionType::HarvestReforge;
+        reforge.params.target_tag_id = kTagFire;
+        reforge.kind = TransitionKind::Reforge;
+        reforge.cost_keys = {reforge.id};
+        reforge.legality.rarity_mask = 1u << PC_RARITY_RARE;
+        reforge.discriminating_tag_ids = {kTagFire};
+        reforge.refinement =
+            derive_action_refinement_contract(*session, reforge);
+        validate_action_refinement_contract(reforge);
+        registry.index_by_id.emplace(reforge.id, 0);
+        registry.actions.push_back(reforge);
+
+        CalcContext semantic(
+            session, family_goal_100(), registry, {},
+            false, true, true);
+        CalcContext exact(
+            session, family_goal_100(), registry, {},
+            false, true, true, std::nullopt, {}, false, {}, true);
+        pc_item_state rare;
+        pc_item_clear(&rare);
+        rare.rarity = PC_RARITY_RARE;
+        const OutcomeDistribution& exact_distribution =
+            exact.outcomes(exact.intern_item(rare), 0);
+        const OutcomeDistribution& semantic_distribution =
+            semantic.outcomes(semantic.intern_item(rare), 0);
+        PC_CHECK(exact_distribution.supported);
+        PC_CHECK(sums_to_one(exact_distribution));
+        compare_projected(
+            exact, semantic, exact_distribution,
+            semantic_distribution);
+        for (const OutcomeEntry& entry : exact_distribution.entries) {
+            pc_item_state item;
+            PC_CHECK(exact.materialize(entry.state, item));
+            PC_CHECK(item_contains_mod(item, 3));
+            PC_CHECK(!item_contains_mod(item, 4));
+        }
+    }
 }
 
 void run_harvest_targeted_natural_regression() {
@@ -272,6 +649,9 @@ void run_harvest_targeted_natural_regression() {
 
     ActionRegistry registry;
     const auto add_action = [&](ActionDescriptor action) {
+        action.refinement =
+            derive_action_refinement_contract(*session, action);
+        validate_action_refinement_contract(action);
         const std::uint32_t index =
             static_cast<std::uint32_t>(registry.actions.size());
         registry.index_by_id.emplace(action.id, index);
@@ -361,6 +741,44 @@ void run_harvest_targeted_natural_regression() {
             PC_CHECK(item_contains_mod(result, kGoodFire));
         }
     }
+}
+
+void run_exact_goal_member_materialization_test() {
+    const auto session = make_calc_session();
+    session->family_id[0] = 999;
+    session->family_id[1] = 999;
+    session->family_id[3] = 999;
+    session->family_id[4] = 999;
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    GoalSlot slot;
+    slot.family_id = 999;
+    slot.min_tier = 0;
+    goal.slots.push_back(slot);
+    CalcContext calc(
+        session, goal, std::move(registry), {}, false, true, true);
+
+    const auto intern_mod = [&](const std::uint32_t mod) {
+        pc_item_state item;
+        pc_item_clear(&item);
+        item.rarity = PC_RARITY_MAGIC;
+        place(
+            &item, PC_SIDE_PREFIX, mod,
+            static_cast<std::uint16_t>(session->primary_group[mod]));
+        return calc.intern_item(item);
+    };
+    const std::uint32_t same_zero = intern_mod(0);
+    const std::uint32_t same_one = intern_mod(1);
+    const std::uint32_t different = intern_mod(3);
+    PC_CHECK(same_zero == same_one);
+    PC_CHECK(same_zero != different);
+    PC_CHECK(calc.state(different).goal_member_class_tokens[0] != 0);
+
+    pc_item_state materialized;
+    PC_CHECK(calc.materialize(different, materialized));
+    PC_CHECK(
+        project_item(*session, calc.layout(), materialized) ==
+        calc.state(different));
 }
 
 void run_goal_threshold_tests() {
@@ -688,11 +1106,14 @@ void unveil_mc_cross_check(
     double offer_probability = 0.0;
     for (const OutcomeChoiceGroup& group : exact.choice_groups) {
         offer_probability += group.probability;
+        PC_CHECK(group.observation_state == veiled_state);
     }
     PC_CHECK(near(offer_probability, 1.0, 1e-8));
 
     std::map<std::uint32_t, std::uint32_t> state_by_mod;
     for (const OutcomeChoiceOption& option : exact.choice_options) {
+        PC_CHECK(option.observation_state == veiled_state);
+        PC_CHECK(option.actual_state == option.state);
         state_by_mod.emplace(option.mod_id, option.state);
     }
     const auto better = [&](std::uint32_t a, std::uint32_t b) {
@@ -972,6 +1393,9 @@ void run_reforge_tests() {
         reforge_fire.cost_keys = {reforge_fire.id};
         reforge_fire.legality.rarity_mask = 1u << PC_RARITY_RARE;
         reforge_fire.discriminating_tag_ids = {kTagFire};
+        reforge_fire.refinement =
+            derive_action_refinement_contract(*session, reforge_fire);
+        validate_action_refinement_contract(reforge_fire);
         custom.index_by_id.emplace(reforge_fire.id, 0);
         custom.actions.push_back(reforge_fire);
         ActionDescriptor augment_fire;
@@ -986,6 +1410,9 @@ void run_reforge_tests() {
         augment_fire.legality.forbidden_flags |=
             kFlagInfluenced | kFlagEldritchImplicit;
         augment_fire.discriminating_tag_ids = {kTagFire};
+        augment_fire.refinement =
+            derive_action_refinement_contract(*session, augment_fire);
+        validate_action_refinement_contract(augment_fire);
         custom.index_by_id.emplace(augment_fire.id, 1);
         custom.actions.push_back(augment_fire);
 
@@ -1269,10 +1696,6 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             "bench:StrMasterItemGenerationCannotChangePrefixes");
         const std::uint32_t suffix_lock = registry.index_by_id.at(
             "bench:DexMasterItemGenerationCannotChangeSuffixes");
-        const std::uint32_t no_attack = registry.index_by_id.at(
-            "bench:IntMasterItemGenerationCannotRollAttackAffixes");
-        const std::uint32_t no_caster = registry.index_by_id.at(
-            "bench:StrDexMasterItemGenerationCannotRollCasterAffixes");
         const auto bench_mod = [&](const std::uint32_t action_index) {
             return registry.actions[action_index].params.mod_id;
         };
@@ -1580,8 +2003,11 @@ void run_artifact_calc_tests(const char* artifact_dir) {
 } // namespace
 
 void run_solver_calc_tests(const char* artifact_dir) {
+    run_exact_goal_member_materialization_test();
     run_goal_threshold_tests();
     run_exact_distribution_tests();
+    run_semantic_exclusion_equivalence_tests();
+    run_identity_reforge_factorization_tests();
     run_harvest_targeted_natural_regression();
     run_reforge_tests();
     run_special_evaluator_tests();

@@ -67,6 +67,7 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_solve_expand.cpp
     src/solver_solve_incremental.cpp
     src/solver_solve_audit.cpp
+    src/solver_sparse_policy.cpp
     src/solver_solve_bellman.cpp
     src/solver_solve_focused.cpp
     src/solver_solve_constructive.cpp
@@ -74,6 +75,8 @@ add_library(poecraft_engine_objects OBJECT
     src/solver_solve_quotient.cpp
     src/solver_solve_finish.cpp
     src/solver_solve_telemetry.cpp
+    src/solver_refinement.cpp
+    src/solver_policy_refinement.cpp
     src/solver_compile.cpp
     src/solver_eval.cpp
     src/solver_api.cpp
@@ -144,6 +147,7 @@ if(BUILD_TESTING)
         tests/test_solver_s8_3.cpp
         tests/test_solver_eval.cpp
         tests/test_solver_api.cpp
+        tests/test_solver_refinement.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -168,4 +172,5 @@ if(BUILD_TESTING)
             --corpus "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/solver-benchmarks/v1/manifest.json"
             --validate-only
     )
+
 endif()

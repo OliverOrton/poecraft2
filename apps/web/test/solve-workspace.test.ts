@@ -76,6 +76,25 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
 {
     const compiled = createDefaultStrategy();
     compiled.nodes[1].expected_cost = 2.9319;
+    compiled.edges[1].condition = {
+        type: "observation_signature",
+        version: 1,
+        requirement: {
+            item_features: 1,
+            modifier_tag_ids: [],
+            affix_observations: [],
+        },
+        signature: [
+            {
+                feature: 0,
+                subject: 0,
+                value: ["0000000000000002"],
+            },
+        ],
+        goal_status_tier_class_by_mod: [],
+        count_observation_count: 0,
+        count_observation_membership_by_mod: [],
+    };
     for (const node of compiled.nodes) {
         delete (node as { position?: { x: number; y: number } }).position;
     }
@@ -88,9 +107,17 @@ import { createDefaultStrategy } from "../src/app/strategy-model";
         ),
     );
     assert.equal(prepared.nodes[1].expected_cost, 2.9319);
+    assert.equal(prepared.edges[1].condition?.type, "observation_signature");
+    assert.deepEqual(prepared.edges[1].condition?.signature, [
+        {
+            feature: 0,
+            subject: 0,
+            value: ["0000000000000002"],
+        },
+    ]);
     assert.strictEqual(prepared, compiled);
     console.log(
-        "  ok - uniquely transferred policies are adopted and auto-laid out without a full clone",
+        "  ok - uniquely transferred policies preserve opaque exact routers and auto-layout without a full clone",
     );
 }
 

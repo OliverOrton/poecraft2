@@ -398,19 +398,45 @@ void run_public_solver_gate(const char* artifact_dir) {
     pc_solve_summary solve_summary;
     PC_CHECK(pc_solver_solve(solver, &item, economy, nullptr,
                              &solve_summary, &error) == PC_RESULT_OK);
-    PC_CHECK(solve_summary.converged == 1);
     PC_CHECK(solve_summary.policy_available == 1);
-    PC_CHECK(solve_summary.policy_status == PC_SOLVE_POLICY_EXACT);
+    const std::string initial_solve_telemetry =
+        solver_telemetry_json(solver, &error);
+    const bool policy_guided_refined =
+        initial_solve_telemetry.find(
+            "\"solution_scope\":"
+            "\"policy_guided_exact_refinement_bounded\"") !=
+        std::string::npos;
+    PC_CHECK(
+        solve_summary.converged ==
+        (policy_guided_refined ? 0 : 1));
+    PC_CHECK(
+        solve_summary.policy_status ==
+        (policy_guided_refined
+             ? PC_SOLVE_POLICY_BOUNDED_FEASIBLE
+             : PC_SOLVE_POLICY_EXACT));
     PC_CHECK(solve_summary.termination ==
              PC_SOLVE_TERMINATION_EXACT_CLOSED);
     PC_CHECK(solve_summary.stop_cause == PC_SOLVE_STOP_EXACT_CLOSED);
     PC_CHECK(solve_summary.cap_hit_mask == 0);
-    PC_CHECK(solve_summary.lower_bound == solve_summary.start_value);
     PC_CHECK(solve_summary.upper_bound == solve_summary.start_value);
     PC_CHECK(solve_summary.evaluated_policy_cost ==
              solve_summary.start_value);
-    PC_CHECK(solve_summary.absolute_optimality_gap == 0.0);
-    PC_CHECK(solve_summary.relative_optimality_gap == 0.0);
+    if (policy_guided_refined) {
+        PC_CHECK(solve_summary.lower_bound == 0.0);
+        PC_CHECK(
+            solve_summary.absolute_optimality_gap ==
+            solve_summary.start_value);
+        PC_CHECK(std::isinf(
+            solve_summary.relative_optimality_gap));
+    } else {
+        PC_CHECK(
+            solve_summary.lower_bound ==
+            solve_summary.start_value);
+        PC_CHECK(
+            solve_summary.absolute_optimality_gap == 0.0);
+        PC_CHECK(
+            solve_summary.relative_optimality_gap == 0.0);
+    }
     PC_CHECK(solve_summary.start_value > 0.0);
     PC_CHECK(solve_summary.skipped_action_count == 0);
     PC_CHECK(solve_summary.registry_action_count >=
@@ -478,8 +504,24 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_progress.live_owned_bytes > 0);
     PC_CHECK(solve_progress.peak_owned_bytes >=
              solve_progress.live_owned_bytes);
-    PC_CHECK(solve_progress.lower_bound == solve_summary.start_value);
-    PC_CHECK(solve_progress.upper_bound == solve_summary.start_value);
+    if (policy_guided_refined) {
+        /*
+         * Progress is the completed coarse discovery snapshot. Exact
+         * publication refinement runs during finish and may replace its
+         * bounds with the refined feasible certificate.
+         */
+        PC_CHECK(solve_progress.lower_bound >= 0.0);
+        PC_CHECK(
+            solve_progress.upper_bound >=
+            solve_progress.lower_bound);
+    } else {
+        PC_CHECK(
+            solve_progress.lower_bound ==
+            solve_summary.start_value);
+        PC_CHECK(
+            solve_progress.upper_bound ==
+            solve_summary.start_value);
+    }
 
     pc_solve_summary stepped_summary{};
     PC_CHECK(pc_solver_solve_finish(solver, &stepped_summary, &error) ==
@@ -517,14 +559,39 @@ void run_public_solver_gate(const char* artifact_dir) {
     solve_summary = stepped_summary;
     const std::string solved_telemetry =
         solver_telemetry_json(solver, &error);
-    PC_CHECK(solved_telemetry.find("\"status\":\"exact_abstract\"") !=
-             std::string::npos);
-    PC_CHECK(solved_telemetry.find(
-                 "\"start_status\":\"exact_abstract_within_tolerance\"") !=
-             std::string::npos);
-    PC_CHECK(solved_telemetry.find(
-                 "\"policy_result\":{\"available\":true,\"status\":\"exact\"") !=
-             std::string::npos);
+    const bool stepped_policy_guided_refined =
+        solved_telemetry.find(
+            "\"solution_scope\":"
+            "\"policy_guided_exact_refinement_bounded\"") !=
+        std::string::npos;
+    PC_CHECK(
+        stepped_policy_guided_refined ==
+        policy_guided_refined);
+    if (policy_guided_refined) {
+        PC_CHECK(solved_telemetry.find(
+                     "\"status\":\"bounded_feasible\"") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"start_status\":"
+                     "\"bounded_feasible_certificate\"") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"policy_result\":{\"available\":true,"
+                     "\"status\":\"bounded_feasible\"") !=
+                 std::string::npos);
+    } else {
+        PC_CHECK(solved_telemetry.find(
+                     "\"status\":\"exact_abstract\"") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"start_status\":"
+                     "\"exact_abstract_within_tolerance\"") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"policy_result\":{\"available\":true,"
+                     "\"status\":\"exact\"") !=
+                 std::string::npos);
+    }
     PC_CHECK(solved_telemetry.find("\"state_action_rows\":0") ==
              std::string::npos);
     PC_CHECK(solved_telemetry.find("\"available\":false") !=
@@ -541,12 +608,30 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(pc_solver_project_item(solver, &item, &start_state, &error) ==
              PC_RESULT_OK);
     PC_CHECK(start_state == solve_summary.start_state);
-    double start_value = 0.0;
-    const char* start_action = nullptr;
-    PC_CHECK(pc_solver_state_value(solver, start_state, &start_value,
-                                   &start_action, &error) == PC_RESULT_OK);
-    PC_CHECK(start_value == solve_summary.start_value);
-    PC_CHECK(start_action != nullptr);
+    constexpr double kUntouchedValue = -12345.0;
+    constexpr const char* kUntouchedAction = "untouched";
+    double start_value = kUntouchedValue;
+    const char* start_action = kUntouchedAction;
+    const pc_result state_value_result =
+        pc_solver_state_value(
+            solver, start_state, &start_value,
+            &start_action, &error);
+    if (policy_guided_refined) {
+        PC_CHECK(
+            state_value_result ==
+            PC_RESULT_UNSUPPORTED_FEATURE);
+        PC_CHECK(error.code == PC_RESULT_UNSUPPORTED_FEATURE);
+        PC_CHECK(std::strstr(
+                     error.message,
+                     "per-state coarse policy queries are unavailable") !=
+                 nullptr);
+        PC_CHECK(start_value == kUntouchedValue);
+        PC_CHECK(start_action == kUntouchedAction);
+    } else {
+        PC_CHECK(state_value_result == PC_RESULT_OK);
+        PC_CHECK(start_value == solve_summary.start_value);
+        PC_CHECK(start_action != nullptr);
+    }
 
     /* Solve log: one line per expanded state. */
     size_t log_length = 0;
@@ -562,17 +647,84 @@ void run_public_solver_gate(const char* artifact_dir) {
     }
     PC_CHECK(lines == solve_summary.expanded_states);
 
-    /* Compile the policy and verify it through the public simulator. */
+    /*
+     * Compile the policy and verify it through the public simulator. A
+     * refined publication already owns its exact JSON inside SolveResult;
+     * the buffer query must not duplicate that document into the ordinary
+     * handle cache.
+     */
+    const std::string refinement_prefix =
+        "\"policy_refinement\":{\"triggers\":";
+    const std::size_t refinement_position =
+        solved_telemetry.find(refinement_prefix);
+    PC_CHECK(refinement_position != std::string::npos);
+    const bool policy_refinement_triggered =
+        solved_telemetry.find(
+            "\"policy_refinement\":{\"triggers\":0") ==
+        std::string::npos;
+    PC_CHECK(solved_telemetry.find("\"resource_cap\":null") !=
+             std::string::npos);
+    if (policy_refinement_triggered) {
+        PC_CHECK(solved_telemetry.find(
+                     "\"status\":\"complete\","
+                     "\"resource_cap\":null") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"fixed_point\":{\"checked\":true,"
+                     "\"complete\":true,"
+                     "\"lumpability_checked\":true,"
+                     "\"lumpable\":true") !=
+                 std::string::npos);
+        PC_CHECK(solved_telemetry.find(
+                     "\"class_policy\":{\"checked\":true,"
+                     "\"proper\":true}") !=
+                 std::string::npos);
+    } else {
+        PC_CHECK(solved_telemetry.find(
+                     "\"policy_refinement\":{\"triggers\":0,"
+                     "\"status\":\"exact_assertion_complete\","
+                     "\"resource_cap\":null") !=
+                 std::string::npos);
+    }
+    PC_CHECK(solved_telemetry.find(
+                 "\"compiled_assertion\":{\"checked\":true,"
+                 "\"proper\":true,\"zero_off_policy\":true,"
+                 "\"cost_reconciled\":true}") !=
+             std::string::npos);
+    pc_native_memory_stats memory_before_compile{};
+    PC_CHECK(pc_solver_memory_stats(
+                 solver, &memory_before_compile, &error) ==
+             PC_RESULT_OK);
     size_t strategy_length = 0;
     PC_CHECK(pc_solver_compile_strategy(solver, nullptr, 0,
                                         &strategy_length, &error) ==
              PC_RESULT_OK);
     PC_CHECK(strategy_length > 0);
+    pc_native_memory_stats memory_after_length_query{};
+    PC_CHECK(pc_solver_memory_stats(
+                 solver, &memory_after_length_query, &error) ==
+             PC_RESULT_OK);
+    if (policy_refinement_triggered) {
+        PC_CHECK(
+            memory_after_length_query.serialized_output_bytes ==
+            memory_before_compile.serialized_output_bytes);
+    } else {
+        PC_CHECK(
+            memory_after_length_query.serialized_output_bytes >
+            memory_before_compile.serialized_output_bytes);
+    }
     std::string strategy_json(strategy_length + 1, '\0');
     PC_CHECK(pc_solver_compile_strategy(solver, strategy_json.data(),
                                         strategy_json.size(),
                                         &strategy_length, &error) ==
              PC_RESULT_OK);
+    pc_native_memory_stats memory_after_strategy_copy{};
+    PC_CHECK(pc_solver_memory_stats(
+                 solver, &memory_after_strategy_copy, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(
+        memory_after_strategy_copy.serialized_output_bytes ==
+        memory_after_length_query.serialized_output_bytes);
     const std::string compiled_telemetry =
         solver_telemetry_json(solver, &error);
     PC_CHECK(compiled_telemetry.find("\"available\":true") !=
@@ -580,6 +732,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(compiled_telemetry.find(
                  "\"strategy_json_bytes\":" +
                  std::to_string(strategy_length)) != std::string::npos);
+    PC_CHECK(compiled_telemetry.find(
+                 "\"peak_owned_bytes\":") != std::string::npos);
 
     pc_strategy_handle strategy = nullptr;
     PC_CHECK(pc_strategy_compile_json(session, strategy_json.c_str(),
@@ -608,14 +762,43 @@ void run_public_solver_gate(const char* artifact_dir) {
     const double empirical =
         simulation_summary.known_total_cost /
         static_cast<double>(simulation_summary.completed_runs);
+    const char* policy_label =
+        policy_guided_refined ? "refined-router" : start_action;
     std::printf(
         "solver api gate: V=%.4f empirical=%.4f (%u states, policy %s)\n",
         solve_summary.start_value, empirical, solve_summary.expanded_states,
-        start_action);
+        policy_label);
     PC_CHECK(std::fabs(empirical - solve_summary.start_value) < 0.25);
 
     pc_simulator_destroy(simulator);
     pc_strategy_destroy(strategy);
+
+    /*
+     * Starting replacement invalidates the prior result and releases an
+     * ordinary compiled cache before new SolveWork is constructed. A refined
+     * publication never populated that cache, so its serialized-output count
+     * remains flat instead of growing.
+     */
+    PC_CHECK(pc_solver_solve_begin(
+                 solver, &item, economy, nullptr, &error) ==
+             PC_RESULT_OK);
+    pc_native_memory_stats replacement_memory{};
+    PC_CHECK(pc_solver_memory_stats(
+                 solver, &replacement_memory, &error) ==
+             PC_RESULT_OK);
+    PC_CHECK(
+        replacement_memory.serialized_output_bytes <=
+        memory_after_strategy_copy.serialized_output_bytes);
+    if (!policy_refinement_triggered) {
+        PC_CHECK(
+            replacement_memory.serialized_output_bytes <
+            memory_after_strategy_copy.serialized_output_bytes);
+    }
+    pc_solver_solve_abandon(solver);
+    size_t unavailable_strategy_length = 0;
+    PC_CHECK(pc_solver_compile_strategy(
+                 solver, nullptr, 0, &unavailable_strategy_length,
+                 &error) == PC_RESULT_NOT_FOUND);
 
     /* A no-policy cap keeps the cap as the public stopping cause. */
     pc_solve_options capped_options{};

@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -235,22 +236,10 @@ bool SolveWork::Impl::collect_focused_fringe(
             for (std::uint32_t i = 0; i < row.choice_count; ++i) {
                 const SparseChoiceGroup& choice =
                     transition_cache->choices.at(row.choice_offset + i);
-                std::uint32_t selected = choice.has_self ? state : kNoId;
-                double selected_value =
-                    choice.has_self ? result.values[state] : kInfinity;
-                for (std::uint32_t s = 0; s < choice.successor_count; ++s) {
-                    const std::uint32_t successor =
-                        transition_cache->choice_successors.at(
-                            choice.successor_offset + s);
-                    const double value = result.values[successor];
-                    if (value < selected_value - options.epsilon ||
-                        (std::abs(value - selected_value) <=
-                             options.epsilon &&
-                         successor < selected)) {
-                        selected = successor;
-                        selected_value = value;
-                    }
-                }
+                const std::uint32_t selected =
+                    select_sparse_policy_choice_successor(
+                        *transition_cache, choice, state,
+                        result.values);
                 if (selected != state && selected != kNoId) {
                     route(selected, normalization * choice.probability);
                 }

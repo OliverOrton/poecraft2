@@ -32,16 +32,19 @@ SolveWork::Impl::Impl(
         const pc_item_state& start_item,
         const std::unordered_map<std::string, double>& prices,
         const SolveOptions& solve_options)
-        : calc(context), session(context.session()), options(solve_options),
-          prices(prices),
+        : calc(context), session(context.session()),
+          exact_start_item(start_item), options(solve_options), prices(prices),
           reported_unsupported(context.operators().size(), false) {
         const auto setup_started = std::chrono::steady_clock::now();
         options.max_expanded_states = std::min(
             options.max_expanded_states, options.max_states);
         calc.reset_solve_telemetry();
         calc.set_solve_resource_caps(
-            options.max_discovered_states, options.max_reforge_work);
+            options.max_discovered_states, options.max_reforge_work,
+            true, options.max_solver_owned_bytes);
         result.options = options;
+        result.has_exact_start_item = true;
+        result.exact_start_item = exact_start_item;
         result.requested_absolute_optimality_gap =
             options.max_absolute_optimality_gap;
         result.requested_relative_optimality_gap =

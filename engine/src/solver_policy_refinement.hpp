@@ -1,0 +1,177 @@
+#pragma once
+
+#include "solver_refinement.hpp"
+
+#include <cstdint>
+#include <limits>
+#include <string>
+#include <unordered_map>
+
+namespace poecraft {
+namespace solver {
+namespace refinement {
+
+/*
+ * Production adapter result. The shared refinement engine remains the sole
+ * owner of partitioning and lumpability; this type only records the bounded
+ * strict-carrier discovery needed to feed that engine.
+ */
+struct PolicyLiftAdapterTelemetry {
+    std::uint32_t coarse_policy_states = 0;
+    std::uint64_t coarse_policy_edges = 0;
+    std::uint32_t strict_states_discovered = 0;
+    std::uint32_t strict_carriers_materialized = 0;
+    std::uint32_t strict_kernels_built = 0;
+    std::uint64_t strict_transitions_built = 0;
+    std::uint64_t canonical_successor_collapses = 0;
+    std::uint64_t strict_kernel_cache_hits = 0;
+    std::uint32_t backward_observation_rounds = 0;
+    std::uint64_t exact_fixed_point_rounds = 0;
+    std::uint64_t strict_calc_owned_bytes = 0;
+    std::uint64_t adapter_owned_bytes = 0;
+    std::uint64_t peak_adapter_owned_bytes = 0;
+    std::uint64_t strict_reforge_work = 0;
+    std::uint32_t local_reoptimization_rounds = 0;
+    std::uint64_t local_state_action_rows_scheduled = 0;
+    std::uint64_t local_state_action_rows_evaluated = 0;
+    std::uint64_t local_reoptimizations = 0;
+    std::uint64_t local_policy_changes = 0;
+    std::uint64_t local_value_changes = 0;
+};
+
+/*
+ * Structured authority for compiling an exactly refined policy. The strict
+ * state ids are carrier handles only; policy routing is defined exclusively
+ * by the canonical observation program and its resulting signature.
+ */
+struct RefinedPolicyCompileClass {
+    std::uint32_t class_id = 0;
+    std::uint32_t coarse_state = kNoId;
+    StableKey coarse_state_key;
+    std::uint32_t representative_state = kNoId;
+    std::vector<std::uint32_t> strict_members;
+    bool terminal = false;
+    ObservationRequirement required_observations;
+    FeatureSignature observation_signature;
+    std::optional<SelectedAction> selected_action;
+    double action_cost = 0.0;
+    std::vector<ProjectedTransition> transitions;
+};
+
+struct RefinedPolicyCompileRouting {
+    std::vector<RefinedPolicyCompileClass> classes;
+};
+
+enum class CompiledPolicyAssertionStatus : std::uint8_t {
+    NotRun = 0,
+    Complete,
+    NoPolicy,
+    ResourceCap,
+    CompilationFailure,
+    ExactEvaluationFailure,
+    ImproperPolicy,
+    IncompleteCost,
+    CostMismatch,
+};
+
+struct CompiledPolicyAssertion {
+    CompiledPolicyAssertionStatus status =
+        CompiledPolicyAssertionStatus::NotRun;
+    bool executable = false;
+    bool proper = false;
+    bool zero_off_policy = false;
+    bool cost_reconciled = false;
+    std::string failure_reason;
+    std::string resource_cap;
+    std::string strategy_json;
+    PolicyCompilationTelemetry compilation;
+    StrategyEvalResult evaluation;
+    double solver_cost = std::numeric_limits<double>::infinity();
+    double exact_cost = std::numeric_limits<double>::infinity();
+    double absolute_cost_delta = std::numeric_limits<double>::infinity();
+    double relative_cost_delta = std::numeric_limits<double>::infinity();
+    double off_policy_probability = std::numeric_limits<double>::infinity();
+    std::uint64_t retained_solver_bytes = 0;
+    std::uint64_t parsed_strategy_bytes = 0;
+    std::uint64_t economy_bytes = 0;
+    std::uint64_t evaluator_memory_budget = 0;
+    std::uint64_t publication_peak_owned_bytes = 0;
+};
+
+/*
+ * Compile the supplied policy/layout, parse the emitted strategy through
+ * simulator authority, and exact-evaluate it under the remaining solve
+ * resource budget. The production lift calls this with its strict context and
+ * a policy populated for every reached strict carrier, so success certifies
+ * the lifted artifact rather than merely rechecking the coarse policy.
+ * Reconciliation uses the portfolio contract: absolute error <= 1e-7 OR
+ * relative error <= 1e-9.
+ */
+CompiledPolicyAssertion assert_compiled_policy_exact(
+    CalcContext& coarse,
+    const SolveResult& solved,
+    const std::unordered_map<std::string, double>& prices,
+    const SolveOptions& options,
+    const std::string& strategy_name,
+    const RefinedPolicyCompileRouting* refined_routing = nullptr);
+
+enum class PolicyExactLiftStatus : std::uint8_t {
+    Complete = 0,
+    NoPolicy,
+    InvalidSolveState,
+    MissingPrice,
+    UnsupportedPrimitiveKernel,
+    CoarseMappingFailure,
+    ObservationUnavailable,
+    ResourceCap,
+    RefinementFailure,
+    LocalReoptimizationRequired,
+    CompiledAssertionFailure,
+};
+
+const char* policy_exact_lift_status_name(PolicyExactLiftStatus status);
+
+struct PolicyExactLiftCertificate {
+    PolicyExactLiftStatus status = PolicyExactLiftStatus::InvalidSolveState;
+    bool executable = false;
+    bool lumpable = false;
+    bool policy_changed = false;
+    bool coarse_value_reconciled = false;
+    std::string failure_reason;
+    std::string resource_cap;
+    double exact_start_cost = std::numeric_limits<double>::infinity();
+    double solver_cost = std::numeric_limits<double>::infinity();
+    double absolute_cost_delta = std::numeric_limits<double>::infinity();
+    double relative_cost_delta = std::numeric_limits<double>::infinity();
+    std::uint32_t root_refinement_class = kNoId;
+    StableKey exact_root_key;
+    PolicyLiftAdapterTelemetry adapter;
+    RefinementResult refinement;
+    PolicyEvaluationResult class_evaluation;
+    CompiledPolicyAssertion compiled;
+};
+
+/*
+ * Lift only the policy-reachable strict closure of `exact_start`. Primitive
+ * and fixed PlannerOperators are imported by context-independent semantic
+ * identity. Fixed operators derive one conservative contract from their
+ * declared primitive dependencies and execute through exact OptionKernel
+ * authority; the shared refinement engine remains independent of option
+ * names and kinds.
+ *
+ * The shared class-policy evaluator proves properness and supplies
+ * exact_start_cost before compilation. The parsed compiled-strategy evaluator
+ * is then the independent final executable-artifact assertion.
+ */
+PolicyExactLiftCertificate lift_policy_exact(
+    CalcContext& coarse,
+    const SolveResult& solved,
+    const pc_item_state& exact_start,
+    const std::unordered_map<std::string, double>& prices,
+    const SolveOptions& options,
+    const std::string& strategy_name,
+    const RefinementLimits* limits_override = nullptr);
+
+} // namespace refinement
+} // namespace solver
+} // namespace poecraft

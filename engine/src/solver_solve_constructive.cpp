@@ -687,20 +687,12 @@ void SolveWork::Impl::populate_incumbent_policy(
                 calc.operators().at(candidate.policy[state].index);
             if (planner.kind == PlannerOperatorKind::Primitive &&
                 planner.primitive_action < calc.registry().actions.size() &&
-                calc.registry().actions[planner.primitive_action].params.type ==
-                    ActionType::Unveil) {
-                std::sort(
-                    source.choices.begin(), source.choices.end(),
-                    [&](const OutcomeChoiceOption& left,
-                        const OutcomeChoiceOption& right) {
-                        const double left_value =
-                            candidate.values.at(left.state);
-                        const double right_value =
-                            candidate.values.at(right.state);
-                        return left_value != right_value
-                                   ? left_value < right_value
-                                   : left.mod_id < right.mod_id;
-                    });
+                action_observes_modifier_offer(
+                    calc.registry().actions[planner.primitive_action])) {
+                order_observed_modifier_choices(
+                    calc.registry().actions[
+                        planner.primitive_action],
+                    source.choices, candidate.values);
                 for (const OutcomeChoiceOption& choice : source.choices) {
                     candidate.unveil_preferences[state].push_back(
                         choice.mod_id);
@@ -713,18 +705,17 @@ void SolveWork::Impl::populate_incumbent_policy(
                     by_observation[choice.observation_state].push_back(choice);
                 }
                 for (auto& [observation_state, choices] : by_observation) {
-                    std::sort(
-                        choices.begin(), choices.end(),
-                        [&](const OutcomeChoiceOption& left,
-                            const OutcomeChoiceOption& right) {
-                            const double left_value =
-                                candidate.values.at(left.state);
-                            const double right_value =
-                                candidate.values.at(right.state);
-                            return left_value != right_value
-                                       ? left_value < right_value
-                                       : left.mod_id < right.mod_id;
-                        });
+                    if (planner.primitive_program.empty() ||
+                        planner.primitive_program.back() >=
+                            calc.registry().actions.size()) {
+                        throw std::logic_error(
+                            "bounded observed-choice option has no final "
+                            "primitive action");
+                    }
+                    order_observed_modifier_choices(
+                        calc.registry().actions[
+                            planner.primitive_program.back()],
+                        choices, candidate.values);
                     ObservedUnveilPreference preference;
                     preference.observation_state = observation_state;
                     for (const OutcomeChoiceOption& choice : choices) {

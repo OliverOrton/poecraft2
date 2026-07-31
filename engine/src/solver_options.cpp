@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <set>
@@ -860,10 +861,11 @@ void resolve_renewal_program(
         out.push_back(index);
     }
     std::size_t effective = out.size();
-    if (registry.actions.at(out.back()).params.type == ActionType::Unveil) {
+    if (action_observes_modifier_offer(
+            registry.actions.at(out.back()))) {
         if (!allow_unveil || effective < 2) {
             throw std::runtime_error(
-                "fixed option: Unveil is allowed only as the final observed "
+                "fixed option: observed choice is allowed only as the final "
                 "renewal step");
         }
         --effective;
@@ -901,7 +903,7 @@ void resolve_imprint_program(
         std::uint32_t index = kNoId;
         const ActionDescriptor& action = require_action(registry, id, index);
         if (action.synthetic || action.uses_companion_state ||
-            action.params.type == ActionType::Unveil ||
+            action_observes_modifier_offer(action) ||
             !calc_supports(action)) {
             throw std::runtime_error(
                 "fixed option: imprint retry action is not an exact ordinary "
@@ -958,7 +960,7 @@ AttemptKernel execute_attempt(
         const std::uint32_t action_index = program[step];
         const ActionDescriptor& action =
             calc.registry().actions.at(action_index);
-        const bool observed = action.params.type == ActionType::Unveil;
+        const bool observed = action_observes_modifier_offer(action);
         if (observed && step + 1 != program.size()) {
             result.supported = false;
             break;
@@ -986,7 +988,7 @@ AttemptKernel execute_attempt(
                      distribution.choice_groups) {
                     result.choice_groups.push_back(
                         {path_probability * group.probability,
-                         group.states});
+                         group.states, state_id});
                 }
                 for (const OutcomeChoiceOption& choice :
                      distribution.choice_options) {
@@ -1053,6 +1055,7 @@ std::uint64_t attempt_kernel_hash(const AttemptKernel& attempt) {
     }
     for (const OutcomeChoiceGroup& group : attempt.choice_groups) {
         mix(std::bit_cast<std::uint64_t>(group.probability));
+        mix(group.observation_state);
         for (const std::uint32_t state : group.states) mix(state);
         mix(kNoId);
     }
@@ -1134,7 +1137,7 @@ ImprintDiscoveryResult discover_automatic_imprint_options(
         const ActionDescriptor& action = calc.registry().actions.at(index);
         if (action.synthetic || action.uses_companion_state ||
             action.automatic_dependency_only ||
-            action.params.type == ActionType::Unveil ||
+            action_observes_modifier_offer(action) ||
             !calc_supports(action) ||
             !resource_keys_available(action.cost_keys, limits.prices)) {
             continue;
@@ -1347,6 +1350,62 @@ void add_action_resources(
     }
 }
 
+std::string registry_action_id(
+    const ActionRegistry& registry,
+    const std::uint32_t index) {
+    if (index == kNoId) return {};
+    if (index >= registry.actions.size()) {
+        throw std::logic_error(
+            "planner operator contains an out-of-range primitive action");
+    }
+    return registry.actions[index].id;
+}
+
+void bind_planner_primitive_action_ids(
+    const ActionRegistry& registry,
+    PlannerOperator& planner) {
+    planner.primitive_action_id =
+        registry_action_id(registry, planner.primitive_action);
+    planner.primitive_program_action_ids.clear();
+    planner.primitive_program_action_ids.reserve(
+        planner.primitive_program.size());
+    for (const std::uint32_t action : planner.primitive_program) {
+        planner.primitive_program_action_ids.push_back(
+            registry_action_id(registry, action));
+    }
+    planner.conditional_action_id =
+        registry_action_id(registry, planner.conditional_action);
+    planner.setup_action_id =
+        registry_action_id(registry, planner.setup_action);
+    planner.followup_action_id =
+        registry_action_id(registry, planner.followup_action);
+    planner.cleanup_action_id =
+        registry_action_id(registry, planner.cleanup_action);
+    planner.constructive_finish_action_id =
+        registry_action_id(
+            registry, planner.constructive_finish_action);
+}
+
+std::string bestiary_action_id(
+    const SessionImpl& session,
+    const std::uint32_t index) {
+    if (index == kNoId) return {};
+    if (index >= session.data->bestiary_actions.size()) {
+        throw std::logic_error(
+            "planner operator contains an out-of-range Bestiary action");
+    }
+    return session.data->bestiary_actions[index].id;
+}
+
+void bind_planner_bestiary_action_ids(
+    const SessionImpl& session,
+    PlannerOperator& planner) {
+    planner.bestiary_create_action_id =
+        bestiary_action_id(session, planner.bestiary_create_action);
+    planner.bestiary_restore_action_id =
+        bestiary_action_id(session, planner.bestiary_restore_action);
+}
+
 } // namespace
 
 std::vector<PlannerOperator> build_planner_operators(
@@ -1367,6 +1426,8 @@ std::vector<PlannerOperator> build_planner_operators(
         primitive.primitive_program.push_back(index);
         primitive.resource_quantities =
             aggregate_resources(registry, primitive.primitive_program);
+        bind_planner_primitive_action_ids(registry, primitive);
+        bind_planner_bestiary_action_ids(session, primitive);
         if (goal.automatic_candidates) {
             if (action.params.type == ActionType::Fracture) {
                 primitive.relevant_goal_mask =
@@ -1413,7 +1474,10 @@ std::vector<PlannerOperator> build_planner_operators(
             const std::uint32_t available = all_goal_slots & ~finish_mask;
             for (std::uint32_t subset = available; subset != 0;
                  subset = (subset - 1u) & available) {
-                if (std::popcount(subset) != exit_count) continue;
+                if (static_cast<std::uint32_t>(
+                        std::popcount(subset)) != exit_count) {
+                    continue;
+                }
                 std::vector<std::uint32_t> exit_slots;
                 for (std::uint32_t slot = 0; slot < goal.slots.size(); ++slot) {
                     if ((subset & (1u << slot)) != 0) {
@@ -1770,10 +1834,11 @@ std::vector<PlannerOperator> build_planner_operators(
                     "fixed option: primitive has no exact evaluator: " +
                     registry.actions.at(action).id);
             }
-            if (registry.actions.at(action).params.type == ActionType::Unveil &&
+            if (action_observes_modifier_offer(
+                    registry.actions.at(action)) &&
                 option.option_kind != FixedOptionKind::Renewal) {
                 throw std::runtime_error(
-                    "fixed option: observed Unveil choices are not fixed "
+                    "fixed option: observed choices are not fixed "
                     "program steps");
             }
         }
@@ -1803,9 +1868,910 @@ std::vector<PlannerOperator> build_planner_operators(
         if (option.conditional_action != kNoId) {
             option.primitive_program.pop_back();
         }
+        bind_planner_primitive_action_ids(registry, option);
+        bind_planner_bestiary_action_ids(session, option);
         operators.push_back(std::move(option));
     }
+    /*
+     * Planner construction is the admission boundary for composite runtime
+     * semantics. Reject an incomplete dependency contract or inconsistent
+     * execution-role program before any policy can select the operator.
+     */
+    for (const PlannerOperator& planner : operators) {
+        (void)planner_operator_runtime_semantics(
+            planner, registry);
+    }
     return operators;
+}
+
+namespace {
+
+void append_semantic_string(
+    std::vector<std::uint64_t>& key,
+    const std::string& value) {
+    key.push_back(static_cast<std::uint64_t>(value.size()));
+    for (std::size_t offset = 0; offset < value.size(); offset += 8) {
+        std::uint64_t word = 0;
+        const std::size_t count =
+            std::min<std::size_t>(8, value.size() - offset);
+        for (std::size_t byte = 0; byte < count; ++byte) {
+            word |= static_cast<std::uint64_t>(
+                        static_cast<unsigned char>(value[offset + byte]))
+                    << (byte * 8);
+        }
+        key.push_back(word);
+    }
+}
+
+void append_semantic_strings(
+    std::vector<std::uint64_t>& key,
+    const std::vector<std::string>& values) {
+    key.push_back(static_cast<std::uint64_t>(values.size()));
+    for (const std::string& value : values) {
+        append_semantic_string(key, value);
+    }
+}
+
+void append_semantic_u32s(
+    std::vector<std::uint64_t>& key,
+    const std::vector<std::uint32_t>& values) {
+    key.push_back(static_cast<std::uint64_t>(values.size()));
+    for (const std::uint32_t value : values) key.push_back(value);
+}
+
+bool same_resource_quantities(
+    const std::vector<std::pair<std::string, double>>& left,
+    const std::vector<std::pair<std::string, double>>& right) {
+    if (left.size() != right.size()) return false;
+    for (std::size_t i = 0; i < left.size(); ++i) {
+        if (left[i].first != right[i].first ||
+            std::bit_cast<std::uint64_t>(left[i].second) !=
+                std::bit_cast<std::uint64_t>(right[i].second)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace
+
+std::vector<std::uint64_t> exact_abstract_state_key(
+        const AbstractState& state,
+        const std::uint32_t coarse_parent) {
+    std::vector<std::uint64_t> key{
+        0x7063727374617432ull, /* "pcrstat2" */
+        coarse_parent,
+        state.fractured_goal_mask,
+        state.crafted_goal_mask,
+        state.blocked_mask,
+        state.prefix_count,
+        state.suffix_count,
+        state.rarity,
+        state.influence_bits,
+        static_cast<std::uint64_t>(state.veiled_side + 1),
+        state.searing_exarch_tier,
+        state.eater_of_worlds_tier,
+        state.flags,
+        state.fractured_metamod_flags,
+        state.goal_progress_retry_basin,
+    };
+    for (const std::uint8_t status : state.slot_status) {
+        key.push_back(status);
+    }
+    for (const std::uint32_t token :
+         state.goal_member_class_tokens) {
+        key.push_back(token);
+    }
+    const auto append_counts =
+        [&](const CompactCountVector& counts) {
+            key.push_back(counts.size());
+            std::uint64_t nonzero = 0;
+            for (std::size_t index = 0;
+                 index < counts.size(); ++index) {
+                if (counts[index] != 0) ++nonzero;
+            }
+            key.push_back(nonzero);
+            for (std::size_t index = 0;
+                 index < counts.size(); ++index) {
+                const std::uint8_t value = counts[index];
+                if (value == 0) continue;
+                key.push_back(index);
+                key.push_back(value);
+            }
+        };
+    append_counts(state.junk_counts);
+    append_counts(state.fractured_junk_counts);
+    append_counts(state.crafted_junk_counts);
+    append_counts(state.fractured_crafted_junk_counts);
+    return key;
+}
+
+std::vector<std::uint64_t> planner_operator_semantic_key(
+    const PlannerOperator& planner) {
+    std::vector<std::uint64_t> key;
+    key.reserve(
+        32 + planner.primitive_program_action_ids.size() +
+        planner.exit_goal_slots.size() +
+        planner.resource_quantities.size() * 3);
+    /* Versioned, length-delimited logical serialization. No hash is used:
+     * equality of these vectors is collision-free semantic equality. */
+    key.push_back(1);
+    key.push_back(static_cast<std::uint8_t>(planner.kind));
+    key.push_back(static_cast<std::uint8_t>(planner.option_kind));
+    append_semantic_string(key, planner.primitive_action_id);
+    append_semantic_strings(
+        key, planner.primitive_program_action_ids);
+    key.push_back(
+        static_cast<std::uint8_t>(planner.intended_side));
+    append_semantic_u32s(key, planner.exit_goal_slots);
+    key.push_back(planner.exit_min_satisfied);
+    key.push_back(planner.carrier_goal_slot);
+    append_semantic_string(key, planner.conditional_action_id);
+    append_semantic_string(key, planner.bestiary_create_action_id);
+    append_semantic_string(key, planner.bestiary_restore_action_id);
+    key.push_back(static_cast<std::uint8_t>(planner.automatic_kind));
+    key.push_back(planner.relevant_goal_mask);
+    append_semantic_string(key, planner.setup_action_id);
+    append_semantic_string(key, planner.followup_action_id);
+    append_semantic_string(key, planner.cleanup_action_id);
+    append_semantic_string(
+        key, planner.constructive_finish_action_id);
+    key.push_back(
+        static_cast<std::uint64_t>(
+            planner.resource_quantities.size()));
+    for (const auto& [resource, quantity] :
+         planner.resource_quantities) {
+        append_semantic_string(key, resource);
+        key.push_back(std::bit_cast<std::uint64_t>(quantity));
+    }
+    return key;
+}
+
+bool planner_operator_structurally_equal(
+    const PlannerOperator& left,
+    const PlannerOperator& right) {
+    return left.kind == right.kind &&
+           left.option_kind == right.option_kind &&
+           left.primitive_action_id == right.primitive_action_id &&
+           left.primitive_program_action_ids ==
+               right.primitive_program_action_ids &&
+           left.intended_side == right.intended_side &&
+           left.exit_goal_slots == right.exit_goal_slots &&
+           left.exit_min_satisfied == right.exit_min_satisfied &&
+           left.carrier_goal_slot == right.carrier_goal_slot &&
+           left.conditional_action_id == right.conditional_action_id &&
+           left.bestiary_create_action_id ==
+               right.bestiary_create_action_id &&
+           left.bestiary_restore_action_id ==
+               right.bestiary_restore_action_id &&
+           left.automatic_kind == right.automatic_kind &&
+           left.relevant_goal_mask == right.relevant_goal_mask &&
+           left.setup_action_id == right.setup_action_id &&
+           left.followup_action_id == right.followup_action_id &&
+           left.cleanup_action_id == right.cleanup_action_id &&
+           left.constructive_finish_action_id ==
+               right.constructive_finish_action_id &&
+           same_resource_quantities(
+               left.resource_quantities,
+               right.resource_quantities);
+}
+
+PlannerOperatorRuntimeSemantics planner_operator_runtime_semantics(
+        const PlannerOperator& planner,
+        const ActionRegistry& registry) {
+    PlannerOperatorRuntimeSemantics semantics;
+    if (planner.option_kind == FixedOptionKind::ImprintRetry) {
+        if (planner.kind != PlannerOperatorKind::FixedOption ||
+            planner.bestiary_create_action == kNoId ||
+            planner.bestiary_create_action_id.empty() ||
+            planner.bestiary_restore_action == kNoId ||
+            planner.bestiary_restore_action_id.empty()) {
+            throw std::invalid_argument(
+                "imprint retry planner operator has incomplete "
+                "checkpoint dependencies");
+        }
+        /*
+         * Checkpoint creation preserves the live item, but its legality
+         * observes rarity and the immutable corruption/mirror flags. Restore
+         * is the option kernel's internal exact return-to-entry loop, so it
+         * has no outgoing policy continuation path of its own.
+         */
+        ActionDescriptor checkpoint_create;
+        checkpoint_create.id =
+            "internal:bestiary_imprint_checkpoint_create";
+        checkpoint_create.refinement.schema_version =
+            kActionRefinementContractVersion;
+        checkpoint_create.refinement.observed_item_features =
+            refinement_feature(RefinementFeature::Rarity) |
+            refinement_feature(RefinementFeature::Corrupted) |
+            refinement_feature(RefinementFeature::Mirrored);
+        checkpoint_create.refinement.preserved_item_features =
+            kAllRefinementItemFeatures;
+        checkpoint_create.refinement.preserved_affixes.push_back({});
+        RefinementAffixFlow identity;
+        identity.preserved_features =
+            kAllRefinementAffixFeatures;
+        checkpoint_create.refinement.affix_flows.push_back(
+            std::move(identity));
+        canonicalize_and_validate_action_refinement_contract(
+            checkpoint_create);
+        semantics.ordered_program.push_back(
+            {kNoId, std::move(checkpoint_create.refinement)});
+    } else if (
+        planner.bestiary_create_action != kNoId ||
+        !planner.bestiary_create_action_id.empty() ||
+        planner.bestiary_restore_action != kNoId ||
+        !planner.bestiary_restore_action_id.empty()) {
+        throw std::invalid_argument(
+            "non-imprint planner operator has checkpoint dependencies");
+    }
+    const auto append_step =
+        [&](const std::uint32_t action) {
+            if (action == kNoId) {
+                throw std::invalid_argument(
+                    "planner operator runtime program contains no action");
+            }
+            if (action >= registry.actions.size()) {
+                throw std::invalid_argument(
+                    "planner operator has a runtime dependency outside "
+                    "the action registry");
+            }
+            ActionDescriptor admitted = registry.actions[action];
+            canonicalize_and_validate_action_refinement_contract(
+                admitted);
+            semantics.ordered_program.push_back(
+                {action, std::move(admitted.refinement)});
+        };
+    for (const std::uint32_t action :
+         planner.primitive_program) {
+        append_step(action);
+    }
+    if (planner.conditional_action != kNoId &&
+        std::none_of(
+            semantics.ordered_program.begin(),
+            semantics.ordered_program.end(),
+            [&](const PlannerOperatorRuntimeStep& step) {
+                return step.action ==
+                       planner.conditional_action;
+            })) {
+        append_step(planner.conditional_action);
+    }
+    /*
+     * constructive_finish_action witnesses synthesis/admission of an upper
+     * policy. It is not executed by this PlannerOperator and therefore must
+     * not broaden its observation or preservation contract.
+     */
+    if (semantics.ordered_program.empty()) {
+        throw std::invalid_argument(
+            "planner operator has no runtime action program");
+    }
+    const auto require_role_in_program =
+        [&](const std::uint32_t action,
+            const char* role) {
+            if (action == kNoId) return;
+            if (std::none_of(
+                    semantics.ordered_program.begin(),
+                    semantics.ordered_program.end(),
+                    [&](const PlannerOperatorRuntimeStep& step) {
+                        return step.action == action;
+                    })) {
+                throw std::invalid_argument(
+                    std::string{"planner operator "} + role +
+                    " is absent from its runtime action program");
+            }
+        };
+    require_role_in_program(
+        planner.setup_action, "setup action");
+    require_role_in_program(
+        planner.followup_action, "followup action");
+    require_role_in_program(
+        planner.cleanup_action, "cleanup action");
+    semantics.action_dependencies.reserve(
+        semantics.ordered_program.size());
+    for (const PlannerOperatorRuntimeStep& step :
+         semantics.ordered_program) {
+        if (step.action != kNoId) {
+            semantics.action_dependencies.push_back(step.action);
+        }
+    }
+    std::sort(
+        semantics.action_dependencies.begin(),
+        semantics.action_dependencies.end());
+    semantics.action_dependencies.erase(
+        std::unique(
+            semantics.action_dependencies.begin(),
+            semantics.action_dependencies.end()),
+        semantics.action_dependencies.end());
+    if (semantics.action_dependencies.empty()) {
+        throw std::invalid_argument(
+            "planner operator has no runtime action dependency");
+    }
+    const auto add_execution_path =
+        [&](std::vector<PlannerOperatorRuntimeStep> path) {
+            if (path.empty()) return;
+            const auto same_path =
+                [&](const std::vector<PlannerOperatorRuntimeStep>&
+                        existing) {
+                    if (existing.size() != path.size()) return false;
+                    for (std::size_t index = 0;
+                         index < path.size(); ++index) {
+                        if (existing[index].action !=
+                            path[index].action) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+            if (std::none_of(
+                    semantics.execution_paths.begin(),
+                    semantics.execution_paths.end(),
+                    same_path)) {
+                semantics.execution_paths.push_back(
+                    std::move(path));
+            }
+        };
+    if (planner.kind == PlannerOperatorKind::Primitive) {
+        if (planner.primitive_action == kNoId ||
+            semantics.ordered_program.size() != 1 ||
+            semantics.ordered_program.front().action !=
+                planner.primitive_action ||
+            semantics.action_dependencies.size() != 1) {
+            throw std::invalid_argument(
+                "primitive planner operator has an inconsistent "
+                "runtime program");
+        }
+        add_execution_path(semantics.ordered_program);
+        semantics.compatibility_refinement =
+            semantics.ordered_program.front().refinement;
+        return semantics;
+    }
+
+    const std::size_t preparation_steps =
+        planner.primitive_program.size();
+    if (planner.conditional_action != kNoId) {
+        const auto conditional = std::find_if(
+            semantics.ordered_program.begin(),
+            semantics.ordered_program.end(),
+            [&](const PlannerOperatorRuntimeStep& step) {
+                return step.action == planner.conditional_action;
+            });
+        if (conditional ==
+            semantics.ordered_program.end()) {
+            throw std::invalid_argument(
+                "conditional planner action is absent from its "
+                "runtime program");
+        }
+        /*
+         * The option may enter with its carrier already prepared, finish a
+         * complete preparation attempt without taking the conditional step,
+         * or execute the conditional step after that complete attempt.
+         * Individual preparation prefixes are not executable exits.
+         */
+        add_execution_path({*conditional});
+        std::vector<PlannerOperatorRuntimeStep> preparation{
+            semantics.ordered_program.begin(),
+            semantics.ordered_program.begin() +
+                static_cast<std::ptrdiff_t>(preparation_steps)};
+        add_execution_path(preparation);
+        if (preparation.empty() ||
+            preparation.back().action !=
+                planner.conditional_action) {
+            preparation.push_back(*conditional);
+        }
+        add_execution_path(std::move(preparation));
+    } else if (
+        !semantics.ordered_program.empty() &&
+        action_observes_modifier_offer(
+            registry.actions.at(
+                semantics.ordered_program.back().action))) {
+        /*
+         * An observed modifier offer may be empty. In that branch the
+         * completed preparation is the whole path; otherwise the selected
+         * choice is the final step.
+         */
+        add_execution_path(
+            std::vector<PlannerOperatorRuntimeStep>{
+                semantics.ordered_program.begin(),
+                semantics.ordered_program.end() - 1});
+        add_execution_path(semantics.ordered_program);
+    } else {
+        add_execution_path(semantics.ordered_program);
+    }
+    if (semantics.execution_paths.empty()) {
+        add_execution_path(semantics.ordered_program);
+    }
+    std::sort(
+        semantics.execution_paths.begin(),
+        semantics.execution_paths.end(),
+        [](const std::vector<PlannerOperatorRuntimeStep>& left,
+           const std::vector<PlannerOperatorRuntimeStep>& right) {
+            return std::lexicographical_compare(
+                left.begin(), left.end(),
+                right.begin(), right.end(),
+                [](const PlannerOperatorRuntimeStep& a,
+                   const PlannerOperatorRuntimeStep& b) {
+                    return a.action < b.action;
+                });
+        });
+
+    ActionRefinementContract& composite =
+        semantics.compatibility_refinement;
+    composite.schema_version =
+        kActionRefinementContractVersion;
+    for (const PlannerOperatorRuntimeStep& step :
+         semantics.ordered_program) {
+        const ActionRefinementContract& dependency =
+            step.refinement;
+        composite.observed_item_features |=
+            dependency.observed_item_features;
+        composite.preserved_item_features |=
+            dependency.preserved_item_features;
+        composite.destroyed_item_features |=
+            dependency.destroyed_item_features;
+        composite.observed_modifier_tag_ids.insert(
+            composite.observed_modifier_tag_ids.end(),
+            dependency.observed_modifier_tag_ids.begin(),
+            dependency.observed_modifier_tag_ids.end());
+        composite.affix_observations.insert(
+            composite.affix_observations.end(),
+            dependency.affix_observations.begin(),
+            dependency.affix_observations.end());
+        composite.item_affix_dependencies.insert(
+            composite.item_affix_dependencies.end(),
+            dependency.item_affix_dependencies.begin(),
+            dependency.item_affix_dependencies.end());
+        composite.affix_flows.insert(
+            composite.affix_flows.end(),
+            dependency.affix_flows.begin(),
+            dependency.affix_flows.end());
+        composite.preserved_affixes.insert(
+            composite.preserved_affixes.end(),
+            dependency.preserved_affixes.begin(),
+            dependency.preserved_affixes.end());
+        composite.destroyed_affixes.insert(
+            composite.destroyed_affixes.end(),
+            dependency.destroyed_affixes.begin(),
+            dependency.destroyed_affixes.end());
+        if (dependency.outcome_observation !=
+            RefinementOutcomeObservation::None) {
+            if (composite.outcome_observation !=
+                    RefinementOutcomeObservation::None &&
+                composite.outcome_observation !=
+                    dependency.outcome_observation) {
+                throw std::invalid_argument(
+                    "planner runtime combines incompatible observed-choice "
+                    "vocabularies");
+            }
+            composite.outcome_observation =
+                dependency.outcome_observation;
+        }
+    }
+    composite.resets_to_fresh_item = false;
+
+    std::sort(
+        composite.observed_modifier_tag_ids.begin(),
+        composite.observed_modifier_tag_ids.end());
+    composite.observed_modifier_tag_ids.erase(
+        std::unique(
+            composite.observed_modifier_tag_ids.begin(),
+            composite.observed_modifier_tag_ids.end()),
+        composite.observed_modifier_tag_ids.end());
+    const auto selector_less =
+        [](const RefinementAffixSelector& left,
+           const RefinementAffixSelector& right) {
+            const auto left_scalars = std::tie(
+                left.required_affix_traits,
+                left.forbidden_affix_traits,
+                left.required_item_traits,
+                left.forbidden_item_traits);
+            const auto right_scalars = std::tie(
+                right.required_affix_traits,
+                right.forbidden_affix_traits,
+                right.required_item_traits,
+                right.forbidden_item_traits);
+            return left_scalars != right_scalars
+                       ? left_scalars < right_scalars
+                       : left.required_tag_ids <
+                             right.required_tag_ids;
+        };
+    const auto canonicalize_selectors =
+        [&](std::vector<RefinementAffixSelector>& selectors) {
+            std::sort(
+                selectors.begin(), selectors.end(),
+                selector_less);
+            selectors.erase(
+                std::unique(
+                    selectors.begin(), selectors.end()),
+                selectors.end());
+        };
+    canonicalize_selectors(composite.preserved_affixes);
+    canonicalize_selectors(composite.destroyed_affixes);
+
+    std::sort(
+        composite.affix_observations.begin(),
+        composite.affix_observations.end(),
+        [&](const RefinementAffixObservation& left,
+            const RefinementAffixObservation& right) {
+            return selector_less(
+                left.selector, right.selector);
+        });
+    std::vector<RefinementAffixObservation>
+        merged_observations;
+    for (RefinementAffixObservation observation :
+         composite.affix_observations) {
+        if (!merged_observations.empty() &&
+            merged_observations.back().selector ==
+                observation.selector) {
+            merged_observations.back().features |=
+                observation.features;
+        } else {
+            merged_observations.push_back(
+                std::move(observation));
+        }
+    }
+    composite.affix_observations =
+        std::move(merged_observations);
+
+    std::sort(
+        composite.item_affix_dependencies.begin(),
+        composite.item_affix_dependencies.end(),
+        [](const RefinementItemAffixDependency& left,
+           const RefinementItemAffixDependency& right) {
+            return std::tie(
+                       left.item_features,
+                       left.survivor_affix_features) <
+                   std::tie(
+                       right.item_features,
+                       right.survivor_affix_features);
+        });
+    composite.item_affix_dependencies.erase(
+        std::unique(
+            composite.item_affix_dependencies.begin(),
+            composite.item_affix_dependencies.end()),
+        composite.item_affix_dependencies.end());
+    std::sort(
+        composite.affix_flows.begin(),
+        composite.affix_flows.end(),
+        [&](const RefinementAffixFlow& left,
+            const RefinementAffixFlow& right) {
+            if (selector_less(
+                    left.source_selector,
+                    right.source_selector)) {
+                return true;
+            }
+            if (selector_less(
+                    right.source_selector,
+                    left.source_selector)) {
+                return false;
+            }
+            return std::tie(
+                       left.set_affix_traits,
+                       left.cleared_affix_traits,
+                       left.preserved_features,
+                       left.preserves_modifier_classification) <
+                   std::tie(
+                       right.set_affix_traits,
+                       right.cleared_affix_traits,
+                       right.preserved_features,
+                       right.preserves_modifier_classification);
+        });
+    composite.affix_flows.erase(
+        std::unique(
+            composite.affix_flows.begin(),
+            composite.affix_flows.end()),
+        composite.affix_flows.end());
+    return semantics;
+}
+
+bool fixed_option_choice_retries_locally(
+        const std::uint32_t entry_state,
+        const OptionKernel& kernel,
+        const std::uint32_t successor_state,
+        const std::uint32_t actual_state,
+        const std::vector<std::uint32_t>&
+            behavioral_representative_by_state) {
+    const auto same_behavioral_state =
+        [&](const std::uint32_t left,
+            const std::uint32_t right) {
+            if (left == right) return true;
+            if (left == kNoId || right == kNoId ||
+                behavioral_representative_by_state.empty() ||
+                left >=
+                    behavioral_representative_by_state.size()) {
+                return false;
+            }
+            const std::uint32_t projected_left =
+                behavioral_representative_by_state[left];
+            if (projected_left == right) return true;
+            return right <
+                       behavioral_representative_by_state.size() &&
+                   projected_left ==
+                       behavioral_representative_by_state[right];
+        };
+    if (successor_state == kNoId ||
+        same_behavioral_state(successor_state, entry_state) ||
+        std::find(
+            kernel.retry_states.begin(),
+            kernel.retry_states.end(),
+            actual_state) != kernel.retry_states.end()) {
+        return true;
+    }
+    return std::any_of(
+        kernel.retry_states.begin(),
+        kernel.retry_states.end(),
+        [&](const std::uint32_t retry_state) {
+            return same_behavioral_state(
+                retry_state, actual_state);
+        });
+}
+
+ExecutableFixedOptionRecipe fixed_option_executable_recipe(
+        const CalcContext& calc,
+        const std::uint32_t entry_state,
+        const PlannerOperator& planner,
+        const OptionKernel& kernel,
+        const std::vector<ObservedUnveilPreference>& preferences,
+        const std::vector<std::uint32_t>&
+            behavioral_representative_by_state) {
+    if (planner.kind != PlannerOperatorKind::FixedOption) {
+        throw std::invalid_argument(
+            "executable fixed-option recipe received a primitive "
+            "operator");
+    }
+    if (entry_state >= calc.state_count()) {
+        throw std::invalid_argument(
+            "executable fixed-option recipe entry is outside the "
+            "state table");
+    }
+    if (!kernel.supported || !kernel.legal ||
+        !kernel.terminates_almost_surely) {
+        throw std::invalid_argument(
+            "fixed-option member has no legal exact kernel");
+    }
+
+    const auto state_key =
+        [&](const std::uint32_t state,
+            const char* subject) {
+            const std::uint32_t resolved =
+                state == kNoId ? entry_state : state;
+            if (resolved >= calc.state_count()) {
+                throw std::invalid_argument(
+                    std::string(subject) +
+                    " references a state outside the exact table");
+            }
+            return exact_abstract_state_key(
+                calc.state(resolved), 0);
+        };
+    const auto canonical_state_keys =
+        [&](const std::vector<std::uint32_t>& states,
+            const char* subject) {
+            std::vector<std::vector<std::uint64_t>> keys;
+            keys.reserve(states.size());
+            for (const std::uint32_t state : states) {
+                keys.push_back(state_key(state, subject));
+            }
+            std::sort(keys.begin(), keys.end());
+            keys.erase(
+                std::unique(keys.begin(), keys.end()),
+                keys.end());
+            return keys;
+        };
+
+    ExecutableFixedOptionRecipe recipe;
+    recipe.entry_continues = kernel.entry_continues;
+    const bool renewal_route =
+        planner.option_kind == FixedOptionKind::Renewal ||
+        planner.option_kind == FixedOptionKind::ProtectedRepeat ||
+        planner.option_kind ==
+            FixedOptionKind::TemporaryBenchRepeat;
+    bool observed = false;
+    if (!planner.primitive_program.empty()) {
+        const std::uint32_t final_action =
+            planner.primitive_program.back();
+        if (final_action >= calc.registry().actions.size()) {
+            throw std::invalid_argument(
+                "fixed option has an invalid primitive program");
+        }
+        observed = action_observes_modifier_offer(
+            calc.registry().actions[final_action]);
+    }
+    if (observed && !renewal_route) {
+        throw std::invalid_argument(
+            "fixed option has an unsupported observed execution "
+            "recipe");
+    }
+
+    if (planner.option_kind == FixedOptionKind::ImprintRetry ||
+        (renewal_route && !observed) ||
+        (planner.option_kind ==
+             FixedOptionKind::FracturePrepare &&
+         !kernel.entry_continues)) {
+        recipe.retry_state_keys =
+            canonical_state_keys(
+                kernel.retry_states,
+                "fixed-option retry predicate");
+    }
+    if (planner.option_kind ==
+            FixedOptionKind::FracturePrepare &&
+        !kernel.entry_continues) {
+        recipe.continuation_state_keys =
+            canonical_state_keys(
+                kernel.continuation_states,
+                "fixed-option continuation predicate");
+        std::vector<std::vector<std::uint64_t>> overlap;
+        std::set_intersection(
+            recipe.retry_state_keys.begin(),
+            recipe.retry_state_keys.end(),
+            recipe.continuation_state_keys.begin(),
+            recipe.continuation_state_keys.end(),
+            std::back_inserter(overlap));
+        if (!overlap.empty()) {
+            throw std::invalid_argument(
+                "fixed option has overlapping retry and "
+                "continuation predicates");
+        }
+    }
+
+    if (!observed) {
+        if (!preferences.empty() ||
+            !kernel.observation_choice_options.empty() ||
+            !kernel.observation_choice_groups.empty()) {
+            throw std::invalid_argument(
+                "unobserved fixed option has an unexpected choice "
+                "sidecar");
+        }
+        return recipe;
+    }
+    if (preferences.empty() ||
+        kernel.observation_choice_options.empty()) {
+        throw std::invalid_argument(
+            "observed fixed option has no populated choice sidecar");
+    }
+
+    std::map<
+        std::vector<std::uint64_t>,
+        std::map<std::uint32_t, bool>>
+        offered_by_observation;
+    for (const OutcomeChoiceOption& option :
+         kernel.observation_choice_options) {
+        if (option.mod_id >= calc.session().mod_count) {
+            throw std::invalid_argument(
+                "observed fixed option exposes an invalid modifier");
+        }
+        const std::vector<std::uint64_t> observation =
+            state_key(
+                option.observation_state,
+                "fixed-option observation");
+        const bool retry_local =
+            fixed_option_choice_retries_locally(
+                entry_state, kernel, option.state,
+                option.actual_state,
+                behavioral_representative_by_state);
+        const auto [found, inserted] =
+            offered_by_observation[observation].emplace(
+                option.mod_id, retry_local);
+        if (!inserted && found->second != retry_local) {
+            throw std::invalid_argument(
+                "one observed modifier has conflicting branch roles");
+        }
+    }
+
+    std::set<std::vector<std::uint64_t>>
+        seen_observations;
+    recipe.offers.reserve(preferences.size());
+    for (const ObservedUnveilPreference& preference :
+         preferences) {
+        ExecutableFixedOptionOffer offer;
+        offer.observation_state_key =
+            state_key(
+                preference.observation_state,
+                "fixed-option preference observation");
+        if (!seen_observations.insert(
+                offer.observation_state_key).second) {
+            throw std::invalid_argument(
+                "fixed-option preference repeats an observation");
+        }
+        const auto available =
+            offered_by_observation.find(
+                offer.observation_state_key);
+        if (available == offered_by_observation.end() ||
+            preference.choices.empty()) {
+            throw std::invalid_argument(
+                "fixed-option preference does not match an observed "
+                "offer");
+        }
+        for (const auto& [mod, unused] : available->second) {
+            (void)unused;
+            offer.offered_mod_ids.push_back(mod);
+        }
+        std::set<std::uint32_t> seen_mods;
+        for (const ObservedUnveilChoice& choice :
+             preference.choices) {
+            if (choice.mod_id >= calc.session().mod_count ||
+                !seen_mods.insert(choice.mod_id).second) {
+                throw std::invalid_argument(
+                    "fixed-option preference has an invalid or "
+                    "repeated modifier");
+            }
+            const auto offered =
+                available->second.find(choice.mod_id);
+            if (offered == available->second.end()) {
+                throw std::invalid_argument(
+                    "fixed-option preference chooses outside its "
+                    "offer");
+            }
+            const bool retry_local =
+                fixed_option_choice_retries_locally(
+                    entry_state, kernel,
+                    choice.successor_state,
+                    choice.actual_state,
+                    behavioral_representative_by_state);
+            if (retry_local != offered->second) {
+                throw std::invalid_argument(
+                    "fixed-option preference gives an offered "
+                    "modifier the wrong branch role");
+            }
+            offer.ordered_choices.push_back({
+                choice.mod_id, retry_local});
+        }
+        if (seen_mods.size() != available->second.size()) {
+            throw std::invalid_argument(
+                "fixed-option preference does not cover its offer");
+        }
+        recipe.offers.push_back(std::move(offer));
+    }
+    if (recipe.offers.size() !=
+        offered_by_observation.size()) {
+        throw std::invalid_argument(
+            "fixed-option preferences do not cover every offer");
+    }
+    std::sort(
+        recipe.offers.begin(), recipe.offers.end(),
+        [](const ExecutableFixedOptionOffer& left,
+           const ExecutableFixedOptionOffer& right) {
+            return left.observation_state_key <
+                   right.observation_state_key;
+        });
+    return recipe;
+}
+
+std::vector<std::uint64_t> fixed_option_executable_recipe_key(
+        const ExecutableFixedOptionRecipe& recipe) {
+    std::vector<std::uint64_t> key{
+        0x706366786f707431ull, /* "pcfxopt1" */
+        recipe.entry_continues ? 1u : 0u};
+    const auto append_state_keys =
+        [&](const std::vector<std::vector<std::uint64_t>>& states) {
+            key.push_back(states.size());
+            for (const std::vector<std::uint64_t>& state : states) {
+                key.push_back(state.size());
+                key.insert(
+                    key.end(), state.begin(), state.end());
+            }
+        };
+    append_state_keys(recipe.retry_state_keys);
+    append_state_keys(recipe.continuation_state_keys);
+    key.push_back(recipe.offers.size());
+    for (const ExecutableFixedOptionOffer& offer :
+         recipe.offers) {
+        key.push_back(offer.observation_state_key.size());
+        key.insert(
+            key.end(),
+            offer.observation_state_key.begin(),
+            offer.observation_state_key.end());
+        key.push_back(offer.offered_mod_ids.size());
+        for (const std::uint32_t mod :
+             offer.offered_mod_ids) {
+            key.push_back(mod);
+        }
+        key.push_back(offer.ordered_choices.size());
+        for (const ExecutableFixedOptionChoice& choice :
+             offer.ordered_choices) {
+            key.push_back(choice.mod_id);
+            key.push_back(choice.retry_local ? 1u : 0u);
+        }
+    }
+    return key;
 }
 
 namespace {
@@ -1850,22 +2816,7 @@ bool same_option_transition_kernel(
 bool same_option_template_planner(
     const PlannerOperator& left,
     const PlannerOperator& right) {
-    return left.kind == right.kind &&
-           left.option_kind == right.option_kind &&
-           left.primitive_program == right.primitive_program &&
-           left.intended_side == right.intended_side &&
-           left.exit_goal_slots == right.exit_goal_slots &&
-           left.exit_min_satisfied == right.exit_min_satisfied &&
-           left.carrier_goal_slot == right.carrier_goal_slot &&
-           left.conditional_action == right.conditional_action &&
-           left.bestiary_create_action == right.bestiary_create_action &&
-           left.bestiary_restore_action == right.bestiary_restore_action &&
-           left.automatic_kind == right.automatic_kind &&
-           left.relevant_goal_mask == right.relevant_goal_mask &&
-           left.resource_quantities == right.resource_quantities &&
-           left.setup_action == right.setup_action &&
-           left.followup_action == right.followup_action &&
-           left.cleanup_action == right.cleanup_action;
+    return planner_operator_structurally_equal(left, right);
 }
 
 std::uint64_t option_planner_hash(const PlannerOperator& planner) {
@@ -1874,27 +2825,9 @@ std::uint64_t option_planner_hash(const PlannerOperator& planner) {
         hash ^= value;
         hash *= 1099511628211ull;
     };
-    mix(static_cast<std::uint8_t>(planner.kind));
-    mix(static_cast<std::uint8_t>(planner.option_kind));
-    mix(static_cast<std::uint8_t>(planner.automatic_kind));
-    mix(static_cast<std::uint8_t>(planner.intended_side + 1));
-    mix(planner.exit_min_satisfied);
-    mix(planner.carrier_goal_slot);
-    mix(planner.conditional_action);
-    mix(planner.bestiary_create_action);
-    mix(planner.bestiary_restore_action);
-    mix(planner.relevant_goal_mask);
-    mix(planner.setup_action);
-    mix(planner.followup_action);
-    mix(planner.cleanup_action);
-    for (const std::uint32_t action : planner.primitive_program) mix(action);
-    mix(kNoId);
-    for (const std::uint32_t slot : planner.exit_goal_slots) mix(slot);
-    mix(kNoId);
-    for (const auto& [key, quantity] : planner.resource_quantities) {
-        for (const unsigned char c : key) mix(c);
-        mix(0xffu);
-        mix(std::bit_cast<std::uint64_t>(quantity));
+    for (const std::uint64_t word :
+         planner_operator_semantic_key(planner)) {
+        mix(word);
     }
     return hash == 0 ? 1 : hash;
 }
@@ -1907,22 +2840,10 @@ std::uint64_t option_template_hash(
         hash ^= value;
         hash *= 1099511628211ull;
     };
-    mix(static_cast<std::uint8_t>(planner.option_kind));
-    mix(static_cast<std::uint8_t>(planner.automatic_kind));
-    mix(static_cast<std::uint8_t>(planner.intended_side + 1));
-    mix(planner.exit_min_satisfied);
-    mix(planner.carrier_goal_slot);
-    mix(planner.conditional_action);
-    mix(planner.bestiary_create_action);
-    mix(planner.bestiary_restore_action);
-    mix(planner.relevant_goal_mask);
-    mix(planner.setup_action);
-    mix(planner.followup_action);
-    mix(planner.cleanup_action);
-    for (const std::uint32_t action : planner.primitive_program) mix(action);
-    mix(kNoId);
-    for (const std::uint32_t slot : planner.exit_goal_slots) mix(slot);
-    mix(kNoId);
+    for (const std::uint64_t word :
+         planner_operator_semantic_key(planner)) {
+        mix(word);
+    }
     mix(kernel.legal ? 1u : 0u);
     mix(kernel.supported ? 1u : 0u);
     mix(kernel.terminates_almost_surely ? 1u : 0u);
@@ -1942,6 +2863,7 @@ std::uint64_t option_template_hash(
     for (const OutcomeChoiceGroup& group :
          kernel.observation_choice_groups) {
         mix(std::bit_cast<std::uint64_t>(group.probability));
+        mix(group.observation_state);
         for (const std::uint32_t state : group.states) mix(state);
         mix(kNoId);
     }
@@ -1977,6 +2899,7 @@ std::uint64_t option_transition_hash(const OptionKernel& kernel) {
     for (const OutcomeChoiceGroup& group :
          kernel.observation_choice_groups) {
         mix(std::bit_cast<std::uint64_t>(group.probability));
+        mix(group.observation_state);
         for (const std::uint32_t state : group.states) mix(state);
         mix(kNoId);
     }
@@ -2090,6 +3013,7 @@ PlannerOperator temporary_variant_planner(
     }
     for (const std::string& key : blocker.cost_keys) resources[key] += 1.0;
     variant.resource_quantities.assign(resources.begin(), resources.end());
+    bind_planner_primitive_action_ids(registry, variant);
     return variant;
 }
 
@@ -2148,6 +3072,8 @@ OutcomeDistribution map_local_distribution(
         result.entries.push_back({state, probability});
     }
     for (OutcomeChoiceGroup& group : result.choice_groups) {
+        group.observation_state = map_local_state(
+            local, destination, group.observation_state, mapped);
         for (std::uint32_t& state : group.states) {
             state = map_local_state(local, destination, state, mapped);
         }
@@ -2185,6 +3111,8 @@ OptionKernel map_local_option_kernel(
         result.exits.push_back({state, probability});
     }
     for (OutcomeChoiceGroup& group : result.observation_choice_groups) {
+        group.observation_state = map_local_state(
+            local, destination, group.observation_state, mapped);
         for (std::uint32_t& state : group.states) {
             state = map_local_state(local, destination, state, mapped);
         }
@@ -2225,7 +3153,230 @@ OptionKernel map_local_option_kernel(
     return result;
 }
 
+void require_import_reference_shape(
+    const std::uint32_t index,
+    const std::string& id,
+    const char* field) {
+    if ((index == kNoId) != id.empty()) {
+        throw std::invalid_argument(
+            std::string("planner operator has an incomplete ") +
+            field + " reference");
+    }
+}
+
+std::uint32_t resolve_imported_primitive(
+    const ActionRegistry& registry,
+    const std::string& id,
+    const char* field) {
+    const auto found = registry.index_by_id.find(id);
+    if (found == registry.index_by_id.end() ||
+        found->second >= registry.actions.size() ||
+        registry.actions[found->second].id != id) {
+        throw std::invalid_argument(
+            std::string("planner operator ") + field +
+            " dependency is absent from the destination registry: " + id);
+    }
+    const ActionDescriptor& action = registry.actions[found->second];
+    if (!calc_supports(action)) {
+        throw std::invalid_argument(
+            std::string("planner operator ") + field +
+            " dependency has no exact calculator authority: " + id);
+    }
+    validate_action_refinement_contract(action);
+    return found->second;
+}
+
+std::uint32_t resolve_imported_bestiary(
+    const SessionImpl& session,
+    const std::string& id,
+    const char* field) {
+    std::uint32_t result = kNoId;
+    for (std::uint32_t index = 0;
+         index < session.data->bestiary_actions.size(); ++index) {
+        if (session.data->bestiary_actions[index].id != id) continue;
+        if (result != kNoId) {
+            throw std::invalid_argument(
+                std::string("planner operator ") + field +
+                " dependency is ambiguous in the destination session: " +
+                id);
+        }
+        result = index;
+    }
+    if (result == kNoId) {
+        throw std::invalid_argument(
+            std::string("planner operator ") + field +
+            " dependency is absent from the destination session: " + id);
+    }
+    return result;
+}
+
 } // namespace
+
+std::uint32_t CalcContext::import_planner_operator(
+    const PlannerOperator& planner,
+    const bool state_local) {
+    require_import_reference_shape(
+        planner.primitive_action,
+        planner.primitive_action_id,
+        "primitive_action");
+    if (planner.primitive_program.size() !=
+        planner.primitive_program_action_ids.size()) {
+        throw std::invalid_argument(
+            "planner operator primitive program is missing canonical ids");
+    }
+    for (std::size_t i = 0;
+         i < planner.primitive_program.size(); ++i) {
+        require_import_reference_shape(
+            planner.primitive_program[i],
+            planner.primitive_program_action_ids[i],
+            "primitive_program");
+    }
+    require_import_reference_shape(
+        planner.conditional_action,
+        planner.conditional_action_id,
+        "conditional_action");
+    require_import_reference_shape(
+        planner.bestiary_create_action,
+        planner.bestiary_create_action_id,
+        "bestiary_create_action");
+    require_import_reference_shape(
+        planner.bestiary_restore_action,
+        planner.bestiary_restore_action_id,
+        "bestiary_restore_action");
+    require_import_reference_shape(
+        planner.setup_action,
+        planner.setup_action_id,
+        "setup_action");
+    require_import_reference_shape(
+        planner.followup_action,
+        planner.followup_action_id,
+        "followup_action");
+    require_import_reference_shape(
+        planner.cleanup_action,
+        planner.cleanup_action_id,
+        "cleanup_action");
+    require_import_reference_shape(
+        planner.constructive_finish_action,
+        planner.constructive_finish_action_id,
+        "constructive_finish_action");
+
+    PlannerOperator mapped = planner;
+    const auto map_optional_primitive =
+        [&](const std::string& id,
+            const char* field) -> std::uint32_t {
+        return id.empty()
+                   ? kNoId
+                   : resolve_imported_primitive(
+                         registry_, id, field);
+    };
+    mapped.primitive_action = map_optional_primitive(
+        planner.primitive_action_id, "primitive_action");
+    mapped.primitive_program.clear();
+    mapped.primitive_program.reserve(
+        planner.primitive_program_action_ids.size());
+    for (const std::string& id :
+         planner.primitive_program_action_ids) {
+        if (id.empty()) {
+            throw std::invalid_argument(
+                "planner operator primitive program contains an empty id");
+        }
+        mapped.primitive_program.push_back(
+            resolve_imported_primitive(
+                registry_, id, "primitive_program"));
+    }
+    mapped.conditional_action = map_optional_primitive(
+        planner.conditional_action_id, "conditional_action");
+    mapped.setup_action = map_optional_primitive(
+        planner.setup_action_id, "setup_action");
+    mapped.followup_action = map_optional_primitive(
+        planner.followup_action_id, "followup_action");
+    mapped.cleanup_action = map_optional_primitive(
+        planner.cleanup_action_id, "cleanup_action");
+    mapped.constructive_finish_action = map_optional_primitive(
+        planner.constructive_finish_action_id,
+        "constructive_finish_action");
+    mapped.bestiary_create_action =
+        planner.bestiary_create_action_id.empty()
+            ? kNoId
+            : resolve_imported_bestiary(
+                  *session_,
+                  planner.bestiary_create_action_id,
+                  "bestiary_create_action");
+    mapped.bestiary_restore_action =
+        planner.bestiary_restore_action_id.empty()
+            ? kNoId
+            : resolve_imported_bestiary(
+                  *session_,
+                  planner.bestiary_restore_action_id,
+                  "bestiary_restore_action");
+
+    if (mapped.kind == PlannerOperatorKind::Primitive) {
+        if (mapped.primitive_action == kNoId ||
+            mapped.primitive_program.size() != 1 ||
+            mapped.primitive_program.front() !=
+                mapped.primitive_action) {
+            throw std::invalid_argument(
+                "primitive planner operator must name its one exact "
+                "primitive dependency");
+        }
+        if (mapped.primitive_action >= operators_.size() ||
+            operators_[mapped.primitive_action].kind !=
+                PlannerOperatorKind::Primitive ||
+            !planner_operator_structurally_equal(
+                operators_[mapped.primitive_action], mapped)) {
+            throw std::invalid_argument(
+                "primitive planner operator semantics differ from the "
+                "destination registry wrapper");
+        }
+        return mapped.primitive_action;
+    }
+    if (mapped.kind != PlannerOperatorKind::FixedOption) {
+        throw std::invalid_argument(
+            "planner operator kind is not supported");
+    }
+    if (mapped.primitive_action != kNoId ||
+        mapped.primitive_program.empty()) {
+        throw std::invalid_argument(
+            "fixed planner option has an invalid primitive dependency "
+            "shape");
+    }
+    /*
+     * Imported automatic operators cross CalcContext boundaries. Apply the
+     * same complete runtime-path admission contract as initial planner
+     * construction before an invalid composite can enter the candidate set.
+     */
+    (void)planner_operator_runtime_semantics(mapped, registry_);
+
+    for (std::uint32_t index = 0; index < operators_.size(); ++index) {
+        if (!planner_operator_structurally_equal(
+                operators_[index], mapped)) {
+            continue;
+        }
+        if (state_local) {
+            state_local_automatic_operator_indices_.insert(index);
+        }
+        return index;
+    }
+    if (operators_.size() >=
+        static_cast<std::size_t>(kNoId)) {
+        throw std::overflow_error(
+            "planner operator index space exhausted");
+    }
+    const std::uint32_t result =
+        static_cast<std::uint32_t>(operators_.size());
+    operators_.push_back(std::move(mapped));
+    account_new_operator(operators_.back());
+    const std::uint64_t template_id =
+        option_planner_hash(operators_.back());
+    auto& bucket = option_operator_templates_[template_id];
+    const std::size_t old_capacity = bucket.capacity();
+    bucket.push_back(result);
+    account_operator_template_insert(old_capacity, bucket);
+    if (state_local) {
+        state_local_automatic_operator_indices_.insert(result);
+    }
+    return result;
+}
 
 void CalcContext::initialize_temporary_bench_effect_classes() {
     const auto started = std::chrono::steady_clock::now();
@@ -2577,6 +3728,41 @@ double CalcContext::optimistic_goal_draw_probability(
                  static_cast<double>(denominator));
 }
 
+bool CalcContext::is_candidate_operator_admitted_for_state(
+    const std::uint32_t state_id,
+    const std::uint32_t operator_index) const {
+    if (state_id >= states_.size() || operator_index >= operators_.size()) {
+        return false;
+    }
+
+    const std::size_t static_count = std::min(
+        static_candidate_operator_count_, candidate_operators_.size());
+    const auto static_end =
+        candidate_operators_.begin() +
+        static_cast<std::ptrdiff_t>(static_count);
+    if (std::find(
+            candidate_operators_.begin(), static_end,
+            operator_index) != static_end) {
+        return true;
+    }
+
+    if (std::find(
+            static_end, candidate_operators_.end(),
+            operator_index) == candidate_operators_.end()) {
+        return false;
+    }
+    if (!is_state_local_automatic_operator(operator_index)) {
+        return true;
+    }
+
+    const auto retained =
+        state_local_automatic_operators_.find(state_id);
+    return retained != state_local_automatic_operators_.end() &&
+           std::binary_search(
+               retained->second.begin(), retained->second.end(),
+               operator_index);
+}
+
 StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
     const std::uint32_t state_id,
     const AutomaticAdmissionLimits& limits) {
@@ -2722,7 +3908,11 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
         limits.max_reforge_work == 0
             ? std::numeric_limits<std::uint64_t>::max()
             : limits.max_reforge_work,
-        false);
+        false,
+        limits.max_solver_owned_bytes == 0
+            ? std::nullopt
+            : std::optional<std::uint64_t>{
+                  limits.max_solver_owned_bytes});
     const std::uint32_t local_state = local.intern_item(carrier);
     const std::uint32_t base_operator_count =
         static_cast<std::uint32_t>(local.operators().size());
@@ -3366,7 +4556,8 @@ StateLocalAutomaticBatch CalcContext::admit_state_local_automatic_candidates(
                         automatic_comparison_context_->set_solve_resource_caps(
                             solve_discovered_state_cap_.value_or(
                                 std::numeric_limits<std::uint32_t>::max()),
-                            std::numeric_limits<std::uint64_t>::max(), false);
+                            std::numeric_limits<std::uint64_t>::max(), false,
+                            solve_owned_bytes_cap_);
                     }
                     CalcContext& comparison_context =
                         *automatic_comparison_context_;
@@ -4182,10 +5373,11 @@ const OptionKernel& CalcContext::option_kernel(
             result->automatic.setup_complete = setup_applies_exactly(
                 *this, state_id, option.setup_action,
                 option.option_kind == FixedOptionKind::ProtectedRepeat
-                    ? (option.intended_side == PC_SIDE_PREFIX
-                           ? kFlagPrefixesLocked
-                           : kFlagSuffixesLocked)
-                    : 0);
+                    ? static_cast<std::uint32_t>(
+                          option.intended_side == PC_SIDE_PREFIX
+                              ? kFlagPrefixesLocked
+                              : kFlagSuffixesLocked)
+                    : std::uint32_t{0});
 
             bool carrier_relevant = true;
             bool cleanup_complete = true;
@@ -4562,7 +5754,9 @@ const OptionKernel& CalcContext::option_kernel(
             return finish();
         }
         std::map<std::uint32_t, double> exits;
-        std::map<std::vector<std::uint32_t>, double> choices;
+        std::map<
+            std::pair<std::uint32_t, std::vector<std::uint32_t>>,
+            double> choices;
         std::map<std::uint32_t, std::uint32_t> normalized;
         const auto normalize = [&](const std::uint32_t actual) {
             const auto cached = normalized.find(actual);
@@ -4592,7 +5786,8 @@ const OptionKernel& CalcContext::option_kernel(
             successors.erase(
                 std::unique(successors.begin(), successors.end()),
                 successors.end());
-            choices[successors] += group.probability;
+            choices[{group.observation_state, successors}] +=
+                group.probability;
             if (successors.size() == 1 && successors.front() == kNoId) {
                 forced_retry_probability += group.probability;
             }
@@ -4615,9 +5810,9 @@ const OptionKernel& CalcContext::option_kernel(
         for (const auto& [exit, probability] : exits) {
             result->exits.push_back({exit, probability});
         }
-        for (const auto& [successors, probability] : choices) {
+        for (const auto& [choice, probability] : choices) {
             result->observation_choice_groups.push_back(
-                {probability, successors});
+                {probability, choice.second, choice.first});
         }
         result->terminates_almost_surely =
             forced_retry_probability < 1.0 - 1e-15;

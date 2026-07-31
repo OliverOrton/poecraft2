@@ -1,4 +1,5 @@
 #include "solver_solve_types.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -1332,9 +1333,9 @@ void SolveWork::Impl::finalize_upper_policy_provenance() {
                     successor < incumbent.values.size()
                         ? incumbent.values[successor]
                         : kInfinity;
-                if (upper < selected_upper - options.epsilon ||
-                    (std::abs(upper - selected_upper) <= options.epsilon &&
-                     successor < selected)) {
+                if (sparse_policy_choice_precedes(
+                        upper, successor,
+                        selected_upper, selected)) {
                     selected = successor;
                     selected_upper = upper;
                 }

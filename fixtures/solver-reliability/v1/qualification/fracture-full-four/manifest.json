@@ -1,0 +1,15 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "engine_abi_version": 2,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "cases": [
+    "cases/natural-t1-full-four-47d8b909aa88.json"
+  ],
+  "corpus_id": "poecraft2-policy-guided-exact-refinement-fracture-full-four-v1",
+  "schema_version": "solver_benchmark_corpus_v1"
+}

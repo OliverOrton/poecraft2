@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/solver_internal.hpp"
+#include "../src/solver_policy_refinement.hpp"
 #include "poecraft/bitset.h"
 #include "poecraft/item_state.h"
 
@@ -21,6 +22,24 @@ using namespace poecraft;
 using namespace poecraft::solver;
 
 namespace {
+
+void report_compile_solve_issue(
+        const char* label,
+        const SolveResult& solved) {
+    if (solved.converged) return;
+    std::printf(
+        "solver compile issue [%s]: available=%u termination=%u "
+        "publication=%s evaluation=%s compatibility=%s "
+        "states=%u/%u\n",
+        label,
+        solved.policy_available ? 1u : 0u,
+        static_cast<unsigned>(solved.termination),
+        solved.diagnostics.policy_publication_failure_reason.c_str(),
+        solved.diagnostics.policy_evaluation_failure.c_str(),
+        solved.diagnostics.policy_compatibility_reason.c_str(),
+        solved.diagnostics.expanded_states,
+        solved.diagnostics.discovered_states);
+}
 
 /*
  * The eight ordinary-mod weighted universe again, plus dedicated prefix and
@@ -192,6 +211,657 @@ StrategyEvalResult evaluate_compiled(
     StrategyEvalOptions options;
     options.economy = economy;
     return evaluate_strategy(*strategy, options);
+}
+
+/* The compiler follows the engine-owned observed-choice contract carried by
+ * the admitted exact mechanic descriptor. */
+void run_future_observed_choice_compile_test() {
+    auto session = make_compile_session();
+    ActionRegistry registry = build_action_registry(*session);
+    const std::uint32_t unveil =
+        registry.index_by_id.at("unveil");
+    ActionDescriptor future = registry.actions.at(unveil);
+    future.id = "test:future_observed_modifier_offer";
+    future.display_name = "future observed modifier offer";
+    canonicalize_and_validate_action_refinement_contract(
+        *session, future);
+    PC_CHECK(action_observes_modifier_offer(future));
+    const std::uint32_t future_index =
+        static_cast<std::uint32_t>(registry.actions.size());
+    registry.index_by_id.emplace(future.id, future_index);
+    registry.actions.push_back(std::move(future));
+
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot wanted;
+    wanted.family_id = session->family_id.at(5);
+    wanted.min_tier = 1;
+    goal.slots.push_back(wanted);
+    CalcContext calc(
+        session, goal, registry, {future_index}, false, true, true);
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    const std::uint32_t start_state = calc.intern_item(start);
+    PC_CHECK(!calc.is_goal_state(calc.state(start_state)));
+
+    SolveResult authored;
+    authored.converged = true;
+    authored.policy_available = true;
+    authored.policy_status = SolvePolicyStatus::Exact;
+    authored.termination = SolveTermination::ExactClosed;
+    authored.start_state = start_state;
+    authored.has_exact_start_item = true;
+    authored.exact_start_item = start;
+    const std::size_t state_count = calc.state_count();
+    authored.values.assign(state_count, 1.0);
+    authored.policy.assign(state_count, PolicyOperatorRef{});
+    authored.expanded.assign(state_count, 1);
+    authored.goal_states.assign(state_count, 0);
+    authored.policy_reachable.assign(state_count, 0);
+    authored.unveil_preferences.resize(state_count);
+    authored.option_unveil_preferences.resize(state_count);
+    authored.policy[start_state] = {
+        PlannerOperatorKind::Primitive, future_index};
+    authored.policy_reachable[start_state] = 1;
+    authored.unveil_preferences[start_state] = {0, 3};
+
+    const std::string strategy = compile_policy_strategy_json(
+        calc, authored, "future-observed-choice");
+    PC_CHECK(strategy.find("has_unveil_option") != std::string::npos);
+    PC_CHECK(strategy.find("\"type\":\"unveil\"") !=
+             std::string::npos);
+    PC_CHECK(strategy.find("\"mod_key\":\"mod0\"") !=
+             std::string::npos);
+    PC_CHECK(strategy.find("\"mod_key\":\"mod3\"") !=
+             std::string::npos);
+}
+
+struct StructuredRouteFixture {
+    std::shared_ptr<SessionImpl> session;
+    ActionRegistry registry;
+    std::unique_ptr<CalcContext> calc;
+    SolveResult solved;
+    refinement::RefinedPolicyCompileRouting routing;
+    std::uint32_t left_state = kNoId;
+    std::uint32_t right_state = kNoId;
+    std::uint32_t goal_state = kNoId;
+    std::uint32_t scour = kNoId;
+    std::uint32_t chaos = kNoId;
+    std::uint32_t renewal = kNoId;
+};
+
+pc_item_state compile_item(
+        const SessionImpl& session,
+        const std::uint32_t mod,
+        const std::int8_t side) {
+    pc_item_state item;
+    pc_item_clear(&item);
+    item.rarity = PC_RARITY_RARE;
+    PC_CHECK(
+        pc_item_add_mod(
+            &item, side, mod, session.primary_group.at(mod), 0,
+            nullptr) == PC_RESULT_OK);
+    return item;
+}
+
+refinement::ObservationRequirement exclusion_requirement() {
+    refinement::ObservationRequirement requirement;
+    RefinementAffixObservation observation;
+    observation.features = refinement_feature(
+        RefinementFeature::ModifierExclusionSignature);
+    requirement.affix_observations.push_back(observation);
+    return refinement::canonical_observation_requirement(
+        std::move(requirement));
+}
+
+refinement::FeatureSignature observed_signature(
+        const CalcContext& calc,
+        const std::uint32_t state,
+        const refinement::ObservationRequirement& requirement) {
+    const refinement::AbstractFeatureExtraction extraction =
+        refinement::extract_strict_abstract_features(
+            calc.session(), calc.layout(), calc.state(state),
+            requirement);
+    PC_CHECK(extraction.complete());
+    return refinement::observe_features(
+        extraction.features, requirement);
+}
+
+refinement::SelectedAction compile_selected_operator(
+        const CalcContext& calc,
+        const std::uint32_t operator_index) {
+    refinement::SelectedAction selected;
+    selected.action_id = operator_index;
+    selected.semantic_key = {
+        0x7465737464656331ull}; /* "testdec1" */
+    const PlannerOperator& planner =
+        calc.operators().at(operator_index);
+    const std::vector<std::uint64_t> operator_key =
+        planner_operator_semantic_key(planner);
+    selected.semantic_key.insert(
+        selected.semantic_key.end(),
+        operator_key.begin(), operator_key.end());
+    if (planner.kind == PlannerOperatorKind::Primitive) {
+        selected.contract =
+            calc.registry()
+                .actions.at(planner.primitive_action)
+                .refinement;
+    }
+    return selected;
+}
+
+StructuredRouteFixture make_structured_route_fixture() {
+    StructuredRouteFixture fixture;
+    fixture.session = make_compile_session();
+    fixture.registry = build_action_registry(*fixture.session);
+    fixture.scour = fixture.registry.index_by_id.at("scour");
+    fixture.chaos = fixture.registry.index_by_id.at("chaos");
+    const std::uint32_t restart =
+        fixture.registry.index_by_id.at("restart");
+
+    GoalSpec goal;
+    GoalSlot wanted;
+    wanted.family_id = fixture.session->family_id.at(7);
+    wanted.min_tier = 1;
+    goal.slots.push_back(wanted);
+    goal.rarity = PC_RARITY_RARE;
+    FixedOptionSpec renewal;
+    renewal.kind = FixedOptionKind::Renewal;
+    renewal.program_action_ids = {"chaos"};
+    renewal.exit_goal_slots = {0};
+    renewal.exit_min_satisfied = 1;
+    goal.fixed_options.push_back(renewal);
+    fixture.calc = std::make_unique<CalcContext>(
+        fixture.session, goal, fixture.registry,
+        std::vector<std::uint32_t>{
+            fixture.scour, fixture.chaos, restart},
+        false, true, true);
+    fixture.renewal =
+        static_cast<std::uint32_t>(
+            fixture.registry.actions.size());
+    PC_CHECK(
+        fixture.renewal < fixture.calc->operators().size());
+    PC_CHECK(
+        fixture.calc->operators()[fixture.renewal].kind ==
+        PlannerOperatorKind::FixedOption);
+
+    const pc_item_state left =
+        compile_item(*fixture.session, 0, PC_SIDE_PREFIX);
+    const pc_item_state right =
+        compile_item(*fixture.session, 3, PC_SIDE_PREFIX);
+    const pc_item_state goal_item =
+        compile_item(*fixture.session, 7, PC_SIDE_SUFFIX);
+    fixture.left_state = fixture.calc->intern_item(left);
+    fixture.right_state = fixture.calc->intern_item(right);
+    fixture.goal_state = fixture.calc->intern_item(goal_item);
+    PC_CHECK(fixture.left_state != fixture.right_state);
+    PC_CHECK(fixture.left_state != fixture.goal_state);
+    PC_CHECK(fixture.right_state != fixture.goal_state);
+
+    const std::size_t state_count = fixture.calc->state_count();
+    fixture.solved.start_state = fixture.left_state;
+    fixture.solved.has_exact_start_item = true;
+    fixture.solved.exact_start_item = left;
+    fixture.solved.policy_available = true;
+    fixture.solved.policy_status = SolvePolicyStatus::Exact;
+    fixture.solved.values.assign(state_count, 1.0);
+    fixture.solved.policy.assign(state_count, PolicyOperatorRef{});
+    fixture.solved.expanded.assign(state_count, 1);
+    fixture.solved.goal_states.assign(state_count, 0);
+    fixture.solved.policy_reachable.assign(state_count, 0);
+    fixture.solved.behavioral_representative_by_state.resize(
+        state_count);
+    for (std::uint32_t state = 0; state < state_count; ++state) {
+        fixture.solved.behavioral_representative_by_state[state] =
+            state;
+    }
+    for (const std::uint32_t state :
+         {fixture.left_state, fixture.right_state}) {
+        fixture.solved.policy[state] =
+            PolicyOperatorRef{fixture.scour};
+        fixture.solved.policy_reachable[state] = 1;
+    }
+    fixture.solved.goal_states[fixture.goal_state] = 1;
+    fixture.solved.policy_reachable[fixture.goal_state] = 1;
+
+    const refinement::ObservationRequirement requirement =
+        exclusion_requirement();
+    fixture.routing.classes.resize(3);
+    const auto working_class =
+        [&](const std::uint32_t class_id,
+            const std::uint32_t state) {
+            refinement::RefinedPolicyCompileClass policy_class;
+            policy_class.class_id = class_id;
+            policy_class.coarse_state = 0;
+            policy_class.coarse_state_key = {0};
+            policy_class.representative_state = state;
+            policy_class.strict_members = {state};
+            policy_class.required_observations = requirement;
+            policy_class.observation_signature =
+                observed_signature(
+                    *fixture.calc, state, requirement);
+            policy_class.selected_action =
+                compile_selected_operator(
+                    *fixture.calc, fixture.scour);
+            policy_class.action_cost = 1.0;
+            policy_class.transitions = {{2, 1.0}};
+            return policy_class;
+        };
+    fixture.routing.classes[0] =
+        working_class(0, fixture.left_state);
+    fixture.routing.classes[1] =
+        working_class(1, fixture.right_state);
+    fixture.routing.classes[2].class_id = 2;
+    fixture.routing.classes[2].coarse_state = 1;
+    fixture.routing.classes[2].coarse_state_key = {1};
+    fixture.routing.classes[2].representative_state =
+        fixture.goal_state;
+    fixture.routing.classes[2].strict_members = {
+        fixture.goal_state};
+    fixture.routing.classes[2].terminal = true;
+    return fixture;
+}
+
+StructuredRouteFixture make_structured_fixed_route_fixture() {
+    StructuredRouteFixture fixture =
+        make_structured_route_fixture();
+    const OptionKernel& left_kernel =
+        fixture.calc->option_kernel(
+            fixture.left_state, fixture.renewal);
+    const OptionKernel& right_kernel =
+        fixture.calc->option_kernel(
+            fixture.right_state, fixture.renewal);
+    PC_CHECK(left_kernel.supported && left_kernel.legal);
+    PC_CHECK(right_kernel.supported && right_kernel.legal);
+
+    const std::size_t state_count =
+        fixture.calc->state_count();
+    const std::size_t old_state_count =
+        fixture.solved.values.size();
+    fixture.solved.values.resize(
+        state_count,
+        std::numeric_limits<double>::infinity());
+    fixture.solved.policy.resize(state_count);
+    fixture.solved.expanded.resize(state_count, 0);
+    fixture.solved.goal_states.resize(state_count, 0);
+    fixture.solved.policy_reachable.resize(state_count, 0);
+    fixture.solved.unveil_preferences.resize(state_count);
+    fixture.solved.option_unveil_preferences.resize(
+        state_count);
+    fixture.solved.behavioral_representative_by_state.resize(
+        state_count);
+    for (std::uint32_t state =
+             static_cast<std::uint32_t>(old_state_count);
+         state < state_count; ++state) {
+        fixture.solved.behavioral_representative_by_state[state] =
+            state;
+    }
+    for (const std::uint32_t state :
+         {fixture.left_state, fixture.right_state}) {
+        fixture.solved.policy[state] = PolicyOperatorRef{
+            PlannerOperatorKind::FixedOption,
+            fixture.renewal};
+        fixture.solved.values[state] = 1.0;
+        fixture.solved.expanded[state] = 1;
+    }
+    fixture.solved.policy_reachable[fixture.left_state] = 1;
+    fixture.solved.policy_reachable[fixture.right_state] = 0;
+    fixture.solved.behavioral_representative_by_state[
+        fixture.right_state] = fixture.left_state;
+
+    refinement::RefinedPolicyCompileClass working;
+    working.class_id = 0;
+    working.coarse_state = 0;
+    working.coarse_state_key = {0};
+    working.representative_state = fixture.left_state;
+    working.strict_members = {
+        fixture.left_state, fixture.right_state};
+    working.selected_action =
+        compile_selected_operator(
+            *fixture.calc, fixture.renewal);
+    working.action_cost = 1.0;
+    working.transitions = {{1, 1.0}};
+
+    refinement::RefinedPolicyCompileClass terminal;
+    terminal.class_id = 1;
+    terminal.coarse_state = 1;
+    terminal.coarse_state_key = {1};
+    terminal.representative_state = fixture.goal_state;
+    terminal.strict_members = {fixture.goal_state};
+    terminal.terminal = true;
+
+    fixture.routing.classes = {
+        std::move(working), std::move(terminal)};
+    return fixture;
+}
+
+template <typename Mutator>
+void expect_structured_route_refusal(
+        Mutator mutate,
+        const std::string& expected) {
+    StructuredRouteFixture fixture =
+        make_structured_route_fixture();
+    mutate(fixture);
+    bool refused = false;
+    try {
+        (void)compile_policy_strategy_json(
+            *fixture.calc, fixture.solved,
+            "invalid structured observation route", nullptr,
+            std::numeric_limits<std::uint64_t>::max(),
+            &fixture.routing);
+    } catch (const std::exception& error) {
+        refused =
+            std::string(error.what()).find(expected) !=
+            std::string::npos;
+        if (!refused) {
+            std::printf(
+                "structured route refusal mismatch: expected=%s "
+                "actual=%s\n",
+                expected.c_str(), error.what());
+        }
+    }
+    PC_CHECK(refused);
+}
+
+void run_structured_observation_route_tests() {
+    {
+        StructuredRouteFixture fixture =
+            make_structured_route_fixture();
+        PolicyCompilationTelemetry telemetry;
+        const std::string strategy =
+            compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "structured observation route", &telemetry,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        PC_CHECK(
+            strategy.find("\"type\":\"observation_signature\"") !=
+            std::string::npos);
+        PC_CHECK(
+            strategy.find("\"version\":1") != std::string::npos);
+        PC_CHECK(
+            strategy.find("\"id\":\"refined_parent_0\"") !=
+            std::string::npos);
+        PC_CHECK(
+            strategy.find("\"id\":\"refined_parent_1\"") ==
+            std::string::npos);
+        PC_CHECK(
+            telemetry.peak_owned_bytes >=
+            strategy.capacity() + 1);
+        PC_CHECK(
+            compile_strategy_json(
+                fixture.session, strategy.data(), strategy.size()) !=
+            nullptr);
+
+        StructuredRouteFixture remapped =
+            make_structured_route_fixture();
+        for (refinement::RefinedPolicyCompileClass& policy_class :
+             remapped.routing.classes) {
+            policy_class.coarse_state =
+                policy_class.terminal ? 37 : 91;
+        }
+        const std::string remapped_strategy =
+            compile_policy_strategy_json(
+                *remapped.calc, remapped.solved,
+                "structured observation route", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &remapped.routing);
+        PC_CHECK(remapped_strategy == strategy);
+    }
+
+    {
+        StructuredRouteFixture fixture =
+            make_structured_route_fixture();
+        PolicyCompilationTelemetry telemetry;
+        bool capped = false;
+        try {
+            (void)compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "structured condition memory cap", &telemetry,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing, 1);
+        } catch (const SolverResourceLimit& error) {
+            capped =
+                error.cap_name() == "max_solver_owned_bytes";
+        }
+        PC_CHECK(capped);
+        PC_CHECK(
+            telemetry.cap_hit == "max_solver_owned_bytes");
+        PC_CHECK(telemetry.peak_owned_bytes > 1);
+    }
+
+    /* Raw carrier identity is irrelevant when the serialized semantic
+     * observation and selected operation are identical. Such duplicate
+     * classes are deliberately accepted, even when their local value or
+     * projected class row differs: the router re-observes after the action. */
+    {
+        StructuredRouteFixture fixture =
+            make_structured_route_fixture();
+        refinement::ObservationRequirement none;
+        for (std::uint32_t policy_class = 0;
+             policy_class < 2; ++policy_class) {
+            fixture.routing.classes[policy_class]
+                .required_observations = none;
+            fixture.routing.classes[policy_class]
+                .observation_signature.clear();
+        }
+        fixture.routing.classes[1].action_cost = 9.0;
+        fixture.routing.classes[1].transitions = {{2, 0.25}};
+        const std::string strategy =
+            compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "equivalent duplicate structured routes", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        PC_CHECK(
+            strategy.find("\"type\":\"observation_signature\"") !=
+            std::string::npos);
+    }
+
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[1].class_id = 0;
+        },
+        "sidecar is not canonical");
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            std::reverse(
+                fixture.routing.classes[0].strict_members.begin(),
+                fixture.routing.classes[0].strict_members.end());
+            fixture.routing.classes[0].strict_members.push_back(
+                fixture.left_state);
+        },
+        "sidecar is not canonical");
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[0].coarse_state_key.clear();
+            fixture.routing.classes[1].coarse_state_key.clear();
+        },
+        "no deterministic semantic key");
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[1].coarse_state_key = {9};
+        },
+        "inconsistent semantic keys");
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[1].coarse_state = 2;
+        },
+        "share one semantic key");
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            AbstractState retry =
+                fixture.calc->state(fixture.left_state);
+            retry.goal_progress_retry_basin = 1;
+            const std::uint32_t retry_state =
+                fixture.calc->intern_state(retry);
+            const std::size_t state_count =
+                fixture.calc->state_count();
+            fixture.solved.values.resize(state_count, 1.0);
+            fixture.solved.policy.resize(state_count);
+            fixture.solved.expanded.resize(state_count, 0);
+            fixture.solved.goal_states.resize(state_count, 0);
+            fixture.solved.policy_reachable.resize(state_count, 0);
+            fixture.solved.behavioral_representative_by_state.resize(
+                state_count, kNoId);
+            fixture.solved.policy[retry_state] =
+                PolicyOperatorRef{fixture.scour};
+            fixture.solved.expanded[retry_state] = 1;
+            fixture.solved.policy_reachable[retry_state] = 1;
+            fixture.solved.behavioral_representative_by_state[
+                retry_state] = fixture.left_state;
+            fixture.routing.classes[0].strict_members.push_back(
+                retry_state);
+            std::sort(
+                fixture.routing.classes[0].strict_members.begin(),
+                fixture.routing.classes[0].strict_members.end());
+        },
+        "mixes ordinary and retry-basin");
+
+    /* Identical/overlapping observations may not choose a different
+     * executable semantic operation. */
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            refinement::ObservationRequirement none;
+            for (std::uint32_t policy_class = 0;
+                 policy_class < 2; ++policy_class) {
+                fixture.routing.classes[policy_class]
+                    .required_observations = none;
+                fixture.routing.classes[policy_class]
+                    .observation_signature.clear();
+            }
+            fixture.solved.policy[fixture.right_state] =
+                PolicyOperatorRef{fixture.chaos};
+            fixture.routing.classes[1].selected_action =
+                compile_selected_operator(
+                    *fixture.calc, fixture.chaos);
+        },
+        "indistinguishable_refined_policy_actions");
+
+    /* The state-local semantic decision key is part of executable identity,
+     * even when the imported operator itself is unchanged. */
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            refinement::ObservationRequirement none;
+            for (std::uint32_t policy_class = 0;
+                 policy_class < 2; ++policy_class) {
+                fixture.routing.classes[policy_class]
+                    .required_observations = none;
+                fixture.routing.classes[policy_class]
+                    .observation_signature.clear();
+            }
+            fixture.routing.classes[1]
+                .selected_action->semantic_key.push_back(999);
+        },
+        "indistinguishable_refined_policy_actions");
+
+    /* One broad predicate and one exact predicate overlap on the left
+     * carrier. The overlap is safe only while both select the same action. */
+    {
+        StructuredRouteFixture fixture =
+            make_structured_route_fixture();
+        fixture.routing.classes[0].required_observations = {};
+        fixture.routing.classes[0].observation_signature.clear();
+        const std::string strategy =
+            compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "overlapping equivalent structured routes", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        PC_CHECK(!strategy.empty());
+    }
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[0].required_observations = {};
+            fixture.routing.classes[0]
+                .observation_signature.clear();
+            fixture.solved.policy[fixture.right_state] =
+                PolicyOperatorRef{fixture.chaos};
+            fixture.routing.classes[1].selected_action =
+                compile_selected_operator(
+                    *fixture.calc, fixture.chaos);
+        },
+        "overlapping_refined_policy_actions");
+
+    /* A represented strict carrier must still match at least one route. */
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[0].observation_signature =
+                fixture.routing.classes[1].observation_signature;
+        },
+        "incomplete_refined_policy_observation_signature");
+
+    expect_structured_route_refusal(
+        [](StructuredRouteFixture& fixture) {
+            fixture.routing.classes[1].strict_members.insert(
+                fixture.routing.classes[1].strict_members.begin(),
+                fixture.left_state);
+        },
+        "overlaps strict member classes");
+
+    /* A fixed operator is routed by its imported strict operator identity,
+     * while every hidden class member independently proves the exact retry
+     * recipe emitted for the representative. */
+    {
+        StructuredRouteFixture fixture =
+            make_structured_fixed_route_fixture();
+        const std::string strategy =
+            compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "structured fixed renewal route", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        PC_CHECK(
+            strategy.find("_retry") != std::string::npos);
+        PC_CHECK(
+            strategy.find("\"type\":\"chaos\"") !=
+            std::string::npos);
+    }
+    {
+        StructuredRouteFixture fixture =
+            make_structured_fixed_route_fixture();
+        fixture.solved.policy[fixture.right_state] =
+            PolicyOperatorRef{fixture.chaos};
+        bool refused = false;
+        try {
+            (void)compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "fixed operator mismatch", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        } catch (const std::exception& error) {
+            refused =
+                std::string(error.what()).find(
+                    "member operator disagrees") !=
+                std::string::npos;
+        }
+        PC_CHECK(refused);
+    }
+    {
+        StructuredRouteFixture fixture =
+            make_structured_fixed_route_fixture();
+        ObservedUnveilPreference unexpected;
+        unexpected.observation_state =
+            fixture.right_state;
+        fixture.solved.option_unveil_preferences[
+            fixture.right_state].push_back(
+                std::move(unexpected));
+        bool refused = false;
+        try {
+            (void)compile_policy_strategy_json(
+                *fixture.calc, fixture.solved,
+                "fixed choice-sidecar mismatch", nullptr,
+                std::numeric_limits<std::uint64_t>::max(),
+                &fixture.routing);
+        } catch (const std::exception& error) {
+            refused =
+                std::string(error.what()).find(
+                    "unexpected choice sidecar") !=
+                std::string::npos;
+        }
+        PC_CHECK(refused);
+    }
 }
 
 void run_synthetic_gate() {
@@ -713,6 +1383,7 @@ void run_artifact_gate(const char* artifact_dir) {
 
         const SolveResult solved = solve(
             option_calc, rare, {{"chaos", 1.0}});
+        report_compile_solve_issue("renewal chaos", solved);
         PC_CHECK(solved.converged);
         PC_CHECK(solved.policy[solved.start_state] == op);
         const std::string strategy = compile_policy_strategy_json(
@@ -787,6 +1458,10 @@ void run_artifact_gate(const char* artifact_dir) {
         PC_CHECK(kernel.legal);
         PC_CHECK(!kernel.observation_choice_groups.empty());
         PC_CHECK(!kernel.observation_choice_options.empty());
+        for (const OutcomeChoiceGroup& group :
+             kernel.observation_choice_groups) {
+            PC_CHECK(group.observation_state != kNoId);
+        }
 
         const SolveResult solved = solve(
             option_calc, rare, {{"veiled_chaos", 1.0}});
@@ -1188,6 +1863,7 @@ void run_imprint_gate(const char* artifact_dir) {
     solve_options.max_imprint_program_depth = 1;
     solve_options.max_imprint_program_work = 16;
     const SolveResult solved = solve(calc, magic, prices, solve_options);
+    report_compile_solve_issue("automatic imprint retry", solved);
     PC_CHECK(solved.converged);
     PC_CHECK(solved.start_state < solved.policy.size());
     const std::uint32_t selected = solved.policy[solved.start_state].index;
@@ -1264,9 +1940,61 @@ void run_imprint_gate(const char* artifact_dir) {
 
     auto compiled = compile_strategy_json(
         session, strategy.data(), strategy.size());
+    const ActionRegistry accounting_registry =
+        build_action_registry(*session);
+    bool resolved_create = false;
+    bool resolved_restore = false;
+    for (const StrategyNode& node : compiled->nodes) {
+        if (node.action_type != kStrategyBestiaryImprintOperation &&
+            node.action_type !=
+                kStrategyBestiaryRestoreImprintOperation) {
+            continue;
+        }
+        const ResolvedStrategyOperation operation =
+            resolve_strategy_operation(
+                node, accounting_registry, *session);
+        PC_CHECK(operation.kind ==
+                 ResolvedStrategyOperationKind::Bestiary);
+        PC_CHECK(operation.descriptor_index ==
+                 node.bestiary_action_index);
+        PC_CHECK(resolve_strategy_action(node, accounting_registry) ==
+                 kNoId);
+        if (node.action_type == kStrategyBestiaryImprintOperation) {
+            resolved_create = true;
+        } else {
+            resolved_restore = true;
+        }
+    }
+    PC_CHECK(resolved_create);
+    PC_CHECK(resolved_restore);
     auto economy = std::make_shared<EconomyImpl>();
     economy->id = "s8.4r.3-focused";
     economy->prices = prices;
+    StrategyEvalOptions eval_options;
+    eval_options.economy = economy;
+    const StrategyEvalResult exact =
+        evaluate_strategy(*compiled, eval_options);
+    PC_CHECK(exact.converged);
+    PC_CHECK(exact.cost_complete);
+    PC_CHECK(std::fabs(
+                 exact.total_expected_cost -
+                 solved.values[solved.start_state]) < 1e-8);
+    PC_CHECK(exact.expected_consumption.at(
+                 "beast:craicic-chimeral") > 1.0);
+    PC_CHECK(std::fabs(
+                 exact.expected_consumption.at("beast:rare") -
+                 3.0 * exact.expected_consumption.at(
+                           "beast:craicic-chimeral")) < 1e-8);
+    PC_CHECK(std::any_of(
+        exact.action_totals.begin(), exact.action_totals.end(),
+        [](const StrategyEvalActionTotal& action) {
+            return action.id == "bestiary:imprint";
+        }));
+    PC_CHECK(std::any_of(
+        exact.action_totals.begin(), exact.action_totals.end(),
+        [](const StrategyEvalActionTotal& action) {
+            return action.id == "bestiary:restore_imprint";
+        }));
     SimulatorImpl simulator;
     simulator.session = session;
     simulator.strategy = compiled;
@@ -1297,6 +2025,10 @@ void run_imprint_gate(const char* artifact_dir) {
     PC_CHECK(imprint_count == restore_count + 64);
     PC_CHECK(simulator.action_descriptor_counts["augment"] == imprint_count);
     PC_CHECK(simulator.action_descriptor_counts["regal"] == 64);
+    PC_CHECK(simulator.action_descriptor_counts["bestiary:imprint"] ==
+             imprint_count);
+    PC_CHECK(simulator.action_descriptor_counts[
+                 "bestiary:restore_imprint"] == restore_count);
     PC_CHECK(simulator.material_counts["beast:craicic-chimeral"] ==
              imprint_count);
     PC_CHECK(simulator.material_counts["beast:rare"] == 3 * imprint_count);
@@ -1310,6 +2042,8 @@ void run_imprint_gate(const char* artifact_dir) {
 } // namespace
 
 void run_solver_compile_tests(const char* artifact_dir) {
+    run_future_observed_choice_compile_test();
+    run_structured_observation_route_tests();
     run_synthetic_gate();
     run_artifact_gate(artifact_dir);
     run_imprint_gate(artifact_dir);

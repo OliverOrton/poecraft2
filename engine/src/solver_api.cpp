@@ -700,7 +700,9 @@ uint32_t solve_cap_hit_mask(const solver::SolveDiagnostics& diagnostics) {
             mask |= PC_SOLVE_CAP_STATE;
         } else if (cap == "max_transitions") {
             mask |= PC_SOLVE_CAP_TRANSITIONS;
-        } else if (cap == "max_solver_owned_bytes") {
+        } else if (cap == "max_solver_owned_bytes" ||
+                   cap == "max_owned_bytes" ||
+                   cap == "max_estimated_memory_bytes") {
             mask |= PC_SOLVE_CAP_MEMORY;
         } else if (cap == "max_sweeps") {
             mask |= PC_SOLVE_CAP_SWEEPS;
@@ -875,7 +877,7 @@ void copy_solve_summary(
 void commit_solve(pc_solver_handle solver, solver::SolveResult result) {
     solver->solved = std::move(result);
     solver->compilation.reset();
-    solver->compiled_strategy.clear();
+    std::string{}.swap(solver->compiled_strategy);
     solver->solve_log.clear();
     solver->abandoned_telemetry.clear();
     solver->abandoned_telemetry_capped = false;
@@ -1377,6 +1379,16 @@ pc_result pc_solver_solve(
     }
     try {
         solver->solve_work.reset();
+        /*
+         * A replacement solve starts a new handle-owned memory budget.
+         * Release the previous retained policy (including an exact refined
+         * strategy) and the ordinary compiled-output cache before SolveWork
+         * begins, rather than carrying either full document beside the new
+         * graph until commit.
+         */
+        solver->solved.reset();
+        solver->compilation.reset();
+        std::string{}.swap(solver->compiled_strategy);
         solver->abandoned_telemetry.clear();
         solver->abandoned_telemetry_capped = false;
         solver->abandoned_telemetry_limit = 0;
@@ -1409,13 +1421,20 @@ pc_result pc_solver_solve_begin(
         return PC_RESULT_INVALID_ARGUMENT;
     }
     try {
+        /*
+         * Beginning stepped replacement invalidates the previous solve.
+         * Release its retained strategy and any ordinary compiled cache
+         * before constructing the new work object so both documents cannot
+         * sit outside the new solve's declared byte cap.
+         */
+        solver->solve_work.reset();
+        solver->solved.reset();
+        solver->compilation.reset();
+        std::string{}.swap(solver->compiled_strategy);
         auto work = std::make_unique<solver::SolveWork>(
             *solver->calc, *start_item, economy_prices(economy),
             solve_options(options));
         solver->solve_work = std::move(work);
-        solver->solved.reset();
-        solver->compilation.reset();
-        solver->compiled_strategy.clear();
         solver->solve_log.clear();
         solver->abandoned_telemetry.clear();
         solver->abandoned_telemetry_capped = false;
@@ -1525,6 +1544,19 @@ pc_result pc_solver_state_value(
         return PC_RESULT_NOT_FOUND;
     }
     const solver::SolveResult& result = *solver->solved;
+    if (!result.refined_policy_artifact.strategy_json.empty()) {
+        /*
+         * One coarse state can contain several exact subclasses with
+         * different values or actions. The executable refined policy is the
+         * retained strategy router; returning a coarse state/action pair here
+         * would expose a different policy through the same solve handle.
+         */
+        set_error(
+            out_error, PC_RESULT_UNSUPPORTED_FEATURE,
+            "per-state coarse policy queries are unavailable for a "
+            "policy-guided exact refined strategy");
+        return PC_RESULT_UNSUPPORTED_FEATURE;
+    }
     if (state_id >= result.values.size()) {
         set_error(out_error, PC_RESULT_NOT_FOUND,
                   "state id outside the solved set");
@@ -1692,6 +1724,33 @@ pc_result pc_solver_compile_strategy(
         return PC_RESULT_NOT_FOUND;
     }
     try {
+        /*
+         * Policy-guided refinement already retained the exact, parsed and
+         * reconciled document inside SolveResult under the solve-owned byte
+         * cap. Return that storage directly. Copying it into the handle cache
+         * would make the first compile query own two complete strategy
+         * documents without a second cap check.
+         */
+        const solver::RetainedCompiledPolicyArtifact& refined =
+            solver->solved->refined_policy_artifact;
+        if (!refined.strategy_json.empty()) {
+            if (!solver->compilation.has_value()) {
+                solver->compilation.emplace();
+                solver::PolicyCompilationTelemetry& telemetry =
+                    *solver->compilation;
+                telemetry.working_states = refined.working_states;
+                telemetry.policy_regions = refined.policy_regions;
+                telemetry.nodes = refined.nodes;
+                telemetry.edges = refined.edges;
+                telemetry.strategy_json_bytes =
+                    refined.strategy_json.size();
+                telemetry.peak_owned_bytes =
+                    refined.strategy_json.capacity() + 1;
+            }
+            return copy_text(
+                refined.strategy_json, buffer, capacity, out_length,
+                out_error);
+        }
         if (solver->compiled_strategy.empty()) {
             const auto started = std::chrono::steady_clock::now();
             solver->compilation.emplace();

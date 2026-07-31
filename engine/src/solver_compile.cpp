@@ -1,11 +1,14 @@
 #include "solver_internal.hpp"
+#include "solver_policy_refinement.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -49,6 +52,21 @@ std::string number(double value) {
     return buffer;
 }
 
+void add_owned_bytes(
+    std::uint64_t& total,
+    const std::uint64_t addition) {
+    if (addition >
+        std::numeric_limits<std::uint64_t>::max() - total) {
+        total = std::numeric_limits<std::uint64_t>::max();
+    } else {
+        total += addition;
+    }
+}
+
+std::uint64_t owned_string_bytes(const std::string& value) {
+    return static_cast<std::uint64_t>(value.capacity()) + 1;
+}
+
 const char* rarity_name(std::uint8_t rarity) {
     switch (rarity) {
     case PC_RARITY_NORMAL:
@@ -60,27 +78,62 @@ const char* rarity_name(std::uint8_t rarity) {
     }
 }
 
-std::string all_of(const std::vector<std::string>& parts) {
-    if (parts.empty()) return "{\"type\":\"always\"}";
-    if (parts.size() == 1) return parts.front();
-    std::string out = "{\"type\":\"all\",\"conditions\":[";
-    for (std::size_t i = 0; i < parts.size(); ++i) {
-        if (i > 0) out += ',';
-        out += parts[i];
+void append_composite_range(
+    std::string& out,
+    const char* type,
+    const std::vector<std::string>& parts,
+    const std::size_t first,
+    const std::size_t last) {
+    constexpr std::size_t kMaxCompositeChildren = 1024;
+    const std::size_t count = last - first;
+    if (count == 1) {
+        out += parts[first];
+        return;
+    }
+    out += std::string("{\"type\":\"") + type +
+           "\",\"conditions\":[";
+    if (count <= kMaxCompositeChildren) {
+        for (std::size_t index = first; index < last; ++index) {
+            if (index > first) out += ',';
+            out += parts[index];
+        }
+    } else {
+        const std::size_t child_span = std::max<std::size_t>(
+            kMaxCompositeChildren,
+            (count + kMaxCompositeChildren - 1) /
+                kMaxCompositeChildren);
+        bool first_child = true;
+        for (std::size_t child_first = first;
+             child_first < last;
+             child_first += child_span) {
+            if (!first_child) out += ',';
+            first_child = false;
+            append_composite_range(
+                out, type, parts, child_first,
+                std::min(last, child_first + child_span));
+        }
     }
     out += "]}";
+}
+
+std::string composite_of(
+    const char* type,
+    const std::vector<std::string>& parts,
+    const char* empty_identity) {
+    if (parts.empty()) return empty_identity;
+    if (parts.size() == 1) return parts.front();
+    std::string out;
+    append_composite_range(out, type, parts, 0, parts.size());
     return out;
 }
 
+std::string all_of(const std::vector<std::string>& parts) {
+    return composite_of(
+        "all", parts, "{\"type\":\"always\"}");
+}
+
 std::string any_of(const std::vector<std::string>& parts) {
-    if (parts.size() == 1) return parts.front();
-    std::string out = "{\"type\":\"any\",\"conditions\":[";
-    for (std::size_t i = 0; i < parts.size(); ++i) {
-        if (i > 0) out += ',';
-        out += parts[i];
-    }
-    out += "]}";
-    return out;
+    return composite_of("any", parts, "{\"type\":\"any\",\"conditions\":[]}");
 }
 
 std::string at_least(std::size_t count,
@@ -134,24 +187,27 @@ std::string mod_key_of(const SessionImpl& session, std::uint32_t mod_id) {
     return data.string_at(data.mod_key_sid[session.global_index[mod_id]]);
 }
 
-std::string mod_count_condition(
+std::string mod_count_condition_for_mask(
     const SessionImpl& session,
-    const JunkClass& junk,
+    const std::vector<std::uint64_t>& member_mask,
     std::uint8_t count,
-    std::uint8_t required_flags = 0) {
+    std::uint8_t required_flags,
+    bool allow_family_cover,
+    const char* subject) {
     std::map<std::uint32_t, std::uint32_t> representative_by_family;
     pc_bitset_for_each(
-        junk.member_mask.data(), session.words, [&](std::size_t bit) {
+        member_mask.data(), session.words, [&](std::size_t bit) {
             const std::uint32_t mod = static_cast<std::uint32_t>(bit);
             representative_by_family.emplace(session.family_id[mod], mod);
         });
-    bool exact_family_cover = !representative_by_family.empty();
+    bool exact_family_cover =
+        allow_family_cover && !representative_by_family.empty();
     for (std::uint32_t mod = 0;
          exact_family_cover && mod < session.mod_count; ++mod) {
         const bool family_selected =
             representative_by_family.count(session.family_id[mod]) != 0;
         const bool class_selected =
-            pc_bitset_test(junk.member_mask.data(), mod);
+            pc_bitset_test(member_mask.data(), mod);
         if (family_selected != class_selected) exact_family_cover = false;
     }
 
@@ -163,7 +219,8 @@ std::string mod_count_condition(
             const std::string key =
                 mod_key_of(session, mod);
             if (key.empty()) {
-                gap("junk class member " + std::to_string(mod) +
+                gap(std::string(subject) + " member " +
+                    std::to_string(mod) +
                     " has no stable modifier key");
             }
             if (!first) out += ',';
@@ -178,11 +235,11 @@ std::string mod_count_condition(
         }
     } else {
         pc_bitset_for_each(
-            junk.member_mask.data(), session.words, [&](std::size_t bit) {
+            member_mask.data(), session.words, [&](std::size_t bit) {
                 append_key(static_cast<std::uint32_t>(bit));
             });
     }
-    if (first) gap("junk class has no members");
+    if (first) gap(std::string(subject) + " has no members");
     out += "]";
     if ((required_flags & PC_MOD_SLOT_FRACTURED) != 0) {
         out += ",\"fractured\":true";
@@ -193,6 +250,41 @@ std::string mod_count_condition(
     out += ",\"min\":" + std::to_string(count) +
            ",\"max\":" + std::to_string(count) + "}";
     return out;
+}
+
+std::string mod_count_condition(
+    const SessionImpl& session,
+    const JunkClass& junk,
+    std::uint8_t count,
+    std::uint8_t required_flags = 0) {
+    return mod_count_condition_for_mask(
+        session, junk.member_mask, count, required_flags, true,
+        "junk class");
+}
+
+std::string goal_member_class_condition(
+    const SessionImpl& session,
+    const ResolvedGoalSlot& slot,
+    std::size_t slot_index,
+    GoalSlotStatus status,
+    std::uint32_t token) {
+    if (token == 0 || token > slot.member_classes.size()) {
+        gap(
+            "goal slot " + std::to_string(slot_index) +
+            " has an invalid exact member-class token");
+    }
+    const GoalMemberClass& member_class =
+        slot.member_classes[token - 1];
+    if (member_class.status != status) {
+        gap(
+            "goal slot " + std::to_string(slot_index) +
+            " member-class token disagrees with tier status");
+    }
+    /* Emit every exact member key. A class is a semantic union, not an
+     * arbitrarily selected representative modifier identity. */
+    return mod_count_condition_for_mask(
+        session, member_class.member_mask, 1, 0, false,
+        "goal member class");
 }
 
 std::string with_slot_flags(
@@ -304,6 +396,25 @@ std::string abstract_state_condition(
         case GoalSlotStatus::Absent:
             parts.push_back(not_of(vocabulary[i].member));
             break;
+        }
+        const ResolvedGoalSlot& slot = layout.slots[i];
+        const std::uint32_t member_class_token =
+            state.goal_member_class_tokens[i];
+        if (slot.member_classes.empty()) {
+            if (member_class_token != 0) {
+                gap(
+                    "coarse goal slot " + std::to_string(i) +
+                    " carries an exact member-class token");
+            }
+        } else if (status == GoalSlotStatus::Absent) {
+            if (member_class_token != 0) {
+                gap(
+                    "absent goal slot " + std::to_string(i) +
+                    " carries an exact member-class token");
+            }
+        } else {
+            parts.push_back(goal_member_class_condition(
+                session, slot, i, status, member_class_token));
         }
     }
     static const std::pair<std::uint32_t, const char*> flag_conditions[] = {
@@ -430,6 +541,29 @@ std::vector<QuotientFeature> quotient_features(
             break;
         }
         features.push_back({state.slot_status[i], status_condition});
+        const ResolvedGoalSlot& slot = layout.slots[i];
+        const std::uint32_t member_class_token =
+            state.goal_member_class_tokens[i];
+        if (!slot.member_classes.empty()) {
+            std::string member_class_condition;
+            if (status == GoalSlotStatus::Absent) {
+                if (member_class_token != 0) {
+                    gap(
+                        "absent goal slot " + std::to_string(i) +
+                        " carries an exact member-class token");
+                }
+                member_class_condition = not_of(vocabulary[i].member);
+            } else {
+                member_class_condition = goal_member_class_condition(
+                    session, slot, i, status, member_class_token);
+            }
+            features.push_back({
+                member_class_token, std::move(member_class_condition)});
+        } else if (member_class_token != 0) {
+            gap(
+                "coarse goal slot " + std::to_string(i) +
+                " carries an exact member-class token");
+        }
         const bool fractured =
             (state.fractured_goal_mask & (1u << i)) != 0;
         const bool crafted =
@@ -523,6 +657,9 @@ std::vector<std::uint32_t> quotient_feature_values(
     values.push_back(state.suffix_count);
     for (std::size_t i = 0; i < layout.slots.size(); ++i) {
         values.push_back(state.slot_status[i]);
+        if (!layout.slots[i].member_classes.empty()) {
+            values.push_back(state.goal_member_class_tokens[i]);
+        }
         values.push_back(
             (state.fractured_goal_mask & (1u << i)) != 0 ? 1u : 0u);
         values.push_back(
@@ -715,12 +852,220 @@ std::string quotient_class_condition(
     return all_of(conditions);
 }
 
+std::string hex_u64(const std::uint64_t value) {
+    static constexpr char digits[] = "0123456789abcdef";
+    std::string out(16, '0');
+    for (std::size_t index = 0; index < out.size(); ++index) {
+        const std::size_t shift = (out.size() - index - 1) * 4;
+        out[index] = digits[(value >> shift) & 0xfu];
+    }
+    return out;
+}
+
+std::string stable_key_json(
+        const refinement::StableKey& value) {
+    std::string out = "[";
+    for (std::size_t index = 0; index < value.size(); ++index) {
+        if (index != 0) out += ',';
+        out += "\"" + hex_u64(value[index]) + "\"";
+    }
+    return out + "]";
+}
+
+std::string sorted_u32_json(
+        const std::vector<std::uint32_t>& values) {
+    std::string out = "[";
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (index != 0) out += ',';
+        out += std::to_string(values[index]);
+    }
+    return out + "]";
+}
+
+refinement::StableKey count_observation_membership(
+        const AbstractLayout& layout,
+        const std::uint32_t mod) {
+    refinement::StableKey bits(
+        (layout.count_observations.size() + 63) / 64, 0);
+    for (std::size_t observation = 0;
+         observation < layout.count_observations.size();
+         ++observation) {
+        const std::vector<std::uint64_t>& mask =
+            layout.count_observations[observation].member_mask;
+        if (!mask.empty() && pc_bitset_test(mask.data(), mod)) {
+            bits[observation / 64] |=
+                std::uint64_t{1} << (observation % 64);
+        }
+    }
+    return bits;
+}
+
+std::string observation_signature_condition(
+        const SessionImpl& session,
+        const AbstractLayout& layout,
+        const refinement::ObservationRequirement& input_requirement,
+        const refinement::FeatureSignature& input_signature) {
+    const refinement::ObservationRequirement requirement =
+        refinement::canonical_observation_requirement(
+            input_requirement);
+    const refinement::FeatureSignature signature =
+        refinement::canonical_feature_signature(
+            input_signature);
+    if (requirement != input_requirement ||
+        signature != input_signature) {
+        gap(
+            "refined policy supplied a non-canonical observation "
+            "route");
+    }
+
+    std::string out =
+        "{\"type\":\"observation_signature\",\"version\":" +
+        std::to_string(kObservationSignatureConditionVersion) +
+        ",\"requirement\":{\"item_features\":" +
+        std::to_string(requirement.item_features) +
+        ",\"modifier_tag_ids\":" +
+        sorted_u32_json(requirement.modifier_tag_ids) +
+        ",\"affix_observations\":[";
+    for (std::size_t index = 0;
+         index < requirement.affix_observations.size(); ++index) {
+        if (index != 0) out += ',';
+        const RefinementAffixObservation& observation =
+            requirement.affix_observations[index];
+        out +=
+            "{\"features\":" +
+            std::to_string(observation.features) +
+            ",\"selector\":{\"required_affix_traits\":" +
+            std::to_string(
+                observation.selector.required_affix_traits) +
+            ",\"forbidden_affix_traits\":" +
+            std::to_string(
+                observation.selector.forbidden_affix_traits) +
+            ",\"required_item_traits\":" +
+            std::to_string(
+                observation.selector.required_item_traits) +
+            ",\"forbidden_item_traits\":" +
+            std::to_string(
+                observation.selector.forbidden_item_traits) +
+            ",\"required_tag_ids\":" +
+            sorted_u32_json(
+                observation.selector.required_tag_ids) +
+            "}}";
+    }
+    out += "]},\"signature\":[";
+    for (std::size_t index = 0; index < signature.size(); ++index) {
+        if (index != 0) out += ',';
+        const refinement::FeatureAtom& atom = signature[index];
+        out +=
+            "{\"feature\":" +
+            std::to_string(
+                static_cast<std::uint8_t>(atom.feature)) +
+            ",\"subject\":" + std::to_string(atom.subject) +
+            ",\"value\":" + stable_key_json(atom.value) + "}";
+    }
+    out += "],\"goal_status_tier_class_by_mod\":[";
+    bool first = true;
+    const bool goal_context_required =
+        std::any_of(
+            requirement.affix_observations.begin(),
+            requirement.affix_observations.end(),
+            [](const RefinementAffixObservation& observation) {
+                return (
+                    observation.features &
+                    refinement_feature(
+                        RefinementFeature::
+                            GoalStatusTierClass)) != 0;
+            });
+    if (goal_context_required) {
+        for (std::uint32_t mod = 0;
+             mod < session.mod_count; ++mod) {
+            refinement::StableKey value{
+                0u,
+                static_cast<std::uint8_t>(
+                    GoalSlotStatus::Absent)};
+            for (std::size_t slot = 0;
+                 slot < layout.slots.size(); ++slot) {
+                if (!pc_bitset_test(
+                        layout.slots[slot].member_mask.data(),
+                        mod)) {
+                    continue;
+                }
+                if (value.front() != 0) {
+                    gap(
+                        "observation-signature goal context has "
+                        "overlapping modifier slots");
+                }
+                value = {
+                    slot + 1,
+                    static_cast<std::uint8_t>(
+                        pc_bitset_test(
+                            layout.slots[slot]
+                                .satisfying_mask.data(),
+                            mod)
+                            ? GoalSlotStatus::Satisfied
+                            : GoalSlotStatus::
+                                  PresentBelowTier)};
+            }
+            if (value.front() == 0) continue;
+            if (!first) out += ',';
+            first = false;
+            out +=
+                "{\"mod_key\":\"" +
+                json_escape(mod_key_of(session, mod)) +
+                "\",\"value\":" +
+                stable_key_json(value) + "}";
+        }
+    }
+    out +=
+        "],\"count_observation_count\":" +
+        std::to_string(layout.count_observations.size()) +
+        ",\"count_observation_membership_by_mod\":[";
+    first = true;
+    const bool count_context_required =
+        std::any_of(
+            requirement.affix_observations.begin(),
+            requirement.affix_observations.end(),
+            [](const RefinementAffixObservation& observation) {
+                return (
+                    observation.features &
+                    refinement_feature(
+                        RefinementFeature::
+                            CountObservationMembership)) != 0;
+            });
+    if (count_context_required) {
+        for (std::uint32_t mod = 0;
+             mod < session.mod_count; ++mod) {
+            const refinement::StableKey value =
+                count_observation_membership(layout, mod);
+            if (std::all_of(
+                    value.begin(), value.end(),
+                    [](const std::uint64_t word) {
+                        return word == 0;
+                    })) {
+                continue;
+            }
+            if (!first) out += ',';
+            first = false;
+            out +=
+                "{\"mod_key\":\"" +
+                json_escape(mod_key_of(session, mod)) +
+                "\",\"value\":" +
+                stable_key_json(value) + "}";
+        }
+    }
+    return out + "]}";
+}
+
 std::string operation_json(const SessionImpl& session,
                            const ActionDescriptor& action) {
     const DataImpl& data = *session.data;
     if (action.synthetic) return "{\"type\":\"restart\"}";
     switch (action.params.type) {
     case ActionType::Essence:
+        if (action.params.essence_index >=
+            data.essence_key_sids.size()) {
+            gap(
+                "essence action has no stable session key");
+        }
         return "{\"type\":\"essence\",\"essence_key\":\"" +
                json_escape(data.string_at(
                    data.essence_key_sids[action.params.essence_index])) +
@@ -729,6 +1074,11 @@ std::string operation_json(const SessionImpl& session,
         std::string out = "{\"type\":\"fossil\",\"fossils\":[";
         for (std::size_t i = 0; i < action.params.fossil_indices.size();
              ++i) {
+            if (action.params.fossil_indices[i] >=
+                data.fossil_key_sids.size()) {
+                gap(
+                    "fossil action has no stable session key");
+            }
             if (i > 0) out += ',';
             out += '"';
             out += json_escape(data.string_at(
@@ -776,10 +1126,40 @@ std::string operation_json(const SessionImpl& session,
                    static_cast<std::size_t>(
                        action.params.influence_code))) +
                "\"}";
-    default:
-        /* Basic currency and simple actions: id == operation name. */
-        return "{\"type\":\"" + json_escape(action.id) + "\"}";
+    case ActionType::Transmute:
+        return "{\"type\":\"transmute\"}";
+    case ActionType::Augment:
+        return "{\"type\":\"augment\"}";
+    case ActionType::Alteration:
+        return "{\"type\":\"alteration\"}";
+    case ActionType::Regal:
+        return "{\"type\":\"regal\"}";
+    case ActionType::Alchemy:
+        return "{\"type\":\"alchemy\"}";
+    case ActionType::Chaos:
+        return "{\"type\":\"chaos\"}";
+    case ActionType::Exalt:
+        return "{\"type\":\"exalt\"}";
+    case ActionType::Annul:
+        return "{\"type\":\"annul\"}";
+    case ActionType::Scour:
+        return "{\"type\":\"scour\"}";
+    case ActionType::VeiledChaos:
+        return "{\"type\":\"veiled_chaos\"}";
+    case ActionType::VeiledExalt:
+        return "{\"type\":\"veiled_exalt\"}";
+    case ActionType::EldritchExalt:
+        return "{\"type\":\"eldritch_exalt\"}";
+    case ActionType::EldritchChaos:
+        return "{\"type\":\"eldritch_chaos\"}";
+    case ActionType::EldritchAnnul:
+        return "{\"type\":\"eldritch_annul\"}";
+    case ActionType::Fracture:
+        return "{\"type\":\"fracture\"}";
+    case ActionType::RemoveCraftedModifiers:
+        return "{\"type\":\"remove_crafted_modifiers\"}";
     }
+    gap("action type has no strategy operation serializer");
 }
 
 std::string accounting_roles_json(
@@ -850,10 +1230,77 @@ std::string compile_policy_strategy_json(
     CalcContext& calc,
     const SolveResult& result,
     const std::string& name,
-    PolicyCompilationTelemetry* telemetry) {
+    PolicyCompilationTelemetry* telemetry,
+    const std::uint64_t max_strategy_json_bytes,
+    const refinement::RefinedPolicyCompileRouting* refined_routing,
+    const std::uint64_t max_compiler_owned_bytes) {
+    const std::uint64_t strategy_json_limit = std::min(
+        result.options.max_strategy_json_bytes,
+        max_strategy_json_bytes);
+    std::uint64_t compiler_peak_owned_bytes = 0;
+    const auto observe_compiler_owned =
+        [&](const std::uint64_t bytes) {
+            compiler_peak_owned_bytes =
+                std::max(compiler_peak_owned_bytes, bytes);
+            if (telemetry != nullptr) {
+                telemetry->peak_owned_bytes =
+                    compiler_peak_owned_bytes;
+            }
+            if (bytes > max_compiler_owned_bytes) {
+                if (telemetry != nullptr) {
+                    telemetry->cap_hit =
+                        "max_solver_owned_bytes";
+                }
+                throw SolverResourceLimit(
+                    "max_solver_owned_bytes",
+                    max_compiler_owned_bytes);
+            }
+        };
+    if (!result.refined_policy_artifact.strategy_json.empty()) {
+        if (result.refined_policy_artifact.strategy_json.size() >
+            strategy_json_limit) {
+            if (telemetry != nullptr) {
+                telemetry->cap_hit = "max_strategy_json_bytes";
+            }
+            gap("retained refined policy exceeded "
+                "max_strategy_json_bytes");
+        }
+        if (telemetry != nullptr) {
+            telemetry->working_states =
+                result.refined_policy_artifact.working_states;
+            telemetry->policy_regions =
+                result.refined_policy_artifact.policy_regions;
+            telemetry->nodes = result.refined_policy_artifact.nodes;
+            telemetry->edges = result.refined_policy_artifact.edges;
+            telemetry->strategy_json_bytes =
+                result.refined_policy_artifact.strategy_json.size();
+        }
+        observe_compiler_owned(
+            result.refined_policy_artifact.strategy_json.size() + 1);
+        return result.refined_policy_artifact.strategy_json;
+    }
     const SessionImpl& session = calc.session();
     const DataImpl& data = *session.data;
     const AbstractLayout& layout = calc.layout();
+    const auto primitive_observes_modifier_offer =
+        [&](const PlannerOperator& planner) {
+            return planner.kind == PlannerOperatorKind::Primitive &&
+                   planner.primitive_action <
+                       calc.registry().actions.size() &&
+                   action_observes_modifier_offer(
+                       calc.registry().actions[
+                           planner.primitive_action]);
+        };
+    const auto option_observes_modifier_offer =
+        [&](const PlannerOperator& planner) {
+            return planner.kind == PlannerOperatorKind::FixedOption &&
+                   !planner.primitive_program.empty() &&
+                   planner.primitive_program.back() <
+                       calc.registry().actions.size() &&
+                   action_observes_modifier_offer(
+                       calc.registry().actions[
+                           planner.primitive_program.back()]);
+        };
 
     if (result.start_state == kNoId ||
         result.start_state >= result.values.size()) {
@@ -951,7 +1398,9 @@ std::string compile_policy_strategy_json(
         }
 
         pc_item_state start_item;
-        if (!calc.materialize(result.start_state, start_item)) {
+        if (result.has_exact_start_item) {
+            start_item = result.exact_start_item;
+        } else if (!calc.materialize(result.start_state, start_item)) {
             gap("gated primitive renewal start cannot be materialized");
         }
         std::vector<std::string> goal_parts{
@@ -1072,13 +1521,15 @@ std::string compile_policy_strategy_json(
             }
             gap("compiled fixed renewal exceeded max_compiled_edges");
         }
-        if (json.size() > result.options.max_strategy_json_bytes) {
+        if (json.size() > strategy_json_limit) {
             if (telemetry != nullptr) {
                 telemetry->cap_hit = "max_strategy_json_bytes";
             }
             gap("compiled fixed renewal exceeded "
                 "max_strategy_json_bytes");
         }
+        observe_compiler_owned(
+            owned_string_bytes(json));
         if (telemetry != nullptr) {
             telemetry->working_states =
                 static_cast<std::uint32_t>(working_states);
@@ -1098,7 +1549,6 @@ std::string compile_policy_strategy_json(
             result.goal_states[state_id]) {
             continue;
         }
-        const AbstractState& state = calc.state(state_id);
         if (result.policy[state_id] == kNoId) {
             gap("policy-reachable state " + std::to_string(state_id) +
                 " has no action");
@@ -1135,8 +1585,629 @@ std::string compile_policy_strategy_json(
      * produces the same document for the same solved policy. */
     std::map<std::uint32_t, std::string> state_conditions;
     std::map<std::uint32_t, std::vector<std::uint32_t>> quotient_members;
+    std::uint64_t retained_compile_condition_bytes = 0;
+    const bool structured_refined_route =
+        refined_routing != nullptr;
+    std::map<
+        std::uint32_t,
+        const refinement::RefinedPolicyCompileClass*>
+        refined_class_by_representative;
+    std::vector<std::string> refined_condition_by_class;
+    std::map<std::uint32_t, std::vector<std::uint32_t>>
+        refined_classes_by_coarse_parent;
+    std::vector<std::uint32_t> refined_parent_order;
+    std::map<std::uint32_t, std::string>
+        refined_parent_condition;
+    std::map<std::uint32_t, std::string>
+        refined_parent_router;
+    const auto refined_route_owned_bytes = [&]() {
+        std::uint64_t bytes = 0;
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(
+                refined_condition_by_class.capacity()) *
+                sizeof(std::string));
+        for (const std::string& condition :
+             refined_condition_by_class) {
+            add_owned_bytes(
+                bytes, owned_string_bytes(condition));
+        }
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(
+                refined_parent_order.capacity()) *
+                sizeof(std::uint32_t));
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(
+                refined_class_by_representative.size()) *
+                (sizeof(std::uint32_t) +
+                 sizeof(const refinement::RefinedPolicyCompileClass*) +
+                 3 * sizeof(void*)));
+        add_owned_bytes(
+            bytes,
+            static_cast<std::uint64_t>(
+                refined_classes_by_coarse_parent.size()) *
+                (sizeof(std::uint32_t) +
+                 sizeof(std::vector<std::uint32_t>) +
+                 3 * sizeof(void*)));
+        for (const auto& [unused, class_ids] :
+             refined_classes_by_coarse_parent) {
+            (void)unused;
+            add_owned_bytes(
+                bytes,
+                static_cast<std::uint64_t>(
+                    class_ids.capacity()) *
+                    sizeof(std::uint32_t));
+        }
+        const auto add_string_map =
+            [&](const std::map<std::uint32_t, std::string>& values) {
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(values.size()) *
+                        (sizeof(std::uint32_t) +
+                         sizeof(std::string) +
+                         3 * sizeof(void*)));
+                for (const auto& [unused, value] : values) {
+                    (void)unused;
+                    add_owned_bytes(
+                        bytes, owned_string_bytes(value));
+                }
+            };
+        add_string_map(refined_parent_condition);
+        add_string_map(refined_parent_router);
+        return bytes;
+    };
+    if (structured_refined_route) {
+        if (result.policy.size() != result.values.size() ||
+            result.expanded.size() != result.values.size() ||
+            result.goal_states.size() != result.values.size() ||
+            result.policy_reachable.size() != result.values.size() ||
+            result.behavioral_representative_by_state.size() !=
+                result.values.size()) {
+            gap(
+                "refined policy compile sidecar disagrees with the "
+                "strict state table");
+        }
+        refined_condition_by_class.resize(
+            refined_routing->classes.size());
+        std::vector<std::uint32_t> refined_member_owner(
+            result.values.size(), kNoId);
+        std::vector<std::vector<std::uint64_t>>
+            refined_operator_key_by_class(
+                refined_routing->classes.size());
+        std::vector<std::vector<std::uint64_t>>
+            refined_recipe_by_class(
+                refined_routing->classes.size());
+        for (std::size_t class_index = 0;
+             class_index < refined_routing->classes.size();
+             ++class_index) {
+            const refinement::RefinedPolicyCompileClass& policy_class =
+                refined_routing->classes[class_index];
+            const bool members_are_canonical =
+                std::is_sorted(
+                    policy_class.strict_members.begin(),
+                    policy_class.strict_members.end()) &&
+                std::adjacent_find(
+                    policy_class.strict_members.begin(),
+                    policy_class.strict_members.end()) ==
+                    policy_class.strict_members.end() &&
+                std::all_of(
+                    policy_class.strict_members.begin(),
+                    policy_class.strict_members.end(),
+                    [&](std::uint32_t member) {
+                        return member < result.values.size();
+                    });
+            if (policy_class.class_id != class_index ||
+                policy_class.coarse_state == kNoId ||
+                policy_class.representative_state >=
+                    result.values.size() ||
+                policy_class.strict_members.empty() ||
+                !members_are_canonical ||
+                !std::binary_search(
+                    policy_class.strict_members.begin(),
+                    policy_class.strict_members.end(),
+                    policy_class.representative_state)) {
+                gap(
+                    "refined policy compile sidecar is not canonical");
+            }
+            const auto [unused, inserted] =
+                refined_class_by_representative.emplace(
+                    policy_class.representative_state,
+                    &policy_class);
+            (void)unused;
+            if (!inserted) {
+                gap(
+                    "refined policy compile sidecar repeats a "
+                    "representative state");
+            }
+            for (const std::uint32_t member :
+                 policy_class.strict_members) {
+                if (refined_member_owner[member] != kNoId) {
+                    gap(
+                        "refined policy compile sidecar overlaps strict "
+                        "member classes");
+                }
+                refined_member_owner[member] =
+                    policy_class.class_id;
+            }
+            refined_condition_by_class[policy_class.class_id] =
+                observation_signature_condition(
+                    session,
+                    layout,
+                    policy_class.required_observations,
+                    policy_class.observation_signature);
+            if (!policy_class.terminal) {
+                refined_classes_by_coarse_parent[
+                    policy_class.coarse_state]
+                        .push_back(policy_class.class_id);
+            }
+            observe_compiler_owned(
+                refined_route_owned_bytes());
+            for (const refinement::ProjectedTransition& transition :
+                 policy_class.transitions) {
+                if (transition.successor_class >=
+                    refined_routing->classes.size()) {
+                    gap(
+                        "refined route transition has an invalid "
+                        "successor");
+                }
+            }
+        }
+
+        for (std::uint32_t state = 0;
+             state < result.values.size(); ++state) {
+            const bool represented =
+                result.expanded[state] != 0;
+            const std::uint32_t owner =
+                refined_member_owner[state];
+            if (represented != (owner != kNoId)) {
+                gap(
+                    represented
+                        ? "refined policy compile sidecar omits a "
+                          "represented strict member"
+                        : "refined policy compile sidecar contains an "
+                          "unrepresented strict member");
+            }
+            if (owner == kNoId) continue;
+            const refinement::RefinedPolicyCompileClass& policy_class =
+                refined_routing->classes.at(owner);
+            if (result.behavioral_representative_by_state[state] !=
+                    policy_class.representative_state ||
+                (result.goal_states[state] != 0) !=
+                    policy_class.terminal) {
+                gap(
+                    "refined policy compile sidecar disagrees with its "
+                    "strict assignment");
+            }
+        }
+
+        /*
+         * The shared refinement engine deliberately scopes selected-action
+         * separation to one coarse policy location. Preserve that control
+         * flow in the executable graph instead of flattening every exact
+         * subclass onto one router. A parent guard is the union of all
+         * policy-reachable strict semantic states represented by that coarse
+         * location; no representative modifier identity is selected.
+         *
+         * These guards are re-evaluated after every operation. An action that
+         * destroys an observed feature therefore routes directly into the
+         * collapsed successor parent, while a preserving action retains only
+         * the semantic strict class that actually survives.
+         */
+        std::map<
+            refinement::StableKey,
+            std::uint32_t>
+            parent_by_stable_key;
+        std::vector<
+            std::pair<refinement::StableKey, std::uint32_t>>
+            ordered_parents;
+        std::map<std::string, std::uint32_t>
+            globally_routed_member_owner;
+        const auto parent_build_owned_bytes =
+            [&](const std::vector<std::string>* current_conditions) {
+                std::uint64_t bytes =
+                    refined_route_owned_bytes();
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        parent_by_stable_key.size()) *
+                        (sizeof(refinement::StableKey) +
+                         sizeof(std::uint32_t) +
+                         3 * sizeof(void*)));
+                for (const auto& [key, unused] :
+                     parent_by_stable_key) {
+                    (void)unused;
+                    add_owned_bytes(
+                        bytes,
+                        static_cast<std::uint64_t>(
+                            key.capacity()) *
+                            sizeof(std::uint64_t));
+                }
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        ordered_parents.capacity()) *
+                        sizeof(ordered_parents.front()));
+                for (const auto& [key, unused] :
+                     ordered_parents) {
+                    (void)unused;
+                    add_owned_bytes(
+                        bytes,
+                        static_cast<std::uint64_t>(
+                            key.capacity()) *
+                            sizeof(std::uint64_t));
+                }
+                add_owned_bytes(
+                    bytes,
+                    static_cast<std::uint64_t>(
+                        globally_routed_member_owner.size()) *
+                        (sizeof(std::string) +
+                         sizeof(std::uint32_t) +
+                         3 * sizeof(void*)));
+                for (const auto& [condition, unused] :
+                     globally_routed_member_owner) {
+                    (void)unused;
+                    add_owned_bytes(
+                        bytes, owned_string_bytes(condition));
+                }
+                if (current_conditions != nullptr) {
+                    add_owned_bytes(
+                        bytes,
+                        static_cast<std::uint64_t>(
+                            current_conditions->capacity()) *
+                            sizeof(std::string));
+                    for (const std::string& condition :
+                         *current_conditions) {
+                        add_owned_bytes(
+                            bytes,
+                            owned_string_bytes(condition));
+                    }
+                }
+                return bytes;
+            };
+        for (const auto& [coarse_state, class_ids] :
+             refined_classes_by_coarse_parent) {
+            const refinement::StableKey& coarse_state_key =
+                refined_routing->classes.at(class_ids.front())
+                    .coarse_state_key;
+            if (coarse_state_key.empty()) {
+                gap(
+                    "refined coarse parent has no deterministic "
+                    "semantic key");
+            }
+            for (const std::uint32_t class_id : class_ids) {
+                if (refined_routing->classes.at(class_id)
+                        .coarse_state_key != coarse_state_key) {
+                    gap(
+                        "refined coarse parent has inconsistent "
+                        "semantic keys");
+                }
+            }
+            const auto [same_key, inserted_key] =
+                parent_by_stable_key.emplace(
+                    coarse_state_key, coarse_state);
+            if (!inserted_key &&
+                same_key->second != coarse_state) {
+                gap(
+                    "distinct refined coarse parents share one "
+                    "semantic key");
+            }
+
+            std::vector<std::string> member_conditions;
+            std::optional<bool> retry_basin;
+            for (const std::uint32_t class_id : class_ids) {
+                const refinement::RefinedPolicyCompileClass& policy_class =
+                    refined_routing->classes.at(class_id);
+                for (const std::uint32_t member :
+                     policy_class.strict_members) {
+                    const bool member_retry_basin =
+                        calc.state(member).goal_progress_retry_basin != 0;
+                    if (retry_basin.has_value() &&
+                        *retry_basin != member_retry_basin) {
+                        gap(
+                            "refined coarse parent mixes ordinary and "
+                            "retry-basin control states");
+                    }
+                    retry_basin = member_retry_basin;
+                    const std::string condition =
+                        abstract_state_condition(
+                            session, layout, vocabulary,
+                            calc.state(member));
+                    if (!member_retry_basin) {
+                        const auto [owner, inserted] =
+                            globally_routed_member_owner.emplace(
+                                condition, coarse_state);
+                        if (!inserted &&
+                            owner->second != coarse_state) {
+                            gap(
+                                "overlapping refined coarse-parent "
+                                "guards");
+                        }
+                    }
+                    member_conditions.push_back(condition);
+                }
+            }
+            std::sort(
+                member_conditions.begin(), member_conditions.end());
+            member_conditions.erase(
+                std::unique(
+                    member_conditions.begin(),
+                    member_conditions.end()),
+                member_conditions.end());
+            if (member_conditions.empty()) {
+                gap(
+                    "refined coarse parent has no represented strict "
+                    "member");
+            }
+            /*
+             * Retry-basin identity is policy memory, not an observable item
+             * predicate. It is entered only through the gated reforge's local
+             * control-flow edge, so publishing it on the global item router
+             * would overlap the ordinary parent with identical item state.
+             */
+            if (!retry_basin.value_or(false)) {
+                refined_parent_condition.emplace(
+                    coarse_state, any_of(member_conditions));
+                ordered_parents.emplace_back(
+                    coarse_state_key, coarse_state);
+            }
+            observe_compiler_owned(
+                parent_build_owned_bytes(&member_conditions));
+        }
+        std::sort(ordered_parents.begin(), ordered_parents.end());
+        std::uint32_t parent_router_index = 0;
+        for (const auto& [unused_key, coarse_state] :
+             ordered_parents) {
+            (void)unused_key;
+            refined_parent_order.push_back(coarse_state);
+            refined_parent_router.emplace(
+                coarse_state,
+                "refined_parent_" +
+                    std::to_string(parent_router_index++));
+        }
+        observe_compiler_owned(
+            parent_build_owned_bytes(nullptr));
+
+        const auto fixed_option_recipe =
+            [&](const std::uint32_t member,
+                const std::uint32_t operator_index,
+                const PlannerOperator& planner) {
+                const OptionKernel& kernel =
+                    calc.option_kernel(member, operator_index);
+                const std::vector<ObservedUnveilPreference>
+                    empty_preferences;
+                const std::vector<ObservedUnveilPreference>&
+                    preferences =
+                        member <
+                                result
+                                    .option_unveil_preferences
+                                    .size()
+                            ? result
+                                  .option_unveil_preferences[
+                                      member]
+                            : empty_preferences;
+                return fixed_option_executable_recipe_key(
+                    fixed_option_executable_recipe(
+                        calc, member, planner, kernel,
+                        preferences));
+            };
+        const auto primitive_recipe =
+            [&](const std::uint32_t member,
+                const PlannerOperator& planner) {
+                std::vector<std::uint64_t> recipe{
+                    0x70637072696d7231ull}; /* "pcprimr1" */
+                if (planner.primitive_action >=
+                    calc.registry().actions.size()) {
+                    gap(
+                        "refined primitive operator is outside the "
+                        "strict action registry");
+                }
+                if (!primitive_observes_modifier_offer(planner)) {
+                    return recipe;
+                }
+                if (member >= result.unveil_preferences.size() ||
+                    result.unveil_preferences[member].empty()) {
+                    gap(
+                        "refined observed-choice member has no populated "
+                        "preference sidecar");
+                }
+                std::set<std::uint32_t> seen_mods;
+                for (const std::uint32_t mod :
+                     result.unveil_preferences[member]) {
+                    if (mod >= session.mod_count ||
+                        !seen_mods.insert(mod).second) {
+                        gap(
+                            "refined observed-choice preference has an invalid "
+                            "or repeated modifier");
+                    }
+                    recipe.push_back(mod);
+                }
+                return recipe;
+            };
+
+        for (const refinement::RefinedPolicyCompileClass& policy_class :
+             refined_routing->classes) {
+            if (policy_class.terminal) continue;
+            if (!policy_class.selected_action.has_value()) {
+                gap(
+                    "refined non-terminal route has no selected "
+                    "action");
+            }
+            const auto representative =
+                refined_class_by_representative.find(
+                    policy_class.representative_state);
+            if (representative ==
+                    refined_class_by_representative.end() ||
+                std::find(
+                    compiled_states.begin(),
+                    compiled_states.end(),
+                    policy_class.representative_state) ==
+                    compiled_states.end()) {
+                gap(
+                    "refined working class is absent from the lifted "
+                    "policy");
+            }
+            const refinement::SelectedAction& selected =
+                *policy_class.selected_action;
+            if (selected.action_id >= calc.operators().size() ||
+                selected.semantic_key.empty()) {
+                gap(
+                    "refined route has an invalid semantic operator "
+                    "decision");
+            }
+            const PlannerOperator& planner =
+                calc.operators().at(selected.action_id);
+            const std::vector<std::uint64_t> operator_key =
+                planner_operator_semantic_key(planner);
+            if (operator_key.empty()) {
+                gap(
+                    "refined route operator has no semantic key");
+            }
+            refined_operator_key_by_class[policy_class.class_id] =
+                operator_key;
+
+            std::optional<std::vector<std::uint64_t>>
+                representative_recipe;
+            for (const std::uint32_t member :
+                 policy_class.strict_members) {
+                const PolicyOperatorRef policy =
+                    result.policy[member];
+                if (policy.index != selected.action_id ||
+                    policy.kind != planner.kind ||
+                    policy.index >= calc.operators().size() ||
+                    planner_operator_semantic_key(
+                        calc.operators().at(policy.index)) !=
+                        operator_key) {
+                    gap(
+                        "refined route member operator disagrees with "
+                        "the selected strict decision");
+                }
+                const std::vector<std::uint64_t> recipe =
+                    planner.kind ==
+                            PlannerOperatorKind::FixedOption
+                        ? fixed_option_recipe(
+                              member, selected.action_id,
+                              planner)
+                        : primitive_recipe(member, planner);
+                if (!representative_recipe.has_value()) {
+                    representative_recipe = recipe;
+                } else if (*representative_recipe != recipe) {
+                    gap(
+                        "refined route members have different "
+                        "executable operator recipes");
+                }
+            }
+            refined_recipe_by_class[policy_class.class_id] =
+                *representative_recipe;
+        }
+
+        const auto same_refined_decision =
+            [&](const refinement::RefinedPolicyCompileClass& left,
+                const refinement::RefinedPolicyCompileClass& right) {
+                return left.selected_action.has_value() &&
+                       right.selected_action.has_value() &&
+                       left.selected_action->action_id ==
+                           right.selected_action->action_id &&
+                       left.selected_action->semantic_key ==
+                           right.selected_action->semantic_key &&
+                       refined_operator_key_by_class[left.class_id] ==
+                           refined_operator_key_by_class[
+                               right.class_id] &&
+                       refined_recipe_by_class[left.class_id] ==
+                           refined_recipe_by_class[
+                               right.class_id];
+            };
+        std::map<
+            std::pair<std::uint32_t, std::string>,
+            std::uint32_t>
+            first_class_by_condition;
+        for (const refinement::RefinedPolicyCompileClass& policy_class :
+             refined_routing->classes) {
+            if (policy_class.terminal) continue;
+            const std::string& condition =
+                refined_condition_by_class[policy_class.class_id];
+            const auto [found, inserted] =
+                first_class_by_condition.emplace(
+                    std::pair{
+                        policy_class.coarse_state, condition},
+                    policy_class.class_id);
+            if (inserted) continue;
+            const refinement::RefinedPolicyCompileClass& first_class =
+                refined_routing->classes.at(found->second);
+            if (!same_refined_decision(
+                    first_class, policy_class)) {
+                gap(
+                    "indistinguishable_refined_policy_actions");
+            }
+        }
+
+        /*
+         * A policy router only decides the next executable operation. Exact
+         * classes with different values or projected kernels may therefore
+         * overlap when every matching predicate selects the same semantic
+         * action: whichever equal-action edge wins, the operation is
+         * identical and successor routing is evaluated again on the concrete
+         * result. An overlap between different semantic actions is not
+         * executable and remains a hard compiler assertion.
+         */
+        for (const refinement::RefinedPolicyCompileClass& owner :
+             refined_routing->classes) {
+            if (owner.terminal) continue;
+            for (const std::uint32_t member :
+                 owner.strict_members) {
+                if (member >= result.values.size()) {
+                    gap(
+                        "refined route member is outside the strict "
+                        "state table");
+                }
+                bool matched_owner_condition = false;
+                bool conflicting_decision = false;
+                for (const refinement::RefinedPolicyCompileClass&
+                         candidate : refined_routing->classes) {
+                    if (candidate.terminal ||
+                        candidate.coarse_state !=
+                            owner.coarse_state) {
+                        continue;
+                    }
+                    const refinement::AbstractFeatureExtraction
+                        extraction =
+                            refinement::
+                                extract_strict_abstract_features(
+                                    session,
+                                    layout,
+                                    calc.state(member),
+                                    candidate
+                                        .required_observations);
+                    if (!extraction.complete()) continue;
+                    if (refinement::observe_features(
+                            extraction.features,
+                            candidate.required_observations) ==
+                        candidate.observation_signature) {
+                        matched_owner_condition =
+                            matched_owner_condition ||
+                            refined_condition_by_class[
+                                candidate.class_id] ==
+                                refined_condition_by_class[
+                                    owner.class_id];
+                        conflicting_decision =
+                            conflicting_decision ||
+                            !same_refined_decision(owner, candidate);
+                    }
+                }
+                if (!matched_owner_condition) {
+                    gap(
+                        "incomplete_refined_policy_observation_signature");
+                }
+                if (conflicting_decision) {
+                    gap(
+                        "overlapping_refined_policy_actions");
+                }
+            }
+        }
+    }
     QuotientFeatureIndex feature_index;
-    {
+    if (!structured_refined_route) {
         const std::size_t state_count = result.values.size();
         if (state_count != 0) {
             feature_index.width =
@@ -1168,7 +2239,21 @@ std::string compile_policy_strategy_json(
         }
     }
     for (const std::uint32_t state_id : compiled_states) {
-        if (!result.behavioral_representative_by_state.empty()) {
+        if (structured_refined_route) {
+            const auto policy_class =
+                refined_class_by_representative.find(state_id);
+            if (policy_class ==
+                    refined_class_by_representative.end() ||
+                policy_class->second->terminal) {
+                gap(
+                    "lifted working state has no refined routing "
+                    "class");
+            }
+            state_conditions.emplace(
+                state_id,
+                refined_condition_by_class[
+                    policy_class->second->class_id]);
+        } else if (!result.behavioral_representative_by_state.empty()) {
             state_conditions.emplace(
                 state_id,
                 quotient_class_condition(
@@ -1177,10 +2262,31 @@ std::string compile_policy_strategy_json(
                     result.behavioral_representative_by_state));
         }
     }
+    if (structured_refined_route) {
+        retained_compile_condition_bytes =
+            refined_route_owned_bytes();
+        add_owned_bytes(
+            retained_compile_condition_bytes,
+            static_cast<std::uint64_t>(
+                state_conditions.size()) *
+                (sizeof(std::uint32_t) +
+                 sizeof(std::string) +
+                 3 * sizeof(void*)));
+        for (const auto& [unused, condition] :
+             state_conditions) {
+            (void)unused;
+            add_owned_bytes(
+                retained_compile_condition_bytes,
+                owned_string_bytes(condition));
+        }
+        observe_compiler_owned(
+            retained_compile_condition_bytes);
+    }
     std::sort(
         compiled_states.begin(), compiled_states.end(),
         [&](const std::uint32_t left, const std::uint32_t right) {
-            if (!result.behavioral_representative_by_state.empty()) {
+            if (structured_refined_route ||
+                !result.behavioral_representative_by_state.empty()) {
                 const std::string& left_condition = state_conditions.at(left);
                 const std::string& right_condition = state_conditions.at(right);
                 if (left_condition != right_condition) {
@@ -1229,10 +2335,8 @@ std::string compile_policy_strategy_json(
     for (const std::uint32_t state_id : compiled_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
-        const bool primitive_unveil =
-            planner.kind == PlannerOperatorKind::Primitive &&
-            calc.registry().actions[planner.primitive_action].params.type ==
-                ActionType::Unveil;
+        const bool primitive_observed_choice =
+            primitive_observes_modifier_offer(planner);
         const bool product_local_fracture =
             calc.product_solver_parent() &&
             planner.kind == PlannerOperatorKind::Primitive &&
@@ -1245,7 +2349,7 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::FracturePrepare ||
              planner.option_kind == FixedOptionKind::ImprintRetry);
         std::uint32_t leader = state_id;
-        if (!primitive_unveil && !product_local_fracture &&
+        if (!primitive_observed_choice && !product_local_fracture &&
             !state_local_option &&
             !gated_primitive_reforge(state_id)) {
             const std::string key =
@@ -1307,14 +2411,30 @@ std::string compile_policy_strategy_json(
             distribution.gated_retry_state;
         if (retry_state == kNoId ||
             retry_state >= result.policy_reachable.size() ||
-            !result.policy_reachable[retry_state] ||
-            result.goal_states[retry_state] ||
-            result.policy[retry_state] == kNoId ||
+            (!result.behavioral_representative_by_state.empty() &&
+             retry_state >=
+                 result.behavioral_representative_by_state.size()) ||
             calc.state(retry_state).goal_progress_retry_basin == 0) {
             gap("selected gated reforge retry basin is outside the "
                 "executable policy");
         }
-        gated_retry_state_by_state.emplace(state_id, retry_state);
+        const std::uint32_t retry_policy_state =
+            result.behavioral_representative_by_state.empty()
+                ? retry_state
+                : result.behavioral_representative_by_state[
+                      retry_state];
+        if (retry_policy_state == kNoId ||
+            retry_policy_state >= result.policy_reachable.size() ||
+            !result.policy_reachable[retry_policy_state] ||
+            result.goal_states[retry_policy_state] ||
+            result.policy[retry_policy_state] == kNoId ||
+            calc.state(retry_policy_state)
+                    .goal_progress_retry_basin == 0) {
+            gap("selected gated reforge retry basin is outside the "
+                "executable policy");
+        }
+        gated_retry_state_by_state.emplace(
+            state_id, retry_policy_state);
     }
     const auto expected_cost_annotation =
         [&](const std::uint32_t leader) -> std::string {
@@ -1577,6 +2697,8 @@ std::string compile_policy_strategy_json(
     }
     std::uint32_t node_count =
         4 + static_cast<std::uint32_t>(policy_route_nodes.size()) +
+        static_cast<std::uint32_t>(
+            refined_parent_router.size()) +
         (bounded_default_restart_action != kNoId ? 1u : 0u) +
         (dedicated_product_fracture_restart ? 1u : 0u);
     const auto check_node_cap = [&]() {
@@ -1590,7 +2712,9 @@ std::string compile_policy_strategy_json(
 
     const AbstractState& start = calc.state(result.start_state);
     pc_item_state start_item;
-    if (!calc.materialize(result.start_state, start_item)) {
+    if (result.has_exact_start_item) {
+        start_item = result.exact_start_item;
+    } else if (!calc.materialize(result.start_state, start_item)) {
         gap("start state cannot be materialized exactly");
     }
 
@@ -1674,13 +2798,18 @@ std::string compile_policy_strategy_json(
     for (const PolicyRouteNode& route : policy_route_nodes) {
         json += ",{\"id\":\"" + route.id + "\",\"kind\":\"router\"}";
     }
+    for (const std::uint32_t coarse_state :
+         refined_parent_order) {
+        const std::string& router_id =
+            refined_parent_router.at(coarse_state);
+        json += ",{\"id\":\"" + router_id +
+                "\",\"kind\":\"router\"}";
+    }
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
-        const bool unveil =
-            planner.kind == PlannerOperatorKind::Primitive &&
-            calc.registry().actions[planner.primitive_action].params.type ==
-                ActionType::Unveil;
+        const bool observed_choice =
+            primitive_observes_modifier_offer(planner);
         const auto gated_retry =
             gated_retry_state_by_state.find(state_id);
         if (gated_retry != gated_retry_state_by_state.end()) {
@@ -1689,10 +2818,11 @@ std::string compile_policy_strategy_json(
             ++node_count;
             check_node_cap();
         }
-        if (unveil) {
+        if (observed_choice) {
             if (state_id >= result.unveil_preferences.size() ||
                 result.unveil_preferences[state_id].empty()) {
-                gap("unveil state " + std::to_string(state_id) +
+                gap("observed-choice state " +
+                    std::to_string(state_id) +
                     " has no resolved option preference");
             }
             json += ",{\"id\":\"";
@@ -1705,14 +2835,17 @@ std::string compile_policy_strategy_json(
                  ++option) {
                 const std::uint32_t mod_id =
                     result.unveil_preferences[state_id][option];
-            json += ",{\"id\":\"";
-            json += state_node(state_id);
-            json += "_u" + std::to_string(option);
-            json += "\",\"kind\":\"operation\"";
-            json += expected_cost_annotation(state_id);
-            json += ",\"operation\":{\"type\":\"unveil\",\"mod_key\":\"";
-                json += json_escape(mod_key_of(session, mod_id));
-                json += "\"}}";
+                json += ",{\"id\":\"";
+                json += state_node(state_id);
+                json += "_u" + std::to_string(option);
+                json += "\",\"kind\":\"operation\"";
+                json += expected_cost_annotation(state_id);
+                ActionDescriptor selected =
+                    calc.registry().actions.at(
+                        planner.primitive_action);
+                selected.params.mod_id = mod_id;
+                json += ",\"operation\":" +
+                        operation_json(session, selected) + "}";
                 ++node_count;
                 check_node_cap();
             }
@@ -1755,10 +2888,7 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::ProtectedRepeat ||
              planner.option_kind == FixedOptionKind::TemporaryBenchRepeat)) {
             const bool observed =
-                !planner.primitive_program.empty() &&
-                calc.registry()
-                        .actions.at(planner.primitive_program.back())
-                        .params.type == ActionType::Unveil;
+                option_observes_modifier_offer(planner);
             const std::size_t primitive_steps =
                 planner.primitive_program.size() - (observed ? 1u : 0u);
             if (primitive_steps == 0) {
@@ -1783,7 +2913,7 @@ std::string compile_policy_strategy_json(
                 const auto& preferences =
                     result.option_unveil_preferences.at(state_id);
                 if (preferences.empty()) {
-                    gap("observed renewal has no Unveil preferences");
+                    gap("observed renewal has no choice preferences");
                 }
                 json += ",{\"id\":\"" + state_node(state_id) +
                         "_observe\",\"kind\":\"router\"}";
@@ -1804,12 +2934,12 @@ std::string compile_policy_strategy_json(
                                 std::to_string(observation) + "_u" +
                                 std::to_string(choice) +
                                 "\",\"kind\":\"operation\",\"operation\":";
-                        ActionDescriptor unveil =
+                        ActionDescriptor selected =
                             calc.registry().actions.at(
                                 planner.primitive_program.back());
-                        unveil.params.mod_id =
+                        selected.params.mod_id =
                             preferences[observation].choices[choice].mod_id;
-                        json += operation_json(session, unveil) + "}";
+                        json += operation_json(session, selected) + "}";
                         ++node_count;
                         check_node_cap();
                     }
@@ -1916,6 +3046,13 @@ std::string compile_policy_strategy_json(
         }
     }
     json += "],\"edges\":[";
+    {
+        std::uint64_t owned =
+            retained_compile_condition_bytes;
+        add_owned_bytes(
+            owned, owned_string_bytes(json));
+        observe_compiler_owned(owned);
+    }
 
     std::uint32_t edge_counter = 0;
     const auto edge = [&](const std::string& from, const std::string& to,
@@ -1948,14 +3085,19 @@ std::string compile_policy_strategy_json(
             gap("compiled policy exceeded max_compiled_edges (" +
                 std::to_string(result.options.max_compiled_edges) + ")");
         }
-        if (json.size() > result.options.max_strategy_json_bytes) {
+        if (json.size() > strategy_json_limit) {
             if (telemetry != nullptr) {
                 telemetry->cap_hit = "max_strategy_json_bytes";
             }
             gap("compiled policy exceeded max_strategy_json_bytes (" +
-                std::to_string(result.options.max_strategy_json_bytes) +
+                std::to_string(strategy_json_limit) +
                 ")");
         }
+        std::uint64_t owned =
+            retained_compile_condition_bytes;
+        add_owned_bytes(
+            owned, owned_string_bytes(json));
+        observe_compiler_owned(owned);
     };
 
     edge("start", "router", 0, "", true);
@@ -1976,25 +3118,84 @@ std::string compile_policy_strategy_json(
         edge("router", "goal", 0, all_of(parts), false);
     }
 
+    int root_default_priority = 2;
     if (strict_policy_route) {
         if (use_exact_policy_tree) {
             edge(
                 "router", policy_route_root.to, 1,
                 policy_route_root.guard, false);
         }
+    } else if (structured_refined_route) {
+        int parent_priority = 1;
+        for (const std::uint32_t coarse_state :
+             refined_parent_order) {
+            const std::string& router_id =
+                refined_parent_router.at(coarse_state);
+            edge(
+                "router", router_id, parent_priority++,
+                refined_parent_condition.at(coarse_state), false);
+        }
+        root_default_priority = parent_priority;
+        for (const std::uint32_t coarse_state :
+             refined_parent_order) {
+            const std::vector<std::uint32_t>& class_ids =
+                refined_classes_by_coarse_parent.at(coarse_state);
+            const std::string& router_id =
+                refined_parent_router.at(coarse_state);
+            std::set<std::pair<std::string, std::string>>
+                emitted_routes;
+            int route_priority = 0;
+            for (const std::uint32_t class_id : class_ids) {
+                const refinement::RefinedPolicyCompileClass& policy_class =
+                    refined_routing->classes.at(class_id);
+                if (policy_class.terminal) continue;
+                const std::uint32_t state =
+                    policy_class.representative_state;
+                const std::uint32_t leader =
+                    policy_region_by_state.at(state);
+                if (leader == kNoId) {
+                    gap(
+                        "refined policy class has no emitted policy "
+                        "region");
+                }
+                const std::pair<std::string, std::string> route{
+                    state_node(leader),
+                    refined_condition_by_class[class_id]};
+                if (!emitted_routes.insert(route).second) {
+                    continue;
+                }
+                edge(
+                    router_id, route.first, route_priority++,
+                    route.second, false);
+            }
+            edge(
+                router_id, policy_route_default_node,
+                route_priority, "", true);
+        }
     } else {
+        std::set<std::pair<std::string, std::string>>
+            emitted_refined_routes;
         for (const std::uint32_t leader : emitted_states) {
             for (const std::uint32_t state : states_by_leader.at(leader)) {
                 if (calc.state(state).goal_progress_retry_basin != 0) {
                     continue;
                 }
+                const std::pair<std::string, std::string> route{
+                    state_node(leader),
+                    state_conditions.at(state)};
+                if (structured_refined_route &&
+                    !emitted_refined_routes.insert(route).second) {
+                    continue;
+                }
                 edge(
-                    "router", state_node(leader), 1,
-                    state_conditions.at(state), false);
+                    "router", route.first, 1,
+                    route.second, false);
             }
         }
     }
-    edge("router", policy_route_default_node, 2, "", true);
+    edge(
+        "router", policy_route_default_node,
+        root_default_priority, "", true);
     for (const PolicyRouteNode& route : policy_route_nodes) {
         int priority = 0;
         for (const PolicyRouteEdge& route_edge : route.edges) {
@@ -2013,10 +3214,8 @@ std::string compile_policy_strategy_json(
     for (std::uint32_t state_id : emitted_states) {
         const PlannerOperator& planner =
             calc.operators().at(result.policy[state_id]);
-        const bool unveil =
-            planner.kind == PlannerOperatorKind::Primitive &&
-            calc.registry().actions[planner.primitive_action].params.type ==
-                ActionType::Unveil;
+        const bool observed_choice =
+            primitive_observes_modifier_offer(planner);
         if (planner.kind == PlannerOperatorKind::FixedOption &&
             planner.option_kind == FixedOptionKind::ImprintRetry) {
             const std::string base = state_node(state_id);
@@ -2053,10 +3252,7 @@ std::string compile_policy_strategy_json(
              planner.option_kind == FixedOptionKind::ProtectedRepeat ||
              planner.option_kind == FixedOptionKind::TemporaryBenchRepeat)) {
             const bool observed =
-                !planner.primitive_program.empty() &&
-                calc.registry()
-                        .actions.at(planner.primitive_program.back())
-                        .params.type == ActionType::Unveil;
+                option_observes_modifier_offer(planner);
             const std::size_t primitive_steps =
                 planner.primitive_program.size() - (observed ? 1u : 0u);
             for (std::size_t step = 0; step < primitive_steps; ++step) {
@@ -2106,48 +3302,18 @@ std::string compile_policy_strategy_json(
                                     session, selected.mod_id)) +
                                 "\"}",
                             false);
-                        const auto same_behavioral_state =
-                            [&](const std::uint32_t left,
-                                const std::uint32_t right) {
-                                if (left == right) return true;
-                                if (result
-                                        .behavioral_representative_by_state
-                                        .empty() ||
-                                    left >= result
-                                                .behavioral_representative_by_state
-                                                .size()) {
-                                    return false;
-                                }
-                                const std::uint32_t projected_left =
-                                    result.behavioral_representative_by_state[
-                                        left];
-                                if (projected_left == right) return true;
-                                return right <
-                                           result
-                                               .behavioral_representative_by_state
-                                               .size() &&
-                                       projected_left ==
-                                           result
-                                               .behavioral_representative_by_state[
-                                               right];
-                            };
                         const bool retry_choice =
-                            selected.successor_state == kNoId ||
-                            same_behavioral_state(
-                                selected.successor_state, state_id) ||
-                            std::find(
-                                kernel.retry_states.begin(),
-                                kernel.retry_states.end(),
-                                selected.actual_state) !=
-                                kernel.retry_states.end() ||
-                            std::any_of(
-                                kernel.retry_states.begin(),
-                                kernel.retry_states.end(),
-                                [&](const std::uint32_t retry_state) {
-                                    return same_behavioral_state(
-                                        retry_state,
-                                        selected.actual_state);
-                                });
+                            structured_refined_route
+                                ? fixed_option_choice_retries_locally(
+                                      state_id, kernel,
+                                      selected.successor_state,
+                                      selected.actual_state)
+                                : fixed_option_choice_retries_locally(
+                                      state_id, kernel,
+                                      selected.successor_state,
+                                      selected.actual_state,
+                                      result
+                                          .behavioral_representative_by_state);
                         edge(
                             operation,
                             retry_choice
@@ -2268,7 +3434,7 @@ std::string compile_policy_strategy_json(
                 1, "", true, "retry");
             continue;
         }
-        if (!unveil) {
+        if (!observed_choice) {
             for (std::size_t step = 0;
                  step < planner.primitive_program.size(); ++step) {
                 std::string from = state_node(state_id);
@@ -2327,10 +3493,17 @@ std::string compile_policy_strategy_json(
              static_cast<int>(preferences.size()), "", true);
     }
     json += "]}";
-    if (json.size() > result.options.max_strategy_json_bytes) {
+    if (json.size() > strategy_json_limit) {
         if (telemetry != nullptr) telemetry->cap_hit = "max_strategy_json_bytes";
         gap("compiled policy exceeded max_strategy_json_bytes (" +
-            std::to_string(result.options.max_strategy_json_bytes) + ")");
+            std::to_string(strategy_json_limit) + ")");
+    }
+    {
+        std::uint64_t owned =
+            retained_compile_condition_bytes;
+        add_owned_bytes(
+            owned, owned_string_bytes(json));
+        observe_compiler_owned(owned);
     }
     if (telemetry != nullptr) {
         telemetry->working_states = static_cast<std::uint32_t>(

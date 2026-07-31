@@ -510,9 +510,12 @@ typedef struct pc_solve_progress {
     uint64_t peak_owned_bytes;
 } pc_solve_progress;
 
-/* Stateful solve surface. begin snapshots the economy and resets the latest
- * result; step performs bounded expansion/sweep work; finish extracts and
- * stores the policy after progress.done; abandon discards partial work. */
+/* Stateful solve surface. After non-null argument validation, begin releases
+ * and resets the latest result before constructing replacement work, so a
+ * later failed begin does not restore the previous result or its
+ * compiled-strategy cache. step performs bounded expansion/sweep work; finish
+ * extracts and stores the policy after progress.done; abandon discards
+ * partial work. */
 pc_result pc_solver_solve_begin(
     pc_solver_handle solver,
     const pc_item_state* start_item,
@@ -536,10 +539,12 @@ void pc_solver_solve_abandon(pc_solver_handle solver);
 /*
  * Synchronous value iteration from the start item. The economy supplies
  * the price table (a null economy is invalid: costs are required).
- * Results are stored on the solver for the query calls below; a new solve
- * replaces them. The active solve stores one sparse transition graph and may
- * reuse collision-checked exact action kernels within the compatible session,
- * goal layout, and action vocabulary.
+ * Results are stored on the solver for the query calls below. A new solve
+ * releases the previous result and compiled-strategy cache after non-null
+ * argument validation and before replacement work begins; a later failed
+ * replacement does not restore them. The active solve stores one sparse
+ * transition graph and may reuse collision-checked exact action kernels
+ * within the compatible session, goal layout, and action vocabulary.
  */
 pc_result pc_solver_solve(
     pc_solver_handle solver,
@@ -553,8 +558,11 @@ pc_result pc_solver_solve(
  * Value and policy operator for one abstract state from the latest solve.
  * Primitive ids retain the action-registry vocabulary; fixed option ids begin
  * with "option:". out_action_id receives NULL for goal/terminal states. The
- * id points into solver-owned storage. Returns PC_RESULT_NOT_FOUND before any
- * solve.
+ * id points into solver-owned storage. A policy-guided exact strategy can
+ * split one coarse state into subclasses with different values or actions;
+ * in that case this coarse-state query returns
+ * PC_RESULT_UNSUPPORTED_FEATURE and pc_solver_compile_strategy is the
+ * executable policy authority. Returns PC_RESULT_NOT_FOUND before any solve.
  */
 pc_result pc_solver_state_value(
     pc_solver_handle solver,

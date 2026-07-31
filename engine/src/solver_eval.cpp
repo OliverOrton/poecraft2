@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <iomanip>
 #include <limits>
@@ -22,6 +23,8 @@
 
 #include "json.hpp"
 #include "poecraft/bitset.h"
+#include "solver_refinement.hpp"
+#include "solver_sparse_policy.hpp"
 
 namespace poecraft {
 namespace solver {
@@ -47,6 +50,7 @@ struct TargetEntry {
 
 struct EvalModel {
     std::unique_ptr<CalcContext> calc;
+    std::vector<ResolvedStrategyOperation> operation_by_node;
     std::vector<std::uint32_t> action_by_node;
     std::vector<GoalSlot> targets;
 };
@@ -68,6 +72,10 @@ struct EvalTransition {
     /* First compiler-generated policy_route_* node skipped during discovery.
      * Its exact state-specific path is replayed once flow is known. */
     std::uint32_t policy_route = kNoId;
+    /* Exact state used to traverse policy_route. Operation-pair refinement
+     * may merge input states after that router selected the same action, so
+     * the target pair's representative is not authoritative for replay. */
+    std::uint32_t policy_state = kNoId;
 };
 
 struct EvalAbsorption {
@@ -87,6 +95,10 @@ struct EvalRow {
 struct EvalPair {
     std::uint32_t node = kNoId;
     std::uint32_t state = kNoId;
+    /* Exact saved-item carrier for companion-state operations. kNoId means
+     * no checkpoint exists. The checkpoint is bound to the current live item;
+     * Restart clears it before changing item identity. */
+    std::uint32_t checkpoint_state = kNoId;
     /* Interned sampled Unveil offer carried through its routing DAG. */
     std::uint32_t unveil_offer = kNoId;
     bool operation = false;
@@ -109,32 +121,542 @@ std::string join_gaps(const std::vector<std::string>& gaps) {
     return message;
 }
 
+using refinement::ObservationRequirement;
+
+std::uint64_t capped_add(
+        const std::uint64_t left,
+        const std::uint64_t right) {
+    return right > std::numeric_limits<std::uint64_t>::max() - left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left + right;
+}
+
+std::uint64_t capped_product(
+        const std::uint64_t left,
+        const std::uint64_t right) {
+    return left != 0 &&
+                   right > std::numeric_limits<std::uint64_t>::max() / left
+               ? std::numeric_limits<std::uint64_t>::max()
+               : left * right;
+}
+
+std::uint64_t observation_requirement_payload_bytes(
+        const ObservationRequirement& requirement) {
+    std::uint64_t bytes = capped_product(
+        requirement.modifier_tag_ids.capacity(), sizeof(std::uint32_t));
+    bytes = capped_add(
+        bytes,
+        capped_product(
+            requirement.affix_observations.capacity(),
+            sizeof(RefinementAffixObservation)));
+    for (const RefinementAffixObservation& observation :
+         requirement.affix_observations) {
+        bytes = capped_add(
+            bytes,
+            capped_product(
+                observation.selector.required_tag_ids.capacity(),
+                sizeof(std::uint32_t)));
+    }
+    return bytes;
+}
+
+std::uint64_t refinement_contract_payload_bytes(
+        const ActionRefinementContract& contract) {
+    std::uint64_t bytes = capped_product(
+        contract.observed_modifier_tag_ids.capacity(),
+        sizeof(std::uint32_t));
+    bytes = capped_add(
+        bytes,
+        capped_product(
+            contract.affix_observations.capacity(),
+            sizeof(RefinementAffixObservation)));
+    for (const RefinementAffixObservation& observation :
+         contract.affix_observations) {
+        bytes = capped_add(
+            bytes,
+            capped_product(
+                observation.selector.required_tag_ids.capacity(),
+                sizeof(std::uint32_t)));
+    }
+    bytes = capped_add(
+        bytes,
+        capped_product(
+            contract.item_affix_dependencies.capacity(),
+            sizeof(RefinementItemAffixDependency)));
+    bytes = capped_add(
+        bytes,
+        capped_product(
+            contract.affix_flows.capacity(),
+            sizeof(RefinementAffixFlow)));
+    for (const RefinementAffixFlow& flow : contract.affix_flows) {
+        bytes = capped_add(
+            bytes,
+            capped_product(
+                flow.source_selector.required_tag_ids.capacity(),
+                sizeof(std::uint32_t)));
+    }
+    const auto append_selectors =
+        [&](const std::vector<RefinementAffixSelector>& selectors) {
+            bytes = capped_add(
+                bytes,
+                capped_product(
+                    selectors.capacity(),
+                    sizeof(RefinementAffixSelector)));
+            for (const RefinementAffixSelector& selector : selectors) {
+                bytes = capped_add(
+                    bytes,
+                    capped_product(
+                        selector.required_tag_ids.capacity(),
+                        sizeof(std::uint32_t)));
+            }
+        };
+    append_selectors(contract.preserved_affixes);
+    append_selectors(contract.destroyed_affixes);
+    return bytes;
+}
+
+void observe_item_feature(
+    ObservationRequirement& requirement,
+    const RefinementFeature feature) {
+    requirement.item_features |= refinement_feature(feature);
+}
+
+void observe_affix_features(
+    ObservationRequirement& requirement,
+    const RefinementFeatureMask features,
+    RefinementAffixSelector selector = {}) {
+    requirement.affix_observations.push_back(
+        {features, std::move(selector)});
+}
+
+void observe_required_slot_flags(
+    ObservationRequirement& requirement,
+    const std::uint8_t required_flags) {
+    RefinementFeatureMask features = 0;
+    if ((required_flags & PC_MOD_SLOT_FRACTURED) != 0) {
+        features |= refinement_feature(
+            RefinementFeature::ModifierFractured);
+    }
+    if ((required_flags & PC_MOD_SLOT_CRAFTED) != 0) {
+        features |= refinement_feature(
+            RefinementFeature::ModifierCrafted);
+    }
+    observe_affix_features(requirement, features);
+}
+
+ObservationRequirement condition_observation_requirement(
+    const CompiledCondition& condition) {
+    ObservationRequirement requirement;
+    switch (condition.kind) {
+    case ConditionKind::Always:
+    case ConditionKind::HasUnveilOption:
+        break;
+    case ConditionKind::ObservationSignature:
+        if (condition.observation_program == nullptr) {
+            throw std::logic_error(
+                "observation-signature condition has no program");
+        }
+        requirement =
+            condition.observation_program->requirement;
+        break;
+    case ConditionKind::HasModGroup:
+    case ConditionKind::HasModFamily:
+        observe_affix_features(
+            requirement,
+            refinement_feature(
+                RefinementFeature::GoalStatusTierClass));
+        observe_required_slot_flags(
+            requirement, condition.required_flags);
+        break;
+    case ConditionKind::RarityIs:
+        observe_item_feature(
+            requirement, RefinementFeature::Rarity);
+        break;
+    case ConditionKind::OpenPrefixCount:
+        observe_item_feature(
+            requirement, RefinementFeature::Rarity);
+        observe_item_feature(
+            requirement, RefinementFeature::PrefixCount);
+        break;
+    case ConditionKind::OpenSuffixCount:
+        observe_item_feature(
+            requirement, RefinementFeature::Rarity);
+        observe_item_feature(
+            requirement, RefinementFeature::SuffixCount);
+        break;
+    case ConditionKind::PrefixCountRange:
+        observe_item_feature(
+            requirement, RefinementFeature::PrefixCount);
+        break;
+    case ConditionKind::SuffixCountRange:
+        observe_item_feature(
+            requirement, RefinementFeature::SuffixCount);
+        break;
+    case ConditionKind::ModCount:
+    case ConditionKind::ModFamilyCount:
+        observe_affix_features(
+            requirement,
+            refinement_feature(
+                RefinementFeature::CountObservationMembership));
+        observe_required_slot_flags(
+            requirement, condition.required_flags);
+        break;
+    case ConditionKind::ItemFlag:
+        switch (condition.item_flag) {
+        case ItemFlagKind::Corrupted:
+            observe_item_feature(
+                requirement, RefinementFeature::Corrupted);
+            break;
+        case ItemFlagKind::Mirrored:
+            observe_item_feature(
+                requirement, RefinementFeature::Mirrored);
+            break;
+        case ItemFlagKind::Split:
+            observe_item_feature(
+                requirement, RefinementFeature::Split);
+            break;
+        case ItemFlagKind::Synthesised:
+            observe_item_feature(
+                requirement, RefinementFeature::Synthesised);
+            break;
+        case ItemFlagKind::Fractured:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::HasFracturedModifier);
+            break;
+        case ItemFlagKind::Crafted:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::HasCraftedModifier);
+            break;
+        case ItemFlagKind::Veiled:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::HasVeiledModifier);
+            break;
+        case ItemFlagKind::VeiledPrefix:
+        case ItemFlagKind::VeiledSuffix: {
+            observe_item_feature(
+                requirement,
+                RefinementFeature::HasVeiledModifier);
+            RefinementAffixSelector veiled;
+            veiled.required_affix_traits =
+                kRefinementAffixVeiled;
+            observe_affix_features(
+                requirement,
+                refinement_feature(
+                    RefinementFeature::ModifierSide) |
+                    refinement_feature(
+                        RefinementFeature::ModifierVeiled),
+                std::move(veiled));
+            break;
+        }
+        case ItemFlagKind::Multimod:
+            observe_item_feature(
+                requirement, RefinementFeature::Multimod);
+            break;
+        case ItemFlagKind::NoAttack:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::CannotRollAttack);
+            break;
+        case ItemFlagKind::NoCaster:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::CannotRollCaster);
+            break;
+        case ItemFlagKind::PrefixesLocked:
+            observe_item_feature(
+                requirement, RefinementFeature::PrefixLock);
+            break;
+        case ItemFlagKind::SuffixesLocked:
+            observe_item_feature(
+                requirement, RefinementFeature::SuffixLock);
+            break;
+        case ItemFlagKind::Influenced:
+            observe_item_feature(
+                requirement, RefinementFeature::Influence);
+            break;
+        case ItemFlagKind::EldritchImplicit:
+            observe_item_feature(
+                requirement,
+                RefinementFeature::EldritchPresence);
+            break;
+        }
+        break;
+    case ConditionKind::InfluenceBits:
+        observe_item_feature(
+            requirement, RefinementFeature::Influence);
+        break;
+    case ConditionKind::EldritchTier:
+        observe_item_feature(
+            requirement,
+            condition.eldritch_side == 0
+                ? RefinementFeature::SearingExarchTier
+                : RefinementFeature::EaterOfWorldsTier);
+        break;
+    case ConditionKind::All:
+    case ConditionKind::Any:
+    case ConditionKind::Not:
+    case ConditionKind::AtLeast:
+        break;
+    }
+    for (const CompiledCondition& child : condition.children) {
+        requirement = refinement::merge_observation_requirements(
+            std::move(requirement),
+            condition_observation_requirement(child));
+    }
+    return refinement::canonical_observation_requirement(
+        std::move(requirement));
+}
+
+template <typename MemoryCheck>
+std::vector<ObservationRequirement>
+derive_node_observation_requirements(
+    const StrategyImpl& strategy,
+    const EvalModel& model,
+    const std::uint32_t max_rounds,
+    MemoryCheck&& check_memory) {
+    const std::size_t node_count = strategy.nodes.size();
+    std::vector<ObservationRequirement> direct(node_count);
+    for (std::uint32_t source = 0; source < node_count; ++source) {
+        for (const StrategyEdge& edge : strategy.nodes[source].edges) {
+            if (!edge.is_default) {
+                direct[source] =
+                    refinement::merge_observation_requirements(
+                        std::move(direct[source]),
+                        condition_observation_requirement(
+                            edge.condition));
+            }
+        }
+    }
+    std::uint64_t direct_bytes = capped_product(
+        direct.capacity(), sizeof(ObservationRequirement));
+    for (const ObservationRequirement& requirement : direct) {
+        direct_bytes = capped_add(
+            direct_bytes,
+            observation_requirement_payload_bytes(requirement));
+    }
+    check_memory(direct_bytes);
+
+    std::vector<refinement::PolicyObservationNode> nodes;
+    nodes.reserve(node_count);
+    for (std::uint32_t node = 0; node < node_count; ++node) {
+        refinement::PolicyObservationNode observation;
+        observation.state_id = node;
+        observation.direct_observes = std::move(direct[node]);
+        if (strategy.nodes[node].kind ==
+            StrategyNodeKind::Operation) {
+            const ResolvedStrategyOperation& operation =
+                model.operation_by_node.at(node);
+            if (operation.kind ==
+                ResolvedStrategyOperationKind::Bestiary) {
+                /* Companion-state flow is represented explicitly in EvalPair.
+                 * Treat the live-item channel conservatively as pass-through;
+                 * the closed pair partition proves equivalence across the
+                 * saved-state channel after discovery. */
+                for (const StrategyEdge& edge :
+                     strategy.nodes[node].edges) {
+                    observation.successors.push_back(edge.target);
+                }
+                nodes.push_back(std::move(observation));
+                continue;
+            }
+            const std::uint32_t action_index =
+                operation.descriptor_index;
+            if (action_index == kNoId) {
+                throw std::logic_error(
+                    "operation observation fixed point has no action");
+            }
+            const ActionRefinementContract& contract =
+                model.calc->registry().actions.at(action_index)
+                    .refinement;
+            refinement::SelectedAction selected;
+            selected.action_id = action_index;
+            selected.semantic_key = {
+                static_cast<std::uint64_t>(node) + 1};
+            selected.contract = contract;
+            observation.selected_action = std::move(selected);
+        }
+        for (const StrategyEdge& edge :
+             strategy.nodes[node].edges) {
+            observation.successors.push_back(edge.target);
+        }
+        nodes.push_back(std::move(observation));
+    }
+    std::uint64_t nodes_bytes = capped_product(
+        nodes.capacity(), sizeof(refinement::PolicyObservationNode));
+    ObservationRequirement union_requirement;
+    std::uint64_t requirement_vocabulary_bytes = 0;
+    for (const refinement::PolicyObservationNode& node : nodes) {
+        nodes_bytes = capped_add(
+            nodes_bytes,
+            observation_requirement_payload_bytes(node.direct_observes));
+        nodes_bytes = capped_add(
+            nodes_bytes,
+            capped_product(
+                node.successors.capacity(), sizeof(std::uint32_t)));
+        union_requirement = refinement::merge_observation_requirements(
+            std::move(union_requirement), node.direct_observes);
+        if (node.selected_action.has_value()) {
+            nodes_bytes = capped_add(
+                nodes_bytes,
+                capped_product(
+                    node.selected_action->semantic_key.capacity(),
+                    sizeof(std::uint64_t)));
+            nodes_bytes = capped_add(
+                nodes_bytes,
+                refinement_contract_payload_bytes(
+                    node.selected_action->contract));
+            requirement_vocabulary_bytes = capped_add(
+                requirement_vocabulary_bytes,
+                refinement_contract_payload_bytes(
+                    node.selected_action->contract));
+            union_requirement =
+                refinement::merge_observation_requirements(
+                    std::move(union_requirement),
+                    refinement::observation_requirement_from_selected_action(
+                        *node.selected_action));
+            union_requirement =
+                refinement::merge_observation_requirements(
+                    std::move(union_requirement),
+                    node.selected_action->routing_observes);
+        }
+    }
+    std::vector<ObservationRequirement>().swap(direct);
+    const std::uint64_t one_requirement_bytes = capped_add(
+        capped_add(
+            sizeof(ObservationRequirement),
+            observation_requirement_payload_bytes(union_requirement)),
+        requirement_vocabulary_bytes);
+    /* propagate_policy_observations owns the graph, its ordered state index,
+     * two fixed-point vectors, and finally one assignment vector. Every
+     * propagated requirement is a subset of this deterministic union. */
+    std::uint64_t propagation_peak = nodes_bytes;
+    propagation_peak = capped_add(
+        propagation_peak,
+        capped_product(
+            node_count,
+            sizeof(std::pair<const std::uint32_t, std::uint32_t>) +
+                3 * sizeof(void*)));
+    propagation_peak = capped_add(
+        propagation_peak,
+        capped_product(
+            node_count,
+            capped_product(one_requirement_bytes, 3)));
+    check_memory(propagation_peak);
+    refinement::PolicyObservationFixedPoint fixed =
+        refinement::propagate_policy_observations(
+            std::move(nodes), max_rounds);
+    if (!fixed.complete) {
+        if (fixed.round_cap) {
+            throw std::length_error(
+                "strategy evaluation observation propagation exceeded "
+                "max_sweeps (" + std::to_string(max_rounds) + ")");
+        }
+        throw std::logic_error(
+            fixed.failure_reason.empty()
+                ? "strategy observation fixed point did not converge"
+                : fixed.failure_reason);
+    }
+    std::vector<ObservationRequirement> required(node_count);
+    std::uint64_t conversion_bytes = capped_product(
+        required.capacity(), sizeof(ObservationRequirement));
+    conversion_bytes = capped_add(
+        conversion_bytes,
+        capped_product(
+            fixed.assignments.capacity(),
+            sizeof(refinement::PolicyObservationAssignment)));
+    for (const refinement::PolicyObservationAssignment& assignment :
+         fixed.assignments) {
+        conversion_bytes = capped_add(
+            conversion_bytes,
+            observation_requirement_payload_bytes(assignment.required));
+    }
+    check_memory(conversion_bytes);
+    for (refinement::PolicyObservationAssignment& assignment :
+         fixed.assignments) {
+        required.at(assignment.state_id) =
+            std::move(assignment.required);
+    }
+    return required;
+}
+
+void append_stable_tokens(
+    refinement::StableKey& target,
+    const refinement::StableKey& tokens) {
+    target.push_back(static_cast<std::uint64_t>(tokens.size()));
+    target.insert(target.end(), tokens.begin(), tokens.end());
+}
+
+void append_feature_signature(
+    refinement::StableKey& target,
+    const refinement::FeatureSignature& features) {
+    target.push_back(static_cast<std::uint64_t>(features.size()));
+    for (const refinement::FeatureAtom& atom : features) {
+        target.push_back(
+            static_cast<std::uint64_t>(atom.feature));
+        target.push_back(atom.subject);
+        target.push_back(atom.affix_traits);
+        target.push_back(atom.item_traits);
+        target.push_back(
+            static_cast<std::uint64_t>(
+                atom.modifier_tag_ids.size()));
+        target.insert(
+            target.end(),
+            atom.modifier_tag_ids.begin(),
+            atom.modifier_tag_ids.end());
+        append_stable_tokens(target, atom.value);
+    }
+}
+
+void append_optional_u32(
+    refinement::StableKey& target,
+    const std::uint32_t value) {
+    target.push_back(value == kNoId ? 0u : 1u);
+    if (value != kNoId) target.push_back(value);
+}
+
 bool same_action_parameters(
     const ActionParameters& compiled,
-    const ActionParameters& descriptor) {
-    if (compiled.type != descriptor.type) return false;
+    const ActionDescriptor& descriptor) {
+    if (compiled.type != descriptor.params.type) return false;
+    if (action_observes_modifier_offer(descriptor)) {
+        /* The registry descriptor is the sampled-observation template; the
+         * authored modifier selection lives only on the concrete graph node.
+         * Every other parameter remains stable semantic identity and must
+         * still select the correct template when a future mechanic exposes
+         * multiple modifier-offer descriptors. */
+        return compiled.essence_index ==
+                   descriptor.params.essence_index &&
+               compiled.fossil_indices ==
+                   descriptor.params.fossil_indices &&
+               compiled.target_tag_id ==
+                   descriptor.params.target_tag_id &&
+               compiled.source_tag_id ==
+                   descriptor.params.source_tag_id &&
+               compiled.influence_code ==
+                   descriptor.params.influence_code &&
+               compiled.tier == descriptor.params.tier;
+    }
     switch (compiled.type) {
     case ActionType::Essence:
-        return compiled.essence_index == descriptor.essence_index;
+        return compiled.essence_index == descriptor.params.essence_index;
     case ActionType::Fossil:
-        return compiled.fossil_indices == descriptor.fossil_indices;
+        return compiled.fossil_indices == descriptor.params.fossil_indices;
     case ActionType::Bench:
-        return compiled.mod_id == descriptor.mod_id;
-    case ActionType::Unveil:
-        /* The registry's one "unveil" descriptor represents choosing the
-         * authored unveil result, which is carried only by the graph node. */
-        return true;
+        return compiled.mod_id == descriptor.params.mod_id;
     case ActionType::HarvestReforge:
     case ActionType::HarvestAugment:
-        return compiled.target_tag_id == descriptor.target_tag_id;
+        return compiled.target_tag_id == descriptor.params.target_tag_id;
     case ActionType::HarvestResist:
-        return compiled.source_tag_id == descriptor.source_tag_id &&
-               compiled.target_tag_id == descriptor.target_tag_id;
+        return compiled.source_tag_id == descriptor.params.source_tag_id &&
+               compiled.target_tag_id == descriptor.params.target_tag_id;
     case ActionType::EldritchEmber:
     case ActionType::EldritchIchor:
-        return compiled.tier == descriptor.tier;
+        return compiled.tier == descriptor.params.tier;
     case ActionType::InfluenceExalt:
-        return compiled.influence_code == descriptor.influence_code;
+        return compiled.influence_code == descriptor.params.influence_code;
     default:
         return true;
     }
@@ -222,6 +744,71 @@ void collect_condition_targets(
                 condition.count_memo_slot) == found->memo_slots.end()) {
             found->memo_slots.push_back(condition.count_memo_slot);
         }
+    } else if (condition.kind ==
+               ConditionKind::ObservationSignature) {
+        if (condition.observation_program == nullptr) {
+            add_gap(
+                gaps,
+                "edge '" + edge_id +
+                    "' has no observation-signature program");
+        } else {
+            const std::uint32_t observation_count =
+                condition.observation_signature
+                    .count_observation_count;
+            for (std::uint32_t observation = 0;
+                 observation < observation_count;
+                 ++observation) {
+                CountObservation exact;
+                exact.by_family = false;
+                const std::size_t word = observation / 64;
+                const std::uint64_t bit =
+                    std::uint64_t{1} << (observation % 64);
+                for (std::uint32_t mod = 0;
+                     mod <
+                     condition.observation_program->context
+                         .count_observation_membership_by_mod
+                         .size();
+                     ++mod) {
+                    const refinement::StableKey& membership =
+                        condition.observation_program->context
+                            .count_observation_membership_by_mod[mod];
+                    if (word < membership.size() &&
+                        (membership[word] & bit) != 0) {
+                        exact.ids.push_back(mod);
+                    }
+                }
+                if (exact.ids.empty()) {
+                    add_gap(
+                        gaps,
+                        "edge '" + edge_id +
+                            "' observation-signature count context "
+                            "contains an empty membership class");
+                    continue;
+                }
+                if (observation < count_observations.size()) {
+                    if (count_observations[observation].by_family ||
+                        count_observations[observation].ids !=
+                            exact.ids) {
+                        add_gap(
+                            gaps,
+                            "edge '" + edge_id +
+                                "' observation-signature count "
+                                "context conflicts with an earlier "
+                                "condition observer");
+                    }
+                } else if (observation ==
+                           count_observations.size()) {
+                    count_observations.push_back(
+                        std::move(exact));
+                } else {
+                    add_gap(
+                        gaps,
+                        "edge '" + edge_id +
+                            "' observation-signature count context "
+                            "is non-contiguous");
+                }
+            }
+        }
     } else if (condition.kind == ConditionKind::HasUnveilOption) {
         /*
          * Offer routing is evaluated directly from OutcomeChoiceOption below,
@@ -269,12 +856,79 @@ bool targets_overlap(
     return false;
 }
 
+const std::vector<std::string>& operation_cost_keys(
+        const ResolvedStrategyOperation& operation,
+        const ActionRegistry& registry,
+        const SessionImpl& session) {
+    if (operation.kind == ResolvedStrategyOperationKind::Bestiary) {
+        return session.data->bestiary_actions.at(
+            operation.descriptor_index).cost_keys;
+    }
+    return registry.actions.at(operation.descriptor_index).cost_keys;
+}
+
+const std::string& operation_id(
+        const ResolvedStrategyOperation& operation,
+        const ActionRegistry& registry,
+        const SessionImpl& session) {
+    if (operation.kind == ResolvedStrategyOperationKind::Bestiary) {
+        return session.data->bestiary_actions.at(
+            operation.descriptor_index).id;
+    }
+    return registry.actions.at(operation.descriptor_index).id;
+}
+
+const std::string& operation_display_name(
+        const ResolvedStrategyOperation& operation,
+        const ActionRegistry& registry,
+        const SessionImpl& session) {
+    if (operation.kind == ResolvedStrategyOperationKind::Bestiary) {
+        return session.data->bestiary_actions.at(
+            operation.descriptor_index).display_name;
+    }
+    return registry.actions.at(operation.descriptor_index).display_name;
+}
+
+bool selector_matches_fresh_explicit(
+        const RefinementAffixSelector& selector) {
+    return refinement_selector_matches(selector, 0, 0, {});
+}
+
+bool requirement_observes_fresh_exclusion_identity(
+        const ObservationRequirement& requirement) {
+    const RefinementFeatureMask exclusion = refinement_feature(
+        RefinementFeature::ModifierExclusionSignature);
+    return std::any_of(
+        requirement.affix_observations.begin(),
+        requirement.affix_observations.end(),
+        [&](const RefinementAffixObservation& observation) {
+            return (observation.features & exclusion) != 0 &&
+                   selector_matches_fresh_explicit(
+                       observation.selector);
+        });
+}
+
+bool contract_preserves_fresh_exclusion_identity(
+        const ActionRefinementContract& contract) {
+    const RefinementFeatureMask exclusion = refinement_feature(
+        RefinementFeature::ModifierExclusionSignature);
+    return std::any_of(
+        contract.affix_flows.begin(), contract.affix_flows.end(),
+        [&](const RefinementAffixFlow& flow) {
+            return (flow.preserved_features & exclusion) != 0 &&
+                   selector_matches_fresh_explicit(
+                       flow.source_selector);
+        });
+}
+
 EvalModel derive_model(
     const StrategyImpl& strategy,
     std::optional<std::uint32_t> state_cap) {
     const auto session = strategy.session;
     ActionRegistry registry = build_action_registry(*session);
     std::vector<std::string> gaps;
+    std::vector<ResolvedStrategyOperation> operation_by_node(
+        strategy.nodes.size());
     std::vector<std::uint32_t> action_by_node(
         strategy.nodes.size(), kNoId);
     std::vector<std::uint32_t> used_actions;
@@ -282,26 +936,33 @@ EvalModel derive_model(
     for (std::size_t i = 0; i < strategy.nodes.size(); ++i) {
         const StrategyNode& node = strategy.nodes[i];
         if (node.kind != StrategyNodeKind::Operation) continue;
-        const std::uint32_t action = resolve_strategy_action(node, registry);
-        action_by_node[i] = action;
-        if (action == kNoId) {
+        const ResolvedStrategyOperation operation =
+            resolve_strategy_operation(node, registry, *session);
+        operation_by_node[i] = operation;
+        if (!operation.resolved()) {
             add_gap(
                 gaps,
                 "node '" + node.id +
-                    "' operation does not resolve to a calculator action");
+                    "' operation does not resolve to an engine descriptor");
             continue;
         }
+        if (operation_cost_keys(operation, registry, *session) !=
+            node.price_keys) {
+            throw std::runtime_error(
+                "strategy evaluation price-key mismatch at node '" +
+                node.id + "'");
+        }
+        if (operation.kind == ResolvedStrategyOperationKind::Bestiary) {
+            continue;
+        }
+        const std::uint32_t action = operation.descriptor_index;
+        action_by_node[i] = action;
         const ActionDescriptor& descriptor = registry.actions[action];
         if (!calc_supports(descriptor)) {
             add_gap(
                 gaps,
                 "node '" + node.id + "' operation '" + descriptor.id +
                     "' has no exact calculator evaluator");
-        }
-        if (descriptor.cost_keys != node.price_keys) {
-            throw std::runtime_error(
-                "strategy evaluation price-key mismatch at node '" +
-                node.id + "'");
         }
         if (std::find(used_actions.begin(), used_actions.end(), action) ==
             used_actions.end()) {
@@ -322,8 +983,11 @@ EvalModel derive_model(
     }
     for (std::size_t target = 0; target < strategy.nodes.size(); ++target) {
         const StrategyNode& node = strategy.nodes[target];
+        const std::uint32_t action = action_by_node[target];
         if (node.kind != StrategyNodeKind::Operation ||
-            node.action.type != ActionType::Unveil) {
+            action == kNoId ||
+            !action_observes_modifier_offer(
+                registry.actions[action])) {
             continue;
         }
         bool has_incoming = false;
@@ -353,7 +1017,7 @@ EvalModel derive_model(
                     add_gap(
                         gaps,
                         "node '" + node.id +
-                            "' authored unveil selection must be entered "
+                            "' authored observed selection must be entered "
                             "through a matching has_unveil_option edge");
                 }
             }
@@ -362,7 +1026,7 @@ EvalModel derive_model(
             add_gap(
                 gaps,
                 "node '" + node.id +
-                    "' authored unveil selection has no offer-routing edge");
+                "' authored observed selection has no offer-routing edge");
         }
     }
     if (target_entries.size() > kMaxGoalSlots) {
@@ -399,58 +1063,84 @@ EvalModel derive_model(
         static_cast<std::uint32_t>(goal.slots.size());
 
     /*
-     * A clean-start graph made only of full destructive renewals (or a
-     * restart to that same clean start) has no cross-operation exclusion
-     * identity. Each operation computes its exact within-roll pool and then
-     * replaces every explicit affix before routing observes the result.
-     * Reusing the existing coarse layout here is therefore exact and avoids
-     * enumerating every concrete junk-group combination for a repeat-reforge
-     * loop. Any authored carrier, pool-add/protection operation, partial-side
-     * renewal, Veiled route, or other vocabulary keeps strict group effects.
+     * Choose the evaluator carrier from the same scoped semantic contracts
+     * used by policy refinement. A clean graph whose operations destroy every
+     * ordinary freshly rolled explicit before any operation or router can
+     * observe its exclusion identity has no cross-operation group state. The
+     * coarse layout is exact there and avoids eagerly enumerating concrete
+     * junk combinations for a destructive renewal cycle.
+     *
+     * Exact authored carriers always remain strict. So do direct structured
+     * observations and any operation whose declared survivor flow can carry
+     * a fresh explicit's exclusion identity. Trait-scoped flows such as a
+     * fractured-only survivor do not force global strictness from a clean
+     * start: no admitted operation that passes this test can create that
+     * trait without also exposing an identity-preserving fresh-affix flow.
      */
-    const bool clean_restart_carrier =
+    const bool clean_start_carrier =
         strategy.start_item.prefix_count == 0 &&
         strategy.start_item.suffix_count == 0 &&
         strategy.start_item.item_flags == 0 &&
         strategy.start_item.generic_influence_bits == 0 &&
         strategy.start_item.searing_exarch_tier == 0 &&
         strategy.start_item.eater_of_worlds_tier == 0;
-    const auto full_destructive_renewal =
-        [&](const ActionDescriptor& descriptor) {
-            if (descriptor.synthetic) return true;
-            switch (descriptor.params.type) {
-            case ActionType::Transmute:
-            case ActionType::Alteration:
-            case ActionType::Alchemy:
-            case ActionType::Chaos:
-            case ActionType::Essence:
-            case ActionType::Fossil:
-            case ActionType::HarvestReforge:
-                return true;
-            default:
-                return false;
+    bool direct_router_observes_fresh_exclusion = false;
+    for (const StrategyNode& node : strategy.nodes) {
+        for (const StrategyEdge& edge : node.edges) {
+            if (edge.is_default) continue;
+            if (requirement_observes_fresh_exclusion_identity(
+                    condition_observation_requirement(
+                        edge.condition))) {
+                direct_router_observes_fresh_exclusion = true;
+                break;
             }
-        };
-    const bool coarse_renewal_boundary_exact =
-        clean_restart_carrier && !used_actions.empty() &&
-        std::all_of(
+        }
+        if (direct_router_observes_fresh_exclusion) break;
+    }
+    const bool operation_preserves_fresh_exclusion =
+        std::any_of(
             used_actions.begin(), used_actions.end(),
             [&](const std::uint32_t action) {
-                return action < registry.actions.size() &&
-                       full_destructive_renewal(
-                           registry.actions[action]);
+                return action >= registry.actions.size() ||
+                       contract_preserves_fresh_exclusion_identity(
+                           registry.actions[action].refinement);
             });
+    const bool semantic_strict_carrier =
+        !clean_start_carrier ||
+        direct_router_observes_fresh_exclusion ||
+        operation_preserves_fresh_exclusion;
 
     EvalModel model;
+    model.operation_by_node = std::move(operation_by_node);
     model.action_by_node = std::move(action_by_node);
     model.targets = goal.slots;
+    std::vector<std::uint64_t> exact_start_mods(session->words, 0);
+    const auto retain_start_mods =
+        [&](const pc_mod_slot* slots,
+            const std::uint8_t count) {
+            for (std::uint8_t i = 0; i < count; ++i) {
+                if (slots[i].mod_id < session->mod_count) {
+                    pc_bitset_set(
+                        exact_start_mods.data(), slots[i].mod_id);
+                }
+            }
+        };
+    retain_start_mods(
+        strategy.start_item.prefixes,
+        strategy.start_item.prefix_count);
+    retain_start_mods(
+        strategy.start_item.suffixes,
+        strategy.start_item.suffix_count);
     try {
         model.calc = std::make_unique<CalcContext>(
             session, goal, std::move(registry), used_actions,
             true,  /* allow count/rarity-only graphs */
             false, /* no operations must not mean the full registry */
-            !coarse_renewal_boundary_exact,
-            state_cap, count_observations);
+            semantic_strict_carrier,
+            /* observer-conditioned exact carrier when required */
+            state_cap, count_observations, false,
+            exact_start_mods,
+            false); /* observer-derived semantic strict carrier */
     } catch (const std::exception& ex) {
         std::string origin;
         for (const TargetEntry& target : target_entries) {
@@ -810,10 +1500,23 @@ std::vector<ReviewSectionSpec> parse_review_sections(
 
 } // namespace
 
-std::uint32_t resolve_strategy_action(
-    const StrategyNode& node,
-    const ActionRegistry& registry) {
+namespace {
+
+std::uint32_t resolve_registry_strategy_action(
+        const StrategyNode& node,
+        const ActionRegistry& registry) {
     if (node.kind != StrategyNodeKind::Operation) return kNoId;
+    if (node.action_type == kStrategyBestiaryImprintOperation ||
+        node.action_type == kStrategyBestiaryRestoreImprintOperation) {
+        return kNoId;
+    }
+    if (node.action_type != kStrategyRestartOperation &&
+        (node.action_type < static_cast<int>(ActionType::Transmute) ||
+         node.action_type >
+             static_cast<int>(ActionType::RemoveCraftedModifiers) ||
+         node.action_type != static_cast<int>(node.action.type))) {
+        return kNoId;
+    }
     for (std::uint32_t i = 0; i < registry.actions.size(); ++i) {
         const ActionDescriptor& descriptor = registry.actions[i];
         if (node.action_type == kStrategyRestartOperation) {
@@ -821,9 +1524,52 @@ std::uint32_t resolve_strategy_action(
             continue;
         }
         if (descriptor.synthetic) continue;
-        if (same_action_parameters(node.action, descriptor.params)) return i;
+        if (same_action_parameters(node.action, descriptor)) return i;
     }
     return kNoId;
+}
+
+} // namespace
+
+ResolvedStrategyOperation resolve_strategy_operation(
+        const StrategyNode& node,
+        const ActionRegistry& registry,
+        const SessionImpl& session) {
+    if (node.kind != StrategyNodeKind::Operation) return {};
+    if (node.bestiary_action_index != kNoId) {
+        if (node.bestiary_action_index >=
+            session.data->bestiary_actions.size()) {
+            return {};
+        }
+        const BestiaryActionDescriptor& descriptor =
+            session.data->bestiary_actions[node.bestiary_action_index];
+        const int expected_type =
+            descriptor.operation == BestiaryOperationKind::Create
+                ? kStrategyBestiaryImprintOperation
+                : kStrategyBestiaryRestoreImprintOperation;
+        if (node.action_type != expected_type) return {};
+        return {
+            ResolvedStrategyOperationKind::Bestiary,
+            node.bestiary_action_index};
+    }
+    if (node.action_type == kStrategyBestiaryImprintOperation ||
+        node.action_type == kStrategyBestiaryRestoreImprintOperation) {
+        return {};
+    }
+    const std::uint32_t action =
+        resolve_registry_strategy_action(node, registry);
+    if (action == kNoId) return {};
+    return {
+        node.action_type == kStrategyRestartOperation
+            ? ResolvedStrategyOperationKind::Restart
+            : ResolvedStrategyOperationKind::Ordinary,
+        action};
+}
+
+std::uint32_t resolve_strategy_action(
+        const StrategyNode& node,
+        const ActionRegistry& registry) {
+    return resolve_registry_strategy_action(node, registry);
 }
 
 bool evaluate_abstract_condition(
@@ -957,6 +1703,9 @@ bool evaluate_abstract_condition(
             throw std::logic_error(
                 "compiled count condition missing from exact layout");
         }
+        const std::size_t observation_index =
+            static_cast<std::size_t>(
+                std::distance(layout.count_observations.begin(), found));
 
         const bool fractured =
             (condition.required_flags & PC_MOD_SLOT_FRACTURED) != 0;
@@ -982,13 +1731,173 @@ bool evaluate_abstract_condition(
                 continue;
             }
             const std::uint8_t status = state.slot_status[slot];
-            count += found->goal_status_counts[slot][status];
+            const ResolvedGoalSlot& goal_slot = layout.slots[slot];
+            if (goal_slot.member_classes.empty()) {
+                count += found->goal_status_counts[slot][status];
+                continue;
+            }
+            if (status ==
+                static_cast<std::uint8_t>(GoalSlotStatus::Absent)) {
+                continue;
+            }
+            const std::uint32_t token =
+                state.goal_member_class_tokens[slot];
+            if (token == 0 || token > goal_slot.member_classes.size()) {
+                throw std::logic_error(
+                    "exact goal state has an invalid member-class token");
+            }
+            const GoalMemberClass& member_class =
+                goal_slot.member_classes[token - 1];
+            if (static_cast<std::uint8_t>(member_class.status) != status) {
+                throw std::logic_error(
+                    "exact goal member class disagrees with tier status");
+            }
+            const std::size_t word = observation_index / 64;
+            if (word < member_class.count_observation_bits.size() &&
+                (member_class.count_observation_bits[word] &
+                 (std::uint64_t{1} << (observation_index % 64))) != 0) {
+                ++count;
+            }
         }
         return count >= condition.min_value &&
                count <= condition.max_value;
     }
     case ConditionKind::HasUnveilOption:
         return false; /* rejected during model derivation */
+    case ConditionKind::ObservationSignature: {
+        if (condition.observation_program == nullptr) {
+            throw std::logic_error(
+                "observation-signature condition has no program");
+        }
+        const refinement::CompiledObservationProgram& program =
+            *condition.observation_program;
+        const bool observes_goal_context =
+            std::any_of(
+                program.requirement.affix_observations.begin(),
+                program.requirement.affix_observations.end(),
+                [](const RefinementAffixObservation& observation) {
+                    return (
+                        observation.features &
+                        refinement_feature(
+                            RefinementFeature::
+                                GoalStatusTierClass)) != 0;
+                });
+        if (observes_goal_context) {
+            for (std::uint32_t mod = 0;
+                 mod < session.mod_count; ++mod) {
+                refinement::StableKey expected{
+                    0u,
+                    static_cast<std::uint8_t>(
+                        GoalSlotStatus::Absent)};
+                for (std::size_t slot = 0;
+                     slot < layout.slots.size(); ++slot) {
+                    if (!pc_bitset_test(
+                            layout.slots[slot].member_mask.data(),
+                            mod)) {
+                        continue;
+                    }
+                    expected = {
+                        slot + 1,
+                        static_cast<std::uint8_t>(
+                            pc_bitset_test(
+                                layout.slots[slot]
+                                    .satisfying_mask.data(),
+                                mod)
+                                ? GoalSlotStatus::Satisfied
+                                : GoalSlotStatus::
+                                      PresentBelowTier)};
+                    break;
+                }
+                const refinement::StableKey actual =
+                    mod <
+                                program.context
+                                    .goal_status_tier_class_by_mod
+                                    .size() &&
+                            !program.context
+                                 .goal_status_tier_class_by_mod[mod]
+                                 .empty()
+                        ? program.context
+                              .goal_status_tier_class_by_mod[mod]
+                        : refinement::StableKey{
+                              0u,
+                              static_cast<std::uint8_t>(
+                                  GoalSlotStatus::Absent)};
+                if (actual != expected) {
+                    throw std::logic_error(
+                        "observation-signature goal context disagrees "
+                        "with the exact layout");
+                }
+            }
+        }
+        const std::uint32_t observation_count =
+            condition.observation_signature
+                .count_observation_count;
+        if (layout.count_observations.size() <
+            observation_count) {
+            throw std::logic_error(
+                "observation-signature count context is absent "
+                "from the exact layout");
+        }
+        for (std::uint32_t observation = 0;
+             observation < observation_count;
+             ++observation) {
+            const CountObservation& layout_observation =
+                layout.count_observations[observation];
+            if (layout_observation.by_family) {
+                throw std::logic_error(
+                    "observation-signature count context changed "
+                    "kind in the exact layout");
+            }
+            for (std::uint32_t mod = 0;
+                 mod < session.mod_count; ++mod) {
+                const refinement::StableKey& membership =
+                    program.context
+                        .count_observation_membership_by_mod[mod];
+                const bool expected_member =
+                    observation / 64 < membership.size() &&
+                    (membership[observation / 64] &
+                     (std::uint64_t{1} <<
+                      (observation % 64))) != 0;
+                const bool actual_member =
+                    std::binary_search(
+                        layout_observation.ids.begin(),
+                        layout_observation.ids.end(),
+                        mod);
+                if (actual_member != expected_member) {
+                    throw std::logic_error(
+                        "observation-signature count context "
+                        "disagrees with the exact layout");
+                }
+            }
+        }
+        refinement::AbstractFeatureExtraction extraction =
+            refinement::extract_strict_abstract_features(
+                session, layout, state, program.requirement);
+        if (!extraction.complete()) return false;
+        const std::size_t count_words =
+            (observation_count + 63) / 64;
+        for (refinement::FeatureAtom& atom :
+             extraction.features) {
+            if (atom.feature !=
+                RefinementFeature::
+                    CountObservationMembership) {
+                continue;
+            }
+            atom.value.resize(count_words, 0);
+            if (!atom.value.empty() &&
+                observation_count % 64 != 0) {
+                atom.value.back() &=
+                    (std::uint64_t{1} <<
+                     (observation_count % 64)) -
+                    1;
+            }
+        }
+        return refinement::observe_features(
+                   refinement::canonical_feature_signature(
+                       std::move(extraction.features)),
+                   program.requirement) ==
+               program.signature;
+    }
     case ConditionKind::All:
         return std::all_of(
             condition.children.begin(), condition.children.end(),
@@ -1018,6 +1927,50 @@ bool evaluate_abstract_condition(
     }
     return false;
 }
+
+namespace {
+
+bool bestiary_action_legal(
+        const BestiaryActionDescriptor& action,
+        const AbstractState& state,
+        const std::uint32_t checkpoint_state) {
+    const std::uint8_t rarity_bit =
+        state.rarity < 8
+            ? static_cast<std::uint8_t>(1u << state.rarity)
+            : 0;
+    if ((action.rarity_mask & rarity_bit) == 0) return false;
+    if ((action.forbidden_item_flags & PC_ITEM_CORRUPTED) != 0 &&
+        (state.flags & kFlagCorrupted) != 0) {
+        return false;
+    }
+    if ((action.forbidden_item_flags & PC_ITEM_MIRRORED) != 0 &&
+        (state.flags & kFlagMirrored) != 0) {
+        return false;
+    }
+    const bool checkpoint_active = checkpoint_state != kNoId;
+    if (action.checkpoint_requirement ==
+            BestiaryCheckpointRequirement::Absent &&
+        checkpoint_active) {
+        return false;
+    }
+    if (action.checkpoint_requirement ==
+            BestiaryCheckpointRequirement::Present &&
+        !checkpoint_active) {
+        return false;
+    }
+    /* Every evaluator checkpoint is created from the current live item.
+     * Ordinary crafts keep item identity, while Restart clears the checkpoint
+     * before changing it. Therefore an active checkpoint is necessarily bound
+     * to this live item. */
+    if (action.identity_requirement ==
+            BestiaryIdentityRequirement::SameItem &&
+        !checkpoint_active) {
+        return false;
+    }
+    return true;
+}
+
+} // namespace
 
 struct StrategyEvalWork::Impl {
     struct PolicyRouteResolution {
@@ -1054,7 +2007,9 @@ struct StrategyEvalWork::Impl {
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
 
     std::map<
-        std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+        std::tuple<
+            std::uint32_t, std::uint32_t, std::uint32_t,
+            std::uint32_t>,
         std::uint32_t>
         pair_by_key;
     std::vector<EvalPair> pairs;
@@ -1062,8 +2017,19 @@ struct StrategyEvalWork::Impl {
         unveil_offer_by_mods;
     std::vector<std::vector<std::uint32_t>> unveil_offer_sets;
     std::vector<EvalRow> rows;
+    /* The behavioral quotient solves value/flow at the minimum observable
+     * carrier. Retain the pre-quotient graph until finalization solely to
+     * disaggregate that flow back onto exact evaluator states and terminal
+     * states; no representative state is authoritative for reporting. */
+    std::vector<EvalPair> attribution_pairs;
+    std::vector<EvalRow> attribution_rows;
+    std::vector<std::uint32_t> attribution_class_by_pair;
+    std::uint32_t attribution_start_pair = kNoId;
+    std::uint64_t attribution_row_payload_owned_bytes = 0;
     std::map<
-        std::pair<std::uint32_t, const OutcomeDistribution*>,
+        std::tuple<
+            std::uint32_t, std::uint32_t,
+            const OutcomeDistribution*>,
         std::uint32_t> row_by_distribution;
     std::uint64_t stored_transitions = 0;
     std::uint64_t row_payload_owned_bytes = 0;
@@ -1072,6 +2038,7 @@ struct StrategyEvalWork::Impl {
     std::uint64_t edge_index_owned_bytes = 0;
     std::uint64_t terminal_incoming_owned_bytes = 0;
     std::uint64_t compressed_policy_incoming_owned_bytes = 0;
+    std::uint64_t observation_requirement_owned_bytes = 0;
     std::size_t discover_index = 0;
     std::uint32_t start_pair = kNoId;
 
@@ -1090,6 +2057,7 @@ struct StrategyEvalWork::Impl {
     std::vector<std::uint32_t> chain_next;
     std::vector<std::uint32_t> chain_edge;
     std::vector<std::uint32_t> chain_policy_route;
+    std::vector<std::uint32_t> chain_policy_state;
     std::vector<std::uint32_t> chain_terminal;
     std::vector<double> chain_inflow;
     std::unique_ptr<FallbackState> fallback;
@@ -1108,6 +2076,8 @@ struct StrategyEvalWork::Impl {
     bool compress_policy_routes = false;
     std::uint32_t compressed_policy_root = kNoId;
     std::vector<PolicyRouteResolution> policy_route_cache;
+    std::vector<ObservationRequirement>
+        node_observation_requirements;
 
     bool is_policy_route_node(std::uint32_t node) const {
         return node < strategy->nodes.size() &&
@@ -1124,6 +2094,22 @@ struct StrategyEvalWork::Impl {
         std::uint64_t bytes = values.capacity() * sizeof(std::string);
         for (const std::string& value : values) {
             bytes += value.capacity() + 1;
+        }
+        return bytes;
+    }
+
+    static std::uint64_t observation_requirement_nested_bytes(
+        const ObservationRequirement& requirement) {
+        std::uint64_t bytes =
+            requirement.modifier_tag_ids.capacity() *
+            sizeof(std::uint32_t);
+        bytes += requirement.affix_observations.capacity() *
+                 sizeof(RefinementAffixObservation);
+        for (const RefinementAffixObservation& observation :
+             requirement.affix_observations) {
+            bytes +=
+                observation.selector.required_tag_ids.capacity() *
+                sizeof(std::uint32_t);
         }
         return bytes;
     }
@@ -1226,6 +2212,8 @@ struct StrategyEvalWork::Impl {
     std::uint64_t estimated_owned_bytes() const {
         std::uint64_t bytes = sizeof(*this);
         if (model.calc != nullptr) bytes += model.calc->estimated_owned_bytes();
+        bytes += model.operation_by_node.capacity() *
+                 sizeof(ResolvedStrategyOperation);
         bytes += model.action_by_node.capacity() * sizeof(std::uint32_t);
         bytes += model.targets.capacity() * sizeof(GoalSlot);
         bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
@@ -1238,6 +2226,12 @@ struct StrategyEvalWork::Impl {
         bytes += pair_by_key.size() *
                  (sizeof(decltype(pair_by_key)::value_type) + 3 * sizeof(void*));
         bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += node_observation_requirements.capacity() *
+                 sizeof(ObservationRequirement);
+        for (const ObservationRequirement& requirement :
+             node_observation_requirements) {
+            bytes += observation_requirement_nested_bytes(requirement);
+        }
         bytes += unveil_offer_by_mods.size() *
                  (sizeof(decltype(unveil_offer_by_mods)::value_type) +
                   3 * sizeof(void*));
@@ -1252,6 +2246,14 @@ struct StrategyEvalWork::Impl {
         }
         bytes += rows.capacity() * sizeof(EvalRow);
         for (const EvalRow& row : rows) {
+            bytes += row.transitions.capacity() * sizeof(EvalTransition);
+            bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
+        }
+        bytes += attribution_pairs.capacity() * sizeof(EvalPair);
+        bytes += attribution_rows.capacity() * sizeof(EvalRow);
+        bytes += attribution_class_by_pair.capacity() *
+                 sizeof(std::uint32_t);
+        for (const EvalRow& row : attribution_rows) {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
             bytes += row.absorptions.capacity() * sizeof(EvalAbsorption);
         }
@@ -1270,6 +2272,7 @@ struct StrategyEvalWork::Impl {
         bytes += chain_next.capacity() * sizeof(std::uint32_t);
         bytes += chain_edge.capacity() * sizeof(std::uint32_t);
         bytes += chain_policy_route.capacity() * sizeof(std::uint32_t);
+        bytes += chain_policy_state.capacity() * sizeof(std::uint32_t);
         bytes += chain_terminal.capacity() * sizeof(std::uint32_t);
         bytes += chain_inflow.capacity() * sizeof(double);
         if (fallback != nullptr) {
@@ -1326,6 +2329,8 @@ struct StrategyEvalWork::Impl {
         if (model.calc != nullptr) {
             bytes += model.calc->fast_estimated_owned_bytes();
         }
+        bytes += model.operation_by_node.capacity() *
+                 sizeof(ResolvedStrategyOperation);
         bytes += model.action_by_node.capacity() * sizeof(std::uint32_t);
         bytes += model.targets.capacity() * sizeof(GoalSlot);
         bytes += review_sections.capacity() * sizeof(ReviewSectionSpec);
@@ -1334,6 +2339,9 @@ struct StrategyEvalWork::Impl {
                  (sizeof(decltype(pair_by_key)::value_type) +
                   3 * sizeof(void*));
         bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += node_observation_requirements.capacity() *
+                 sizeof(ObservationRequirement);
+        bytes += observation_requirement_owned_bytes;
         bytes += unveil_offer_by_mods.size() *
                  (sizeof(decltype(unveil_offer_by_mods)::value_type) +
                   3 * sizeof(void*));
@@ -1348,6 +2356,11 @@ struct StrategyEvalWork::Impl {
         }
         bytes += rows.capacity() * sizeof(EvalRow);
         bytes += row_payload_owned_bytes;
+        bytes += attribution_pairs.capacity() * sizeof(EvalPair);
+        bytes += attribution_rows.capacity() * sizeof(EvalRow);
+        bytes += attribution_class_by_pair.capacity() *
+                 sizeof(std::uint32_t);
+        bytes += attribution_row_payload_owned_bytes;
         bytes += row_by_distribution.size() *
                  (sizeof(decltype(row_by_distribution)::value_type) +
                   3 * sizeof(void*));
@@ -1361,6 +2374,7 @@ struct StrategyEvalWork::Impl {
         bytes += chain_next.capacity() * sizeof(std::uint32_t);
         bytes += chain_edge.capacity() * sizeof(std::uint32_t);
         bytes += chain_policy_route.capacity() * sizeof(std::uint32_t);
+        bytes += chain_policy_state.capacity() * sizeof(std::uint32_t);
         bytes += chain_terminal.capacity() * sizeof(std::uint32_t);
         bytes += chain_inflow.capacity() * sizeof(double);
         if (fallback != nullptr) {
@@ -1492,6 +2506,11 @@ struct StrategyEvalWork::Impl {
         }
         output.max_owned_bytes = options.max_owned_bytes;
         output.max_output_json_bytes = options.max_output_json_bytes;
+        model.calc->set_solve_resource_caps(
+            options.max_states,
+            options.max_reforge_work,
+            false,
+            options.max_owned_bytes);
         output.targets = model.targets;
         for (const ReviewSectionSpec& section : review_sections) {
             review_payload_owned_bytes +=
@@ -1502,6 +2521,18 @@ struct StrategyEvalWork::Impl {
             review_payload_owned_bytes += string_vector_bytes(section.edges);
         }
         const std::size_t node_count = strategy->nodes.size();
+        check_owned_cap();
+        node_observation_requirements =
+            derive_node_observation_requirements(
+                *strategy, model, options.max_sweeps,
+                [&](const std::uint64_t transient_bytes) {
+                    check_owned_cap(transient_bytes);
+                });
+        for (const ObservationRequirement& requirement :
+             node_observation_requirements) {
+            observation_requirement_owned_bytes +=
+                observation_requirement_nested_bytes(requirement);
+        }
         std::vector<std::uint32_t> policy_roots;
         for (std::uint32_t source = 0; source < node_count; ++source) {
             if (is_policy_route_node(source)) continue;
@@ -1583,20 +2614,24 @@ struct StrategyEvalWork::Impl {
     std::uint32_t intern_pair(
         std::uint32_t node,
         std::uint32_t state,
-        std::uint32_t unveil_offer = kNoId) {
-        const auto key = std::make_tuple(node, state, unveil_offer);
+        std::uint32_t unveil_offer = kNoId,
+        std::uint32_t checkpoint_state = kNoId) {
+        /*
+         * This is deliberately the raw exact pair identity. Observation
+         * equality is only a seed for the shared split-only fixed point after
+         * the reachable graph is closed; it must never irreversibly select a
+         * representative during discovery.
+         */
+        const auto key = std::make_tuple(
+            node, state, unveil_offer, checkpoint_state);
         const auto found = pair_by_key.find(key);
         if (found != pair_by_key.end()) return found->second;
-        if (pairs.size() >= options.max_pairs) {
-            throw std::length_error(
-                "strategy evaluation exceeded max_pairs (" +
-                std::to_string(options.max_pairs) + ")");
-        }
         const std::uint32_t id = static_cast<std::uint32_t>(pairs.size());
         pair_by_key.emplace(key, id);
         EvalPair pair;
         pair.node = node;
         pair.state = state;
+        pair.checkpoint_state = checkpoint_state;
         pair.unveil_offer = unveil_offer;
         pairs.push_back(std::move(pair));
         return id;
@@ -1671,7 +2706,7 @@ struct StrategyEvalWork::Impl {
         return fallback_edge;
     }
 
-    bool node_observes_unveil_offer(const StrategyNode& node) const {
+    bool node_observes_modifier_offer(const StrategyNode& node) const {
         const std::function<bool(const CompiledCondition&)> contains =
             [&](const CompiledCondition& condition) {
                 return condition.kind == ConditionKind::HasUnveilOption ||
@@ -1686,15 +2721,42 @@ struct StrategyEvalWork::Impl {
             });
     }
 
-    std::uint32_t unveil_action_index() const {
+    std::uint32_t modifier_offer_action_index(
+            const StrategyNode& node) const {
+        std::uint32_t selected = kNoId;
+        for (const StrategyEdge& edge : node.edges) {
+            if (edge.is_default ||
+                edge.target >= model.action_by_node.size()) {
+                continue;
+            }
+            const std::uint32_t action =
+                model.action_by_node[edge.target];
+            if (action == kNoId ||
+                !action_observes_modifier_offer(
+                    model.calc->registry().actions[action])) {
+                continue;
+            }
+            if (selected != kNoId && selected != action) {
+                throw StrategyEvalUnsupported(
+                    "strategy evaluation unsupported:\n- one modifier-offer "
+                    "router selects multiple observation actions");
+            }
+            selected = action;
+        }
+        if (selected != kNoId) return selected;
+
         for (std::uint32_t action = 0;
              action < model.calc->registry().actions.size(); ++action) {
-            if (model.calc->registry().actions[action].params.type ==
-                ActionType::Unveil) {
-                return action;
+            if (!action_observes_modifier_offer(
+                    model.calc->registry().actions[action])) {
+                continue;
             }
+            if (selected != kNoId) {
+                return kNoId;
+            }
+            selected = action;
         }
-        return kNoId;
+        return selected;
     }
 
     void expand_pair(std::uint32_t pair_id) {
@@ -1702,6 +2764,8 @@ struct StrategyEvalWork::Impl {
             fast_estimated_owned_bytes();
         const std::uint32_t node_index = pairs.at(pair_id).node;
         const std::uint32_t state_id = pairs.at(pair_id).state;
+        const std::uint32_t checkpoint_state_id =
+            pairs.at(pair_id).checkpoint_state;
         const std::uint32_t unveil_offer_id =
             pairs.at(pair_id).unveil_offer;
         const std::vector<std::uint32_t>* active_unveil_offer =
@@ -1714,7 +2778,9 @@ struct StrategyEvalWork::Impl {
         std::uint32_t action_index = kNoId;
         const OutcomeDistribution* shared_distribution = nullptr;
         std::map<
-            std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+            std::tuple<
+                std::uint32_t, std::uint32_t, std::uint32_t,
+                std::uint32_t>,
             double> transitions;
         std::map<
             std::tuple<
@@ -1723,6 +2789,7 @@ struct StrategyEvalWork::Impl {
             double> absorptions;
 
         const auto add_transition = [&](const std::tuple<
+                                            std::uint32_t,
                                             std::uint32_t,
                                             std::uint32_t,
                                             std::uint32_t>& key,
@@ -1763,7 +2830,8 @@ struct StrategyEvalWork::Impl {
                                std::uint32_t state,
                                double probability,
                                const std::vector<std::uint32_t>*
-                                   offered_mods = nullptr) {
+                                   offered_mods,
+                               std::uint32_t checkpoint_state) {
             if (!(probability > 0.0)) return;
             if (!std::isfinite(probability)) {
                 throw std::runtime_error(
@@ -1832,43 +2900,55 @@ struct StrategyEvalWork::Impl {
                     ? kNoId
                     : intern_unveil_offer(*offered_mods);
             const std::uint32_t target_pair =
-                intern_pair(target_node, state, target_unveil_offer);
-            add_transition({target_pair, edge, policy_route}, probability);
+                intern_pair(
+                    target_node, state, target_unveil_offer,
+                    checkpoint_state);
+            add_transition(
+                {target_pair, edge, policy_route, state}, probability);
         };
 
         if (node.kind != StrategyNodeKind::Operation) {
-            if (!node_observes_unveil_offer(node)) {
-                route(state_id, 1.0, active_unveil_offer);
+            if (!node_observes_modifier_offer(node)) {
+                route(
+                    state_id, 1.0, active_unveil_offer,
+                    checkpoint_state_id);
             } else if (active_unveil_offer != nullptr) {
-                route(state_id, 1.0, active_unveil_offer);
+                route(
+                    state_id, 1.0, active_unveil_offer,
+                    checkpoint_state_id);
             } else {
-                const std::uint32_t unveil = unveil_action_index();
-                if (unveil == kNoId) {
+                const std::uint32_t observed_action =
+                    modifier_offer_action_index(node);
+                if (observed_action == kNoId) {
                     throw StrategyEvalUnsupported(
                         "strategy evaluation unsupported:\n- node '" +
                         node.id +
-                        "' observes unveil offers but the session has no "
-                        "Unveil action");
+                        "' observes modifier offers but has no unique "
+                        "admitted observation action");
                 }
                 const ActionDescriptor& action =
-                    model.calc->registry().actions.at(unveil);
+                    model.calc->registry().actions.at(observed_action);
                 if (!action_legal(
                         model.calc->session(), action,
                         model.calc->state(state_id))) {
-                    route(state_id, 1.0);
+                    route(
+                        state_id, 1.0, nullptr,
+                        checkpoint_state_id);
                 } else {
                     const OutcomeDistribution& outcomes =
-                        model.calc->outcomes(state_id, unveil);
+                        model.calc->outcomes(state_id, observed_action);
                     if (!outcomes.supported) {
                         throw StrategyEvalUnsupported(
                             "strategy evaluation unsupported:\n- node '" +
                             node.id +
-                            "' has no exact Unveil offer distribution for "
+                            "' has no exact modifier-offer distribution for "
                             "a reachable state");
                     }
                     ensure_state_limit();
                     if (outcomes.choice_groups.empty()) {
-                        route(state_id, 1.0);
+                        route(
+                            state_id, 1.0, nullptr,
+                            checkpoint_state_id);
                     } else {
                         double distribution_mass = 0.0;
                         for (const OutcomeChoiceGroup& group :
@@ -1894,11 +2974,12 @@ struct StrategyEvalWork::Impl {
                             distribution_mass += group.probability;
                             route(
                                 state_id, group.probability,
-                                &offered_mods);
+                                &offered_mods,
+                                checkpoint_state_id);
                         }
                         if (std::fabs(distribution_mass - 1.0) > 1e-9) {
                             throw std::runtime_error(
-                                "strategy evaluation Unveil offer "
+                                "strategy evaluation modifier-offer "
                                 "distribution does not sum to one at node '" +
                                 node.id + "'");
                         }
@@ -1907,79 +2988,123 @@ struct StrategyEvalWork::Impl {
             }
         } else {
             operation = true;
-            action_index = model.action_by_node.at(node_index);
-            const ActionDescriptor& action =
-                model.calc->registry().actions.at(action_index);
-            if (!action_legal(
-                    model.calc->session(), action,
-                    model.calc->state(state_id))) {
-                add_absorption(
-                    {static_cast<int>(EvalAbsorptionKind::ActionNotApplied),
-                     node_index, state_id, kNoId, kNoId},
-                    1.0);
-            } else {
-                consumes = true;
-                const OutcomeDistribution& outcomes =
-                    model.calc->outcomes(state_id, action_index);
-                if (!outcomes.supported) {
-                    throw StrategyEvalUnsupported(
-                        "strategy evaluation unsupported:\n- node '" +
-                        node.id + "' operation '" + action.id +
-                        "' has no exact distribution for a reachable state");
-                }
-                ensure_state_limit();
-                const auto shared = row_by_distribution.find(
-                    {node_index, &outcomes});
-                if (shared != row_by_distribution.end()) {
-                    EvalPair& pair = pairs.at(pair_id);
-                    pair.operation = operation;
-                    pair.consumes = consumes;
-                    pair.action = action_index;
-                    pair.row = shared->second;
-                    return;
-                }
-                double distribution_mass = 0.0;
-                if (action.params.type == ActionType::Unveil) {
-                    if (active_unveil_offer == nullptr ||
-                        std::find(
-                            active_unveil_offer->begin(),
-                            active_unveil_offer->end(),
-                            node.action.mod_id) ==
-                            active_unveil_offer->end()) {
-                        throw std::logic_error(
-                            "authored Unveil selection is not present in "
-                            "the sampled offer carried to node '" +
-                            node.id + "'");
-                    }
-                    const auto selected = std::find_if(
-                        outcomes.choice_options.begin(),
-                        outcomes.choice_options.end(),
-                        [&](const OutcomeChoiceOption& option) {
-                            return option.mod_id == node.action.mod_id;
-                        });
-                    if (selected == outcomes.choice_options.end()) {
-                        throw std::logic_error(
-                            "authored Unveil selection is absent from its "
-                            "reachable exact offer vocabulary at node '" +
-                            node.id + "'");
-                    }
-                    const std::uint32_t successor =
-                        selected->actual_state != kNoId
-                            ? selected->actual_state
-                            : selected->state;
-                    distribution_mass = 1.0;
-                    route(successor, 1.0);
+            const ResolvedStrategyOperation& resolved =
+                model.operation_by_node.at(node_index);
+            if (resolved.kind ==
+                ResolvedStrategyOperationKind::Bestiary) {
+                const BestiaryActionDescriptor& action =
+                    model.calc->session().data->bestiary_actions.at(
+                        resolved.descriptor_index);
+                if (!bestiary_action_legal(
+                        action, model.calc->state(state_id),
+                        checkpoint_state_id)) {
+                    add_absorption(
+                        {static_cast<int>(
+                             EvalAbsorptionKind::ActionNotApplied),
+                         node_index, state_id, kNoId, kNoId},
+                        1.0);
                 } else {
-                    shared_distribution = &outcomes;
-                    for (const OutcomeEntry& outcome : outcomes.entries) {
-                        distribution_mass += outcome.probability;
-                        route(outcome.state, outcome.probability);
+                    consumes = true;
+                    std::uint32_t successor_state = state_id;
+                    std::uint32_t successor_checkpoint =
+                        checkpoint_state_id;
+                    if (action.checkpoint_effect ==
+                        BestiaryCheckpointEffect::Create) {
+                        successor_checkpoint = state_id;
+                    } else {
+                        successor_state = checkpoint_state_id;
+                        successor_checkpoint = kNoId;
                     }
+                    route(
+                        successor_state, 1.0, nullptr,
+                        successor_checkpoint);
                 }
-                if (std::fabs(distribution_mass - 1.0) > 1e-9) {
-                    throw std::runtime_error(
-                        "strategy evaluation action distribution does not "
-                        "sum to one at node '" + node.id + "'");
+            } else {
+                action_index = resolved.descriptor_index;
+                const ActionDescriptor& action =
+                    model.calc->registry().actions.at(action_index);
+                if (!action_legal(
+                        model.calc->session(), action,
+                        model.calc->state(state_id))) {
+                    add_absorption(
+                        {static_cast<int>(
+                             EvalAbsorptionKind::ActionNotApplied),
+                         node_index, state_id, kNoId, kNoId},
+                        1.0);
+                } else {
+                    consumes = true;
+                    const OutcomeDistribution& outcomes =
+                        model.calc->outcomes(state_id, action_index);
+                    if (!outcomes.supported) {
+                        throw StrategyEvalUnsupported(
+                            "strategy evaluation unsupported:\n- node '" +
+                            node.id + "' operation '" + action.id +
+                            "' has no exact distribution for a reachable "
+                            "state");
+                    }
+                    ensure_state_limit();
+                    const auto shared = row_by_distribution.find(
+                        {node_index, checkpoint_state_id, &outcomes});
+                    if (shared != row_by_distribution.end()) {
+                        EvalPair& pair = pairs.at(pair_id);
+                        pair.operation = operation;
+                        pair.consumes = consumes;
+                        pair.action = action_index;
+                        pair.row = shared->second;
+                        return;
+                    }
+                    double distribution_mass = 0.0;
+                    const std::uint32_t successor_checkpoint =
+                        resolved.kind ==
+                                ResolvedStrategyOperationKind::Restart
+                            ? kNoId
+                            : checkpoint_state_id;
+                    if (action_observes_modifier_offer(action)) {
+                        if (active_unveil_offer == nullptr ||
+                            std::find(
+                                active_unveil_offer->begin(),
+                                active_unveil_offer->end(),
+                                node.action.mod_id) ==
+                                active_unveil_offer->end()) {
+                            throw std::logic_error(
+                                "authored modifier selection is not present "
+                                "in the sampled offer carried to node '" +
+                                node.id + "'");
+                        }
+                        const auto selected = std::find_if(
+                            outcomes.choice_options.begin(),
+                            outcomes.choice_options.end(),
+                            [&](const OutcomeChoiceOption& option) {
+                                return option.mod_id == node.action.mod_id;
+                            });
+                        if (selected == outcomes.choice_options.end()) {
+                            throw std::logic_error(
+                                "authored modifier selection is absent from "
+                                "its reachable exact offer vocabulary at "
+                                "node '" + node.id + "'");
+                        }
+                        const std::uint32_t successor =
+                            selected->actual_state != kNoId
+                                ? selected->actual_state
+                                : selected->state;
+                        distribution_mass = 1.0;
+                        route(
+                            successor, 1.0, nullptr,
+                            successor_checkpoint);
+                    } else {
+                        shared_distribution = &outcomes;
+                        for (const OutcomeEntry& outcome : outcomes.entries) {
+                            distribution_mass += outcome.probability;
+                            route(
+                                outcome.state, outcome.probability,
+                                nullptr, successor_checkpoint);
+                        }
+                    }
+                    if (std::fabs(distribution_mass - 1.0) > 1e-9) {
+                        throw std::runtime_error(
+                            "strategy evaluation action distribution does "
+                            "not sum to one at node '" + node.id + "'");
+                    }
                 }
             }
         }
@@ -1993,7 +3118,7 @@ struct StrategyEvalWork::Impl {
         for (const auto& [key, probability] : transitions) {
             row.transitions.push_back(
                 {std::get<0>(key), probability, std::get<1>(key), kNoId,
-                 std::get<2>(key)});
+                 std::get<2>(key), std::get<3>(key)});
         }
         row.absorptions.reserve(absorptions.size());
         for (const auto& [key, probability] : absorptions) {
@@ -2022,8 +3147,639 @@ struct StrategyEvalWork::Impl {
         rows.push_back(std::move(row));
         if (shared_distribution != nullptr) {
             row_by_distribution.emplace(
-                std::make_pair(node_index, shared_distribution), pair.row);
+                std::make_tuple(
+                    node_index, checkpoint_state_id,
+                    shared_distribution),
+                pair.row);
         }
+    }
+
+    void append_unveil_offer(
+        refinement::StableKey& key,
+        const std::uint32_t offer) const {
+        if (offer == kNoId) {
+            key.push_back(0);
+            return;
+        }
+        key.push_back(1);
+        const std::vector<std::uint32_t>& mods =
+            unveil_offer_sets.at(offer);
+        key.push_back(static_cast<std::uint64_t>(mods.size()));
+        key.insert(key.end(), mods.begin(), mods.end());
+    }
+
+    void append_compressed_policy_trace(
+        refinement::StableKey& key,
+        const std::uint32_t root,
+        const std::uint32_t state) const {
+        append_optional_u32(key, root);
+        if (root == kNoId) return;
+        if (state == kNoId) {
+            throw std::logic_error(
+                "compressed policy trace has no exact state");
+        }
+        std::uint32_t cursor = root;
+        std::size_t steps = 0;
+        while (is_policy_route_node(cursor)) {
+            if (++steps > strategy->nodes.size()) {
+                throw std::logic_error(
+                    "compiled policy router contains a cycle");
+            }
+            const StrategyEdge* selected =
+                select_edge(strategy->nodes[cursor], state);
+            if (selected == nullptr) {
+                key.push_back(0); /* no-matching-edge trace */
+                key.push_back(cursor);
+                return;
+            }
+            key.push_back(1); /* selected router edge */
+            key.push_back(edge_index_by_id.at(selected->id));
+            cursor = selected->target;
+        }
+        key.push_back(2); /* resolved non-router target */
+        key.push_back(cursor);
+    }
+
+    refinement::StableKey raw_pair_stable_key(
+        const EvalPair& pair) const {
+        refinement::StableKey key{
+            0x6576616c70616972ull, /* "evalpair" */
+            pair.node};
+        if (pair.state == kNoId ||
+            pair.state >= model.calc->state_count()) {
+            throw std::logic_error(
+                "strategy evaluation pair has no exact semantic state");
+        }
+        append_stable_tokens(
+            key,
+            exact_abstract_state_key(
+                model.calc->state(pair.state), kNoId));
+        append_optional_u32(key, pair.checkpoint_state);
+        if (pair.checkpoint_state != kNoId) {
+            if (pair.checkpoint_state >= model.calc->state_count()) {
+                throw std::logic_error(
+                    "strategy evaluation pair has an invalid checkpoint "
+                    "state");
+            }
+            append_stable_tokens(
+                key,
+                exact_abstract_state_key(
+                    model.calc->state(pair.checkpoint_state), kNoId));
+        }
+        append_unveil_offer(key, pair.unveil_offer);
+        return key;
+    }
+
+    refinement::StableKey pair_observation_key(
+        const EvalPair& pair) const {
+        const ObservationRequirement& requirement =
+            node_observation_requirements.at(pair.node);
+        const refinement::AbstractFeatureExtraction extraction =
+            refinement::extract_strict_abstract_features(
+                model.calc->session(),
+                model.calc->layout(),
+                model.calc->state(pair.state),
+                requirement);
+        if (!extraction.complete()) {
+            throw StrategyEvalUnsupported(
+                "strategy evaluation unsupported:\n- node '" +
+                strategy->nodes.at(pair.node).id +
+                "' requires an exact observation discarded by the "
+                "evaluation carrier");
+        }
+        const refinement::FeatureSignature observed =
+            refinement::observe_features(
+                extraction.features, requirement);
+        refinement::StableKey key{
+            0x6576616c6f627331ull}; /* "evalobs1" */
+        append_feature_signature(key, observed);
+        return key;
+    }
+
+    refinement::StableKey pair_immediate_key(
+        const EvalPair& pair) const {
+        refinement::StableKey key{
+            0x6576616c696d6d31ull, /* "evalimm1" */
+            pair.node,
+            pair.operation ? 1u : 0u,
+            pair.consumes ? 1u : 0u};
+        append_optional_u32(key, pair.action);
+        append_unveil_offer(key, pair.unveil_offer);
+        return key;
+    }
+
+    refinement::StableKey transition_partition_label(
+        const EvalTransition& transition) const {
+        refinement::StableKey key{
+            0x6576616c74726e31ull}; /* "evaltrn1" */
+        append_optional_u32(key, transition.edge);
+        append_optional_u32(key, transition.via);
+        append_unveil_offer(
+            key, pairs.at(transition.target).unveil_offer);
+        append_compressed_policy_trace(
+            key, transition.policy_route,
+            transition.policy_state);
+        return key;
+    }
+
+    refinement::StableKey absorption_partition_label(
+        const EvalAbsorption& absorption) const {
+        refinement::StableKey key{
+            0x6576616c61627331ull, /* "evalabs1" */
+            static_cast<std::uint64_t>(absorption.kind),
+            absorption.node};
+        append_optional_u32(key, absorption.edge);
+        if (absorption.kind == EvalAbsorptionKind::Terminal) {
+            key.push_back(
+                static_cast<std::uint64_t>(
+                    strategy->nodes.at(absorption.node)
+                        .terminal_kind));
+        }
+        append_compressed_policy_trace(
+            key, absorption.policy_route, absorption.state);
+        return key;
+    }
+
+    void refine_pair_graph() {
+        using refinement::ClosedPartitionArc;
+        using refinement::ClosedPartitionLimits;
+        using refinement::ClosedPartitionNode;
+        using refinement::ClosedPartitionResult;
+        using refinement::ClosedPartitionStatus;
+
+        if (pairs.empty()) return;
+        output.raw_pairs_discovered =
+            static_cast<std::uint32_t>(pairs.size());
+
+        const auto saturated_add = [](
+                const std::uint64_t left,
+                const std::uint64_t right) {
+            return right >
+                           std::numeric_limits<std::uint64_t>::max() -
+                               left
+                       ? std::numeric_limits<std::uint64_t>::max()
+                       : left + right;
+        };
+        const auto saturated_product = [](
+                const std::size_t count,
+                const std::size_t width) {
+            return width != 0 &&
+                           count >
+                               std::numeric_limits<std::uint64_t>::max() /
+                                   width
+                       ? std::numeric_limits<std::uint64_t>::max()
+                       : static_cast<std::uint64_t>(count) * width;
+        };
+        const auto stable_key_bytes =
+            [&](const refinement::StableKey& key) {
+                return saturated_product(
+                    key.capacity(), sizeof(std::uint64_t));
+            };
+
+        /*
+         * `closed` is transferred into the shared partitioner, while
+         * `stable_keys` remains live in this caller for representative
+         * selection. Track those two ownership domains separately so the
+         * shared cap receives the exact caller-retained amount and does not
+         * rely on a heuristic multiplier.
+         */
+        const std::uint64_t projected_closed_outer =
+            saturated_product(
+                pairs.size(), sizeof(ClosedPartitionNode));
+        const std::uint64_t projected_stable_outer =
+            saturated_product(
+                pairs.size(), sizeof(refinement::StableKey));
+        check_owned_cap(saturated_add(
+            projected_closed_outer, projected_stable_outer));
+        std::vector<ClosedPartitionNode> closed;
+        closed.reserve(pairs.size());
+        std::vector<refinement::StableKey> stable_keys;
+        stable_keys.reserve(pairs.size());
+        std::uint64_t closed_owned_bytes =
+            saturated_product(
+                closed.capacity(), sizeof(ClosedPartitionNode));
+        std::uint64_t stable_keys_owned_bytes =
+            saturated_product(
+                stable_keys.capacity(), sizeof(refinement::StableKey));
+        check_owned_cap(saturated_add(
+            closed_owned_bytes, stable_keys_owned_bytes));
+        for (std::uint32_t pair_id = 0;
+             pair_id < pairs.size(); ++pair_id) {
+            const EvalPair& pair = pairs[pair_id];
+            ClosedPartitionNode node;
+            node.stable_key = raw_pair_stable_key(pair);
+            closed_owned_bytes = saturated_add(
+                closed_owned_bytes,
+                stable_key_bytes(node.stable_key));
+            check_owned_cap(saturated_add(
+                closed_owned_bytes, stable_keys_owned_bytes));
+            node.observation_key = pair_observation_key(pair);
+            closed_owned_bytes = saturated_add(
+                closed_owned_bytes,
+                stable_key_bytes(node.observation_key));
+            check_owned_cap(saturated_add(
+                closed_owned_bytes, stable_keys_owned_bytes));
+            node.immediate_key = pair_immediate_key(pair);
+            closed_owned_bytes = saturated_add(
+                closed_owned_bytes,
+                stable_key_bytes(node.immediate_key));
+            check_owned_cap(saturated_add(
+                closed_owned_bytes, stable_keys_owned_bytes));
+            const EvalRow& row = pair_row(pair_id);
+            const std::size_t arc_count =
+                row.transitions.size() + row.absorptions.size();
+            check_owned_cap(saturated_add(
+                saturated_add(
+                    closed_owned_bytes, stable_keys_owned_bytes),
+                saturated_product(
+                    arc_count, sizeof(ClosedPartitionArc))));
+            node.arcs.reserve(
+                arc_count);
+            closed_owned_bytes = saturated_add(
+                closed_owned_bytes,
+                saturated_product(
+                    node.arcs.capacity(),
+                    sizeof(ClosedPartitionArc)));
+            check_owned_cap(saturated_add(
+                closed_owned_bytes, stable_keys_owned_bytes));
+            for (const EvalTransition& transition :
+                 row.transitions) {
+                refinement::StableKey label =
+                    transition_partition_label(transition);
+                const std::uint64_t label_bytes =
+                    stable_key_bytes(label);
+                check_owned_cap(saturated_add(
+                    saturated_add(
+                        closed_owned_bytes,
+                        stable_keys_owned_bytes),
+                    label_bytes));
+                node.arcs.push_back(ClosedPartitionArc{
+                    std::move(label),
+                    std::optional<std::uint32_t>{
+                        transition.target},
+                    transition.probability});
+                closed_owned_bytes = saturated_add(
+                    closed_owned_bytes,
+                    stable_key_bytes(node.arcs.back().label));
+                check_owned_cap(saturated_add(
+                    closed_owned_bytes, stable_keys_owned_bytes));
+            }
+            for (const EvalAbsorption& absorption :
+                 row.absorptions) {
+                refinement::StableKey label =
+                    absorption_partition_label(absorption);
+                const std::uint64_t label_bytes =
+                    stable_key_bytes(label);
+                check_owned_cap(saturated_add(
+                    saturated_add(
+                        closed_owned_bytes,
+                        stable_keys_owned_bytes),
+                    label_bytes));
+                node.arcs.push_back(ClosedPartitionArc{
+                    std::move(label),
+                    std::nullopt,
+                    absorption.probability});
+                closed_owned_bytes = saturated_add(
+                    closed_owned_bytes,
+                    stable_key_bytes(node.arcs.back().label));
+                check_owned_cap(saturated_add(
+                    closed_owned_bytes, stable_keys_owned_bytes));
+            }
+            check_owned_cap(saturated_add(
+                saturated_add(
+                    closed_owned_bytes, stable_keys_owned_bytes),
+                saturated_product(
+                    node.stable_key.size(),
+                    sizeof(std::uint64_t))));
+            stable_keys.push_back(node.stable_key);
+            stable_keys_owned_bytes = saturated_add(
+                stable_keys_owned_bytes,
+                stable_key_bytes(stable_keys.back()));
+            closed.push_back(std::move(node));
+            check_owned_cap(saturated_add(
+                closed_owned_bytes, stable_keys_owned_bytes));
+        }
+
+        ClosedPartitionLimits limits;
+        limits.max_classes = options.max_pairs;
+        limits.max_rounds = options.max_pairs;
+        limits.retained_estimated_memory_bytes =
+            saturated_add(
+                fast_estimated_owned_bytes(),
+                stable_keys_owned_bytes);
+        limits.max_estimated_memory_bytes =
+            options.max_owned_bytes;
+        limits.probability_sum_tolerance = 1e-9;
+        ClosedPartitionResult refined =
+            refinement::refine_closed_probabilistic_partition(
+                std::move(closed), limits);
+        peak_owned_bytes_value = std::max(
+            peak_owned_bytes_value,
+            refined.peak_estimated_memory_bytes);
+        output.peak_owned_bytes_estimate =
+            peak_owned_bytes_value;
+        if (refined.status != ClosedPartitionStatus::Complete ||
+            !refined.lumpable) {
+            if (refined.status ==
+                    ClosedPartitionStatus::ResourceCap &&
+                refined.resource_cap == "max_classes") {
+                throw std::length_error(
+                    "strategy evaluation exceeded max_pairs (" +
+                    std::to_string(options.max_pairs) + ")");
+            }
+            if (refined.status ==
+                    ClosedPartitionStatus::ResourceCap &&
+                refined.resource_cap ==
+                    "max_estimated_memory_bytes") {
+                throw std::length_error(
+                    "strategy evaluation exceeded max_owned_bytes (" +
+                    std::to_string(options.max_owned_bytes) + ")");
+            }
+            throw std::runtime_error(
+                refined.failure_reason.empty()
+                    ? "strategy evaluation pair refinement failed"
+                    : "strategy evaluation pair refinement failed: " +
+                          refined.failure_reason);
+        }
+        if (refined.final_class_count > options.max_pairs) {
+            throw std::length_error(
+                "strategy evaluation exceeded max_pairs (" +
+                std::to_string(options.max_pairs) + ")");
+        }
+        output.refined_pairs = refined.final_class_count;
+        output.pair_refinement_rounds = refined.rounds;
+        output.pair_lumpability_checks =
+            refined.lumpability_checks;
+
+        /* A singleton partition already retains exact attribution in the
+         * ordinary evaluator graph. Avoid duplicating and re-solving it; the
+         * secondary attribution graph exists only when quotienting actually
+         * merges concrete evaluator pairs. */
+        if (refined.final_class_count == pairs.size()) {
+            check_owned_cap();
+            return;
+        }
+
+        if (refined.estimated_memory_bytes <
+            limits.retained_estimated_memory_bytes) {
+            throw std::logic_error(
+                "strategy evaluation partition memory ledger regressed");
+        }
+        const std::uint64_t refined_result_owned_bytes =
+            refined.estimated_memory_bytes -
+            limits.retained_estimated_memory_bytes;
+        const std::uint64_t projected_representative_bytes =
+            saturated_product(
+                refined.final_class_count,
+                sizeof(std::uint32_t));
+        check_owned_cap(saturated_add(
+            saturated_add(
+                stable_keys_owned_bytes,
+                refined_result_owned_bytes),
+            projected_representative_bytes));
+        std::vector<std::uint32_t> representative(
+            refined.final_class_count, kNoId);
+        check_owned_cap(saturated_add(
+            saturated_add(
+                stable_keys_owned_bytes,
+                refined_result_owned_bytes),
+            saturated_product(
+                representative.capacity(),
+                sizeof(std::uint32_t))));
+        for (std::uint32_t raw = 0; raw < pairs.size(); ++raw) {
+            const std::uint32_t class_id =
+                refined.class_by_node.at(raw);
+            std::uint32_t& selected = representative.at(class_id);
+            if (selected == kNoId ||
+                stable_keys[raw] < stable_keys[selected]) {
+                selected = raw;
+            }
+        }
+
+        const std::uint32_t refined_class_count =
+            refined.final_class_count;
+        std::vector<std::uint32_t> class_by_node =
+            std::move(refined.class_by_node);
+        refined = ClosedPartitionResult{};
+        std::vector<refinement::StableKey>().swap(stable_keys);
+        const auto conversion_local_bytes = [&]() {
+            return saturated_add(
+                saturated_product(
+                    representative.capacity(),
+                    sizeof(std::uint32_t)),
+                saturated_product(
+                    class_by_node.capacity(),
+                    sizeof(std::uint32_t)));
+        };
+        check_owned_cap(conversion_local_bytes());
+
+        {
+            std::vector<EvalPair> raw_pairs = std::move(pairs);
+            std::vector<EvalRow> raw_rows = std::move(rows);
+            attribution_start_pair = start_pair;
+            stored_transitions = 0;
+            row_payload_owned_bytes = 0;
+            std::uint64_t raw_graph_bytes =
+                saturated_add(
+                    saturated_product(
+                        raw_pairs.capacity(),
+                        sizeof(EvalPair)),
+                    saturated_product(
+                        raw_rows.capacity(),
+                        sizeof(EvalRow)));
+            for (const EvalRow& row : raw_rows) {
+                raw_graph_bytes = saturated_add(
+                    raw_graph_bytes,
+                    saturated_add(
+                        saturated_product(
+                            row.transitions.capacity(),
+                            sizeof(EvalTransition)),
+                        saturated_product(
+                            row.absorptions.capacity(),
+                            sizeof(EvalAbsorption))));
+            }
+            const auto check_conversion =
+                [&](const std::uint64_t scratch = 0) {
+                    check_owned_cap(saturated_add(
+                        saturated_add(
+                            raw_graph_bytes,
+                            conversion_local_bytes()),
+                        scratch));
+                };
+            check_conversion();
+            check_conversion(saturated_add(
+                saturated_product(
+                    refined_class_count, sizeof(EvalPair)),
+                saturated_product(
+                    refined_class_count, sizeof(EvalRow))));
+            pairs.assign(refined_class_count, EvalPair{});
+            rows.clear();
+            rows.reserve(refined_class_count);
+            check_conversion();
+
+            using TransitionKey = std::tuple<
+                std::uint32_t, std::uint32_t, std::uint32_t,
+                std::uint32_t, std::uint32_t>;
+            using AbsorptionKey = std::tuple<
+                int, std::uint32_t, std::uint32_t,
+                std::uint32_t, std::uint32_t>;
+            using TransitionMap =
+                std::map<TransitionKey, double>;
+            using AbsorptionMap =
+                std::map<AbsorptionKey, double>;
+            const std::uint64_t transition_map_node_bytes =
+                sizeof(TransitionMap::value_type) +
+                3 * sizeof(void*);
+            const std::uint64_t absorption_map_node_bytes =
+                sizeof(AbsorptionMap::value_type) +
+                3 * sizeof(void*);
+
+            for (std::uint32_t class_id = 0;
+                 class_id < refined_class_count; ++class_id) {
+                const std::uint32_t raw =
+                    representative.at(class_id);
+                if (raw == kNoId) {
+                    throw std::logic_error(
+                        "strategy evaluation refinement produced an empty "
+                        "pair class");
+                }
+                EvalPair pair = raw_pairs.at(raw);
+                const EvalRow& source =
+                    raw_rows.at(pair.row);
+                TransitionMap transitions;
+                AbsorptionMap absorptions;
+                const auto map_bytes = [&]() {
+                    return saturated_add(
+                        saturated_product(
+                            transitions.size(),
+                            transition_map_node_bytes),
+                        saturated_product(
+                            absorptions.size(),
+                            absorption_map_node_bytes));
+                };
+                for (const EvalTransition& transition :
+                     source.transitions) {
+                    const TransitionKey key{
+                        class_by_node.at(transition.target),
+                        transition.edge,
+                        transition.via,
+                        transition.policy_route,
+                        transition.policy_state};
+                    const auto found = transitions.find(key);
+                    if (found == transitions.end()) {
+                        check_conversion(saturated_add(
+                            map_bytes(),
+                            transition_map_node_bytes));
+                        transitions.emplace(
+                            key, transition.probability);
+                    } else {
+                        found->second += transition.probability;
+                    }
+                }
+                for (const EvalAbsorption& absorption :
+                     source.absorptions) {
+                    const AbsorptionKey key{
+                        static_cast<int>(absorption.kind),
+                        absorption.node,
+                        absorption.state,
+                        absorption.edge,
+                        absorption.policy_route};
+                    const auto found = absorptions.find(key);
+                    if (found == absorptions.end()) {
+                        check_conversion(saturated_add(
+                            map_bytes(),
+                            absorption_map_node_bytes));
+                        absorptions.emplace(
+                            key, absorption.probability);
+                    } else {
+                        found->second += absorption.probability;
+                    }
+                }
+
+                const std::uint64_t projected_row_bytes =
+                    saturated_add(
+                        saturated_product(
+                            transitions.size(),
+                            sizeof(EvalTransition)),
+                        saturated_product(
+                            absorptions.size(),
+                            sizeof(EvalAbsorption)));
+                check_conversion(saturated_add(
+                    map_bytes(), projected_row_bytes));
+                EvalRow row;
+                row.transitions.reserve(transitions.size());
+                row.absorptions.reserve(absorptions.size());
+                const auto row_bytes = [&]() {
+                    return saturated_add(
+                        saturated_product(
+                            row.transitions.capacity(),
+                            sizeof(EvalTransition)),
+                        saturated_product(
+                            row.absorptions.capacity(),
+                            sizeof(EvalAbsorption)));
+                };
+                check_conversion(saturated_add(
+                    map_bytes(), row_bytes()));
+                for (const auto& [key, probability] : transitions) {
+                    row.transitions.push_back({
+                        std::get<0>(key),
+                        probability,
+                        std::get<1>(key),
+                        std::get<2>(key),
+                        std::get<3>(key),
+                        std::get<4>(key)});
+                }
+                for (const auto& [key, probability] : absorptions) {
+                    row.absorptions.push_back({
+                        static_cast<EvalAbsorptionKind>(
+                            std::get<0>(key)),
+                        std::get<1>(key),
+                        std::get<2>(key),
+                        probability,
+                        std::get<3>(key),
+                        std::get<4>(key)});
+                }
+                check_conversion(saturated_add(
+                    map_bytes(), row_bytes()));
+                pair.row =
+                    static_cast<std::uint32_t>(rows.size());
+                pairs[class_id] = std::move(pair);
+                stored_transitions +=
+                    row.transitions.size() +
+                    row.absorptions.size();
+                const std::uint64_t retained_row_bytes =
+                    row_bytes();
+                rows.push_back(std::move(row));
+                row_payload_owned_bytes = saturated_add(
+                    row_payload_owned_bytes,
+                    retained_row_bytes);
+                check_conversion(map_bytes());
+            }
+
+            if (start_pair != kNoId) {
+                start_pair = class_by_node.at(start_pair);
+            }
+            discover_index = pairs.size();
+            pair_by_key.clear();
+            row_by_distribution.clear();
+            attribution_pairs = std::move(raw_pairs);
+            attribution_rows = std::move(raw_rows);
+            attribution_class_by_pair = std::move(class_by_node);
+            attribution_row_payload_owned_bytes = 0;
+            for (const EvalRow& row : attribution_rows) {
+                attribution_row_payload_owned_bytes = capped_add(
+                    attribution_row_payload_owned_bytes,
+                    capped_add(
+                        capped_product(
+                            row.transitions.capacity(),
+                            sizeof(EvalTransition)),
+                        capped_product(
+                            row.absorptions.capacity(),
+                            sizeof(EvalAbsorption))));
+            }
+            check_owned_cap();
+        }
+        check_owned_cap();
     }
 
     /* Fold deterministic pass-through pairs — exactly one outgoing
@@ -2044,6 +3800,7 @@ struct StrategyEvalWork::Impl {
         chain_next.assign(count, kNoId);
         chain_edge.assign(count, kNoId);
         chain_policy_route.assign(count, kNoId);
+        chain_policy_state.assign(count, kNoId);
         chain_terminal.assign(count, kNoId);
         chain_inflow.assign(count, 0.0);
         if (count == 0) return;
@@ -2058,6 +3815,8 @@ struct StrategyEvalWork::Impl {
                 chain_edge[pair] = row.transitions.front().edge;
                 chain_policy_route[pair] =
                     row.transitions.front().policy_route;
+                chain_policy_state[pair] =
+                    row.transitions.front().policy_state;
             }
         }
 
@@ -2120,7 +3879,7 @@ struct StrategyEvalWork::Impl {
                 std::map<
                     std::tuple<
                         std::uint32_t, std::uint32_t, std::uint32_t,
-                        std::uint32_t>,
+                        std::uint32_t, std::uint32_t>,
                     double> merged;
                 for (const EvalTransition& transition : row.transitions) {
                     const std::uint32_t via =
@@ -2131,7 +3890,8 @@ struct StrategyEvalWork::Impl {
                         via == kNoId ? transition.target
                                      : forward[transition.target];
                     merged[{target, transition.edge, via,
-                            transition.policy_route}] +=
+                            transition.policy_route,
+                            transition.policy_state}] +=
                         transition.probability;
                 }
                 row.transitions.clear();
@@ -2139,7 +3899,8 @@ struct StrategyEvalWork::Impl {
                 for (const auto& [key, probability] : merged) {
                     row.transitions.push_back(
                         {std::get<0>(key), probability, std::get<1>(key),
-                         std::get<2>(key), std::get<3>(key)});
+                         std::get<2>(key), std::get<3>(key),
+                         std::get<4>(key)});
                 }
             }
             remaining_transitions +=
@@ -2176,7 +3937,7 @@ struct StrategyEvalWork::Impl {
                 edge_traversals.at(chain_edge[pair]) += inflow;
             }
             add_compressed_policy_incoming(
-                chain_policy_route[pair], pairs[pair].state, inflow);
+                chain_policy_route[pair], chain_policy_state[pair], inflow);
             const std::uint32_t next = chain_next[pair];
             if (pair_contracted[next]) {
                 chain_inflow[next] += inflow;
@@ -2186,6 +3947,7 @@ struct StrategyEvalWork::Impl {
     }
 
     void build_components() {
+        refine_pair_graph();
         contract_pass_through();
         const std::size_t count = pairs.size();
         struct Frame {
@@ -2498,7 +4260,7 @@ struct StrategyEvalWork::Impl {
                 }
                 add_compressed_policy_incoming(
                     transition.policy_route,
-                    pairs.at(transition.target).state, flow);
+                    transition.policy_state, flow);
                 if (transition.via != kNoId) {
                     chain_inflow.at(transition.via) += flow;
                 }
@@ -2786,19 +4548,407 @@ struct StrategyEvalWork::Impl {
         finish_component();
     }
 
+    std::vector<double> solve_exact_attribution() {
+        using solve_detail::PolicyEdge;
+        using solve_detail::PolicyRow;
+        using solve_detail::SparsePolicyComponentResult;
+        using solve_detail::SparsePolicyComponentStatus;
+        using solve_detail::SparsePolicyComponentView;
+        using solve_detail::SparsePolicyComponentWorkspace;
+        using solve_detail::SparsePolicyResume;
+        using solve_detail::SparsePolicyTarjanView;
+
+        const std::size_t count = attribution_pairs.size();
+        if (count == 0 || attribution_start_pair >= count ||
+            attribution_rows.empty() ||
+            attribution_class_by_pair.size() != count) {
+            throw std::logic_error(
+                "strategy evaluation exact attribution graph is incomplete");
+        }
+
+        std::vector<std::uint32_t> incoming_counts(count, 0);
+        std::uint64_t edge_count = 0;
+        for (const EvalPair& pair : attribution_pairs) {
+            if (pair.row >= attribution_rows.size()) {
+                throw std::logic_error(
+                    "strategy evaluation exact attribution row is missing");
+            }
+            for (const EvalTransition& transition :
+                 attribution_rows[pair.row].transitions) {
+                if (transition.target >= count) {
+                    throw std::logic_error(
+                        "strategy evaluation exact attribution target is "
+                        "missing");
+                }
+                if (incoming_counts[transition.target] ==
+                    std::numeric_limits<std::uint32_t>::max()) {
+                    throw std::length_error(
+                        "strategy evaluation exact attribution edge count "
+                        "overflowed");
+                }
+                ++incoming_counts[transition.target];
+                ++edge_count;
+            }
+        }
+        if (edge_count > std::numeric_limits<std::size_t>::max() ||
+            edge_count > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::length_error(
+                "strategy evaluation exact attribution edge count "
+                "overflowed");
+        }
+
+        std::vector<PolicyRow> transpose_rows(count);
+        std::vector<PolicyEdge> transpose_edges(
+            static_cast<std::size_t>(edge_count));
+        std::vector<std::uint32_t> cursors(count, 0);
+        std::uint64_t offset = 0;
+        for (std::uint32_t target = 0; target < count; ++target) {
+            transpose_rows[target].edge_offset = offset;
+            transpose_rows[target].edge_count = incoming_counts[target];
+            cursors[target] = static_cast<std::uint32_t>(offset);
+            offset += incoming_counts[target];
+        }
+        for (std::uint32_t source = 0; source < count; ++source) {
+            const EvalRow& row =
+                attribution_rows[attribution_pairs[source].row];
+            for (const EvalTransition& transition : row.transitions) {
+                transpose_edges[cursors[transition.target]++] = {
+                    source, transition.probability};
+            }
+        }
+
+        std::vector<std::uint32_t> active_states(count);
+        std::vector<std::uint8_t> active(count, 1);
+        std::vector<std::uint8_t> terminal(count, 0);
+        std::vector<std::uint64_t> policy_rows(count);
+        for (std::uint32_t state = 0; state < count; ++state) {
+            active_states[state] = state;
+            policy_rows[state] = state;
+        }
+        const std::vector<std::uint32_t> no_representatives;
+        SparsePolicyComponentWorkspace workspace;
+        std::vector<double> external_incoming_exact(count, 0.0);
+        std::vector<double> exact_visits(count, 0.0);
+        std::vector<double> previous_values(count, 0.0);
+        std::vector<double> visits_by_class(pairs.size(), 0.0);
+        external_incoming_exact[attribution_start_pair] = 1.0;
+
+        const auto transient_bytes = [&](const std::uint64_t scratch = 0) {
+            std::uint64_t bytes = scratch;
+            const auto add_vector = [&](const auto& values) {
+                using Value = typename std::decay_t<decltype(values)>::value_type;
+                bytes = capped_add(
+                    bytes,
+                    capped_product(values.capacity(), sizeof(Value)));
+            };
+            add_vector(incoming_counts);
+            add_vector(transpose_rows);
+            add_vector(transpose_edges);
+            add_vector(cursors);
+            add_vector(active_states);
+            add_vector(active);
+            add_vector(terminal);
+            add_vector(policy_rows);
+            add_vector(workspace.components);
+            for (const auto& component : workspace.components) {
+                add_vector(component);
+            }
+            add_vector(workspace.component_by_state);
+            add_vector(workspace.local);
+            add_vector(workspace.tarjan_index);
+            add_vector(workspace.tarjan_lowlink);
+            add_vector(workspace.tarjan_on_stack);
+            add_vector(workspace.tarjan_stack);
+            add_vector(workspace.tarjan_dfs);
+            add_vector(external_incoming_exact);
+            add_vector(exact_visits);
+            add_vector(previous_values);
+            add_vector(visits_by_class);
+            return bytes;
+        };
+        check_owned_cap(transient_bytes());
+        const SparsePolicyTarjanView tarjan{
+            active_states, active, terminal, policy_rows,
+            no_representatives, transpose_rows, transpose_edges};
+        while (!solve_detail::advance_sparse_policy_components(
+            tarjan, workspace, 65536)) {
+            check_owned_cap(transient_bytes());
+        }
+        check_owned_cap(transient_bytes());
+
+        for (std::uint32_t component = 0;
+             component < workspace.components.size(); ++component) {
+            const std::vector<std::uint32_t>& members =
+                workspace.components[component];
+            std::vector<double> rhs;
+            rhs.reserve(members.size());
+            double input_mass = 0.0;
+            for (std::size_t local = 0; local < members.size(); ++local) {
+                const std::uint32_t state = members[local];
+                workspace.local[state] = static_cast<std::int32_t>(local);
+                rhs.push_back(external_incoming_exact[state]);
+                input_mass += rhs.back();
+            }
+            if (!(input_mass > 0.0)) continue;
+
+            bool has_exit = false;
+            for (const std::uint32_t source : members) {
+                const EvalRow& row =
+                    attribution_rows[attribution_pairs[source].row];
+                if (!row.absorptions.empty()) has_exit = true;
+                for (const EvalTransition& transition : row.transitions) {
+                    if (workspace.component_by_state[transition.target] !=
+                        component) {
+                        has_exit = true;
+                    }
+                }
+            }
+            if (!has_exit) {
+                for (std::size_t local = 0; local < members.size(); ++local) {
+                    exact_visits[members[local]] += rhs[local];
+                }
+                continue;
+            }
+
+            std::unique_ptr<SparsePolicyResume> resume;
+            SparsePolicyComponentResult solved;
+            do {
+                const std::uint64_t scratch = capped_add(
+                    solve_detail::sparse_policy_component_scratch_bytes(
+                        members.size(), true),
+                    capped_product(
+                        members.size(),
+                        sizeof(double) + sizeof(std::uint32_t)));
+                std::uint64_t solve_transient =
+                    capped_add(transient_bytes(), scratch);
+                solve_transient = capped_add(
+                    solve_transient,
+                    capped_product(rhs.capacity(), sizeof(double)));
+                /* The shared scratch authority includes both the retained
+                 * incomplete result capacity and retained resume, plus the
+                 * fresh allocations that coexist with them during this call. */
+                check_owned_cap(solve_transient);
+                solved = solve_detail::advance_sparse_policy_component(
+                    SparsePolicyComponentView{
+                        members, component,
+                        workspace.component_by_state, workspace.local,
+                        transpose_rows, transpose_edges, rhs,
+                        previous_values,
+                        options.max_sweeps},
+                    resume);
+                std::uint64_t retained_solve = capped_add(
+                    transient_bytes(),
+                    capped_add(
+                        capped_product(rhs.capacity(), sizeof(double)),
+                        capped_product(
+                            solved.values.capacity(), sizeof(double))));
+                if (resume != nullptr) {
+                    retained_solve = capped_add(
+                        retained_solve, sizeof(SparsePolicyResume));
+                    retained_solve = capped_add(
+                        retained_solve,
+                        capped_product(
+                            resume->members.capacity(),
+                            sizeof(std::uint32_t)));
+                    const auto add_wide = [&](const auto& values) {
+                        retained_solve = capped_add(
+                            retained_solve,
+                            capped_product(
+                                values.capacity(),
+                                sizeof(solve_detail::WideFloat)));
+                    };
+                    add_wide(resume->b);
+                    add_wide(resume->x);
+                    add_wide(resume->r);
+                    add_wide(resume->r0);
+                    add_wide(resume->p);
+                    add_wide(resume->v);
+                    add_wide(resume->s);
+                    add_wide(resume->t);
+                }
+                check_owned_cap(retained_solve);
+            } while (solved.status ==
+                     SparsePolicyComponentStatus::Incomplete);
+            if (solved.status ==
+                SparsePolicyComponentStatus::DidNotConverge) {
+                throw std::length_error(
+                    "strategy evaluation exact attribution reached "
+                    "max_sweeps (" +
+                    std::to_string(options.max_sweeps) + ")");
+            }
+            if (solved.status != SparsePolicyComponentStatus::Complete ||
+                solved.values.size() != members.size()) {
+                throw std::runtime_error(
+                    "strategy evaluation exact attribution solve failed "
+                    "(component_size=" +
+                    std::to_string(members.size()) +
+                    ", status=" +
+                    std::to_string(static_cast<unsigned int>(
+                        solved.status)) +
+                    ", iterations=" +
+                    std::to_string(solved.total_iterations) + ")");
+            }
+            /* Validate every raw attribution equation before quotient-class
+             * aggregation can cancel opposing errors. The shared solver
+             * proves its WideFloat iterate; this second check also covers the
+             * returned-double conversion and the dense solve path. */
+            for (std::size_t local = 0;
+                 local < members.size(); ++local) {
+                solve_detail::WideFloat expected = rhs[local];
+                const PolicyRow& row =
+                    transpose_rows[members[local]];
+                for (std::uint32_t edge_index = 0;
+                     edge_index < row.edge_count; ++edge_index) {
+                    const PolicyEdge& edge =
+                        transpose_edges.at(
+                            row.edge_offset + edge_index);
+                    if (workspace.component_by_state[edge.target] !=
+                        component) {
+                        continue;
+                    }
+                    const std::int32_t successor_local =
+                        workspace.local.at(edge.target);
+                    if (successor_local < 0) {
+                        throw std::logic_error(
+                            "strategy evaluation exact attribution has an "
+                            "invalid component-local successor");
+                    }
+                    expected +=
+                        solve_detail::WideFloat{edge.probability} *
+                        solve_detail::WideFloat{
+                            solved.values[static_cast<std::size_t>(
+                                successor_local)]};
+                }
+                const double raw_residual = std::fabs(
+                    (solve_detail::WideFloat{solved.values[local]} -
+                     expected)
+                        .value());
+                const double residual_scale = std::max(
+                    {1.0,
+                     std::fabs(solved.values[local]),
+                     std::fabs(expected.value())});
+                if (!std::isfinite(raw_residual) ||
+                    raw_residual >
+                        options.epsilon * residual_scale) {
+                    throw std::runtime_error(
+                        "strategy evaluation exact attribution raw "
+                        "component residual exceeded epsilon");
+                }
+            }
+            for (std::size_t local = 0; local < members.size(); ++local) {
+                const double value = solved.values[local];
+                if (!std::isfinite(value) || value < -1e-10) {
+                    throw std::runtime_error(
+                        "strategy evaluation exact attribution produced an "
+                        "invalid occupancy");
+                }
+                exact_visits[members[local]] = std::max(0.0, value);
+            }
+            for (const std::uint32_t source : members) {
+                const EvalRow& row =
+                    attribution_rows[attribution_pairs[source].row];
+                for (const EvalTransition& transition : row.transitions) {
+                    if (workspace.component_by_state[transition.target] !=
+                        component) {
+                        external_incoming_exact[transition.target] +=
+                            exact_visits[source] * transition.probability;
+                    }
+                }
+            }
+        }
+
+        for (std::size_t raw = 0; raw < count; ++raw) {
+            const std::uint32_t class_id =
+                attribution_class_by_pair[raw];
+            if (class_id >= visits_by_class.size()) {
+                throw std::logic_error(
+                    "strategy evaluation exact attribution class is "
+                    "missing");
+            }
+            visits_by_class[class_id] += exact_visits[raw];
+        }
+        for (std::size_t class_id = 0;
+             class_id < visits_by_class.size(); ++class_id) {
+            const double tolerance = std::max(
+                1e-9,
+                options.epsilon *
+                    std::max(
+                        1.0,
+                        std::max(
+                            std::fabs(visits_by_class[class_id]),
+                            std::fabs(pair_visits[class_id]))) *
+                    100.0);
+            if (std::fabs(
+                    visits_by_class[class_id] -
+                    pair_visits[class_id]) > tolerance) {
+                throw std::runtime_error(
+                    "strategy evaluation exact attribution does not "
+                    "reconcile with the behavioral quotient");
+            }
+        }
+        check_owned_cap(transient_bytes());
+        return exact_visits;
+    }
+
     void finalize() {
         propagate_chain_inflow();
+        std::vector<double> exact_pair_visits_owned;
+        const std::vector<double>* exact_pair_visits = &pair_visits;
+        const std::vector<EvalPair>* exact_pairs = &pairs;
+        if (!attribution_pairs.empty()) {
+            exact_pair_visits_owned = solve_exact_attribution();
+            exact_pair_visits = &exact_pair_visits_owned;
+            exact_pairs = &attribution_pairs;
+            for (auto& incoming : terminal_incoming) incoming.clear();
+            for (auto& incoming : compressed_policy_incoming) {
+                incoming.clear();
+            }
+            terminal_incoming_owned_bytes = 0;
+            compressed_policy_incoming_owned_bytes = 0;
+            for (std::size_t raw = 0;
+                 raw < attribution_pairs.size(); ++raw) {
+                const double visits = exact_pair_visits->at(raw);
+                if (!(visits > 0.0)) continue;
+                const EvalRow& row = attribution_rows.at(
+                    attribution_pairs[raw].row);
+                for (const EvalTransition& transition : row.transitions) {
+                    add_compressed_policy_incoming(
+                        transition.policy_route,
+                        transition.policy_state,
+                        visits * transition.probability);
+                }
+                for (const EvalAbsorption& absorption : row.absorptions) {
+                    const double mass = visits * absorption.probability;
+                    add_compressed_policy_incoming(
+                        absorption.policy_route,
+                        absorption.state, mass);
+                    if (absorption.kind == EvalAbsorptionKind::Terminal) {
+                        add_terminal_incoming(
+                            absorption.node, absorption.state, mass);
+                    }
+                }
+                if ((raw & 255u) == 255u) {
+                    check_owned_cap(capped_product(
+                        exact_pair_visits_owned.capacity(),
+                        sizeof(double)));
+                }
+            }
+        }
         CalcContext& calc = *model.calc;
+        output.reforge_work =
+            calc.telemetry().reforge_frontier_work;
         const std::size_t node_count = strategy->nodes.size();
         const std::size_t operation_pair_count = static_cast<std::size_t>(
             std::count_if(
-                pairs.begin(), pairs.end(),
+                exact_pairs->begin(), exact_pairs->end(),
                 [](const EvalPair& pair) { return pair.operation; }));
         std::uint64_t finalization_transient_floor =
+            capped_product(
+                exact_pair_visits_owned.capacity(), sizeof(double)) +
             node_count *
                 (4ull * sizeof(double) +
                  sizeof(std::map<std::uint32_t, double>)) +
-            pairs.size() *
+            exact_pairs->size() *
                 (sizeof(std::pair<const std::uint32_t, double>) +
                  3ull * sizeof(void*));
         check_owned_cap(
@@ -2878,25 +5028,36 @@ struct StrategyEvalWork::Impl {
 
         for (std::size_t pair = 0; pair < pairs.size(); ++pair) {
             const EvalPair& record = pairs[pair];
-            const double visits = pair_visits[pair];
-            node_visits[record.node] += visits;
-            incoming[record.node][record.state] += visits;
             unresolved_by_node[record.node] += unresolved_pair[pair];
             output.residual_mass += unresolved_pair[pair];
+        }
+        for (std::size_t pair = 0;
+             pair < exact_pairs->size(); ++pair) {
+            const EvalPair& record = exact_pairs->at(pair);
+            const double visits = exact_pair_visits->at(pair);
+            node_visits[record.node] += visits;
+            incoming[record.node][record.state] += visits;
             if (record.operation) {
                 output.expected_actions += visits;
                 operation_visits[record.node] += visits;
                 StrategyEvalOccupancyEntry retained;
                 retained.state = record.state;
                 retained.node = record.node;
-                retained.action = record.action;
+                const ResolvedStrategyOperation& operation =
+                    model.operation_by_node.at(record.node);
+                retained.action =
+                    operation.kind ==
+                            ResolvedStrategyOperationKind::Bestiary
+                        ? kNoId
+                        : operation.descriptor_index;
                 retained.expected_visits = visits;
                 retained.expected_applied = record.consumes ? visits : 0.0;
                 retained.reward_complete = options.economy != nullptr;
-                const ActionDescriptor& action =
-                    calc.registry().actions.at(record.action);
+                const std::vector<std::string>& cost_keys =
+                    operation_cost_keys(
+                        operation, calc.registry(), calc.session());
                 if (record.consumes && options.economy != nullptr) {
-                    for (const std::string& key : action.cost_keys) {
+                    for (const std::string& key : cost_keys) {
                         const auto price = options.economy->prices.find(key);
                         if (price == options.economy->prices.end()) {
                             retained.reward_complete = false;
@@ -2911,7 +5072,7 @@ struct StrategyEvalWork::Impl {
                 output.occupancy.push_back(retained);
                 if (record.consumes) {
                     operation_applied[record.node] += visits;
-                    for (const std::string& key : action.cost_keys) {
+                    for (const std::string& key : cost_keys) {
                         output.expected_consumption[key] += visits;
                     }
                 }
@@ -2920,6 +5081,11 @@ struct StrategyEvalWork::Impl {
                 check_owned_cap(finalization_transient_floor);
             }
         }
+        std::vector<EvalPair>().swap(attribution_pairs);
+        std::vector<EvalRow>().swap(attribution_rows);
+        std::vector<std::uint32_t>().swap(
+            attribution_class_by_pair);
+        attribution_row_payload_owned_bytes = 0;
         for (std::size_t node = 0; node < node_count; ++node) {
             node_visits[node] += terminal_mass[node];
             for (const auto& [state, mass] : terminal_incoming[node]) {
@@ -3020,14 +5186,21 @@ struct StrategyEvalWork::Impl {
              ++node_index) {
             const StrategyNode& node = strategy->nodes[node_index];
             if (node.kind != StrategyNodeKind::Operation) continue;
-            const ActionDescriptor& descriptor =
-                calc.registry().actions.at(
-                    model.action_by_node.at(node_index));
-            StrategyEvalActionTotal& action = actions_by_id[descriptor.id];
+            const ResolvedStrategyOperation& operation =
+                model.operation_by_node.at(node_index);
+            const std::string& descriptor_id = operation_id(
+                operation, calc.registry(), calc.session());
+            const std::string& display_name = operation_display_name(
+                operation, calc.registry(), calc.session());
+            const std::vector<std::string>& cost_keys =
+                operation_cost_keys(
+                    operation, calc.registry(), calc.session());
+            StrategyEvalActionTotal& action =
+                actions_by_id[descriptor_id];
             if (action.id.empty()) {
-                action.id = descriptor.id;
-                action.display_name = descriptor.display_name;
-                action.price_keys = descriptor.cost_keys;
+                action.id = descriptor_id;
+                action.display_name = display_name;
+                action.price_keys = cost_keys;
             }
             action.expected_visits += operation_visits[node_index];
             action.expected_applied += operation_applied[node_index];
@@ -3037,40 +5210,54 @@ struct StrategyEvalWork::Impl {
             total_applied_actions += operation_applied[node_index];
 
             std::vector<std::string> roles = node.accounting_roles;
-            if (descriptor.synthetic) {
+            if (operation.kind ==
+                ResolvedStrategyOperationKind::Restart) {
                 add_classification(roles, "restart");
             } else {
                 add_classification(roles, "ordinary_crafting");
             }
-            if (descriptor.params.type == ActionType::Fracture) {
-                add_classification(roles, "fracture");
-            } else if (
-                descriptor.params.type == ActionType::RemoveCraftedModifiers) {
-                add_classification(roles, "cleanup_or_replacement");
-            } else if (descriptor.params.type == ActionType::Bench) {
-                const std::uint32_t mod = descriptor.params.mod_id;
-                if (mod < calc.session().metamod_type.size()) {
-                    const int metamod = calc.session().metamod_type[mod];
-                    if (metamod ==
-                            calc.session().data->metamod_prefixes_locked_code ||
-                        metamod ==
-                            calc.session().data->metamod_suffixes_locked_code) {
-                        add_classification(roles, "protection_setup");
-                    } else if (
-                        metamod ==
-                        calc.session().data->metamod_multimod_code) {
-                        add_classification(roles, "multimod_setup");
+            if (operation.kind ==
+                ResolvedStrategyOperationKind::Bestiary) {
+                /* Descriptor-owned Bestiary operations need no ordinary
+                 * ActionType classification. */
+            } else {
+                const ActionDescriptor& descriptor =
+                    calc.registry().actions.at(
+                        operation.descriptor_index);
+                if (descriptor.params.type == ActionType::Fracture) {
+                    add_classification(roles, "fracture");
+                } else if (
+                    descriptor.params.type ==
+                        ActionType::RemoveCraftedModifiers) {
+                    add_classification(roles, "cleanup_or_replacement");
+                } else if (descriptor.params.type == ActionType::Bench) {
+                    const std::uint32_t mod = descriptor.params.mod_id;
+                    if (mod < calc.session().metamod_type.size()) {
+                        const int metamod =
+                            calc.session().metamod_type[mod];
+                        if (metamod == calc.session().data
+                                            ->metamod_prefixes_locked_code ||
+                            metamod == calc.session().data
+                                            ->metamod_suffixes_locked_code) {
+                            add_classification(roles, "protection_setup");
+                        } else if (
+                            metamod == calc.session().data
+                                           ->metamod_multimod_code) {
+                            add_classification(roles, "multimod_setup");
+                        }
                     }
-                }
-                const bool goal_bench = std::any_of(
-                    output.targets.begin(), output.targets.end(),
-                    [&](const GoalSlot& target) {
-                        return target_contains_mod(
-                            calc.session(), target, mod);
-                    });
-                if (goal_bench) {
-                    add_classification(roles, "permanent_goal_bench");
-                    add_classification(roles, "deterministic_finish");
+                    const bool goal_bench = std::any_of(
+                        output.targets.begin(), output.targets.end(),
+                        [&](const GoalSlot& target) {
+                            return target_contains_mod(
+                                calc.session(), target, mod);
+                        });
+                    if (goal_bench) {
+                        add_classification(
+                            roles, "permanent_goal_bench");
+                        add_classification(
+                            roles, "deterministic_finish");
+                    }
                 }
             }
             for (const std::string& role : roles) {
@@ -3115,10 +5302,13 @@ struct StrategyEvalWork::Impl {
         };
         for (const StrategyEvalOccupancyEntry& entry : output.occupancy) {
             if (entry.state >= output.occupancy_states.size() ||
-                entry.action >= calc.registry().actions.size() ||
+                entry.node >= model.operation_by_node.size() ||
                 entry.expected_visits <= 0.0) {
                 continue;
             }
+            const ResolvedStrategyOperation& operation =
+                model.operation_by_node[entry.node];
+            if (!operation.resolved()) continue;
             const AbstractState& state =
                 output.occupancy_states[entry.state];
             std::uint32_t progress = 0;
@@ -3138,8 +5328,8 @@ struct StrategyEvalWork::Impl {
             const RegionKey key{
                 progress, state.rarity, bit_count(state.blocked_mask),
                 crafted, state.fractured_goal_mask, fractured};
-            const std::string& id =
-                calc.registry().actions[entry.action].id;
+            const std::string& id = operation_id(
+                operation, calc.registry(), calc.session());
             RetainedRegion& region = regions_by_action[id][key];
             region.totals.goal_progress = progress;
             region.totals.rarity = state.rarity;
@@ -3282,15 +5472,22 @@ struct StrategyEvalWork::Impl {
                         StrategyNodeKind::Operation) {
                         continue;
                     }
-                    const ActionDescriptor& descriptor =
-                        calc.registry().actions.at(
-                            model.action_by_node.at(node_index));
+                    const ResolvedStrategyOperation& operation =
+                        model.operation_by_node.at(node_index);
+                    const std::string& descriptor_id = operation_id(
+                        operation, calc.registry(), calc.session());
+                    const std::string& display_name =
+                        operation_display_name(
+                            operation, calc.registry(), calc.session());
+                    const std::vector<std::string>& cost_keys =
+                        operation_cost_keys(
+                            operation, calc.registry(), calc.session());
                     StrategyEvalActionTotal& action =
-                        section_actions[section][descriptor.id];
+                        section_actions[section][descriptor_id];
                     if (action.id.empty()) {
-                        action.id = descriptor.id;
-                        action.display_name = descriptor.display_name;
-                        action.price_keys = descriptor.cost_keys;
+                        action.id = descriptor_id;
+                        action.display_name = display_name;
+                        action.price_keys = cost_keys;
                     }
                     for (const std::string& role :
                          node_classifications[node_index]) {
@@ -3302,7 +5499,7 @@ struct StrategyEvalWork::Impl {
                         {strategy->nodes[node_index].id,
                          operation_visits[node_index],
                          operation_applied[node_index]});
-                    for (const std::string& key : descriptor.cost_keys) {
+                    for (const std::string& key : cost_keys) {
                         section_materials[section][key] +=
                             operation_applied[node_index];
                     }
@@ -3399,7 +5596,7 @@ struct StrategyEvalWork::Impl {
                     }
                     add_compressed_policy_incoming(
                         transition.policy_route,
-                        pairs.at(transition.target).state, flow);
+                        transition.policy_state, flow);
                     if (transition.via != kNoId) {
                         chain_inflow.at(transition.via) += flow;
                     }
