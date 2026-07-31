@@ -28,9 +28,12 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-There is no active implementation boundary. Oliver must choose the next chunk
-before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
-boundary.
+The active implementation boundary is
+[Policy-Guided Exact State Refinement](active/policy-guided-exact-refinement.md).
+It converts policy-reachable coarse solutions into exact executable strategy
+regions through one engine-owned observation contract, deterministic
+lumpability refinement, and witness-local Bellman re-optimization. It does not
+start the deferred executable-anchor library.
 
 The completed
 [Cross-Base And Compiled-Strategy Reliability Pass](archive/2026-07-30-cross-base-strategy-reliability/README.md)

@@ -1,42 +1,31 @@
 # Active Work
 
-**Status: no implementation plan is active.**
+**Status: one implementation plan is active.**
 
 Parent: [Documentation map](../README.md)
 
+Current boundary:
+[Policy-Guided Exact State Refinement](policy-guided-exact-refinement.md).
+It preserves broad coarse discovery while lazily restoring exact identity
+only where a selected action or downstream policy observes it, then performs
+witness-local Bellman re-optimization when exact subclasses need different
+choices.
+
 The completed
 [Cross-Base And Compiled-Strategy Reliability Pass](../archive/2026-07-30-cross-base-strategy-reliability/README.md)
-qualifies all 979 ordinary-session bases and the complete returned-policy
-chain across native and release WASM. It changed no crafting mechanic, solver
-objective, or action-filtering scope.
+is the source boundary. It proved every published policy exact, but refused
+most solved coarse policies when selected actions observed discarded
+exclusion identity. This milestone converts those ordinary solutions into
+executable exact strategy regions rather than manufacturing a fallback.
 
-The completed
+The qualified
 [Fracture-Local Coarse-Parent Prototype](../archive/2026-07-29-fracture-local-coarse-parent/README.md)
-remains the qualified solver boundary. Its transition behavior and hashes were
-preserved by the reliability pass.
+remains a frozen non-regression boundary: six parent junk classes, 217 root
+Chaos successors, 927 states, and its qualified transition, policy, and
+compiled-strategy hashes must remain unchanged.
 
-Oliver must select the next implementation boundary before work resumes. The
-deferred three-/two-/one-goal executable anchor library remains unselected.
-
-The governing research is the completed
-[Practical Exact Four-Goal Solving Research](../archive/2026-07-29-practical-four-goal-solving-research/README.md).
-It measured the exact `105 -> 6` junk-class and `134,477 -> 217` root-support
-opportunity selected by Oliver for this prototype.
-
-Historical input is the rejected
-[High-Impact Partial-State Executable Upper Policies](../archive/2026-07-29-high-impact-executable-uppers/README.md)
-milestone. It restored all experimental behavior after producing no qualifying
-upper-Q reduction, while retaining bounded observational provenance telemetry.
-
-The preceding
-[Chaos-Anchored Incremental Action Generation](../archive/2026-07-28-chaos-anchored-incremental-actions/README.md)
-retains the gated scheduler that releases Chaos successors before delayed
-exact alternatives.
-
-The earlier
-[Harvest Natural Pools And Shared Exact Reforge Frontier](../archive/2026-07-28-harvest-shared-reforge-frontier/README.md)
-retained the Harvest mechanic correction and rejected the dense shared
-cross-action structural DAG.
+The deferred executable-anchor library remains unselected and outside this
+boundary.
 
 Older completed milestones are indexed in the
 [documentation archive](../archive/README.md). Unselected possibilities remain
