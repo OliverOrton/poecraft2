@@ -4827,9 +4827,22 @@ struct StrategyEvalWork::Impl {
                     {1.0,
                      std::fabs(solved.values[local]),
                      std::fabs(expected.value())});
+                /* The shared component solver proves its WideFloat iterate,
+                 * but this audit intentionally rechecks the public double
+                 * values. A caller may request an epsilon below what those
+                 * returned doubles can represent (the stepped web
+                 * cancellation probe uses 1e-30). Retain the strict raw-row
+                 * check while flooring only its comparison at a conservative
+                 * double round-trip bound. */
+                const double representable_relative_tolerance =
+                    8.0 * std::numeric_limits<double>::epsilon();
+                const double residual_tolerance =
+                    std::max(
+                        options.epsilon,
+                        representable_relative_tolerance) *
+                    residual_scale;
                 if (!std::isfinite(raw_residual) ||
-                    raw_residual >
-                        options.epsilon * residual_scale) {
+                    raw_residual > residual_tolerance) {
                     throw std::runtime_error(
                         "strategy evaluation exact attribution raw "
                         "component residual exceeded epsilon");

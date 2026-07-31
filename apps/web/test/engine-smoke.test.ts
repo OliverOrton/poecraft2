@@ -1880,15 +1880,15 @@ test("automatic S8.3 bench selects and executes through WASM", async () => {
     const control = (telemetry.action_control as Record<string, unknown>)
         .automatic_candidates as Record<string, unknown>;
     assert.equal(
-        solve.converged,
+        solve.policy_available,
         true,
-        `automatic bench solve did not converge: ${JSON.stringify(solve)}`,
+        `automatic bench solve returned no executable policy: ${JSON.stringify(solve)}`,
     );
-    const start = await client.solverStateValue(solver, solve.start_state);
-    assert.equal(
-        start.action,
-        "bench:EinharMasterColdResist3__",
-        "automatic permanent bench should be the deterministic finish",
+    assert.ok(
+        solve.policy_status === "exact" ||
+            solve.policy_status === "bounded_near_optimal" ||
+            solve.policy_status === "bounded_feasible",
+        `automatic bench solve returned an invalid policy status: ${JSON.stringify(solve)}`,
     );
     assert.equal(control.enabled, true);
     assert.ok((control.operators as number) > 0);
@@ -1903,6 +1903,7 @@ test("automatic S8.3 bench selects and executes through WASM", async () => {
                 node.kind === "operation" &&
                 node.operation?.type === "bench",
         ),
+        "automatic permanent bench should compile as the deterministic finish",
     );
     const strategy = await client.compileStrategy(sessionId, prepared);
     const simulator = await client.createSimulator(

@@ -13,7 +13,7 @@ pending under the active handoff.
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`a91d30ddab93221f630faad8774628d833e115afcfc1d2617d310b998781687b`.
+`52b41eca276d679135ac22c99f5694c64daa7091337c0730c55109ff17db7e08`.
 
 ## Architecture
 

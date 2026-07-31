@@ -15,8 +15,9 @@ required clean source
 `codex/cross-base-strategy-reliability`. Boundary/plan commit
 `69d7a0abda4ddd8809439c09f3c8803fc978c4f1` was made separately. `main` was
 not merged or fast-forwarded. Implementation checkpoint
-`7b2da3765d6b9a38f208899de24a639bdaeed0fd` is followed by the cap-only
-maintenance commit containing this handoff; both are local only.
+`7b2da3765d6b9a38f208899de24a639bdaeed0fd` is followed by cap-only
+maintenance commit `da2dabb9f62991fa3914692bba5cc781cd24f76d` and the
+WASM exact-attribution fix containing this handoff; all are local only.
 
 ## Implemented Boundary
 
@@ -77,6 +78,15 @@ last source edit. These final slices are green:
 - focused Imprint: `59` checks, `0` failures; and
 - exact evaluator with `data/compiled/current`: `16,783` checks, `0` failures.
 
+After rebuilding release WASM, the web worker exposed a sub-double residual
+audit error in exact attribution. The audit now retains an eight-ULP
+returned-double floor without changing the caller's solve epsilon, and a
+native `1e-30` regression is frozen. Post-fix focused results are:
+
+- exact evaluator with `data/compiled/current`: `16,787` checks, `0` failures;
+- WASM/worker engine smoke: `27/27` passed; and
+- TypeScript plus production Vite build: passed.
+
 `git diff --check` was clean. A read-only architecture audit found no action
 name switch, representative modifier selection, incompatible-refinement value
 mixing, or incomplete-contract admission in the shared refinement, lifting,
@@ -93,7 +103,7 @@ other solver resource limit is unchanged.
 
 The tracked release WASM was rebuilt successfully after that maintenance
 change; its SHA-256 is
-`a91d30ddab93221f630faad8774628d833e115afcfc1d2617d310b998781687b`.
+`52b41eca276d679135ac22c99f5694c64daa7091337c0730c55109ff17db7e08`.
 This is a build result, not web acceptance. Rebuild it again before final
 acceptance if any native source changes during qualification.
 

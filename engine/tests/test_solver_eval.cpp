@@ -1460,6 +1460,19 @@ void run_destructive_refinement_cycle_test() {
     PC_CHECK(near(exact.no_matching_edge_probability, 0.0, 1e-12));
     PC_CHECK(exact.max_mass_conservation_error < 1e-10);
 
+    /* The public result is stored as doubles even though component solving
+     * uses WideFloat. A sub-double caller tolerance must not reject a sound
+     * exact attribution merely because the returned coordinates round to
+     * representable doubles. */
+    StrategyEvalOptions sub_double_options = options;
+    sub_double_options.epsilon = 1e-30;
+    const StrategyEvalResult sub_double =
+        evaluate_strategy(*strategy, sub_double_options);
+    PC_CHECK(sub_double.converged);
+    PC_CHECK(near(sub_double.success_probability, 1.0, 1e-10));
+    PC_CHECK(sub_double.raw_pairs_discovered == 76);
+    PC_CHECK(sub_double.refined_pairs == 57);
+
     /*
      * Pair refinement temporarily retains the discovered evaluator graph
      * while the shared closed-partition proof owns its canonical graph and
