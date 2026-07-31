@@ -380,3 +380,22 @@ up to 20,000,000 reforge-work units. Historical fixtures and evidence that
 pin 11,000,000 retain their original experiment identity. The memory cap still
 accounts selected native allocations rather than total WASM heap or browser
 process memory.
+
+## 2026-07-31 — Default Reforge Work Increases To 50 Million
+
+**Decision:** Raise the unspecified solver reforge-work allowance from
+20,000,000 to 50,000,000. Explicit fixture, benchmark-case, and caller
+overrides remain authoritative and are not rewritten.
+
+Keep every other solver resource limit unchanged. The public solve-options
+shape already permits a caller to select a smaller or larger work budget.
+
+**Context:** Oliver selected this cap-only maintenance change while the
+policy-guided exact-refinement implementation awaited product qualification.
+The smallest exact fixed-policy diagnostic for the known full-three renewal
+case consumed 48,409,673 work units, so 50,000,000 is the selected round
+default covering that measured workload.
+
+**Consequences:** Unspecified native, WASM-product, and benchmark solves may
+perform up to 50,000,000 reforge-work units. Historical evidence and
+qualification inputs retain their pinned limits and experiment identity.

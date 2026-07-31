@@ -382,8 +382,9 @@ records a negative production decision and a reusable fixed-policy result.
 - The smallest fixed-policy-only compaction preserved all four probabilities.
   Diagnostic work was 48,409,673 for full-three, 14,815,748 for deep-three,
   6,789,419 for full-four, and 2,698,559 for deep-four. The two three-mod
-  cases exceeded the then-current 11,000,000 limit; after the 2026-07-30
-  increase, only full-three exceeds the current 20,000,000 limit.
+  cases exceeded the then-current 11,000,000 limit. After the 2026-07-30
+  increase, only full-three exceeded 20,000,000; the 2026-07-31 increase to
+  50,000,000 covers all four measured fixed-policy workloads.
 - Goal/failure aggregation is not a general exact Bellman kernel. Under each
   full admitted action set, the 200,000 broad-reforge successors had zero
   exact quotient merges and essentially every successor had a witnessed

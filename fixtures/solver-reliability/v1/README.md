@@ -11,8 +11,8 @@ The portfolio contains:
   authored special starts, and two selected verification cases;
 - two-, three-, and four-goal prefix, suffix, and mixed-side shapes;
 - empty rare, crafted, fractured, influenced, Eldritch, and Veiled starts;
-- dense, low-probability deep diagnostics under the product's 20,000,000
-  reforge-work boundary;
+- dense, low-probability deep diagnostics under the portfolio's pinned
+  20,000,000 reforge-work boundary;
 - exact Calculator evaluation and a Simulator smoke for every returned
   policy, with exact cost reconciliation; and
 - two selected 10,000-run verification cases.

@@ -14,8 +14,9 @@ required clean source
 `71e1ad05e07949aafe6312fe0e50f49fb685dba3` on
 `codex/cross-base-strategy-reliability`. Boundary/plan commit
 `69d7a0abda4ddd8809439c09f3c8803fc978c4f1` was made separately. `main` was
-not merged or fast-forwarded. The implementation checkpoint is the HEAD commit
-containing this handoff; it is local only.
+not merged or fast-forwarded. Implementation checkpoint
+`7b2da3765d6b9a38f208899de24a639bdaeed0fd` is followed by the cap-only
+maintenance commit containing this handoff; both are local only.
 
 ## Implemented Boundary
 
@@ -82,8 +83,19 @@ mixing, or incomplete-contract admission in the shared refinement, lifting,
 re-optimization, compiler, or exact-evaluation paths.
 
 Not run at this checkpoint: the full solver slice, the real-artifact abstract
-slice, native product corpora, the qualified Fracture case, release WASM, web
-acceptance, or `scripts/test.ps1`. That work is intentionally handed off below.
+slice, native product corpora, the qualified Fracture case, web acceptance, or
+`scripts/test.ps1`. That work is intentionally handed off below.
+
+Post-checkpoint maintenance on 2026-07-31 raises the unspecified native,
+WASM-product, and benchmark reforge-work default from 20,000,000 to 50,000,000.
+Explicit corpus and benchmark caps remain pinned and were not rewritten. Every
+other solver resource limit is unchanged.
+
+The tracked release WASM was rebuilt successfully after that maintenance
+change; its SHA-256 is
+`a91d30ddab93221f630faad8774628d833e115afcfc1d2617d310b998781687b`.
+This is a build result, not web acceptance. Rebuild it again before final
+acceptance if any native source changes during qualification.
 
 ## Qualification Handoff
 

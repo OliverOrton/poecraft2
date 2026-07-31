@@ -6,13 +6,14 @@ evidence boundaries.
 
 Parent: [Engine](README.md)
 
-Verified against code, rebuilt release module, and complete non-visual web
-acceptance: 2026-07-30 on `codex/fracture-local-coarse-parent`.
+Verified against code and rebuilt release module: 2026-07-31 on
+`codex/policy-guided-exact-refinement`. Complete non-visual web acceptance is
+pending under the active handoff.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`b31ce207fe17af8db650a6ffeeeab94c66b682e11a9ac831c66d0f009d039227`.
+`a91d30ddab93221f630faad8774628d833e115afcfc1d2617d310b998781687b`.
 
 ## Architecture
 
@@ -189,12 +190,13 @@ When product code omits native overrides, exact evaluation defaults include
 100,000 states and sweeps, 1,000,000 state/node pairs, 10,000,000 transitions,
 16 top classes per node, a 512 MiB selected-owned-allocation cap, and a 64 MiB
 output-JSON cap. Strategy solve defaults include 200,000-state/search limits,
-1,215,000 state/action rows, 10,000,000 transitions, 20,000,000 reforge work,
+1,215,000 state/action rows, 10,000,000 transitions, 50,000,000 reforge work,
 a 1 GiB selected-solver-owned cap, 100,000 compiled nodes, 400,000 compiled
 edges, a 64 MiB strategy-JSON cap, and a 1 MiB telemetry-JSON cap. Only the
-state/search and row limits retain the Q4 scaling values; Oliver raised the
-default reforge-work allowance from 11,000,000 to 20,000,000 on 2026-07-30.
-The transition, memory, compiler, and JSON caps did not change.
+state/search and row limits retain the Q4 scaling values. Oliver raised the
+default reforge-work allowance from 11,000,000 to 20,000,000 on 2026-07-30,
+then to 50,000,000 on 2026-07-31. The transition, memory, compiler, and JSON
+caps did not change.
 
 Those native caps cover selected allocations accounted by the evaluator or
 solver. They are not limits on the entire WASM heap, Emscripten stack, facade

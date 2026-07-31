@@ -5424,7 +5424,7 @@ void run_solver_policy_refinement_tests() {
 
 void run_solver_solve_tests(const char* artifact_dir) {
     const SolveOptions default_options;
-    PC_CHECK(default_options.max_reforge_work == 20000000);
+    PC_CHECK(default_options.max_reforge_work == 50000000);
     PC_CHECK(
         default_options.max_solver_owned_bytes ==
         1024ull * 1024ull * 1024ull);

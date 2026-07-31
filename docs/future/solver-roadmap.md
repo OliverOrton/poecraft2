@@ -14,7 +14,8 @@ now close, compile, evaluate exactly, and pass their required 10,000-run
 verification. The measured smallest sufficient defaults are 200,000
 state/search entries, 1,215,000 rows, and 11,000,000 reforge work. Oliver
 subsequently raised the product reforge-work default to 20,000,000 on
-2026-07-30; unrelated resource and compiler caps stayed fixed.
+2026-07-30 and 50,000,000 on 2026-07-31; unrelated resource and compiler caps
+stayed fixed.
 
 Exact quotienting is useful but action-scope dependent: the bounded Chaos
 oracle reduces 57,722 strict states to 3, while the complete product envelopes
@@ -45,9 +46,9 @@ Pre-expansion fixed-policy renewal produced exact finite candidates, but the
 immediate-price envelope excluded zero actions and left Chaos as the
 proof-bearing minimum. The smallest exact fixed-policy compaction still used
 48,409,673 and 14,815,748 diagnostic work on the two three-mod hard cases,
-respectively; only the larger remains above the current 20,000,000 cap. Full
-Bellman goal/failure aggregation is forbidden because the admitted
-continuation actions distinguish essentially every broad-reforge successor.
+respectively. Both fit under the current 50,000,000 default. Full Bellman
+goal/failure aggregation is forbidden because the admitted continuation
+actions distinguish essentially every broad-reforge successor.
 
 The 2026-07-27
 [streaming broad-lower falsification](../archive/2026-07-27-streaming-broad-lower-fold/README.md)
