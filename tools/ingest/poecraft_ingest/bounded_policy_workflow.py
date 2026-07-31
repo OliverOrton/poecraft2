@@ -107,6 +107,10 @@ def main(argv: list[str] | None = None) -> int:
         max_workers=args.max_workers,
         memory_budget_bytes=args.memory_budget_bytes,
         exact_evaluation=bool(stage.get("exact_evaluation")),
+        run_verification=bool(stage.get("verification")),
+        goal_progress_gated_reforges=bool(
+            stage.get("goal_progress_gated_reforges")
+        ),
         evaluation_roles_path=args.evaluation_roles,
         selected_evaluation_roles=set(args.role) or None,
     )

@@ -11,9 +11,10 @@ bounded-incumbent graph stability, the goal-progress-gated native/WASM
 acceptance, the gated root renewal incumbent, interrupted root-row ownership,
 the Harvest targeted-natural correction, the rejected shared-reforge
 frontier prototype, the finalization-only four-goal abstraction audit, and
-the qualified Fracture-local coarse-parent milestone: 2026-07-29 on
-`codex/fracture-local-coarse-parent`, starting from
-`490b9f77d7f143d9f14bba888ea229f47bd6919b`. The preceding broad architecture
+the qualified Fracture-local coarse-parent milestone, plus the cross-base and
+compiled-strategy reliability pass: 2026-07-30 on
+`codex/cross-base-strategy-reliability`, starting from qualified commit
+`25d5bbe6791beb61eae803219563575346def2dc`. The preceding broad architecture
 stamp was 2026-07-24 @ `255e8f1`.
 Scope: native solver,
 calculation/evaluation engines, public C ABI, policy compilation, seeded
@@ -24,6 +25,13 @@ measurements live in
 generated corpus lives in
 [seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
 stamp does not claim rendered-browser review or a mechanic ruling.
+
+The cross-base structural harness iterates all 979 engine-certified ordinary
+bases. It checks session/base/item-level identity, modifier/family/tier
+consistency, influence and implicit reachability, representative goals,
+action vocabulary and candidates, exact Restart/Eldritch legality,
+serialization, and low-/high-item-level session isolation. Failures name the
+base, class, and violated contract.
 
 ## Purpose
 
@@ -170,6 +178,19 @@ economy, generator, Git state, compiler, ABI, and native-binary hashes. The
 generation report retains the full acceptance/rejection funnel and deliberate
 feasibility probes. Run records pin the solver build separately so later A/B
 runs reuse the same explicit cases.
+
+The versioned
+[cross-base reliability v1 corpus](../../fixtures/solver-reliability/v1/README.md)
+uses the same generator without changing the historical natural-T1 v1 corpus.
+It adds one natural goal for every supported ordinary item class, one- through
+four-goal prefix/suffix shapes, special crafted/fractured/influenced/Eldritch
+and Veiled starts, and a selected 10,000-run verification subset. Its staged
+runner preserves separate solve, compile, exact-evaluation, and simulation
+status instead of collapsing a truthful cap or downstream failure into one
+unavailable result. The final corpus has 49 cases and pins 1,000 expanded
+states, 20,000,000 reforge work, a 900-second watchdog, 1 GiB selected
+solver-owned memory, and a 20-second stress-corpus worker-slice ceiling.
+Those are portfolio bounds, not product-default changes.
 
 Code authority: `engine/include/poecraft/solver.h`,
 `engine/src/solver_api.cpp`,
@@ -622,6 +643,38 @@ entry point; `solver_solve_expand.cpp`, `solver_solve_bellman.cpp`,
 `solver_solve_finish.cpp`, and `solver_solve_telemetry.cpp` own their named
 phases.
 
+## Solve Result Classification
+
+The public solve summary reports policy quality and stopping cause
+independently. `policy_status` distinguishes no policy, bounded feasible,
+bounded near-optimal, and exact policy. `stop_cause` separately names exact
+closure, a requested gap, or the first deterministic state, transition,
+memory, sweep, reforge-work, state/action-row, compiled-output, or other
+resource stop. `cap_hit_mask` retains every observed cap, including when a
+proper bounded policy survives.
+
+Action accounting is also categorical: registry actions, solver candidates,
+evaluator-supported actions, supported priced actions, missing-price skips,
+and unsupported-vocabulary skips are separate counts. The older combined
+`skipped_action_count` remains only for compatibility.
+
+Unsupported mechanic or graph vocabulary, structural unreachability/no proper
+fallback, compilation refusal, exact-evaluation failure, and simulation
+off-policy failure are downstream workflow states rather than aliases for a
+resource cap. Benchmark reports preserve those distinctions and attach the
+precise node, action, condition, or cap diagnostic where one exists.
+
+When an expanded graph reaches a configured cap, finalization stops promptly
+and preserves the last completed lower bound and valid incumbent. A final
+focused diagnostic pass is allowed only for tiny graphs of at most eight
+states; larger capped graphs do not continue unbounded optimization after the
+cap. This tiny-graph allowance preserves deterministic diagnostic tests and
+does not weaken product-scale stopping.
+
+Code authority: `engine/include/poecraft/solver.h`,
+`engine/src/solver_api.cpp`, `engine/src/solver_solve_finish.cpp`, and
+`engine/benchmarks/solver_benchmark.cpp`.
+
 ## Policy Compilation
 
 `pc_solver_compile_strategy` converts the latest executable policy into v1
@@ -647,8 +700,21 @@ Compilation refuses a policy when the ordinary strategy vocabulary cannot
 represent it or when configured graph/output caps are exceeded. It does not
 invent a second execution format.
 
-Code authority: `engine/src/solver_compile.cpp` and
-`engine/src/simulator.cpp`.
+Publication adds an exact-executability check for the deliberately coarse
+product parent. Pool-add actions and preserving renewals that observe
+unrepresented exclusion identity are refused with
+`coarse_parent_requires_exact_exclusion_identity`. A resource-capped renewal
+without the exact fixed-renewal witness is refused with
+`coarse_parent_capped_renewal_without_exact_witness`. A witnessed primitive
+renewal whose expected action count exceeds the product Simulator's
+100,000-action run limit is refused with
+`primitive_renewal_expected_actions_exceed_simulator_cap`. These checks do not
+remove candidates, alter transitions, or change the solver objective; they
+prevent an abstract policy from being advertised as an executable concrete
+strategy.
+
+Code authority: `engine/src/solver_compile.cpp`,
+`engine/src/solver_solve_finish.cpp`, and `engine/src/simulator.cpp`.
 
 ## Exact Strategy Evaluation And Accounting
 
@@ -673,10 +739,20 @@ supplies the reward dot product.
 
 Evaluation refuses unsupported graph vocabulary rather than estimating it.
 `mod_count` and `mod_family_count`, including required crafted/fractured flags,
-are exact. Concrete authored Unveil-offer conditions remain the named gap. The
-stateful API has
+are exact. Unveil is exact: the sampled offer set is part of evaluator-pair
+identity while compiler-generated `has_unveil_option` routers select an
+offered modifier, and the selected Unveil consumes that same offer context.
+An authored selection absent from its sampled offer is refused rather than
+resampled or approximated. The stateful API has
 begin/step/finish/destroy calls, cooperative progress, owned/output byte caps,
 and live/peak memory statistics.
+
+For a clean start and a compiled graph containing only full destructive
+renewals (or Restart to that same clean start), exact evaluation may reuse the
+coarse renewal layout: every operation replaces all explicit affixes before a
+router can observe them, so cross-operation exclusion identity is absent. Any
+authored carrier, pool-add/protection action, partial-side renewal, Veiled
+route, or other observing vocabulary retains strict group identity.
 
 Code authority: `engine/src/solver_eval.cpp` and
 `engine/src/solver_api.cpp`.
@@ -712,13 +788,21 @@ an atomic resumable ledger. Completed reports are skipped on resume. Default
 hard-case concurrency is one; callers may opt into more workers with a memory
 budget, in which case each case reserves its declared solver-owned-byte cap.
 
-The native benchmark accepts the historical solver corpus and the generated
-natural-T1 corpus. It compiles whenever `policy_available`, evaluates the
-compiled returned policy exactly with the pinned economy, and records a bound
-trace at every focused-round/incumbent change and bounded wall intervals. Each
-sample carries `L`, `U`, both gaps, state/frontier and work counts, live/peak
-owned memory, cap proximity, and whether progress raised `L` or lowered `U`.
-Reports derive first-incumbent and standard gap-threshold times.
+The native benchmark accepts the historical solver corpus, the generated
+natural-T1 corpus, and the cross-base reliability corpus. It compiles whenever
+`policy_available`, evaluates the compiled returned policy exactly with the
+pinned economy, and can simulate the same document. A complete exact
+round-trip requires converged evaluation, complete pricing, success
+probability one within tolerance, zero failure/stop/action-not-applied/
+no-edge/unresolved mass, and compiled cost reconciliation against the
+solver-evaluated policy. The report keeps solve classification, compile,
+exact-evaluation, and simulation status independent.
+
+The runner also records a bound trace at every focused-round/incumbent change
+and bounded wall intervals. Each sample carries `L`, `U`, both gaps,
+state/frontier and work counts, live/peak owned memory, cap proximity, and
+whether progress raised `L` or lowered `U`. Reports derive first-incumbent and
+standard gap-threshold times.
 
 Solver telemetry attributes row attempts, raw outcomes, retained transitions,
 reforge work, cache requests/hits, wall time, and retained selected-allocation

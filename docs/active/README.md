@@ -5,13 +5,18 @@
 Parent: [Documentation map](../README.md)
 
 The completed
-[Fracture-Local Coarse-Parent Prototype](../archive/2026-07-29-fracture-local-coarse-parent/README.md)
-replaces the product solver's globally strict Fracture-driven parent with a
-six-class ordinary/reforge parent and an exact solver-local goal-hit plus
-priced-Restart Fracture composition. The frozen carrier graph closes at 927
-states instead of stopping at 200,000.
+[Cross-Base And Compiled-Strategy Reliability Pass](../archive/2026-07-30-cross-base-strategy-reliability/README.md)
+qualifies all 979 ordinary-session bases and the complete returned-policy
+chain across native and release WASM. It changed no crafting mechanic, solver
+objective, or action-filtering scope.
 
-Oliver must select the next implementation boundary before work resumes.
+The completed
+[Fracture-Local Coarse-Parent Prototype](../archive/2026-07-29-fracture-local-coarse-parent/README.md)
+remains the qualified solver boundary. Its transition behavior and hashes were
+preserved by the reliability pass.
+
+Oliver must select the next implementation boundary before work resumes. The
+deferred three-/two-/one-goal executable anchor library remains unselected.
 
 The governing research is the completed
 [Practical Exact Four-Goal Solving Research](../archive/2026-07-29-practical-four-goal-solving-research/README.md).

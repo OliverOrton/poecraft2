@@ -93,6 +93,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                sizeof(FocusedScheduleRoundTelemetry) +
            diagnostics.solution_scope.capacity() + 1 +
            diagnostics.policy_evaluation_failure.capacity() + 1 +
+           diagnostics.policy_compatibility_action.capacity() + 1 +
+           diagnostics.policy_compatibility_reason.capacity() + 1 +
            diagnostics.incumbent_kind.capacity() + 1 +
            diagnostics.destructive_renewal_action_id.capacity() + 1 +
            diagnostics.progressive_fracture_roll_action_id.capacity() + 1 +
@@ -1134,6 +1136,37 @@ std::string serialize_solver_telemetry(
                 json, diagnostics->skipped_unsupported[i]);
         }
         json += "]";
+    }
+    json += "}";
+
+    json += ",\"policy_compatibility\":{";
+    if (diagnostics == nullptr) {
+        json += "\"supported\":null,\"state_id\":null,"
+                "\"action\":null,\"reason\":null";
+    } else {
+        json += "\"supported\":" + std::string(bool_json(
+            diagnostics->policy_compatibility_supported));
+        json += ",\"state_id\":";
+        if (diagnostics->policy_compatibility_state == kNoId) {
+            json += "null";
+        } else {
+            json += std::to_string(
+                diagnostics->policy_compatibility_state);
+        }
+        json += ",\"action\":";
+        if (diagnostics->policy_compatibility_action.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, diagnostics->policy_compatibility_action);
+        }
+        json += ",\"reason\":";
+        if (diagnostics->policy_compatibility_reason.empty()) {
+            json += "null";
+        } else {
+            append_telemetry_json_string(
+                json, diagnostics->policy_compatibility_reason);
+        }
     }
     json += "}";
 
@@ -2380,7 +2413,12 @@ std::string serialize_solver_telemetry(
                 std::string(bool_json(diagnostics->state_cap_hit));
         json += ",\"resource_cap_hit\":" +
                 std::string(bool_json(diagnostics->resource_cap_hit));
-        json += ",\"cap_hits\":[]";
+        json += ",\"cap_hits\":[";
+        for (std::size_t i = 0; i < diagnostics->cap_hits.size(); ++i) {
+            if (i != 0) json += ',';
+            json += "\"" + diagnostics->cap_hits[i] + "\"";
+        }
+        json += "]";
         json += ",\"full_request_status\":\"incomplete_not_finished\"";
     } else {
         const char* status =

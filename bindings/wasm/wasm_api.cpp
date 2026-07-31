@@ -689,6 +689,27 @@ const char* solve_termination_name(const int32_t termination) {
     }
 }
 
+const char* solve_stop_cause_name(const int32_t cause) {
+    switch (cause) {
+    case PC_SOLVE_STOP_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_STOP_TARGET_GAP: return "target_gap";
+    case PC_SOLVE_STOP_STATE_CAP: return "state_cap";
+    case PC_SOLVE_STOP_TRANSITION_CAP: return "transition_cap";
+    case PC_SOLVE_STOP_MEMORY_CAP: return "memory_cap";
+    case PC_SOLVE_STOP_SWEEP_CAP: return "sweep_cap";
+    case PC_SOLVE_STOP_REFORGE_WORK_CAP: return "reforge_work_cap";
+    case PC_SOLVE_STOP_STATE_ACTION_ROW_CAP:
+        return "state_action_row_cap";
+    case PC_SOLVE_STOP_COMPILED_OUTPUT_CAP:
+        return "compiled_output_cap";
+    case PC_SOLVE_STOP_OTHER_RESOURCE_CAP:
+        return "other_resource_cap";
+    case PC_SOLVE_STOP_NO_EXECUTABLE_POLICY:
+        return "no_executable_policy";
+    default: return "none";
+    }
+}
+
 const char* solve_gap_target_name(const int32_t target) {
     switch (target) {
     case PC_SOLVE_GAP_TARGET_ABSOLUTE: return "absolute";
@@ -803,7 +824,22 @@ void append_solve_summary(
     out += summary.target_met ? "true" : "false";
     out += ",\"target_fired\":\"";
     out += solve_gap_target_name(summary.target_fired);
-    out += '"';
+    out += "\",\"stop_cause\":\"";
+    out += solve_stop_cause_name(summary.stop_cause);
+    out += "\",\"cap_hit_mask\":" +
+           std::to_string(summary.cap_hit_mask);
+    out += ",\"registry_actions\":" +
+           std::to_string(summary.registry_action_count);
+    out += ",\"candidate_actions\":" +
+           std::to_string(summary.candidate_action_count);
+    out += ",\"evaluator_supported_actions\":" +
+           std::to_string(summary.evaluator_supported_action_count);
+    out += ",\"supported_priced_actions\":" +
+           std::to_string(summary.supported_priced_action_count);
+    out += ",\"skipped_missing_price_actions\":" +
+           std::to_string(summary.skipped_missing_price_count);
+    out += ",\"skipped_unsupported_actions\":" +
+           std::to_string(summary.skipped_unsupported_count);
 }
 
 const char* terminal_name(int32_t kind) {
@@ -1389,11 +1425,17 @@ const char* pcw_item_add_mod(uint32_t item_id, uint32_t session_id,
         else if (side_value->string == "suffix") side = PC_SIDE_SUFFIX;
         else return fail(PC_RESULT_INVALID_ARGUMENT, "side must be prefix or suffix");
     }
-    const Value* fractured = spec.find("fractured");
-    uint8_t flags = fractured != nullptr && fractured->type == Type::Bool &&
-                            fractured->boolean
-                        ? PC_MOD_SLOT_FRACTURED
-                        : 0;
+    const auto flag = [&](const char* name, const uint8_t value) {
+        const Value* enabled = spec.find(name);
+        return enabled != nullptr && enabled->type == Type::Bool &&
+                       enabled->boolean
+                   ? value
+                   : static_cast<uint8_t>(0);
+    };
+    const uint8_t flags =
+        flag("fractured", PC_MOD_SLOT_FRACTURED) |
+        flag("crafted", PC_MOD_SLOT_CRAFTED) |
+        flag("veiled", PC_MOD_SLOT_VEILED);
     pc_result rc = pc_item_add_mod(item, side, match.session_mod_id,
                                    static_cast<uint16_t>(match.primary_group_id),
                                    flags, nullptr);

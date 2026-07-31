@@ -256,9 +256,9 @@ and would require an enforced live-memory budget.
 If Oliver selects another one-item solver chunk, the surviving product work is:
 
 - **R5 — verification presentation.** Show the pinned economy and sampled
-  uncertainty in product review, keep per-run and independent-retry-normalized
-  costs distinct, and decide the remaining authored Unveil-offer evaluator
-  boundary. Compiler-emitted count conditions and the selected product
+  uncertainty in product review, and keep per-run and
+  independent-retry-normalized costs distinct. Compiler-emitted count
+  conditions, authored Unveil-offer exact evaluation, and the selected product
   verification gate are complete.
 - **S8.5 — compact review and optional empirical trim.** Focus view remains
   presentation-only. Trimming creates a separate derived strategy with parent

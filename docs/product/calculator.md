@@ -109,6 +109,12 @@ exactly evaluated returned-policy cost, optimal-cost lower bound, certified
 policy upper bound, absolute gap, certified multiplicative factor, requested
 target/firing criterion, pinned economy, and the exact admitted priced action
 IDs. Cap hits remain visible even when an executable bounded policy survives.
+The result also names the first deterministic stopping cause and reports every
+cap in a bit mask. Registry, candidate, evaluator-supported, supported-priced,
+missing-price, and unsupported-vocabulary action counts remain separate; the
+UI does not collapse them into an ambiguous unavailable or skipped total.
+All configured caps stay visible before solving even when policy availability
+or the current action envelope makes a particular cap unlikely to fire.
 Bounded certificates use only wording such as “Certified within 1.10x of
 optimal” and “At most 10% more expensive than optimal.” They never say the
 policy is 10% suboptimal or call the upper bound the optimum; a weak lower
@@ -116,6 +122,15 @@ bound can make the certificate pessimistic.
 
 Automatic options remain native planner operators and compile into primitive
 strategy nodes; the web app does not execute opaque macros.
+
+The product publishes a Strategy Board document only when the selected policy
+has exact executable identity. A coarse-parent pool-add or preserved-renewal
+route that needs unrepresented exclusion-group identity is refused with its
+state, action, and compatibility reason. A capped destructive renewal without
+an exact fixed-renewal witness is likewise refused, as is a fixed renewal
+whose expected action count exceeds the product Simulator's 100,000-action
+run limit. These are publication checks after search, not new action filters
+or changes to Bellman comparisons.
 
 The complete Calculator-to-worker-to-native sequence, including handle
 ownership, cooperative cancellation, compilation, repricing, and verification,

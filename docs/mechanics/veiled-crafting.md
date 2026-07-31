@@ -4,7 +4,8 @@
 
 Parent: [Mechanics](README.md)
 
-Verified against code: 2026-07-19 @ d5e38e3
+Verified against code: 2026-07-30 on
+`codex/cross-base-strategy-reliability`
 
 Verification scope: native Veiled Chaos/Exalt/Unveil transitions, offer
 generation, exact single-action calculation, solver compiler/evaluator, and
@@ -74,9 +75,11 @@ exact support. Renewal fixed options may use Veiled Chaos as their renewal and
 may append Unveil only immediately after that Veiled Chaos step.
 
 The compiled strategy simulator can execute an explicit Unveil operation and
-can test `has_unveil_option`. Whole-graph exact strategy evaluation does not
-currently resolve an authored Unveil choice or the `has_unveil_option`
-condition. This does not remove sampled simulator support.
+can test `has_unveil_option`. Whole-graph exact strategy evaluation carries
+the sampled offer set in evaluator-pair identity. A
+`has_unveil_option(mod_key)` router tests that stored set, and an authored
+Unveil selection consumes the same offer context. A selected modifier absent
+from the sampled offer is refused rather than resampled or approximated.
 
 ## Calculator Support
 
@@ -88,13 +91,12 @@ policy may also compile Unveil routing to ordinary strategy nodes.
 
 - No additional veiled operation beyond the three named action IDs is present
   in the engine vocabulary.
-- Whole-graph exact evaluation of a user-authored selected Unveil and
-  `has_unveil_option` routing is unsupported, even though sampled strategy
-  execution supports them.
 - Unveil selection has no independent price key beyond its explicit zero-cost
   classification.
 
 ## Open Questions Requiring Oliver
 
-- Should authored Unveil choices and `has_unveil_option` become supported by
-  whole-graph exact evaluation, or remain simulator-only authoring features?
+No unresolved mechanic ruling is attached to authored Unveil exact evaluation.
+The remaining product question is only whether broader automatic Veiled
+planning should enter goal-relevant solver scope; that is deferred solver
+scope, not a transition-mechanic ambiguity.

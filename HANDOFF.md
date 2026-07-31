@@ -3,6 +3,22 @@
 **Status: no active implementation boundary.**
 
 The
+[Cross-Base And Compiled-Strategy Reliability Pass](docs/archive/2026-07-30-cross-base-strategy-reliability/README.md)
+is complete and qualified on local branch
+`codex/cross-base-strategy-reliability`, starting from
+`25d5bbe6791beb61eae803219563575346def2dc`.
+
+All 979 engine-certified ordinary-session bases pass the structural harness.
+The final 49-case native and release-WASM portfolios complete without
+unclassified failures; every published policy compiles and exact-reconciles.
+The two selected policies each pass 10,000/10,000 simulations with zero
+failures and zero off-policy actions. Release WASM is rebuilt. Codex performed
+no rendered visual review; Oliver's checklist is in
+[Product Reliability Coverage](docs/product/reliability.md).
+The final `powershell -File scripts/test.ps1` acceptance pipeline is green,
+including 2,991,320 engine checks and all non-visual web/WASM suites.
+
+The
 [Fracture-Local Coarse-Parent Prototype](docs/archive/2026-07-29-fracture-local-coarse-parent/README.md)
 is implemented and qualified on branch
 `codex/fracture-local-coarse-parent`, starting from clean source

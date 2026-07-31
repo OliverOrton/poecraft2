@@ -8,6 +8,7 @@ from pathlib import Path
 from poecraft_engine import BaseInfo, load_data
 from poecraft_ingest.natural_t1_corpus import (
     CONFIG_SCHEMA,
+    RELIABILITY_MANIFEST_SCHEMA,
     _select_bases,
     generate_corpus,
 )
@@ -132,7 +133,131 @@ class NaturalT1CorpusTests(unittest.TestCase):
         self.assertEqual(case["corpus"]["goal_modifier_count"], 1)
         self.assertEqual(case["resolved_natural_t1_goals"][0]["family_tier_index"], 1)
         self.assertEqual(case["resolved_natural_t1_goals"][0]["reach_via"], "base")
+        self.assertEqual(
+            case["economy"]["content_sha256"],
+            "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+        )
+        self.assertEqual(
+            case["economy"]["source_cutoff_at_utc"],
+            "2026-07-15T21:18:29Z",
+        )
         self.assertTrue(case["product_action_envelope"]["bench_goal_slots_forbidden"])
+
+    def test_reliability_schema_covers_item_class_and_preserves_start(self) -> None:
+        config = {
+            "schema_version": CONFIG_SCHEMA,
+            "manifest_schema": RELIABILITY_MANIFEST_SCHEMA,
+            "corpus_id": "reliability-test",
+            "output_directory": "ignored",
+            "artifact": "data/compiled/current",
+            "category": "cross_base_reliability",
+            "approval_status": "test",
+            "comparison_profile": "reliability-test-v1",
+            "economy": {
+                "snapshot_path": ECONOMY,
+                "manual_overrides": {"base": 1.0},
+                "fallback_price": None,
+            },
+            "base_pools": {"one": [DIRE_PELT]},
+            "base_selection": {
+                "pool": "one",
+                "paths": [],
+                "classes": [],
+                "list": None,
+            },
+            "item_level": 86,
+            "start": {
+                "rarity": "rare",
+                "with_implicits": False,
+                "mods": [],
+            },
+            "natural_filters": {
+                "families": [],
+                "required_tags": [],
+                "excluded_tags": [],
+                "tag_mode": "any",
+            },
+            "seed": 23,
+            "watchdog_seconds": 30,
+            "case_watchdog_seconds": 10,
+            "resource_caps": {
+                "max_states": 100,
+                "max_sweeps": 1,
+                "max_reforge_work": 20_000_000,
+            },
+            "verification": {
+                "runs": 100,
+                "exact_evaluation": True,
+                "exact_max_states": 1_000_000,
+            },
+            "coverage": {
+                "one_goal_per_item_class": True,
+                "stratum": "class-one",
+            },
+            "explicit_cases": [
+                {
+                    "id": "crafted-start",
+                    "stratum": "special",
+                    "base_metadata_path": DIRE_PELT,
+                    "goal_family_mod_keys": ["IncreasedLife9"],
+                    "start": {
+                        "rarity": "rare",
+                        "with_implicits": False,
+                        "mods": [
+                            {
+                                "key": "HelenaMasterFireResist1",
+                                "flags": ["crafted"],
+                            }
+                        ],
+                    },
+                }
+            ],
+            "strata": [
+                {
+                    "id": "class-one",
+                    "corpus": "smoke",
+                    "goal_count": 1,
+                    "side_compositions": ["P", "S"],
+                    "cases": 1,
+                    "max_attempts": 10,
+                },
+                {
+                    "id": "special",
+                    "corpus": "special_start",
+                    "goal_count": 1,
+                    "side_compositions": ["P"],
+                    "cases": 1,
+                    "max_attempts": 10,
+                },
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            config_path = temp / "config.json"
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            output = temp / "output"
+            generated = generate_corpus(config_path, output_override=output)
+        self.assertEqual(
+            generated["manifest"]["schema_version"],
+            RELIABILITY_MANIFEST_SCHEMA,
+        )
+        self.assertEqual(generated["manifest"]["stratum_counts"]["class-one"], 1)
+        crafted = next(
+            case for case in generated["cases"] if case["id"] == "crafted-start"
+        )
+        self.assertEqual(crafted["start"]["mods"][0]["flags"], ["crafted"])
+        self.assertTrue(crafted["verification"]["exact_evaluation"])
+        self.assertEqual(crafted["verification"]["runs"], 100)
+        self.assertEqual(crafted["verification"]["exact_max_states"], 1_000_000)
+        self.assertEqual(
+            crafted["expected"],
+            {
+                "solve_status": "reliability_classified",
+                "optimality_status": "classified",
+                "compile_status": "compiled_if_policy_available",
+                "verification_status": "run_if_compiled",
+            },
+        )
 
 
 if __name__ == "__main__":

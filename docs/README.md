@@ -33,6 +33,13 @@ before implementation resumes; [HANDOFF](../HANDOFF.md) records the clean
 boundary.
 
 The completed
+[Cross-Base And Compiled-Strategy Reliability Pass](archive/2026-07-30-cross-base-strategy-reliability/README.md)
+qualifies all 979 supported ordinary bases and a 49-case native/release-WASM
+portfolio through solve, compilation, exact Calculator evaluation, and
+Simulator execution. It preserves the qualified Fracture hashes and changes
+no mechanics, solver objective, or action-filtering scope.
+
+The completed
 [Fracture-Local Coarse-Parent Prototype](archive/2026-07-29-fracture-local-coarse-parent/README.md)
 replaces the product solver's globally strict Fracture observer with a
 six-class ordinary/reforge parent plus an exact solver-local goal-hit and

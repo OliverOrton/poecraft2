@@ -151,10 +151,11 @@ are not additional crafting rules.
   flag. Corruption-only Essence behavior is not implemented.
 - The visual Strategy Builder exposes fewer condition leaf types than the JSON
   compiler/simulator accepts.
-- The exact single-action calculator supports every primitive, but whole-graph
-  exact strategy evaluation does not currently resolve `mod_count`,
-  `mod_family_count`, `has_unveil_option`, an authored Unveil choice, or the two
-  Bestiary operation IDs as ordinary calculator actions.
+- The exact single-action calculator supports every primitive. Whole-graph
+  exact strategy evaluation supports `mod_count`, `mod_family_count`,
+  `has_unveil_option`, and authored Unveil selection; the two Bestiary
+  operation IDs remain on their separate stateful calculation path rather
+  than ordinary evaluator actions.
 - Bench is a real native action even though neither product surface has a
   dedicated bench craft-panel tab.
 - Solver-generated `restart` nodes compile and simulate, but `restart` is not

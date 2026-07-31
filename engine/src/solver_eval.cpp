@@ -87,15 +87,13 @@ struct EvalRow {
 struct EvalPair {
     std::uint32_t node = kNoId;
     std::uint32_t state = kNoId;
+    /* Interned sampled Unveil offer carried through its routing DAG. */
+    std::uint32_t unveil_offer = kNoId;
     bool operation = false;
     bool consumes = false;
     std::uint32_t action = kNoId;
     std::uint32_t row = kNoId;
 };
-
-std::uint64_t eval_pair_key(std::uint32_t node, std::uint32_t state) {
-    return (static_cast<std::uint64_t>(node) << 32) | state;
-}
 
 void add_gap(std::vector<std::string>& gaps, const std::string& gap) {
     if (std::find(gaps.begin(), gaps.end(), gap) == gaps.end()) {
@@ -225,11 +223,16 @@ void collect_condition_targets(
             found->memo_slots.push_back(condition.count_memo_slot);
         }
     } else if (condition.kind == ConditionKind::HasUnveilOption) {
-        add_gap(
-            gaps,
-            "edge '" + edge_id +
-                "' unveil-option routing cannot be represented by "
-                "Calculator mode yet");
+        /*
+         * Offer routing is evaluated directly from OutcomeChoiceOption below,
+         * rather than from the projected item. Concrete modifiers that share
+         * one exact successor state are behaviorally interchangeable for this
+         * evaluator: routing through either choice produces the same state.
+         * Do not add them as CountObservations, because one concrete unveil
+         * option can legitimately refine (partially overlap) a goal-family
+         * tier partition.
+         */
+        (void)count_observations;
     }
     for (const CompiledCondition& child : condition.children) {
         collect_condition_targets(
@@ -289,13 +292,6 @@ EvalModel derive_model(
             continue;
         }
         const ActionDescriptor& descriptor = registry.actions[action];
-        if (descriptor.params.type == ActionType::Unveil) {
-            add_gap(
-                gaps,
-                "node '" + node.id +
-                    "' authored unveil selection depends on its concrete "
-                    "offered options");
-        }
         if (!calc_supports(descriptor)) {
             add_gap(
                 gaps,
@@ -322,6 +318,51 @@ EvalModel derive_model(
                     edge.condition, edge.id, target_entries,
                     count_observations, gaps);
             }
+        }
+    }
+    for (std::size_t target = 0; target < strategy.nodes.size(); ++target) {
+        const StrategyNode& node = strategy.nodes[target];
+        if (node.kind != StrategyNodeKind::Operation ||
+            node.action.type != ActionType::Unveil) {
+            continue;
+        }
+        bool has_incoming = false;
+        for (const StrategyNode& source : strategy.nodes) {
+            for (const StrategyEdge& edge : source.edges) {
+                if (edge.target != target) continue;
+                has_incoming = true;
+                const std::function<bool(const CompiledCondition&)>
+                    contains_selected_offer =
+                        [&](const CompiledCondition& condition) {
+                            if (condition.kind ==
+                                    ConditionKind::HasUnveilOption &&
+                                std::find(
+                                    condition.mod_ids.begin(),
+                                    condition.mod_ids.end(),
+                                    node.action.mod_id) !=
+                                    condition.mod_ids.end()) {
+                                return true;
+                            }
+                            return std::any_of(
+                                condition.children.begin(),
+                                condition.children.end(),
+                                contains_selected_offer);
+                        };
+                if (edge.is_default ||
+                    !contains_selected_offer(edge.condition)) {
+                    add_gap(
+                        gaps,
+                        "node '" + node.id +
+                            "' authored unveil selection must be entered "
+                            "through a matching has_unveil_option edge");
+                }
+            }
+        }
+        if (!has_incoming) {
+            add_gap(
+                gaps,
+                "node '" + node.id +
+                    "' authored unveil selection has no offer-routing edge");
         }
     }
     if (target_entries.size() > kMaxGoalSlots) {
@@ -357,6 +398,49 @@ EvalModel derive_model(
     goal.min_satisfied_slots =
         static_cast<std::uint32_t>(goal.slots.size());
 
+    /*
+     * A clean-start graph made only of full destructive renewals (or a
+     * restart to that same clean start) has no cross-operation exclusion
+     * identity. Each operation computes its exact within-roll pool and then
+     * replaces every explicit affix before routing observes the result.
+     * Reusing the existing coarse layout here is therefore exact and avoids
+     * enumerating every concrete junk-group combination for a repeat-reforge
+     * loop. Any authored carrier, pool-add/protection operation, partial-side
+     * renewal, Veiled route, or other vocabulary keeps strict group effects.
+     */
+    const bool clean_restart_carrier =
+        strategy.start_item.prefix_count == 0 &&
+        strategy.start_item.suffix_count == 0 &&
+        strategy.start_item.item_flags == 0 &&
+        strategy.start_item.generic_influence_bits == 0 &&
+        strategy.start_item.searing_exarch_tier == 0 &&
+        strategy.start_item.eater_of_worlds_tier == 0;
+    const auto full_destructive_renewal =
+        [&](const ActionDescriptor& descriptor) {
+            if (descriptor.synthetic) return true;
+            switch (descriptor.params.type) {
+            case ActionType::Transmute:
+            case ActionType::Alteration:
+            case ActionType::Alchemy:
+            case ActionType::Chaos:
+            case ActionType::Essence:
+            case ActionType::Fossil:
+            case ActionType::HarvestReforge:
+                return true;
+            default:
+                return false;
+            }
+        };
+    const bool coarse_renewal_boundary_exact =
+        clean_restart_carrier && !used_actions.empty() &&
+        std::all_of(
+            used_actions.begin(), used_actions.end(),
+            [&](const std::uint32_t action) {
+                return action < registry.actions.size() &&
+                       full_destructive_renewal(
+                           registry.actions[action]);
+            });
+
     EvalModel model;
     model.action_by_node = std::move(action_by_node);
     model.targets = goal.slots;
@@ -365,7 +449,7 @@ EvalModel derive_model(
             session, goal, std::move(registry), used_actions,
             true,  /* allow count/rarity-only graphs */
             false, /* no operations must not mean the full registry */
-            true,  /* preserve exact group effects between graph actions */
+            !coarse_renewal_boundary_exact,
             state_cap, count_observations);
     } catch (const std::exception& ex) {
         std::string origin;
@@ -969,8 +1053,14 @@ struct StrategyEvalWork::Impl {
     StrategyEvalResult output;
     StrategyEvalPhase phase = StrategyEvalPhase::Discovery;
 
-    std::map<std::uint64_t, std::uint32_t> pair_by_key;
+    std::map<
+        std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>,
+        std::uint32_t>
+        pair_by_key;
     std::vector<EvalPair> pairs;
+    std::map<std::vector<std::uint32_t>, std::uint32_t>
+        unveil_offer_by_mods;
+    std::vector<std::vector<std::uint32_t>> unveil_offer_sets;
     std::vector<EvalRow> rows;
     std::map<
         std::pair<std::uint32_t, const OutcomeDistribution*>,
@@ -1148,6 +1238,18 @@ struct StrategyEvalWork::Impl {
         bytes += pair_by_key.size() *
                  (sizeof(decltype(pair_by_key)::value_type) + 3 * sizeof(void*));
         bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += unveil_offer_by_mods.size() *
+                 (sizeof(decltype(unveil_offer_by_mods)::value_type) +
+                  3 * sizeof(void*));
+        for (const auto& [mods, unused] : unveil_offer_by_mods) {
+            (void)unused;
+            bytes += mods.capacity() * sizeof(std::uint32_t);
+        }
+        bytes += unveil_offer_sets.capacity() *
+                 sizeof(std::vector<std::uint32_t>);
+        for (const auto& mods : unveil_offer_sets) {
+            bytes += mods.capacity() * sizeof(std::uint32_t);
+        }
         bytes += rows.capacity() * sizeof(EvalRow);
         for (const EvalRow& row : rows) {
             bytes += row.transitions.capacity() * sizeof(EvalTransition);
@@ -1232,6 +1334,18 @@ struct StrategyEvalWork::Impl {
                  (sizeof(decltype(pair_by_key)::value_type) +
                   3 * sizeof(void*));
         bytes += pairs.capacity() * sizeof(EvalPair);
+        bytes += unveil_offer_by_mods.size() *
+                 (sizeof(decltype(unveil_offer_by_mods)::value_type) +
+                  3 * sizeof(void*));
+        bytes += unveil_offer_sets.capacity() *
+                 sizeof(std::vector<std::uint32_t>);
+        for (const auto& [mods, unused] : unveil_offer_by_mods) {
+            (void)unused;
+            bytes += mods.capacity() * sizeof(std::uint32_t);
+        }
+        for (const auto& mods : unveil_offer_sets) {
+            bytes += mods.capacity() * sizeof(std::uint32_t);
+        }
         bytes += rows.capacity() * sizeof(EvalRow);
         bytes += row_payload_owned_bytes;
         bytes += row_by_distribution.size() *
@@ -1453,10 +1567,24 @@ struct StrategyEvalWork::Impl {
         }
     }
 
+    std::uint32_t intern_unveil_offer(
+        std::vector<std::uint32_t> mods) {
+        std::sort(mods.begin(), mods.end());
+        mods.erase(std::unique(mods.begin(), mods.end()), mods.end());
+        const auto found = unveil_offer_by_mods.find(mods);
+        if (found != unveil_offer_by_mods.end()) return found->second;
+        const std::uint32_t id =
+            static_cast<std::uint32_t>(unveil_offer_sets.size());
+        unveil_offer_sets.push_back(mods);
+        unveil_offer_by_mods.emplace(std::move(mods), id);
+        return id;
+    }
+
     std::uint32_t intern_pair(
         std::uint32_t node,
-        std::uint32_t state) {
-        const std::uint64_t key = eval_pair_key(node, state);
+        std::uint32_t state,
+        std::uint32_t unveil_offer = kNoId) {
+        const auto key = std::make_tuple(node, state, unveil_offer);
         const auto found = pair_by_key.find(key);
         if (found != pair_by_key.end()) return found->second;
         if (pairs.size() >= options.max_pairs) {
@@ -1469,6 +1597,7 @@ struct StrategyEvalWork::Impl {
         EvalPair pair;
         pair.node = node;
         pair.state = state;
+        pair.unveil_offer = unveil_offer;
         pairs.push_back(std::move(pair));
         return id;
     }
@@ -1488,18 +1617,84 @@ struct StrategyEvalWork::Impl {
 
     const StrategyEdge* select_edge(
         const StrategyNode& node,
-        std::uint32_t state) const {
+        std::uint32_t state,
+        const std::vector<std::uint32_t>* offered_mods = nullptr) const {
+        const std::function<bool(const CompiledCondition&)>
+            evaluate_condition =
+                [&](const CompiledCondition& condition) -> bool {
+                    switch (condition.kind) {
+                    case ConditionKind::HasUnveilOption:
+                        return offered_mods != nullptr &&
+                               std::any_of(
+                                   condition.mod_ids.begin(),
+                                   condition.mod_ids.end(),
+                                   [&](const std::uint32_t mod) {
+                                       return std::find(
+                                                  offered_mods->begin(),
+                                                  offered_mods->end(),
+                                                  mod) != offered_mods->end();
+                                   });
+                    case ConditionKind::All:
+                        return std::all_of(
+                            condition.children.begin(),
+                            condition.children.end(),
+                            evaluate_condition);
+                    case ConditionKind::Any:
+                        return std::any_of(
+                            condition.children.begin(),
+                            condition.children.end(),
+                            evaluate_condition);
+                    case ConditionKind::Not:
+                        return !evaluate_condition(
+                            condition.children.front());
+                    case ConditionKind::AtLeast:
+                        return std::count_if(
+                                   condition.children.begin(),
+                                   condition.children.end(),
+                                   evaluate_condition) >=
+                               condition.min_value;
+                    default:
+                        return evaluate_abstract_condition(
+                            condition, model.calc->session(),
+                            model.calc->layout(),
+                            model.calc->state(state));
+                    }
+                };
         const StrategyEdge* fallback_edge = nullptr;
         for (const StrategyEdge& edge : node.edges) {
             if (edge.is_default) {
                 fallback_edge = &edge;
-            } else if (evaluate_abstract_condition(
-                           edge.condition, model.calc->session(),
-                           model.calc->layout(), model.calc->state(state))) {
+            } else if (evaluate_condition(edge.condition)) {
                 return &edge;
             }
         }
         return fallback_edge;
+    }
+
+    bool node_observes_unveil_offer(const StrategyNode& node) const {
+        const std::function<bool(const CompiledCondition&)> contains =
+            [&](const CompiledCondition& condition) {
+                return condition.kind == ConditionKind::HasUnveilOption ||
+                       std::any_of(
+                           condition.children.begin(),
+                           condition.children.end(), contains);
+            };
+        return std::any_of(
+            node.edges.begin(), node.edges.end(),
+            [&](const StrategyEdge& edge) {
+                return !edge.is_default && contains(edge.condition);
+            });
+    }
+
+    std::uint32_t unveil_action_index() const {
+        for (std::uint32_t action = 0;
+             action < model.calc->registry().actions.size(); ++action) {
+            if (model.calc->registry().actions[action].params.type ==
+                ActionType::Unveil) {
+                return action;
+            }
+        }
+        return kNoId;
     }
 
     void expand_pair(std::uint32_t pair_id) {
@@ -1507,6 +1702,12 @@ struct StrategyEvalWork::Impl {
             fast_estimated_owned_bytes();
         const std::uint32_t node_index = pairs.at(pair_id).node;
         const std::uint32_t state_id = pairs.at(pair_id).state;
+        const std::uint32_t unveil_offer_id =
+            pairs.at(pair_id).unveil_offer;
+        const std::vector<std::uint32_t>* active_unveil_offer =
+            unveil_offer_id == kNoId
+                ? nullptr
+                : &unveil_offer_sets.at(unveil_offer_id);
         const StrategyNode& node = strategy->nodes.at(node_index);
         bool operation = false;
         bool consumes = false;
@@ -1558,13 +1759,18 @@ struct StrategyEvalWork::Impl {
             }
         };
 
-        const auto route = [&](std::uint32_t state, double probability) {
+        const auto route = [&](
+                               std::uint32_t state,
+                               double probability,
+                               const std::vector<std::uint32_t>*
+                                   offered_mods = nullptr) {
             if (!(probability > 0.0)) return;
             if (!std::isfinite(probability)) {
                 throw std::runtime_error(
                     "strategy evaluation found a non-finite transition");
             }
-            const StrategyEdge* selected = select_edge(node, state);
+            const StrategyEdge* selected =
+                select_edge(node, state, offered_mods);
             if (selected == nullptr) {
                 add_absorption(
                     {static_cast<int>(EvalAbsorptionKind::NoMatchingEdge),
@@ -1621,13 +1827,84 @@ struct StrategyEvalWork::Impl {
                     probability);
                 return;
             }
+            const std::uint32_t target_unveil_offer =
+                offered_mods == nullptr
+                    ? kNoId
+                    : intern_unveil_offer(*offered_mods);
             const std::uint32_t target_pair =
-                intern_pair(target_node, state);
+                intern_pair(target_node, state, target_unveil_offer);
             add_transition({target_pair, edge, policy_route}, probability);
         };
 
         if (node.kind != StrategyNodeKind::Operation) {
-            route(state_id, 1.0);
+            if (!node_observes_unveil_offer(node)) {
+                route(state_id, 1.0, active_unveil_offer);
+            } else if (active_unveil_offer != nullptr) {
+                route(state_id, 1.0, active_unveil_offer);
+            } else {
+                const std::uint32_t unveil = unveil_action_index();
+                if (unveil == kNoId) {
+                    throw StrategyEvalUnsupported(
+                        "strategy evaluation unsupported:\n- node '" +
+                        node.id +
+                        "' observes unveil offers but the session has no "
+                        "Unveil action");
+                }
+                const ActionDescriptor& action =
+                    model.calc->registry().actions.at(unveil);
+                if (!action_legal(
+                        model.calc->session(), action,
+                        model.calc->state(state_id))) {
+                    route(state_id, 1.0);
+                } else {
+                    const OutcomeDistribution& outcomes =
+                        model.calc->outcomes(state_id, unveil);
+                    if (!outcomes.supported) {
+                        throw StrategyEvalUnsupported(
+                            "strategy evaluation unsupported:\n- node '" +
+                            node.id +
+                            "' has no exact Unveil offer distribution for "
+                            "a reachable state");
+                    }
+                    ensure_state_limit();
+                    if (outcomes.choice_groups.empty()) {
+                        route(state_id, 1.0);
+                    } else {
+                        double distribution_mass = 0.0;
+                        for (const OutcomeChoiceGroup& group :
+                             outcomes.choice_groups) {
+                            std::vector<std::uint32_t> offered_mods;
+                            for (const OutcomeChoiceOption& option :
+                                 outcomes.choice_options) {
+                                if (std::find(
+                                        group.states.begin(),
+                                        group.states.end(),
+                                        option.state) !=
+                                    group.states.end()) {
+                                    offered_mods.push_back(option.mod_id);
+                                }
+                            }
+                            std::sort(
+                                offered_mods.begin(), offered_mods.end());
+                            offered_mods.erase(
+                                std::unique(
+                                    offered_mods.begin(),
+                                    offered_mods.end()),
+                                offered_mods.end());
+                            distribution_mass += group.probability;
+                            route(
+                                state_id, group.probability,
+                                &offered_mods);
+                        }
+                        if (std::fabs(distribution_mass - 1.0) > 1e-9) {
+                            throw std::runtime_error(
+                                "strategy evaluation Unveil offer "
+                                "distribution does not sum to one at node '" +
+                                node.id + "'");
+                        }
+                    }
+                }
+            }
         } else {
             operation = true;
             action_index = model.action_by_node.at(node_index);
@@ -1661,11 +1938,43 @@ struct StrategyEvalWork::Impl {
                     pair.row = shared->second;
                     return;
                 }
-                shared_distribution = &outcomes;
                 double distribution_mass = 0.0;
-                for (const OutcomeEntry& outcome : outcomes.entries) {
-                    distribution_mass += outcome.probability;
-                    route(outcome.state, outcome.probability);
+                if (action.params.type == ActionType::Unveil) {
+                    if (active_unveil_offer == nullptr ||
+                        std::find(
+                            active_unveil_offer->begin(),
+                            active_unveil_offer->end(),
+                            node.action.mod_id) ==
+                            active_unveil_offer->end()) {
+                        throw std::logic_error(
+                            "authored Unveil selection is not present in "
+                            "the sampled offer carried to node '" +
+                            node.id + "'");
+                    }
+                    const auto selected = std::find_if(
+                        outcomes.choice_options.begin(),
+                        outcomes.choice_options.end(),
+                        [&](const OutcomeChoiceOption& option) {
+                            return option.mod_id == node.action.mod_id;
+                        });
+                    if (selected == outcomes.choice_options.end()) {
+                        throw std::logic_error(
+                            "authored Unveil selection is absent from its "
+                            "reachable exact offer vocabulary at node '" +
+                            node.id + "'");
+                    }
+                    const std::uint32_t successor =
+                        selected->actual_state != kNoId
+                            ? selected->actual_state
+                            : selected->state;
+                    distribution_mass = 1.0;
+                    route(successor, 1.0);
+                } else {
+                    shared_distribution = &outcomes;
+                    for (const OutcomeEntry& outcome : outcomes.entries) {
+                        distribution_mass += outcome.probability;
+                        route(outcome.state, outcome.probability);
+                    }
                 }
                 if (std::fabs(distribution_mass - 1.0) > 1e-9) {
                     throw std::runtime_error(

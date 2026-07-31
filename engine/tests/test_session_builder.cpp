@@ -2,11 +2,15 @@
 
 #include "poecraft/api.h"
 #include "poecraft/session.h"
+#include "poecraft/solver.h"
 
 #include "../src/json.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <fstream>
+#include <limits>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -39,6 +43,7 @@ struct ModRow {
     uint32_t primary_group = 0;
     uint32_t family_id = 0;
     uint32_t family_tier = 0;
+    uint32_t required_level = 0;
     uint32_t classification_tag_count = 0;
 };
 
@@ -58,6 +63,7 @@ std::vector<ModRow> read_session_mods(pc_session_handle session) {
         rows[i].primary_group = info.primary_group_id;
         rows[i].family_id = info.family_id;
         rows[i].family_tier = info.family_tier_index;
+        rows[i].required_level = info.required_level;
         rows[i].classification_tag_count = info.classification_tag_count;
         PC_CHECK(info.family_tier_index > 0);
         if (info.classification_tag_count > 0) {
@@ -73,6 +79,30 @@ std::vector<ModRow> read_session_mods(pc_session_handle session) {
 
 const char* gen_name(int gen_type) {
     return gen_type == 0 ? "prefix" : "suffix";
+}
+
+bool reliability_check(
+    bool condition,
+    const std::string& base,
+    const std::string& item_class,
+    const std::string& detail) {
+    if (!condition) {
+        std::printf(
+            "cross-base reliability failure: base=%s class=%s %s\n",
+            base.c_str(), item_class.c_str(), detail.c_str());
+    }
+    PC_CHECK(condition);
+    return condition;
+}
+
+std::string quoted_json(const std::string& value) {
+    std::string out = "\"";
+    for (const char c : value) {
+        if (c == '"' || c == '\\') out.push_back('\\');
+        out.push_back(c);
+    }
+    out.push_back('"');
+    return out;
 }
 
 void check_universe(pc_session_handle session, const std::string& fixture_dir) {
@@ -483,16 +513,38 @@ void run_session_builder_tests(const char* artifact_dir,
         pc_session_destroy(session);
     }
 
-    // --- generic coverage: armour, weapon, jewel, abyss jewel ---------------
+    // --- complete cross-base structural reliability audit -------------------
     uint32_t base_count = 0;
     pc_data_summary summary;
     pc_data_get_summary(data, &summary, &error);
     base_count = summary.base_item_count;
+    PC_CHECK(summary.ordinary_session_base_count == 979);
 
     bool found_armour = false, found_weapon = false, found_jewel = false,
          found_abyss = false, found_implicit = false;
     int built = 0;
     int with_mods = 0;
+    std::set<std::string> expected_classes;
+    std::set<std::string> built_classes;
+    std::set<std::string> level_switched_classes;
+    std::map<std::string, std::set<std::string>> actions_by_class;
+    for (uint32_t i = 0; i < base_count; ++i) {
+        const char* unused_path = nullptr;
+        int32_t support = -1;
+        if (pc_data_get_base_path(
+                data, i, &unused_path, &support, &error) !=
+                PC_RESULT_OK ||
+            support != PC_SESSION_SUPPORT_ORDINARY) {
+            continue;
+        }
+        const char* unused_name = nullptr;
+        const char* item_class = nullptr;
+        PC_CHECK(pc_data_get_base_display(
+                     data, i, &unused_name, &item_class, &error) ==
+                 PC_RESULT_OK);
+        if (item_class != nullptr) expected_classes.insert(item_class);
+    }
+
     for (uint32_t i = 0; i < base_count; ++i) {
         const char* path = nullptr;
         int32_t support = -1;
@@ -503,6 +555,29 @@ void run_session_builder_tests(const char* artifact_dir,
         if (support != PC_SESSION_SUPPORT_ORDINARY) {
             continue;
         }
+        const char* display_name = nullptr;
+        const char* data_class = nullptr;
+        int32_t drop_level = -1;
+        if (pc_data_get_base_display(
+                data, i, &display_name, &data_class, &error) !=
+                PC_RESULT_OK ||
+            pc_data_get_base_drop_level(
+                data, i, &drop_level, &error) != PC_RESULT_OK) {
+            reliability_check(
+                false, path == nullptr ? "<null>" : path,
+                data_class == nullptr ? "<null>" : data_class,
+                "data identity lookup failed");
+            continue;
+        }
+        const std::string base_path =
+            path == nullptr ? "<null>" : path;
+        const std::string class_key =
+            data_class == nullptr ? "<null>" : data_class;
+        reliability_check(
+            !base_path.empty() && display_name != nullptr &&
+                display_name[0] != '\0' && !class_key.empty(),
+            base_path, class_key, "empty base identity");
+
         pc_session_options opt;
         opt.struct_size = sizeof(opt);
         opt.abi_version = PC_ABI_VERSION;
@@ -510,15 +585,275 @@ void run_session_builder_tests(const char* artifact_dir,
         opt.item_level = 86;
         pc_session_handle s = nullptr;
         if (pc_session_create(data, &opt, &s, &error) != PC_RESULT_OK) {
-            PC_CHECK(false); // every ordinary base must build
+            reliability_check(
+                false, base_path, class_key,
+                std::string("session creation failed: ") + error.message);
             continue;
         }
         ++built;
+        built_classes.insert(class_key);
+
+        pc_base_info info{};
+        const bool base_info_ok =
+            pc_session_get_base_info(s, &info, &error) == PC_RESULT_OK;
+        reliability_check(
+            base_info_ok && info.metadata_path != nullptr &&
+                base_path == info.metadata_path &&
+                info.item_class_key != nullptr &&
+                class_key == info.item_class_key &&
+                info.item_level == 86 &&
+                info.session_support == PC_SESSION_SUPPORT_ORDINARY,
+            base_path, class_key,
+            "session base identity or item level mismatched");
+
         uint32_t mc = 0;
-        pc_session_get_mod_count(s, &mc, &error);
+        reliability_check(
+            pc_session_get_mod_count(s, &mc, &error) == PC_RESULT_OK,
+            base_path, class_key, "mod count query failed");
         if (mc > 0) ++with_mods;
-        pc_base_info info;
-        pc_session_get_base_info(s, &info, &error);
+
+        std::map<
+            std::uint32_t,
+            std::map<std::uint32_t, std::uint32_t>>
+            required_level_by_family_tier;
+        std::string representative_mod;
+        std::set<int> influence_codes;
+        for (std::uint32_t mod = 0; mod < mc; ++mod) {
+            pc_mod_info mod_info{};
+            if (!reliability_check(
+                    pc_session_get_mod_info(
+                        s, mod, &mod_info, &error) == PC_RESULT_OK,
+                    base_path, class_key,
+                    "mod info query failed: session_mod_id=" +
+                        std::to_string(mod))) {
+                continue;
+            }
+            const std::string mod_key =
+                mod_info.key == nullptr ? "<null>" : mod_info.key;
+            reliability_check(
+                mod_info.session_mod_id == mod &&
+                    mod_info.key != nullptr && mod_info.key[0] != '\0' &&
+                    mod_info.family_tier_index > 0,
+                base_path, class_key,
+                "invalid modifier identity: mod=" + mod_key +
+                    " family=" + std::to_string(mod_info.family_id) +
+                    " tier=" +
+                    std::to_string(mod_info.family_tier_index));
+            const bool is_affix =
+                mod_info.generation_type == PC_SIDE_PREFIX ||
+                mod_info.generation_type == PC_SIDE_SUFFIX;
+            if (!is_affix) {
+                continue;
+            }
+            auto& tiers =
+                required_level_by_family_tier[mod_info.family_id];
+            const auto [tier, inserted] = tiers.emplace(
+                mod_info.family_tier_index, mod_info.required_level);
+            if (!inserted) {
+                reliability_check(
+                    tier->second == mod_info.required_level,
+                    base_path, class_key,
+                    "family tier has inconsistent required levels: mod=" +
+                        mod_key + " family=" +
+                        std::to_string(mod_info.family_id) + " tier=" +
+                        std::to_string(mod_info.family_tier_index));
+            }
+            if (mod_info.reach_kind == PC_MOD_REACH_INFLUENCE) {
+                influence_codes.insert(mod_info.reach_influence);
+            }
+            if (representative_mod.empty() &&
+                mod_info.reach_kind == PC_MOD_REACH_BASE &&
+                mod_info.required_level <= 86) {
+                representative_mod = mod_key;
+            }
+        }
+        for (const auto& [family, tiers] :
+             required_level_by_family_tier) {
+            std::uint32_t expected_tier = 1;
+            std::uint32_t previous_required_level =
+                std::numeric_limits<std::uint32_t>::max();
+            for (const auto& [tier, required_level] : tiers) {
+                reliability_check(
+                    tier == expected_tier &&
+                        required_level <= previous_required_level,
+                    base_path, class_key,
+                    "family tier ordering failed: family=" +
+                        std::to_string(family) + " tier=" +
+                        std::to_string(tier) + " required_level=" +
+                        std::to_string(required_level));
+                expected_tier = tier + 1;
+                previous_required_level = required_level;
+            }
+        }
+
+        pc_action_context_options context_options{};
+        context_options.struct_size = sizeof(context_options);
+        context_options.abi_version = PC_ABI_VERSION;
+        context_options.seed = 0xC05B4A5EULL + i;
+        pc_action_context_handle cross_base_context = nullptr;
+        reliability_check(
+            pc_action_context_create(
+                s, &context_options, &cross_base_context, &error) ==
+                PC_RESULT_OK,
+            base_path, class_key, "action context creation failed");
+
+        pc_item_init_options rare_options{};
+        rare_options.struct_size = sizeof(rare_options);
+        rare_options.abi_version = PC_ABI_VERSION;
+        rare_options.rarity = PC_RARITY_RARE;
+        rare_options.with_implicits = 1;
+        pc_item_state rare_item{};
+        reliability_check(
+            pc_item_init(
+                s, &rare_options, &rare_item, &error) == PC_RESULT_OK,
+            base_path, class_key, "rare item initialization failed");
+        pc_item_state restored_item = rare_item;
+        reliability_check(
+            std::memcmp(
+                &rare_item, &restored_item, sizeof(rare_item)) == 0,
+            base_path, class_key,
+            "value-copy item restoration changed state");
+        std::size_t original_length = 0;
+        std::size_t restored_length = 0;
+        reliability_check(
+            pc_item_debug_format(
+                s, &rare_item, nullptr, 0, &original_length, &error) ==
+                PC_RESULT_BUFFER_TOO_SMALL &&
+                pc_item_debug_format(
+                    s, &restored_item, nullptr, 0, &restored_length,
+                    &error) == PC_RESULT_BUFFER_TOO_SMALL &&
+                original_length == restored_length,
+            base_path, class_key,
+            "item serialization length changed after restoration");
+
+        if (!representative_mod.empty()) {
+            const std::string goal =
+                "{\"version\":\"v1\",\"rarity\":\"rare\","
+                "\"fossil_mode\":\"goal_relevant\",\"slots\":[{"
+                "\"family_mod_key\":" +
+                quoted_json(representative_mod) +
+                ",\"min_tier\":1}]}";
+            pc_solver_handle structural_solver = nullptr;
+            if (reliability_check(
+                    pc_solver_create(
+                        s, goal.data(), goal.size(), &structural_solver,
+                        &error) == PC_RESULT_OK,
+                    base_path, class_key,
+                    "representative family goal failed: mod=" +
+                        representative_mod)) {
+                std::uint32_t action_count = 0;
+                reliability_check(
+                    pc_solver_action_count(
+                        structural_solver, &action_count, &error) ==
+                            PC_RESULT_OK &&
+                        action_count > 0,
+                    base_path, class_key,
+                    "action registry is empty: goal_mod=" +
+                        representative_mod);
+                for (std::uint32_t action = 0;
+                     action < action_count; ++action) {
+                    pc_solver_action_info action_info{};
+                    if (reliability_check(
+                            pc_solver_get_action_info(
+                                structural_solver, action, &action_info,
+                                &error) == PC_RESULT_OK &&
+                                action_info.id != nullptr &&
+                                action_info.id[0] != '\0',
+                            base_path, class_key,
+                            "invalid action registry row: action=" +
+                                std::to_string(action))) {
+                        actions_by_class[class_key].insert(action_info.id);
+                    }
+                }
+                std::uint32_t candidate_count = 0;
+                pc_result candidates_result = pc_solver_candidates(
+                    structural_solver, nullptr, 0, &candidate_count,
+                    &error);
+                reliability_check(
+                    (candidates_result == PC_RESULT_OK ||
+                     candidates_result == PC_RESULT_BUFFER_TOO_SMALL) &&
+                        candidate_count > 0,
+                    base_path, class_key,
+                    "goal produced no candidate actions: mod=" +
+                        representative_mod);
+
+                std::uint32_t restart_action = UINT32_MAX;
+                if (reliability_check(
+                        pc_solver_find_action(
+                            structural_solver, "restart",
+                            &restart_action, &error) == PC_RESULT_OK,
+                        base_path, class_key,
+                        "restart action missing from registry")) {
+                    pc_calc_summary calc_summary{};
+                    std::uint32_t outcome_count = 0;
+                    const pc_result calc_result =
+                        pc_calc_action_outcomes(
+                            structural_solver, &rare_item,
+                            restart_action, nullptr, 0, &outcome_count,
+                            &calc_summary, &error);
+                    reliability_check(
+                        (calc_result == PC_RESULT_OK ||
+                         calc_result == PC_RESULT_BUFFER_TOO_SMALL) &&
+                            calc_summary.supported != 0 &&
+                            calc_summary.legal != 0 &&
+                            outcome_count > 0,
+                        base_path, class_key,
+                        "restart exact legality/evaluation failed");
+                }
+
+                std::uint32_t eldritch_count = 0;
+                pc_session_dump_mask(
+                    s, PC_MASK_ELDRITCH_IMPLICIT, nullptr, 0,
+                    &eldritch_count, &error);
+                if (eldritch_count > 0) {
+                    std::uint32_t eldritch_action = UINT32_MAX;
+                    if (reliability_check(
+                        pc_solver_find_action(
+                            structural_solver, "eldritch_exalt",
+                            &eldritch_action, &error) == PC_RESULT_OK,
+                        base_path, class_key,
+                        "Eldritch-eligible base omitted eldritch_exalt")) {
+                        pc_item_state dominated_item = rare_item;
+                        dominated_item.searing_exarch_tier = 2;
+                        dominated_item.eater_of_worlds_tier = 1;
+                        pc_calc_summary eldritch_summary{};
+                        std::uint32_t eldritch_outcome_count = 0;
+                        const pc_result eldritch_result =
+                            pc_calc_action_outcomes(
+                                structural_solver, &dominated_item,
+                                eldritch_action, nullptr, 0,
+                                &eldritch_outcome_count,
+                                &eldritch_summary, &error);
+                        reliability_check(
+                            (eldritch_result == PC_RESULT_OK ||
+                             eldritch_result ==
+                                 PC_RESULT_BUFFER_TOO_SMALL) &&
+                                eldritch_summary.supported != 0 &&
+                                eldritch_summary.legal != 0 &&
+                                eldritch_outcome_count > 0,
+                            base_path, class_key,
+                            "Eldritch eligibility/action legality failed");
+                    }
+                }
+                pc_solver_destroy(structural_solver);
+            }
+        }
+
+        for (const int influence : influence_codes) {
+            std::uint32_t influence_count = 0;
+            const pc_result influence_result =
+                pc_session_dump_influence_mask(
+                    s, influence, nullptr, 0, &influence_count, &error);
+            reliability_check(
+                influence > 0 && influence <= 8 &&
+                    (influence_result == PC_RESULT_OK ||
+                     influence_result == PC_RESULT_BUFFER_TOO_SMALL) &&
+                    influence_count > 0,
+                base_path, class_key,
+                "influence reachability mask missing: influence=" +
+                    std::to_string(influence));
+        }
+
         if (!found_implicit && info.implicit_count > 0) {
             pc_item_init_options init{};
             init.struct_size = sizeof(init);
@@ -535,20 +870,66 @@ void run_session_builder_tests(const char* artifact_dir,
             PC_CHECK(implicit_mask_count >= info.implicit_count);
             found_implicit = true;
         }
-        const std::string cls = info.item_class_key;
+        const std::string cls = class_key;
         if (mc > 0) {
             if (cls == "Body Armour") found_armour = true;
             else if (cls == "Bow") found_weapon = true;
             else if (cls == "Jewel") found_jewel = true;
             else if (cls == "AbyssJewel") found_abyss = true;
         }
+        if (level_switched_classes.insert(class_key).second) {
+            pc_session_options low_options = opt;
+            low_options.item_level = 1;
+            pc_session_handle low_session = nullptr;
+            if (reliability_check(
+                    pc_session_create(
+                        data, &low_options, &low_session, &error) ==
+                        PC_RESULT_OK,
+                    base_path, class_key,
+                    "low-item-level session creation failed")) {
+                pc_base_info low_info{};
+                std::uint32_t low_mod_count = 0;
+                reliability_check(
+                    pc_session_get_base_info(
+                        low_session, &low_info, &error) == PC_RESULT_OK &&
+                        low_info.metadata_path != nullptr &&
+                        base_path == low_info.metadata_path &&
+                        low_info.item_level == 1 &&
+                        pc_session_get_mod_count(
+                            low_session, &low_mod_count, &error) ==
+                            PC_RESULT_OK &&
+                        low_mod_count <= mc,
+                    base_path, class_key,
+                    "base/iLvl switch retained stale session state");
+                pc_session_destroy(low_session);
+                pc_base_info high_info{};
+                reliability_check(
+                    pc_session_get_base_info(
+                        s, &high_info, &error) == PC_RESULT_OK &&
+                        high_info.metadata_path != nullptr &&
+                        base_path == high_info.metadata_path &&
+                        high_info.item_level == 86,
+                    base_path, class_key,
+                    "low-iLvl workspace contaminated live high-iLvl session");
+            }
+        }
+        pc_action_context_destroy(cross_base_context);
         pc_session_destroy(s);
     }
     std::printf(
         "generic: built %d ordinary sessions, %d with mods (armour=%d weapon=%d "
         "jewel=%d abyss=%d)\n",
         built, with_mods, found_armour, found_weapon, found_jewel, found_abyss);
-    PC_CHECK(built > 0);
+    PC_CHECK(built == 979);
+    PC_CHECK(built_classes == expected_classes);
+    PC_CHECK(level_switched_classes == expected_classes);
+    for (const std::string& item_class : expected_classes) {
+        reliability_check(
+            !actions_by_class[item_class].empty() &&
+                actions_by_class[item_class].count("restart") != 0,
+            "<class-wide>", item_class,
+            "item class has no verified action vocabulary");
+    }
     PC_CHECK(found_armour);
     PC_CHECK(found_weapon);
     PC_CHECK(found_jewel);

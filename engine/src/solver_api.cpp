@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -691,6 +692,67 @@ int32_t solve_termination(const solver::SolveTermination termination) {
     return PC_SOLVE_TERMINATION_NONE;
 }
 
+uint32_t solve_cap_hit_mask(const solver::SolveDiagnostics& diagnostics) {
+    uint32_t mask = 0;
+    for (const std::string& cap : diagnostics.cap_hits) {
+        if (cap == "max_states" || cap == "max_discovered_states" ||
+            cap == "max_expanded_states") {
+            mask |= PC_SOLVE_CAP_STATE;
+        } else if (cap == "max_transitions") {
+            mask |= PC_SOLVE_CAP_TRANSITIONS;
+        } else if (cap == "max_solver_owned_bytes") {
+            mask |= PC_SOLVE_CAP_MEMORY;
+        } else if (cap == "max_sweeps") {
+            mask |= PC_SOLVE_CAP_SWEEPS;
+        } else if (cap == "max_reforge_work") {
+            mask |= PC_SOLVE_CAP_REFORGE_WORK;
+        } else if (cap == "max_state_action_rows") {
+            mask |= PC_SOLVE_CAP_STATE_ACTION_ROWS;
+        } else if (cap == "max_compiled_nodes" ||
+                   cap == "max_compiled_edges" ||
+                   cap == "max_strategy_json_bytes" ||
+                   cap == "max_telemetry_json_bytes") {
+            mask |= PC_SOLVE_CAP_COMPILED_OUTPUT;
+        } else {
+            mask |= PC_SOLVE_CAP_OTHER;
+        }
+    }
+    return mask;
+}
+
+int32_t solve_stop_cause(const solver::SolveResult& result) {
+    const uint32_t caps = solve_cap_hit_mask(result.diagnostics);
+    if ((caps & PC_SOLVE_CAP_STATE) != 0) return PC_SOLVE_STOP_STATE_CAP;
+    if ((caps & PC_SOLVE_CAP_TRANSITIONS) != 0) {
+        return PC_SOLVE_STOP_TRANSITION_CAP;
+    }
+    if ((caps & PC_SOLVE_CAP_MEMORY) != 0) return PC_SOLVE_STOP_MEMORY_CAP;
+    if ((caps & PC_SOLVE_CAP_SWEEPS) != 0) return PC_SOLVE_STOP_SWEEP_CAP;
+    if ((caps & PC_SOLVE_CAP_REFORGE_WORK) != 0) {
+        return PC_SOLVE_STOP_REFORGE_WORK_CAP;
+    }
+    if ((caps & PC_SOLVE_CAP_STATE_ACTION_ROWS) != 0) {
+        return PC_SOLVE_STOP_STATE_ACTION_ROW_CAP;
+    }
+    if ((caps & PC_SOLVE_CAP_COMPILED_OUTPUT) != 0) {
+        return PC_SOLVE_STOP_COMPILED_OUTPUT_CAP;
+    }
+    if (caps != 0) return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
+    switch (result.termination) {
+    case solver::SolveTermination::ExactClosed:
+        return PC_SOLVE_STOP_EXACT_CLOSED;
+    case solver::SolveTermination::TargetGap:
+        return PC_SOLVE_STOP_TARGET_GAP;
+    case solver::SolveTermination::NoExecutablePolicy:
+        return PC_SOLVE_STOP_NO_EXECUTABLE_POLICY;
+    case solver::SolveTermination::RefusedResourceCap:
+        return PC_SOLVE_STOP_OTHER_RESOURCE_CAP;
+    case solver::SolveTermination::None:
+        return PC_SOLVE_STOP_NONE;
+    }
+    return PC_SOLVE_STOP_NONE;
+}
+
 int32_t solve_gap_target(const solver::SolveGapTarget target) {
     switch (target) {
     case solver::SolveGapTarget::None:
@@ -790,6 +852,24 @@ void copy_solve_summary(
         result.requested_relative_optimality_gap;
     out_summary->target_met = result.target_met ? 1 : 0;
     out_summary->target_fired = solve_gap_target(result.target_fired);
+    out_summary->stop_cause = solve_stop_cause(result);
+    out_summary->cap_hit_mask = solve_cap_hit_mask(result.diagnostics);
+    out_summary->registry_action_count =
+        result.diagnostics.registry_actions;
+    out_summary->candidate_action_count =
+        result.diagnostics.candidate_actions;
+    out_summary->evaluator_supported_action_count =
+        result.diagnostics.evaluator_supported_actions;
+    out_summary->supported_priced_action_count =
+        result.diagnostics.supported_priced_actions;
+    out_summary->skipped_missing_price_count = static_cast<uint32_t>(
+        std::min<std::uint64_t>(
+            result.diagnostics.skipped_missing_price_count,
+            std::numeric_limits<uint32_t>::max()));
+    out_summary->skipped_unsupported_count = static_cast<uint32_t>(
+        std::min<std::uint64_t>(
+            result.diagnostics.skipped_unsupported_count,
+            std::numeric_limits<uint32_t>::max()));
 }
 
 void commit_solve(pc_solver_handle solver, solver::SolveResult result) {

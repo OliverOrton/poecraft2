@@ -24,10 +24,10 @@ function objectRecord(value: unknown): Record<string, unknown> | null {
         : null;
 }
 
-function finiteCost(value: number | null): string {
+function finiteCost(value: number | null, unavailable: string): string {
     return value !== null && Number.isFinite(value) && value < 1e12
         ? formatChaosValue(value)
-        : "Unavailable";
+        : unavailable;
 }
 
 function conservativeFixed(value: number, digits: number): string {
@@ -121,7 +121,7 @@ export function certifiedFactorLabel(relativeGap: number | null): string {
         Number.isFinite(relativeGap) &&
         relativeGap >= 0
         ? `${conservativeFixed(1 + relativeGap, 2)}x`
-        : "Unavailable";
+        : "Not certified";
 }
 
 export function shouldCompileSolvePolicy(summary: SolveSummary): boolean {
@@ -172,6 +172,35 @@ export function solveTerminationDetail(
     return "The solve stopped without a classified termination reason.";
 }
 
+function stopCauseLabel(summary: SolveSummary): string {
+    switch (summary.stop_cause) {
+        case "exact_closed":
+            return "Exact proof closed";
+        case "target_gap":
+            return "Requested gap target met";
+        case "state_cap":
+            return "State cap";
+        case "transition_cap":
+            return "Transition cap";
+        case "memory_cap":
+            return "Memory cap";
+        case "sweep_cap":
+            return "Sweep cap";
+        case "reforge_work_cap":
+            return "Reforge-work cap";
+        case "state_action_row_cap":
+            return "State/action-row cap";
+        case "compiled_output_cap":
+            return "Compiled-output cap";
+        case "other_resource_cap":
+            return "Other resource cap";
+        case "no_executable_policy":
+            return "No executable policy";
+        default:
+            return "No stopping cause reported";
+    }
+}
+
 /** Stable DOM contract for exact and bounded solver results. */
 export function solveResultMarkup(options: SolveResultMarkupOptions): string {
     const {
@@ -184,10 +213,16 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         busy,
         verification,
     } = options;
-    const evaluatedPolicyCost = finiteCost(summary.evaluated_policy_cost);
-    const lowerBound = finiteCost(summary.lower_bound);
-    const upperBound = finiteCost(summary.upper_bound);
-    const absoluteGap = finiteCost(summary.absolute_optimality_gap);
+    const evaluatedPolicyCost = finiteCost(
+        summary.evaluated_policy_cost,
+        "No policy returned",
+    );
+    const lowerBound = finiteCost(summary.lower_bound, "Not certified");
+    const upperBound = finiteCost(summary.upper_bound, "Not certified");
+    const absoluteGap = finiteCost(
+        summary.absolute_optimality_gap,
+        "Not certified",
+    );
     const multiplicativeFactor = certifiedFactorLabel(
         summary.relative_optimality_gap,
     );
@@ -196,7 +231,7 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
         .map((id) => `<li><code>${escapeHtml(id)}</code></li>`)
         .join("");
 
-    return `<section class="pc-calc-solve-result" data-policy-status="${summary.policy_status}" data-termination="${summary.termination}">
+    return `<section class="pc-calc-solve-result" data-policy-status="${summary.policy_status}" data-termination="${summary.termination}" data-stop-cause="${summary.stop_cause}">
         <div class="pc-calc-solve-headline">
             <span>Returned policy expected cost</span>
             <strong data-solve-result="evaluated-policy-cost">${evaluatedPolicyCost}</strong>
@@ -214,13 +249,14 @@ export function solveResultMarkup(options: SolveResultMarkupOptions): string {
             <div><dt>Absolute optimality gap</dt><dd data-solve-result="absolute-gap">${absoluteGap}</dd></div>
             <div><dt>Certified multiplicative factor</dt><dd data-solve-result="multiplicative-factor">${multiplicativeFactor}</dd></div>
             <div><dt>Termination</dt><dd data-solve-result="termination-reason">${escapeHtml(terminationLabel(summary))}</dd></div>
+            <div><dt>Stopping cause</dt><dd data-solve-result="stop-cause">${escapeHtml(stopCauseLabel(summary))}</dd></div>
             <div><dt>Requested target</dt><dd data-solve-result="requested-target">${escapeHtml(requestedTargetLabel(summary))}</dd></div>
             <div><dt>Firing criterion</dt><dd data-solve-result="firing-criterion">${escapeHtml(firedTargetLabel(summary))}</dd></div>
-            <div><dt>Economy</dt><dd data-solve-result="economy">${economyLabel ? escapeHtml(economyLabel) : "Unavailable"}</dd></div>
+            <div><dt>Economy</dt><dd data-solve-result="economy">${economyLabel ? escapeHtml(economyLabel) : "No economy selected"}</dd></div>
         </dl>
         <p class="pc-calc-solve-termination-detail">${escapeHtml(terminationDetail)}</p>
         <strong class="pc-calc-solve-skipped">${excludedActions.toLocaleString()} unpriced actions excluded before Solve</strong>
-        <span class="pc-calc-solve-native-skipped">${summary.skipped_actions.toLocaleString()} of ${admittedActionIds.length.toLocaleString()} admitted priced actions skipped by the native solver</span>
+        <span class="pc-calc-solve-native-skipped">${summary.skipped_missing_price_actions.toLocaleString()} missing-price and ${summary.skipped_unsupported_actions.toLocaleString()} unsupported actions skipped by the native solver; ${summary.supported_priced_actions.toLocaleString()} supported priced actions remained from ${summary.candidate_actions.toLocaleString()} candidates</span>
         <details class="pc-calc-solve-admitted-actions">
             <summary>Admitted priced action identity &middot; ${admittedActionIds.length.toLocaleString()}</summary>
             <ul>${admitted || "<li>None</li>"}</ul>

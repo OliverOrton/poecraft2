@@ -607,6 +607,8 @@ async function dispatch(
                 key: params.key as string,
                 side: params.side as string | undefined,
                 fractured: params.fractured as boolean | undefined,
+                crafted: params.crafted as boolean | undefined,
+                veiled: params.veiled as boolean | undefined,
             });
             return {};
         case "removeMod":

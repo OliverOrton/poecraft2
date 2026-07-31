@@ -32,6 +32,8 @@ execution, exact evaluation, and solving remain native-engine authority.
   solve flow, and the current sampled verification boundary.
 - [Strategies](strategies.md) — v1 graph model, conditions, validation, board,
   Simulator mode, and exact whole-graph Calculator mode.
+- [Product Reliability Coverage](reliability.md) — automated non-visual
+  coverage and Oliver's manual visual checklist.
 - [Product Notes](NOTES.md) — non-authoritative open and deferred product work.
 
 Mechanic-specific availability and behavior are indexed by the

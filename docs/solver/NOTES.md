@@ -34,13 +34,14 @@ linear-memory high-water.
 
 ### 2026-07-19 — #debt — Verification truth and evaluator gaps
 
-Status: promoted to the
-[future solver roadmap](../future/solver-roadmap.md).
+Status: resolved by the
+[cross-base reliability pass](../archive/2026-07-30-cross-base-strategy-reliability/README.md).
 
 Product verification must gate on terminal/limit/off-policy truth and sampled
 confidence before comparing sampled cost with the exact evaluated cost of the
-returned policy. Exact whole-graph evaluation still refuses compiler-only
-modifier-count conditions and authored Unveil offer selection.
+returned policy. The benchmark now enforces those gates, while exact
+whole-graph evaluation supports modifier-count conditions and carries authored
+Unveil offer identity through selection.
 
 ### 2026-07-19 — #idea — Reviewed optimization candidates
 

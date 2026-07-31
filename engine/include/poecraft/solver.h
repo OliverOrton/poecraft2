@@ -396,6 +396,36 @@ typedef enum pc_solve_termination {
     PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY = 4
 } pc_solve_termination;
 
+/* Precise stopping cause is independent of policy availability. A capped
+ * solve can therefore return either a bounded policy or no policy while
+ * retaining the same stop cause. cap_hit_mask preserves every cap when more
+ * than one was observed; stop_cause names the first deterministic cause. */
+typedef enum pc_solve_stop_cause {
+    PC_SOLVE_STOP_NONE = 0,
+    PC_SOLVE_STOP_EXACT_CLOSED = 1,
+    PC_SOLVE_STOP_TARGET_GAP = 2,
+    PC_SOLVE_STOP_STATE_CAP = 3,
+    PC_SOLVE_STOP_TRANSITION_CAP = 4,
+    PC_SOLVE_STOP_MEMORY_CAP = 5,
+    PC_SOLVE_STOP_SWEEP_CAP = 6,
+    PC_SOLVE_STOP_REFORGE_WORK_CAP = 7,
+    PC_SOLVE_STOP_STATE_ACTION_ROW_CAP = 8,
+    PC_SOLVE_STOP_COMPILED_OUTPUT_CAP = 9,
+    PC_SOLVE_STOP_OTHER_RESOURCE_CAP = 10,
+    PC_SOLVE_STOP_NO_EXECUTABLE_POLICY = 11
+} pc_solve_stop_cause;
+
+typedef enum pc_solve_cap_hit {
+    PC_SOLVE_CAP_STATE = 1u << 0,
+    PC_SOLVE_CAP_TRANSITIONS = 1u << 1,
+    PC_SOLVE_CAP_MEMORY = 1u << 2,
+    PC_SOLVE_CAP_SWEEPS = 1u << 3,
+    PC_SOLVE_CAP_REFORGE_WORK = 1u << 4,
+    PC_SOLVE_CAP_STATE_ACTION_ROWS = 1u << 5,
+    PC_SOLVE_CAP_COMPILED_OUTPUT = 1u << 6,
+    PC_SOLVE_CAP_OTHER = 1u << 31
+} pc_solve_cap_hit;
+
 typedef enum pc_solve_gap_target {
     PC_SOLVE_GAP_TARGET_NONE = 0,
     PC_SOLVE_GAP_TARGET_ABSOLUTE = 1,
@@ -426,6 +456,14 @@ typedef struct pc_solve_summary {
     double requested_relative_optimality_gap;
     int32_t target_met;
     int32_t target_fired; /* pc_solve_gap_target */
+    int32_t stop_cause; /* pc_solve_stop_cause; independent of policy */
+    uint32_t cap_hit_mask; /* pc_solve_cap_hit bitset; every observed cap */
+    uint32_t registry_action_count;
+    uint32_t candidate_action_count;
+    uint32_t evaluator_supported_action_count;
+    uint32_t supported_priced_action_count;
+    uint32_t skipped_missing_price_count;
+    uint32_t skipped_unsupported_count;
 } pc_solve_summary;
 
 typedef enum pc_solve_phase {

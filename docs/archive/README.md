@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-30
+
+- [Cross-Base And Compiled-Strategy Reliability Pass](2026-07-30-cross-base-strategy-reliability/README.md) —
+  validated all 979 ordinary-session bases, qualified a deterministic 49-case
+  native/release-WASM portfolio, exact-reconciled every published policy, and
+  completed two selected 10,000-run simulator checks while preserving the
+  Fracture-local hashes and existing mechanics/action scope.
+
 ## 2026-07-29
 
 - [Fracture-Local Coarse-Parent Prototype](2026-07-29-fracture-local-coarse-parent/README.md) —

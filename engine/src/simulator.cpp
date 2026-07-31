@@ -112,6 +112,7 @@ void add_start_mod(
     std::string key;
     bool fractured = false;
     bool crafted = false;
+    bool veiled = false;
     if (value.type == Type::String) {
         key = value.string;
     } else if (value.type == Type::Object) {
@@ -119,6 +120,7 @@ void add_start_mod(
         if (key.empty()) key = string_member(value, "key");
         fractured = bool_member(value, "fractured", false);
         crafted = bool_member(value, "crafted", false);
+        veiled = bool_member(value, "veiled", false);
     } else {
         invalid("base_state explicit mods must be strings or objects");
     }
@@ -141,6 +143,7 @@ void add_start_mod(
     std::uint8_t flags = 0;
     if (fractured) flags |= PC_MOD_SLOT_FRACTURED;
     if (crafted) flags |= PC_MOD_SLOT_CRAFTED;
+    if (veiled) flags |= PC_MOD_SLOT_VEILED;
     if (pc_item_add_mod(
             &item,
             side,
@@ -1832,6 +1835,7 @@ RunResult run_one(SimulatorImpl& simulator, RetainedTrace* trace) {
 
     RunResult result;
     result.item = strategy.start_item;
+    (void)ensure_unveil_options(*simulator.context, &result.item);
     BestiaryCraftState bestiary_state;
     bestiary_state.item = result.item;
     bestiary_state.live_item_identity = 1;

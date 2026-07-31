@@ -109,6 +109,10 @@ struct CaseResult {
         bool increased_upper = false;
     };
     std::string actual_status = "not_run";
+    std::string solve_result_class = "not_run";
+    std::string compile_status = "not_attempted";
+    std::string exact_evaluation_status = "not_requested";
+    std::string simulation_status = "not_requested";
     bool expectation_met = false;
     bool verification_skipped = false;
     double registry_layout_ms = 0.0;
@@ -153,6 +157,15 @@ struct CaseResult {
     bool exact_strategy_evaluation_time_limited = false;
     double exact_strategy_evaluation_ms = 0.0;
     std::string exact_strategy_evaluation_json;
+    bool exact_strategy_evaluation_converged = false;
+    bool exact_strategy_evaluation_cost_complete = false;
+    bool exact_strategy_evaluation_zero_off_policy = false;
+    bool exact_strategy_evaluation_cost_reconciled = false;
+    double exact_strategy_evaluation_cost = 0.0;
+    double exact_strategy_evaluation_cost_delta_absolute = 0.0;
+    double exact_strategy_evaluation_cost_delta_relative = 0.0;
+    double exact_strategy_evaluation_terminal_success = 0.0;
+    double exact_strategy_evaluation_off_policy_mass = 0.0;
     pc_simulation_summary verification{};
     double verification_mean_cost = 0.0;
     double cost_delta_absolute = 0.0;
@@ -613,10 +626,27 @@ pc_item_state build_start_item(pc_session_handle session, const Value& start) {
     }
 
     if (const Value* tier = optional(start, "searing_exarch_tier", Type::Number)) {
+        if (tier->number < 0 || tier->number > 4) {
+            throw std::runtime_error(
+                "start searing_exarch_tier must be 0-4");
+        }
         item.searing_exarch_tier = static_cast<std::uint8_t>(tier->number);
     }
     if (const Value* tier = optional(start, "eater_of_worlds_tier", Type::Number)) {
+        if (tier->number < 0 || tier->number > 4) {
+            throw std::runtime_error(
+                "start eater_of_worlds_tier must be 0-4");
+        }
         item.eater_of_worlds_tier = static_cast<std::uint8_t>(tier->number);
+    }
+    if (const Value* influences = optional(
+            start, "generic_influence_bits", Type::Number)) {
+        if (influences->number < 0 || influences->number > 255) {
+            throw std::runtime_error(
+                "start generic_influence_bits must be 0-255");
+        }
+        item.generic_influence_bits =
+            static_cast<std::uint8_t>(influences->number);
     }
     const Value& mods = required(start, "mods", Type::Array);
     for (const Value& mod : mods.array) {
@@ -692,6 +722,16 @@ bool expectation_matches(const std::string& expected,
     if (expected == "refused_state_cap_with_filtered_actions") {
         return actual == "refused_state_cap";
     }
+    if (expected == "reliability_classified") {
+        return actual == "converged" ||
+               actual == "bounded_near_optimal" ||
+               actual == "bounded_feasible" ||
+               actual == "refused_state_cap" ||
+               actual == "refused_sweep_cap" ||
+               actual == "refused_resource_cap" ||
+               actual == "refused_unsupported_action" ||
+               actual == "refused_unreachable_goal";
+    }
     return false;
 }
 
@@ -706,10 +746,117 @@ const Value* nested_member(
     return current;
 }
 
+std::string solve_result_class(const pc_solve_summary& summary) {
+    if (summary.cap_hit_mask != 0) {
+        return summary.policy_available
+                   ? "capped_with_policy"
+                   : "capped_without_policy";
+    }
+    switch (summary.policy_status) {
+    case PC_SOLVE_POLICY_EXACT: return "exact";
+    case PC_SOLVE_POLICY_BOUNDED_NEAR_OPTIMAL:
+    case PC_SOLVE_POLICY_BOUNDED_FEASIBLE:
+        return "bounded";
+    default:
+        return summary.termination ==
+                       PC_SOLVE_TERMINATION_NO_EXECUTABLE_POLICY
+                   ? "no_executable_policy"
+                   : "no_policy";
+    }
+}
+
+void inspect_exact_strategy_evaluation(
+    const Value& specification,
+    CaseResult& report) {
+    const Value evaluation = Parser(
+        report.exact_strategy_evaluation_json.data(),
+        report.exact_strategy_evaluation_json.size()).parse();
+    const Value* converged = evaluation.find("converged");
+    const Value* success = nested_member(
+        evaluation, {"terminals", "success"});
+    const Value* failure = nested_member(
+        evaluation, {"terminals", "failure"});
+    const Value* stop = nested_member(
+        evaluation, {"terminals", "stop"});
+    const Value* action_not_applied = nested_member(
+        evaluation, {"terminals", "action_not_applied"});
+    const Value* no_matching_edge = nested_member(
+        evaluation, {"terminals", "no_matching_edge"});
+    const Value* unresolved = nested_member(
+        evaluation, {"terminals", "unresolved"});
+    const Value* cost_complete = nested_member(
+        evaluation,
+        {"accounting", "totals", "per_invocation", "cost_complete"});
+    const Value* cost = nested_member(
+        evaluation,
+        {"accounting", "totals", "per_invocation",
+         "total_expected_cost"});
+    if (converged == nullptr || converged->type != Type::Bool ||
+        success == nullptr || success->type != Type::Number ||
+        failure == nullptr || failure->type != Type::Number ||
+        stop == nullptr || stop->type != Type::Number ||
+        action_not_applied == nullptr ||
+        action_not_applied->type != Type::Number ||
+        no_matching_edge == nullptr ||
+        no_matching_edge->type != Type::Number ||
+        unresolved == nullptr || unresolved->type != Type::Number ||
+        cost_complete == nullptr || cost_complete->type != Type::Bool ||
+        cost == nullptr || cost->type != Type::Number) {
+        throw std::runtime_error(
+            "exact strategy evaluation omitted required reliability fields");
+    }
+    report.exact_strategy_evaluation_converged = converged->boolean;
+    report.exact_strategy_evaluation_cost_complete =
+        cost_complete->boolean;
+    report.exact_strategy_evaluation_terminal_success = success->number;
+    report.exact_strategy_evaluation_off_policy_mass =
+        failure->number + stop->number +
+        action_not_applied->number + no_matching_edge->number +
+        unresolved->number;
+    report.exact_strategy_evaluation_zero_off_policy =
+        report.exact_strategy_evaluation_off_policy_mass <= 1e-10 &&
+        success->number >= 1.0 - 1e-10;
+    report.exact_strategy_evaluation_cost = cost->number;
+    report.exact_strategy_evaluation_cost_delta_absolute = std::fabs(
+        cost->number - report.solve_summary.evaluated_policy_cost);
+    report.exact_strategy_evaluation_cost_delta_relative =
+        std::fabs(report.solve_summary.evaluated_policy_cost) > 1e-12
+            ? report.exact_strategy_evaluation_cost_delta_absolute /
+                  std::fabs(report.solve_summary.evaluated_policy_cost)
+            : report.exact_strategy_evaluation_cost_delta_absolute;
+    const Value& verification =
+        required(specification, "verification", Type::Object);
+    const Value* absolute = optional(
+        verification, "exact_cost_absolute_tolerance", Type::Number);
+    const Value* relative = optional(
+        verification, "exact_cost_relative_tolerance", Type::Number);
+    const double absolute_tolerance =
+        absolute == nullptr ? 1e-7 : absolute->number;
+    const double relative_tolerance =
+        relative == nullptr ? 1e-9 : relative->number;
+    report.exact_strategy_evaluation_cost_reconciled =
+        report.exact_strategy_evaluation_cost_delta_absolute <=
+            absolute_tolerance ||
+        report.exact_strategy_evaluation_cost_delta_relative <=
+            relative_tolerance;
+    if (report.exact_strategy_evaluation_converged &&
+        report.exact_strategy_evaluation_cost_complete &&
+        report.exact_strategy_evaluation_zero_off_policy &&
+        report.exact_strategy_evaluation_cost_reconciled) {
+        report.exact_evaluation_status = "matched";
+    } else {
+        report.exact_evaluation_status = "mismatch";
+        report.errors.push_back(
+            "exact strategy evaluation did not reconcile with the "
+            "solver policy");
+    }
+}
+
 void add_cap_check(
     CaseResult& report, const Value& telemetry,
     std::initializer_list<const char*> metric_path, const Value& caps,
-    const char* cap_name, const double cap_override = 0.0) {
+    const char* cap_name, const double cap_override = 0.0,
+    const bool named_cap_hit = false) {
     const Value* metric = nested_member(telemetry, metric_path);
     const Value* cap = optional(caps, cap_name, Type::Number);
     if (metric == nullptr || metric->type != Type::Number ||
@@ -718,8 +865,9 @@ void add_cap_check(
     }
     report.cap_checks.emplace_back(
         cap_name,
-        metric->number <=
-            (cap_override > 0.0 ? cap_override : cap->number));
+        named_cap_hit ||
+            metric->number <=
+                (cap_override > 0.0 ? cap_override : cap->number));
 }
 
 void evaluate_cap_checks(const Value& specification, CaseResult& report) {
@@ -731,28 +879,48 @@ void evaluate_cap_checks(const Value& specification, CaseResult& report) {
         const Value telemetry = Parser(
             report.telemetry_json.data(), report.telemetry_json.size()).parse();
         const Value& caps = required(specification, "caps", Type::Object);
+        const Value* cap_hits = nested_member(
+            telemetry, {"optimization", "cap_hits"});
+        const auto named_cap_hit = [&](const char* name) {
+            return cap_hits != nullptr && cap_hits->type == Type::Array &&
+                   std::any_of(
+                       cap_hits->array.begin(), cap_hits->array.end(),
+                       [&](const Value& entry) {
+                           return entry.type == Type::String &&
+                                  entry.string == name;
+                       });
+        };
         add_cap_check(report, telemetry, {"states", "discovered"}, caps,
                       "max_discovered_states",
-                      report.max_discovered_states_override);
+                      report.max_discovered_states_override,
+                      named_cap_hit("max_discovered_states"));
         add_cap_check(report, telemetry, {"states", "expanded"}, caps,
-                      "max_expanded_states");
+                      "max_expanded_states", 0.0,
+                      named_cap_hit("max_expanded_states"));
         add_cap_check(report, telemetry, {"work", "state_action_rows"}, caps,
-                      "max_state_action_rows");
+                      "max_state_action_rows", 0.0,
+                      named_cap_hit("max_state_action_rows"));
         add_cap_check(report, telemetry, {"work", "transition_entries"}, caps,
-                      "max_transitions");
+                      "max_transitions", 0.0,
+                      named_cap_hit("max_transitions"));
         add_cap_check(report, telemetry,
                       {"cache", "reforge", "frontier_work"}, caps,
-                      "max_reforge_work");
+                      "max_reforge_work", 0.0,
+                      named_cap_hit("max_reforge_work"));
         add_cap_check(report, telemetry,
                       {"memory", "solver_owned_bytes_estimate"}, caps,
-                      "max_solver_owned_bytes");
+                      "max_solver_owned_bytes", 0.0,
+                      named_cap_hit("max_solver_owned_bytes"));
         add_cap_check(report, telemetry, {"compilation", "nodes"}, caps,
-                      "max_compiled_nodes");
+                      "max_compiled_nodes", 0.0,
+                      named_cap_hit("max_compiled_nodes"));
         add_cap_check(report, telemetry, {"compilation", "edges"}, caps,
-                      "max_compiled_edges");
+                      "max_compiled_edges", 0.0,
+                      named_cap_hit("max_compiled_edges"));
         add_cap_check(report, telemetry,
                       {"compilation", "strategy_json_bytes"}, caps,
-                      "max_strategy_json_bytes");
+                      "max_strategy_json_bytes", 0.0,
+                      named_cap_hit("max_strategy_json_bytes"));
         const Value* available = nested_member(
             telemetry, {"compilation", "available"});
         const Value* nodes = nested_member(telemetry, {"compilation", "nodes"});
@@ -778,6 +946,16 @@ bool evaluate_expectation(
         return true;
     }
     if (report.telemetry_json.empty() || !report.errors.empty()) return false;
+    const Value& verification =
+        required(specification, "verification", Type::Object);
+    const bool exact_evaluation_required =
+        optional_bool(verification, "exact_evaluation", false);
+    if (report.has_solve_summary &&
+        report.solve_summary.policy_available &&
+        exact_evaluation_required &&
+        report.exact_evaluation_status != "matched") {
+        return false;
+    }
     const Value* expected_contract = specification.find("expected");
     if (expected_contract == nullptr) {
         if (!report.has_solve_summary ||
@@ -803,9 +981,9 @@ bool evaluate_expectation(
     const Value telemetry = Parser(
         report.telemetry_json.data(), report.telemetry_json.size()).parse();
     for (const char* section : {
-             "availability", "actions", "abstraction", "states", "work",
-             "cache", "optimization", "timings_ns", "memory", "compilation",
-             "value"}) {
+             "availability", "actions", "policy_compatibility",
+             "abstraction", "states", "work", "cache", "optimization",
+             "timings_ns", "memory", "compilation", "value"}) {
         if (optional(telemetry, section, Type::Object) == nullptr) return false;
     }
     const std::string expected_optimality =
@@ -850,8 +1028,6 @@ bool evaluate_expectation(
         report.verification.no_matching_edge_count +
         report.verification.action_not_applied_count;
     if (off_policy != 0) return false;
-    const Value& verification =
-        required(specification, "verification", Type::Object);
     const Value* minimum_success =
         optional(verification, "minimum_success_rate", Type::Number);
     if (minimum_success != nullptr) {
@@ -879,32 +1055,33 @@ std::string classify_completed_solve(
     if (telemetry_json.empty()) return "telemetry_unavailable";
     const Value telemetry =
         Parser(telemetry_json.data(), telemetry_json.size()).parse();
-    const Value* state_cap = nested_member(
-        telemetry, {"optimization", "state_cap_hit"});
-    if (state_cap != nullptr && state_cap->type == Type::Bool &&
-        state_cap->boolean) {
+    if (summary.stop_cause == PC_SOLVE_STOP_STATE_CAP) {
         return "refused_state_cap";
     }
-    const Value* resource_cap = nested_member(
-        telemetry, {"optimization", "resource_cap_hit"});
-    if (resource_cap != nullptr && resource_cap->type == Type::Bool &&
-        resource_cap->boolean) {
+    if (summary.stop_cause == PC_SOLVE_STOP_SWEEP_CAP) {
+        return "refused_sweep_cap";
+    }
+    if (summary.cap_hit_mask != 0 ||
+        summary.termination ==
+            PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP) {
         return "refused_resource_cap";
     }
     const Value* missing_price = nested_member(
         telemetry, {"actions", "missing_price"});
-    const Value* unsupported = nested_member(
+    const Value* unsupported_requested = nested_member(
         telemetry, {"actions", "unsupported_requested"});
-    if (unsupported == nullptr) {
-        unsupported = nested_member(
-            telemetry, {"actions", "unsupported_observed"});
-    }
+    const Value* unsupported_observed = nested_member(
+        telemetry, {"actions", "unsupported_observed"});
     const bool has_missing_price =
         missing_price != nullptr && missing_price->type == Type::Number &&
         missing_price->number > 0;
     const bool has_unsupported =
-        unsupported != nullptr && unsupported->type == Type::Number &&
-        unsupported->number > 0;
+        (unsupported_requested != nullptr &&
+         unsupported_requested->type == Type::Number &&
+         unsupported_requested->number > 0) ||
+        (unsupported_observed != nullptr &&
+         unsupported_observed->type == Type::Number &&
+         unsupported_observed->number > 0);
     const bool priced_product_envelope =
         specification.find("product_action_envelope") != nullptr;
     if (has_missing_price && has_unsupported && !priced_product_envelope) {
@@ -1370,6 +1547,8 @@ CaseResult run_case(
                                                    error));
             }
             report.has_solve_summary = true;
+            report.solve_result_class =
+                solve_result_class(report.solve_summary);
             report.telemetry_json =
                 query_telemetry(handles.solver, report.errors);
             report.actual_status = classify_completed_solve(
@@ -1391,6 +1570,12 @@ CaseResult run_case(
             expected_contract == nullptr
                 ? "compiled_if_policy_available"
                 : required_string(*expected_contract, "compile_status");
+        if (report.has_solve_summary &&
+            !report.solve_summary.policy_available) {
+            report.compile_status = "not_applicable_no_policy";
+            report.exact_evaluation_status = "not_applicable_no_policy";
+            report.simulation_status = "not_applicable_no_policy";
+        }
         if (!bounded_first_expansion && report.has_solve_summary &&
             report.solve_summary.policy_available &&
             expected_compile != "not_required" &&
@@ -1431,11 +1616,20 @@ CaseResult run_case(
                     report.compile_ms =
                         milliseconds(compile_begin, Clock::now());
                     if (result != PC_RESULT_OK) {
+                        report.compile_status = "compile_failed";
                         report.errors.push_back(api_error(
                             "pc_strategy_compile_json", result, error));
                         report.actual_status = "compile_refused";
                     } else {
-                        if (exact_strategy_evaluation) {
+                        report.compile_status = "compiled";
+                        const Value& verification = required(
+                            specification, "verification", Type::Object);
+                        const bool exact_evaluation_required =
+                            exact_strategy_evaluation ||
+                            optional_bool(
+                                verification, "exact_evaluation", false);
+                        if (exact_evaluation_required) {
+                            report.exact_evaluation_status = "running";
                             const auto evaluation_started = Clock::now();
                             pc_strategy_eval_options evaluation_options{};
                             evaluation_options.struct_size =
@@ -1444,17 +1638,30 @@ CaseResult run_case(
                             evaluation_options.epsilon = 1e-12;
                             evaluation_options.max_sweeps = 100000;
                             evaluation_options.max_states = optional_u32(
-                                caps, "max_discovered_states", 300000);
-                            evaluation_options.max_pairs = static_cast<
-                                std::uint32_t>(std::min<std::uint64_t>(
-                                optional_u64(
-                                    caps, "max_state_action_rows", 3000000),
-                                std::numeric_limits<std::uint32_t>::max()));
-                            evaluation_options.max_transitions = static_cast<
-                                std::uint32_t>(std::min<std::uint64_t>(
-                                optional_u64(
-                                    caps, "max_transitions", 30000000),
-                                std::numeric_limits<std::uint32_t>::max()));
+                                verification, "exact_max_states",
+                                optional_u32(
+                                    caps, "max_discovered_states", 300000));
+                            evaluation_options.max_pairs = optional_u32(
+                                verification, "exact_max_pairs",
+                                static_cast<std::uint32_t>(
+                                    std::min<std::uint64_t>(
+                                        optional_u64(
+                                            caps, "max_state_action_rows",
+                                            3000000),
+                                        std::numeric_limits<
+                                            std::uint32_t>::max())));
+                            evaluation_options.max_transitions = optional_u32(
+                                verification, "exact_max_transitions",
+                                static_cast<std::uint32_t>(
+                                    std::min<std::uint64_t>(
+                                        optional_u64(
+                                            caps, "max_transitions",
+                                            30000000),
+                                        std::numeric_limits<
+                                            std::uint32_t>::max())));
+                            evaluation_options.max_owned_bytes = optional_u64(
+                                verification, "exact_max_owned_bytes",
+                                512ull * 1024ull * 1024ull);
                             evaluation_options.economy = handles.economy;
                             result = pc_strategy_eval_begin(
                                 handles.strategy, &evaluation_options,
@@ -1501,6 +1708,8 @@ CaseResult run_case(
                                         now >= evaluation_deadline) {
                                         report.exact_strategy_evaluation_time_limited =
                                             true;
+                                        report.exact_evaluation_status =
+                                            "time_cap";
                                         break;
                                     }
                                 }
@@ -1523,14 +1732,29 @@ CaseResult run_case(
                                                 true;
                                             report.exact_strategy_evaluation_json =
                                                 std::move(json);
+                                            inspect_exact_strategy_evaluation(
+                                                specification, report);
                                         }
                                     }
                                 }
                             }
                             if (result != PC_RESULT_OK) {
+                                report.exact_evaluation_status =
+                                    result == PC_RESULT_UNSUPPORTED_FEATURE
+                                        ? "unsupported_vocabulary"
+                                        : "evaluation_failed";
                                 report.errors.push_back(api_error(
                                     "exact strategy evaluation", result,
                                     error));
+                            } else if (
+                                !report.has_exact_strategy_evaluation &&
+                                !report
+                                     .exact_strategy_evaluation_time_limited) {
+                                report.exact_evaluation_status =
+                                    "evaluation_incomplete";
+                                report.errors.push_back(
+                                    "exact strategy evaluation did not "
+                                    "produce a completed result");
                             }
                             report.exact_strategy_evaluation_ms = milliseconds(
                                 evaluation_started, Clock::now());
@@ -1539,8 +1763,6 @@ CaseResult run_case(
                             handles.strategy_evaluation = nullptr;
                             result = PC_RESULT_OK;
                         }
-                        const Value& verification = required(
-                            specification, "verification", Type::Object);
                         const std::uint64_t corpus_runs =
                             optional_u64(verification, "runs", 0);
                         const std::uint64_t runs =
@@ -1552,12 +1774,19 @@ CaseResult run_case(
                             verification_seed_override != 0 ||
                             verification_time_limit_seconds > 0.0;
                         report.verification_requested_runs = runs;
+                        report.simulation_status =
+                            runs == 0
+                                ? "not_selected"
+                                : (skip_verification ? "skipped"
+                                                     : "running");
                         if (runs > 0 && !skip_verification) {
                             const auto verification_begin = Clock::now();
                             result = pc_simulator_create(
                                 handles.session, handles.strategy,
                                 handles.economy, &handles.simulator, &error);
                             if (result != PC_RESULT_OK) {
+                                report.simulation_status =
+                                    "simulation_failed";
                                 report.errors.push_back(api_error(
                                     "pc_simulator_create", result, error));
                             } else {
@@ -1654,6 +1883,8 @@ CaseResult run_case(
                                     if (!simulation_progress.finished &&
                                         now >= simulation_deadline) {
                                         report.verification_time_limited = true;
+                                        report.simulation_status =
+                                            "time_cap";
                                         break;
                                     }
                                 }
@@ -1667,6 +1898,13 @@ CaseResult run_case(
                                     report.verification_finished =
                                         report.verification.completed_runs ==
                                         runs;
+                                    report.simulation_status =
+                                        report.verification_finished
+                                            ? "completed"
+                                            : (report
+                                                       .verification_time_limited
+                                                   ? "time_cap"
+                                                   : "incomplete");
                                     if (variance_count > 1) {
                                         report.has_verification_cost_variance =
                                             true;
@@ -1724,6 +1962,8 @@ CaseResult run_case(
                                         }
                                     }
                                 } else {
+                                    report.simulation_status =
+                                        "simulation_failed";
                                     report.errors.push_back(api_error(
                                         "simulation verification", result, error));
                                 }
@@ -1733,6 +1973,7 @@ CaseResult run_case(
                         }
                     }
                 } else {
+                    report.compile_status = "compile_failed";
                     report.compile_ms =
                         milliseconds(compile_begin, Clock::now());
                     report.errors.push_back(api_error(
@@ -1740,6 +1981,7 @@ CaseResult run_case(
                     report.actual_status = "compile_refused";
                 }
             } else {
+                report.compile_status = "compile_failed";
                 report.compile_ms =
                     milliseconds(compile_begin, Clock::now());
                 report.errors.push_back(api_error(
@@ -1817,6 +2059,27 @@ const char* termination_name(const int32_t termination) {
     }
 }
 
+const char* stop_cause_name(const int32_t cause) {
+    switch (cause) {
+    case PC_SOLVE_STOP_EXACT_CLOSED: return "exact_closed";
+    case PC_SOLVE_STOP_TARGET_GAP: return "target_gap";
+    case PC_SOLVE_STOP_STATE_CAP: return "state_cap";
+    case PC_SOLVE_STOP_TRANSITION_CAP: return "transition_cap";
+    case PC_SOLVE_STOP_MEMORY_CAP: return "memory_cap";
+    case PC_SOLVE_STOP_SWEEP_CAP: return "sweep_cap";
+    case PC_SOLVE_STOP_REFORGE_WORK_CAP: return "reforge_work_cap";
+    case PC_SOLVE_STOP_STATE_ACTION_ROW_CAP:
+        return "state_action_row_cap";
+    case PC_SOLVE_STOP_COMPILED_OUTPUT_CAP:
+        return "compiled_output_cap";
+    case PC_SOLVE_STOP_OTHER_RESOURCE_CAP:
+        return "other_resource_cap";
+    case PC_SOLVE_STOP_NO_EXECUTABLE_POLICY:
+        return "no_executable_policy";
+    default: return "none";
+    }
+}
+
 const char* target_name(const int32_t target) {
     switch (target) {
     case PC_SOLVE_GAP_TARGET_ABSOLUTE: return "absolute";
@@ -1869,6 +2132,13 @@ void append_case_report(
     }
     out << ",\n";
     out << "  \"actual_status\":" << escape_json(result.actual_status) << ",\n";
+    out << "  \"workflow_status\":{\"solve_result_class\":"
+        << escape_json(result.solve_result_class)
+        << ",\"compile\":" << escape_json(result.compile_status)
+        << ",\"exact_evaluation\":"
+        << escape_json(result.exact_evaluation_status)
+        << ",\"simulation\":"
+        << escape_json(result.simulation_status) << "},\n";
     out << "  \"expectation_met\":" << (result.expectation_met ? "true" : "false") << ",\n";
     out << "  \"verification_skipped\":"
         << (result.verification_skipped ? "true" : "false") << ",\n";
@@ -1904,14 +2174,50 @@ void append_case_report(
         out << "{\"completed\":false,\"time_limited\":"
             << (result.exact_strategy_evaluation_time_limited
                     ? "true" : "false")
+            << ",\"status\":"
+            << escape_json(result.exact_evaluation_status)
             << ",\"wall_ms\":";
         append_nullable_number(
             out, result.exact_strategy_evaluation_ms > 0.0,
             result.exact_strategy_evaluation_ms);
         out << "},\n";
     } else {
-        out << "{\"completed\":true,\"time_limited\":false,\"wall_ms\":";
+        out << "{\"completed\":true,\"time_limited\":false,\"status\":"
+            << escape_json(result.exact_evaluation_status)
+            << ",\"wall_ms\":";
         append_nullable_number(out, true, result.exact_strategy_evaluation_ms);
+        out << ",\"converged\":"
+            << (result.exact_strategy_evaluation_converged
+                    ? "true" : "false")
+            << ",\"cost_complete\":"
+            << (result.exact_strategy_evaluation_cost_complete
+                    ? "true" : "false")
+            << ",\"zero_off_policy_mass\":"
+            << (result.exact_strategy_evaluation_zero_off_policy
+                    ? "true" : "false")
+            << ",\"cost_reconciled\":"
+            << (result.exact_strategy_evaluation_cost_reconciled
+                    ? "true" : "false")
+            << ",\"success_probability\":";
+        append_nullable_number(
+            out, true,
+            result.exact_strategy_evaluation_terminal_success);
+        out << ",\"off_policy_mass\":";
+        append_nullable_number(
+            out, true,
+            result.exact_strategy_evaluation_off_policy_mass);
+        out << ",\"total_expected_cost\":";
+        append_nullable_number(
+            out, result.exact_strategy_evaluation_cost_complete,
+            result.exact_strategy_evaluation_cost);
+        out << ",\"solver_cost_delta_absolute\":";
+        append_nullable_number(
+            out, true,
+            result.exact_strategy_evaluation_cost_delta_absolute);
+        out << ",\"solver_cost_delta_relative\":";
+        append_nullable_number(
+            out, true,
+            result.exact_strategy_evaluation_cost_delta_relative);
         out << ",\"result\":" << result.exact_strategy_evaluation_json
             << "},\n";
     }
@@ -2143,6 +2449,23 @@ void append_case_report(
             << ",\"termination\":"
             << escape_json(termination_name(
                    result.solve_summary.termination))
+            << ",\"stop_cause\":"
+            << escape_json(stop_cause_name(
+                   result.solve_summary.stop_cause))
+            << ",\"cap_hit_mask\":"
+            << result.solve_summary.cap_hit_mask
+            << ",\"action_counts\":{\"registry\":"
+            << result.solve_summary.registry_action_count
+            << ",\"candidate\":"
+            << result.solve_summary.candidate_action_count
+            << ",\"evaluator_supported\":"
+            << result.solve_summary.evaluator_supported_action_count
+            << ",\"supported_priced\":"
+            << result.solve_summary.supported_priced_action_count
+            << ",\"skipped_missing_price\":"
+            << result.solve_summary.skipped_missing_price_count
+            << ",\"skipped_unsupported\":"
+            << result.solve_summary.skipped_unsupported_count << '}'
             << ",\"lower_bound\":";
         append_nullable_number(
             out, true, result.solve_summary.lower_bound);
@@ -2432,7 +2755,9 @@ int main(int argc, char** argv) {
         const std::string corpus_schema =
             required_string(manifest, "schema_version");
         if (corpus_schema != "solver_benchmark_corpus_v1" &&
-            corpus_schema != "natural_t1_benchmark_corpus_v1") {
+            corpus_schema != "natural_t1_benchmark_corpus_v1" &&
+            corpus_schema !=
+                "cross_base_reliability_corpus_v1") {
             throw std::runtime_error("unsupported corpus schema_version");
         }
         const Value& case_paths = required(manifest, "cases", Type::Array);
@@ -2447,8 +2772,9 @@ int main(int argc, char** argv) {
         const Value& artifact_pin = required(manifest, "artifact", Type::Object);
         std::uint32_t pinned_abi = optional_u32(
             artifact_pin, "engine_abi_version", 0);
-        if (pinned_abi == 0 && corpus_schema ==
-                "natural_t1_benchmark_corpus_v1") {
+        if (pinned_abi == 0 &&
+            (corpus_schema == "natural_t1_benchmark_corpus_v1" ||
+             corpus_schema == "cross_base_reliability_corpus_v1")) {
             pinned_abi = optional_u32(
                 required(manifest, "generator", Type::Object),
                 "engine_abi_version", 0);

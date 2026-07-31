@@ -180,6 +180,20 @@ SimulationSummaryInternal run_compiled(
     return simulator.summary;
 }
 
+StrategyEvalResult evaluate_compiled(
+    std::shared_ptr<const SessionImpl> session,
+    const std::string& strategy_json,
+    const std::unordered_map<std::string, double>& prices) {
+    auto strategy = compile_strategy_json(
+        session, strategy_json.c_str(), strategy_json.size());
+    auto economy = std::make_shared<EconomyImpl>();
+    economy->id = "test";
+    economy->prices = prices;
+    StrategyEvalOptions options;
+    options.economy = economy;
+    return evaluate_strategy(*strategy, options);
+}
+
 void run_synthetic_gate() {
     auto session = make_compile_session();
     ActionRegistry registry = build_action_registry(*session);
@@ -434,6 +448,18 @@ void run_synthetic_gate() {
                  std::string::npos);
         PC_CHECK(json.find("\"type\":\"unveil\"") !=
                  std::string::npos);
+        const StrategyEvalResult exact =
+            evaluate_compiled(session, json, prices);
+        PC_CHECK(exact.converged);
+        PC_CHECK(exact.cost_complete);
+        PC_CHECK(exact.success_probability > 1.0 - 1e-9);
+        PC_CHECK(exact.failure_probability < 1e-12);
+        PC_CHECK(exact.action_not_applied_probability < 1e-12);
+        PC_CHECK(exact.no_matching_edge_probability < 1e-12);
+        PC_CHECK(exact.unresolved_probability < 1e-12);
+        PC_CHECK(std::fabs(
+                     exact.total_expected_cost -
+                     solved.evaluated_policy_cost) < 1e-7);
         const SimulationSummaryInternal summary =
             run_compiled(session, json, prices, 10000, 1234567);
         PC_CHECK(summary.success_count == summary.completed_runs);
@@ -449,6 +475,61 @@ void run_synthetic_gate() {
             static_cast<unsigned long long>(summary.no_matching_edge_count),
             static_cast<unsigned long long>(summary.action_not_applied_count));
         PC_CHECK(std::fabs(mean - expected) < 0.25);
+    }
+
+    /* A serialized imported start may already contain an unobserved Veiled
+     * placeholder. The compiler must preserve that slot flag, Calculator
+     * mode must integrate its offer distribution exactly, and Simulator mode
+     * must materialize one offer set per run before routing. */
+    {
+        GoalSpec unveil_goal;
+        GoalSlot life;
+        life.family_id = 100;
+        life.min_tier = 1;
+        unveil_goal.slots.push_back(life);
+        unveil_goal.rarity = PC_RARITY_RARE;
+        const std::uint32_t veiled_exalt =
+            registry.index_by_id.at("veiled_exalt");
+        const std::uint32_t unveil = registry.index_by_id.at("unveil");
+        CalcContext unveil_calc(
+            session, unveil_goal, registry,
+            {veiled_exalt, unveil, restart});
+        pc_item_state veiled_start;
+        pc_item_clear(&veiled_start);
+        veiled_start.rarity = PC_RARITY_RARE;
+        PC_CHECK(
+            pc_item_add_mod(
+                &veiled_start, PC_SIDE_PREFIX, 8, 30,
+                PC_MOD_SLOT_VEILED, nullptr) == PC_RESULT_OK);
+        const std::unordered_map<std::string, double> prices{
+            {"veiled_exalt", 1.0}, {"base", 10.0}};
+        const SolveResult solved =
+            solve(unveil_calc, veiled_start, prices);
+        PC_CHECK(solved.converged);
+        const std::string json = compile_policy_strategy_json(
+            unveil_calc, solved, "imported veiled start");
+        PC_CHECK(json.find("\"mod_key\":\"mod8\",\"veiled\":true") !=
+                 std::string::npos);
+        PC_CHECK(json.find("\"type\":\"has_unveil_option\"") !=
+                 std::string::npos);
+        const StrategyEvalResult exact =
+            evaluate_compiled(session, json, prices);
+        PC_CHECK(exact.converged);
+        PC_CHECK(exact.cost_complete);
+        PC_CHECK(exact.success_probability > 1.0 - 1e-9);
+        PC_CHECK(exact.failure_probability < 1e-12);
+        PC_CHECK(exact.action_not_applied_probability < 1e-12);
+        PC_CHECK(exact.no_matching_edge_probability < 1e-12);
+        PC_CHECK(exact.unresolved_probability < 1e-12);
+        PC_CHECK(std::fabs(
+                     exact.total_expected_cost -
+                     solved.evaluated_policy_cost) < 1e-7);
+        const SimulationSummaryInternal summary =
+            run_compiled(session, json, prices, 10000, 7654321);
+        PC_CHECK(summary.success_count == summary.completed_runs);
+        PC_CHECK(summary.failure_count == 0);
+        PC_CHECK(summary.no_matching_edge_count == 0);
+        PC_CHECK(summary.action_not_applied_count == 0);
     }
 }
 
@@ -766,6 +847,45 @@ void run_artifact_gate(const char* artifact_dir) {
                 "\"";
             PC_CHECK(strategy.find(marker) != std::string::npos);
         }
+        const StrategyEvalResult exact = evaluate_compiled(
+            observed_session, strategy, {{"veiled_chaos", 1.0}});
+        std::printf(
+            "solver observed unveil exact: cost=%.12f solver=%.12f "
+            "success=%.12f failure=%.12f unapplied=%.12f "
+            "noedge=%.12f unresolved=%.12f\n",
+            exact.total_expected_cost, solved.evaluated_policy_cost,
+            exact.success_probability, exact.failure_probability,
+            exact.action_not_applied_probability,
+            exact.no_matching_edge_probability,
+            exact.unresolved_probability);
+        for (const StrategyEvalFailure& failure :
+             exact.failures_by_node) {
+            std::printf(
+                "solver observed unveil failure: node=%s reason=%s "
+                "probability=%.12f\n",
+                failure.node_id.c_str(), failure.reason.c_str(),
+                failure.probability);
+        }
+        PC_CHECK(exact.converged);
+        PC_CHECK(exact.cost_complete);
+        PC_CHECK(exact.success_probability > 1.0 - 1e-9);
+        PC_CHECK(exact.failure_probability < 1e-12);
+        PC_CHECK(exact.action_not_applied_probability < 1e-12);
+        PC_CHECK(exact.no_matching_edge_probability < 1e-12);
+        PC_CHECK(exact.unresolved_probability < 1e-12);
+        PC_CHECK(std::fabs(
+                     exact.total_expected_cost -
+                     solved.evaluated_policy_cost) < 1e-7);
+        const SimulationSummaryInternal observed_summary =
+            run_compiled(
+                observed_session, strategy,
+                {{"veiled_chaos", 1.0}}, 10000, 246813579);
+        PC_CHECK(
+            observed_summary.success_count ==
+            observed_summary.completed_runs);
+        PC_CHECK(observed_summary.failure_count == 0);
+        PC_CHECK(observed_summary.action_not_applied_count == 0);
+        PC_CHECK(observed_summary.no_matching_edge_count == 0);
         std::printf(
             "solver quotient choice audit: offered=%zu "
             "projected_collision_classes=%u max_offered_per_class=%zu\n",

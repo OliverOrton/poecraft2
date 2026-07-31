@@ -1190,6 +1190,33 @@ void apply_fossil_specials(
 
 } // namespace
 
+bool ensure_unveil_options(
+    ActionContextImpl& context,
+    pc_item_state* item) {
+    if (item == nullptr) return false;
+    const auto ensure_side = [&](
+                                 pc_mod_slot* slots,
+                                 const std::uint8_t count,
+                                 const int side) {
+        for (std::uint8_t index = 0; index < count; ++index) {
+            pc_mod_slot& slot = slots[index];
+            if ((slot.flags & PC_MOD_SLOT_VEILED) == 0 ||
+                slot.veiled_option_count != 0) {
+                continue;
+            }
+            if (!generate_unveil_options(
+                    context, item, side, index)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    return ensure_side(
+               item->prefixes, item->prefix_count, PC_SIDE_PREFIX) &&
+           ensure_side(
+               item->suffixes, item->suffix_count, PC_SIDE_SUFFIX);
+}
+
 ActionOutcome apply_action(
     ActionContextImpl& context,
     pc_item_state* item,

@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import random
+import re
 import subprocess
 import time
 from collections import Counter, defaultdict
@@ -32,6 +33,7 @@ from poecraft_engine import (
 GENERATOR_VERSION = "natural-t1-corpus-v1"
 CONFIG_SCHEMA = "natural_t1_generator_config_v1"
 MANIFEST_SCHEMA = "natural_t1_benchmark_corpus_v1"
+RELIABILITY_MANIFEST_SCHEMA = "cross_base_reliability_corpus_v1"
 REPORT_SCHEMA = "natural_t1_generation_report_v1"
 CASE_SCHEMA = "solver_benchmark_case_v1"
 
@@ -195,6 +197,11 @@ def _side_code(value: str, count: int) -> str:
     return code
 
 
+def _slug(value: str) -> str:
+    result = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return result or "unknown"
+
+
 def _resolved_goals(session: Any, feasibility: GoalFeasibility) -> list[dict[str, Any]]:
     resolved: list[dict[str, Any]] = []
     for slot, mod_id in enumerate(feasibility.witness_mod_ids):
@@ -226,12 +233,20 @@ def _economy(root: Path, value: Mapping[str, Any]) -> dict[str, Any]:
     snapshot_path = root / str(value["snapshot_path"])
     payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
     metadata = payload.get("metadata") or {}
+    content_sha256 = metadata.get("content_sha256")
+    source_cutoff_at_utc = metadata.get("source_cutoff_at_utc")
+    if not isinstance(content_sha256, str) or not content_sha256:
+        raise ValueError(f"{snapshot_path} is missing metadata.content_sha256")
+    if not isinstance(source_cutoff_at_utc, str) or not source_cutoff_at_utc:
+        raise ValueError(
+            f"{snapshot_path} is missing metadata.source_cutoff_at_utc"
+        )
     return {
         "version": "v1",
         "id": payload["id"],
         "snapshot_path": _relative(root, snapshot_path),
-        "content_sha256": _sha256(snapshot_path),
-        "source_cutoff_at_utc": metadata.get("created_at_utc"),
+        "content_sha256": content_sha256,
+        "source_cutoff_at_utc": source_cutoff_at_utc,
         "league_key": metadata.get("league_key"),
         "league_name": metadata.get("league_name"),
         "manual_overrides": dict(value.get("manual_overrides") or {}),
@@ -315,6 +330,9 @@ def generate_corpus(
     start_spec = dict(config.get("start") or {"rarity": "rare", "with_implicits": False, "mods": []})
     item_level = int(config.get("item_level", 86))
     filters = dict(config.get("natural_filters") or {})
+    manifest_schema = str(config.get("manifest_schema", MANIFEST_SCHEMA))
+    if manifest_schema not in {MANIFEST_SCHEMA, RELIABILITY_MANIFEST_SCHEMA}:
+        raise ValueError(f"unsupported manifest_schema: {manifest_schema}")
 
     counters: Counter[str] = Counter()
     counters.update(
@@ -433,13 +451,20 @@ def generate_corpus(
             requested_keys: list[str],
             stratum: Mapping[str, Any],
             explicit_id: str | None = None,
+            case_start: Mapping[str, Any] | None = None,
         ) -> bool:
             if time.monotonic() - started >= watchdog_seconds:
                 raise TimeoutError("natural-T1 generator watchdog expired")
             counters["attempts"] += 1
             session, _ = session_for(base)
+            resolved_start = dict(case_start or start_spec)
+            start_signature = (
+                [] if resolved_start == start_spec else [resolved_start]
+            )
             requested_signature = json.dumps(
-                [base.metadata_path, sorted(requested_keys)], separators=(",", ":")
+                [base.metadata_path, sorted(requested_keys), *start_signature],
+                sort_keys=True,
+                separators=(",", ":"),
             )
             if requested_signature in attempt_signatures:
                 counters["duplicates"] += 1
@@ -447,6 +472,9 @@ def generate_corpus(
             attempt_signatures.add(requested_signature)
             feasibility = session.goal_feasibility(
                 _goal(requested_keys),
+                # Special-start reliability cases reuse the ordinary-start
+                # native feasibility proof for goal selection, then exercise
+                # the explicitly authored start through the full solver.
                 _start_item(session, start_spec),
             )
             if feasibility.status != "feasible":
@@ -467,7 +495,9 @@ def generate_corpus(
             resolved = _resolved_goals(session, feasibility)
             resolved_keys = [entry["family_mod_key"] for entry in resolved]
             signature = json.dumps(
-                [base.metadata_path, sorted(resolved_keys)], separators=(",", ":")
+                [base.metadata_path, sorted(resolved_keys), *start_signature],
+                sort_keys=True,
+                separators=(",", ":"),
             )
             if signature in case_signatures:
                 counters["duplicates"] += 1
@@ -504,10 +534,22 @@ def generate_corpus(
             case = {
                 "schema_version": CASE_SCHEMA,
                 "id": case_id,
-                "category": "seeded_natural_t1",
-                "approval_status": "generated_b3_2026_07_22",
+                "category": str(
+                    config.get("category", "seeded_natural_t1")
+                ),
+                "approval_status": str(
+                    config.get(
+                        "approval_status",
+                        "generated_b3_2026_07_22",
+                    )
+                ),
                 "benchmark_enabled": True,
-                "comparison_profile": "bounded-policy-natural-t1-v1",
+                "comparison_profile": str(
+                    config.get(
+                        "comparison_profile",
+                        "bounded-policy-natural-t1-v1",
+                    )
+                ),
                 "corpus": {
                     "tier": stratum["corpus"],
                     "stratum": stratum["id"],
@@ -529,7 +571,7 @@ def generate_corpus(
                     "item_class_key": base.item_class_key,
                     "item_level": item_level,
                 },
-                "start": start_spec,
+                "start": resolved_start,
                 "goal": goal,
                 "resolved_natural_t1_goals": resolved,
                 "product_action_envelope": {
@@ -550,6 +592,8 @@ def generate_corpus(
                     "runs": 10000,
                     "seed": seed + len(cases) + 1,
                     "max_actions_per_run": 100000,
+                    **dict(config.get("verification") or {}),
+                    **dict(stratum.get("verification") or {}),
                 },
                 "feasibility": _feasibility_dict(feasibility),
                 "generation": {
@@ -560,6 +604,13 @@ def generate_corpus(
                     "artifact_manifest_sha256": artifact["manifest_sha256"],
                 },
             }
+            if manifest_schema == RELIABILITY_MANIFEST_SCHEMA:
+                case["expected"] = {
+                    "solve_status": "reliability_classified",
+                    "optimality_status": "classified",
+                    "compile_status": "compiled_if_policy_available",
+                    "verification_status": "run_if_compiled",
+                }
             cases.append(case)
             accepted_by_stratum[str(stratum["id"])] += 1
             counters["accepts"] += 1
@@ -579,7 +630,45 @@ def generate_corpus(
                 requested_keys=[str(value) for value in explicit["goal_family_mod_keys"]],
                 stratum=stratum,
                 explicit_id=str(explicit["id"]),
+                case_start=dict(explicit.get("start") or start_spec),
             )
+
+        coverage = dict(config.get("coverage") or {})
+        if coverage.get("one_goal_per_item_class"):
+            coverage_stratum_id = str(coverage["stratum"])
+            coverage_stratum = stratum_by_id[coverage_stratum_id]
+            bases_by_class: dict[str, list[BaseInfo]] = defaultdict(list)
+            for base in eligible_bases:
+                bases_by_class[base.item_class_key].append(base)
+            for item_class in sorted(bases_by_class):
+                accepted = False
+                for base in sorted(
+                    bases_by_class[item_class],
+                    key=lambda value: value.metadata_path,
+                ):
+                    _, families = session_for(base)
+                    candidates = sorted(
+                        families["prefix"] + families["suffix"],
+                        key=lambda info: (info.family_id, info.key),
+                    )
+                    for info in candidates:
+                        if attempt_case(
+                            base=base,
+                            requested_keys=[info.key],
+                            stratum=coverage_stratum,
+                            explicit_id=(
+                                f"reliability-class-{_slug(item_class)}"
+                            ),
+                        ):
+                            accepted = True
+                            break
+                    if accepted:
+                        break
+                if not accepted:
+                    raise RuntimeError(
+                        "unable to generate reliability coverage for "
+                        f"item class {item_class}"
+                    )
 
         for stratum in strata:
             stratum_id = str(stratum["id"])
@@ -642,7 +731,7 @@ def generate_corpus(
         relative_cases.append(path.relative_to(output_dir).as_posix())
 
     manifest = {
-        "schema_version": MANIFEST_SCHEMA,
+        "schema_version": manifest_schema,
         "corpus_id": str(config["corpus_id"]),
         "generator": generation,
         "artifact": artifact,

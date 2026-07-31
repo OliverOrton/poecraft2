@@ -1022,6 +1022,10 @@ std::string compile_policy_strategy_json(
                          PC_MOD_SLOT_CRAFTED) != 0) {
                         json += ",\"crafted\":true";
                     }
+                    if ((mods[i].flags &
+                         PC_MOD_SLOT_VEILED) != 0) {
+                        json += ",\"veiled\":true";
+                    }
                     json += '}';
                 }
                 json += ']';
@@ -1634,6 +1638,9 @@ std::string compile_policy_strategy_json(
             if ((slots[i].flags & PC_MOD_SLOT_CRAFTED) != 0) {
                 json += ",\"crafted\":true";
             }
+            if ((slots[i].flags & PC_MOD_SLOT_VEILED) != 0) {
+                json += ",\"veiled\":true";
+            }
             json += '}';
         }
         json += ']';
@@ -2066,6 +2073,8 @@ std::string compile_policy_strategy_json(
                 edge(from, to, 0, "", true);
             }
             if (observed) {
+                const OptionKernel& kernel =
+                    compiled_option_kernels.at(state_id);
                 const auto& preferences =
                     result.option_unveil_preferences.at(state_id);
                 const std::string dispatcher =
@@ -2097,9 +2106,51 @@ std::string compile_policy_strategy_json(
                                     session, selected.mod_id)) +
                                 "\"}",
                             false);
+                        const auto same_behavioral_state =
+                            [&](const std::uint32_t left,
+                                const std::uint32_t right) {
+                                if (left == right) return true;
+                                if (result
+                                        .behavioral_representative_by_state
+                                        .empty() ||
+                                    left >= result
+                                                .behavioral_representative_by_state
+                                                .size()) {
+                                    return false;
+                                }
+                                const std::uint32_t projected_left =
+                                    result.behavioral_representative_by_state[
+                                        left];
+                                if (projected_left == right) return true;
+                                return right <
+                                           result
+                                               .behavioral_representative_by_state
+                                               .size() &&
+                                       projected_left ==
+                                           result
+                                               .behavioral_representative_by_state[
+                                               right];
+                            };
+                        const bool retry_choice =
+                            selected.successor_state == kNoId ||
+                            same_behavioral_state(
+                                selected.successor_state, state_id) ||
+                            std::find(
+                                kernel.retry_states.begin(),
+                                kernel.retry_states.end(),
+                                selected.actual_state) !=
+                                kernel.retry_states.end() ||
+                            std::any_of(
+                                kernel.retry_states.begin(),
+                                kernel.retry_states.end(),
+                                [&](const std::uint32_t retry_state) {
+                                    return same_behavioral_state(
+                                        retry_state,
+                                        selected.actual_state);
+                                });
                         edge(
                             operation,
-                            selected.successor_state == state_id
+                            retry_choice
                                 ? state_node(state_id)
                                 : "router",
                             0, "", true);

@@ -24,7 +24,5 @@ Parent: [Documentation map](../README.md)
 The following are owner choices but not mechanic-transition rulings, so they
 remain in their owning references rather than this mechanic rollup:
 
-- authored Unveil and exact-evaluator coverage in
-  [Veiled Crafting](../mechanics/veiled-crafting.md#open-questions-requiring-oliver);
-- direct Restart authoring and whole-graph condition/Bestiary coverage in
+- direct Restart authoring and whole-graph Bestiary coverage in
   [Strategy and Solver Vocabulary](../mechanics/strategy-and-solver-vocabulary.md#open-questions-requiring-oliver).

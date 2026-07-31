@@ -14,7 +14,7 @@
     "benchmark:strategy-eval": "tsx test/strategy-eval-benchmark.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/engine-smoke.test.ts && tsx test/engine-client-transfer.test.ts && tsx test/solver-benchmark-corpus.test.ts && tsx test/item-display.test.ts && tsx test/calculator-goal-item.test.ts && tsx test/odds-presentation.test.ts && tsx test/solve-workspace.test.ts && tsx test/solver-result-presentation.test.ts && tsx test/workspace-model.test.ts && tsx test/base-picker-model.test.ts && tsx test/strategy-model.test.ts && tsx test/strategy-layout.test.ts && tsx test/strategy-calculator-mode.test.ts && tsx test/economy-service.test.ts"
+    "test": "tsx test/engine-smoke.test.ts && tsx test/engine-client-transfer.test.ts && tsx test/solver-benchmark-corpus.test.ts && tsx test/bestiary-bindings.test.ts && tsx test/item-display.test.ts && tsx test/calculator-goal-item.test.ts && tsx test/odds-presentation.test.ts && tsx test/solve-workspace.test.ts && tsx test/solver-result-presentation.test.ts && tsx test/workspace-model.test.ts && tsx test/base-picker-model.test.ts && tsx test/strategy-model.test.ts && tsx test/strategy-layout.test.ts && tsx test/strategy-calculator-mode.test.ts && tsx test/economy-service.test.ts"
   },
   "dependencies": {
     "dockview-core": "^4.2.0"

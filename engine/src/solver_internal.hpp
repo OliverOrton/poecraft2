@@ -1716,6 +1716,10 @@ struct SolveDiagnostics {
     std::vector<std::string> skipped_unsupported;
     std::uint64_t skipped_missing_price_count = 0;
     std::uint64_t skipped_unsupported_count = 0;
+    bool policy_compatibility_supported = true;
+    std::uint32_t policy_compatibility_state = kNoId;
+    std::string policy_compatibility_action;
+    std::string policy_compatibility_reason;
     std::uint32_t expanded_states = 0;
     std::uint32_t sweeps = 0;
     std::uint32_t policy_improvement_rounds = 0;

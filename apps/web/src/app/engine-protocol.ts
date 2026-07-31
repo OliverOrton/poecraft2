@@ -624,7 +624,28 @@ export interface SolveSummary {
     expanded_states: number;
     sweeps: number;
     residual: number;
+    /** Compatibility aggregate; prefer the two categorized counts below. */
     skipped_actions: number;
+    stop_cause:
+        | "none"
+        | "exact_closed"
+        | "target_gap"
+        | "state_cap"
+        | "transition_cap"
+        | "memory_cap"
+        | "sweep_cap"
+        | "reforge_work_cap"
+        | "state_action_row_cap"
+        | "compiled_output_cap"
+        | "other_resource_cap"
+        | "no_executable_policy";
+    cap_hit_mask: number;
+    registry_actions: number;
+    candidate_actions: number;
+    evaluator_supported_actions: number;
+    supported_priced_actions: number;
+    skipped_missing_price_actions: number;
+    skipped_unsupported_actions: number;
     policy_available: boolean;
     policy_status:
         | "none"

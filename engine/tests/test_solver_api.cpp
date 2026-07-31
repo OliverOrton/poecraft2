@@ -403,6 +403,8 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_summary.policy_status == PC_SOLVE_POLICY_EXACT);
     PC_CHECK(solve_summary.termination ==
              PC_SOLVE_TERMINATION_EXACT_CLOSED);
+    PC_CHECK(solve_summary.stop_cause == PC_SOLVE_STOP_EXACT_CLOSED);
+    PC_CHECK(solve_summary.cap_hit_mask == 0);
     PC_CHECK(solve_summary.lower_bound == solve_summary.start_value);
     PC_CHECK(solve_summary.upper_bound == solve_summary.start_value);
     PC_CHECK(solve_summary.evaluated_policy_cost ==
@@ -411,6 +413,15 @@ void run_public_solver_gate(const char* artifact_dir) {
     PC_CHECK(solve_summary.relative_optimality_gap == 0.0);
     PC_CHECK(solve_summary.start_value > 0.0);
     PC_CHECK(solve_summary.skipped_action_count == 0);
+    PC_CHECK(solve_summary.registry_action_count >=
+             solve_summary.candidate_action_count);
+    PC_CHECK(solve_summary.candidate_action_count >=
+             solve_summary.evaluator_supported_action_count);
+    PC_CHECK(solve_summary.evaluator_supported_action_count >=
+             solve_summary.supported_priced_action_count);
+    PC_CHECK(solve_summary.skipped_action_count ==
+             solve_summary.skipped_missing_price_count +
+                 solve_summary.skipped_unsupported_count);
 
     /* The stepped ABI uses the same solver state machine. Exercise abandon,
      * then complete with deliberately tiny and uneven budgets. */
@@ -485,6 +496,20 @@ void run_public_solver_gate(const char* artifact_dir) {
              solve_summary.policy_available);
     PC_CHECK(stepped_summary.policy_status == solve_summary.policy_status);
     PC_CHECK(stepped_summary.termination == solve_summary.termination);
+    PC_CHECK(stepped_summary.stop_cause == solve_summary.stop_cause);
+    PC_CHECK(stepped_summary.cap_hit_mask == solve_summary.cap_hit_mask);
+    PC_CHECK(stepped_summary.registry_action_count ==
+             solve_summary.registry_action_count);
+    PC_CHECK(stepped_summary.candidate_action_count ==
+             solve_summary.candidate_action_count);
+    PC_CHECK(stepped_summary.evaluator_supported_action_count ==
+             solve_summary.evaluator_supported_action_count);
+    PC_CHECK(stepped_summary.supported_priced_action_count ==
+             solve_summary.supported_priced_action_count);
+    PC_CHECK(stepped_summary.skipped_missing_price_count ==
+             solve_summary.skipped_missing_price_count);
+    PC_CHECK(stepped_summary.skipped_unsupported_count ==
+             solve_summary.skipped_unsupported_count);
     PC_CHECK(stepped_summary.lower_bound == solve_summary.lower_bound);
     PC_CHECK(stepped_summary.upper_bound == solve_summary.upper_bound);
     PC_CHECK(stepped_summary.evaluated_policy_cost ==
@@ -591,6 +616,25 @@ void run_public_solver_gate(const char* artifact_dir) {
 
     pc_simulator_destroy(simulator);
     pc_strategy_destroy(strategy);
+
+    /* A no-policy cap keeps the cap as the public stopping cause. */
+    pc_solve_options capped_options{};
+    capped_options.struct_size = sizeof(capped_options);
+    capped_options.abi_version = PC_ABI_VERSION;
+    capped_options.max_states = 1;
+    pc_solve_summary capped_summary{};
+    PC_CHECK(pc_solver_solve(
+                 solver, &item, economy, &capped_options,
+                 &capped_summary, &error) == PC_RESULT_OK);
+    PC_CHECK(capped_summary.converged == 0);
+    PC_CHECK(capped_summary.policy_available == 0);
+    PC_CHECK(capped_summary.policy_status == PC_SOLVE_POLICY_NONE);
+    PC_CHECK(capped_summary.termination ==
+             PC_SOLVE_TERMINATION_REFUSED_RESOURCE_CAP);
+    PC_CHECK(capped_summary.stop_cause == PC_SOLVE_STOP_STATE_CAP);
+    PC_CHECK(
+        (capped_summary.cap_hit_mask & PC_SOLVE_CAP_STATE) != 0);
+
     pc_economy_destroy(economy);
     pc_solver_destroy(solver);
     pc_action_context_destroy(context);

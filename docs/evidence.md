@@ -914,6 +914,47 @@ record the qualified implementation.
   routing verification, but 9,038 runs hit its action limit. It is therefore
   not cited as sampled mean-cost parity.
 
+## Cross-Base And Compiled-Strategy Reliability Qualification
+
+The 2026-07-30
+[completed milestone](archive/2026-07-30-cross-base-strategy-reliability/README.md)
+and tracked
+[reliability corpus](../fixtures/solver-reliability/v1/README.md) qualify the
+supported-base and returned-policy chain without changing mechanics, solver
+objective, or action scope.
+
+- The structural harness builds and audits all 979 ordinary-session bases
+  with base/class-attributed identity, pool/family/tier, goal/action,
+  eligibility, serialization, and item-level isolation checks.
+- The final deterministic corpus has 49 cases: 27 class smokes, six breadth,
+  seven representative, two deep, five special-start, and two selected
+  verification cases.
+- Final native staged evidence completes 49/49 cases with zero expectation
+  failures, incomplete cases, or survivor processes.
+- The selected Gloves policy reconciles solver/exact cost
+  `37.126855862088689 / 37.126855862092299`; the Ring policy reconciles
+  `490.41233174996785 / 490.41233174992311`. Each completes 10,000/10,000
+  native simulator runs with zero failures and zero off-policy actions.
+- The final release-WASM report meets all 49 expectations and repeats both
+  selected 10,000/10,000 success results. Its maximum cooperative solve slice
+  is 5.76 seconds under the 20-second stress-corpus ceiling; peak reported
+  WASM heap is about 990 MB.
+- Product publication now refuses precise coarse-parent identity gaps and
+  non-executable renewal witnesses before a mismatching Strategy Board
+  document can escape. Exact Unveil offer identity and full authored start
+  state survive compilation/evaluation.
+- Fracture transition hash `04a66ba6c6dfcabf`, policy hash
+  `3e5d7530e7aed5fb`, and strategy SHA-256
+  `e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e`
+  remain the frozen invariants.
+- The final repository pipeline passes ingest/artifact checks, bindings,
+  2,991,320 engine checks, benchmark-spec validation, 27/27 WASM smoke
+  checks, and the complete non-visual web suite.
+
+The raw final reports are reproducible local build artifacts under
+`build/acceptance/cross-base-reliability/native-acceptance-final-v4/` and
+`build/acceptance/cross-base-reliability/wasm-report-final-v2.json`.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

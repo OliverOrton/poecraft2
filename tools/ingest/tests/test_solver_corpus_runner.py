@@ -197,6 +197,48 @@ def test_native_expectation_miss_is_a_completed_measurement(
     assert result["exit_code"] == 2
 
 
+def test_case_command_forwards_product_verification_contract(
+    tmp_path: Path, monkeypatch
+) -> None:
+    observed: list[str] = []
+
+    def fake_process(command, **kwargs):
+        observed.extend(command)
+        output_flag = command.index("--output") + 1
+        _write_json(Path(command[output_flag]), {"cases": []})
+        return {
+            "exit_code": 0,
+            "timed_out": False,
+            "survivor": False,
+            "survivor_check": "test",
+            "wall_ms": 1.0,
+            "output": "",
+        }
+
+    monkeypatch.setattr(
+        "poecraft_ingest.solver_corpus_runner.run_isolated_process",
+        fake_process,
+    )
+    task = CaseTask("product", tmp_path / "product.json", 1.0, 100, "smoke")
+
+    result = _run_case(
+        task,
+        executable=Path(sys.executable),
+        artifact=tmp_path,
+        corpus=tmp_path / "manifest.json",
+        output_directory=tmp_path / "run",
+        root=tmp_path,
+        exact_evaluation=True,
+        run_verification=True,
+        goal_progress_gated_reforges=True,
+    )
+
+    assert result["status"] == "completed"
+    assert "--exact-strategy-evaluation" in observed
+    assert "--goal-progress-gated-reforges" in observed
+    assert "--skip-verification" not in observed
+
+
 def test_watchdog_preserves_valid_partial_report(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -87,6 +87,18 @@ WideFloat operator/(const WideFloat numerator, const WideFloat denominator) {
 
 }
 
+namespace {
+
+/*
+ * Tiny diagnostic solves retain their historical final focused measurement:
+ * its work is strictly bounded by this fixed graph size and several unit
+ * tests inspect the resulting fallback diagnostics. Portfolio-scale caps
+ * stop without reoptimizing the entire final partial graph.
+ */
+constexpr std::uint32_t kSynchronousCapFinalFocusStates = 8;
+
+}
+
 bool SolveWork::Impl::optimization_converged() const {
         if (policy_iteration_failed) {
             return residual <= options.epsilon;
@@ -1972,6 +1984,24 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                     phase = SolvePhase::Done;
                     break;
                 }
+                if (focus_optimizing &&
+                    expanded_count >= options.max_expanded_states &&
+                    expanded_count >
+                        kSynchronousCapFinalFocusStates &&
+                    calc.state_count() > expanded_count) {
+                    /*
+                     * The expansion limit is a prompt resource boundary.
+                     * Keep the most recent completed focused bound and any
+                     * executable incumbent, but do not begin or continue a
+                     * potentially unbounded optimization pass over the final
+                     * cap-sized partial graph.
+                     */
+                    focus_optimizing = false;
+                    focused_lower_mode = false;
+                    prepare_iteration();
+                    phase = SolvePhase::Done;
+                    break;
+                }
                 if (focus_optimizing) {
                     run_focused_lower_unit();
                     --remaining;
@@ -2075,15 +2105,20 @@ void SolveWork::Impl::step(std::uint32_t max_work_items) {
                 }
                 if (completed_state &&
                     expanded_count >= options.max_expanded_states) {
-                    /* Measure the final exact partial graph before reporting
-                     * its cap. Otherwise a focused batch that lands exactly
-                     * on the limit exposes bounds from the preceding round and
-                     * discards every state in the last batch. */
-                    if (focused_mode && !focused_closure_proved) {
+                    /*
+                     * The last completed focused bound and executable
+                     * incumbent remain available for cap finalization. Do
+                     * not spend unbounded time reoptimizing the entire final
+                     * cap-sized partial graph.
+                     */
+                    if (focused_mode && !focused_closure_proved &&
+                        expanded_count <=
+                            kSynchronousCapFinalFocusStates) {
                         begin_focused_lower_solve();
                         continue;
                     }
                     prepare_iteration();
+                    phase = SolvePhase::Done;
                     break;
                 }
                 if (completed_state && !expansion_active && queue.empty()) {

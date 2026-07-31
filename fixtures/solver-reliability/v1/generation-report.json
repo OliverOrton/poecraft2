@@ -1,0 +1,182 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "manifest_sha256": "ba1feb596d6f07903dfa992d4ba42184bee30c18660ab56c84dad1c5cadc8a27",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "corpus_id": "poecraft2-cross-base-reliability-v1",
+  "counters": {
+    "accepts": 49,
+    "attempts": 51,
+    "duplicates": 2,
+    "exhausted_strata": 0,
+    "group_slot_conflicts": 0,
+    "ineligible_bases": 3995,
+    "infeasible": 0,
+    "unknown": 0,
+    "zero_weight_families": 0
+  },
+  "exhausted_strata": [],
+  "feasibility_probes": [],
+  "generator": {
+    "compiler": "gcc-14.2.0",
+    "engine_abi_version": 2,
+    "engine_binary_path": "build/engine/poecraft_engine.dll",
+    "engine_binary_sha256": "b8f16e7ba5447ca405af70480bbb6ddd12fdd10f94c8f35ef23ad12cc45615a7",
+    "engine_commit": "25d5bbe6791beb61eae803219563575346def2dc",
+    "engine_dirty": true,
+    "engine_dirty_paths": [
+      "M HANDOFF.md",
+      " M apps/web/package.json",
+      " M apps/web/src/app/engine-client.ts",
+      " M apps/web/src/app/engine-protocol.ts",
+      " M apps/web/src/app/engine-wasm.ts",
+      " M apps/web/src/app/engine-worker.ts",
+      " M apps/web/src/app/solver-result-presentation.ts",
+      " M apps/web/test/engine-smoke.test.ts",
+      " M apps/web/test/solver-benchmark-corpus.test.ts",
+      " M apps/web/test/solver-benchmark-corpus.ts",
+      " M apps/web/test/solver-benchmark.ts",
+      " M apps/web/test/solver-result-presentation.test.ts",
+      " M bindings/wasm/dist/poecraft_engine.mjs",
+      " M bindings/wasm/dist/poecraft_engine.wasm",
+      " M bindings/wasm/wasm_api.cpp",
+      " M docs/README.md",
+      " M docs/active/README.md",
+      " M docs/archive/README.md",
+      " M docs/evidence.md",
+      " M docs/future/solver-roadmap.md",
+      " M docs/mechanics/README.md",
+      " M docs/mechanics/strategy-and-solver-vocabulary.md",
+      " M docs/mechanics/veiled-crafting.md",
+      " M docs/notes/ruling-needed.md",
+      " M docs/product/README.md",
+      " M docs/product/calculator.md",
+      " M docs/solver/NOTES.md",
+      " M docs/solver/README.md",
+      " M engine/benchmarks/solver_benchmark.cpp",
+      " M engine/include/poecraft/solver.h",
+      " M engine/src/actions_basic.cpp",
+      " M engine/src/engine_internal.hpp",
+      " M engine/src/simulator.cpp",
+      " M engine/src/solver_api.cpp",
+      " M engine/src/solver_compile.cpp",
+      " M engine/src/solver_eval.cpp",
+      " M engine/src/solver_internal.hpp",
+      " M engine/src/solver_solve_bellman.cpp",
+      " M engine/src/solver_solve_constructive.cpp",
+      " M engine/src/solver_solve_finish.cpp",
+      " M engine/src/solver_solve_quotient.cpp",
+      " M engine/src/solver_solve_telemetry.cpp",
+      " M engine/tests/test_main.cpp",
+      " M engine/tests/test_session_builder.cpp",
+      " M engine/tests/test_solver_api.cpp",
+      " M engine/tests/test_solver_compile.cpp",
+      " M engine/tests/test_solver_solve.cpp",
+      " M tools/ingest/poecraft_ingest/bounded_policy_workflow.py",
+      " M tools/ingest/poecraft_ingest/natural_t1_corpus.py",
+      " M tools/ingest/poecraft_ingest/solver_corpus_runner.py",
+      " M tools/ingest/tests/test_natural_t1_corpus.py",
+      " M tools/ingest/tests/test_solver_corpus_runner.py",
+      "?? docs/archive/2026-07-30-cross-base-strategy-reliability/",
+      "?? docs/product/reliability.md",
+      "?? fixtures/solver-reliability/"
+    ],
+    "generator_version": "natural-t1-corpus-v1",
+    "seed": 20260730
+  },
+  "reason_counts": {
+    "natural_reforge_witness": 49
+  },
+  "rejection_examples": {
+    "ineligible_bases": [
+      {
+        "base_metadata_path": "Metadata/Items/AnimalCharms/DexAnimalCharm",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AnimalCharms/IntAnimalCharm",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AnimalCharms/StrAnimalCharm",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasExiles/AddModToRareCrusader",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasExiles/AddModToRareHunter",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasExiles/AddModToRareRedeemer",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasExiles/AddModToRareWarlord",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasExiles/ApplyInfluence",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_1",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_2",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_3",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_4",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_5",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_6",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_7",
+        "reason": "unsupported_or_drop_level"
+      },
+      {
+        "base_metadata_path": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade1_8",
+        "reason": "unsupported_or_drop_level"
+      }
+    ]
+  },
+  "schema_version": "natural_t1_generation_report_v1",
+  "stratum_accepts": {
+    "breadth-two": 6,
+    "class-one-goal": 27,
+    "deep-four-dense": 2,
+    "representative-four": 3,
+    "representative-three": 4,
+    "selected-verification": 2,
+    "special-starts": 5
+  },
+  "stratum_targets": {
+    "breadth-two": 6,
+    "class-one-goal": 27,
+    "deep-four-dense": 2,
+    "representative-four": 3,
+    "representative-three": 4,
+    "selected-verification": 2,
+    "special-starts": 5
+  }
+}

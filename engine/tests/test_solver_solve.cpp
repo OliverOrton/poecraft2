@@ -382,7 +382,7 @@ void run_alt_spam_tests() {
         PC_CHECK(!capped.policy_available);
         PC_CHECK(capped.policy_status == SolvePolicyStatus::None);
         PC_CHECK(capped.termination ==
-                 SolveTermination::NoExecutablePolicy);
+                 SolveTermination::RefusedResourceCap);
         PC_CHECK(!std::isfinite(capped.upper_bound));
         const std::string capped_telemetry = serialize_solver_telemetry(
             calc, &capped, nullptr, std::nullopt, nullptr);
@@ -773,14 +773,32 @@ void run_constructive_renewal_upper_tests() {
     SolveOptions options;
     options.max_expanded_states = 2;
     options.state_certificate_control = false;
+    options.goal_progress_gated_reforges = true;
     options.focused_expansion_checkpoint = 1;
     options.focused_expansion_queue_threshold = 0;
-    const SolveResult result = solve(
-        calc, start,
-        {{"chaos", 1.0},
-         {"base", 1.0},
-         {"bench:constructive_finish", 2.0}},
-        options);
+    const std::unordered_map<std::string, double> prices{
+        {"chaos", 1.0},
+        {"base", 1.0},
+        {"bench:constructive_finish", 2.0}};
+    SolveWork work(calc, start, prices, options);
+    SolveProgress progress = work.progress();
+    std::uint32_t work_units = 0;
+    while (!progress.done &&
+           progress.expanded_states < options.max_expanded_states &&
+           work_units < 10000) {
+        work.step(1);
+        progress = work.progress();
+        ++work_units;
+    }
+    while (!progress.done && work_units < 10000) {
+        work.step(1);
+        progress = work.progress();
+        ++work_units;
+    }
+    PC_CHECK(progress.expanded_states == options.max_expanded_states);
+    PC_CHECK(progress.done);
+    if (!progress.done) return;
+    const SolveResult result = work.finish();
     PC_CHECK(result.diagnostics.focused_expansion);
     PC_CHECK(result.diagnostics.state_cap_hit);
     PC_CHECK(std::isfinite(result.diagnostics.focused_upper_bound));
@@ -985,15 +1003,19 @@ void run_primitive_destructive_renewal_upper_tests() {
     options.state_certificate_control = false;
     options.focused_expansion_checkpoint = 1;
     options.focused_expansion_queue_threshold = 0;
+    SolveOptions bounded_options = options;
+    bounded_options.goal_progress_gated_reforges = true;
     const std::unordered_map<std::string, double> prices{
         {"alchemy", 0.5}, {"chaos", 1.0}, {"base", 1.0}};
-    const SolveResult result = solve(calc, start, prices, options);
+    const SolveResult result = solve(
+        calc, start, prices, bounded_options);
     const double direct_renewal = 1.0 / success_probability;
     PC_CHECK(result.diagnostics.focused_expansion);
     PC_CHECK(result.diagnostics.state_cap_hit);
     PC_CHECK(result.policy_available);
     PC_CHECK(result.policy_status ==
              SolvePolicyStatus::BoundedFeasible);
+    PC_CHECK(result.primitive_renewal_witness.valid);
     PC_CHECK(result.termination ==
              SolveTermination::RefusedResourceCap);
     PC_CHECK(result.lower_bound <= result.evaluated_policy_cost + 1e-9);
@@ -1013,19 +1035,12 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(result.diagnostics.focused_lower_bound <=
              result.diagnostics.focused_upper_bound + 1e-9);
     PC_CHECK(result.diagnostics.supported_priced_actions == 3);
-    bool saw_primitive_renewal = false;
-    bool saw_real_anchor = false;
-    for (const std::string& reason :
-         result.diagnostics.action_inclusion_reasons) {
-        saw_primitive_renewal |=
-            reason.find(
-                "included:primitive_destructive_renewal_policy:chaos") !=
-            std::string::npos;
-        saw_real_anchor |= saw_primitive_renewal &&
-            reason.find(":anchor=") != std::string::npos;
-    }
-    PC_CHECK(saw_primitive_renewal);
-    PC_CHECK(saw_real_anchor);
+    PC_CHECK(result.diagnostics.gated_root_renewal_candidates > 0);
+    PC_CHECK(
+        result.diagnostics.gated_root_renewal_validated_non_goal_states >
+        0);
+    PC_CHECK(
+        result.diagnostics.destructive_renewal_action_id == "chaos");
 
     /* The same uncapped toy policy must close and lift to ordinary primitive
      * strategy behavior. This keeps the bounded fallback witness aligned with
@@ -1112,7 +1127,7 @@ void run_primitive_destructive_renewal_upper_tests() {
         PC_CHECK(std::isfinite(result.upper_bound));
     }
 
-    SolveOptions target_options = options;
+    SolveOptions target_options = bounded_options;
     target_options.max_expanded_states = 1000;
     target_options.max_absolute_optimality_gap = 1e9;
     const SolveResult target = solve(
@@ -1134,7 +1149,7 @@ void run_primitive_destructive_renewal_upper_tests() {
     PC_CHECK(target.absolute_optimality_gap <=
              target_options.max_absolute_optimality_gap);
 
-    SolveOptions unmet_options = options;
+    SolveOptions unmet_options = bounded_options;
     unmet_options.max_absolute_optimality_gap = 1e-30;
     const SolveResult unmet = solve(
         calc, start, prices, unmet_options);
@@ -1149,7 +1164,8 @@ void run_primitive_destructive_renewal_upper_tests() {
         (void)unused;
         price *= 2.0;
     }
-    const SolveResult repriced = solve(calc, start, doubled, options);
+    const SolveResult repriced = solve(
+        calc, start, doubled, bounded_options);
     PC_CHECK(std::isfinite(repriced.diagnostics.focused_upper_bound));
     PC_CHECK(near(
         repriced.diagnostics.focused_upper_bound,
@@ -1161,10 +1177,11 @@ void run_primitive_destructive_renewal_upper_tests() {
         session, goal, std::move(illegal_registry),
         {alchemy, chaos, restart});
     const SolveResult illegal = solve(
-        illegal_calc, start, prices, options);
+        illegal_calc, start, prices, bounded_options);
     PC_CHECK(!illegal.policy_available);
     PC_CHECK(illegal.policy_status == SolvePolicyStatus::None);
-    PC_CHECK(illegal.termination == SolveTermination::NoExecutablePolicy);
+    PC_CHECK(illegal.diagnostics.resource_cap_hit);
+    PC_CHECK(illegal.termination == SolveTermination::RefusedResourceCap);
     PC_CHECK(!std::isfinite(illegal.upper_bound));
     PC_CHECK(std::none_of(
         illegal.diagnostics.action_inclusion_reasons.begin(),
@@ -2298,7 +2315,10 @@ void run_incremental_action_generation_tests() {
         capped.policy_status == SolvePolicyStatus::BoundedFeasible);
     PC_CHECK(
         !capped.diagnostics.incremental_action_envelope_closed);
-    PC_CHECK(capped.diagnostics.incremental_actions_unresolved > 0);
+    PC_CHECK(
+        capped.diagnostics.incremental_actions_unresolved +
+            capped.diagnostics.incremental_actions_unevaluated >
+        0);
     PC_CHECK(capped.termination == SolveTermination::RefusedResourceCap);
 
     auto delta_session = make_solve_session();
@@ -2438,6 +2458,126 @@ void run_incremental_action_generation_tests() {
     PC_CHECK(
         varying.policy[varying_magic_state].index ==
         varying_alteration);
+}
+
+void run_mixed_side_rare_cap_reporting_regression() {
+    auto session = make_solve_session();
+    ActionRegistry registry = build_action_registry(*session);
+    GoalSpec goal;
+    goal.rarity = PC_RARITY_RARE;
+    GoalSlot prefix;
+    prefix.family_id = 100;
+    prefix.min_tier = 1;
+    goal.slots.push_back(prefix);
+    GoalSlot suffix;
+    suffix.family_id = 104;
+    suffix.min_tier = 1;
+    goal.slots.push_back(suffix);
+    const std::uint32_t chaos = registry.index_by_id.at("chaos");
+    const std::uint32_t restart = registry.index_by_id.at("restart");
+    CalcContext calc(session, goal, registry, {chaos, restart});
+    pc_item_state start;
+    pc_item_clear(&start);
+    start.rarity = PC_RARITY_RARE;
+    SolveOptions options;
+    options.max_states = 200000;
+    options.max_discovered_states = 200000;
+    options.max_expanded_states = 1;
+    options.goal_progress_gated_reforges = true;
+    const SolveResult result = solve(
+        calc, start, {{"chaos", 1.0}, {"base", 5.0}}, options);
+    PC_CHECK(!result.converged);
+    PC_CHECK(result.diagnostics.state_cap_hit);
+    PC_CHECK(result.diagnostics.resource_cap_hit);
+    PC_CHECK(result.termination == SolveTermination::RefusedResourceCap);
+    PC_CHECK(std::find(
+                 result.diagnostics.cap_hits.begin(),
+                 result.diagnostics.cap_hits.end(),
+                 "max_expanded_states") !=
+             result.diagnostics.cap_hits.end());
+    if (result.policy_available) {
+        PC_CHECK(
+            result.policy_status ==
+                SolvePolicyStatus::BoundedFeasible ||
+            result.policy_status ==
+                SolvePolicyStatus::BoundedNearOptimal);
+    } else {
+        PC_CHECK(result.policy_status == SolvePolicyStatus::None);
+    }
+    const std::string telemetry = serialize_solver_telemetry(
+        calc, &result, nullptr, std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(telemetry));
+    PC_CHECK(
+        telemetry.find("\"max_expanded_states\"") !=
+        std::string::npos);
+
+    GoalSpec product_goal = goal;
+    product_goal.automatic_candidates = true;
+    CalcContext product_calc(
+        session, product_goal, registry, {chaos, restart});
+    SolveOptions reforge_cap_options;
+    reforge_cap_options.max_reforge_work = 1;
+    reforge_cap_options.goal_progress_gated_reforges = true;
+    reforge_cap_options.state_certificate_control = false;
+    const SolveResult reforge_capped = solve(
+        product_calc, start,
+        {{"chaos", 1.0}, {"base", 5.0}},
+        reforge_cap_options);
+    PC_CHECK(!reforge_capped.converged);
+    PC_CHECK(reforge_capped.diagnostics.resource_cap_hit);
+    PC_CHECK(
+        reforge_capped.termination ==
+        SolveTermination::RefusedResourceCap);
+    PC_CHECK(std::find(
+                 reforge_capped.diagnostics.cap_hits.begin(),
+                 reforge_capped.diagnostics.cap_hits.end(),
+                 "max_reforge_work") !=
+             reforge_capped.diagnostics.cap_hits.end());
+
+    CalcContext prompt_calc(
+        session, goal, registry, {chaos, restart});
+    SolveOptions prompt_options;
+    prompt_options.max_expanded_states = 9;
+    prompt_options.goal_progress_gated_reforges = true;
+    prompt_options.state_certificate_control = false;
+    prompt_options.focused_expansion_checkpoint = 1;
+    prompt_options.focused_expansion_queue_threshold = 0;
+    SolveWork prompt_work(
+        prompt_calc, start,
+        {{"chaos", 1.0}, {"base", 5.0}},
+        prompt_options);
+    SolveProgress prompt_progress = prompt_work.progress();
+    std::uint32_t prompt_work_units = 0;
+    while (!prompt_progress.done && prompt_work_units < 100000) {
+        prompt_work.step(1);
+        prompt_progress = prompt_work.progress();
+        ++prompt_work_units;
+        if (prompt_progress.expanded_states >=
+            prompt_options.max_expanded_states) {
+            break;
+        }
+    }
+    if (!prompt_progress.done &&
+        prompt_progress.expanded_states ==
+            prompt_options.max_expanded_states) {
+        prompt_work.step(1);
+        prompt_progress = prompt_work.progress();
+        ++prompt_work_units;
+    }
+    PC_CHECK(
+        prompt_progress.expanded_states ==
+        prompt_options.max_expanded_states);
+    PC_CHECK(prompt_progress.done);
+    if (prompt_progress.done) {
+        const SolveResult prompt_result = prompt_work.finish();
+        PC_CHECK(prompt_result.diagnostics.state_cap_hit);
+        PC_CHECK(prompt_result.diagnostics.resource_cap_hit);
+        PC_CHECK(std::find(
+                     prompt_result.diagnostics.cap_hits.begin(),
+                     prompt_result.diagnostics.cap_hits.end(),
+                     "max_expanded_states") !=
+                 prompt_result.diagnostics.cap_hits.end());
+    }
 }
 
 void run_automatic_eldritch_side_tests() {
@@ -3262,6 +3402,7 @@ void run_solver_solve_tests(const char* artifact_dir) {
     run_primitive_destructive_renewal_upper_tests();
     run_goal_progress_gated_reforge_tests();
     run_incremental_action_generation_tests();
+    run_mixed_side_rare_cap_reporting_regression();
     run_automatic_eldritch_side_tests();
     run_artifact_solve_tests(artifact_dir);
 }

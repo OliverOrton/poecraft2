@@ -36,8 +36,14 @@ interface CaseReport {
     category: string;
     approval_status: string;
     benchmark_enabled: boolean;
-    expected: SolverBenchmarkCase["expected"];
+    expected: SolverBenchmarkCase["expected"] | null;
     actual_status: string;
+    workflow_status: {
+        solve_result_class: string;
+        compile: string;
+        exact_evaluation: string;
+        simulation: string;
+    };
     expectation_met: boolean;
     verification_skipped: boolean;
     input: Record<string, unknown>;
@@ -73,6 +79,7 @@ interface CaseReport {
         edges: number;
         strategy_json_bytes: number;
     } | null;
+    exact_evaluation: Record<string, unknown> | null;
     value: { start: number | null };
     verification: Record<string, unknown> | null;
     cap_checks: {
@@ -157,6 +164,12 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
             (spec.execution_backend === "native_unit_fixture"
                 ? "covered_by_native_unit_gate"
                 : "not_run_approval_pending"),
+        workflow_status: {
+            solve_result_class: "not_run",
+            compile: "not_attempted",
+            exact_evaluation: "not_requested",
+            simulation: "not_requested",
+        },
         expectation_met: true,
         verification_skipped: false,
         input: {
@@ -200,6 +213,7 @@ function disabledReport(spec: SolverBenchmarkCase, status?: string): CaseReport 
         solve_summary: null,
         solver_telemetry: null,
         compiled_graph: null,
+        exact_evaluation: null,
         value: { start: null },
         verification: null,
         cap_checks: { all_passed: true, checks: {} },
@@ -244,6 +258,10 @@ function statusFrom(
     pricedProductEnvelope = false,
 ): string {
     if (solve?.cancelled) return "cancelled";
+    if (solve && !solve.cancelled) {
+        if (solve.stop_cause === "state_cap") return "refused_state_cap";
+        if (solve.cap_hit_mask !== 0) return "refused_resource_cap";
+    }
     const stateCapHit = nestedBoolean(telemetry, "optimization", "state_cap_hit");
     const resourceCapHit = nestedBoolean(
         telemetry,
@@ -251,12 +269,9 @@ function statusFrom(
         "resource_cap_hit",
     );
     const missingPrice = nestedNumber(telemetry, "actions", "missing_price") ?? 0;
-    /* Match the native harness: requested-action refusal is authoritative
-     * when present; unsupported observed exits remain diagnostic. */
     const unsupported =
-        nestedNumber(telemetry, "actions", "unsupported_requested") ??
-        nestedNumber(telemetry, "actions", "unsupported_observed") ??
-        0;
+        (nestedNumber(telemetry, "actions", "unsupported_requested") ?? 0) +
+        (nestedNumber(telemetry, "actions", "unsupported_observed") ?? 0);
     const fullRequestStatus = nestedString(
         telemetry,
         "optimization",
@@ -320,6 +335,18 @@ function expectationMet(expected: string, actual: string): boolean {
             "not_converged",
         ].includes(actual);
     }
+    if (expected === "reliability_classified") {
+        return [
+            "converged",
+            "bounded_near_optimal",
+            "bounded_feasible",
+            "refused_state_cap",
+            "refused_sweep_cap",
+            "refused_resource_cap",
+            "refused_unsupported_action",
+            "refused_unreachable_goal",
+        ].includes(actual);
+    }
     return false;
 }
 
@@ -352,8 +379,17 @@ function nestedBoolean(value: unknown, ...path: string[]): boolean | null {
 
 function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseReport["cap_checks"] {
     const checks: Record<string, boolean> = {};
+    const optimization = report.solver_telemetry?.optimization;
+    const reportedCaps =
+        optimization && typeof optimization === "object" &&
+        Array.isArray((optimization as Record<string, unknown>).cap_hits)
+            ? (optimization as Record<string, unknown>).cap_hits as unknown[]
+            : [];
     const check = (name: string, actual: number | null, cap: number): void => {
-        if (actual !== null) checks[name] = actual <= cap;
+        if (actual !== null) {
+            checks[name] =
+                actual <= cap || reportedCaps.includes(name);
+        }
     };
     check("max_discovered_states", nestedNumber(report.solver_telemetry, "states", "discovered"), spec.caps.max_discovered_states);
     check("max_expanded_states", nestedNumber(report.solver_telemetry, "states", "expanded"), spec.caps.max_expanded_states);
@@ -365,7 +401,7 @@ function buildCapChecks(spec: SolverBenchmarkCase, report: CaseReport): CaseRepo
     check("max_compiled_edges", report.compiled_graph?.edges ?? null, spec.caps.max_compiled_edges);
     check("max_strategy_json_bytes", report.compiled_graph?.strategy_json_bytes ?? null, spec.caps.max_strategy_json_bytes);
     check("worker_step_ms", report.execution.worker_max_slice_ms, spec.caps.worker_step_ms);
-    if (spec.expected.solve_status === "cancelled") {
+    if (spec.expected?.solve_status === "cancelled") {
         check("cancel_ack_ms", report.execution.cancellation_ack_ms, spec.caps.cancel_ack_ms);
     }
     return { all_passed: Object.values(checks).every(Boolean), checks };
@@ -376,12 +412,47 @@ function caseExpectationMet(
     report: CaseReport,
     skipVerification: boolean,
 ): boolean {
-    if (!expectationMet(spec.expected.solve_status, report.actual_status)) return false;
     if (report.errors.length > 0) return false;
     if (report.solver_telemetry?.version !== "solver_telemetry_v1") return false;
+    if (!report.cap_checks.all_passed) return false;
+    if (
+        report.solve_summary?.policy_available === true &&
+        spec.verification.exact_evaluation === true &&
+        report.workflow_status.exact_evaluation !== "matched"
+    ) {
+        return false;
+    }
+    if (spec.expected === undefined) {
+        const solve = report.solve_summary;
+        if (solve === null) return false;
+        if (solve.policy_available === true) {
+            if (!report.compiled_graph) return false;
+            if (
+                spec.verification.exact_evaluation === true &&
+                report.workflow_status.exact_evaluation !== "matched"
+            ) {
+                return false;
+            }
+            if (
+                !skipVerification &&
+                spec.verification.runs > 0 &&
+                report.workflow_status.simulation !== "completed"
+            ) {
+                return false;
+            }
+        } else if (
+            solve.stop_cause === "none" &&
+            solve.termination !== "no_executable_policy"
+        ) {
+            return false;
+        }
+        return true;
+    }
+    if (!expectationMet(spec.expected.solve_status, report.actual_status)) return false;
     for (const section of [
         "availability",
         "actions",
+        "policy_compatibility",
         "abstraction",
         "states",
         "work",
@@ -444,6 +515,7 @@ async function runCase(
     let solve: SolverSolveResult | null = null;
     let telemetry: SolverTelemetry | null = null;
     let compiledGraph: CaseReport["compiled_graph"] = null;
+    let exactEvaluation: CaseReport["exact_evaluation"] = null;
     let verification: CaseReport["verification"] = null;
     let registryLayoutMs: number | null = null;
     let solveMs: number | null = null;
@@ -457,6 +529,13 @@ async function runCase(
     let wasmAfter = 0;
     let rssPeak = 0;
     let rssSampler: ReturnType<typeof startRssSampler> | null = null;
+    let compileStatus = "not_attempted";
+    let exactEvaluationStatus = spec.verification.exact_evaluation
+        ? "not_attempted"
+        : "not_requested";
+    let simulationStatus = spec.verification.runs > 0
+        ? "not_attempted"
+        : "not_requested";
 
     try {
         wasmBefore = (await client.memoryStats()).wasm_memory_bytes;
@@ -473,27 +552,38 @@ async function runCase(
             withImplicits: spec.start.with_implicits,
         });
         for (const mod of spec.start.mods) {
-            if (mod.flags.includes("crafted") || mod.flags.includes("veiled")) {
-                throw new Error(
-                    `benchmark start modifier ${mod.key} requires unsupported worker import flags`,
-                );
-            }
             await client.addMod(item, session, {
                 key: mod.key,
                 fractured: mod.flags.includes("fractured") || undefined,
+                crafted: mod.flags.includes("crafted") || undefined,
+                veiled: mod.flags.includes("veiled") || undefined,
             });
         }
         if ((spec.start.searing_exarch_tier ?? 0) !== 0 ||
-            (spec.start.eater_of_worlds_tier ?? 0) !== 0) {
-            throw new Error("non-zero Eldritch start tiers are not worker-importable yet");
+            (spec.start.eater_of_worlds_tier ?? 0) !== 0 ||
+            (spec.start.generic_influence_bits ?? 0) !== 0) {
+            const exported = await client.exportItem(item) as Record<string, unknown>;
+            exported.searing_exarch_tier =
+                spec.start.searing_exarch_tier ?? 0;
+            exported.eater_of_worlds_tier =
+                spec.start.eater_of_worlds_tier ?? 0;
+            exported.generic_influence_bits =
+                spec.start.generic_influence_bits ?? 0;
+            const imported = await client.importItem(exported);
+            await client.closeItem(item);
+            item = imported;
         }
+        const economySpec = materializeSolverBenchmarkEconomy(
+            spec,
+            REPO_ROOT,
+        );
         solver = await client.openSolver(
             session,
             materializeSolverBenchmarkGoal(spec),
         );
         await client.solverActions(solver);
         economy = await client.loadEconomy(
-            materializeSolverBenchmarkEconomy(spec, REPO_ROOT),
+            economySpec,
         );
         registryLayoutMs = roundMs(performance.now() - registryStarted);
 
@@ -576,17 +666,7 @@ async function runCase(
         solveMs = roundMs(performance.now() - solveStarted);
         telemetry = await safeTelemetry(client, solver, errors);
 
-        if (
-            solve &&
-            !solve.cancelled &&
-            solve.converged &&
-            statusFrom(
-                solve,
-                solveError,
-                telemetry,
-                spec.product_action_envelope !== undefined,
-            ) === "converged"
-        ) {
+        if (solve && !solve.cancelled && solve.policy_available) {
             const compileStarted = performance.now();
             try {
                 const raw = await client.solverCompileStrategy(solver);
@@ -601,10 +681,98 @@ async function runCase(
                     edges: raw.edges.length,
                     strategy_json_bytes: Buffer.byteLength(strategyJson),
                 };
-                if (!skipVerification) {
-                    const strategy = prepareSolverStrategy(raw);
-                    strategyHandle = await client.compileStrategy(
-                        session, strategy);
+                const strategy = prepareSolverStrategy(raw);
+                const reloaded = JSON.parse(
+                    JSON.stringify(strategy),
+                ) as unknown;
+                if (!isStrategyDocument(reloaded)) {
+                    throw new Error(
+                        "The saved compiled strategy did not reload as a "
+                        + "Strategy Board document.",
+                    );
+                }
+                strategyHandle = await client.compileStrategy(
+                    session,
+                    reloaded,
+                );
+                compileStatus = "compiled";
+                if (spec.verification.exact_evaluation) {
+                    exactEvaluationStatus = "running";
+                    const exact = await client.strategyEvaluate(
+                        session,
+                        reloaded,
+                        {
+                            max_states:
+                                spec.verification.exact_max_states,
+                            max_pairs:
+                                spec.verification.exact_max_pairs,
+                            max_transitions:
+                                spec.verification.exact_max_transitions,
+                            max_owned_bytes:
+                                spec.verification.exact_max_owned_bytes,
+                        },
+                        { economy: economySpec },
+                    );
+                    const offPolicy =
+                        exact.terminals.failure +
+                        exact.terminals.stop +
+                        exact.terminals.action_not_applied +
+                        exact.terminals.no_matching_edge +
+                        exact.terminals.unresolved;
+                    const exactCost =
+                        exact.accounting.totals.per_invocation
+                            .total_expected_cost;
+                    const solverCost = solve.evaluated_policy_cost;
+                    const absolute =
+                        exactCost !== null && solverCost !== null
+                            ? Math.abs(exactCost - solverCost)
+                            : Number.POSITIVE_INFINITY;
+                    const relative =
+                        solverCost !== null && Math.abs(solverCost) > 1e-12
+                            ? absolute / Math.abs(solverCost)
+                            : absolute;
+                    const absoluteTolerance =
+                        spec.verification
+                            .exact_cost_absolute_tolerance ?? 1e-7;
+                    const relativeTolerance =
+                        spec.verification
+                            .exact_cost_relative_tolerance ?? 1e-9;
+                    const reconciled =
+                        absolute <= absoluteTolerance ||
+                        relative <= relativeTolerance;
+                    const matched =
+                        exact.converged &&
+                        exact.accounting.totals.per_invocation
+                            .cost_complete &&
+                        exact.terminals.success >= 1 - 1e-10 &&
+                        offPolicy <= 1e-10 &&
+                        reconciled;
+                    exactEvaluationStatus = matched
+                        ? "matched"
+                        : "mismatch";
+                    exactEvaluation = {
+                        converged: exact.converged,
+                        cost_complete:
+                            exact.accounting.totals.per_invocation
+                                .cost_complete,
+                        success_probability: exact.terminals.success,
+                        off_policy_mass: offPolicy,
+                        total_expected_cost: exactCost,
+                        solver_policy_cost: solverCost,
+                        cost_delta_absolute: Number.isFinite(absolute)
+                            ? absolute
+                            : null,
+                        cost_delta_relative: Number.isFinite(relative)
+                            ? relative
+                            : null,
+                        cost_reconciled: reconciled,
+                    };
+                    if (!matched) {
+                        errors.push(
+                            "exact evaluation: compiled policy did not "
+                            + "reconcile with the solver policy",
+                        );
+                    }
                 }
                 telemetry = await safeTelemetry(client, solver, errors);
                 const engineStrategyBytes = nestedNumber(
@@ -613,12 +781,18 @@ async function runCase(
                     compiledGraph.strategy_json_bytes = engineStrategyBytes;
                 }
             } catch (error) {
+                if (compileStatus !== "compiled") {
+                    compileStatus = "compile_failed";
+                } else if (exactEvaluationStatus === "running") {
+                    exactEvaluationStatus = "evaluation_failed";
+                }
                 errors.push(`compile: ${errorDetail(error)}`);
                 telemetry = await safeTelemetry(client, solver, errors);
             }
             compileMs = roundMs(performance.now() - compileStarted);
             if (strategyHandle && spec.verification.runs > 0 &&
                 !skipVerification) {
+                simulationStatus = "running";
                 const verifyStarted = performance.now();
                 try {
                     const verificationStartValue =
@@ -638,8 +812,13 @@ async function runCase(
                             spec,
                             (handle) => { simulator = handle; },
                         );
+                        simulationStatus =
+                            verification.verification_passed === true
+                                ? "completed"
+                                : "mismatch";
                     }
                 } catch (error) {
+                    simulationStatus = "simulation_failed";
                     errors.push(`verification: ${errorDetail(error)}`);
                 }
                 verificationMs = roundMs(performance.now() - verifyStarted);
@@ -675,8 +854,33 @@ async function runCase(
         category: spec.category,
         approval_status: spec.approval_status,
         benchmark_enabled: true,
-        expected: spec.expected,
+        expected: spec.expected ?? null,
         actual_status: actualStatus,
+        workflow_status: {
+            solve_result_class:
+                complete === null
+                    ? "not_available"
+                    : complete.cap_hit_mask !== 0
+                      ? complete.policy_available
+                          ? "capped_with_policy"
+                          : "capped_without_policy"
+                      : complete.policy_status === "exact"
+                        ? "exact"
+                        : complete.policy_available
+                          ? "bounded"
+                          : complete.termination === "no_executable_policy"
+                            ? "no_executable_policy"
+                            : "no_policy",
+            compile: complete?.policy_available
+                ? compileStatus
+                : "not_applicable_no_policy",
+            exact_evaluation: complete?.policy_available
+                ? exactEvaluationStatus
+                : "not_applicable_no_policy",
+            simulation: complete?.policy_available
+                ? simulationStatus
+                : "not_applicable_no_policy",
+        },
         expectation_met: false,
         verification_skipped: skipVerification,
         input: {
@@ -720,18 +924,11 @@ async function runCase(
                 wasmBefore && wasmAfter ? wasmAfter - wasmBefore : null,
         },
         solve_summary: complete
-            ? {
-                  converged: complete.converged,
-                  start_state: complete.start_state,
-                  start_value: complete.start_value,
-                  expanded_states: complete.expanded_states,
-                  sweeps: complete.sweeps,
-                  residual: complete.residual,
-                  skipped_action_count: complete.skipped_actions,
-              }
+            ? { ...complete, progress: undefined, worker: undefined }
             : null,
         solver_telemetry: telemetry,
         compiled_graph: compiledGraph,
+        exact_evaluation: exactEvaluation,
         value: {
             start: complete
                 ? nestedNumber(telemetry, "value", "start") ?? complete.start_value

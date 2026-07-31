@@ -63,6 +63,14 @@ int main(int argc, char** argv) {
                     pctest::g_checks, pctest::g_failures);
         return pctest::g_failures == 0 ? 0 : 1;
     }
+    if (argc > 3 && std::string(argv[1]) ==
+                        "--session-builder-only") {
+        run_session_builder_tests(argv[2], argv[3]);
+        std::printf(
+            "session-builder tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
     run_bitset_tests();
     run_rng_tests();
     run_item_state_tests();

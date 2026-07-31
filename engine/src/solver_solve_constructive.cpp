@@ -911,6 +911,31 @@ void SolveWork::Impl::install_direct_output_incumbent(
         candidate.option_unveil_preferences.clear();
         candidate.policy_materialized = false;
         capture_incumbent_state(candidate, result.start_state, row);
+        /*
+         * A direct self/goal row can improve an earlier fixed-renewal
+         * incumbent while selecting a different planner operator. The
+         * incumbent policy remains executable, but the action-local renewal
+         * witness no longer describes it; let the ordinary policy compiler
+         * handle the updated row instead of publishing stale witness data.
+         */
+        if (candidate.primitive_renewal_witness.valid) {
+            const PrimitiveRenewalWitness& witness =
+                candidate.primitive_renewal_witness;
+            const bool witness_matches =
+                result.start_state < candidate.policy.size() &&
+                witness.operator_index < calc.operators().size() &&
+                candidate.policy[result.start_state].index ==
+                    witness.operator_index &&
+                candidate.policy[result.start_state].kind ==
+                    calc.operators()[witness.operator_index].kind &&
+                calc.operators()[witness.operator_index]
+                        .primitive_action ==
+                    witness.primitive_action;
+            if (!witness_matches) {
+                candidate.primitive_renewal_witness =
+                    PrimitiveRenewalWitness{};
+            }
+        }
         commit_output_incumbent(std::move(candidate));
     }
 

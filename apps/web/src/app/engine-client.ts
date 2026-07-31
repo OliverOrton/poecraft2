@@ -351,7 +351,13 @@ export class EngineClient {
     addMod(
         item: number,
         session: number,
-        spec: { key: string; side?: AffixSide; fractured?: boolean },
+        spec: {
+            key: string;
+            side?: AffixSide;
+            fractured?: boolean;
+            crafted?: boolean;
+            veiled?: boolean;
+        },
     ): Promise<void> {
         return this.call<void>("addMod", { item, session, ...spec });
     }

@@ -252,7 +252,13 @@ export class EngineBindings {
     addMod(
         item: number,
         session: number,
-        spec: { key: string; side?: string; fractured?: boolean },
+        spec: {
+            key: string;
+            side?: string;
+            fractured?: boolean;
+            crafted?: boolean;
+            veiled?: boolean;
+        },
     ): void {
         this.callJson(
             "pcw_item_add_mod",

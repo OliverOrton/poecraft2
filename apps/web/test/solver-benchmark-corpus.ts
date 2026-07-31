@@ -12,10 +12,11 @@ export interface SolverBenchmarkCase {
     approval_status: string;
     benchmark_enabled: boolean;
     benchmark_mode?: "cancel_after_first_step";
-    description: string;
+    description?: string;
     session: {
         base_metadata_path: string;
         base_name: string;
+        item_class_key?: string;
         item_level: number;
     };
     start: {
@@ -23,13 +24,15 @@ export interface SolverBenchmarkCase {
         with_implicits: boolean;
         searing_exarch_tier?: number;
         eater_of_worlds_tier?: number;
+        generic_influence_bits?: number;
         mods: Array<{ key: string; flags: BenchmarkModFlag[] }>;
     };
     goal: SolverGoal;
     product_action_envelope?: {
         mode: "calculator_goal_relevant_priced_v1";
         envelope_goal: SolverGoal;
-        expected_priced_action_ids: string[];
+        expected_priced_action_ids?: string[];
+        pricing_filter?: string;
     };
     allowed_mechanic_families: string[];
     economy: {
@@ -43,7 +46,7 @@ export interface SolverBenchmarkCase {
         override_purpose?: string;
         fallback_price?: null;
     };
-    expected: {
+    expected?: {
         solve_status: string;
         optimality_status: string;
         compile_status: string;
@@ -79,6 +82,13 @@ export interface SolverBenchmarkCase {
         mean_cost_absolute_tolerance?: number;
         mean_cost_relative_tolerance?: number;
         minimum_success_rate?: number;
+        exact_evaluation?: boolean;
+        exact_cost_absolute_tolerance?: number;
+        exact_cost_relative_tolerance?: number;
+        exact_max_states?: number;
+        exact_max_pairs?: number;
+        exact_max_transitions?: number;
+        exact_max_owned_bytes?: number;
     };
     cancellation?: {
         abort_after_progress_events?: number;
@@ -87,11 +97,14 @@ export interface SolverBenchmarkCase {
 }
 
 export interface SolverBenchmarkManifest {
-    schema_version: "solver_benchmark_corpus_v1";
+    schema_version:
+        | "solver_benchmark_corpus_v1"
+        | "natural_t1_benchmark_corpus_v1"
+        | "cross_base_reliability_corpus_v1";
     corpus_id: string;
     artifact: {
         manifest_relative_path: string;
-        canonical_source: string;
+        canonical_source?: string;
         engine_abi_version?: number;
         artifact_schema_version?: number;
         source_version?: string;
@@ -99,7 +112,11 @@ export interface SolverBenchmarkManifest {
         game_data_sha256?: string;
         strings_sha256?: string;
     };
-    owner_decisions: string[];
+    generator?: {
+        engine_abi_version?: number;
+        [key: string]: unknown;
+    };
+    owner_decisions?: string[];
     cases: string[];
 }
 
@@ -137,7 +154,9 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
     if (typeof spec.benchmark_enabled !== "boolean") {
         throw new Error(`${path}.benchmark_enabled must be boolean`);
     }
-    requireRecord(spec.expected, `${path}.expected`);
+    if (spec.expected !== undefined) {
+        requireRecord(spec.expected, `${path}.expected`);
+    }
     if (!spec.benchmark_enabled) {
         return spec as unknown as SolverBenchmarkCase;
     }
@@ -185,7 +204,11 @@ function validateCase(value: unknown, path: string): SolverBenchmarkCase {
 export function loadSolverBenchmarkCorpus(path: string): LoadedSolverBenchmarkCorpus {
     const absolute = resolve(path);
     const raw = requireRecord(readJson(absolute), absolute);
-    if (raw.schema_version !== "solver_benchmark_corpus_v1") {
+    if (
+        raw.schema_version !== "solver_benchmark_corpus_v1" &&
+        raw.schema_version !== "natural_t1_benchmark_corpus_v1" &&
+        raw.schema_version !== "cross_base_reliability_corpus_v1"
+    ) {
         throw new Error(`${absolute} has unsupported corpus schema`);
     }
     requireString(raw, "corpus_id", absolute);
@@ -239,15 +262,28 @@ export function materializeSolverBenchmarkEconomy(
         `${spec.id}.economy.manual_overrides`,
     );
     const entries = Object.entries(overrides);
-    if (
+    const generatedReliability =
+        spec.category === "cross_base_reliability";
+    if (!generatedReliability && (
         entries.length !== 1 || entries[0][0] !== "base" ||
         typeof entries[0][1] !== "number" || !Number.isFinite(entries[0][1]) ||
         entries[0][1] <= 0 ||
         economy.override_purpose !== "r3f_restart_route_gate_not_market_quote"
-    ) {
+    )) {
         throw new Error(
             `${spec.id} permits only the disclosed positive R3F base override`,
         );
+    }
+    if (
+        generatedReliability &&
+        entries.some(
+            ([, value]) =>
+                typeof value !== "number" ||
+                !Number.isFinite(value) ||
+                value < 0,
+        )
+    ) {
+        throw new Error(`${spec.id} has an invalid generated price override`);
     }
     return {
         ...snapshot,
@@ -262,6 +298,9 @@ export function materializeSolverBenchmarkGoal(
     if (!envelope) return spec.goal;
     if (envelope.mode !== "calculator_goal_relevant_priced_v1") {
         throw new Error(`${spec.id} has an unsupported product action-envelope mode`);
+    }
+    if (envelope.expected_priced_action_ids === undefined) {
+        return envelope.envelope_goal;
     }
     if (
         !Array.isArray(envelope.expected_priced_action_ids) ||
@@ -289,7 +328,12 @@ export function validateCorpusArtifactPins(
     const strings = requireRecord(files["strings.json"], "artifact strings file");
     const pins = manifest.artifact;
     const comparisons: Array<[string, unknown, unknown]> = [
-        ["engine ABI", abiVersion, pins.engine_abi_version],
+        [
+            "engine ABI",
+            abiVersion,
+            pins.engine_abi_version ??
+                manifest.generator?.engine_abi_version,
+        ],
         ["artifact schema", artifact.artifact_schema_version, pins.artifact_schema_version],
         ["source version", source.source_version, pins.source_version],
         ["source data hash", source.data_hash, pins.source_data_hash],

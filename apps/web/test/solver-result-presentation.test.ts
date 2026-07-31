@@ -70,6 +70,8 @@ import {
         policy_available: true,
         policy_status: "bounded_feasible",
         termination: "refused_resource_cap",
+        stop_cause: "transition_cap",
+        cap_hit_mask: 2,
         lower_bound: 40,
         upper_bound: 200,
         evaluated_policy_cost: 175,
@@ -94,6 +96,7 @@ import {
     });
     assert.match(markup, /Bounded feasible policy/);
     assert.match(markup, /Resource cap reached/);
+    assert.match(markup, /Transition cap/);
     assert.match(markup, /Certified within 5\.00x of optimal\./);
     console.log("  ok - capped bounded policies stay executable and non-exact");
 }
@@ -103,7 +106,9 @@ import {
         converged: false,
         policy_available: false,
         policy_status: "none",
-        termination: "no_executable_policy",
+        termination: "refused_resource_cap",
+        stop_cause: "state_cap",
+        cap_hit_mask: 1,
         lower_bound: 25,
     });
     assert.equal(shouldCompileSolvePolicy(summary), false);
@@ -118,9 +123,14 @@ import {
         verification: null,
     });
     assert.match(markup, /No executable policy certificate was returned/);
-    assert.match(markup, /no finite policy upper bound is claimed/i);
+    assert.match(markup, /before it could certify an executable policy/i);
+    assert.match(markup, /No policy returned/);
+    assert.match(markup, /Not certified/);
+    assert.match(markup, /No economy selected/);
+    assert.match(markup, /State cap/);
     assert.doesNotMatch(markup, /Open in Strategy Board/);
-    console.log("  ok - unavailable policy results never expose board actions");
+    assert.doesNotMatch(markup, />Unavailable</);
+    console.log("  ok - capped no-policy results retain their stopping cause");
 }
 
 {
@@ -162,6 +172,14 @@ function solveSummary(overrides: Partial<SolveSummary>): SolveSummary {
         sweeps: 4,
         residual: 0.001,
         skipped_actions: 0,
+        stop_cause: "none",
+        cap_hit_mask: 0,
+        registry_actions: 11,
+        candidate_actions: 8,
+        evaluator_supported_actions: 7,
+        supported_priced_actions: 6,
+        skipped_missing_price_actions: 1,
+        skipped_unsupported_actions: 1,
         policy_available: false,
         policy_status: "none",
         termination: "none",

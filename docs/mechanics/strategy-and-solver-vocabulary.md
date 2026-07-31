@@ -169,10 +169,12 @@ The registry is session-dependent and may omit parameterized actions whose
 data/pool is unavailable. Relevance, legality, price, and automatic-candidate
 filters can further narrow a solve without changing the vocabulary.
 
-Whole-graph exact strategy evaluation currently does not resolve
-`mod_count`, `mod_family_count`, `has_unveil_option`, an authored Unveil
-selection, or Bestiary operations as ordinary calculator actions. The strategy
-compiler and sampled simulator still support those operations/conditions.
+Whole-graph exact strategy evaluation resolves `mod_count`,
+`mod_family_count` (including crafted/fractured requirements),
+`has_unveil_option`, and authored Unveil selection. Offer identity is carried
+from the sampled Veiled outcome through the selected Unveil operation.
+Bestiary operations continue to use their separate stateful calculation path
+rather than ordinary one-item evaluator actions.
 
 ## Calculator Support
 
@@ -191,13 +193,13 @@ expansions.
   by advanced JSON.
 - The visual operation dropdown omits `restart`, even though solver-generated
   Restart compiles and simulates.
-- Whole-graph exact evaluation has the named condition, Unveil-selection, and
-  Bestiary gaps; sampled support must not be described as exact support.
+- Whole-graph exact evaluation does not treat the two Bestiary operations as
+  ordinary one-item calculator actions; sampled support must not be described
+  as ordinary exact-evaluator support.
 
 ## Open Questions Requiring Oliver
 
 - Should `restart` become a directly authorable Strategy Builder operation, or
   remain solver-generated/import-only?
-- Should `mod_count`, `mod_family_count`, `has_unveil_option`, authored Unveil,
-  and Bestiary operations be added to whole-graph exact evaluation, or should
-  those authoring features remain explicitly sampled-only?
+- Should Bestiary operations be integrated into the ordinary whole-graph
+  evaluator, or remain on their existing separate stateful calculation path?

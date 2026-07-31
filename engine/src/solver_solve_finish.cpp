@@ -61,14 +61,34 @@ SolveResult SolveWork::Impl::finish() {
             throw std::logic_error("solver work was already finished");
         }
         const auto extraction_started = std::chrono::steady_clock::now();
-        finalize_incremental_diagnostics();
+        const auto finalize_diagnostic =
+            [&](auto&& finalizer) {
+                try {
+                    finalizer();
+                } catch (const SolverResourceLimit& limit) {
+                    /*
+                     * Finalization diagnostics are observational. A solve
+                     * that already exhausted an exact-kernel budget can
+                     * revisit automatic-candidate/provenance helpers here;
+                     * keep the cap as the public stop instead of escaping
+                     * through solve_finish as an internal error.
+                     */
+                    record_cap(
+                        limit.cap_name(),
+                        limit.cap_name() == "max_discovered_states");
+                }
+            };
+        finalize_diagnostic(
+            [&] { finalize_incremental_diagnostics(); });
         /*
          * Capture provenance while the incumbent still owns its complete
          * selected-row/value witness. Keep the optional strings outside
          * SolveDiagnostics until final accounting is frozen.
          */
-        finalize_upper_policy_provenance();
-        finalize_upper_cap_zero_progress_audit();
+        finalize_diagnostic(
+            [&] { finalize_upper_policy_provenance(); });
+        finalize_diagnostic(
+            [&] { finalize_upper_cap_zero_progress_audit(); });
         std::vector<std::string> upper_policy_provenance_samples =
             std::move(
                 result.diagnostics.upper_policy_provenance_samples);
@@ -142,6 +162,24 @@ SolveResult SolveWork::Impl::finish() {
                 std::move(incumbent.policy_reachable);
             result.primitive_renewal_witness =
                 std::move(incumbent.primitive_renewal_witness);
+            if (result.primitive_renewal_witness.valid) {
+                const PrimitiveRenewalWitness& witness =
+                    result.primitive_renewal_witness;
+                const bool witness_matches =
+                    result.start_state < result.policy.size() &&
+                    witness.operator_index < calc.operators().size() &&
+                    result.policy[result.start_state].index ==
+                        witness.operator_index &&
+                    result.policy[result.start_state].kind ==
+                        calc.operators()[witness.operator_index].kind &&
+                    calc.operators()[witness.operator_index]
+                            .primitive_action ==
+                        witness.primitive_action;
+                if (!witness_matches) {
+                    result.primitive_renewal_witness =
+                        PrimitiveRenewalWitness{};
+                }
+            }
             policy_rows = std::move(incumbent.policy_rows);
             restored_policy_row_costs =
                 std::move(incumbent.policy_row_costs);
@@ -612,6 +650,313 @@ SolveResult SolveWork::Impl::finish() {
                     result.option_unveil_preferences[representative];
             }
         }
+        /*
+         * The deliberately coarse product parent does not retain complete
+         * exclusion-group identity. Renewal rows that wipe the ambiguous
+         * carrier remain exact, but a selected pool-add row (or a renewal
+         * preserving that carrier) would compile to the concrete engine and
+         * can have a different value. Do not publish such a policy as
+         * executable. This is a compatibility refusal, not a new planner
+         * action filter or a change to the qualified parent transitions.
+         */
+        bool executable_policy_abstraction_supported = true;
+        if (calc.product_solver_parent()) {
+            const auto exclusion_signature =
+                [&](const std::uint32_t mod) {
+                    std::vector<std::uint64_t> signature(
+                        session.words, 0);
+                    if (mod + 1 >= session.group_offsets.size()) {
+                        return signature;
+                    }
+                    for (std::uint32_t offset =
+                             session.group_offsets[mod];
+                         offset < session.group_offsets[mod + 1];
+                         ++offset) {
+                        const std::uint32_t group =
+                            session.group_ids[offset];
+                        if (group >= session.group_masks.size() ||
+                            session.group_masks[group].empty()) {
+                            continue;
+                        }
+                        pc_bitset_or(
+                            signature.data(), signature.data(),
+                            session.group_masks[group].data(),
+                            session.words);
+                    }
+                    return signature;
+                };
+            const auto ambiguous_members =
+                [&](const std::vector<std::uint64_t>& members,
+                    const std::vector<std::uint64_t>* excluded) {
+                    std::optional<std::vector<std::uint64_t>> first;
+                    bool ambiguous = false;
+                    pc_bitset_for_each(
+                        members.data(), session.words,
+                        [&](const std::size_t bit) {
+                            if (ambiguous ||
+                                (excluded != nullptr &&
+                                 pc_bitset_test(
+                                     excluded->data(), bit))) {
+                                return;
+                            }
+                            std::vector<std::uint64_t> signature =
+                                exclusion_signature(
+                                    static_cast<std::uint32_t>(bit));
+                            if (!first.has_value()) {
+                                first = std::move(signature);
+                            } else if (*first != signature) {
+                                ambiguous = true;
+                            }
+                        });
+                    return ambiguous;
+                };
+            std::vector<std::uint8_t> ambiguous_junk(
+                calc.layout().junk_classes.size(), 0);
+            for (std::size_t junk = 0;
+                 junk < calc.layout().junk_classes.size(); ++junk) {
+                ambiguous_junk[junk] = ambiguous_members(
+                    calc.layout().junk_classes[junk].member_mask,
+                    nullptr)
+                                           ? 1
+                                           : 0;
+            }
+            std::vector<std::array<std::uint8_t, 3>> ambiguous_goal(
+                calc.layout().slots.size());
+            for (std::size_t slot = 0;
+                 slot < calc.layout().slots.size(); ++slot) {
+                const ResolvedGoalSlot& resolved =
+                    calc.layout().slots[slot];
+                ambiguous_goal[slot][static_cast<std::size_t>(
+                    GoalSlotStatus::Absent)] = 0;
+                ambiguous_goal[slot][static_cast<std::size_t>(
+                    GoalSlotStatus::PresentBelowTier)] =
+                    ambiguous_members(
+                        resolved.member_mask,
+                        &resolved.satisfying_mask)
+                        ? 1
+                        : 0;
+                ambiguous_goal[slot][static_cast<std::size_t>(
+                    GoalSlotStatus::Satisfied)] =
+                    ambiguous_members(
+                        resolved.satisfying_mask, nullptr)
+                        ? 1
+                        : 0;
+            }
+            const auto state_has_ambiguous_identity =
+                [&](const AbstractState& state,
+                    const bool preserved_only) {
+                    for (std::size_t junk = 0;
+                         junk < ambiguous_junk.size(); ++junk) {
+                        if (!ambiguous_junk[junk]) continue;
+                        const JunkClass& klass =
+                            calc.layout().junk_classes[junk];
+                        const bool locked =
+                            (klass.gen_type == PC_SIDE_PREFIX &&
+                             (state.flags & kFlagPrefixesLocked)) ||
+                            (klass.gen_type == PC_SIDE_SUFFIX &&
+                             (state.flags & kFlagSuffixesLocked));
+                        const std::uint8_t count =
+                            preserved_only
+                                ? state.fractured_junk_counts[junk] +
+                                      (locked
+                                           ? state.junk_counts[junk] -
+                                                 state
+                                                     .fractured_junk_counts[
+                                                         junk]
+                                           : 0)
+                                : state.junk_counts[junk];
+                        if (count != 0) return true;
+                    }
+                    for (std::size_t slot = 0;
+                         slot < ambiguous_goal.size(); ++slot) {
+                        const auto status = static_cast<GoalSlotStatus>(
+                            state.slot_status[slot]);
+                        if (!ambiguous_goal[slot][
+                                static_cast<std::size_t>(status)]) {
+                            continue;
+                        }
+                        if (!preserved_only ||
+                            (state.fractured_goal_mask & (1u << slot)) != 0) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+            const auto action_needs_identity =
+                [&](const ActionDescriptor& action,
+                    const AbstractState& state) {
+                    switch (action.params.type) {
+                    case ActionType::Augment:
+                    case ActionType::Regal:
+                    case ActionType::Exalt:
+                        return state_has_ambiguous_identity(state, false);
+                    default:
+                        break;
+                    }
+                    if (action_transition_facts(action.params.type).renewal) {
+                        return state_has_ambiguous_identity(state, true);
+                    }
+                    return false;
+                };
+            constexpr double kProductSimulatorActionLimit = 100000.0;
+            if (restore_output_incumbent &&
+                result.primitive_renewal_witness.valid &&
+                result.primitive_renewal_witness.success_probability >
+                    0.0 &&
+                1.0 /
+                        result.primitive_renewal_witness
+                            .success_probability >
+                    kProductSimulatorActionLimit) {
+                executable_policy_abstraction_supported = false;
+                const PrimitiveRenewalWitness& witness =
+                    result.primitive_renewal_witness;
+                const std::string action_id =
+                    witness.primitive_action <
+                            calc.registry().actions.size()
+                        ? calc.registry()
+                              .actions[witness.primitive_action]
+                              .id
+                        : std::string{};
+                const std::string reason =
+                    "primitive_renewal_expected_actions_exceed_"
+                    "simulator_cap";
+                result.diagnostics.policy_compatibility_supported =
+                    false;
+                result.diagnostics.policy_compatibility_state =
+                    result.start_state;
+                result.diagnostics.policy_compatibility_action =
+                    action_id;
+                result.diagnostics.policy_compatibility_reason =
+                    reason;
+                if (!action_id.empty()) {
+                    record_skipped_unsupported(action_id);
+                    add_action_reason(
+                        "unsupported", action_id,
+                        reason + "_at_state_" +
+                            std::to_string(result.start_state));
+                }
+            }
+            if (restore_output_incumbent &&
+                result.diagnostics.resource_cap_hit &&
+                !result.primitive_renewal_witness.valid &&
+                result.start_state < result.policy.size()) {
+                const PolicyOperatorRef selected =
+                    result.policy[result.start_state];
+                if (selected.index < calc.operators().size()) {
+                    const PlannerOperator& planner =
+                        calc.operators()[selected.index];
+                    if (planner.kind ==
+                            PlannerOperatorKind::Primitive &&
+                        planner.primitive_action <
+                            calc.registry().actions.size()) {
+                        const ActionDescriptor& action =
+                            calc.registry().actions[
+                                planner.primitive_action];
+                        if (action_transition_facts(
+                                action.params.type)
+                                .renewal) {
+                            executable_policy_abstraction_supported =
+                                false;
+                            const std::string reason =
+                                "coarse_parent_capped_renewal_without_"
+                                "exact_witness";
+                            result.diagnostics
+                                .policy_compatibility_supported = false;
+                            result.diagnostics
+                                .policy_compatibility_state =
+                                result.start_state;
+                            result.diagnostics
+                                .policy_compatibility_action =
+                                action.id;
+                            result.diagnostics
+                                .policy_compatibility_reason =
+                                reason;
+                            record_skipped_unsupported(action.id);
+                            add_action_reason(
+                                "unsupported", action.id,
+                                reason + "_at_state_" +
+                                    std::to_string(
+                                        result.start_state));
+                        }
+                    }
+                }
+            }
+            const auto compatibility_reachable =
+                [&](const std::uint32_t state_id) {
+                    if (state_id < result.policy_reachable.size()) {
+                        return result.policy_reachable[state_id] != 0;
+                    }
+                    if (state_id < restored_policy_reachable.size()) {
+                        return restored_policy_reachable[state_id] != 0;
+                    }
+                    return false;
+                };
+            if (restore_output_incumbent &&
+                result.policy_reachable.empty() &&
+                restored_policy_reachable.empty()) {
+                executable_policy_abstraction_supported = false;
+                result.diagnostics.policy_compatibility_supported =
+                    false;
+                result.diagnostics.policy_compatibility_reason =
+                    "coarse_parent_policy_reachability_unavailable_after_cap";
+            }
+            for (std::uint32_t state_id = 0;
+                 state_id < result.policy.size() &&
+                 executable_policy_abstraction_supported;
+                 ++state_id) {
+                if (!compatibility_reachable(state_id) ||
+                    state_id >= result.goal_states.size() ||
+                    result.goal_states[state_id]) {
+                    continue;
+                }
+                const PolicyOperatorRef selected = result.policy[state_id];
+                if (selected.index == kNoId ||
+                    selected.index >= calc.operators().size()) {
+                    continue;
+                }
+                const PlannerOperator& planner =
+                    calc.operators()[selected.index];
+                std::vector<std::uint32_t> actions =
+                    planner.kind == PlannerOperatorKind::Primitive
+                        ? std::vector<std::uint32_t>{
+                              planner.primitive_action}
+                        : planner.primitive_program;
+                if (planner.conditional_action != kNoId) {
+                    actions.push_back(planner.conditional_action);
+                }
+                for (const std::uint32_t action_index : actions) {
+                    if (action_index >=
+                            calc.registry().actions.size() ||
+                        !action_needs_identity(
+                            calc.registry().actions[action_index],
+                            calc.state(state_id))) {
+                        continue;
+                    }
+                    executable_policy_abstraction_supported = false;
+                    const std::string& action_id =
+                        calc.registry().actions[action_index].id;
+                    const std::string reason =
+                        "coarse_parent_requires_exact_exclusion_identity";
+                    result.diagnostics.policy_compatibility_supported =
+                        false;
+                    result.diagnostics.policy_compatibility_state =
+                        state_id;
+                    result.diagnostics.policy_compatibility_action =
+                        action_id;
+                    result.diagnostics.policy_compatibility_reason =
+                        reason;
+                    record_skipped_unsupported(action_id);
+                    add_action_reason(
+                        "unsupported", action_id,
+                        reason + "_at_state_" +
+                            std::to_string(state_id));
+                    break;
+                }
+            }
+        }
+        if (!executable_policy_abstraction_supported) {
+            result.converged = false;
+        }
         if (result.converged) {
             const double exact_value = result.values[result.start_state];
             result.policy_available = true;
@@ -622,8 +967,9 @@ SolveResult SolveWork::Impl::finish() {
             result.evaluated_policy_cost = exact_value;
             result.absolute_optimality_gap = 0.0;
             result.relative_optimality_gap = 0.0;
-        } else if (restore_output_incumbent && reachable_policy_complete &&
-                   !finalization_capped) {
+        } else if (executable_policy_abstraction_supported &&
+                   restore_output_incumbent &&
+                   reachable_policy_complete && !finalization_capped) {
             const BoundedPolicyIncumbent& incumbent = *output_incumbent;
             result.policy_available = true;
             result.target_met = target_gap_stop;
@@ -662,7 +1008,13 @@ SolveResult SolveWork::Impl::finish() {
         } else {
             result.policy_available = false;
             result.policy_status = SolvePolicyStatus::None;
-            result.termination = SolveTermination::NoExecutablePolicy;
+            /* Stopping cause and policy availability are separate. A cap
+             * without an incumbent is still a resource-cap result; callers
+             * must not have to infer it from optional telemetry. */
+            result.termination =
+                result.diagnostics.resource_cap_hit
+                    ? SolveTermination::RefusedResourceCap
+                    : SolveTermination::NoExecutablePolicy;
             result.lower_bound =
                 result.diagnostics.focused_expansion
                     ? result.diagnostics.focused_lower_bound

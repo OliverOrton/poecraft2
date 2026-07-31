@@ -1,0 +1,273 @@
+{
+  "allowed_mechanic_families": [
+    "calculator_goal_relevant_product_envelope"
+  ],
+  "approval_status": "generated_reliability_2026_07_30",
+  "benchmark_enabled": true,
+  "caps": {
+    "cancel_ack_ms": 250,
+    "full_evidence": true,
+    "goal_progress_gated_reforges": true,
+    "max_absolute_optimality_gap": 5.0,
+    "max_compiled_edges": 400000,
+    "max_compiled_nodes": 100000,
+    "max_diagnostic_samples": 32,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 1000,
+    "max_reforge_work": 20000000,
+    "max_relative_optimality_gap": 0.1,
+    "max_solver_owned_bytes": 1073741824,
+    "max_state_action_rows": 1215000,
+    "max_states": 200000,
+    "max_strategy_json_bytes": 67108864,
+    "max_sweeps": 100000,
+    "max_telemetry_json_bytes": 1048576,
+    "max_transitions": 10000000,
+    "solve_step_work_items": 1024,
+    "worker_step_ms": 20000
+  },
+  "category": "cross_base_reliability",
+  "comparison_profile": "cross-base-compiled-strategy-reliability-v1",
+  "corpus": {
+    "geometric_mean_single_draw_probability": 0.0029136979773803223,
+    "goal_modifier_count": 4,
+    "maximum_single_draw_probability": 0.008713989438644801,
+    "minimum_single_draw_probability": 0.00021784973596612002,
+    "natural_pool_mod_count": 142,
+    "natural_pool_weight": 114758,
+    "prefix_goal_count": 2,
+    "side_mix": "PPSS",
+    "stratum": "deep-four-dense",
+    "suffix_goal_count": 2,
+    "tier": "deep"
+  },
+  "economy": {
+    "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "fallback_price": null,
+    "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "league_key": "mirage",
+    "league_name": "Mirage",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+    "version": "v1"
+  },
+  "expected": {
+    "compile_status": "compiled_if_policy_available",
+    "optimality_status": "classified",
+    "solve_status": "reliability_classified",
+    "verification_status": "run_if_compiled"
+  },
+  "feasibility": {
+    "eligible_slot_count": 4,
+    "goal_slot_count": 4,
+    "natural_pool_mod_count": 142,
+    "natural_pool_weight": 114758,
+    "natural_prefix_mod_count": 65,
+    "natural_prefix_weight": 54658,
+    "natural_suffix_mod_count": 77,
+    "natural_suffix_weight": 60100,
+    "reason": "natural_reforge_witness",
+    "required_slot_count": 4,
+    "slot_natural_mod_counts": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "slot_natural_weights": [
+      500,
+      1000,
+      25,
+      1000
+    ],
+    "slot_single_draw_probabilities": [
+      0.004356994719322401,
+      0.008713989438644801,
+      0.00021784973596612002,
+      0.008713989438644801
+    ],
+    "status": "feasible",
+    "witness_action_id": "chaos",
+    "witness_action_index": 5,
+    "witness_mod_ids": [
+      73,
+      231,
+      193,
+      161
+    ]
+  },
+  "generation": {
+    "artifact_manifest_sha256": "ba1feb596d6f07903dfa992d4ba42184bee30c18660ab56c84dad1c5cadc8a27",
+    "engine_binary_sha256": "b8f16e7ba5447ca405af70480bbb6ddd12fdd10f94c8f35ef23ad12cc45615a7",
+    "engine_commit": "25d5bbe6791beb61eae803219563575346def2dc",
+    "generator_seed": 20260730,
+    "generator_version": "natural-t1-corpus-v1"
+  },
+  "goal": {
+    "action_mode": "goal_relevant",
+    "min_satisfied_slots": 4,
+    "rarity": "rare",
+    "slots": [
+      {
+        "family_mod_key": "LifeGainPerTargetLocal8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "ManaLeechPermyriadLocalSuffix1",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreasedPhysicalDamagePercentAndAccuracyRating8",
+        "min_tier": 1
+      },
+      {
+        "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+        "min_tier": 1
+      }
+    ],
+    "version": "v1"
+  },
+  "id": "natural-t1-deep-four-dense-a64d3d932590",
+  "product_action_envelope": {
+    "bench_goal_slots_forbidden": true,
+    "envelope_goal": {
+      "action_mode": "goal_relevant",
+      "fossil_mode": "goal_relevant",
+      "min_satisfied_slots": 4,
+      "rarity": "rare",
+      "requested_fossil_actions": [],
+      "slots": [
+        {
+          "family_mod_key": "LifeGainPerTargetLocal8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "ManaLeechPermyriadLocalSuffix1",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreasedPhysicalDamagePercentAndAccuracyRating8",
+          "min_tier": 1
+        },
+        {
+          "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+          "min_tier": 1
+        }
+      ],
+      "version": "v1"
+    },
+    "mode": "calculator_goal_relevant_priced_v1",
+    "pricing_filter": "all_declared_cost_keys_present"
+  },
+  "resolved_natural_t1_goals": [
+    {
+      "classification_tags": [
+        "attack",
+        "life",
+        "resource"
+      ],
+      "family_id": 29,
+      "family_mod_key": "LifeGainPerTargetLocal8",
+      "family_tier_index": 1,
+      "global_mod_id": 19095,
+      "natural_mod_count": 1,
+      "natural_weight": 500,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 80,
+      "session_mod_id": 73,
+      "side": "suffix",
+      "single_draw_probability": 0.004356994719322401,
+      "slot": 0
+    },
+    {
+      "classification_tags": [
+        "attack",
+        "mana",
+        "physical",
+        "resource"
+      ],
+      "family_id": 63,
+      "family_mod_key": "ManaLeechPermyriadLocalSuffix1",
+      "family_tier_index": 1,
+      "global_mod_id": 21774,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 50,
+      "session_mod_id": 231,
+      "side": "suffix",
+      "single_draw_probability": 0.008713989438644801,
+      "slot": 1
+    },
+    {
+      "classification_tags": [
+        "attack",
+        "damage",
+        "physical",
+        "physical_damage"
+      ],
+      "family_id": 52,
+      "family_mod_key": "LocalIncreasedPhysicalDamagePercentAndAccuracyRating8",
+      "family_tier_index": 1,
+      "global_mod_id": 21159,
+      "natural_mod_count": 1,
+      "natural_weight": 25,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 83,
+      "session_mod_id": 193,
+      "side": "prefix",
+      "single_draw_probability": 0.00021784973596612002,
+      "slot": 2
+    },
+    {
+      "classification_tags": [
+        "gem"
+      ],
+      "family_id": 46,
+      "family_mod_key": "LocalIncreaseSocketedGemLevel1",
+      "family_tier_index": 1,
+      "global_mod_id": 20432,
+      "natural_mod_count": 1,
+      "natural_weight": 1000,
+      "reach_kind": 0,
+      "reach_via": "base",
+      "required_level": 50,
+      "session_mod_id": 161,
+      "side": "prefix",
+      "single_draw_probability": 0.008713989438644801,
+      "slot": 3
+    }
+  ],
+  "schema_version": "solver_benchmark_case_v1",
+  "session": {
+    "base_metadata_path": "Metadata/Items/Weapons/TwoHandWeapons/Bows/BowE3",
+    "base_name": "Solarine Bow",
+    "item_class_key": "Bow",
+    "item_level": 86
+  },
+  "start": {
+    "mods": [],
+    "rarity": "rare",
+    "with_implicits": false
+  },
+  "verification": {
+    "exact_cost_absolute_tolerance": 1e-07,
+    "exact_cost_relative_tolerance": 1e-09,
+    "exact_evaluation": true,
+    "exact_max_owned_bytes": 1073741824,
+    "exact_max_pairs": 5000000,
+    "exact_max_states": 1000000,
+    "exact_max_transitions": 20000000,
+    "max_actions_per_run": 100000,
+    "minimum_success_rate": 1.0,
+    "runs": 100,
+    "seed": 20260779
+  },
+  "watchdog_seconds": 900.0
+}

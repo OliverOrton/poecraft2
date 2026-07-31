@@ -783,6 +783,12 @@ ActionOutcome apply_action(
     pc_item_state* item,
     const ActionParameters& action);
 
+/* Imported/compiled start states may carry an unobserved veiled placeholder.
+ * Materialize its offer once from the simulator RNG before graph routing. */
+bool ensure_unveil_options(
+    ActionContextImpl& context,
+    pc_item_state* item);
+
 BestiaryActionOutcome apply_bestiary_action(
     const DataImpl& data,
     BestiaryCraftState& state,

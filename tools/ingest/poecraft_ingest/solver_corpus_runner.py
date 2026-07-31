@@ -241,6 +241,8 @@ def _run_case(
     output_directory: Path,
     root: Path,
     exact_evaluation: bool,
+    run_verification: bool = False,
+    goal_progress_gated_reforges: bool = False,
 ) -> dict[str, Any]:
     reports = output_directory / "cases"
     strategies = output_directory / "strategies"
@@ -268,10 +270,13 @@ def _run_case(
         str(strategies),
         "--case",
         task.case_id,
-        "--skip-verification",
     ]
+    if not run_verification:
+        command.append("--skip-verification")
     if exact_evaluation:
         command.append("--exact-strategy-evaluation")
+    if goal_progress_gated_reforges:
+        command.append("--goal-progress-gated-reforges")
     result = run_isolated_process(
         command,
         watchdog_seconds=task.watchdog_seconds,
@@ -431,6 +436,8 @@ def run_corpus(
     max_workers: int = 1,
     memory_budget_bytes: int = 0,
     exact_evaluation: bool = True,
+    run_verification: bool = False,
+    goal_progress_gated_reforges: bool = False,
     evaluation_roles_path: Path | None = None,
     selected_evaluation_roles: set[str] | None = None,
 ) -> dict[str, Any]:
@@ -467,6 +474,8 @@ def run_corpus(
         "memory_budget_bytes": memory_budget_bytes or None,
         "hard_case_default_concurrency": 1,
         "exact_evaluation": exact_evaluation,
+        "run_verification": run_verification,
+        "goal_progress_gated_reforges": goal_progress_gated_reforges,
         "evaluation_roles": sorted(selected_evaluation_roles or []),
         "evaluation_roles_manifest": role_provenance,
     }
@@ -548,6 +557,8 @@ def run_corpus(
                     output_directory=output_directory,
                     root=root,
                     exact_evaluation=exact_evaluation,
+                    run_verification=run_verification,
+                    goal_progress_gated_reforges=goal_progress_gated_reforges,
                 )
                 running[future] = task
                 reserved += requirement
@@ -603,6 +614,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_WATCHDOG_SECONDS,
     )
     parser.add_argument("--no-exact-evaluation", action="store_true")
+    parser.add_argument("--run-verification", action="store_true")
+    parser.add_argument(
+        "--goal-progress-gated-reforges",
+        action="store_true",
+    )
     return parser
 
 
@@ -630,6 +646,8 @@ def main(argv: list[str] | None = None) -> int:
         max_workers=args.max_workers,
         memory_budget_bytes=args.memory_budget_bytes,
         exact_evaluation=not args.no_exact_evaluation,
+        run_verification=args.run_verification,
+        goal_progress_gated_reforges=args.goal_progress_gated_reforges,
         evaluation_roles_path=args.evaluation_roles,
         selected_evaluation_roles=set(args.role) or None,
     )

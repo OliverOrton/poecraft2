@@ -230,7 +230,10 @@ function alterationLoopStrategy(familyKey: string): Record<string, unknown> {
     };
 }
 
-function fallbackPhaseStrategy(familyKey: string): Record<string, unknown> {
+function fallbackPhaseStrategy(
+    familyKey: string,
+    carrier: ModInfo,
+): Record<string, unknown> {
     const hit = {
         type: "has_mod_family",
         family_mod_key: familyKey,
@@ -244,6 +247,12 @@ function fallbackPhaseStrategy(familyKey: string): Record<string, unknown> {
             base_key: BASE,
             item_level: ITEM_LEVEL,
             rarity: "magic",
+            [carrier.generation_type === 0 ? "prefixes" : "suffixes"]: [
+                {
+                    mod_key: carrier.key,
+                    fractured: true,
+                },
+            ],
         },
         nodes: [
             { id: "start", kind: "start" },
@@ -299,7 +308,7 @@ function fallbackPhaseStrategy(familyKey: string): Record<string, unknown> {
     };
 }
 
-async function lowWeightAlterationFamily(): Promise<string> {
+async function lowWeightAlterationMod(): Promise<ModInfo> {
     const item = await client.createItem(sessionId, {
         rarity: "magic",
         withImplicits: false,
@@ -317,10 +326,31 @@ async function lowWeightAlterationFamily(): Promise<string> {
                     a.session_mod_id - b.session_mod_id,
             )[0];
         assert.ok(candidate, "expected an Alteration pool candidate");
-        return (await client.modInfo(sessionId, candidate.session_mod_id)).key;
+        return client.modInfo(sessionId, candidate.session_mod_id);
     } finally {
         await client.closeItem(item);
     }
+}
+
+async function lowWeightAlterationFamily(): Promise<string> {
+    return (await lowWeightAlterationMod()).key;
+}
+
+async function strictAlterationCarrier(target: ModInfo): Promise<ModInfo> {
+    const count = await client.modCount(sessionId);
+    for (let id = 0; id < count; id += 1) {
+        const candidate = await client.modInfo(sessionId, id);
+        if (
+            candidate.reach_kind === 0 &&
+            candidate.required_level <= ITEM_LEVEL &&
+            candidate.generation_type === 1 - target.generation_type &&
+            candidate.family_id !== target.family_id &&
+            candidate.primary_group_id !== target.primary_group_id
+        ) {
+            return candidate;
+        }
+    }
+    throw new Error("expected a distinct opposite-side Alteration carrier");
 }
 
 function familyTierStrategy(
@@ -1011,15 +1041,19 @@ test("exact evaluation cancellation is prompt and leaks no handles", async () =>
     assert.ok(after.native_serialized_output_bytes >= 0);
 });
 
-test("fallback-phase evaluation reports progress and cancels promptly", async () => {
-    const family = await lowWeightAlterationFamily();
+test("fallback-capable evaluation completes or cancels promptly", async () => {
+    const target = await lowWeightAlterationMod();
+    const carrier = await strictAlterationCarrier(target);
     const controller = new AbortController();
     const phases: string[] = [];
     let fallbackAt = 0;
-    await assert.rejects(
-        client.strategyEvaluate(
+    let completedExactly = false;
+    let completionSummary: Record<string, unknown> | null = null;
+    let caught: unknown;
+    try {
+        const result = await client.strategyEvaluate(
             sessionId,
-            fallbackPhaseStrategy(family),
+            fallbackPhaseStrategy(target.key, carrier),
             { epsilon: 1e-30, max_sweeps: 100_000 },
             {
                 signal: controller.signal,
@@ -1031,15 +1065,35 @@ test("fallback-phase evaluation reports progress and cancels promptly", async ()
                     }
                 },
             },
-        ),
-        /cancelled/,
-    );
-    assert.ok(phases.includes("fallback"), "expected fallback progress");
-    assert.ok(fallbackAt > 0);
-    assert.ok(
-        performance.now() - fallbackAt < 1000,
-        "fallback cancellation should abandon promptly",
-    );
+        );
+        completedExactly =
+            result.converged &&
+            result.residual_mass === 0 &&
+            Math.abs(result.terminals.success - 1) < 1e-9;
+        completionSummary = {
+            converged: result.converged,
+            residual_mass: result.residual_mass,
+            terminals: result.terminals,
+        };
+    } catch (error) {
+        caught = error;
+    }
+    if (fallbackAt > 0) {
+        assert.match(String(caught), /cancelled/);
+        assert.ok(phases.includes("fallback"), "expected fallback progress");
+        assert.ok(
+            performance.now() - fallbackAt < 1000,
+            "fallback cancellation should abandon promptly",
+        );
+    } else {
+        assert.equal(caught, undefined);
+        assert.ok(
+            completedExactly,
+            `direct exact evaluation should complete: ${
+                JSON.stringify(completionSummary)
+            }`,
+        );
+    }
 });
 
 test("a burst of obsolete evaluations leaves only the newest graph", async () => {
@@ -1419,14 +1473,15 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     );
     // A multi-slot solve emits honest stepped progress and can be abandoned
     // promptly before policy extraction.
-    const economy = await client.loadEconomy({
+    const economySpec = {
         version: "v1",
         prices: {
             transmute: 0.1, augment: 0.5, alteration: 0.2, regal: 1.0,
             alchemy: 0.5, chaos: 1.0, exalt: 20.0, annul: 3.0,
             scour: 0.5, base: 5.0,
         },
-    });
+    };
+    const economy = await client.loadEconomy(economySpec);
     const controller = new AbortController();
     const cancelProgress: SolveProgress[] = [];
     const cancelStarted = performance.now();
@@ -1476,6 +1531,14 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
     assert.equal(solve.policy_available, true);
     assert.equal(solve.policy_status, "exact");
     assert.equal(solve.termination, "exact_closed");
+    assert.equal(solve.stop_cause, "exact_closed");
+    assert.equal(solve.cap_hit_mask, 0);
+    assert.ok(solve.registry_actions > solve.candidate_actions);
+    assert.equal(solve.candidate_actions, 10);
+    assert.equal(solve.evaluator_supported_actions, 10);
+    assert.equal(solve.supported_priced_actions, 10);
+    assert.equal(solve.skipped_missing_price_actions, 0);
+    assert.equal(solve.skipped_unsupported_actions, 0);
     assert.equal(solve.lower_bound, solve.start_value);
     assert.equal(solve.upper_bound, solve.start_value);
     assert.equal(solve.evaluated_policy_cost, solve.start_value);
@@ -1545,7 +1608,35 @@ test("solver runs in the browser runtime: odds, solve, compiled policy", async (
         [],
         "the prepared policy is Strategy Board-valid",
     );
-    const strategy = await client.compileStrategy(sessionId, prepared);
+    const reloaded = JSON.parse(
+        JSON.stringify(prepared),
+    ) as typeof prepared;
+    assert.deepEqual(
+        validateStrategy(reloaded).filter((issue) => issue.severity === "error"),
+        [],
+        "the compiled policy survives workspace-style JSON save/reload",
+    );
+    const exact = await client.strategyEvaluate(
+        sessionId,
+        reloaded,
+        undefined,
+        { economy: economySpec },
+    );
+    assert.equal(exact.converged, true);
+    assert.ok(exact.terminals.success > 1 - 1e-9);
+    assert.ok(exact.terminals.failure < 1e-12);
+    assert.ok(exact.terminals.action_not_applied < 1e-12);
+    assert.ok(exact.terminals.no_matching_edge < 1e-12);
+    assert.ok(exact.terminals.unresolved < 1e-12);
+    assert.equal(exact.accounting.totals.per_invocation.cost_complete, true);
+    const exactCost =
+        exact.accounting.totals.per_invocation.total_expected_cost;
+    assert.ok(exactCost !== null);
+    assert.ok(
+        Math.abs(exactCost! - solve.evaluated_policy_cost!) < 1e-7,
+        `exact compiled cost ${exactCost} vs solver policy cost ${solve.evaluated_policy_cost}`,
+    );
+    const strategy = await client.compileStrategy(sessionId, reloaded);
     const simulator = await client.createSimulator(
         sessionId,
         strategy,

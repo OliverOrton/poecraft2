@@ -701,22 +701,21 @@ void SolveWork::Impl::build_quotient_graph(
          * projection. Copy each strict arena once, then let quotient rows
          * retain their original slices. Re-copying a shared strict row's
          * variants for every behavioral representative turns exact kernel
-         * reuse back into graph-sized duplication. Choice-option state IDs
-         * are projected once below because those IDs are observable. */
+         * reuse back into graph-sized duplication. Only the Bellman
+         * successor is projected below. observation_state and actual_state
+         * are concrete compiler witnesses: projecting either can erase the
+         * Veiled carrier or other item facts that the emitted dispatcher must
+         * test before applying the authored choice. */
         quotient->variant_arena = strict->variant_arena;
         quotient->accounts_variant_arena =
             focused_strict_transition_cache == nullptr;
         quotient->choice_options = strict->choice_options;
         for (OutcomeChoiceOption& choice : quotient->choice_options) {
-            const auto map_state = [&](std::uint32_t& state) {
-                if (state != kNoId) {
-                    state = result.behavioral_representative_by_state.at(
-                        state);
-                }
-            };
-            map_state(choice.state);
-            map_state(choice.observation_state);
-            map_state(choice.actual_state);
+            if (choice.state != kNoId) {
+                choice.state =
+                    result.behavioral_representative_by_state.at(
+                        choice.state);
+            }
         }
         quotient->automatic_rows_considered =
             strict->automatic_rows_considered;
