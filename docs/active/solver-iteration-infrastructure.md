@@ -1,6 +1,7 @@
 # Solver Iteration Infrastructure And Decomposition
 
-**Status: Gates 0-2 complete; header fan-out/build-impact audit is next.**
+**Status: Gates 0-3 complete; the qualified incremental WASM path is the
+separate Gate 4 change.**
 
 Owner: Oliver
 
@@ -249,6 +250,52 @@ header, and the broad shared internal header. Report navigability, leaf edit
 locality, clean-build parallelism, and header fan-out honestly. If the broad
 header remains broad, name the next narrow seam without beginning another
 restructure.
+
+### Gate 3 result
+
+Dependency counts were refreshed by compiling the native tests after the
+header split, then read from Ninja's dependency database. Counts include engine
+and test translation units where applicable.
+
+| Private header | Before | After |
+| --- | ---: | ---: |
+| `solver_internal.hpp` compatibility umbrella | 30 | 6 |
+| `solver_model.hpp` broad core | n/a | 42 |
+| `solver_calc_types.hpp` | n/a | 40 |
+| `solver_eval_types.hpp` | n/a | 31 |
+| `solver_solve_contracts.hpp` | n/a | 30 |
+| `solver_compile_contracts.hpp` | n/a | 9 |
+| `solver_solve_types.hpp` | 16 | 23 |
+| `solver_refinement.hpp` | 10 | 17 |
+| `solver_sparse_policy.hpp` | 10 | 17 |
+| `solver_policy_refinement.hpp` | 5 | 6 |
+
+The umbrella reduction is real, and a compiler-only contract now reaches only
+nine units. Broad header fan-out did not improve: the one-way phase chain means
+every solve/evaluation owner still consumes the 1,197-line model, while the
+mechanical split created more translation units. Refinement-specific counts
+also grew for the same reason. A future header-only boundary, if measurements
+justify it after quotient work stabilizes, should split goal/registry value
+types from abstract-layout/state declarations and replace unnecessary complete
+types with forward declarations. This milestone does not launch that work.
+
+Rebuild probes added and then removed compile-visible declarations. ccache was
+disabled for comparable compile timing:
+
+| Probe | Rebuilt units | Wall time |
+| --- | ---: | ---: |
+| Leaf `solver_eval_report.cpp` plus static relink | 1 | 3.165 s |
+| Refinement-specific `solver_refinement.hpp` plus library/test relinks | 17 | 12.241 s |
+| Broad `solver_model.hpp` plus library/test relinks | 42 | 18.510 s |
+
+The final uncached clean all-native parallel build took 20.383 s for 64 compile
+steps, versus the 22.813 s starting measurement: a modest 10.7% reduction that
+may include run variance, not a large clean-build claim. The canonical warm
+ccache clean rebuild took 5.988 s and the final no-op wrapper took 0.398 s.
+Against the former 9.857 s monolithic refinement edit, independent leaf owners
+now give materially better edit locality. Agent navigability improved through
+named owners and the routing map; broad core-header edits remain essentially a
+clean rebuild and are recorded as debt rather than an incremental win.
 
 ## Gate 4 - incremental WASM investigation
 

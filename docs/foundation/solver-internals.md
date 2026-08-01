@@ -81,6 +81,11 @@ solve contracts explicitly. `solver_internal.hpp` is a compatibility umbrella
 for deliberate cross-phase callers such as the public solver adapter and broad
 native tests. New leaf implementation files should not include it by default.
 
+The core chain is intentionally not advertised as low-fan-out. A change to
+`solver_model.hpp` still rebuilds nearly every solver owner; use the narrow
+phase headers to localize later-phase declaration changes, not to infer that a
+core model edit is cheap.
+
 ## Where Should I Make This Change?
 
 | Change | Start here |
