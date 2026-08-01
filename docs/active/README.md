@@ -1,16 +1,21 @@
 # Active Work
 
-**Status: one structural implementation plan is selected; implementation has
-not begun.**
+**Status: one enabling implementation plan is selected; Gate 0 is frozen and
+implementation has not begun.**
 
 Parent: [Documentation map](../README.md)
 
 Current boundary:
+[Solver Iteration Infrastructure And Decomposition](solver-iteration-infrastructure.md).
+It establishes the canonical Ninja development path, focused native testing,
+one engine source inventory, coherent solver source/header ownership, measured
+header fan-out, and an evidence-backed incremental WASM decision without
+changing solver behavior.
+
+The selected algorithmic boundary remains
 [Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
-It retains proof-carrying quotient transitions during solving and drives the
-existing shared partition from counterexamples inside policy improvement. The
-first implementation gate is proof identity and cache invalidation; do not
-start with another full hard-case run.
+Its plan is unchanged and resumes immediately after the enabling milestone is
+archived. It is not implemented, completed, or superseded.
 
 The preceding
 [Policy-Guided Exact Refinement qualification](../archive/2026-07-31-policy-guided-exact-refinement/README.md)

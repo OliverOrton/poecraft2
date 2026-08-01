@@ -28,12 +28,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected structural implementation boundary is
+The selected enabling implementation boundary is
+[Solver Iteration Infrastructure And Decomposition](active/solver-iteration-infrastructure.md).
+Gate 0 is frozen. It establishes the canonical fast native workflow and
+decomposes oversized solver sources/private contracts without changing solver
+behavior.
+
+The queued algorithmic boundary remains
 [Proof-Carrying Quotient Refinement During Solving](active/proof-carrying-quotient-refinement.md).
-Implementation has not begun. It will retain certified quotient transitions
-during solve and feed counterexamples from the existing shared partition back
-into policy improvement, without changing mechanics, action filtering,
-strategy format, or the 1 GiB cap.
+Its plan is unchanged and resumes immediately after the enabling milestone.
+It will retain certified quotient transitions during solve and feed
+counterexamples from the existing shared partition back into policy
+improvement, without changing mechanics, action filtering, strategy format,
+or the 1 GiB cap.
 
 The archived
 [Policy-Guided Exact Refinement qualification](archive/2026-07-31-policy-guided-exact-refinement/README.md)
