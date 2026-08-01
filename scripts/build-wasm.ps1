@@ -45,35 +45,18 @@ if ($LASTEXITCODE -ne 0) {
 $EngineSources = Get-PoeCraftEngineSources -Root $Root
 $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
-$Exported = @(
-    "_pcw_abi_version", "_pcw_response_data", "_pcw_response_size",
-    "_pcw_response_clear",
-    "_pcw_data_open", "_pcw_data_summary", "_pcw_data_bases",
-    "_pcw_bestiary_presentation", "_pcw_bestiary_apply",
-    "_pcw_bestiary_calculate",
-    "_pcw_data_close",
-    "_pcw_session_open", "_pcw_session_close", "_pcw_session_mod_count",
-    "_pcw_session_mod_info", "_pcw_context_open", "_pcw_context_close",
-    "_pcw_item_create", "_pcw_item_clone", "_pcw_item_close", "_pcw_item_info",
-    "_pcw_item_add_mod", "_pcw_item_remove_mod", "_pcw_item_set_mod_fractured",
-    "_pcw_item_export", "_pcw_item_import",
-    "_pcw_apply", "_pcw_run_batch", "_pcw_debug_pool",
-    "_pcw_strategy_compile", "_pcw_strategy_close", "_pcw_strategy_evaluate",
-    "_pcw_strategy_eval_begin", "_pcw_strategy_eval_step",
-    "_pcw_strategy_eval_finish", "_pcw_strategy_eval_close",
-    "_pcw_live_handle_count", "_pcw_memory_stats",
-    "_pcw_economy_open", "_pcw_economy_close",
-    "_pcw_simulator_open", "_pcw_simulator_close",
-    "_pcw_simulator_run_chunk", "_pcw_simulator_result",
-    "_pcw_solver_open", "_pcw_solver_close", "_pcw_solver_actions",
-    "_pcw_solver_calc", "_pcw_solver_solve", "_pcw_solver_state_value",
-    "_pcw_solver_project", "_pcw_solver_compile",
-    "_pcw_solver_compile_transfer", "_pcw_solver_log",
-    "_pcw_solver_telemetry",
-    "_pcw_solver_solve_begin", "_pcw_solver_solve_step",
-    "_pcw_solver_solve_finish", "_pcw_solver_solve_abandon",
-    "_malloc", "_free"
-) -join ","
+$ExportManifest = Join-Path $Root "bindings/wasm/wasm-exports.txt"
+$ExportEntries = @(
+    Get-Content -LiteralPath $ExportManifest |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -and -not $_.StartsWith("#") }
+)
+if ($ExportEntries.Count -eq 0 -or
+        ($ExportEntries | Select-Object -Unique).Count -ne $ExportEntries.Count -or
+        @($ExportEntries | Where-Object { $_ -notmatch '^_[A-Za-z0-9_]+$' }).Count -ne 0) {
+    throw "Invalid or duplicate WASM export in $ExportManifest."
+}
+$Exported = $ExportEntries -join ","
 
 $RuntimeMethods = @("ccall", "cwrap", "UTF8ToString", "HEAPU8") -join ","
 

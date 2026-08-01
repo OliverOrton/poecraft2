@@ -1,7 +1,6 @@
 # Solver Iteration Infrastructure And Decomposition
 
-**Status: Gates 0-3 complete; the qualified incremental WASM path is the
-separate Gate 4 change.**
+**Status: Gates 0-4 complete; final reporting and archival are next.**
 
 Owner: Oliver
 
@@ -305,6 +304,39 @@ module pair, preserves exports/runtime behavior, keeps direct emcc as a working
 fallback, and materially improves measured incremental builds without changing
 memory/ABI/behavior. Otherwise record a precise negative result. Any retained
 WASM change receives its own commit.
+
+### Gate 4 result
+
+Retained. An Emscripten-only CMake target consumes the same
+`engine/engine-sources.txt` inventory and a canonical 61-symbol
+`bindings/wasm/wasm-exports.txt` manifest. `scripts/dev-wasm.ps1` configures it
+with CMake/Ninja, builds objects and the facade incrementally, and normalizes
+the existing `.mjs` output. `scripts/build-wasm.ps1` remains the direct-emcc
+release fallback and now consumes the same export manifest.
+
+| Release WASM operation | Wall time | Relative to direct |
+| --- | ---: | ---: |
+| Direct-emcc release fallback | 124.885 s | baseline |
+| Incremental target, clean | 29.607 s | 76.3% lower |
+| Incremental target, one leaf object plus relink | 17.367 s | 86.1% lower |
+| Incremental target, no-op | 0.711 s | 99.4% lower |
+
+The clean target compiled 45 engine units plus the facade in parallel and
+emitted the same module pair. All 61 manifest exports are callable; the module
+reports ABI 2 and zero initial live handles. The direct fallback produced the
+final release artifacts and the complete Node worker/web suite passed. The
+release files are 39,624-byte `.mjs` SHA-256
+`be4af9c77950d9098e95ef3cc6bb1d6f48a17781dcb3564ca33372bc5741ce8f`
+and 4,003,962-byte `.wasm` SHA-256
+`2aefa2e4958f4ddef34372c60118a3df59e9a84848630f0fb6b52046353ef523`.
+
+Emscripten 6's C++20 library no longer exposes deprecated
+`shared_ptr::unique()`, so the equivalent `use_count() != 1` ownership check is
+used. The native and release-WASM acceptance preserves behavior. The same
+acceptance exposed that MinGW CMake's shared library needed the documented
+Windows filename and adjacent `libwinpthread` runtime for Python binding loads;
+the canonical target now supplies both. No ABI, export, memory, mechanics,
+strategy, cap, or solver behavior changed.
 
 ## Replay/checkpoint evidence only
 

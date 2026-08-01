@@ -251,7 +251,7 @@ std::shared_ptr<SelectedAction> intern_selection(
 }
 
 void detach_selection(Node& node) {
-    if (node.selection != nullptr && !node.selection.unique()) {
+    if (node.selection != nullptr && node.selection.use_count() != 1) {
         node.selection =
             std::make_shared<SelectedAction>(*node.selection);
     }

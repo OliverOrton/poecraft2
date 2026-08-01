@@ -92,19 +92,94 @@ target_compile_features(poecraft_engine_objects PUBLIC cxx_std_20)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(poecraft_engine_objects PRIVATE -ffp-contract=off)
 endif()
+if(EMSCRIPTEN)
+    target_compile_options(poecraft_engine_objects PRIVATE -fexceptions)
+endif()
 
 add_library(poecraft_engine STATIC
     $<TARGET_OBJECTS:poecraft_engine_objects>)
 target_include_directories(poecraft_engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(poecraft_engine PUBLIC cxx_std_20)
 
+if(EMSCRIPTEN)
+    set(POECRAFT_WASM_EXPORTS_FILE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../bindings/wasm/wasm-exports.txt")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${POECRAFT_WASM_EXPORTS_FILE}")
+    file(STRINGS "${POECRAFT_WASM_EXPORTS_FILE}" POECRAFT_WASM_EXPORTS)
+    list(FILTER POECRAFT_WASM_EXPORTS EXCLUDE REGEX "^[ \t]*(#|$)")
+    list(LENGTH POECRAFT_WASM_EXPORTS POECRAFT_WASM_EXPORT_COUNT)
+    list(REMOVE_DUPLICATES POECRAFT_WASM_EXPORTS)
+    list(LENGTH POECRAFT_WASM_EXPORTS POECRAFT_WASM_UNIQUE_EXPORT_COUNT)
+    if(POECRAFT_WASM_EXPORT_COUNT EQUAL 0 OR
+            NOT POECRAFT_WASM_EXPORT_COUNT EQUAL
+                POECRAFT_WASM_UNIQUE_EXPORT_COUNT)
+        message(FATAL_ERROR "wasm-exports.txt is empty or contains duplicates")
+    endif()
+    foreach(WASM_EXPORT IN LISTS POECRAFT_WASM_EXPORTS)
+        if(NOT WASM_EXPORT MATCHES "^_[A-Za-z0-9_]+$")
+            message(FATAL_ERROR "Invalid WASM export: ${WASM_EXPORT}")
+        endif()
+    endforeach()
+    list(JOIN POECRAFT_WASM_EXPORTS "," POECRAFT_WASM_EXPORTED_FUNCTIONS)
+
+    add_executable(poecraft_engine_wasm
+        "${CMAKE_CURRENT_SOURCE_DIR}/../bindings/wasm/wasm_api.cpp")
+    target_link_libraries(poecraft_engine_wasm PRIVATE poecraft_engine)
+    target_include_directories(poecraft_engine_wasm PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${HARVEST_GENERATED_DIR}")
+    target_compile_options(poecraft_engine_wasm PRIVATE
+        -O3 -ffp-contract=off -fexceptions)
+    target_link_options(poecraft_engine_wasm PRIVATE
+        -O3 -ffp-contract=off -fexceptions
+        "-sMODULARIZE=1"
+        "-sEXPORT_ES6=1"
+        "-sEXPORT_NAME=createPoecraftEngine"
+        "-sENVIRONMENT=web,worker,node"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sINITIAL_MEMORY=134217728"
+        "-sMAXIMUM_MEMORY=4GB"
+        "-sSTACK_SIZE=67108864"
+        "-sEXIT_RUNTIME=0"
+        "-sEXPORTED_FUNCTIONS=${POECRAFT_WASM_EXPORTED_FUNCTIONS}"
+        "-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,UTF8ToString,HEAPU8")
+    set_target_properties(poecraft_engine_wasm PROPERTIES
+        OUTPUT_NAME poecraft_engine
+        SUFFIX ".mjs"
+        RUNTIME_OUTPUT_DIRECTORY
+            "${CMAKE_CURRENT_SOURCE_DIR}/../bindings/wasm/dist")
+endif()
+
 add_library(poecraft_engine_shared SHARED
     $<TARGET_OBJECTS:poecraft_engine_objects>)
 set_target_properties(poecraft_engine_shared PROPERTIES
     OUTPUT_NAME poecraft_engine
     WINDOWS_EXPORT_ALL_SYMBOLS ON)
+if(WIN32)
+    set_target_properties(poecraft_engine_shared PROPERTIES PREFIX "")
+endif()
 target_include_directories(poecraft_engine_shared PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(poecraft_engine_shared PUBLIC cxx_std_20)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_options(poecraft_engine_shared PRIVATE
+        -static-libstdc++ -static-libgcc)
+    if(MINGW)
+        get_filename_component(POECRAFT_MINGW_BIN
+            "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        find_file(POECRAFT_WINPTHREAD_RUNTIME
+            NAMES libwinpthread-1.dll
+            PATHS "${POECRAFT_MINGW_BIN}"
+            NO_DEFAULT_PATH)
+        if(NOT POECRAFT_WINPTHREAD_RUNTIME)
+            message(FATAL_ERROR "MinGW winpthread runtime was not found")
+        endif()
+        add_custom_command(TARGET poecraft_engine_shared POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${POECRAFT_WINPTHREAD_RUNTIME}"
+                "$<TARGET_FILE_DIR:poecraft_engine_shared>")
+    endif()
+endif()
 
 # S7 optimal-solver baseline harness. It consumes versioned corpus specs and
 # only calls the public engine API; json.hpp is reused solely for tooling-side

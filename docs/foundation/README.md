@@ -150,7 +150,7 @@ costs and solver selection; they do not change crafting legality or outcomes.
 | C ABI | `engine/include/poecraft/` |
 | Native source inventory and build | `engine/engine-sources.txt`, `engine/CMakeLists.txt`, `engine/CMakePresets.json`, `scripts/dev-engine.ps1`, `scripts/build.ps1` |
 | Native solver phases and private source ownership | [Solver internals](solver-internals.md) |
-| WASM build | `scripts/build-wasm.ps1` |
+| WASM build | `scripts/dev-wasm.ps1` (incremental), `scripts/build-wasm.ps1` (direct release fallback) |
 | WASM facade | `bindings/wasm/wasm_api.cpp` |
 | Browser boundary | `apps/web/src/app/engine-client.ts`, `engine-worker.ts`, `engine-wasm.ts` |
 | Product shell | `apps/web/src/app/components/pc-app.ts`, `pc-workspace.ts` |

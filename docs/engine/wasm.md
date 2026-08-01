@@ -6,14 +6,13 @@ evidence boundaries.
 
 Parent: [Engine](README.md)
 
-Verified against code and rebuilt release module: 2026-07-31 on
-`codex/policy-guided-exact-refinement`. Complete non-visual web acceptance is
-pending under the active handoff.
+Verified against code, rebuilt release module, and complete non-visual web
+acceptance: 2026-08-01 on `codex/solver-iteration-infrastructure`.
 
 Release-wrapper export map verified in the tracked
 `bindings/wasm/dist/poecraft_engine.mjs` generated at this boundary. The
 tracked `.wasm` SHA-256 is
-`52b41eca276d679135ac22c99f5694c64daa7091337c0730c55109ff17db7e08`.
+`2aefa2e4958f4ddef34372c60118a3df59e9a84848630f0fb6b52046353ef523`.
 
 ## Architecture
 
@@ -37,8 +36,9 @@ with the worker/tab rather than an ordinary product `data_close` path.
 ## Build and release artifact
 
 `scripts/build-wasm.ps1` activates Emscripten from `$env:EMSDK` or `C:\emsdk`,
-regenerates the Harvest allowlist header, and compiles every `engine/src/*.cpp`
-file plus the facade. The release flags include:
+regenerates the Harvest allowlist header, reads the canonical engine source and
+WASM export manifests, and compiles every engine translation unit plus the
+facade in one direct-emcc release invocation. The release flags include:
 
 - C++20, `-O3`, disabled floating-point contraction, and C++ exceptions;
 - modularized ES module output named `createPoecraftEngine` for
@@ -52,6 +52,14 @@ file plus the facade. The release flags include:
 `bindings/wasm/dist/poecraft_engine.mjs` and `.wasm`. A diagnostics build adds
 Emscripten assertions, safe-heap checks, and stack-overflow checks, but those
 are not release behavior.
+
+`scripts/dev-wasm.ps1` is the incremental development path. Its Emscripten-only
+CMake/Ninja target compiles the same source inventory to separate objects and
+emits the same module pair with the same flags and 61-symbol export manifest.
+The direct script remains the release fallback and diagnostics owner. On the
+current machine the direct release took 124.885 s; incremental clean, leaf
+edit/relink, and no-op builds took 29.607 s, 17.367 s, and 0.711 s. The retained
+path therefore improves iteration without changing release authority.
 
 Vite treats the worker as ES2022 and suppresses Node `process` detection for
 the production worker loader. The generated module still supports Node so the
@@ -270,7 +278,7 @@ WASM integration evidence, but it is not a real-browser/device benchmark.
 ## Export inventory
 
 The source facade marks all public functions `EMSCRIPTEN_KEEPALIVE`. The
-explicit `$Exported` array in `scripts/build-wasm.ps1` and the tracked release
+explicit `bindings/wasm/wasm-exports.txt` manifest and the tracked release
 module include the four stepped solver functions:
 
 ```text
@@ -301,7 +309,8 @@ The repository does not yet establish:
 
 These are unknowns to measure or decide, not implemented guarantees.
 
-Implementation entry points: `scripts/build-wasm.ps1`,
+Implementation entry points: `scripts/build-wasm.ps1`, `scripts/dev-wasm.ps1`,
+`bindings/wasm/wasm-exports.txt`,
 `bindings/wasm/wasm_api.cpp`, `apps/web/src/app/engine-wasm.ts`,
 `apps/web/src/app/engine-worker.ts`, `apps/web/src/app/engine-client.ts`, and
 `apps/web/test/engine-smoke.test.ts`.
