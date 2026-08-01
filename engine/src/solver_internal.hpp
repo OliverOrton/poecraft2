@@ -1690,6 +1690,13 @@ class CalcContext {
         std::uint32_t state_id,
         std::uint32_t action_index,
         bool goal_progress_gated = false);
+    /* Release one published primitive row and, when that row is backed by a
+     * retained stable reforge memo, release only that memo's payload. Other
+     * already-paid transition rows remain available to the solve. */
+    void release_published_outcome_storage(
+        std::uint32_t state_id,
+        std::uint32_t action_index,
+        bool goal_progress_gated = false);
     void release_option_kernel(
         std::uint32_t state_id,
         std::uint32_t operator_index);

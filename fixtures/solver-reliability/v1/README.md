@@ -40,3 +40,15 @@ remain separate in native and WASM reports. Reliability expectations accept
 only classified outcomes; any returned policy must compile, exact-reconcile,
 and simulate without an off-policy action. The two verification-tier policies
 run 10,000 simulations each.
+
+Qualification evidence for policy-guided exact refinement is indexed here:
+
+- [`policy-guided-exact-refinement-baseline.json`](evidence/policy-guided-exact-refinement-baseline.json)
+  freezes the pre-implementation 49-case policy/refusal boundary; and
+- [`policy-guided-exact-refinement-decision-gate.json`](evidence/policy-guided-exact-refinement-decision-gate.json)
+  records the 2026-07-31 two-goal 1 GiB stop and the transition to the separate
+  proof-carrying quotient milestone.
+
+This v1 corpus has two-, three-, and four-goal cases but no exactly five-goal
+case. The next structural milestone must freeze an owner-approved five-goal
+fixture without mutating this corpus or guessing a crafting recipe.

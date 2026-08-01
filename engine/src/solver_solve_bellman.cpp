@@ -1275,8 +1275,7 @@ bool SolveWork::Impl::repair_improper_policy() {
                 select_sparse_policy_row(
                     *transition_cache, state, options.epsilon,
                     [&](const std::uint64_t row_index) {
-                        if (policy_rows[state] == row_index ||
-                            preservation_prunes(row_index)) {
+                        if (preservation_prunes(row_index)) {
                             return false;
                         }
                         const SparseRow& row =
@@ -1325,15 +1324,18 @@ bool SolveWork::Impl::repair_improper_policy() {
                     });
             const std::uint64_t best_row = selected.row;
             if (best_row != std::numeric_limits<std::uint64_t>::max()) {
-                /* Every selected row has a certified exit from the closed
-                 * component. Repair them together; the next fixed-policy
-                 * evaluation proves properness and ordinary Howard
-                 * improvement is still responsible for optimality. */
                 policy_rows[state] = best_row;
                 repaired = true;
             }
         }
         if (!repaired) return false;
+        /* Fixed rows may contain observed choices. Seed the rejected closed
+         * component at infinity so the next exact kernel preparation keeps
+         * the certified outside choices used by repair_values instead of
+         * recreating the same closed observer cycle from stale finite values. */
+        for (const std::uint32_t state : improper_policy_states) {
+            result.values[state] = kInfinity;
+        }
         improper_policy_states.clear();
         return true;
     }
@@ -1434,7 +1436,7 @@ bool SolveWork::Impl::run_policy_iteration_unit() {
                 result.diagnostics.policy_improvement_rounds = sweeps;
                 policy_unit_stage = PolicyUnitStage::Evaluate;
                 finish_unit();
-                backup_active = true;
+                backup_active = sweeps < options.max_sweeps;
                 return true;
             }
             policy_iteration_failed = true;

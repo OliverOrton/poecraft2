@@ -956,6 +956,38 @@ The raw final reports are reproducible local build artifacts under
 `build/acceptance/cross-base-reliability/native-acceptance-final-v4/` and
 `build/acceptance/cross-base-reliability/wasm-report-final-v2.json`.
 
+## Policy-Guided Exact Refinement Decision Gate
+
+The 2026-07-31
+[qualification report](archive/2026-07-31-policy-guided-exact-refinement/report.md)
+and
+[tracked summary](../fixtures/solver-reliability/v1/evidence/policy-guided-exact-refinement-decision-gate.json)
+record the stopped reconstruct-then-merge qualification.
+
+- Focused shared-refinement and policy-refinement suites passed `301/0` and
+  `4,829/0` after the final post-projection payload release.
+- The unchanged natural two-goal decision case ran for `467.304` seconds and
+  reached `1,089,111,449` solver-owned bytes against the existing
+  `1,073,741,824`-byte cap.
+- Strict discovery and contract propagation completed with 183,062 retained
+  exact carriers, 423,756 transitions, 10,466 kernels, three backward rounds,
+  and one shared observation round.
+- Closed partitioning never began: initial classes, final classes, partition
+  rounds, and lumpability checks all remained zero. No policy was published,
+  so compile, exact evaluation, and simulation were not applicable.
+- The raw case report remains at
+  `build/acceptance/policy-guided-exact-refinement/diagnostic-natural-projected-carrier-release/cases/natural-t1-breadth-two-4e65dda9c53b.json`
+  with SHA-256
+  `cf3feb1a36aeb559bb5f4bdc8b0a160639d3310e3a7f4377218365eb85734ba6`.
+- The minimum four-node cyclic witness proves that equal current observation
+  and immediate behavior cannot justify merging an open graph. The selected
+  follow-on instead retains proof-carrying quotient transitions and explicit
+  split dependencies inside solver policy improvement.
+
+The red gate intentionally stopped the remaining native portfolio, Fracture
+hash gate, selected 10,000-run verification, release WASM, web acceptance, and
+`scripts/test.ps1`; none is claimed here.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

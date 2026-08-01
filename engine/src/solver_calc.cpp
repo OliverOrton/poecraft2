@@ -1331,6 +1331,50 @@ void CalcContext::release_outcome(
     distribution_cache_.erase(key);
 }
 
+void CalcContext::release_published_outcome_storage(
+    const std::uint32_t state_id,
+    const std::uint32_t action_index,
+    bool goal_progress_gated) {
+    goal_progress_gated =
+        goal_progress_gated &&
+        action_transition_facts(
+            registry_.actions.at(action_index).params.type).renewal;
+    const std::uint64_t key = distribution_cache_key(
+        state_id, action_index, goal_progress_gated);
+    const auto cached = distribution_cache_.find(key);
+    if (cached == distribution_cache_.end()) return;
+    const std::shared_ptr<const OutcomeDistribution> published =
+        cached->second;
+    account_distribution_cache_erase(key);
+    distribution_cache_.erase(cached);
+
+    /* Keep each bucket's capacity: a later exact row with the same memo hash
+     * may reuse that allocation, and the fast ownership ledger already
+     * charges it. Only nested payload owned by the removed memo is released.
+     */
+    for (auto& [unused_key, memos] : reforge_cache_) {
+        (void)unused_key;
+        for (auto memo = memos.begin(); memo != memos.end();) {
+            if (memo->distribution != published) {
+                ++memo;
+                continue;
+            }
+            const std::uint64_t signature_bytes =
+                memo->observation_signature.capacity() *
+                sizeof(std::uint64_t);
+            const std::uint64_t distribution_bytes =
+                distribution_selected_bytes(*memo->distribution);
+            owned_reforge_payload_bytes_ -= std::min(
+                owned_reforge_payload_bytes_, signature_bytes);
+            retained_reforge_distribution_bytes_ -= std::min(
+                retained_reforge_distribution_bytes_,
+                distribution_bytes);
+            release_distribution_payload(memo->distribution);
+            memo = memos.erase(memo);
+        }
+    }
+}
+
 void CalcContext::release_option_kernel(
     const std::uint32_t state_id,
     const std::uint32_t operator_index) {

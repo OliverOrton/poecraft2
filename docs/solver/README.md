@@ -26,12 +26,20 @@ generated corpus lives in
 [seeded natural-T1 v1](../../fixtures/solver-natural-t1/v1/README.md). This
 stamp does not claim rendered-browser review or a mechanic ruling.
 
+Focused qualification addendum: the shared refinement and policy-lifting
+authorities were rechecked on 2026-07-31 from source base `acb9c975` with
+`301/0` and `4,829/0` focused results. The natural two-goal publication path
+then stopped before partition initialization at the unchanged 1 GiB cap. This
+addendum does not claim the native portfolio, release WASM, or full pipeline.
+
 The action-observation and policy-guided refinement sections below are the
-durable contract selected by the current
-[active boundary](../active/policy-guided-exact-refinement.md). Portfolio
-availability, refusal-count, and compiled-reconciliation results remain
-qualification evidence for that boundary and are not claimed on this page
-until its final archive exists.
+implemented shared authority retained by the
+[2026-07-31 qualification stop](../archive/2026-07-31-policy-guided-exact-refinement/README.md).
+The reconstruct-then-merge production adapter did not qualify the required
+two-goal 1 GiB gate. The separate
+[active boundary](../active/proof-carrying-quotient-refinement.md) integrates
+proof-carrying quotient transitions into solving without replacing these
+authorities; implementation has not begun.
 
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier

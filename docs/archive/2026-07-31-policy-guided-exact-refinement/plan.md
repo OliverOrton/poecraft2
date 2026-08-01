@@ -1,6 +1,7 @@
 # Policy-Guided Exact State Refinement
 
-**Status: active implementation plan.**
+**Status: archived implementation plan; qualification stopped at the 1 GiB
+decision gate.**
 
 Owner: Oliver
 
@@ -10,7 +11,7 @@ Starting source:
 `71e1ad05e07949aafe6312fe0e50f49fb685dba3`
 (`Complete cross-base strategy reliability`)
 
-Parent: [Active work](README.md)
+Parent: [Policy-Guided Exact Refinement qualification report](README.md)
 
 ## Objective
 
@@ -64,7 +65,7 @@ changes:
   `coarse_parent_requires_exact_exclusion_identity`.
 
 The durable corpus is
-[`fixtures/solver-reliability/v1`](../../fixtures/solver-reliability/v1/README.md).
+[`fixtures/solver-reliability/v1`](../../../fixtures/solver-reliability/v1/README.md).
 Run-local evidence belongs under
 `build/acceptance/policy-guided-exact-refinement/`; the final report will
 record exact artifact paths and hashes.
@@ -138,6 +139,77 @@ through existing predecessors until the refined policy is stable and proper.
 The coarse `CalcContext`, hashes, and discovery graph remain authoritative for
 broad-search evidence. Exact policy state IDs live in their own compatible
 context and are never mixed with coarse IDs.
+
+### Qualification checkpoint: exact publication phase ordering
+
+The current production adapter reaches the shared contract-derived partition
+in this exact order:
+
+1. `ProductionPolicyOracle` derives the strict carrier layout and backward
+   coarse-policy requirements from the admitted action contracts, imports the
+   existing planner operators by semantic identity, and interns the concrete
+   start item in the strict `CalcContext`.
+2. `discover_policy_graph` enumerates only the requested exact roots, asks the
+   oracle for each selected semantic action, and materializes that action's
+   strict kernel.
+3. Successor generation interns every strict successor in the adapter's
+   collision-free carrier table and then in the refinement graph before graph
+   discovery continues. The existing `policy_collapse_key` fast path may reuse
+   the shared canonical operation/state signature for a fixed policy, but it
+   is disabled for witness-local re-optimization; that path therefore retains
+   every strict successor carrier.
+4. Only after exact successor closure does `canonicalize_graph` order carrier
+   identities and remap every absolute edge.
+5. `refine_selected_action_routing` derives class-local routing predicates on
+   the completed graph, and `propagate_policy_observations` carries the same
+   action-contract requirements backward to a fixed point.
+6. `initial_behavior_key` forms the contract-derived observation classes, then
+   `refine_closed_probabilistic_partition` repeatedly splits them by immediate
+   cost and probability mass into successor classes until the existing
+   lumpability proof closes.
+7. The engine retains counterexamples and final classes, runs the shared exact
+   SCC evaluator, and only then constructs and independently verifies the
+   ordinary compiled strategy.
+
+Consequently, witness-local publication currently materializes strict
+carriers before the canonical contract-derived partition can operate. Any
+early aggregation considered during qualification must call the same shared
+observation and partition authorities; it must not introduce a second
+signature, contract, or refinement system.
+
+The audit rejects lossless early aggregation on an open successor graph. The
+shared `refine_closed_probabilistic_partition` contract requires complete
+stochastic rows and is split-only: a class may separate after any successor
+class separates. The minimal live-carrier witness is:
+
+```text
+x and y: same coarse parent, observation key, selected semantic action,
+         and immediate cost
+x -> 0.5 y + 0.5 success
+y -> 0.5 x + 0.5 failure
+success and failure: distinct terminal observation classes
+```
+
+Before both exits and the live cycle are closed, `x` and `y` have the same
+available local key. The completed shared partition must split them because
+their probability mass into the terminal classes differs. Discarding either
+strict carrier during successor generation would make that later split
+impossible. Using unresolved collision-free successor keys as absolute arc
+labels is conservative but also prevents valid quotient-cycle merges and
+therefore does not provide the required aggregation.
+
+The existing fixed-policy `policy_collapse_key` remains the only approved
+early reuse path: it uses the shared canonical operation/state authority after
+the selected action and its backward router requirement are known, plus the
+collision-checked reforge-kernel signature where required. Witness-local
+re-optimization cannot extend that collapse to a class merely because its
+current action matches: two carriers may have the same incumbent row while an
+admitted alternative's contract or value separates them. The shared candidate
+partition can prove that separation only after retaining the candidate
+carriers and their complete rows. The closed partition may be scheduled for a
+closed component while member identities remain retained, but that does not
+remove the strict-carrier materialization boundary. No new early partition or
+signature is retained by this milestone.
 
 ## Named Product Limits And Telemetry
 
@@ -261,4 +333,3 @@ After qualification:
 6. create one final local implementation/evidence/documentation commit ending
    with `Co-authored-by: Codex <codex@openai.com>`; and
 7. leave the worktree clean without pushing.
-

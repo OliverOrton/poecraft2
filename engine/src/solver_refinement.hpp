@@ -177,6 +177,11 @@ struct PolicyObservationNode {
     std::optional<SelectedAction> selected_action;
     ObservationRequirement direct_observes;
     std::vector<std::uint32_t> successors;
+    /* Optional one-level authorities avoid copying an interned selection or
+     * one absolute successor row into every exact carrier. The named state
+     * must exist in the same input and own the corresponding payload. */
+    std::optional<std::uint32_t> selected_action_source;
+    std::optional<std::uint32_t> successor_source;
 };
 
 struct PolicyObservationAssignment {
@@ -241,6 +246,11 @@ struct ClosedPartitionNode {
     StableKey immediate_key;
     bool terminal = false;
     std::vector<ClosedPartitionArc> arcs;
+    /* Optional one-level authority naming another input node whose absolute
+     * arc row is identical. The referencing node must not own arcs. */
+    std::optional<std::uint32_t> arc_source;
+    std::optional<std::uint32_t> observation_source;
+    std::optional<std::uint32_t> immediate_source;
 };
 
 struct ClosedPartitionProjectedArc {
@@ -376,6 +386,9 @@ private:
  *   full ExactState successor records are the only source of non-root exact
  *   states, so discovery follows only policy-reachable concrete successors
  *   and never enumerates an entire successor coarse parent.
+ * - exact_kernel_reuse_key() may name a previously completed absolute row
+ *   only when the native authority proves collision-free equality. The
+ *   default disables reuse; callers must never infer it from a hash alone.
  *
  * The core sorts and cross-checks every record, so oracle enumeration order
  * or kernel transition order cannot change class identities.
@@ -393,6 +406,16 @@ public:
     virtual ExactActionKernel exact_kernel(
         const ExactState& state,
         const SelectedAction& action) = 0;
+
+    virtual std::optional<StableKey> exact_kernel_reuse_key(
+        const ExactState& state,
+        const SelectedAction& action) {
+        (void)state;
+        (void)action;
+        return std::nullopt;
+    }
+
+    virtual void note_exact_kernel_reuse() {}
 
     /*
      * Selected-owned memory retained by the adapter while the shared graph
@@ -473,10 +496,9 @@ struct RefinedPolicyClass {
 };
 
 struct StateClassAssignment {
-    StableKey exact_state;
     std::uint32_t coarse_state = 0;
     std::uint32_t class_id = 0;
-    StableKey coarse_state_key;
+    std::uint32_t exact_member_index = 0;
 
     bool operator==(const StateClassAssignment&) const = default;
 };
@@ -522,6 +544,19 @@ struct RefinementResult {
     std::vector<RefinedPolicyClass> classes;
     std::vector<RefinementCounterexample> counterexamples;
 };
+
+inline const StableKey& assignment_exact_state(
+        const RefinementResult& result,
+        const StateClassAssignment& assignment) {
+    return result.classes.at(assignment.class_id).exact_members.at(
+        assignment.exact_member_index);
+}
+
+inline const StableKey& assignment_coarse_state_key(
+        const RefinementResult& result,
+        const StateClassAssignment& assignment) {
+    return result.classes.at(assignment.class_id).coarse_state_key;
+}
 
 RefinementResult refine_policy_exact(
     PolicyRefinementOracle& oracle,

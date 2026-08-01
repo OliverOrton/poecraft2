@@ -45,6 +45,14 @@ int main(int argc, char** argv) {
         return pctest::g_failures == 0 ? 0 : 1;
     }
     if (argc > 1 &&
+        std::string(argv[1]) == "--solver-automatic-eldritch-only") {
+        run_solver_automatic_eldritch_tests();
+        std::printf(
+            "solver automatic Eldritch tests: %d checks, %d failures\n",
+            pctest::g_checks, pctest::g_failures);
+        return pctest::g_failures == 0 ? 0 : 1;
+    }
+    if (argc > 1 &&
         std::string(argv[1]) == "--solver-policy-refinement-only") {
         run_solver_policy_refinement_tests();
         std::printf(

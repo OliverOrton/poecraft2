@@ -964,6 +964,7 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         !options.high_impact_executable_uppers ||
         incremental_reclassify_all;
     incremental_reclassify_all = false;
+    bool admitted = false;
     for (IncrementalAlternativeRow& candidate :
          incremental_alternative_rows) {
         if (candidate.status ==
@@ -1032,7 +1033,8 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
                 IncrementalAlternativeRow::Status::Admitted;
             candidate.improvement_margin =
                 current_upper - candidate.upper_q;
-            return true;
+            admitted = true;
+            continue;
         }
         if (std::isfinite(current_upper) &&
             current_upper < kValueCeiling &&
@@ -1047,8 +1049,13 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
         }
     }
 
+    /* Rows proved improving against the same incumbent are independent
+     * admissions, not prescribed policy choices. Expose the whole batch and
+     * let one exact Bellman re-optimization choose among them. */
+    if (admitted) return true;
+
     if (incremental_unevaluated_actions == 0) {
-        auto unresolved = std::find_if(
+        const auto unresolved = std::find_if(
             incremental_alternative_rows.begin(),
             incremental_alternative_rows.end(),
             [](const IncrementalAlternativeRow& candidate) {
@@ -1059,19 +1066,29 @@ bool SolveWork::Impl::classify_incremental_alternatives() {
          * Once every non-goal state and every filtered action are complete,
          * there is no fringe estimate left to refine. Overlap can then mean
          * that several rows form a proper/improving policy only together.
-         * Admit one such row to the exact closed Bellman problem and let the
-         * following solve decide it. This closure rule cannot run on the
-         * large incomplete Chaos fringe and is not the removed broad-graph
-         * overlap fallback.
+         * Admit those rows to the exact closed Bellman problem together and
+         * let the following solve decide among them. They are already fully
+         * materialized legal alternatives; admission does not prescribe a
+         * row. One batch avoids repeating the same exact SCC proof once per
+         * row. This closure rule cannot run on the large incomplete Chaos
+         * fringe and is not the removed broad-graph overlap fallback.
          */
         if (unresolved != incremental_alternative_rows.end() &&
             restricted_graph_closed &&
             incremental_restricted_values_ready &&
             !result.diagnostics.resource_cap_hit) {
-            transition_cache->rows.at(unresolved->row_index).admitted = true;
-            unresolved->status =
-                IncrementalAlternativeRow::Status::Admitted;
-            unresolved->improvement_margin = 0.0;
+            for (IncrementalAlternativeRow& candidate :
+                 incremental_alternative_rows) {
+                if (candidate.status !=
+                    IncrementalAlternativeRow::Status::Unresolved) {
+                    continue;
+                }
+                transition_cache->rows.at(
+                    candidate.row_index).admitted = true;
+                candidate.status =
+                    IncrementalAlternativeRow::Status::Admitted;
+                candidate.improvement_margin = 0.0;
+            }
             return true;
         }
         if (unresolved == incremental_alternative_rows.end() &&

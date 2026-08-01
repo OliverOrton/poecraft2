@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-07-31
+
+- [Policy-Guided Exact Refinement Qualification Stop](2026-07-31-policy-guided-exact-refinement/README.md) —
+  retained the shared contract/refinement/evaluator/compiler foundation and
+  focused green tests, disproved open-graph early merging with a minimal cyclic
+  witness, and stopped after the natural two-goal decision case reached
+  `1,089,111,449` bytes before its first partition class under the unchanged
+  1 GiB cap.
+
 ## 2026-07-30
 
 - [Cross-Base And Compiled-Strategy Reliability Pass](2026-07-30-cross-base-strategy-reliability/README.md) —

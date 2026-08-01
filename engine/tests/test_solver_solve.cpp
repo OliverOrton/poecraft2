@@ -1408,7 +1408,6 @@ void run_policy_guided_exact_lift_tests() {
     SolveOptions options;
     const SolveResult solved =
         solve(calc, start, prices, options);
-
     PC_CHECK(solved.policy_available);
     PC_CHECK(!solved.converged);
     PC_CHECK(
@@ -4739,6 +4738,11 @@ void run_automatic_eldritch_side_tests() {
     SolveOptions prefix_solve_options;
     prefix_solve_options.goal_progress_gated_reforges = true;
     prefix_solve_options.focused_expansion_queue_threshold = 1000000;
+    /* Keep this synthetic regression on the candidate-admission envelope it
+     * was designed to exercise. Product-default cap changes are verified
+     * separately and must not multiply the focused suite's runtime. */
+    prefix_solve_options.max_reforge_work = limits.max_reforge_work;
+    prefix_solve_options.max_sweeps = 512;
     const SolveResult prefix_solved = solve(
         prefix_solve_calc, repair_prefix, prices,
         prefix_solve_options);
@@ -4952,6 +4956,9 @@ void run_automatic_eldritch_side_tests() {
         static_cast<unsigned long long>(
             delta_solved.diagnostics.incremental_actions_unresolved));
     PC_CHECK(delta_solved.policy_available);
+    PC_CHECK(
+        delta_solved.diagnostics.sweeps <
+        delta_options.max_sweeps);
     PC_CHECK(
         delta_solved.diagnostics
             .incremental_states_outside_chaos_support > 0);
@@ -5408,6 +5415,10 @@ void run_artifact_solve_tests(const char* artifact_dir) {
 }
 
 } // namespace
+
+void run_solver_automatic_eldritch_tests() {
+    run_automatic_eldritch_side_tests();
+}
 
 void run_solver_policy_refinement_tests() {
     run_shared_sparse_policy_kernel_tests();

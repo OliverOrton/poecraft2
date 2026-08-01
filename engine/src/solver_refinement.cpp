@@ -624,6 +624,9 @@ struct CanonicalClosedNode {
     StableKey immediate_key;
     bool terminal = false;
     std::vector<CanonicalClosedArc> arcs;
+    std::optional<std::uint32_t> arc_source;
+    std::optional<std::uint32_t> observation_source;
+    std::optional<std::uint32_t> immediate_source;
 };
 
 struct ClosedProjectionEntry {
@@ -637,12 +640,17 @@ struct ClosedProjectionEntry {
 using ClosedPartitionKey = std::vector<std::uint64_t>;
 
 std::vector<ClosedProjectionEntry> project_closed_row(
+        const std::vector<CanonicalClosedNode>& graph,
         const CanonicalClosedNode& node,
         const std::vector<std::uint32_t>& partition) {
     using ProjectionKey =
         std::pair<StableKey, std::optional<std::uint32_t>>;
     std::map<ProjectionKey, DeterministicSum> projected;
-    for (const CanonicalClosedArc& arc : node.arcs) {
+    const std::vector<CanonicalClosedArc>& arcs =
+        node.arc_source.has_value()
+            ? graph.at(*node.arc_source).arcs
+            : node.arcs;
+    for (const CanonicalClosedArc& arc : arcs) {
         const std::optional<std::uint32_t> successor_class =
             arc.successor.has_value()
                 ? std::optional<std::uint32_t>{
@@ -661,21 +669,37 @@ std::vector<ClosedProjectionEntry> project_closed_row(
     return out;
 }
 
+const StableKey& closed_observation_key(
+        const std::vector<CanonicalClosedNode>& graph,
+        const CanonicalClosedNode& node) {
+    return node.observation_source.has_value()
+               ? graph.at(*node.observation_source).observation_key
+               : node.observation_key;
+}
+
+const StableKey& closed_immediate_key(
+        const std::vector<CanonicalClosedNode>& graph,
+        const CanonicalClosedNode& node) {
+    return node.immediate_source.has_value()
+               ? graph.at(*node.immediate_source).immediate_key
+               : node.immediate_key;
+}
+
 ClosedPartitionKey closed_initial_key(
+        const std::vector<CanonicalClosedNode>& graph,
         const CanonicalClosedNode& node) {
     ClosedPartitionKey out{node.terminal ? 1u : 0u};
-    append_tokens(out, node.observation_key);
+    append_tokens(out, closed_observation_key(graph, node));
     return out;
 }
 
 ClosedPartitionKey closed_refined_key(
+        const std::vector<CanonicalClosedNode>& graph,
         const CanonicalClosedNode& node,
         const std::uint32_t current_class,
-        const std::vector<std::uint32_t>& partition) {
+        const std::vector<ClosedProjectionEntry>& projected) {
     ClosedPartitionKey out{current_class};
-    append_tokens(out, node.immediate_key);
-    const std::vector<ClosedProjectionEntry> projected =
-        project_closed_row(node, partition);
+    append_tokens(out, closed_immediate_key(graph, node));
     out.push_back(projected.size());
     for (const ClosedProjectionEntry& arc : projected) {
         append_tokens(out, arc.label);
@@ -730,6 +754,45 @@ bool canonicalize_closed_partition_graph(
         }
         remap[order[canonical]] = canonical;
     }
+    for (std::uint32_t index = 0; index < input.size(); ++index) {
+        const ClosedPartitionNode& node = input[index];
+        const auto valid_source =
+            [&](const std::optional<std::uint32_t> source,
+                const auto member) {
+                return !source.has_value() ||
+                       (*source < input.size() &&
+                        *source != index &&
+                        !(input[*source].*member).has_value());
+            };
+        if (!valid_source(
+                node.arc_source,
+                &ClosedPartitionNode::arc_source) ||
+            (node.arc_source.has_value() && !node.arcs.empty())) {
+            failure_reason =
+                "closed partition has an invalid shared arc authority";
+            return false;
+        }
+        if (!valid_source(
+                node.observation_source,
+                &ClosedPartitionNode::observation_source) ||
+            (node.observation_source.has_value() &&
+             !node.observation_key.empty())) {
+            failure_reason =
+                "closed partition has an invalid shared observation "
+                "authority";
+            return false;
+        }
+        if (!valid_source(
+                node.immediate_source,
+                &ClosedPartitionNode::immediate_source) ||
+            (node.immediate_source.has_value() &&
+             !node.immediate_key.empty())) {
+            failure_reason =
+                "closed partition has an invalid shared immediate "
+                "authority";
+            return false;
+        }
+    }
 
     struct PendingArc {
         StableKey label;
@@ -755,7 +818,8 @@ bool canonicalize_closed_partition_graph(
          canonical < order.size(); ++canonical) {
         const std::uint32_t original = order[canonical];
         ClosedPartitionNode& source = input[original];
-        if (source.terminal && !source.arcs.empty()) {
+        if (source.terminal &&
+            (!source.arcs.empty() || source.arc_source.has_value())) {
             failure_reason =
                 "closed partition terminal node has outgoing arcs";
             return false;
@@ -798,6 +862,17 @@ bool canonicalize_closed_partition_graph(
         node.observation_key = std::move(source.observation_key);
         node.immediate_key = std::move(source.immediate_key);
         node.terminal = source.terminal;
+        if (source.arc_source.has_value()) {
+            node.arc_source = remap[*source.arc_source];
+        }
+        if (source.observation_source.has_value()) {
+            node.observation_source =
+                remap[*source.observation_source];
+        }
+        if (source.immediate_source.has_value()) {
+            node.immediate_source =
+                remap[*source.immediate_source];
+        }
         DeterministicSum total;
         node.arcs.reserve(grouped.size());
         for (auto& [key, probability] : grouped) {
@@ -805,7 +880,7 @@ bool canonicalize_closed_partition_graph(
             node.arcs.push_back({
                 std::move(key.first), key.second, probability});
         }
-        if (!node.terminal &&
+        if (!node.terminal && !node.arc_source.has_value() &&
             (node.arcs.empty() ||
              std::abs(total.value() - 1.0) >
                  limits.probability_sum_tolerance)) {
@@ -815,6 +890,26 @@ bool canonicalize_closed_partition_graph(
         }
         output.push_back(std::move(node));
     }
+    for (const CanonicalClosedNode& node : output) {
+        if (node.arc_source.has_value() &&
+            output[*node.arc_source].arcs.empty()) {
+            failure_reason =
+                "closed partition shared arc authority has no row";
+            return false;
+        }
+        if (node.observation_source.has_value() &&
+            output[*node.observation_source].observation_key.empty()) {
+            failure_reason =
+                "closed partition shared observation authority has no key";
+            return false;
+        }
+        if (node.immediate_source.has_value() &&
+            output[*node.immediate_source].immediate_key.empty()) {
+            failure_reason =
+                "closed partition shared immediate authority has no key";
+            return false;
+        }
+    }
     return true;
 }
 
@@ -823,18 +918,17 @@ struct NodeEdge {
     DeterministicSum probability;
 };
 
+constexpr std::uint32_t kNoEdgeSource =
+    std::numeric_limits<std::uint32_t>::max();
+
 struct Node {
     ExactState state;
     bool expanded = false;
-    std::optional<SelectedAction> selection;
+    std::uint32_t edge_source = kNoEdgeSource;
+    std::shared_ptr<SelectedAction> selection;
     double action_cost = 0.0;
     std::vector<NodeEdge> edges;
     ObservationRequirement required;
-};
-
-struct PendingEdge {
-    ExactState successor;
-    DeterministicSum probability;
 };
 
 struct ActionKey {
@@ -849,11 +943,124 @@ struct ActionKey {
 
 struct Graph {
     std::vector<Node> nodes;
-    std::map<StableKey, std::uint32_t> index_by_key;
+    /*
+     * The exact key remains authoritative in Node. This compact lookup owns
+     * only hash buckets of graph ids and verifies the full key on every hit,
+     * so collisions cannot merge carriers and the graph does not retain a
+     * second copy of every large collision-free state identity.
+     */
+    std::map<std::uint64_t, std::vector<std::uint32_t>>
+        indices_by_key_hash;
+    std::map<StableKey, std::uint32_t> kernel_source_by_reuse_key;
     std::map<std::uint32_t, StableKey> coarse_key_by_state;
     std::map<StableKey, std::uint32_t> coarse_state_by_key;
     std::map<ActionKey, StableKey> contract_signature_by_action;
+    std::map<StableKey, std::shared_ptr<SelectedAction>>
+        selection_by_signature;
+    mutable bool memory_cache_initialized = false;
+    mutable std::uint32_t memory_checks_since_audit = 0;
+    mutable std::uint64_t audited_memory_bytes = 0;
+    mutable std::uint64_t projected_growth_bytes = 0;
 };
+
+struct PendingExactLess {
+    const Graph* graph = nullptr;
+
+    bool operator()(
+            const std::uint32_t left,
+            const std::uint32_t right) const {
+        if (left == right) return false;
+        const StableKey& left_key =
+            graph->nodes.at(left).state.stable_key;
+        const StableKey& right_key =
+            graph->nodes.at(right).state.stable_key;
+        if (left_key != right_key) return left_key < right_key;
+        return left < right;
+    }
+};
+
+struct PendingExact {
+    Graph* graph = nullptr;
+    std::vector<std::uint32_t> entries;
+    std::vector<bool> scheduled;
+
+    explicit PendingExact(Graph* graph_value)
+        : graph(graph_value) {}
+
+    bool empty() const { return entries.empty(); }
+    std::size_t size() const { return entries.size(); }
+    std::size_t capacity() const { return entries.capacity(); }
+    std::size_t scheduled_capacity() const {
+        return scheduled.capacity();
+    }
+
+    void release_storage() {
+        std::vector<std::uint32_t>{}.swap(entries);
+        std::vector<bool>{}.swap(scheduled);
+    }
+
+    void insert(const std::uint32_t index) {
+        (void)graph->nodes.at(index);
+        if (scheduled.size() <= index) {
+            scheduled.resize(
+                static_cast<std::size_t>(index) + 1, false);
+        }
+        if (scheduled[index]) return;
+        scheduled[index] = true;
+        entries.push_back(index);
+        const auto priority_less = [&](const std::uint32_t left,
+                                       const std::uint32_t right) {
+            return PendingExactLess{graph}(right, left);
+        };
+        std::push_heap(
+            entries.begin(), entries.end(), priority_less);
+    }
+
+    std::uint32_t pop_next() {
+        const auto priority_less = [&](const std::uint32_t left,
+                                       const std::uint32_t right) {
+            return PendingExactLess{graph}(right, left);
+        };
+        std::pop_heap(
+            entries.begin(), entries.end(), priority_less);
+        const std::uint32_t next = entries.back();
+        entries.pop_back();
+        scheduled[next] = false;
+        /* A broad shared row can seed hundreds of thousands of ids, then
+         * consume them without adding successors. Do not retain the heap's
+         * high-water allocation through every late publication audit. */
+        if (entries.capacity() > 16384 &&
+            entries.size() <= entries.capacity() / 2) {
+            std::vector<std::uint32_t> compact(entries);
+            entries.swap(compact);
+        }
+        return next;
+    }
+};
+
+const std::vector<NodeEdge>& node_edges(
+        const Graph& graph,
+        const Node& node) {
+    return node.edge_source == kNoEdgeSource
+               ? node.edges
+               : graph.nodes.at(node.edge_source).edges;
+}
+
+const StableKey& node_coarse_key(
+        const Graph& graph,
+        const Node& node) {
+    return graph.coarse_key_by_state.at(node.state.coarse_state);
+}
+
+bool same_stored_exact_state(
+        const ExactState& stored,
+        const ExactState& incoming) {
+    return stored.stable_key == incoming.stable_key &&
+           stored.coarse_state == incoming.coarse_state &&
+           stored.features == incoming.features &&
+           stored.goal == incoming.goal &&
+           stored.terminal == incoming.terminal;
+}
 
 std::uint64_t saturated_add(
         const std::uint64_t left,
@@ -887,6 +1094,17 @@ std::uint64_t estimate_stable_key_bytes(
         const StableKey& key) {
     return saturated_product(
         key.capacity(), sizeof(std::uint64_t));
+}
+
+std::uint64_t stable_key_hash(const StableKey& key) {
+    std::uint64_t hash = 1469598103934665603ull;
+    for (const std::uint64_t token : key) {
+        for (std::uint32_t shift = 0; shift < 64; shift += 8) {
+            hash ^= (token >> shift) & 0xffu;
+            hash *= 1099511628211ull;
+        }
+    }
+    return hash;
 }
 
 std::uint64_t estimate_selector_bytes(
@@ -1049,6 +1267,7 @@ std::uint64_t estimate_ordered_nodes(
 std::uint64_t estimate_graph_memory(const Graph& graph) {
     std::uint64_t bytes = saturated_product(
         graph.nodes.capacity(), sizeof(Node));
+    std::set<const SelectedAction*> counted_selections;
     for (const Node& node : graph.nodes) {
         add_bytes(bytes, estimate_exact_state_bytes(node.state));
         add_bytes(
@@ -1056,14 +1275,30 @@ std::uint64_t estimate_graph_memory(const Graph& graph) {
             saturated_product(
                 node.edges.capacity(), sizeof(NodeEdge)));
         add_bytes(bytes, estimate_requirement_bytes(node.required));
-        if (node.selection.has_value()) {
+        if (node.selection != nullptr &&
+            counted_selections.insert(node.selection.get()).second) {
             add_bytes(
                 bytes,
-                estimate_selected_action_bytes(*node.selection));
+                sizeof(SelectedAction) + 2 * sizeof(void*) +
+                    estimate_selected_action_bytes(*node.selection));
         }
     }
-    add_bytes(bytes, estimate_ordered_nodes(graph.index_by_key));
-    for (const auto& [key, unused] : graph.index_by_key) {
+    add_bytes(
+        bytes,
+        estimate_ordered_nodes(graph.indices_by_key_hash));
+    for (const auto& [unused, indices] :
+         graph.indices_by_key_hash) {
+        (void)unused;
+        add_bytes(
+            bytes,
+            saturated_product(
+                indices.capacity(), sizeof(std::uint32_t)));
+    }
+    add_bytes(
+        bytes,
+        estimate_ordered_nodes(graph.kernel_source_by_reuse_key));
+    for (const auto& [key, unused] :
+         graph.kernel_source_by_reuse_key) {
         (void)unused;
         add_bytes(bytes, estimate_stable_key_bytes(key));
     }
@@ -1094,7 +1329,57 @@ std::uint64_t estimate_graph_memory(const Graph& graph) {
             estimate_stable_key_bytes(key.semantic_key));
         add_bytes(bytes, estimate_stable_key_bytes(signature));
     }
+    add_bytes(
+        bytes,
+        estimate_ordered_nodes(graph.selection_by_signature));
+    for (const auto& [key, unused] :
+         graph.selection_by_signature) {
+        (void)unused;
+        add_bytes(bytes, estimate_stable_key_bytes(key));
+    }
     return bytes;
+}
+
+void note_graph_memory_growth(
+        Graph& graph,
+        const std::uint64_t bytes) {
+    add_bytes(graph.projected_growth_bytes, bytes);
+}
+
+void note_graph_memory_release(
+        Graph& graph,
+        const std::uint64_t bytes) {
+    if (!graph.memory_cache_initialized) return;
+    const std::uint64_t projected_release = std::min(
+        graph.projected_growth_bytes, bytes);
+    graph.projected_growth_bytes -= projected_release;
+    const std::uint64_t audited_release = bytes - projected_release;
+    graph.audited_memory_bytes =
+        audited_release > graph.audited_memory_bytes
+            ? 0
+            : graph.audited_memory_bytes - audited_release;
+}
+
+void invalidate_graph_memory_cache(Graph& graph) {
+    graph.memory_cache_initialized = false;
+    graph.memory_checks_since_audit = 0;
+    graph.projected_growth_bytes = 0;
+}
+
+std::uint64_t fast_estimate_graph_memory(const Graph& graph) {
+    constexpr std::uint32_t kAuditInterval = 128;
+    if (!graph.memory_cache_initialized ||
+        graph.memory_checks_since_audit >= kAuditInterval) {
+        graph.audited_memory_bytes = estimate_graph_memory(graph);
+        graph.projected_growth_bytes = 0;
+        graph.memory_checks_since_audit = 0;
+        graph.memory_cache_initialized = true;
+        return graph.audited_memory_bytes;
+    }
+    ++graph.memory_checks_since_audit;
+    return saturated_add(
+        graph.audited_memory_bytes,
+        graph.projected_growth_bytes);
 }
 
 std::uint64_t estimate_refinement_result_memory(
@@ -1108,16 +1393,6 @@ std::uint64_t estimate_refinement_result_memory(
         saturated_product(
             result.assignments.capacity(),
             sizeof(StateClassAssignment)));
-    for (const StateClassAssignment& assignment :
-         result.assignments) {
-        add_bytes(
-            bytes,
-            estimate_stable_key_bytes(assignment.exact_state));
-        add_bytes(
-            bytes,
-            estimate_stable_key_bytes(
-                assignment.coarse_state_key));
-    }
     add_bytes(
         bytes,
         saturated_product(
@@ -1204,17 +1479,19 @@ std::uint64_t estimate_refined_policy_class_memory(
 }
 
 std::uint64_t estimate_project_kernel_scratch(
+        const Graph& graph,
         const Node& node) {
     using ProjectionMap =
         std::map<std::uint32_t, DeterministicSum>;
+    const std::vector<NodeEdge>& edges = node_edges(graph, node);
     std::uint64_t bytes = saturated_product(
-        node.edges.size(),
+        edges.size(),
         sizeof(typename ProjectionMap::value_type) +
             3 * sizeof(void*));
     add_bytes(
         bytes,
         saturated_product(
-            node.edges.size(),
+            edges.size(),
             sizeof(std::pair<std::uint32_t, DeterministicSum>)));
     return bytes;
 }
@@ -1229,18 +1506,6 @@ std::uint64_t estimate_exact_states_memory(
     return bytes;
 }
 
-std::uint64_t estimate_pending_edges_memory(
-        const std::map<StableKey, PendingEdge>& combined) {
-    std::uint64_t bytes = estimate_ordered_nodes(combined);
-    for (const auto& [key, edge] : combined) {
-        add_bytes(bytes, estimate_stable_key_bytes(key));
-        add_bytes(
-            bytes,
-            estimate_exact_state_bytes(edge.successor));
-    }
-    return bytes;
-}
-
 std::uint64_t estimate_node_edges_memory(
         const std::vector<NodeEdge>& edges) {
     return saturated_product(
@@ -1248,13 +1513,15 @@ std::uint64_t estimate_node_edges_memory(
 }
 
 std::uint64_t estimate_discovery_worklists_memory(
-        const std::set<StableKey>& pending_exact,
+        const PendingExact& pending_exact,
         const std::set<std::uint32_t>& reachable_coarse) {
     std::uint64_t bytes =
-        estimate_ordered_nodes(pending_exact);
-    for (const StableKey& key : pending_exact) {
-        add_bytes(bytes, estimate_stable_key_bytes(key));
-    }
+        saturated_product(
+            pending_exact.capacity(), sizeof(std::uint32_t));
+    add_bytes(
+        bytes,
+        saturated_add(
+            pending_exact.scheduled_capacity(), 7) / 8);
     add_bytes(bytes, estimate_ordered_nodes(reachable_coarse));
     return bytes;
 }
@@ -1263,7 +1530,7 @@ std::uint64_t estimate_graph_canonicalization_scratch(
         const Graph& graph) {
     std::uint64_t bytes = saturated_product(
         graph.nodes.size(),
-        sizeof(Node) + 2 * sizeof(std::uint32_t));
+        2 * sizeof(std::uint32_t));
     return bytes;
 }
 
@@ -1287,6 +1554,24 @@ std::uint64_t estimate_policy_observation_nodes_memory(
                 node.successors.capacity(),
                 sizeof(std::uint32_t)));
     }
+    return bytes;
+}
+
+std::uint64_t estimate_policy_observation_node_nested_memory(
+        const PolicyObservationNode& node) {
+    std::uint64_t bytes = 0;
+    if (node.selected_action.has_value()) {
+        add_bytes(
+            bytes,
+            estimate_selected_action_bytes(*node.selected_action));
+    }
+    add_bytes(
+        bytes,
+        estimate_requirement_bytes(node.direct_observes));
+    add_bytes(
+        bytes,
+        saturated_product(
+            node.successors.capacity(), sizeof(std::uint32_t)));
     return bytes;
 }
 
@@ -1326,6 +1611,24 @@ std::uint64_t estimate_closed_nodes_memory(
         for (const ClosedPartitionArc& arc : node.arcs) {
             add_bytes(bytes, estimate_stable_key_bytes(arc.label));
         }
+    }
+    return bytes;
+}
+
+std::uint64_t estimate_closed_node_nested_memory(
+        const ClosedPartitionNode& node) {
+    std::uint64_t bytes =
+        estimate_stable_key_bytes(node.stable_key);
+    add_bytes(
+        bytes, estimate_stable_key_bytes(node.observation_key));
+    add_bytes(
+        bytes, estimate_stable_key_bytes(node.immediate_key));
+    add_bytes(
+        bytes,
+        saturated_product(
+            node.arcs.capacity(), sizeof(ClosedPartitionArc)));
+    for (const ClosedPartitionArc& arc : node.arcs) {
+        add_bytes(bytes, estimate_stable_key_bytes(arc.label));
     }
     return bytes;
 }
@@ -1459,20 +1762,25 @@ std::uint64_t estimate_closed_projection_memory(
 }
 
 std::uint64_t estimate_closed_projection_scratch(
+        const std::vector<CanonicalClosedNode>& graph,
         const CanonicalClosedNode& node) {
     using ProjectionKey =
         std::pair<StableKey, std::optional<std::uint32_t>>;
     using ProjectionMap =
         std::map<ProjectionKey, DeterministicSum>;
+    const std::vector<CanonicalClosedArc>& arcs =
+        node.arc_source.has_value()
+            ? graph.at(*node.arc_source).arcs
+            : node.arcs;
     std::uint64_t bytes = saturated_product(
-        node.arcs.size(), sizeof(ClosedProjectionEntry));
+        arcs.size(), sizeof(ClosedProjectionEntry));
     add_bytes(
         bytes,
         saturated_product(
-            node.arcs.size(),
+            arcs.size(),
             sizeof(typename ProjectionMap::value_type) +
                 3 * sizeof(void*)));
-    for (const CanonicalClosedArc& arc : node.arcs) {
+    for (const CanonicalClosedArc& arc : arcs) {
         /*
          * The map key and returned projection each own a label copy while
          * project_closed_row() transfers the row out.
@@ -1491,7 +1799,7 @@ std::uint64_t estimate_max_closed_projection_scratch(
     for (const CanonicalClosedNode& node : nodes) {
         maximum = std::max(
             maximum,
-            estimate_closed_projection_scratch(node));
+            estimate_closed_projection_scratch(nodes, node));
     }
     return maximum;
 }
@@ -1637,7 +1945,7 @@ void update_memory(
         const Graph& graph,
         const std::uint64_t adapter_memory = 0,
         const std::uint64_t transient_memory = 0) {
-    std::uint64_t live = estimate_graph_memory(graph);
+    std::uint64_t live = fast_estimate_graph_memory(graph);
     add_bytes(live, adapter_memory);
     add_bytes(live, estimate_refinement_result_memory(result));
     add_bytes(live, transient_memory);
@@ -1694,6 +2002,29 @@ bool check_refinement_memory(
         "policy refinement reached max_estimated_memory_bytes");
 }
 
+bool check_refinement_memory_with_result_ledger(
+        RefinementResult& result,
+        const Graph& graph,
+        const RefinementLimits& limits,
+        const std::uint64_t adapter_memory,
+        const std::uint64_t result_memory,
+        const std::uint64_t transient_memory = 0) {
+    std::uint64_t live = fast_estimate_graph_memory(graph);
+    add_bytes(live, adapter_memory);
+    add_bytes(live, result_memory);
+    add_bytes(live, transient_memory);
+    result.telemetry.estimated_memory_bytes = live;
+    result.telemetry.peak_estimated_memory_bytes = std::max(
+        result.telemetry.peak_estimated_memory_bytes, live);
+    if (live != std::numeric_limits<std::uint64_t>::max() &&
+        live <= limits.max_estimated_memory_bytes) {
+        return true;
+    }
+    return cap(
+        result, "max_estimated_memory_bytes",
+        "policy refinement reached max_estimated_memory_bytes");
+}
+
 ExactState canonical_state(ExactState state) {
     state.features =
         canonical_feature_signature(std::move(state.features));
@@ -1707,7 +2038,8 @@ bool add_or_verify_state(
         RefinementResult& result,
         const RefinementLimits& limits,
         const std::uint64_t adapter_memory,
-        const std::uint64_t transient_memory) {
+        const std::uint64_t transient_memory,
+        const bool defer_memory_checks = false) {
     state = canonical_state(std::move(state));
     if (state.stable_key.empty()) {
         return fail(
@@ -1736,25 +2068,55 @@ bool add_or_verify_state(
             "one semantic coarse-state key names incompatible numeric "
             "states");
     }
-    graph.coarse_key_by_state.emplace(
-        state.coarse_state, state.coarse_state_key);
-    graph.coarse_state_by_key.emplace(
-        state.coarse_state_key, state.coarse_state);
+    const auto [unused_numeric, inserted_numeric] =
+        graph.coarse_key_by_state.emplace(
+            state.coarse_state, state.coarse_state_key);
+    (void)unused_numeric;
+    const auto [unused_semantic, inserted_semantic] =
+        graph.coarse_state_by_key.emplace(
+            state.coarse_state_key, state.coarse_state);
+    (void)unused_semantic;
+    if (inserted_numeric || inserted_semantic) {
+        std::uint64_t parent_growth = 0;
+        if (inserted_numeric) {
+            add_bytes(
+                parent_growth,
+                sizeof(decltype(graph.coarse_key_by_state)::value_type) +
+                    3 * sizeof(void*) +
+                    estimate_stable_key_bytes(state.coarse_state_key));
+        }
+        if (inserted_semantic) {
+            add_bytes(
+                parent_growth,
+                sizeof(decltype(graph.coarse_state_by_key)::value_type) +
+                    3 * sizeof(void*) +
+                    estimate_stable_key_bytes(state.coarse_state_key));
+        }
+        note_graph_memory_growth(graph, parent_growth);
+    }
     if (state.goal && !state.terminal) {
         return fail(
             result, RefinementStatus::InvalidState,
             "goal exact refinement is not terminal");
     }
-    const auto found = graph.index_by_key.find(state.stable_key);
-    if (found != graph.index_by_key.end()) {
-        index = found->second;
-        Node& existing = graph.nodes.at(index);
-        if (!(existing.state == state)) {
-            return fail(
-                result, RefinementStatus::InvalidState,
-                "stable exact state key names incompatible records");
+    const std::uint64_t key_hash =
+        stable_key_hash(state.stable_key);
+    const auto found =
+        graph.indices_by_key_hash.find(key_hash);
+    if (found != graph.indices_by_key_hash.end()) {
+        for (const std::uint32_t candidate : found->second) {
+            Node& existing = graph.nodes.at(candidate);
+            if (existing.state.stable_key != state.stable_key) {
+                continue;
+            }
+            index = candidate;
+            if (!same_stored_exact_state(existing.state, state)) {
+                return fail(
+                    result, RefinementStatus::InvalidState,
+                    "stable exact state key names incompatible records");
+            }
+            return true;
         }
-        return true;
     }
     if (graph.nodes.size() >= limits.max_exact_states) {
         return cap(
@@ -1762,20 +2124,36 @@ bool add_or_verify_state(
             "policy refinement reached max_exact_states");
     }
     index = static_cast<std::uint32_t>(graph.nodes.size());
-    graph.index_by_key.emplace(state.stable_key, index);
-    if (!check_refinement_memory(
-            result, graph, limits, adapter_memory,
-            transient_memory)) {
-        return false;
+    StableKey{}.swap(state.coarse_state_key);
+    const std::size_t old_node_capacity = graph.nodes.capacity();
+    if (graph.nodes.size() == graph.nodes.capacity()) {
+        const std::size_t growth = std::max<std::size_t>(
+            2048, graph.nodes.capacity() / 32);
+        graph.nodes.reserve(
+            saturated_add(graph.nodes.capacity(), growth));
     }
+    std::uint64_t graph_growth =
+        estimate_exact_state_bytes(state);
+    add_bytes(
+        graph_growth,
+        saturated_product(
+            graph.nodes.capacity() - old_node_capacity,
+            sizeof(Node)));
+    add_bytes(
+        graph_growth,
+        sizeof(decltype(graph.indices_by_key_hash)::value_type) +
+            3 * sizeof(void*) + sizeof(std::uint32_t));
     Node node;
     node.state = std::move(state);
     graph.nodes.push_back(std::move(node));
+    graph.indices_by_key_hash[key_hash].push_back(index);
+    note_graph_memory_growth(graph, graph_growth);
     result.telemetry.exact_states =
         static_cast<std::uint32_t>(graph.nodes.size());
-    return check_refinement_memory(
-        result, graph, limits, adapter_memory,
-        transient_memory);
+    return defer_memory_checks ||
+           check_refinement_memory(
+               result, graph, limits, adapter_memory,
+               transient_memory);
 }
 
 bool note_reachable_coarse(
@@ -1801,7 +2179,8 @@ bool validate_selection(
         RefinementResult& result,
         const RefinementLimits& limits,
         const std::uint64_t adapter_memory,
-        const std::uint64_t caller_transient_memory) {
+        const std::uint64_t caller_transient_memory,
+        const bool defer_memory_check) {
     selection.routing_observes =
         canonical_observation_requirement(
             std::move(selection.routing_observes));
@@ -1832,6 +2211,17 @@ bool validate_selection(
             result, RefinementStatus::InvalidContract,
             "one executable action has incompatible refinement contracts");
     }
+    if (inserted) {
+        std::uint64_t growth =
+            sizeof(decltype(
+                graph.contract_signature_by_action)::value_type) +
+            3 * sizeof(void*);
+        add_bytes(
+            growth,
+            estimate_stable_key_bytes(key.semantic_key));
+        add_bytes(growth, estimate_stable_key_bytes(signature));
+        note_graph_memory_growth(graph, growth);
+    }
     std::uint64_t transient = caller_transient_memory;
     add_bytes(
         transient,
@@ -1839,21 +2229,78 @@ bool validate_selection(
     add_bytes(
         transient,
         estimate_stable_key_bytes(signature));
-    return check_refinement_memory(
-        result, graph, limits, adapter_memory, transient);
+    return defer_memory_check ||
+           check_refinement_memory(
+               result, graph, limits, adapter_memory, transient);
+}
+
+std::shared_ptr<SelectedAction> intern_selection(
+        Graph& graph,
+        SelectedAction selection) {
+    StableKey key{
+        0x70637273656c7631ull, /* "pcrselv1" */
+        selection.action_id};
+    append_tokens(key, selection.semantic_key);
+    append_tokens(
+        key, selected_runtime_contract_signature(selection));
+    append_requirement(key, selection.routing_observes);
+    const auto found = graph.selection_by_signature.find(key);
+    if (found != graph.selection_by_signature.end()) {
+        return found->second;
+    }
+    auto stored = std::make_shared<SelectedAction>(
+        std::move(selection));
+    const auto [inserted, unused] =
+        graph.selection_by_signature.emplace(
+            std::move(key), stored);
+    (void)unused;
+    std::uint64_t growth =
+        sizeof(decltype(
+            graph.selection_by_signature)::value_type) +
+        5 * sizeof(void*) + sizeof(SelectedAction);
+    add_bytes(
+        growth,
+        estimate_stable_key_bytes(inserted->first));
+    add_bytes(
+        growth,
+        estimate_selected_action_bytes(*stored));
+    note_graph_memory_growth(graph, growth);
+    return stored;
+}
+
+void detach_selection(Node& node) {
+    if (node.selection != nullptr && !node.selection.unique()) {
+        node.selection =
+            std::make_shared<SelectedAction>(*node.selection);
+    }
+}
+
+void release_discovery_indices(Graph& graph) {
+    decltype(graph.indices_by_key_hash){}.swap(
+        graph.indices_by_key_hash);
+    decltype(graph.kernel_source_by_reuse_key){}.swap(
+        graph.kernel_source_by_reuse_key);
+    decltype(graph.selection_by_signature){}.swap(
+        graph.selection_by_signature);
+    decltype(graph.coarse_state_by_key){}.swap(
+        graph.coarse_state_by_key);
+    decltype(graph.contract_signature_by_action){}.swap(
+        graph.contract_signature_by_action);
+    invalidate_graph_memory_cache(graph);
 }
 
 bool expand_node(
         PolicyRefinementOracle& oracle,
         Graph& graph,
         const std::uint32_t node_index,
-        std::set<StableKey>& pending_exact,
+        PendingExact& pending_exact,
         std::set<std::uint32_t>& reachable_coarse,
         const RefinementLimits& limits,
         RefinementResult& result,
         const std::uint64_t caller_transient_memory) {
     Node& node = graph.nodes.at(node_index);
     if (node.expanded) return true;
+    node.state.coarse_state_key = node_coarse_key(graph, node);
     std::optional<SelectedAction> selected;
     try {
         selected = oracle.selected_action(node.state);
@@ -1873,6 +2320,12 @@ bool expand_node(
                 "terminal exact refinement selects an action");
         }
         node.expanded = true;
+        StableKey{}.swap(node.state.coarse_state_key);
+        if (pending_exact.empty()) {
+            pending_exact.release_storage();
+            std::set<std::uint32_t>{}.swap(reachable_coarse);
+            release_discovery_indices(graph);
+        }
         return true;
     }
     if (!selected.has_value()) {
@@ -1884,9 +2337,11 @@ bool expand_node(
         estimate_discovery_worklists_memory(
             pending_exact, reachable_coarse);
     add_bytes(selection_context, caller_transient_memory);
+    const bool possible_final_node = pending_exact.empty();
     if (!validate_selection(
             graph, *selected, result, limits,
-            oracle.estimated_owned_bytes(), selection_context)) {
+            oracle.estimated_owned_bytes(), selection_context,
+            possible_final_node)) {
         return false;
     }
     const std::uint64_t selected_memory =
@@ -1896,11 +2351,65 @@ bool expand_node(
             pending_exact, reachable_coarse);
     add_bytes(discovery_memory, caller_transient_memory);
     add_bytes(discovery_memory, selected_memory);
-    if (!check_refinement_memory(
+    if (!possible_final_node &&
+        !check_refinement_memory(
             result, graph, limits,
             oracle.estimated_owned_bytes(),
             discovery_memory)) {
         return false;
+    }
+    std::optional<StableKey> reuse_key;
+    try {
+        reuse_key = oracle.exact_kernel_reuse_key(
+            node.state, *selected);
+    } catch (const RefinementOracleResourceLimit& error) {
+        return cap(result, error.cap_name(), error.what());
+    } catch (const std::exception& error) {
+        return fail(
+            result, RefinementStatus::OracleFailure,
+            std::string{"exact-kernel reuse oracle failed: "} +
+                error.what());
+    } catch (...) {
+        return fail(
+            result, RefinementStatus::OracleFailure,
+            "exact-kernel reuse oracle failed");
+    }
+    if (reuse_key.has_value()) {
+        const auto reused =
+            graph.kernel_source_by_reuse_key.find(*reuse_key);
+        if (reused != graph.kernel_source_by_reuse_key.end()) {
+            if (reused->second >= graph.nodes.size() ||
+                !graph.nodes[reused->second].expanded) {
+                return fail(
+                    result, RefinementStatus::InvalidKernel,
+                    "exact-kernel reuse key names an incomplete row");
+            }
+            const Node& source = graph.nodes[reused->second];
+            StableKey{}.swap(
+                graph.nodes[node_index].state.coarse_state_key);
+            Node& refreshed = graph.nodes[node_index];
+            refreshed.selection = intern_selection(
+                graph, std::move(*selected));
+            refreshed.action_cost = source.action_cost;
+            refreshed.edge_source = reused->second;
+            refreshed.expanded = true;
+            std::uint64_t row_growth = 0;
+            note_graph_memory_growth(graph, row_growth);
+            oracle.note_exact_kernel_reuse();
+            std::uint64_t transient =
+                estimate_discovery_worklists_memory(
+                    pending_exact, reachable_coarse);
+            add_bytes(transient, caller_transient_memory);
+            if (pending_exact.empty()) {
+                pending_exact.release_storage();
+                std::set<std::uint32_t>{}.swap(reachable_coarse);
+                release_discovery_indices(graph);
+                transient = caller_transient_memory;
+            }
+            return check_refinement_memory(
+                result, graph, limits,
+                oracle.estimated_owned_bytes(), transient);
+        }
     }
     if (result.telemetry.exact_kernels >= limits.max_exact_kernels) {
         return cap(
@@ -1923,6 +2432,8 @@ bool expand_node(
             result, RefinementStatus::OracleFailure,
             "exact-kernel oracle failed");
     }
+    StableKey{}.swap(
+        graph.nodes[node_index].state.coarse_state_key);
     if (!std::isfinite(kernel.action_cost) ||
         kernel.action_cost < 0.0) {
         return fail(
@@ -1945,7 +2456,6 @@ bool expand_node(
         return false;
     }
 
-    std::map<StableKey, PendingEdge> combined;
     DeterministicSum total;
     for (ExactTransition& transition : kernel.transitions) {
         if (!std::isfinite(transition.probability) ||
@@ -1957,41 +2467,71 @@ bool expand_node(
         if (transition.probability == 0.0) continue;
         transition.successor =
             canonical_state(std::move(transition.successor));
-        auto [it, inserted] = combined.emplace(
-            transition.successor.stable_key,
-            PendingEdge{transition.successor, {}});
-        if (!inserted &&
-            !(it->second.successor == transition.successor)) {
-            return fail(
-                result, RefinementStatus::InvalidKernel,
-                "one exact successor key names incompatible records");
-        }
-        it->second.probability.add(transition.probability);
         total.add(transition.probability);
+    }
+    std::sort(
+        kernel.transitions.begin(), kernel.transitions.end(),
+        [](const ExactTransition& left,
+           const ExactTransition& right) {
+            return left.successor.stable_key <
+                   right.successor.stable_key;
+        });
+    std::size_t combined_size = 0;
+    for (std::size_t first = 0;
+         first < kernel.transitions.size();) {
+        if (kernel.transitions[first].probability == 0.0) {
+            ++first;
+            continue;
+        }
+        std::size_t end = first + 1;
+        DeterministicSum probability;
+        probability.add(kernel.transitions[first].probability);
+        while (end < kernel.transitions.size() &&
+               kernel.transitions[end].successor.stable_key ==
+                   kernel.transitions[first].successor.stable_key) {
+            if (!(kernel.transitions[end].successor ==
+                  kernel.transitions[first].successor)) {
+                return fail(
+                    result, RefinementStatus::InvalidKernel,
+                    "one exact successor key names incompatible records");
+            }
+            probability.add(kernel.transitions[end].probability);
+            ++end;
+        }
+        if (combined_size != first) {
+            kernel.transitions[combined_size].successor =
+                std::move(kernel.transitions[first].successor);
+        }
+        kernel.transitions[combined_size].probability =
+            probability.value();
+        ++combined_size;
+        first = end;
+    }
+    kernel.transitions.resize(combined_size);
+    std::uint64_t working_kernel_memory =
+        estimate_exact_kernel_bytes(kernel);
+    {
         std::uint64_t transient =
             estimate_discovery_worklists_memory(
                 pending_exact, reachable_coarse);
         add_bytes(transient, caller_transient_memory);
         add_bytes(transient, selected_memory);
-        add_bytes(
-            transient, estimate_exact_kernel_bytes(kernel));
-        add_bytes(
-            transient,
-            estimate_pending_edges_memory(combined));
+        add_bytes(transient, working_kernel_memory);
         if (!check_refinement_memory(
                 result, graph, limits, adapter_memory,
                 transient)) {
             return false;
         }
     }
-    if (combined.empty() ||
+    if (kernel.transitions.empty() ||
         std::abs(total.value() - 1.0) >
             limits.probability_sum_tolerance) {
         return fail(
             result, RefinementStatus::InvalidKernel,
             "exact kernel is empty or does not sum to one");
     }
-    if (result.telemetry.exact_transitions + combined.size() >
+    if (result.telemetry.exact_transitions +
+            kernel.transitions.size() >
         limits.max_transitions) {
         return cap(
             result, "max_transitions",
@@ -1999,18 +2539,14 @@ bool expand_node(
     }
 
     std::vector<NodeEdge> edges;
-    edges.reserve(combined.size());
+    edges.reserve(kernel.transitions.size());
     {
         std::uint64_t transient =
             estimate_discovery_worklists_memory(
                 pending_exact, reachable_coarse);
         add_bytes(transient, caller_transient_memory);
         add_bytes(transient, selected_memory);
-        add_bytes(
-            transient, estimate_exact_kernel_bytes(kernel));
-        add_bytes(
-            transient,
-            estimate_pending_edges_memory(combined));
+        add_bytes(transient, working_kernel_memory);
         add_bytes(transient, estimate_node_edges_memory(edges));
         if (!check_refinement_memory(
                 result, graph, limits, adapter_memory,
@@ -2018,67 +2554,92 @@ bool expand_node(
             return false;
         }
     }
-    for (auto& [unused, edge] : combined) {
-        (void)unused;
+    std::uint32_t ingested_since_audit = 0;
+    for (ExactTransition& transition : kernel.transitions) {
         if (!note_reachable_coarse(
-                edge.successor.coarse_state, reachable_coarse,
+                transition.successor.coarse_state, reachable_coarse,
                 limits, result)) {
             return false;
         }
         std::uint32_t successor = 0;
-        std::uint64_t transient =
-            estimate_discovery_worklists_memory(
-                pending_exact, reachable_coarse);
-        add_bytes(transient, caller_transient_memory);
-        add_bytes(transient, selected_memory);
-        add_bytes(
-            transient, estimate_exact_kernel_bytes(kernel));
-        add_bytes(
-            transient,
-            estimate_pending_edges_memory(combined));
-        add_bytes(transient, estimate_node_edges_memory(edges));
+        const std::uint64_t moved_payload =
+            estimate_exact_state_bytes(transition.successor);
+        working_kernel_memory =
+            moved_payload > working_kernel_memory
+                ? 0
+                : working_kernel_memory - moved_payload;
         if (!add_or_verify_state(
-                graph, std::move(edge.successor), successor, result,
-                limits, adapter_memory, transient)) {
+                graph, std::move(transition.successor), successor,
+                result,
+                limits, adapter_memory, 0, true)) {
             return false;
         }
-        edges.push_back({successor, edge.probability});
+        DeterministicSum probability;
+        probability.add(transition.probability);
+        edges.push_back({successor, probability});
         if (!graph.nodes.at(successor).expanded) {
-            pending_exact.insert(
-                graph.nodes.at(successor).state.stable_key);
+            pending_exact.insert(successor);
         }
-        transient =
-            estimate_discovery_worklists_memory(
-                pending_exact, reachable_coarse);
-        add_bytes(transient, caller_transient_memory);
-        add_bytes(transient, selected_memory);
-        add_bytes(
-            transient, estimate_exact_kernel_bytes(kernel));
-        add_bytes(
-            transient,
-            estimate_pending_edges_memory(combined));
-        add_bytes(transient, estimate_node_edges_memory(edges));
-        if (!check_refinement_memory(
-                result, graph, limits, adapter_memory,
-                transient)) {
-            return false;
+        ++ingested_since_audit;
+        if (ingested_since_audit == 512) {
+            std::uint64_t transient =
+                estimate_discovery_worklists_memory(
+                    pending_exact, reachable_coarse);
+            add_bytes(transient, caller_transient_memory);
+            add_bytes(transient, selected_memory);
+            add_bytes(transient, working_kernel_memory);
+            add_bytes(
+                transient, estimate_node_edges_memory(edges));
+            if (!check_refinement_memory(
+                    result, graph, limits, adapter_memory,
+                    transient)) {
+                return false;
+            }
+            ingested_since_audit = 0;
         }
     }
     Node& refreshed = graph.nodes.at(node_index);
-    refreshed.selection = std::move(selected);
+    refreshed.selection = intern_selection(
+        graph, std::move(*selected));
     refreshed.action_cost = kernel.action_cost;
     refreshed.edges = std::move(edges);
     refreshed.expanded = true;
+    std::uint64_t row_growth = 0;
+    add_bytes(
+        row_growth,
+        estimate_node_edges_memory(refreshed.edges));
     ++result.telemetry.exact_kernels;
     result.telemetry.exact_transitions += refreshed.edges.size();
+    if (reuse_key.has_value()) {
+        const auto [unused, inserted] =
+            graph.kernel_source_by_reuse_key.emplace(
+                std::move(*reuse_key), node_index);
+        (void)unused;
+        if (!inserted) {
+            return fail(
+                result, RefinementStatus::InvalidKernel,
+                "exact-kernel reuse authority changed during row "
+                "construction");
+        }
+        add_bytes(
+            row_growth,
+            sizeof(decltype(
+                graph.kernel_source_by_reuse_key)::value_type) +
+                3 * sizeof(void*) +
+                estimate_stable_key_bytes(unused->first));
+    }
+    note_graph_memory_growth(graph, row_growth);
+    std::vector<ExactTransition>{}.swap(kernel.transitions);
     std::uint64_t transient =
         estimate_discovery_worklists_memory(
             pending_exact, reachable_coarse);
     add_bytes(transient, caller_transient_memory);
-    add_bytes(
-        transient, estimate_exact_kernel_bytes(kernel));
-    add_bytes(
-        transient, estimate_pending_edges_memory(combined));
+    if (pending_exact.empty()) {
+        pending_exact.release_storage();
+        std::set<std::uint32_t>{}.swap(reachable_coarse);
+        release_discovery_indices(graph);
+        transient = caller_transient_memory;
+    }
     return check_refinement_memory(
         result, graph, limits, adapter_memory, transient);
 }
@@ -2089,7 +2650,7 @@ bool discover_policy_graph(
         const RefinementRequest& request,
         RefinementResult& result) {
     std::set<std::uint32_t> reachable_coarse;
-    std::set<StableKey> pending_exact;
+    PendingExact pending_exact{&graph};
 
     /*
      * Enumerate only the requested roots. Every later exact state is supplied
@@ -2168,7 +2729,7 @@ bool discover_policy_graph(
                     transient)) {
                 return false;
             }
-            pending_exact.insert(graph.nodes.at(index).state.stable_key);
+            pending_exact.insert(index);
             transient = estimate_discovery_worklists_memory(
                 pending_exact, reachable_coarse);
             add_bytes(
@@ -2186,22 +2747,22 @@ bool discover_policy_graph(
     }
 
     /*
-     * Stable keys make the worklist deterministic even when root enumeration
-     * or kernel transition records arrive in a different order.
+     * The worklist retains graph ids instead of a second full copy of every
+     * collision-free key. Its comparator reads the immutable graph keys, so
+     * discovery order remains deterministic even when root enumeration or
+     * kernel transition records arrive in a different order.
      */
     while (!pending_exact.empty()) {
-        const StableKey key = *pending_exact.begin();
-        pending_exact.erase(pending_exact.begin());
-        const auto found = graph.index_by_key.find(key);
-        if (found == graph.index_by_key.end()) {
+        const std::uint32_t index = pending_exact.pop_next();
+        if (index >= graph.nodes.size()) {
             return fail(
                 result, RefinementStatus::InvalidState,
                 "pending exact state disappeared during discovery");
         }
         if (!expand_node(
-                oracle, graph, found->second, pending_exact,
+                oracle, graph, index, pending_exact,
                 reachable_coarse, request.limits, result,
-                estimate_stable_key_bytes(key))) {
+                0)) {
             return false;
         }
     }
@@ -2213,6 +2774,7 @@ bool discover_policy_graph(
                 "policy-reachable exact successor was not expanded");
         }
     }
+    release_discovery_indices(graph);
     return true;
 }
 
@@ -2225,20 +2787,35 @@ void canonicalize_graph(Graph& graph) {
             const Node& a = graph.nodes[left];
             const Node& b = graph.nodes[right];
             return std::tie(
-                       a.state.coarse_state_key,
+                       node_coarse_key(graph, a),
                        a.state.stable_key) <
                    std::tie(
-                       b.state.coarse_state_key,
+                       node_coarse_key(graph, b),
                        b.state.stable_key);
         });
     std::vector<std::uint32_t> remap(order.size());
-    std::vector<Node> sorted;
-    sorted.reserve(order.size());
     for (std::uint32_t next = 0; next < order.size(); ++next) {
         remap[order[next]] = next;
-        sorted.push_back(std::move(graph.nodes[order[next]]));
     }
-    for (Node& node : sorted) {
+    /*
+     * `remap` is the authoritative old-to-canonical id map needed by the
+     * edges below. Reuse `order` as a mutable placement permutation so the
+     * canonicalization does not briefly retain a second full Node vector.
+     */
+    order = remap;
+    for (std::uint32_t current = 0;
+         current < order.size(); ++current) {
+        while (order[current] != current) {
+            const std::uint32_t target = order[current];
+            std::swap(
+                graph.nodes[current], graph.nodes[target]);
+            std::swap(order[current], order[target]);
+        }
+    }
+    for (Node& node : graph.nodes) {
+        if (node.edge_source != kNoEdgeSource) {
+            node.edge_source = remap.at(node.edge_source);
+        }
         for (NodeEdge& edge : node.edges) {
             edge.successor = remap.at(edge.successor);
         }
@@ -2248,7 +2825,7 @@ void canonicalize_graph(Graph& graph) {
                 return left.successor < right.successor;
             });
     }
-    graph.nodes = std::move(sorted);
+    invalidate_graph_memory_cache(graph);
 }
 
 bool propagate_observations(
@@ -2258,23 +2835,57 @@ bool propagate_observations(
         const std::uint64_t adapter_memory) {
     std::vector<PolicyObservationNode> nodes;
     nodes.reserve(graph.nodes.size());
-    for (std::uint32_t index = 0;
-         index < graph.nodes.size(); ++index) {
-        PolicyObservationNode node;
-        node.state_id = index;
-        node.selected_action = graph.nodes[index].selection;
-        for (const NodeEdge& edge : graph.nodes[index].edges) {
-            node.successors.push_back(edge.successor);
-        }
-        nodes.push_back(std::move(node));
-        if (!check_refinement_memory(
-                result, graph, limits, adapter_memory,
-                estimate_policy_observation_nodes_memory(nodes))) {
-            return false;
+    std::uint64_t observation_nodes_memory = saturated_product(
+        nodes.capacity(), sizeof(PolicyObservationNode));
+    {
+        std::map<const SelectedAction*, std::uint32_t>
+            selection_authority;
+        std::uint32_t nodes_since_audit = 0;
+        for (std::uint32_t index = 0;
+             index < graph.nodes.size(); ++index) {
+            PolicyObservationNode node;
+            node.state_id = index;
+            if (graph.nodes[index].selection != nullptr) {
+                const auto [authority, inserted] =
+                    selection_authority.emplace(
+                        graph.nodes[index].selection.get(), index);
+                if (inserted) {
+                    node.selected_action =
+                        *graph.nodes[index].selection;
+                } else {
+                    node.selected_action_source = authority->second;
+                }
+            }
+            if (graph.nodes[index].edge_source != kNoEdgeSource) {
+                node.successor_source =
+                    graph.nodes[index].edge_source;
+            } else {
+                for (const NodeEdge& edge : graph.nodes[index].edges) {
+                    node.successors.push_back(edge.successor);
+                }
+            }
+            nodes.push_back(std::move(node));
+            add_bytes(
+                observation_nodes_memory,
+                estimate_policy_observation_node_nested_memory(
+                    nodes.back()));
+            ++nodes_since_audit;
+            if (nodes_since_audit == 512 ||
+                nodes.size() == graph.nodes.size()) {
+                std::uint64_t construction_memory =
+                    observation_nodes_memory;
+                add_bytes(
+                    construction_memory,
+                    estimate_ordered_nodes(selection_authority));
+                if (!check_refinement_memory(
+                        result, graph, limits, adapter_memory,
+                        construction_memory)) {
+                    return false;
+                }
+                nodes_since_audit = 0;
+            }
         }
     }
-    const std::uint64_t observation_nodes_memory =
-        estimate_policy_observation_nodes_memory(nodes);
     const std::size_t observation_node_count = nodes.size();
     PolicyObservationFixedPoint fixed =
         propagate_policy_observations(
@@ -2333,14 +2944,28 @@ bool propagate_observations(
             result, RefinementStatus::InvalidContract,
             fixed.failure_reason);
     }
+    std::uint32_t assignments_since_audit = 0;
     for (PolicyObservationAssignment& assignment :
          fixed.assignments) {
+        note_graph_memory_growth(
+            graph,
+            estimate_requirement_bytes(assignment.required));
         graph.nodes.at(assignment.state_id).required =
             std::move(assignment.required);
-        if (!check_refinement_memory(
-                result, graph, limits, adapter_memory,
-                estimate_policy_observation_fixed_memory(fixed))) {
-            return false;
+        ++assignments_since_audit;
+        if (assignments_since_audit == 512 ||
+            &assignment == &fixed.assignments.back()) {
+            /*
+             * Retaining the pre-move estimate is conservative: moved-from
+             * assignments can only release payload while graph ownership
+             * grows through the separately tracked ledger above.
+             */
+            if (!check_refinement_memory(
+                    result, graph, limits, adapter_memory,
+                    fixed_result_memory)) {
+                return false;
+            }
+            assignments_since_audit = 0;
         }
     }
     return true;
@@ -2348,12 +2973,15 @@ bool propagate_observations(
 
 using BehaviorKey = std::vector<std::uint64_t>;
 
-BehaviorKey initial_behavior_key(const Node& node) {
+BehaviorKey initial_behavior_key(
+        const Graph& graph,
+        const Node& node,
+        const FeatureSignature& observed) {
     BehaviorKey out;
-    append_tokens(out, node.state.coarse_state_key);
+    append_tokens(out, node_coarse_key(graph, node));
     out.push_back(node.state.goal ? 1u : 0u);
     out.push_back(node.state.terminal ? 1u : 0u);
-    if (!node.selection.has_value()) {
+    if (node.selection == nullptr) {
         out.push_back(0);
         return out;
     }
@@ -2361,8 +2989,6 @@ BehaviorKey initial_behavior_key(const Node& node) {
     out.push_back(node.selection->action_id);
     append_tokens(out, node.selection->semantic_key);
     append_requirement(out, node.required);
-    const FeatureSignature observed =
-        observe_features(node.state.features, node.required);
     out.push_back(observed.size());
     for (const FeatureAtom& atom : observed) append_atom(out, atom);
     return out;
@@ -2371,11 +2997,11 @@ BehaviorKey initial_behavior_key(const Node& node) {
 bool same_selected_decision(
         const Node& left,
         const Node& right) {
-    if (left.selection.has_value() !=
-        right.selection.has_value()) {
+    if ((left.selection != nullptr) !=
+        (right.selection != nullptr)) {
         return false;
     }
-    if (!left.selection.has_value()) return true;
+    if (left.selection == nullptr) return true;
     return left.selection->action_id ==
                right.selection->action_id &&
            left.selection->semantic_key ==
@@ -2438,7 +3064,7 @@ bool refine_selected_action_routing(
     for (std::uint32_t node = 0;
          node < graph.nodes.size(); ++node) {
         if (graph.nodes[node].state.terminal ||
-            !graph.nodes[node].selection.has_value()) {
+            graph.nodes[node].selection == nullptr) {
             continue;
         }
         members.push_back(node);
@@ -2518,15 +3144,25 @@ bool refine_selected_action_routing(
             }
             return bytes;
         };
-    for (std::size_t left_index = 0;
-         left_index < members.size(); ++left_index) {
+    std::size_t routing_parent_begin = 0;
+    while (routing_parent_begin < members.size()) {
+        std::size_t routing_parent_end = routing_parent_begin + 1;
+        while (routing_parent_end < members.size() &&
+               node_coarse_key(
+                   graph,
+                   graph.nodes[members[routing_parent_begin]]) ==
+                   node_coarse_key(
+                       graph,
+                       graph.nodes[members[routing_parent_end]])) {
+            ++routing_parent_end;
+        }
+        for (std::size_t left_index = routing_parent_begin;
+             left_index < routing_parent_end; ++left_index) {
         for (std::size_t right_index = left_index + 1;
-             right_index < members.size(); ++right_index) {
+             right_index < routing_parent_end; ++right_index) {
             Node& left = graph.nodes[members[left_index]];
             Node& right = graph.nodes[members[right_index]];
-            if (left.state.coarse_state_key !=
-                    right.state.coarse_state_key ||
-                same_selected_decision(left, right) ||
+            if (same_selected_decision(left, right) ||
                 !routes_overlap(
                     left, right,
                     left.selection->routing_observes,
@@ -2865,6 +3501,8 @@ bool refine_selected_action_routing(
                 std::move(next_left_promoted);
             promoted_requirements[members[right_index]] =
                 std::move(next_right_promoted);
+            detach_selection(left);
+            detach_selection(right);
             left.selection->routing_observes =
                 std::move(left_trial);
             right.selection->routing_observes =
@@ -2875,6 +3513,8 @@ bool refine_selected_action_routing(
                 return false;
             }
         }
+        }
+        routing_parent_begin = routing_parent_end;
     }
 
     /*
@@ -2956,6 +3596,7 @@ bool refine_selected_action_routing(
                 return false;
             }
             promoted_requirements[node] = std::move(trial);
+            detach_selection(graph.nodes[node]);
             graph.nodes[node].selection->routing_observes =
                 std::move(combined);
             if (!check_refinement_memory(
@@ -2971,10 +3612,10 @@ bool refine_selected_action_routing(
     while (parent_begin < members.size()) {
         std::size_t parent_end = parent_begin + 1;
         while (parent_end < members.size() &&
-               graph.nodes[members[parent_begin]]
-                       .state.coarse_state_key ==
-                   graph.nodes[members[parent_end]]
-                       .state.coarse_state_key) {
+               node_coarse_key(
+                   graph, graph.nodes[members[parent_begin]]) ==
+                   node_coarse_key(
+                       graph, graph.nodes[members[parent_end]])) {
             ++parent_end;
         }
         if (!parent_routes_disjoint(parent_begin, parent_end)) {
@@ -3200,10 +3841,11 @@ bool refine_selected_action_routing(
 
 std::vector<std::pair<std::uint32_t, DeterministicSum>>
 project_kernel(
+        const Graph& graph,
         const Node& node,
         const std::vector<std::uint32_t>& partition) {
     std::map<std::uint32_t, DeterministicSum> projected;
-    for (const NodeEdge& edge : node.edges) {
+    for (const NodeEdge& edge : node_edges(graph, node)) {
         projected[partition.at(edge.successor)].add(edge.probability);
     }
     return {projected.begin(), projected.end()};
@@ -3212,27 +3854,24 @@ project_kernel(
 FeatureSignature relevant_difference(
         const Node& left,
         const Node& right) {
-    const ObservationRequirement requirement =
-        merge_requirements(left.required, right.required);
-    const FeatureSignature a =
-        observe_features(left.state.features, requirement);
-    const FeatureSignature b =
-        observe_features(right.state.features, requirement);
     FeatureSignature out;
     std::set_symmetric_difference(
-        a.begin(), a.end(), b.begin(), b.end(),
+        left.state.features.begin(), left.state.features.end(),
+        right.state.features.begin(), right.state.features.end(),
         std::back_inserter(out), atom_less);
     return out;
 }
 
 CounterexampleKind counterexample_kind(
+        const Graph& graph,
         const Node& left,
         const Node& right,
         const std::vector<std::uint32_t>& partition) {
-    if (left.selection.has_value() != right.selection.has_value()) {
+    if ((left.selection != nullptr) !=
+        (right.selection != nullptr)) {
         return CounterexampleKind::SelectedAction;
     }
-    if (!left.selection.has_value()) {
+    if (left.selection == nullptr) {
         return CounterexampleKind::Observation;
     }
     if (left.selection->action_id != right.selection->action_id ||
@@ -3244,8 +3883,8 @@ CounterexampleKind counterexample_kind(
         std::bit_cast<std::uint64_t>(right.action_cost)) {
         return CounterexampleKind::ActionCost;
     }
-    if (project_kernel(left, partition) !=
-        project_kernel(right, partition)) {
+    if (project_kernel(graph, left, partition) !=
+        project_kernel(graph, right, partition)) {
         return CounterexampleKind::SuccessorProjection;
     }
     return CounterexampleKind::Observation;
@@ -3332,7 +3971,7 @@ bool collect_counterexamples(
         const Node& left = graph.nodes[pair->first];
         const Node& right = graph.nodes[pair->second];
         result.counterexamples.push_back({
-            counterexample_kind(left, right, final),
+            counterexample_kind(graph, left, right, final),
             coarse,
             left.state.stable_key,
             right.state.stable_key,
@@ -3350,7 +3989,7 @@ bool collect_counterexamples(
 }
 
 bool build_classes(
-        const Graph& graph,
+        Graph& graph,
         const std::vector<std::uint32_t>& partition,
         const std::uint32_t class_count,
         const RefinementLimits& limits,
@@ -3374,6 +4013,10 @@ bool build_classes(
     add_bytes(
         projected_members,
         saturated_product(
+            graph.nodes.size(), sizeof(std::uint32_t)));
+    add_bytes(
+        projected_members,
+        saturated_product(
             class_count, sizeof(RefinedPolicyClass)));
     add_bytes(
         projected_members,
@@ -3389,6 +4032,7 @@ bool build_classes(
         ++member_counts.at(class_id);
     }
     std::vector<std::vector<std::uint32_t>> members(class_count);
+    std::vector<std::uint32_t> member_position(graph.nodes.size());
     for (std::uint32_t class_id = 0;
          class_id < class_count; ++class_id) {
         members[class_id].reserve(member_counts[class_id]);
@@ -3398,37 +4042,40 @@ bool build_classes(
     }
     result.classes.reserve(class_count);
     result.assignments.reserve(graph.nodes.size());
-    const auto members_memory = [&]() {
-        std::uint64_t bytes = saturated_product(
-            members.capacity(),
-            sizeof(std::vector<std::uint32_t>));
-        for (const std::vector<std::uint32_t>& states : members) {
-            add_bytes(
-                bytes,
-                saturated_product(
-                    states.capacity(), sizeof(std::uint32_t)));
-        }
+    std::uint64_t members_memory = saturated_product(
+        members.capacity(), sizeof(std::vector<std::uint32_t>));
+    for (const std::vector<std::uint32_t>& states : members) {
         add_bytes(
-            bytes,
+            members_memory,
             saturated_product(
-                member_counts.capacity(), sizeof(std::size_t)));
-        return bytes;
-    };
+                states.capacity(), sizeof(std::uint32_t)));
+    }
+    add_bytes(
+        members_memory,
+        saturated_product(
+            member_counts.capacity(), sizeof(std::size_t)));
+    add_bytes(
+        members_memory,
+        saturated_product(
+            member_position.capacity(), sizeof(std::uint32_t)));
+    std::uint64_t result_memory =
+        estimate_refinement_result_memory(result);
     for (std::uint32_t class_id = 0;
          class_id < class_count; ++class_id) {
         const Node& authority =
             graph.nodes.at(members[class_id].front());
         std::uint64_t class_live =
-            saturated_add(retained_scratch, members_memory());
+            saturated_add(retained_scratch, members_memory);
         add_bytes(
             class_live,
-            estimate_project_kernel_scratch(authority));
-        if (!check_refinement_memory(
+            estimate_project_kernel_scratch(graph, authority));
+        if (!check_refinement_memory_with_result_ledger(
                 result, graph, limits, adapter_memory,
-                class_live)) {
+                result_memory, class_live)) {
             return false;
         }
-        const auto projection = project_kernel(authority, partition);
+        const auto projection =
+            project_kernel(graph, authority, partition);
         const std::uint64_t projection_memory =
             saturated_product(
                 projection.capacity(),
@@ -3437,12 +4084,10 @@ bool build_classes(
         std::uint64_t projected_output =
             saturated_product(
                 members[class_id].size(), sizeof(StableKey));
-        for (const std::uint32_t state : members[class_id]) {
-            add_bytes(
-                projected_output,
-                estimate_stable_key_bytes(
-                    graph.nodes[state].state.stable_key));
-        }
+        add_bytes(
+            projected_output,
+            estimate_stable_key_bytes(
+                node_coarse_key(graph, authority)));
         /*
          * required_observations and observation_signature are copied into
          * the result while observe_features also owns canonicalization and
@@ -3460,7 +4105,7 @@ bool build_classes(
         add_bytes(projected_output, exact_feature_memory);
         add_bytes(projected_output, exact_feature_memory);
         add_bytes(projected_output, exact_feature_memory);
-        if (authority.selection.has_value()) {
+        if (authority.selection != nullptr) {
             add_bytes(
                 projected_output,
                 estimate_selected_action_bytes(
@@ -3472,91 +4117,77 @@ bool build_classes(
                 projection.size(),
                 sizeof(ProjectedTransition)));
         class_live =
-            saturated_add(retained_scratch, members_memory());
+            saturated_add(retained_scratch, members_memory);
         add_bytes(class_live, projection_memory);
         add_bytes(class_live, projected_output);
-        if (!check_refinement_memory(
+        if (!check_refinement_memory_with_result_ledger(
                 result, graph, limits, adapter_memory,
-                class_live)) {
+                result_memory, class_live)) {
             return false;
         }
         RefinedPolicyClass output;
         output.class_id = class_id;
         output.coarse_state = authority.state.coarse_state;
         output.coarse_state_key =
-            authority.state.coarse_state_key;
+            node_coarse_key(graph, authority);
         output.goal = authority.state.goal;
         output.terminal = authority.state.terminal;
         output.required_observations = authority.required;
-        output.observation_signature = observe_features(
-            authority.state.features, authority.required);
-        output.selected_action = authority.selection;
+        output.observation_signature = authority.state.features;
+        if (authority.selection != nullptr) {
+            output.selected_action = *authority.selection;
+        }
         output.action_cost = authority.action_cost;
         output.exact_members.reserve(members[class_id].size());
         output.transitions.reserve(projection.size());
         for (const std::uint32_t state : members[class_id]) {
+            member_position[state] = static_cast<std::uint32_t>(
+                output.exact_members.size());
+            const std::uint64_t transferred_key_bytes =
+                estimate_stable_key_bytes(
+                    graph.nodes[state].state.stable_key);
             output.exact_members.push_back(
-                graph.nodes[state].state.stable_key);
-            class_live =
-                saturated_add(retained_scratch, members_memory());
-            add_bytes(class_live, projection_memory);
-            add_bytes(
-                class_live,
-                estimate_refined_policy_class_memory(output));
-            if (!check_refinement_memory(
-                    result, graph, limits, adapter_memory,
-                    class_live)) {
-                return false;
-            }
+                std::move(graph.nodes[state].state.stable_key));
+            note_graph_memory_release(
+                graph, transferred_key_bytes);
         }
         for (const auto& [successor, probability] : projection) {
             output.transitions.push_back(
                 {successor, probability.value()});
-            class_live =
-                saturated_add(retained_scratch, members_memory());
-            add_bytes(class_live, projection_memory);
-            add_bytes(
-                class_live,
-                estimate_refined_policy_class_memory(output));
-            if (!check_refinement_memory(
-                    result, graph, limits, adapter_memory,
-                    class_live)) {
-                return false;
-            }
         }
+        add_bytes(
+            result_memory,
+            estimate_stable_key_bytes(output.coarse_state_key));
+        add_bytes(
+            result_memory,
+            estimate_refined_policy_class_memory(output));
         result.classes.push_back(std::move(output));
-        if (!check_refinement_memory(
+        class_live = saturated_add(
+            retained_scratch, members_memory);
+        add_bytes(class_live, projection_memory);
+        if (!check_refinement_memory_with_result_ledger(
                 result, graph, limits, adapter_memory,
-                saturated_add(
-                    retained_scratch, members_memory()))) {
+                result_memory, class_live)) {
             return false;
         }
+    }
+    std::uint64_t assignment_live = saturated_add(
+        retained_scratch, members_memory);
+    if (!check_refinement_memory_with_result_ledger(
+            result, graph, limits, adapter_memory,
+            result_memory, assignment_live)) {
+        return false;
     }
     for (std::uint32_t state = 0; state < graph.nodes.size(); ++state) {
-        std::uint64_t assignment_live =
-            saturated_add(retained_scratch, members_memory());
-        add_bytes(
-            assignment_live,
-            estimate_stable_key_bytes(
-                graph.nodes[state].state.stable_key));
-        if (!check_refinement_memory(
-                result, graph, limits, adapter_memory,
-                assignment_live)) {
-            return false;
-        }
+        const std::uint32_t class_id = partition[state];
         result.assignments.push_back({
-            graph.nodes[state].state.stable_key,
             graph.nodes[state].state.coarse_state,
-            partition[state],
-            graph.nodes[state].state.coarse_state_key});
-        if (!check_refinement_memory(
-                result, graph, limits, adapter_memory,
-                saturated_add(
-                    retained_scratch, members_memory()))) {
-            return false;
-        }
+            class_id,
+            member_position[state]});
     }
-    return true;
+    return check_refinement_memory_with_result_ledger(
+        result, graph, limits, adapter_memory, result_memory,
+        saturated_add(retained_scratch, members_memory));
 }
 
 std::vector<std::uint32_t> mask_members(
@@ -3804,16 +4435,100 @@ PolicyObservationFixedPoint propagate_policy_observations(
                 nodes[index].successors.begin(),
                 nodes[index].successors.end()),
             nodes[index].successors.end());
-        if (nodes[index].selected_action.has_value() &&
-            !nodes[index].selected_action->contract.complete()) {
+    }
+    const auto referenced_node =
+        [&](const std::uint32_t state_id)
+            -> const PolicyObservationNode* {
+            const auto found = index_by_state.find(state_id);
+            return found == index_by_state.end()
+                       ? nullptr
+                       : &nodes[found->second];
+        };
+    for (const PolicyObservationNode& node : nodes) {
+        if (node.selected_action_source.has_value()) {
+            const PolicyObservationNode* source =
+                referenced_node(*node.selected_action_source);
+            if (source == nullptr ||
+                source->selected_action_source.has_value() ||
+                !source->selected_action.has_value()) {
+                result.failure_reason =
+                    "policy observation graph has an invalid shared "
+                    "action authority";
+                return result;
+            }
+        }
+        if (node.successor_source.has_value()) {
+            const PolicyObservationNode* source =
+                referenced_node(*node.successor_source);
+            if (source == nullptr ||
+                source->successor_source.has_value()) {
+                result.failure_reason =
+                    "policy observation graph has an invalid shared "
+                    "successor authority";
+                return result;
+            }
+        }
+    }
+    const auto selected_action =
+        [&](const PolicyObservationNode& node)
+            -> const std::optional<SelectedAction>& {
+            return node.selected_action_source.has_value()
+                       ? referenced_node(
+                             *node.selected_action_source)
+                             ->selected_action
+                       : node.selected_action;
+        };
+    const auto successors =
+        [&](const PolicyObservationNode& node)
+            -> const std::vector<std::uint32_t>& {
+            return node.successor_source.has_value()
+                       ? referenced_node(*node.successor_source)
+                             ->successors
+                       : node.successors;
+        };
+    std::vector<std::vector<std::uint32_t>> propagation_groups;
+    {
+        std::map<StableKey, std::uint32_t> group_by_signature;
+        for (std::uint32_t index = 0; index < nodes.size(); ++index) {
+            const PolicyObservationNode& node = nodes[index];
+            StableKey key{0x7063726f62736731ull}; /* "pcrobsg1" */
+            key.push_back(
+                node.selected_action_source.has_value()
+                    ? static_cast<std::uint64_t>(
+                          *node.selected_action_source) + 1
+                    : (node.selected_action.has_value()
+                           ? static_cast<std::uint64_t>(node.state_id) + 1
+                           : 0));
+            key.push_back(
+                node.successor_source.has_value()
+                    ? static_cast<std::uint64_t>(
+                          *node.successor_source) + 1
+                    : static_cast<std::uint64_t>(node.state_id) + 1);
+            append_requirement(key, node.direct_observes);
+            const auto [group, inserted] =
+                group_by_signature.emplace(
+                    std::move(key),
+                    static_cast<std::uint32_t>(
+                        propagation_groups.size()));
+            if (inserted) {
+                propagation_groups.emplace_back();
+            }
+            propagation_groups[group->second].push_back(index);
+        }
+    }
+    for (const PolicyObservationNode& node : nodes) {
+        const std::optional<SelectedAction>& selected =
+            selected_action(node);
+        if (selected.has_value() &&
+            !selected->contract.complete()) {
             result.failure_reason =
                 "policy observation graph has an incomplete action "
                 "contract";
             return result;
         }
-        if (nodes[index].selected_action.has_value() &&
+        if (selected.has_value() &&
             !selected_runtime_contracts_complete(
-                *nodes[index].selected_action)) {
+                *selected)) {
             result.failure_reason =
                 "policy observation graph has an incomplete or empty "
                 "runtime path contract";
@@ -3822,9 +4537,11 @@ PolicyObservationFixedPoint propagate_policy_observations(
     }
     std::vector<ObservationRequirement> required(nodes.size());
     for (std::uint32_t index = 0; index < nodes.size(); ++index) {
-        if (nodes[index].selected_action.has_value()) {
+        const std::optional<SelectedAction>& selected_value =
+            selected_action(nodes[index]);
+        if (selected_value.has_value()) {
             const SelectedAction& selected =
-                *nodes[index].selected_action;
+                *selected_value;
             required[index] = merge_requirements(
                 merge_requirements(
                     selected_contract_observations(selected),
@@ -3848,11 +4565,13 @@ PolicyObservationFixedPoint propagate_policy_observations(
         ++result.rounds;
         bool changed = false;
         std::vector<ObservationRequirement> next = required;
-        for (std::uint32_t source = 0;
-             source < nodes.size(); ++source) {
+        for (const std::vector<std::uint32_t>& group :
+             propagation_groups) {
+            const std::uint32_t source = group.front();
             const PolicyObservationNode& node = nodes[source];
+            ObservationRequirement propagated = required[source];
             for (const std::uint32_t successor :
-                 node.successors) {
+                 successors(node)) {
                 const auto target =
                     index_by_state.find(successor);
                 if (target == index_by_state.end()) {
@@ -3861,17 +4580,22 @@ PolicyObservationFixedPoint propagate_policy_observations(
                         "successor";
                     return result;
                 }
+                const std::optional<SelectedAction>& selected =
+                    selected_action(node);
                 const ObservationRequirement carried =
-                    node.selected_action.has_value()
+                    selected.has_value()
                         ? selected_preserved_requirement(
                               required[target->second],
-                              *node.selected_action)
+                              *selected)
                         : required[target->second];
                 ObservationRequirement merged =
                     merge_requirements(
-                        next[source], carried);
-                if (!(merged == next[source])) {
-                    next[source] = std::move(merged);
+                        std::move(propagated), carried);
+                propagated = std::move(merged);
+            }
+            for (const std::uint32_t member : group) {
+                if (!(propagated == required[member])) {
+                    next[member] = propagated;
                     changed = true;
                 }
             }
@@ -3883,17 +4607,19 @@ PolicyObservationFixedPoint propagate_policy_observations(
     for (std::uint32_t index = 0; index < nodes.size(); ++index) {
         result.assignments.push_back(
             {nodes[index].state_id, required[index]});
-        if (!nodes[index].selected_action.has_value()) {
+        const std::optional<SelectedAction>& selected =
+            selected_action(nodes[index]);
+        if (!selected.has_value()) {
             continue;
         }
         const RefinementFeatureMask destroyed =
             selected_destroyed_feature_mask(
                 required[index],
-                *nodes[index].selected_action);
+                *selected);
         const RefinementFeatureMask preserved =
             selected_preserved_feature_mask(
                 required[index],
-                *nodes[index].selected_action);
+                *selected);
         result.collapse_destroyed_feature_mask |= destroyed;
         result.collapse_preserved_feature_mask |= preserved;
         if (destroyed != 0) {
@@ -3977,7 +4703,8 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
     if (!exact_closed_partition(
             canonical.size(),
             [&](const std::uint32_t node) {
-                return closed_initial_key(canonical[node]);
+                return closed_initial_key(
+                    canonical, canonical[node]);
             },
             saturated_add(
                 canonical_memory,
@@ -4035,12 +4762,39 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
                 partition.capacity(), sizeof(std::uint32_t)));
         std::vector<std::uint32_t> next;
         std::uint32_t next_count = 0;
+        std::vector<bool> shared_arc_authority(canonical.size(), false);
+        for (const CanonicalClosedNode& node : canonical) {
+            if (node.arc_source.has_value()) {
+                shared_arc_authority[*node.arc_source] = true;
+            }
+        }
+        std::map<std::uint32_t,
+                 std::vector<ClosedProjectionEntry>>
+            shared_projections;
         if (!exact_closed_partition(
                 canonical.size(),
                 [&](const std::uint32_t node) {
+                    const std::uint32_t authority =
+                        canonical[node].arc_source.value_or(node);
+                    if (canonical[node].arc_source.has_value() ||
+                        shared_arc_authority[node]) {
+                        const auto [projection, inserted] =
+                            shared_projections.try_emplace(authority);
+                        if (inserted) {
+                            projection->second = project_closed_row(
+                                canonical,
+                                canonical[authority], partition);
+                        }
+                        return closed_refined_key(
+                            canonical, canonical[node], partition[node],
+                            projection->second);
+                    }
+                    const std::vector<ClosedProjectionEntry> projected =
+                        project_closed_row(
+                            canonical, canonical[node], partition);
                     return closed_refined_key(
-                        canonical[node], partition[node],
-                        partition);
+                        canonical, canonical[node],
+                        partition[node], projected);
                 },
                 retained,
                 estimate_max_closed_projection_scratch(canonical),
@@ -4146,8 +4900,12 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
                 "closed probabilistic partition has an empty class";
             return result;
         }
+        const std::uint32_t authority_index =
+            members[class_id].front();
         const CanonicalClosedNode& authority =
-            canonical[members[class_id].front()];
+            canonical[authority_index];
+        const std::uint32_t authority_arc_source =
+            authority.arc_source.value_or(authority_index);
         std::uint64_t class_base = canonical_memory;
         add_bytes(
             class_base,
@@ -4172,11 +4930,11 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
                 saturated_add(
                     class_base,
                     estimate_closed_projection_scratch(
-                        authority)))) {
+                        canonical, authority)))) {
             return result;
         }
         const std::vector<ClosedProjectionEntry> projection =
-            project_closed_row(authority, partition);
+            project_closed_row(canonical, authority, partition);
         if (!check_closed_partition_memory(
                 result, limits,
                 saturated_add(
@@ -4189,24 +4947,35 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
              member < members[class_id].size(); ++member) {
             const CanonicalClosedNode& candidate =
                 canonical[members[class_id][member]];
+            const std::uint32_t candidate_index =
+                members[class_id][member];
+            const bool shares_absolute_row =
+                candidate.arc_source.value_or(candidate_index) ==
+                authority_arc_source;
             ++result.lumpability_checks;
             std::uint64_t proof_live = class_base;
             add_bytes(
                 proof_live,
                 estimate_closed_projection_memory(projection));
-            add_bytes(
-                proof_live,
-                estimate_closed_projection_scratch(candidate));
+            if (!shares_absolute_row) {
+                add_bytes(
+                    proof_live,
+                    estimate_closed_projection_scratch(
+                        canonical, candidate));
+            }
             if (!check_closed_partition_memory(
                     result, limits, proof_live)) {
                 return result;
             }
             if (candidate.terminal != authority.terminal ||
-                candidate.observation_key !=
-                    authority.observation_key ||
-                candidate.immediate_key != authority.immediate_key ||
-                project_closed_row(candidate, partition) !=
-                    projection) {
+                closed_observation_key(canonical, candidate) !=
+                    closed_observation_key(canonical, authority) ||
+                closed_immediate_key(canonical, candidate) !=
+                    closed_immediate_key(canonical, authority) ||
+                (!shares_absolute_row &&
+                 project_closed_row(
+                     canonical, candidate, partition) !=
+                     projection)) {
                 result.status =
                     ClosedPartitionStatus::NonLumpable;
                 result.failure_reason =
@@ -4228,11 +4997,11 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
         add_bytes(
             projected_output,
             estimate_stable_key_bytes(
-                authority.observation_key));
+                closed_observation_key(canonical, authority)));
         add_bytes(
             projected_output,
             estimate_stable_key_bytes(
-                authority.immediate_key));
+                closed_immediate_key(canonical, authority)));
         add_bytes(
             projected_output,
             saturated_product(
@@ -4254,8 +5023,10 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
         }
         ClosedPartitionClass output;
         output.class_id = class_id;
-        output.observation_key = authority.observation_key;
-        output.immediate_key = authority.immediate_key;
+        output.observation_key =
+            closed_observation_key(canonical, authority);
+        output.immediate_key =
+            closed_immediate_key(canonical, authority);
         output.terminal = authority.terminal;
         output.member_keys.reserve(members[class_id].size());
         output.arcs.reserve(projection.size());
@@ -5302,43 +6073,138 @@ RefinementResult refine_policy_exact(
 
     std::vector<ClosedPartitionNode> closed_nodes;
     closed_nodes.reserve(graph.nodes.size());
+    std::uint64_t closed_nodes_memory = saturated_product(
+        closed_nodes.capacity(), sizeof(ClosedPartitionNode));
     if (!check_refinement_memory(
             result, graph, request.limits, adapter_memory,
-            estimate_closed_nodes_memory(closed_nodes))) {
+            closed_nodes_memory)) {
         return result;
     }
-    for (const Node& node : graph.nodes) {
+    std::map<std::uint64_t, std::vector<std::uint32_t>>
+        observation_authorities;
+    std::map<std::uint64_t, std::uint32_t>
+        immediate_authorities;
+    std::uint32_t closed_nodes_since_audit = 0;
+    for (std::uint32_t node_index = 0;
+         node_index < graph.nodes.size(); ++node_index) {
+        Node& node = graph.nodes[node_index];
         ClosedPartitionNode closed;
         /*
-         * Both parts are length-delimited semantic identities. Numeric
-         * coarse discovery ids remain lookup-only.
+         * canonicalize_graph() has already ordered the exact collision-free
+         * keys and remapped every absolute edge. The closed partition uses
+         * its stable key only for deterministic ordering and returned member
+         * labels, which this caller discards, so retain the canonical id
+         * instead of a second full copy of every exact identity. Semantic
+         * observation and immediate behavior remain in their own keys.
          */
-        append_tokens(
-            closed.stable_key,
-            node.state.coarse_state_key);
-        append_tokens(
-            closed.stable_key,
-            node.state.stable_key);
-        closed.observation_key = initial_behavior_key(node);
-        if (node.selection.has_value()) {
+        closed.stable_key = {
+            0x706372636e6f6431ull, /* "pcrcnod1" */
+            node_index};
+        /*
+         * Observation propagation is now at its fixed point.  The shared
+         * contract says that only this canonical projection may influence
+         * the closed partition or its published class, so the wider strict
+         * feature payload is dead after the projection is materialized.
+         * Retain the projected signature in the graph node for class output
+         * and counterexamples, and release the unobserved carrier payload
+         * before the partition's canonicalization overlap.
+         */
+        FeatureSignature observed =
+            observe_features(node.state.features, node.required);
+        closed.observation_key =
+            initial_behavior_key(graph, node, observed);
+        const std::uint64_t exact_feature_memory =
+            estimate_feature_bytes(node.state.features);
+        const std::uint64_t observed_feature_memory =
+            estimate_feature_bytes(observed);
+        node.state.features = std::move(observed);
+        if (exact_feature_memory > observed_feature_memory) {
+            note_graph_memory_release(
+                graph,
+                exact_feature_memory - observed_feature_memory);
+        } else if (observed_feature_memory > exact_feature_memory) {
+            note_graph_memory_growth(
+                graph,
+                observed_feature_memory - exact_feature_memory);
+        }
+        const std::uint64_t observation_hash =
+            stable_key_hash(closed.observation_key);
+        auto& observation_candidates =
+            observation_authorities[observation_hash];
+        for (const std::uint32_t authority :
+             observation_candidates) {
+            if (closed_nodes[authority].observation_key ==
+                closed.observation_key) {
+                closed.observation_source = authority;
+                StableKey{}.swap(closed.observation_key);
+                break;
+            }
+        }
+        if (!closed.observation_source.has_value()) {
+            observation_candidates.push_back(node_index);
+        }
+        if (node.selection != nullptr) {
             closed.immediate_key = {
                 std::bit_cast<std::uint64_t>(node.action_cost)};
+            const std::uint64_t immediate =
+                closed.immediate_key.front();
+            const auto [authority, inserted] =
+                immediate_authorities.emplace(immediate, node_index);
+            if (!inserted) {
+                closed.immediate_source = authority->second;
+                StableKey{}.swap(closed.immediate_key);
+            }
         }
         closed.terminal = node.state.terminal;
-        closed.arcs.reserve(node.edges.size());
-        for (const NodeEdge& edge : node.edges) {
-            closed.arcs.push_back({
-                {},
-                std::optional<std::uint32_t>{edge.successor},
-                edge.probability.value()});
+        if (node.edge_source != kNoEdgeSource) {
+            closed.arc_source = node.edge_source;
+        } else {
+            closed.arcs.reserve(node.edges.size());
+            for (const NodeEdge& edge : node.edges) {
+                closed.arcs.push_back({
+                    {},
+                    std::optional<std::uint32_t>{edge.successor},
+                    edge.probability.value()});
+            }
         }
         closed_nodes.push_back(std::move(closed));
-        if (!check_refinement_memory(
-                result, graph, request.limits, adapter_memory,
-                estimate_closed_nodes_memory(closed_nodes))) {
-            return result;
+        add_bytes(
+            closed_nodes_memory,
+            estimate_closed_node_nested_memory(
+                closed_nodes.back()));
+        ++closed_nodes_since_audit;
+        if (closed_nodes_since_audit == 512 ||
+            !closed_nodes.back().arcs.empty() ||
+            closed_nodes.size() == graph.nodes.size()) {
+            std::uint64_t construction_memory =
+                closed_nodes_memory;
+            add_bytes(
+                construction_memory,
+                estimate_ordered_nodes(observation_authorities));
+            for (const auto& [unused, candidates] :
+                 observation_authorities) {
+                (void)unused;
+                add_bytes(
+                    construction_memory,
+                    saturated_product(
+                        candidates.capacity(),
+                        sizeof(std::uint32_t)));
+            }
+            add_bytes(
+                construction_memory,
+                estimate_ordered_nodes(immediate_authorities));
+            if (!check_refinement_memory(
+                    result, graph, request.limits, adapter_memory,
+                    construction_memory)) {
+                return result;
+            }
+            closed_nodes_since_audit = 0;
         }
     }
+    decltype(observation_authorities){}.swap(
+        observation_authorities);
+    decltype(immediate_authorities){}.swap(
+        immediate_authorities);
     ClosedPartitionLimits partition_limits;
     partition_limits.max_classes =
         request.limits.max_refinement_classes;

@@ -108,7 +108,8 @@ std::uint32_t assigned_class(
         const RefinementResult& result,
         const std::uint64_t state_key) {
     for (const StateClassAssignment& assignment : result.assignments) {
-        if (assignment.exact_state == StableKey{state_key}) {
+        if (assignment_exact_state(result, assignment) ==
+            StableKey{state_key}) {
             return assignment.class_id;
         }
     }
@@ -131,7 +132,7 @@ std::string fingerprint(const RefinementResult& result) {
         << result.telemetry.final_refinement_classes << ';';
     for (const StateClassAssignment& assignment : result.assignments) {
         out << assignment.coarse_state << ':'
-            << assignment.exact_state.front() << '='
+            << assignment_exact_state(result, assignment).front() << '='
             << assignment.class_id << ';';
     }
     for (const RefinedPolicyClass& refined : result.classes) {
@@ -160,9 +161,10 @@ std::string semantic_parent_fingerprint(
         << result.telemetry.exact_states << ':'
         << result.telemetry.final_refinement_classes << ';';
     for (const StateClassAssignment& assignment : result.assignments) {
-        append_key(out, assignment.exact_state);
+        append_key(out, assignment_exact_state(result, assignment));
         out << '@';
-        append_key(out, assignment.coarse_state_key);
+        append_key(out, assignment_coarse_state_key(
+            result, assignment));
         out << '=' << assignment.class_id << ';';
     }
     for (const RefinedPolicyClass& refined : result.classes) {
@@ -1122,6 +1124,34 @@ void run_closed_partition_delayed_split_tests() {
     REFINE_CHECK(result.rounds >= 3);
     REFINE_CHECK(partition_class(result, 20) !=
                  partition_class(result, 21));
+    REFINE_CHECK(partition_class(result, 10) !=
+                 partition_class(result, 11));
+}
+
+void run_closed_partition_minimal_open_cycle_witness_tests() {
+    std::vector<ClosedPartitionNode> nodes{
+        partition_node(10, 1, 100),
+        partition_node(11, 1, 100),
+        partition_node(30, 3, 0, true),
+        partition_node(31, 4, 0, true)};
+    /*
+     * The two live carriers have identical initial observation/immediate
+     * behavior. They can be distinguished only after both terminal exits and
+     * the live cycle are closed, so an open-graph aggregation that discarded
+     * either carrier could not be repaired by the split-only authority.
+     */
+    add_partition_arc(nodes, 0, {}, 1, 0.5);
+    add_partition_arc(nodes, 0, {}, 2, 0.5);
+    add_partition_arc(nodes, 1, {}, 0, 0.5);
+    add_partition_arc(nodes, 1, {}, 3, 0.5);
+
+    const ClosedPartitionResult result =
+        refine_closed_probabilistic_partition(std::move(nodes));
+    REFINE_CHECK(
+        result.status == ClosedPartitionStatus::Complete);
+    REFINE_CHECK(result.lumpable);
+    REFINE_CHECK(result.initial_class_count == 3);
+    REFINE_CHECK(result.final_class_count == 4);
     REFINE_CHECK(partition_class(result, 10) !=
                  partition_class(result, 11));
 }
@@ -2438,6 +2468,7 @@ void run_solver_refinement_tests() {
     run_abstract_adapter_tests();
     run_closed_partition_cycle_merge_tests();
     run_closed_partition_delayed_split_tests();
+    run_closed_partition_minimal_open_cycle_witness_tests();
     run_closed_partition_order_tests();
     run_closed_partition_labeled_arc_tests();
     run_closed_partition_memory_cap_tests();

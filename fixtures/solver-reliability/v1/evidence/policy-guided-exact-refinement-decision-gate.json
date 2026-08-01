@@ -1,0 +1,108 @@
+{
+  "schema_version": "policy_guided_exact_refinement_decision_gate_v1",
+  "date": "2026-07-31",
+  "decision": "stop_reconstruct_then_merge_qualification_and_prepare_structural_follow_on",
+  "source": {
+    "branch": "codex/policy-guided-exact-refinement",
+    "base_commit": "acb9c975a8c04418536c1b3fa91cde8fe8d2e452",
+    "worktree_state": "uncommitted implementation under qualification",
+    "final_commit": "this_documentation_and_source_commit"
+  },
+  "constraints": {
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_ceiling_seconds": 900,
+    "goal_progress_gated_reforges": true,
+    "max_workers": 1,
+    "cap_raised": false,
+    "visual_review_run": false,
+    "pushed": false
+  },
+  "case": {
+    "id": "natural-t1-breadth-two-4e65dda9c53b",
+    "corpus": "fixtures/solver-reliability/v1/manifest.json",
+    "goal_modifier_count": 2,
+    "actual_status": "refused_resource_cap",
+    "solve_result_class": "capped_without_policy",
+    "policy_available": false,
+    "termination": "refused_resource_cap",
+    "resource_cap": "max_solver_owned_bytes",
+    "compile": "not_applicable_no_policy",
+    "exact_evaluation": "not_applicable_no_policy",
+    "simulation": "not_applicable_no_policy",
+    "wall_seconds": 467.3043269,
+    "solver_owned_bytes": 1089111449,
+    "solver_owned_limit_bytes": 1073741824,
+    "bytes_over_limit": 15369625,
+    "strict": {
+      "exact_states": 183062,
+      "retained_exact_states": 183062,
+      "exact_transitions": 423756,
+      "exact_kernels": 10466,
+      "exact_kernel_cache_hits": 162130,
+      "exact_state_reuses": 240695
+    },
+    "refinement": {
+      "backward_observation_rounds": 3,
+      "selected_action_routing_rounds": 0,
+      "observation_propagation_rounds": 1,
+      "partition_refinement_rounds": 0,
+      "initial_observation_classes": 0,
+      "final_classes": 0,
+      "lumpability_checked": false,
+      "class_policy_checked": false,
+      "compiled_assertion_checked": false
+    }
+  },
+  "focused_tests": [
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-refinement-only data/compiled/current",
+      "checks": 301,
+      "failures": 0
+    },
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-policy-refinement-only data/compiled/current",
+      "checks": 4829,
+      "failures": 0
+    }
+  ],
+  "artifacts": {
+    "benchmark_executable": {
+      "path": "build/engine/poecraft_solver_benchmark.exe",
+      "sha256": "808d3521ce5ed2b55ef03e8e55afc9aab862e496ead11940ad614894b10e677d"
+    },
+    "focused_test_executable": {
+      "path": "build/engine/poecraft_engine_tests.exe",
+      "sha256": "4969f073b37331f94005b0d0b29052863cd3ec441ce55ae80d7ae55defb4e996"
+    },
+    "case_report": {
+      "path": "build/acceptance/policy-guided-exact-refinement/diagnostic-natural-projected-carrier-release/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "sha256": "cf3feb1a36aeb559bb5f4bdc8b0a160639d3310e3a7f4377218365eb85734ba6",
+      "bytes": 405701
+    },
+    "runner_ledger": {
+      "path": "build/acceptance/policy-guided-exact-refinement/diagnostic-natural-projected-carrier-release/ledger.json",
+      "sha256": "587f3c1058e9c008ed12a1447eef33932589460efc570208b1483d6e4290c6c6",
+      "bytes": 4093
+    }
+  },
+  "interpretation": {
+    "post_projection_release_observed": true,
+    "process_working_set_before_release_mib_approx": 989,
+    "process_working_set_after_release_mib_approx": 338,
+    "closed_partition_began": false,
+    "reconstruct_then_merge_role": "correctness_bridge_not_scalable_four_five_goal_endpoint",
+    "open_graph_early_merge": "disproved_by_minimal_cyclic_carrier_witness",
+    "next_boundary": "docs/active/proof-carrying-quotient-refinement.md"
+  },
+  "not_run_after_red_gate": [
+    "remaining_native_solver_slices",
+    "gate4_focused_portfolio",
+    "qualified_fracture_hash_gate",
+    "gate5_native_49",
+    "selected_10000_run_verification",
+    "release_wasm_build",
+    "wasm_product_acceptance",
+    "scripts/test.ps1",
+    "visual_review"
+  ]
+}

@@ -1,15 +1,23 @@
 # Active Work
 
-**Status: one implementation plan is active.**
+**Status: one structural implementation plan is selected; implementation has
+not begun.**
 
 Parent: [Documentation map](../README.md)
 
 Current boundary:
-[Policy-Guided Exact State Refinement](policy-guided-exact-refinement.md).
-It preserves broad coarse discovery while lazily restoring exact identity
-only where a selected action or downstream policy observes it, then performs
-witness-local Bellman re-optimization when exact subclasses need different
-choices.
+[Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
+It retains proof-carrying quotient transitions during solving and drives the
+existing shared partition from counterexamples inside policy improvement. The
+first implementation gate is proof identity and cache invalidation; do not
+start with another full hard-case run.
+
+The preceding
+[Policy-Guided Exact Refinement qualification](../archive/2026-07-31-policy-guided-exact-refinement/README.md)
+retains the shared contract/refinement/evaluator/compiler foundation, but its
+reconstruct-then-merge adapter failed the unchanged 1 GiB two-goal decision
+gate before partition initialization. It is a correctness bridge, not the
+selected four/five-goal architecture.
 
 The completed
 [Cross-Base And Compiled-Strategy Reliability Pass](../archive/2026-07-30-cross-base-strategy-reliability/README.md)

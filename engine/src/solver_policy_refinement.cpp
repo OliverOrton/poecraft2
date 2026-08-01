@@ -514,12 +514,6 @@ std::uint64_t refinement_result_bytes(
         result.resource_cap.capacity() + 1;
     bytes += result.assignments.capacity() *
              sizeof(StateClassAssignment);
-    for (const StateClassAssignment& assignment :
-         result.assignments) {
-        bytes += stable_key_bytes(assignment.exact_state);
-        bytes += stable_key_bytes(
-            assignment.coarse_state_key);
-    }
     bytes += result.classes.capacity() *
              sizeof(RefinedPolicyClass);
     for (const RefinedPolicyClass& policy_class :
@@ -609,6 +603,7 @@ struct CoarsePolicyNode {
     std::optional<SelectedAction> selected;
     std::vector<std::uint32_t> successors;
     ObservationRequirement required;
+    bool observations_propagated = false;
 };
 
 std::uint64_t coarse_policy_node_bytes(
@@ -1185,10 +1180,12 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         const RefinementResult& refinement) const {
         for (const StateClassAssignment& assignment :
              refinement.assignments) {
+            const StableKey& exact_state =
+                assignment_exact_state(refinement, assignment);
             const auto known =
-                known_.find(assignment.exact_state);
+                known_.find(exact_state);
             if (known == known_.end() ||
-                known->second.exact.terminal) {
+                known->second.terminal) {
                 continue;
             }
             const auto parent = coarse_policy_.find(
@@ -1199,7 +1196,7 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             }
             const auto exact =
                 exact_policy_.find(
-                    assignment.exact_state);
+                    exact_state);
             if (exact != exact_policy_.end() &&
                 exact->second.semantic_key !=
                     parent->second.selected
@@ -1218,9 +1215,9 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         const std::uint64_t coarse_bytes =
             estimated_retained_solver_bytes(coarse_, &solved_);
         const std::uint64_t strict_bytes =
-            strict_->estimated_owned_bytes();
+            strict_->audited_estimated_owned_bytes();
         const std::uint64_t adapter_bytes =
-            estimated_owned_bytes();
+            audit_adapter_owned_bytes();
         const std::uint64_t adapter_cache_bytes =
             adapter_bytes > strict_bytes
                 ? adapter_bytes - strict_bytes
@@ -1386,18 +1383,17 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             std::vector<ExactState> result;
             result.reserve(filtered->second.size());
             for (const StableKey& key : filtered->second) {
-                result.push_back(known_.at(key).exact);
+                result.push_back(materialize_exact_state(
+                    key, known_.at(key)));
             }
             return result;
         }
-        const auto found = exact_keys_by_coarse_.find(coarse_state);
-        if (found == exact_keys_by_coarse_.end()) return {};
-        std::vector<ExactState> result;
-        result.reserve(found->second.size());
-        for (const StableKey& key : found->second) {
-            result.push_back(known_.at(key).exact);
-        }
-        return result;
+        if (root_key_.empty()) return {};
+        const KnownState& root = known_.at(root_key_);
+        return root.coarse_state == coarse_state
+                   ? std::vector<ExactState>{
+                         materialize_exact_state(root_key_, root)}
+                   : std::vector<ExactState>{};
     }
 
     std::optional<SelectedAction> selected_action(
@@ -1405,11 +1401,6 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         if (state.terminal) return std::nullopt;
         const auto exact = exact_policy_.find(state.stable_key);
         if (exact != exact_policy_.end()) return exact->second;
-        const auto cached =
-            base_selected_by_exact_.find(state.stable_key);
-        if (cached != base_selected_by_exact_.end()) {
-            return cached->second;
-        }
         const auto found = coarse_policy_.find(state.coarse_state);
         const auto carrier = known_.find(state.stable_key);
         if (found == coarse_policy_.end() ||
@@ -1419,16 +1410,73 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                 PolicyExactLiftStatus::InvalidSolveState,
                 "exact state maps outside the reachable coarse policy");
         }
+        const std::uint32_t strict_operator = strict_operator_for(
+            found->second.coarse_operator);
         SelectedAction selected = make_selected(
             state.coarse_state,
-            strict_operator_for(
-                found->second.coarse_operator),
+            strict_operator,
             carrier->second.strict_state);
-        const auto [stored, inserted] =
-            base_selected_by_exact_.emplace(
-                state.stable_key, std::move(selected));
-        (void)inserted;
-        return stored->second;
+        const StableKey raw_key = exact_refinement_state_key(
+            strict_->state(carrier->second.strict_state),
+            state.coarse_state_key);
+        const PlannerOperator& selected_planner =
+            strict_->operators().at(selected.action_id);
+        if (raw_key != state.stable_key &&
+            !has_proven_unobserved_primitive_recipe(
+                carrier->second.strict_state,
+                selected_planner)) {
+            store_choice_recipe(
+                state.stable_key,
+                selected.semantic_key,
+                choice_recipe(raw_key, selected));
+        }
+        return selected;
+    }
+
+    std::optional<StableKey> exact_kernel_reuse_key(
+            const ExactState& state,
+            const SelectedAction& selected) override {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end() ||
+            selected.action_id >= strict_->operators().size()) {
+            return std::nullopt;
+        }
+        const PlannerOperator& planner =
+            strict_->operators()[selected.action_id];
+        if (planner.kind != PlannerOperatorKind::Primitive) {
+            return std::nullopt;
+        }
+        const std::uint32_t action = planner.primitive_action;
+        std::optional<StableKey> key = stable_reforge_reuse_key(
+            known->second.strict_state, action);
+        if (!key.has_value()) {
+            return std::nullopt;
+        }
+        if (stable_kernel_reuse_keys_.contains(*key)) {
+            return key;
+        }
+        refresh_strict_resource_cap(
+            "strict shared-kernel reuse proof");
+        const OutcomeDistribution& distribution =
+            strict_->outcomes(
+                known->second.strict_state, action,
+                options_.goal_progress_gated_reforges);
+        if (!distribution.supported ||
+            !distribution.stable_shared_kernel ||
+            !distribution.choice_groups.empty() ||
+            !distribution.choice_options.empty()) {
+            return std::nullopt;
+        }
+        require_local_memory(
+            sizeof(StableKey) + 3 * sizeof(void*) +
+                stable_key_bytes(*key),
+            "strict shared-kernel reuse proof");
+        stable_kernel_reuse_keys_.insert(*key);
+        return key;
+    }
+
+    void note_exact_kernel_reuse() override {
+        ++telemetry_.strict_kernel_cache_hits;
     }
 
     ExactActionKernel exact_kernel(
@@ -1468,7 +1516,27 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             }
         }
         try {
-            return exact_kernel_ref(state, selected);
+            const KernelKey key{
+                state.stable_key, selected.semantic_key};
+            const auto cached = kernels_.find(key);
+            if (cached != kernels_.end()) {
+                ++telemetry_.strict_kernel_cache_hits;
+                return cached->second;
+            }
+            ExactActionKernel kernel =
+                build_counted_kernel(state, selected);
+            /*
+             * The oracle API returns a kernel by value. Retaining a second
+             * adapter-owned copy until every later policy pass ends consumes
+             * the publication budget without saving work. Release only this
+             * published strict row; unrelated already-paid rows must remain
+             * cached so publication cannot spend the reforge-work cap twice.
+             * Candidate Bellman rows still use exact_kernel_ref() because
+             * their caller requires stable retained storage across
+             * comparisons.
+             */
+            release_published_kernel_storage(state, selected);
+            return kernel;
         } catch (const AdapterFailure& error) {
             /*
              * A legal coarse decision can still fail only on one concrete
@@ -1502,7 +1570,16 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             ++telemetry_.strict_kernel_cache_hits;
             return cached->second;
         }
-        if (kernels_.size() >= limits_.max_exact_kernels) {
+        ExactActionKernel kernel =
+            build_counted_kernel(state, selected);
+        return cache_kernel(key, std::move(kernel));
+    }
+
+    ExactActionKernel build_counted_kernel(
+            const ExactState& state,
+            const SelectedAction& selected) {
+        if (telemetry_.strict_kernels_built >=
+            limits_.max_exact_kernels) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::ResourceCap,
                 "strict policy discovery reached max_exact_kernels",
@@ -1537,7 +1614,35 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             kernel.transitions.size();
         ++telemetry_.strict_kernels_built;
         telemetry_.strict_calc_owned_bytes =
-            strict_->estimated_owned_bytes();
+            strict_->fast_estimated_owned_bytes();
+        return kernel;
+    }
+
+    void release_published_kernel_storage(
+            const ExactState& state,
+            const SelectedAction& selected) {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end() ||
+            selected.action_id >= strict_->operators().size()) {
+            return;
+        }
+        const PlannerOperator& planner =
+            strict_->operators()[selected.action_id];
+        if (planner.kind == PlannerOperatorKind::Primitive) {
+            strict_->release_published_outcome_storage(
+                known->second.strict_state,
+                planner.primitive_action,
+                options_.goal_progress_gated_reforges);
+        } else {
+            strict_->release_option_kernel(
+                known->second.strict_state,
+                selected.action_id);
+        }
+    }
+
+    const ExactActionKernel& cache_kernel(
+            const std::pair<StableKey, StableKey>& key,
+            ExactActionKernel kernel) {
         std::uint64_t projected =
             sizeof(decltype(kernels_)::value_type) +
             3 * sizeof(void*);
@@ -1570,10 +1675,8 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         return stored->second;
     }
 
-    std::uint64_t estimated_owned_bytes() const override {
-        std::uint64_t bytes = sizeof(*this);
-        saturating_add(
-            bytes, caller_seed_retained_bytes_);
+    std::uint64_t dynamic_child_owned_bytes() const {
+        std::uint64_t bytes = 0;
         const std::uint64_t current_coarse_bytes =
             coarse_.fast_estimated_owned_bytes();
         if (current_coarse_bytes >
@@ -1584,8 +1687,18 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                     coarse_retained_bytes_at_entry_);
         }
         if (strict_ != nullptr) {
-            bytes += strict_->estimated_owned_bytes();
+            saturating_add(
+                bytes,
+                strict_->fast_estimated_owned_bytes());
         }
+        return bytes;
+    }
+
+    std::uint64_t calculate_adapter_owned_bytes() const {
+        std::uint64_t bytes = sizeof(*this);
+        saturating_add(
+            bytes, caller_seed_retained_bytes_);
+        saturating_add(bytes, dynamic_child_owned_bytes());
         bytes += strict_junk_to_coarse_.capacity() *
                  sizeof(std::uint32_t);
         for (const std::vector<std::uint32_t>& slot_map :
@@ -1634,19 +1747,10 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                   3 * sizeof(void*));
         for (const auto& [key, known] : known_) {
             bytes += stable_key_bytes(key);
-            bytes += exact_state_bytes(known.exact);
-        }
-        bytes += exact_keys_by_coarse_.size() *
-                 (sizeof(decltype(
-                      exact_keys_by_coarse_)::value_type) +
-                  3 * sizeof(void*));
-        for (const auto& [unused, keys] :
-             exact_keys_by_coarse_) {
-            (void)unused;
-            bytes += keys.capacity() * sizeof(StableKey);
-            for (const StableKey& key : keys) {
-                bytes += stable_key_bytes(key);
-            }
+            bytes += known.equivalent_strict_states.capacity() *
+                     sizeof(std::uint32_t);
+            bytes += feature_signature_bytes(
+                known.collapsed_features);
         }
         bytes += kernels_.size() *
                  (sizeof(decltype(kernels_)::value_type) +
@@ -1670,6 +1774,11 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             bytes += stable_key_bytes(key.second);
             bytes += exact_choice_recipe_bytes(recipe);
         }
+        bytes += stable_kernel_reuse_keys_.size() *
+                 (sizeof(StableKey) + 3 * sizeof(void*));
+        for (const StableKey& key : stable_kernel_reuse_keys_) {
+            bytes += stable_key_bytes(key);
+        }
         bytes += exact_policy_.size() *
                  (sizeof(decltype(exact_policy_)::value_type) +
                   3 * sizeof(void*));
@@ -1677,15 +1786,7 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             bytes += stable_key_bytes(key);
             bytes += selected_action_bytes(selected);
         }
-        bytes += base_selected_by_exact_.size() *
-                 (sizeof(decltype(
-                      base_selected_by_exact_)::value_type) +
-                  3 * sizeof(void*));
-        for (const auto& [key, selected] :
-             base_selected_by_exact_) {
-            bytes += stable_key_bytes(key);
-            bytes += selected_action_bytes(selected);
-        }
+        bytes += stable_key_set_bytes(repair_carriers_);
         if (exact_root_filter_.has_value()) {
             bytes += exact_root_filter_->size() *
                      (sizeof(std::pair<
@@ -1714,10 +1815,50 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         return bytes;
     }
 
+    std::uint64_t audit_adapter_owned_bytes() const {
+        const std::uint64_t bytes =
+            calculate_adapter_owned_bytes();
+        const std::uint64_t child_bytes =
+            dynamic_child_owned_bytes();
+        adapter_memory_cached_non_child_bytes_ =
+            bytes > child_bytes ? bytes - child_bytes : 0;
+        adapter_memory_projected_growth_bytes_ = 0;
+        adapter_memory_checks_since_audit_ = 0;
+        adapter_memory_cache_initialized_ = true;
+        return bytes;
+    }
+
+    std::uint64_t estimated_owned_bytes() const override {
+        constexpr std::uint32_t kAuditInterval = 512;
+        if (!adapter_memory_cache_initialized_ ||
+            adapter_memory_checks_since_audit_ >=
+                kAuditInterval) {
+            return audit_adapter_owned_bytes();
+        }
+        ++adapter_memory_checks_since_audit_;
+        std::uint64_t bytes =
+            adapter_memory_cached_non_child_bytes_;
+        saturating_add(
+            bytes, adapter_memory_projected_growth_bytes_);
+        saturating_add(bytes, dynamic_child_owned_bytes());
+        telemetry_.adapter_owned_bytes = bytes;
+        telemetry_.peak_adapter_owned_bytes = std::max(
+            telemetry_.peak_adapter_owned_bytes, bytes);
+        if (strict_ != nullptr) {
+            telemetry_.strict_reforge_work =
+                strict_->telemetry().reforge_frontier_work;
+        }
+        return bytes;
+    }
+
   private:
     struct KnownState {
-        ExactState exact;
         std::uint32_t strict_state = kNoId;
+        std::uint32_t coarse_state = kNoId;
+        bool terminal = false;
+        bool policy_collapsed = false;
+        std::vector<std::uint32_t> equivalent_strict_states;
+        FeatureSignature collapsed_features;
     };
     using KernelKey = std::pair<StableKey, StableKey>;
 
@@ -1749,12 +1890,11 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
     ObservationRequirement carrier_requirement_;
     std::map<std::uint32_t, CoarsePolicyNode> coarse_policy_;
     std::map<StableKey, KnownState> known_;
-    std::map<std::uint32_t, std::vector<StableKey>>
-        exact_keys_by_coarse_;
     std::map<KernelKey, ExactActionKernel> kernels_;
     std::map<KernelKey, ExactChoiceRecipe> choice_recipes_;
+    std::set<StableKey> stable_kernel_reuse_keys_;
     std::map<StableKey, SelectedAction> exact_policy_;
-    std::map<StableKey, SelectedAction> base_selected_by_exact_;
+    std::set<StableKey> repair_carriers_;
     std::optional<std::map<std::uint32_t, std::vector<StableKey>>>
         exact_root_filter_;
     std::optional<StableKey> illegal_action_witness_;
@@ -1762,6 +1902,134 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         operator_vocabulary_widening_witness_;
     StableKey root_key_;
     std::uint64_t refinement_rounds_consumed_ = 0;
+    mutable bool adapter_memory_cache_initialized_ = false;
+    mutable std::uint32_t adapter_memory_checks_since_audit_ = 0;
+    mutable std::uint64_t adapter_memory_cached_non_child_bytes_ = 0;
+    mutable std::uint64_t adapter_memory_projected_growth_bytes_ = 0;
+
+    ExactState materialize_exact_state(
+            const StableKey& key,
+            const KnownState& known) const {
+        if (known.strict_state >= strict_->state_count() ||
+            known.coarse_state >= coarse_.state_count()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "retained strict carrier has an invalid state index");
+        }
+        ExactState exact;
+        exact.stable_key = key;
+        exact.coarse_state = known.coarse_state;
+        exact.coarse_state_key = abstract_state_key(
+            coarse_.state(known.coarse_state));
+        exact.goal = known.terminal;
+        exact.terminal = known.terminal;
+        if (known.policy_collapsed) {
+            exact.features = known.collapsed_features;
+            return exact;
+        }
+        const auto policy = coarse_policy_.find(
+            known.coarse_state);
+        const bool witness_parent =
+            enable_local_reoptimization_ &&
+            reoptimization_parents_.contains(
+                known.coarse_state);
+        const ObservationRequirement& requirement =
+            witness_parent || exact_policy_.contains(key) ||
+                    policy == coarse_policy_.end() ||
+                    !policy->second.observations_propagated
+                ? carrier_requirement_
+                : policy->second.required;
+        const AbstractFeatureExtraction extraction =
+            extract_strict_abstract_features(
+                strict_->session(), strict_->layout(),
+                strict_->state(known.strict_state),
+                requirement);
+        if (!extraction.complete()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::ObservationUnavailable,
+                "retained strict carrier lost a policy-required "
+                "observation");
+        }
+        exact.features = extraction.features;
+        return exact;
+    }
+
+    std::optional<StableKey> stable_reforge_reuse_key(
+            const std::uint32_t strict_state,
+            const std::uint32_t action) const {
+        StableKey reforge_signature;
+        if (!strict_->exact_reforge_kernel_signature(
+                strict_state, action, reforge_signature)) {
+            return std::nullopt;
+        }
+        StableKey key{
+            0x7063726b72657531ull, /* "pcrkreu1" */
+            options_.goal_progress_gated_reforges ? 1ull : 0ull,
+            reforge_signature.size()};
+        key.insert(
+            key.end(), reforge_signature.begin(),
+            reforge_signature.end());
+        return key;
+    }
+
+    bool has_proven_unobserved_primitive_recipe(
+            const std::uint32_t strict_state,
+            const PlannerOperator& planner) const {
+        if (planner.kind != PlannerOperatorKind::Primitive) {
+            return false;
+        }
+        const std::optional<StableKey> key =
+            stable_reforge_reuse_key(
+                strict_state, planner.primitive_action);
+        return key.has_value() &&
+               stable_kernel_reuse_keys_.contains(*key);
+    }
+
+    std::optional<StableKey> policy_collapse_key(
+            const std::uint32_t strict_state,
+            const StableKey& coarse_key,
+            const bool terminal,
+            const FeatureSignature& features,
+            const CoarsePolicyNode& policy) const {
+        if (enable_local_reoptimization_) return std::nullopt;
+        if (terminal) {
+            StableKey key{
+                0x7063727465726d31ull, /* "pcrterm1" */
+                coarse_key.size()};
+            key.insert(key.end(), coarse_key.begin(), coarse_key.end());
+            return key;
+        }
+        if (!policy.selected.has_value() ||
+            policy.selected->action_id >= strict_->operators().size()) {
+            return std::nullopt;
+        }
+        const std::optional<StableKey> operation_signature =
+            canonical_operation_state_signature(
+                strict_->session(), strict_->layout(),
+                strict_->state(strict_state), *policy.selected);
+        if (!operation_signature.has_value()) return std::nullopt;
+        const PlannerOperator& planner =
+            strict_->operators()[policy.selected->action_id];
+        StableKey kernel_signature;
+        if (planner.kind == PlannerOperatorKind::Primitive) {
+            (void)strict_->exact_reforge_kernel_signature(
+                strict_state, planner.primitive_action,
+                kernel_signature);
+        }
+        StableKey key{
+            0x70637270636f6c31ull, /* "pcrpcol1" */
+            coarse_key.size()};
+        key.insert(key.end(), coarse_key.begin(), coarse_key.end());
+        key.push_back(operation_signature->size());
+        key.insert(
+            key.end(), operation_signature->begin(),
+            operation_signature->end());
+        key.push_back(kernel_signature.size());
+        key.insert(
+            key.end(), kernel_signature.begin(), kernel_signature.end());
+        (void)features;
+        return key;
+    }
 
     std::optional<SelectedAction> candidate_selection(
         const StableKey& key,
@@ -1793,7 +2061,8 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         std::set<StableKey>& repairing,
         std::vector<PolicyMutation>& mutations,
         std::uint32_t depth,
-        std::uint64_t caller_retained_bytes);
+        std::uint64_t caller_retained_bytes,
+        bool evaluate_before_repair = true);
 
     std::set<StableKey> mismatch_witnesses(
         const ExactPolicyRun& run) const;
@@ -1809,6 +2078,9 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
     void rollback_policy_mutations(
         std::vector<PolicyMutation>& mutations,
         std::size_t checkpoint);
+
+    void release_completed_evaluation_storage(
+        const std::vector<StableKey>& roots);
 
     void require_local_memory(
         std::uint64_t caller_owned_bytes,
@@ -2722,6 +2994,15 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         const auto found = choice_recipes_.find(
             {exact_state, selected.semantic_key});
         if (found == choice_recipes_.end()) {
+            const auto known = known_.find(exact_state);
+            if (known != known_.end() &&
+                selected.action_id < strict_->operators().size() &&
+                has_proven_unobserved_primitive_recipe(
+                    known->second.strict_state,
+                    strict_->operators()[selected.action_id])) {
+                static const ExactChoiceRecipe kNoChoiceRecipe;
+                return kNoChoiceRecipe;
+            }
             throw AdapterFailure(
                 PolicyExactLiftStatus::InvalidSolveState,
                 "exact selected decision has no stored choice "
@@ -2744,22 +3025,30 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         if (strict_state.has_value()) {
             refresh_strict_resource_cap(
                 "strict selected-operation recipe");
+            const bool proven_unobserved_primitive =
+                exact_recipe == nullptr &&
+                has_proven_unobserved_primitive_recipe(
+                    *strict_state, planner);
             ExactChoiceRecipe recipe =
                 exact_recipe == nullptr
-                    ? seeded_choice_recipe(
-                          coarse_state, *strict_,
-                          *strict_state, strict_operator)
+                    ? (proven_unobserved_primitive
+                           ? ExactChoiceRecipe{}
+                           : seeded_choice_recipe(
+                                 coarse_state, *strict_,
+                                 *strict_state, strict_operator))
                     : *exact_recipe;
             selected.semantic_key = operator_decision_key(
                 *strict_, *strict_state,
                 strict_operator, recipe);
-            store_choice_recipe(
-                exact_refinement_state_key(
-                    strict_->state(*strict_state),
-                    abstract_state_key(
-                        coarse_.state(coarse_state))),
-                selected.semantic_key,
-                std::move(recipe));
+            if (!proven_unobserved_primitive) {
+                store_choice_recipe(
+                    exact_refinement_state_key(
+                        strict_->state(*strict_state),
+                        abstract_state_key(
+                            coarse_.state(coarse_state))),
+                    selected.semantic_key,
+                    std::move(recipe));
+            }
         } else {
             if (exact_recipe != nullptr) {
                 throw AdapterFailure(
@@ -3108,8 +3397,10 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             "coarse-policy observation fixed point");
         for (PolicyObservationAssignment& assignment :
              fixed.assignments) {
-            coarse_policy_.at(assignment.state_id).required =
-                std::move(assignment.required);
+            CoarsePolicyNode& node =
+                coarse_policy_.at(assignment.state_id);
+            node.required = std::move(assignment.required);
+            node.observations_propagated = true;
             require_local_memory(
                 policy_observation_fixed_bytes(fixed),
                 "coarse observation assignment");
@@ -3302,6 +3593,11 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         exact.coarse_state = parent;
         exact.coarse_state_key =
             abstract_state_key(coarse_.state(parent));
+        const StableKey raw_key =
+            exact_refinement_state_key(
+                strict_->state(strict_state),
+                exact.coarse_state_key);
+        exact.stable_key = raw_key;
         exact.goal =
             strict_->is_goal_state(strict_->state(strict_state));
         exact.terminal = exact.goal;
@@ -3316,7 +3612,12 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                 strict_->session(),
                 strict_->layout(),
                 strict_->state(strict_state),
-                carrier_requirement_);
+                (enable_local_reoptimization_ &&
+                 reoptimization_parents_.contains(parent)) ||
+                        exact_policy_.contains(raw_key) ||
+                        !policy->second.observations_propagated
+                    ? carrier_requirement_
+                    : policy->second.required);
         if (!extraction.complete()) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::ObservationUnavailable,
@@ -3326,6 +3627,15 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                     ")");
         }
         exact.features = extraction.features;
+        const std::optional<StableKey> collapse_key =
+            policy_collapse_key(
+                strict_state, exact.coarse_state_key,
+                exact.terminal, exact.features,
+                policy->second);
+        if (collapse_key.has_value()) {
+            exact.stable_key = *collapse_key;
+            if (exact.terminal) exact.features.clear();
+        }
         if (!exact.terminal) {
             if (!policy->second.selected.has_value()) {
                 throw AdapterFailure(
@@ -3347,25 +3657,45 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             }
         }
         /*
-         * Stable identity remains the complete strict carrier until the
-         * shared engine compares every raw kernel. Observation signatures
-         * are partition keys, never representative-state identities.
+         * Witness-driven/local carriers retain their complete strict key.
+         * During the initial fixed-policy lift, terminal carriers and rows
+         * with the same engine-authored selected-operation observation
+         * signature may share a semantic key. Stable destructive reforges
+         * additionally include their collision-checked exact kernel
+         * signature. Backward observation propagation puts every downstream
+         * survivor in the operation signature, and every strict member is
+         * retained below for compilation; no representative identity is
+         * discarded.
          */
-        exact.stable_key =
-            exact_refinement_state_key(
-                strict_->state(strict_state),
-                exact.coarse_state_key);
-
         const auto existing = known_.find(exact.stable_key);
         if (existing != known_.end()) {
-            if (!(existing->second.exact == exact) ||
-                existing->second.strict_state != strict_state) {
+            if (existing->second.strict_state != strict_state ||
+                existing->second.coarse_state != parent ||
+                existing->second.terminal != exact.terminal) {
+                if (!existing->second.policy_collapsed ||
+                    existing->second.coarse_state != parent ||
+                    existing->second.terminal != exact.terminal ||
+                    existing->second.collapsed_features !=
+                        exact.features) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::ObservationUnavailable,
+                        "collision-free strict state identity changed");
+                }
+                existing->second.equivalent_strict_states.push_back(
+                    strict_state);
+                require_local_memory(
+                    existing->second.equivalent_strict_states.capacity() *
+                        sizeof(std::uint32_t),
+                    "contract-proved policy carrier collapse");
+            } else if (existing->second.policy_collapsed &&
+                       existing->second.collapsed_features !=
+                           exact.features) {
                 throw AdapterFailure(
                     PolicyExactLiftStatus::ObservationUnavailable,
                     "collision-free strict state identity changed");
             }
             ++telemetry_.canonical_successor_collapses;
-            return {existing->second.exact, false};
+            return {std::move(exact), false};
         }
         if (known_.size() >= limits_.max_exact_states) {
             throw AdapterFailure(
@@ -3379,24 +3709,20 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         saturating_add(
             state_projection,
             exact_state_bytes(exact));
-        saturating_add(
-            state_projection,
-            exact_state_bytes(exact));
-        saturating_add(
-            state_projection,
-            sizeof(StableKey) +
-                stable_key_bytes(exact.stable_key));
         require_local_memory(
             state_projection,
             "strict exact-carrier construction");
         known_.emplace(
             exact.stable_key,
-            KnownState{exact, strict_state});
-        require_local_memory(
-            sizeof(StableKey) +
-                stable_key_bytes(exact.stable_key),
-            "strict exact-carrier parent index");
-        exact_keys_by_coarse_[parent].push_back(exact.stable_key);
+            KnownState{
+                strict_state,
+                parent,
+                exact.terminal,
+                collapse_key.has_value(),
+                {},
+                collapse_key.has_value()
+                    ? exact.features
+                    : FeatureSignature{}});
         ++telemetry_.strict_states_discovered;
         ++telemetry_.strict_carriers_materialized;
         require_local_memory(
@@ -3545,33 +3871,29 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             "strict lifted-sidecar projection");
         for (const StateClassAssignment& assignment :
              refinement.assignments) {
-            const auto override =
-                exact_policy_.find(assignment.exact_state);
-            const auto incumbent =
-                base_selected_by_exact_.find(
-                    assignment.exact_state);
-            const std::optional<SelectedAction> selected =
-                override == exact_policy_.end()
-                    ? (incumbent ==
-                               base_selected_by_exact_.end()
-                           ? std::optional<SelectedAction>{}
-                           : std::optional<SelectedAction>{
-                                 incumbent->second})
-                    : std::optional<SelectedAction>{
-                          override->second};
+            if (assignment.class_id >= refinement.classes.size()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::InvalidSolveState,
+                    "lifted projection assignment has no refined "
+                    "class");
+            }
+            const std::optional<SelectedAction>& selected =
+                refinement.classes[assignment.class_id]
+                    .selected_action;
             if (!selected.has_value()) {
                 continue;
             }
             add(exact_choice_recipe_bytes(
                 choice_recipe(
-                    assignment.exact_state, *selected)));
+                    assignment_exact_state(
+                        refinement, assignment),
+                    *selected)));
         }
         add(
             refinement.classes.size() *
             sizeof(RefinedPolicyCompileClass));
         add(
-            refinement.assignments.size() *
-            sizeof(std::uint32_t));
+            states * sizeof(std::uint32_t));
         for (const RefinedPolicyClass& policy_class :
              refinement.classes) {
             add(requirement_bytes(
@@ -3721,7 +4043,9 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
         }
         for (const StateClassAssignment& assignment :
              refinement.assignments) {
-            const auto known = known_.find(assignment.exact_state);
+            const StableKey& exact_state =
+                assignment_exact_state(refinement, assignment);
+            const auto known = known_.find(exact_state);
             if (known == known_.end() ||
                 known->second.strict_state >= state_count ||
                 assignment.class_id >=
@@ -3732,13 +4056,30 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                     "refinement assignment has no strict carrier or "
                     "class representative");
             }
+            const std::uint32_t representative =
+                representative_by_class[assignment.class_id];
             lifted.behavioral_representative_by_state[
-                known->second.strict_state] =
-                    representative_by_class[assignment.class_id];
+                known->second.strict_state] = representative;
+            for (const std::uint32_t equivalent :
+                 known->second.equivalent_strict_states) {
+                if (equivalent >= state_count) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "collapsed policy carrier exceeds the strict "
+                        "state table");
+                }
+                lifted.behavioral_representative_by_state[equivalent] =
+                    representative;
+            }
             if (refined_routing != nullptr) {
-                refined_routing->classes[assignment.class_id]
-                    .strict_members.push_back(
-                        known->second.strict_state);
+                std::vector<std::uint32_t>& members =
+                    refined_routing->classes[assignment.class_id]
+                        .strict_members;
+                members.push_back(known->second.strict_state);
+                members.insert(
+                    members.end(),
+                    known->second.equivalent_strict_states.begin(),
+                    known->second.equivalent_strict_states.end());
             }
         }
         if (refined_routing != nullptr) {
@@ -3805,8 +4146,9 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
                     PolicyExactLiftStatus::InvalidSolveState,
                     "lifted strict member has no exact class value");
             }
-            const auto carrier =
-                known_.find(assignment.exact_state);
+            const StableKey& exact_state =
+                assignment_exact_state(refinement, assignment);
+            const auto carrier = known_.find(exact_state);
             if (carrier == known_.end() ||
                 carrier->second.strict_state >= state_count) {
                 throw AdapterFailure(
@@ -3815,46 +4157,62 @@ class ProductionPolicyOracle final : public PolicyRefinementOracle {
             }
             const RefinedPolicyClass& policy_class =
                 refinement.classes[assignment.class_id];
-            const std::uint32_t strict_state =
-                carrier->second.strict_state;
-            lifted.expanded[strict_state] = 1;
-            lifted.goal_states[strict_state] =
-                policy_class.goal ? 1 : 0;
-            lifted.values[strict_state] =
-                value_by_class[assignment.class_id];
-            if (policy_class.terminal) continue;
-
-            const std::optional<SelectedAction> selected =
-                selected_action(carrier->second.exact);
-            if (!selected.has_value() ||
-                !policy_class.selected_action.has_value() ||
-                selected->action_id !=
-                    policy_class.selected_action->action_id ||
-                selected->semantic_key !=
-                    policy_class.selected_action->semantic_key ||
-                selected->action_id >=
-                    strict_->operators().size()) {
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::InvalidSolveState,
-                    "lifted strict member changed its refined planner "
-                    "decision");
-            }
-            const PlannerOperator& planner =
-                strict_->operators()[selected->action_id];
-            const ExactChoiceRecipe& recipe =
-                choice_recipe(
-                    assignment.exact_state, *selected);
-            lifted.policy[strict_state] = PolicyOperatorRef{
-                planner.kind, selected->action_id};
-            if (planner.kind == PlannerOperatorKind::Primitive) {
-                if (recipe.kind ==
-                    ExactChoiceRecipeKind::PrimitiveObservedChoice) {
-                    lifted.unveil_preferences[strict_state] =
-                        recipe.primitive_preferences;
+            std::optional<SelectedAction> selected;
+            const PlannerOperator* planner = nullptr;
+            const ExactChoiceRecipe* recipe = nullptr;
+            if (!policy_class.terminal) {
+                selected = selected_action(materialize_exact_state(
+                    exact_state, carrier->second));
+                if (!selected.has_value() ||
+                    !policy_class.selected_action.has_value() ||
+                    selected->action_id !=
+                        policy_class.selected_action->action_id ||
+                    selected->semantic_key !=
+                        policy_class.selected_action->semantic_key ||
+                    selected->action_id >=
+                        strict_->operators().size()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "lifted strict member changed its refined "
+                        "planner decision");
                 }
-            } else {
-                lifted.option_unveil_preferences[strict_state] =
-                    recipe.option_preferences;
+                planner = &strict_->operators()[selected->action_id];
+                recipe = &choice_recipe(
+                    exact_state, *selected);
+            }
+            const auto apply_member =
+                [&](const std::uint32_t strict_state) {
+                    if (strict_state >= state_count) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::InvalidSolveState,
+                            "lifted collapsed member exceeds the "
+                            "strict state table");
+                    }
+                    lifted.expanded[strict_state] = 1;
+                    lifted.goal_states[strict_state] =
+                        policy_class.goal ? 1 : 0;
+                    lifted.values[strict_state] =
+                        value_by_class[assignment.class_id];
+                    if (policy_class.terminal) return;
+                    lifted.policy[strict_state] = PolicyOperatorRef{
+                        planner->kind, selected->action_id};
+                    if (planner->kind ==
+                        PlannerOperatorKind::Primitive) {
+                        if (recipe->kind ==
+                            ExactChoiceRecipeKind::
+                                PrimitiveObservedChoice) {
+                            lifted.unveil_preferences[strict_state] =
+                                recipe->primitive_preferences;
+                        }
+                    } else {
+                        lifted.option_unveil_preferences[strict_state] =
+                            recipe->option_preferences;
+                    }
+                };
+            apply_member(carrier->second.strict_state);
+            for (const std::uint32_t equivalent :
+                 carrier->second.equivalent_strict_states) {
+                apply_member(equivalent);
             }
         }
         return lifted;
@@ -3886,7 +4244,7 @@ ExactPolicyRun ProductionPolicyOracle::evaluate_current_policy(
                 "local exact policy root has no strict carrier";
             return run;
         }
-        filtered[found->second.exact.coarse_state].push_back(key);
+        filtered[found->second.coarse_state].push_back(key);
     }
     for (auto& [unused, keys] : filtered) {
         (void)unused;
@@ -3989,7 +4347,8 @@ ExactPolicyRun ProductionPolicyOracle::evaluate_current_policy(
             run.refinement.assignments.begin(),
             run.refinement.assignments.end(),
             [&](const StateClassAssignment& assignment) {
-                return assignment.exact_state == key;
+                return assignment_exact_state(
+                           run.refinement, assignment) == key;
             });
         if (found == run.refinement.assignments.end()) {
             run.evaluation.status =
@@ -4154,7 +4513,8 @@ ExactPolicyRun ProductionPolicyOracle::evaluate_current_policy(
          run.refinement.assignments) {
         saturating_add(
             projected_value_map_bytes,
-            stable_key_bytes(assignment.exact_state));
+            stable_key_bytes(assignment_exact_state(
+                run.refinement, assignment)));
     }
     saturating_add(
         value_construction_bytes,
@@ -4184,7 +4544,7 @@ ExactPolicyRun ProductionPolicyOracle::evaluate_current_policy(
             return run;
         }
         run.value_by_exact.emplace(
-            assignment.exact_state,
+            assignment_exact_state(run.refinement, assignment),
             value_by_class[assignment.class_id]);
     }
     std::uint64_t returned_bytes =
@@ -4208,7 +4568,7 @@ void ProductionPolicyOracle::refresh_strict_resource_cap(
      * publication cap.
      */
     const std::uint64_t strict_owned_bytes =
-        strict_->estimated_owned_bytes();
+        strict_->fast_estimated_owned_bytes();
     const std::uint64_t adapter_owned_bytes =
         estimated_owned_bytes();
     std::uint64_t non_strict_adapter_bytes =
@@ -4255,12 +4615,16 @@ void ProductionPolicyOracle::require_local_memory(
         const char* subject) const {
     std::uint64_t total = estimated_owned_bytes();
     saturating_add(total, caller_owned_bytes);
+    if (total >= limits_.max_estimated_memory_bytes) {
+        total = audit_adapter_owned_bytes();
+        saturating_add(total, caller_owned_bytes);
+    }
     telemetry_.peak_adapter_owned_bytes = std::max(
         telemetry_.peak_adapter_owned_bytes, total);
     if (strict_ != nullptr) {
         telemetry_.strict_calc_owned_bytes = std::max(
             telemetry_.strict_calc_owned_bytes,
-            strict_->estimated_owned_bytes());
+            strict_->fast_estimated_owned_bytes());
     }
     if (total >= limits_.max_estimated_memory_bytes) {
         throw AdapterFailure(
@@ -4269,6 +4633,18 @@ void ProductionPolicyOracle::require_local_memory(
                 " reached max_estimated_memory_bytes",
             "max_estimated_memory_bytes");
     }
+    /*
+     * `caller_owned_bytes` is a live projection for this check, not an
+     * allocation delta.  The same scratch/vector projection is commonly
+     * presented before and after one mutation, so accumulating it would
+     * turn repeated cap checks into fictitious retained ownership.  Keep
+     * the largest unaudited projection as the conservative bridge to the
+     * next exact adapter audit; the periodic audit accounts for everything
+     * that was actually retained.
+     */
+    adapter_memory_projected_growth_bytes_ = std::max(
+        adapter_memory_projected_growth_bytes_,
+        caller_owned_bytes);
 }
 
 void ProductionPolicyOracle::apply_policy_override(
@@ -4331,6 +4707,34 @@ void ProductionPolicyOracle::rollback_policy_mutations(
     }
 }
 
+void ProductionPolicyOracle::release_completed_evaluation_storage(
+        const std::vector<StableKey>& roots) {
+    /*
+     * A repair trial re-evaluates the policy from its roots. The strict
+     * calculation remains the canonical carrier store, so retaining every
+     * adapter-side KnownState from the completed failed evaluation merely
+     * duplicates identities while the next (potentially very large) root
+     * kernel is materialized. Keep only roots and active repair witnesses;
+     * graph discovery deterministically recreates every other carrier needed
+     * by the next evaluation. std::map erasure preserves pointers to the
+     * retained witness nodes held by PolicyMutation.
+     */
+    for (auto known = known_.begin(); known != known_.end();) {
+        const bool root = std::find(
+            roots.begin(), roots.end(), known->first) != roots.end();
+        if (root || repair_carriers_.contains(known->first)) {
+            ++known;
+        } else {
+            known = known_.erase(known);
+        }
+    }
+    std::map<KernelKey, ExactActionKernel>{}.swap(kernels_);
+    adapter_memory_cache_initialized_ = false;
+    adapter_memory_checks_since_audit_ = 0;
+    adapter_memory_cached_non_child_bytes_ = 0;
+    adapter_memory_projected_growth_bytes_ = 0;
+}
+
 std::optional<SelectedAction>
 ProductionPolicyOracle::candidate_selection(
         const StableKey& key,
@@ -4343,13 +4747,13 @@ ProductionPolicyOracle::candidate_selection(
         return std::nullopt;
     }
     const auto known = known_.find(key);
-    if (known == known_.end() || known->second.exact.terminal) {
+    if (known == known_.end() || known->second.terminal) {
         return std::nullopt;
     }
     const std::uint32_t coarse_operator =
         coarse_operator_for(operator_index);
     if (!coarse_.is_candidate_operator_admitted_for_state(
-            known->second.exact.coarse_state,
+            known->second.coarse_state,
             coarse_operator)) {
         return std::nullopt;
     }
@@ -4603,7 +5007,7 @@ ProductionPolicyOracle::candidate_selection(
                 continuation = ExactPolicyRun{};
                 for (const StableKey& root :
                      continuation_roots) {
-                    if (known_.at(root).exact.terminal) {
+                    if (known_.at(root).terminal) {
                         continuation_values.emplace(root, 0.0);
                         continue;
                     }
@@ -4772,7 +5176,7 @@ ProductionPolicyOracle::candidate_selection(
                 "Bellman-greedy exact choice recipe");
         }
         SelectedAction selected = make_selected(
-            known->second.exact.coarse_state,
+            known->second.coarse_state,
             operator_index,
             known->second.strict_state,
             &recipe);
@@ -4807,7 +5211,7 @@ ProductionPolicyOracle::candidate_kernel(
         const SelectedAction& selected) {
     try {
         return &exact_kernel_ref(
-            known_.at(key).exact, selected);
+            materialize_exact_state(key, known_.at(key)), selected);
     } catch (const RefinementOracleResourceLimit& error) {
         throw AdapterFailure(
             PolicyExactLiftStatus::ResourceCap,
@@ -4922,8 +5326,22 @@ ProductionPolicyOracle::partition_candidate_subclasses(
                     carrier_requirement_, *candidate));
         requirement = canonical_observation_requirement(
             std::move(requirement));
+        const KnownState& candidate_carrier =
+            known_.at(member);
+        const AbstractFeatureExtraction candidate_extraction =
+            extract_strict_abstract_features(
+                strict_->session(), strict_->layout(),
+                strict_->state(candidate_carrier.strict_state),
+                requirement);
+        if (!candidate_extraction.complete()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::ObservationUnavailable,
+                "candidate exact subclass lost a required "
+                "observation");
+        }
         const FeatureSignature signature = observe_features(
-            known_.at(member).exact.features, requirement);
+            candidate_extraction.features,
+            requirement);
         auto observation_group = std::find_if(
             observation_groups.begin(),
             observation_groups.end(),
@@ -5185,7 +5603,7 @@ bool ProductionPolicyOracle::shared_bellman_prefers_candidate(
         } else {
             const auto carrier = known_.find(exact);
             if (carrier != known_.end() &&
-                carrier->second.exact.terminal) {
+                carrier->second.terminal) {
                 values[state] = 0.0;
             } else {
                 throw AdapterFailure(
@@ -5292,8 +5710,10 @@ ProductionPolicyOracle::mismatch_witnesses(
     std::set<std::uint32_t> mismatched_classes;
     for (const StateClassAssignment& assignment :
          run.refinement.assignments) {
+        const StableKey& exact_state =
+            assignment_exact_state(run.refinement, assignment);
         const auto value =
-            run.value_by_exact.find(assignment.exact_state);
+            run.value_by_exact.find(exact_state);
         if (value == run.value_by_exact.end() ||
             assignment.coarse_state >= solved_.values.size() ||
             !std::isfinite(
@@ -5316,7 +5736,7 @@ ProductionPolicyOracle::mismatch_witnesses(
             run.root_value(), solved_.evaluated_policy_cost,
             absolute, relative)) {
         affected_parents.insert(
-            known_.at(root_key_).exact.coarse_state);
+            known_.at(root_key_).coarse_state);
     }
 
     std::set<StableKey> witnesses;
@@ -5325,9 +5745,9 @@ ProductionPolicyOracle::mismatch_witnesses(
         [&](const StableKey& key) {
             const auto known = known_.find(key);
             if (known == known_.end() ||
-                known->second.exact.terminal ||
+                known->second.terminal ||
                 !affected_parents.contains(
-                    known->second.exact.coarse_state)) {
+                    known->second.coarse_state)) {
                 return;
             }
             witnesses.insert(key);
@@ -5335,7 +5755,8 @@ ProductionPolicyOracle::mismatch_witnesses(
                 run.refinement.assignments.begin(),
                 run.refinement.assignments.end(),
                 [&](const StateClassAssignment& candidate) {
-                    return candidate.exact_state == key;
+                    return assignment_exact_state(
+                               run.refinement, candidate) == key;
                 });
             if (assignment !=
                 run.refinement.assignments.end()) {
@@ -5370,7 +5791,8 @@ ProductionPolicyOracle::mismatch_witnesses(
                 assignment.class_id) &&
             !covered_classes.contains(
                 assignment.class_id)) {
-            add_witness(assignment.exact_state);
+            add_witness(assignment_exact_state(
+                run.refinement, assignment));
         }
     }
 
@@ -5427,9 +5849,9 @@ ProductionPolicyOracle::reoptimization_seed(
          run.defect_witnesses) {
         const auto known = known_.find(defect);
         if (known != known_.end() &&
-            !known->second.exact.terminal) {
+            !known->second.terminal) {
             seed.coarse_parents.insert(
-                known->second.exact.coarse_state);
+                known->second.coarse_state);
         }
     }
     const std::set<StableKey> mismatches =
@@ -5439,9 +5861,9 @@ ProductionPolicyOracle::reoptimization_seed(
     for (const StableKey& mismatch : mismatches) {
         const auto known = known_.find(mismatch);
         if (known != known_.end() &&
-            !known->second.exact.terminal) {
+            !known->second.terminal) {
             seed.coarse_parents.insert(
-                known->second.exact.coarse_state);
+                known->second.coarse_state);
         }
     }
     for (const RefinementCounterexample& counterexample :
@@ -5465,11 +5887,11 @@ bool ProductionPolicyOracle::note_missing_candidate_vocabulary(
         const StableKey& key) {
     const auto known = known_.find(key);
     if (known == known_.end() ||
-        known->second.exact.terminal) {
+        known->second.terminal) {
         return false;
     }
     const std::uint32_t parent =
-        known->second.exact.coarse_state;
+        known->second.coarse_state;
     for (const std::uint32_t coarse_operator :
          coarse_.candidate_operators()) {
         if (!coarse_.is_candidate_operator_admitted_for_state(
@@ -5492,7 +5914,8 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
         std::set<StableKey>& repairing,
         std::vector<PolicyMutation>& mutations,
         const std::uint32_t depth,
-        const std::uint64_t caller_retained_bytes) {
+        const std::uint64_t caller_retained_bytes,
+        const bool evaluate_before_repair) {
     if (depth >= limits_.max_refinement_rounds) {
         throw AdapterFailure(
             PolicyExactLiftStatus::ResourceCap,
@@ -5503,16 +5926,18 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
     consume_refinement_rounds(
         1, "local exact policy repair");
     ++telemetry_.local_reoptimization_rounds;
-    repaired = ExactPolicyRun{};
-    std::uint64_t retained = caller_retained_bytes;
-    saturating_add(retained, stable_keys_bytes(roots));
-    saturating_add(retained, stable_key_set_bytes(repairing));
-    saturating_add(
-        retained, policy_mutations_bytes(mutations));
-    require_local_memory(
-        retained,
-        "local exact repair worklist");
-    repaired = evaluate_current_policy(roots, retained);
+    if (evaluate_before_repair) {
+        repaired = ExactPolicyRun{};
+        std::uint64_t retained = caller_retained_bytes;
+        saturating_add(retained, stable_keys_bytes(roots));
+        saturating_add(retained, stable_key_set_bytes(repairing));
+        saturating_add(
+            retained, policy_mutations_bytes(mutations));
+        require_local_memory(
+            retained,
+            "local exact repair worklist");
+        repaired = evaluate_current_policy(roots, retained);
+    }
     if (repaired.complete) return true;
     if (repaired.refinement.status ==
         RefinementStatus::ResourceCap) {
@@ -5533,12 +5958,23 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
     for (const StableKey& defect : repaired.defect_witnesses) {
         const auto witness_carrier = known_.find(defect);
         if (witness_carrier == known_.end() ||
-            witness_carrier->second.exact.terminal) {
+            witness_carrier->second.terminal) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::InvalidSolveState,
                 "local policy defect has no non-terminal exact carrier");
         }
         defect_keys.push_back(&witness_carrier->first);
+        if (!repair_carriers_.contains(witness_carrier->first)) {
+            std::uint64_t projected =
+                sizeof(StableKey) + 3 * sizeof(void*);
+            saturating_add(
+                projected,
+                stable_key_bytes(witness_carrier->first));
+            require_local_memory(
+                projected, "local exact repair carrier");
+            repair_carriers_.insert(witness_carrier->first);
+            adapter_memory_cache_initialized_ = false;
+        }
     }
     std::uint64_t transaction_retained =
         caller_retained_bytes;
@@ -5562,7 +5998,8 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
                 return false;
             }
             std::optional<SelectedAction> current =
-                selected_action(known_.at(witness).exact);
+                selected_action(materialize_exact_state(
+                    witness, known_.at(witness)));
             const StableKey current_semantic =
                 current.has_value()
                     ? current->semantic_key
@@ -5604,10 +6041,13 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
                     require_local_memory(
                         mutation_live,
                         "local exact repair transaction");
-                    if (repair_invalid_policy_recursive(
+                    release_completed_evaluation_storage(roots);
+                    const bool repaired_candidate =
+                        repair_invalid_policy_recursive(
                             roots, repaired, repairing,
                             mutations, depth + 1,
-                            transaction_retained)) {
+                            transaction_retained);
+                    if (repaired_candidate) {
                         repairing.erase(witness);
                         return true;
                     }
@@ -5629,16 +6069,16 @@ bool ProductionPolicyOracle::repair_invalid_policy_recursive(
 }
 
 ExactPolicyRun ProductionPolicyOracle::repair_invalid_policy() {
+    repair_carriers_.clear();
     ExactPolicyRun repaired = evaluate_current_policy({root_key_});
     if (repaired.complete) return repaired;
     if (repaired.defect_witnesses.empty()) return repaired;
-    repaired = ExactPolicyRun{};
     std::set<StableKey> repairing;
     std::vector<PolicyMutation> mutations;
     const std::vector<StableKey> roots{root_key_};
     if (repair_invalid_policy_recursive(
             roots, repaired, repairing,
-            mutations, 0, 0)) {
+            mutations, 0, 0, false)) {
         saturating_add(
             telemetry_.local_reoptimizations,
             mutations.size());
@@ -5666,6 +6106,7 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
     if (!incumbent.complete) return incumbent;
 
     for (;;) {
+        try {
         consume_refinement_rounds(
             1, "local exact policy improvement");
         ++telemetry_.local_reoptimization_rounds;
@@ -5675,9 +6116,9 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
              mismatch_witnesses(incumbent)) {
             const auto known = known_.find(mismatch);
             if (known != known_.end() &&
-                !known->second.exact.terminal) {
+                !known->second.terminal) {
                 affected_parents.insert(
-                    known->second.exact.coarse_state);
+                    known->second.coarse_state);
             }
         }
         if (affected_parents.empty()) break;
@@ -5736,7 +6177,8 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
                     }
                     std::optional<SelectedAction> current =
                         selected_action(
-                            known_.at(witness).exact);
+                            materialize_exact_state(
+                                witness, known_.at(witness)));
                     const auto candidate =
                         candidate_partition
                             .candidate_by_exact.find(witness);
@@ -5893,6 +6335,19 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
             if (accepted) break;
         }
         if (!accepted) break;
+        } catch (const AdapterFailure& error) {
+            if (error.status ==
+                PolicyExactLiftStatus::ResourceCap) {
+                /*
+                 * Candidate search is optional once a complete, proper exact
+                 * incumbent exists. A declared cap ends further improvement
+                 * but cannot invalidate that already evaluated executable
+                 * policy; the publication layer exposes it as bounded.
+                 */
+                return incumbent;
+            }
+            throw;
+        }
     }
     return incumbent;
 }
@@ -6373,7 +6828,8 @@ PolicyExactLiftCertificate lift_policy_exact(
                 }
                 for (const StateClassAssignment& assignment :
                      certificate.refinement.assignments) {
-                    if (assignment.exact_state ==
+                    if (assignment_exact_state(
+                            certificate.refinement, assignment) ==
                         certificate.exact_root_key) {
                         certificate.root_refinement_class =
                             assignment.class_id;
@@ -6404,9 +6860,22 @@ PolicyExactLiftCertificate lift_policy_exact(
                         certificate.class_evaluation);
             };
 
-        ExactPolicyRun lift_policy;
         ReoptimizationSeed reoptimization_seed;
-        {
+        if (solved.diagnostics.policy_refinement.triggers != 0) {
+            reoptimization_seed.coarse_parents.insert(
+                solved.diagnostics.policy_refinement
+                    .trigger_coarse_states.begin(),
+                solved.diagnostics.policy_refinement
+                    .trigger_coarse_states.end());
+            if (reoptimization_seed.coarse_parents.empty() &&
+                solved.diagnostics.policy_compatibility_state !=
+                    kNoId) {
+                reoptimization_seed.coarse_parents.insert(
+                    solved.diagnostics.policy_compatibility_state);
+            }
+        }
+        ExactPolicyRun lift_policy;
+        if (reoptimization_seed.empty()) {
             /*
              * Pass one is the minimum selected-policy carrier. It cannot
              * grow support for an unused alternative merely because that
@@ -6419,9 +6888,27 @@ PolicyExactLiftCertificate lift_policy_exact(
             lift_policy = oracle.evaluate_fixed_policy();
             reoptimization_seed =
                 oracle.reoptimization_seed(lift_policy);
-            if (reoptimization_seed.empty()) {
+            const std::uint64_t spent_reforge = std::min(
+                lift_telemetry.strict_reforge_work,
+                options.max_reforge_work);
+            const std::uint64_t remaining_reforge =
+                options.max_reforge_work - spent_reforge;
+            const bool optional_rebuild_unbudgeted =
+                lift_policy.complete &&
+                !reoptimization_seed.empty() &&
+                spent_reforge > remaining_reforge;
+            if (reoptimization_seed.empty() ||
+                optional_rebuild_unbudgeted) {
+                /*
+                 * A complete fixed policy is already a valid bounded
+                 * incumbent. Do not spend a smaller residual budget on a
+                 * second adapter whose only purpose is optional improvement;
+                 * retain the two-pass path whenever at least half of the
+                 * declared reforge work remains.
+                 */
                 finalize(
                     oracle, std::move(lift_policy));
+                reoptimization_seed = {};
             }
         }
         while (!reoptimization_seed.empty() &&

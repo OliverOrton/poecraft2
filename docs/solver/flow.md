@@ -13,10 +13,21 @@ solver C ABI, native solve lifecycle, policy compilation, exact graph
 evaluation, and sampled verification. No rendered review or mechanic ruling
 was performed.
 
-The policy-guided refinement steps below define the selected native
-publication contract. Their portfolio qualification remains owned by the
-[active boundary](../active/policy-guided-exact-refinement.md); this page does
-not claim its final availability or refusal counts.
+Qualification addendum: source inspection and focused native tests on
+2026-07-31 verified the shared publication steps through observation
+propagation, but the required natural two-goal case stopped before its first
+closed-partition class at the unchanged 1 GiB cap. Release WASM and full
+cross-layer acceptance were not rerun.
+
+The policy-guided refinement steps below define the retained native
+publication authority. Its reconstruct-then-merge production path stopped at
+the archived
+[two-goal 1 GiB qualification gate](../archive/2026-07-31-policy-guided-exact-refinement/README.md),
+so this page does not claim broad availability or changed refusal counts. The
+separate
+[active structural boundary](../active/proof-carrying-quotient-refinement.md)
+will integrate the same authority during solving; implementation has not
+begun.
 
 ## Purpose
 

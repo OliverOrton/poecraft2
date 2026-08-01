@@ -28,12 +28,19 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The active implementation boundary is
-[Policy-Guided Exact State Refinement](active/policy-guided-exact-refinement.md).
-It converts policy-reachable coarse solutions into exact executable strategy
-regions through one engine-owned observation contract, deterministic
-lumpability refinement, and witness-local Bellman re-optimization. It does not
-start the deferred executable-anchor library.
+The selected structural implementation boundary is
+[Proof-Carrying Quotient Refinement During Solving](active/proof-carrying-quotient-refinement.md).
+Implementation has not begun. It will retain certified quotient transitions
+during solve and feed counterexamples from the existing shared partition back
+into policy improvement, without changing mechanics, action filtering,
+strategy format, or the 1 GiB cap.
+
+The archived
+[Policy-Guided Exact Refinement qualification](archive/2026-07-31-policy-guided-exact-refinement/README.md)
+retains the shared exact contract/evaluation/compiler foundation. Its final
+two-goal run stopped before partition initialization at `1,089,111,449` bytes
+under the unchanged `1,073,741,824`-byte cap, so reconstruct-then-merge is
+classified as a correctness bridge rather than the scalable endpoint.
 
 The completed
 [Cross-Base And Compiled-Strategy Reliability Pass](archive/2026-07-30-cross-base-strategy-reliability/README.md)

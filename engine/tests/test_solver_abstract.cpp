@@ -696,7 +696,12 @@ void run_refinement_contract_tests(const SessionImpl& session) {
     /* Observation declarations and exact calculator capability are admitted
      * together. Copying a valid offer contract onto a deterministic mechanic
      * is rejected before planner construction. */
-    ActionDescriptor mismatched_offer = descriptor("unveil");
+    SessionImpl offer_session = session;
+    offer_session.veiled_prefix_mod_id = 0;
+    const ActionRegistry offer_registry =
+        build_action_registry(offer_session);
+    ActionDescriptor mismatched_offer = offer_registry.actions.at(
+        offer_registry.index_by_id.at("unveil"));
     mismatched_offer.id = "test:mismatched_modifier_offer";
     mismatched_offer.params.type = ActionType::Bench;
     rejected = false;
