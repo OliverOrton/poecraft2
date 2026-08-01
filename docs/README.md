@@ -29,19 +29,20 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected enabling implementation boundary is
-[Solver Iteration Infrastructure And Decomposition](active/solver-iteration-infrastructure.md).
-Gate 0 is frozen. It establishes the canonical fast native workflow and
-decomposes oversized solver sources/private contracts without changing solver
-behavior.
-
-The queued algorithmic boundary remains
+The selected implementation boundary is
 [Proof-Carrying Quotient Refinement During Solving](active/proof-carrying-quotient-refinement.md).
-Its plan is unchanged and resumes immediately after the enabling milestone.
+Its plan remains unchanged after the completed enabling milestone.
 It will retain certified quotient transitions during solve and feed
 counterexamples from the existing shared partition back into policy
 improvement, without changing mechanics, action filtering, strategy format,
 or the 1 GiB cap.
+
+The archived
+[Solver Iteration Infrastructure And Decomposition](archive/2026-08-01-solver-iteration-infrastructure/README.md)
+established the canonical Ninja/CTest workflow, one engine source inventory,
+solver responsibility/header decomposition, the internal architecture map,
+measured header fan-out, and incremental Emscripten builds. Replay remains
+intentionally deferred until quotient representation stabilizes.
 
 The archived
 [Policy-Guided Exact Refinement qualification](archive/2026-07-31-policy-guided-exact-refinement/README.md)

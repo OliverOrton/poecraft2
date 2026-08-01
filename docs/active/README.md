@@ -1,21 +1,20 @@
 # Active Work
 
-**Status: one enabling implementation plan is selected; its build workflow and
-mechanical decomposition are complete, with measured audits remaining.**
+**Status: proof-carrying quotient refinement is the selected implementation
+boundary.**
 
 Parent: [Documentation map](../README.md)
 
 Current boundary:
-[Solver Iteration Infrastructure And Decomposition](solver-iteration-infrastructure.md).
-It establishes the canonical Ninja development path, focused native testing,
-one engine source inventory, coherent solver source/header ownership, measured
-header fan-out, and an evidence-backed incremental WASM decision without
-changing solver behavior.
-
-The selected algorithmic boundary remains
 [Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
-Its plan is unchanged and resumes immediately after the enabling milestone is
-archived. It is not implemented, completed, or superseded.
+Its plan is unchanged. It is not implemented, completed, or superseded.
+
+The completed
+[Solver Iteration Infrastructure And Decomposition](../archive/2026-08-01-solver-iteration-infrastructure/README.md)
+established the canonical fast native/WASM development paths, focused testing,
+one engine source inventory, and coherent solver source/header ownership before
+this algorithmic work. Replay remains deferred until quotient representation
+stabilizes.
 
 The preceding
 [Policy-Guided Exact Refinement qualification](../archive/2026-07-31-policy-guided-exact-refinement/README.md)

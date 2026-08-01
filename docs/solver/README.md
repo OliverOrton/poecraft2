@@ -32,6 +32,14 @@ authorities were rechecked on 2026-07-31 from source base `acb9c975` with
 then stopped before partition initialization at the unchanged 1 GiB cap. This
 addendum does not claim the native portfolio, release WASM, or full pipeline.
 
+Iteration-infrastructure addendum: on 2026-08-01 the private solver owners and
+phase headers were mechanically decomposed, the release WASM was rebuilt, and
+the complete native/web/pipeline acceptance passed without changing the public
+or algorithmic contracts described here. File ownership now follows
+[Solver Internals And Source Ownership](../foundation/solver-internals.md).
+The measured evidence is archived with the
+[completed milestone](../archive/2026-08-01-solver-iteration-infrastructure/README.md).
+
 The action-observation and policy-guided refinement sections below are the
 implemented shared authority retained by the
 [2026-07-31 qualification stop](../archive/2026-07-31-policy-guided-exact-refinement/README.md).

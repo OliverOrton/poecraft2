@@ -9,6 +9,14 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-01
+
+- [Solver Iteration Infrastructure And Decomposition](2026-08-01-solver-iteration-infrastructure/README.md) —
+  established the canonical Ninja/CTest and incremental Emscripten workflows,
+  one engine source inventory, coherent solver source/header ownership, honest
+  fan-out evidence, and the stable internal routing map without changing solver
+  behavior; replay remains deferred until quotient representation stabilizes.
+
 ## 2026-07-31
 
 - [Policy-Guided Exact Refinement Qualification Stop](2026-07-31-policy-guided-exact-refinement/README.md) —

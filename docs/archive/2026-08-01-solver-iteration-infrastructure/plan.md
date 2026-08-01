@@ -1,6 +1,7 @@
 # Solver Iteration Infrastructure And Decomposition
 
-**Status: Gates 0-4 complete; final reporting and archival are next.**
+**Status: completed and archived; proof-carrying quotient refinement is the
+unchanged current implementation milestone.**
 
 Owner: Oliver
 
@@ -8,10 +9,10 @@ Branch: `codex/solver-iteration-infrastructure`
 
 Starting commit: `f1ad2a2ab32d948b11758972aafb198cee9ea483`
 
-Parent: [Active work](README.md)
+Parent: [Archived milestone](README.md)
 
 Queued algorithmic milestone:
-[Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
+[Proof-Carrying Quotient Refinement During Solving](../../active/proof-carrying-quotient-refinement.md).
 That plan remains unchanged and resumes immediately after this enabling work.
 
 ## Objective
@@ -236,7 +237,7 @@ independent resolution, reporting, condition, and serialization work moved out.
 Leaf implementations now include the narrowest correct private phase header.
 The broad `solver_internal.hpp` umbrella remains only in the cross-phase solver
 API and broad native tests. The stable
-[solver internals map](../foundation/solver-internals.md) documents phases,
+[solver internals map](../../foundation/solver-internals.md) documents phases,
 representations, edit routing, and exactness/lifetime invariants. No public ABI,
 algorithm, ordering, mechanics, cap, strategy vocabulary, or frontend contract
 was changed.
