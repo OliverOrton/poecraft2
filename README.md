@@ -7,7 +7,7 @@ client-side product.
 
 Start with the [documentation map](docs/README.md), then read
 [project direction](docs/direction.md). [HANDOFF](HANDOFF.md) names the current
-implementation boundary when one exists; there is no active chunk at present.
+implementation boundary when one exists.
 
 ## Quickstart
 
@@ -16,6 +16,21 @@ Build the native engine:
 ```powershell
 powershell -File scripts/build.ps1
 ```
+
+For focused native development, use the incremental Ninja wrapper:
+
+```powershell
+powershell -File scripts/dev-engine.ps1 -Task Engine
+powershell -File scripts/dev-engine.ps1 -Task Test -Suite refinement
+powershell -File scripts/dev-engine.ps1 -Task TestAll
+powershell -File scripts/dev-engine.ps1 -Task BenchmarkValidate
+```
+
+`dev-engine.ps1` also supports `Configure`, `Tests`, `Benchmark`, `Full`,
+`RerunFailed`, and the explicitly destructive `CleanRebuild` task. It uses the
+checked-in UCRT64 GCC/Ninja Release preset and optional ccache when installed.
+The canonical engine translation-unit inventory is
+`engine/engine-sources.txt`.
 
 Run the full acceptance pipeline:
 

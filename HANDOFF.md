@@ -1,8 +1,9 @@
 # Session Handoff
 
 **Status: solver iteration infrastructure is the active enabling boundary.
-Gate 0 is frozen and implementation has not begun. Proof-carrying quotient
-refinement remains the unchanged next algorithmic milestone.**
+Gate 1 is complete and the mechanical solver decomposition is next.
+Proof-carrying quotient refinement remains the unchanged next algorithmic
+milestone.**
 
 Current plan:
 [Solver Iteration Infrastructure And Decomposition](docs/active/solver-iteration-infrastructure.md).
@@ -72,13 +73,31 @@ Starting internal-header fan-out from Ninja dependencies:
   `3e5d7530e7aed5fb`; compiled strategy SHA-256
   `e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e`.
 
+## Gate 1 completed
+
+- One source inventory: `engine/engine-sources.txt`.
+- Checked-in preset: `engine/CMakePresets.json`.
+- Focused wrapper: `scripts/dev-engine.ps1`.
+- `scripts/build.ps1` discovers the installed CMake/Ninja paths and uses the
+  fast preset; direct g++ emits a prominent fallback warning.
+- Ten non-overlapping native CTest entries: 35.872 s serial versus 12.434 s
+  parallel (65.3% wall reduction).
+- Current wrapper no-op: 0.393 s. Fresh all-target Ninja build: 22.813 s.
+  Fresh engine-only build: 14.223 s.
+- ccache 4.10.2 A -> B -> A: 15.660 s initial population, 9.697 s changed leaf,
+  0.299 s direct-hit return to A. Optional absent-safe integration retained.
+- Focused refinement modes remain green at 301 and 4,829 checks. Benchmark
+  validation remains green at 12 specs.
+
 ## Exact next step
 
-Commit this plan/HANDOFF boundary with the required co-author line, then
-implement Gate 1 only: canonical source inventory, checked-in Ninja preset,
-focused wrapper, installed-tool discovery/fallback warning, non-overlapping
-CTest organization, build/test measurements, and the measured ccache decision.
-Commit Gate 1 separately before source decomposition.
+Commit Gate 1 independently, then implement Gate 2: inventory the actual
+responsibility/type/function seams in the five oversized sources and private
+header, mechanically move definitions/contracts into coherent owners, keep
+ordering/linkage/lifetimes/evaluation order unchanged, update the canonical
+source inventory and architecture documentation, and use only narrow compile
+checks while moving. Commit that decomposition independently before the final
+fan-out/WASM audits.
 
 Do not implement proof-carrying quotient refinement, replay/checkpoint,
 mechanics, new action filtering, solver mathematics, memory-cap changes, C ABI,

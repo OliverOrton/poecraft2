@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/engine-build-common.ps1"
 
 if (-not $EmsdkRoot) {
     $EmsdkRoot = if ($env:EMSDK) { $env:EMSDK } else { "C:\emsdk" }
@@ -41,8 +42,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Harvest craft allowlist generation failed with exit code $LASTEXITCODE."
 }
 
-$EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
-    ForEach-Object { $_.FullName }
+$EngineSources = Get-PoeCraftEngineSources -Root $Root
 $Facade = Join-Path $Root "bindings/wasm/wasm_api.cpp"
 
 $Exported = @(

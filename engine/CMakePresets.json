@@ -1,0 +1,59 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ucrt64-ninja-release",
+      "displayName": "UCRT64 GCC Release (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../build/engine",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_MAKE_PROGRAM": "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "all-native",
+      "configurePreset": "ucrt64-ninja-release"
+    },
+    {
+      "name": "engine-only",
+      "configurePreset": "ucrt64-ninja-release",
+      "targets": ["poecraft_engine"]
+    },
+    {
+      "name": "tests-only",
+      "configurePreset": "ucrt64-ninja-release",
+      "targets": ["poecraft_header_smoke", "poecraft_engine_tests"]
+    },
+    {
+      "name": "benchmark-only",
+      "configurePreset": "ucrt64-ninja-release",
+      "targets": ["poecraft_solver_benchmark"]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "native",
+      "configurePreset": "ucrt64-ninja-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "label": "native"
+        }
+      }
+    }
+  ]
+}

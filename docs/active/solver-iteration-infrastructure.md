@@ -1,7 +1,6 @@
 # Solver Iteration Infrastructure And Decomposition
 
-**Status: selected enabling milestone; Gate 0 frozen, implementation has not
-begun.**
+**Status: Gate 1 complete; Gate 2 mechanical decomposition is next.**
 
 Owner: Oliver
 
@@ -153,6 +152,38 @@ will record the after counts and representative measured rebuilds.
    useful; otherwise record the negative result.
 
 Commit this gate independently.
+
+### Gate 1 result
+
+Completed on 2026-08-01:
+
+- `engine/engine-sources.txt` is the single translation-unit inventory for
+  CMake, the native fallback, and WASM. Both CMake and PowerShell reject drift.
+- `engine/CMakePresets.json` pins Ninja, UCRT64 GCC, Release optimization,
+  compile commands, and the established `build/engine` output directory.
+- `scripts/dev-engine.ps1` implements every requested focused workflow;
+  `scripts/build.ps1` discovers the installed tools outside `PATH` and warns
+  prominently before fallback.
+- CTest now partitions the prior monolithic invocation into ten non-overlapping
+  native entries (header smoke, core, and eight solver owners). Serial execution
+  took 35.872 s; parallel execution took 12.434 s, a 65.3% wall reduction. The
+  focused policy/refinement subsets remain direct modes and are not duplicated
+  in the all-native set.
+- The canonical wrapper no-op engine build took 0.393 s including PowerShell
+  startup and Ninja's inventory check. The fresh pre-change all-target build
+  took 22.813 s and the engine-only build after infrastructure configuration
+  took 14.223 s, both below the 60 s qualification limit.
+- MSYS2 package `mingw-w64-ucrt-x86_64-ccache` 4.10.2 was installed under the
+  prompt's explicit authorization. With the exact Release command containing
+  `-O3 -DNDEBUG -ffp-contract=off`, the deterministic A -> B -> A probe measured
+  15.660 s initial cache population, 9.697 s for the B leaf edit/relink, and
+  0.299 s returning to A. The probe was 100% cacheable; its final A lookup was a
+  direct hit. The A/B/A probe hit rate was 1/3, while the full initial population
+  explains the displayed cumulative 1/34 rate. Optional integration is retained
+  because it materially improves branch-return builds and is absent-safe.
+
+No PCH, unity build, alternate linker, fallback timing run, solver behavior, or
+public contract change was introduced.
 
 ## Gate 2 - mechanical solver subsystem decomposition
 

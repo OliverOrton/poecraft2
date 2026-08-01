@@ -3,6 +3,7 @@ param()
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+. "$PSScriptRoot/engine-build-common.ps1"
 
 function Get-PoeCraftPython {
     if ($env:POECRAFT_PYTHON) {
@@ -48,24 +49,49 @@ if ($LASTEXITCODE -ne 0) {
     throw "Harvest craft allowlist generation failed with exit code $LASTEXITCODE."
 }
 
-$CMake = Get-Command cmake -ErrorAction SilentlyContinue
-if ($CMake) {
-    & $CMake.Source -S "$Root/engine" -B "$Root/build/engine" -DBUILD_TESTING=ON
+$CMake = Find-PoeCraftCMake
+$Ninja = Find-PoeCraftNinja
+if ($CMake -and $Ninja) {
+    $Ccache = Find-PoeCraftCcache
+    $ConfigureArgs = @("--preset", "ucrt64-ninja-release")
+    if ($Ccache) {
+        Write-Host "Using optional compiler cache: $Ccache"
+        $CcacheCMakePath = $Ccache.Replace("\", "/")
+        $ConfigureArgs += "-DCMAKE_C_COMPILER_LAUNCHER=$CcacheCMakePath"
+        $ConfigureArgs += "-DCMAKE_CXX_COMPILER_LAUNCHER=$CcacheCMakePath"
+    }
+    else {
+        $ConfigureArgs += "-DCMAKE_C_COMPILER_LAUNCHER="
+        $ConfigureArgs += "-DCMAKE_CXX_COMPILER_LAUNCHER="
+    }
+    Push-Location "$Root/engine"
+    try {
+        & $CMake @ConfigureArgs
+    }
+    finally {
+        Pop-Location
+    }
     if ($LASTEXITCODE -ne 0) {
         throw "CMake configure failed with exit code $LASTEXITCODE."
     }
-    & $CMake.Source --build "$Root/build/engine" --config Release
+    & $CMake --build "$Root/build/engine" --parallel
     if ($LASTEXITCODE -ne 0) {
         throw "CMake build failed with exit code $LASTEXITCODE."
     }
 }
 else {
-    $Compiler = Get-Command g++,clang++ -ErrorAction SilentlyContinue |
-        Select-Object -First 1
+    Write-Warning @"
+FAST CMAKE/NINJA PATH UNAVAILABLE.
+Falling back to direct g++ commands that recompile every engine source for
+each output. This path is intentionally retained for portability but is not
+the normal development workflow. Use scripts/dev-engine.ps1 when the checked
+toolchain is installed.
+"@
+    $Compiler = Find-PoeCraftCompiler
     if ($Compiler) {
         $BuildDirectory = "$Root/build/engine"
         New-Item -ItemType Directory -Force -Path $BuildDirectory | Out-Null
-        & $Compiler.Source `
+        & $Compiler `
             -std=c++20 `
             "-I$Root/engine/include" `
             "$Root/engine/tests/header_smoke.cpp" `
@@ -74,8 +100,7 @@ else {
             throw "C++ header smoke build failed with exit code $LASTEXITCODE."
         }
 
-        $EngineSources = Get-ChildItem -Path "$Root/engine/src" -Filter *.cpp |
-            ForEach-Object { $_.FullName }
+        $EngineSources = Get-PoeCraftEngineSources -Root $Root
         $TestSources = @(
             "$Root/engine/tests/test_main.cpp",
             "$Root/engine/tests/test_bitset.cpp",
@@ -100,7 +125,7 @@ else {
         # in MSYS2 ucrt64 binutils when linking the shared C++ runtime against
         # exception-bearing COMDAT sections. They also make the test binary
         # self-contained. CMake/MSVC builds do not need this.
-        & $Compiler.Source `
+        & $Compiler `
             -std=c++20 -O2 -ffp-contract=off `
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
@@ -112,7 +137,7 @@ else {
             throw "C++ engine test build failed with exit code $LASTEXITCODE."
         }
 
-        & $Compiler.Source `
+        & $Compiler `
             -std=c++20 -O2 -ffp-contract=off -shared `
             -static-libstdc++ -static-libgcc `
             "-Wl,--export-all-symbols" `
@@ -132,7 +157,7 @@ else {
         if ($env:OS -eq "Windows_NT") {
             $BenchmarkSystemLibraries += "-lpsapi"
         }
-        & $Compiler.Source `
+        & $Compiler `
             -std=c++20 -O2 -ffp-contract=off `
             -static-libstdc++ -static-libgcc `
             "-I$Root/engine/include" `
@@ -145,7 +170,7 @@ else {
         if ($LASTEXITCODE -ne 0) {
             throw "C++ solver benchmark build failed with exit code $LASTEXITCODE."
         }
-        $CompilerDirectory = Split-Path -Parent $Compiler.Source
+        $CompilerDirectory = Split-Path -Parent $Compiler
         $WinPthread = Join-Path $CompilerDirectory "libwinpthread-1.dll"
         if (Test-Path $WinPthread) {
             Copy-Item -Force $WinPthread $BuildDirectory

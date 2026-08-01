@@ -110,15 +110,19 @@ provider adapter + economy schema/catalogs
 
 Run `powershell -File scripts/build.ps1` after native source/header changes.
 The script compiles the ingest and economy Python packages, regenerates the
-Harvest allowlist header, then configures/builds the CMake targets when CMake is
-available. CMake builds the object library, static/shared engines, tests, and
-solver benchmark.
+Harvest allowlist header, discovers the installed Visual Studio CMake/Ninja
+tools even when they are absent from `PATH`, then configures/builds the checked
+UCRT64 GCC Release preset. CMake builds the object library, static/shared
+engines, tests, and solver benchmark. A prominent direct-g++ fallback remains
+for portability, but it recompiles all sources and is not the development path.
 
-Native source discovery has three paths: `engine/CMakeLists.txt` is an explicit
-per-file list, while `scripts/build.ps1` and `scripts/build-wasm.ps1` use
-non-recursive top-level `engine/src/*.cpp` globs. Adding, moving, or nesting a
-translation unit must update/verify all three; a nested source directory is not
-covered by either PowerShell glob automatically.
+Native and WASM source discovery has one owner:
+`engine/engine-sources.txt`. CMake, `scripts/build.ps1`, and
+`scripts/build-wasm.ps1` consume that inventory and reject missing, duplicate,
+or unlisted translation units. Add, move, or remove an engine translation unit
+there once. `scripts/dev-engine.ps1` exposes incremental engine-only,
+tests-only, benchmark-only, selected-suite, parallel native CTest,
+benchmark-validation, rerun-failed, and explicit clean-rebuild workflows.
 
 ### Compiled game data
 

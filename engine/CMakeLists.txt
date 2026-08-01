@@ -46,41 +46,41 @@ target_include_directories(poecraft_headers INTERFACE "${CMAKE_CURRENT_SOURCE_DI
 target_compile_features(poecraft_headers INTERFACE cxx_std_20)
 
 # Build the core once, then expose both a static library for native tests and a
-# shared C ABI library for Python/WASM-facing bindings.
-add_library(poecraft_engine_objects OBJECT
-    src/api.cpp
-    src/bitset.cpp
-    src/data_loader.cpp
-    src/item_state.cpp
-    src/rng.cpp
-    src/session_builder.cpp
-    src/actions_basic.cpp
-    src/actions_bestiary.cpp
-    src/bestiary_api.cpp
-    src/simulator.cpp
-    src/solver_registry.cpp
-    src/solver_abstract.cpp
-    src/solver_calc.cpp
-    src/solver_reforge.cpp
-    src/solver_options.cpp
-    src/solver_solve.cpp
-    src/solver_solve_expand.cpp
-    src/solver_solve_incremental.cpp
-    src/solver_solve_audit.cpp
-    src/solver_sparse_policy.cpp
-    src/solver_solve_bellman.cpp
-    src/solver_solve_focused.cpp
-    src/solver_solve_constructive.cpp
-    src/solver_solve_heuristics.cpp
-    src/solver_solve_quotient.cpp
-    src/solver_solve_finish.cpp
-    src/solver_solve_telemetry.cpp
-    src/solver_refinement.cpp
-    src/solver_policy_refinement.cpp
-    src/solver_compile.cpp
-    src/solver_eval.cpp
-    src/solver_api.cpp
-)
+# shared C ABI library for Python/WASM-facing bindings. The text inventory is
+# also consumed by the PowerShell native fallback and the WASM build.
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/engine-sources.txt"
+    POECRAFT_ENGINE_SOURCE_ENTRIES)
+set(POECRAFT_ENGINE_SOURCES "")
+foreach(SOURCE_ENTRY IN LISTS POECRAFT_ENGINE_SOURCE_ENTRIES)
+    string(STRIP "${SOURCE_ENTRY}" SOURCE_ENTRY)
+    if(SOURCE_ENTRY STREQUAL "" OR SOURCE_ENTRY MATCHES "^#")
+        continue()
+    endif()
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_ENTRY}")
+        message(FATAL_ERROR
+            "Engine source inventory entry does not exist: ${SOURCE_ENTRY}")
+    endif()
+    list(APPEND POECRAFT_ENGINE_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_ENTRY}")
+endforeach()
+list(LENGTH POECRAFT_ENGINE_SOURCES POECRAFT_ENGINE_SOURCE_COUNT)
+list(REMOVE_DUPLICATES POECRAFT_ENGINE_SOURCES)
+list(LENGTH POECRAFT_ENGINE_SOURCES POECRAFT_UNIQUE_ENGINE_SOURCE_COUNT)
+if(NOT POECRAFT_ENGINE_SOURCE_COUNT EQUAL POECRAFT_UNIQUE_ENGINE_SOURCE_COUNT)
+    message(FATAL_ERROR "engine-sources.txt contains duplicate entries")
+endif()
+
+file(GLOB_RECURSE POECRAFT_DISCOVERED_ENGINE_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+set(POECRAFT_SORTED_ENGINE_SOURCES ${POECRAFT_ENGINE_SOURCES})
+list(SORT POECRAFT_SORTED_ENGINE_SOURCES)
+list(SORT POECRAFT_DISCOVERED_ENGINE_SOURCES)
+if(NOT POECRAFT_SORTED_ENGINE_SOURCES STREQUAL POECRAFT_DISCOVERED_ENGINE_SOURCES)
+    message(FATAL_ERROR
+        "engine-sources.txt must contain every engine/src translation unit exactly once")
+endif()
+
+add_library(poecraft_engine_objects OBJECT ${POECRAFT_ENGINE_SOURCES})
 set_target_properties(poecraft_engine_objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
 target_include_directories(poecraft_engine_objects
@@ -157,14 +157,67 @@ if(BUILD_TESTING)
         target_link_options(poecraft_engine_tests PRIVATE
             -static-libstdc++ -static-libgcc)
     endif()
-    # Pass the compiled artifact dir and spec fixtures dir so the data-loader
-    # and session-builder suites run.
-    add_test(
-        NAME poecraft_engine_tests
-        COMMAND poecraft_engine_tests
-            "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/spec"
-    )
+    set(POECRAFT_COMPILED_ARTIFACT
+        "${CMAKE_CURRENT_SOURCE_DIR}/../data/compiled/current")
+    set(POECRAFT_SPEC_FIXTURES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../fixtures/spec")
+
+    # These entries partition the monolithic test executable without overlap,
+    # so CTest can obtain real process-level parallelism. Focused subset modes
+    # such as policy-refinement remain available through dev-engine.ps1 but are
+    # intentionally not duplicated in the all-native CTest set.
+    add_test(NAME poecraft_core
+        COMMAND poecraft_engine_tests --core-only
+            "${POECRAFT_COMPILED_ARTIFACT}" "${POECRAFT_SPEC_FIXTURES}")
+    add_test(NAME poecraft_solver_abstract
+        COMMAND poecraft_engine_tests --solver-abstract-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_calc
+        COMMAND poecraft_engine_tests --solver-calc-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_solve
+        COMMAND poecraft_engine_tests --solver-solve-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_compile
+        COMMAND poecraft_engine_tests --solver-compile-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_eval
+        COMMAND poecraft_engine_tests --solver-eval-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_api
+        COMMAND poecraft_engine_tests --solver-api-only
+            "${POECRAFT_COMPILED_ARTIFACT}")
+    add_test(NAME poecraft_solver_s8_3
+        COMMAND poecraft_engine_tests --solver-s8-3-only)
+    add_test(NAME poecraft_solver_refinement
+        COMMAND poecraft_engine_tests --solver-refinement-only)
+
+    set_tests_properties(
+        poecraft_header_smoke
+        poecraft_core
+        poecraft_solver_abstract
+        poecraft_solver_calc
+        poecraft_solver_solve
+        poecraft_solver_compile
+        poecraft_solver_eval
+        poecraft_solver_api
+        poecraft_solver_s8_3
+        poecraft_solver_refinement
+        PROPERTIES LABELS "native")
+    set_tests_properties(
+        poecraft_solver_abstract
+        poecraft_solver_calc
+        poecraft_solver_solve
+        poecraft_solver_compile
+        poecraft_solver_eval
+        poecraft_solver_api
+        poecraft_solver_s8_3
+        poecraft_solver_refinement
+        PROPERTIES LABELS "native;solver")
+    set_tests_properties(poecraft_solver_refinement PROPERTIES
+        LABELS "native;solver;solver-refinement")
+    set_tests_properties(poecraft_solver_solve PROPERTIES
+        LABELS "native;solver;solver-policy")
     add_test(
         NAME poecraft_solver_benchmark_validate
         COMMAND poecraft_solver_benchmark

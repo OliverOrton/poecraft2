@@ -148,7 +148,7 @@ costs and solver selection; they do not change crafting legality or outcomes.
 | Repository orientation | `docs/README.md`, `docs/direction.md` |
 | Data schema and compilation | `schemas/sqlite/001_initial.sql`, `tools/ingest/poecraft_ingest/compiled_data.py` |
 | C ABI | `engine/include/poecraft/` |
-| Native build | `engine/CMakeLists.txt`, `scripts/build.ps1` |
+| Native source inventory and build | `engine/engine-sources.txt`, `engine/CMakeLists.txt`, `engine/CMakePresets.json`, `scripts/dev-engine.ps1`, `scripts/build.ps1` |
 | WASM build | `scripts/build-wasm.ps1` |
 | WASM facade | `bindings/wasm/wasm_api.cpp` |
 | Browser boundary | `apps/web/src/app/engine-client.ts`, `engine-worker.ts`, `engine-wasm.ts` |
