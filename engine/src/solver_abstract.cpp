@@ -1,4 +1,4 @@
-#include "solver_internal.hpp"
+#include "solver_model.hpp"
 
 #include <algorithm>
 #include <cstring>

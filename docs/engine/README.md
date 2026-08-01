@@ -79,7 +79,10 @@ declaration.
 | WASM JSON facade | `bindings/wasm/wasm_api.cpp` |
 
 Shared private structures are declared in `engine/src/engine_internal.hpp` and
-`engine/src/solver_internal.hpp`. They are implementation details, not an ABI.
+the private phase headers indexed by
+[Solver internals](../foundation/solver-internals.md). They are implementation
+details, not an ABI. `engine/src/solver_internal.hpp` remains a compatibility
+umbrella for deliberate cross-phase callers.
 
 ## Runtime Model
 

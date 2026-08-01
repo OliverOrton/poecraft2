@@ -1,6 +1,6 @@
 #pragma once
 
-#include "solver_internal.hpp"
+#include "solver_model.hpp"
 
 #include <array>
 #include <cstddef>

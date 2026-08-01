@@ -420,7 +420,7 @@ different evidence sources.
 | Public native contract | `engine/include/poecraft/solver.h` |
 | Native API/lifetime | `engine/src/solver_api.cpp` |
 | Solve shared types and entry | `engine/src/solver_solve_types.hpp`, `solver_solve.cpp` |
-| Action observation/refinement contract | `engine/src/solver_internal.hpp`, `solver_registry.cpp`, `solver_refinement.cpp` |
+| Action observation/refinement contract | `engine/src/solver_model.hpp`, `solver_refinement.hpp`, `solver_registry.cpp`, and the `solver_refinement*` owners |
 | Expansion and Bellman stepping | `engine/src/solver_solve_expand.cpp`, `solver_sparse_policy.cpp`, `solver_solve_bellman.cpp` |
 | Focused, constructive, and heuristic phases | `engine/src/solver_solve_focused.cpp`, `solver_solve_constructive.cpp`, `solver_solve_heuristics.cpp` |
 | Quotient, finish, and telemetry phases | `engine/src/solver_solve_quotient.cpp`, `solver_solve_finish.cpp`, `solver_solve_telemetry.cpp` |

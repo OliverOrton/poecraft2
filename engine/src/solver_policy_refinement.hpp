@@ -1,6 +1,7 @@
 #pragma once
 
 #include "solver_refinement.hpp"
+#include "solver_solve_contracts.hpp"
 
 #include <cstdint>
 #include <limits>

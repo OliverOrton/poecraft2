@@ -69,6 +69,8 @@ current user-facing orchestration. Mechanic behavior belongs to the
 [mechanics library](../mechanics/README.md). The complete UI-to-native request,
 handle, cancellation, compilation, evaluation, and verification sequence is in
 [End-To-End Solver Flow](flow.md).
+The private phase/header map and edit-routing guide are in
+[Solver Internals And Source Ownership](../foundation/solver-internals.md).
 
 ## Goal And State Contract
 
@@ -156,7 +158,8 @@ is implemented. See the
 [archived report](../archive/2026-07-28-harvest-shared-reforge-frontier/report.md).
 
 Code authority:
-`engine/src/solver_internal.hpp`, `engine/src/solver_api.cpp`,
+`engine/src/solver_model.hpp`, `engine/src/solver_calc_types.hpp`,
+`engine/src/solver_api.cpp`,
 `engine/src/solver_abstract.cpp`, and `engine/src/solver_calc.cpp`.
 
 ### Natural-T1 corpus feasibility
@@ -260,8 +263,8 @@ recorded as deferred scope work in the
 [solver roadmap](../future/solver-roadmap.md).
 
 Code authority:
-`engine/src/solver_registry.cpp`, `engine/src/solver_options.cpp`, and
-`engine/src/solver_internal.hpp`.
+`engine/src/solver_registry.cpp`, the `engine/src/solver_options*.cpp` owners,
+`engine/src/solver_model.hpp`, and `engine/src/solver_calc_types.hpp`.
 
 ### Action Observation And Refinement Contract
 
@@ -318,8 +321,9 @@ compiled strategy JSON. It does not infer observation features, preservation
 scopes, exclusion equivalence, or collapse rules.
 
 Code authority:
-`engine/src/solver_internal.hpp`, `engine/src/solver_registry.cpp`, and
-`engine/src/solver_refinement.cpp`.
+`engine/src/solver_model.hpp`, `engine/src/solver_refinement.hpp`,
+`engine/src/solver_registry.cpp`, and the `engine/src/solver_refinement*`
+owners.
 
 ## Exact Transition Provider
 

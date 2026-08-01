@@ -1,6 +1,6 @@
 #pragma once
 
-#include "solver_internal.hpp"
+#include "solver_solve_contracts.hpp"
 
 #include "poecraft/bitset.h"
 

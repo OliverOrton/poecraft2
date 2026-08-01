@@ -1,6 +1,6 @@
 # Solver Iteration Infrastructure And Decomposition
 
-**Status: Gate 1 complete; Gate 2 mechanical decomposition is next.**
+**Status: Gates 0-2 complete; header fan-out/build-impact audit is next.**
 
 Owner: Oliver
 
@@ -211,6 +211,35 @@ Create a stable foundation architecture map covering phases, representations,
 file ownership, edit routing, and exactness/determinism invariants, and index it
 from `docs/README.md`. Commit the mechanical decomposition separately from
 build tooling.
+
+### Gate 2 result
+
+Completed mechanically on 2026-08-01. Narrow engine-library compilation was
+used during motion; acceptance suites remain deferred to the final boundary.
+
+| Former hotspot | Responsibility owners after decomposition |
+| --- | --- |
+| `solver_refinement.cpp` (7,228 lines) | 321-line orchestration; observation, feature extraction, partition, and exact-evaluation translation units; graph core, discovery, and routing helpers, each independently named |
+| `solver_policy_refinement.cpp` (7,156 lines) | one 400-line anonymous-oracle translation unit with named setup, kernel, mapping, choice, observation, lift, resource, evaluation, and improvement fragments; independent 327-line compiled-policy assertion unit |
+| `solver_options.cpp` (6,152 lines) | 1,079-line option-kernel owner plus automatic admission, planner construction/import, runtime semantics, and temporary-bench responsibility units |
+| `solver_eval.cpp` (6,283 lines) | tightly coupled 3,843-line `StrategyEvalWork::Impl` lifecycle plus a 1,506-line private helper layer and independent 436-line operation-resolution and 523-line report owners |
+| `solver_compile.cpp` (3,521 lines) | cohesive 2,306-line graph-emission owner plus 851-line condition/routing and 383-line serialization helpers |
+| `solver_internal.hpp` (2,885 lines) | 1,197-line model, 711-line calculation, 300-line evaluation, 678-line solve, and 39-line compiler phase headers; a five-line compatibility umbrella remains for deliberate cross-phase callers |
+
+The anonymous production policy oracle remains one translation unit so moving
+code cannot change internal linkage or object lifetime. Its `.inc` files are
+physical navigation boundaries, not separately compiled owners. The evaluator
+work object and compiler emission function also remain larger than the general
+guideline because their inline state-machine/emission order is tightly coupled;
+independent resolution, reporting, condition, and serialization work moved out.
+
+Leaf implementations now include the narrowest correct private phase header.
+The broad `solver_internal.hpp` umbrella remains only in the cross-phase solver
+API and broad native tests. The stable
+[solver internals map](../foundation/solver-internals.md) documents phases,
+representations, edit routing, and exactness/lifetime invariants. No public ABI,
+algorithm, ordering, mechanics, cap, strategy vocabulary, or frontend contract
+was changed.
 
 ## Gate 3 - build impact audit
 

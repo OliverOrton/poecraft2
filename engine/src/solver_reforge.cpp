@@ -1,4 +1,4 @@
-#include "solver_internal.hpp"
+#include "solver_calc_types.hpp"
 
 #include <algorithm>
 #include <array>

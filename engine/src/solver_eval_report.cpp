@@ -1,0 +1,523 @@
+#include "solver_eval_helpers.hpp"
+
+namespace poecraft {
+namespace solver {
+
+namespace {
+
+void append_material_totals_json(
+    BoundedJson& out,
+    const std::vector<StrategyEvalMaterialTotal>& materials,
+    double divisor = 1.0) {
+    out.push_back('[');
+    for (std::size_t i = 0; i < materials.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalMaterialTotal& material = materials[i];
+        out += "{\"price_key\":\"" + json_escape(material.price_key) +
+               "\",\"expected_quantity\":";
+        append_number(out, material.expected_quantity / divisor);
+        out += ",\"price_status\":\"";
+        out += material.priced ? "priced" : "missing";
+        out += "\",\"unit_price\":";
+        if (material.priced) {
+            append_number(out, material.unit_price);
+        } else {
+            out += "null";
+        }
+        out += ",\"cost_contribution\":";
+        if (material.priced) {
+            append_number(out, material.cost_contribution / divisor);
+        } else {
+            out += "null";
+        }
+        out.push_back('}');
+    }
+    out.push_back(']');
+}
+
+void append_techniques_json(
+    BoundedJson& out,
+    const std::map<std::string, double>& techniques,
+    double divisor = 1.0) {
+    out.push_back('{');
+    std::size_t index = 0;
+    for (const auto& [key, value] : techniques) {
+        if (index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, value / divisor);
+    }
+    out.push_back('}');
+}
+
+void append_action_totals_json(
+    BoundedJson& out,
+    const std::vector<StrategyEvalActionTotal>& actions,
+    const std::vector<StrategyEvalMaterialTotal>& priced_materials,
+    double divisor = 1.0) {
+    std::map<std::string, const StrategyEvalMaterialTotal*> price_by_key;
+    for (const StrategyEvalMaterialTotal& material : priced_materials) {
+        price_by_key.emplace(material.price_key, &material);
+    }
+    double known_total_cost = 0.0;
+    for (const StrategyEvalMaterialTotal& material : priced_materials) {
+        if (material.priced) known_total_cost += material.cost_contribution;
+    }
+    out.push_back('[');
+    for (std::size_t i = 0; i < actions.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalActionTotal& action = actions[i];
+        out += "{\"id\":\"" + json_escape(action.id) +
+               "\",\"display_name\":\"" +
+               json_escape(action.display_name) +
+               "\",\"expected_visits\":";
+        append_number(out, action.expected_visits / divisor);
+        out += ",\"expected_applied\":";
+        append_number(out, action.expected_applied / divisor);
+        double action_known_spend = 0.0;
+        bool action_spend_complete = true;
+        for (const std::string& key : action.price_keys) {
+            const auto price = price_by_key.find(key);
+            if (price == price_by_key.end() || !price->second->priced) {
+                action_spend_complete = false;
+            } else {
+                action_known_spend +=
+                    action.expected_applied * price->second->unit_price /
+                    divisor;
+            }
+        }
+        out += ",\"expected_spend_known\":";
+        append_number(out, action_known_spend);
+        out += ",\"expected_spend_complete\":";
+        out += action_spend_complete ? "true" : "false";
+        out += ",\"known_cost_share\":";
+        if (known_total_cost > 0.0) {
+            append_number(
+                out, action_known_spend /
+                         (known_total_cost / divisor));
+        } else {
+            out += "null";
+        }
+        out += ",\"probability_of_any_use\":{";
+        if (action.expected_visits == 0.0) {
+            out += "\"status\":\"exact_zero\",\"value\":0}";
+        } else {
+            out += "\"status\":\"not_computable_from_occupancy\","
+                   "\"value\":null}";
+        }
+        out += ",\"reachable_states\":" +
+               std::to_string(action.reachable_states);
+        out += ",\"reachable_regions\":" +
+               std::to_string(action.regions.size());
+        out += ",\"classifications\":[";
+        for (std::size_t role = 0; role < action.classifications.size();
+             ++role) {
+            if (role != 0) out.push_back(',');
+            out += "\"" + json_escape(action.classifications[role]) + "\"";
+        }
+        out += "],\"materials\":[";
+        std::map<std::string, std::uint32_t> quantities;
+        for (const std::string& key : action.price_keys) ++quantities[key];
+        std::size_t material_index = 0;
+        for (const auto& [key, count] : quantities) {
+            if (material_index++ != 0) out.push_back(',');
+            const double quantity =
+                action.expected_applied * static_cast<double>(count) /
+                divisor;
+            out += "{\"price_key\":\"" + json_escape(key) +
+                   "\",\"expected_quantity\":";
+            append_number(out, quantity);
+            const auto found = price_by_key.find(key);
+            const bool priced =
+                found != price_by_key.end() && found->second->priced;
+            out += ",\"price_status\":\"";
+            out += priced ? "priced" : "missing";
+            out += "\",\"unit_price\":";
+            if (priced) {
+                append_number(out, found->second->unit_price);
+            } else {
+                out += "null";
+            }
+            out += ",\"cost_contribution\":";
+            if (priced) {
+                append_number(out, quantity * found->second->unit_price);
+            } else {
+                out += "null";
+            }
+            out.push_back('}');
+        }
+        out += "],\"regions\":[";
+        for (std::size_t region_index = 0;
+             region_index < action.regions.size(); ++region_index) {
+            if (region_index != 0) out.push_back(',');
+            const StrategyEvalActionRegion& region =
+                action.regions[region_index];
+            out += "{\"goal_progress\":" +
+                   std::to_string(region.goal_progress);
+            out += ",\"rarity\":" + std::to_string(region.rarity);
+            out += ",\"blocker_count\":" +
+                   std::to_string(region.blocker_count);
+            out += ",\"crafted_count\":" +
+                   std::to_string(region.crafted_count);
+            out += ",\"fractured_goal_mask\":" +
+                   std::to_string(region.fractured_goal_mask);
+            out += ",\"fractured_count\":" +
+                   std::to_string(region.fractured_count);
+            out += ",\"reachable_states\":" +
+                   std::to_string(region.reachable_states);
+            out += ",\"expected_visits\":";
+            append_number(out, region.expected_visits / divisor);
+            out += ",\"expected_applied\":";
+            append_number(out, region.expected_applied / divisor);
+            out.push_back('}');
+        }
+        out += "],\"raw_nodes\":[";
+        for (std::size_t node = 0; node < action.nodes.size(); ++node) {
+            if (node != 0) out.push_back(',');
+            const StrategyEvalActionNode& entry = action.nodes[node];
+            out += "{\"node_id\":\"" + json_escape(entry.node_id) +
+                   "\",\"expected_visits\":";
+            append_number(out, entry.expected_visits / divisor);
+            out += ",\"expected_applied\":";
+            append_number(out, entry.expected_applied / divisor);
+            out.push_back('}');
+        }
+        out += "]}";
+    }
+    out.push_back(']');
+}
+
+void append_cost_totals_json(
+    BoundedJson& out,
+    double expected_actions,
+    double known_cost,
+    bool complete,
+    double total_cost,
+    double divisor = 1.0) {
+    out += "{\"expected_actions\":";
+    append_number(out, expected_actions / divisor);
+    out += ",\"known_expected_cost\":";
+    append_number(out, known_cost / divisor);
+    out += ",\"total_expected_cost\":";
+    if (complete) {
+        append_number(out, total_cost / divisor);
+    } else {
+        out += "null";
+    }
+    out += ",\"cost_complete\":";
+    out += complete ? "true" : "false";
+    out.push_back('}');
+}
+
+} // namespace
+
+std::string serialize_strategy_eval(const StrategyEvalResult& result) {
+    BoundedJson out(result.max_output_json_bytes);
+    out += "{\"version\":\"v1\",\"converged\":";
+    out += result.converged ? "true" : "false";
+    out += ",\"sweeps\":" + std::to_string(result.sweeps);
+    out += ",\"residual_mass\":";
+    append_number(out, result.residual_mass);
+    out += ",\"terminals\":{";
+    out += "\"success\":";
+    append_number(out, result.success_probability);
+    out += ",\"failure\":";
+    append_number(out, result.failure_probability);
+    out += ",\"stop\":";
+    append_number(out, result.stop_probability);
+    out += ",\"action_not_applied\":";
+    append_number(out, result.action_not_applied_probability);
+    out += ",\"no_matching_edge\":";
+    append_number(out, result.no_matching_edge_probability);
+    out += ",\"unresolved\":";
+    append_number(out, result.unresolved_probability);
+    out += ",\"by_node\":[";
+    for (std::size_t i = 0; i < result.terminal_nodes.size(); ++i) {
+        if (i != 0) out += ',';
+        const StrategyEvalTerminalNode& node = result.terminal_nodes[i];
+        out += "{\"node_id\":\"" + json_escape(node.node_id) +
+               "\",\"kind\":\"" + terminal_name(node.terminal_kind) +
+               "\",\"p\":";
+        append_number(out, node.probability);
+        out += '}';
+    }
+    out += "]}";
+
+    out += ",\"unresolved_by_node\":[";
+    for (std::size_t i = 0; i < result.unresolved_by_node.size(); ++i) {
+        if (i != 0) out += ',';
+        const StrategyEvalNodeMass& node = result.unresolved_by_node[i];
+        out += "{\"node_id\":\"" + json_escape(node.node_id) +
+               "\",\"mass\":";
+        append_number(out, node.mass);
+        out += '}';
+    }
+    out += ']';
+
+    out += ",\"failures_by_node\":[";
+    for (std::size_t i = 0; i < result.failures_by_node.size(); ++i) {
+        if (i != 0) out += ',';
+        const StrategyEvalFailure& failure = result.failures_by_node[i];
+        out += "{\"node_id\":\"" + json_escape(failure.node_id) +
+               "\",\"reason\":\"" + json_escape(failure.reason) +
+               "\",\"p\":";
+        append_number(out, failure.probability);
+        out += '}';
+    }
+    out += ']';
+
+    out += ",\"expected_actions\":";
+    append_number(out, result.expected_actions);
+    out += ",\"expected_consumption\":[";
+    std::size_t consumption_index = 0;
+    for (const auto& [key, quantity] : result.expected_consumption) {
+        if (consumption_index++ != 0) out += ',';
+        out += "{\"key\":\"" + json_escape(key) +
+               "\",\"quantity\":";
+        append_number(out, quantity);
+        out += '}';
+    }
+    out += ']';
+
+    out += ",\"accounting\":{\"version\":\"s8.4_v1\",\"semantics\":{";
+    out += "\"primary\":\"per_strategy_invocation\",";
+    out += "\"terminal_mass_separate\":true,";
+    out += "\"success_normalized_basis\":";
+    if (result.success_normalized_enabled) {
+        out += "\"independent_whole_strategy_retries\"";
+    } else {
+        out += "null";
+    }
+    out += ",\"success_normalized_is_conditional_path_expectation\":false}";
+    out += ",\"pricing\":{\"status\":\"";
+    out += !result.pricing_enabled
+               ? "disabled"
+               : (result.cost_complete ? "complete" : "incomplete");
+    out += "\",\"economy_id\":";
+    if (result.pricing_enabled) {
+        out += "\"" + json_escape(result.economy_id) + "\"";
+    } else {
+        out += "null";
+    }
+    out += ",\"missing_price_keys\":[";
+    std::size_t missing_price_index = 0;
+    for (const StrategyEvalMaterialTotal& material : result.material_totals) {
+        if (material.priced) continue;
+        if (missing_price_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(material.price_key) + "\"";
+    }
+    out += "]}";
+    out += ",\"totals\":{\"per_invocation\":";
+    append_cost_totals_json(
+        out, result.expected_actions, result.known_expected_cost,
+        result.cost_complete, result.total_expected_cost);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        out += "{\"basis\":\"independent_whole_strategy_retries\",";
+        out += "\"success_probability_denominator\":";
+        append_number(out, result.success_probability);
+        out += ",\"expected_invocations\":";
+        append_number(out, 1.0 / result.success_probability);
+        out += ",\"work\":";
+        append_cost_totals_json(
+            out, result.expected_actions, result.known_expected_cost,
+            result.cost_complete, result.total_expected_cost,
+            result.success_probability);
+        out.push_back('}');
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"actions\":{\"per_invocation\":";
+    append_action_totals_json(
+        out, result.action_totals, result.material_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_action_totals_json(
+            out, result.action_totals, result.material_totals,
+            result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"materials\":{\"per_invocation\":";
+    append_material_totals_json(out, result.material_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_material_totals_json(
+            out, result.material_totals, result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"techniques\":{\"per_invocation\":";
+    append_techniques_json(out, result.technique_totals);
+    out += ",\"success_normalized\":";
+    if (result.success_normalized_enabled) {
+        append_techniques_json(
+            out, result.technique_totals, result.success_probability);
+    } else {
+        out += "null";
+    }
+    out.push_back('}');
+    out += ",\"review_sections\":{\"enabled\":";
+    out += result.review_sections_enabled ? "true" : "false";
+    out += ",\"items\":[";
+    for (std::size_t i = 0; i < result.review_sections.size(); ++i) {
+        if (i != 0) out.push_back(',');
+        const StrategyEvalReviewSection& section = result.review_sections[i];
+        out += "{\"id\":\"" + json_escape(section.id) +
+               "\",\"label\":\"" + json_escape(section.label) +
+               "\",\"role\":\"" + json_escape(section.role) +
+               "\",\"raw_references\":{\"node_ids\":[";
+        for (std::size_t node = 0; node < section.raw_node_ids.size(); ++node) {
+            if (node != 0) out.push_back(',');
+            out += "\"" + json_escape(section.raw_node_ids[node]) + "\"";
+        }
+        out += "],\"edge_ids\":[";
+        for (std::size_t edge = 0; edge < section.raw_edge_ids.size(); ++edge) {
+            if (edge != 0) out.push_back(',');
+            out += "\"" + json_escape(section.raw_edge_ids[edge]) + "\"";
+        }
+        out += "]},\"per_invocation\":";
+        append_cost_totals_json(
+            out, section.expected_actions, section.known_expected_cost,
+            section.cost_complete, section.total_expected_cost);
+        out += ",\"expected_edge_traversals\":";
+        append_number(out, section.expected_edge_traversals);
+        out += ",\"actions\":";
+        append_action_totals_json(
+            out, section.actions, section.materials);
+        out += ",\"materials\":";
+        append_material_totals_json(out, section.materials);
+        out += ",\"techniques\":";
+        append_techniques_json(out, section.techniques);
+        out += ",\"success_normalized\":";
+        if (result.success_normalized_enabled) {
+            out += "{\"work\":";
+            append_cost_totals_json(
+                out, section.expected_actions, section.known_expected_cost,
+                section.cost_complete, section.total_expected_cost,
+                result.success_probability);
+            out += ",\"expected_edge_traversals\":";
+            append_number(
+                out, section.expected_edge_traversals /
+                         result.success_probability);
+            out += ",\"actions\":";
+            append_action_totals_json(
+                out, section.actions, section.materials,
+                result.success_probability);
+            out += ",\"materials\":";
+            append_material_totals_json(
+                out, section.materials, result.success_probability);
+            out += ",\"techniques\":";
+            append_techniques_json(
+                out, section.techniques, result.success_probability);
+            out.push_back('}');
+        } else {
+            out += "null";
+        }
+        out.push_back('}');
+    }
+    out += "]}";
+    out += ",\"reconciliation\":{\"action_descriptor_visits_difference\":";
+    append_number(out, result.action_descriptor_visits_difference);
+    out += ",\"action_descriptor_applied_difference\":";
+    append_number(out, result.action_descriptor_applied_difference);
+    out += ",\"node_operation_visits_difference\":";
+    append_number(out, result.node_operation_visits_difference);
+    out += ",\"material_quantity_differences\":{";
+    std::size_t difference_index = 0;
+    for (const auto& [key, difference] :
+         result.material_quantity_differences) {
+        if (difference_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, difference);
+    }
+    out += "},\"cost_dot_product_difference\":";
+    append_number(out, result.cost_dot_product_difference);
+    out += ",\"section_actions_difference\":";
+    append_number(out, result.section_actions_difference);
+    out += ",\"section_material_differences\":{";
+    difference_index = 0;
+    for (const auto& [key, difference] :
+         result.section_material_differences) {
+        if (difference_index++ != 0) out.push_back(',');
+        out += "\"" + json_escape(key) + "\":";
+        append_number(out, difference);
+    }
+    out += "}}}";
+
+    out += ",\"memory\":{\"owned_bytes_estimate\":" +
+           std::to_string(result.owned_bytes_estimate) +
+           ",\"peak_owned_bytes_estimate\":" +
+           std::to_string(result.peak_owned_bytes_estimate) +
+           ",\"max_owned_bytes\":" +
+           std::to_string(result.max_owned_bytes) +
+           ",\"max_output_json_bytes\":" +
+           std::to_string(result.max_output_json_bytes) + "}";
+
+    out += ",\"targets\":[";
+    for (std::size_t i = 0; i < result.targets.size(); ++i) {
+        if (i != 0) out += ',';
+        const GoalSlot& target = result.targets[i];
+        if (target.family_id != kNoId) {
+            out += "{\"kind\":\"family\",\"family_id\":" +
+                   std::to_string(target.family_id) +
+                   ",\"min_tier\":" + std::to_string(target.min_tier) +
+                   '}';
+        } else {
+            out += "{\"kind\":\"group\",\"group_id\":" +
+                   std::to_string(target.group_id) + '}';
+        }
+    }
+    out += ']';
+
+    out += ",\"nodes\":[";
+    for (std::size_t i = 0; i < result.nodes.size(); ++i) {
+        if (i != 0) out += ',';
+        const StrategyEvalNode& node = result.nodes[i];
+        out += "{\"id\":\"" + json_escape(node.id) +
+               "\",\"expected_visits\":";
+        append_number(out, node.expected_visits);
+        out += ",\"classes\":[";
+        for (std::size_t c = 0; c < node.classes.size(); ++c) {
+            if (c != 0) out += ',';
+            const StrategyEvalClass& entry = node.classes[c];
+            const AbstractState& state = entry.state;
+            out += "{\"share\":";
+            append_number(out, entry.share);
+            out += ",\"rarity\":" + std::to_string(state.rarity) +
+                   ",\"prefixes\":" +
+                   std::to_string(state.prefix_count) +
+                   ",\"suffixes\":" +
+                   std::to_string(state.suffix_count) +
+                   ",\"flags\":" + std::to_string(state.flags) +
+                   ",\"blocked\":" +
+                   std::to_string(state.blocked_mask) + ",\"slots\":[";
+            for (std::size_t slot = 0; slot < result.targets.size(); ++slot) {
+                if (slot != 0) out += ',';
+                out += std::to_string(state.slot_status[slot]);
+            }
+            out += "]}";
+        }
+        out += "],\"classes_truncated_share\":";
+        append_number(out, node.classes_truncated_share);
+        out += '}';
+    }
+    out += ']';
+
+    out += ",\"edges\":[";
+    for (std::size_t i = 0; i < result.edges.size(); ++i) {
+        if (i != 0) out += ',';
+        const StrategyEvalEdge& edge = result.edges[i];
+        out += "{\"id\":\"" + json_escape(edge.id) +
+               "\",\"expected_traversals\":";
+        append_number(out, edge.expected_traversals);
+        out += '}';
+    }
+    out += "]}";
+    return std::move(out).take();
+}
+
+} // namespace solver
+} // namespace poecraft

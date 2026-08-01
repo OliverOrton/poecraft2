@@ -2,7 +2,7 @@
 #include "harvest_crafts.generated.hpp"
 #include "json.hpp"
 #include "poecraft/session.h"
-#include "solver_internal.hpp"
+#include "solver_eval_types.hpp"
 #include "solver_refinement.hpp"
 
 #include <algorithm>

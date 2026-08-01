@@ -1,7 +1,7 @@
 # Session Handoff
 
 **Status: solver iteration infrastructure is the active enabling boundary.
-Gate 1 is complete and the mechanical solver decomposition is next.
+Gates 0-2 are complete and the measured header/WASM audits are next.
 Proof-carrying quotient refinement remains the unchanged next algorithmic
 milestone.**
 
@@ -89,15 +89,34 @@ Starting internal-header fan-out from Ninja dependencies:
 - Focused refinement modes remain green at 301 and 4,829 checks. Benchmark
   validation remains green at 12 specs.
 
+## Gate 2 completed
+
+The five oversized solver sources were mechanically separated by real
+responsibility. Shared exact refinement now has graph discovery, observation,
+feature, partition, evaluation, and routing owners. The anonymous production
+policy oracle stays one translation unit but is navigable through named
+responsibility fragments; compiled-policy assertion is independent. Options
+now separate kernel construction, automatic admission, planner construction,
+import, semantics, and temporary-bench work. Evaluation separates operation
+resolution and report serialization from its tightly coupled work lifecycle;
+compilation separates condition/routing and serialization helpers from ordered
+graph emission.
+
+The former 2,885-line `solver_internal.hpp` is now a compatibility umbrella
+over model, calculation, evaluation, solve, and compiler phase headers. Leaf
+implementations include the narrowest correct phase; the umbrella remains only
+for the cross-phase solver API and broad tests. The stable
+`docs/foundation/solver-internals.md` maps phases, representations, file
+ownership, edit routing, and invariants.
+
 ## Exact next step
 
-Commit Gate 1 independently, then implement Gate 2: inventory the actual
-responsibility/type/function seams in the five oversized sources and private
-header, mechanically move definitions/contracts into coherent owners, keep
-ordering/linkage/lifetimes/evaluation order unchanged, update the canonical
-source inventory and architecture documentation, and use only narrow compile
-checks while moving. Commit that decomposition independently before the final
-fan-out/WASM audits.
+Commit Gate 2 independently, then perform Gate 3 from `compile_commands.json`,
+Ninja dependencies, and measured leaf/refinement-header/broad-header edits.
+Record honest before/after rebuild fan-out, edit locality, clean parallelism,
+and any remaining header seam. Then investigate incremental WASM; retain it
+only with meaningful, reliable measured benefit before the one final acceptance
+run.
 
 Do not implement proof-carrying quotient refinement, replay/checkpoint,
 mechanics, new action filtering, solver mathematics, memory-cap changes, C ABI,

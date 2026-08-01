@@ -15,6 +15,11 @@ src/solver_abstract.cpp
 src/solver_calc.cpp
 src/solver_reforge.cpp
 src/solver_options.cpp
+src/solver_options_automatic.cpp
+src/solver_options_build.cpp
+src/solver_options_import.cpp
+src/solver_options_semantics.cpp
+src/solver_options_temporary.cpp
 src/solver_solve.cpp
 src/solver_solve_expand.cpp
 src/solver_solve_incremental.cpp
@@ -28,7 +33,14 @@ src/solver_solve_quotient.cpp
 src/solver_solve_finish.cpp
 src/solver_solve_telemetry.cpp
 src/solver_refinement.cpp
+src/solver_refinement_eval.cpp
+src/solver_refinement_features.cpp
+src/solver_refinement_observation.cpp
+src/solver_refinement_partition.cpp
 src/solver_policy_refinement.cpp
+src/solver_policy_assertion.cpp
 src/solver_compile.cpp
 src/solver_eval.cpp
+src/solver_eval_report.cpp
+src/solver_eval_resolve.cpp
 src/solver_api.cpp

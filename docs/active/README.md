@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: one enabling implementation plan is selected; Gate 0 is frozen and
-implementation has not begun.**
+**Status: one enabling implementation plan is selected; its build workflow and
+mechanical decomposition are complete, with measured audits remaining.**
 
 Parent: [Documentation map](../README.md)
 

@@ -11,6 +11,7 @@ when Oliver has selected one.
 | --- | --- |
 | Product orientation and current posture | [Project direction](direction.md) |
 | Architecture, layer ownership, and change impact | [Foundation](foundation/README.md) |
+| Native solver phase flow and private source ownership | [Solver internals](foundation/solver-internals.md) |
 | Implemented crafting behavior | [Mechanics](mechanics/README.md) |
 | Native data, state, pools, weights, bitsets, and WASM | [Engine](engine/README.md) |
 | Exact planning and strategy compilation | [Solver](solver/README.md) |

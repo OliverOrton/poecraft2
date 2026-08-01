@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include "../src/json.hpp"
+#include "../src/solver_compile_contracts.hpp"
 #include "../src/solver_policy_refinement.hpp"
 #include "../src/solver_sparse_policy.hpp"
 #include "../src/solver_solve_types.hpp"
