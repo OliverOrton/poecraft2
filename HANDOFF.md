@@ -1,11 +1,10 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement Gates 0 through 4 are complete.
-Gate 5 native structural and scale acceptance is the current
-implementation boundary.**
+**Status: proof-carrying quotient refinement stopped at the first binding
+Gate 5 native case. No implementation boundary is active.**
 
-Current plan:
-[Proof-Carrying Quotient Refinement During Solving](docs/active/proof-carrying-quotient-refinement.md).
+Completed milestone:
+[Proof-Carrying Quotient Refinement Structural Stop](docs/archive/2026-08-01-proof-carrying-quotient-refinement/README.md).
 
 Completed enabling milestone:
 [Solver Iteration Infrastructure And Decomposition](docs/archive/2026-08-01-solver-iteration-infrastructure/README.md).
@@ -17,10 +16,12 @@ Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
 Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
 `9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is
-`62ca542e76829d39a27323fa2d5c1cc6266ba567`. Gate 4 is recorded by the next
-boundary commit.
+`62ca542e76829d39a27323fa2d5c1cc6266ba567`. Gate 4 is
+`dac7c6f9670a17e788381fd1ce4c33fc8c4925e2`. Gate 5 is recorded by the final
+archive commit.
 
-Nothing has been pushed or merged. `main` is unchanged.
+Nothing has been pushed or merged. `main` remains unchanged at
+`25d5bbe6791beb61eae803219563575346def2dc`.
 
 ## Gate 0 frozen boundary
 
@@ -175,21 +176,58 @@ tracked work counters. The tracked qualified Fracture evidence retains
   failures and zero reference calls. Evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json`.
 
-## Exact next step
+## Gate 5 structural stop
 
-Run Gate 5 native acceptance exactly once per expensive case where practical:
+- The frozen binding case `natural-t1-breadth-two-4e65dda9c53b` was run once
+  through the direct native benchmark with exact compiled evaluation and
+  10,000 verification runs requested under an external 900-second watchdog.
+- It returned `refused_resource_cap` on `max_reforge_work` after 5,787.0836 ms
+  total and 3,679.1468 ms solve time. No policy was available, so compilation,
+  exact compiled evaluation, reconciliation, and simulation were not
+  applicable.
+- The stopped prefix materialized four exact carriers and two kernels with
+  345,192 transitions. It installed zero quotient classes, ran zero partition
+  rounds, and retained zero certified rows. The peak live carrier slice was
+  one slice / 4,198,696 bytes.
+- Native live / peak owned memory was 305,293,988 / 375,483,167 bytes, below
+  the unchanged 1 GiB cap. The production reference adapter was never called
+  and no complete strict graph was reconstructed.
+- Gate 3's 13,076-cell, 561,416,670-byte, 560-second point prediction cannot
+  be compared with this prefix because the run stopped before partition
+  initialization.
+- Source tracing shows `quotient_compact_action_rows` completing rows for the
+  full already-admitted candidate vocabulary through `candidate_selection`
+  before a carrier reaches the partition. Candidate work, rather than global
+  carrier retention or memory, is the immediate structural wall.
+- Core quotient qualification is unqualified. Five-goal scale and WASM
+  product qualification are unqualified and were not run after the binding
+  core result.
+- The Fracture and representative-four core cases, five-goal case, native
+  smoke/reliability portfolios, selected 10,000-run verification, release
+  WASM, web acceptance, and final `scripts/test.ps1` were intentionally not
+  run after the explicit stop.
+- The raw report SHA-256 is
+  `fcef98a4ddadeec6d6c3cda51ab53d4710bba23097a86e1516f5dcbabfe32837`.
+  Tracked evidence is in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate5-structural-stop.json`.
 
-- frozen two-goal under the unchanged 1 GiB/900-second contract, with exact
-  publication, 10,000-run verification, and prediction-versus-actual evidence;
-- qualified Fracture full-four with all frozen counts and hashes;
-- the frozen representative four-goal core case;
-- the frozen five-goal scale case, reported separately if it refuses; and
-- only after those, the 27-case smoke, 49-case native portfolio, and selected
-  Ring/Gloves 10,000-run verification.
+## Recommended next boundary
 
-Do not implement replay/checkpoint until the quotient representation is stable.
-Do not change mechanics, action filtering, caps, public C ABI, strategy
-vocabulary, or frontend authority without a separately selected boundary.
+No active plan is selected. Oliver must choose the next chunk before
+implementation resumes. The evidence recommends competitive lazy alternative
+certification:
+
+1. Discover and certify selected-policy closure first.
+2. Preserve every admitted but uncertified alternative as an explicit
+   unresolved lower-only proof obligation.
+3. Certify an alternative transactionally only when Bellman competitiveness
+   or a counterexample requires it; do not discard it or hard-code actions.
+4. Keep the executable upper fully certified, closed, lumpable, proper,
+   compiled, and independently reconciled.
+5. Preserve the existing vocabulary, mechanics, action filtering, caps,
+   public C ABI, strategy JSON, and frontend authority.
+
+Deterministic checkpoint/replay remains deferred.
 
 ## Repository rules
 

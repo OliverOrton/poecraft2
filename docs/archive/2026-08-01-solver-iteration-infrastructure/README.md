@@ -18,6 +18,6 @@ quotient representation stabilizes.
 - [Archived implementation plan and gate evidence](plan.md)
 - [Final timing, parity, and acceptance report](report.md)
 - [Stable solver internals map](../../foundation/solver-internals.md)
-- [Restored next milestone: Proof-Carrying Quotient Refinement](../../active/proof-carrying-quotient-refinement.md)
+- [Subsequent Proof-Carrying Quotient Refinement milestone](../2026-08-01-proof-carrying-quotient-refinement/README.md)
 
 Nothing was pushed or merged. No rendered or visual review was performed.

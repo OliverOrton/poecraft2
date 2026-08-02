@@ -44,10 +44,12 @@ The action-observation and policy-guided refinement sections below are the
 implemented shared authority retained by the
 [2026-07-31 qualification stop](../archive/2026-07-31-policy-guided-exact-refinement/README.md).
 The reconstruct-then-merge production adapter did not qualify the required
-two-goal 1 GiB gate. The separate
-[active boundary](../active/proof-carrying-quotient-refinement.md) integrates
-proof-carrying quotient transitions into solving without replacing these
-authorities; implementation has not begun.
+two-goal 1 GiB gate. The subsequent
+[proof-carrying quotient milestone](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
+integrates quotient transitions into solving without replacing these
+authorities and retains passing focused/medium behavior. Its binding two-goal
+case exhausted candidate-certification reforge work before partition
+initialization, so core qualification remains red.
 
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier

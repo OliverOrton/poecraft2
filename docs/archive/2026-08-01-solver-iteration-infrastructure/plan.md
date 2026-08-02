@@ -11,9 +11,9 @@ Starting commit: `f1ad2a2ab32d948b11758972aafb198cee9ea483`
 
 Parent: [Archived milestone](README.md)
 
-Queued algorithmic milestone:
-[Proof-Carrying Quotient Refinement During Solving](../../active/proof-carrying-quotient-refinement.md).
-That plan remains unchanged and resumes immediately after this enabling work.
+Subsequent algorithmic milestone:
+[Proof-Carrying Quotient Refinement During Solving](../2026-08-01-proof-carrying-quotient-refinement/README.md).
+That later milestone is now archived with its Gate 5 structural stop.
 
 ## Objective
 

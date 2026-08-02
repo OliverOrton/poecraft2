@@ -988,6 +988,46 @@ The red gate intentionally stopped the remaining native portfolio, Fracture
 hash gate, selected 10,000-run verification, release WASM, web acceptance, and
 `scripts/test.ps1`; none is claimed here.
 
+## Proof-Carrying Quotient Refinement Structural Stop
+
+The 2026-08-01
+[qualification report](archive/2026-08-01-proof-carrying-quotient-refinement/report.md)
+and
+[tracked Gate 5 evidence](../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate5-structural-stop.json)
+record the retained implementation and binding native stop.
+
+- Gates 1 through 4 retain collision-checked replay coverage, conserved proof
+  ledgers, shared-partition CEGAR, certified Bellman rows, current-generation
+  publication audits, canonical compilation, and exact reconciliation without
+  a global strict-carrier vector or production reference fallback.
+- Final focused checks passed quotient proof 259/0, policy refinement 4,829/0,
+  and compiler routing 750/0.
+- The medium belt case compiled to 14 nodes and 33 edges, reconciled solver
+  cost `9.143792577895411` to exact compiled cost `9.14379257789546`, and
+  completed 10,000/10,000 simulations with zero off-policy failures. Its
+  native peak was `79,085,896` bytes and it used zero reference calls.
+- The frozen binding two-goal case returned `refused_resource_cap` on
+  `max_reforge_work` after four exact carriers, two kernels, and 345,192 exact
+  transitions, before partition initialization. It installed zero quotient
+  classes and zero certified rows and published no policy.
+- That run took `5,787.0836 ms` total and peaked at `375,483,167` native-owned
+  bytes, well below 1 GiB. The result identifies eager certification of every
+  already-admitted alternative as the immediate work boundary rather than
+  carrier retention or memory capacity.
+- Gate 3's completed-solve prediction is not comparable with the stopped
+  prefix: the actual run never reached the predicted partition population.
+- Core quotient qualification is unqualified. Five-goal scale and WASM
+  product qualification are unqualified and were not run after the binding
+  core result. The remaining native portfolio, release WASM, web acceptance,
+  and final full suite are not claimed.
+
+The recommended follow-on is competitive lazy alternative certification:
+certify selected-policy closure first, retain every admitted alternative as an
+explicit unresolved lower-only proof obligation, and certify alternatives
+transactionally only when competitiveness or a counterexample demands it.
+Caps, mechanics, action filtering, ABI, and strategy vocabulary remain
+unchanged; checkpoint/replay remains deferred.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

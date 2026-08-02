@@ -11,6 +11,13 @@ selected active work.
 
 ## 2026-08-01
 
+- [Proof-Carrying Quotient Refinement Structural Stop](2026-08-01-proof-carrying-quotient-refinement/README.md) —
+  retained replay-backed proof slices, shared-partition CEGAR, certified
+  Bellman publication, and medium compiled verification, then stopped when the
+  binding two-goal case exhausted `max_reforge_work` after four exact carriers
+  and two kernels but before its first quotient class; core, five-goal scale,
+  and WASM product qualification are unqualified.
+
 - [Solver Iteration Infrastructure And Decomposition](2026-08-01-solver-iteration-infrastructure/README.md) —
   established the canonical Ninja/CTest and incremental Emscripten workflows,
   one engine source inventory, coherent solver source/header ownership, honest

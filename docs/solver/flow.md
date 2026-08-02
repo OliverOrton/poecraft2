@@ -24,10 +24,11 @@ publication authority. Its reconstruct-then-merge production path stopped at
 the archived
 [two-goal 1 GiB qualification gate](../archive/2026-07-31-policy-guided-exact-refinement/README.md),
 so this page does not claim broad availability or changed refusal counts. The
-separate
-[active structural boundary](../active/proof-carrying-quotient-refinement.md)
-will integrate the same authority during solving; implementation has not
-begun.
+subsequent
+[proof-carrying quotient milestone](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
+integrates the same authority during solving and retains its focused and medium
+implementation. Its binding two-goal case exhausted candidate-certification
+work before partition initialization, so the core remains unqualified.
 
 ## Purpose
 

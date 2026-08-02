@@ -29,13 +29,14 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected implementation boundary is
-[Proof-Carrying Quotient Refinement During Solving](active/proof-carrying-quotient-refinement.md).
-Its plan remains unchanged after the completed enabling milestone.
-It will retain certified quotient transitions during solve and feed
-counterexamples from the existing shared partition back into policy
-improvement, without changing mechanics, action filtering, strategy format,
-or the 1 GiB cap.
+No implementation boundary is active. The archived
+[Proof-Carrying Quotient Refinement structural stop](archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
+retains Gates 0 through 4, but the first binding Gate 5 two-goal case exhausted
+`max_reforge_work` after four exact carriers and two large kernels, before
+partition initialization or policy publication. Core quotient, five-goal
+scale, and WASM product qualification are unqualified. The report recommends
+competitive lazy alternative certification as the next structural boundary;
+Oliver must select the next active chunk before implementation resumes.
 
 The archived
 [Solver Iteration Infrastructure And Decomposition](archive/2026-08-01-solver-iteration-infrastructure/README.md)

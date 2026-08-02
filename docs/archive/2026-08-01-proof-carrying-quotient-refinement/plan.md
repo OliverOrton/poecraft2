@@ -1,7 +1,8 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: implementation milestone in progress; Gates 0 through 4 are complete
-on the dedicated branch, and Gate 5 native acceptance is next.**
+**Status: archived after the Gate 5 binding-core structural stop on
+2026-08-01. Gates 0 through 4 are retained; the core, five-goal scale, and
+WASM product qualification levels are unqualified.**
 
 Owner: Oliver
 
@@ -13,19 +14,19 @@ may be pushed or merged during this milestone.
 
 Gate 0 provenance, fixture hashes, bounded reconnaissance, and WASM
 classifications are frozen in
-[`proof-carrying-quotient-gate0.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json).
+[`proof-carrying-quotient-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json).
 Gate 1 proof representation and focused validation are recorded in
-[`proof-carrying-quotient-gate1.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json).
+[`proof-carrying-quotient-gate1.json`](../../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json).
 Gate 2 shared-partition integration and structural witnesses are recorded in
-[`proof-carrying-quotient-gate2.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json).
+[`proof-carrying-quotient-gate2.json`](../../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json).
 Gate 3 replay-backed Bellman integration, the frozen medium measurement, and
 the pre-hard two-goal prediction are recorded in
-[`proof-carrying-quotient-gate3.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json).
+[`proof-carrying-quotient-gate3.json`](../../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json).
 Gate 4 publication, compilation, exact reconciliation, and 10,000-run medium
 verification are recorded in
-[`proof-carrying-quotient-gate4.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json).
+[`proof-carrying-quotient-gate4.json`](../../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json).
 
-Parent: [Active work](README.md)
+Parent: [Archived milestone](README.md)
 
 ## Objective and non-goals
 
@@ -502,6 +503,16 @@ simulation.
 Then run the existing 27-case smoke corpus, 49-case native reliability
 portfolio, and selected Ring/Gloves 10,000-run verification. A red binding
 core result is architectural evidence, not permission to raise a limit.
+
+Gate 5 stopped on its first binding case. The frozen two-goal run returned
+`refused_resource_cap` on `max_reforge_work` after four exact carriers, two
+kernels, and 345,192 exact transitions, before partition initialization or
+policy publication. Native peak owned memory was `375,483,167` bytes and
+reference-adapter calls remained zero. Because this binding core result is
+red, the remaining native cases, portfolios, five-goal run, and Gate 6 were
+not run. Core quotient, five-goal scale, and WASM product qualification are
+all unqualified; the full evidence and next-architecture recommendation are
+in the sibling [report](report.md).
 
 ### Gate 6 — release WASM and final acceptance
 

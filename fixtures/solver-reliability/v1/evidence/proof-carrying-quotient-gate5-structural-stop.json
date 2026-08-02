@@ -1,0 +1,179 @@
+{
+  "schema_version": "proof_carrying_quotient_gate5_structural_stop_v1",
+  "date": "2026-08-01",
+  "decision": "binding_core_failed_stop_remaining_acceptance",
+  "parent_commit": "dac7c6f9670a17e788381fd1ce4c33fc8c4925e2",
+  "branch": "codex/proof-carrying-quotient-refinement",
+  "starting_commit": "882e70968cd86090e9fc4e882fc6e01886aa62a4",
+  "binding_case": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "fixture_path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+    "fixture_sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+    "command": "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-reliability/v1/manifest.json --case natural-t1-breadth-two-4e65dda9c53b --output build/acceptance/proof-carrying-quotient/gate5-native/two-goal/natural-t1-breadth-two-4e65dda9c53b.json --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges",
+    "external_watchdog": {
+      "implementation": "PowerShell Start-Process -WindowStyle Hidden followed by Wait-Process",
+      "ceiling_seconds": 900,
+      "fired": false,
+      "observed_wall_seconds": 6.19
+    },
+    "raw_report": {
+      "path": "build/acceptance/proof-carrying-quotient/gate5-native/two-goal/natural-t1-breadth-two-4e65dda9c53b.json",
+      "sha256": "fcef98a4ddadeec6d6c3cda51ab53d4710bba23097a86e1516f5dcbabfe32837"
+    },
+    "stdout": {
+      "path": "build/acceptance/proof-carrying-quotient/gate5-native/two-goal/stdout.log",
+      "sha256": "da6d8d4af5b2a32ea2d74728ea4818be1552cda5b30d8b90fa64e4390c7f26aa"
+    },
+    "stderr": {
+      "path": "build/acceptance/proof-carrying-quotient/gate5-native/two-goal/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "binary_sha256": "9cf90458cdb27ead4732d3529d72f66958a041233ee273e7a849060e6843a718",
+    "artifact_manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "economy_content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "actual_status": "refused_resource_cap",
+    "workflow_status": {
+      "solve_result_class": "capped_without_policy",
+      "compile": "not_applicable_no_policy",
+      "exact_evaluation": "not_applicable_no_policy",
+      "simulation": "not_applicable_no_policy"
+    },
+    "binding_expectation_met": false,
+    "portfolio_classification_expectation_met": true,
+    "termination": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "resource": "max_reforge_work",
+    "max_reforge_work": 20000000,
+    "policy_refinement_failure": "policy_exact_refinement_resource_cap: solver exceeded max_reforge_work (5922368)",
+    "phase_wall_ms": {
+      "solve": 3679.1468,
+      "compile": null,
+      "verification": null,
+      "total": 5787.0836
+    },
+    "policy_available": false,
+    "coarse_start_lower_bound": 752.9009075663787,
+    "coarse_states_expanded": 171,
+    "exact_carriers_materialized": 4,
+    "retained_exact_carriers": 0,
+    "exact_transitions": 345192,
+    "exact_kernels": 2,
+    "initial_quotient_classes": 0,
+    "final_quotient_classes": 0,
+    "partition_rounds": 0,
+    "certified_rows": 0,
+    "fixed_point_checked": false,
+    "properness_checked": false,
+    "compiled_assertion_checked": false,
+    "proof": {
+      "peak_live_slices": 1,
+      "peak_live_slice_bytes": 4198696,
+      "coverage_descriptor_bytes": 0,
+      "certificate_bytes": 0,
+      "dependency_sidecar_bytes": 0,
+      "partition_bytes": 0,
+      "carrier_bytes": 0,
+      "row_kernel_bytes": 0,
+      "reference_adapter_invocations": 0
+    },
+    "memory": {
+      "native_live_owned_bytes": 305293988,
+      "native_peak_owned_bytes": 375483167,
+      "solver_telemetry_live_owned_bytes": 305284935,
+      "solver_telemetry_peak_owned_bytes": 375474114,
+      "solver_cap_bytes": 1073741824,
+      "process_working_set_after_bytes": 386867200,
+      "process_peak_not_measured": true
+    },
+    "complete_strict_graph_reconstructed": false,
+    "reference_fallback_used": false,
+    "compilation_attempted": false,
+    "exact_reconciliation_attempted": false,
+    "simulation_attempted": false
+  },
+  "prediction_comparison": {
+    "gate3_point": {
+      "final_quotient_cells": 13076,
+      "certified_sparse_row_use_sites": 10518,
+      "peak_total_solver_owned_bytes": 561416670,
+      "wall_seconds": 560
+    },
+    "gate3_ranges": {
+      "final_quotient_cells": [9600, 18000],
+      "peak_total_solver_owned_bytes": [430000000, 760000000],
+      "wall_seconds": [470, 700]
+    },
+    "actual_before_partition": {
+      "final_quotient_cells": 0,
+      "certified_sparse_row_use_sites": 0,
+      "peak_total_solver_owned_bytes": 375483167,
+      "wall_seconds": 5.7870836
+    },
+    "comparable": false,
+    "reason": "The binding run exhausted exact candidate reforge work after two kernels and stopped before partition initialization, so its incomplete memory, population, and time cannot validate or falsify the prediction for a completed quotient solve."
+  },
+  "smallest_preserved_failure_witness": {
+    "input": "the frozen two-goal case above",
+    "observed_prefix": "four exact carriers, two exact kernels, and 345192 exact transitions before the first partition class",
+    "compatibility_counterexample": {
+      "coarse_state": 18,
+      "action": "exalt",
+      "kind": "observation",
+      "required_feature_mask": 2297351,
+      "unavailable_feature_mask": 2097152,
+      "preserved_exclusion_witness": true
+    },
+    "why_no_smaller_synthetic_failure": "All focused proof and publication witnesses passed before Gate 5; the failure is admission-breadth work on the first binding production case rather than a local proof invariant."
+  },
+  "source_trace": {
+    "compact_action_rows": {
+      "path": "engine/src/solver_policy_oracle_setup.inc",
+      "sha256": "cad248abe4cbe67981da50ff0de7896f784b892a1be00cf6ee326caba3405e51",
+      "finding": "quotient_compact_action_rows certifies the current selected row, then eagerly asks candidate_selection for every already-admitted operator when the carrier lacks a complete inherited selection or is affected by reoptimization"
+    },
+    "candidate_selection": {
+      "path": "engine/src/solver_policy_oracle_resources.inc",
+      "sha256": "4e2304c648917442e0b040c0a8a52dffa8b6b22fcfa5575a65e01d86206ba008",
+      "finding": "candidate_selection materializes strict primitive and option outcomes under the existing resource ledger; the frozen candidate vocabulary is not filtered or hard-coded"
+    },
+    "streamed_discovery": {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "sha256": "b8c90c98601f71151aefc2f9ad3037efc961abdb5fd6a3fd92d53c2bcb20b96c",
+      "finding": "one locator slice is live at a time, but all compact candidate rows for that carrier are completed before the carrier enters the shared partition"
+    }
+  },
+  "structural_conclusion": "The proof-carrying representation is bounded and correct on focused and medium cases, but eager certification of the complete admitted alternative vocabulary can consume the binding work budget before selected-policy quotient closure begins. Raising the cap, narrowing the product vocabulary, or adding a fixture-specific fallback would not satisfy the milestone.",
+  "qualification": {
+    "core_quotient": "unqualified_binding_two_goal_resource_refusal",
+    "five_goal_scale": "unqualified_not_run_after_core_red",
+    "wasm_product": "unqualified_not_run_after_core_red"
+  },
+  "skipped_after_binding_red": [
+    "qualified Fracture full-four regression",
+    "natural representative four-goal case",
+    "natural five-goal scale case",
+    "27-case native smoke corpus",
+    "49-case native reliability portfolio",
+    "selected Ring and Gloves 10000-run verification",
+    "release WASM rebuild and frozen cases",
+    "release WASM reliability corpus",
+    "web tests and TypeScript check",
+    "final scripts/test.ps1"
+  ],
+  "next_architecture_recommendation": {
+    "name": "competitive lazy alternative certification",
+    "requirements": [
+      "discover and certify selected-policy closure first",
+      "retain every admitted but uncertified alternative as an explicit unresolved lower-only proof obligation",
+      "certify an alternative transactionally only when Bellman competitiveness or a counterexample requires it",
+      "publish an executable upper only from fully current certified selected rows and the existing properness authority",
+      "preserve action independence, the unchanged vocabulary, caps, mechanics, ABI, and strategy format",
+      "keep deterministic checkpoint and replay deferred"
+    ]
+  },
+  "gate6_reached": false,
+  "full_acceptance_suite_run": false,
+  "pushed": false,
+  "merged": false
+}

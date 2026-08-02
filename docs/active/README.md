@@ -1,16 +1,22 @@
 # Active Work
 
-**Status: proof-carrying quotient refinement is the selected implementation
-boundary.**
+**Status: no active implementation boundary.**
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
-Its amended Gate 0 is frozen on
-`codex/proof-carrying-quotient-refinement`; proof identity, replayable coverage,
-dependency storage, and ledger accounting are the next implementation gate.
-The quotient itself is not yet implemented, completed, or superseded.
+The completed
+[Proof-Carrying Quotient Refinement structural stop](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
+retains the streamed quotient implementation and passing focused/medium proof,
+partition, Bellman, properness, compilation, and verification gates. Its first
+binding two-goal acceptance case exhausted candidate-certification reforge work
+before the first quotient class, so core, five-goal scale, and WASM product
+qualification remain unqualified.
+
+The archived report recommends competitive lazy alternative certification:
+close and certify the selected policy first, preserve every admitted
+alternative as an explicit unresolved lower-only obligation, and certify an
+alternative only when Bellman competitiveness or a counterexample requires
+it. Oliver must select a new active plan before implementation resumes.
 
 The completed
 [Solver Iteration Infrastructure And Decomposition](../archive/2026-08-01-solver-iteration-infrastructure/README.md)

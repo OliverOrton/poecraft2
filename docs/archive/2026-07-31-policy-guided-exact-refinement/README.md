@@ -20,7 +20,7 @@ the scalable four- or five-goal endpoint.
 - [Archived implementation plan](plan.md)
 - [Qualification and architecture report](report.md)
 - [Tracked decision-gate evidence](../../../fixtures/solver-reliability/v1/evidence/policy-guided-exact-refinement-decision-gate.json)
-- [Next active structural plan](../../active/proof-carrying-quotient-refinement.md)
+- [Subsequent proof-carrying quotient milestone](../2026-08-01-proof-carrying-quotient-refinement/README.md)
 
 No release WASM build, full native portfolio, `scripts/test.ps1`, push, or
 visual review was performed after the red decision gate.
