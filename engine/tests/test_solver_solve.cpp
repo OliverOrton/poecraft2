@@ -1433,7 +1433,7 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_telemetry.exact_transitions > 0);
     PC_CHECK(refinement_telemetry.exact_kernels > 0);
     PC_CHECK(refinement_telemetry.exact_state_reuses > 0);
-    PC_CHECK(refinement_telemetry.collapse_events > 0);
+    PC_CHECK(refinement_telemetry.collapse_events == 0);
     PC_CHECK(
         refinement_telemetry.memory_limit_bytes ==
         options.max_solver_owned_bytes);

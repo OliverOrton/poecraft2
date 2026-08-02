@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement Gates 0 through 3 are complete.
-Gate 4 properness, compilation, and reconciliation are the current
+**Status: proof-carrying quotient refinement Gates 0 through 4 are complete.
+Gate 5 native structural and scale acceptance is the current
 implementation boundary.**
 
 Current plan:
@@ -16,8 +16,9 @@ Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 
 Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
 Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
-`9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is recorded by the
-next boundary commit.
+`9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is
+`62ca542e76829d39a27323fa2d5c1cc6266ba567`. Gate 4 is recorded by the next
+boundary commit.
 
 Nothing has been pushed or merged. `main` is unchanged.
 
@@ -152,19 +153,39 @@ tracked work counters. The tracked qualified Fracture evidence retains
   lower bound exceeds 1 GiB, so the early stop did not fire. Evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json`.
 
+## Gate 4 completed boundary
+
+- Publication is gated by current reachable certificates, closed target
+  generations, terminal-reachable bottom components, and a finite proper exact
+  value for every entry. The final audit is part of `Complete`, not telemetry
+  inferred after publication.
+- Certified dead-end alternatives stay retained for lower reasoning while the
+  executable upper uses only rows whose full support remains in the certified
+  terminal-attractor. A stale unselected alternative no longer blocks a valid
+  current upper, and an entry without a certified terminal path is improper.
+- Exact successors lacking an inherited coarse choice enter the existing
+  local optimizer with the complete already-filtered candidate vocabulary;
+  existing per-state admission remains authoritative.
+- Streamed compilation requires canonical strict locator coverage and uses the
+  existing `RefinedPolicyCompileRouting`; no quotient cell id reaches strategy
+  JSON and no vocabulary or ABI changed.
+- Focused results are quotient proof 259/0, policy refinement 4,829/0, and
+  compiler routing 750/0. The fresh medium run parsed, exact-matched, reconciled
+  at the root, and completed 10,000/10,000 simulations with zero off-policy
+  failures and zero reference calls. Evidence is in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json`.
+
 ## Exact next step
 
-Complete Gate 4 properness, compilation, and reconciliation:
+Run Gate 5 native acceptance exactly once per expensive case where practical:
 
-- add focused streamed-publication assertions for current reachable
-  certificates, closed target dependencies, terminal bottom SCCs, and strict
-  locator coverage;
-- validate the existing `RefinedPolicyCompileRouting` path without provisional
-  quotient IDs or any strategy-vocabulary change;
-- keep the frozen medium case exact-matched, root-reconciled, compiled, and
-  zero-reference; and
-- resolve any compiler/publication defect on focused or medium evidence before
-  the first hard solve.
+- frozen two-goal under the unchanged 1 GiB/900-second contract, with exact
+  publication, 10,000-run verification, and prediction-versus-actual evidence;
+- qualified Fracture full-four with all frozen counts and hashes;
+- the frozen representative four-goal core case;
+- the frozen five-goal scale case, reported separately if it refuses; and
+- only after those, the 27-case smoke, 49-case native portfolio, and selected
+  Ring/Gloves 10,000-run verification.
 
 Do not implement replay/checkpoint until the quotient representation is stable.
 Do not change mechanics, action filtering, caps, public C ABI, strategy

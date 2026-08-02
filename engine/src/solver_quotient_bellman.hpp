@@ -74,6 +74,20 @@ struct QuotientBellmanTelemetry {
     ProofMemorySnapshot memory;
 };
 
+struct QuotientPublicationAudit {
+    bool reachable_selected_rows_current = false;
+    bool closed_target_dependencies = false;
+    bool terminal_reachable_bottom_sccs = false;
+    bool proper_every_entry = false;
+
+    bool complete() const {
+        return reachable_selected_rows_current &&
+               closed_target_dependencies &&
+               terminal_reachable_bottom_sccs &&
+               proper_every_entry;
+    }
+};
+
 struct QuotientBellmanResult {
     QuotientBellmanStatus status = QuotientBellmanStatus::EmptyGraph;
     bool executable_upper = false;
@@ -83,6 +97,7 @@ struct QuotientBellmanResult {
     std::vector<double> values_by_state;
     std::vector<std::uint64_t> selected_rows_by_state;
     std::vector<double> lower_relaxation_by_state;
+    QuotientPublicationAudit publication_audit;
 };
 
 /*

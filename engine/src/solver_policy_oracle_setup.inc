@@ -61,18 +61,12 @@
             }
             for (const std::uint32_t operator_index :
                  coarse_.candidate_operators()) {
-                const bool admitted = std::any_of(
-                    reoptimization_parents_.begin(),
-                    reoptimization_parents_.end(),
-                    [&](const std::uint32_t parent) {
-                        return coarse_
-                            .is_candidate_operator_admitted_for_state(
-                                parent, operator_index);
-                    });
-                if (admitted) {
-                    append_admitted_coarse_operator(
-                        operator_index);
-                }
+                /* Exact successors may expose a coarse parent that the
+                 * optimistic policy never selected. Retain the complete
+                 * already-filtered candidate vocabulary up front; the
+                 * per-carrier admission authority below still rejects every
+                 * operator that is not admitted for that concrete parent. */
+                append_admitted_coarse_operator(operator_index);
             }
         } else {
             for (const auto& [unused, node] :

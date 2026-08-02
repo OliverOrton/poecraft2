@@ -433,10 +433,17 @@
         for (const RefinedPolicyClass& cls : refinement.classes) {
             if (cls.class_id >= value_by_class.size() ||
                 !std::isfinite(value_by_class[cls.class_id]) ||
-                cls.strict_members.empty()) {
+                cls.strict_members.empty() ||
+                !std::is_sorted(
+                    cls.strict_members.begin(),
+                    cls.strict_members.end()) ||
+                std::adjacent_find(
+                    cls.strict_members.begin(),
+                    cls.strict_members.end()) !=
+                    cls.strict_members.end()) {
                 throw AdapterFailure(
                     PolicyExactLiftStatus::InvalidSolveState,
-                    "streamed refinement class has no exact value");
+                    "streamed refinement class lacks canonical exact locator coverage");
             }
             const std::uint32_t representative =
                 *std::min_element(

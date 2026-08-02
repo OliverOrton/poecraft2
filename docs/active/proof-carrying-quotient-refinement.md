@@ -1,7 +1,7 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: implementation milestone in progress; Gates 0 through 3 are complete
-on the dedicated branch, and Gate 4 properness/compilation acceptance is next.**
+**Status: implementation milestone in progress; Gates 0 through 4 are complete
+on the dedicated branch, and Gate 5 native acceptance is next.**
 
 Owner: Oliver
 
@@ -21,6 +21,9 @@ Gate 2 shared-partition integration and structural witnesses are recorded in
 Gate 3 replay-backed Bellman integration, the frozen medium measurement, and
 the pre-hard two-goal prediction are recorded in
 [`proof-carrying-quotient-gate3.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json).
+Gate 4 publication, compilation, exact reconciliation, and 10,000-run medium
+verification are recorded in
+[`proof-carrying-quotient-gate4.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json).
 
 Parent: [Active work](README.md)
 
@@ -458,6 +461,25 @@ unchanged JSON must parse, independently exact-evaluate, reconcile at the
 root, route zero off-policy, and pass 10,000-run zero-off-policy simulation
 when verification is required. Diagnose compiler issues on focused/medium
 cases before any hard solve.
+
+Gate 4 is qualified. `QuotientPublicationAudit` is now binding before a
+Bellman result becomes executable: every selected-reachable row is current,
+its generation-stamped target dependencies are closed, every reachable bottom
+component has a terminal path, and every entry has a finite proper exact
+value. Certified dead-end alternatives remain retained for lower reasoning,
+but only rows whose complete support stays inside the certified terminal
+attractor can support the upper. An exact successor without an inherited
+coarse selection enters the existing local optimizer with the complete
+already-filtered vocabulary and is still checked by per-state admission.
+
+Focused quotient proof is 259/0, the frozen policy-refinement baseline is
+4,829/0, and compiler routing is 750/0. The fresh medium run completed
+`bounded_feasible` in 1,331.4421 ms including 10,000 simulations. Its unchanged
+strategy vocabulary parsed to 14 nodes and 33 edges, independently evaluated
+to `9.14379257789546` versus the solver root `9.143792577895411`, had exact
+off-policy mass zero, and completed all 10,000 simulations successfully with
+zero off-policy failures. The corrected row/kernel ledger is 181,604 bytes,
+the native peak is 79,085,896 bytes, and reference-adapter calls remain zero.
 
 ### Gate 5 — native structural and scale acceptance
 

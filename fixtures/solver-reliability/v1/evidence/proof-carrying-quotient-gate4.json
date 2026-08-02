@@ -1,0 +1,141 @@
+{
+  "schema_version": "proof_carrying_quotient_gate4_evidence_v1",
+  "date": "2026-08-01",
+  "decision": "gate4_qualified_proceed_to_native_hard_acceptance",
+  "parent_commit": "62ca542e76829d39a27323fa2d5c1cc6266ba567",
+  "publication_contract": {
+    "reachable_selected_rows_current": "required by QuotientPublicationAudit before Complete",
+    "closed_target_dependencies": "every selected sparse target is present in the current generation-stamped proof sidecar",
+    "lumpable_shared_partition": "required before Bellman publication and independently reported complete/lumpable",
+    "terminal_bottom_components": "the certified terminal-attractor excludes off-policy dead ends and the final audit proves every selected-reachable cell reaches a terminal",
+    "proper_every_entry": "the existing exact SCC evaluator runs over every cell in the certified envelope and every requested entry must have a finite exact value",
+    "lower_upper_separation": "certified and uncertified dead-end alternatives remain retained for lower reasoning but only certified rows whose complete support stays inside the terminal-attractor can support the executable upper",
+    "exact_successor_without_inherited_policy": "enters existing local reoptimization with the complete already-filtered candidate vocabulary; existing per-state admission authority still rejects inadmissible operators",
+    "compile_routing": "existing RefinedPolicyCompileRouting with canonical strict locator members and representatives; provisional quotient cell ids are never compiled",
+    "strategy_vocabulary_changed": false,
+    "public_abi_changed": false,
+    "reference_adapter_invocations": 0
+  },
+  "source": {
+    "bellman_header": {
+      "path": "engine/src/solver_quotient_bellman.hpp",
+      "sha256": "a577bc2986ff867d782fae40869f2513e247e8dadd601225d9af2147e8f06df6"
+    },
+    "bellman_implementation": {
+      "path": "engine/src/solver_quotient_bellman.cpp",
+      "sha256": "daf31d9ee4fd3fa736124454eef49af3b579d65d0c13a9e497365e71a0e39712"
+    },
+    "production_adapter": {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "sha256": "b8c90c98601f71151aefc2f9ad3037efc961abdb5fd6a3fd92d53c2bcb20b96c"
+    },
+    "streamed_compile_lift": {
+      "path": "engine/src/solver_policy_oracle_lift.inc",
+      "sha256": "83073f3af03079b1b01c22506114f7ab71715b8557bae5856f2e173a285b228d"
+    },
+    "streamed_observation_owner": {
+      "path": "engine/src/solver_policy_oracle_observations.inc",
+      "sha256": "7df888057bd829f116e3f1c430c6304a63028ef3a5847a70cae9c11e1ab976ca"
+    },
+    "filtered_vocabulary_owner": {
+      "path": "engine/src/solver_policy_oracle_setup.inc",
+      "sha256": "cad248abe4cbe67981da50ff0de7896f784b892a1be00cf6ee326caba3405e51"
+    },
+    "bellman_test": {
+      "path": "engine/tests/test_solver_quotient_bellman.cpp",
+      "sha256": "a18a777bdb3438c1744761574946c4fff59948606ed972d5474bc2dee329409d"
+    }
+  },
+  "focused_validation": {
+    "quotient_proof": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+      "checks": 259,
+      "failures": 0,
+      "witnesses": {
+        "current_reachable_certificates": true,
+        "closed_target_dependencies": true,
+        "terminal_reachable_bottom_components": true,
+        "proper_multiple_entries": true,
+        "stale_unselected_alternative_does_not_block_upper": true,
+        "improper_entry_without_terminal_path_rejected": true,
+        "deterministic_improper_component_repair": true
+      }
+    },
+    "policy_refinement": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite policy-refinement",
+      "checks": 4829,
+      "failures": 0,
+      "regression": "an exact successor lacking an inherited coarse selection is repaired only through existing filtered/admitted local alternatives"
+    },
+    "compiler": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite compile",
+      "checks": 750,
+      "failures": 0
+    }
+  },
+  "medium_integration": {
+    "case_id": "reliability-class-belt",
+    "command": "poecraft_solver_benchmark --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges",
+    "report_path": "build/acceptance/proof-carrying-quotient/gate4-medium/reliability-class-belt.json",
+    "report_sha256": "f6c43c9e9b47712c41840afa52148cf60dc2888893999ec89aa371bb08f378f9",
+    "status": "bounded_feasible",
+    "expectation_met": true,
+    "phase_wall_ms": {
+      "solve": 30.1819,
+      "compile": 10.1179,
+      "verification": 581.3679,
+      "total": 1331.4421
+    },
+    "native_peak_solver_owned_bytes": 79085896,
+    "native_live_solver_owned_bytes": 18693391,
+    "policy_reachable_coarse_states": 14,
+    "exact_carriers": 266,
+    "final_quotient_classes": 19,
+    "publication": {
+      "shared_fixed_point_complete": true,
+      "lumpable": true,
+      "lumpability_checks": 532,
+      "class_policy_proper": true,
+      "coarse_value_reconciled": true,
+      "compiled_policy_proper": true,
+      "compiled_zero_off_policy": true,
+      "compiled_cost_reconciled": true,
+      "reference_adapter_invocations": 0
+    },
+    "proof_memory": {
+      "coverage_descriptor_bytes": 25560,
+      "certificate_bytes": 18432,
+      "dependency_sidecar_bytes": 25056,
+      "partition_bytes": 242808,
+      "carrier_locator_bytes": 4096,
+      "row_kernel_bytes": 181604,
+      "scratch_bytes_at_completion": 0,
+      "peak_live_slices": 1,
+      "peak_live_slice_bytes": 28472,
+      "quotient_local_solver_owned_bytes": 3994390
+    },
+    "compiled_artifact": {
+      "nodes": 14,
+      "edges": 33,
+      "strategy_json_bytes": 727252,
+      "strategy_sha256": "adf9ae9312ae1c184a3f467effde14e4c52ef789678a78ad1216bf53a4e04003",
+      "parsed_successfully": true
+    },
+    "independent_exact_evaluation": {
+      "status": "matched",
+      "solver_root_cost": 9.143792577895411,
+      "compiled_exact_root_cost": 9.14379257789546,
+      "absolute_delta": 4.973799150320701e-14,
+      "off_policy_mass": 0
+    },
+    "simulation": {
+      "requested_runs": 10000,
+      "completed_runs": 10000,
+      "successes": 10000,
+      "failures": 0,
+      "off_policy_failures": 0,
+      "passed": true
+    }
+  },
+  "next_gate": "fresh native binding-core and five-goal scale acceptance"
+}

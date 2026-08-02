@@ -357,9 +357,10 @@ bool QuotientBellmanGraph::row_certificate_current(
 }
 
 void QuotientBellmanGraph::refresh_row_kernel_bytes() {
-    std::uint64_t bytes = external_row_kernel_bytes_;
+    std::uint64_t bytes = saturated_add(
+        external_row_kernel_bytes_,
         saturated_product(
-            transition_cache_.rows.capacity(), sizeof(SparseRow));
+            transition_cache_.rows.capacity(), sizeof(SparseRow)));
     bytes = saturated_add(
         bytes,
         saturated_product(
@@ -423,6 +424,97 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             ProofMemoryCategory::Scratch,
             scratch_bytes);
 
+        /* A certified alternative may lead into a cell that has no path to
+         * any terminal under the already-filtered action vocabulary. Retain
+         * that row for the optimistic lower relaxation, but do not let it
+         * pull an off-policy dead end into the executable upper envelope. */
+        std::vector<std::uint8_t> terminal_attractor(state_count, 0);
+        for (std::uint32_t state = 0; state < state_count; ++state) {
+            if (cells_.at(cell_by_state_[state]).cell.terminal) {
+                terminal_attractor[state] = 1;
+            }
+        }
+        bool attractor_changed = true;
+        while (attractor_changed) {
+            attractor_changed = false;
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (terminal_attractor[state]) continue;
+                for (const std::uint64_t row :
+                     state_row_indices(transition_cache_, state)) {
+                    if (!transition_cache_.rows[row].admitted ||
+                        !row_certificate_current(row)) {
+                        continue;
+                    }
+                    const SparseRow& sparse = transition_cache_.rows[row];
+                    bool reaches_attractor = false;
+                    for (std::uint32_t i = 0;
+                         i < sparse.transition_count; ++i) {
+                        if (terminal_attractor[
+                                transition_cache_.successors[
+                                    sparse.transition_offset + i]]) {
+                            reaches_attractor = true;
+                            break;
+                        }
+                    }
+                    if (reaches_attractor) {
+                        terminal_attractor[state] = 1;
+                        attractor_changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        bool support_changed = true;
+        while (support_changed) {
+            support_changed = false;
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (!terminal_attractor[state] ||
+                    cells_.at(cell_by_state_[state]).cell.terminal) {
+                    continue;
+                }
+                bool has_closed_row = false;
+                for (const std::uint64_t row :
+                     state_row_indices(transition_cache_, state)) {
+                    if (!transition_cache_.rows[row].admitted ||
+                        !row_certificate_current(row)) {
+                        continue;
+                    }
+                    const SparseRow& sparse = transition_cache_.rows[row];
+                    bool closed = true;
+                    for (std::uint32_t i = 0;
+                         i < sparse.transition_count; ++i) {
+                        if (!terminal_attractor[
+                                transition_cache_.successors[
+                                    sparse.transition_offset + i]]) {
+                            closed = false;
+                            break;
+                        }
+                    }
+                    if (closed) {
+                        has_closed_row = true;
+                        break;
+                    }
+                }
+                if (!has_closed_row) {
+                    terminal_attractor[state] = 0;
+                    support_changed = true;
+                }
+            }
+        }
+        const auto row_stays_in_terminal_attractor =
+                [&](const std::uint64_t row) {
+            const SparseRow& sparse = transition_cache_.rows[row];
+            for (std::uint32_t i = 0;
+                 i < sparse.transition_count; ++i) {
+                if (!terminal_attractor[
+                        transition_cache_.successors[
+                            sparse.transition_offset + i]]) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         std::vector<double> optimistic(state_count, 0.0);
         out.lower_relaxation_by_state.assign(
             state_count, kInfinity);
@@ -457,6 +549,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         for (std::uint32_t state = 0; state < state_count; ++state) {
             if (cells_.at(cell_by_state_[state]).cell.terminal) {
                 closed_seed[state] = 0;
+            } else if (!terminal_attractor[state]) {
+                closed_seed[state] = 0;
             }
         }
         bool closed_changed = true;
@@ -468,7 +562,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 for (const std::uint64_t row :
                      state_row_indices(transition_cache_, state)) {
                     if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row)) {
+                        !row_certificate_current(row) ||
+                        !row_stays_in_terminal_attractor(row)) {
                         continue;
                     }
                     const SparseRow& sparse = transition_cache_.rows[row];
@@ -501,7 +596,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 for (const std::uint64_t row :
                      state_row_indices(transition_cache_, state)) {
                     if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row)) {
+                        !row_certificate_current(row) ||
+                        !row_stays_in_terminal_attractor(row)) {
                         continue;
                     }
                     const SparseRow& sparse = transition_cache_.rows[row];
@@ -525,7 +621,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 transition_cache_, state, improvement_epsilon,
                 [&](const std::uint64_t row) {
                     return transition_cache_.rows[row].admitted &&
-                           row_certificate_current(row);
+                           row_certificate_current(row) &&
+                           row_stays_in_terminal_attractor(row);
                 },
                 [&](const std::uint64_t row, std::uint32_t& work) {
                     work = 0;
@@ -549,6 +646,16 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
         }
         std::sort(entries.begin(), entries.end());
         entries.erase(std::unique(entries.begin(), entries.end()), entries.end());
+        if (std::any_of(
+                entries.begin(), entries.end(),
+                [&](const std::uint32_t entry) {
+                    return !terminal_attractor[entry];
+                })) {
+            out.status = QuotientBellmanStatus::ImproperPolicy;
+            out.failure_reason =
+                "quotient Bellman entry has no certified path to a terminal";
+            return out;
+        }
 
         std::vector<double> values(state_count, kInfinity);
         for (std::uint32_t iteration = 0;
@@ -566,7 +673,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 for (const std::uint64_t row :
                      state_row_indices(transition_cache_, state)) {
                     if (!transition_cache_.rows[row].admitted ||
-                        !row_certificate_current(row)) {
+                        !row_certificate_current(row) ||
+                        !row_stays_in_terminal_attractor(row)) {
                         continue;
                     }
                     saw_certificate = true;
@@ -674,32 +782,41 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             if (evaluated.status ==
                     refinement::PolicyEvaluationStatus::ImproperPolicy) {
                 bool repaired = false;
+                const std::set<std::uint32_t> improper_classes(
+                    evaluated.improper_component_classes.begin(),
+                    evaluated.improper_component_classes.end());
                 for (const std::uint32_t local :
                      evaluated.improper_component_classes) {
                     if (local >= state_by_local.size()) continue;
                     const std::uint32_t state = state_by_local[local];
-                    bool passed_current = false;
-                    std::uint64_t first_alternative = kNoRow;
                     for (const std::uint64_t row :
                          state_row_indices(transition_cache_, state)) {
                         if (!transition_cache_.rows[row].admitted ||
-                            !row_certificate_current(row)) {
+                            !row_certificate_current(row) ||
+                            !row_stays_in_terminal_attractor(row) ||
+                            row == policy_rows[state]) {
                             continue;
                         }
-                        if (row != policy_rows[state] &&
-                            first_alternative == kNoRow) {
-                            first_alternative = row;
+                        const SparseRow& sparse = transition_cache_.rows[row];
+                        bool escapes_component = false;
+                        for (std::uint32_t i = 0;
+                             i < sparse.transition_count; ++i) {
+                            const std::uint32_t target_state =
+                                transition_cache_.successors[
+                                    sparse.transition_offset + i];
+                            const std::uint32_t target_local =
+                                local_by_state[target_state];
+                            if (target_local == kNoId ||
+                                !improper_classes.contains(target_local)) {
+                                escapes_component = true;
+                                break;
+                            }
                         }
-                        if (passed_current) {
+                        if (escapes_component) {
                             policy_rows[state] = row;
                             repaired = true;
                             break;
                         }
-                        if (row == policy_rows[state]) passed_current = true;
-                    }
-                    if (!repaired && first_alternative != kNoRow) {
-                        policy_rows[state] = first_alternative;
-                        repaired = true;
                     }
                     if (repaired) {
                         ++telemetry_.policy_improvements;
@@ -737,7 +854,8 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                     transition_cache_, state, improvement_epsilon,
                     [&](const std::uint64_t row) {
                         return transition_cache_.rows[row].admitted &&
-                               row_certificate_current(row);
+                               row_certificate_current(row) &&
+                               row_stays_in_terminal_attractor(row);
                     },
                     [&](const std::uint64_t row, std::uint32_t& work) {
                         return solve_detail::evaluate_sparse_policy_row(
@@ -754,9 +872,6 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             }
             if (changed) continue;
 
-            out.status = QuotientBellmanStatus::Complete;
-            out.executable_upper = true;
-            out.proper = true;
             out.values_by_state = std::move(values);
             out.selected_rows_by_state = std::move(policy_rows);
             std::set<std::uint32_t> selected_pending(entries.begin(), entries.end());
@@ -781,6 +896,98 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
             std::sort(
                 out.reachable_cell_ids.begin(),
                 out.reachable_cell_ids.end());
+
+            QuotientPublicationAudit& audit = out.publication_audit;
+            audit.reachable_selected_rows_current = true;
+            audit.closed_target_dependencies = true;
+            std::vector<std::vector<std::uint32_t>> selected_predecessors(
+                state_count);
+            std::set<std::uint32_t> terminal_pending;
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (!selected_seen[state]) continue;
+                const CellRecord& cell = cells_.at(cell_by_state_[state]);
+                if (cell.cell.terminal) {
+                    terminal_pending.insert(state);
+                    continue;
+                }
+                const std::uint64_t row =
+                    out.selected_rows_by_state[state];
+                if (row == kNoRow || !row_certificate_current(row)) {
+                    audit.reachable_selected_rows_current = false;
+                    audit.closed_target_dependencies = false;
+                    continue;
+                }
+                const RowProofUseSite& use =
+                    transition_cache_.quotient_proofs->use_site(row);
+                const SparseRow& sparse = transition_cache_.rows[row];
+                std::set<std::uint32_t> dependency_cells;
+                for (const TargetGenerationDependency& dependency :
+                     use.target_dependencies) {
+                    const auto target = cells_.find(dependency.cell_id);
+                    if (target == cells_.end() ||
+                        dependency.generation !=
+                            target->second.target_generation) {
+                        audit.closed_target_dependencies = false;
+                    }
+                    dependency_cells.insert(dependency.cell_id);
+                }
+                for (std::uint32_t i = 0;
+                     i < sparse.transition_count; ++i) {
+                    const std::uint32_t target =
+                        transition_cache_.successors[
+                            sparse.transition_offset + i];
+                    if (!selected_seen[target] ||
+                        !dependency_cells.contains(cell_by_state_[target])) {
+                        audit.closed_target_dependencies = false;
+                    }
+                    selected_predecessors[target].push_back(state);
+                }
+            }
+
+            std::vector<std::uint8_t> terminal_reachable(state_count, 0);
+            while (!terminal_pending.empty()) {
+                const std::uint32_t state = *terminal_pending.begin();
+                terminal_pending.erase(terminal_pending.begin());
+                if (terminal_reachable[state]) continue;
+                terminal_reachable[state] = 1;
+                for (const std::uint32_t predecessor :
+                     selected_predecessors[state]) {
+                    if (!terminal_reachable[predecessor]) {
+                        terminal_pending.insert(predecessor);
+                    }
+                }
+            }
+            audit.terminal_reachable_bottom_sccs = true;
+            for (std::uint32_t state = 0; state < state_count; ++state) {
+                if (selected_seen[state] && !terminal_reachable[state]) {
+                    audit.terminal_reachable_bottom_sccs = false;
+                    break;
+                }
+            }
+            audit.proper_every_entry = std::all_of(
+                entries.begin(), entries.end(),
+                [&](const std::uint32_t entry) {
+                    return selected_seen[entry] &&
+                           std::isfinite(out.values_by_state[entry]);
+                });
+            if (!audit.reachable_selected_rows_current ||
+                !audit.closed_target_dependencies) {
+                out.status = QuotientBellmanStatus::
+                    MissingReachableCertificate;
+                out.failure_reason =
+                    "published quotient has stale or open selected proof dependencies";
+                return out;
+            }
+            if (!audit.terminal_reachable_bottom_sccs ||
+                !audit.proper_every_entry) {
+                out.status = QuotientBellmanStatus::ImproperPolicy;
+                out.failure_reason =
+                    "published quotient has a nonterminal bottom component or improper entry";
+                return out;
+            }
+            out.status = QuotientBellmanStatus::Complete;
+            out.executable_upper = true;
+            out.proper = true;
             refresh_row_kernel_bytes();
             telemetry_.memory =
                 transition_cache_.quotient_proofs->ledger().snapshot();

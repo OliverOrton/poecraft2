@@ -172,7 +172,9 @@
         if (selected.index == kNoId) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::InvalidSolveState,
-                "non-goal coarse state has no selected policy action");
+                "non-goal coarse state " +
+                    std::to_string(coarse_state) +
+                    " has no selected policy action");
         }
         if (selected.index >= coarse_.operators().size()) {
             throw AdapterFailure(

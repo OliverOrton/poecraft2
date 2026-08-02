@@ -557,7 +557,8 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
         if (solved_quotient.status !=
                 quotient::QuotientBellmanStatus::Complete ||
             !solved_quotient.executable_upper ||
-            !solved_quotient.proper) {
+            !solved_quotient.proper ||
+            !solved_quotient.publication_audit.complete()) {
             throw AdapterFailure(
                 solved_quotient.status ==
                         quotient::QuotientBellmanStatus::ResourceCap
@@ -1532,6 +1533,17 @@ PolicyExactLiftCertificate lift_policy_quotient(
                         locators.at(ordinal));
                 }
             }
+            std::sort(
+                policy_class.strict_members.begin(),
+                policy_class.strict_members.end());
+            if (std::adjacent_find(
+                    policy_class.strict_members.begin(),
+                    policy_class.strict_members.end()) !=
+                policy_class.strict_members.end()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::RefinementFailure,
+                    "published quotient has overlapping strict locator coverage");
+            }
             if (cell.terminal) continue;
             const std::uint32_t state =
                 *bellman.state_index_for_cell(cell.cell_id);
@@ -1560,6 +1572,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
             }
         }
         certificate.refinement.telemetry.exact_states = locators.size();
+        certificate.refinement.telemetry.policy_reachable_coarse_states =
+            telemetry.coarse_policy_states;
         certificate.refinement.telemetry.final_refinement_classes =
             reachable_classes.size();
         certificate.refinement.telemetry.initial_observation_classes =
@@ -1619,7 +1633,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
         }
         if (certificate.compiled.status !=
                 CompiledPolicyAssertionStatus::Complete ||
-            !certificate.compiled.executable) {
+            !certificate.compiled.executable ||
+            !certificate.compiled.zero_off_policy) {
             throw AdapterFailure(
                 certificate.compiled.status ==
                         CompiledPolicyAssertionStatus::ResourceCap

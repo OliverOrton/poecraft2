@@ -110,6 +110,13 @@ void run_bellman_projection_and_invalidation_tests() {
     PC_CHECK(solved.status == QuotientBellmanStatus::Complete);
     PC_CHECK(solved.executable_upper);
     PC_CHECK(solved.proper);
+    PC_CHECK(solved.publication_audit.complete());
+    PC_CHECK(
+        solved.publication_audit.reachable_selected_rows_current);
+    PC_CHECK(solved.publication_audit.closed_target_dependencies);
+    PC_CHECK(
+        solved.publication_audit.terminal_reachable_bottom_sccs);
+    PC_CHECK(solved.publication_audit.proper_every_entry);
     if (solved.status == QuotientBellmanStatus::Complete) {
         PC_CHECK(solved.selected_rows_by_state.at(0) == cyclic);
         PC_CHECK(std::fabs(solved.values_by_state.at(0) - 4.0) < 1e-10);
@@ -153,8 +160,11 @@ void run_bellman_projection_and_invalidation_tests() {
 
     PC_CHECK(graph.invalidate_source_split(2, 3) == 1);
     solved = graph.solve({1});
-    PC_CHECK(solved.status ==
-             QuotientBellmanStatus::MissingReachableCertificate);
+    PC_CHECK(solved.status == QuotientBellmanStatus::Complete);
+    PC_CHECK(solved.publication_audit.complete());
+    if (solved.status == QuotientBellmanStatus::Complete) {
+        PC_CHECK(solved.selected_rows_by_state.at(0) == direct);
+    }
     PC_CHECK(graph.telemetry().source_splits == 1);
     PC_CHECK(graph.telemetry().reverse_invalidations == 2);
 
@@ -185,6 +195,7 @@ void run_improper_and_determinism_tests() {
     const QuotientBellmanResult repaired = repairable.solve({7});
     PC_CHECK(repaired.status == QuotientBellmanStatus::Complete);
     PC_CHECK(repaired.proper);
+    PC_CHECK(repaired.publication_audit.complete());
     PC_CHECK(repaired.selected_rows_by_state.at(0) == repaired_exit);
     PC_CHECK(repairable.telemetry().policy_improvements != 0);
     PC_CHECK(repairable.telemetry().improper_policy_repairs != 0);
@@ -200,6 +211,7 @@ void run_improper_and_determinism_tests() {
     const QuotientBellmanResult improper = graph.solve({10});
     PC_CHECK(improper.status == QuotientBellmanStatus::ImproperPolicy);
     PC_CHECK(!improper.executable_upper);
+    PC_CHECK(!improper.publication_audit.complete());
 
     QuotientBellmanGraph reversed;
     reversed.install_cells({cell(11), cell(10)});

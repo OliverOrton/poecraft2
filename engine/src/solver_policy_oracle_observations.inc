@@ -86,30 +86,37 @@
         }
         CoarsePolicyNode node;
         if (!coarse_.is_goal_state(coarse_.state(state))) {
-            const PlannerOperator& planner =
-                coarse_operator(state);
-            (void)planner;
-            node.coarse_operator =
-                solved_.policy[state].index;
-            if (!strict_operator_by_coarse_.contains(
-                    node.coarse_operator)) {
-                operator_vocabulary_widening_witness_ =
-                    OperatorVocabularyWideningWitness{
-                        state, node.coarse_operator};
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::
-                        CoarseMappingFailure,
-                    "policy-reachable exact successor selected an "
-                    "operator outside the current witness-driven "
-                    "runtime vocabulary");
+            if (solved_.policy[state].index == kNoId) {
+                if (!enable_local_reoptimization_) {
+                    (void)coarse_operator(state);
+                }
+                reoptimization_parents_.insert(state);
+            } else {
+                const PlannerOperator& planner =
+                    coarse_operator(state);
+                (void)planner;
+                node.coarse_operator =
+                    solved_.policy[state].index;
+                if (!strict_operator_by_coarse_.contains(
+                        node.coarse_operator)) {
+                    operator_vocabulary_widening_witness_ =
+                        OperatorVocabularyWideningWitness{
+                            state, node.coarse_operator};
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::
+                            CoarseMappingFailure,
+                        "policy-reachable exact successor selected an "
+                        "operator outside the current witness-driven "
+                        "runtime vocabulary");
+                }
+                node.selected = make_selected(
+                    state,
+                    strict_operator_for(node.coarse_operator),
+                    std::nullopt);
+                require_local_memory(
+                    coarse_policy_node_bytes(node),
+                    "local coarse-policy parent construction");
             }
-            node.selected = make_selected(
-                state,
-                strict_operator_for(node.coarse_operator),
-                std::nullopt);
-            require_local_memory(
-                coarse_policy_node_bytes(node),
-                "local coarse-policy parent construction");
         }
         coarse_policy_.emplace(state, std::move(node));
         telemetry_.coarse_policy_states =
@@ -290,23 +297,27 @@
             if (exact.terminal) exact.features.clear();
         }
         if (!exact.terminal) {
-            if (!policy->second.selected.has_value()) {
+            if (!policy->second.selected.has_value() &&
+                !(enable_local_reoptimization_ &&
+                  reoptimization_parents_.contains(parent))) {
                 throw AdapterFailure(
                     PolicyExactLiftStatus::InvalidSolveState,
                     "non-terminal strict carrier has no coarse policy "
                     "action");
             }
-            const std::optional<StableKey> operation =
-                canonical_operation_state_signature(
-                    strict_->session(),
-                    strict_->layout(),
-                    strict_->state(strict_state),
-                    *policy->second.selected);
-            if (!operation.has_value()) {
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::ObservationUnavailable,
-                    "strict carrier cannot form its canonical operation "
-                    "signature");
+            if (policy->second.selected.has_value()) {
+                const std::optional<StableKey> operation =
+                    canonical_operation_state_signature(
+                        strict_->session(),
+                        strict_->layout(),
+                        strict_->state(strict_state),
+                        *policy->second.selected);
+                if (!operation.has_value()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::ObservationUnavailable,
+                        "strict carrier cannot form its canonical operation "
+                        "signature");
+                }
             }
         }
         /*
