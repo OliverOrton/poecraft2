@@ -1237,6 +1237,22 @@ std::string serialize_solver_telemetry(
         json += ",\"local_reoptimizations\":null";
         json += ",\"local_policy_changes\":null";
         json += ",\"local_value_changes\":null";
+        json += ",\"quotient_proof\":{"
+                "\"payload_reuses\":null,\"row_reprojections\":null,"
+                "\"source_splits\":null,\"target_splits\":null,"
+                "\"reverse_invalidations\":null,"
+                "\"improper_policy_repairs\":null,"
+                "\"exact_carriers_replayed\":null,"
+                "\"current_live_slices\":null,\"peak_live_slices\":null,"
+                "\"current_live_slice_bytes\":null,"
+                "\"peak_live_slice_bytes\":null,"
+                "\"coverage_descriptor_bytes\":null,"
+                "\"certificate_bytes\":null,"
+                "\"dependency_sidecar_bytes\":null,"
+                "\"partition_bytes\":null,\"carrier_bytes\":null,"
+                "\"row_kernel_bytes\":null,\"scratch_bytes\":null,"
+                "\"total_solver_owned_bytes\":null,"
+                "\"reference_adapter_invocations\":null}";
         json += ",\"fixed_point\":{"
                 "\"checked\":null,\"complete\":null,"
                 "\"lumpability_checked\":null,\"lumpable\":null,"
@@ -1342,6 +1358,47 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.local_policy_changes);
         json += ",\"local_value_changes\":" +
                 std::to_string(refinement.local_value_changes);
+        json += ",\"quotient_proof\":{\"payload_reuses\":" +
+                std::to_string(refinement.proof_payload_reuses);
+        json += ",\"row_reprojections\":" +
+                std::to_string(refinement.row_reprojections);
+        json += ",\"source_splits\":" +
+                std::to_string(refinement.quotient_source_splits);
+        json += ",\"target_splits\":" +
+                std::to_string(refinement.quotient_target_splits);
+        json += ",\"reverse_invalidations\":" +
+                std::to_string(refinement.reverse_invalidations);
+        json += ",\"improper_policy_repairs\":" +
+                std::to_string(refinement.improper_policy_repairs);
+        json += ",\"exact_carriers_replayed\":" +
+                std::to_string(refinement.exact_carriers_replayed);
+        json += ",\"current_live_slices\":" +
+                std::to_string(refinement.current_live_slices);
+        json += ",\"peak_live_slices\":" +
+                std::to_string(refinement.peak_live_slices);
+        json += ",\"current_live_slice_bytes\":" +
+                std::to_string(refinement.current_live_slice_bytes);
+        json += ",\"peak_live_slice_bytes\":" +
+                std::to_string(refinement.peak_live_slice_bytes);
+        json += ",\"coverage_descriptor_bytes\":" +
+                std::to_string(refinement.coverage_descriptor_bytes);
+        json += ",\"certificate_bytes\":" +
+                std::to_string(refinement.certificate_bytes);
+        json += ",\"dependency_sidecar_bytes\":" +
+                std::to_string(refinement.dependency_sidecar_bytes);
+        json += ",\"partition_bytes\":" +
+                std::to_string(refinement.partition_bytes);
+        json += ",\"carrier_bytes\":" +
+                std::to_string(refinement.carrier_bytes);
+        json += ",\"row_kernel_bytes\":" +
+                std::to_string(refinement.row_kernel_bytes);
+        json += ",\"scratch_bytes\":" +
+                std::to_string(refinement.scratch_bytes);
+        json += ",\"total_solver_owned_bytes\":" +
+                std::to_string(refinement.total_solver_owned_bytes);
+        json += ",\"reference_adapter_invocations\":" +
+                std::to_string(
+                    refinement.reference_adapter_invocations) + "}";
         json += ",\"fixed_point\":{\"checked\":" +
                 std::string(bool_json(refinement.fixed_point_checked));
         json += ",\"complete\":" +

@@ -523,7 +523,9 @@ std::uint64_t refinement_result_bytes(
         bytes += stable_key_bytes(
             policy_class.coarse_state_key);
         bytes += policy_class.exact_members.capacity() *
-                 sizeof(StableKey);
+            sizeof(StableKey);
+        bytes += policy_class.strict_members.capacity() *
+            sizeof(std::uint32_t);
         for (const StableKey& member :
              policy_class.exact_members) {
             bytes += stable_key_bytes(member);

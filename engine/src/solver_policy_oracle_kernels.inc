@@ -498,6 +498,7 @@
     bool enable_local_reoptimization_ = false;
     std::set<std::uint32_t> reoptimization_parents_;
     std::uint64_t caller_seed_retained_bytes_ = 0;
+    bool force_semantic_strict_identity_ = false;
     std::unique_ptr<CalcContext> strict_;
     std::vector<std::uint32_t> strict_junk_to_coarse_;
     std::array<
@@ -516,6 +517,7 @@
     std::map<StableKey, KnownState> known_;
     std::map<KernelKey, ExactActionKernel> kernels_;
     std::map<KernelKey, ExactChoiceRecipe> choice_recipes_;
+    std::map<StableKey, ExactChoiceRecipe> quotient_streamed_recipes_;
     std::set<StableKey> stable_kernel_reuse_keys_;
     std::map<StableKey, SelectedAction> exact_policy_;
     std::set<StableKey> repair_carriers_;
@@ -615,7 +617,8 @@
             const bool terminal,
             const FeatureSignature& features,
             const CoarsePolicyNode& policy) const {
-        if (enable_local_reoptimization_) return std::nullopt;
+        if (enable_local_reoptimization_ ||
+            force_semantic_strict_identity_) return std::nullopt;
         if (terminal) {
             StableKey key{
                 0x7063727465726d31ull, /* "pcrterm1" */

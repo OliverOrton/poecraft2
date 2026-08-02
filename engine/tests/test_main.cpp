@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
         std::string(argv[1]) == "--solver-quotient-proof-only") {
         run_solver_quotient_proof_tests();
         run_solver_quotient_partition_tests();
+        run_solver_quotient_bellman_tests();
         std::printf(
             "solver quotient-proof tests: %d checks, %d failures\n",
             pctest::g_checks, pctest::g_failures);
@@ -150,6 +151,7 @@ int main(int argc, char** argv) {
     run_solver_refinement_tests();
     run_solver_quotient_proof_tests();
     run_solver_quotient_partition_tests();
+    run_solver_quotient_bellman_tests();
 
     std::printf("engine tests: %d checks, %d failures\n", pctest::g_checks,
                 pctest::g_failures);

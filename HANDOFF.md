@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement Gates 0 through 2 are complete.
-Gate 3 Bellman integration and medium-case projection are the current
+**Status: proof-carrying quotient refinement Gates 0 through 3 are complete.
+Gate 4 properness, compilation, and reconciliation are the current
 implementation boundary.**
 
 Current plan:
@@ -16,7 +16,8 @@ Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 
 Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
 Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
-recorded by the next boundary commit.
+`9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is recorded by the
+next boundary commit.
 
 Nothing has been pushed or merged. `main` is unchanged.
 
@@ -125,26 +126,45 @@ tracked work counters. The tracked qualified Fracture evidence retains
   4,829 checks with zero failures. Evidence is tracked in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json`.
 
+## Gate 3 completed boundary
+
+- `SolveTransitionCache` now owns stable certified quotient rows, state-row
+  spans, reverse predecessors, price/Q/policy generations, and exact SCC
+  evaluation. Uncertified rows participate only in the optimistic lower
+  relaxation; every published upper row must have a current full-key proof.
+- Production discovery materializes one exact carrier and compact kernel slice
+  at a time. Immutable raw kernels are collision-checked and shared; persistent
+  per-carrier state is only a strict replay locator and payload-id sidecar.
+  `refine_closed_probabilistic_partition_replay` is the replay-backed entry to
+  the existing shared split-only authority, so no complete strict graph or
+  complete semantic-key vector is retained.
+- Observation-coarse certified cells are refined monotonically. The medium run
+  exercised 15 source/target splits, 87 reverse invalidations, 173 payload
+  reuses, 204 row projections, and 11 Bellman policy changes. The focused
+  improper two-state cycle exercises deterministic repair before publication.
+- `reliability-class-belt` completed `bounded_feasible`, exact-matched, and
+  compiled in 770.817 ms total with one 28,040-byte live slice,
+  3,483,686 quotient-local owned bytes, and zero reference-adapter calls.
+  `quotient-proof` is 250/0.
+- The frozen two-goal point prediction is 13,076 cells, 10,518 certified row
+  uses, 189,014,112 proof bytes, 561,416,670 total peak bytes, and 560 seconds;
+  the declared total range is 430-760 MB and 470-700 seconds. No measured
+  lower bound exceeds 1 GiB, so the early stop did not fire. Evidence is in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json`.
+
 ## Exact next step
 
-Implement Gate 3 in `SolveTransitionCache` and existing Bellman/policy owners:
+Complete Gate 4 properness, compilation, and reconciliation:
 
-- retain quotient cells, certified sparse rows, state-to-row spans, and reverse
-  predecessor work without changing the filtered action vocabulary;
-- mark uncertified aggregation lower-only and require current reachable
-  certificates for any executable upper;
-- reproject stale rows after source/target splits while preserving unaffected
-  payload reuse and every admitted alternative;
-- invalidate prices, Q values, SCC values, and policy without discarding
-  structurally valid rows on price-only change;
-- expose every required proof/split/replay/live-slice/ledger/reference-adapter
-  telemetry field; and
-- run `reliability-class-belt` through quotient construction, Bellman repair,
-  properness, and compilation with zero production reference-adapter calls.
-
-Use the Gate 1-3 medium measurements to freeze a plausible population, memory,
-and wall-time range for the archived two-goal case before running it. Stop only
-if measured accounting proves a lower bound above 1 GiB or unbounded growth.
+- add focused streamed-publication assertions for current reachable
+  certificates, closed target dependencies, terminal bottom SCCs, and strict
+  locator coverage;
+- validate the existing `RefinedPolicyCompileRouting` path without provisional
+  quotient IDs or any strategy-vocabulary change;
+- keep the frozen medium case exact-matched, root-reconciled, compiled, and
+  zero-reference; and
+- resolve any compiler/publication defect on focused or medium evidence before
+  the first hard solve.
 
 Do not implement replay/checkpoint until the quotient representation is stable.
 Do not change mechanics, action filtering, caps, public C ABI, strategy

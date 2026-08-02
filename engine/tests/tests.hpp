@@ -47,5 +47,6 @@ void run_solver_s8_3_tests();
 void run_solver_refinement_tests();
 void run_solver_quotient_proof_tests();
 void run_solver_quotient_partition_tests();
+void run_solver_quotient_bellman_tests();
 
 #endif

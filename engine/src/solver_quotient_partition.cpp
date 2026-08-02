@@ -220,6 +220,10 @@ const QuotientCell* QuotientPartitionState::find_cell(
                : nullptr;
 }
 
+StableKey canonical_quotient_cell_identity(const QuotientCell& cell) {
+    return cell_semantic_identity(cell);
+}
+
 QuotientPartitionResult refine_certified_quotient_partition(
         const CoverageDescriptor& coverage_descriptor,
         const std::vector<CoverageCarrier>& exact_coverage,

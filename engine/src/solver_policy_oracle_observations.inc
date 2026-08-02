@@ -384,9 +384,11 @@
         return {std::move(exact), true};
     }
 
-    ExactActionKernel build_kernel(
+    template <typename AddTransition>
+    double visit_kernel_transitions(
             const StableKey& key,
-            const SelectedAction& selected) {
+            const SelectedAction& selected,
+            AddTransition&& add) {
         const KnownState& known = known_.at(key);
         if (selected.action_id >= strict_->operators().size()) {
             throw AdapterFailure(
@@ -400,20 +402,16 @@
             choice_recipe(key, selected);
         refresh_strict_resource_cap(
             "strict exact-kernel evaluation");
-        ExactActionKernel kernel;
-        const auto add =
-            [&](const std::uint32_t successor,
-                const double probability) {
-                if (probability == 0.0) return;
-                auto [exact, inserted] =
-                    intern_strict_state(
-                        successor == kNoId
-                            ? known.strict_state
-                            : successor);
-                (void)inserted;
-                kernel.transitions.push_back(
-                    {std::move(exact), probability});
-            };
+        double action_cost = 0.0;
+        std::uint64_t transition_count = 0;
+        const auto append = [&](const std::uint32_t successor,
+                                const double probability) {
+            if (probability == 0.0) return;
+            add(
+                successor == kNoId ? known.strict_state : successor,
+                probability);
+            ++transition_count;
+        };
         if (planner.kind == PlannerOperatorKind::Primitive) {
             const std::uint32_t action =
                 planner.primitive_action;
@@ -437,17 +435,16 @@
                         UnsupportedPrimitiveKernel,
                     "selected primitive has no strict exact kernel");
             }
-            kernel.action_cost =
-                primitive_action_cost(descriptor);
+            action_cost = primitive_action_cost(descriptor);
             if (distribution.choice_groups.empty()) {
                 for (const OutcomeEntry& entry :
                      distribution.entries) {
-                    add(entry.state, entry.probability);
+                    append(entry.state, entry.probability);
                 }
             } else {
                 for (const OutcomeChoiceGroup& group :
                      distribution.choice_groups) {
-                    add(
+                    append(
                         resolve_primitive_choice(
                             recipe.primitive_preferences,
                             known.strict_state,
@@ -467,10 +464,9 @@
                     "one exact refinement makes its selected planner "
                     "option illegal or unsupported");
             }
-            kernel.action_cost =
-                resource_cost(option.expected_resources);
+            action_cost = resource_cost(option.expected_resources);
             for (const OutcomeEntry& exit : option.exits) {
-                add(exit.state, exit.probability);
+                append(exit.state, exit.probability);
             }
             for (const OutcomeChoiceGroup& group :
                   option.observation_choice_groups) {
@@ -478,14 +474,30 @@
                     recipe.option_preferences,
                     known.strict_state,
                     group, option);
-                add(chosen, group.probability);
+                append(chosen, group.probability);
             }
         }
-        if (kernel.transitions.empty()) {
+        if (transition_count == 0) {
             throw AdapterFailure(
                 PolicyExactLiftStatus::UnsupportedPrimitiveKernel,
                 "selected planner operator produced an empty strict "
                 "kernel");
         }
+        return action_cost;
+    }
+
+    ExactActionKernel build_kernel(
+            const StableKey& key,
+            const SelectedAction& selected) {
+        ExactActionKernel kernel;
+        kernel.action_cost = visit_kernel_transitions(
+            key, selected,
+            [&](const std::uint32_t successor,
+                const double probability) {
+                auto [exact, inserted] = intern_strict_state(successor);
+                (void)inserted;
+                kernel.transitions.push_back(
+                    {std::move(exact), probability});
+            });
         return kernel;
     }

@@ -136,6 +136,8 @@ struct QuotientPartitionResult {
     std::vector<refinement::RefinementCounterexample> counterexamples;
 };
 
+StableKey canonical_quotient_cell_identity(const QuotientCell& cell);
+
 /*
  * `exact_coverage` must be the live replay of `coverage_descriptor` and must
  * cover every submitted node exactly once. `previous` is optional on first

@@ -5,6 +5,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -333,6 +334,21 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
     std::vector<ClosedPartitionNode> nodes,
     ClosedPartitionLimits limits = {});
 
+/* Replay-backed form of the same split-only partition authority. The caller
+ * retains only stable enumerator positions and reconstructs one canonical
+ * node at a time; no complete exact carrier graph is materialized. A supplied
+ * previous partition is a monotone lower-resolution seed and may only split.
+ */
+using ClosedPartitionReplayFunction =
+    std::function<ClosedPartitionNode(std::uint32_t)>;
+
+ClosedPartitionResult refine_closed_probabilistic_partition_replay(
+    std::uint32_t node_count,
+    const ClosedPartitionReplayFunction& replay,
+    const std::vector<std::uint32_t>& previous_partition = {},
+    bool retain_member_keys = false,
+    ClosedPartitionLimits limits = {});
+
 /*
  * Collision-free operation/state key for evaluator row collapse. Returns
  * nullopt when the layout cannot represent any feature observed by the action
@@ -501,6 +517,9 @@ struct RefinedPolicyClass {
     bool goal = false;
     bool terminal = false;
     std::vector<StableKey> exact_members;
+    /* Replay-backed quotient publication may retain collision-free strict
+     * enumerator positions instead of duplicating every semantic key. */
+    std::vector<std::uint32_t> strict_members;
     ObservationRequirement required_observations;
     FeatureSignature observation_signature;
     std::optional<SelectedAction> selected_action;

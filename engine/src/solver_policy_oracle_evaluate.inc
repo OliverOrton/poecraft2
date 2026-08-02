@@ -1,6 +1,7 @@
 ExactPolicyRun ProductionPolicyOracle::evaluate_current_policy(
         std::vector<StableKey> exact_roots,
         const std::uint64_t caller_retained_bytes) {
+    ++telemetry_.reference_adapter_invocations;
     ExactPolicyRun run;
     run.roots = std::move(exact_roots);
     std::sort(run.roots.begin(), run.roots.end());

@@ -1,7 +1,7 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: implementation milestone in progress; Gates 0 through 2 are complete
-on the dedicated branch, and Gate 3 Bellman integration is next.**
+**Status: implementation milestone in progress; Gates 0 through 3 are complete
+on the dedicated branch, and Gate 4 properness/compilation acceptance is next.**
 
 Owner: Oliver
 
@@ -18,6 +18,9 @@ Gate 1 proof representation and focused validation are recorded in
 [`proof-carrying-quotient-gate1.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json).
 Gate 2 shared-partition integration and structural witnesses are recorded in
 [`proof-carrying-quotient-gate2.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json).
+Gate 3 replay-backed Bellman integration, the frozen medium measurement, and
+the pre-hard two-goal prediction are recorded in
+[`proof-carrying-quotient-gate3.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json).
 
 Parent: [Active work](README.md)
 
@@ -414,6 +417,35 @@ and their percentage of total without imposing an arbitrary allowance.
 **Early stop:** stop before the hard run only for a measured lower bound above
 1 GiB or demonstrated unbounded growth, never for a rough pessimistic
 extrapolation.
+
+Gate 3 is qualified. The production path discovers one exact carrier at a
+time, interns collision-checked compact raw kernels, retains only strict replay
+locators plus payload-id sidecars, and invokes the replay-backed entry to the
+shared split-only partition authority. It never retains the complete strict
+carrier-key population or a carrier-to-carrier adjacency graph. The bounded
+materialized implementation remains an uncalled test/debug oracle only.
+
+The frozen `reliability-class-belt` run completed `bounded_feasible` in
+770.817 ms total and 33.4882 ms solve time. Independent exact strategy
+evaluation matched. It retained 266 locator-covered carriers in 19 final
+classes, replayed 2,394 carriers through five shared-partition rounds, and
+reported 204 certified row projections, 173 immutable-payload reuses, 15
+source splits, 15 target splits, 87 reverse invalidations, 11 Bellman policy
+changes, one live slice peaking at 28,040 bytes, 3,483,686 quotient-local
+solver-owned bytes, and zero reference-adapter calls. The focused suite is
+250/0 and includes deterministic improper-policy repair; the integrated case
+exercises policy repair/improvement, properness, exact reconciliation, and
+compilation.
+
+For the frozen two-goal case, the Gate 3 point prediction is 13,076 final
+cells, 10,518 certified sparse-row use sites, 10,466 shared raw-kernel
+payloads, 1,647,558 replay visits, one live carrier slice peaking near 7 MB,
+189,014,112 proof bytes, 561,416,670 peak total solver-owned bytes, and 560
+seconds wall. The declared ranges are 9,600-18,000 cells, 430-760 MB total,
+and 470-700 seconds. Proof overhead is 33.67% of the point peak; this is a
+measurement-derived prediction, not an allowance. Neither the point nor upper
+range establishes a lower bound above 1 GiB, so the Gate 3 early stop did not
+fire and the fresh hard run remains binding.
 
 ### Gate 4 — properness, compilation, and reconciliation
 

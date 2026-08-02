@@ -433,6 +433,56 @@ void run_external_frontier_and_open_rejection_tests() {
         refinement::ClosedPartitionStatus::EmptyGraph);
 }
 
+void run_replay_backed_shared_partition_tests() {
+    std::vector<refinement::ClosedPartitionNode> nodes(4);
+    nodes[0] = {{10}, {100}, {1000}, false,
+                {{{1}, 1, 0.5}, {{2}, 2, 0.5}}};
+    nodes[1] = {{11}, {100}, {1000}, false,
+                {{{1}, 0, 0.5}, {{2}, 3, 0.5}}};
+    nodes[2] = {{12}, {200}, {2000}, true, {}};
+    nodes[3] = {{13}, {300}, {3000}, true, {}};
+    const refinement::ClosedPartitionResult materialized =
+        refinement::refine_closed_probabilistic_partition(nodes);
+    std::uint32_t live = 0;
+    std::uint32_t peak = 0;
+    const refinement::ClosedPartitionResult replayed =
+        refinement::refine_closed_probabilistic_partition_replay(
+            static_cast<std::uint32_t>(nodes.size()),
+            [&](const std::uint32_t index) {
+                ++live;
+                peak = std::max(peak, live);
+                refinement::ClosedPartitionNode out = nodes.at(index);
+                --live;
+                return out;
+            },
+            {}, true);
+    PC_CHECK(materialized.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(replayed.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(replayed.lumpable);
+    PC_CHECK(replayed.initial_class_by_node ==
+             materialized.initial_class_by_node);
+    PC_CHECK(replayed.class_by_node == materialized.class_by_node);
+    PC_CHECK(replayed.classes == materialized.classes);
+    PC_CHECK(peak == 1);
+
+    std::vector<refinement::ClosedPartitionNode> observed = nodes;
+    observed[1].observation_key = {101};
+    const refinement::ClosedPartitionResult split =
+        refinement::refine_closed_probabilistic_partition_replay(
+            static_cast<std::uint32_t>(observed.size()),
+            [&](const std::uint32_t index) {
+                return observed.at(index);
+            },
+            replayed.class_by_node,
+            false);
+    PC_CHECK(split.status ==
+             refinement::ClosedPartitionStatus::Complete);
+    PC_CHECK(split.final_class_count >= replayed.final_class_count);
+    PC_CHECK(split.classes.front().member_keys.empty());
+}
+
 } // namespace
 
 void run_solver_quotient_partition_tests() {
@@ -440,4 +490,5 @@ void run_solver_quotient_partition_tests() {
     run_multiple_entry_and_determinism_tests();
     run_split_invalidation_and_requirement_tests();
     run_external_frontier_and_open_rejection_tests();
+    run_replay_backed_shared_partition_tests();
 }

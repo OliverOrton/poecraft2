@@ -934,6 +934,43 @@ void merge_adapter_telemetry(
     saturating_add(
         total.local_value_changes,
         pass.local_value_changes);
+    saturating_add(total.proof_payload_reuses, pass.proof_payload_reuses);
+    saturating_add(total.row_reprojections, pass.row_reprojections);
+    saturating_add(
+        total.quotient_source_splits, pass.quotient_source_splits);
+    saturating_add(
+        total.quotient_target_splits, pass.quotient_target_splits);
+    saturating_add(
+        total.reverse_invalidations, pass.reverse_invalidations);
+    saturating_add(
+        total.improper_policy_repairs, pass.improper_policy_repairs);
+    saturating_add(
+        total.exact_carriers_replayed, pass.exact_carriers_replayed);
+    total.current_live_slices = pass.current_live_slices;
+    total.peak_live_slices = std::max(
+        total.peak_live_slices, pass.peak_live_slices);
+    total.current_live_slice_bytes = pass.current_live_slice_bytes;
+    total.peak_live_slice_bytes = std::max(
+        total.peak_live_slice_bytes, pass.peak_live_slice_bytes);
+    total.coverage_descriptor_bytes = std::max(
+        total.coverage_descriptor_bytes, pass.coverage_descriptor_bytes);
+    total.certificate_bytes = std::max(
+        total.certificate_bytes, pass.certificate_bytes);
+    total.dependency_sidecar_bytes = std::max(
+        total.dependency_sidecar_bytes, pass.dependency_sidecar_bytes);
+    total.partition_bytes = std::max(
+        total.partition_bytes, pass.partition_bytes);
+    total.carrier_bytes = std::max(
+        total.carrier_bytes, pass.carrier_bytes);
+    total.row_kernel_bytes = std::max(
+        total.row_kernel_bytes, pass.row_kernel_bytes);
+    total.scratch_bytes = std::max(
+        total.scratch_bytes, pass.scratch_bytes);
+    total.total_solver_owned_bytes = std::max(
+        total.total_solver_owned_bytes, pass.total_solver_owned_bytes);
+    saturating_add(
+        total.reference_adapter_invocations,
+        pass.reference_adapter_invocations);
 }
 
 RefinementLimits default_limits(

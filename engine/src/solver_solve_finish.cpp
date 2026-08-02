@@ -1451,7 +1451,7 @@ SolveResult SolveWork::Impl::finish() {
                     publication_live_bytes);
             refinement::PolicyExactLiftCertificate certificate;
             if (lift_options.has_value()) {
-                certificate = refinement::lift_policy_exact(
+                certificate = refinement::lift_policy_quotient(
                     calc, result, exact_start_item, prices,
                     *lift_options, "solved policy");
             } else {
@@ -1539,6 +1539,46 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.local_policy_changes;
             telemetry.local_value_changes =
                 certificate.adapter.local_value_changes;
+            telemetry.proof_payload_reuses =
+                certificate.adapter.proof_payload_reuses;
+            telemetry.row_reprojections =
+                certificate.adapter.row_reprojections;
+            telemetry.quotient_source_splits =
+                certificate.adapter.quotient_source_splits;
+            telemetry.quotient_target_splits =
+                certificate.adapter.quotient_target_splits;
+            telemetry.reverse_invalidations =
+                certificate.adapter.reverse_invalidations;
+            telemetry.improper_policy_repairs =
+                certificate.adapter.improper_policy_repairs;
+            telemetry.exact_carriers_replayed =
+                certificate.adapter.exact_carriers_replayed;
+            telemetry.current_live_slices =
+                certificate.adapter.current_live_slices;
+            telemetry.peak_live_slices =
+                certificate.adapter.peak_live_slices;
+            telemetry.current_live_slice_bytes =
+                certificate.adapter.current_live_slice_bytes;
+            telemetry.peak_live_slice_bytes =
+                certificate.adapter.peak_live_slice_bytes;
+            telemetry.coverage_descriptor_bytes =
+                certificate.adapter.coverage_descriptor_bytes;
+            telemetry.certificate_bytes =
+                certificate.adapter.certificate_bytes;
+            telemetry.dependency_sidecar_bytes =
+                certificate.adapter.dependency_sidecar_bytes;
+            telemetry.partition_bytes =
+                certificate.adapter.partition_bytes;
+            telemetry.carrier_bytes =
+                certificate.adapter.carrier_bytes;
+            telemetry.row_kernel_bytes =
+                certificate.adapter.row_kernel_bytes;
+            telemetry.scratch_bytes =
+                certificate.adapter.scratch_bytes;
+            telemetry.total_solver_owned_bytes =
+                certificate.adapter.total_solver_owned_bytes;
+            telemetry.reference_adapter_invocations =
+                certificate.adapter.reference_adapter_invocations;
             telemetry.lumpability_checks =
                 certificate.refinement.telemetry.lumpability_checks;
             telemetry.fixed_point_checked =

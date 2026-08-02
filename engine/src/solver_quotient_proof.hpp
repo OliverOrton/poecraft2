@@ -336,6 +336,7 @@ public:
 
     const CertifiedRowPayload& payload(std::uint32_t payload_id) const;
     const RowProofUseSite& use_site(std::uint64_t row_id) const;
+    bool has_use_site(std::uint64_t row_id) const;
     std::uint32_t payload_count() const;
     std::uint64_t valid_use_site_count() const;
 

@@ -796,6 +796,10 @@ const RowProofUseSite& ProofStore::use_site(
     return value;
 }
 
+bool ProofStore::has_use_site(const std::uint64_t row_id) const {
+    return row_id < use_sites_.size() && use_sites_[row_id].present;
+}
+
 std::uint32_t ProofStore::payload_count() const {
     return static_cast<std::uint32_t>(payloads_.size());
 }

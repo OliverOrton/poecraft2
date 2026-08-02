@@ -1,0 +1,158 @@
+{
+  "schema_version": "proof_carrying_quotient_gate3_evidence_v1",
+  "date": "2026-08-01",
+  "decision": "gate3_qualified_proceed_to_hard_cases",
+  "parent_commit": "9e0ae6f3135515a9b358ee178a16b3658bea9939",
+  "production_architecture": {
+    "partition_authority": "refine_closed_probabilistic_partition_replay, the replay-backed entry to the shared split-only probabilistic partition authority",
+    "carrier_discovery": "one exact carrier and its compact rows are live at a time",
+    "persistent_carrier_form": "strict replay locators, class coverage ranges, shared immutable compact kernel payloads, and per-carrier payload-id sidecars",
+    "complete_strict_graph_retained": false,
+    "complete_strict_carrier_key_vector_retained": false,
+    "reference_adapter_invocations": 0,
+    "uncertified_aggregation": "optimistic lower relaxation only",
+    "executable_upper_requirement": "every reachable selected sparse row has a current full-key certificate and exact proper-policy evaluation"
+  },
+  "source": {
+    "bellman_header": {
+      "path": "engine/src/solver_quotient_bellman.hpp",
+      "sha256": "60c8f96f9b65732931fb3603908e548f86e3e92cd71da0c023067ee917ae59bb"
+    },
+    "bellman_implementation": {
+      "path": "engine/src/solver_quotient_bellman.cpp",
+      "sha256": "ba20733e9425cdba4c7a6c45a0b397837cc8403143408e34b024040f60285f1c"
+    },
+    "shared_replay_partition": {
+      "path": "engine/src/solver_refinement_partition.cpp",
+      "sha256": "33ba0cdf5380e6ce7a4aff9d7f4f1dc5656b32b2b58ed28249eab6939e05a086"
+    },
+    "production_adapter": {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "sha256": "55f251f417e33e07a48283dcd7121c2c4784606d455df90cc3123ae797c09661"
+    },
+    "bellman_test": {
+      "path": "engine/tests/test_solver_quotient_bellman.cpp",
+      "sha256": "301bd3dd0bfe786cd4059eae0f40ed0b125064367a08d98c01c76fcf2e67a627"
+    },
+    "partition_test": {
+      "path": "engine/tests/test_solver_quotient_partition.cpp",
+      "sha256": "114c33eb35b7f7dd1c2c31810909875f69607274940a2806f4c25a4832d30405"
+    }
+  },
+  "focused_validation": {
+    "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+    "checks": 250,
+    "failures": 0,
+    "witnesses": {
+      "certified_and_uncertified_lower_upper_separation": true,
+      "stable_sparse_row_ownership": true,
+      "price_only_structural_reuse": true,
+      "source_and_target_generation_invalidation": true,
+      "deterministic_improper_policy_repair": true,
+      "proper_and_improper_scc_evaluation": true,
+      "replay_backed_partition_matches_materialized_shared_authority": true,
+      "replay_peak_live_nodes": 1,
+      "monotone_observation_split": true
+    }
+  },
+  "medium_integration": {
+    "case_id": "reliability-class-belt",
+    "report_path": "build/acceptance/proof-carrying-quotient/gate3-medium-stream-v5/cases/reliability-class-belt.json",
+    "status": "bounded_feasible",
+    "expectation_met": true,
+    "exact_strategy_evaluation": "matched",
+    "phase_wall_ms": {
+      "solve": 33.4882,
+      "total": 770.817
+    },
+    "native_peak_solver_owned_bytes": 78807808,
+    "native_live_solver_owned_bytes": 18693391,
+    "exact_carriers": 266,
+    "retained_exact_states": 266,
+    "final_quotient_classes": 19,
+    "initial_observation_classes": 14,
+    "partition_rounds": 5,
+    "exact_transitions": 1751,
+    "exact_kernels": 203,
+    "bellman_local_policy_changes": 11,
+    "compiled_nodes": 14,
+    "compiled_edges": 33,
+    "proof": {
+      "payload_reuses": 173,
+      "row_reprojections": 204,
+      "source_splits": 15,
+      "target_splits": 15,
+      "reverse_invalidations": 87,
+      "exact_carriers_replayed": 2394,
+      "peak_live_slices": 1,
+      "peak_live_slice_bytes": 28040,
+      "coverage_descriptor_bytes": 25560,
+      "certificate_bytes": 18432,
+      "dependency_sidecar_bytes": 25056,
+      "partition_bytes": 242808,
+      "carrier_locator_bytes": 4096,
+      "row_kernel_bytes": 138596,
+      "scratch_bytes_at_completion": 0,
+      "total_solver_owned_bytes": 3483686,
+      "reference_adapter_invocations": 0
+    },
+    "medium_policy_repair_authority": "11 Bellman policy changes on the integrated case; the focused certified two-state cycle independently exercises deterministic improper-policy repair",
+    "fraction_of_archived_two_goal_wall": 0.00165,
+    "fraction_of_archived_two_goal_peak_owned": 0.07236
+  },
+  "frozen_two_goal_prediction": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "frozen_inputs": {
+      "exact_carriers": 183062,
+      "exact_transitions": 423756,
+      "exact_kernels": 10466,
+      "archived_peak_solver_owned_bytes": 1089111449,
+      "archived_wall_seconds": 467.3043269
+    },
+    "scaling_ratios": {
+      "carrier_to_medium": 688.203,
+      "transition_to_medium": 242.008,
+      "kernel_to_medium": 51.5567
+    },
+    "point_prediction": {
+      "final_quotient_cells": 13076,
+      "initial_observation_cells": 9635,
+      "certified_sparse_row_use_sites": 10518,
+      "shared_raw_kernel_payloads": 10466,
+      "retained_class_coverage_descriptors": 13076,
+      "retained_row_coverage_descriptors": 10466,
+      "retained_coverage_ranges": 80000,
+      "peak_live_slices": 1,
+      "peak_live_carriers": 1,
+      "peak_live_slice_bytes": 7000000,
+      "exact_carrier_replays": 1647558,
+      "coverage_descriptor_bytes": 1317788,
+      "certificate_bytes": 950292,
+      "dependency_sidecar_bytes": 1291803,
+      "partition_bytes": 167101196,
+      "carrier_locator_bytes": 2818880,
+      "row_kernel_bytes": 7145545,
+      "scratch_bytes": 8388608,
+      "proof_overhead_bytes": 189014112,
+      "peak_total_solver_owned_bytes": 561416670,
+      "proof_overhead_percent_of_peak": 33.67,
+      "wall_seconds": 560
+    },
+    "prediction_range": {
+      "final_quotient_cells": [9600, 18000],
+      "certified_sparse_row_use_sites": [10000, 16000],
+      "retained_coverage_ranges": [25000, 200000],
+      "peak_live_slice_bytes": [3000000, 10000000],
+      "proof_overhead_bytes": [50000000, 260000000],
+      "peak_total_solver_owned_bytes": [430000000, 760000000],
+      "wall_seconds": [470, 700]
+    },
+    "basis": "carrier-scaled dense partition is used for the conservative partition point; kernel-scaled immutable rows/certificates/sidecars are used where payload sharing is measured; the archived 305293694-byte live strict/refinement observation and a 67108864-byte publication allowance are added to proof overhead for the point peak",
+    "binding_claim": "prediction only; the fresh hard run remains binding"
+  },
+  "early_stop": {
+    "triggered": false,
+    "reason": "measured replay-backed live slices are bounded, zero production reference calls occurred, and neither the point nor upper prediction establishes a lower bound above 1 GiB"
+  },
+  "next_gate": "properness, compilation, and reconciliation"
+}

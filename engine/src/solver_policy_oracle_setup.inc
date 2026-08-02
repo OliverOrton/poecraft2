@@ -7,7 +7,8 @@
         const SolveOptions& options,
         RefinementLimits limits,
         PolicyLiftAdapterTelemetry& telemetry,
-        const ReoptimizationSeed* reoptimization_seed)
+        const ReoptimizationSeed* reoptimization_seed,
+        const bool force_semantic_strict_identity = false)
         : coarse_(coarse),
           solved_(solved),
           exact_start_(exact_start),
@@ -28,7 +29,9 @@
               reoptimization_seed == nullptr
                   ? 0
                   : reoptimization_seed_bytes(
-                        *reoptimization_seed)) {
+                        *reoptimization_seed)),
+          force_semantic_strict_identity_(
+              force_semantic_strict_identity) {
         require_local_memory(
             0, "exact-refinement adapter construction");
         discover_coarse_policy();
@@ -218,6 +221,285 @@
         return root_key_;
     }
 
+    ExactState quotient_root_state() const {
+        return materialize_exact_state(
+            root_key_, known_.at(root_key_));
+    }
+
+    std::uint32_t quotient_locator(const StableKey& key) const {
+        const auto known = known_.find(key);
+        if (known == known_.end()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "quotient carrier has no strict replay locator");
+        }
+        return known->second.strict_state;
+    }
+
+    ExactState quotient_materialize_locator(
+            const std::uint32_t strict_state) {
+        auto [state, inserted] = intern_strict_state(strict_state);
+        (void)inserted;
+        return state;
+    }
+
+    std::vector<std::uint32_t> quotient_equivalent_locators(
+            const StableKey& key) const {
+        const auto known = known_.find(key);
+        if (known == known_.end()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "quotient carrier lost its replay equivalence");
+        }
+        std::vector<std::uint32_t> locators{
+            known->second.strict_state};
+        locators.insert(
+            locators.end(),
+            known->second.equivalent_strict_states.begin(),
+            known->second.equivalent_strict_states.end());
+        std::sort(locators.begin(), locators.end());
+        locators.erase(
+            std::unique(locators.begin(), locators.end()),
+            locators.end());
+        return locators;
+    }
+
+    void quotient_release_carrier(const StableKey& key) {
+        for (auto kernel = kernels_.begin(); kernel != kernels_.end();) {
+            kernel = kernel->first.first == key
+                         ? kernels_.erase(kernel)
+                         : std::next(kernel);
+        }
+        for (auto recipe = choice_recipes_.begin();
+             recipe != choice_recipes_.end();) {
+            recipe = recipe->first.first == key
+                         ? choice_recipes_.erase(recipe)
+                         : std::next(recipe);
+        }
+        known_.erase(key);
+        adapter_memory_cache_initialized_ = false;
+        adapter_memory_checks_since_audit_ = 0;
+        adapter_memory_cached_non_child_bytes_ = 0;
+        adapter_memory_projected_growth_bytes_ = 0;
+    }
+
+    std::vector<QuotientOracleCompactRow> quotient_compact_action_rows(
+            const ExactState& state) {
+        if (state.terminal) return {};
+        std::vector<QuotientOracleCompactRow> rows;
+        std::set<StableKey> semantic_rows;
+        const auto append = [&](SelectedAction selected) {
+            if (!semantic_rows.insert(selected.semantic_key).second) return;
+            if (telemetry_.strict_kernels_built >=
+                limits_.max_exact_kernels) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::ResourceCap,
+                    "strict policy discovery reached max_exact_kernels",
+                    "max_exact_kernels");
+            }
+            QuotientOracleCompactRow row;
+            row.selected = std::move(selected);
+            row.choice_recipe = choice_recipe(
+                state.stable_key, row.selected);
+            row.action_cost = visit_kernel_transitions(
+                state.stable_key, row.selected,
+                [&](const std::uint32_t successor,
+                    const double probability) {
+                    row.transitions.push_back({successor, probability});
+                });
+            if (telemetry_.strict_transitions_built +
+                    row.transitions.size() >
+                limits_.max_transitions) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::ResourceCap,
+                    "strict policy discovery reached max_transitions",
+                    "max_transitions");
+            }
+            telemetry_.strict_transitions_built += row.transitions.size();
+            ++telemetry_.strict_kernels_built;
+            telemetry_.strict_calc_owned_bytes =
+                strict_->fast_estimated_owned_bytes();
+            release_published_kernel_storage(state, row.selected);
+            rows.push_back(std::move(row));
+        };
+        bool current_complete = false;
+        try {
+            std::optional<SelectedAction> current = selected_action(state);
+            if (current.has_value()) {
+                append(std::move(*current));
+                current_complete = true;
+            }
+        } catch (const AdapterFailure& error) {
+            if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+        }
+        const bool affected =
+            enable_local_reoptimization_ &&
+            reoptimization_parents_.contains(state.coarse_state);
+        if (affected || !current_complete) {
+            for (const std::uint32_t operator_index : admitted_operators_) {
+                saturating_add(
+                    telemetry_.local_state_action_rows_scheduled, 1);
+                std::optional<SelectedAction> candidate =
+                    candidate_selection(state.stable_key, operator_index, 0);
+                if (!candidate.has_value() ||
+                    semantic_rows.contains(candidate->semantic_key)) {
+                    continue;
+                }
+                try {
+                    append(std::move(*candidate));
+                    saturating_add(
+                        telemetry_.local_state_action_rows_evaluated, 1);
+                } catch (const AdapterFailure& error) {
+                    if (error.status == PolicyExactLiftStatus::ResourceCap) {
+                        throw;
+                    }
+                }
+            }
+        }
+        if (rows.empty()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::LocalReoptimizationRequired,
+                "proof-carrying quotient carrier has no certified admitted row");
+        }
+        return rows;
+    }
+
+    void quotient_install_streamed_recipe(
+            const SelectedAction& selected,
+            const ExactChoiceRecipe& recipe) {
+        const auto [stored, inserted] =
+            quotient_streamed_recipes_.emplace(
+                selected.semantic_key, recipe);
+        if (!inserted && stored->second != recipe) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "streamed semantic decision changed its exact recipe");
+        }
+    }
+
+    std::vector<QuotientOracleRow> quotient_action_rows(
+            const ExactState& state) {
+        if (state.terminal) return {};
+        std::vector<QuotientOracleRow> rows;
+        std::set<StableKey> semantic_rows;
+        const auto append = [&](SelectedAction selected,
+                                ExactActionKernel kernel) {
+            if (!semantic_rows.insert(selected.semantic_key).second) return;
+            rows.push_back({std::move(selected), std::move(kernel)});
+        };
+        bool current_complete = false;
+        try {
+            std::optional<SelectedAction> current = selected_action(state);
+            if (current.has_value()) {
+                ExactActionKernel kernel = exact_kernel(state, *current);
+                append(std::move(*current), std::move(kernel));
+                current_complete = true;
+            }
+        } catch (const AdapterFailure& error) {
+            if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+        }
+        const bool affected =
+            enable_local_reoptimization_ &&
+            reoptimization_parents_.contains(state.coarse_state);
+        if (affected || !current_complete) {
+            for (const std::uint32_t operator_index : admitted_operators_) {
+                saturating_add(
+                    telemetry_.local_state_action_rows_scheduled, 1);
+                std::optional<SelectedAction> candidate =
+                    candidate_selection(state.stable_key, operator_index, 0);
+                if (!candidate.has_value() ||
+                    semantic_rows.contains(candidate->semantic_key)) {
+                    continue;
+                }
+                const ExactActionKernel* kernel =
+                    candidate_kernel(state.stable_key, *candidate);
+                if (kernel == nullptr) continue;
+                saturating_add(
+                    telemetry_.local_state_action_rows_evaluated, 1);
+                ExactActionKernel copied = *kernel;
+                release_published_kernel_storage(state, *candidate);
+                append(std::move(*candidate), std::move(copied));
+            }
+        }
+        if (rows.empty()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::LocalReoptimizationRequired,
+                "proof-carrying quotient carrier has no certified admitted row");
+        }
+        return rows;
+    }
+
+    quotient::CertifiedRowIdentity quotient_proof_identity(
+            const ExactState& source,
+            const SelectedAction& selected,
+            quotient::CoverageDescriptor coverage,
+            std::vector<quotient::ProofProjectedArc> arcs,
+            const double total_probability) const {
+        quotient::CertifiedRowIdentity identity;
+        identity.source_coarse_parent = source.coarse_state_key;
+        identity.observation_requirement =
+            selected.routing_observes;
+        identity.observed_features = observe_features(
+            source.features, identity.observation_requirement);
+        identity.action_id = selected.action_id;
+        identity.semantic_action_identity = selected.semantic_key;
+        identity.runtime_contract_program_identity =
+            canonical_selected_runtime_contract_identity(selected);
+        /* The semantic decision key already contains the complete immutable
+         * exact observe-then-decide recipe. Retain it independently as the
+         * proof field so recipe and runtime-contract changes invalidate by
+         * full tuple rather than by a hash. */
+        identity.exact_choice_recipe_identity = selected.semantic_key;
+        const auto address = [](const void* value) {
+            return static_cast<std::uint64_t>(
+                reinterpret_cast<std::uintptr_t>(value));
+        };
+        identity.session_identity = {
+            0x7063717365737331ull,
+            address(&strict_->session()),
+            strict_->session().base_index,
+            strict_->session().item_level};
+        identity.layout_identity = {
+            0x7063716c61796f31ull,
+            address(&strict_->layout()),
+            strict_->layout().slots.size(),
+            strict_->layout().junk_classes.size()};
+        identity.goal_identity = {
+            0x706371676f616c31ull,
+            address(&strict_->goal()),
+            strict_->goal().rarity,
+            strict_->goal().required_satisfied_slots()};
+        identity.artifact_identity = {
+            0x7063716172746631ull,
+            address(strict_->session().data.get()),
+            strict_->session().data->artifact_schema_version};
+        identity.start_identity = root_key_;
+        identity.solver_options_identity = {
+            0x7063716f70747331ull,
+            options_.goal_progress_gated_reforges ? 1u : 0u,
+            admitted_operators_.size()};
+        identity.solver_options_identity.insert(
+            identity.solver_options_identity.end(),
+            admitted_operators_.begin(), admitted_operators_.end());
+        identity.coverage = std::move(coverage);
+        identity.exact_total_probability = total_probability;
+        identity.projected_arcs = std::move(arcs);
+        return quotient::canonical_certified_row_identity(
+            std::move(identity));
+    }
+
+    void quotient_install_policy(
+            const StableKey& carrier,
+            const SelectedAction& selected) {
+        const auto known = known_.find(carrier);
+        if (known == known_.end() || known->second.terminal) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "quotient policy installation names an invalid carrier");
+        }
+        exact_policy_[carrier] = selected;
+    }
+
     ExactPolicyRun evaluate_current_policy(
         std::vector<StableKey> exact_roots,
         std::uint64_t caller_retained_bytes = 0);
@@ -364,9 +646,16 @@
         remaining_options.max_solver_owned_bytes -=
             required_before_lift;
         RefinedPolicyCompileRouting refined_routing;
-        SolveResult lifted =
-            make_lifted_solve_result(
-                refinement, evaluation, &refined_routing);
+        const bool streamed = std::any_of(
+            refinement.classes.begin(), refinement.classes.end(),
+            [](const RefinedPolicyClass& cls) {
+                return !cls.strict_members.empty();
+            });
+        SolveResult lifted = streamed
+            ? make_streamed_lifted_solve_result(
+                  refinement, evaluation, &refined_routing)
+            : make_lifted_solve_result(
+                  refinement, evaluation, &refined_routing);
         const std::uint64_t refined_routing_bytes =
             refined_compile_routing_bytes(refined_routing);
         if (refined_routing_bytes >=

@@ -497,6 +497,287 @@ ClosedPartitionResult refine_closed_probabilistic_partition(
     return result;
 }
 
+ClosedPartitionResult refine_closed_probabilistic_partition_replay(
+        const std::uint32_t node_count,
+        const ClosedPartitionReplayFunction& replay,
+        const std::vector<std::uint32_t>& previous_partition,
+        const bool retain_member_keys,
+        const ClosedPartitionLimits limits) {
+    ClosedPartitionResult result;
+    if (node_count == 0) {
+        result.failure_reason =
+            "replay-backed closed partition graph is empty";
+        return result;
+    }
+    if (!replay ||
+        (!previous_partition.empty() &&
+         previous_partition.size() != node_count) ||
+        !std::isfinite(limits.probability_sum_tolerance) ||
+        limits.probability_sum_tolerance < 0.0) {
+        result.status = ClosedPartitionStatus::InvalidGraph;
+        result.failure_reason =
+            "replay-backed closed partition has invalid authority";
+        return result;
+    }
+
+    const auto fail_memory = [&](const std::uint64_t live) {
+        result.peak_estimated_memory_bytes = std::max(
+            result.peak_estimated_memory_bytes, live);
+        if (live <= limits.max_estimated_memory_bytes) return false;
+        result.status = ClosedPartitionStatus::ResourceCap;
+        result.resource_cap = "max_estimated_memory_bytes";
+        result.failure_reason =
+            "replay-backed closed partition reached memory cap";
+        return true;
+    };
+    const std::uint64_t dense_bytes = saturated_add(
+        limits.retained_estimated_memory_bytes,
+        saturated_product(
+            node_count,
+            3 * sizeof(std::uint32_t) + sizeof(std::uint64_t)));
+    if (fail_memory(dense_bytes)) return result;
+
+    const auto canonical_node = [&](const std::uint32_t index) {
+        ClosedPartitionNode input = replay(index);
+        if (input.stable_key.empty() || input.observation_key.empty() ||
+            input.immediate_key.empty() || input.arc_source.has_value() ||
+            input.observation_source.has_value() ||
+            input.immediate_source.has_value()) {
+            throw std::invalid_argument(
+                "replayed closed node has invalid identity authority");
+        }
+        if (input.terminal && !input.arcs.empty()) {
+            throw std::invalid_argument(
+                "replayed terminal closed node has outgoing arcs");
+        }
+        using ArcKey =
+            std::pair<StableKey, std::optional<std::uint32_t>>;
+        std::map<ArcKey, DeterministicSum> accumulated;
+        DeterministicSum total;
+        for (const ClosedPartitionArc& arc : input.arcs) {
+            if (!std::isfinite(arc.probability) ||
+                arc.probability < 0.0 ||
+                (arc.successor.has_value() &&
+                 *arc.successor >= node_count)) {
+                throw std::invalid_argument(
+                    "replayed closed node has an invalid arc");
+            }
+            if (arc.probability == 0.0) continue;
+            accumulated[{arc.label, arc.successor}].add(arc.probability);
+            total.add(arc.probability);
+        }
+        if (!input.terminal &&
+            (accumulated.empty() ||
+             std::fabs(total.value() - 1.0) >
+                 limits.probability_sum_tolerance)) {
+            throw std::invalid_argument(
+                "replayed closed node row is not stochastic");
+        }
+        CanonicalClosedNode out;
+        out.original_index = index;
+        out.stable_key = std::move(input.stable_key);
+        out.observation_key = std::move(input.observation_key);
+        out.immediate_key = std::move(input.immediate_key);
+        out.terminal = input.terminal;
+        out.arcs.reserve(accumulated.size());
+        for (auto& [key, probability] : accumulated) {
+            out.arcs.push_back({
+                std::move(key.first), key.second, probability});
+        }
+        return out;
+    };
+    const auto projection = [&](const CanonicalClosedNode& node,
+                                const std::vector<std::uint32_t>& partition) {
+        using Key =
+            std::pair<StableKey, std::optional<std::uint32_t>>;
+        std::map<Key, DeterministicSum> accumulated;
+        for (const CanonicalClosedArc& arc : node.arcs) {
+            accumulated[{
+                arc.label,
+                arc.successor.has_value()
+                    ? std::optional<std::uint32_t>{
+                          partition.at(*arc.successor)}
+                    : std::nullopt}].add(arc.probability);
+        }
+        std::vector<ClosedProjectionEntry> projected;
+        projected.reserve(accumulated.size());
+        for (auto& [key, probability] : accumulated) {
+            projected.push_back({
+                std::move(key.first), key.second, probability});
+        }
+        return projected;
+    };
+    const auto partition_pass =
+            [&](const std::vector<std::uint32_t>* current,
+               const bool initial,
+               std::vector<std::uint32_t>& assigned,
+               std::uint32_t& class_count) {
+        std::map<ClosedPartitionKey, std::uint32_t> temporary;
+        assigned.assign(node_count, 0);
+        std::uint64_t key_bytes = 0;
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            CanonicalClosedNode canonical = canonical_node(node);
+            ClosedPartitionKey key;
+            if (initial) {
+                if (!previous_partition.empty()) {
+                    key.push_back(previous_partition[node]);
+                }
+                key.push_back(canonical.terminal ? 1u : 0u);
+                append_tokens(key, canonical.observation_key);
+            } else {
+                const std::vector<ClosedProjectionEntry> projected =
+                    projection(canonical, *current);
+                key = closed_refined_key(
+                    std::vector<CanonicalClosedNode>{canonical},
+                    canonical, (*current)[node], projected);
+            }
+            auto [found, inserted] = temporary.emplace(
+                std::move(key),
+                static_cast<std::uint32_t>(temporary.size()));
+            assigned[node] = found->second;
+            if (inserted) {
+                key_bytes = saturated_add(
+                    key_bytes,
+                    saturated_product(
+                        found->first.capacity(), sizeof(std::uint64_t)));
+                key_bytes = saturated_add(
+                    key_bytes,
+                    sizeof(decltype(temporary)::value_type) +
+                        3 * sizeof(void*));
+                if (temporary.size() > limits.max_classes ||
+                    fail_memory(saturated_add(dense_bytes, key_bytes))) {
+                    if (result.status != ClosedPartitionStatus::ResourceCap) {
+                        result.status = ClosedPartitionStatus::ResourceCap;
+                        result.resource_cap = "max_classes";
+                        result.failure_reason =
+                            "replay-backed closed partition reached max_classes";
+                    }
+                    return false;
+                }
+            }
+        }
+        std::vector<std::uint32_t> canonical_id(temporary.size());
+        std::uint32_t next = 0;
+        for (const auto& [unused, temporary_id] : temporary) {
+            (void)unused;
+            canonical_id[temporary_id] = next++;
+        }
+        for (std::uint32_t& value : assigned) {
+            value = canonical_id[value];
+        }
+        class_count = next;
+        return true;
+    };
+
+    try {
+        std::vector<std::uint32_t> partition;
+        std::uint32_t class_count = 0;
+        if (!partition_pass(
+                nullptr, true, partition, class_count)) {
+            return result;
+        }
+        result.initial_class_by_node = partition;
+        result.initial_class_count = class_count;
+        result.final_class_count = class_count;
+        for (;;) {
+            if (result.rounds >= limits.max_rounds) {
+                result.status = ClosedPartitionStatus::RefinementRoundCap;
+                result.failure_reason =
+                    "replay-backed closed partition reached max_rounds";
+                return result;
+            }
+            std::vector<std::uint32_t> next;
+            std::uint32_t next_count = 0;
+            if (!partition_pass(
+                    &partition, false, next, next_count)) {
+                return result;
+            }
+            ++result.rounds;
+            if (next_count < class_count) {
+                result.status = ClosedPartitionStatus::NonLumpable;
+                result.failure_reason =
+                    "replay-backed closed partition violated split-only refinement";
+                return result;
+            }
+            result.final_class_count = next_count;
+            if (next == partition) break;
+            partition = std::move(next);
+            class_count = next_count;
+        }
+        result.class_by_node = partition;
+
+        std::vector<std::uint32_t> representatives(
+            result.final_class_count, kNoId);
+        std::vector<std::uint32_t> member_counts(
+            result.final_class_count, 0);
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            const std::uint32_t cls = partition[node];
+            if (representatives[cls] == kNoId) representatives[cls] = node;
+            ++member_counts[cls];
+        }
+        result.classes.resize(result.final_class_count);
+        for (std::uint32_t cls = 0;
+             cls < result.final_class_count; ++cls) {
+            CanonicalClosedNode authority =
+                canonical_node(representatives[cls]);
+            const std::vector<ClosedProjectionEntry> projected =
+                projection(authority, partition);
+            ClosedPartitionClass& output = result.classes[cls];
+            output.class_id = cls;
+            output.observation_key = authority.observation_key;
+            output.immediate_key = authority.immediate_key;
+            output.terminal = authority.terminal;
+            for (const ClosedProjectionEntry& arc : projected) {
+                output.arcs.push_back({
+                    arc.label, arc.successor_class,
+                    arc.probability.value()});
+            }
+            if (retain_member_keys) {
+                output.member_keys.reserve(member_counts[cls]);
+            }
+        }
+        for (std::uint32_t node = 0; node < node_count; ++node) {
+            const std::uint32_t cls = partition[node];
+            CanonicalClosedNode candidate = canonical_node(node);
+            const ClosedPartitionClass& authority = result.classes[cls];
+            const std::vector<ClosedProjectionEntry> projected =
+                projection(candidate, partition);
+            std::vector<ClosedPartitionProjectedArc> candidate_arcs;
+            candidate_arcs.reserve(projected.size());
+            for (const ClosedProjectionEntry& arc : projected) {
+                candidate_arcs.push_back({
+                    arc.label, arc.successor_class,
+                    arc.probability.value()});
+            }
+            ++result.lumpability_checks;
+            if (candidate.terminal != authority.terminal ||
+                candidate.observation_key != authority.observation_key ||
+                candidate.immediate_key != authority.immediate_key ||
+                candidate_arcs != authority.arcs) {
+                result.status = ClosedPartitionStatus::NonLumpable;
+                result.failure_reason =
+                    "replay-backed closed partition failed final proof";
+                return result;
+            }
+            if (retain_member_keys) {
+                result.classes[cls].member_keys.push_back(
+                    std::move(candidate.stable_key));
+            }
+        }
+        result.estimated_memory_bytes = saturated_add(
+            dense_bytes,
+            estimate_closed_partition_result_memory(result));
+        if (fail_memory(result.estimated_memory_bytes)) return result;
+        result.status = ClosedPartitionStatus::Complete;
+        result.lumpable = true;
+        return result;
+    } catch (const std::exception& error) {
+        result.status = ClosedPartitionStatus::InvalidGraph;
+        result.failure_reason = error.what();
+        return result;
+    }
+}
+
 } // namespace refinement
 } // namespace solver
 } // namespace poecraft

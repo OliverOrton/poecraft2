@@ -38,6 +38,26 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t local_reoptimizations = 0;
     std::uint64_t local_policy_changes = 0;
     std::uint64_t local_value_changes = 0;
+    std::uint64_t proof_payload_reuses = 0;
+    std::uint64_t row_reprojections = 0;
+    std::uint64_t quotient_source_splits = 0;
+    std::uint64_t quotient_target_splits = 0;
+    std::uint64_t reverse_invalidations = 0;
+    std::uint64_t improper_policy_repairs = 0;
+    std::uint64_t exact_carriers_replayed = 0;
+    std::uint64_t current_live_slices = 0;
+    std::uint64_t peak_live_slices = 0;
+    std::uint64_t current_live_slice_bytes = 0;
+    std::uint64_t peak_live_slice_bytes = 0;
+    std::uint64_t coverage_descriptor_bytes = 0;
+    std::uint64_t certificate_bytes = 0;
+    std::uint64_t dependency_sidecar_bytes = 0;
+    std::uint64_t partition_bytes = 0;
+    std::uint64_t carrier_bytes = 0;
+    std::uint64_t row_kernel_bytes = 0;
+    std::uint64_t scratch_bytes = 0;
+    std::uint64_t total_solver_owned_bytes = 0;
+    std::uint64_t reference_adapter_invocations = 0;
 };
 
 /*
@@ -165,6 +185,20 @@ struct PolicyExactLiftCertificate {
  * is then the independent final executable-artifact assertion.
  */
 PolicyExactLiftCertificate lift_policy_exact(
+    CalcContext& coarse,
+    const SolveResult& solved,
+    const pc_item_state& exact_start,
+    const std::unordered_map<std::string, double>& prices,
+    const SolveOptions& options,
+    const std::string& strategy_name,
+    const RefinementLimits* limits_override = nullptr);
+
+/* Production proof-carrying quotient publication. Exact carriers are
+ * discovered through native kernel authority, partitioned through the shared
+ * closed probabilistic engine, projected into stable certified sparse rows,
+ * and evaluated by the common proper-policy machinery. The reconstruct-then-
+ * merge adapter above remains a bounded reference oracle only. */
+PolicyExactLiftCertificate lift_policy_quotient(
     CalcContext& coarse,
     const SolveResult& solved,
     const pc_item_state& exact_start,

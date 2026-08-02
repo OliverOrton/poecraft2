@@ -57,6 +57,9 @@
             states * sizeof(std::uint32_t));
         for (const RefinedPolicyClass& policy_class :
              refinement.classes) {
+            add(
+                policy_class.strict_members.capacity() *
+                sizeof(std::uint32_t));
             add(requirement_bytes(
                 policy_class.required_observations));
             add(feature_signature_bytes(
@@ -376,5 +379,140 @@
                 apply_member(equivalent);
             }
         }
+        return lifted;
+    }
+
+    SolveResult make_streamed_lifted_solve_result(
+            const RefinementResult& refinement,
+            const PolicyEvaluationResult& evaluation,
+            RefinedPolicyCompileRouting* refined_routing) {
+        RefinementResult representatives = refinement;
+        representatives.assignments.clear();
+        for (RefinedPolicyClass& cls : representatives.classes) {
+            if (cls.strict_members.empty()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::InvalidSolveState,
+                    "streamed refinement class has no strict coverage");
+            }
+            const std::uint32_t representative =
+                *std::min_element(
+                    cls.strict_members.begin(),
+                    cls.strict_members.end());
+            ExactState state = quotient_materialize_locator(representative);
+            cls.exact_members = {state.stable_key};
+            cls.strict_members.clear();
+            if (!cls.terminal && cls.selected_action.has_value()) {
+                exact_policy_[state.stable_key] = *cls.selected_action;
+                const auto recipe = quotient_streamed_recipes_.find(
+                    cls.selected_action->semantic_key);
+                if (recipe == quotient_streamed_recipes_.end()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "streamed selected decision has no retained recipe");
+                }
+                store_choice_recipe(
+                    state.stable_key,
+                    cls.selected_action->semantic_key,
+                    recipe->second);
+            }
+            representatives.assignments.push_back({
+                cls.coarse_state, cls.class_id, 0});
+        }
+        SolveResult lifted = make_lifted_solve_result(
+            representatives, evaluation, refined_routing);
+
+        std::vector<double> value_by_class(
+            refinement.classes.size(),
+            std::numeric_limits<double>::infinity());
+        for (const RefinedClassValue& value : evaluation.class_values) {
+            value_by_class.at(value.class_id) = value.value;
+        }
+        std::uint32_t streamed_start = kNoId;
+        const std::uint32_t authored_start =
+            strict_->intern_item(exact_start_);
+        for (const RefinedPolicyClass& cls : refinement.classes) {
+            if (cls.class_id >= value_by_class.size() ||
+                !std::isfinite(value_by_class[cls.class_id]) ||
+                cls.strict_members.empty()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::InvalidSolveState,
+                    "streamed refinement class has no exact value");
+            }
+            const std::uint32_t representative =
+                *std::min_element(
+                    cls.strict_members.begin(),
+                    cls.strict_members.end());
+            if (refined_routing != nullptr) {
+                refined_routing->classes.at(cls.class_id).strict_members =
+                    cls.strict_members;
+                refined_routing->classes.at(cls.class_id)
+                    .representative_state = representative;
+            }
+            lifted.policy_reachable[representative] = 1;
+            for (const std::uint32_t strict_state : cls.strict_members) {
+                if (strict_state >= strict_->state_count()) {
+                    throw AdapterFailure(
+                        PolicyExactLiftStatus::InvalidSolveState,
+                        "streamed strict coverage exceeds state table");
+                }
+                lifted.behavioral_representative_by_state[strict_state] =
+                    representative;
+                if (strict_state == authored_start) {
+                    streamed_start = representative;
+                }
+                ExactState state = quotient_materialize_locator(strict_state);
+                lifted.expanded[strict_state] = 1;
+                lifted.goal_states[strict_state] = cls.goal ? 1 : 0;
+                lifted.values[strict_state] = value_by_class[cls.class_id];
+                if (!cls.terminal) {
+                    if (!cls.selected_action.has_value() ||
+                        cls.selected_action->action_id >=
+                            strict_->operators().size()) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::InvalidSolveState,
+                            "streamed class has no selected operator");
+                    }
+                    exact_policy_[state.stable_key] =
+                        *cls.selected_action;
+                    const auto streamed_recipe =
+                        quotient_streamed_recipes_.find(
+                            cls.selected_action->semantic_key);
+                    if (streamed_recipe ==
+                        quotient_streamed_recipes_.end()) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::InvalidSolveState,
+                            "streamed selected decision has no retained recipe");
+                    }
+                    store_choice_recipe(
+                        state.stable_key,
+                        cls.selected_action->semantic_key,
+                        streamed_recipe->second);
+                    const PlannerOperator& planner = strict_->operators().at(
+                        cls.selected_action->action_id);
+                    lifted.policy[strict_state] = PolicyOperatorRef{
+                        planner.kind, cls.selected_action->action_id};
+                    const ExactChoiceRecipe& recipe = choice_recipe(
+                        state.stable_key, *cls.selected_action);
+                    if (planner.kind == PlannerOperatorKind::Primitive) {
+                        if (recipe.kind ==
+                            ExactChoiceRecipeKind::PrimitiveObservedChoice) {
+                            lifted.unveil_preferences[strict_state] =
+                                recipe.primitive_preferences;
+                        }
+                    } else {
+                        lifted.option_unveil_preferences[strict_state] =
+                            recipe.option_preferences;
+                    }
+                }
+                exact_policy_.erase(state.stable_key);
+                quotient_release_carrier(state.stable_key);
+            }
+        }
+        if (streamed_start == kNoId) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "streamed strict coverage omits authored start");
+        }
+        lifted.start_state = streamed_start;
         return lifted;
     }
