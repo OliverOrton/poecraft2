@@ -1,0 +1,64 @@
+{
+  "schema_version": "proof_carrying_quotient_gate2_evidence_v1",
+  "date": "2026-08-01",
+  "decision": "gate2_qualified",
+  "parent_commit": "5c531d0c9eff204954a5d3d6883a0a2e6d99726a",
+  "integration": {
+    "observation_authority": "canonical_observation_requirement, observe_features, canonical_feature_signature, and canonical_observation_identity",
+    "partition_authority": "refine_closed_probabilistic_partition",
+    "counterexample_type": "RefinementCounterexample",
+    "persistent_exact_member_keys": false,
+    "persistent_coverage": "deterministic canonical replay ranges with exact count and mass",
+    "external_frontiers": "collision-free encoded original label plus immutable frontier identity",
+    "open_graph_submission": "rejected before shared partition invocation",
+    "reference_adapter_invocations": 0
+  },
+  "source": {
+    "partition_header": {
+      "path": "engine/src/solver_quotient_partition.hpp",
+      "sha256": "4151b0eb98fdae9e1078b23ed7d8a26a6c76a6c40c75ce8004e70ec42a487e53"
+    },
+    "partition_implementation": {
+      "path": "engine/src/solver_quotient_partition.cpp",
+      "sha256": "016182d003a0deb4aeea1b89a1a611d3a14da2dec7b29a493d313a1df58ecfca"
+    },
+    "focused_test": {
+      "path": "engine/tests/test_solver_quotient_partition.cpp",
+      "sha256": "c29f6b1273be69e00ac14557c9d7a269d204ba8da7a2af68d08729559ace076e"
+    }
+  },
+  "focused_validation": {
+    "combined_quotient_proof_and_partition": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+      "checks": 195,
+      "failures": 0
+    },
+    "shared_refinement": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite refinement",
+      "checks": 301,
+      "failures": 0
+    },
+    "policy_refinement": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite policy-refinement",
+      "checks": 4829,
+      "failures": 0
+    }
+  },
+  "witnesses": {
+    "four_node_closed_cycle_delayed_split": true,
+    "four_node_persistent_member_keys": 0,
+    "equal_row_cycle_stays_merged": true,
+    "improper_two_node_cycle_detected_by_existing_evaluator": true,
+    "multiple_entry_distribution_split_and_preserved": true,
+    "source_split_invalidation": true,
+    "target_split_predecessor_invalidation": true,
+    "requirement_growth_counterexample": true,
+    "external_frontiers_remain_distinct": true,
+    "unlabeled_open_frontier_rejected_before_partition": true,
+    "exact_projected_mass_reconciliation": true,
+    "reversed_enumeration_and_arc_order_determinism": true,
+    "live_replay_slice_released": true
+  },
+  "early_stop_triggered": false,
+  "next_gate": "Bellman integration and medium-case projection"
+}

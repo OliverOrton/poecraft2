@@ -69,7 +69,11 @@ CoverageReplayFunction make_replay() {
         std::vector<CoverageCarrier> carriers;
         for (std::uint64_t offset = 0; offset < range.count; ++offset) {
             carriers.push_back(
-                CoverageCarrier{{2000 + range.begin + offset}, 0.25});
+                CoverageCarrier{
+                    {2000 + range.begin + offset},
+                    range.range_identity,
+                    range.begin + offset,
+                    0.25});
         }
         /* Normalization must make callback enumeration order irrelevant. */
         std::reverse(carriers.begin(), carriers.end());

@@ -76,6 +76,23 @@ ObservationRequirement merge_observation_requirements(
     return merge_requirements(std::move(target), addition);
 }
 
+StableKey canonical_observation_identity(
+        const StableKey& coarse_parent,
+        const ObservationRequirement& requirement,
+        const FeatureSignature& exact_features) {
+    if (coarse_parent.empty()) return {};
+    const ObservationRequirement canonical_requirement =
+        canonical_observation_requirement(requirement);
+    const FeatureSignature observed = canonical_feature_signature(
+        observe_features(exact_features, canonical_requirement));
+    StableKey out{0x7063726f627331ull}; /* "pcrobs1" */
+    append_tokens(out, coarse_parent);
+    append_requirement(out, canonical_requirement);
+    out.push_back(observed.size());
+    for (const FeatureAtom& atom : observed) append_atom(out, atom);
+    return out;
+}
+
 ObservationRequirement observation_requirement_from_contract(
         const ActionRefinementContract& contract) {
     return canonical_observation_requirement({

@@ -1,7 +1,8 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement Gates 0 and 1 are complete. Gate
-2 shared-partition CEGAR integration is the current implementation boundary.**
+**Status: proof-carrying quotient refinement Gates 0 through 2 are complete.
+Gate 3 Bellman integration and medium-case projection are the current
+implementation boundary.**
 
 Current plan:
 [Proof-Carrying Quotient Refinement During Solving](docs/active/proof-carrying-quotient-refinement.md).
@@ -14,7 +15,8 @@ Branch: `codex/proof-carrying-quotient-refinement`
 Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 
 Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
-Gate 1 is recorded by the next boundary commit.
+Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
+recorded by the next boundary commit.
 
 Nothing has been pushed or merged. `main` is unchanged.
 
@@ -96,25 +98,53 @@ tracked work counters. The tracked qualified Fracture evidence retains
   zero failures. The tracked Gate 1 evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json`.
 
+## Gate 2 completed boundary
+
+- Transient certified carrier slices now adapt directly to the existing
+  canonical observation projection and
+  `refine_closed_probabilistic_partition`; there is no quotient-specific
+  observation contract or partition algorithm.
+- Persistent cells retain deterministic replay ranges and exact count/mass,
+  not exact member-key vectors. An exact carrier population exists only while
+  its ledger-tracked `CoverageReplaySlice` is live.
+- Internal successors must close inside the submitted slice. External
+  frontiers carry collision-free encoded label/identity pairs and remain
+  distinct. An unlabeled open edge is rejected before the shared partition is
+  invoked.
+- Split-only installation retains stable IDs for unchanged cells, allocates
+  deterministic child IDs, rejects re-merging, preserves the complete entry
+  distribution, emits existing `RefinementCounterexample` records, and drives
+  deterministic source and target proof invalidation.
+- The four-node delayed cyclic witness splits without persistent strict-graph
+  retention. Equal-row cycles stay merged; the existing exact evaluator
+  diagnoses the two-node closed cycle as improper. Source split, target
+  predecessor invalidation, requirement growth, multiple entries, frontier
+  separation, exact mass, and reversed-order determinism all pass.
+- The combined `quotient-proof` suite passed 195 checks with zero failures.
+  Preserved shared refinement and policy-refinement suites remain 301 and
+  4,829 checks with zero failures. Evidence is tracked in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json`.
+
 ## Exact next step
 
-Implement Gate 2 through the existing shared-partition authorities:
+Implement Gate 3 in `SolveTransitionCache` and existing Bellman/policy owners:
 
-- adapt certified replay slices to `ActionRefinementContract`, observation
-  propagation, `FeatureSignature`, and
-  `refine_closed_probabilistic_partition`;
-- keep external frontier labels distinct and refuse open-graph partition
-  submissions;
-- install canonical children and existing `RefinementCounterexample` values
-  after a split, then invalidate source and target dependents deterministically;
-- preserve complete multiple-entry distributions and exact projected mass;
-  and
-- add all Gate 2 focused cyclic, improper, entry-split, equal-row, split,
-  requirement-growth, frontier, reconciliation, and determinism witnesses.
+- retain quotient cells, certified sparse rows, state-to-row spans, and reverse
+  predecessor work without changing the filtered action vocabulary;
+- mark uncertified aggregation lower-only and require current reachable
+  certificates for any executable upper;
+- reproject stale rows after source/target splits while preserving unaffected
+  payload reuse and every admitted alternative;
+- invalidate prices, Q values, SCC values, and policy without discarding
+  structurally valid rows on price-only change;
+- expose every required proof/split/replay/live-slice/ledger/reference-adapter
+  telemetry field; and
+- run `reliability-class-belt` through quotient construction, Bellman repair,
+  properness, and compilation with zero production reference-adapter calls.
 
-If the four-node cyclic witness requires complete strict-graph or equivalently
-unbounded carrier retention, stop and archive the smallest Gate 2 failure.
-Do not enter Bellman integration in that condition.
+Use the Gate 1-3 medium measurements to freeze a plausible population, memory,
+and wall-time range for the archived two-goal case before running it. Stop only
+if measured accounting proves a lower bound above 1 GiB or unbounded growth.
 
 Do not implement replay/checkpoint until the quotient representation is stable.
 Do not change mechanics, action filtering, caps, public C ABI, strategy

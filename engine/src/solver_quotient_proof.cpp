@@ -133,6 +133,8 @@ std::uint64_t replay_slice_bytes(
         carriers.capacity(), sizeof(CoverageCarrier));
     for (const CoverageCarrier& carrier : carriers) {
         bytes = checked_add(bytes, stable_key_capacity_bytes(carrier.stable_key));
+        bytes = checked_add(
+            bytes, stable_key_capacity_bytes(carrier.range_identity));
     }
     return bytes;
 }
@@ -385,6 +387,13 @@ CoverageReplaySlice replay_coverage(
         }
         for (const CoverageCarrier& carrier : part) {
             require_identity(carrier.stable_key, "replayed carrier identity");
+            if (carrier.range_identity != range.range_identity ||
+                carrier.enumeration_index < range.begin ||
+                carrier.enumeration_index >=
+                    checked_add(range.begin, range.count)) {
+                throw std::invalid_argument(
+                    "replayed carrier is outside its coverage range");
+            }
             if (!valid_probability(carrier.probability)) {
                 throw std::invalid_argument("invalid replayed carrier mass");
             }
@@ -398,16 +407,30 @@ CoverageReplaySlice replay_coverage(
         carriers.begin(), carriers.end(),
         [](const CoverageCarrier& left, const CoverageCarrier& right) {
             return std::tuple{
-                       left.stable_key,
+                       left.stable_key, left.range_identity,
+                       left.enumeration_index,
                        std::bit_cast<std::uint64_t>(left.probability)} <
                    std::tuple{
-                       right.stable_key,
+                       right.stable_key, right.range_identity,
+                       right.enumeration_index,
                        std::bit_cast<std::uint64_t>(right.probability)};
         });
     for (std::size_t i = 1; i < carriers.size(); ++i) {
         if (carriers[i - 1].stable_key == carriers[i].stable_key) {
             throw std::invalid_argument("coverage replay contains duplicate carrier");
         }
+    }
+    std::vector<std::pair<StableKey, std::uint64_t>> locators;
+    locators.reserve(carriers.size());
+    for (const CoverageCarrier& carrier : carriers) {
+        locators.emplace_back(
+            carrier.range_identity, carrier.enumeration_index);
+    }
+    std::sort(locators.begin(), locators.end());
+    if (std::adjacent_find(locators.begin(), locators.end()) !=
+        locators.end()) {
+        throw std::invalid_argument(
+            "coverage replay contains duplicate enumeration positions");
     }
     if (carriers.size() != canonical.exact_source_count ||
         probability_sum(

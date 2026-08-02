@@ -1,7 +1,7 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: implementation milestone in progress; Gates 0 and 1 are complete on
-the dedicated branch, and Gate 2 shared-partition integration is next.**
+**Status: implementation milestone in progress; Gates 0 through 2 are complete
+on the dedicated branch, and Gate 3 Bellman integration is next.**
 
 Owner: Oliver
 
@@ -16,6 +16,8 @@ classifications are frozen in
 [`proof-carrying-quotient-gate0.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json).
 Gate 1 proof representation and focused validation are recorded in
 [`proof-carrying-quotient-gate1.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json).
+Gate 2 shared-partition integration and structural witnesses are recorded in
+[`proof-carrying-quotient-gate2.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json).
 
 Parent: [Active work](README.md)
 

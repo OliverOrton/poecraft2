@@ -224,6 +224,7 @@ if(BUILD_TESTING)
         tests/test_solver_api.cpp
         tests/test_solver_refinement.cpp
         tests/test_solver_quotient_proof.cpp
+        tests/test_solver_quotient_partition.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

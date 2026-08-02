@@ -69,6 +69,13 @@ ObservationRequirement merge_observation_requirements(
     ObservationRequirement target,
     const ObservationRequirement& addition);
 
+/* Canonical full-tuple serialization used when an existing observation
+ * projection must be supplied to another collision-checked authority. */
+StableKey canonical_observation_identity(
+    const StableKey& coarse_parent,
+    const ObservationRequirement& requirement,
+    const FeatureSignature& exact_features);
+
 ObservationRequirement observation_requirement_from_contract(
     const ActionRefinementContract& contract);
 
@@ -477,6 +484,8 @@ struct RefinementCounterexample {
     StableKey left_state;
     StableKey right_state;
     FeatureSignature differing_features;
+
+    bool operator==(const RefinementCounterexample&) const = default;
 };
 
 struct ProjectedTransition {

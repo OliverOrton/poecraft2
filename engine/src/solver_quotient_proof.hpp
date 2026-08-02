@@ -135,6 +135,8 @@ struct CoverageDescriptor {
 
 struct CoverageCarrier {
     StableKey stable_key;
+    StableKey range_identity;
+    std::uint64_t enumeration_index = 0;
     double probability = 0.0;
 
     bool operator==(const CoverageCarrier&) const = default;
