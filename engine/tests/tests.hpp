@@ -45,5 +45,6 @@ void run_solver_api_tests(const char* artifact_dir);
 void run_solver_feasibility_tests(const char* artifact_dir);
 void run_solver_s8_3_tests();
 void run_solver_refinement_tests();
+void run_solver_quotient_proof_tests();
 
 #endif

@@ -1,0 +1,64 @@
+{
+  "schema_version": "proof_carrying_quotient_gate1_evidence_v1",
+  "date": "2026-08-01",
+  "decision": "gate1_qualified",
+  "parent_commit": "4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9",
+  "representation": {
+    "payload_identity": "canonical collision-checked full tuple; hashes index buckets only and every hit compares the full identity",
+    "coverage": "canonical deterministic replay ranges with strict-kernel, replay-authority, and normalized-enumeration identities plus exact count and mass",
+    "retained_global_exact_carrier_vector": false,
+    "dependency_storage": "SolveTransitionCache-owned proof sidecar; immutable shared payload IDs and independent generation-stamped stable row use sites",
+    "memory_accounting": "capacity-based solver-owned ledger with proof payload, certificate, dependency sidecar, coverage descriptor, live replay slice, partition, carrier, row/kernel, and scratch categories"
+  },
+  "source": {
+    "proof_header": {
+      "path": "engine/src/solver_quotient_proof.hpp",
+      "sha256": "f2b032a3b5bc8492bf0af275b05d78f0dcf5b082af535a9abed2241aa28b1603"
+    },
+    "proof_implementation": {
+      "path": "engine/src/solver_quotient_proof.cpp",
+      "sha256": "c3e1e3f7a25176f327be823ddda3d7b5adff5a522790366d071a59ec8430c597"
+    },
+    "focused_test": {
+      "path": "engine/tests/test_solver_quotient_proof.cpp",
+      "sha256": "ce9ffc5084bc297f7d5be9896f02e97f7dd7fab53c46231a8623caf10e55694a"
+    }
+  },
+  "focused_validation": {
+    "quotient_proof": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+      "checks": 111,
+      "failures": 0
+    },
+    "shared_refinement": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite refinement",
+      "checks": 301,
+      "failures": 0
+    },
+    "policy_refinement": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite policy-refinement",
+      "checks": 4829,
+      "failures": 0
+    }
+  },
+  "witnesses": {
+    "forced_hash_collision_full_key_rejection": true,
+    "requirement_and_runtime_program_identity_changes": true,
+    "semantic_action_and_choice_recipe_changes": true,
+    "kernel_and_immutable_solve_identity_changes": true,
+    "source_and_target_generation_invalidation": true,
+    "action_and_admission_generation_invalidation": true,
+    "price_only_structural_reuse_and_q_policy_invalidation": true,
+    "equal_payload_sharing_with_independent_use_sites": true,
+    "deterministic_exact_coverage_replay": true,
+    "exact_count_and_mass_reconciliation": true,
+    "corruption_and_stale_generation_rejection": true,
+    "independent_capacity_ledger_conservation": true,
+    "shared_payload_charged_once": true,
+    "temporary_charges_fully_released": true,
+    "ledger_returns_to_starting_value": true,
+    "hard_cap_rejection_rolls_back_ledger": true
+  },
+  "early_stop_triggered": false,
+  "next_gate": "shared-partition CEGAR integration"
+}

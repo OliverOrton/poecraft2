@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement Gate 0 is frozen. Gate 1 proof
-identity, coverage replay, dependency storage, and ledger accounting are the
-current implementation boundary.**
+**Status: proof-carrying quotient refinement Gates 0 and 1 are complete. Gate
+2 shared-partition CEGAR integration is the current implementation boundary.**
 
 Current plan:
 [Proof-Carrying Quotient Refinement During Solving](docs/active/proof-carrying-quotient-refinement.md).
@@ -14,8 +13,8 @@ Branch: `codex/proof-carrying-quotient-refinement`
 
 Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 
-Gate commits: Gate 0 is recorded by this boundary commit; later gate hashes
-will be appended as they are created.
+Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
+Gate 1 is recorded by the next boundary commit.
 
 Nothing has been pushed or merged. `main` is unchanged.
 
@@ -77,22 +76,45 @@ tracked work counters. The tracked qualified Fracture evidence retains
 `04a66ba6c6dfcabf` / `3e5d7530e7aed5fb` and compiled strategy SHA-256
 `e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e`.
 
+## Gate 1 completed boundary
+
+- `SolveTransitionCache` directly owns the optional proof sidecar, while
+  immutable collision-checked payloads are separated from stable row use
+  sites and their source/target/action/admission generations.
+- Coverage is a deterministic canonical range recipe under explicit strict
+  kernel, replay-authority, and normalized-enumeration identities. Only a
+  requested replay slice materializes exact carriers; no global strict-carrier
+  vector is retained.
+- Full equality follows every hash lookup, including a deliberately forced
+  collision witness. Every identity and generation mismatch required by Gate
+  1 is rejected or invalidated.
+- The category ledger charges selected vector capacities and nested owned
+  allocations, separately tracks live replay slices, enforces its cap, and is
+  included in `SolveTransitionCache` owned-memory estimation.
+- `quotient-proof` passed 111 checks with zero failures. The preserved shared
+  refinement and policy-refinement suites passed 301 and 4,829 checks with
+  zero failures. The tracked Gate 1 evidence is in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json`.
+
 ## Exact next step
 
-Implement Gate 1 before production integration:
+Implement Gate 2 through the existing shared-partition authorities:
 
-- collision-checked full proof identity and deliberately colliding-hash tests;
-- deterministic replayable coverage without a global strict-carrier vector;
-- `SolveTransitionCache`-owned compact dependency sidecar with stable row IDs,
-  shared immutable payloads, and independent generation-stamped use sites;
-- exact mass, stale/corrupt rejection, and every mismatch/invalidation witness
-  required by the active plan; and
-- an independent capacity-based ledger-conservation test that returns to its
-  starting value.
+- adapt certified replay slices to `ActionRefinementContract`, observation
+  propagation, `FeatureSignature`, and
+  `refine_closed_probabilistic_partition`;
+- keep external frontier labels distinct and refuse open-graph partition
+  submissions;
+- install canonical children and existing `RefinementCounterexample` values
+  after a split, then invalidate source and target dependents deterministically;
+- preserve complete multiple-entry distributions and exact projected mass;
+  and
+- add all Gate 2 focused cyclic, improper, entry-split, equal-row, split,
+  requirement-growth, frontier, reconciliation, and determinism witnesses.
 
-If the representation cannot meet replay, collision, probability, ledger, and
-bounded-retention requirements, stop and archive the smallest Gate 1 witness.
-Do not enter shared-partition or Bellman integration in that condition.
+If the four-node cyclic witness requires complete strict-graph or equivalently
+unbounded carrier retention, stop and archive the smallest Gate 2 failure.
+Do not enter Bellman integration in that condition.
 
 Do not implement replay/checkpoint until the quotient representation is stable.
 Do not change mechanics, action filtering, caps, public C ABI, strategy

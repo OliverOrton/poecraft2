@@ -1,5 +1,7 @@
 #include "solver_solve_types.hpp"
 
+#include "solver_quotient_proof.hpp"
+
 namespace poecraft {
 namespace solver {
 
@@ -181,6 +183,9 @@ std::uint64_t SolveTransitionCache::shallow_estimated_owned_bytes() const {
                  sizeof(std::uint32_t);
         bytes += state_rows.capacity() * sizeof(StateRowSpan);
         bytes += rows.capacity() * sizeof(SparseRow);
+        if (quotient_proofs != nullptr) {
+            bytes += quotient_proofs->ledger().snapshot().total_bytes;
+        }
         if (accounts_variant_arena && variant_arena != nullptr) {
             bytes += variant_arena->selected_bytes();
         }

@@ -167,6 +167,11 @@ ObservationRequirement preserved_observation_requirement(
     const ObservationRequirement& downstream,
     const SelectedAction& action);
 
+/* Existing canonical runtime contract/program identity used by refinement,
+ * compilation, and proof-carrying rows. */
+StableKey canonical_selected_runtime_contract_identity(
+    const SelectedAction& action);
+
 /*
  * Shared cyclic policy-observation fixed point. Adapters describe only graph
  * topology and selected semantic contracts; this engine owns backward

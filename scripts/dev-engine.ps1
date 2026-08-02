@@ -6,8 +6,8 @@ param(
     [string]$Task = "Engine",
     [ValidateSet(
         "abstract", "automatic-eldritch", "calc", "compile", "eval", "api",
-        "feasibility", "imprint", "policy-refinement", "refinement", "s8-3",
-        "solve")]
+        "feasibility", "imprint", "policy-refinement", "quotient-proof",
+        "refinement", "s8-3", "solve")]
     [string]$Suite = "refinement",
     [int]$Jobs = 0
 )
@@ -94,6 +94,7 @@ function Get-SuiteArguments {
         "feasibility" { return @("--solver-feasibility-only", $Artifact) }
         "imprint" { return @("--solver-imprint-only", $Artifact) }
         "policy-refinement" { return @("--solver-policy-refinement-only") }
+        "quotient-proof" { return @("--solver-quotient-proof-only") }
         "refinement" { return @("--solver-refinement-only") }
         "s8-3" { return @("--solver-s8-3-only") }
         "solve" { return @("--solver-solve-only", $Artifact) }

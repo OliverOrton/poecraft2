@@ -1,7 +1,7 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: selected implementation milestone; Gate 0 frozen on the dedicated
-branch, Gate 1 is next.**
+**Status: implementation milestone in progress; Gates 0 and 1 are complete on
+the dedicated branch, and Gate 2 shared-partition integration is next.**
 
 Owner: Oliver
 
@@ -14,6 +14,8 @@ may be pushed or merged during this milestone.
 Gate 0 provenance, fixture hashes, bounded reconnaissance, and WASM
 classifications are frozen in
 [`proof-carrying-quotient-gate0.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json).
+Gate 1 proof representation and focused validation are recorded in
+[`proof-carrying-quotient-gate1.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json).
 
 Parent: [Active work](README.md)
 

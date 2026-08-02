@@ -1,0 +1,367 @@
+#pragma once
+
+#include "solver_refinement.hpp"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+namespace poecraft {
+namespace solver {
+namespace quotient {
+
+using refinement::FeatureSignature;
+using refinement::ObservationRequirement;
+using refinement::StableKey;
+
+enum class ProofMemoryCategory : std::uint8_t {
+    ProofPayload = 0,
+    Certificate,
+    DependencySidecar,
+    CoverageDescriptor,
+    LiveReplaySlice,
+    Partition,
+    Carrier,
+    RowKernel,
+    Scratch,
+    Count,
+};
+
+inline constexpr std::size_t kProofMemoryCategoryCount =
+    static_cast<std::size_t>(ProofMemoryCategory::Count);
+
+struct ProofMemorySnapshot {
+    std::array<std::uint64_t, kProofMemoryCategoryCount> bytes{};
+    std::uint64_t total_bytes = 0;
+    std::uint64_t peak_total_bytes = 0;
+    std::uint64_t live_slice_count = 0;
+    std::uint64_t peak_live_slice_count = 0;
+    std::uint64_t live_slice_bytes = 0;
+    std::uint64_t peak_live_slice_bytes = 0;
+
+    bool operator==(const ProofMemorySnapshot&) const = default;
+};
+
+class ProofMemoryLimit final : public std::runtime_error {
+public:
+    ProofMemoryLimit(std::uint64_t requested, std::uint64_t cap);
+
+    std::uint64_t requested_bytes() const { return requested_bytes_; }
+    std::uint64_t cap_bytes() const { return cap_bytes_; }
+
+private:
+    std::uint64_t requested_bytes_ = 0;
+    std::uint64_t cap_bytes_ = 0;
+};
+
+class ProofMemoryLedger {
+public:
+    explicit ProofMemoryLedger(
+        std::uint64_t cap_bytes =
+            std::numeric_limits<std::uint64_t>::max());
+
+    ProofMemorySnapshot snapshot() const;
+    std::uint64_t cap_bytes() const { return cap_bytes_; }
+
+    void set_owned_bytes(ProofMemoryCategory category, std::uint64_t bytes);
+    void charge(ProofMemoryCategory category, std::uint64_t bytes);
+    void release(ProofMemoryCategory category, std::uint64_t bytes);
+    void charge_live_slice(std::uint64_t bytes);
+    void release_live_slice(std::uint64_t bytes);
+
+private:
+    std::uint64_t cap_bytes_ = 0;
+    ProofMemorySnapshot value_;
+
+    static std::size_t index(ProofMemoryCategory category);
+    void refresh_total_and_peak();
+};
+
+class ScopedProofMemoryCharge {
+public:
+    ScopedProofMemoryCharge() = default;
+    ScopedProofMemoryCharge(
+        ProofMemoryLedger& ledger,
+        ProofMemoryCategory category,
+        std::uint64_t bytes);
+    ~ScopedProofMemoryCharge();
+
+    ScopedProofMemoryCharge(const ScopedProofMemoryCharge&) = delete;
+    ScopedProofMemoryCharge& operator=(const ScopedProofMemoryCharge&) = delete;
+    ScopedProofMemoryCharge(ScopedProofMemoryCharge&& other) noexcept;
+    ScopedProofMemoryCharge& operator=(ScopedProofMemoryCharge&& other) noexcept;
+
+    void reset();
+
+private:
+    ProofMemoryLedger* ledger_ = nullptr;
+    ProofMemoryCategory category_ = ProofMemoryCategory::Scratch;
+    std::uint64_t bytes_ = 0;
+};
+
+/*
+ * Coverage is a deterministic recipe, not a retained carrier population.
+ * `replay_authority_identity` names the exact enumerator. Each range names a
+ * collision-free slice in that enumerator and carries its exact count/mass.
+ * A range may therefore be retained only for a split-affected slice without
+ * growing one process-wide carrier vector.
+ */
+struct CoverageRange {
+    StableKey range_identity;
+    std::uint64_t begin = 0;
+    std::uint64_t count = 0;
+    double total_probability = 0.0;
+
+    bool operator==(const CoverageRange&) const = default;
+};
+
+struct CoverageDescriptor {
+    StableKey strict_kernel_identity;
+    StableKey replay_authority_identity;
+    StableKey normalized_enumeration_identity;
+    std::vector<CoverageRange> ranges;
+    std::uint64_t exact_source_count = 0;
+    double exact_total_probability = 0.0;
+
+    bool operator==(const CoverageDescriptor&) const = default;
+};
+
+struct CoverageCarrier {
+    StableKey stable_key;
+    double probability = 0.0;
+
+    bool operator==(const CoverageCarrier&) const = default;
+};
+
+using CoverageReplayFunction =
+    std::function<std::vector<CoverageCarrier>(const CoverageRange&)>;
+
+class CoverageReplaySlice {
+public:
+    CoverageReplaySlice() = default;
+    ~CoverageReplaySlice();
+
+    CoverageReplaySlice(const CoverageReplaySlice&) = delete;
+    CoverageReplaySlice& operator=(const CoverageReplaySlice&) = delete;
+    CoverageReplaySlice(CoverageReplaySlice&& other) noexcept;
+    CoverageReplaySlice& operator=(CoverageReplaySlice&& other) noexcept;
+
+    const std::vector<CoverageCarrier>& carriers() const { return carriers_; }
+    std::uint64_t charged_bytes() const { return charged_bytes_; }
+    void reset();
+
+private:
+    friend CoverageReplaySlice replay_coverage(
+        const CoverageDescriptor&,
+        const StableKey&,
+        const CoverageReplayFunction&,
+        ProofMemoryLedger&);
+
+    CoverageReplaySlice(
+        std::vector<CoverageCarrier> carriers,
+        ProofMemoryLedger& ledger,
+        std::uint64_t charged_bytes);
+
+    std::vector<CoverageCarrier> carriers_;
+    ProofMemoryLedger* ledger_ = nullptr;
+    std::uint64_t charged_bytes_ = 0;
+};
+
+CoverageDescriptor canonical_coverage_descriptor(CoverageDescriptor value);
+
+CoverageReplaySlice replay_coverage(
+    const CoverageDescriptor& descriptor,
+    const StableKey& replay_authority_identity,
+    const CoverageReplayFunction& replay,
+    ProofMemoryLedger& ledger);
+
+struct ProofProjectedArc {
+    StableKey label;
+    StableKey target_cell_identity;
+    double probability = 0.0;
+
+    bool operator==(const ProofProjectedArc&) const = default;
+};
+
+/*
+ * Dependency generations are deliberately absent. This is the durable,
+ * collision-checked row identity. Callers supply the existing canonical
+ * runtime-contract/program and exact choice-recipe identities; the proof
+ * store does not define a second action vocabulary.
+ */
+struct CertifiedRowIdentity {
+    StableKey source_coarse_parent;
+    ObservationRequirement observation_requirement;
+    FeatureSignature observed_features;
+    std::uint32_t action_id = 0;
+    StableKey semantic_action_identity;
+    StableKey runtime_contract_program_identity;
+    StableKey exact_choice_recipe_identity;
+    StableKey session_identity;
+    StableKey layout_identity;
+    StableKey goal_identity;
+    StableKey artifact_identity;
+    StableKey start_identity;
+    StableKey solver_options_identity;
+    CoverageDescriptor coverage;
+    double exact_total_probability = 0.0;
+    std::vector<ProofProjectedArc> projected_arcs;
+
+    bool operator==(const CertifiedRowIdentity&) const = default;
+};
+
+CertifiedRowIdentity canonical_certified_row_identity(
+    CertifiedRowIdentity value);
+
+std::uint64_t certified_row_identity_hash(
+    const CertifiedRowIdentity& identity);
+
+struct CertifiedRowPayload {
+    CertifiedRowIdentity identity;
+    std::uint64_t semantic_hash = 0;
+};
+
+struct TargetGenerationDependency {
+    std::uint32_t cell_id = 0;
+    std::uint64_t generation = 0;
+
+    bool operator==(const TargetGenerationDependency&) const = default;
+};
+
+struct RowProofUseSite {
+    bool present = false;
+    bool valid = false;
+    std::uint64_t row_id = 0;
+    std::uint32_t payload_id = 0;
+    std::uint32_t source_cell_id = 0;
+    std::uint64_t source_generation = 0;
+    std::vector<TargetGenerationDependency> target_dependencies;
+    std::uint64_t action_generation = 0;
+    std::uint64_t admission_generation = 0;
+};
+
+struct ProofValidationContext {
+    std::uint64_t source_generation = 0;
+    std::function<std::optional<std::uint64_t>(std::uint32_t)>
+        target_generation;
+    std::uint64_t action_generation = 0;
+    std::uint64_t admission_generation = 0;
+};
+
+enum class ProofValidationStatus : std::uint8_t {
+    Current = 0,
+    MissingRow,
+    Invalidated,
+    CorruptPayload,
+    FullKeyMismatch,
+    StaleSourceGeneration,
+    StaleTargetGeneration,
+    StaleActionGeneration,
+    StaleAdmissionGeneration,
+};
+
+struct ProofStoreStorageStats {
+    std::uint64_t payload_pointer_capacity = 0;
+    std::uint64_t payload_bucket_capacity = 0;
+    std::uint64_t payload_bucket_id_capacity = 0;
+    std::uint64_t payload_object_count = 0;
+    std::uint64_t payload_key_u64_capacity = 0;
+    std::uint64_t requirement_tag_capacity = 0;
+    std::uint64_t requirement_affix_capacity = 0;
+    std::uint64_t requirement_selector_tag_capacity = 0;
+    std::uint64_t feature_capacity = 0;
+    std::uint64_t feature_value_u64_capacity = 0;
+    std::uint64_t feature_tag_capacity = 0;
+    std::uint64_t arc_capacity = 0;
+    std::uint64_t arc_key_u64_capacity = 0;
+    std::uint64_t coverage_range_capacity = 0;
+    std::uint64_t coverage_key_u64_capacity = 0;
+    std::uint64_t use_site_capacity = 0;
+    std::uint64_t use_target_dependency_capacity = 0;
+    std::uint64_t source_index_outer_capacity = 0;
+    std::uint64_t source_index_row_capacity = 0;
+    std::uint64_t target_index_outer_capacity = 0;
+    std::uint64_t target_index_row_capacity = 0;
+};
+
+struct ProofPayloadHashBucket {
+    std::uint64_t hash = 0;
+    std::vector<std::uint32_t> payload_ids;
+};
+
+class ProofStore {
+public:
+    explicit ProofStore(
+        std::uint64_t max_owned_bytes =
+            std::numeric_limits<std::uint64_t>::max());
+
+    std::pair<std::uint32_t, bool> intern_payload(
+        CertifiedRowIdentity identity,
+        std::optional<std::uint64_t> forced_hash_for_test = std::nullopt);
+
+    void attach_row(
+        std::uint64_t row_id,
+        std::uint32_t payload_id,
+        std::uint32_t source_cell_id,
+        std::uint64_t source_generation,
+        std::vector<TargetGenerationDependency> target_dependencies,
+        std::uint64_t action_generation,
+        std::uint64_t admission_generation);
+
+    std::uint64_t invalidate_source(std::uint32_t source_cell_id);
+    std::uint64_t invalidate_target(std::uint32_t target_cell_id);
+    std::uint64_t invalidate_action_generation(std::uint64_t current);
+    std::uint64_t invalidate_admission_generation(std::uint64_t current);
+
+    void note_price_change();
+
+    ProofValidationStatus validate_row(
+        std::uint64_t row_id,
+        const CertifiedRowIdentity& expected_identity,
+        const ProofValidationContext& context) const;
+
+    CoverageReplaySlice replay_row_coverage(
+        std::uint64_t row_id,
+        const StableKey& replay_authority_identity,
+        const CoverageReplayFunction& replay);
+
+    const CertifiedRowPayload& payload(std::uint32_t payload_id) const;
+    const RowProofUseSite& use_site(std::uint64_t row_id) const;
+    std::uint32_t payload_count() const;
+    std::uint64_t valid_use_site_count() const;
+
+    std::uint64_t price_generation() const { return price_generation_; }
+    std::uint64_t q_generation() const { return q_generation_; }
+    std::uint64_t policy_generation() const { return policy_generation_; }
+
+    ProofMemoryLedger& ledger() { return ledger_; }
+    const ProofMemoryLedger& ledger() const { return ledger_; }
+    ProofStoreStorageStats storage_stats() const;
+
+    void clear_and_release();
+
+private:
+    ProofMemoryLedger ledger_;
+    std::vector<std::shared_ptr<const CertifiedRowPayload>> payloads_;
+    std::vector<ProofPayloadHashBucket> payload_buckets_;
+    std::vector<RowProofUseSite> use_sites_;
+    std::vector<std::vector<std::uint64_t>> source_rows_;
+    std::vector<std::vector<std::uint64_t>> target_rows_;
+    std::uint64_t price_generation_ = 0;
+    std::uint64_t q_generation_ = 0;
+    std::uint64_t policy_generation_ = 0;
+
+    void detach_row_indexes(const RowProofUseSite& use);
+    void refresh_owned_bytes();
+};
+
+} // namespace quotient
+} // namespace solver
+} // namespace poecraft

@@ -11,6 +11,7 @@
 #include <deque>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -371,6 +372,10 @@ struct SparsePolicyResume {
 
 using namespace solve_detail;
 
+namespace quotient {
+class ProofStore;
+}
+
 /* A completed reachable closure is independent of the economy. Equivalent
  * kernels retain all operator/resource variants, so a later solve may change
  * relative prices without rebuilding transitions or reusing a stale action
@@ -471,6 +476,9 @@ struct SolveTransitionCache {
     std::vector<std::uint8_t> expanded;
     std::vector<StateRowSpan> state_rows;
     std::vector<SparseRow> rows;
+    /* Proof-carrying quotient rows retain their immutable payloads and
+     * generation-stamped dependency sidecar directly beside stable row IDs. */
+    std::shared_ptr<quotient::ProofStore> quotient_proofs;
     std::shared_ptr<SparseVariantArena> variant_arena =
         std::make_shared<SparseVariantArena>();
     bool accounts_variant_arena = true;

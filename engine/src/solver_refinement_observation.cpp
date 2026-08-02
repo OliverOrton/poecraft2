@@ -4,6 +4,11 @@ namespace poecraft {
 namespace solver {
 namespace refinement {
 
+StableKey canonical_selected_runtime_contract_identity(
+        const SelectedAction& action) {
+    return selected_runtime_contract_signature(action);
+}
+
 FeatureSignature canonical_feature_signature(
         FeatureSignature signature) {
     for (FeatureAtom& atom : signature) {

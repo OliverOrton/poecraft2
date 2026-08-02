@@ -223,6 +223,7 @@ if(BUILD_TESTING)
         tests/test_solver_eval.cpp
         tests/test_solver_api.cpp
         tests/test_solver_refinement.cpp
+        tests/test_solver_quotient_proof.cpp
     )
     target_link_libraries(poecraft_engine_tests PRIVATE poecraft_engine)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -266,6 +267,8 @@ if(BUILD_TESTING)
         COMMAND poecraft_engine_tests --solver-s8-3-only)
     add_test(NAME poecraft_solver_refinement
         COMMAND poecraft_engine_tests --solver-refinement-only)
+    add_test(NAME poecraft_solver_quotient_proof
+        COMMAND poecraft_engine_tests --solver-quotient-proof-only)
 
     set_tests_properties(
         poecraft_header_smoke
@@ -278,6 +281,7 @@ if(BUILD_TESTING)
         poecraft_solver_api
         poecraft_solver_s8_3
         poecraft_solver_refinement
+        poecraft_solver_quotient_proof
         PROPERTIES LABELS "native")
     set_tests_properties(
         poecraft_solver_abstract
@@ -288,9 +292,12 @@ if(BUILD_TESTING)
         poecraft_solver_api
         poecraft_solver_s8_3
         poecraft_solver_refinement
+        poecraft_solver_quotient_proof
         PROPERTIES LABELS "native;solver")
     set_tests_properties(poecraft_solver_refinement PROPERTIES
         LABELS "native;solver;solver-refinement")
+    set_tests_properties(poecraft_solver_quotient_proof PROPERTIES
+        LABELS "native;solver;solver-quotient-proof")
     set_tests_properties(poecraft_solver_solve PROPERTIES
         LABELS "native;solver;solver-policy")
     add_test(

@@ -30,6 +30,7 @@ src/solver_solve_focused.cpp
 src/solver_solve_constructive.cpp
 src/solver_solve_heuristics.cpp
 src/solver_solve_quotient.cpp
+src/solver_quotient_proof.cpp
 src/solver_solve_finish.cpp
 src/solver_solve_telemetry.cpp
 src/solver_refinement.cpp
