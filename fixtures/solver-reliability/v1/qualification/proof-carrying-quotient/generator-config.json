@@ -1,0 +1,101 @@
+{
+  "schema_version": "natural_t1_generator_config_v1",
+  "manifest_schema": "cross_base_reliability_corpus_v1",
+  "corpus_id": "poecraft2-proof-carrying-quotient-five-goal-v1",
+  "output_directory": "fixtures/solver-reliability/v1/qualification/proof-carrying-quotient",
+  "artifact": "data/compiled/current",
+  "category": "cross_base_reliability",
+  "approval_status": "selected_proof_carrying_quotient_gate0_2026_08_01",
+  "comparison_profile": "proof-carrying-quotient-scale-v1",
+  "economy": {
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "fallback_price": null
+  },
+  "base_pools": {},
+  "base_selection": {
+    "paths": [
+      "Metadata/Items/Armours/Gloves/GlovesExpedition3"
+    ],
+    "classes": [],
+    "list": null
+  },
+  "item_level": 86,
+  "start": {
+    "rarity": "rare",
+    "with_implicits": false,
+    "mods": []
+  },
+  "natural_filters": {
+    "families": [],
+    "required_tags": [],
+    "excluded_tags": [],
+    "tag_mode": "any"
+  },
+  "seed": 20260801,
+  "watchdog_seconds": 900,
+  "case_watchdog_seconds": 900,
+  "resource_caps": {
+    "max_states": 200000,
+    "max_sweeps": 100000,
+    "solve_step_work_items": 1024,
+    "max_discovered_states": 200000,
+    "max_expanded_states": 200000,
+    "max_state_action_rows": 1215000,
+    "max_transitions": 10000000,
+    "max_reforge_work": 20000000,
+    "max_solver_owned_bytes": 1073741824,
+    "max_diagnostic_samples": 32,
+    "max_telemetry_json_bytes": 1048576,
+    "max_compiled_nodes": 100000,
+    "max_compiled_edges": 400000,
+    "goal_progress_gated_reforges": true,
+    "max_strategy_json_bytes": 67108864,
+    "max_absolute_optimality_gap": 5.0,
+    "max_relative_optimality_gap": 0.1,
+    "full_evidence": true,
+    "worker_step_ms": 20000,
+    "cancel_ack_ms": 250
+  },
+  "verification": {
+    "runs": 10000,
+    "exact_evaluation": true,
+    "exact_cost_absolute_tolerance": 1e-7,
+    "exact_cost_relative_tolerance": 1e-9,
+    "exact_max_states": 1000000,
+    "exact_max_pairs": 5000000,
+    "exact_max_transitions": 20000000,
+    "exact_max_owned_bytes": 1073741824,
+    "minimum_success_rate": 1.0,
+    "max_actions_per_run": 100000
+  },
+  "coverage": {},
+  "explicit_cases": [
+    {
+      "id": "natural-t1-scale-five-d432b26dfce2",
+      "stratum": "scale-five",
+      "base_metadata_path": "Metadata/Items/Armours/Gloves/GlovesExpedition3",
+      "goal_family_mod_keys": [
+        "AddedPhysicalDamage4",
+        "LifeRegeneration8_",
+        "ReducedLocalAttributeRequirements2",
+        "LocalBaseWardAndLife2",
+        "ColdResist8"
+      ]
+    }
+  ],
+  "strata": [
+    {
+      "id": "scale-five",
+      "corpus": "scale",
+      "goal_count": 5,
+      "side_compositions": [
+        "PPSSS"
+      ],
+      "cases": 1,
+      "max_attempts": 1
+    }
+  ]
+}

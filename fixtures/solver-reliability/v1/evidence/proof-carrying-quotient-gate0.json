@@ -1,0 +1,183 @@
+{
+  "schema_version": "proof_carrying_quotient_gate0_evidence_v1",
+  "date": "2026-08-01",
+  "decision": "gate0_frozen",
+  "source": {
+    "branch": "codex/proof-carrying-quotient-refinement",
+    "starting_branch": "codex/solver-iteration-infrastructure",
+    "starting_commit": "882e70968cd86090e9fc4e882fc6e01886aa62a4",
+    "starting_worktree_clean": true,
+    "main_unchanged": true,
+    "pushed": false
+  },
+  "identities": {
+    "compiled_artifact": {
+      "manifest_path": "data/compiled/current/manifest.json",
+      "manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+      "artifact_schema_version": 4,
+      "source_version": "repoe-e4eaf06c20e1ddb4",
+      "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+      "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+      "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+    },
+    "economy": {
+      "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+      "snapshot_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e",
+      "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "manual_overrides": {
+        "base": 1.0
+      },
+      "fallback_price": null
+    },
+    "engine": {
+      "compiler": "gcc-14.2.0",
+      "abi_version": 2,
+      "engine_sources_sha256": "49f7f773469cc13dcdc2c87679e217f89eafb4d49fc93018d248b797359e5745",
+      "wasm_exports_sha256": "9e92cce8948dd59c67d37653d1cd2e038befea1f73740bb01031ecbe5d193f87",
+      "release_wasm_sha256": "2aefa2e4958f4ddef34372c60118a3df59e9a84848630f0fb6b52046353ef523"
+    },
+    "action_vocabulary_sources": {
+      "solver_registry_cpp_sha256": "d60687aa61825f97272505919e925468798fb5d2cc2db080eba9e76c68533fbc",
+      "solver_options_build_cpp_sha256": "54c99ada10fdc8d5914f23bbfb2329240d56d29924289c77436bef0e98cda4b2",
+      "solver_options_automatic_cpp_sha256": "d3b5ea86a9ab1b8d584b40b85a2ec8a7f9fb94b3bb66c2b55f0d47aa8728b069",
+      "solver_options_temporary_cpp_sha256": "5d8431418f2831327d3086aa2966d8e849960bd4f1ed153d2920e1d97a8f8c04",
+      "solver_options_import_cpp_sha256": "95def5436017b9dec548ede166f6e3fb30536a84dde75787712bcd63e50cc435",
+      "solver_options_semantics_cpp_sha256": "f1e02140cbf7bbb87cbbf4fb91fe20c8cf2256093e28f4abd45e0aba7f1c1c63",
+      "solver_options_cpp_sha256": "577dd6758824479ea930a343f7c5ff772cecb3ecebb8feaf4631a4da51ec6946"
+    }
+  },
+  "focused_baselines": {
+    "shared_refinement": {
+      "checks": 301,
+      "failures": 0
+    },
+    "policy_refinement": {
+      "checks": 4829,
+      "failures": 0
+    }
+  },
+  "archived_two_goal": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "exact_carriers": 183062,
+    "exact_transitions": 423756,
+    "exact_kernels": 10466,
+    "peak_solver_owned_bytes": 1089111449,
+    "partition_rounds": 0,
+    "wall_seconds": 467.3043269,
+    "transition_bits_hash": "4f26d305a908c59f",
+    "policy_bits_hash": "3e384d3eb52f9ab7",
+    "rerun_during_gate0": false
+  },
+  "qualified_fracture": {
+    "case_id": "natural-t1-full-four-47d8b909aa88",
+    "fixture_path": "fixtures/solver-reliability/v1/qualification/fracture-full-four/cases/natural-t1-full-four-47d8b909aa88.json",
+    "fixture_sha256": "ec05210da8e1fa7df2fc6aab5fc1419048467bc5dfbbac2df5d5dde9d4910304",
+    "parent_junk_classes": 6,
+    "root_chaos_successors": 217,
+    "discovered_states": 927,
+    "transition_bits_hash": "04a66ba6c6dfcabf",
+    "policy_bits_hash": "3e5d7530e7aed5fb",
+    "compiled_strategy_sha256": "e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e"
+  },
+  "fixtures": {
+    "medium": {
+      "case_id": "reliability-class-belt",
+      "path": "fixtures/solver-reliability/v1/cases/reliability-class-belt.json",
+      "sha256": "b9b363a45ff23a5aeb4c6b4f05800f537750f6098cbf63b8cc1dafbf16fe822d",
+      "selection_reason": "The current bounded run is tiny but traverses Bellman selection, an observation counterexample and successor-projection counterexample, exact policy refinement, properness, compilation, and exact reconciliation. Gate 3 additionally requires at least one quotient split, reverse invalidation, and policy repair on this path.",
+      "gate0_native": {
+        "actual_status": "bounded_feasible",
+        "total_wall_ms": 905.005,
+        "solve_wall_ms": 39.5083,
+        "coarse_states": 51,
+        "exact_carriers": 266,
+        "retained_exact_carriers": 165,
+        "exact_classes": 19,
+        "counterexamples": 2,
+        "peak_solver_owned_bytes": 80316483,
+        "compiled_nodes": 14,
+        "compiled_edges": 33,
+        "exact_evaluation": "matched"
+      },
+      "gate0_wasm": {
+        "actual_status": "not_converged",
+        "total_wall_ms": 2946.559,
+        "solve_wall_ms": 1249.869,
+        "compile_wall_ms": 1634.343,
+        "coarse_states": 51,
+        "exact_carriers": 266,
+        "peak_solver_owned_bytes": 66468661,
+        "exact_evaluation": "matched"
+      }
+    },
+    "representative_four": {
+      "case_id": "natural-t1-representative-four-62bcfa21ebfe",
+      "path": "fixtures/solver-reliability/v1/cases/natural-t1-representative-four-62bcfa21ebfe.json",
+      "sha256": "4d148b081d55f5998014cb425f1ff6e52f6e1045158a44d89829839730d59a86",
+      "base": "Runic Gauntlets",
+      "item_level": 86,
+      "side_mix": "PPSS",
+      "natural_pool_mod_count": 139,
+      "natural_pool_weight": 115000,
+      "minimum_single_draw_probability": 0.00391304347826087,
+      "feasibility": "natural_reforge_witness",
+      "prior_bounded_reconnaissance": {
+        "source_commit": "25d5bbe6791beb61eae803219563575346def2dc",
+        "actual_status": "refused_state_cap",
+        "expanded_states": 1000,
+        "discovered_states": 1239,
+        "native_total_wall_ms": 157.5035,
+        "native_peak_owned_bytes": 15371919,
+        "wasm_total_wall_ms": 356.669,
+        "complete_strict_graph_constructed": false
+      }
+    },
+    "five_goal": {
+      "case_id": "natural-t1-scale-five-d432b26dfce2",
+      "path": "fixtures/solver-reliability/v1/qualification/proof-carrying-quotient/cases/natural-t1-scale-five-d432b26dfce2.json",
+      "sha256": "b1864beda82ebbd938acc7ebcb3eb0046e48bb4b1a9dcee0b0c7b762ee8902ab",
+      "manifest_path": "fixtures/solver-reliability/v1/qualification/proof-carrying-quotient/manifest.json",
+      "manifest_sha256": "665bc75a36d2aae2a2e03e2f0fd8a3f75046965070daa5f504ce5dac1133d904",
+      "base": "Runic Gauntlets",
+      "item_level": 86,
+      "side_mix": "PPSSS",
+      "natural_pool_mod_count": 139,
+      "natural_pool_weight": 115000,
+      "minimum_single_draw_probability": 0.00391304347826087,
+      "feasibility": "natural_reforge_witness",
+      "max_solver_owned_bytes": 1073741824,
+      "watchdog_seconds": 900,
+      "verification_runs": 10000,
+      "complete_strict_graph_constructed_during_gate0": false
+    }
+  },
+  "reconnaissance": {
+    "method": [
+      "native feasibility and pool query",
+      "existing product action envelopes",
+      "archived strict and Fracture graph evidence",
+      "matched medium native/WASM run",
+      "matched bounded representative-four native/WASM evidence"
+    ],
+    "native_to_wasm_end_to_end_slowdown": {
+      "minimum_ratio": 2.2645,
+      "maximum_ratio": 3.2558,
+      "note": "The interval uses matched end-to-end workflows; phase labels are not compared because native extraction and WASM worker accounting assign work differently."
+    },
+    "wasm_classification": {
+      "reliability-class-belt": "wasm_binding",
+      "natural-t1-breadth-two-4e65dda9c53b": "native_binding_wasm_reported",
+      "natural-t1-full-four-47d8b909aa88": "native_binding_wasm_reported",
+      "natural-t1-representative-four-62bcfa21ebfe": "native_binding_wasm_reported",
+      "natural-t1-scale-five-d432b26dfce2": "native_binding_wasm_reported"
+    },
+    "classification_reason": "The archived two-goal native wall time already projects beyond 900 seconds at the observed end-to-end slowdown. The four/five-goal quotient populations and native wall time are not yet measured, so Gate 0 cannot establish adequate WASM headroom. All cases will still run under the declared product watchdog and be reported."
+  },
+  "frozen_gate1_choices": {
+    "coverage": "collision-checked strict kernel/support identity plus deterministic normalized replay recipe; exact range/chunk only for an affected slice when kernel replay is unavailable; no global exact-carrier vector",
+    "dependency_storage": "SolveTransitionCache-owned compact sidecar with shared immutable payloads and independent generation-stamped use sites",
+    "reference_adapter": "bounded synthetic parity/debug only; zero invocations on medium and acceptance production paths",
+    "compaction": "none until a complete measured ledger proves it necessary and derives a limit from the unchanged product cap"
+  }
+}

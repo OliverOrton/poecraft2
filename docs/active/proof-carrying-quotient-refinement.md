@@ -1,12 +1,19 @@
 # Proof-Carrying Quotient Refinement During Solving
 
-**Status: selected structural follow-on; implementation has not begun.**
+**Status: selected implementation milestone; Gate 0 frozen on the dedicated
+branch, Gate 1 is next.**
 
 Owner: Oliver
 
-Branch boundary: continue from the locally committed qualification-stop state
-on `codex/policy-guided-exact-refinement`, or create a separately named branch
-from that commit before editing.
+Branch: `codex/proof-carrying-quotient-refinement`.
+
+Starting boundary: `882e70968cd86090e9fc4e882fc6e01886aa62a4` on
+`codex/solver-iteration-infrastructure`. `main` remains unchanged and no work
+may be pushed or merged during this milestone.
+
+Gate 0 provenance, fixture hashes, bounded reconnaissance, and WASM
+classifications are frozen in
+[`proof-carrying-quotient-gate0.json`](../../fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json).
 
 Parent: [Active work](README.md)
 
@@ -28,7 +35,17 @@ The milestone must not:
 - change Path of Exile mechanics, prices, product action filtering, strategy
   JSON, solver objective, or frontend authority;
 - raise the `1,073,741,824`-byte product cap or case watchdogs; or
-- treat a bounded lower relaxation as an executable upper policy.
+- treat a bounded lower relaxation as an executable upper policy;
+- reconstruct the complete strict graph before quotient refinement;
+- merge an open graph merely because currently known successors agree;
+- add named behavior for any primitive, option, or recipe;
+- change action filtering, prices, mechanics, solver objectives, the public C
+  ABI, strategy JSON, action vocabulary, or frontend authority;
+- add checkpoint/replay during this milestone; or
+- perform rendered or browser visual review.
+
+Any ambiguous Path of Exile mechanic still requires Oliver's ruling. The
+implementation does not research or infer mechanic behavior.
 
 ## Reusable authority and integration map
 
@@ -122,6 +139,44 @@ The certificate must retain exact total mass and deterministic summation
 evidence. A coverage hash alone is insufficient. Before Phase 2, choose and
 test one collision-checked coverage representation that supports replay under
 the cap; see unresolved decisions below.
+
+## Frozen representation decisions
+
+### Coverage and live slices
+
+Gate 1 starts with a collision-checked replay descriptor containing the
+existing strict kernel/support identity; a deterministic normalized replay
+recipe; immutable session, layout, goal, artifact, operation, and relevant
+solver identities; exact covered-source count and probability mass; and full
+tuple validation on every cache hit. It must replay the exact covered
+carriers after a split. A hash or representative carrier is never proof.
+
+There is no global retained exact-carrier vector. When the kernel cannot
+replay a split slice directly, only that affected slice may retain an explicit
+deterministic range or chunk. Every live slice is scheduled under a declared
+ledger-derived byte budget, with current and peak live slice count and bytes
+reported. Backpressure, release, or replay must not discard admitted work or
+weaken exactness.
+
+### Dependency ownership
+
+`SolveTransitionCache` owns, or directly owns through one compact sidecar,
+stable row IDs, source-cell use sites, target-cell reverse dependencies,
+source/target generations, action/admission generations, and deterministic
+invalidation worklists. Immutable equal-row payloads may be shared, but their
+generation-stamped use sites may not be shared. Dependency generations are
+validity tokens rather than durable semantic identity.
+
+### Reference adapter and compaction
+
+Reconstruct-then-merge remains only a bounded synthetic parity oracle or
+debug assertion. A reference-adapter invocation on the medium production path
+or any frozen acceptance case is red; it is never a production fallback.
+
+No arbitrary compaction threshold is permitted. First measure the complete
+ledger. Add compaction only when the unchanged 1 GiB cap, measured fixed
+costs, variance, required live work, and replay cost demonstrate that it is
+required and determine its limit.
 
 ## Cache invalidation rules
 
@@ -230,116 +285,189 @@ the existing observation requirement/signature authority and
 Exact evaluator and simulator routing consume the same observation program.
 Compatibility remains a final assertion, not a substitute for proof.
 
+## Qualification levels
+
+Qualification claims remain deliberately separate:
+
+- **Core structural qualification** binds the frozen red two-goal case, the
+  qualified Fracture full-four regression, and the selected natural
+  representative four-goal case. Each must carry exact proof through
+  properness, compilation, reconciliation, and verification at or below 1 GiB
+  with zero production reference-adapter invocations.
+- **Five-goal scale qualification** binds only the selected five-goal case. A
+  time or memory refusal does not erase an otherwise successful core result;
+  the exact report is then “core quotient qualified; five-goal scale
+  unqualified,” and that evidence becomes the next structural boundary.
+- **WASM product qualification** is separate from native correctness. A native
+  success followed by a declared WASM timeout leaves release performance
+  unqualified without retroactively disproving the quotient.
+
 ## Staged implementation gates
 
-Run routine suites only at the final acceptance boundary; use the named
-focused witnesses while developing each stage.
+Focused refinement suites may run when they directly validate or diagnose the
+current gate. Routine complete suites run once at the final boundary.
 
-### Gate 0 — freeze provenance and acceptance inputs
+### Gate 0 — frozen provenance, fixtures, and predictions
 
-- Preserve the archived red two-goal report and the current focused counts.
-- Freeze exact IDs and artifact/economy hashes for:
-  `natural-t1-breadth-two-4e65dda9c53b` (two goals),
-  `natural-t1-full-four-47d8b909aa88` (qualified four goals), and one new
-  owner-approved five-goal case selected as described under unresolved
-  decisions.
-- Keep the 1 GiB solver cap, existing action filter, prices, mechanics, and
-  900-second ceiling unchanged.
+Gate 0 is frozen by the linked evidence file. It preserves:
 
-### Gate 1 — proof identity and invalidation harness
+- shared refinement `301/0` and policy refinement `4,829/0`;
+- `natural-t1-breadth-two-4e65dda9c53b`: 183,062 exact carriers,
+  423,756 transitions, 10,466 kernels, 1,089,111,449 peak owned bytes, and
+  zero partition rounds;
+- the Fracture six-parent, 217-root, 927-state invariants and frozen hashes;
+- `reliability-class-belt` as the medium integration case;
+- `natural-t1-representative-four-62bcfa21ebfe` as the representative four;
+  and
+- generated natural feasible `natural-t1-scale-five-d432b26dfce2`, Runic
+  Gauntlets, item level 86, `2P3S`, Mirage economy, existing goal-relevant
+  envelope, 1 GiB, and 900 seconds.
 
-- Add focused unit tests for full-tuple collision checks, source split,
-  target split, requirement growth, action/choice change, price-only reuse,
-  vocabulary invalidation, and session/goal mismatch.
-- Freeze a row-sharing witness proving equal certified rows share one payload
-  without sharing stale dependency generations.
-- Freeze a key-dedup witness proving hashes never merge unequal full keys.
+The medium acceptance must exercise quotient cells, Bellman selection, at
+least one split, reverse invalidation, policy repair, properness, and
+compilation at a small fraction of the hard two-goal cost. Gate 0 used pool
+structure, the existing action envelope, archived graph evidence, and matched
+small native/WASM measurements; it did not run the archived 467-second case or
+construct a complete four/five-goal strict graph. Hard cases are initially
+classified native-binding/WASM-reported because the measured slowdown leaves
+no defensible 900-second WASM headroom; this may be tightened, never silently
+relaxed, from Gate 3 measurements.
+
+### Gate 1 — proof identity, memory accounting, and invalidation
+
+Implement the proof types and focused harness before production integration.
+Certified identity includes source coarse parent, current observation
+requirement and feature signature, semantic action, runtime program, exact
+choice recipe, session/layout/goal/artifact/solver identity, strict kernel or
+replay authority, exact source coverage, total probability, and ordered
+labeled projected arcs.
+
+Focused tests cover full-tuple collision validation including deliberately
+colliding hashes; source and target splits; requirement and routing-program
+growth; action, choice-recipe, kernel, and admission changes; price-only
+structural reuse with Q/policy invalidation; session, goal, artifact, start,
+and option mismatch; shared immutable rows with independent generations;
+deterministic replay and mass preservation; and stale/corrupt rejection.
+
+An independent ledger-conservation witness starts from a snapshot, allocates
+payloads, certificates, sidecar records, reverse edges, coverage descriptors,
+and live slices, exercises growth/sharing/invalidation/replay/release, and
+checks production bytes against an independently calculated capacity model.
+Shared payloads are charged once, use sites individually, temporary charges
+return to zero, and the final ledger equals the starting snapshot. RSS is only
+a sanity comparison.
+
+**Early stop:** stop before production integration and archive the smallest
+failure if no bounded representation can replay exact split coverage, reject
+full-key collisions, conserve probability and the ledger, and avoid global
+strict-carrier retention.
 
 ### Gate 2 — shared-partition CEGAR integration
 
-- Route closed affected proof slices through
-  `refine_closed_probabilistic_partition`.
-- Pass the four-node cyclic witness, an improper two-node cycle, a
-  multiple-entry distribution that splits, an equal-row cycle that remains
-  merged, and a target-split predecessor invalidation witness.
-- Prove no open frontier label is treated as an internal equal successor.
+Reuse `ActionRefinementContract`, observation propagation,
+`FeatureSignature`, and `refine_closed_probabilistic_partition`. External
+frontiers stay distinct until certified and an open graph is never submitted
+as a closed probabilistic partition. A split installs canonical children and
+an existing `RefinementCounterexample`; source and target dependencies
+invalidate deterministically; stale rows replay or reproject before exact or
+upper use; complete entry distributions remain intact.
 
-### Gate 3 — Bellman/policy improvement integration
+Focused witnesses are the four-node cyclic counterexample, improper two-node
+cycle, splitting multiple-entry distribution, equal-row cycle that remains
+merged, source split, target split with predecessor invalidation, requirement
+growth, external/internal frontier separation, exact projected-mass
+reconciliation, and deterministic repeated construction.
 
-- Install split children in `SolveTransitionCache`, retain stable global row
-  ownership, and schedule existing predecessor worklists.
-- Focused tests must show lower monotonicity, no incompatible value mixing,
-  alternative preservation, price-only Q invalidation, cyclic SCC repair, and
-  witness-local action changes without named-action logic.
-- The two-goal native case must publish inside 1 GiB/900 seconds with materially
-  less retained exact reconstruction than the archived 183,062-carrier bridge.
+**Early stop:** if the four-node cycle cannot be represented without the
+complete strict graph or an equivalently unbounded carrier population,
+archive a red structural report and do not begin Bellman integration.
 
-### Gate 4 — properness, compilation, and exact reconciliation
+### Gate 3 — Bellman integration and medium projection
 
-- Every policy-reachable selected row has a current certificate.
-- Shared partition reports lumpable; shared exact SCC evaluation reports
-  proper; compiled assertion reports proper, zero off-policy, and reconciled.
-- Run native compilation/exact evaluation plus 10,000 simulator runs for the
-  selected two-goal verification case.
-- Preserve the qualified Fracture six-parent/217-root/927-state invariants and
-  hashes exactly.
+Integrate quotient cells and certified rows with `SolveTransitionCache`,
+stable row ownership, state-row spans, reverse scheduling, Bellman Q backups,
+SCC evaluation, policy improvement, lower/upper provenance, and the unchanged
+filtered vocabulary. Uncertified aggregation is lower-only. Executable uppers
+require current certificates for every reachable selected row. Splits
+invalidate dependent rows, values, SCCs, and predecessors while unrelated
+payloads remain reusable. Price changes retain structural transitions but
+invalidate prices/Q/policy. Counterexamples never select a named action,
+alternatives survive splits, incompatible mixing cannot lower the bound, and
+multiple entries/cycles use existing proper-policy authority.
 
-### Gate 5 — native scale acceptance
+Telemetry separately reports proof reuse, reprojection, source/target splits,
+reverse invalidations, carrier replay, current/peak live slices and bytes,
+coverage, certificate, sidecar, partition, carrier, row/kernel, scratch, total
+owned bytes, and reference-adapter calls. Run the frozen medium case before a
+hard case; any production reference-adapter invocation is red.
 
-- Two goals: `natural-t1-breadth-two-4e65dda9c53b` must publish, compile,
-  exact-evaluate, reconcile, and verify within 1 GiB/900 seconds.
-- Four goals: run both the frozen Fracture
-  `natural-t1-full-four-47d8b909aa88` non-regression and a natural
-  representative-four case selected at Gate 0; both must satisfy their
-  declared policy/verification contracts without reconstructing the complete
-  strict policy graph.
-- Five goals: run the frozen Gate-0 case under the same 1 GiB product cap and
-  owner-approved watchdog; require a published bounded or exact executable
-  policy, compile/exact reconciliation, and 10,000-run zero-off-policy
-  verification. A resource refusal is a red structural gate, not permission
-  to raise the cap.
-- Then run the existing 27-case smoke, 49-case native reliability portfolio,
-  and selected existing 10,000-run Ring/Gloves verification.
+Use Gate 1–3 data to publish a ranged two-goal prediction for quotient cells,
+certified rows, retained coverage, peak live slices, every ledger category,
+total owned bytes, and wall time. Compare it with the eventual run. Carrier
+count is diagnostic; total solver-owned bytes is binding. Report proof bytes
+and their percentage of total without imposing an arbitrary allowance.
 
-### Gate 6 — release WASM and final repository acceptance
+**Early stop:** stop before the hard run only for a measured lower bound above
+1 GiB or demonstrated unbounded growth, never for a rough pessimistic
+extrapolation.
 
-- Rebuild through `powershell -File scripts/build-wasm.ps1`.
-- Run the identical frozen two-, four-, and five-goal cases with
-  `apps/web/test/solver-benchmark.ts` against release WASM; require the same
-  publication, compilation, exact-evaluation, reconciliation, cap, and
-  verification classifications as native.
-- Run the complete release-WASM reliability corpus, then
-  `powershell -File scripts/test.ps1` once.
-- Record native/WASM memory, wall time, cooperative slice/cancel evidence,
-  certificate reuse/invalidation counts, hashes, and 10,000-run results.
-- No visual review unless Oliver explicitly requests it.
+### Gate 4 — properness, compilation, and reconciliation
 
-## Unresolved design decisions
+Publish only when all reachable selected rows have current certificates,
+target dependencies are closed, the shared partition is lumpable, reachable
+bottom SCCs are terminal, exact policy evaluation is proper for every entry,
+and no incompatible value mixing remains. Build existing
+`RefinedPolicyCompileRouting`; do not compile provisional quotient IDs. The
+unchanged JSON must parse, independently exact-evaluate, reconcile at the
+root, route zero off-policy, and pass 10,000-run zero-off-policy simulation
+when verification is required. Diagnose compiler issues on focused/medium
+cases before any hard solve.
 
-Do not guess these during implementation:
+### Gate 5 — native structural and scale acceptance
 
-1. **Carrier coverage representation.** Choose between an explicit replayable
-   enumerator/range proof, an existing exact kernel support identity plus
-   normalized enumeration evidence, or another collision-checked form. A hash
-   or representative alone is forbidden. The choice must pass Gate 1 memory,
-   collision, replay, and cap tests before solver integration.
-2. **Dependency-index storage.** Decide whether reverse target dependencies
-   live directly beside `SolveTransitionCache` rows or in a compact generation
-   table. It must support deterministic invalidation and be included in the
-   same memory ledger.
-3. **Reference-adapter fallback scope.** Decide which small/debug cases may use
-   reconstruct-then-merge as a parity oracle and whether production may ever
-   fall back. Falling back on the two/four/five acceptance cases does not meet
-   the milestone.
-4. **Five-goal fixture.** No tracked case currently has exactly five goal
-   slots. Before implementation, Oliver must approve one deterministic
-   generated or authored case and its watchdog. Recommended selection
-   criteria—not a mechanic ruling—are a feasible natural T1 `3P2S` or `2P3S`
-   goal, the existing goal-relevant product action envelope, frozen Mirage
-   economy/artifact identity, and no manufactured fallback recipe.
-5. **Compaction threshold.** Any eviction/replay threshold must be derived from
-   the 1 GiB ledger and focused evidence; it may not silently weaken proof or
-   alter public caps.
+Run each expensive solve once where practical, carrying it through
+publication, compilation, exact evaluation, reconciliation, and 10,000-run
+simulation.
 
-Once these decisions are recorded, Gate 1 is the next implementation boundary.
-Do not begin with another full natural hard-case run.
+1. Frozen two-goal: at or below 1 GiB/900 seconds, no complete strict
+   reconstruction or reference fallback, executable publication, exact
+   reconciliation, zero off-policy, and prediction-versus-actual reporting.
+2. Qualified Fracture full-four: preserve six parents, 217 root Chaos
+   successors, 927 states, and transition/policy/compiled hashes.
+3. Representative four: satisfy its frozen feasible contract at or below
+   1 GiB/900 seconds, with no full reconstruction or fallback, executable
+   publication, reconciliation, and 10,000-run verification.
+4. Five-goal scale: run at 1 GiB/900 seconds. Success qualifies five-goal
+   scale. Refusal is preserved honestly as the next structural boundary and
+   does not invalidate a successful core.
+
+Then run the existing 27-case smoke corpus, 49-case native reliability
+portfolio, and selected Ring/Gloves 10,000-run verification. A red binding
+core result is architectural evidence, not permission to raise a limit.
+
+### Gate 6 — release WASM and final acceptance
+
+Rebuild with `powershell -File scripts/build-wasm.ps1`. Run every frozen case
+under its Gate 0 classification. WASM-binding cases require matching
+publication, compilation, reconciliation, correctness, memory, watchdog, and
+10,000-run verification. Native-binding/WASM-reported cases still run under
+the declared product watchdog and report completion/refusal, memory, wall
+time, slicing, and cancellation honestly.
+
+Verify all 61 exports and ABI 2, run the release-WASM reliability corpus,
+`npm test`, `npx tsc --noEmit`, and one final
+`powershell -File scripts/test.ps1`. Do not perform visual review.
+
+## Completion and next boundary
+
+Use one local commit per completed logical gate and do not squash useful gate
+boundaries. At completion or an explicit structural early stop, produce a
+complete report, archive this plan, update indexes and `HANDOFF.md`, preserve
+the smallest failed witness, distinguish the three qualification levels, and
+leave a clean unpushed worktree.
+
+Checkpoint/replay remains deferred. If core and five-goal qualification both
+succeed, record the stable post-quotient identity boundary and select
+deterministic replay next. If core succeeds but five goals fail, select the
+five-goal evidence before replay. If a proof gate fails, recommend the next
+architecture without spending the hard acceptance runs.

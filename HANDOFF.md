@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: solver iteration infrastructure is complete and archived.
-Proof-carrying quotient refinement is restored unchanged as the current
-implementation milestone.**
+**Status: proof-carrying quotient refinement Gate 0 is frozen. Gate 1 proof
+identity, coverage replay, dependency storage, and ledger accounting are the
+current implementation boundary.**
 
 Current plan:
 [Proof-Carrying Quotient Refinement During Solving](docs/active/proof-carrying-quotient-refinement.md).
@@ -10,38 +10,36 @@ Current plan:
 Completed enabling milestone:
 [Solver Iteration Infrastructure And Decomposition](docs/archive/2026-08-01-solver-iteration-infrastructure/README.md).
 
-Branch: `codex/solver-iteration-infrastructure`
+Branch: `codex/proof-carrying-quotient-refinement`
 
-Starting commit: `f1ad2a2ab32d948b11758972aafb198cee9ea483`
+Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
 
-Gate commits: `7d64cc6`, `25ca6f2`, `c236e50`, `5161524`, and
-`c042d8a`, followed by the final archive/handoff commit.
+Gate commits: Gate 0 is recorded by this boundary commit; later gate hashes
+will be appended as they are created.
 
 Nothing has been pushed or merged. `main` is unchanged.
 
-## Completed boundary
+## Gate 0 frozen boundary
 
-- `engine/engine-sources.txt` is the canonical native/fallback/WASM
-  translation-unit inventory.
-- `engine/CMakePresets.json` and `scripts/dev-engine.ps1` provide the Release
-  Ninja workflow, focused build/test tasks, parallel CTest, benchmark
-  validation, rerun-failed, and explicit clean rebuild.
-- `scripts/build.ps1` discovers the installed Visual Studio CMake/Ninja tools
-  and warns prominently before its all-source g++ fallback.
-- Optional absent-safe ccache integration was retained after a measured
-  A -> B -> A direct-hit result.
-- The large refinement, policy-refinement, options, evaluator, compiler, and
-  private contract owners are decomposed by responsibility. Read
-  [Solver Internals And Source Ownership](docs/foundation/solver-internals.md)
-  before modifying them.
-- `scripts/dev-wasm.ps1` is the incremental Emscripten CMake/Ninja path;
-  `scripts/build-wasm.ps1` remains the direct release/diagnostics fallback.
-  Both consume the canonical engine inventory and 61-symbol WASM export
-  manifest.
-- Replay/checkpoint was measured and intentionally deferred until quotient
-  representation stabilizes.
+- The amended plan now binds core, five-goal scale, and WASM qualification
+  separately and includes all early structural stops.
+- Artifact, Mirage economy, compiler, ABI, action-vocabulary source, goal,
+  solver-option, and fixture identities are pinned in
+  `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate0.json`.
+- `reliability-class-belt` is the medium integration case.
+- `natural-t1-representative-four-62bcfa21ebfe` is the natural representative
+  four-goal case.
+- `natural-t1-scale-five-d432b26dfce2` is the generated natural feasible
+  Runic Gauntlets `2P3S` scale case under 1 GiB/900 seconds and 10,000-run
+  verification. Its dedicated corpus does not alter the existing 49-case
+  reliability portfolio.
+- The archived 467-second two-goal case was not rerun. Bounded pool/action
+  reconnaissance and matched medium native/WASM measurements were used.
+- Reconstruct-then-merge is frozen as a bounded synthetic parity/debug oracle
+  only. Production reference-adapter use on the medium or acceptance cases is
+  red.
 
-## Final measured evidence
+## Preserved and Gate 0 evidence
 
 | Check | Result |
 | --- | ---: |
@@ -59,6 +57,15 @@ Nothing has been pushed or merged. `main` is unchanged.
 | WASM exports | 61/61 callable, ABI 2 |
 | Complete `scripts/test.ps1` run | passed, 66.524 s |
 
+The fresh medium reconnaissance completed natively in 905.005 ms total with
+51 coarse states, 266 exact carriers, 19 exact classes, two counterexamples,
+80,316,483 peak solver-owned bytes, compilation, and matched independent exact
+evaluation. The matched release-WASM workflow took 2,946.559 ms total and
+also matched exact evaluation; its classification mismatch is baseline
+evidence, not a Gate 0 success claim. Matched end-to-end evidence gives a
+2.2645x–3.2558x native-to-WASM range, so hard cases are initially
+native-binding/WASM-reported until Gate 3 can prove adequate product headroom.
+
 `npm test` and `npx tsc --noEmit` passed. The release WASM worker suite passed
 27/27. Compiled-strategy verification used 10,000 runs where requested. No
 rendered/visual review was performed.
@@ -72,11 +79,20 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Begin Gate 0 of the unchanged proof-carrying quotient plan. Re-freeze the
-current local source boundary after Oliver selects the implementation branch,
-then follow that plan's representation/proof gates. Do not substitute the
-archived reconstruct-then-merge adapter or treat this enabling milestone as
-quotient implementation.
+Implement Gate 1 before production integration:
+
+- collision-checked full proof identity and deliberately colliding-hash tests;
+- deterministic replayable coverage without a global strict-carrier vector;
+- `SolveTransitionCache`-owned compact dependency sidecar with stable row IDs,
+  shared immutable payloads, and independent generation-stamped use sites;
+- exact mass, stale/corrupt rejection, and every mismatch/invalidation witness
+  required by the active plan; and
+- an independent capacity-based ledger-conservation test that returns to its
+  starting value.
+
+If the representation cannot meet replay, collision, probability, ledger, and
+bounded-retention requirements, stop and archive the smallest Gate 1 witness.
+Do not enter shared-partition or Bellman integration in that condition.
 
 Do not implement replay/checkpoint until the quotient representation is stable.
 Do not change mechanics, action filtering, caps, public C ABI, strategy

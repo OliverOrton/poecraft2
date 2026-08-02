@@ -1,0 +1,63 @@
+{
+  "artifact": {
+    "artifact_schema_version": 4,
+    "game_data_sha256": "af41b8f4bdf874676b3446e2b46f5652cdd1e1f9f990b1fb609bf6fdb20c27d5",
+    "manifest_relative_path": "data/compiled/current/manifest.json",
+    "manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "source_data_hash": "93c97d879e11b2022fc272b4d51c6336c3656151cd758ec1c2427d8f74bfc615",
+    "source_version": "repoe-e4eaf06c20e1ddb4",
+    "strings_sha256": "654a55489b47740672aea5a27ef52f01e23efc3bf5ce337be5a58756b72f955c"
+  },
+  "case_counts": {
+    "scale": 1
+  },
+  "cases": [
+    "cases/natural-t1-scale-five-d432b26dfce2.json"
+  ],
+  "configuration": {
+    "config_path": "fixtures/solver-reliability/v1/qualification/proof-carrying-quotient/generator-config.json",
+    "config_sha256": "35848b4301d269b10a4accc326f7eddc36782883fb2d8877045c55e1029f1fc0",
+    "item_level": 86,
+    "natural_filters": {
+      "excluded_tags": [],
+      "families": [],
+      "required_tags": [],
+      "tag_mode": "any"
+    },
+    "start": {
+      "mods": [],
+      "rarity": "rare",
+      "with_implicits": false
+    },
+    "watchdog_seconds": 900.0
+  },
+  "corpus_id": "poecraft2-proof-carrying-quotient-five-goal-v1",
+  "economy": {
+    "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "fallback_price": null,
+    "id": "economy:mirage:9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "league_key": "mirage",
+    "league_name": "Mirage",
+    "manual_overrides": {
+      "base": 1.0
+    },
+    "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+    "source_cutoff_at_utc": "2026-07-15T21:18:29Z",
+    "version": "v1"
+  },
+  "generator": {
+    "compiler": "gcc-14.2.0",
+    "engine_abi_version": 2,
+    "engine_binary_path": "build/engine/poecraft_engine.dll",
+    "engine_binary_sha256": "d50b9eb5d67222affbbb3f8e08cda970d18ffa94fc19621713daf8598239929d",
+    "engine_commit": "882e70968cd86090e9fc4e882fc6e01886aa62a4",
+    "engine_dirty": false,
+    "engine_dirty_paths": [],
+    "generator_version": "natural-t1-corpus-v1",
+    "seed": 20260801
+  },
+  "schema_version": "cross_base_reliability_corpus_v1",
+  "stratum_counts": {
+    "scale-five": 1
+  }
+}

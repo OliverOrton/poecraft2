@@ -7,7 +7,10 @@ Parent: [Documentation map](../README.md)
 
 Current boundary:
 [Proof-Carrying Quotient Refinement During Solving](proof-carrying-quotient-refinement.md).
-Its plan is unchanged. It is not implemented, completed, or superseded.
+Its amended Gate 0 is frozen on
+`codex/proof-carrying-quotient-refinement`; proof identity, replayable coverage,
+dependency storage, and ledger accounting are the next implementation gate.
+The quotient itself is not yet implemented, completed, or superseded.
 
 The completed
 [Solver Iteration Infrastructure And Decomposition](../archive/2026-08-01-solver-iteration-infrastructure/README.md)
