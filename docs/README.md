@@ -33,8 +33,9 @@ The selected next boundary is
 [Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md).
 Gate 0 froze identities and predictions and added behavior-neutral
 selected-versus-alternative telemetry. Gate 1 now retains collision-checked,
-carrier-wide lower-only alternative obligations; Gate 2 selected-policy-first
-quotient construction is active. The archived
+carrier-wide lower-only alternative obligations. Gate 2 now closes, partitions,
+and publishes the selected policy before exact alternative expansion; Gate 3
+competitive scheduling is active. The archived
 [Exact Reforge-Work Growth Diagnostic](archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
 measured an approximately linear eager-candidate grind through 100M total work:
 40 exact kernels and 6,903,840 transitions, but zero partition classes,

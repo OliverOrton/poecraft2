@@ -1122,6 +1122,33 @@ scheduling.
 No production row order, cap, mechanic, action filter, ABI, strategy
 vocabulary, WASM artifact, or frontend contract changes at this gate.
 
+## Selected-Policy-First Quotient Construction
+
+The 2026-08-02
+[tracked Gate 2 evidence](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate2.json)
+connects the Gate 1 obligation contract to production quotient discovery.
+
+- Current-row certification, cheap admitted-descriptor enumeration, and
+  requested exact certification are separate operations. Cheap enumeration
+  constructs runtime identity and checks inexpensive admission/primitive
+  legality without building primitive outcomes or option kernels.
+- Initial strict closure follows only the selected row. Alternative descriptor
+  identities constrain partitioning, while their unknown successors remain
+  absent rather than represented by fabricated stochastic arcs.
+- Every final nonterminal cell is accounted exactly once by its current
+  certified row plus explicit lower-only obligations. The selected operator's
+  pending alternative choice remains represented.
+- Focused production evidence reaches partition after selected work alone,
+  creates nonzero unresolved obligations, avoids nonzero exact rows, builds
+  zero alternative kernels before the first proper executable upper, compiles,
+  and exact-reconciles the returned artifact.
+- Focused solve acceptance passes 98,140 checks and quotient
+  proof/partition/Bellman acceptance passes 316 checks, both with zero
+  failures.
+
+This is selected-policy-first bounded publication, not an exact alternative
+envelope. Competitive obligation scheduling and certification remain Gate 3.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

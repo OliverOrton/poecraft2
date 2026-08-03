@@ -24,6 +24,35 @@ struct QuotientOracleCompactRow {
     std::vector<QuotientOracleCompactTransition> transitions;
 };
 
+struct QuotientAlternativeDescriptor {
+    std::uint32_t operator_index = kNoId;
+    quotient::AlternativeActionIdentity action;
+    ObservationRequirement routing_observes;
+    StableKey resumable_work_identity;
+
+    bool operator==(const QuotientAlternativeDescriptor&) const = default;
+};
+
+std::uint64_t quotient_alternative_descriptor_bytes(
+        const QuotientAlternativeDescriptor& descriptor) {
+    std::uint64_t bytes = 0;
+    saturating_add(
+        bytes,
+        stable_key_bytes(descriptor.action.semantic_action_identity));
+    saturating_add(
+        bytes,
+        stable_key_bytes(
+            descriptor.action.runtime_contract_program_identity));
+    saturating_add(
+        bytes,
+        stable_key_bytes(descriptor.action.exact_choice_recipe_identity));
+    saturating_add(
+        bytes, requirement_bytes(descriptor.routing_observes));
+    saturating_add(
+        bytes, stable_key_bytes(descriptor.resumable_work_identity));
+    return bytes;
+}
+
 #include "solver_policy_oracle.hpp"
 #include "solver_policy_oracle_evaluate.inc"
 #include "solver_policy_oracle_resources.inc"
@@ -546,6 +575,9 @@ PolicyExactLiftCertificate lift_policy_quotient_materialized_scaffold(
         telemetry.dependency_sidecar_bytes = memory.bytes[
             static_cast<std::size_t>(
                 quotient::ProofMemoryCategory::DependencySidecar)];
+        telemetry.alternative_obligation_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::AlternativeObligation)];
         telemetry.row_kernel_bytes = memory.bytes[
             static_cast<std::size_t>(
                 quotient::ProofMemoryCategory::RowKernel)];
@@ -834,6 +866,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
         std::vector<std::uint32_t> locators;
         std::vector<std::uint32_t> ordinal_by_strict_state;
         std::vector<std::vector<std::uint32_t>> rows_by_ordinal;
+        std::vector<std::vector<QuotientAlternativeDescriptor>>
+            alternatives_by_ordinal;
 
         const auto ensure_locator_capacity = [&](const std::uint32_t locator) {
             if (ordinal_by_strict_state.size() <= locator) {
@@ -857,6 +891,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
             ordinal_by_strict_state[locator] = ordinal;
             locators.push_back(locator);
             rows_by_ordinal.emplace_back();
+            alternatives_by_ordinal.emplace_back();
             return ordinal;
         };
         intern_locator(root_locator);
@@ -925,56 +960,59 @@ PolicyExactLiftCertificate lift_policy_quotient(
                     "streamed quotient strict identity unexpectedly collapsed");
             }
             if (!state.terminal) {
-                std::vector<QuotientOracleCompactRow> rows =
-                    oracle.quotient_compact_action_rows(state);
+                QuotientOracleCompactRow selected =
+                    oracle.quotient_selected_compact_row(state);
+                alternatives_by_ordinal[cursor] =
+                    oracle.quotient_alternative_descriptors(state);
                 std::uint64_t discovery_live = exact_state_bytes(state);
                 saturating_add(
                     discovery_live,
-                    rows.capacity() * sizeof(QuotientOracleCompactRow));
-                for (const QuotientOracleCompactRow& row : rows) {
+                    sizeof(QuotientOracleCompactRow));
+                saturating_add(
+                    discovery_live,
+                    alternatives_by_ordinal[cursor].capacity() *
+                        sizeof(QuotientAlternativeDescriptor));
+                for (const QuotientAlternativeDescriptor& descriptor :
+                     alternatives_by_ordinal[cursor]) {
                     saturating_add(
                         discovery_live,
-                        selected_action_bytes(row.selected));
-                    saturating_add(
-                        discovery_live,
-                        exact_choice_recipe_bytes(row.choice_recipe));
-                    saturating_add(
-                        discovery_live,
-                        row.transitions.capacity() *
-                            sizeof(QuotientOracleCompactTransition));
+                        quotient_alternative_descriptor_bytes(descriptor));
                 }
+                saturating_add(
+                    discovery_live,
+                    selected_action_bytes(selected.selected));
+                saturating_add(
+                    discovery_live,
+                    exact_choice_recipe_bytes(selected.choice_recipe));
+                saturating_add(
+                    discovery_live,
+                    selected.transitions.capacity() *
+                        sizeof(QuotientOracleCompactTransition));
                 telemetry.current_live_slices = 1;
                 telemetry.peak_live_slices = 1;
                 telemetry.current_live_slice_bytes = discovery_live;
                 telemetry.peak_live_slice_bytes = std::max(
                     telemetry.peak_live_slice_bytes, discovery_live);
-                for (QuotientOracleCompactRow& candidate : rows) {
-                    candidate = canonical_raw_row(std::move(candidate));
-                    for (const QuotientOracleCompactTransition& transition :
-                         candidate.transitions) {
-                        intern_locator(transition.strict_state);
-                    }
-                    StableKey identity = raw_identity(candidate);
-                    auto [found, inserted] = raw_row_by_identity.emplace(
-                        std::move(identity),
-                        static_cast<std::uint32_t>(raw_rows.size()));
-                    if (inserted) {
-                        raw_rows.push_back({
-                            std::move(candidate.selected),
-                            std::move(candidate.choice_recipe),
-                            candidate.action_cost,
-                            std::move(candidate.transitions)});
-                    }
-                    rows_by_ordinal[cursor].push_back(found->second);
+                selected = canonical_raw_row(std::move(selected));
+                for (const QuotientOracleCompactTransition& transition :
+                     selected.transitions) {
+                    intern_locator(transition.strict_state);
                 }
-                std::sort(
-                    rows_by_ordinal[cursor].begin(),
-                    rows_by_ordinal[cursor].end());
-                rows_by_ordinal[cursor].erase(
-                    std::unique(
-                        rows_by_ordinal[cursor].begin(),
-                        rows_by_ordinal[cursor].end()),
-                    rows_by_ordinal[cursor].end());
+                StableKey identity = raw_identity(selected);
+                auto [found, inserted] = raw_row_by_identity.emplace(
+                    std::move(identity),
+                    static_cast<std::uint32_t>(raw_rows.size()));
+                if (inserted) {
+                    raw_rows.push_back({
+                        std::move(selected.selected),
+                        std::move(selected.choice_recipe),
+                        selected.action_cost,
+                        std::move(selected.transitions)});
+                }
+                rows_by_ordinal[cursor].push_back(found->second);
+                saturating_add(
+                    telemetry.alternative_rows_avoided,
+                    alternatives_by_ordinal[cursor].size());
             }
             const std::uint64_t live_bytes = exact_state_bytes(state);
             telemetry.current_live_slices = 1;
@@ -1001,7 +1039,9 @@ PolicyExactLiftCertificate lift_policy_quotient(
         std::uint64_t raw_row_bytes =
             raw_rows.capacity() * sizeof(RawRowPayload) +
             rows_by_ordinal.capacity() *
-                sizeof(std::vector<std::uint32_t>);
+                sizeof(std::vector<std::uint32_t>) +
+            alternatives_by_ordinal.capacity() *
+                sizeof(std::vector<QuotientAlternativeDescriptor>);
         for (const RawRowPayload& row : raw_rows) {
             saturating_add(
                 raw_row_bytes, selected_action_bytes(row.selected));
@@ -1021,6 +1061,18 @@ PolicyExactLiftCertificate lift_policy_quotient(
             saturating_add(
                 raw_row_bytes,
                 rows.capacity() * sizeof(std::uint32_t));
+        }
+        for (const auto& descriptors : alternatives_by_ordinal) {
+            saturating_add(
+                raw_row_bytes,
+                descriptors.capacity() *
+                    sizeof(QuotientAlternativeDescriptor));
+            for (const QuotientAlternativeDescriptor& descriptor :
+                 descriptors) {
+                saturating_add(
+                    raw_row_bytes,
+                    quotient_alternative_descriptor_bytes(descriptor));
+            }
         }
         std::uint64_t locator_bytes =
             locators.capacity() * sizeof(std::uint32_t) +
@@ -1097,6 +1149,26 @@ PolicyExactLiftCertificate lift_policy_quotient(
                             label, successor,
                             transition.probability * row_weight});
                     }
+                }
+                immediate.push_back(
+                    alternatives_by_ordinal.at(ordinal).size());
+                const auto append_identity =
+                        [&](const StableKey& identity) {
+                    immediate.push_back(identity.size());
+                    immediate.insert(
+                        immediate.end(),
+                        identity.begin(), identity.end());
+                };
+                for (const QuotientAlternativeDescriptor& descriptor :
+                     alternatives_by_ordinal.at(ordinal)) {
+                    immediate.push_back(descriptor.operator_index);
+                    append_identity(
+                        descriptor.action.semantic_action_identity);
+                    append_identity(
+                        descriptor.action
+                            .runtime_contract_program_identity);
+                    append_identity(
+                        descriptor.action.exact_choice_recipe_identity);
                 }
             }
             node.immediate_key = std::move(immediate);
@@ -1340,6 +1412,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
         };
         struct PublishedRow {
             std::uint64_t sparse_row = 0;
+            std::uint32_t source_cell_id = 0;
             SelectedAction selected;
         };
         const auto publish_rows =
@@ -1406,7 +1479,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
                         std::move(arcs), total.value());
                     const std::uint64_t sparse_row =
                         bellman.append_row(std::move(input));
-                    published.push_back({sparse_row, row.selected});
+                    published.push_back({
+                        sparse_row, cell.cell_id, row.selected});
                 }
                 oracle.quotient_release_carrier(source.stable_key);
             }
@@ -1436,6 +1510,143 @@ PolicyExactLiftCertificate lift_policy_quotient(
         retained_coarse_partition.reset();
         const std::vector<PublishedRow> published_rows = publish_rows(
             partition, final_cells, final_cell_id);
+
+        const StableKey price_identity =
+            oracle.quotient_price_identity();
+        const StableKey vocabulary_identity =
+            oracle.quotient_vocabulary_identity();
+        std::vector<quotient::AccountedAlternativeAction>
+            admitted_action_accounting;
+        std::vector<quotient::AccountedAlternativeAction>
+            completed_action_accounting;
+        for (std::uint32_t cls = 0; cls < final_cells.size(); ++cls) {
+            const quotient::QuotientCell& cell = final_cells[cls];
+            if (cell.terminal) continue;
+            const std::uint32_t representative = representative_for(
+                partition.class_by_node, cls);
+            const auto& descriptors =
+                alternatives_by_ordinal.at(representative);
+            for (const quotient::CoverageRange& range :
+                 cell.coverage.ranges) {
+                for (std::uint64_t ordinal = range.begin;
+                     ordinal < range.begin + range.count; ++ordinal) {
+                    if (alternatives_by_ordinal.at(ordinal) != descriptors) {
+                        throw AdapterFailure(
+                            PolicyExactLiftStatus::RefinementFailure,
+                            "one quotient cell merged incompatible admitted alternatives");
+                    }
+                }
+            }
+            const auto selected = std::find_if(
+                published_rows.begin(), published_rows.end(),
+                [&](const PublishedRow& row) {
+                    return row.source_cell_id == cell.cell_id;
+                });
+            if (selected == published_rows.end()) {
+                throw AdapterFailure(
+                    PolicyExactLiftStatus::RefinementFailure,
+                    "nonterminal quotient cell has no selected certified row");
+            }
+            const quotient::AlternativeActionIdentity selected_identity =
+                quotient::canonical_alternative_action_identity({
+                    selected->selected.action_id,
+                    selected->selected.semantic_key,
+                    canonical_selected_runtime_contract_identity(
+                        selected->selected),
+                    selected->selected.semantic_key});
+            admitted_action_accounting.push_back({
+                cell.cell_id,
+                selected_identity,
+                quotient::AlternativeActionAccountingKind::
+                    CurrentSelectedCertified,
+                std::nullopt,
+                std::nullopt});
+            completed_action_accounting.push_back({
+                cell.cell_id,
+                selected_identity,
+                quotient::AlternativeActionAccountingKind::
+                    CurrentSelectedCertified,
+                selected->sparse_row,
+                std::nullopt});
+            for (const QuotientAlternativeDescriptor& descriptor :
+                 descriptors) {
+                StableKey resumable{
+                    0x70637163656c6c72ull,
+                    cell.semantic_identity.size()};
+                resumable.insert(
+                    resumable.end(),
+                    cell.semantic_identity.begin(),
+                    cell.semantic_identity.end());
+                resumable.push_back(
+                    descriptor.resumable_work_identity.size());
+                resumable.insert(
+                    resumable.end(),
+                    descriptor.resumable_work_identity.begin(),
+                    descriptor.resumable_work_identity.end());
+                quotient::UnresolvedAlternativeObligationIdentity identity;
+                identity.source_cell_id = cell.cell_id;
+                identity.source_cell_identity = cell.semantic_identity;
+                identity.observation_requirement =
+                    cell.observation_requirement;
+                identity.action = descriptor.action;
+                identity.price_identity = price_identity;
+                identity.vocabulary_identity = vocabulary_identity;
+                identity.requirement_generation = cell.generation;
+                identity.source_generation = cell.generation;
+                identity.target_generation = cell.generation;
+                identity.partition_generation = cell.generation;
+                identity.action_generation = 1;
+                identity.admission_generation = 1;
+                identity.price_generation = 1;
+                identity.vocabulary_generation = 1;
+                identity.optimistic_lower =
+                    quotient::trivial_carrier_wide_lower_q(
+                        cell.semantic_identity, cell.coverage);
+                identity.scheduling_priority = 0.0;
+                identity.resumable_work_identity =
+                    std::move(resumable);
+                const std::uint32_t obligation_id =
+                    bellman.proof_store()
+                        ->intern_alternative_obligation(
+                            std::move(identity)).first;
+                bellman.proof_store()
+                    ->transition_alternative_obligation(
+                        obligation_id,
+                        quotient::AlternativeObligationStatus::LowerOnly);
+                admitted_action_accounting.push_back({
+                    cell.cell_id,
+                    descriptor.action,
+                    quotient::AlternativeActionAccountingKind::
+                        UnresolvedObligation,
+                    std::nullopt,
+                    std::nullopt});
+                completed_action_accounting.push_back({
+                    cell.cell_id,
+                    descriptor.action,
+                    quotient::AlternativeActionAccountingKind::
+                        UnresolvedObligation,
+                    std::nullopt,
+                    obligation_id});
+                saturating_add(
+                    telemetry.alternative_obligations_created, 1);
+            }
+        }
+        const quotient::AlternativeActionAccountingAudit action_audit =
+            bellman.proof_store()->audit_alternative_actions(
+                admitted_action_accounting,
+                completed_action_accounting,
+                {},
+                bellman.proof_store()->q_generation());
+        telemetry.action_accounting_complete = action_audit.complete;
+        telemetry.unresolved_alternative_obligations =
+            action_audit.unresolved_actions;
+        if (!action_audit.complete ||
+            action_audit.unresolved_actions !=
+                telemetry.alternative_obligations_created) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::RefinementFailure,
+                "selected-first quotient lost admitted-action accounting");
+        }
 
         const std::uint32_t root_class = partition.class_by_node.at(0);
         const std::uint32_t root_cell = final_cell_id.at(root_class);
@@ -1674,6 +1885,9 @@ PolicyExactLiftCertificate lift_policy_quotient(
         telemetry.dependency_sidecar_bytes = memory.bytes[
             static_cast<std::size_t>(
                 quotient::ProofMemoryCategory::DependencySidecar)];
+        telemetry.alternative_obligation_bytes = memory.bytes[
+            static_cast<std::size_t>(
+                quotient::ProofMemoryCategory::AlternativeObligation)];
         telemetry.partition_bytes = memory.bytes[
             static_cast<std::size_t>(
                 quotient::ProofMemoryCategory::Partition)];

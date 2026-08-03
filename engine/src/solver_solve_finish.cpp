@@ -1516,6 +1516,14 @@ SolveResult SolveWork::Impl::finish() {
             telemetry.alternatives_materialized_before_first_upper =
                 certificate.adapter
                     .alternatives_materialized_before_first_upper;
+            telemetry.alternative_obligations_created =
+                certificate.adapter.alternative_obligations_created;
+            telemetry.unresolved_alternative_obligations =
+                certificate.adapter.unresolved_alternative_obligations;
+            telemetry.alternative_rows_avoided =
+                certificate.adapter.alternative_rows_avoided;
+            telemetry.action_accounting_complete =
+                certificate.adapter.action_accounting_complete;
             telemetry.exact_state_reuses =
                 certificate.adapter.canonical_successor_collapses;
             telemetry.collapse_events =
@@ -1590,6 +1598,8 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.certificate_bytes;
             telemetry.dependency_sidecar_bytes =
                 certificate.adapter.dependency_sidecar_bytes;
+            telemetry.alternative_obligation_bytes =
+                certificate.adapter.alternative_obligation_bytes;
             telemetry.partition_bytes =
                 certificate.adapter.partition_bytes;
             telemetry.carrier_bytes =

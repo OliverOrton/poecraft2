@@ -1435,9 +1435,10 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_telemetry.selected_rows_begun > 0);
     PC_CHECK(refinement_telemetry.selected_rows_completed > 0);
     PC_CHECK(refinement_telemetry.selected_transitions > 0);
-    PC_CHECK(refinement_telemetry.alternative_rows_begun > 0);
-    PC_CHECK(refinement_telemetry.alternative_rows_completed > 0);
-    PC_CHECK(refinement_telemetry.alternative_transitions > 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_begun == 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_completed == 0);
+    PC_CHECK(refinement_telemetry.alternative_transitions == 0);
+    PC_CHECK(refinement_telemetry.alternative_reforge_work == 0);
     PC_CHECK(
         refinement_telemetry.selected_rows_completed +
             refinement_telemetry.alternative_rows_completed ==
@@ -1447,6 +1448,16 @@ void run_policy_guided_exact_lift_tests() {
             refinement_telemetry.alternative_transitions ==
         refinement_telemetry.exact_transitions);
     PC_CHECK(
+        refinement_telemetry.alternative_obligations_created > 0);
+    PC_CHECK(
+        refinement_telemetry.unresolved_alternative_obligations ==
+        refinement_telemetry.alternative_obligations_created);
+    PC_CHECK(
+        refinement_telemetry.alternative_rows_avoided >=
+        refinement_telemetry.alternative_obligations_created);
+    PC_CHECK(refinement_telemetry.action_accounting_complete);
+    PC_CHECK(refinement_telemetry.alternative_obligation_bytes > 0);
+    PC_CHECK(
         refinement_telemetry.work_to_first_partition.has_value());
     PC_CHECK(
         refinement_telemetry.work_to_first_executable_upper.has_value());
@@ -1454,9 +1465,12 @@ void run_policy_guided_exact_lift_tests() {
         *refinement_telemetry.work_to_first_partition <=
         *refinement_telemetry.work_to_first_executable_upper);
     PC_CHECK(
+        *refinement_telemetry.work_to_first_partition ==
+        refinement_telemetry.selected_reforge_work);
+    PC_CHECK(
         refinement_telemetry
             .alternatives_materialized_before_first_upper ==
-        refinement_telemetry.alternative_rows_completed);
+        0);
     PC_CHECK(refinement_telemetry.exact_state_reuses > 0);
     PC_CHECK(refinement_telemetry.collapse_events == 0);
     PC_CHECK(
@@ -1487,6 +1501,12 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_json.find("\"certification_work\":{") !=
              std::string::npos);
     PC_CHECK(refinement_json.find("\"work_to_first_partition\":") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find(
+                 "\"alternative_obligations_created\":") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find(
+                 "\"action_accounting_complete\":true") !=
              std::string::npos);
 
     const refinement::PolicyExactLiftCertificate lifted =

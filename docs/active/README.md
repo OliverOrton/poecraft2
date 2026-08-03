@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: competitive lazy alternative certification Gates 0 and 1 are
-complete; Gate 2 selected-policy-first construction is active.**
+**Status: competitive lazy alternative certification Gates 0 through 2 are
+complete; Gate 3 competitive alternative scheduling is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -14,7 +14,10 @@ it. Gate 0 retains behavior-neutral aggregate work attribution and a frozen
 before/after medium comparison. Gate 1 supplies the collision-safe obligation,
 carrier-wide lower, lifecycle, action-accounting, invalidation, deterministic
 order, and memory-ledger contracts. The active plan defines the remaining
-implementation and conditional qualification gates.
+implementation and conditional qualification gates. Gate 2 wires those
+objects into production: selected closure and partition precede alternative
+kernel construction, while complete admitted-action accounting remains
+explicit.
 
 The completed
 [Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)

@@ -1228,7 +1228,10 @@ std::string serialize_solver_telemetry(
                 "\"work_to_first_partition\":null,"
                 "\"work_to_first_executable_upper\":null,"
                 "\"exact_alternatives_materialized_before_first_upper\":"
-                "null}";
+                "null,\"alternative_obligations_created\":null,"
+                "\"unresolved_alternative_obligations\":null,"
+                "\"alternative_exact_rows_avoided\":null,"
+                "\"action_accounting_complete\":null}";
         json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
         json += ",\"memory_limit_bytes\":null";
         json += ",\"retained_artifact_bytes\":null";
@@ -1260,6 +1263,7 @@ std::string serialize_solver_telemetry(
                 "\"coverage_descriptor_bytes\":null,"
                 "\"certificate_bytes\":null,"
                 "\"dependency_sidecar_bytes\":null,"
+                "\"alternative_obligation_bytes\":null,"
                 "\"partition_bytes\":null,\"carrier_bytes\":null,"
                 "\"row_kernel_bytes\":null,\"scratch_bytes\":null,"
                 "\"total_solver_owned_bytes\":null,"
@@ -1349,8 +1353,19 @@ std::string serialize_solver_telemetry(
         json +=
             ",\"exact_alternatives_materialized_before_first_upper\":" +
             std::to_string(
-                refinement.alternatives_materialized_before_first_upper) +
-            "}";
+                refinement.alternatives_materialized_before_first_upper);
+        json += ",\"alternative_obligations_created\":" +
+                std::to_string(
+                    refinement.alternative_obligations_created);
+        json += ",\"unresolved_alternative_obligations\":" +
+                std::to_string(
+                    refinement.unresolved_alternative_obligations);
+        json += ",\"alternative_exact_rows_avoided\":" +
+                std::to_string(refinement.alternative_rows_avoided);
+        json += ",\"action_accounting_complete\":" +
+                std::string(bool_json(
+                    refinement.action_accounting_complete)) +
+                "}";
         json += ",\"memory_bytes\":" +
                 std::to_string(refinement.memory_bytes);
         json += ",\"peak_memory_bytes\":" +
@@ -1432,6 +1447,8 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.certificate_bytes);
         json += ",\"dependency_sidecar_bytes\":" +
                 std::to_string(refinement.dependency_sidecar_bytes);
+        json += ",\"alternative_obligation_bytes\":" +
+                std::to_string(refinement.alternative_obligation_bytes);
         json += ",\"partition_bytes\":" +
                 std::to_string(refinement.partition_bytes);
         json += ",\"carrier_bytes\":" +

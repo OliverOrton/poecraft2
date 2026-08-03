@@ -1,0 +1,102 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate2_v1",
+  "date": "2026-08-02",
+  "decision": "gate2_qualified_begin_competitive_scheduler",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "parent_gate_commit": "53c538143b3599b99b5b8cd8317557ada14e39c7",
+  "gate_commit": "the commit containing this evidence record",
+  "production_construction": {
+    "separate_operations": [
+      "enumerate cheap admitted alternative descriptors",
+      "certify inherited/current selected row",
+      "certify one requested alternative descriptor transactionally"
+    ],
+    "initial_closure_rows": "selected only",
+    "alternative_outcomes_in_initial_graph": false,
+    "fake_stochastic_rows": false,
+    "alternative_descriptor_partition_identity": true,
+    "selected_operator_pending_choice_preserved": true,
+    "fallback_when_current_row_unusable": "deterministically certify descriptors one at a time until one complete row exists",
+    "final_cell_action_accounting_audited": true,
+    "lower_only_obligation_per_admitted_descriptor": true,
+    "unknown_successors_mergeable": false
+  },
+  "descriptor_contract": {
+    "retained": [
+      "strict operator index",
+      "planner semantic action identity",
+      "runtime contract/program identity",
+      "pending exact-choice problem identity",
+      "routing observation requirement",
+      "resumable-work identity"
+    ],
+    "coarse_admission_checked": true,
+    "primitive_refinement_and_legality_checked": true,
+    "primitive_outcomes_built": false,
+    "option_kernels_built": false,
+    "deterministic_order": true
+  },
+  "new_telemetry": [
+    "alternative_obligations_created",
+    "unresolved_alternative_obligations",
+    "alternative_exact_rows_avoided",
+    "action_accounting_complete",
+    "alternative_obligation_bytes"
+  ],
+  "focused_production_assertions": {
+    "selected_rows_completed_positive": true,
+    "selected_transitions_positive": true,
+    "alternative_rows_begun": 0,
+    "alternative_rows_completed": 0,
+    "alternative_transitions": 0,
+    "alternative_reforge_work": 0,
+    "alternative_obligations_created_positive": true,
+    "unresolved_equals_created": true,
+    "exact_rows_avoided_at_least_obligations": true,
+    "action_accounting_complete": true,
+    "alternative_obligation_bytes_positive": true,
+    "work_to_first_partition_equals_selected_reforge_work": true,
+    "alternatives_materialized_before_first_upper": 0,
+    "proper_compiled_exact_reconciled_upper": true,
+    "reference_adapter_invocations": 0
+  },
+  "focused_acceptance": [
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite solve",
+      "checks": 98140,
+      "failures": 0
+    },
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+      "scope": "quotient proof, partition, and Bellman",
+      "checks": 316,
+      "failures": 0
+    }
+  ],
+  "source_sha256": {
+    "engine/src/solver_policy_oracle_setup.inc": "0829ec3d696b7cb6b0ae0b4213bc4bc49b2dc17ae556851807862f0d628a2591",
+    "engine/src/solver_policy_refinement.cpp": "4791ecd7d1fbb5f1286407d21844190e1ecf0f206dc14ea83da52ea6226e5581",
+    "engine/src/solver_policy_refinement.hpp": "ad21f952ceac403b24e75719fc3ef6da5a82788b3c46ca20e91cd410d8a25cbe",
+    "engine/src/solver_solve_contracts.hpp": "4e3eda507ba67e01f547936d0ea4fff7bc11b07a513956946f82b3cd8b0393bd",
+    "engine/src/solver_policy_oracle_improve.inc": "4d264926bfe8b2c85a7412fe424ee006af0ead18cd55a34c4f7933422680c7f3",
+    "engine/src/solver_solve_finish.cpp": "aa5866fbec56f5e67d25d1296883bf6a352506c23b30fff7b6c1f532797b6b92",
+    "engine/src/solver_solve_telemetry.cpp": "30fb54e12051e7cce2228c0a6628e694f0e71cb117ca9fdfc9f59158b1781dd9",
+    "engine/tests/test_solver_solve.cpp": "0adbcc7488b6c175d5ea74ec40661f2e18c71c4438075167ee44664c8d677be4"
+  },
+  "scope": {
+    "competitive_alternative_scheduler_implemented": false,
+    "medium_frozen_case_qualified": false,
+    "two_goal_frozen_case_run": false,
+    "caps_or_defaults_changed": false,
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false
+  },
+  "next_gate": "competitive alternative scheduler and bounded publication",
+  "pushed": false,
+  "merged": false
+}

@@ -77,6 +77,15 @@ generation, lifecycle, priority, resumable-work, exactness-blocking, and
 memory-ledger identities are retained. This is private native proof
 infrastructure; production row scheduling remains unchanged until Gate 2.
 
+Competitive-lazy Gate 2 splits production quotient discovery into current-row
+certification, cheap alternative descriptor enumeration, and one requested
+alternative certification operation. Only the selected row grows the strict
+closure before partition. Final cells retain lower-only obligations for every
+other admitted descriptor, including a potentially different exact choice for
+the selected operator, and audit full action accounting. The focused path
+partitions and publishes a proper compiled upper with zero alternative kernels;
+competitive exact expansion begins only in Gate 3.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,

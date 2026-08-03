@@ -169,6 +169,10 @@ struct PolicyRefinementTelemetry {
     std::optional<std::uint64_t> work_to_first_partition;
     std::optional<std::uint64_t> work_to_first_executable_upper;
     std::uint64_t alternatives_materialized_before_first_upper = 0;
+    std::uint64_t alternative_obligations_created = 0;
+    std::uint64_t unresolved_alternative_obligations = 0;
+    std::uint64_t alternative_rows_avoided = 0;
+    bool action_accounting_complete = false;
     std::uint64_t memory_bytes = 0;
     std::uint64_t peak_memory_bytes = 0;
     std::uint64_t memory_limit_bytes = 0;
@@ -211,6 +215,7 @@ struct PolicyRefinementTelemetry {
     std::uint64_t coverage_descriptor_bytes = 0;
     std::uint64_t certificate_bytes = 0;
     std::uint64_t dependency_sidecar_bytes = 0;
+    std::uint64_t alternative_obligation_bytes = 0;
     std::uint64_t partition_bytes = 0;
     std::uint64_t carrier_bytes = 0;
     std::uint64_t row_kernel_bytes = 0;

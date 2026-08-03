@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification Gates 0 and 1 complete.
-Gate 2 selected-policy-first quotient construction is the active boundary.**
+**Status: competitive lazy alternative certification Gates 0 through 2
+complete. Gate 3 competitive alternative scheduling is the active boundary.**
 
 Current plan:
 [Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
@@ -21,8 +21,9 @@ Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
 
 Current milestone commits: Gate 0 is
-`222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is recorded by the
-current local commit; Gate 2 has not begun.
+`222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is
+`53c538143b3599b99b5b8cd8317557ada14e39c7`. Gate 2 is recorded by the
+current local commit; Gate 3 has not begun.
 
 Preserved proof-carrying quotient commits: Gate 0 is
 `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
@@ -86,6 +87,32 @@ Nothing has been pushed or merged. `main` remains unchanged at
 - No production row scheduling, cap, mechanic, action filter, ABI, strategy
   vocabulary, WASM artifact, or frontend contract changed. Gate 2 may now wire
   these proof objects into selected-policy-first construction.
+
+## Competitive lazy Gate 2
+
+- Production quotient APIs now separately enumerate cheap alternative
+  descriptors, certify the inherited/current selected row, and certify one
+  requested descriptor transactionally. Descriptor enumeration does not call
+  primitive outcome or option-kernel construction.
+- Only selected-row successors enter initial strict closure. Alternative
+  descriptor full identities participate in partition identity, but unknown
+  outcomes never become stochastic arcs or mergeable frontier states.
+- Every final nonterminal cell retains its current certified row plus one
+  lower-only obligation per admitted descriptor. The descriptor for the
+  selected operator is preserved because a different exact observed choice may
+  still improve it.
+- Production performs a complete action-accounting audit before Bellman solve.
+  New telemetry reports obligations created/unresolved, exact rows avoided,
+  accounting completion, and exact obligation-ledger bytes.
+- The focused integration reaches partition at exactly its selected exact work,
+  materializes zero alternatives before its executable upper, compiles, proves
+  properness, and exact-reconciles. Solve acceptance passes 98,140 checks / 0
+  failures; quotient proof/partition/Bellman acceptance passes 316 / 0.
+- Evidence is tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate2.json`.
+- No cap, mechanic, price, filter, ABI, strategy vocabulary, WASM artifact, or
+  frontend contract changed. Gate 3 now decides which unresolved obligation is
+  competitive enough to certify.
 
 ## Preserved proof-carrying quotient Gate 0 boundary
 

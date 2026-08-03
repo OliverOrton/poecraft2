@@ -277,84 +277,247 @@
         adapter_memory_projected_growth_bytes_ = 0;
     }
 
-    std::vector<QuotientOracleCompactRow> quotient_compact_action_rows(
-            const ExactState& state) {
+    std::vector<QuotientAlternativeDescriptor>
+    quotient_alternative_descriptors(const ExactState& state) {
         if (state.terminal) return {};
-        std::vector<QuotientOracleCompactRow> rows;
-        std::set<StableKey> semantic_rows;
-        const auto attribute_reforge_work = [&](
-                const std::uint64_t before,
-                const bool alternative) {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "alternative descriptor lost its exact carrier");
+        }
+        std::vector<QuotientAlternativeDescriptor> descriptors;
+        for (const std::uint32_t operator_index : admitted_operators_) {
+            const std::uint32_t coarse_operator =
+                coarse_operator_for(operator_index);
+            if (!coarse_.is_candidate_operator_admitted_for_state(
+                    known->second.coarse_state, coarse_operator)) {
+                continue;
+            }
+            const PlannerOperator& planner =
+                strict_->operators().at(operator_index);
+            if (planner.kind == PlannerOperatorKind::Primitive) {
+                const ActionDescriptor& action = strict_->registry()
+                    .actions.at(planner.primitive_action);
+                if (!action.refinement.complete() ||
+                    !action_legal(
+                        strict_->session(), action,
+                        strict_->state(known->second.strict_state))) {
+                    continue;
+                }
+            }
+            SelectedAction runtime;
+            runtime.action_id = operator_index;
+            populate_ordered_runtime_contracts(runtime, planner);
+            runtime.routing_observes =
+                observation_requirement_from_selected_action(runtime);
+            const StableKey planner_identity =
+                planner_operator_semantic_key(planner);
+            StableKey pending_identity{
+                0x706371616c746431ull,
+                operator_index,
+                planner_identity.size()};
+            pending_identity.insert(
+                pending_identity.end(),
+                planner_identity.begin(), planner_identity.end());
+            StableKey choice_identity{
+                0x70637163686f6964ull,
+                pending_identity.size()};
+            choice_identity.insert(
+                choice_identity.end(),
+                pending_identity.begin(), pending_identity.end());
+            StableKey resumable_identity{
+                0x706371726573756dull,
+                pending_identity.size()};
+            resumable_identity.insert(
+                resumable_identity.end(),
+                pending_identity.begin(), pending_identity.end());
+            QuotientAlternativeDescriptor descriptor;
+            descriptor.operator_index = operator_index;
+            descriptor.action =
+                quotient::canonical_alternative_action_identity({
+                    operator_index,
+                    std::move(pending_identity),
+                    canonical_selected_runtime_contract_identity(runtime),
+                    std::move(choice_identity)});
+            descriptor.routing_observes =
+                std::move(runtime.routing_observes);
+            descriptor.resumable_work_identity =
+                std::move(resumable_identity);
+            descriptors.push_back(std::move(descriptor));
+        }
+        std::sort(
+            descriptors.begin(), descriptors.end(),
+            [](const QuotientAlternativeDescriptor& left,
+               const QuotientAlternativeDescriptor& right) {
+                return std::tie(
+                           left.operator_index,
+                           left.action.semantic_action_identity,
+                           left.action.exact_choice_recipe_identity) <
+                       std::tie(
+                           right.operator_index,
+                           right.action.semantic_action_identity,
+                           right.action.exact_choice_recipe_identity);
+            });
+        descriptors.erase(
+            std::unique(descriptors.begin(), descriptors.end()),
+            descriptors.end());
+        return descriptors;
+    }
+
+    StableKey quotient_price_identity() const {
+        std::map<std::string, double> ordered(
+            prices_.begin(), prices_.end());
+        StableKey identity{0x7063717072696365ull, ordered.size()};
+        for (const auto& [key, price] : ordered) {
+            identity.push_back(key.size());
+            for (const unsigned char value : key) {
+                identity.push_back(value);
+            }
+            identity.push_back(std::bit_cast<std::uint64_t>(price));
+        }
+        return identity;
+    }
+
+    StableKey quotient_vocabulary_identity() const {
+        StableKey identity{
+            0x706371766f636162ull,
+            admitted_operators_.size()};
+        for (const std::uint32_t operator_index : admitted_operators_) {
+            const StableKey planner = planner_operator_semantic_key(
+                strict_->operators().at(operator_index));
+            identity.push_back(operator_index);
+            identity.push_back(planner.size());
+            identity.insert(
+                identity.end(), planner.begin(), planner.end());
+        }
+        return identity;
+    }
+
+    QuotientOracleCompactRow quotient_build_compact_row(
+            const ExactState& state,
+            SelectedAction selected,
+            const bool alternative) {
+        if (telemetry_.strict_kernels_built >=
+            limits_.max_exact_kernels) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::ResourceCap,
+                "strict policy discovery reached max_exact_kernels",
+                "max_exact_kernels");
+        }
+        saturating_add(
+            alternative
+                ? telemetry_.alternative_rows_begun
+                : telemetry_.selected_rows_begun,
+            1);
+        const std::uint64_t work_before =
+            strict_->telemetry().reforge_frontier_work;
+        const auto attribute_work = [&] {
             const std::uint64_t after =
                 strict_->telemetry().reforge_frontier_work;
-            const std::uint64_t delta =
-                after >= before ? after - before : 0;
             saturating_add(
                 alternative
                     ? telemetry_.alternative_reforge_work
                     : telemetry_.selected_reforge_work,
-                delta);
+                after >= work_before ? after - work_before : 0);
             telemetry_.strict_reforge_work = after;
         };
-        const auto append = [&](SelectedAction selected,
-                                const bool alternative) {
-            if (!semantic_rows.insert(selected.semantic_key).second) return;
-            if (telemetry_.strict_kernels_built >=
-                limits_.max_exact_kernels) {
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::ResourceCap,
-                    "strict policy discovery reached max_exact_kernels",
-                    "max_exact_kernels");
-            }
-            saturating_add(
-                alternative
-                    ? telemetry_.alternative_rows_begun
-                    : telemetry_.selected_rows_begun,
-                1);
-            const std::uint64_t work_before =
+        QuotientOracleCompactRow row;
+        try {
+            row.selected = std::move(selected);
+            row.choice_recipe = choice_recipe(
+                state.stable_key, row.selected);
+            row.action_cost = visit_kernel_transitions(
+                state.stable_key, row.selected,
+                [&](const std::uint32_t successor,
+                    const double probability) {
+                    row.transitions.push_back({successor, probability});
+                });
+        } catch (...) {
+            attribute_work();
+            throw;
+        }
+        attribute_work();
+        if (telemetry_.strict_transitions_built + row.transitions.size() >
+            limits_.max_transitions) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::ResourceCap,
+                "strict policy discovery reached max_transitions",
+                "max_transitions");
+        }
+        telemetry_.strict_transitions_built += row.transitions.size();
+        ++telemetry_.strict_kernels_built;
+        saturating_add(
+            alternative
+                ? telemetry_.alternative_rows_completed
+                : telemetry_.selected_rows_completed,
+            1);
+        saturating_add(
+            alternative
+                ? telemetry_.alternative_transitions
+                : telemetry_.selected_transitions,
+            row.transitions.size());
+        telemetry_.strict_calc_owned_bytes =
+            strict_->fast_estimated_owned_bytes();
+        release_published_kernel_storage(state, row.selected);
+        return row;
+    }
+
+    std::optional<QuotientOracleCompactRow>
+    quotient_certify_alternative_descriptor(
+            const ExactState& state,
+            const QuotientAlternativeDescriptor& descriptor) {
+        const std::vector<QuotientAlternativeDescriptor> current =
+            quotient_alternative_descriptors(state);
+        if (std::find(current.begin(), current.end(), descriptor) ==
+            current.end()) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "alternative descriptor is stale or outside admission");
+        }
+        saturating_add(
+            telemetry_.local_state_action_rows_scheduled, 1);
+        const std::uint64_t work_before =
+            strict_->telemetry().reforge_frontier_work;
+        std::optional<SelectedAction> candidate;
+        try {
+            candidate = candidate_selection(
+                state.stable_key, descriptor.operator_index, 0);
+        } catch (...) {
+            const std::uint64_t after =
                 strict_->telemetry().reforge_frontier_work;
-            QuotientOracleCompactRow row;
-            try {
-                row.selected = std::move(selected);
-                row.choice_recipe = choice_recipe(
-                    state.stable_key, row.selected);
-                row.action_cost = visit_kernel_transitions(
-                    state.stable_key, row.selected,
-                    [&](const std::uint32_t successor,
-                        const double probability) {
-                        row.transitions.push_back({successor, probability});
-                    });
-            } catch (...) {
-                attribute_reforge_work(work_before, alternative);
-                throw;
-            }
-            attribute_reforge_work(work_before, alternative);
-            if (telemetry_.strict_transitions_built +
-                    row.transitions.size() >
-                limits_.max_transitions) {
-                throw AdapterFailure(
-                    PolicyExactLiftStatus::ResourceCap,
-                    "strict policy discovery reached max_transitions",
-                    "max_transitions");
-            }
-            telemetry_.strict_transitions_built += row.transitions.size();
-            ++telemetry_.strict_kernels_built;
             saturating_add(
-                alternative
-                    ? telemetry_.alternative_rows_completed
-                    : telemetry_.selected_rows_completed,
-                1);
+                telemetry_.alternative_reforge_work,
+                after >= work_before ? after - work_before : 0);
+            telemetry_.strict_reforge_work = after;
+            throw;
+        }
+        const std::uint64_t after =
+            strict_->telemetry().reforge_frontier_work;
+        saturating_add(
+            telemetry_.alternative_reforge_work,
+            after >= work_before ? after - work_before : 0);
+        telemetry_.strict_reforge_work = after;
+        if (!candidate.has_value()) return std::nullopt;
+        try {
+            QuotientOracleCompactRow row = quotient_build_compact_row(
+                state, std::move(*candidate), true);
             saturating_add(
-                alternative
-                    ? telemetry_.alternative_transitions
-                    : telemetry_.selected_transitions,
-                row.transitions.size());
-            telemetry_.strict_calc_owned_bytes =
-                strict_->fast_estimated_owned_bytes();
-            release_published_kernel_storage(state, row.selected);
-            rows.push_back(std::move(row));
-        };
-        bool current_complete = false;
+                telemetry_.local_state_action_rows_evaluated, 1);
+            return row;
+        } catch (const AdapterFailure& error) {
+            if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
+            return std::nullopt;
+        }
+    }
+
+    QuotientOracleCompactRow quotient_selected_compact_row(
+            const ExactState& state) {
+        if (state.terminal) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::InvalidSolveState,
+                "terminal carrier has no selected quotient row");
+        }
         try {
             const std::uint64_t work_before =
                 strict_->telemetry().reforge_frontier_work;
@@ -362,56 +525,39 @@
             try {
                 current = selected_action(state);
             } catch (...) {
-                attribute_reforge_work(work_before, false);
+                const std::uint64_t after =
+                    strict_->telemetry().reforge_frontier_work;
+                saturating_add(
+                    telemetry_.selected_reforge_work,
+                    after >= work_before ? after - work_before : 0);
+                telemetry_.strict_reforge_work = after;
                 throw;
             }
-            attribute_reforge_work(work_before, false);
+            const std::uint64_t after =
+                strict_->telemetry().reforge_frontier_work;
+            saturating_add(
+                telemetry_.selected_reforge_work,
+                after >= work_before ? after - work_before : 0);
+            telemetry_.strict_reforge_work = after;
             if (current.has_value()) {
-                append(std::move(*current), false);
-                current_complete = true;
+                return quotient_build_compact_row(
+                    state, std::move(*current), false);
             }
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;
         }
-        const bool affected =
-            enable_local_reoptimization_ &&
-            reoptimization_parents_.contains(state.coarse_state);
-        if (affected || !current_complete) {
-            for (const std::uint32_t operator_index : admitted_operators_) {
-                saturating_add(
-                    telemetry_.local_state_action_rows_scheduled, 1);
-                const std::uint64_t work_before =
-                    strict_->telemetry().reforge_frontier_work;
-                std::optional<SelectedAction> candidate;
-                try {
-                    candidate = candidate_selection(
-                        state.stable_key, operator_index, 0);
-                } catch (...) {
-                    attribute_reforge_work(work_before, true);
-                    throw;
-                }
-                attribute_reforge_work(work_before, true);
-                if (!candidate.has_value() ||
-                    semantic_rows.contains(candidate->semantic_key)) {
-                    continue;
-                }
-                try {
-                    append(std::move(*candidate), true);
-                    saturating_add(
-                        telemetry_.local_state_action_rows_evaluated, 1);
-                } catch (const AdapterFailure& error) {
-                    if (error.status == PolicyExactLiftStatus::ResourceCap) {
-                        throw;
-                    }
-                }
-            }
+        const std::vector<QuotientAlternativeDescriptor> alternatives =
+            quotient_alternative_descriptors(state);
+        for (const QuotientAlternativeDescriptor& alternative :
+             alternatives) {
+            std::optional<QuotientOracleCompactRow> row =
+                quotient_certify_alternative_descriptor(
+                    state, alternative);
+            if (row.has_value()) return std::move(*row);
         }
-        if (rows.empty()) {
-            throw AdapterFailure(
-                PolicyExactLiftStatus::LocalReoptimizationRequired,
-                "proof-carrying quotient carrier has no certified admitted row");
-        }
-        return rows;
+        throw AdapterFailure(
+            PolicyExactLiftStatus::LocalReoptimizationRequired,
+            "proof-carrying quotient carrier has no certified admitted row");
     }
 
     void quotient_install_streamed_recipe(

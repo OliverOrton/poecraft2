@@ -1,6 +1,6 @@
 # Competitive Lazy Alternative Certification
 
-**Status: Gates 0 and 1 complete; Gate 2 is the active implementation
+**Status: Gates 0 through 2 complete; Gate 3 is the active implementation
 boundary.**
 
 Owner: Oliver
@@ -127,7 +127,7 @@ acceptance passed 316 checks with zero failures; tracked evidence is
 
 ## Gate 2 — selected-policy-first quotient construction
 
-**Status: active.**
+**Status: complete.**
 
 Split the eager row API into operations that obtain the current selection,
 enumerate cheap alternative descriptors, create obligations, and certify one
@@ -152,7 +152,26 @@ improper-policy repair, multiple entries, replay identity, and proof-memory
 accounting. Stop if first partition or a selected executable policy still
 inherently requires every admitted alternative.
 
+Production now exposes separate operations for cheap deterministic alternative
+descriptors, the inherited/current selected row, and transactional exact
+certification of one requested descriptor. The selected row alone grows the
+strict successor closure. Descriptor identities participate in cell
+partitioning, but their unknown outcomes do not become arcs or mergeable
+successors. Each final cell then interns one rowless lower-only obligation per
+admitted descriptor and audits its selected-certified plus unresolved action
+accounting before Bellman publication.
+
+The focused production integration reaches its first partition after selected
+work only, builds zero alternative kernels, retains nonzero obligations and
+avoided-row counts, proves a proper upper, compiles it, and exact-reconciles the
+artifact. The solve suite passes 98,140 checks and the quotient proof,
+partition, and Bellman suite passes 316 checks, all with zero failures. Tracked
+evidence is
+[`competitive-lazy-alternative-certification-gate2.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate2.json).
+
 ## Gate 3 — competitive alternative scheduler
+
+**Status: active.**
 
 After a proper upper exists, schedule an unresolved alternative only when it
 cannot currently be proved noncompetitive or a refinement counterexample

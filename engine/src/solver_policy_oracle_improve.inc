@@ -935,6 +935,18 @@ void merge_adapter_telemetry(
         total.alternative_reforge_work, pass.alternative_reforge_work);
     saturating_add(
         total.alternative_transitions, pass.alternative_transitions);
+    saturating_add(
+        total.alternative_obligations_created,
+        pass.alternative_obligations_created);
+    saturating_add(
+        total.unresolved_alternative_obligations,
+        pass.unresolved_alternative_obligations);
+    saturating_add(
+        total.alternative_rows_avoided,
+        pass.alternative_rows_avoided);
+    total.action_accounting_complete =
+        total.action_accounting_complete ||
+        pass.action_accounting_complete;
     if (!total.work_to_first_partition.has_value() &&
         pass.work_to_first_partition.has_value()) {
         total.work_to_first_partition = prior_reforge_work;
@@ -996,6 +1008,9 @@ void merge_adapter_telemetry(
         total.certificate_bytes, pass.certificate_bytes);
     total.dependency_sidecar_bytes = std::max(
         total.dependency_sidecar_bytes, pass.dependency_sidecar_bytes);
+    total.alternative_obligation_bytes = std::max(
+        total.alternative_obligation_bytes,
+        pass.alternative_obligation_bytes);
     total.partition_bytes = std::max(
         total.partition_bytes, pass.partition_bytes);
     total.carrier_bytes = std::max(
