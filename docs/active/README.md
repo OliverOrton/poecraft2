@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: competitive lazy alternative certification is the selected next
-structural boundary; implementation has not begun.**
+**Status: competitive lazy alternative certification Gate 0 is complete;
+Gate 1 explicit unresolved obligations are active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -10,8 +10,9 @@ Current boundary:
 It closes and certifies the selected policy first, preserves every admitted
 alternative as an explicit unresolved lower-only obligation, and certifies an
 alternative only when Bellman competitiveness or a counterexample requires
-it. A detailed implementation and qualification plan is required before source
-edits begin.
+it. Gate 0 retains behavior-neutral aggregate work attribution and a frozen
+before/after medium comparison; the active plan defines the remaining
+implementation and conditional qualification gates.
 
 The completed
 [Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)

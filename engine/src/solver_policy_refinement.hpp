@@ -32,6 +32,22 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t adapter_owned_bytes = 0;
     std::uint64_t peak_adapter_owned_bytes = 0;
     std::uint64_t strict_reforge_work = 0;
+    /* Aggregate, deterministic attribution for the production streamed
+     * quotient. "Selected" is the inherited/current exact policy decision;
+     * "alternative" is any other admitted semantic decision considered for
+     * that carrier. Begun rows include the resource-interrupted row, while
+     * completed rows and transitions include only fully materialized rows. */
+    std::uint64_t selected_rows_begun = 0;
+    std::uint64_t selected_rows_completed = 0;
+    std::uint64_t selected_reforge_work = 0;
+    std::uint64_t selected_transitions = 0;
+    std::uint64_t alternative_rows_begun = 0;
+    std::uint64_t alternative_rows_completed = 0;
+    std::uint64_t alternative_reforge_work = 0;
+    std::uint64_t alternative_transitions = 0;
+    std::optional<std::uint64_t> work_to_first_partition;
+    std::optional<std::uint64_t> work_to_first_executable_upper;
+    std::uint64_t alternatives_materialized_before_first_upper = 0;
     std::uint32_t local_reoptimization_rounds = 0;
     std::uint64_t local_state_action_rows_scheduled = 0;
     std::uint64_t local_state_action_rows_evaluated = 0;

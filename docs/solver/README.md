@@ -59,6 +59,15 @@ reaches 40 kernels and 6,903,840 transitions with zero partition or
 certificate progress, selecting competitive lazy alternative certification
 without changing caps or production behavior.
 
+Competitive-lazy Gate 0 adds bounded aggregate publication telemetry without
+changing scheduling: inherited/current selected rows and alternative rows now
+report begun/completed counts, exact reforge work, transitions, work to first
+partition and first executable upper, and alternatives materialized before
+that upper. A fresh medium before/after run preserved all semantic and work
+identities and the compiled strategy hash. Alternatives consumed 4,180,979 of
+4,220,669 exact work before both first partition and first upper, directly
+measuring the eager-ordering cost. The telemetry carries no proof authority.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,

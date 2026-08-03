@@ -1,0 +1,259 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate0_v1",
+  "date": "2026-08-02",
+  "decision": "gate0_qualified_begin_explicit_obligations",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "starting_commit": "bd288c9041a5b54fa4ec134c7e1dec90486ac385",
+  "main_commit_unchanged": "25d5bbe6791beb61eae803219563575346def2dc",
+  "frozen_boundaries": {
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "admitted_vocabulary_changed": false,
+    "prices_or_objective_changed": false,
+    "two_goal_max_reforge_work": 20000000,
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_seconds": 900,
+    "public_c_abi_changed": false,
+    "strategy_json_changed": false,
+    "wasm_contract_changed": false,
+    "frontend_authority_changed": false,
+    "checkpoint_replay_implemented": false,
+    "named_action_or_fixture_special_cases": false
+  },
+  "frozen_identities": {
+    "corpus_manifest": {
+      "path": "fixtures/solver-reliability/v1/manifest.json",
+      "sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f"
+    },
+    "medium_case": {
+      "id": "reliability-class-belt",
+      "path": "fixtures/solver-reliability/v1/cases/reliability-class-belt.json",
+      "sha256": "b9b363a45ff23a5aeb4c6b4f05800f537750f6098cbf63b8cc1dafbf16fe822d"
+    },
+    "frozen_two_goal_case": {
+      "id": "natural-t1-breadth-two-4e65dda9c53b",
+      "path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be"
+    },
+    "compiled_artifact_manifest": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5"
+    },
+    "economy_content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "medium_product_action_count": 17,
+    "medium_product_action_order_compact_json_sha256": "032da6a8c6906cada64e45a5d6e1479ae50ba03c1eadcfc41a7bb6813224b154",
+    "two_goal_product_action_count": 27,
+    "two_goal_product_action_order_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5",
+    "diagnostic_evidence": {
+      "path": "fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json",
+      "sha256": "8e52d892e1585e1ecfe3bb9bb72800b9d5a80dbb854a8770b7f425aa57bbaf2d",
+      "preserved_report_sha256": {
+        "20m": "fcef98a4ddadeec6d6c3cda51ab53d4710bba23097a86e1516f5dcbabfe32837",
+        "50m": "3a05a4f829a621e81e0b27c85c392d12e56e1fce800dff8e9bf99ba2afcd4264",
+        "100m": "a92717eaa6049fc76c11602c00bbf18476e6ceea063a84ceeec2ee2d8b6c6afb"
+      }
+    }
+  },
+  "retained_hash_classification": {
+    "order_invariant_required_exact": [
+      "corpus and case SHA-256 identities",
+      "compiled artifact manifest SHA-256",
+      "economy content SHA-256",
+      "product action count and action-order SHA-256",
+      "coarse transition_bits_hash",
+      "coarse policy_bits_hash",
+      "input options, caps, prices, goal, and session identities",
+      "compiled action/condition vocabulary identity",
+      "exact evaluation cost and terminal/off-policy semantics"
+    ],
+    "order_sensitive_allowed_to_change": [
+      "implementation source and benchmark binary SHA-256",
+      "whole benchmark report and partial-report SHA-256 after telemetry extension",
+      "quotient cell, sparse-row, and internal scheduling identities after selected-first behavior begins",
+      "compiled strategy SHA-256 after policy scheduling changes"
+    ],
+    "order_sensitive_acceptance": "Changes are allowed only with complete action accounting, certified executable semantics, exact cost reconciliation, zero off-policy mass, and deterministic repetition. Gate 0 itself requires the compiled strategy SHA-256 to remain exact."
+  },
+  "telemetry_contract": {
+    "location": "solver_telemetry_v1.policy_refinement.certification_work",
+    "bounded": true,
+    "deterministic": true,
+    "proof_authority": false,
+    "memory_cap_authority": false,
+    "fields": [
+      "selected.rows_begun",
+      "selected.rows_completed",
+      "selected.reforge_work",
+      "selected.transitions",
+      "alternatives.rows_begun",
+      "alternatives.rows_completed",
+      "alternatives.reforge_work",
+      "alternatives.transitions",
+      "work_to_first_partition",
+      "work_to_first_executable_upper",
+      "exact_alternatives_materialized_before_first_upper"
+    ],
+    "interruption_semantics": "begun includes the resource-interrupted row; completed and transitions include only fully materialized rows; reforge work includes the interrupted attempt"
+  },
+  "source_provenance": [
+    {
+      "path": "engine/src/solver_policy_refinement.hpp",
+      "before_sha256": "0f5f0412964325f3e0536f7a2a649fd4f607834a603cdd730059341d660c6200",
+      "after_sha256": "08026045f0615680e08800a3484c46d7248b69813ddc467f1149772ac901b625"
+    },
+    {
+      "path": "engine/src/solver_solve_contracts.hpp",
+      "before_sha256": "43601ec49ad647e6f587109a43a81e3962c59bf1438e7491898c828489c0a2dd",
+      "after_sha256": "cf40c98f068b7f1a73570b07f0fb17669df20dd1b0f41c9a2bf0ee45a5172e8c"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_setup.inc",
+      "before_sha256": "cad248abe4cbe67981da50ff0de7896f784b892a1be00cf6ee326caba3405e51",
+      "after_sha256": "c277068d7c4c6699b1fa16f66d76e86580f66852a2302f745f784a868423628d"
+    },
+    {
+      "path": "engine/src/solver_policy_refinement.cpp",
+      "before_sha256": "b8c90c98601f71151aefc2f9ad3037efc961abdb5fd6a3fd92d53c2bcb20b96c",
+      "after_sha256": "be89afa7337ccbaa46676be333e3392d2f9ec281275a253fcee37cb3ac408f77"
+    },
+    {
+      "path": "engine/src/solver_policy_oracle_improve.inc",
+      "before_sha256": "9b9e892ea52b2307b07d6c7c798e4be868ec5d4159445768fa2177fc79c41982",
+      "after_sha256": "e1345991f76bae8ad97d2bbc2cf7c0076b1d7668bafcce1c1fc6c6acab9864d3"
+    },
+    {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "before_sha256": "9f5df33483418099b62526ca77f1818f5837d003d52ca59909df2975f858e1cd",
+      "after_sha256": "cc290c84f15c2a7cc0b12b7538f921524ec8fea58d391e67b151925367d705e9"
+    },
+    {
+      "path": "engine/src/solver_solve_telemetry.cpp",
+      "before_sha256": "d87fa66118d068e620e2f7cda6d895f94a1aac08b7de489cfe566f64aff48500",
+      "after_sha256": "3f909fa87197b5de55de2f886f36c9cbaa29dec44ebce19c2a5ef26849e1065a"
+    },
+    {
+      "path": "engine/tests/test_solver_solve.cpp",
+      "before_sha256": "bc08a9515b95ed734e52c4425656c0f95623018a80d9d612a75dfcaee4e2c7b8",
+      "after_sha256": "8a601998429df0c95279d9c2712d7ed8110fb0ca1ce584b5f6fddd0759032f81"
+    }
+  ],
+  "medium_before_after": {
+    "command": "poecraft_solver_benchmark --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges",
+    "before": {
+      "benchmark_binary_sha256": "9cf90458cdb27ead4732d3529d72f66958a041233ee273e7a849060e6843a718",
+      "report_path": "build/acceptance/competitive-lazy-alternative-certification/gate0-before/report.json",
+      "report_sha256": "93347018c85692329f9570974c15ffbc70381c7f25fe7c8354d05fcd2a4247e8",
+      "partial_sha256": "914c9c0d9127e745da786caa6421ec7956965a24e3f7e5c685f170cf85b4cd6b",
+      "total_wall_ms": 1369.7918,
+      "solve_wall_ms": 34.6642,
+      "native_live_owned_bytes": 18693391,
+      "native_peak_owned_bytes": 79085896,
+      "telemetry_json_bytes": 167956
+    },
+    "after": {
+      "benchmark_binary_sha256": "6a97f684ffcbf24e59f12248546442cbee94778538e7ddcbae2e563f72fbe210",
+      "report_path": "build/acceptance/competitive-lazy-alternative-certification/gate0-after/report.json",
+      "report_sha256": "1a3c03a8cf40c1487de4796ef00326a2633952731f59c5cca4bf18e01132400f",
+      "partial_sha256": "bd5ef7316076b26cc5a536f0d2f8e4482882944703b1b4011738cbb26bbabb4d",
+      "total_wall_ms": 1348.991,
+      "solve_wall_ms": 34.3768,
+      "native_live_owned_bytes": 18693599,
+      "native_peak_owned_bytes": 79086208,
+      "telemetry_json_bytes": 168287
+    },
+    "semantic_and_work_fingerprint_equal": true,
+    "fingerprint_scope": [
+      "complete input and caps",
+      "product action ids in order",
+      "solve status, policy status, bounds, and evaluated cost",
+      "coarse states and every coarse work counter",
+      "transition_bits_hash and policy_bits_hash",
+      "all pre-existing refinement counters except owned-memory estimates",
+      "quotient proof counters",
+      "compiled graph counts and bytes",
+      "exact evaluation result",
+      "10,000-run simulation result",
+      "cap checks and errors"
+    ],
+    "coarse_transition_bits_hash": "ce5a144282753b26",
+    "coarse_policy_bits_hash": "6bee45662f66d2e4",
+    "compiled_strategy_sha256_before": "adf9ae9312ae1c184a3f467effde14e4c52ef789678a78ad1216bf53a4e04003",
+    "compiled_strategy_sha256_after": "adf9ae9312ae1c184a3f467effde14e4c52ef789678a78ad1216bf53a4e04003",
+    "status": "bounded_feasible",
+    "exact_cost": 9.14379257789546,
+    "off_policy_mass": 0,
+    "simulation_runs": 10000,
+    "simulation_successes": 10000,
+    "simulation_off_policy_failures": 0,
+    "exact_carriers": 266,
+    "quotient_classes": 19,
+    "exact_kernels": 203,
+    "exact_transitions": 1751,
+    "partition_rounds": 5,
+    "policy_changes": 11,
+    "reference_adapter_invocations": 0,
+    "certification_work": {
+      "selected": {
+        "rows_begun": 115,
+        "rows_completed": 115,
+        "reforge_work": 39690,
+        "transitions": 1476
+      },
+      "alternatives": {
+        "rows_begun": 88,
+        "rows_completed": 88,
+        "reforge_work": 4180979,
+        "transitions": 275
+      },
+      "work_to_first_partition": 4220669,
+      "work_to_first_executable_upper": 4220669,
+      "exact_alternatives_materialized_before_first_upper": 88
+    },
+    "fixed_size_telemetry_overhead": {
+      "native_live_owned_bytes_delta": 208,
+      "native_peak_owned_bytes_delta": 312,
+      "telemetry_json_bytes_delta": 331,
+      "interpretation": "expected fixed diagnostic/result and serialized JSON growth; quotient proof ledger categories and all algorithmic work are unchanged"
+    }
+  },
+  "hard_case_budget_facts": {
+    "coarse_reforge_work": 14077632,
+    "exact_work_remaining_at_20m": 5922368,
+    "measured_broad_marginal_work_per_row": 2111010.009099181,
+    "measured_broad_transitions_per_row": 172596,
+    "archived_selected_policy_kernels": 10466,
+    "archived_selected_policy_transitions": 423756,
+    "archived_average_transitions_per_selected_kernel": 40.48882094400917,
+    "risk_interpretation": "archived selected kernels and current broad kernels have materially different transition sizes, so neither quotient cells nor a medium cells-per-kernel ratio is used as an affordability estimate"
+  },
+  "frozen_prediction": {
+    "first_partition": "not presently estimable before selected-first hard-case measurement",
+    "first_executable_upper": "not presently estimable before selected-first hard-case measurement",
+    "binding_known_budget": "the root selected row and recursively selected successor closure must fit in 5922368 exact reforge work",
+    "conditional_risk_scenario": {
+      "assumption": "10466 archived selected-policy kernels each cost the newly measured broad-row slope",
+      "projected_exact_work": 22093830755.232025,
+      "validity": "not a forecast; the transition-size mismatch rejects this as a point estimate"
+    },
+    "stop_decision": "continue because no measurement proves that every executable selected-policy witness exceeds 20M total work"
+  },
+  "focused_acceptance": {
+    "solve_suite": {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite solve",
+      "checks": 98131,
+      "failures": 0
+    },
+    "medium_before_after_workflow": {
+      "completed": true,
+      "exact_strategy_evaluation": "matched",
+      "verification_runs": 10000,
+      "verification_passed": true,
+      "semantic_work_invariance": "passed"
+    },
+    "full_pipeline_run": false,
+    "reason_full_pipeline_not_run": "Gate 0 is an intermediate telemetry checkpoint; final repository acceptance remains Gate 7"
+  },
+  "next_gate": "explicit unresolved alternative obligations",
+  "pushed": false,
+  "merged": false
+}

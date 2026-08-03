@@ -1064,6 +1064,35 @@ selects
 [Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md)
 as the next boundary.
 
+## Competitive Lazy Alternative Certification Gate 0
+
+The 2026-08-02
+[active plan](active/competitive-lazy-alternative-certification.md) and
+[tracked Gate 0 evidence](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate0.json)
+freeze the exact follow-on boundary before scheduling changes begin.
+
+- Behavior-neutral aggregate telemetry attributes exact rows, reforge work,
+  and transitions to inherited/current selected decisions versus admitted
+  alternatives. It also records work to the first quotient partition and the
+  first executable upper.
+- The frozen medium belt control retains every pre-existing deterministic
+  work count, bound, transition/policy hash, compiled strategy byte, exact
+  evaluation, and 10,000-run simulation result. The selected-strategy SHA-256
+  remains `adf9ae9312ae1c184a3f467effde14e4c52ef789678a78ad1216bf53a4e04003`.
+- That control spends 39,690 exact reforge-work units on 115 selected rows and
+  4,180,979 units on 88 alternatives before its first partition and executable
+  upper at 4,220,669 units. The diagnostic adds 208 live and 312 peak native
+  owned bytes; no proof-ledger category or accounted work changes.
+- For the frozen two-goal case, coarse work leaves 5,922,368 exact work units
+  under the unchanged 20M cap. Existing measurements do not identify the
+  selected-policy closure's row population or prove that no selected
+  executable witness fits that allowance, so implementation proceeds rather
+  than treating the 22.11B broad-row sensitivity calculation as a forecast.
+
+Gate 0 changes no mechanics, caps, action filtering, ABI, strategy vocabulary,
+or scheduling. Gate 1 makes every unresolved admitted alternative a
+first-class lower-only proof obligation.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

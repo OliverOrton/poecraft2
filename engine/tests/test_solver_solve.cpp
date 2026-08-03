@@ -1432,6 +1432,31 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_telemetry.exact_classes > 0);
     PC_CHECK(refinement_telemetry.exact_transitions > 0);
     PC_CHECK(refinement_telemetry.exact_kernels > 0);
+    PC_CHECK(refinement_telemetry.selected_rows_begun > 0);
+    PC_CHECK(refinement_telemetry.selected_rows_completed > 0);
+    PC_CHECK(refinement_telemetry.selected_transitions > 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_begun > 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_completed > 0);
+    PC_CHECK(refinement_telemetry.alternative_transitions > 0);
+    PC_CHECK(
+        refinement_telemetry.selected_rows_completed +
+            refinement_telemetry.alternative_rows_completed ==
+        refinement_telemetry.exact_kernels);
+    PC_CHECK(
+        refinement_telemetry.selected_transitions +
+            refinement_telemetry.alternative_transitions ==
+        refinement_telemetry.exact_transitions);
+    PC_CHECK(
+        refinement_telemetry.work_to_first_partition.has_value());
+    PC_CHECK(
+        refinement_telemetry.work_to_first_executable_upper.has_value());
+    PC_CHECK(
+        *refinement_telemetry.work_to_first_partition <=
+        *refinement_telemetry.work_to_first_executable_upper);
+    PC_CHECK(
+        refinement_telemetry
+            .alternatives_materialized_before_first_upper ==
+        refinement_telemetry.alternative_rows_completed);
     PC_CHECK(refinement_telemetry.exact_state_reuses > 0);
     PC_CHECK(refinement_telemetry.collapse_events == 0);
     PC_CHECK(
@@ -1456,6 +1481,13 @@ void run_policy_guided_exact_lift_tests() {
         solved.diagnostics.policy_compatibility_supported);
     PC_CHECK(
         !solved.refined_policy_artifact.strategy_json.empty());
+    const std::string refinement_json = serialize_solver_telemetry(
+        calc, &solved, nullptr, std::nullopt, nullptr);
+    PC_CHECK(valid_json_object(refinement_json));
+    PC_CHECK(refinement_json.find("\"certification_work\":{") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find("\"work_to_first_partition\":") !=
+             std::string::npos);
 
     const refinement::PolicyExactLiftCertificate lifted =
         refinement::lift_policy_exact(

@@ -1493,6 +1493,29 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.strict_kernels_built;
             telemetry.exact_kernel_cache_hits =
                 certificate.adapter.strict_kernel_cache_hits;
+            telemetry.selected_rows_begun =
+                certificate.adapter.selected_rows_begun;
+            telemetry.selected_rows_completed =
+                certificate.adapter.selected_rows_completed;
+            telemetry.selected_reforge_work =
+                certificate.adapter.selected_reforge_work;
+            telemetry.selected_transitions =
+                certificate.adapter.selected_transitions;
+            telemetry.alternative_rows_begun =
+                certificate.adapter.alternative_rows_begun;
+            telemetry.alternative_rows_completed =
+                certificate.adapter.alternative_rows_completed;
+            telemetry.alternative_reforge_work =
+                certificate.adapter.alternative_reforge_work;
+            telemetry.alternative_transitions =
+                certificate.adapter.alternative_transitions;
+            telemetry.work_to_first_partition =
+                certificate.adapter.work_to_first_partition;
+            telemetry.work_to_first_executable_upper =
+                certificate.adapter.work_to_first_executable_upper;
+            telemetry.alternatives_materialized_before_first_upper =
+                certificate.adapter
+                    .alternatives_materialized_before_first_upper;
             telemetry.exact_state_reuses =
                 certificate.adapter.canonical_successor_collapses;
             telemetry.collapse_events =

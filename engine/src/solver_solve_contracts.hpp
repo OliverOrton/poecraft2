@@ -156,6 +156,19 @@ struct PolicyRefinementTelemetry {
     std::uint64_t exact_transitions = 0;
     std::uint64_t exact_kernels = 0;
     std::uint64_t exact_kernel_cache_hits = 0;
+    /* Bounded selected-vs-alternative certification attribution. These
+     * counters are observational only and carry no proof authority. */
+    std::uint64_t selected_rows_begun = 0;
+    std::uint64_t selected_rows_completed = 0;
+    std::uint64_t selected_reforge_work = 0;
+    std::uint64_t selected_transitions = 0;
+    std::uint64_t alternative_rows_begun = 0;
+    std::uint64_t alternative_rows_completed = 0;
+    std::uint64_t alternative_reforge_work = 0;
+    std::uint64_t alternative_transitions = 0;
+    std::optional<std::uint64_t> work_to_first_partition;
+    std::optional<std::uint64_t> work_to_first_executable_upper;
+    std::uint64_t alternatives_materialized_before_first_upper = 0;
     std::uint64_t memory_bytes = 0;
     std::uint64_t peak_memory_bytes = 0;
     std::uint64_t memory_limit_bytes = 0;

@@ -1,8 +1,7 @@
 # Session Handoff
 
-**Status: exact reforge-work growth diagnostic complete. Competitive lazy
-alternative certification is the selected next structural boundary;
-implementation has not begun.**
+**Status: competitive lazy alternative certification Gate 0 complete. Gate 1
+explicit unresolved alternative obligations are the active boundary.**
 
 Current plan:
 [Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
@@ -16,12 +15,16 @@ Source milestone:
 Completed enabling milestone:
 [Solver Iteration Infrastructure And Decomposition](docs/archive/2026-08-01-solver-iteration-infrastructure/README.md).
 
-Branch: `codex/reforge-work-growth-diagnostic`
+Branch: `codex/competitive-lazy-alternative-certification`
 
-Diagnostic starting commit:
-`41d6a243947b0205a6e29c6373e79b21b0d8292a`
+Milestone starting commit:
+`bd288c9041a5b54fa4ec134c7e1dec90486ac385`
 
-Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
+Current milestone commits: Gate 0 is recorded by the current local commit;
+Gate 1 has not begun.
+
+Preserved proof-carrying quotient commits: Gate 0 is
+`4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
 Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
 `9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is
 `62ca542e76829d39a27323fa2d5c1cc6266ba567`. Gate 4 is
@@ -32,7 +35,33 @@ the final archive commit.
 Nothing has been pushed or merged. `main` remains unchanged at
 `25d5bbe6791beb61eae803219563575346def2dc`.
 
-## Gate 0 frozen boundary
+## Competitive lazy Gate 0
+
+- Frozen corpus, fixture, artifact, economy, action-order, options, prices,
+  diagnostic reports, source, and binary identities are tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate0.json`.
+- New deterministic aggregate telemetry distinguishes selected and alternative
+  rows begun/completed, exact reforge work, transitions, work to first
+  partition/upper, and alternatives exact-materialized before the upper. It
+  does not influence scheduling or proof.
+- The medium before/after semantic-work fingerprint is exact. Both runs retain
+  `ce5a144282753b26` / `6bee45662f66d2e4` transition/policy hashes and compiled
+  strategy SHA-256
+  `adf9ae9312ae1c184a3f467effde14e4c52ef789678a78ad1216bf53a4e04003`.
+- Medium attribution is 115 selected rows, 39,690 work, and 1,476 transitions
+  versus 88 alternative rows, 4,180,979 work, and 275 transitions. First
+  partition and first executable upper both occur at 4,220,669 exact work,
+  after all alternatives have already materialized.
+- The frozen hard case still has only 5,922,368 exact work after its invariant
+  coarse phase. Hard selected closure is not presently estimable: the archived
+  10,466 selected kernels average about 40 transitions, materially unlike the
+  172,596-transition broad rows. No measurement proves every executable
+  selected witness exceeds the cap, so Gate 1 proceeds.
+- Focused solve acceptance is 98,131 checks / 0 failures. The before/after
+  medium workflows both exact-reconcile and complete 10,000/10,000 simulations
+  with zero off-policy failures and zero reference calls.
+
+## Preserved proof-carrying quotient Gate 0 boundary
 
 - The amended plan now binds core, five-goal scale, and WASM qualification
   separately and includes all early structural stops.
@@ -90,7 +119,7 @@ tracked work counters. The tracked qualified Fracture evidence retains
 `04a66ba6c6dfcabf` / `3e5d7530e7aed5fb` and compiled strategy SHA-256
 `e951df8287448fce5c6d6238622a8977fa547cb33202ffe00f9a460366d64f0e`.
 
-## Gate 1 completed boundary
+## Preserved proof-carrying quotient Gate 1 boundary
 
 - `SolveTransitionCache` directly owns the optional proof sidecar, while
   immutable collision-checked payloads are separated from stable row use
@@ -110,7 +139,7 @@ tracked work counters. The tracked qualified Fracture evidence retains
   zero failures. The tracked Gate 1 evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate1.json`.
 
-## Gate 2 completed boundary
+## Preserved proof-carrying quotient Gate 2 boundary
 
 - Transient certified carrier slices now adapt directly to the existing
   canonical observation projection and
@@ -137,7 +166,7 @@ tracked work counters. The tracked qualified Fracture evidence retains
   4,829 checks with zero failures. Evidence is tracked in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate2.json`.
 
-## Gate 3 completed boundary
+## Preserved proof-carrying quotient Gate 3 boundary
 
 - `SolveTransitionCache` now owns stable certified quotient rows, state-row
   spans, reverse predecessors, price/Q/policy generations, and exact SCC
@@ -163,7 +192,7 @@ tracked work counters. The tracked qualified Fracture evidence retains
   lower bound exceeds 1 GiB, so the early stop did not fire. Evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate3.json`.
 
-## Gate 4 completed boundary
+## Preserved proof-carrying quotient Gate 4 boundary
 
 - Publication is gated by current reachable certificates, closed target
   generations, terminal-reachable bottom components, and a finite proper exact
@@ -185,7 +214,7 @@ tracked work counters. The tracked qualified Fracture evidence retains
   failures and zero reference calls. Evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate4.json`.
 
-## Gate 5 structural stop
+## Preserved proof-carrying quotient Gate 5 structural stop
 
 - The frozen binding case `natural-t1-breadth-two-4e65dda9c53b` was run once
   through the direct native benchmark with exact compiled evaluation and

@@ -867,6 +867,9 @@ ExactPolicyRun ProductionPolicyOracle::improve_policy(
 void merge_adapter_telemetry(
         PolicyLiftAdapterTelemetry& total,
         const PolicyLiftAdapterTelemetry& pass) {
+    const std::uint64_t prior_reforge_work = total.strict_reforge_work;
+    const std::uint64_t prior_alternative_rows =
+        total.alternative_rows_completed;
     const auto add_u32 =
         [](std::uint32_t& target,
            const std::uint32_t addition) {
@@ -916,6 +919,41 @@ void merge_adapter_telemetry(
     saturating_add(
         total.strict_reforge_work,
         pass.strict_reforge_work);
+    saturating_add(total.selected_rows_begun, pass.selected_rows_begun);
+    saturating_add(
+        total.selected_rows_completed, pass.selected_rows_completed);
+    saturating_add(
+        total.selected_reforge_work, pass.selected_reforge_work);
+    saturating_add(
+        total.selected_transitions, pass.selected_transitions);
+    saturating_add(
+        total.alternative_rows_begun, pass.alternative_rows_begun);
+    saturating_add(
+        total.alternative_rows_completed,
+        pass.alternative_rows_completed);
+    saturating_add(
+        total.alternative_reforge_work, pass.alternative_reforge_work);
+    saturating_add(
+        total.alternative_transitions, pass.alternative_transitions);
+    if (!total.work_to_first_partition.has_value() &&
+        pass.work_to_first_partition.has_value()) {
+        total.work_to_first_partition = prior_reforge_work;
+        saturating_add(
+            *total.work_to_first_partition,
+            *pass.work_to_first_partition);
+    }
+    if (!total.work_to_first_executable_upper.has_value() &&
+        pass.work_to_first_executable_upper.has_value()) {
+        total.work_to_first_executable_upper = prior_reforge_work;
+        saturating_add(
+            *total.work_to_first_executable_upper,
+            *pass.work_to_first_executable_upper);
+        total.alternatives_materialized_before_first_upper =
+            prior_alternative_rows;
+        saturating_add(
+            total.alternatives_materialized_before_first_upper,
+            pass.alternatives_materialized_before_first_upper);
+    }
     add_u32(
         total.local_reoptimization_rounds,
         pass.local_reoptimization_rounds);

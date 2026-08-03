@@ -1218,6 +1218,17 @@ std::string serialize_solver_telemetry(
         json += ",\"behavior_splits\":null,\"merged_exact_states\":null";
         json += ",\"exact_transitions\":null,\"exact_kernels\":null";
         json += ",\"exact_kernel_cache_hits\":null";
+        json += ",\"certification_work\":{"
+                "\"selected\":{"
+                "\"rows_begun\":null,\"rows_completed\":null,"
+                "\"reforge_work\":null,\"transitions\":null},"
+                "\"alternatives\":{"
+                "\"rows_begun\":null,\"rows_completed\":null,"
+                "\"reforge_work\":null,\"transitions\":null},"
+                "\"work_to_first_partition\":null,"
+                "\"work_to_first_executable_upper\":null,"
+                "\"exact_alternatives_materialized_before_first_upper\":"
+                "null}";
         json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
         json += ",\"memory_limit_bytes\":null";
         json += ",\"retained_artifact_bytes\":null";
@@ -1305,6 +1316,41 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.exact_kernels);
         json += ",\"exact_kernel_cache_hits\":" +
                 std::to_string(refinement.exact_kernel_cache_hits);
+        json += ",\"certification_work\":{\"selected\":{";
+        json += "\"rows_begun\":" +
+                std::to_string(refinement.selected_rows_begun);
+        json += ",\"rows_completed\":" +
+                std::to_string(refinement.selected_rows_completed);
+        json += ",\"reforge_work\":" +
+                std::to_string(refinement.selected_reforge_work);
+        json += ",\"transitions\":" +
+                std::to_string(refinement.selected_transitions);
+        json += "},\"alternatives\":{\"rows_begun\":" +
+                std::to_string(refinement.alternative_rows_begun);
+        json += ",\"rows_completed\":" +
+                std::to_string(refinement.alternative_rows_completed);
+        json += ",\"reforge_work\":" +
+                std::to_string(refinement.alternative_reforge_work);
+        json += ",\"transitions\":" +
+                std::to_string(refinement.alternative_transitions);
+        json += "},\"work_to_first_partition\":";
+        if (refinement.work_to_first_partition.has_value()) {
+            json += std::to_string(*refinement.work_to_first_partition);
+        } else {
+            json += "null";
+        }
+        json += ",\"work_to_first_executable_upper\":";
+        if (refinement.work_to_first_executable_upper.has_value()) {
+            json += std::to_string(
+                *refinement.work_to_first_executable_upper);
+        } else {
+            json += "null";
+        }
+        json +=
+            ",\"exact_alternatives_materialized_before_first_upper\":" +
+            std::to_string(
+                refinement.alternatives_materialized_before_first_upper) +
+            "}";
         json += ",\"memory_bytes\":" +
                 std::to_string(refinement.memory_bytes);
         json += ",\"peak_memory_bytes\":" +

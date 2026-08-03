@@ -1136,6 +1136,10 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 observation_coarse.failure_reason,
                 observation_coarse.resource_cap);
         }
+        if (!telemetry.work_to_first_partition.has_value()) {
+            telemetry.work_to_first_partition =
+                telemetry.strict_reforge_work;
+        }
         const std::uint64_t coarse_partition_owned =
             observation_coarse.estimated_memory_bytes >
                     retained_for_partition
@@ -1478,6 +1482,12 @@ PolicyExactLiftCertificate lift_policy_quotient(
                         quotient::QuotientBellmanStatus::ResourceCap
                     ? "max_estimated_memory_bytes"
                     : std::string{});
+        }
+        if (!telemetry.work_to_first_executable_upper.has_value()) {
+            telemetry.work_to_first_executable_upper =
+                telemetry.strict_reforge_work;
+            telemetry.alternatives_materialized_before_first_upper =
+                telemetry.alternative_rows_completed;
         }
 
         std::map<std::uint64_t, const PublishedRow*> publication_by_row;
