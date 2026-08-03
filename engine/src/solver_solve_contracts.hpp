@@ -131,6 +131,22 @@ struct FallbackValidationTelemetry {
  * retained samples are capped by SolveDiagnostics::diagnostic_sample_limit
  * at the producer and report their omitted population explicitly.
  */
+struct PolicyBroadRowAttribution {
+    bool alternative = false;
+    std::uint64_t row_sequence = 0;
+    std::uint32_t source_strict_state = kNoId;
+    std::uint32_t source_coarse_state = kNoId;
+    std::uint64_t source_stable_key_hash = 0;
+    std::uint32_t operator_index = kNoId;
+    std::string planner_id;
+    std::vector<std::string> primitive_program_action_ids;
+    RefinementFeatureMask observation_item_features = 0;
+    std::vector<std::uint32_t> observation_modifier_tag_ids;
+    std::uint64_t observation_affix_selectors = 0;
+    std::uint64_t raw_transitions = 0;
+    ReforgeBuildAttribution reforge;
+};
+
 struct PolicyRefinementTelemetry {
     std::uint64_t triggers = 0;
     /* Structured compatibility witnesses consumed by exact refinement. The
@@ -166,6 +182,8 @@ struct PolicyRefinementTelemetry {
     std::uint64_t alternative_rows_completed = 0;
     std::uint64_t alternative_reforge_work = 0;
     std::uint64_t alternative_transitions = 0;
+    std::vector<PolicyBroadRowAttribution> broad_row_attribution;
+    std::uint64_t broad_row_attribution_omitted = 0;
     std::optional<std::uint64_t> work_to_first_partition;
     std::optional<std::uint64_t> work_to_first_executable_upper;
     std::optional<std::uint64_t> wall_ns_to_first_partition;

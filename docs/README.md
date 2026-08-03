@@ -34,8 +34,10 @@ The selected boundary is
 Gate 0 freezes the current selected-first inputs and metrics. Gate 1's single
 100M hard-case diagnostic completes 40 selected rows but reaches no partition
 or upper, so a 200M run, higher default, and conditional Gate 2 are rejected.
-Gate 3 now attributes the broad selected rows before generic projected
-construction. The archived
+Gate 3 attributes the raw selected row to exhaustive 40-bucket scans over
+51,155 frontier states, with zero raw-identity-tree work and only 185,825
+positive edges. Gate 4 now prototypes generic exact sparse projection while
+retaining the raw evaluator as its oracle. The archived
 [Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
 milestone qualifies selected-policy-first bounded publication on the medium
 native workflow, then stops structurally when the single frozen two-goal run

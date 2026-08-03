@@ -45,6 +45,8 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t alternative_rows_completed = 0;
     std::uint64_t alternative_reforge_work = 0;
     std::uint64_t alternative_transitions = 0;
+    std::vector<PolicyBroadRowAttribution> broad_row_attribution;
+    std::uint64_t broad_row_attribution_omitted = 0;
     std::optional<std::uint64_t> work_to_first_partition;
     std::optional<std::uint64_t> work_to_first_executable_upper;
     std::optional<std::uint64_t> wall_ns_to_first_partition;

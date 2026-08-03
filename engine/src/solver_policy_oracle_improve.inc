@@ -935,6 +935,23 @@ void merge_adapter_telemetry(
         total.alternative_reforge_work, pass.alternative_reforge_work);
     saturating_add(
         total.alternative_transitions, pass.alternative_transitions);
+    for (const PolicyBroadRowAttribution& pass_sample :
+         pass.broad_row_attribution) {
+        constexpr std::size_t kSampleLimit = 64;
+        if (total.broad_row_attribution.size() >= kSampleLimit) {
+            ++total.broad_row_attribution_omitted;
+            continue;
+        }
+        PolicyBroadRowAttribution sample = pass_sample;
+        sample.row_sequence += sample.alternative
+                                   ? prior_alternative_rows
+                                   : total.selected_rows_completed -
+                                         pass.selected_rows_completed;
+        total.broad_row_attribution.push_back(std::move(sample));
+    }
+    saturating_add(
+        total.broad_row_attribution_omitted,
+        pass.broad_row_attribution_omitted);
     saturating_add(
         total.alternative_obligations_created,
         pass.alternative_obligations_created);

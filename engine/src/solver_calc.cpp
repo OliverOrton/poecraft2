@@ -333,7 +333,8 @@ CalcContext::CalcContext(
     const bool product_solver_parent,
     const std::vector<std::uint64_t>&
         required_reachable_mod_mask,
-    const bool distinguish_modifier_identity)
+    const bool distinguish_modifier_identity,
+    const bool capture_reforge_attribution)
     : session_(std::move(session)),
       goal_(goal),
       registry_(std::move(registry)),
@@ -341,7 +342,8 @@ CalcContext::CalcContext(
       context_(0),
       state_cap_(state_cap),
       product_solver_parent_(product_solver_parent),
-      distinguish_modifier_identity_(distinguish_modifier_identity) {
+      distinguish_modifier_identity_(distinguish_modifier_identity),
+      capture_reforge_attribution_(capture_reforge_attribution) {
     /* Action registries are public construction inputs in native tests and
      * future integrations, not only products of build_action_registry().
      * Canonicalize and prove every contract at the CalcContext boundary so a

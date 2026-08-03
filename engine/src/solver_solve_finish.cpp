@@ -1509,6 +1509,10 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.alternative_reforge_work;
             telemetry.alternative_transitions =
                 certificate.adapter.alternative_transitions;
+            telemetry.broad_row_attribution =
+                certificate.adapter.broad_row_attribution;
+            telemetry.broad_row_attribution_omitted =
+                certificate.adapter.broad_row_attribution_omitted;
             telemetry.work_to_first_partition =
                 certificate.adapter.work_to_first_partition;
             telemetry.work_to_first_executable_upper =

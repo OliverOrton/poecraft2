@@ -164,7 +164,9 @@
             std::vector<CountObservation>{},
             false,
             exact_start_mods,
-            false); /* contract-derived semantic strict carrier */
+            false,
+            true); /* contract-derived semantic strict carrier with bounded
+                      broad-row attribution */
         require_local_memory(
             exact_start_mods.capacity() * sizeof(std::uint64_t),
             "strict calculation construction");
@@ -394,10 +396,83 @@
         return identity;
     }
 
+    void record_broad_row_attribution(
+            const ExactState& state,
+            const SelectedAction& selected,
+            const bool alternative,
+            const std::size_t sample_begin,
+            const std::uint64_t raw_transitions) {
+        const auto known = known_.find(state.stable_key);
+        if (known == known_.end() ||
+            selected.action_id >= strict_->operators().size()) {
+            return;
+        }
+        const auto& samples =
+            strict_->telemetry().reforge_build_attribution_samples;
+        if (sample_begin >= samples.size()) return;
+        const PlannerOperator& planner =
+            strict_->operators()[selected.action_id];
+        std::vector<std::string> program;
+        const auto append_action = [&](const std::string& action_id) {
+            if (!action_id.empty()) program.push_back(action_id);
+        };
+        append_action(planner.primitive_action_id);
+        for (const std::string& action_id :
+             planner.primitive_program_action_ids) {
+            append_action(action_id);
+        }
+        append_action(planner.conditional_action_id);
+        append_action(planner.bestiary_create_action_id);
+        append_action(planner.bestiary_restore_action_id);
+        append_action(planner.setup_action_id);
+        append_action(planner.followup_action_id);
+        append_action(planner.cleanup_action_id);
+        std::sort(program.begin(), program.end());
+        program.erase(
+            std::unique(program.begin(), program.end()),
+            program.end());
+        for (std::size_t index = sample_begin;
+             index < samples.size(); ++index) {
+            constexpr std::size_t kSampleLimit = 64;
+            if (telemetry_.broad_row_attribution.size() >=
+                kSampleLimit) {
+                ++telemetry_.broad_row_attribution_omitted;
+                continue;
+            }
+            PolicyBroadRowAttribution sample;
+            sample.alternative = alternative;
+            sample.row_sequence = alternative
+                                      ? telemetry_.alternative_rows_begun
+                                      : telemetry_.selected_rows_begun;
+            sample.source_strict_state = known->second.strict_state;
+            sample.source_coarse_state = state.coarse_state;
+            std::uint64_t source_hash = 1469598103934665603ull;
+            for (const std::uint64_t token : state.stable_key) {
+                source_hash ^= token;
+                source_hash *= 1099511628211ull;
+            }
+            sample.source_stable_key_hash = source_hash;
+            sample.operator_index = selected.action_id;
+            sample.planner_id = planner.id;
+            sample.primitive_program_action_ids = program;
+            sample.observation_item_features =
+                selected.routing_observes.item_features;
+            sample.observation_modifier_tag_ids =
+                selected.routing_observes.modifier_tag_ids;
+            sample.observation_affix_selectors =
+                selected.routing_observes.affix_observations.size();
+            sample.raw_transitions = raw_transitions;
+            sample.reforge = samples[index];
+            telemetry_.broad_row_attribution.push_back(
+                std::move(sample));
+        }
+    }
+
     QuotientOracleCompactRow quotient_build_compact_row(
             const ExactState& state,
             SelectedAction selected,
-            const bool alternative) {
+            const bool alternative,
+            const std::size_t attribution_sample_begin) {
         if (telemetry_.strict_kernels_built >=
             limits_.max_exact_kernels) {
             throw AdapterFailure(
@@ -435,9 +510,17 @@
                 });
         } catch (...) {
             attribute_work();
+            record_broad_row_attribution(
+                state, row.selected, alternative,
+                attribution_sample_begin,
+                row.transitions.size());
             throw;
         }
         attribute_work();
+        record_broad_row_attribution(
+            state, row.selected, alternative,
+            attribution_sample_begin,
+            row.transitions.size());
         if (telemetry_.strict_transitions_built + row.transitions.size() >
             limits_.max_transitions) {
             throw AdapterFailure(
@@ -477,6 +560,9 @@
         }
         saturating_add(
             telemetry_.local_state_action_rows_scheduled, 1);
+        const std::size_t attribution_sample_begin =
+            strict_->telemetry()
+                .reforge_build_attribution_samples.size();
         const std::uint64_t work_before =
             strict_->telemetry().reforge_frontier_work;
         std::optional<SelectedAction> candidate;
@@ -501,7 +587,8 @@
         if (!candidate.has_value()) return std::nullopt;
         try {
             QuotientOracleCompactRow row = quotient_build_compact_row(
-                state, std::move(*candidate), true);
+                state, std::move(*candidate), true,
+                attribution_sample_begin);
             saturating_add(
                 telemetry_.local_state_action_rows_evaluated, 1);
             return row;
@@ -519,6 +606,9 @@
                 "terminal carrier has no selected quotient row");
         }
         try {
+            const std::size_t attribution_sample_begin =
+                strict_->telemetry()
+                    .reforge_build_attribution_samples.size();
             const std::uint64_t work_before =
                 strict_->telemetry().reforge_frontier_work;
             std::optional<SelectedAction> current;
@@ -541,7 +631,8 @@
             telemetry_.strict_reforge_work = after;
             if (current.has_value()) {
                 return quotient_build_compact_row(
-                    state, std::move(*current), false);
+                    state, std::move(*current), false,
+                    attribution_sample_begin);
             }
         } catch (const AdapterFailure& error) {
             if (error.status == PolicyExactLiftStatus::ResourceCap) throw;

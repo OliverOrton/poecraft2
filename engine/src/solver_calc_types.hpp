@@ -180,6 +180,72 @@ struct ExecutableFixedOptionRecipe {
     bool operator==(const ExecutableFixedOptionRecipe&) const = default;
 };
 
+/*
+ * One source-authoritative destructive-reforge build profile. These samples
+ * describe the raw evaluator's actual intermediate representation rather
+ * than inferring phase ownership from the final transition count. They are
+ * diagnostic only: no solver decision or proof may depend on them.
+ */
+struct ReforgeBuildAttribution {
+    std::string action_id;
+    std::uint32_t action_index = kNoId;
+    std::uint64_t preserved_base_hash = 0;
+    bool goal_progress_gated = false;
+    bool completed = false;
+    std::uint32_t forced_modifier_count = 0;
+    std::uint64_t natural_pool_entries = 0;
+    std::uint64_t natural_pool_weight = 0;
+    std::uint64_t natural_prefix_entries = 0;
+    std::uint64_t natural_prefix_weight = 0;
+    std::uint64_t natural_suffix_entries = 0;
+    std::uint64_t natural_suffix_weight = 0;
+    std::uint64_t guaranteed_pool_entries = 0;
+    std::uint64_t guaranteed_pool_weight = 0;
+    std::uint64_t physical_families = 0;
+    std::uint64_t roll_buckets = 0;
+    std::uint64_t prefix_buckets = 0;
+    std::uint64_t suffix_buckets = 0;
+    std::uint64_t goal_satisfied_buckets = 0;
+    std::uint64_t goal_below_buckets = 0;
+    std::uint64_t junk_buckets = 0;
+    std::uint64_t raw_choice_entries = 0;
+    std::uint64_t exclusion_group_entries = 0;
+    std::uint64_t exclusion_pair_checks = 0;
+    std::uint64_t exclusion_conflicts = 0;
+    /* Families/classes that the generic isolated-family proof could merge
+     * under the current abstract projection. Raw mode measures these without
+     * applying the merge. */
+    std::uint64_t projectable_physical_families = 0;
+    std::uint64_t projectable_family_classes = 0;
+    std::uint64_t projected_families_removed = 0;
+    std::uint64_t frontier_state_visits = 0;
+    std::uint64_t frontier_edges = 0;
+    std::uint64_t maximum_frontier_states = 0;
+    std::uint64_t terminal_roll_states = 0;
+    std::uint64_t raw_identity_tree_nodes = 0;
+    std::uint64_t raw_identity_tree_leaves = 0;
+    std::uint64_t successor_commits = 0;
+    std::uint64_t unique_projected_outcomes = 0;
+    std::uint64_t duplicate_projected_outcomes = 0;
+    double duplicate_projected_probability_mass = 0.0;
+    std::array<std::uint64_t, kMaxExplicitAffixes + 1>
+        terminal_prefix_counts{};
+    std::array<std::uint64_t, kMaxExplicitAffixes + 1>
+        terminal_suffix_counts{};
+    std::uint64_t raw_choice_table_work = 0;
+    std::uint64_t guaranteed_scan_work = 0;
+    std::uint64_t frontier_work = 0;
+    std::uint64_t raw_identity_tree_work = 0;
+    std::uint64_t total_reforge_work = 0;
+    std::uint64_t pool_build_ns = 0;
+    std::uint64_t bucket_build_ns = 0;
+    std::uint64_t exclusion_build_ns = 0;
+    std::uint64_t frontier_build_ns = 0;
+    std::uint64_t finalize_ns = 0;
+    std::uint64_t total_build_ns = 0;
+    std::uint64_t structural_bits_hash = 0;
+};
+
 /* Per-solve transition-provider telemetry. The distribution cache itself
  * survives price-only re-solves; reset_solve_telemetry clears only counters
  * and the set of rows touched by the next solve. */
@@ -198,6 +264,8 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    std::vector<ReforgeBuildAttribution> reforge_build_attribution_samples;
+    std::uint64_t reforge_build_attribution_omitted = 0;
     std::uint64_t gated_reforge_rows = 0;
     double gated_terminal_probability = 0.0;
     double gated_retry_probability = 0.0;
@@ -357,7 +425,8 @@ class CalcContext {
         bool product_solver_parent = false,
         const std::vector<std::uint64_t>&
             required_reachable_mod_mask = {},
-        bool distinguish_modifier_identity = false);
+        bool distinguish_modifier_identity = false,
+        bool capture_reforge_attribution = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -628,6 +697,7 @@ class CalcContext {
     bool owned_bytes_ledger_initialized_ = false;
     bool product_solver_parent_ = false;
     bool distinguish_modifier_identity_ = false;
+    bool capture_reforge_attribution_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();

@@ -103,6 +103,47 @@ struct ReforgeBuildTimer {
     }
 };
 
+struct ReforgeAttributionRecorder {
+    CalcTelemetry& telemetry;
+    bool enabled = false;
+    ReforgeBuildAttribution row;
+    std::uint64_t work_started = 0;
+    std::chrono::steady_clock::time_point started =
+        std::chrono::steady_clock::now();
+
+    ~ReforgeAttributionRecorder() noexcept {
+        if (!enabled) return;
+        row.total_reforge_work =
+            telemetry.reforge_frontier_work >= work_started
+                ? telemetry.reforge_frontier_work - work_started
+                : 0;
+        row.total_build_ns = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - started)
+                .count());
+        try {
+            constexpr std::size_t kSampleLimit = 64;
+            if (telemetry.reforge_build_attribution_samples.size() <
+                kSampleLimit) {
+                telemetry.reforge_build_attribution_samples.push_back(
+                    std::move(row));
+            } else {
+                ++telemetry.reforge_build_attribution_omitted;
+            }
+        } catch (...) {
+            ++telemetry.reforge_build_attribution_omitted;
+        }
+    }
+};
+
+std::uint64_t elapsed_ns(
+        const std::chrono::steady_clock::time_point started) {
+    return static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now() - started)
+            .count());
+}
+
 std::uint8_t rarity_cap(const SessionImpl& session, std::uint8_t rarity) {
     switch (rarity) {
     case PC_RARITY_NORMAL:
@@ -476,6 +517,18 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     ++telemetry_.reforge_misses;
     telemetry_timer.miss = true;
 
+    ReforgeAttributionRecorder attribution_recorder{
+        telemetry_, capture_reforge_attribution_};
+    const bool capture_attribution =
+        attribution_recorder.enabled;
+    ReforgeBuildAttribution& attribution = attribution_recorder.row;
+    attribution.action_id = action.id;
+    attribution.action_index = action_index;
+    attribution.preserved_base_hash = base_hash;
+    attribution.goal_progress_gated = goal_progress_gated;
+    attribution_recorder.work_started =
+        telemetry_.reforge_frontier_work;
+
     std::unordered_map<std::uint32_t, double> outcome_acc;
     std::size_t outcome_reserve = 65536;
     if (state_cap_.has_value()) {
@@ -499,9 +552,17 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     const auto accumulate_outcome =
         [&](const std::uint32_t state,
             const double probability) {
+            if (capture_attribution) {
+                ++attribution.successor_commits;
+            }
             const auto found = outcome_acc.find(state);
             if (found != outcome_acc.end()) {
                 found->second += probability;
+                if (capture_attribution) {
+                    ++attribution.duplicate_projected_outcomes;
+                    attribution.duplicate_projected_probability_mass +=
+                        probability;
+                }
                 return;
             }
             const std::size_t required = outcome_acc.size() + 1;
@@ -531,6 +592,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     bool state_dependent = false;
     const auto finalize = [&](const bool allow_shared_kernel = false)
         -> std::shared_ptr<const OutcomeDistribution> {
+        const auto finalize_started =
+            std::chrono::steady_clock::now();
         std::vector<std::pair<std::uint32_t, double>> ordered_outcomes(
             outcome_acc.begin(), outcome_acc.end());
         std::sort(ordered_outcomes.begin(), ordered_outcomes.end());
@@ -625,6 +688,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             allow_shared_kernel && !state_dependent &&
             can_retain_reforge_distribution(result);
         result.stable_shared_kernel = retain_shared_kernel;
+        attribution.unique_projected_outcomes =
+            result.entries.size();
+        attribution.completed = true;
+        attribution.finalize_ns += elapsed_ns(finalize_started);
         std::shared_ptr<const OutcomeDistribution> finalized =
             std::make_shared<OutcomeDistribution>(std::move(result));
         if (retain_shared_kernel) {
@@ -672,6 +739,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         directs.erase(std::unique(directs.begin(), directs.end()),
                       directs.end());
     }
+    attribution.forced_modifier_count = directs.size();
     for (std::uint32_t direct : directs) {
         if (!direct_add(session, base, direct)) {
             return unapplied();
@@ -710,7 +778,24 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     if (eldritch_reforge && eldritch_side >= 0) {
         request.side_filter = eldritch_side;
     }
+    const auto pool_started = std::chrono::steady_clock::now();
     const WeightedPool& pool = get_weighted_pool(context_, &base, request);
+    attribution.pool_build_ns += elapsed_ns(pool_started);
+    if (capture_attribution) {
+        for (const PoolEntry& entry : pool.entries) {
+            if (entry.final_weight == 0) continue;
+            ++attribution.natural_pool_entries;
+            attribution.natural_pool_weight += entry.final_weight;
+            if (entry.gen_type == PC_SIDE_PREFIX) {
+                ++attribution.natural_prefix_entries;
+                attribution.natural_prefix_weight += entry.final_weight;
+            } else if (entry.gen_type == PC_SIDE_SUFFIX) {
+                ++attribution.natural_suffix_entries;
+                attribution.natural_suffix_weight += entry.final_weight;
+            }
+        }
+    }
+    const auto bucket_started = std::chrono::steady_clock::now();
 
     /* Aggregate pool weights per complete (side, exclusion-group family)
      * with goal classification. Harvest reforge overlays a
@@ -770,6 +855,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
              * an unmetered raw-choice table ahead of the frontier cap.
              */
             consume_reforge_work(1);
+            if (capture_attribution) {
+                ++attribution.raw_choice_table_work;
+            }
             const auto found = std::lower_bound(
                 pair.raw_weights.begin(), pair.raw_weights.end(), mod,
                 [](const WeightPair::RawWeight& candidate,
@@ -849,13 +937,23 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         PoolBuildRequest guaranteed_request;
         guaranteed_request.weight_kind = PoolWeightKind::TargetedNatural;
         guaranteed_request.target_tag_id = action.params.target_tag_id;
+        const auto guaranteed_pool_started =
+            std::chrono::steady_clock::now();
         const WeightedPool& guaranteed_pool =
             get_weighted_pool(context_, &base, guaranteed_request);
+        attribution.pool_build_ns +=
+            elapsed_ns(guaranteed_pool_started);
         for (const PoolEntry& entry : guaranteed_pool.entries) {
             if (entry.final_weight == 0) continue;
+            if (capture_attribution) {
+                ++attribution.guaranteed_pool_entries;
+                attribution.guaranteed_pool_weight +=
+                    entry.final_weight;
+            }
             classify(entry, true);
         }
     }
+    attribution.physical_families = families.size();
 
     /*
      * Product-parent reforge compression.
@@ -891,10 +989,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         return false;
     };
-    std::vector<std::optional<AggregateKey>> aggregate_key_by_family(
+    std::vector<std::optional<AggregateKey>> projectable_key_by_family(
         ordered_families.size());
-    std::map<AggregateKey, std::uint32_t> aggregate_multiplicity;
-    if (product_solver_parent_) {
+    std::map<AggregateKey, std::uint32_t> projectable_multiplicity;
+    if (product_solver_parent_ || capture_attribution) {
         for (std::size_t i = 0; i < ordered_families.size(); ++i) {
             const auto& [family_key, family] = *ordered_families[i];
             bool goal_observed = false;
@@ -927,9 +1025,32 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const AggregateKey aggregate{
                 family_key.first, junk_key.first, junk_key.second,
                 weights.normal, weights.guaranteed};
-            aggregate_key_by_family[i] = aggregate;
-            ++aggregate_multiplicity[aggregate];
+            projectable_key_by_family[i] = aggregate;
+            ++projectable_multiplicity[aggregate];
         }
+    }
+    if (capture_attribution) {
+        for (const auto& candidate : projectable_key_by_family) {
+            if (candidate.has_value()) {
+                ++attribution.projectable_physical_families;
+            }
+        }
+        attribution.projectable_family_classes =
+            projectable_multiplicity.size();
+        attribution.projected_families_removed =
+            attribution.projectable_physical_families >=
+                    attribution.projectable_family_classes
+                ? attribution.projectable_physical_families -
+                      attribution.projectable_family_classes
+                : 0;
+    }
+
+    std::vector<std::optional<AggregateKey>> aggregate_key_by_family(
+        ordered_families.size());
+    std::map<AggregateKey, std::uint32_t> aggregate_multiplicity;
+    if (product_solver_parent_) {
+        aggregate_key_by_family = projectable_key_by_family;
+        aggregate_multiplicity = projectable_multiplicity;
     }
 
     std::vector<RollBucket> buckets;
@@ -1107,6 +1228,48 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
      * pairwise relation once instead of repeatedly intersecting sorted group
      * vectors in every frontier state and candidate-bucket visit. */
     const std::size_t bucket_count = buckets.size();
+    attribution.roll_buckets = bucket_count;
+    if (capture_attribution) {
+      for (const RollBucket& bucket : buckets) {
+        if (bucket.side == PC_SIDE_PREFIX) {
+            ++attribution.prefix_buckets;
+        } else if (bucket.side == PC_SIDE_SUFFIX) {
+            ++attribution.suffix_buckets;
+        }
+        if (bucket.kind == BucketKind::GoalSat) {
+            ++attribution.goal_satisfied_buckets;
+        } else if (bucket.kind == BucketKind::GoalBelow) {
+            ++attribution.goal_below_buckets;
+        } else {
+            ++attribution.junk_buckets;
+        }
+        attribution.raw_choice_entries += bucket.raw_choices.size();
+        attribution.exclusion_group_entries +=
+            bucket.exclusion_groups.size();
+      }
+    }
+    std::uint64_t structural_hash = 1469598103934665603ull;
+    const auto mix_structural = [&](const std::uint64_t value) {
+        structural_hash ^= value;
+        structural_hash *= 1099511628211ull;
+    };
+    mix_structural(bucket_count);
+    for (const RollBucket& bucket : buckets) {
+        mix_structural(static_cast<std::uint8_t>(bucket.side));
+        mix_structural(static_cast<std::uint8_t>(bucket.kind));
+        mix_structural(bucket.slot);
+        mix_structural(bucket.goal_member_class_token);
+        mix_structural(bucket.junk_class);
+        mix_structural(bucket.block_mask);
+        mix_structural(bucket.weight);
+        mix_structural(bucket.guaranteed);
+        mix_structural(bucket.multiplicity);
+        for (const std::uint32_t group : bucket.exclusion_groups) {
+            mix_structural(group);
+        }
+    }
+    attribution.structural_bits_hash = structural_hash;
+    attribution.bucket_build_ns = elapsed_ns(bucket_started);
     if (bucket_count >
         std::numeric_limits<std::uint16_t>::max()) {
         throw SolverResourceLimit(
@@ -1184,8 +1347,13 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             sizeof(decltype(outcome_acc)::value_type))));
     std::vector<std::uint8_t> buckets_conflict(
         bucket_count * bucket_count, 0);
+    const auto exclusion_started =
+        std::chrono::steady_clock::now();
     for (std::size_t left = 0; left < bucket_count; ++left) {
         for (std::size_t right = left; right < bucket_count; ++right) {
+            if (capture_attribution) {
+                ++attribution.exclusion_pair_checks;
+            }
             if (left == right &&
                 buckets[left].interchangeable_family_class) {
                 continue;
@@ -1208,8 +1376,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
             buckets_conflict[left * bucket_count + right] = conflict;
             buckets_conflict[right * bucket_count + left] = conflict;
+            if (capture_attribution && conflict) {
+                ++attribution.exclusion_conflicts;
+            }
         }
     }
+    attribution.exclusion_build_ns = elapsed_ns(exclusion_started);
 
     /* --- base abstract features -------------------------------------------- */
     const AbstractState base_state = project_item(session, layout_, base);
@@ -1357,6 +1529,19 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
     };
     const auto commit_outcome = [&](const RollState& roll, double weight) {
+        if (capture_attribution) {
+            ++attribution.terminal_roll_states;
+            const std::size_t terminal_prefix =
+                std::min<std::size_t>(
+                    attribution.terminal_prefix_counts.size() - 1,
+                    base.prefix_count + roll.prefix_picks);
+            const std::size_t terminal_suffix =
+                std::min<std::size_t>(
+                    attribution.terminal_suffix_counts.size() - 1,
+                    base.suffix_count + roll.suffix_picks);
+            ++attribution.terminal_prefix_counts[terminal_prefix];
+            ++attribution.terminal_suffix_counts[terminal_suffix];
+        }
         const bool zero_progress = roll_has_zero_progress(roll);
         AbstractState successor = base_state;
         successor.blocked_mask |= roll.blocked_mask;
@@ -1426,7 +1611,14 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                  * work under the same exact-kernel resource cap.
                  */
                 consume_reforge_work(1);
+                if (capture_attribution) {
+                    ++attribution.raw_identity_tree_nodes;
+                    ++attribution.raw_identity_tree_work;
+                }
                 if (pick == deferred_picks.size()) {
+                    if (capture_attribution) {
+                        ++attribution.raw_identity_tree_leaves;
+                    }
                     commit_successor(
                         std::move(expanded), probability, zero_progress);
                     return;
@@ -1549,6 +1741,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 outcome_preflight_entries,
                 sizeof(decltype(outcome_acc)::value_type))));
     frontier.reserve(frontier_preflight_entries);
+    const auto frontier_started = std::chrono::steady_clock::now();
     const auto add_bucket_pick =
         [&](const RollState& roll,
             const std::uint16_t b,
@@ -1600,6 +1793,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         };
         double total = 0.0;
         consume_reforge_work(buckets.size());
+        attribution.guaranteed_scan_work += buckets.size();
         for (std::uint16_t b = 0;
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
             total += guaranteed_remaining(b);
@@ -1664,6 +1858,12 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         ordered_frontier.reserve(
             ordered_preflight_entries);
         ordered_frontier.assign(frontier.begin(), frontier.end());
+        if (capture_attribution) {
+            attribution.maximum_frontier_states =
+                std::max<std::uint64_t>(
+                    attribution.maximum_frontier_states,
+                    ordered_frontier.size());
+        }
         std::sort(
             ordered_frontier.begin(), ordered_frontier.end(),
             [](const auto& left, const auto& right) {
@@ -1671,6 +1871,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             });
         for (const auto& [roll, probability] : ordered_frontier) {
             consume_reforge_work(1 + buckets.size());
+            if (capture_attribution) {
+                ++attribution.frontier_state_visits;
+                attribution.frontier_work +=
+                    1 + buckets.size();
+            }
             if (goal_progress_gated && roll_is_goal(roll)) {
                 commit_outcome(
                     roll, probability * (stop_here + deeper));
@@ -1734,6 +1939,9 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                  b < static_cast<std::uint16_t>(buckets.size()); ++b) {
                 const double remaining = remaining_by_bucket[b];
                 if (remaining <= 0.0) continue;
+                if (capture_attribution) {
+                    ++attribution.frontier_edges;
+                }
                 const double p = probability * (remaining / total);
                 RollState child = add_bucket_pick(roll, b);
                 const auto existing = next.find(child);
@@ -1760,6 +1968,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         frontier_preflight_entries =
             next_preflight_entries;
     }
+    attribution.frontier_build_ns = elapsed_ns(frontier_started);
 
     /* Pointer-identity kernel reuse is valid only while the reforge cache
      * retains the distribution object. Unretained exact distributions fall

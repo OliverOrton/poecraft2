@@ -1255,6 +1255,24 @@ PowerShell watcher at 10 seconds; continuous watchdog attachment is not
 claimed. The decision contract forbids 200M and rejects a higher default, so
 Gate 2 is skipped and attribution proceeds.
 
+## Selected-Closure Scaling Gate 3
+
+The 2026-08-03
+[`selected-closure-broad-row-scaling-gate3.json`](../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json)
+records source-authoritative attribution for one newly instrumented 18M raw
+probe. It neither reruns the frozen 20M measurement nor repeats Gate 1's
+one-shot 100M diagnostic. The selected root program is Zeal Essence with one
+forced modifier, a 259-entry/210,650-weight post-forced natural pool, 39
+physical exclusion families, 40 roll buckets, and 172,596 strict outcomes.
+
+All 2,097,355 row-work units are frontier work: 51,155 states each charge one
+node plus 40 bucket probes. Only 185,825 bucket edges are positive, yielding a
+236,980 node-plus-positive-edge prototype proxy. Raw modifier-choice tables
+and identity-tree nodes are both zero. The raw DP commits 688,739 terminal
+arrivals, of which 516,143 merge into existing projected targets and carry
+0.25435223351246694 duplicate-arrival probability mass. The exact sparse
+projected prototype is therefore the active boundary.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

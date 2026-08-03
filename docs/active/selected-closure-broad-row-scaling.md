@@ -1,7 +1,7 @@
 # Selected-Closure Scaling And Exact Broad-Row Projection
 
-**Status: Gates 0 and 1 complete; Gate 2 skipped by its condition; Gate 3
-broad selected-row attribution is the active boundary.**
+**Status: Gates 0, 1, and 3 complete; Gate 2 skipped by its condition; Gate 4
+exact projected broad-row prototyping is the active boundary.**
 
 Owner: Oliver
 
@@ -145,7 +145,36 @@ return evidence. Commit this behavior separately.
 
 ## Gate 3 — attribute broad selected rows
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`selected-closure-broad-row-scaling-gate3.json`](../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json).
+
+A source-authoritative 18M attribution probe completed one selected row after
+the invariant 14,077,632-work coarse phase. It did not repeat the frozen 20M
+or one-shot 100M runs and did not change any canonical cap. The selected row
+is the one-step Zeal Essence operator on strict/coarse root `0`, with one
+forced modifier, a post-forced natural pool of 259 modifiers and weight
+210,650, and 172,596 raw transitions.
+
+The causal owner is the current-roll frontier, not literal junk identity. The
+row visits 51,155 frontier states and scans all 40 buckets at each state,
+charging exactly 2,097,355 work. Raw-choice tables and identity-tree work are
+both zero. Of 2,046,200 bucket probes, only 185,825 are positive. The sparse
+node-plus-positive-edge proxy is therefore 236,980 work, below Gate 5's 300k
+threshold before prototype overhead.
+
+Terminal enumeration commits 688,739 arrivals into 172,596 strict abstract
+outcomes. The 516,143 duplicate arrivals carry 0.25435223351246694 probability
+mass after their first insertion. Frontier construction takes 704.269 ms of
+808.997 ms measured raw build time; final projection/interning takes another
+100.054 ms. The existing isolated-family compression has no opportunity: 38
+eligible physical junk families produce 38 distinct projected classes.
+
+The immutable Gate 1 report did not retain per-row action/base/source
+identities, so rows 2–40 cannot be retroactively named without the forbidden
+100M rerun. Their exactly equal 172,596-transition populations remain valid;
+only row 1's complete attribution is source-authoritative. New bounded
+telemetry records up to 64 later rows with explicit omissions and does not
+participate in solving or proof.
 
 Identify the exact selected programs producing the 172,596-transition rows.
 For every row record source carrier/observation requirements, parameterized
@@ -161,6 +190,8 @@ action, legality rule, exclusion rule, compiler route, or proof obligation can
 observe it. Commit causal evidence.
 
 ## Gate 4 — exact projected broad-row prototype
+
+**Status: active.**
 
 Build an action-parameterized exact prototype that computes probability over
 future-relevant projected states without first retaining every complete item

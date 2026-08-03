@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: selected-closure scaling Gates 0 and 1 are complete. Gate 2 is
-skipped by its condition; Gate 3 broad selected-row attribution is the active
-boundary.**
+**Status: selected-closure scaling Gates 0, 1, and 3 are complete. Gate 2 is
+skipped by its condition; Gate 4 exact projected broad-row prototyping is the
+active boundary.**
 
 Current plan:
 [Selected-Closure Scaling And Exact Broad-Row Projection](docs/active/selected-closure-broad-row-scaling.md).
@@ -28,7 +28,8 @@ Current milestone starting commit:
 
 Current milestone commits: Gate 0 is
 `9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is recorded by the
-current local commit. Gate 2 is skipped; Gate 3 has not begun.
+current local commit. Gate 2 is skipped. Gate 3 is recorded by the next local
+commit; Gate 4 is the active boundary.
 
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
@@ -109,6 +110,44 @@ Nothing has been pushed or merged. `main` remains unchanged at
 - Gate 3 now owns exact attribution of the broad selected programs, pools,
   exclusion state, enumeration phases, raw identity tree, projected duplicate
   targets, and reusable calculations.
+
+## Selected-closure scaling Gate 3
+
+- Bounded diagnostic telemetry now carries the selected/alternative row,
+  source strict/coarse carrier, program, observation summary, pool weights,
+  bucket/exclusion topology, frontier and terminal populations, duplicate
+  projected mass, work categories, and phase timings. It is observational and
+  does not participate in solver decisions or proof.
+- The first 18M probe found the capture boundary too late: selected-action
+  resolution had already prepared the distribution, leaving the new sample
+  list empty. Its aggregate counters remain valid, but it is rejected for
+  attribution. The second probe validated the fixed boundary. A final probe
+  against the commit-ready binary reproduced every deterministic row field
+  after attribution became opt-in to the strict publication child. All three
+  attempts are disclosed in tracked evidence.
+- The accepted selected row is root Zeal Essence, operator `10`, with one
+  forced modifier. Its post-forced natural pool is 259 modifiers / 210,650
+  weight (112 / 88,600 prefix and 147 / 122,050 suffix), split into 39
+  physical families and 40 roll buckets.
+- All 2,097,355 work belongs to 51,155 frontier-state visits times 41
+  node/bucket probes. Raw-choice and identity-tree work are zero. Only 185,825
+  of 2,046,200 bucket probes are positive, so the sparse node-plus-edge proxy
+  is 236,980 before prototype overhead.
+- The row commits 688,739 terminal arrivals into 172,596 strict projected
+  outcomes. There are 516,143 duplicate arrivals carrying
+  0.25435223351246694 probability mass after first insertion. Frontier time is
+  704.269 ms and finalization 100.054 ms of 808.997 ms raw build time.
+- Gate 1's immutable report cannot retroactively identify the source/action
+  of rows 2–40. They retain the exact common 172,596 transition count, but no
+  100M rerun is permitted. Tracked Gate 3 evidence states this boundary rather
+  than inferring identities.
+- Gate 4 must prototype a generic exact sparse projected roll DP. Its key must
+  retain current-roll exclusions and all future-visible goal, tag, legality,
+  protection, forced/guaranteed, compiler, and simulator distinctions. Keep
+  raw-equivalent and projected work counters in parallel and keep the raw
+  enumerator as the independent oracle.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json`.
 
 ## Competitive lazy Gate 0
 
@@ -496,21 +535,22 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete selected-closure scaling Gate 3:
+Complete selected-closure scaling Gate 4:
 
-1. Identify the exact selected action/programs behind the 172,596-transition
-   rows and map source carriers, observation requirements, forced/guaranteed
-   state, pool sizes/weights, slot process, group/tag exclusions, and future
-   observation authority.
-2. Add bounded diagnostic attribution for raw identity-tree nodes, terminal
-   states, proof-relevant projected targets, enumeration-phase work/time,
-   duplicate projected targets/mass, pool reuse, and repeated work across
-   carriers/reforge families. Do not change mechanics or certification.
-3. Determine which exact junk distinctions are required by reachable actions,
-   legality, exclusions, compiler routing, and proof obligations. Do not infer
-   equivalence from non-goal status alone.
-4. Record the causal evidence and commit Gate 3 before building the projected
-   prototype. Do not run 100M or 200M again.
+1. Build a generic sparse projected reforge DP whose state retains every
+   current-roll availability distinction and every future-visible goal,
+   below-tier, side-cap, crafted/fractured, protection/metamod, tag, blocked
+   family, forced/guaranteed, compiler, and simulator distinction.
+2. Parameterize weights and deterministic seeds so ordinary, Essence,
+   Harvest, and Fossil rows share code without assuming equal supports.
+3. Accumulate exact mass by projected successor and process only proved
+   eligible sparse edges. Keep the existing raw enumerator independently
+   selectable as the Gate 5 oracle.
+4. Version projected work and retain the raw-equivalent 2,097,355-work counter
+   in parallel. The prototype must not silently reinterpret
+   `max_reforge_work`.
+5. Do not run 100M or 200M again. Commit Gate 4 before equivalence and
+   performance qualification.
 
 Deterministic checkpoint/replay remains deferred.
 

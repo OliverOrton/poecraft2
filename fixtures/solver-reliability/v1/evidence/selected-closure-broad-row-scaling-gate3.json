@@ -1,0 +1,203 @@
+{
+  "schema_version": "selected_closure_broad_row_scaling_gate3_v1",
+  "recorded_at_local_date": "2026-08-03",
+  "decision": "broad_selected_row_cost_is_frontier_bucket_scanning_not_raw_modifier_identity_expansion",
+  "branch": "codex/selected-closure-broad-row-scaling",
+  "scope": {
+    "production_semantics_changed": false,
+    "product_caps_changed": false,
+    "canonical_fixture_changed": false,
+    "action_vocabulary_changed": false,
+    "telemetry_only_source_change": true,
+    "frozen_20m_rerun": false,
+    "selected_first_100m_rerun": false
+  },
+  "measurement": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "purpose": "complete the smallest practical raw selected row with source-authoritative phase attribution",
+    "temporary_max_reforge_work": 18000000,
+    "canonical_max_reforge_work": 20000000,
+    "coarse_reforge_work": 14077632,
+    "post_coarse_allowance": 3922368,
+    "memory_limit_bytes": 1073741824,
+    "product_action_count": 27,
+    "goal_progress_gated_reforges": true,
+    "exact_evaluation_requested_if_policy": true,
+    "verification_runs_requested_if_policy": 10000,
+    "policy_produced": false,
+    "first_probe": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate3-raw-attribution-18m/report.json",
+      "report_sha256": "f070ea6645987764d92a85b8d2ddc6e6c0ad51f931a9bc5ac271b00b51388776",
+      "disposition": "invalid_for_attribution_only",
+      "reason": "the sample boundary began after selected-action resolution, but that resolution prepared the broad distribution; aggregate row and work counters remained valid"
+    },
+    "development_probe": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate3-raw-attribution-18m-valid/report.json",
+      "report_sha256": "b85e420ef860b81ba8311b35449c78df2430ebae640cbe7ecebd45da00a30fef",
+      "partial_sha256": "312a7db6d83b565677cf0ebcc5caf3735b27842992e4ead1460a26bbb7d3c73f",
+      "benchmark_sha256": "b995c28aa5408e5124df4d30400ccd085b14ca2cd67b686d4dfd358360543454",
+      "disposition": "valid_attribution_superseded_by_commit_ready_opt_in_binary",
+      "deterministic_row_fields_match_final_probe": true
+    },
+    "valid_probe": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate3-raw-attribution-18m-final/report.json",
+      "report_sha256": "37216ad2085eecf307135a99ca6e638790032e1d9aa934de15d09849dd6d0527",
+      "partial_sha256": "be27e9f614ad39e429ed072fada0726398abc73a3009d25079a4d3237d53c969",
+      "benchmark_sha256": "ca74eaf49147574a330def0308958c4ea3a5d88fac99c76f18fc9f7a27958a94",
+      "temporary_case_sha256": "882ff215b432d9761c5c943ee2d7716bb7c11560ffb19150c179ec021405cbc9",
+      "canonical_case_sha256_unchanged": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+      "actual_status": "refused_resource_cap",
+      "stop_cause": "reforge_work_cap",
+      "report_total_wall_ms": 8372.9822,
+      "solve_wall_ms": 5654.5087,
+      "native_live_owned_bytes": 305296331,
+      "native_peak_owned_bytes": 375484687,
+      "working_set_after_bytes": 386547712,
+      "solver_telemetry_json_bytes": 380526
+    }
+  },
+  "selected_row": {
+    "row_sequence": 1,
+    "source": {
+      "strict_state": 0,
+      "coarse_state": 0,
+      "stable_key_hash": "15649380309660385562",
+      "observation_item_feature_mask": 200198,
+      "observation_modifier_tag_ids": [],
+      "observation_affix_selector_count": 2
+    },
+    "operator_index": 10,
+    "planner_id": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "primitive_program_action_ids": [
+      "essence:Metadata/Items/Currency/CurrencyEssenceZeal4"
+    ],
+    "action_family": "essence_destructive_reforge",
+    "forced_modifier_count": 1,
+    "guaranteed_natural_pick_count": 0,
+    "preserved_base_hash": "13558861323426354538",
+    "raw_transitions": 172596,
+    "completed": true
+  },
+  "pool_and_slot_process": {
+    "pre_action_fixture_pool": {
+      "entries": 264,
+      "weight": 214650,
+      "prefix_entries": 112,
+      "prefix_weight": 88600,
+      "suffix_entries": 152,
+      "suffix_weight": 126050
+    },
+    "post_forced_modifier_natural_pool": {
+      "entries": 259,
+      "weight": 210650,
+      "prefix_entries": 112,
+      "prefix_weight": 88600,
+      "suffix_entries": 147,
+      "suffix_weight": 122050
+    },
+    "forced_modifier_exclusion_delta": {
+      "entries_removed": 5,
+      "weight_removed": 4000,
+      "side": "suffix"
+    },
+    "rare_total_affix_targets": [
+      {"total": 4, "probability": "1/3"},
+      {"total": 5, "probability": "1/3"},
+      {"total": 6, "probability": "1/3"}
+    ],
+    "terminal_roll_state_count_by_prefix_count_0_to_6": [24, 4500, 34020, 650195, 0, 0, 0],
+    "terminal_roll_state_count_by_suffix_count_0_to_6": [0, 455, 14016, 674268, 0, 0, 0]
+  },
+  "structure": {
+    "physical_exclusion_families": 39,
+    "roll_buckets": 40,
+    "prefix_buckets": 15,
+    "suffix_buckets": 25,
+    "goal_satisfied_buckets": 1,
+    "goal_below_buckets": 1,
+    "junk_buckets": 38,
+    "exclusion_group_entries": 40,
+    "exclusion_pair_checks": 820,
+    "exclusion_conflicts": 41,
+    "structural_bits_hash": "4621815107264678244",
+    "raw_choice_entries": 0,
+    "raw_identity_tree_nodes": 0,
+    "raw_identity_tree_leaves": 0,
+    "projectable_physical_families": 38,
+    "projectable_family_classes": 38,
+    "projected_families_removed_by_existing_isolated_family_rule": 0
+  },
+  "enumeration": {
+    "frontier_state_visits": 51155,
+    "bucket_probes": 2046200,
+    "frontier_positive_edges": 185825,
+    "maximum_frontier_states": 42770,
+    "terminal_roll_states": 688739,
+    "successor_commits": 688739,
+    "unique_projected_outcomes": 172596,
+    "duplicate_projected_arrivals": 516143,
+    "duplicate_projected_arrival_fraction": 0.7494028942748995,
+    "duplicate_projected_arrival_probability_mass": 0.25435223351246694,
+    "positive_edge_fraction_of_bucket_probes": 0.09081468087186004,
+    "raw_transition_compression_from_terminal_arrivals": 3.99046907228441
+  },
+  "work": {
+    "raw_choice_table": 0,
+    "guaranteed_scan": 0,
+    "frontier": 2097355,
+    "raw_identity_tree": 0,
+    "total": 2097355,
+    "identity": "frontier_work == frontier_state_visits * (1 + roll_buckets)",
+    "sparse_node_plus_positive_edge_proxy": 236980,
+    "sparse_proxy_reduction_fraction": 0.8870100674420878,
+    "sparse_proxy_below_gate5_300k": true
+  },
+  "time_ns": {
+    "pool": 13400,
+    "bucket": 60100,
+    "exclusion": 3200,
+    "frontier": 704269000,
+    "finalize": 100054400,
+    "total": 808996800,
+    "frontier_fraction_of_total": 0.8705460886866302,
+    "finalize_fraction_of_total": 0.12367712702942707
+  },
+  "causal_attribution": {
+    "complete_affix_combination_enumeration": "dominant: 51,155 canonical roll-frontier states scan all 40 buckets, charging 2,097,355 work",
+    "exact_junk_modifier_identity": "not causal in this row: raw identity choices and identity-tree work are zero",
+    "future_group_exclusions": "causal to the key: 39 physical families, 40 exclusion entries, and 41 conflicts must remain represented for exact within-roll availability",
+    "repeated_equivalent_pool_calculations": "not yet quantified per base signature; Gate 1 reported zero kernel-cache hits and identical 172,596-transition rows, but its immutable report did not retain per-row base hashes",
+    "transitions_later_merged_by_projection": "material: 688,739 terminal arrivals merge to 172,596 strict abstract outcomes; 516,143 later arrivals carry 0.25435223351246694 probability mass",
+    "shared_between_carriers_or_reforge_families": "unproved by the single valid sample; the new bounded telemetry will compare full preserved-base and structural hashes on later authorized qualification runs",
+    "existing_isolated_family_compression": "no opportunity: 38 eligible physical junk families form 38 distinct projected classes"
+  },
+  "historical_40_row_boundary": {
+    "gate1_rows": 40,
+    "gate1_transitions_each": 172596,
+    "gate1_exact_kernel_cache_hits": 0,
+    "row1_action_confirmed_by_new_probe": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "rows_2_to_40_source_and_action_identity": "not recoverable from the immutable Gate 1 report because that telemetry did not exist; no 100M rerun is permitted or performed",
+    "safe_claim": "all 40 historic rows have the same raw transition population; only the first row's carrier, program, pool, and phase attribution is newly source-authoritative"
+  },
+  "gate4_direction": {
+    "prototype": "generic sparse projected roll DP keyed by the complete current-roll exclusion and future-observation state",
+    "why": "only 185,825 of 2,046,200 bucket probes are positive; node-plus-positive-edge work is 236,980 before prototype overhead",
+    "requirements": [
+      "retain all current-roll group and side-cap exclusions",
+      "retain goal satisfied and below-tier state",
+      "retain forced and guaranteed channels",
+      "parameterize bucket weights for ordinary, Essence, Harvest, and Fossil reforges",
+      "accumulate exact mass by projected successor before strict-state publication",
+      "keep raw-equivalent work in parallel with versioned projected work",
+      "retain the raw evaluator as the independent oracle"
+    ]
+  },
+  "verification": {
+    "release_native_build": "passed",
+    "focused_benchmark_report_json_parsed": true,
+    "focused_benchmark_errors": [],
+    "full_native_suite": "deferred_to_final_acceptance_per_repository_cadence",
+    "wasm_web_full_pipeline": "not_run_for_gate3_telemetry_only_change"
+  },
+  "next_gate": "generic exact sparse projected broad-row prototype"
+}

@@ -1017,6 +1017,16 @@ carrier-wide optimistic lower participates only in the lower relaxation; it
 cannot support an executable upper. A stale obligation contributes neither a
 lower nor a noncompetition verdict.
 
+`broad_row_attribution` is bounded diagnostic evidence for destructive
+reforge builds encountered while certifying those rows. Each sample joins the
+source strict/coarse carrier and selected program to the preserved-base hash,
+forced/guaranteed inputs, natural pool, physical families, roll buckets,
+exclusion topology, frontier nodes/edges, terminal arrivals, duplicate
+projected mass, work categories, and phase time. The producer retains at most
+64 samples and reports omissions. These fields are observational only: they
+cannot establish carrier equivalence, authorize junk collapse, or participate
+in proof, scheduling, compilation, or policy selection.
+
 The frozen two-goal product measurement establishes a separate affordability
 boundary. Its coarse phase consumes 14,077,632 of the 20M work cap; two exact
 selected rows consume the remaining 5,922,368 before partition or obligation

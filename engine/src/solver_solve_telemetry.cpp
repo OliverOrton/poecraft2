@@ -74,6 +74,21 @@ std::uint64_t string_vector_owned_bytes(
     return total;
 }
 
+std::uint64_t broad_row_attribution_owned_bytes(
+        const std::vector<PolicyBroadRowAttribution>& samples) {
+    std::uint64_t total =
+        samples.capacity() * sizeof(PolicyBroadRowAttribution);
+    for (const PolicyBroadRowAttribution& sample : samples) {
+        total += sample.planner_id.capacity() + 1;
+        total += string_vector_owned_bytes(
+            sample.primitive_program_action_ids);
+        total += sample.observation_modifier_tag_ids.capacity() *
+                 sizeof(std::uint32_t);
+        total += sample.reforge.action_id.capacity() + 1;
+    }
+    return total;
+}
+
 std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
     std::uint64_t bytes =
            string_vector_owned_bytes(diagnostics.skipped_missing_price) +
@@ -98,6 +113,8 @@ std::uint64_t diagnostics_owned_bytes(const SolveDiagnostics& diagnostics) {
                sizeof(std::uint32_t) +
            diagnostics.policy_refinement.status.capacity() + 1 +
            diagnostics.policy_refinement.resource_cap.capacity() + 1 +
+           broad_row_attribution_owned_bytes(
+               diagnostics.policy_refinement.broad_row_attribution) +
            string_vector_owned_bytes(diagnostics.equivalence_witnesses) +
            diagnostics.focused_schedule_rounds.capacity() *
                sizeof(FocusedScheduleRoundTelemetry) +
@@ -997,6 +1014,13 @@ void append_telemetry_json_string(
     out += '"';
 }
 
+std::string telemetry_finite_json(const double value) {
+    if (!std::isfinite(value)) return "null";
+    char buffer[64];
+    std::snprintf(buffer, sizeof(buffer), "%.17g", value);
+    return buffer;
+}
+
 std::string serialize_solver_telemetry(
     const CalcContext& calc,
     const SolveResult* result,
@@ -1431,6 +1455,171 @@ std::string serialize_solver_telemetry(
         json += ",\"exact_alternative_envelope_closed\":" +
                 std::string(bool_json(
                     refinement.exact_alternative_envelope_closed)) +
+                "}";
+        json += ",\"broad_row_attribution\":{\"samples\":[";
+        bool first_broad_sample = true;
+        for (const PolicyBroadRowAttribution& sample :
+             refinement.broad_row_attribution) {
+            if (!first_broad_sample) json += ',';
+            first_broad_sample = false;
+            const ReforgeBuildAttribution& row = sample.reforge;
+            json += "{\"alternative\":" +
+                    std::string(bool_json(sample.alternative));
+            json += ",\"row_sequence\":" +
+                    std::to_string(sample.row_sequence);
+            json += ",\"source_strict_state\":" +
+                    std::to_string(sample.source_strict_state);
+            json += ",\"source_coarse_state\":" +
+                    std::to_string(sample.source_coarse_state);
+            json += ",\"source_stable_key_hash\":" +
+                    std::to_string(sample.source_stable_key_hash);
+            json += ",\"operator_index\":" +
+                    std::to_string(sample.operator_index);
+            json += ",\"planner_id\":";
+            append_telemetry_json_string(json, sample.planner_id);
+            json += ",\"primitive_program_action_ids\":[";
+            for (std::size_t index = 0;
+                 index < sample.primitive_program_action_ids.size();
+                 ++index) {
+                if (index != 0) json += ',';
+                append_telemetry_json_string(
+                    json, sample.primitive_program_action_ids[index]);
+            }
+            json += "],\"observation\":{\"item_feature_mask\":" +
+                    std::to_string(sample.observation_item_features);
+            json += ",\"modifier_tag_ids\":[";
+            for (std::size_t index = 0;
+                 index < sample.observation_modifier_tag_ids.size();
+                 ++index) {
+                if (index != 0) json += ',';
+                json += std::to_string(
+                    sample.observation_modifier_tag_ids[index]);
+            }
+            json += "],\"affix_selectors\":" +
+                    std::to_string(sample.observation_affix_selectors) +
+                    "}";
+            json += ",\"raw_transitions\":" +
+                    std::to_string(sample.raw_transitions);
+            json += ",\"reforge\":{\"action_id\":";
+            append_telemetry_json_string(json, row.action_id);
+            json += ",\"action_index\":" +
+                    std::to_string(row.action_index);
+            json += ",\"preserved_base_hash\":" +
+                    std::to_string(row.preserved_base_hash);
+            json += ",\"goal_progress_gated\":" +
+                    std::string(bool_json(row.goal_progress_gated));
+            json += ",\"completed\":" +
+                    std::string(bool_json(row.completed));
+            json += ",\"forced_modifier_count\":" +
+                    std::to_string(row.forced_modifier_count);
+            json += ",\"pool\":{\"natural_entries\":" +
+                    std::to_string(row.natural_pool_entries);
+            json += ",\"natural_weight\":" +
+                    std::to_string(row.natural_pool_weight);
+            json += ",\"prefix_entries\":" +
+                    std::to_string(row.natural_prefix_entries);
+            json += ",\"prefix_weight\":" +
+                    std::to_string(row.natural_prefix_weight);
+            json += ",\"suffix_entries\":" +
+                    std::to_string(row.natural_suffix_entries);
+            json += ",\"suffix_weight\":" +
+                    std::to_string(row.natural_suffix_weight);
+            json += ",\"guaranteed_entries\":" +
+                    std::to_string(row.guaranteed_pool_entries);
+            json += ",\"guaranteed_weight\":" +
+                    std::to_string(row.guaranteed_pool_weight) + "}";
+            json += ",\"structure\":{\"physical_families\":" +
+                    std::to_string(row.physical_families);
+            json += ",\"roll_buckets\":" +
+                    std::to_string(row.roll_buckets);
+            json += ",\"prefix_buckets\":" +
+                    std::to_string(row.prefix_buckets);
+            json += ",\"suffix_buckets\":" +
+                    std::to_string(row.suffix_buckets);
+            json += ",\"goal_satisfied_buckets\":" +
+                    std::to_string(row.goal_satisfied_buckets);
+            json += ",\"goal_below_buckets\":" +
+                    std::to_string(row.goal_below_buckets);
+            json += ",\"junk_buckets\":" +
+                    std::to_string(row.junk_buckets);
+            json += ",\"raw_choice_entries\":" +
+                    std::to_string(row.raw_choice_entries);
+            json += ",\"exclusion_group_entries\":" +
+                    std::to_string(row.exclusion_group_entries);
+            json += ",\"exclusion_pair_checks\":" +
+                    std::to_string(row.exclusion_pair_checks);
+            json += ",\"exclusion_conflicts\":" +
+                    std::to_string(row.exclusion_conflicts);
+            json += ",\"projectable_physical_families\":" +
+                    std::to_string(row.projectable_physical_families);
+            json += ",\"projectable_family_classes\":" +
+                    std::to_string(row.projectable_family_classes);
+            json += ",\"projected_families_removed\":" +
+                    std::to_string(row.projected_families_removed);
+            json += ",\"structural_bits_hash\":" +
+                    std::to_string(row.structural_bits_hash) + "}";
+            json += ",\"enumeration\":{\"frontier_state_visits\":" +
+                    std::to_string(row.frontier_state_visits);
+            json += ",\"frontier_edges\":" +
+                    std::to_string(row.frontier_edges);
+            json += ",\"maximum_frontier_states\":" +
+                    std::to_string(row.maximum_frontier_states);
+            json += ",\"terminal_roll_states\":" +
+                    std::to_string(row.terminal_roll_states);
+            json += ",\"raw_identity_tree_nodes\":" +
+                    std::to_string(row.raw_identity_tree_nodes);
+            json += ",\"raw_identity_tree_leaves\":" +
+                    std::to_string(row.raw_identity_tree_leaves);
+            json += ",\"successor_commits\":" +
+                    std::to_string(row.successor_commits);
+            json += ",\"unique_projected_outcomes\":" +
+                    std::to_string(row.unique_projected_outcomes);
+            json += ",\"duplicate_projected_outcomes\":" +
+                    std::to_string(row.duplicate_projected_outcomes);
+            json += ",\"duplicate_projected_probability_mass\":" +
+                    telemetry_finite_json(
+                        row.duplicate_projected_probability_mass);
+            const auto append_count_array =
+                    [&](const auto& counts) {
+                json += '[';
+                for (std::size_t index = 0;
+                     index < counts.size(); ++index) {
+                    if (index != 0) json += ',';
+                    json += std::to_string(counts[index]);
+                }
+                json += ']';
+            };
+            json += ",\"terminal_prefix_counts\":";
+            append_count_array(row.terminal_prefix_counts);
+            json += ",\"terminal_suffix_counts\":";
+            append_count_array(row.terminal_suffix_counts);
+            json += "}";
+            json += ",\"work\":{\"raw_choice_table\":" +
+                    std::to_string(row.raw_choice_table_work);
+            json += ",\"guaranteed_scan\":" +
+                    std::to_string(row.guaranteed_scan_work);
+            json += ",\"frontier\":" +
+                    std::to_string(row.frontier_work);
+            json += ",\"raw_identity_tree\":" +
+                    std::to_string(row.raw_identity_tree_work);
+            json += ",\"total\":" +
+                    std::to_string(row.total_reforge_work) + "}";
+            json += ",\"time_ns\":{\"pool\":" +
+                    std::to_string(row.pool_build_ns);
+            json += ",\"bucket\":" +
+                    std::to_string(row.bucket_build_ns);
+            json += ",\"exclusion\":" +
+                    std::to_string(row.exclusion_build_ns);
+            json += ",\"frontier\":" +
+                    std::to_string(row.frontier_build_ns);
+            json += ",\"finalize\":" +
+                    std::to_string(row.finalize_ns);
+            json += ",\"total\":" +
+                    std::to_string(row.total_build_ns) + "}}}";
+        }
+        json += "],\"omitted\":" +
+                std::to_string(
+                    refinement.broad_row_attribution_omitted) +
                 "}";
         json += ",\"memory_bytes\":" +
                 std::to_string(refinement.memory_bytes);
