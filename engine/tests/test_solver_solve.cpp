@@ -1435,10 +1435,10 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_telemetry.selected_rows_begun > 0);
     PC_CHECK(refinement_telemetry.selected_rows_completed > 0);
     PC_CHECK(refinement_telemetry.selected_transitions > 0);
-    PC_CHECK(refinement_telemetry.alternative_rows_begun == 0);
-    PC_CHECK(refinement_telemetry.alternative_rows_completed == 0);
-    PC_CHECK(refinement_telemetry.alternative_transitions == 0);
-    PC_CHECK(refinement_telemetry.alternative_reforge_work == 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_begun > 0);
+    PC_CHECK(refinement_telemetry.alternative_rows_completed > 0);
+    PC_CHECK(refinement_telemetry.alternative_transitions > 0);
+    PC_CHECK(refinement_telemetry.alternative_reforge_work > 0);
     PC_CHECK(
         refinement_telemetry.selected_rows_completed +
             refinement_telemetry.alternative_rows_completed ==
@@ -1450,12 +1450,50 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(
         refinement_telemetry.alternative_obligations_created > 0);
     PC_CHECK(
-        refinement_telemetry.unresolved_alternative_obligations ==
+        refinement_telemetry.unresolved_alternative_obligations <
         refinement_telemetry.alternative_obligations_created);
     PC_CHECK(
         refinement_telemetry.alternative_rows_avoided >=
         refinement_telemetry.alternative_obligations_created);
     PC_CHECK(refinement_telemetry.action_accounting_complete);
+    PC_CHECK(refinement_telemetry.alternative_scheduling_rounds > 0);
+    PC_CHECK(
+        refinement_telemetry.alternative_obligations_scheduled > 0);
+    PC_CHECK(
+        refinement_telemetry.alternative_obligations_certified > 0);
+    PC_CHECK(
+        refinement_telemetry.competitive_alternatives_remaining ==
+        refinement_telemetry.unresolved_alternative_obligations);
+    PC_CHECK(refinement_telemetry.bounded_publication_retained);
+    PC_CHECK(
+        !refinement_telemetry.exact_alternative_envelope_closed);
+    std::printf(
+        "solver competitive alternatives: obligations=%llu "
+        "scheduled=%llu certified=%llu partial=%llu "
+        "noncompetitive=%llu interrupted=%llu remaining=%llu "
+        "selected_work=%llu alternative_work=%llu improvements=%llu\n",
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_obligations_created),
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_obligations_scheduled),
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_obligations_certified),
+        static_cast<unsigned long long>(
+            refinement_telemetry
+                .alternative_obligations_partially_evaluated),
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_obligations_noncompetitive),
+        static_cast<unsigned long long>(
+            refinement_telemetry
+                .alternative_obligations_resource_interrupted),
+        static_cast<unsigned long long>(
+            refinement_telemetry.competitive_alternatives_remaining),
+        static_cast<unsigned long long>(
+            refinement_telemetry.selected_reforge_work),
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_reforge_work),
+        static_cast<unsigned long long>(
+            refinement_telemetry.alternative_policy_improvements));
     PC_CHECK(refinement_telemetry.alternative_obligation_bytes > 0);
     PC_CHECK(
         refinement_telemetry.work_to_first_partition.has_value());
@@ -1508,6 +1546,12 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_json.find(
                  "\"action_accounting_complete\":true") !=
              std::string::npos);
+    PC_CHECK(refinement_json.find(
+                 "\"obligations_scheduled\":") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find(
+                 "\"bounded_publication_retained\":true") !=
+             std::string::npos);
 
     const refinement::PolicyExactLiftCertificate lifted =
         refinement::lift_policy_exact(
@@ -1552,6 +1596,35 @@ void run_policy_guided_exact_lift_tests() {
         lifted.refinement.telemetry.lumpability_checks > 0);
     PC_CHECK(
         lifted.adapter.canonical_successor_collapses > 0);
+
+    refinement::RefinementLimits interrupted_limits;
+    interrupted_limits.max_exact_kernels =
+        static_cast<std::uint32_t>(
+            refinement_telemetry.selected_rows_completed);
+    interrupted_limits.max_estimated_memory_bytes =
+        options.max_solver_owned_bytes;
+    const refinement::PolicyExactLiftCertificate interrupted =
+        refinement::lift_policy_quotient(
+            calc, solved, start, prices, options,
+            "resource-interrupted competitive alternatives",
+            &interrupted_limits);
+    report_lift_failure("Interrupted alternative lift", interrupted);
+    PC_CHECK(
+        interrupted.status ==
+        refinement::PolicyExactLiftStatus::Complete);
+    PC_CHECK(interrupted.executable);
+    PC_CHECK(interrupted.compiled.executable);
+    PC_CHECK(
+        interrupted.adapter
+            .alternative_obligations_resource_interrupted == 1);
+    PC_CHECK(interrupted.adapter.bounded_publication_retained);
+    PC_CHECK(
+        interrupted.adapter.competitive_alternatives_remaining > 0);
+    PC_CHECK(
+        !interrupted.adapter.exact_alternative_envelope_closed);
+    PC_CHECK(
+        interrupted.adapter
+            .alternatives_materialized_before_first_upper == 0);
 
     PolicyCompilationTelemetry retained_telemetry;
     const std::string retained =

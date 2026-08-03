@@ -1,7 +1,7 @@
 # Competitive Lazy Alternative Certification
 
-**Status: Gates 0 through 2 complete; Gate 3 is the active implementation
-boundary.**
+**Status: Gates 0 through 3 complete; Gate 4 medium integration qualification
+is the active boundary.**
 
 Owner: Oliver
 
@@ -171,7 +171,8 @@ evidence is
 
 ## Gate 3 — competitive alternative scheduler
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`competitive-lazy-alternative-certification-gate3.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json).
 
 After a proper upper exists, schedule an unresolved alternative only when it
 cannot currently be proved noncompetitive or a refinement counterexample
@@ -193,7 +194,36 @@ the existing refusal; an upper plus unresolved competitive alternatives is a
 bounded policy; resolving all potentially improving actions may allow exact
 publication.
 
+Production now compiles the selected-only proper upper before optional
+alternative work. The deterministic scheduler compares each carrier-wide
+optimistic lower with the current certified source upper, then certifies one
+requested descriptor across every carrier of that quotient cell. A row is
+installed only when all carriers agree on its action, exact cost, closed
+successor projection, and already-satisfied routing requirement. Newly exposed
+frontiers or split requirements remain `partially_evaluated`; they never become
+fabricated arcs or certified rows.
+
+Installed complete rows enter the existing proof store and Bellman graph.
+Potential improvements rerun Bellman and properness, and a replacement artifact
+becomes current only after compilation and exact reconciliation. If exact row
+construction or replacement compilation reaches a resource cap, the last
+compiled selected upper remains publishable and the envelope stays explicitly
+bounded. Rowless obligation lowers now participate in the optimistic lower
+relaxation but remain excluded from executable-upper selection.
+
+The focused production witness creates and schedules 12 obligations, certifies
+6, leaves 6 explicit partial blockers, performs zero alternative work before
+the first upper, and returns a proper compiled reconciled bounded policy. A
+separate exact-kernel-cap witness interrupts the first alternative after the
+selected publication and retains that executable artifact. Explicit tests
+revoke conditional verdicts and recreate schedulable blockers after source and
+target splits, requirement growth, price change, and vocabulary change.
+Focused solve acceptance passes 98,156 checks and quotient
+proof/partition/Bellman acceptance passes 353 checks, both with zero failures.
+
 ## Gate 4 — medium integration qualification
+
+**Status: active.**
 
 Run `reliability-class-belt` through the full native workflow. Require complete
 action accounting, selected closure before broad alternatives, exercised

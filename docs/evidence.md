@@ -1147,7 +1147,27 @@ connects the Gate 1 obligation contract to production quotient discovery.
   failures.
 
 This is selected-policy-first bounded publication, not an exact alternative
-envelope. Competitive obligation scheduling and certification remain Gate 3.
+envelope. Competitive obligation scheduling and certification are qualified
+by the tracked Gate 3 evidence.
+
+## Competitive Lazy Alternative Certification Gate 3
+
+The tracked
+[`competitive-lazy-alternative-certification-gate3.json`](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json)
+qualifies deterministic post-upper scheduling and honest bounded retention.
+The focused witness created and scheduled 12 obligations, certified 6
+carrier-wide closed rows, retained 6 explicit partial blockers, and performed
+7,680 selected plus 7,680 alternative reforge work. No alternative was
+materialized before the first executable upper. The returned policy remained
+proper, compiled, and exactly reconciled; zero pruning by the trivial lower is
+reported honestly.
+
+An exact-kernel-cap control interrupts alternative certification only after a
+selected artifact exists and confirms that the result remains complete and
+executable while exact-envelope closure stays false. Source/target split,
+requirement, price, and vocabulary revocation controls all recreate a
+deterministically schedulable blocker and refuse exactness. Focused acceptance
+is 98,156/0 solve checks and 353/0 quotient proof/partition/Bellman checks.
 
 ## Engine And WASM Evidence Boundaries
 

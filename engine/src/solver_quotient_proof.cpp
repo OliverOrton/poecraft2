@@ -853,15 +853,28 @@ void ProofStore::attach_row(
 
 std::uint64_t ProofStore::invalidate_source(
         const std::uint32_t source_cell_id) {
-    if (source_cell_id >= source_rows_.size()) return 0;
     std::uint64_t invalidated = 0;
-    for (const std::uint64_t row_id : source_rows_[source_cell_id]) {
-        if (row_id < use_sites_.size() && use_sites_[row_id].valid) {
-            use_sites_[row_id].valid = false;
-            ++invalidated;
+    if (source_cell_id < source_rows_.size()) {
+        for (const std::uint64_t row_id : source_rows_[source_cell_id]) {
+            if (row_id < use_sites_.size() && use_sites_[row_id].valid) {
+                use_sites_[row_id].valid = false;
+                ++invalidated;
+            }
         }
     }
-    if (invalidated != 0) {
+    bool obligation_invalidated = false;
+    for (UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.identity.source_cell_id == source_cell_id &&
+            obligation.status != AlternativeObligationStatus::Stale) {
+            obligation.status = AlternativeObligationStatus::Stale;
+            obligation.certified_row_id.reset();
+            obligation.conditional_upper_q.reset();
+            obligation.conditional_q_generation = 0;
+            obligation_invalidated = true;
+        }
+    }
+    if (invalidated != 0 || obligation_invalidated) {
         ++q_generation_;
         ++policy_generation_;
     }
@@ -870,15 +883,31 @@ std::uint64_t ProofStore::invalidate_source(
 
 std::uint64_t ProofStore::invalidate_target(
         const std::uint32_t target_cell_id) {
-    if (target_cell_id >= target_rows_.size()) return 0;
     std::uint64_t invalidated = 0;
-    for (const std::uint64_t row_id : target_rows_[target_cell_id]) {
-        if (row_id < use_sites_.size() && use_sites_[row_id].valid) {
-            use_sites_[row_id].valid = false;
-            ++invalidated;
+    if (target_cell_id < target_rows_.size()) {
+        for (const std::uint64_t row_id : target_rows_[target_cell_id]) {
+            if (row_id < use_sites_.size() && use_sites_[row_id].valid) {
+                use_sites_[row_id].valid = false;
+                ++invalidated;
+            }
         }
     }
-    if (invalidated != 0) {
+    bool obligation_invalidated = false;
+    for (UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.status != AlternativeObligationStatus::Stale) {
+            /* An unresolved row has no target dependency sidecar yet. A
+             * target split can therefore invalidate any optimistic verdict;
+             * conservatively revoke all such verdicts until child-cell
+             * obligations are recreated under the new partition. */
+            obligation.status = AlternativeObligationStatus::Stale;
+            obligation.certified_row_id.reset();
+            obligation.conditional_upper_q.reset();
+            obligation.conditional_q_generation = 0;
+            obligation_invalidated = true;
+        }
+    }
+    if (invalidated != 0 || obligation_invalidated) {
         ++q_generation_;
         ++policy_generation_;
     }
@@ -894,7 +923,19 @@ std::uint64_t ProofStore::invalidate_action_generation(
             ++invalidated;
         }
     }
-    if (invalidated != 0) {
+    bool obligation_invalidated = false;
+    for (UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.status != AlternativeObligationStatus::Stale &&
+            obligation.identity.action_generation != current) {
+            obligation.status = AlternativeObligationStatus::Stale;
+            obligation.certified_row_id.reset();
+            obligation.conditional_upper_q.reset();
+            obligation.conditional_q_generation = 0;
+            obligation_invalidated = true;
+        }
+    }
+    if (invalidated != 0 || obligation_invalidated) {
         ++q_generation_;
         ++policy_generation_;
     }
@@ -910,7 +951,19 @@ std::uint64_t ProofStore::invalidate_admission_generation(
             ++invalidated;
         }
     }
-    if (invalidated != 0) {
+    bool obligation_invalidated = false;
+    for (UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.status != AlternativeObligationStatus::Stale &&
+            obligation.identity.admission_generation != current) {
+            obligation.status = AlternativeObligationStatus::Stale;
+            obligation.certified_row_id.reset();
+            obligation.conditional_upper_q.reset();
+            obligation.conditional_q_generation = 0;
+            obligation_invalidated = true;
+        }
+    }
+    if (invalidated != 0 || obligation_invalidated) {
         ++q_generation_;
         ++policy_generation_;
     }
@@ -918,6 +971,15 @@ std::uint64_t ProofStore::invalidate_admission_generation(
 }
 
 void ProofStore::note_price_change() {
+    for (UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.status != AlternativeObligationStatus::Stale) {
+            obligation.status = AlternativeObligationStatus::Stale;
+            obligation.certified_row_id.reset();
+            obligation.conditional_upper_q.reset();
+            obligation.conditional_q_generation = 0;
+        }
+    }
     ++price_generation_;
     ++q_generation_;
     ++policy_generation_;
@@ -1276,6 +1338,35 @@ ProofStore::ordered_pending_alternative_obligations() const {
                        right_id};
         });
     return pending;
+}
+
+std::optional<double>
+ProofStore::optimistic_alternative_lower_for_source(
+        const std::uint32_t source_cell_id) const {
+    std::optional<double> lower;
+    for (const UnresolvedAlternativeObligation& obligation :
+         alternative_obligations_) {
+        if (obligation.identity.source_cell_id != source_cell_id) {
+            continue;
+        }
+        switch (obligation.status) {
+        case AlternativeObligationStatus::Unscheduled:
+        case AlternativeObligationStatus::LowerOnly:
+        case AlternativeObligationStatus::Scheduled:
+        case AlternativeObligationStatus::PartiallyEvaluated:
+        case AlternativeObligationStatus::ConditionallyNoncompetitive:
+        case AlternativeObligationStatus::ResourceInterrupted:
+            if (!lower.has_value() ||
+                obligation.identity.optimistic_lower.lower_q() < *lower) {
+                lower = obligation.identity.optimistic_lower.lower_q();
+            }
+            break;
+        case AlternativeObligationStatus::Certified:
+        case AlternativeObligationStatus::Stale:
+            break;
+        }
+    }
+    return lower;
 }
 
 bool ProofStore::alternative_obligation_supports_executable_upper(

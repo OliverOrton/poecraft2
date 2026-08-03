@@ -947,6 +947,40 @@ void merge_adapter_telemetry(
     total.action_accounting_complete =
         total.action_accounting_complete ||
         pass.action_accounting_complete;
+    saturating_add(
+        total.alternative_scheduling_rounds,
+        pass.alternative_scheduling_rounds);
+    saturating_add(
+        total.alternative_obligations_scheduled,
+        pass.alternative_obligations_scheduled);
+    saturating_add(
+        total.alternative_obligations_certified,
+        pass.alternative_obligations_certified);
+    saturating_add(
+        total.alternative_obligations_partially_evaluated,
+        pass.alternative_obligations_partially_evaluated);
+    saturating_add(
+        total.alternative_obligations_noncompetitive,
+        pass.alternative_obligations_noncompetitive);
+    saturating_add(
+        total.alternative_obligations_stale,
+        pass.alternative_obligations_stale);
+    saturating_add(
+        total.alternative_verdict_revocations,
+        pass.alternative_verdict_revocations);
+    saturating_add(
+        total.alternative_obligations_resource_interrupted,
+        pass.alternative_obligations_resource_interrupted);
+    total.competitive_alternatives_remaining =
+        pass.competitive_alternatives_remaining;
+    saturating_add(
+        total.alternative_policy_improvements,
+        pass.alternative_policy_improvements);
+    total.bounded_publication_retained =
+        total.bounded_publication_retained ||
+        pass.bounded_publication_retained;
+    total.exact_alternative_envelope_closed =
+        pass.exact_alternative_envelope_closed;
     if (!total.work_to_first_partition.has_value() &&
         pass.work_to_first_partition.has_value()) {
         total.work_to_first_partition = prior_reforge_work;

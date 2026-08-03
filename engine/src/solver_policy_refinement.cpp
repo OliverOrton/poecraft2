@@ -1508,8 +1508,27 @@ PolicyExactLiftCertificate lift_policy_quotient(
         }
         install_cells(final_cells);
         retained_coarse_partition.reset();
-        const std::vector<PublishedRow> published_rows = publish_rows(
+        std::vector<PublishedRow> published_rows = publish_rows(
             partition, final_cells, final_cell_id);
+        const auto refresh_external_row_kernel_bytes = [&] {
+            std::uint64_t retained = raw_row_bytes;
+            saturating_add(
+                retained,
+                coarse_rows.capacity() * sizeof(PublishedRow));
+            saturating_add(
+                retained,
+                published_rows.capacity() * sizeof(PublishedRow));
+            for (const PublishedRow& row : coarse_rows) {
+                saturating_add(
+                    retained, selected_action_bytes(row.selected));
+            }
+            for (const PublishedRow& row : published_rows) {
+                saturating_add(
+                    retained, selected_action_bytes(row.selected));
+            }
+            bellman.set_external_row_kernel_bytes(retained);
+        };
+        refresh_external_row_kernel_bytes();
 
         const StableKey price_identity =
             oracle.quotient_price_identity();
@@ -1701,6 +1720,18 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 telemetry.alternative_rows_completed;
         }
 
+        const auto publish_current_upper =
+                [&](const quotient::QuotientBellmanResult& solved_upper) {
+        certificate.refinement = {};
+        certificate.class_evaluation = {};
+        certificate.compiled = {};
+        certificate.root_refinement_class = kNoId;
+        certificate.exact_start_cost = kInfinity;
+        certificate.absolute_cost_delta = kInfinity;
+        certificate.relative_cost_delta = kInfinity;
+        certificate.coarse_value_reconciled = false;
+        certificate.lumpable = false;
+        certificate.executable = false;
         std::map<std::uint64_t, const PublishedRow*> publication_by_row;
         for (const PublishedRow& row : coarse_rows) {
             publication_by_row.emplace(row.sparse_row, &row);
@@ -1713,8 +1744,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
             final_class_by_cell.emplace(final_cell_id[cls], cls);
         }
         std::set<std::uint32_t> reachable(
-            solved_quotient.reachable_cell_ids.begin(),
-            solved_quotient.reachable_cell_ids.end());
+            solved_upper.reachable_cell_ids.begin(),
+            solved_upper.reachable_cell_ids.end());
         std::vector<std::uint32_t> reachable_classes;
         for (std::uint32_t cls = 0; cls < final_cells.size(); ++cls) {
             if (reachable.contains(final_cells[cls].cell_id)) {
@@ -1769,7 +1800,7 @@ PolicyExactLiftCertificate lift_policy_quotient(
             const std::uint32_t state =
                 *bellman.state_index_for_cell(cell.cell_id);
             const std::uint64_t selected_row =
-                solved_quotient.selected_rows_by_state.at(state);
+                solved_upper.selected_rows_by_state.at(state);
             policy_class.selected_action =
                 publication_by_row.at(selected_row)->selected;
             policy_class.action_cost =
@@ -1874,6 +1905,596 @@ PolicyExactLiftCertificate lift_policy_quotient(
                 PolicyExactLiftStatus::CompiledAssertionFailure,
                 "compiled quotient artifact does not reconcile with Bellman value");
         }
+        certificate.status = PolicyExactLiftStatus::Complete;
+        certificate.executable = true;
+        };
+        publish_current_upper(solved_quotient);
+
+        /*
+         * The selected-only publication above is the rollback authority for
+         * lazy alternative work.  An alternative may consume the remaining
+         * exact-work budget, but it must never erase an already compiled,
+         * proper executable upper.  Completed rows are installed only after
+         * every carrier in their source cell agrees on the exact projected
+         * quotient row.  A row exposing a new frontier or a required source
+         * split remains explicitly partial; no synthetic arc is installed.
+         */
+        quotient::QuotientBellmanResult current_solved = solved_quotient;
+        quotient::QuotientBellmanResult published_solved = solved_quotient;
+        PolicyExactLiftCertificate retained_publication = certificate;
+        std::uint64_t published_q_generation =
+            bellman.proof_store()->q_generation();
+        bool publication_blocked_after_improvement = false;
+        bool stop_alternative_scheduling = false;
+        std::set<std::uint32_t> attempted_obligations;
+        std::map<std::uint32_t, std::uint32_t>
+            scheduler_class_by_cell;
+        for (std::uint32_t cls = 0; cls < final_cell_id.size(); ++cls) {
+            scheduler_class_by_cell.emplace(final_cell_id[cls], cls);
+        }
+        const auto upper_by_source =
+                [&](const quotient::QuotientBellmanResult& upper) {
+            std::map<std::uint32_t, double> values;
+            for (const quotient::QuotientCell& cell : final_cells) {
+                const std::optional<std::uint32_t> state =
+                    bellman.state_index_for_cell(cell.cell_id);
+                if (state.has_value() &&
+                    *state < upper.values_by_state.size()) {
+                    values.emplace(
+                        cell.cell_id,
+                        upper.values_by_state[*state]);
+                }
+            }
+            return values;
+        };
+        const auto mark_resource_interrupted =
+                [&](const std::uint32_t obligation_id,
+                    const std::uint64_t work_completed) {
+            bellman.proof_store()->transition_alternative_obligation(
+                obligation_id,
+                quotient::AlternativeObligationStatus::
+                    ResourceInterrupted,
+                work_completed);
+            saturating_add(
+                telemetry
+                    .alternative_obligations_resource_interrupted,
+                1);
+            telemetry.bounded_publication_retained = true;
+            stop_alternative_scheduling = true;
+        };
+
+        while (!stop_alternative_scheduling) {
+            const std::map<std::uint32_t, double> current_upper =
+                upper_by_source(current_solved);
+            for (std::uint32_t obligation_id = 0;
+                 obligation_id <
+                     bellman.proof_store()
+                         ->alternative_obligation_count();
+                 ++obligation_id) {
+                const quotient::UnresolvedAlternativeObligation&
+                    obligation = bellman.proof_store()
+                        ->alternative_obligation(obligation_id);
+                if (obligation.status !=
+                        quotient::AlternativeObligationStatus::
+                            ConditionallyNoncompetitive) {
+                    continue;
+                }
+                const auto upper = current_upper.find(
+                    obligation.identity.source_cell_id);
+                if (upper == current_upper.end() ||
+                    bellman.proof_store()
+                        ->alternative_obligation_blocks_exactness(
+                            obligation_id, upper->second,
+                            bellman.proof_store()->q_generation())) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::
+                                Scheduled);
+                    saturating_add(
+                        telemetry.alternative_verdict_revocations, 1);
+                }
+            }
+
+            std::vector<std::uint32_t> pending =
+                bellman.proof_store()
+                    ->ordered_pending_alternative_obligations();
+            pending.erase(
+                std::remove_if(
+                    pending.begin(), pending.end(),
+                    [&](const std::uint32_t obligation_id) {
+                        return attempted_obligations.contains(
+                            obligation_id);
+                    }),
+                pending.end());
+            if (pending.empty()) break;
+            saturating_add(telemetry.alternative_scheduling_rounds, 1);
+            bool policy_improved_this_round = false;
+
+            for (const std::uint32_t obligation_id : pending) {
+                const quotient::UnresolvedAlternativeObligation& before =
+                    bellman.proof_store()->alternative_obligation(
+                        obligation_id);
+                const auto source_class = scheduler_class_by_cell.find(
+                    before.identity.source_cell_id);
+                if (source_class == scheduler_class_by_cell.end()) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::Stale);
+                    saturating_add(
+                        telemetry.alternative_obligations_stale, 1);
+                    attempted_obligations.insert(obligation_id);
+                    continue;
+                }
+                const quotient::QuotientCell& cell =
+                    final_cells[source_class->second];
+                quotient::AlternativeObligationValidationContext context;
+                context.source_cell_identity = cell.semantic_identity;
+                context.price_identity = price_identity;
+                context.vocabulary_identity = vocabulary_identity;
+                context.requirement_generation = cell.generation;
+                context.source_generation = cell.generation;
+                context.target_generation = cell.generation;
+                context.partition_generation = cell.generation;
+                context.action_generation = 1;
+                context.admission_generation = 1;
+                context.price_generation = 1;
+                context.vocabulary_generation = 1;
+                context.q_generation =
+                    bellman.proof_store()->q_generation();
+                if (bellman.proof_store()
+                        ->validate_alternative_obligation(
+                            obligation_id, before.identity, context) !=
+                    quotient::AlternativeObligationValidationStatus::
+                        Current) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::Stale);
+                    saturating_add(
+                        telemetry.alternative_obligations_stale, 1);
+                    attempted_obligations.insert(obligation_id);
+                    continue;
+                }
+                const auto source_upper = current_upper.find(
+                    cell.cell_id);
+                if (source_upper != current_upper.end() &&
+                    std::isfinite(source_upper->second) &&
+                    before.identity.optimistic_lower.lower_q() >=
+                        source_upper->second) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::
+                                ConditionallyNoncompetitive,
+                            before.work_completed, std::nullopt,
+                            source_upper->second,
+                            bellman.proof_store()->q_generation());
+                    saturating_add(
+                        telemetry.alternative_obligations_noncompetitive,
+                        1);
+                    continue;
+                }
+
+                const std::uint32_t representative = representative_for(
+                    partition.class_by_node, source_class->second);
+                const auto& representative_descriptors =
+                    alternatives_by_ordinal.at(representative);
+                const auto descriptor_it = std::find_if(
+                    representative_descriptors.begin(),
+                    representative_descriptors.end(),
+                    [&](const QuotientAlternativeDescriptor& descriptor) {
+                        return descriptor.action == before.identity.action;
+                    });
+                if (descriptor_it == representative_descriptors.end()) {
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::Stale);
+                    saturating_add(
+                        telemetry.alternative_obligations_stale, 1);
+                    attempted_obligations.insert(obligation_id);
+                    continue;
+                }
+                const QuotientAlternativeDescriptor descriptor =
+                    *descriptor_it;
+                bellman.proof_store()->transition_alternative_obligation(
+                    obligation_id,
+                    quotient::AlternativeObligationStatus::Scheduled);
+                saturating_add(
+                    telemetry.alternative_obligations_scheduled, 1);
+                const std::uint64_t work_before =
+                    telemetry.alternative_reforge_work;
+
+                bool complete_cell_row = true;
+                bool have_row = false;
+                SelectedAction certified_selected;
+                ExactChoiceRecipe certified_recipe;
+                ExactState proof_source;
+                double certified_cost = kInfinity;
+                std::vector<std::pair<std::uint32_t, double>>
+                    certified_projection;
+                try {
+                    for (const quotient::CoverageRange& range :
+                         cell.coverage.ranges) {
+                        for (std::uint64_t ordinal = range.begin;
+                             ordinal < range.begin + range.count;
+                             ++ordinal) {
+                            ExactState source =
+                                oracle.quotient_materialize_locator(
+                                    locators.at(ordinal));
+                            std::optional<QuotientOracleCompactRow>
+                                candidate;
+                            try {
+                                candidate = oracle
+                                    .quotient_certify_alternative_descriptor(
+                                        source, descriptor);
+                            } catch (...) {
+                                oracle.quotient_release_carrier(
+                                    source.stable_key);
+                                throw;
+                            }
+                            oracle.quotient_release_carrier(
+                                source.stable_key);
+                            if (!candidate.has_value()) {
+                                complete_cell_row = false;
+                                break;
+                            }
+                            QuotientOracleCompactRow row =
+                                canonical_raw_row(
+                                    std::move(*candidate));
+                            if (row.selected.action_id !=
+                                    before.identity.action.action_id ||
+                                canonical_selected_runtime_contract_identity(
+                                    row.selected) !=
+                                    before.identity.action
+                                        .runtime_contract_program_identity) {
+                                complete_cell_row = false;
+                                break;
+                            }
+                            std::map<
+                                std::uint32_t,
+                                solve_detail::WideFloat> projected;
+                            for (const auto& transition :
+                                 row.transitions) {
+                                if (transition.strict_state >=
+                                        ordinal_by_strict_state.size() ||
+                                    ordinal_by_strict_state[
+                                        transition.strict_state] == kNoId) {
+                                    complete_cell_row = false;
+                                    break;
+                                }
+                                const std::uint32_t target_ordinal =
+                                    ordinal_by_strict_state[
+                                        transition.strict_state];
+                                projected[final_cell_id[
+                                    partition.class_by_node[
+                                        target_ordinal]]] +=
+                                    solve_detail::WideFloat{
+                                        transition.probability};
+                            }
+                            if (!complete_cell_row) break;
+                            std::vector<std::pair<std::uint32_t, double>>
+                                projection;
+                            for (const auto& [target, probability] :
+                                 projected) {
+                                projection.emplace_back(
+                                    target, probability.value());
+                            }
+                            if (!have_row) {
+                                have_row = true;
+                                certified_selected = row.selected;
+                                certified_recipe = row.choice_recipe;
+                                proof_source = std::move(source);
+                                certified_cost = row.action_cost;
+                                certified_projection =
+                                    std::move(projection);
+                            } else {
+                                if (row.selected.semantic_key !=
+                                        certified_selected.semantic_key ||
+                                    canonical_selected_runtime_contract_identity(
+                                        row.selected) !=
+                                        canonical_selected_runtime_contract_identity(
+                                            certified_selected) ||
+                                    std::fabs(
+                                        certified_cost -
+                                        row.action_cost) >
+                                        limits
+                                            .probability_sum_tolerance ||
+                                    certified_projection.size() !=
+                                        projection.size()) {
+                                    complete_cell_row = false;
+                                    break;
+                                }
+                                for (std::size_t i = 0;
+                                     i < projection.size(); ++i) {
+                                    if (certified_projection[i].first !=
+                                            projection[i].first ||
+                                        std::fabs(
+                                            certified_projection[i]
+                                                .second -
+                                            projection[i].second) >
+                                            limits
+                                                .probability_sum_tolerance) {
+                                        complete_cell_row = false;
+                                        break;
+                                    }
+                                }
+                                if (!complete_cell_row) break;
+                            }
+                        }
+                        if (!complete_cell_row) break;
+                    }
+                    const ObservationRequirement merged_requirement =
+                        canonical_observation_requirement(
+                            merge_observation_requirements(
+                                cell.observation_requirement,
+                                descriptor.routing_observes));
+                    if (merged_requirement !=
+                        canonical_observation_requirement(
+                            cell.observation_requirement)) {
+                        complete_cell_row = false;
+                    }
+                    if (!complete_cell_row || !have_row) {
+                        const std::uint64_t completed_work =
+                            before.work_completed +
+                            (telemetry.alternative_reforge_work >=
+                                     work_before
+                                 ? telemetry.alternative_reforge_work -
+                                       work_before
+                                 : 0);
+                        bellman.proof_store()
+                            ->transition_alternative_obligation(
+                                obligation_id,
+                                quotient::AlternativeObligationStatus::
+                                    PartiallyEvaluated,
+                                completed_work);
+                        saturating_add(
+                            telemetry
+                                .alternative_obligations_partially_evaluated,
+                            1);
+                        attempted_obligations.insert(obligation_id);
+                        continue;
+                    }
+
+                    quotient::QuotientBellmanRowInput input;
+                    input.source_cell_id = cell.cell_id;
+                    input.operator_index =
+                        certified_selected.action_id;
+                    input.cost = certified_cost;
+                    input.certified = true;
+                    std::vector<quotient::ProofProjectedArc> arcs;
+                    solve_detail::WideFloat total{0.0};
+                    for (const auto& [target, probability] :
+                         certified_projection) {
+                        input.transitions.push_back(
+                            {{}, target, probability});
+                        arcs.push_back({
+                            {},
+                            final_cells[
+                                scheduler_class_by_cell.at(target)]
+                                .semantic_identity,
+                            probability});
+                        total += solve_detail::WideFloat{probability};
+                    }
+                    quotient::CoverageDescriptor row_coverage =
+                        cell.coverage;
+                    for (quotient::CoverageRange& range :
+                         row_coverage.ranges) {
+                        range.total_probability =
+                            static_cast<double>(range.count) /
+                            static_cast<double>(
+                                row_coverage.exact_source_count) *
+                            total.value();
+                    }
+                    row_coverage.exact_total_probability = total.value();
+                    input.proof_identity =
+                        oracle.quotient_proof_identity(
+                            proof_source, certified_selected,
+                            quotient::canonical_coverage_descriptor(
+                                std::move(row_coverage)),
+                            std::move(arcs), total.value());
+                    const std::uint64_t sparse_row =
+                        bellman.append_row(std::move(input));
+                    oracle.quotient_install_streamed_recipe(
+                        certified_selected, certified_recipe);
+                    published_rows.push_back({
+                        sparse_row, cell.cell_id,
+                        certified_selected});
+                    refresh_external_row_kernel_bytes();
+                    const std::uint64_t completed_work =
+                        before.work_completed +
+                        (telemetry.alternative_reforge_work >=
+                                 work_before
+                             ? telemetry.alternative_reforge_work -
+                                   work_before
+                             : 0);
+                    bellman.proof_store()
+                        ->transition_alternative_obligation(
+                            obligation_id,
+                            quotient::AlternativeObligationStatus::
+                                Certified,
+                            completed_work, sparse_row);
+                    for (quotient::AccountedAlternativeAction& entry :
+                         completed_action_accounting) {
+                        if (entry.obligation_id == obligation_id) {
+                            entry.kind = quotient::
+                                AlternativeActionAccountingKind::
+                                    OtherCertified;
+                            entry.certified_row_id = sparse_row;
+                            entry.obligation_id.reset();
+                            break;
+                        }
+                    }
+                    saturating_add(
+                        telemetry.alternative_obligations_certified, 1);
+                    attempted_obligations.insert(obligation_id);
+
+                    double candidate_q = certified_cost;
+                    for (const auto& [target, probability] :
+                         certified_projection) {
+                        const std::uint32_t target_state =
+                            *bellman.state_index_for_cell(target);
+                        candidate_q += probability *
+                            current_solved.values_by_state.at(
+                                target_state);
+                    }
+                    const std::uint32_t source_state =
+                        *bellman.state_index_for_cell(cell.cell_id);
+                    if (candidate_q + 1e-12 >=
+                        current_solved.values_by_state.at(
+                            source_state)) {
+                        continue;
+                    }
+
+                    quotient::QuotientBellmanResult improved =
+                        bellman.solve(
+                            {root_cell}, limits.max_refinement_rounds,
+                            std::max<std::uint32_t>(
+                                1, options.max_sweeps));
+                    if (improved.status !=
+                            quotient::QuotientBellmanStatus::Complete ||
+                        !improved.executable_upper ||
+                        !improved.proper ||
+                        !improved.publication_audit.complete()) {
+                        publication_blocked_after_improvement = true;
+                        telemetry.bounded_publication_retained = true;
+                        stop_alternative_scheduling = true;
+                        break;
+                    }
+                    current_solved = std::move(improved);
+                    try {
+                        publish_current_upper(current_solved);
+                    } catch (const AdapterFailure& error) {
+                        if (error.status !=
+                            PolicyExactLiftStatus::ResourceCap) {
+                            throw;
+                        }
+                        certificate = retained_publication;
+                        publication_blocked_after_improvement = true;
+                        telemetry.bounded_publication_retained = true;
+                        stop_alternative_scheduling = true;
+                        break;
+                    } catch (const quotient::ProofMemoryLimit&) {
+                        certificate = retained_publication;
+                        publication_blocked_after_improvement = true;
+                        telemetry.bounded_publication_retained = true;
+                        stop_alternative_scheduling = true;
+                        break;
+                    } catch (const SolverResourceLimit&) {
+                        certificate = retained_publication;
+                        publication_blocked_after_improvement = true;
+                        telemetry.bounded_publication_retained = true;
+                        stop_alternative_scheduling = true;
+                        break;
+                    }
+                    retained_publication = certificate;
+                    published_solved = current_solved;
+                    published_q_generation =
+                        bellman.proof_store()->q_generation();
+                    saturating_add(
+                        telemetry.alternative_policy_improvements, 1);
+                    policy_improved_this_round = true;
+                    break;
+                } catch (const AdapterFailure& error) {
+                    const std::uint64_t completed_work =
+                        before.work_completed +
+                        (telemetry.alternative_reforge_work >= work_before
+                             ? telemetry.alternative_reforge_work -
+                                   work_before
+                             : 0);
+                    if (error.status ==
+                        PolicyExactLiftStatus::ResourceCap) {
+                        mark_resource_interrupted(
+                            obligation_id, completed_work);
+                        break;
+                    }
+                    if (error.status ==
+                        PolicyExactLiftStatus::InvalidSolveState) {
+                        bellman.proof_store()
+                            ->transition_alternative_obligation(
+                                obligation_id,
+                                quotient::AlternativeObligationStatus::
+                                    Stale,
+                                completed_work);
+                        saturating_add(
+                            telemetry.alternative_obligations_stale, 1);
+                        attempted_obligations.insert(obligation_id);
+                        continue;
+                    }
+                    throw;
+                } catch (const quotient::ProofMemoryLimit&) {
+                    const std::uint64_t completed_work =
+                        before.work_completed +
+                        (telemetry.alternative_reforge_work >= work_before
+                             ? telemetry.alternative_reforge_work -
+                                   work_before
+                             : 0);
+                    mark_resource_interrupted(
+                        obligation_id, completed_work);
+                    break;
+                } catch (const SolverResourceLimit&) {
+                    const std::uint64_t completed_work =
+                        before.work_completed +
+                        (telemetry.alternative_reforge_work >= work_before
+                             ? telemetry.alternative_reforge_work -
+                                   work_before
+                             : 0);
+                    mark_resource_interrupted(
+                        obligation_id, completed_work);
+                    break;
+                }
+            }
+            if (!policy_improved_this_round) break;
+        }
+
+        const std::map<std::uint32_t, double> published_upper =
+            upper_by_source(published_solved);
+        const quotient::AlternativeActionAccountingAudit final_action_audit =
+            bellman.proof_store()->audit_alternative_actions(
+                admitted_action_accounting,
+                completed_action_accounting,
+                published_upper,
+                published_q_generation);
+        if (!final_action_audit.complete) {
+            throw AdapterFailure(
+                PolicyExactLiftStatus::RefinementFailure,
+                "competitive alternative scheduler lost admitted-action accounting");
+        }
+        telemetry.action_accounting_complete = true;
+        telemetry.unresolved_alternative_obligations =
+            final_action_audit.unresolved_actions;
+        telemetry.competitive_alternatives_remaining =
+            final_action_audit.unresolved_actions;
+        if (publication_blocked_after_improvement) {
+            saturating_add(
+                telemetry.competitive_alternatives_remaining, 1);
+        }
+        telemetry.exact_alternative_envelope_closed =
+            final_action_audit.exact_alternative_envelope_closed &&
+            !publication_blocked_after_improvement;
+        telemetry.bounded_publication_retained =
+            telemetry.bounded_publication_retained ||
+            (certificate.executable &&
+             !telemetry.exact_alternative_envelope_closed);
+
+        const quotient::QuotientBellmanTelemetry& final_bellman_telemetry =
+            bellman.telemetry();
+        telemetry.proof_payload_reuses =
+            final_bellman_telemetry.proof_payload_reuses;
+        telemetry.row_reprojections =
+            final_bellman_telemetry.row_reprojections;
+        telemetry.reverse_invalidations =
+            final_bellman_telemetry.reverse_invalidations;
+        telemetry.improper_policy_repairs =
+            final_bellman_telemetry.improper_policy_repairs;
+        telemetry.local_reoptimization_rounds =
+            final_bellman_telemetry.scc_evaluations;
+        telemetry.local_reoptimizations =
+            final_bellman_telemetry.policy_improvements;
+        telemetry.local_policy_changes =
+            final_bellman_telemetry.policy_improvements;
         const quotient::ProofMemorySnapshot memory =
             ledger.snapshot();
         telemetry.coverage_descriptor_bytes = memory.bytes[

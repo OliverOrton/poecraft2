@@ -574,10 +574,142 @@ void run_alternative_lifecycle_and_invalidation_tests() {
 }
 
 AccountedAlternativeAction accounting_entry(
+    const UnresolvedAlternativeObligationIdentity& identity,
+    AlternativeActionAccountingKind kind,
+    std::optional<std::uint32_t> obligation_id = std::nullopt,
+    std::optional<std::uint64_t> row_id = std::nullopt);
+
+void run_alternative_verdict_revocation_tests() {
+    using Mutator = std::function<void(
+        UnresolvedAlternativeObligationIdentity&,
+        AlternativeObligationValidationContext&)>;
+    const std::vector<std::pair<
+        AlternativeObligationValidationStatus, Mutator>> cases = {
+        {
+            AlternativeObligationValidationStatus::
+                StaleSourceIdentity,
+            [](auto& identity, auto& context) {
+                ++identity.source_cell_id;
+                identity.source_cell_identity.push_back(9001);
+                ++identity.source_generation;
+                ++identity.partition_generation;
+                identity.optimistic_lower =
+                    trivial_carrier_wide_lower_q(
+                        identity.source_cell_identity,
+                        make_identity(30).coverage);
+                context = obligation_context(identity, 31);
+            },
+        },
+        {
+            AlternativeObligationValidationStatus::
+                StaleTargetGeneration,
+            [](auto& identity, auto& context) {
+                ++identity.target_generation;
+                context = obligation_context(identity, 31);
+            },
+        },
+        {
+            AlternativeObligationValidationStatus::
+                StaleRequirementGeneration,
+            [](auto& identity, auto& context) {
+                identity.observation_requirement.modifier_tag_ids
+                    .push_back(9003);
+                ++identity.requirement_generation;
+                context = obligation_context(identity, 31);
+            },
+        },
+        {
+            AlternativeObligationValidationStatus::StalePriceIdentity,
+            [](auto& identity, auto& context) {
+                identity.price_identity.push_back(9004);
+                ++identity.price_generation;
+                context = obligation_context(identity, 31);
+            },
+        },
+        {
+            AlternativeObligationValidationStatus::
+                StaleVocabularyIdentity,
+            [](auto& identity, auto& context) {
+                identity.vocabulary_identity.push_back(9005);
+                ++identity.vocabulary_generation;
+                context = obligation_context(identity, 31);
+            },
+        },
+    };
+
+    for (std::size_t index = 0; index < cases.size(); ++index) {
+        ProofStore store;
+        const UnresolvedAlternativeObligationIdentity original =
+            make_obligation_identity(30 + index);
+        const std::uint32_t original_id =
+            store.intern_alternative_obligation(original).first;
+        store.transition_alternative_obligation(
+            original_id, AlternativeObligationStatus::LowerOnly);
+        store.transition_alternative_obligation(
+            original_id,
+            AlternativeObligationStatus::ConditionallyNoncompetitive,
+            0, std::nullopt,
+            original.optimistic_lower.lower_q(), 30);
+        PC_CHECK(!store.alternative_obligation_blocks_exactness(
+            original_id,
+            original.optimistic_lower.lower_q(), 30));
+
+        UnresolvedAlternativeObligationIdentity replacement = original;
+        AlternativeObligationValidationContext replacement_context =
+            obligation_context(replacement, 31);
+        cases[index].second(replacement, replacement_context);
+        replacement = canonical_unresolved_alternative_obligation_identity(
+            std::move(replacement));
+        PC_CHECK(
+            store.validate_alternative_obligation(
+                original_id, original, replacement_context) ==
+            cases[index].first);
+
+        store.transition_alternative_obligation(
+            original_id, AlternativeObligationStatus::Stale);
+        const std::uint32_t replacement_id =
+            store.intern_alternative_obligation(replacement).first;
+        store.transition_alternative_obligation(
+            replacement_id, AlternativeObligationStatus::LowerOnly);
+        store.transition_alternative_obligation(
+            replacement_id, AlternativeObligationStatus::Scheduled);
+        PC_CHECK((
+            store.ordered_pending_alternative_obligations() ==
+            std::vector<std::uint32_t>{replacement_id}));
+        PC_CHECK(store.alternative_obligation_blocks_exactness(
+            replacement_id,
+            replacement.optimistic_lower.lower_q(), 31));
+
+        const std::vector<AccountedAlternativeAction> admitted = {
+            accounting_entry(
+                replacement,
+                AlternativeActionAccountingKind::
+                    UnresolvedObligation),
+        };
+        const std::vector<AccountedAlternativeAction> accounted = {
+            accounting_entry(
+                replacement,
+                AlternativeActionAccountingKind::
+                    UnresolvedObligation,
+                replacement_id),
+        };
+        const AlternativeActionAccountingAudit audit =
+            store.audit_alternative_actions(
+                admitted, accounted,
+                {{replacement.source_cell_id,
+                  replacement.optimistic_lower.lower_q()}},
+                31);
+        PC_CHECK(audit.complete);
+        PC_CHECK(!audit.exact_alternative_envelope_closed);
+        PC_CHECK(audit.unresolved_actions == 1);
+    }
+}
+
+AccountedAlternativeAction accounting_entry(
         const UnresolvedAlternativeObligationIdentity& identity,
         const AlternativeActionAccountingKind kind,
-        const std::optional<std::uint32_t> obligation_id = std::nullopt,
-        const std::optional<std::uint64_t> row_id = std::nullopt) {
+        const std::optional<std::uint32_t> obligation_id,
+        const std::optional<std::uint64_t> row_id) {
     return {
         identity.source_cell_id,
         identity.action,
@@ -863,6 +995,7 @@ void run_solver_quotient_proof_tests() {
     run_coverage_replay_tests();
     run_alternative_lower_and_collision_tests();
     run_alternative_lifecycle_and_invalidation_tests();
+    run_alternative_verdict_revocation_tests();
     run_alternative_order_and_accounting_tests();
     run_ledger_conservation_test();
 }

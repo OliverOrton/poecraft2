@@ -1,0 +1,110 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate3_v1",
+  "date": "2026-08-02",
+  "decision": "gate3_qualified_begin_medium_integration",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "parent_gate_commit": "c10b2e3cdc85aaab0ec7c0fc6293a9392e66bc16",
+  "gate_commit": "the commit containing this evidence record",
+  "scheduler_contract": {
+    "starts_after_proper_executable_upper": true,
+    "selected_upper_compiled_before_optional_alternative_work": true,
+    "deterministic_priority": [
+      "descending proof-only scheduling priority",
+      "ascending carrier-wide optimistic lower Q",
+      "source cell",
+      "action and choice full identities",
+      "obligation id"
+    ],
+    "proof_authority_from_score": false,
+    "carrier_wide_transaction": true,
+    "complete_row_installed_only_after_all_cell_carriers_agree": true,
+    "unknown_frontier_fabricated": false,
+    "new_frontier_or_required_split_status": "partially_evaluated",
+    "bellman_and_properness_rerun_for_improvement": true,
+    "compiled_publication_replaced_only_after_exact_reconciliation": true,
+    "last_compiled_upper_retained_on_later_resource_cap": true,
+    "checkpoint_replay_implemented": false
+  },
+  "lower_and_exactness_contract": {
+    "unresolved_carrier_wide_lower_participates_in_lower_relaxation": true,
+    "unresolved_obligation_supports_executable_upper": false,
+    "stale_obligation_lower_excluded": true,
+    "competitive_unresolved_obligation_blocks_exactness": true,
+    "conditional_noncompetition_bound_to_q_generation": true,
+    "exact_envelope_requires_complete_action_accounting": true
+  },
+  "focused_scheduler_witness": {
+    "obligations_created": 12,
+    "obligations_scheduled": 12,
+    "obligations_certified": 6,
+    "obligations_partially_evaluated": 6,
+    "obligations_noncompetitive": 0,
+    "obligations_resource_interrupted": 0,
+    "competitive_alternatives_remaining": 6,
+    "selected_reforge_work": 7680,
+    "alternative_reforge_work": 7680,
+    "policy_improvements": 0,
+    "alternatives_materialized_before_first_upper": 0,
+    "proper_compiled_exact_reconciled_upper": true,
+    "bounded_publication_retained": true,
+    "exact_alternative_envelope_closed": false
+  },
+  "resource_interruption_witness": {
+    "limit": "max_exact_kernels fixed to the deterministic selected-row count",
+    "selected_upper_compiled_before_interruption": true,
+    "alternative_obligations_resource_interrupted": 1,
+    "result_status": "complete",
+    "executable_compiled_upper_retained": true,
+    "competitive_alternatives_remaining_positive": true,
+    "exact_alternative_envelope_closed": false
+  },
+  "verdict_revocation_witnesses": [
+    "source-cell split",
+    "target-cell split",
+    "requirement growth",
+    "price change",
+    "action-vocabulary change"
+  ],
+  "focused_acceptance": [
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite solve",
+      "checks": 98156,
+      "failures": 0
+    },
+    {
+      "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+      "scope": "quotient proof, partition, and Bellman",
+      "checks": 353,
+      "failures": 0
+    }
+  ],
+  "source_sha256": {
+    "engine/src/solver_policy_oracle_improve.inc": "9f71d59a2d7e26a73027f4d45ffdf2260588042b4ccd61dd20751afd931296d9",
+    "engine/src/solver_policy_refinement.cpp": "d7ffe78641917a793c757548d8747728ce4b4489874ecd845de71b9b472361ff",
+    "engine/src/solver_policy_refinement.hpp": "ee01c169ce7951e6d62726845b4c112e4282d094cd4d9d2069dcc813d2007006",
+    "engine/src/solver_quotient_bellman.cpp": "45dccd2b7c7b49f15e1dec027f992e5abc1a18cbc07640351fe3aa1f0df07a2f",
+    "engine/src/solver_quotient_proof.cpp": "ca9403bf15ec7f73b9e615a12954701f9b1384ffbc353b1a7435989737fe1291",
+    "engine/src/solver_quotient_proof.hpp": "4544c4d62bca66151f8a6d179c887549d56c9cc575ef1d4440d2b24cda2f2845",
+    "engine/src/solver_solve_contracts.hpp": "95817cb6ae14971fbdfd42dde7e5fc1d420b26240893dac652207698f8c7f482",
+    "engine/src/solver_solve_finish.cpp": "2747ba801c34b3fc93246945df5f6ecd04d90e8037812d7744afdf8906aa0c9d",
+    "engine/src/solver_solve_telemetry.cpp": "91f54e30523b147b9be0964b5d8b5b22630c1329fbca9dc3c2fa1c1f59b6d5b2",
+    "engine/tests/test_solver_quotient_bellman.cpp": "18ff8004e0b05104fc74b6ae585f57410c81e4e5876f845a2c42c30f76c1b1ac",
+    "engine/tests/test_solver_quotient_proof.cpp": "7012668e948cb8ca5d8dd8c76264e52c601c96c260dfe04803d73806d1748fbe",
+    "engine/tests/test_solver_solve.cpp": "b4a415e62276991bf6f9aa01c00a095ae09137f036789719291d81f2d7361683"
+  },
+  "scope": {
+    "medium_frozen_case_qualified": false,
+    "two_goal_frozen_case_run": false,
+    "caps_or_defaults_changed": false,
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false
+  },
+  "next_gate": "medium integration qualification",
+  "pushed": false,
+  "merged": false
+}

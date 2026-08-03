@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification Gates 0 through 2
-complete. Gate 3 competitive alternative scheduling is the active boundary.**
+**Status: competitive lazy alternative certification Gates 0 through 3
+complete. Gate 4 medium integration qualification is the active boundary.**
 
 Current plan:
 [Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
@@ -22,8 +22,9 @@ Milestone starting commit:
 
 Current milestone commits: Gate 0 is
 `222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is
-`53c538143b3599b99b5b8cd8317557ada14e39c7`. Gate 2 is recorded by the
-current local commit; Gate 3 has not begun.
+`53c538143b3599b99b5b8cd8317557ada14e39c7`. Gate 2 is
+`c10b2e3cdc85aaab0ec7c0fc6293a9392e66bc16`. Gate 3 is recorded by the
+current local commit; Gate 4 has not begun.
 
 Preserved proof-carrying quotient commits: Gate 0 is
 `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
@@ -113,6 +114,36 @@ Nothing has been pushed or merged. `main` remains unchanged at
 - No cap, mechanic, price, filter, ABI, strategy vocabulary, WASM artifact, or
   frontend contract changed. Gate 3 now decides which unresolved obligation is
   competitive enough to certify.
+
+## Competitive lazy Gate 3
+
+- The deterministic scheduler starts only after the selected quotient has a
+  proper executable upper and a compiled, exact-reconciled artifact available
+  as rollback authority.
+- It certifies one requested descriptor across the complete source-cell
+  carrier coverage. Only action/cost/projection-lumpable rows with closed
+  successors and already-satisfied routing observations enter the proof store;
+  open-frontier or split-requiring work remains explicitly partial.
+- Completed competitive rows enter the existing Bellman/properness path.
+  Improving publications replace the retained artifact only after compilation
+  and reconciliation. A later alternative or compile resource cap preserves
+  the last compiled bounded upper.
+- Unresolved carrier-wide lowers now participate in the optimistic lower
+  relaxation without becoming executable rows. Stale obligations contribute
+  neither a lower nor a noncompetition verdict.
+- The focused witness scheduled 12 obligations, certified 6, retained 6
+  partial blockers, and used 7,680 selected plus 7,680 alternative work, with
+  zero alternative kernels before the first upper. It remained proper,
+  compiled, reconciled, and honestly bounded.
+- A focused exact-kernel-cap control retained the selected publication after
+  one resource-interrupted obligation. Source/target, requirement, price, and
+  vocabulary revocation controls all recreate a schedulable blocker and refuse
+  exactness.
+- Focused solve acceptance passes 98,156/0 and quotient
+  proof/partition/Bellman acceptance passes 353/0. Evidence is tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json`.
+- Gate 4 now owns the full `reliability-class-belt` workflow, deterministic
+  repeat, 10,000 simulations, and scaled-breadth witness.
 
 ## Preserved proof-carrying quotient Gate 0 boundary
 
@@ -332,19 +363,20 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-The selected boundary is competitive lazy alternative certification:
+Run competitive lazy Gate 4:
 
-1. Establish a detailed implementation and qualification plan before source
-   edits begin.
-2. Discover and certify selected-policy closure before eager alternative
-   closure.
-3. Preserve every admitted but uncertified alternative as an explicit
-   unresolved lower-only proof obligation.
-4. Certify an alternative transactionally only when Bellman competitiveness
-   or a counterexample requires it; do not discard it or hard-code actions.
-5. Keep the executable upper fully certified, closed, lumpable, proper,
-   compiled, and independently reconciled.
-6. Preserve the existing vocabulary, mechanics, action filtering, caps,
+1. Execute `reliability-class-belt` through the complete native benchmark,
+   exact compiled evaluation, and 10,000-run verification workflow twice.
+2. Require deterministic semantic results, complete admitted-action
+   accounting, selected closure and a first upper before alternative
+   exhaustion, exercised competitive certification, properness, lumpability,
+   zero reference calls, compilation, and exact reconciliation.
+3. Run a bounded scaled-breadth witness proving partition and upper progress
+   before all alternatives certify.
+4. Record selected/alternative work, milestone work and wall time, obligation
+   outcomes, lower pruning, policy replacements, quotient size, transitions,
+   memory, simulations, hashes, and Gate 0 prediction scoring.
+5. Preserve the existing vocabulary, mechanics, action filtering, caps,
    public C ABI, strategy JSON, and frontend authority.
 
 Deterministic checkpoint/replay remains deferred.

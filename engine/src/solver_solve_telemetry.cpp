@@ -1231,7 +1231,19 @@ std::string serialize_solver_telemetry(
                 "null,\"alternative_obligations_created\":null,"
                 "\"unresolved_alternative_obligations\":null,"
                 "\"alternative_exact_rows_avoided\":null,"
-                "\"action_accounting_complete\":null}";
+                "\"action_accounting_complete\":null,"
+                "\"scheduling_rounds\":null,"
+                "\"obligations_scheduled\":null,"
+                "\"obligations_certified\":null,"
+                "\"obligations_partially_evaluated\":null,"
+                "\"obligations_noncompetitive\":null,"
+                "\"obligations_stale\":null,"
+                "\"verdict_revocations\":null,"
+                "\"obligations_resource_interrupted\":null,"
+                "\"competitive_alternatives_remaining\":null,"
+                "\"policy_improvements\":null,"
+                "\"bounded_publication_retained\":null,"
+                "\"exact_alternative_envelope_closed\":null}";
         json += ",\"memory_bytes\":null,\"peak_memory_bytes\":null";
         json += ",\"memory_limit_bytes\":null";
         json += ",\"retained_artifact_bytes\":null";
@@ -1364,7 +1376,45 @@ std::string serialize_solver_telemetry(
                 std::to_string(refinement.alternative_rows_avoided);
         json += ",\"action_accounting_complete\":" +
                 std::string(bool_json(
-                    refinement.action_accounting_complete)) +
+                    refinement.action_accounting_complete));
+        json += ",\"scheduling_rounds\":" +
+                std::to_string(
+                    refinement.alternative_scheduling_rounds);
+        json += ",\"obligations_scheduled\":" +
+                std::to_string(
+                    refinement.alternative_obligations_scheduled);
+        json += ",\"obligations_certified\":" +
+                std::to_string(
+                    refinement.alternative_obligations_certified);
+        json += ",\"obligations_partially_evaluated\":" +
+                std::to_string(
+                    refinement
+                        .alternative_obligations_partially_evaluated);
+        json += ",\"obligations_noncompetitive\":" +
+                std::to_string(
+                    refinement.alternative_obligations_noncompetitive);
+        json += ",\"obligations_stale\":" +
+                std::to_string(
+                    refinement.alternative_obligations_stale);
+        json += ",\"verdict_revocations\":" +
+                std::to_string(
+                    refinement.alternative_verdict_revocations);
+        json += ",\"obligations_resource_interrupted\":" +
+                std::to_string(
+                    refinement
+                        .alternative_obligations_resource_interrupted);
+        json += ",\"competitive_alternatives_remaining\":" +
+                std::to_string(
+                    refinement.competitive_alternatives_remaining);
+        json += ",\"policy_improvements\":" +
+                std::to_string(
+                    refinement.alternative_policy_improvements);
+        json += ",\"bounded_publication_retained\":" +
+                std::string(bool_json(
+                    refinement.bounded_publication_retained));
+        json += ",\"exact_alternative_envelope_closed\":" +
+                std::string(bool_json(
+                    refinement.exact_alternative_envelope_closed)) +
                 "}";
         json += ",\"memory_bytes\":" +
                 std::to_string(refinement.memory_bytes);

@@ -580,6 +580,8 @@ public:
         std::uint32_t obligation_id) const;
     std::uint32_t alternative_obligation_count() const;
     std::vector<std::uint32_t> ordered_pending_alternative_obligations() const;
+    std::optional<double> optimistic_alternative_lower_for_source(
+        std::uint32_t source_cell_id) const;
     bool alternative_obligation_supports_executable_upper(
         std::uint32_t obligation_id) const;
     bool alternative_obligation_blocks_exactness(

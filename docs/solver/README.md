@@ -1007,6 +1007,15 @@ reported separately. Neither is an identity-collapse event: `collapse_events`
 counts only contract-driven loss of a downstream observation after an action
 destroys it.
 
+`certification_work` separates selected and alternative row work and records
+the first partition and executable upper. Its alternative scheduler fields
+report obligation lifecycle transitions, competitive blockers, verdict
+revocations, accepted policy improvements, retained bounded publication, and
+whether the exact alternative envelope closed. An unresolved obligation's
+carrier-wide optimistic lower participates only in the lower relaxation; it
+cannot support an executable upper. A stale obligation contributes neither a
+lower nor a noncompetition verdict.
+
 The feature telemetry uses the same numeric authority as the contract.
 `collapse_destroyed_feature_mask` and `collapse_preserved_feature_mask` use
 `RefinementFeature` bit positions. `collapse_events_by_feature` and

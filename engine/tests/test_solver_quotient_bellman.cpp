@@ -94,10 +94,45 @@ void run_bellman_projection_and_invalidation_tests() {
     QuotientBellmanRowInput optimistic;
     optimistic.source_cell_id = 1;
     optimistic.operator_index = 13;
-    optimistic.cost = 0.0;
+    optimistic.cost = 2.0;
     optimistic.admitted = true;
     optimistic.transitions = {{{5}, 3, 1.0}};
     const std::uint64_t uncertified = graph.append_row(std::move(optimistic));
+
+    CoverageDescriptor alternative_coverage;
+    alternative_coverage.strict_kernel_identity = {15000};
+    alternative_coverage.replay_authority_identity = {15001};
+    alternative_coverage.normalized_enumeration_identity = {15002};
+    alternative_coverage.ranges = {{{15003}, 0, 1, 1.0}};
+    alternative_coverage.exact_source_count = 1;
+    alternative_coverage.exact_total_probability = 1.0;
+    alternative_coverage = canonical_coverage_descriptor(
+        std::move(alternative_coverage));
+    UnresolvedAlternativeObligationIdentity alternative;
+    alternative.source_cell_id = 1;
+    alternative.source_cell_identity = identities.at(1);
+    alternative.action = canonical_alternative_action_identity({
+        14, {16000}, {16001}, {16002}});
+    alternative.price_identity = {16003};
+    alternative.vocabulary_identity = {16004};
+    alternative.requirement_generation = 1;
+    alternative.source_generation = 1;
+    alternative.target_generation = 1;
+    alternative.partition_generation = 1;
+    alternative.action_generation = 1;
+    alternative.admission_generation = 1;
+    alternative.price_generation = 1;
+    alternative.vocabulary_generation = 1;
+    alternative.optimistic_lower = certify_carrier_wide_lower_q(
+        alternative.source_cell_identity,
+        alternative_coverage,
+        {16005},
+        {{{15003}, 0, 0.5}});
+    alternative.resumable_work_identity = {16006};
+    const std::uint32_t alternative_id = graph.proof_store()
+        ->intern_alternative_obligation(std::move(alternative)).first;
+    graph.proof_store()->transition_alternative_obligation(
+        alternative_id, AlternativeObligationStatus::LowerOnly);
 
     const SolveTransitionCache& sparse = graph.transition_cache();
     PC_CHECK(sparse.rows.size() == 4);
@@ -121,7 +156,7 @@ void run_bellman_projection_and_invalidation_tests() {
         PC_CHECK(solved.selected_rows_by_state.at(0) == cyclic);
         PC_CHECK(std::fabs(solved.values_by_state.at(0) - 4.0) < 1e-10);
         PC_CHECK(std::fabs(solved.values_by_state.at(1) - 3.0) < 1e-10);
-        PC_CHECK(solved.lower_relaxation_by_state.at(0) == 0.0);
+        PC_CHECK(solved.lower_relaxation_by_state.at(0) == 0.5);
     }
     PC_CHECK(graph.telemetry().bellman_rows_evaluated != 0);
     PC_CHECK(graph.telemetry().scc_evaluations != 0);
@@ -132,6 +167,13 @@ void run_bellman_projection_and_invalidation_tests() {
     graph.note_price_change({{cyclic, 5.0}});
     PC_CHECK(graph.transition_cache().rows.size() == 4);
     PC_CHECK(graph.proof_store()->price_generation() == price_generation + 1);
+    PC_CHECK(
+        graph.proof_store()->alternative_obligation(alternative_id).status ==
+        AlternativeObligationStatus::Stale);
+    PC_CHECK(
+        !graph.proof_store()
+             ->optimistic_alternative_lower_for_source(1)
+             .has_value());
     solved = graph.solve({1});
     PC_CHECK(solved.status == QuotientBellmanStatus::Complete);
     if (solved.status == QuotientBellmanStatus::Complete) {

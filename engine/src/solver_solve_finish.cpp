@@ -1524,6 +1524,33 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.alternative_rows_avoided;
             telemetry.action_accounting_complete =
                 certificate.adapter.action_accounting_complete;
+            telemetry.alternative_scheduling_rounds =
+                certificate.adapter.alternative_scheduling_rounds;
+            telemetry.alternative_obligations_scheduled =
+                certificate.adapter.alternative_obligations_scheduled;
+            telemetry.alternative_obligations_certified =
+                certificate.adapter.alternative_obligations_certified;
+            telemetry.alternative_obligations_partially_evaluated =
+                certificate.adapter
+                    .alternative_obligations_partially_evaluated;
+            telemetry.alternative_obligations_noncompetitive =
+                certificate.adapter
+                    .alternative_obligations_noncompetitive;
+            telemetry.alternative_obligations_stale =
+                certificate.adapter.alternative_obligations_stale;
+            telemetry.alternative_verdict_revocations =
+                certificate.adapter.alternative_verdict_revocations;
+            telemetry.alternative_obligations_resource_interrupted =
+                certificate.adapter
+                    .alternative_obligations_resource_interrupted;
+            telemetry.competitive_alternatives_remaining =
+                certificate.adapter.competitive_alternatives_remaining;
+            telemetry.alternative_policy_improvements =
+                certificate.adapter.alternative_policy_improvements;
+            telemetry.bounded_publication_retained =
+                certificate.adapter.bounded_publication_retained;
+            telemetry.exact_alternative_envelope_closed =
+                certificate.adapter.exact_alternative_envelope_closed;
             telemetry.exact_state_reuses =
                 certificate.adapter.canonical_successor_collapses;
             telemetry.collapse_events =

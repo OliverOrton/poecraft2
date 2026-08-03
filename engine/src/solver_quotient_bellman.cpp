@@ -539,6 +539,14 @@ QuotientBellmanResult QuotientBellmanGraph::solve(
                 });
             telemetry_.bellman_rows_evaluated += selected.evaluated_rows;
             out.lower_relaxation_by_state[state] = selected.value;
+            const std::optional<double> alternative_lower =
+                proof_store()->optimistic_alternative_lower_for_source(
+                    cell.cell.cell_id);
+            if (alternative_lower.has_value()) {
+                out.lower_relaxation_by_state[state] = std::min(
+                    out.lower_relaxation_by_state[state],
+                    *alternative_lower);
+            }
         }
 
         /* Compute the greatest certified nonterminal closed set. When one
