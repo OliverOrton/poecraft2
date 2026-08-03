@@ -1,8 +1,11 @@
 # Session Handoff
 
-**Status: selected-closure scaling completed at Gate 5 with a measured
-structural rejection. Gates 2 and 6–8 were skipped by their conditions. No
-implementation boundary is selected; Oliver must choose the next chunk.**
+**Status: certified fallback and terminal-reforge factorization Gate 0 is
+complete. Track A Gate 1, deterministic preservation of independently
+publishable fallback witnesses, is the active boundary.**
+
+Current plan:
+[Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
 
 Latest completed milestone:
 [Selected-Closure Scaling And Exact Broad-Row Projection](docs/archive/2026-08-03-selected-closure-broad-row-scaling/README.md).
@@ -21,12 +24,20 @@ Completed enabling milestone:
 
 Completed milestone branch: `codex/competitive-lazy-alternative-certification`
 
-Current branch: `codex/selected-closure-broad-row-scaling`
+Completed milestone branch: `codex/selected-closure-broad-row-scaling`
+
+Current branch: `codex/fallback-and-terminal-reforge-factorization`
 
 Current milestone starting commit:
+`0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
+
+Current milestone commits: Gate 0 is recorded by the current local commit.
+Track A Gate 1 is the active implementation boundary.
+
+Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
 
-Current milestone commits: Gate 0 is
+Selected-closure milestone commits: Gate 0 is
 `9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is
 `c9481fb0a5b6666ce73afbdafc497296dd369937`. Gate 2 is skipped. Gate 3 is
 `1ee6bc8481b47bc2e83228e577a930e9c9b72975`. Gate 4 is
@@ -55,6 +66,35 @@ the final archive commit.
 
 Nothing has been pushed or merged. `main` remains unchanged at
 `25d5bbe6791beb61eae803219563575346def2dc`.
+
+## Certified fallback and terminal factorization Gate 0
+
+- The branch begins from clean commit
+  `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`; the source tree, native
+  binaries, artifact, Mirage economy, canonical hard fixture, options, and
+  complete 27-action order are frozen in
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate0.json`.
+- Existing hard 20M and selected-only 100M evidence was not rerun. The product
+  cap remains 20M, the solver-owned cap remains 1 GiB, and no mechanic, public
+  ABI, strategy vocabulary, canonical input, WASM artifact, or frontend
+  authority changed.
+- The existing hard report contains one independently certified primitive
+  Chaos renewal: success probability `0.00025094514103578676`, upper and
+  bootstrap-evaluated value `3984.9346987650665`, 24 validated non-goal
+  carriers, and witness hash `5e2bd0c222942bda`.
+- The preferred coarse/Q-directed candidate is cheaper at
+  `3323.6694369790375`, but its selected Essence policy stops on
+  `max_reforge_work` during strict lift. The current failure is ownership and
+  publication: the unpublishable preferred candidate leaves no retained
+  executable result.
+- The exact V2 boundary remains 2,097,355 V1 work, 923,141 V2 work, 51,155
+  frontier states, 688,739 terminal arrivals, 172,596 unique projected
+  outcomes, and 638,365 final-depth branches omitted from the earlier sparse
+  proxy. Raw/V2 row wall remains approximately 0.809/1.004 seconds.
+- Track A must publish the best still-current certified fallback without
+  changing the lower or resolving alternatives. Track B continues afterward
+  and must reduce real terminal work rather than reclassify it as free.
+- Gate 0 is documentation/evidence only; no test or benchmark was run.
 
 ## Selected-closure scaling Gate 0
 
@@ -587,14 +627,27 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-No implementation boundary is active. Oliver must choose the next chunk before
-implementation resumes.
+Complete Track A Gate 1:
 
-The durable candidate exposed by Gate 5 is final-depth projected successor
-accumulation: reduce or factor the 638,365 direct terminal branches while
-retaining every proof- and future-visible distinction. It is a possible future
-direction, not scheduled work. Reclassifying those branches as free is not an
-acceptable optimization.
+1. Replace single-cheapest/scalar incumbent ownership with a small deterministic
+   portfolio whose entries own executable policy or renewal provenance,
+   independent evaluated cost, complete invalidation identity, compilation and
+   properness results, and solver-owned memory.
+2. Keep preferred optimistic candidate, selected strict lift, certified
+   fallback, and retained compiled artifact as separate states. An uncertified
+   cheaper candidate cannot evict a certified executable fallback.
+3. On lift success publish the cheaper certified result; on a lift cap publish
+   the best current fallback; on staleness, impropriety, compilation failure,
+   or reconciliation failure invalidate only the affected entry.
+4. Preserve the full-envelope lower and every unresolved alternative. Never
+   allow a scalar upper to survive without its executable provenance.
+5. Add the focused portfolio, invalidation, properness, compilation, ordering,
+   equality, and memory-cap tests named in the active plan, then commit Gate 1.
+
+After Gate 1, run the canonical hard case once for Track A Gate 2 at unchanged
+20M/1 GiB/27 actions/900 seconds with exact reconciliation and 10,000
+simulations. Track B attribution continues after Track A unless correctness is
+blocked.
 
 Deterministic checkpoint/replay remains deferred.
 

@@ -1,0 +1,200 @@
+{
+  "schema_version": "fallback_and_terminal_reforge_factorization_gate0_v1",
+  "recorded_at_local_date": "2026-08-03",
+  "decision": "freeze_independent_fallback_and_final_depth_boundaries_before_implementation",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "starting_commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+  "starting_tree": "dac2c8c0e377ee6390ba570ce7f461de5d941ad8",
+  "gate_commit": "the commit containing this evidence record",
+  "main_commit_unchanged": "25d5bbe6791beb61eae803219563575346def2dc",
+  "scope": {
+    "mechanics_changed": false,
+    "action_vocabulary_changed": false,
+    "action_filtering_changed": false,
+    "canonical_fixture_changed": false,
+    "compiled_artifact_changed": false,
+    "economy_changed": false,
+    "product_cap_changed": false,
+    "public_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_changed": false,
+    "frontend_authority_changed": false,
+    "source_changed": false,
+    "tests_or_benchmarks_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "frozen_identities": {
+    "source": {
+      "commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+      "tree": "dac2c8c0e377ee6390ba570ce7f461de5d941ad8",
+      "authorities": {
+        "engine/src/solver_solve_constructive.cpp": "c2850e9d83ee4d3ffb6b4c035aa80949e89ff921733c981c5fb7c2aac9eacaa1",
+        "engine/src/solver_solve_finish.cpp": "d47eaa08b9d834598376338b99c8b39757403c26e4b5966191825ad72964a525",
+        "engine/src/solver_compile.cpp": "35929224f1da51af4a5ea2124571b41ff80dd8fa49bdc9e9322d55cc1c01127a",
+        "engine/src/solver_policy_refinement.cpp": "4e31136635d20e22b2baaf2d003b74f005f5782e9682cd745bc239ef38f53da9",
+        "engine/src/solver_policy_oracle.hpp": "f3728da87d38afbb39efb2ea7f3a4890d0fcf996534d432b86c9c66e9bc64bdb",
+        "engine/src/solver_policy_oracle_setup.inc": "fb1ccf66c4b0213d7be34a18352451a579e5cd11247d0ab2b6cbb79f067eb64a",
+        "engine/src/solver_policy_oracle_improve.inc": "1b7e535254f7d2c6025f781766e832fa0b26907c0d07468ed05cdac9d43808d9",
+        "engine/src/solver_refinement.hpp": "a4ad91685e4d22543b3dae24ec8c8ac455a09ffac3ffa8ac61ec2ffc1bf88f99",
+        "engine/src/solver_reforge.cpp": "13302a3f004a345bfc794284a22c76f9c8d2c1c5dcbce8bec572467e59051174",
+        "engine/src/solver_calc_types.hpp": "abf342619d248d6f6ab30d1ed98c425fe0b172ef47c83b6af1f749a8b924fee0",
+        "engine/src/solver_solve_types.hpp": "33be4c6230b5b40d78ac496ed5c10c763a819e610911263672021d6354be1b8c",
+        "engine/src/solver_solve_contracts.hpp": "ff075eeb66cc4d672087c46514709432c0468cfbf86070a1e7ca0dd44596a65b",
+        "engine/src/solver_solve_telemetry.cpp": "399f02b6b529bcd00ba4acce18940b92b8ee5c94bbd772a5a56267d92186a781"
+      }
+    },
+    "native_binaries": {
+      "benchmark_path": "build/engine/poecraft_solver_benchmark.exe",
+      "benchmark_sha256": "0b9b71d54caaed995f5e6bb17254b43c6ffa1bb80340387f4a09849dbdbf3d50",
+      "engine_path": "build/engine/poecraft_engine.dll",
+      "engine_sha256": "444a0aabb9b17159910693a45040a9ad99e405bbbdebcdc1e332bea87fb8bb0b",
+      "tests_path": "build/engine/poecraft_engine_tests.exe",
+      "tests_sha256": "92bb33f312b46c710840cba64bea9454ffafdae44ec5b1e8a87a9d8573f4a81b"
+    },
+    "compiled_artifact": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5"
+    },
+    "economy": {
+      "content_identity": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+      "snapshot_file_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e"
+    },
+    "corpus": {
+      "manifest_path": "fixtures/solver-reliability/v1/manifest.json",
+      "manifest_sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f",
+      "hard_case_id": "natural-t1-breadth-two-4e65dda9c53b",
+      "hard_case_path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "hard_case_sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be"
+    },
+    "options": {
+      "canonical_caps_compact_json_sha256": "890a74c397e66021c2c130f85d2c6cb79578eb0165b293b66a46cf6bc35a971d",
+      "verification_compact_json_sha256": "505fe0a9c003965f1ab5ffbdd1300e89812abf046032d52615dd2e38c860723a",
+      "max_reforge_work": 20000000,
+      "max_solver_owned_bytes": 1073741824,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 1000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "goal_progress_gated_reforges": true,
+      "solve_step_work_items": 1024,
+      "worker_step_ms": 20000,
+      "cancel_ack_ms": 250,
+      "watchdog_seconds": 900,
+      "gate2_exact_evaluation_required": true,
+      "gate2_simulation_runs": 10000
+    },
+    "action_vocabulary": {
+      "count": 27,
+      "order_identity_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5",
+      "compact_json_sha256": "94fccfe5e3a7b5931954b6323241b18adce1e643b0a2576517a36a301f5f2318",
+      "source_report": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json",
+      "ordered_ids": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingSockets+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "harvest_reforge:caster",
+        "harvest_reforge:life",
+        "harvest_reforge:speed",
+        "harvest_augment:caster",
+        "harvest_augment:life",
+        "harvest_augment:speed",
+        "fracture",
+        "restart"
+      ]
+    }
+  },
+  "frozen_prior_evidence": {
+    "hard_20m": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate5-structural-stop.json",
+      "tracked_sha256": "208f50645cbd2436417d9ae570fa8c81c4517832b48aaf057413d713c9e6d114",
+      "raw_report_path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json",
+      "raw_report_sha256": "17f2dee8fa8d91c3a383037fc4371945758932cdf61ec7d61ec803ba7292be0f",
+      "coarse_reforge_work": 14077632,
+      "post_coarse_allowance": 5922368,
+      "selected_rows_completed": 2,
+      "selected_reforge_work": 5922368,
+      "selected_transitions": 345192,
+      "partition_reached": false,
+      "selected_policy_upper_reached": false,
+      "policy_published": false,
+      "rerun_at_gate0": false
+    },
+    "selected_only_100m": {
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json",
+      "tracked_sha256": "4ada1b424c75cdce4aea04281a07ac5b5c8dff5872885179500127a1882ba5e1",
+      "selected_rows_completed": 40,
+      "selected_transitions": 6903840,
+      "partition_reached": false,
+      "executable_upper_reached": false,
+      "rerun_forbidden": true
+    },
+    "exact_v2_projected_frontier": {
+      "implementation_commit": "ac41a0db96acd45a26a55a1e268502573f2fca74",
+      "decision_commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+      "tracked_path": "fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate5-structural-rejection.json",
+      "tracked_sha256": "6670166373653df6b44bf177234a19fc1f37421a5dd4051d40da7b79ebc324af",
+      "raw_work_v1": 2097355,
+      "projected_work_v2": 923141,
+      "frontier_states": 51155,
+      "terminal_arrivals": 688739,
+      "unique_projected_outcomes": 172596,
+      "final_depth_branches_omitted_by_sparse_proxy": 638365,
+      "raw_row_wall_seconds": 0.8089968,
+      "v2_row_wall_seconds": 1.0040188,
+      "production_enabled": false
+    }
+  },
+  "frozen_fallback_boundary": {
+    "source_report_path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json",
+    "source_report_sha256": "17f2dee8fa8d91c3a383037fc4371945758932cdf61ec7d61ec803ba7292be0f",
+    "primitive_action": "chaos",
+    "success_probability": 0.00025094514103578676,
+    "certified_upper": 3984.9346987650665,
+    "bootstrap_evaluated_value": 3984.9346987650665,
+    "validated_non_goal_carriers": 24,
+    "witness_hash": "5e2bd0c222942bda",
+    "renewal_candidates": 1,
+    "renewal_rejections": 0,
+    "preferred_unpublished_candidate": {
+      "coarse_q_directed_upper": 3323.6694369790375,
+      "selected_action": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+      "strict_lift_status": "resource_cap",
+      "strict_lift_cap": "max_reforge_work",
+      "publication_failure": "policy_exact_refinement_resource_cap",
+      "published": false
+    },
+    "current_bug_boundary": "the cheaper preferred candidate displaces the independently executable renewal before final publication, leaving no policy"
+  },
+  "acceptance_contract": {
+    "track_a_independent_of_track_b": true,
+    "track_b_continues_after_track_a_unless_correctness_blocked": true,
+    "fallback_is_upper_only": true,
+    "fallback_never_changes_lower_or_resolves_alternatives": true,
+    "uncertified_candidate_never_evicts_certified_fallback": true,
+    "no_scalar_upper_without_executable_provenance": true,
+    "v3_diagnostic_until_qualified": true,
+    "raw_remains_independent_oracle": true,
+    "active_work_ledger_charged_honestly": true,
+    "product_cap_remains_20m": true,
+    "named_action_or_fixture_special_case_forbidden": true
+  },
+  "next_gate": "implement deterministic certified fallback incumbent portfolio"
+}

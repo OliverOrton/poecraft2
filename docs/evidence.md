@@ -1296,6 +1296,30 @@ not applicable. Production integration and Gates 6–8 are rejected by
 condition. Raw remains the product default, the 20M default is unchanged, and
 no public ABI, WASM artifact, or frontend contract changed.
 
+## Certified Fallback And Terminal Reforge Factorization Gate 0
+
+The 2026-08-03
+[`fallback-and-terminal-reforge-factorization-gate0.json`](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate0.json)
+freezes the clean `0b4ba38` source tree, release native binaries, artifact,
+economy, canonical hard fixture, options, action order, hard 20M evidence,
+selected-only 100M evidence, and exact V2 prototype without running a new
+benchmark.
+
+The existing hard report independently contains a primitive Chaos renewal
+witness with exact success probability `0.00025094514103578676`, certified and
+bootstrap-evaluated value `3984.9346987650665`, 24 validated non-goal carriers,
+and witness hash `5e2bd0c222942bda`. The preferred coarse/Q-directed candidate
+is cheaper at `3323.6694369790375`, but its selected Essence policy reaches
+`max_reforge_work` during strict lift and currently leaves no published policy.
+The milestone freezes this as a publication/ownership bug, not permission to
+alter the lower or action envelope.
+
+The independent terminal boundary remains 2,097,355 V1 work, 923,141 V2 work,
+51,155 frontier states, 688,739 terminal arrivals, 172,596 unique projected
+outcomes, 638,365 final-depth branches absent from the earlier sparse proxy,
+and approximately 0.809/1.004-second raw/V2 row wall. Track A fallback
+publication is scored separately from later Track B factorization.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
