@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <map>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -26,6 +27,7 @@ enum class ProofMemoryCategory : std::uint8_t {
     Certificate,
     DependencySidecar,
     CoverageDescriptor,
+    AlternativeObligation,
     LiveReplaySlice,
     Partition,
     Carrier,
@@ -184,6 +186,219 @@ CoverageReplaySlice replay_coverage(
     const CoverageReplayFunction& replay,
     ProofMemoryLedger& ledger);
 
+enum class OptimisticLowerQProvenanceKind : std::uint8_t {
+    TrivialNonnegativeCost = 0,
+    CarrierWideWitness,
+};
+
+struct CarrierLowerQWitness {
+    StableKey range_identity;
+    std::uint64_t enumeration_index = 0;
+    double lower_q = 0.0;
+
+    bool operator==(const CarrierLowerQWitness&) const = default;
+};
+
+/*
+ * A retained lower-Q certificate is uniform over a complete source-cell
+ * coverage. Nontrivial construction takes the minimum carrier witness; an
+ * average is deliberately not representable. The zero certificate is the
+ * universally safe fallback under the solver's nonnegative-cost contract.
+ */
+class CarrierWideOptimisticLowerQ {
+public:
+    CarrierWideOptimisticLowerQ() = default;
+
+    OptimisticLowerQProvenanceKind kind() const { return kind_; }
+    const StableKey& authority_identity() const {
+        return authority_identity_;
+    }
+    const StableKey& source_cell_identity() const {
+        return source_cell_identity_;
+    }
+    std::uint64_t exact_carriers_covered() const {
+        return exact_carriers_covered_;
+    }
+    double exact_probability_mass() const {
+        return exact_probability_mass_;
+    }
+    double lower_q() const { return lower_q_; }
+
+    bool operator==(const CarrierWideOptimisticLowerQ&) const = default;
+
+private:
+    OptimisticLowerQProvenanceKind kind_ =
+        OptimisticLowerQProvenanceKind::TrivialNonnegativeCost;
+    StableKey authority_identity_;
+    StableKey source_cell_identity_;
+    std::uint64_t exact_carriers_covered_ = 0;
+    double exact_probability_mass_ = 0.0;
+    double lower_q_ = 0.0;
+
+    CarrierWideOptimisticLowerQ(
+        OptimisticLowerQProvenanceKind kind,
+        StableKey authority_identity,
+        StableKey source_cell_identity,
+        std::uint64_t exact_carriers_covered,
+        double exact_probability_mass,
+        double lower_q);
+
+    friend CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
+        const StableKey&,
+        const CoverageDescriptor&);
+    friend CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
+        const StableKey&,
+        const CoverageDescriptor&,
+        StableKey,
+        std::vector<CarrierLowerQWitness>);
+};
+
+CarrierWideOptimisticLowerQ trivial_carrier_wide_lower_q(
+    const StableKey& source_cell_identity,
+    const CoverageDescriptor& coverage);
+
+CarrierWideOptimisticLowerQ certify_carrier_wide_lower_q(
+    const StableKey& source_cell_identity,
+    const CoverageDescriptor& coverage,
+    StableKey authority_identity,
+    std::vector<CarrierLowerQWitness> witnesses);
+
+struct AlternativeActionIdentity {
+    std::uint32_t action_id = 0;
+    StableKey semantic_action_identity;
+    StableKey runtime_contract_program_identity;
+    StableKey exact_choice_recipe_identity;
+
+    bool operator==(const AlternativeActionIdentity&) const = default;
+};
+
+AlternativeActionIdentity canonical_alternative_action_identity(
+    AlternativeActionIdentity value);
+
+struct UnresolvedAlternativeObligationIdentity {
+    std::uint32_t source_cell_id = 0;
+    StableKey source_cell_identity;
+    ObservationRequirement observation_requirement;
+    AlternativeActionIdentity action;
+    StableKey price_identity;
+    StableKey vocabulary_identity;
+    std::uint64_t requirement_generation = 0;
+    std::uint64_t source_generation = 0;
+    std::uint64_t target_generation = 0;
+    std::uint64_t partition_generation = 0;
+    std::uint64_t action_generation = 0;
+    std::uint64_t admission_generation = 0;
+    std::uint64_t price_generation = 0;
+    std::uint64_t vocabulary_generation = 0;
+    CarrierWideOptimisticLowerQ optimistic_lower;
+    double scheduling_priority = 0.0;
+    StableKey resumable_work_identity;
+
+    bool operator==(
+        const UnresolvedAlternativeObligationIdentity&) const = default;
+};
+
+UnresolvedAlternativeObligationIdentity
+canonical_unresolved_alternative_obligation_identity(
+    UnresolvedAlternativeObligationIdentity value);
+
+std::uint64_t unresolved_alternative_obligation_identity_hash(
+    const UnresolvedAlternativeObligationIdentity& identity);
+
+enum class AlternativeObligationStatus : std::uint8_t {
+    Unscheduled = 0,
+    LowerOnly,
+    Scheduled,
+    PartiallyEvaluated,
+    Certified,
+    ConditionallyNoncompetitive,
+    Stale,
+    ResourceInterrupted,
+};
+
+const char* alternative_obligation_status_name(
+    AlternativeObligationStatus status);
+
+struct UnresolvedAlternativeObligation {
+    std::uint32_t obligation_id = 0;
+    std::uint64_t semantic_hash = 0;
+    UnresolvedAlternativeObligationIdentity identity;
+    AlternativeObligationStatus status =
+        AlternativeObligationStatus::Unscheduled;
+    std::uint64_t work_completed = 0;
+    std::optional<std::uint64_t> certified_row_id;
+    std::optional<double> conditional_upper_q;
+    std::uint64_t conditional_q_generation = 0;
+};
+
+struct AlternativeObligationHashBucket {
+    std::uint64_t hash = 0;
+    std::vector<std::uint32_t> obligation_ids;
+};
+
+struct AlternativeObligationValidationContext {
+    StableKey source_cell_identity;
+    StableKey price_identity;
+    StableKey vocabulary_identity;
+    std::uint64_t requirement_generation = 0;
+    std::uint64_t source_generation = 0;
+    std::uint64_t target_generation = 0;
+    std::uint64_t partition_generation = 0;
+    std::uint64_t action_generation = 0;
+    std::uint64_t admission_generation = 0;
+    std::uint64_t price_generation = 0;
+    std::uint64_t vocabulary_generation = 0;
+    std::uint64_t q_generation = 0;
+};
+
+enum class AlternativeObligationValidationStatus : std::uint8_t {
+    Current = 0,
+    MissingObligation,
+    FullKeyMismatch,
+    StaleLifecycle,
+    StaleSourceIdentity,
+    StalePriceIdentity,
+    StaleVocabularyIdentity,
+    StaleRequirementGeneration,
+    StaleSourceGeneration,
+    StaleTargetGeneration,
+    StalePartitionGeneration,
+    StaleActionGeneration,
+    StaleAdmissionGeneration,
+    StalePriceGeneration,
+    StaleVocabularyGeneration,
+    StaleConditionalQGeneration,
+};
+
+enum class AlternativeActionAccountingKind : std::uint8_t {
+    CurrentSelectedCertified = 0,
+    OtherCertified,
+    UnresolvedObligation,
+};
+
+struct AccountedAlternativeAction {
+    std::uint32_t source_cell_id = 0;
+    AlternativeActionIdentity action;
+    AlternativeActionAccountingKind kind =
+        AlternativeActionAccountingKind::UnresolvedObligation;
+    std::optional<std::uint64_t> certified_row_id;
+    std::optional<std::uint32_t> obligation_id;
+};
+
+struct AlternativeActionAccountingAudit {
+    bool complete = false;
+    bool exact_alternative_envelope_closed = false;
+    std::uint64_t admitted_actions = 0;
+    std::uint64_t selected_certified_actions = 0;
+    std::uint64_t other_certified_actions = 0;
+    std::uint64_t unresolved_actions = 0;
+    std::uint64_t conditionally_noncompetitive_actions = 0;
+    std::uint64_t unaccounted_actions = 0;
+    std::uint64_t duplicate_admissions = 0;
+    std::uint64_t duplicate_accounting = 0;
+    std::uint64_t invalid_accounting = 0;
+};
+
 struct ProofProjectedArc {
     StableKey label;
     StableKey target_cell_identity;
@@ -291,6 +506,13 @@ struct ProofStoreStorageStats {
     std::uint64_t source_index_row_capacity = 0;
     std::uint64_t target_index_outer_capacity = 0;
     std::uint64_t target_index_row_capacity = 0;
+    std::uint64_t obligation_capacity = 0;
+    std::uint64_t obligation_bucket_capacity = 0;
+    std::uint64_t obligation_bucket_id_capacity = 0;
+    std::uint64_t obligation_key_u64_capacity = 0;
+    std::uint64_t obligation_requirement_tag_capacity = 0;
+    std::uint64_t obligation_requirement_affix_capacity = 0;
+    std::uint64_t obligation_requirement_selector_tag_capacity = 0;
 };
 
 struct ProofPayloadHashBucket {
@@ -340,6 +562,36 @@ public:
     std::uint32_t payload_count() const;
     std::uint64_t valid_use_site_count() const;
 
+    std::pair<std::uint32_t, bool> intern_alternative_obligation(
+        UnresolvedAlternativeObligationIdentity identity,
+        std::optional<std::uint64_t> forced_hash_for_test = std::nullopt);
+    void transition_alternative_obligation(
+        std::uint32_t obligation_id,
+        AlternativeObligationStatus status,
+        std::optional<std::uint64_t> work_completed = std::nullopt,
+        std::optional<std::uint64_t> certified_row_id = std::nullopt,
+        std::optional<double> conditional_upper_q = std::nullopt,
+        std::uint64_t conditional_q_generation = 0);
+    AlternativeObligationValidationStatus validate_alternative_obligation(
+        std::uint32_t obligation_id,
+        const UnresolvedAlternativeObligationIdentity& expected_identity,
+        const AlternativeObligationValidationContext& context) const;
+    const UnresolvedAlternativeObligation& alternative_obligation(
+        std::uint32_t obligation_id) const;
+    std::uint32_t alternative_obligation_count() const;
+    std::vector<std::uint32_t> ordered_pending_alternative_obligations() const;
+    bool alternative_obligation_supports_executable_upper(
+        std::uint32_t obligation_id) const;
+    bool alternative_obligation_blocks_exactness(
+        std::uint32_t obligation_id,
+        double current_upper_q,
+        std::uint64_t current_q_generation) const;
+    AlternativeActionAccountingAudit audit_alternative_actions(
+        const std::vector<AccountedAlternativeAction>& admitted,
+        const std::vector<AccountedAlternativeAction>& accounted,
+        const std::map<std::uint32_t, double>& current_upper_q_by_source,
+        std::uint64_t current_q_generation) const;
+
     std::uint64_t price_generation() const { return price_generation_; }
     std::uint64_t q_generation() const { return q_generation_; }
     std::uint64_t policy_generation() const { return policy_generation_; }
@@ -357,6 +609,8 @@ private:
     std::vector<RowProofUseSite> use_sites_;
     std::vector<std::vector<std::uint64_t>> source_rows_;
     std::vector<std::vector<std::uint64_t>> target_rows_;
+    std::vector<UnresolvedAlternativeObligation> alternative_obligations_;
+    std::vector<AlternativeObligationHashBucket> alternative_buckets_;
     std::uint64_t price_generation_ = 0;
     std::uint64_t q_generation_ = 0;
     std::uint64_t policy_generation_ = 0;

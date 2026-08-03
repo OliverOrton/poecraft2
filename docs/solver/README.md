@@ -68,6 +68,15 @@ identities and the compiled strategy hash. Alternatives consumed 4,180,979 of
 4,220,669 exact work before both first partition and first upper, directly
 measuring the eager-ordering cost. The telemetry carries no proof authority.
 
+Competitive-lazy Gate 1 adds a first-class proof-store obligation for an
+admitted alternative whose stochastic row is not yet certified. Its lower-Q
+certificate is either the explicit trivial zero fallback or the minimum of a
+complete exact-carrier witness set; a rowless obligation cannot support an
+executable upper. Full action/program/choice, source, price, vocabulary,
+generation, lifecycle, priority, resumable-work, exactness-blocking, and
+memory-ledger identities are retained. This is private native proof
+infrastructure; production row scheduling remains unchanged until Gate 2.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,

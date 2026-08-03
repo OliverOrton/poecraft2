@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification Gate 0 complete. Gate 1
-explicit unresolved alternative obligations are the active boundary.**
+**Status: competitive lazy alternative certification Gates 0 and 1 complete.
+Gate 2 selected-policy-first quotient construction is the active boundary.**
 
 Current plan:
 [Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
@@ -20,8 +20,9 @@ Branch: `codex/competitive-lazy-alternative-certification`
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
 
-Current milestone commits: Gate 0 is recorded by the current local commit;
-Gate 1 has not begun.
+Current milestone commits: Gate 0 is
+`222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is recorded by the
+current local commit; Gate 2 has not begun.
 
 Preserved proof-carrying quotient commits: Gate 0 is
 `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
@@ -60,6 +61,31 @@ Nothing has been pushed or merged. `main` remains unchanged at
 - Focused solve acceptance is 98,131 checks / 0 failures. The before/after
   medium workflows both exact-reconcile and complete 10,000/10,000 simulations
   with zero off-policy failures and zero reference calls.
+
+## Competitive lazy Gate 1
+
+- `ProofStore` now interns full-key, collision-checked
+  `UnresolvedAlternativeObligation` records. Identities retain source cell,
+  observation requirement, action/program/choice, price, vocabulary,
+  requirement/source/target/partition/action/admission/price/vocabulary
+  generations, scheduling priority, and resumable-work identity.
+- `CarrierWideOptimisticLowerQ` has no writable proof fields. Construction is
+  restricted to the explicit nonnegative-cost zero fallback or complete
+  per-carrier witnesses, whose minimum is retained. Incompatible bounds cannot
+  be averaged into a stronger cell lower.
+- All required lifecycle states are represented. Rowless obligations cannot
+  support the executable upper, potentially competitive or stale obligations
+  block exactness, and conditional noncompetition is valid only under its
+  unchanged source upper and Q generation.
+- Complete action accounting accepts each admission exactly once as current
+  selected-certified, other-certified, or an explicit obligation. Deterministic
+  scheduling order and exact capacity-derived obligation memory are covered.
+- Focused quotient-proof acceptance passes 316 checks / 0 failures. Evidence
+  is tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate1.json`.
+- No production row scheduling, cap, mechanic, action filter, ABI, strategy
+  vocabulary, WASM artifact, or frontend contract changed. Gate 2 may now wire
+  these proof objects into selected-policy-first construction.
 
 ## Preserved proof-carrying quotient Gate 0 boundary
 

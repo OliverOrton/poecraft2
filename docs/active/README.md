@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: competitive lazy alternative certification Gate 0 is complete;
-Gate 1 explicit unresolved obligations are active.**
+**Status: competitive lazy alternative certification Gates 0 and 1 are
+complete; Gate 2 selected-policy-first construction is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -11,7 +11,9 @@ It closes and certifies the selected policy first, preserves every admitted
 alternative as an explicit unresolved lower-only obligation, and certifies an
 alternative only when Bellman competitiveness or a counterexample requires
 it. Gate 0 retains behavior-neutral aggregate work attribution and a frozen
-before/after medium comparison; the active plan defines the remaining
+before/after medium comparison. Gate 1 supplies the collision-safe obligation,
+carrier-wide lower, lifecycle, action-accounting, invalidation, deterministic
+order, and memory-ledger contracts. The active plan defines the remaining
 implementation and conditional qualification gates.
 
 The completed

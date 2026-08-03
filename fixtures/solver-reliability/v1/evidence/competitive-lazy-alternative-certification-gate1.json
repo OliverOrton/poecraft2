@@ -1,0 +1,114 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate1_v1",
+  "date": "2026-08-02",
+  "decision": "gate1_qualified_begin_selected_policy_first_construction",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "parent_gate_commit": "222ef42242bb1c51cddb38444750bbd30cda6875",
+  "gate_commit": "the commit containing this evidence record",
+  "implementation": {
+    "owner": "quotient ProofStore",
+    "first_class_type": "UnresolvedAlternativeObligation",
+    "identity_is_collision_checked_by_full_equality": true,
+    "retained_identity": [
+      "source cell id and semantic identity",
+      "canonical observation requirement",
+      "admitted action id and semantic identity",
+      "runtime contract/program identity",
+      "exact choice-recipe identity",
+      "price identity",
+      "vocabulary identity",
+      "requirement, source, target, partition, action, admission, price, and vocabulary generations",
+      "carrier-wide optimistic lower-Q provenance",
+      "scheduling priority",
+      "resumable-work identity"
+    ],
+    "lifecycle_statuses": [
+      "unscheduled",
+      "lower_only",
+      "scheduled",
+      "partially_evaluated",
+      "certified",
+      "conditionally_noncompetitive",
+      "stale",
+      "resource_interrupted"
+    ],
+    "lower_q_contract": {
+      "trivial_fallback": 0.0,
+      "trivial_authority": "nonnegative solver action-cost contract",
+      "nontrivial_construction": "one finite nonnegative witness for every exact carrier locator in canonical source coverage",
+      "retained_value": "minimum carrier lower-Q witness",
+      "averaging_representable": false,
+      "proof_fields_publicly_writable": false
+    },
+    "upper_contract": {
+      "rowless_obligation_supports_executable_upper": false,
+      "certified_status_requires_real_row_id": true,
+      "lower_only_row_is_manufactured": false
+    },
+    "exactness_contract": {
+      "potentially_competitive_obligation_blocks_exactness": true,
+      "stale_obligation_blocks_exactness": true,
+      "conditional_noncompetition_requires_current_source_upper": true,
+      "conditional_noncompetition_requires_current_q_generation": true
+    },
+    "action_accounting": {
+      "allowed_classes": [
+        "current_selected_certified",
+        "other_certified",
+        "unresolved_obligation"
+      ],
+      "omissions_rejected": true,
+      "duplicates_rejected": true,
+      "full_action_identity_collisions_rejected": true
+    },
+    "deterministic_pending_order": [
+      "scheduling priority descending",
+      "optimistic lower-Q ascending",
+      "source cell id",
+      "action id",
+      "full semantic and choice identity",
+      "stable obligation id"
+    ],
+    "memory": {
+      "ledger_category": "AlternativeObligation",
+      "capacity_derived": true,
+      "includes_records_buckets_bucket_ids_keys_and_requirement_payloads": true
+    }
+  },
+  "source_sha256": {
+    "engine/src/solver_quotient_proof.hpp": "02f1cf6f0224d646d40459f9ba486b315d75b5525ff5b2f1407ab79031c18a67",
+    "engine/src/solver_quotient_proof.cpp": "05d6ba36400e369d09429b5c9b0a0bbc5a4fac2e0ee0da823ab070255219792b",
+    "engine/tests/test_solver_quotient_proof.cpp": "21ea5148f3368eaeec7d5baaac6b497db2626c4137898cc3ec9e81cb2767f44f"
+  },
+  "focused_acceptance": {
+    "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite quotient-proof",
+    "checks": 316,
+    "failures": 0,
+    "covered": [
+      "complete action accounting",
+      "forced hash collision and full action/choice identity separation",
+      "carrier-wide lower soundness and average exclusion",
+      "lower-only executable-upper exclusion",
+      "potentially competitive exactness blocking",
+      "deferred conditional noncompetition",
+      "every retained identity and generation invalidation",
+      "all eight lifecycle statuses",
+      "deterministic pending order",
+      "independent capacity-derived memory conservation"
+    ]
+  },
+  "scope": {
+    "production_row_scheduling_changed": false,
+    "mechanics_changed": false,
+    "caps_or_defaults_changed": false,
+    "action_filtering_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false
+  },
+  "next_gate": "selected-policy-first quotient construction",
+  "pushed": false,
+  "merged": false
+}

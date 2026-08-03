@@ -1,6 +1,7 @@
 # Competitive Lazy Alternative Certification
 
-**Status: Gate 0 complete; Gate 1 is the active implementation boundary.**
+**Status: Gates 0 and 1 complete; Gate 2 is the active implementation
+boundary.**
 
 Owner: Oliver
 
@@ -79,7 +80,7 @@ not a forecast or stop authority.
 
 ## Gate 1 — explicit unresolved alternative obligations
 
-**Status: active.**
+**Status: complete.**
 
 Introduce a first-class `UnresolvedAlternativeObligation`; never manufacture a
 fake stochastic row for an action whose outcomes have not been calculated.
@@ -106,7 +107,27 @@ competitive exactness blocking, deferred noncompetitive actions, every
 identity/generation invalidation, deterministic order, and memory accounting.
 Stop only if even a trivial sound lower cannot be represented.
 
+The retained proof-store implementation satisfies this boundary without
+changing production scheduling. `CarrierWideOptimisticLowerQ` can only be
+constructed through a zero lower justified by the nonnegative-cost contract
+or through complete per-carrier witnesses; the latter stores their minimum,
+never their average. Its interned obligation identity is collision checked
+over source, requirement, action/program/choice, price, vocabulary, all
+generations, lower provenance, priority, and resumable-work identity.
+
+All eight lifecycle states are explicit. A certified row id is required before
+an obligation may support an executable upper; every other state remains
+rowless. A current conditional noncompetition proof can close exactness only
+while both its source upper and Q generation still agree. The accounting audit
+accepts each admitted action exactly once as selected-certified,
+other-certified, or an explicit obligation. The dedicated memory-ledger
+category is independently recomputed from retained capacities. Focused native
+acceptance passed 316 checks with zero failures; tracked evidence is
+[`competitive-lazy-alternative-certification-gate1.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate1.json).
+
 ## Gate 2 — selected-policy-first quotient construction
+
+**Status: active.**
 
 Split the eager row API into operations that obtain the current selection,
 enumerate cheap alternative descriptors, create obligations, and certify one

@@ -1093,6 +1093,35 @@ Gate 0 changes no mechanics, caps, action filtering, ABI, strategy vocabulary,
 or scheduling. Gate 1 makes every unresolved admitted alternative a
 first-class lower-only proof obligation.
 
+## Competitive Lazy Alternative Obligations
+
+The 2026-08-02
+[tracked Gate 1 evidence](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate1.json)
+qualifies the private proof object before it is connected to production
+scheduling.
+
+- Collision-checked full identities retain source cell, observation
+  requirement, admitted action/program/choice, price, vocabulary, eight
+  generation dimensions, lower provenance, scheduling priority, and
+  resumable-work identity.
+- Nontrivial lower-Q certificates consume one witness for every exact carrier
+  in the source coverage and retain the minimum. The trivial zero fallback is
+  explicit; incompatible carrier bounds cannot be averaged.
+- Unscheduled, lower-only, scheduled, partially evaluated, certified,
+  conditionally noncompetitive, stale, and resource-interrupted states are
+  distinct. Only a certified obligation with a real row id may support an
+  executable upper.
+- Complete action accounting rejects omissions, duplicates, and identity
+  collisions. Potentially competitive obligations block exactness; a deferred
+  noncompetitive obligation closes it only under the unchanged source upper
+  and Q generation.
+- The obligation store has its own conserved proof-memory category, checked
+  independently from every retained capacity. Focused native acceptance passed
+  316 checks with zero failures.
+
+No production row order, cap, mechanic, action filter, ABI, strategy
+vocabulary, WASM artifact, or frontend contract changes at this gate.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

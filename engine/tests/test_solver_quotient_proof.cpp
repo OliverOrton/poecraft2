@@ -100,6 +100,69 @@ ProofValidationContext validation_context(
     return context;
 }
 
+UnresolvedAlternativeObligationIdentity make_obligation_identity(
+        const std::uint64_t seed = 0,
+        const double scheduling_priority = 0.0,
+        const bool trivial_lower = false) {
+    const CertifiedRowIdentity row = make_identity(seed);
+    UnresolvedAlternativeObligationIdentity identity;
+    identity.source_cell_id = static_cast<std::uint32_t>(40 + seed);
+    identity.source_cell_identity = {5000 + seed};
+    identity.observation_requirement = row.observation_requirement;
+    identity.action.action_id = static_cast<std::uint32_t>(17 + seed);
+    identity.action.semantic_action_identity = {5100 + seed};
+    identity.action.runtime_contract_program_identity = {5200 + seed};
+    identity.action.exact_choice_recipe_identity = {5300 + seed};
+    identity.price_identity = {5400 + seed};
+    identity.vocabulary_identity = {5500 + seed};
+    identity.requirement_generation = 1;
+    identity.source_generation = 2;
+    identity.target_generation = 3;
+    identity.partition_generation = 4;
+    identity.action_generation = 5;
+    identity.admission_generation = 6;
+    identity.price_generation = 7;
+    identity.vocabulary_generation = 8;
+    if (trivial_lower) {
+        identity.optimistic_lower = trivial_carrier_wide_lower_q(
+            identity.source_cell_identity, row.coverage);
+    } else {
+        identity.optimistic_lower = certify_carrier_wide_lower_q(
+            identity.source_cell_identity,
+            row.coverage,
+            {5600 + seed},
+            {
+                {{1300 + seed}, 0, 14.0 + seed},
+                {{1300 + seed}, 1, 12.0 + seed},
+                {{1300 + seed}, 2, 10.0 + seed},
+                {{1300 + seed}, 3, 16.0 + seed},
+            });
+    }
+    identity.scheduling_priority = scheduling_priority;
+    identity.resumable_work_identity = {5700 + seed};
+    return canonical_unresolved_alternative_obligation_identity(
+        std::move(identity));
+}
+
+AlternativeObligationValidationContext obligation_context(
+        const UnresolvedAlternativeObligationIdentity& identity,
+        const std::uint64_t q_generation = 9) {
+    AlternativeObligationValidationContext context;
+    context.source_cell_identity = identity.source_cell_identity;
+    context.price_identity = identity.price_identity;
+    context.vocabulary_identity = identity.vocabulary_identity;
+    context.requirement_generation = identity.requirement_generation;
+    context.source_generation = identity.source_generation;
+    context.target_generation = identity.target_generation;
+    context.partition_generation = identity.partition_generation;
+    context.action_generation = identity.action_generation;
+    context.admission_generation = identity.admission_generation;
+    context.price_generation = identity.price_generation;
+    context.vocabulary_generation = identity.vocabulary_generation;
+    context.q_generation = q_generation;
+    return context;
+}
+
 void check_distinct_payload(
         ProofStore& store,
         const CertifiedRowIdentity& baseline,
@@ -312,6 +375,335 @@ void run_coverage_replay_tests() {
     PC_CHECK(corrupt_mass_rejected);
 }
 
+void run_alternative_lower_and_collision_tests() {
+    const CertifiedRowIdentity row = make_identity();
+    const StableKey source_cell = {5000};
+    const CarrierWideOptimisticLowerQ lower =
+        certify_carrier_wide_lower_q(
+            source_cell,
+            row.coverage,
+            {5600},
+            {
+                {{1300}, 3, 40.0},
+                {{1300}, 1, 20.0},
+                {{1300}, 0, 10.0},
+                {{1300}, 2, 30.0},
+            });
+    PC_CHECK(lower.lower_q() == 10.0);
+    PC_CHECK(lower.lower_q() != 25.0);
+    PC_CHECK(lower.exact_carriers_covered() == 4);
+    PC_CHECK(lower.exact_probability_mass() == 1.0);
+    const CarrierWideOptimisticLowerQ trivial =
+        trivial_carrier_wide_lower_q(source_cell, row.coverage);
+    PC_CHECK(trivial.lower_q() == 0.0);
+    PC_CHECK(
+        trivial.kind() ==
+        OptimisticLowerQProvenanceKind::TrivialNonnegativeCost);
+
+    bool incomplete_rejected = false;
+    try {
+        (void)certify_carrier_wide_lower_q(
+            source_cell,
+            row.coverage,
+            {5600},
+            {
+                {{1300}, 0, 10.0},
+                {{1300}, 1, 20.0},
+                {{1300}, 2, 30.0},
+            });
+    } catch (const std::invalid_argument&) {
+        incomplete_rejected = true;
+    }
+    PC_CHECK(incomplete_rejected);
+    bool duplicate_rejected = false;
+    try {
+        (void)certify_carrier_wide_lower_q(
+            source_cell,
+            row.coverage,
+            {5600},
+            {
+                {{1300}, 0, 10.0},
+                {{1300}, 1, 20.0},
+                {{1300}, 1, 30.0},
+                {{1300}, 3, 40.0},
+            });
+    } catch (const std::invalid_argument&) {
+        duplicate_rejected = true;
+    }
+    PC_CHECK(duplicate_rejected);
+
+    ProofStore store;
+    const UnresolvedAlternativeObligationIdentity first =
+        make_obligation_identity();
+    UnresolvedAlternativeObligationIdentity collision = first;
+    collision.action.exact_choice_recipe_identity = {99999};
+    const auto [first_id, first_reused] =
+        store.intern_alternative_obligation(first, 77);
+    const auto [collision_id, collision_reused] =
+        store.intern_alternative_obligation(collision, 77);
+    const auto [first_again, first_again_reused] =
+        store.intern_alternative_obligation(first, 77);
+    PC_CHECK(!first_reused);
+    PC_CHECK(!collision_reused);
+    PC_CHECK(first_id != collision_id);
+    PC_CHECK(first_again_reused);
+    PC_CHECK(first_again == first_id);
+    PC_CHECK(
+        store.alternative_obligation(first_id).semantic_hash !=
+        store.alternative_obligation(collision_id).semantic_hash);
+}
+
+void run_alternative_lifecycle_and_invalidation_tests() {
+    ProofStore store;
+    const UnresolvedAlternativeObligationIdentity identity =
+        make_obligation_identity();
+    const std::uint32_t id =
+        store.intern_alternative_obligation(identity).first;
+    PC_CHECK(
+        store.alternative_obligation(id).status ==
+        AlternativeObligationStatus::Unscheduled);
+    PC_CHECK(!store.alternative_obligation_supports_executable_upper(id));
+    PC_CHECK(store.alternative_obligation_blocks_exactness(id, 9.0, 9));
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::LowerOnly);
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::Scheduled);
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::PartiallyEvaluated, 10);
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::ResourceInterrupted, 11);
+    PC_CHECK(
+        std::string(alternative_obligation_status_name(
+            store.alternative_obligation(id).status)) ==
+        "resource_interrupted");
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::Scheduled, 11);
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::Certified, 12, 42);
+    PC_CHECK(store.alternative_obligation_supports_executable_upper(id));
+    PC_CHECK(!store.alternative_obligation_blocks_exactness(id, 9.0, 9));
+    store.transition_alternative_obligation(
+        id, AlternativeObligationStatus::Stale);
+    PC_CHECK(store.alternative_obligation(id).work_completed == 12);
+    PC_CHECK(!store.alternative_obligation_supports_executable_upper(id));
+    PC_CHECK(store.alternative_obligation_blocks_exactness(id, 9.0, 9));
+
+    const UnresolvedAlternativeObligationIdentity deferred_identity =
+        make_obligation_identity(1);
+    const std::uint32_t deferred =
+        store.intern_alternative_obligation(deferred_identity).first;
+    store.transition_alternative_obligation(
+        deferred, AlternativeObligationStatus::LowerOnly);
+    store.transition_alternative_obligation(
+        deferred,
+        AlternativeObligationStatus::ConditionallyNoncompetitive,
+        0,
+        std::nullopt,
+        10.5,
+        9);
+    PC_CHECK(!store.alternative_obligation_supports_executable_upper(deferred));
+    PC_CHECK(!store.alternative_obligation_blocks_exactness(
+        deferred, 10.5, 9));
+    PC_CHECK(store.alternative_obligation_blocks_exactness(
+        deferred, 10.5, 10));
+    PC_CHECK(store.alternative_obligation_blocks_exactness(
+        deferred, 11.5, 9));
+
+    const AlternativeObligationValidationContext current =
+        obligation_context(deferred_identity, 9);
+    PC_CHECK(
+        store.validate_alternative_obligation(
+            deferred, deferred_identity, current) ==
+        AlternativeObligationValidationStatus::Current);
+    const auto expect_context_stale = [&](const auto mutate,
+                                          const auto expected) {
+        AlternativeObligationValidationContext changed = current;
+        mutate(changed);
+        PC_CHECK(
+            store.validate_alternative_obligation(
+                deferred, deferred_identity, changed) == expected);
+    };
+    expect_context_stale(
+        [](auto& value) { value.source_cell_identity.push_back(1); },
+        AlternativeObligationValidationStatus::StaleSourceIdentity);
+    expect_context_stale(
+        [](auto& value) { value.price_identity.push_back(1); },
+        AlternativeObligationValidationStatus::StalePriceIdentity);
+    expect_context_stale(
+        [](auto& value) { value.vocabulary_identity.push_back(1); },
+        AlternativeObligationValidationStatus::StaleVocabularyIdentity);
+    expect_context_stale(
+        [](auto& value) { ++value.requirement_generation; },
+        AlternativeObligationValidationStatus::StaleRequirementGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.source_generation; },
+        AlternativeObligationValidationStatus::StaleSourceGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.target_generation; },
+        AlternativeObligationValidationStatus::StaleTargetGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.partition_generation; },
+        AlternativeObligationValidationStatus::StalePartitionGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.action_generation; },
+        AlternativeObligationValidationStatus::StaleActionGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.admission_generation; },
+        AlternativeObligationValidationStatus::StaleAdmissionGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.price_generation; },
+        AlternativeObligationValidationStatus::StalePriceGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.vocabulary_generation; },
+        AlternativeObligationValidationStatus::StaleVocabularyGeneration);
+    expect_context_stale(
+        [](auto& value) { ++value.q_generation; },
+        AlternativeObligationValidationStatus::StaleConditionalQGeneration);
+    UnresolvedAlternativeObligationIdentity wrong = deferred_identity;
+    wrong.action.exact_choice_recipe_identity.push_back(9);
+    PC_CHECK(
+        store.validate_alternative_obligation(
+            deferred, wrong, current) ==
+        AlternativeObligationValidationStatus::FullKeyMismatch);
+    store.transition_alternative_obligation(
+        deferred, AlternativeObligationStatus::Stale);
+    PC_CHECK(
+        store.validate_alternative_obligation(
+            deferred, deferred_identity, current) ==
+        AlternativeObligationValidationStatus::StaleLifecycle);
+}
+
+AccountedAlternativeAction accounting_entry(
+        const UnresolvedAlternativeObligationIdentity& identity,
+        const AlternativeActionAccountingKind kind,
+        const std::optional<std::uint32_t> obligation_id = std::nullopt,
+        const std::optional<std::uint64_t> row_id = std::nullopt) {
+    return {
+        identity.source_cell_id,
+        identity.action,
+        kind,
+        row_id,
+        obligation_id};
+}
+
+void run_alternative_order_and_accounting_tests() {
+    ProofStore store;
+    const auto selected = make_obligation_identity(10);
+    const auto certified = make_obligation_identity(11);
+    const auto unresolved = make_obligation_identity(12, 2.0);
+    const auto noncompetitive = make_obligation_identity(13, 3.0);
+    const auto lower_priority = make_obligation_identity(14, 1.0);
+    const std::uint32_t unresolved_id =
+        store.intern_alternative_obligation(unresolved).first;
+    const std::uint32_t noncompetitive_id =
+        store.intern_alternative_obligation(noncompetitive).first;
+    const std::uint32_t lower_priority_id =
+        store.intern_alternative_obligation(lower_priority).first;
+    PC_CHECK((
+        store.ordered_pending_alternative_obligations() ==
+        std::vector<std::uint32_t>{
+            noncompetitive_id, unresolved_id, lower_priority_id}));
+
+    store.transition_alternative_obligation(
+        noncompetitive_id, AlternativeObligationStatus::LowerOnly);
+    store.transition_alternative_obligation(
+        noncompetitive_id,
+        AlternativeObligationStatus::ConditionallyNoncompetitive,
+        0,
+        std::nullopt,
+        noncompetitive.optimistic_lower.lower_q(),
+        22);
+
+    std::vector<AccountedAlternativeAction> admitted = {
+        accounting_entry(
+            selected,
+            AlternativeActionAccountingKind::UnresolvedObligation),
+        accounting_entry(
+            certified,
+            AlternativeActionAccountingKind::UnresolvedObligation),
+        accounting_entry(
+            unresolved,
+            AlternativeActionAccountingKind::UnresolvedObligation),
+        accounting_entry(
+            noncompetitive,
+            AlternativeActionAccountingKind::UnresolvedObligation),
+    };
+    std::vector<AccountedAlternativeAction> accounted = {
+        accounting_entry(
+            selected,
+            AlternativeActionAccountingKind::CurrentSelectedCertified,
+            std::nullopt,
+            100),
+        accounting_entry(
+            certified,
+            AlternativeActionAccountingKind::OtherCertified,
+            std::nullopt,
+            101),
+        accounting_entry(
+            unresolved,
+            AlternativeActionAccountingKind::UnresolvedObligation,
+            unresolved_id),
+        accounting_entry(
+            noncompetitive,
+            AlternativeActionAccountingKind::UnresolvedObligation,
+            noncompetitive_id),
+    };
+    AlternativeActionAccountingAudit audit =
+        store.audit_alternative_actions(
+            admitted,
+            accounted,
+            {{noncompetitive.source_cell_id,
+              noncompetitive.optimistic_lower.lower_q()}},
+            22);
+    PC_CHECK(audit.complete);
+    PC_CHECK(!audit.exact_alternative_envelope_closed);
+    PC_CHECK(audit.selected_certified_actions == 1);
+    PC_CHECK(audit.other_certified_actions == 1);
+    PC_CHECK(audit.unresolved_actions == 1);
+    PC_CHECK(audit.conditionally_noncompetitive_actions == 1);
+
+    store.transition_alternative_obligation(
+        unresolved_id, AlternativeObligationStatus::LowerOnly);
+    store.transition_alternative_obligation(
+        unresolved_id,
+        AlternativeObligationStatus::ConditionallyNoncompetitive,
+        0,
+        std::nullopt,
+        unresolved.optimistic_lower.lower_q(),
+        22);
+    audit = store.audit_alternative_actions(
+        admitted,
+        accounted,
+        {{unresolved.source_cell_id,
+          unresolved.optimistic_lower.lower_q()},
+         {noncompetitive.source_cell_id,
+          noncompetitive.optimistic_lower.lower_q()}},
+        22);
+    PC_CHECK(audit.complete);
+    PC_CHECK(audit.exact_alternative_envelope_closed);
+    PC_CHECK(audit.unresolved_actions == 0);
+    PC_CHECK(audit.conditionally_noncompetitive_actions == 2);
+
+    accounted.erase(accounted.begin() + 2);
+    audit = store.audit_alternative_actions(
+        admitted,
+        accounted,
+        {{noncompetitive.source_cell_id,
+          noncompetitive.optimistic_lower.lower_q()}},
+        22);
+    PC_CHECK(!audit.complete);
+    PC_CHECK(audit.unaccounted_actions == 1);
+
+    admitted.push_back(admitted.front());
+    audit = store.audit_alternative_actions(
+        admitted,
+        accounted,
+        {{noncompetitive.source_cell_id,
+          noncompetitive.optimistic_lower.lower_q()}},
+        22);
+    PC_CHECK(audit.duplicate_admissions == 1);
+}
+
 std::array<std::uint64_t, kProofMemoryCategoryCount>
 independent_store_bytes(
         const ProofStoreStorageStats& stats) {
@@ -351,6 +743,18 @@ independent_store_bytes(
     expected[index(ProofMemoryCategory::CoverageDescriptor)] =
         stats.coverage_range_capacity * sizeof(CoverageRange) +
         stats.coverage_key_u64_capacity * sizeof(std::uint64_t);
+    expected[index(ProofMemoryCategory::AlternativeObligation)] =
+        stats.obligation_capacity *
+            sizeof(UnresolvedAlternativeObligation) +
+        stats.obligation_bucket_capacity *
+            sizeof(AlternativeObligationHashBucket) +
+        stats.obligation_bucket_id_capacity * sizeof(std::uint32_t) +
+        stats.obligation_key_u64_capacity * sizeof(std::uint64_t) +
+        stats.obligation_requirement_tag_capacity * sizeof(std::uint32_t) +
+        stats.obligation_requirement_affix_capacity *
+            sizeof(RefinementAffixObservation) +
+        stats.obligation_requirement_selector_tag_capacity *
+            sizeof(std::uint32_t);
     return expected;
 }
 
@@ -377,6 +781,7 @@ void run_ledger_conservation_test() {
     PC_CHECK(store.valid_use_site_count() == 2);
     PC_CHECK(store.invalidate_target(2) == 2);
     store.attach_row(40, payload_id, 6, 3, {{7, 4}}, 1, 1);
+    (void)store.intern_alternative_obligation(make_obligation_identity());
 
     const ProofStoreStorageStats stats = store.storage_stats();
     const auto expected = independent_store_bytes(stats);
@@ -385,7 +790,8 @@ void run_ledger_conservation_test() {
              ProofMemoryCategory::ProofPayload,
              ProofMemoryCategory::Certificate,
              ProofMemoryCategory::DependencySidecar,
-             ProofMemoryCategory::CoverageDescriptor}) {
+             ProofMemoryCategory::CoverageDescriptor,
+             ProofMemoryCategory::AlternativeObligation}) {
         const std::size_t offset = static_cast<std::size_t>(category);
         PC_CHECK(allocated.bytes[offset] == expected[offset]);
     }
@@ -455,5 +861,8 @@ void run_solver_quotient_proof_tests() {
     run_collision_and_identity_tests();
     run_dependency_generation_tests();
     run_coverage_replay_tests();
+    run_alternative_lower_and_collision_tests();
+    run_alternative_lifecycle_and_invalidation_tests();
+    run_alternative_order_and_accounting_tests();
     run_ledger_conservation_test();
 }
