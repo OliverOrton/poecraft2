@@ -1,9 +1,17 @@
 # Active Work
 
-**Status: no implementation boundary is active. Oliver must choose the next
-chunk before implementation resumes.**
+**Status: selected-closure scaling and exact broad-row projection Gate 0 is
+complete; Gate 1 current selected-first 100M diagnostic is active.**
 
 Parent: [Documentation map](../README.md)
+
+Current boundary:
+[Selected-Closure Scaling And Exact Broad-Row Projection](selected-closure-broad-row-scaling.md).
+It preserves the selected-first architecture and complete action envelope,
+measures the hard selected closure once at 100M, then attributes and prototypes
+generic exact future-relevant projection for broad rows. A higher cap is only a
+conditional interim behavior; projected/raw equivalence and a 10x row-work or
+original-cap upper remain the structural gate.
 
 The completed
 [Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md)

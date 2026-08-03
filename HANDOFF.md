@@ -1,8 +1,11 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification stopped structurally at
-Gate 5. No implementation boundary is active; Oliver must choose the next
-chunk before implementation resumes.**
+**Status: selected-closure scaling and exact broad-row projection Gate 0 is
+complete. Gate 1 current selected-first 100M diagnostic is the active
+boundary.**
+
+Current plan:
+[Selected-Closure Scaling And Exact Broad-Row Projection](docs/active/selected-closure-broad-row-scaling.md).
 
 Completed milestone:
 [Competitive Lazy Alternative Certification](docs/archive/2026-08-02-competitive-lazy-alternative-certification/README.md).
@@ -16,7 +19,15 @@ Source milestone:
 Completed enabling milestone:
 [Solver Iteration Infrastructure And Decomposition](docs/archive/2026-08-01-solver-iteration-infrastructure/README.md).
 
-Branch: `codex/competitive-lazy-alternative-certification`
+Completed milestone branch: `codex/competitive-lazy-alternative-certification`
+
+Current branch: `codex/selected-closure-broad-row-scaling`
+
+Current milestone starting commit:
+`a6f7e13cf7d5cb202874c210992689d601c0e650`
+
+Current milestone commits: Gate 0 is recorded by the current local commit.
+Gate 1 has not begun.
 
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
@@ -40,6 +51,32 @@ the final archive commit.
 
 Nothing has been pushed or merged. `main` remains unchanged at
 `25d5bbe6791beb61eae803219563575346def2dc`.
+
+## Selected-closure scaling Gate 0
+
+- The current branch, commit, native benchmark/engine binaries, artifact,
+  economy snapshot, canonical hard fixture, full 27-action order, options,
+  source authorities, and selected-first 20M evidence are frozen in
+  `fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate0.json`.
+- The 20M result is not rerun: 14,077,632 coarse plus 5,922,368 selected work,
+  two completed selected rows, 345,192 transitions, no alternatives,
+  partition, obligation set, or upper, and 375,483,695-byte peak native-owned
+  memory.
+- Gate 1 is authorized to run the current selected-first hard case exactly
+  once at 100M. A temporary case may differ only in
+  `caps.max_reforge_work`; the canonical fixture and product 20M default stay
+  unchanged. The 1 GiB cap, 900-second external watchdog, full action
+  envelope, exact evaluation request, and 10,000-run request remain fixed.
+- Required evidence includes selected/alternative rows, work and transitions;
+  partition/upper work and wall; row slopes; report wall, peak memory, and
+  maximum solve step; retained policy; action/obligation accounting; and all
+  downstream verification if a policy exists.
+- A 200M run is forbidden unless 100M reaches a partition and strongly
+  projects an upper below 200M. No partition or flat/rising rows without such
+  progress means no 200M run and no default increase. Broad-row attribution
+  proceeds in every outcome.
+- No production source, fixture, default, mechanic, ABI, WASM artifact, or
+  frontend contract changed in Gate 0. No test was required.
 
 ## Competitive lazy Gate 0
 
@@ -427,11 +464,23 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Oliver must choose the next implementation chunk. Do not infer a successor
-from the archive or resume Gates 6–7: their prerequisite failed. Preserve the
-single frozen Gate 5 measurement; do not rerun it, raise a cap, narrow the
-vocabulary, or manufacture a bounded policy from its incomplete selected
-closure without a new owner-selected plan.
+Run selected-closure scaling Gate 1 exactly once:
+
+1. Create an isolated temporary copy of the frozen two-goal corpus/case whose
+   only semantic difference is `caps.max_reforge_work = 100000000`; prove the
+   canonical fixture remains unchanged.
+2. Invoke the existing selected-first native benchmark with the full 27-action
+   vocabulary, 1 GiB cap, 900-second external process-tree watchdog, progress
+   and partial output, exact evaluation, and 10,000 simulations requested if a
+   policy exists.
+3. Record selected/alternative rows, work and transitions; first partition and
+   upper work/wall; per-row and transition slopes; maximum cooperative step;
+   total wall and peak memory; policy provenance; action/obligation accounting;
+   and compilation/reconciliation/simulation status.
+4. If no partition appears, or row work is flat/rising without a credible
+   upper below 200M, do not run 200M and do not raise the default. If a
+   partition strongly projects such an upper, at most one 200M run is allowed.
+5. Commit the diagnostic evidence before beginning broad-row source changes.
 
 Deterministic checkpoint/replay remains deferred.
 

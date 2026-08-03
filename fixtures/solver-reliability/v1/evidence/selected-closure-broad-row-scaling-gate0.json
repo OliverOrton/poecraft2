@@ -1,0 +1,189 @@
+{
+  "schema_version": "selected_closure_broad_row_scaling_gate0_v1",
+  "date": "2026-08-03",
+  "decision": "gate0_measurement_contract_frozen_authorize_one_selected_first_100m_run",
+  "branch": "codex/selected-closure-broad-row-scaling",
+  "starting_commit": "a6f7e13cf7d5cb202874c210992689d601c0e650",
+  "gate_commit": "the commit containing this evidence record",
+  "main_commit_unchanged": "25d5bbe6791beb61eae803219563575346def2dc",
+  "frozen_boundaries": {
+    "selected_first_architecture_preserved": true,
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "admitted_vocabulary_changed": false,
+    "prices_or_objective_changed": false,
+    "canonical_product_max_reforge_work": 20000000,
+    "gate1_diagnostic_max_reforge_work": 100000000,
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_seconds": 900,
+    "public_c_abi_changed": false,
+    "strategy_json_changed": false,
+    "wasm_contract_changed": false,
+    "frontend_authority_changed": false,
+    "named_action_or_fixture_special_cases": false,
+    "canonical_fixture_changed": false,
+    "product_default_changed": false
+  },
+  "frozen_identities": {
+    "corpus_manifest": {
+      "path": "fixtures/solver-reliability/v1/manifest.json",
+      "sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f"
+    },
+    "hard_case": {
+      "id": "natural-t1-breadth-two-4e65dda9c53b",
+      "path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be"
+    },
+    "compiled_artifact_manifest": {
+      "path": "data/compiled/current/manifest.json",
+      "sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5"
+    },
+    "economy": {
+      "content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+      "snapshot_path": "apps/web/public/economy/snapshots/9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f.json",
+      "snapshot_file_sha256": "9cae91c13f2c8a6bb06fe0d22487cfc77ca44983817a221de131e5fc3e72cb0e"
+    },
+    "native_binaries": {
+      "benchmark_path": "build/engine/poecraft_solver_benchmark.exe",
+      "benchmark_sha256": "18b55632d0840d78db639583105a815eb0089659bbd9d6cd1f7c8b63a0c0cca3",
+      "engine_path": "build/engine/poecraft_engine.dll",
+      "engine_sha256": "896c2954859c87871fb67cff16b5e8c63c11e51e08160810a6e787756902f0bc"
+    },
+    "action_vocabulary": {
+      "product_action_count": 27,
+      "preserved_order_identity_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5",
+      "compact_json_sha256": "94fccfe5e3a7b5931954b6323241b18adce1e643b0a2576517a36a301f5f2318",
+      "source": "product_action_ids in the preserved selected-first 20M report",
+      "ordered_ids": [
+        "transmute",
+        "augment",
+        "alteration",
+        "regal",
+        "alchemy",
+        "chaos",
+        "exalt",
+        "annul",
+        "scour",
+        "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingCasterMods+Metadata/Items/Currency/CurrencyDelveCraftingEnchant+Metadata/Items/Currency/CurrencyDelveCraftingSockets+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingBleedPoison+Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingLightning+Metadata/Items/Currency/CurrencyDelveCraftingPhysical",
+        "fossil:Metadata/Items/Currency/CurrencyDelveCraftingLife+Metadata/Items/Currency/CurrencyDelveCraftingSpeed",
+        "harvest_reforge:caster",
+        "harvest_reforge:life",
+        "harvest_reforge:speed",
+        "harvest_augment:caster",
+        "harvest_augment:life",
+        "harvest_augment:speed",
+        "fracture",
+        "restart"
+      ]
+    },
+    "options": {
+      "canonical_caps_compact_json_sha256": "890a74c397e66021c2c130f85d2c6cb79578eb0165b293b66a46cf6bc35a971d",
+      "verification_compact_json_sha256": "505fe0a9c003965f1ab5ffbdd1300e89812abf046032d52615dd2e38c860723a",
+      "goal_progress_gated_reforges": true,
+      "solve_step_work_items": 1024,
+      "worker_step_ms": 20000,
+      "cancel_ack_ms": 250,
+      "max_discovered_states": 200000,
+      "max_expanded_states": 1000,
+      "max_state_action_rows": 1215000,
+      "max_transitions": 10000000,
+      "max_solver_owned_bytes": 1073741824,
+      "diagnostic_max_reforge_work_override": 100000000,
+      "exact_strategy_evaluation_requested": true,
+      "verification_runs_override": 10000
+    }
+  },
+  "selected_first_20m_frozen_evidence": {
+    "rerun_forbidden": true,
+    "tracked_evidence_path": "fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate5-structural-stop.json",
+    "tracked_evidence_sha256": "208f50645cbd2436417d9ae570fa8c81c4517832b48aaf057413d713c9e6d114",
+    "raw_report_path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json",
+    "raw_report_sha256": "17f2dee8fa8d91c3a383037fc4371945758932cdf61ec7d61ec803ba7292be0f",
+    "coarse_reforge_work": 14077632,
+    "post_coarse_allowance": 5922368,
+    "selected_rows_begun": 2,
+    "selected_rows_completed": 2,
+    "selected_reforge_work": 5922368,
+    "exact_transitions": 345192,
+    "average_work_per_completed_selected_row": 2961184,
+    "transitions_per_completed_selected_row": 172596,
+    "alternative_rows_begun": 0,
+    "partition_reached": false,
+    "executable_upper_reached": false,
+    "native_peak_owned_bytes": 375483695
+  },
+  "source_authorities": {
+    "engine/benchmarks/solver_benchmark.cpp": "989b280e3a3e5f4381978d38b3a8612bcc9565379d8c4372d9bcfa40f30a6340",
+    "engine/include/poecraft/solver.h": "efc74805a66d8bdac9e7d45e57ca64ba5cd81227569d0ad04ded457dccb69046",
+    "engine/src/solver_internal.hpp": "5b8404f73311dc8aea67a3a646102bef5ec1be35f876996360415a356852446b",
+    "engine/src/solver_calc.cpp": "852f35ecadcad3ee78b2cb54bef0ae778a88754ab7ee0e372699852167a532ca",
+    "engine/src/solver_options_automatic.cpp": "d3b5ea86a9ab1b8d584b40b85a2ec8a7f9fb94b3bb66c2b55f0d47aa8728b069",
+    "engine/src/solver_policy_oracle_setup.inc": "0829ec3d696b7cb6b0ae0b4213bc4bc49b2dc17ae556851807862f0d628a2591",
+    "engine/src/solver_policy_oracle_resources.inc": "4e2304c648917442e0b040c0a8a52dffa8b6b22fcfa5575a65e01d86206ba008",
+    "engine/src/solver_policy_refinement.cpp": "4e31136635d20e22b2baaf2d003b74f005f5782e9682cd745bc239ef38f53da9",
+    "engine/src/solver_reforge.cpp": "3954d2bc9f888ebfa2b9fb2e541308d6f3dcefdf8b8bdec2074cd061f0f4c0b5",
+    "engine/src/solver_solve_finish.cpp": "79f7724405a60136afaa7288ea5cb04755d85d2b9666dd80f2055bc3257dba27"
+  },
+  "measurement_contract": {
+    "one_new_100m_invocation_authorized": true,
+    "one_new_200m_invocation_conditionally_authorized": "only after a 100M partition plus strong evidence for an upper below 200M",
+    "temporary_case_rule": "copy the canonical case and change only caps.max_reforge_work to 100000000",
+    "canonical_fixture_must_remain_unchanged": true,
+    "required_metrics": [
+      "selected rows begun and completed",
+      "selected and alternative reforge work and transitions",
+      "work and wall time to first partition and first executable upper",
+      "native report wall and peak owned memory",
+      "maximum cooperative solve-step duration",
+      "retained policy status and provenance",
+      "action and obligation accounting",
+      "row work and transition slopes",
+      "compilation exact reconciliation and 10000 simulations when a policy exists"
+    ],
+    "command_contract": "one direct native benchmark over an isolated temporary corpus with --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges --progress, partial and strategy outputs, and a 900-second external process-tree watchdog"
+  },
+  "hash_classification": {
+    "order_invariant_required_exact": [
+      "canonical corpus fixture artifact and economy identities",
+      "all options and caps except the explicit temporary max_reforge_work override",
+      "27 product action ids and their order",
+      "coarse transition_bits_hash policy_bits_hash work and bounds",
+      "canonical projected target probability maps",
+      "action legality cost goal and below-tier semantics",
+      "forced guaranteed and exclusion semantics",
+      "final Bellman values policy semantics exact cost and off-policy mass"
+    ],
+    "order_sensitive_allowed_to_change_after_source_work": [
+      "implementation source and native binary SHA-256",
+      "whole report partial report stdout and strategy-file SHA-256",
+      "raw transition order and raw transition hash after projected representation",
+      "internal quotient row payload scheduling and cache identities",
+      "wall-time and cooperative-step timing",
+      "compiled strategy SHA-256 when an exactly reconciled semantic policy changes"
+    ],
+    "acceptance_rule": "order-sensitive changes never replace canonical projected-map equality exact cost reconciliation properness complete action accounting or zero off-policy mass"
+  },
+  "decision_table": {
+    "upper_by_100m": "continue Gate 2 and treat the measured range as an interim cap candidate",
+    "partition_and_credible_upper_below_200m": "permit one 200M diagnostic",
+    "no_partition_or_flat_rising_rows_without_near_term_upper": "do not run 200M and do not raise the default; continue Gate 3",
+    "broad_row_research": "continue regardless of Gate 1 outcome"
+  },
+  "scope": {
+    "source_changed": false,
+    "product_default_changed": false,
+    "canonical_fixture_changed": false,
+    "tests_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "next_gate": "current selected-first 100M diagnostic"
+}

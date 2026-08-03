@@ -1223,6 +1223,18 @@ condition is now resolved negatively: selected closure does not fit the frozen
 post-coarse allowance. This is a selected-closure structural stop, so no Gate 6
 or Gate 7 acceptance was run.
 
+## Selected-Closure Scaling Gate 0
+
+The 2026-08-03
+[`selected-closure-broad-row-scaling-gate0.json`](../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate0.json)
+freezes the current selected-first benchmark and engine binaries, artifact,
+economy, fixture, 27-action order, options, source authorities, prior 20M
+evidence, required metrics, and semantic/order-sensitive hash classification.
+It authorizes exactly one new selected-first 100M hard-case diagnostic under
+the unchanged 1 GiB and 900-second limits. Only a temporary fixture copy may
+change `caps.max_reforge_work`; the canonical 20M fixture and product default
+remain unchanged. No source or test changed at this documentation-only gate.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
