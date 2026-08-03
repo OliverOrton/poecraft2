@@ -632,6 +632,9 @@ solver::SolveOptions solve_options(const pc_solve_options* options) {
         value.high_impact_executable_uppers =
             (options->solver_flags &
              solver::kHighImpactExecutableUppersDiagnosticFlag) != 0;
+        value.projected_reforge_frontier_diagnostic =
+            (options->solver_flags &
+             solver::kProjectedReforgeFrontierDiagnosticFlag) != 0;
     }
     if (PC_SOLVE_OPTION_HAS(max_absolute_optimality_gap) &&
         options->max_absolute_optimality_gap > 0.0) {

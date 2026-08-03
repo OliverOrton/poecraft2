@@ -1,13 +1,13 @@
 # Session Handoff
 
-**Status: selected-closure scaling Gates 0, 1, 3, and 4 are complete. Gate 2
-is skipped by its condition; Gate 5 exact equivalence and performance
-qualification is the active boundary.**
+**Status: selected-closure scaling completed at Gate 5 with a measured
+structural rejection. Gates 2 and 6–8 were skipped by their conditions. No
+implementation boundary is selected; Oliver must choose the next chunk.**
 
-Current plan:
-[Selected-Closure Scaling And Exact Broad-Row Projection](docs/active/selected-closure-broad-row-scaling.md).
+Latest completed milestone:
+[Selected-Closure Scaling And Exact Broad-Row Projection](docs/archive/2026-08-03-selected-closure-broad-row-scaling/README.md).
 
-Completed milestone:
+Preceding completed milestone:
 [Competitive Lazy Alternative Certification](docs/archive/2026-08-02-competitive-lazy-alternative-certification/README.md).
 
 Completed diagnostic:
@@ -29,8 +29,9 @@ Current milestone starting commit:
 Current milestone commits: Gate 0 is
 `9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is
 `c9481fb0a5b6666ce73afbdafc497296dd369937`. Gate 2 is skipped. Gate 3 is
-`1ee6bc8481b47bc2e83228e577a930e9c9b72975`. Gate 4 is recorded by the
-current local commit; Gate 5 is the active boundary.
+`1ee6bc8481b47bc2e83228e577a930e9c9b72975`. Gate 4 is
+`ac41a0db96acd45a26a55a1e268502573f2fca74`. Gate 5 and the archive are
+recorded by the current local commit.
 
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
@@ -171,6 +172,34 @@ Nothing has been pushed or merged. `main` remains unchanged at
   Chaos-like, Essence, Harvest, and Fossil rows, including a positive Fossil
   multiplier and a zeroed tag. The focused engine suite passes 174,411 checks
   with zero failures. Product behavior remains raw pending Gate 5.
+
+## Selected-closure scaling Gate 5 structural rejection
+
+- Forward and reversed raw/projected traversals agree on canonical probability
+  maps and goal mass for synthetic ordinary, Essence, Harvest, and Fossil
+  rows. Sampled real-artifact checks add empty and fractured Vaal Regalia
+  carriers, legality, action cost, Bellman value, and selected semantic action.
+- The focused artifact command passes 250,713 checks with zero failures. No
+  public ABI or strategy vocabulary changed, so neither WASM nor web rebuilds
+  were required at this gate.
+- The only new hard diagnostic reuses Gate 3's accepted 18M carrier and adds
+  the native-only projected-frontier flag. It is not a rerun of the frozen 20M
+  case or the one-shot 100M case; no 200M run was performed.
+- On the binding root Zeal Essence row, parallel V1 work remains 2,097,355 and
+  V2 work is 923,141. The exact 55.99% reduction still exceeds the 300,000
+  ceiling by 623,141 work and measures 1.004 seconds versus 0.809 seconds raw.
+- Gate 3's 236,980 proxy omitted 638,365 eligible final-depth branches that
+  commit directly instead of extending the next frontier. Gate 5 charges them
+  as real work; declaring them free would weaken the cap rather than optimize
+  the algorithm.
+- The diagnostic again stops on the work cap after four selected rows, with no
+  partition, alternative obligation, executable upper, or policy. Compilation,
+  exact reconciliation, and 10,000-run simulation are not applicable.
+- The exact V2 research path and raw oracle are retained, but production
+  integration is rejected. Raw remains the product default and the 20M default
+  is unchanged. Gates 6–8 are skipped by condition.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate5-structural-rejection.json`.
 
 ## Competitive lazy Gate 0
 
@@ -558,22 +587,14 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete selected-closure scaling Gate 5:
+No implementation boundary is active. Oliver must choose the next chunk before
+implementation resumes.
 
-1. Compare raw and projected canonical probability maps across the focused
-   synthetic mechanics and sampled real bases, including group exclusions,
-   forced/guaranteed behavior, Fossil additions/zeroed support, legality, and
-   action cost.
-2. Add a test-only reversed-enumeration path and require deterministic
-   canonical maps in both directions. Compare Bellman values and selected
-   policy semantics, not raw state or transition order.
-3. Opt only the diagnostic strict publication child into V2 and measure the
-   attributed hard Zeal Essence row. Qualification requires at most 300,000
-   V2 work while retaining the parallel 2,097,355 V1 counter.
-4. If the row qualifies, record Gate 5 evidence and commit before Gate 6
-   production integration. If it does not, archive the measured rejection.
-5. Do not run the frozen/original 20M case until conditional Gate 7, and do
-   not run 100M or 200M again.
+The durable candidate exposed by Gate 5 is final-depth projected successor
+accumulation: reduce or factor the 638,365 direct terminal branches while
+retaining every proof- and future-visible distinction. It is a possible future
+direction, not scheduled work. Reclassifying those branches as free is not an
+acceptable optimization.
 
 Deterministic checkpoint/replay remains deferred.
 

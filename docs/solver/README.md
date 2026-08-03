@@ -86,6 +86,17 @@ the selected operator, and audit full action accounting. The focused path
 partitions and publishes a proper compiled upper with zero alternative kernels;
 competitive exact expansion begins only in Gate 3.
 
+The subsequent
+[selected-closure scaling milestone](../archive/2026-08-03-selected-closure-broad-row-scaling/README.md)
+retains an internal opt-in sparse projected reforge frontier and the raw path as
+an independently selectable oracle. Equivalence covers ordinary, Essence,
+Harvest, and Fossil rows, reversed traversal, sampled real carriers, and a real
+Bellman selection. The binding row's comparable work falls from 2,097,355 to
+923,141 but misses the 300,000 qualification ceiling and increases measured
+wall time. Production integration was therefore rejected: raw remains the
+default, the 20M default is unchanged, and no public ABI or strategy vocabulary
+changed.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,
@@ -399,6 +410,17 @@ uses the combined remaining-weight denominator
 weights restored the tiny table's rank but cost more identities than the
 joint representation and would be required after every pick. See the
 [action-local factorization report](../archive/2026-07-27-action-local-side-factorization/report.md).
+
+For diagnostics and equivalence testing, the retained sparse frontier augments
+the exact projected roll state with a collision-checked interned availability
+bitset. It removes a roll bucket only for exact group conflict, exhausted
+multiplicity, occupied or blocked goal observations, closed side capacity, or
+zero natural weight. Versioned work ledgers report the raw node-plus-all-bucket
+V1 cost beside the V2 sparse-node, availability-word, and eligible-edge cost.
+The active evaluator alone is charged to `max_reforge_work`; raw remains the
+product evaluator. The rejected qualification and the omitted-final-depth
+proxy correction are recorded in the
+[final report](../archive/2026-08-03-selected-closure-broad-row-scaling/report.md).
 
 The later
 [complete first-frontier census](../archive/2026-07-27-true-successor-frontier-census/report.md)

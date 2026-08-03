@@ -150,6 +150,9 @@
             exact_start.prefixes, exact_start.prefix_count);
         retain_start_mods(
             exact_start.suffixes, exact_start.suffix_count);
+        /* Contract-derived semantic strict carrier with bounded broad-row
+         * attribution and an explicit diagnostic-only projected-frontier
+         * opt-in. */
         strict_ = std::make_unique<CalcContext>(
             borrowed_session_,
             coarse_.goal(),
@@ -165,8 +168,8 @@
             false,
             exact_start_mods,
             false,
-            true); /* contract-derived semantic strict carrier with bounded
-                      broad-row attribution */
+            true,
+            limits_.use_projected_reforge_frontier);
         require_local_memory(
             exact_start_mods.capacity() * sizeof(std::uint64_t),
             "strict calculation construction");

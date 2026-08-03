@@ -1273,6 +1273,29 @@ arrivals, of which 516,143 merge into existing projected targets and carry
 0.25435223351246694 duplicate-arrival probability mass. The exact sparse
 projected prototype is therefore the active boundary.
 
+## Selected-Closure Scaling Gate 5 Structural Rejection
+
+The 2026-08-03
+[`selected-closure-broad-row-scaling-gate5-structural-rejection.json`](../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate5-structural-rejection.json)
+records exact raw/projected equivalence across synthetic ordinary, Essence,
+Harvest, and Fossil rows, reversed enumeration, sampled real-artifact carriers,
+and a real Bellman action comparison. The focused artifact command completes
+250,713 checks with zero failures.
+
+One native-only 18M diagnostic reuses Gate 3's accepted hard carrier with the
+projected evaluator enabled. The binding root Zeal Essence row retains 172,596
+strict outcomes and a 2,097,355 V1 ledger while V2 uses 923,141 work, a 55.99%
+reduction. V2 nevertheless misses the 300,000 ceiling by 623,141 work and
+increases row wall from 0.809 to 1.004 seconds. Gate 3's 236,980 proxy omitted
+638,365 eligible final-depth branches that commit directly rather than entering
+the next frontier; Gate 5 counts them as real work.
+
+The run stops on the cap after four selected rows with no partition, upper, or
+policy, so compilation, exact reconciliation, and 10,000-run verification are
+not applicable. Production integration and Gates 6–8 are rejected by
+condition. Raw remains the product default, the 20M default is unchanged, and
+no public ABI, WASM artifact, or frontend contract changed.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

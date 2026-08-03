@@ -52,6 +52,7 @@ struct SolveOptions {
     /* Native benchmark investigation only; not exposed by the public ABI or
      * product bindings. */
     bool high_impact_executable_uppers = false;
+    bool projected_reforge_frontier_diagnostic = false;
     double max_absolute_optimality_gap = 0.0;
     double max_relative_optimality_gap = 0.0;
 };

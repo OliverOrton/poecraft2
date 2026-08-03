@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-03
+
+- [Selected-Closure Scaling And Exact Broad-Row Projection](2026-08-03-selected-closure-broad-row-scaling/README.md) —
+  rejected a higher product work cap, attributed the binding 172,596-outcome
+  selected row, and retained an exact opt-in sparse projected frontier with an
+  independent raw oracle. Comparable work falls from 2,097,355 to 923,141,
+  but misses the 300,000 gate and increases row wall time, so raw remains the
+  product default and conditional production/release gates were skipped.
+
 ## 2026-08-02
 
 - [Competitive Lazy Alternative Certification Structural Stop](2026-08-02-competitive-lazy-alternative-certification/README.md) —

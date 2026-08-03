@@ -2106,16 +2106,27 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             total += guaranteed_remaining(b);
         }
         if (total <= 0.0) return unapplied();
-        for (std::uint16_t b = 0;
-             b < static_cast<std::uint16_t>(buckets.size()); ++b) {
-            const double remaining = guaranteed_remaining(b);
-            if (remaining <= 0.0) continue;
-            RollState child =
-                add_bucket_pick(root, b, defer_identity_choice);
-            auto [found, inserted] =
-                frontier.try_emplace(child, 0.0);
-            (void)inserted;
-            found->second += remaining / total;
+        const auto add_guaranteed_branch =
+            [&](const std::uint16_t b) {
+                const double remaining = guaranteed_remaining(b);
+                if (remaining <= 0.0) return;
+                RollState child =
+                    add_bucket_pick(root, b, defer_identity_choice);
+                auto [found, inserted] =
+                    frontier.try_emplace(child, 0.0);
+                (void)inserted;
+                found->second += remaining / total;
+            };
+        if (reverse_reforge_bucket_enumeration_) {
+            for (std::size_t index = buckets.size(); index > 0; --index) {
+                add_guaranteed_branch(
+                    static_cast<std::uint16_t>(index - 1));
+            }
+        } else {
+            for (std::uint16_t b = 0;
+                 b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                add_guaranteed_branch(b);
+            }
         }
     }
     for (int depth = first_depth; depth <= max_target; ++depth) {
@@ -2252,6 +2263,11 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 telemetry_.reforge_projected_work = saturated_add(
                     telemetry_.reforge_projected_work,
                     availability_word_count);
+            }
+            if (reverse_reforge_bucket_enumeration_) {
+                std::reverse(
+                    eligible_buckets.begin(),
+                    eligible_buckets.end());
             }
             const std::uint64_t edge_work = eligible_buckets.size();
             telemetry_.reforge_projected_work = saturated_add(

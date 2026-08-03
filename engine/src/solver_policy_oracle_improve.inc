@@ -1111,5 +1111,7 @@ RefinementLimits default_limits(
             : options.max_solver_owned_bytes - retained;
     limits.max_witnesses =
         std::max<std::uint32_t>(1, options.max_diagnostic_samples);
+    limits.use_projected_reforge_frontier =
+        options.projected_reforge_frontier_diagnostic;
     return limits;
 }

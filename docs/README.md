@@ -29,22 +29,21 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected boundary is
-[Selected-Closure Scaling And Exact Broad-Row Projection](active/selected-closure-broad-row-scaling.md).
-Gate 0 freezes the current selected-first inputs and metrics. Gate 1's single
-100M hard-case diagnostic completes 40 selected rows but reaches no partition
-or upper, so a 200M run, higher default, and conditional Gate 2 are rejected.
-Gate 3 attributes the raw selected row to exhaustive 40-bucket scans over
-51,155 frontier states, with zero raw-identity-tree work and only 185,825
-positive edges. Gate 4 adds the opt-in exact sparse frontier with
-collision-checked availability signatures and parallel V1/V2 work ledgers.
-Gate 5 now qualifies projected/raw equivalence and hard-row performance before
-any production integration. The archived
+No implementation boundary is selected; Oliver must choose the next chunk
+before implementation resumes. The archived
+[Selected-Closure Scaling And Exact Broad-Row Projection](archive/2026-08-03-selected-closure-broad-row-scaling/README.md)
+milestone retains an exact opt-in sparse frontier and independent raw oracle.
+Its binding selected row drops from 2,097,355 comparable V1 work to 923,141 V2
+work, but misses the 300,000 qualification ceiling and increases measured wall
+time. Raw remains the product default, the 20M default is unchanged, and the
+conditional production, portfolio, WASM, web, and full acceptance gates were
+skipped. The archived
 [Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
 milestone qualifies selected-policy-first bounded publication on the medium
 native workflow, then stops structurally when the single frozen two-goal run
 uses its complete post-coarse work allowance on selected closure before the
-first partition or upper. Gates 6 and 7 were therefore not run. The archived
+first partition or upper. Its conditional Gates 6 and 7 were therefore not
+run. The archived
 [Exact Reforge-Work Growth Diagnostic](archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
 measured an approximately linear eager-candidate grind through 100M total work:
 40 exact kernels and 6,903,840 transitions, but zero partition classes,

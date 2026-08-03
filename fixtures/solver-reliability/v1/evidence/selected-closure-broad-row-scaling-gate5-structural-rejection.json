@@ -1,0 +1,194 @@
+{
+  "schema_version": "selected_closure_broad_row_scaling_gate5_structural_rejection_v1",
+  "recorded_at_local_date": "2026-08-03",
+  "decision": "projected_frontier_is_exact_but_does_not_meet_the_300k_hard_row_gate",
+  "branch": "codex/selected-closure-broad-row-scaling",
+  "gate4_commit": "ac41a0db96acd45a26a55a1e268502573f2fca74",
+  "scope": {
+    "production_projected_frontier_enabled": false,
+    "product_caps_changed": false,
+    "canonical_fixture_changed": false,
+    "action_vocabulary_changed": false,
+    "public_abi_changed": false,
+    "frozen_20m_rerun": false,
+    "selected_first_100m_rerun": false,
+    "selected_first_200m_run": false,
+    "diagnostic_only_projected_frontier_flag": true
+  },
+  "implementation": {
+    "raw_path": "retained as the default and independently selectable oracle",
+    "projected_path": "collision-checked interned exact availability bitset plus the existing future-visible roll projection",
+    "availability_removes_only": [
+      "zero natural weight",
+      "closed prefix or suffix capacity",
+      "occupied or blocked goal observation",
+      "exhausted family multiplicity",
+      "complete generation-group conflict"
+    ],
+    "parameterized_mechanics": [
+      "ordinary Chaos-like renewal",
+      "Essence forced modifiers",
+      "Harvest guaranteed-target first pick",
+      "Fossil multipliers",
+      "Fossil zeroed pools",
+      "Fossil pool additions",
+      "Fossil forced modifiers"
+    ],
+    "work_telemetry": {
+      "v1": "one frontier node plus every roll bucket, with common raw-choice, guaranteed-scan, and identity-tree work",
+      "v2": "one sparse node plus availability words inspected plus every eligible edge, with the same common work",
+      "active_cap": "max_reforge_work applies to the selected evaluator ledger",
+      "parallel_reporting": true
+    }
+  },
+  "equivalence": {
+    "focused_synthetic": {
+      "actions": [
+        "ordinary Chaos-like",
+        "forced Essence",
+        "guaranteed-target Harvest",
+        "Fossil with positive multiplier and zeroed tag"
+      ],
+      "forward_raw_vs_projected": "pass",
+      "reverse_raw_vs_forward_raw": "pass",
+      "reverse_projected_vs_forward_raw": "pass",
+      "total_probability_mass": "identical within 1e-12",
+      "canonical_projected_target_mass": "identical within 1e-12",
+      "goal_and_below_tier_mass": "identical within 1e-12",
+      "forced_and_guaranteed_channels": "pass",
+      "group_exclusions": "pass"
+    },
+    "sampled_real_artifact": {
+      "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+      "item_level": 86,
+      "bases": [
+        "empty rare",
+        "rare with one sampled fractured prefix"
+      ],
+      "actions": [
+        "chaos",
+        "one real Essence",
+        "one viable real Harvest reforge",
+        "one real single-Fossil action"
+      ],
+      "action_legality": "identical",
+      "action_cost_identity": "same immutable descriptor cost vectors",
+      "total_probability_mass": "identical within 1e-11",
+      "canonical_projected_target_mass": "identical within 1e-11",
+      "goal_and_below_tier_mass": "identical within 1e-11",
+      "bellman_value": "identical within 1e-9",
+      "selected_policy_semantic_id": "identical"
+    },
+    "native_test": {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+      "checks": 250713,
+      "failures": 0
+    }
+  },
+  "hard_row_measurement": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "temporary_max_reforge_work": 18000000,
+    "canonical_max_reforge_work": 20000000,
+    "coarse_reforge_work": 14077632,
+    "post_coarse_allowance": 3922368,
+    "memory_limit_bytes": 1073741824,
+    "product_action_count": 27,
+    "goal_progress_gated_reforges": true,
+    "projected_reforge_frontier_diagnostic": true,
+    "exact_evaluation_requested_if_policy": true,
+    "verification_runs_requested_if_policy": 10000,
+    "policy_produced": false,
+    "actual_status": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "selected_rows_begun": 4,
+    "selected_rows_completed": 4,
+    "selected_reforge_work": 3922368,
+    "selected_transitions": 690384,
+    "alternative_rows_begun": 0,
+    "partition_reached": false,
+    "executable_upper_produced": false,
+    "report_path": "build/acceptance/selected-closure-broad-row-scaling/gate5-projected-attribution-18m/report.json",
+    "report_sha256": "42f0c19fe5f916118081c3a56b93d36891c3ee861b0de5397b38e69888edf466",
+    "partial_sha256": "fc0c62f5f7c5527cc8b9a2a3776407f061287de7f29fa1bc3fbaea5120c215e4",
+    "benchmark_sha256": "0b9b71d54caaed995f5e6bb17254b43c6ffa1bb80340387f4a09849dbdbf3d50",
+    "artifact_manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "canonical_case_sha256_unchanged": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+    "economy_content_identity": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f"
+  },
+  "selected_row": {
+    "row_sequence": 1,
+    "source_strict_state": 0,
+    "source_coarse_state": 0,
+    "source_stable_key_hash": "15649380309660385562",
+    "operator_index": 10,
+    "planner_id": "essence:Metadata/Items/Currency/CurrencyEssenceZeal4",
+    "forced_modifier_count": 1,
+    "projected_sparse_frontier": true,
+    "raw_transitions": 172596,
+    "completed": true,
+    "raw_equivalent_work_v1": 2097355,
+    "projected_work_v2": 923141,
+    "projected_threshold": 300000,
+    "projected_threshold_met": false,
+    "projected_over_threshold": 623141,
+    "projected_threshold_multiple": 3.07713666666667,
+    "work_reduction_fraction": 0.559854674101428,
+    "raw_to_projected_ratio": 2.27197687027226
+  },
+  "hard_row_exact_invariants": {
+    "preserved_base_hash": "13558861323426354538",
+    "natural_pool_entries": 259,
+    "natural_pool_weight": 210650,
+    "physical_families": 39,
+    "roll_buckets": 40,
+    "structural_bits_hash": "4621815107264678244",
+    "frontier_state_visits": 51155,
+    "maximum_frontier_states": 42770,
+    "terminal_roll_states": 688739,
+    "successor_commits": 688739,
+    "unique_projected_outcomes": 172596,
+    "duplicate_projected_outcomes": 516143,
+    "duplicate_projected_probability_mass": 0.25435223351246694,
+    "match_gate3_raw_attribution": true
+  },
+  "proxy_correction": {
+    "gate3_frontier_extending_edges": 185825,
+    "all_v2_eligible_edges": 824190,
+    "eligible_final_depth_branches_omitted_by_gate3_proxy": 638365,
+    "gate3_sparse_proxy": 236980,
+    "explanation": "Gate 3's positive-edge counter incremented only for branches inserted into the next frontier. Goal-progress-gated final-depth branches committed directly and were absent from that proxy. V2 counts them because they perform real exact probability and successor work."
+  },
+  "timing_and_memory": {
+    "projected_row_frontier_ns": 889602200,
+    "projected_row_finalize_ns": 108945500,
+    "projected_row_total_ns": 1004018800,
+    "gate3_raw_row_total_ns": 808996800,
+    "projected_row_wall_improved": false,
+    "report_total_wall_ms": 11716.7622,
+    "solve_wall_ms": 5966.2299,
+    "maximum_cooperative_step_ms": 1042.362,
+    "native_live_owned_bytes": 305299424,
+    "native_peak_owned_bytes": 375485183,
+    "working_set_after_bytes": 387792896,
+    "solver_telemetry_json_bytes": 386641
+  },
+  "gate_decision": {
+    "qualified_by_300k_row": false,
+    "qualified_by_original_20m_executable_upper": false,
+    "structural_milestone_qualified": false,
+    "production_integration_gate6": "skipped",
+    "hard_and_portfolio_gate7": "skipped",
+    "release_wasm_and_web_gate8": "skipped",
+    "product_default": "raw frontier retained",
+    "cap_recommendation": "do not raise the product default",
+    "disposition": "archive exact prototype and measured rejection; future work must attack final-depth projected successor accumulation rather than reclassify it as free"
+  },
+  "verification": {
+    "release_native_build": "passed",
+    "focused_synthetic_and_real_artifact_solver_calc": "passed",
+    "full_native_suite": "not_run_because_gate5_did_not_qualify",
+    "compiled_policy_10000_simulations": "not_applicable_no_policy",
+    "wasm_web_full_pipeline": "not_run_because_gate6_and_gate7_were_not_entered",
+    "visual_review": "not_requested_not_run"
+  }
+}

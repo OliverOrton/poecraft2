@@ -13,6 +13,8 @@ namespace solver {
  */
 inline constexpr std::uint32_t kHighImpactExecutableUppersDiagnosticFlag =
     1u << 31;
+inline constexpr std::uint32_t kProjectedReforgeFrontierDiagnosticFlag =
+    1u << 30;
 
 } // namespace solver
 } // namespace poecraft

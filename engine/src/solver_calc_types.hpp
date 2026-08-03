@@ -437,7 +437,8 @@ class CalcContext {
             required_reachable_mod_mask = {},
         bool distinguish_modifier_identity = false,
         bool capture_reforge_attribution = false,
-        bool use_projected_reforge_frontier = false);
+        bool use_projected_reforge_frontier = false,
+        bool reverse_reforge_bucket_enumeration = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -710,6 +711,7 @@ class CalcContext {
     bool distinguish_modifier_identity_ = false;
     bool capture_reforge_attribution_ = false;
     bool use_projected_reforge_frontier_ = false;
+    bool reverse_reforge_bucket_enumeration_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();

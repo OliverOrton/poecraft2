@@ -1,18 +1,18 @@
 # Selected-Closure Scaling And Exact Broad-Row Projection
 
-**Status: Gates 0, 1, 3, and 4 complete; Gate 2 skipped by its condition;
-Gate 5 exact equivalence and performance qualification is active.**
+**Status: completed on 2026-08-03 with a measured Gate 5 structural
+rejection. Gates 2 and 6–8 were skipped by their conditions.**
 
 Owner: Oliver
 
-Parent: [Active work](README.md)
+Parent: [Archived milestone](README.md)
 
 Starting commit: `a6f7e13cf7d5cb202874c210992689d601c0e650`.
 
 Branch: `codex/selected-closure-broad-row-scaling`.
 
 Source milestone:
-[Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md).
+[Competitive Lazy Alternative Certification](../2026-08-02-competitive-lazy-alternative-certification/README.md).
 
 ## Objective
 
@@ -45,7 +45,7 @@ cannot answer current selected-closure size or first-upper affordability.
 ## Gate 0 — plan and measurement contract
 
 **Status: complete.** Tracked evidence is
-[`selected-closure-broad-row-scaling-gate0.json`](../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate0.json).
+[`selected-closure-broad-row-scaling-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate0.json).
 
 The current branch, commit, native benchmark and engine binaries, compiled
 artifact, corpus and case, Mirage economy snapshot, 27-action ordered product
@@ -76,7 +76,7 @@ when the exact semantic authorities reconcile.
 ## Gate 1 — current selected-only 100M diagnostic
 
 **Status: complete.** Tracked evidence is
-[`selected-closure-broad-row-scaling-gate1.json`](../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json).
+[`selected-closure-broad-row-scaling-gate1.json`](../../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json).
 
 The single run returned `refused_resource_cap` after 100M total work. The
 coarse phase remained 14,077,632 work; 40 selected rows consumed the complete
@@ -139,14 +139,14 @@ are resolved.
 Do not automatically spend every remaining unit after a useful upper. Preserve
 cooperative stepping, cancellation, progress, worker responsiveness, and the
 complete action envelope. Map every solver-option or ABI-visible change through
-[`change-impact.md`](../foundation/change-impact.md). A higher product default
+[`change-impact.md`](../../foundation/change-impact.md). A higher product default
 cannot ship without release-WASM memory, cancellation, maximum-step, and policy
 return evidence. Commit this behavior separately.
 
 ## Gate 3 — attribute broad selected rows
 
 **Status: complete.** Tracked evidence is
-[`selected-closure-broad-row-scaling-gate3.json`](../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json).
+[`selected-closure-broad-row-scaling-gate3.json`](../../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json).
 
 A source-authoritative 18M attribution probe completed one selected row after
 the invariant 14,077,632-work coarse phase. It did not repeat the frozen 20M
@@ -247,7 +247,31 @@ projected-path errors.
 
 ## Gate 5 — exact equivalence and performance
 
-**Status: active.**
+**Status: complete — exact prototype rejected for production integration.**
+
+Focused synthetic comparison covers ordinary Chaos-like renewal, forced
+Essence, guaranteed-target Harvest, and a Fossil combining a positive
+multiplier with zeroed tag support. Forward raw, forward projected, reversed
+raw, and reversed projected traversal produce identical canonical maps and
+goal mass. Real-artifact checks repeat raw/projected comparison on empty and
+fractured Vaal Regalia bases for Chaos, Essence, Harvest, and Fossil, then
+match Bellman value and selected semantic action. The focused artifact suite
+passes 250,713 checks with zero failures.
+
+The diagnostic-only projected strict child was measured on the same 18M hard
+carrier used for accepted Gate 3 attribution. It retains all exact row
+invariants and 172,596 projected transitions. V1 remains 2,097,355 work; V2 is
+923,141 work, a 55.99% reduction but 3.08 times the required 300,000 maximum.
+The corrected V2 counter includes 638,365 eligible final-depth branches that
+Gate 3's 236,980 proxy omitted because those branches committed directly
+instead of extending the next frontier. Treating them as free would silently
+weaken `max_reforge_work`, so the threshold is honestly missed.
+
+At 18M, four projected selected rows complete versus one raw row in Gate 3,
+but the full allowance is still exhausted before a partition or executable
+upper. The prototype also does not improve row wall time: the first projected
+row takes 1.004 seconds versus 0.809 seconds raw. Tracked evidence is
+[`selected-closure-broad-row-scaling-gate5-structural-rejection.json`](../../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate5-structural-rejection.json).
 
 Across focused fixtures and sampled real bases require identical total mass,
 proof-relevant projected maps, action cost/legality, goal/below-tier behavior,
@@ -265,6 +289,8 @@ measured rejection.
 
 **Condition: only if Gate 5 qualifies.**
 
+**Status: skipped.** Gate 5 did not meet either structural qualification.
+
 Integrate projected construction into selected and competitively scheduled
 certification while preserving the proof store, partition authority, reverse
 invalidation, properness, compiler routing, complete action envelope, and
@@ -275,6 +301,9 @@ resumable and never certified. Commit production integration.
 
 ## Gate 7 — conditional hard and native portfolio qualification
 
+**Status: skipped.** Gate 6 was not entered. The frozen/original 20M case was
+not rerun, and no portfolio or 10,000-run verification was applicable.
+
 Run the hard case under the original 20M cap and any Gate 2 qualified higher
 cap. Require proper compilation, exact reconciliation, and 10,000 simulations
 for every returned policy. Then run the qualified Fracture full-four, natural
@@ -284,6 +313,9 @@ higher cap, or both.
 
 ## Gate 8 — conditional release acceptance
 
+**Status: skipped.** Native qualification was not reached, so release WASM,
+web, and final full-pipeline acceptance were not run.
+
 Only after native qualification, rebuild release WASM, verify 61 exports and
 ABI 2, run the applicable WASM reliability workflows, verify cancellation and
 maximum worker-step duration, run `npm test`, `npx tsc --noEmit`, and finally
@@ -291,6 +323,13 @@ maximum worker-step duration, run `npm test`, `npx tsc --noEmit`, and finally
 requested.
 
 ## Final report and handoff
+
+The milestone is archived as a measured structural rejection. The raw
+frontier remains the product default; no cap increase, public ABI, action
+vocabulary, mechanic, WASM artifact, or frontend behavior changed. A future
+selected plan may reuse the exact V2 prototype, but meeting this milestone's
+threshold requires reducing final-depth projected successor accumulation,
+not excluding that work from the cap ledger.
 
 Archive the selected-first 100M result, partition/upper milestones, cap
 recommendation, broad-row attribution, projected/raw equivalence, work

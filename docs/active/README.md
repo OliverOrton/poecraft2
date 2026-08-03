@@ -1,35 +1,24 @@
 # Active Work
 
-**Status: selected-closure scaling Gates 0, 1, 3, and 4 are complete; Gate 2
-is skipped; Gate 5 equivalence and performance qualification is active.**
+**Status: no implementation boundary is selected. Oliver must choose the next
+chunk before implementation resumes.**
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Selected-Closure Scaling And Exact Broad-Row Projection](selected-closure-broad-row-scaling.md).
-It preserves the selected-first architecture and complete action envelope,
-measures the hard selected closure once at 100M, then attributes and prototypes
-generic exact future-relevant projection for broad rows. A higher cap is only a
-conditional interim behavior; projected/raw equivalence and a 10x row-work or
-original-cap upper remain the structural gate.
-
-The one-shot 100M run completed 40 selected rows and 6,903,840 transitions but
-reached no partition or upper. Marginal work remains approximately linear at
-2.105M per selected row with exactly 172,596 transitions per row. A 200M run
-and higher default are therefore rejected. Gate 3 attributes the first raw
-selected row to 51,155 frontier states scanning 40 buckets: 2,097,355 work,
-while only 185,825 bucket edges are positive. Gate 4 implements the opt-in
-generic exact sparse path and parallel versioned ledgers while retaining raw
-as the default oracle. Gate 5 now owns full equivalence, reversed-order,
-Bellman/policy, sampled-real-base, and hard-row qualification.
+The completed
+[Selected-Closure Scaling And Exact Broad-Row Projection](../archive/2026-08-03-selected-closure-broad-row-scaling/README.md)
+milestone retains an exact opt-in sparse projected frontier and its independent
+raw oracle. The binding row falls from 2,097,355 comparable V1 work to 923,141
+V2 work, but misses the 300,000 ceiling and takes longer. Raw remains the
+product default, the 20M default is unchanged, and conditional production,
+portfolio, WASM, web, and full acceptance gates were skipped.
 
 The completed
 [Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
 milestone qualifies selected-policy-first bounded publication on the medium
-native case, then stops structurally when the single frozen two-goal run spends
-the complete 5,922,368-work post-coarse allowance on two selected rows before
-its first partition or executable upper. Conditional broader native, WASM,
-web, and full acceptance gates were not run.
+native case, then stops structurally when the binding two-goal case consumes
+its complete post-coarse allowance on selected closure before its first
+partition or executable upper.
 
 The preceding
 [Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)

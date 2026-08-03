@@ -646,40 +646,76 @@ void run_projected_reforge_frontier_equivalence_tests() {
         session, family_goal_100(), registry, actions,
         false, false, true, std::nullopt, {}, false, {}, false,
         true, true);
+    CalcContext raw_reverse(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, false, true);
+    CalcContext projected_reverse(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true, true);
     pc_item_state rare;
     pc_item_clear(&rare);
     rare.rarity = PC_RARITY_RARE;
     const std::uint32_t raw_start = raw.intern_item(rare);
     const std::uint32_t projected_start = projected.intern_item(rare);
+    const std::uint32_t raw_reverse_start =
+        raw_reverse.intern_item(rare);
+    const std::uint32_t projected_reverse_start =
+        projected_reverse.intern_item(rare);
     for (const std::uint32_t action : actions) {
         const OutcomeDistribution& raw_distribution =
             raw.outcomes(raw_start, action);
         const OutcomeDistribution& projected_distribution =
             projected.outcomes(projected_start, action);
+        const OutcomeDistribution& raw_reverse_distribution =
+            raw_reverse.outcomes(raw_reverse_start, action);
+        const OutcomeDistribution& projected_reverse_distribution =
+            projected_reverse.outcomes(
+                projected_reverse_start, action);
         PC_CHECK(raw_distribution.supported);
         PC_CHECK(projected_distribution.supported);
         PC_CHECK(sums_to_one(raw_distribution));
         PC_CHECK(sums_to_one(projected_distribution));
+        PC_CHECK(sums_to_one(raw_reverse_distribution));
+        PC_CHECK(sums_to_one(projected_reverse_distribution));
         std::map<std::uint32_t, double> raw_mass;
         for (const OutcomeEntry& entry : raw_distribution.entries) {
             raw_mass[entry.state] += entry.probability;
         }
         const auto projected_mass = project_distribution(
             projected, raw, projected_distribution);
-        PC_CHECK(raw_mass.size() == projected_mass.size());
-        for (const auto& [state, probability] : raw_mass) {
-            const auto found = projected_mass.find(state);
-            PC_CHECK(found != projected_mass.end());
-            if (found != projected_mass.end()) {
-                PC_CHECK(near(probability, found->second, 1e-12));
+        const auto raw_reverse_mass = project_distribution(
+            raw_reverse, raw, raw_reverse_distribution);
+        const auto projected_reverse_mass = project_distribution(
+            projected_reverse, raw,
+            projected_reverse_distribution);
+        const auto check_mass =
+            [&](const std::map<std::uint32_t, double>& candidate) {
+                PC_CHECK(raw_mass.size() == candidate.size());
+                for (const auto& [state, probability] : raw_mass) {
+                    const auto found = candidate.find(state);
+                    PC_CHECK(found != candidate.end());
+                    if (found != candidate.end()) {
+                        PC_CHECK(near(
+                            probability, found->second, 1e-12));
+                    }
+                }
+            };
+        check_mass(projected_mass);
+        check_mass(raw_reverse_mass);
+        check_mass(projected_reverse_mass);
+        for (const OutcomeDistribution* candidate : {
+                 &projected_distribution,
+                 &raw_reverse_distribution,
+                 &projected_reverse_distribution}) {
+            for (std::size_t slot = 0;
+                 slot < kMaxGoalSlots; ++slot) {
+                PC_CHECK(near(
+                    raw_distribution.slot_satisfied_probability[slot],
+                    candidate->slot_satisfied_probability[slot],
+                    1e-12));
             }
-        }
-        for (std::size_t slot = 0;
-             slot < kMaxGoalSlots; ++slot) {
-            PC_CHECK(near(
-                raw_distribution.slot_satisfied_probability[slot],
-                projected_distribution.slot_satisfied_probability[slot],
-                1e-12));
         }
     }
     PC_CHECK(
@@ -1762,10 +1798,97 @@ void run_artifact_calc_tests(const char* artifact_dir) {
         candidates.push_back(harvest_augment_index);
 
         CalcContext reforge_calc(session, goal, registry, candidates);
+        CalcContext projected_reforge_calc(
+            session, goal, registry, candidates,
+            false, false, false, std::nullopt, {}, false, {}, false,
+            true, true);
         ActionContextImpl reforge_mc(31337);
         reforge_mc.session = session;
         const std::uint32_t reforge_start =
             reforge_calc.intern_item(empty_rare);
+        const std::uint32_t projected_reforge_start =
+            projected_reforge_calc.intern_item(empty_rare);
+        const std::vector<std::uint32_t> projected_actions{
+            registry.index_by_id.at("chaos"), essence_index,
+            harvest_reforge_index, fossil_index};
+        const auto compare_real_projected_kernel =
+            [&](const pc_item_state& item,
+                const std::uint32_t action_index) {
+                const std::uint32_t raw_state =
+                    reforge_calc.intern_item(item);
+                const std::uint32_t projected_state =
+                    projected_reforge_calc.intern_item(item);
+                PC_CHECK(
+                    action_legal(
+                        *session, registry.actions[action_index],
+                        reforge_calc.state(raw_state)) ==
+                    action_legal(
+                        *session, registry.actions[action_index],
+                        projected_reforge_calc.state(projected_state)));
+                const OutcomeDistribution& raw_distribution =
+                    reforge_calc.outcomes(raw_state, action_index);
+                const OutcomeDistribution& projected_distribution =
+                    projected_reforge_calc.outcomes(
+                        projected_state, action_index);
+                PC_CHECK(raw_distribution.supported);
+                PC_CHECK(projected_distribution.supported);
+                PC_CHECK(sums_to_one(raw_distribution));
+                PC_CHECK(sums_to_one(projected_distribution));
+                std::map<std::uint32_t, double> raw_mass;
+                for (const OutcomeEntry& entry :
+                     raw_distribution.entries) {
+                    raw_mass[entry.state] += entry.probability;
+                }
+                const auto projected_mass = project_distribution(
+                    projected_reforge_calc, reforge_calc,
+                    projected_distribution);
+                PC_CHECK(raw_mass.size() == projected_mass.size());
+                for (const auto& [state, probability] : raw_mass) {
+                    const auto found = projected_mass.find(state);
+                    PC_CHECK(found != projected_mass.end());
+                    if (found != projected_mass.end()) {
+                        PC_CHECK(near(
+                            probability, found->second, 1e-11));
+                    }
+                }
+                for (std::size_t goal_slot = 0;
+                     goal_slot < kMaxGoalSlots; ++goal_slot) {
+                    PC_CHECK(near(
+                        raw_distribution
+                            .slot_satisfied_probability[goal_slot],
+                        projected_distribution
+                            .slot_satisfied_probability[goal_slot],
+                        1e-11));
+                }
+            };
+        for (const std::uint32_t action_index : projected_actions) {
+            compare_real_projected_kernel(empty_rare, action_index);
+        }
+        std::uint32_t sampled_fractured_mod = kNoId;
+        for (std::uint32_t mod = 0; mod < session->mod_count; ++mod) {
+            if (session->gen_type[mod] == PC_SIDE_PREFIX &&
+                pc_bitset_test(
+                    session->normal_random_roll_mask.data(), mod) &&
+                pc_bitset_test(
+                    session->positive_base_weight_mask.data(), mod)) {
+                sampled_fractured_mod = mod;
+                break;
+            }
+        }
+        PC_CHECK(sampled_fractured_mod != kNoId);
+        if (sampled_fractured_mod != kNoId) {
+            pc_item_state sampled_fractured = empty_rare;
+            place(
+                &sampled_fractured, PC_SIDE_PREFIX,
+                sampled_fractured_mod,
+                static_cast<std::uint16_t>(
+                    session->primary_group[sampled_fractured_mod]),
+                PC_MOD_SLOT_FRACTURED);
+            for (const std::uint32_t action_index : projected_actions) {
+                compare_real_projected_kernel(
+                    sampled_fractured, action_index);
+            }
+        }
         /* The goal slot must appear in the chaos successor support with
          * its exact pool-share probability, however small. */
         const OutcomeDistribution& chaos_dist = reforge_calc.outcomes(
@@ -1814,6 +1937,46 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             "solver reforge artifact: %u states after "
             "chaos/essence/fossil/harvest\n",
             reforge_calc.state_count());
+
+        std::unordered_map<std::string, double> bellman_prices;
+        for (const std::uint32_t action_index : candidates) {
+            for (const std::string& key :
+                 registry.actions[action_index].cost_keys) {
+                bellman_prices[key] = 1.0;
+            }
+        }
+        SolveOptions bellman_options;
+        bellman_options.max_states = 50000;
+        bellman_options.max_discovered_states = 50000;
+        bellman_options.max_expanded_states = 50000;
+        bellman_options.max_state_action_rows = 500000;
+        bellman_options.max_transitions = 5000000;
+        bellman_options.max_reforge_work = 50000000;
+        const SolveResult raw_bellman = solve(
+            reforge_calc, empty_rare, bellman_prices, bellman_options);
+        const SolveResult projected_bellman = solve(
+            projected_reforge_calc, empty_rare, bellman_prices,
+            bellman_options);
+        PC_CHECK(raw_bellman.policy_available);
+        PC_CHECK(projected_bellman.policy_available);
+        PC_CHECK(near(
+            raw_bellman.evaluated_policy_cost,
+            projected_bellman.evaluated_policy_cost,
+            1e-9));
+        if (raw_bellman.policy_available &&
+            projected_bellman.policy_available) {
+            const PolicyOperatorRef raw_selected =
+                raw_bellman.policy[raw_bellman.start_state];
+            const PolicyOperatorRef projected_selected =
+                projected_bellman.policy[
+                    projected_bellman.start_state];
+            PC_CHECK(
+                raw_selected.kind == projected_selected.kind);
+            PC_CHECK(
+                reforge_calc.operators()[raw_selected.index].id ==
+                projected_reforge_calc
+                    .operators()[projected_selected.index].id);
+        }
 
         /* S8.2 owner correction: Fossil and Essence share the same preserved
          * base as the metamod-disabled transition. Locks and cannot-roll
