@@ -108,6 +108,8 @@ struct ReforgeAttributionRecorder {
     bool enabled = false;
     ReforgeBuildAttribution row;
     std::uint64_t work_started = 0;
+    std::uint64_t raw_equivalent_work_started = 0;
+    std::uint64_t projected_work_started = 0;
     std::chrono::steady_clock::time_point started =
         std::chrono::steady_clock::now();
 
@@ -116,6 +118,17 @@ struct ReforgeAttributionRecorder {
         row.total_reforge_work =
             telemetry.reforge_frontier_work >= work_started
                 ? telemetry.reforge_frontier_work - work_started
+                : 0;
+        row.raw_equivalent_reforge_work =
+            telemetry.reforge_raw_equivalent_work >=
+                    raw_equivalent_work_started
+                ? telemetry.reforge_raw_equivalent_work -
+                      raw_equivalent_work_started
+                : 0;
+        row.projected_reforge_work =
+            telemetry.reforge_projected_work >= projected_work_started
+                ? telemetry.reforge_projected_work -
+                      projected_work_started
                 : 0;
         row.total_build_ns = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -362,6 +375,9 @@ struct RollState {
     /* Only Harvest Reforge has a distinct guaranteed first-pick weight. */
     std::uint16_t guaranteed_bucket =
         std::numeric_limits<std::uint16_t>::max();
+    /* Collision-checked interned exact availability signature. Raw-oracle
+     * states leave this unset and derive availability from their pick list. */
+    std::uint32_t availability_class = kNoId;
     /* sorted (bucket index, count), at most six picks total */
     std::array<std::pair<std::uint16_t, std::uint8_t>, 6> picks{};
 
@@ -371,12 +387,14 @@ struct RollState {
         return std::tie(
                    sat_mask, below_mask, blocked_mask,
                    goal_member_class_tokens, prefix_picks, suffix_picks,
-                   guaranteed_bucket, pick_count, picks) <
+                   guaranteed_bucket, pick_count, picks,
+                   availability_class) <
                std::tie(
                    other.sat_mask, other.below_mask, other.blocked_mask,
                    other.goal_member_class_tokens, other.prefix_picks,
                    other.suffix_picks, other.guaranteed_bucket,
-                   other.pick_count, other.picks);
+                   other.pick_count, other.picks,
+                   other.availability_class);
     }
 
     std::uint8_t picks_of(std::uint16_t bucket) const {
@@ -428,6 +446,10 @@ struct RollStateHash {
             std::numeric_limits<std::uint16_t>::max()) {
             mix(0x67756172u); /* "guar": identity-witness Harvest only. */
             mix(state.guaranteed_bucket);
+        }
+        if (state.availability_class != kNoId) {
+            mix(0x61766169u); /* "avai": projected sparse frontier only. */
+            mix(state.availability_class);
         }
         for (std::uint8_t i = 0; i < state.pick_count; ++i) {
             mix((static_cast<std::uint64_t>(state.picks[i].first) << 8) |
@@ -526,8 +548,22 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     attribution.action_index = action_index;
     attribution.preserved_base_hash = base_hash;
     attribution.goal_progress_gated = goal_progress_gated;
+    attribution.projected_sparse_frontier =
+        use_projected_reforge_frontier_;
     attribution_recorder.work_started =
         telemetry_.reforge_frontier_work;
+    attribution_recorder.raw_equivalent_work_started =
+        telemetry_.reforge_raw_equivalent_work;
+    attribution_recorder.projected_work_started =
+        telemetry_.reforge_projected_work;
+    const auto consume_common_reforge_work =
+        [&](const std::uint64_t amount) {
+            telemetry_.reforge_raw_equivalent_work = saturated_add(
+                telemetry_.reforge_raw_equivalent_work, amount);
+            telemetry_.reforge_projected_work = saturated_add(
+                telemetry_.reforge_projected_work, amount);
+            consume_reforge_work(amount);
+        };
 
     std::unordered_map<std::uint32_t, double> outcome_acc;
     std::size_t outcome_reserve = 65536;
@@ -549,6 +585,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     std::size_t outcome_preflight_entries = outcome_reserve;
     std::uint64_t stationary_reforge_scratch_bytes = 0;
     std::uint64_t active_frontier_scratch_bytes = 0;
+    std::uint64_t availability_scratch_bytes = 0;
     const auto accumulate_outcome =
         [&](const std::uint32_t state,
             const double probability) {
@@ -577,8 +614,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 const std::uint64_t projected =
                     saturated_add(
                         saturated_add(
-                            stationary_reforge_scratch_bytes,
-                            active_frontier_scratch_bytes),
+                            saturated_add(
+                                stationary_reforge_scratch_bytes,
+                                active_frontier_scratch_bytes),
+                            availability_scratch_bytes),
                         unordered_storage_bytes(
                             outcome_preflight_entries,
                             sizeof(decltype(outcome_acc)::value_type)));
@@ -854,7 +893,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
              * vector search/allocation prevents a strict kernel from building
              * an unmetered raw-choice table ahead of the frontier cap.
              */
-            consume_reforge_work(1);
+            consume_common_reforge_work(1);
             if (capture_attribution) {
                 ++attribution.raw_choice_table_work;
             }
@@ -1332,12 +1371,29 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             bucket.exclusion_groups.capacity(),
             sizeof(std::uint32_t)));
     }
+    const std::size_t availability_word_count =
+        (bucket_count + 63) / 64;
     const std::uint64_t conflict_bytes =
-        saturated_bytes(
-            bucket_count,
-            saturated_bytes(
-                bucket_count, sizeof(std::uint8_t)));
+        use_projected_reforge_frontier_
+            ? saturated_bytes(
+                  bucket_count,
+                  saturated_bytes(
+                      availability_word_count,
+                      sizeof(std::uint64_t)))
+            : saturated_bytes(
+                  bucket_count,
+                  saturated_bytes(
+                      bucket_count, sizeof(std::uint8_t)));
     add_stationary(conflict_bytes);
+    if (use_projected_reforge_frontier_) {
+        add_stationary(saturated_bytes(
+            2 + layout_.slots.size(),
+            saturated_bytes(
+                availability_word_count,
+                sizeof(std::uint64_t))));
+        add_stationary(saturated_bytes(
+            bucket_count, sizeof(std::uint16_t)));
+    }
     add_stationary(saturated_bytes(
         bucket_count, sizeof(double)));
     require_reforge_scratch_bytes(saturated_add(
@@ -1345,8 +1401,15 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         unordered_storage_bytes(
             outcome_preflight_entries,
             sizeof(decltype(outcome_acc)::value_type))));
-    std::vector<std::uint8_t> buckets_conflict(
-        bucket_count * bucket_count, 0);
+    std::vector<std::uint8_t> buckets_conflict;
+    std::vector<std::vector<std::uint64_t>> bucket_conflict_masks;
+    if (use_projected_reforge_frontier_) {
+        bucket_conflict_masks.assign(
+            bucket_count,
+            std::vector<std::uint64_t>(availability_word_count, 0));
+    } else {
+        buckets_conflict.assign(bucket_count * bucket_count, 0);
+    }
     const auto exclusion_started =
         std::chrono::steady_clock::now();
     for (std::size_t left = 0; left < bucket_count; ++left) {
@@ -1374,14 +1437,57 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                     ++bi;
                 }
             }
-            buckets_conflict[left * bucket_count + right] = conflict;
-            buckets_conflict[right * bucket_count + left] = conflict;
+            if (use_projected_reforge_frontier_) {
+                if (conflict) {
+                    bucket_conflict_masks[left][right / 64] |=
+                        std::uint64_t{1} << (right % 64);
+                    bucket_conflict_masks[right][left / 64] |=
+                        std::uint64_t{1} << (left % 64);
+                }
+            } else {
+                buckets_conflict[left * bucket_count + right] = conflict;
+                buckets_conflict[right * bucket_count + left] = conflict;
+            }
             if (capture_attribution && conflict) {
                 ++attribution.exclusion_conflicts;
             }
         }
     }
     attribution.exclusion_build_ns = elapsed_ns(exclusion_started);
+
+    std::array<std::vector<std::uint64_t>, 2> side_bucket_masks;
+    std::array<std::vector<std::uint64_t>, kMaxGoalSlots>
+        occupied_bucket_masks;
+    std::vector<std::vector<std::uint16_t>> family_class_buckets;
+    if (use_projected_reforge_frontier_) {
+        for (auto& mask : side_bucket_masks) {
+            mask.assign(availability_word_count, 0);
+        }
+        for (auto& mask : occupied_bucket_masks) {
+            mask.assign(availability_word_count, 0);
+        }
+        family_class_buckets.resize(next_family_class);
+        for (std::uint16_t b = 0;
+             b < static_cast<std::uint16_t>(bucket_count); ++b) {
+            const RollBucket& bucket = buckets[b];
+            side_bucket_masks[static_cast<std::size_t>(bucket.side)]
+                              [b / 64] |=
+                std::uint64_t{1} << (b % 64);
+            if (bucket.kind != BucketKind::Junk) {
+                occupied_bucket_masks[bucket.slot][b / 64] |=
+                    std::uint64_t{1} << (b % 64);
+            } else {
+                for (std::size_t slot = 0;
+                     slot < layout_.slots.size(); ++slot) {
+                    if ((bucket.block_mask & (1u << slot)) != 0) {
+                        occupied_bucket_masks[slot][b / 64] |=
+                            std::uint64_t{1} << (b % 64);
+                    }
+                }
+            }
+            family_class_buckets[bucket.family_class].push_back(b);
+        }
+    }
 
     /* --- base abstract features -------------------------------------------- */
     const AbstractState base_state = project_item(session, layout_, base);
@@ -1610,7 +1716,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                  * leaves. This bounds internal branching and successor-copy
                  * work under the same exact-kernel resource cap.
                  */
-                consume_reforge_work(1);
+                consume_common_reforge_work(1);
                 if (capture_attribution) {
                     ++attribution.raw_identity_tree_nodes;
                     ++attribution.raw_identity_tree_work;
@@ -1684,6 +1790,113 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         }
         return sum;
     };
+
+    /*
+     * Projected V2 availability is an exact structural signature, not a
+     * heuristic filter. Each interned bit survives precisely when the bucket
+     * has positive natural weight, an open side, an unoccupied observation,
+     * an unexhausted multiplicity, and no group conflict with a prior pick.
+     * Hash buckets are collision checked against the complete bit vector.
+     */
+    std::vector<std::vector<std::uint64_t>> availability_classes;
+    std::unordered_map<std::uint64_t, std::vector<std::uint32_t>>
+        availability_ids_by_hash;
+    const auto availability_storage_bytes =
+        [&](const std::size_t extra_classes = 0) {
+            std::uint64_t bytes = saturated_bytes(
+                availability_classes.size() + extra_classes,
+                sizeof(decltype(availability_classes)::value_type));
+            std::size_t word_capacity = 0;
+            for (const auto& words : availability_classes) {
+                word_capacity = saturated_add(
+                    word_capacity, words.capacity());
+            }
+            word_capacity = saturated_add(
+                word_capacity,
+                extra_classes * availability_word_count);
+            bytes = saturated_add(
+                bytes,
+                saturated_bytes(word_capacity, sizeof(std::uint64_t)));
+            bytes = saturated_add(
+                bytes,
+                unordered_storage_bytes(
+                    availability_classes.size() + extra_classes,
+                    sizeof(decltype(
+                        availability_ids_by_hash)::value_type)));
+            std::size_t id_capacity = 0;
+            for (const auto& [unused, ids] :
+                 availability_ids_by_hash) {
+                (void)unused;
+                id_capacity = saturated_add(id_capacity, ids.capacity());
+            }
+            id_capacity = saturated_add(id_capacity, extra_classes);
+            return saturated_add(
+                bytes,
+                saturated_bytes(id_capacity, sizeof(std::uint32_t)));
+        };
+    const auto require_availability_insert = [&]() {
+        require_reforge_scratch_bytes(
+            saturated_add(
+                saturated_add(
+                    saturated_add(
+                        stationary_reforge_scratch_bytes,
+                        active_frontier_scratch_bytes),
+                    availability_storage_bytes(1)),
+                unordered_storage_bytes(
+                    outcome_preflight_entries,
+                    sizeof(decltype(outcome_acc)::value_type))));
+    };
+    const auto intern_availability =
+        [&](std::vector<std::uint64_t> words) {
+            std::uint64_t hash = 1469598103934665603ull;
+            for (const std::uint64_t word : words) {
+                hash ^= word;
+                hash *= 1099511628211ull;
+            }
+            const auto found = availability_ids_by_hash.find(hash);
+            if (found != availability_ids_by_hash.end()) {
+                for (const std::uint32_t id : found->second) {
+                    if (availability_classes[id] == words) return id;
+                }
+            }
+            if (availability_classes.size() >=
+                std::numeric_limits<std::uint32_t>::max()) {
+                throw SolverResourceLimit(
+                    "max_reforge_availability_classes",
+                    std::numeric_limits<std::uint32_t>::max());
+            }
+            require_availability_insert();
+            const std::uint32_t id = static_cast<std::uint32_t>(
+                availability_classes.size());
+            availability_classes.push_back(std::move(words));
+            availability_ids_by_hash[hash].push_back(id);
+            availability_scratch_bytes =
+                availability_storage_bytes();
+            return id;
+        };
+    std::uint32_t root_availability_class = kNoId;
+    if (use_projected_reforge_frontier_) {
+        std::vector<std::uint64_t> root_words(
+            availability_word_count, 0);
+        for (std::uint16_t b = 0;
+             b < static_cast<std::uint16_t>(bucket_count); ++b) {
+            const RollBucket& bucket = buckets[b];
+            if (bucket.weight == 0) continue;
+            const std::uint8_t side_count =
+                bucket.side == PC_SIDE_PREFIX
+                    ? base.prefix_count
+                    : base.suffix_count;
+            if (side_count >= cap) continue;
+            if (bucket.kind != BucketKind::Junk) {
+                if ((base_occupied & (1u << bucket.slot)) != 0) continue;
+            } else if ((bucket.block_mask & base_occupied) != 0) {
+                continue;
+            }
+            root_words[b / 64] |= std::uint64_t{1} << (b % 64);
+        }
+        root_availability_class =
+            intern_availability(std::move(root_words));
+    }
     const auto bucket_remaining =
         [&](const RollState& roll, std::uint16_t b,
             std::uint8_t occupied) -> double {
@@ -1721,10 +1934,34 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         return static_cast<double>(bucket.weight) *
                (bucket.multiplicity - used);
     };
+    const auto projected_bucket_remaining =
+        [&](const RollState& roll, const std::uint16_t b) -> double {
+            const RollBucket& bucket = buckets[b];
+            std::uint32_t used = roll.picks_of(b);
+            if (bucket.interchangeable_family_class) {
+                used = 0;
+                for (std::uint8_t pick = 0;
+                     pick < roll.pick_count; ++pick) {
+                    if (buckets[roll.picks[pick].first].family_class ==
+                        bucket.family_class) {
+                        used += roll.picks[pick].second;
+                    }
+                }
+            }
+            if (bucket.weight == 0 || used >= bucket.multiplicity) {
+                throw std::logic_error(
+                    "projected reforge availability retained an empty "
+                    "bucket");
+            }
+            return static_cast<double>(bucket.weight) *
+                   (bucket.multiplicity - used);
+        };
 
     std::unordered_map<RollState, double, RollStateHash> frontier;
     std::vector<std::pair<RollState, double>> ordered_frontier;
     std::vector<double> remaining_by_bucket(bucket_count, 0.0);
+    std::vector<std::uint16_t> eligible_buckets;
+    eligible_buckets.reserve(bucket_count);
     std::size_t frontier_preflight_entries =
         std::max<std::size_t>(
             1, harvest ? bucket_count : 1);
@@ -1735,8 +1972,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
     require_reforge_scratch_bytes(
         saturated_add(
             saturated_add(
-                stationary_reforge_scratch_bytes,
-                active_frontier_scratch_bytes),
+                saturated_add(
+                    stationary_reforge_scratch_bytes,
+                    active_frontier_scratch_bytes),
+                availability_scratch_bytes),
             unordered_storage_bytes(
                 outcome_preflight_entries,
                 sizeof(decltype(outcome_acc)::value_type))));
@@ -1748,6 +1987,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             const bool guaranteed_pick = false) {
         const RollBucket& bucket = buckets[b];
         RollState child = roll;
+        const std::uint8_t parent_occupied =
+            occupied_mask(roll, base_occupied);
         if (bucket.side == 0) {
             ++child.prefix_picks;
         } else {
@@ -1768,14 +2009,80 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
         } else {
             child.blocked_mask |= bucket.block_mask;
         }
+        if (use_projected_reforge_frontier_) {
+            if (roll.availability_class == kNoId ||
+                roll.availability_class >= availability_classes.size()) {
+                throw std::logic_error(
+                    "projected reforge state has no availability class");
+            }
+            std::vector<std::uint64_t> words =
+                availability_classes[roll.availability_class];
+            const auto clear_mask =
+                [&](const std::vector<std::uint64_t>& mask) {
+                    for (std::size_t word = 0;
+                         word < words.size(); ++word) {
+                        words[word] &= ~mask[word];
+                    }
+                };
+            clear_mask(bucket_conflict_masks[b]);
+            std::uint32_t used = child.picks_of(b);
+            if (bucket.interchangeable_family_class) {
+                used = 0;
+                for (std::uint8_t pick = 0;
+                     pick < child.pick_count; ++pick) {
+                    if (buckets[child.picks[pick].first].family_class ==
+                        bucket.family_class) {
+                        used += child.picks[pick].second;
+                    }
+                }
+            }
+            if (used >= bucket.multiplicity) {
+                if (bucket.interchangeable_family_class) {
+                    for (const std::uint16_t member :
+                         family_class_buckets[bucket.family_class]) {
+                        words[member / 64] &=
+                            ~(std::uint64_t{1} << (member % 64));
+                    }
+                } else {
+                    words[b / 64] &=
+                        ~(std::uint64_t{1} << (b % 64));
+                }
+            }
+            const std::uint8_t child_side_count =
+                bucket.side == PC_SIDE_PREFIX
+                    ? static_cast<std::uint8_t>(
+                          base.prefix_count + child.prefix_picks)
+                    : static_cast<std::uint8_t>(
+                          base.suffix_count + child.suffix_picks);
+            if (child_side_count >= cap) {
+                clear_mask(side_bucket_masks[
+                    static_cast<std::size_t>(bucket.side)]);
+            }
+            const std::uint8_t child_occupied =
+                occupied_mask(child, base_occupied);
+            const std::uint8_t newly_occupied =
+                static_cast<std::uint8_t>(
+                    child_occupied & ~parent_occupied);
+            for (std::size_t slot = 0;
+                 slot < layout_.slots.size(); ++slot) {
+                if ((newly_occupied & (1u << slot)) != 0) {
+                    clear_mask(occupied_bucket_masks[slot]);
+                }
+            }
+            child.availability_class =
+                intern_availability(std::move(words));
+        }
         return child;
     };
     if (!harvest) {
-        frontier.emplace(RollState{}, 1.0);
+        RollState root;
+        root.availability_class = root_availability_class;
+        frontier.emplace(std::move(root), 1.0);
     } else {
         /* Guaranteed first pick from the tag-targeted natural pool.
          * An empty pool means the engine action does not apply. */
-        const RollState root;
+        RollState root;
+        root.availability_class = root_availability_class;
         const std::uint8_t occupied = occupied_mask(root, base_occupied);
         const auto guaranteed_remaining = [&](std::uint16_t b) -> double {
             const RollBucket& bucket = buckets[b];
@@ -1792,7 +2099,7 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                    bucket.multiplicity;
         };
         double total = 0.0;
-        consume_reforge_work(buckets.size());
+        consume_common_reforge_work(buckets.size());
         attribution.guaranteed_scan_work += buckets.size();
         for (std::uint16_t b = 0;
              b < static_cast<std::uint16_t>(buckets.size()); ++b) {
@@ -1847,8 +2154,10 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 require_reforge_scratch_bytes(
                     saturated_add(
                         saturated_add(
-                            stationary_reforge_scratch_bytes,
-                            active_frontier_scratch_bytes),
+                            saturated_add(
+                                stationary_reforge_scratch_bytes,
+                                active_frontier_scratch_bytes),
+                            availability_scratch_bytes),
                         unordered_storage_bytes(
                             outcome_preflight_entries,
                             sizeof(decltype(outcome_acc)::value_type))));
@@ -1870,11 +2179,19 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 return left.first < right.first;
             });
         for (const auto& [roll, probability] : ordered_frontier) {
-            consume_reforge_work(1 + buckets.size());
+            const std::uint64_t raw_node_work = 1 + buckets.size();
+            telemetry_.reforge_raw_equivalent_work = saturated_add(
+                telemetry_.reforge_raw_equivalent_work,
+                raw_node_work);
+            telemetry_.reforge_projected_work = saturated_add(
+                telemetry_.reforge_projected_work, 1);
+            const std::uint64_t active_node_work =
+                use_projected_reforge_frontier_ ? 1 : raw_node_work;
+            consume_reforge_work(active_node_work);
             if (capture_attribution) {
                 ++attribution.frontier_state_visits;
                 attribution.frontier_work +=
-                    1 + buckets.size();
+                    active_node_work;
             }
             if (goal_progress_gated && roll_is_goal(roll)) {
                 commit_outcome(
@@ -1888,19 +2205,71 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             if (deeper <= 0.0) continue;
             const std::uint8_t occupied = occupied_mask(roll, base_occupied);
             double total = 0.0;
-            for (std::uint16_t b = 0;
-                 b < static_cast<std::uint16_t>(buckets.size()); ++b) {
-                remaining_by_bucket[b] =
-                    bucket_remaining(roll, b, occupied);
-                total += remaining_by_bucket[b];
+            eligible_buckets.clear();
+            if (use_projected_reforge_frontier_) {
+                if (roll.availability_class == kNoId ||
+                    roll.availability_class >=
+                        availability_classes.size()) {
+                    throw std::logic_error(
+                        "projected reforge frontier lost availability");
+                }
+                const auto& words =
+                    availability_classes[roll.availability_class];
+                const std::uint64_t word_work = words.size();
+                telemetry_.reforge_projected_work = saturated_add(
+                    telemetry_.reforge_projected_work, word_work);
+                consume_reforge_work(word_work);
+                if (capture_attribution) {
+                    attribution.frontier_work += word_work;
+                }
+                for (std::size_t word_index = 0;
+                     word_index < words.size(); ++word_index) {
+                    std::uint64_t word = words[word_index];
+                    while (word != 0) {
+                        const unsigned bit = std::countr_zero(word);
+                        const std::size_t candidate =
+                            word_index * 64 + bit;
+                        if (candidate >= bucket_count) break;
+                        const std::uint16_t b =
+                            static_cast<std::uint16_t>(candidate);
+                        remaining_by_bucket[b] =
+                            projected_bucket_remaining(roll, b);
+                        total += remaining_by_bucket[b];
+                        eligible_buckets.push_back(b);
+                        word &= word - 1;
+                    }
+                }
+            } else {
+                for (std::uint16_t b = 0;
+                     b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                    remaining_by_bucket[b] =
+                        bucket_remaining(roll, b, occupied);
+                    total += remaining_by_bucket[b];
+                    if (remaining_by_bucket[b] > 0.0) {
+                        eligible_buckets.push_back(b);
+                    }
+                }
+                telemetry_.reforge_projected_work = saturated_add(
+                    telemetry_.reforge_projected_work,
+                    availability_word_count);
+            }
+            const std::uint64_t edge_work = eligible_buckets.size();
+            telemetry_.reforge_projected_work = saturated_add(
+                telemetry_.reforge_projected_work, edge_work);
+            if (use_projected_reforge_frontier_) {
+                consume_reforge_work(edge_work);
+                if (capture_attribution) {
+                    attribution.frontier_work += edge_work;
+                }
+            }
+            if (capture_attribution) {
+                attribution.frontier_edges += edge_work;
             }
             if (goal_progress_gated &&
                 roll_has_zero_progress(roll)) {
                 bool can_make_progress = false;
-                for (std::uint16_t b = 0;
-                     b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                for (const std::uint16_t b : eligible_buckets) {
                     can_make_progress |=
-                        remaining_by_bucket[b] > 0.0 &&
                         buckets[b].kind == BucketKind::GoalSat;
                 }
                 if (!can_make_progress) {
@@ -1915,10 +2284,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
             }
             if (goal_progress_gated && depth + 1 == max_target) {
                 double retry_weight = 0.0;
-                for (std::uint16_t b = 0;
-                     b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+                for (const std::uint16_t b : eligible_buckets) {
                     const double remaining = remaining_by_bucket[b];
-                    if (remaining <= 0.0) continue;
                     const double branch_weight =
                         probability * deeper * (remaining / total);
                     if (roll_has_zero_progress(roll) &&
@@ -1935,13 +2302,8 @@ std::shared_ptr<const OutcomeDistribution> CalcContext::evaluate_reforge(
                 }
                 continue;
             }
-            for (std::uint16_t b = 0;
-                 b < static_cast<std::uint16_t>(buckets.size()); ++b) {
+            for (const std::uint16_t b : eligible_buckets) {
                 const double remaining = remaining_by_bucket[b];
-                if (remaining <= 0.0) continue;
-                if (capture_attribution) {
-                    ++attribution.frontier_edges;
-                }
                 const double p = probability * (remaining / total);
                 RollState child = add_bucket_pick(roll, b);
                 const auto existing = next.find(child);

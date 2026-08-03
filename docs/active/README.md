@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: selected-closure scaling Gates 0, 1, and 3 are complete; Gate 2 is
-skipped; Gate 4 exact projected broad-row prototyping is active.**
+**Status: selected-closure scaling Gates 0, 1, 3, and 4 are complete; Gate 2
+is skipped; Gate 5 equivalence and performance qualification is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -18,8 +18,10 @@ reached no partition or upper. Marginal work remains approximately linear at
 2.105M per selected row with exactly 172,596 transitions per row. A 200M run
 and higher default are therefore rejected. Gate 3 attributes the first raw
 selected row to 51,155 frontier states scanning 40 buckets: 2,097,355 work,
-while only 185,825 bucket edges are positive. Gate 4 now prototypes the generic
-exact sparse projected path against the retained raw oracle.
+while only 185,825 bucket edges are positive. Gate 4 implements the opt-in
+generic exact sparse path and parallel versioned ledgers while retaining raw
+as the default oracle. Gate 5 now owns full equivalence, reversed-order,
+Bellman/policy, sampled-real-base, and hard-row qualification.
 
 The completed
 [Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md)

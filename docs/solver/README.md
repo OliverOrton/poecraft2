@@ -1027,6 +1027,16 @@ projected mass, work categories, and phase time. The producer retains at most
 cannot establish carrier equivalence, authorize junk collapse, or participate
 in proof, scheduling, compilation, or policy selection.
 
+Destructive-reforge work has two explicit observational versions during
+projected-frontier qualification. `raw_equivalent_work_v1` preserves the
+historic frontier charge of one state node plus every roll bucket, while
+`projected_work_v2` charges one sparse node, each interned-availability word
+inspected, and each eligible edge. Common raw-choice, guaranteed-pool scan,
+and terminal identity-expansion work appears in both. `frontier_work` remains
+the cap-bearing active evaluator ledger; the raw path is the product default
+until qualification promotes the projected path. Broad-row samples also name
+their active mode and retain row-local V1/V2 totals.
+
 The frozen two-goal product measurement establishes a separate affordability
 boundary. Its coarse phase consumes 14,077,632 of the 20M work cap; two exact
 selected rows consume the remaining 5,922,368 before partition or obligation

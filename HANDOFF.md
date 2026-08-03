@@ -1,8 +1,8 @@
 # Session Handoff
 
-**Status: selected-closure scaling Gates 0, 1, and 3 are complete. Gate 2 is
-skipped by its condition; Gate 4 exact projected broad-row prototyping is the
-active boundary.**
+**Status: selected-closure scaling Gates 0, 1, 3, and 4 are complete. Gate 2
+is skipped by its condition; Gate 5 exact equivalence and performance
+qualification is the active boundary.**
 
 Current plan:
 [Selected-Closure Scaling And Exact Broad-Row Projection](docs/active/selected-closure-broad-row-scaling.md).
@@ -27,9 +27,10 @@ Current milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
 
 Current milestone commits: Gate 0 is
-`9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is recorded by the
-current local commit. Gate 2 is skipped. Gate 3 is recorded by the next local
-commit; Gate 4 is the active boundary.
+`9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is
+`c9481fb0a5b6666ce73afbdafc497296dd369937`. Gate 2 is skipped. Gate 3 is
+`1ee6bc8481b47bc2e83228e577a930e9c9b72975`. Gate 4 is recorded by the
+current local commit; Gate 5 is the active boundary.
 
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
@@ -148,6 +149,28 @@ Nothing has been pushed or merged. `main` remains unchanged at
   enumerator as the independent oracle.
 - Tracked evidence is
   `fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate3.json`.
+
+## Selected-closure scaling Gate 4
+
+- The existing raw frontier remains the default and independently selectable
+  oracle. The opt-in V2 frontier carries the same exact projected roll state
+  plus a full collision-checked interned availability bitset.
+- Availability removes buckets only for exact group conflict, exhausted
+  multiplicity, occupied/blocked goal observations, closed sides, or zero
+  natural weight. It therefore preserves the current goal/below, junk,
+  forced/guaranteed, identity-expansion, compiler, and simulator distinctions
+  without a named action or fixture branch.
+- One shared parameterized path covers ordinary renewal, Essence direct
+  modifiers, Harvest's separate guaranteed first-pick pool, and Fossil
+  multipliers, zeroed pools, additions, and forced modifiers.
+- Work is parallel and versioned. V1 retains the historic node-plus-all-
+  buckets counter; V2 counts sparse nodes, availability words inspected, and
+  eligible edges. Shared raw-choice, guaranteed-scan, and identity-tree work
+  appears in both, while `max_reforge_work` applies to the active evaluator.
+- Focused native coverage compares canonical projected maps and goal mass for
+  Chaos-like, Essence, Harvest, and Fossil rows, including a positive Fossil
+  multiplier and a zeroed tag. The focused engine suite passes 174,411 checks
+  with zero failures. Product behavior remains raw pending Gate 5.
 
 ## Competitive lazy Gate 0
 
@@ -535,22 +558,22 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Complete selected-closure scaling Gate 4:
+Complete selected-closure scaling Gate 5:
 
-1. Build a generic sparse projected reforge DP whose state retains every
-   current-roll availability distinction and every future-visible goal,
-   below-tier, side-cap, crafted/fractured, protection/metamod, tag, blocked
-   family, forced/guaranteed, compiler, and simulator distinction.
-2. Parameterize weights and deterministic seeds so ordinary, Essence,
-   Harvest, and Fossil rows share code without assuming equal supports.
-3. Accumulate exact mass by projected successor and process only proved
-   eligible sparse edges. Keep the existing raw enumerator independently
-   selectable as the Gate 5 oracle.
-4. Version projected work and retain the raw-equivalent 2,097,355-work counter
-   in parallel. The prototype must not silently reinterpret
-   `max_reforge_work`.
-5. Do not run 100M or 200M again. Commit Gate 4 before equivalence and
-   performance qualification.
+1. Compare raw and projected canonical probability maps across the focused
+   synthetic mechanics and sampled real bases, including group exclusions,
+   forced/guaranteed behavior, Fossil additions/zeroed support, legality, and
+   action cost.
+2. Add a test-only reversed-enumeration path and require deterministic
+   canonical maps in both directions. Compare Bellman values and selected
+   policy semantics, not raw state or transition order.
+3. Opt only the diagnostic strict publication child into V2 and measure the
+   attributed hard Zeal Essence row. Qualification requires at most 300,000
+   V2 work while retaining the parallel 2,097,355 V1 counter.
+4. If the row qualifies, record Gate 5 evidence and commit before Gate 6
+   production integration. If it does not, archive the measured rejection.
+5. Do not run the frozen/original 20M case until conditional Gate 7, and do
+   not run 100M or 200M again.
 
 Deterministic checkpoint/replay remains deferred.
 

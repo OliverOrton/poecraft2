@@ -583,6 +583,133 @@ void run_identity_reforge_factorization_tests() {
     }
 }
 
+void run_projected_reforge_frontier_equivalence_tests() {
+    auto session = make_calc_session();
+    session->essence_guaranteed_mod_ids = {3};
+    session->fossil_added_mod_ids = {{}};
+    session->fossil_forced_mod_ids = {{3}};
+    session->fossil_sell_price_mod_ids = {{}};
+    auto data = std::const_pointer_cast<DataImpl>(session->data);
+    data->strings.push_back("Projected Frontier Test Fossil");
+    data->fossil_count = 1;
+    data->fossil_name_sids = {0};
+    data->fossil_rolls_lucky = {0};
+    data->fossil_mirrors = {0};
+    data->fossil_weight_positive_code = 1;
+    data->fossil_weight_negative_code = 2;
+    data->fossil_weight_offsets = {0, 2};
+    data->fossil_weight_kind_codes = {1, 2};
+    data->fossil_weight_tag_ids = {kTagFire, kTagCold};
+    data->fossil_weight_values = {200, 0};
+
+    ActionRegistry registry;
+    const auto add_action = [&](ActionDescriptor action) {
+        action.kind = TransitionKind::Reforge;
+        action.cost_keys = {action.id};
+        action.legality.rarity_mask = 1u << PC_RARITY_RARE;
+        action.refinement =
+            derive_action_refinement_contract(*session, action);
+        validate_action_refinement_contract(action);
+        const std::uint32_t index =
+            static_cast<std::uint32_t>(registry.actions.size());
+        registry.index_by_id.emplace(action.id, index);
+        registry.actions.push_back(std::move(action));
+    };
+    ActionDescriptor chaos;
+    chaos.id = "test:projected-chaos";
+    chaos.params.type = ActionType::Chaos;
+    add_action(std::move(chaos));
+    ActionDescriptor essence;
+    essence.id = "test:projected-essence";
+    essence.params.type = ActionType::Essence;
+    essence.params.essence_index = 0;
+    add_action(std::move(essence));
+    ActionDescriptor harvest;
+    harvest.id = "test:projected-harvest";
+    harvest.params.type = ActionType::HarvestReforge;
+    harvest.params.target_tag_id = kTagFire;
+    harvest.discriminating_tag_ids = {kTagFire};
+    add_action(std::move(harvest));
+    ActionDescriptor fossil;
+    fossil.id = "test:projected-fossil";
+    fossil.params.type = ActionType::Fossil;
+    fossil.params.fossil_indices = {0};
+    fossil.discriminating_tag_ids = {kTagFire, kTagCold};
+    add_action(std::move(fossil));
+
+    const std::vector<std::uint32_t> actions{0, 1, 2, 3};
+    CalcContext raw(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, false);
+    CalcContext projected(
+        session, family_goal_100(), registry, actions,
+        false, false, true, std::nullopt, {}, false, {}, false,
+        true, true);
+    pc_item_state rare;
+    pc_item_clear(&rare);
+    rare.rarity = PC_RARITY_RARE;
+    const std::uint32_t raw_start = raw.intern_item(rare);
+    const std::uint32_t projected_start = projected.intern_item(rare);
+    for (const std::uint32_t action : actions) {
+        const OutcomeDistribution& raw_distribution =
+            raw.outcomes(raw_start, action);
+        const OutcomeDistribution& projected_distribution =
+            projected.outcomes(projected_start, action);
+        PC_CHECK(raw_distribution.supported);
+        PC_CHECK(projected_distribution.supported);
+        PC_CHECK(sums_to_one(raw_distribution));
+        PC_CHECK(sums_to_one(projected_distribution));
+        std::map<std::uint32_t, double> raw_mass;
+        for (const OutcomeEntry& entry : raw_distribution.entries) {
+            raw_mass[entry.state] += entry.probability;
+        }
+        const auto projected_mass = project_distribution(
+            projected, raw, projected_distribution);
+        PC_CHECK(raw_mass.size() == projected_mass.size());
+        for (const auto& [state, probability] : raw_mass) {
+            const auto found = projected_mass.find(state);
+            PC_CHECK(found != projected_mass.end());
+            if (found != projected_mass.end()) {
+                PC_CHECK(near(probability, found->second, 1e-12));
+            }
+        }
+        for (std::size_t slot = 0;
+             slot < kMaxGoalSlots; ++slot) {
+            PC_CHECK(near(
+                raw_distribution.slot_satisfied_probability[slot],
+                projected_distribution.slot_satisfied_probability[slot],
+                1e-12));
+        }
+    }
+    PC_CHECK(
+        raw.telemetry().reforge_frontier_work ==
+        raw.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        projected.telemetry().reforge_frontier_work ==
+        projected.telemetry().reforge_projected_work);
+    PC_CHECK(
+        raw.telemetry().reforge_raw_equivalent_work ==
+        projected.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        projected.telemetry().reforge_projected_work <
+        projected.telemetry().reforge_raw_equivalent_work);
+    PC_CHECK(
+        raw.telemetry().reforge_build_attribution_samples.size() ==
+        actions.size());
+    PC_CHECK(
+        projected.telemetry().reforge_build_attribution_samples.size() ==
+        actions.size());
+    for (const ReforgeBuildAttribution& row :
+         projected.telemetry().reforge_build_attribution_samples) {
+        PC_CHECK(row.completed);
+        PC_CHECK(row.projected_sparse_frontier);
+        PC_CHECK(
+            row.projected_reforge_work <
+            row.raw_equivalent_reforge_work);
+    }
+}
+
 void run_harvest_targeted_natural_regression() {
     constexpr std::uint32_t kGoodFire = 5;
     constexpr std::uint32_t kColdSource = 6;
@@ -2008,6 +2135,7 @@ void run_solver_calc_tests(const char* artifact_dir) {
     run_exact_distribution_tests();
     run_semantic_exclusion_equivalence_tests();
     run_identity_reforge_factorization_tests();
+    run_projected_reforge_frontier_equivalence_tests();
     run_harvest_targeted_natural_regression();
     run_reforge_tests();
     run_special_evaluator_tests();

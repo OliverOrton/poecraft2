@@ -191,6 +191,7 @@ struct ReforgeBuildAttribution {
     std::uint32_t action_index = kNoId;
     std::uint64_t preserved_base_hash = 0;
     bool goal_progress_gated = false;
+    bool projected_sparse_frontier = false;
     bool completed = false;
     std::uint32_t forced_modifier_count = 0;
     std::uint64_t natural_pool_entries = 0;
@@ -237,6 +238,8 @@ struct ReforgeBuildAttribution {
     std::uint64_t frontier_work = 0;
     std::uint64_t raw_identity_tree_work = 0;
     std::uint64_t total_reforge_work = 0;
+    std::uint64_t raw_equivalent_reforge_work = 0;
+    std::uint64_t projected_reforge_work = 0;
     std::uint64_t pool_build_ns = 0;
     std::uint64_t bucket_build_ns = 0;
     std::uint64_t exclusion_build_ns = 0;
@@ -264,6 +267,13 @@ struct CalcTelemetry {
     std::uint64_t reforge_misses = 0;
     std::uint64_t reforge_build_ns = 0;
     std::uint64_t reforge_frontier_work = 0;
+    /* Parallel effort ledgers. V1 raw-equivalent work retains the historic
+     * one-node-plus-all-buckets definition. V2 projected work counts one
+     * sparse node, availability words inspected, and eligible edges. The
+     * public cap continues to apply to reforge_frontier_work, which equals
+     * the active evaluator's ledger. */
+    std::uint64_t reforge_raw_equivalent_work = 0;
+    std::uint64_t reforge_projected_work = 0;
     std::vector<ReforgeBuildAttribution> reforge_build_attribution_samples;
     std::uint64_t reforge_build_attribution_omitted = 0;
     std::uint64_t gated_reforge_rows = 0;
@@ -426,7 +436,8 @@ class CalcContext {
         const std::vector<std::uint64_t>&
             required_reachable_mod_mask = {},
         bool distinguish_modifier_identity = false,
-        bool capture_reforge_attribution = false);
+        bool capture_reforge_attribution = false,
+        bool use_projected_reforge_frontier = false);
 
     const SessionImpl& session() const { return *session_; }
     const AbstractLayout& layout() const { return layout_; }
@@ -698,6 +709,7 @@ class CalcContext {
     bool product_solver_parent_ = false;
     bool distinguish_modifier_identity_ = false;
     bool capture_reforge_attribution_ = false;
+    bool use_projected_reforge_frontier_ = false;
 
     void initialize_temporary_bench_effect_classes();
     void initialize_owned_bytes_ledger();

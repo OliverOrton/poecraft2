@@ -36,8 +36,10 @@ Gate 0 freezes the current selected-first inputs and metrics. Gate 1's single
 or upper, so a 200M run, higher default, and conditional Gate 2 are rejected.
 Gate 3 attributes the raw selected row to exhaustive 40-bucket scans over
 51,155 frontier states, with zero raw-identity-tree work and only 185,825
-positive edges. Gate 4 now prototypes generic exact sparse projection while
-retaining the raw evaluator as its oracle. The archived
+positive edges. Gate 4 adds the opt-in exact sparse frontier with
+collision-checked availability signatures and parallel V1/V2 work ledgers.
+Gate 5 now qualifies projected/raw equivalence and hard-row performance before
+any production integration. The archived
 [Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
 milestone qualifies selected-policy-first bounded publication on the medium
 native workflow, then stops structurally when the single frozen two-goal run

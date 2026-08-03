@@ -1,7 +1,7 @@
 # Selected-Closure Scaling And Exact Broad-Row Projection
 
-**Status: Gates 0, 1, and 3 complete; Gate 2 skipped by its condition; Gate 4
-exact projected broad-row prototyping is the active boundary.**
+**Status: Gates 0, 1, 3, and 4 complete; Gate 2 skipped by its condition;
+Gate 5 exact equivalence and performance qualification is active.**
 
 Owner: Oliver
 
@@ -191,7 +191,41 @@ observe it. Commit causal evidence.
 
 ## Gate 4 — exact projected broad-row prototype
 
-**Status: active.**
+**Status: complete.**
+
+The prototype keeps the existing raw roll frontier as the default and adds an
+independently selectable projected V2 frontier. The V2 state retains the same
+goal/below masks, exact goal-member classes, side counts, bucket picks,
+guaranteed identity channel, junk projection, and terminal identity expansion,
+plus a collision-checked interned availability bitset. That bitset removes a
+bucket only after exact side capacity, occupied/blocked goal observations,
+family multiplicity, or complete generation-group conflict proves the bucket
+unavailable. Child signatures are derived from immutable action-parameterized
+bucket structure; there is no fixture or action-name branch.
+
+The natural pool and integer remaining weights remain shared authorities for
+ordinary renewal, Essence direct modifiers, Harvest's distinct guaranteed
+first-pick channel, and Fossil multipliers, zeroed weights, additions, and
+forced modifiers. Projected states iterate set bits in canonical bucket order,
+then use the existing probability and absorption logic. Raw and projected
+evaluators therefore share pool semantics and final projection without using
+one enumerator to repair the other.
+
+Work telemetry is explicitly versioned in parallel. V1 raw-equivalent work
+retains the historic one-node-plus-all-buckets frontier charge. V2 projected
+work charges a sparse node, availability words inspected, and eligible edges;
+common raw-choice, guaranteed-scan, and identity-expansion work is charged to
+both. `max_reforge_work` applies to the active evaluator's ledger, and the
+report retains both ledgers, so opting into V2 cannot erase the comparable V1
+cost.
+
+A focused native test compares canonical projected probability maps for
+ordinary Chaos-like, forced Essence, guaranteed-target Harvest, and Fossil
+rows, including a positive Fossil multiplier and zeroed target support. It
+also checks total mass, goal/below probability, completed attribution, and
+the active/V1/V2 work identities. This is prototype coverage, not the broader
+Gate 5 qualification across real bases, reversed order, Bellman values, policy
+semantics, or the frozen hard row.
 
 Build an action-parameterized exact prototype that computes probability over
 future-relevant projected states without first retaining every complete item
@@ -212,6 +246,8 @@ The existing raw enumerator remains an independent oracle and must not mask
 projected-path errors.
 
 ## Gate 5 — exact equivalence and performance
+
+**Status: active.**
 
 Across focused fixtures and sampled real bases require identical total mass,
 proof-relevant projected maps, action cost/legality, goal/below-tier behavior,

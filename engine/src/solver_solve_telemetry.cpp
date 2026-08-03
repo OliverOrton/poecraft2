@@ -1508,6 +1508,9 @@ std::string serialize_solver_telemetry(
                     std::to_string(row.preserved_base_hash);
             json += ",\"goal_progress_gated\":" +
                     std::string(bool_json(row.goal_progress_gated));
+            json += ",\"projected_sparse_frontier\":" +
+                    std::string(bool_json(
+                        row.projected_sparse_frontier));
             json += ",\"completed\":" +
                     std::string(bool_json(row.completed));
             json += ",\"forced_modifier_count\":" +
@@ -1603,7 +1606,12 @@ std::string serialize_solver_telemetry(
             json += ",\"raw_identity_tree\":" +
                     std::to_string(row.raw_identity_tree_work);
             json += ",\"total\":" +
-                    std::to_string(row.total_reforge_work) + "}";
+                    std::to_string(row.total_reforge_work);
+            json += ",\"raw_equivalent_v1\":" +
+                    std::to_string(
+                        row.raw_equivalent_reforge_work);
+            json += ",\"projected_v2\":" +
+                    std::to_string(row.projected_reforge_work) + "}";
             json += ",\"time_ns\":{\"pool\":" +
                     std::to_string(row.pool_build_ns);
             json += ",\"bucket\":" +
@@ -2663,6 +2671,10 @@ std::string serialize_solver_telemetry(
             std::to_string(cache.reforge_build_ns);
     json += ",\"frontier_work\":" +
             std::to_string(cache.reforge_frontier_work);
+    json += ",\"raw_equivalent_work_v1\":" +
+            std::to_string(cache.reforge_raw_equivalent_work);
+    json += ",\"projected_work_v2\":" +
+            std::to_string(cache.reforge_projected_work);
     json += ",\"goal_progress_gated\":{\"rows\":" +
             std::to_string(cache.gated_reforge_rows);
     char gated_number[40];
