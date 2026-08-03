@@ -31,10 +31,11 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 The selected boundary is
 [Selected-Closure Scaling And Exact Broad-Row Projection](active/selected-closure-broad-row-scaling.md).
-Gate 0 freezes the current selected-first inputs and metrics and authorizes one
-new 100M hard-case diagnostic without changing the 20M product default. The
-milestone continues into exact broad-row attribution and generic projected
-construction regardless of whether the diagnostic finds an upper. The archived
+Gate 0 freezes the current selected-first inputs and metrics. Gate 1's single
+100M hard-case diagnostic completes 40 selected rows but reaches no partition
+or upper, so a 200M run, higher default, and conditional Gate 2 are rejected.
+Gate 3 now attributes the broad selected rows before generic projected
+construction. The archived
 [Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
 milestone qualifies selected-policy-first bounded publication on the medium
 native workflow, then stops structurally when the single frozen two-goal run

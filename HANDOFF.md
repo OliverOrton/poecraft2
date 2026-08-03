@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: selected-closure scaling and exact broad-row projection Gate 0 is
-complete. Gate 1 current selected-first 100M diagnostic is the active
+**Status: selected-closure scaling Gates 0 and 1 are complete. Gate 2 is
+skipped by its condition; Gate 3 broad selected-row attribution is the active
 boundary.**
 
 Current plan:
@@ -26,8 +26,9 @@ Current branch: `codex/selected-closure-broad-row-scaling`
 Current milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
 
-Current milestone commits: Gate 0 is recorded by the current local commit.
-Gate 1 has not begun.
+Current milestone commits: Gate 0 is
+`9f562eb5c80ffe76ae667a0f3d0895f91f8720b2`. Gate 1 is recorded by the
+current local commit. Gate 2 is skipped; Gate 3 has not begun.
 
 Milestone starting commit:
 `bd288c9041a5b54fa4ec134c7e1dec90486ac385`
@@ -77,6 +78,37 @@ Nothing has been pushed or merged. `main` remains unchanged at
   proceeds in every outcome.
 - No production source, fixture, default, mechanic, ABI, WASM artifact, or
   frontend contract changed in Gate 0. No test was required.
+
+## Selected-closure scaling Gate 1
+
+- The hard case was invoked once with a temporary 100M case whose only
+  semantic difference from the canonical fixture is
+  `caps.max_reforge_work`. The canonical case remains unchanged at SHA-256
+  `1dc33be7...cb3be`; the temporary case is `d5bc4701...101ad`.
+- The run returned `refused_resource_cap`: invariant coarse work is
+  14,077,632 and 40 selected rows consume all 85,922,368 exact work while
+  emitting 6,903,840 transitions. No alternative, partition, obligation, or
+  executable upper is reached.
+- From the frozen 20M point, 38 marginal selected rows cost 80M work, or
+  2.105M each, and add exactly 172,596 transitions per row. The selected-only
+  population equals the archived eager 100M kernel/transition prefix, proving
+  that this expensive prefix belongs to selected closure.
+- Peak native-owned memory is unchanged at 375,483,695 bytes. The report wall
+  is 28.634 seconds, solve wall is 3.979 seconds, and maximum cooperative step
+  is 651.543 ms. There are zero production reference-adapter calls.
+- No policy exists; compilation, exact evaluation, reconciliation, and
+  simulation are not applicable. Action accounting remains incomplete and no
+  carrier-wide obligation lower exists.
+- The tool-level shell timeout detached the PowerShell watcher after 10
+  seconds. The existing benchmark child was monitored without rerun and
+  completed well inside 900 seconds with a valid report, empty stderr, and no
+  survivor. Continuous watchdog attachment is not claimed.
+- The decision gate forbids a 200M run and rejects a higher product default.
+  Conditional Gate 2 is skipped. Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json`.
+- Gate 3 now owns exact attribution of the broad selected programs, pools,
+  exclusion state, enumeration phases, raw identity tree, projected duplicate
+  targets, and reusable calculations.
 
 ## Competitive lazy Gate 0
 
@@ -464,23 +496,21 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Run selected-closure scaling Gate 1 exactly once:
+Complete selected-closure scaling Gate 3:
 
-1. Create an isolated temporary copy of the frozen two-goal corpus/case whose
-   only semantic difference is `caps.max_reforge_work = 100000000`; prove the
-   canonical fixture remains unchanged.
-2. Invoke the existing selected-first native benchmark with the full 27-action
-   vocabulary, 1 GiB cap, 900-second external process-tree watchdog, progress
-   and partial output, exact evaluation, and 10,000 simulations requested if a
-   policy exists.
-3. Record selected/alternative rows, work and transitions; first partition and
-   upper work/wall; per-row and transition slopes; maximum cooperative step;
-   total wall and peak memory; policy provenance; action/obligation accounting;
-   and compilation/reconciliation/simulation status.
-4. If no partition appears, or row work is flat/rising without a credible
-   upper below 200M, do not run 200M and do not raise the default. If a
-   partition strongly projects such an upper, at most one 200M run is allowed.
-5. Commit the diagnostic evidence before beginning broad-row source changes.
+1. Identify the exact selected action/programs behind the 172,596-transition
+   rows and map source carriers, observation requirements, forced/guaranteed
+   state, pool sizes/weights, slot process, group/tag exclusions, and future
+   observation authority.
+2. Add bounded diagnostic attribution for raw identity-tree nodes, terminal
+   states, proof-relevant projected targets, enumeration-phase work/time,
+   duplicate projected targets/mass, pool reuse, and repeated work across
+   carriers/reforge families. Do not change mechanics or certification.
+3. Determine which exact junk distinctions are required by reachable actions,
+   legality, exclusions, compiler routing, and proof obligations. Do not infer
+   equivalence from non-goal status alone.
+4. Record the causal evidence and commit Gate 3 before building the projected
+   prototype. Do not run 100M or 200M again.
 
 Deterministic checkpoint/replay remains deferred.
 

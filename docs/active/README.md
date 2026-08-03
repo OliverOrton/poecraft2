@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: selected-closure scaling and exact broad-row projection Gate 0 is
-complete; Gate 1 current selected-first 100M diagnostic is active.**
+**Status: selected-closure scaling Gates 0 and 1 are complete; Gate 2 is
+skipped; Gate 3 broad selected-row attribution is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -12,6 +12,11 @@ measures the hard selected closure once at 100M, then attributes and prototypes
 generic exact future-relevant projection for broad rows. A higher cap is only a
 conditional interim behavior; projected/raw equivalence and a 10x row-work or
 original-cap upper remain the structural gate.
+
+The one-shot 100M run completed 40 selected rows and 6,903,840 transitions but
+reached no partition or upper. Marginal work remains approximately linear at
+2.105M per selected row with exactly 172,596 transitions per row. A 200M run
+and higher default are therefore rejected; Gate 3 now owns causal attribution.
 
 The completed
 [Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md)

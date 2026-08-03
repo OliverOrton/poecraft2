@@ -1,0 +1,188 @@
+{
+  "schema_version": "selected_closure_broad_row_scaling_gate1_v1",
+  "date": "2026-08-03",
+  "decision": "no_partition_at_100m_reject_200m_and_cap_increase_continue_broad_row_attribution",
+  "branch": "codex/selected-closure-broad-row-scaling",
+  "starting_commit": "a6f7e13cf7d5cb202874c210992689d601c0e650",
+  "parent_gate_commit": "9f562eb5c80ffe76ae667a0f3d0895f91f8720b2",
+  "gate_commit": "the commit containing this evidence record",
+  "invocation": {
+    "count": 1,
+    "rerun_performed": false,
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "binary_sha256": "18b55632d0840d78db639583105a815eb0089659bbd9d6cd1f7c8b63a0c0cca3",
+    "canonical_case_sha256_before_and_after": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+    "temporary_manifest_sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f",
+    "temporary_case_sha256": "d5bc470130d4b49dfb179801e5f3926c4da8be4da4c44e6732941a688b8101ad",
+    "temporary_case_only_difference": "caps.max_reforge_work: 20000000 -> 100000000",
+    "temporary_case_normalizes_byte_exact_to_canonical": true,
+    "product_action_count": 27,
+    "complete_product_action_order_preserved": true,
+    "command": "poecraft_solver_benchmark --artifact data/compiled/current --corpus build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/corpus/manifest.json --case natural-t1-breadth-two-4e65dda9c53b --output build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/report.json --partial-output build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/partial.json --strategy-output build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/strategies --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges --progress",
+    "limits": {
+      "max_reforge_work": 100000000,
+      "max_solver_owned_bytes": 1073741824,
+      "external_watchdog_seconds": 900
+    },
+    "watchdog_orchestration": {
+      "benchmark_completed_before_ceiling": true,
+      "watchdog_fired": false,
+      "survivor_after_completion": false,
+      "native_exit_code_captured": false,
+      "deviation": "the tool-level shell timeout terminated the PowerShell WaitForExit wrapper after 10 seconds while leaving the one benchmark child running; the existing child was monitored without rerun and completed at 28.634 seconds",
+      "acceptance_interpretation": "the measurement completed far inside 900 seconds with a valid final report, completion stdout, empty stderr, and no survivor, but continuous external watchdog attachment after 10 seconds is not claimed"
+    }
+  },
+  "raw_artifacts": {
+    "report": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/report.json",
+      "sha256": "7cf55e33f6c3107fd9906c69d6a2830c059aa6a4526d3a9b0ced0cc85ef169ea",
+      "bytes": 406971
+    },
+    "partial": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/partial.json",
+      "sha256": "561a0dc46efac59cf1baeba749fcff37a142eef28c123b9a9468ddd740f6a919",
+      "bytes": 406998
+    },
+    "stdout": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/stdout.log",
+      "sha256": "d8e8c680c59a9ed1274d9177bfb07893d39b5d262761129d7d3dea917e8d0c31"
+    },
+    "stderr": {
+      "path": "build/acceptance/selected-closure-broad-row-scaling/gate1-selected-first-100m-once/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "outcome": {
+    "actual_status": "refused_resource_cap",
+    "workflow_solve_result_class": "capped_without_policy",
+    "expectation_met": true,
+    "termination": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "resource": "max_reforge_work",
+    "cap_hit_mask": 16,
+    "policy_available": false,
+    "lower_bound": 752.9009075663787,
+    "upper_bound": null,
+    "partition_reached": false,
+    "executable_upper_reached": false,
+    "retained_policy_status": "none"
+  },
+  "work": {
+    "coarse_reforge_work": 14077632,
+    "post_coarse_allowance_and_consumed_work": 85922368,
+    "total_reforge_work": 100000000,
+    "selected": {
+      "rows_begun": 40,
+      "rows_completed": 40,
+      "reforge_work": 85922368,
+      "transitions": 6903840
+    },
+    "alternatives": {
+      "rows_begun": 0,
+      "rows_completed": 0,
+      "reforge_work": 0,
+      "transitions": 0
+    },
+    "average_work_per_completed_selected_row": 2148059.2,
+    "transitions_per_completed_selected_row": 172596,
+    "work_per_exact_transition": 12.445590859579596,
+    "work_to_first_partition": null,
+    "work_to_first_executable_upper": null,
+    "wall_ns_to_first_partition": null,
+    "wall_ns_to_first_executable_upper": null,
+    "exact_alternatives_before_first_upper": 0
+  },
+  "slope_from_frozen_20m": {
+    "delta_exact_work": 80000000,
+    "delta_completed_selected_rows": 38,
+    "marginal_work_per_completed_selected_row": 2105263.1578947366,
+    "delta_exact_transitions": 6558648,
+    "marginal_transitions_per_completed_selected_row": 172596,
+    "classification": "approximately linear; transition output per row is exactly flat and marginal work remains about 2.105M per row"
+  },
+  "comparison_to_archived_eager_100m": {
+    "archived_completed_kernels": 40,
+    "current_selected_rows": 40,
+    "archived_exact_transitions": 6903840,
+    "current_exact_transitions": 6903840,
+    "archived_partition_classes": 0,
+    "current_partition_classes": 0,
+    "interpretation": "the current selected-only prefix exactly reproduces the old 100M kernel and transition population; the first 40 expensive rows belong to selected closure rather than eager post-selected alternatives"
+  },
+  "timing_and_memory": {
+    "report_total_wall_ms": 28634.3731,
+    "report_solve_wall_ms": 3978.8401,
+    "solve_steps": 14,
+    "maximum_cooperative_solve_step_ms": 651.5428,
+    "median_cooperative_solve_step_ms": 258.0419,
+    "p95_cooperative_solve_step_ms": 651.5428,
+    "native_live_owned_bytes": 305294518,
+    "native_peak_owned_bytes": 375483695,
+    "refinement_peak_memory_bytes": 375474378,
+    "process_working_set_after_bytes": 414593024,
+    "memory_limit_bytes": 1073741824
+  },
+  "quotient_and_accounting": {
+    "exact_states": 42,
+    "retained_exact_states": 0,
+    "exact_kernels": 40,
+    "exact_transitions": 6903840,
+    "exact_classes": 0,
+    "partition_refinement_rounds": 0,
+    "peak_live_slices": 1,
+    "peak_live_slice_bytes": 4883872,
+    "action_accounting_complete": false,
+    "alternative_obligations_created": 0,
+    "unresolved_alternative_obligations": 0,
+    "alternative_exact_rows_avoided_telemetry": 1030,
+    "alternative_exact_rows_avoided_is_not_obligation_representation": true,
+    "scheduling_rounds": 0,
+    "obligations_scheduled": 0,
+    "obligations_certified": 0,
+    "obligations_partially_evaluated": 0,
+    "obligations_noncompetitive": 0,
+    "obligations_resource_interrupted": 0,
+    "policy_improvements": 0,
+    "bounded_publication_retained": false,
+    "reference_adapter_invocations": 0
+  },
+  "semantic_hashes": {
+    "coarse_transition_bits_hash": "4f26d305a908c59f",
+    "coarse_policy_bits_hash": "3e384d3eb52f9ab7",
+    "first_reforge_kernel_bits_hash": "556d1a5bf94ef051",
+    "all_required_coarse_and_input_identities_match_gate0": true
+  },
+  "publication_and_verification": {
+    "properness_checked": false,
+    "lumpability_checked": false,
+    "compilation": "not_applicable_no_policy",
+    "exact_evaluation": "not_applicable_no_policy",
+    "simulation": "not_applicable_no_policy",
+    "exact_evaluation_requested": true,
+    "simulation_runs_requested": 10000,
+    "compilation_attempted": false,
+    "exact_reconciliation_attempted": false,
+    "simulation_attempted": false
+  },
+  "decision_table_result": {
+    "upper_by_100m": false,
+    "partition_by_100m": false,
+    "credible_upper_below_200m": false,
+    "run_200m_permitted": false,
+    "run_200m_performed": false,
+    "higher_cap_interim_fix_qualified": false,
+    "gate2_status": "skipped",
+    "product_default_change_recommended": false,
+    "reason": "100M buys 40 approximately linear broad selected rows but no partition, action accounting, obligation set, or executable progress"
+  },
+  "scope": {
+    "canonical_fixture_changed": false,
+    "product_default_changed": false,
+    "production_source_changed": false,
+    "test_suite_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "next_gate": "attribute broad selected rows"
+}

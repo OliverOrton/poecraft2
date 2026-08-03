@@ -1,7 +1,7 @@
 # Selected-Closure Scaling And Exact Broad-Row Projection
 
-**Status: Gate 0 complete; Gate 1 current selected-first 100M diagnostic is
-the active boundary.**
+**Status: Gates 0 and 1 complete; Gate 2 skipped by its condition; Gate 3
+broad selected-row attribution is the active boundary.**
 
 Owner: Oliver
 
@@ -75,6 +75,29 @@ when the exact semantic authorities reconcile.
 
 ## Gate 1 — current selected-only 100M diagnostic
 
+**Status: complete.** Tracked evidence is
+[`selected-closure-broad-row-scaling-gate1.json`](../../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json).
+
+The single run returned `refused_resource_cap` after 100M total work. The
+coarse phase remained 14,077,632 work; 40 selected rows consumed the complete
+85,922,368 exact allowance and emitted 6,903,840 transitions. No alternative
+row, partition, obligation set, or executable upper appeared. Marginally from
+20M to 100M, each of 38 additional selected rows cost 2.105M work and emitted
+exactly 172,596 transitions. Peak native-owned memory stayed 375,483,695 bytes;
+maximum cooperative solve step was 651.543 ms.
+
+The exact selected row/kernel population and transition count equal the old
+eager-architecture 100M prefix. The expensive first 40 rows are therefore
+selected closure, not post-selected alternatives. There is no credible upper
+projection below 200M, so the decision contract forbids a 200M run and rejects
+a higher default. Compilation, reconciliation, and simulation are not
+applicable because no policy exists.
+
+The process completed in 28.634 seconds with a valid report, empty stderr, and
+no survivor. The tool-level shell timeout detached the intended PowerShell
+watcher at 10 seconds; continuous external watchdog attachment is not claimed,
+and the run was not repeated.
+
 Run `natural-t1-breadth-two-4e65dda9c53b` exactly once using a temporary
 diagnostic fixture whose only semantic difference is
 `caps.max_reforge_work = 100000000`. Request exact strategy evaluation and
@@ -103,6 +126,9 @@ Commit the diagnostic evidence before source changes.
 
 **Condition: only if Gate 1 produces an upper in a measured practical range.**
 
+**Status: skipped.** Gate 1 produced neither a partition nor an upper, so no
+higher-cap behavior or product-default change is permitted.
+
 Expose a higher limit as explained solver/product configuration rather than an
 unlabelled constant. Separate pre-upper work from optional post-upper
 improvement work. Retain the first certified upper immediately and return it
@@ -118,6 +144,8 @@ cannot ship without release-WASM memory, cancellation, maximum-step, and policy
 return evidence. Commit this behavior separately.
 
 ## Gate 3 — attribute broad selected rows
+
+**Status: active.**
 
 Identify the exact selected programs producing the 172,596-transition rows.
 For every row record source carrier/observation requirements, parameterized

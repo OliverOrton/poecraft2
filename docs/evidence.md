@@ -1235,6 +1235,26 @@ the unchanged 1 GiB and 900-second limits. Only a temporary fixture copy may
 change `caps.max_reforge_work`; the canonical 20M fixture and product default
 remain unchanged. No source or test changed at this documentation-only gate.
 
+## Selected-Closure Scaling Gate 1
+
+The tracked
+[`selected-closure-broad-row-scaling-gate1.json`](../fixtures/solver-reliability/v1/evidence/selected-closure-broad-row-scaling-gate1.json)
+records the single selected-first 100M hard-case run. Forty selected rows use
+85,922,368 post-coarse work and emit 6,903,840 transitions; no alternative,
+partition, obligation set, or upper appears. From the frozen 20M prefix, each
+of 38 marginal rows costs 2.105M work and emits exactly 172,596 transitions.
+The current selected prefix exactly matches the archived eager 100M kernel and
+transition population, establishing that those first 40 broad rows belong to
+selected closure.
+
+Peak native-owned memory remains 375,483,695 bytes and the maximum cooperative
+step is 651.543 ms. With no policy, compilation, exact reconciliation, and
+10,000-run verification are not applicable. The run completed in 28.634
+seconds with no survivor, but the tool-level timeout detached the intended
+PowerShell watcher at 10 seconds; continuous watchdog attachment is not
+claimed. The decision contract forbids 200M and rejects a higher default, so
+Gate 2 is skipped and attribution proceeds.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)
