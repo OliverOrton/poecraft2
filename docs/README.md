@@ -29,21 +29,17 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected next boundary is
-[Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md).
-Gate 0 froze identities and predictions and added behavior-neutral
-selected-versus-alternative telemetry. Gate 1 now retains collision-checked,
-carrier-wide lower-only alternative obligations. Gate 2 now closes, partitions,
-and publishes the selected policy before exact alternative expansion. Gate 3
-now schedules competitive obligations transactionally and retains the last
-compiled upper across later caps. Gate 4 qualifies the repeated medium native
-workflow; Gate 5 frozen two-goal qualification is active. The archived
+No implementation boundary is active. Oliver must choose the next chunk before
+implementation resumes. The archived
+[Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
+milestone qualifies selected-policy-first bounded publication on the medium
+native workflow, then stops structurally when the single frozen two-goal run
+uses its complete post-coarse work allowance on selected closure before the
+first partition or upper. Gates 6 and 7 were therefore not run. The archived
 [Exact Reforge-Work Growth Diagnostic](archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
 measured an approximately linear eager-candidate grind through 100M total work:
 40 exact kernels and 6,903,840 transitions, but zero partition classes,
-certificates, or policy, with a flat `375,483,167`-byte peak. The selected
-follow-on certifies selected-policy closure first while preserving every
-uncertified admitted alternative as an explicit lower-only obligation.
+certificates, or policy, with a flat `375,483,167`-byte peak.
 
 The archived
 [Solver Iteration Infrastructure And Decomposition](archive/2026-08-01-solver-iteration-infrastructure/README.md)

@@ -1059,15 +1059,15 @@ classify the proof-carrying quotient's eager pre-partition candidate growth.
 - The 200M run was not performed because the 100M point already distinguished
   approximately linear from falling growth. No product cap or default changed.
 
-The result confirms and sharpens the archived structural conclusion and
-selects
-[Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md)
-as the next boundary.
+The result confirmed and sharpened the archived structural conclusion and
+selected the now-completed
+[Competitive Lazy Alternative Certification](archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
+follow-on.
 
 ## Competitive Lazy Alternative Certification Gate 0
 
 The 2026-08-02
-[active plan](active/competitive-lazy-alternative-certification.md) and
+[archived plan](archive/2026-08-02-competitive-lazy-alternative-certification/plan.md) and
 [tracked Gate 0 evidence](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate0.json)
 freeze the exact follow-on boundary before scheduling changes begin.
 
@@ -1195,6 +1195,33 @@ the first competitive alternative retains that artifact. Gate 0's deliberately
 non-numeric hard-case prediction cannot be scored here; on the medium case,
 first-upper work falls 99.979% while total exact work rises 50.595% because
 carrier-wide alternative attempts occur after publication.
+
+## Competitive Lazy Alternative Certification Gate 5 Structural Stop
+
+The tracked
+[`competitive-lazy-alternative-certification-gate5-structural-stop.json`](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate5-structural-stop.json)
+records the single permitted frozen
+`natural-t1-breadth-two-4e65dda9c53b` invocation. Its full 27-action vocabulary,
+20M work cap, 1 GiB solver-owned cap, exact-evaluation request, 10,000-run
+verification request, and 900-second external watchdog remained unchanged.
+The watchdog completed in 6.234 seconds without firing or leaving a survivor.
+
+The invariant coarse phase used 14,077,632 work. Two selected rows then used
+the complete remaining 5,922,368 work and emitted 345,192 transitions. No
+partition, executable upper, alternative row, or obligation was reached.
+Action accounting is consequently incomplete and the reported 194 avoided
+alternative rows are a work counter, not proof representation. The only lower
+is the pre-quotient coarse value `752.9009075663787`; no obligation lower could
+participate.
+
+The binding result is `refused_resource_cap` with no policy. Properness,
+lumpability, compilation, exact reconciliation, and simulation are correctly
+not applicable. Native peak owned memory is 375,483,695 bytes under the 1 GiB
+cap, and production reference-adapter calls remain zero. Gate 0's hard work
+prediction was “not presently estimable,” but its known affordability
+condition is now resolved negatively: selected closure does not fit the frozen
+post-coarse allowance. This is a selected-closure structural stop, so no Gate 6
+or Gate 7 acceptance was run.
 
 ## Engine And WASM Evidence Boundaries
 

@@ -193,8 +193,8 @@ larger cap would evade the architecture is therefore confirmed, with a more
 precise basis: this is a measured linear pre-partition ordering problem rather
 than a memory shortage or an exceptional first-kernel spike.
 
-The next milestone is
-[Competitive Lazy Alternative Certification](../../active/competitive-lazy-alternative-certification.md):
+The selected follow-on was
+[Competitive Lazy Alternative Certification](../2026-08-02-competitive-lazy-alternative-certification/README.md):
 
 1. certify selected-policy closure before eager alternative closure;
 2. preserve every admitted uncertified alternative as an explicit unresolved

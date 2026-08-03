@@ -1,11 +1,11 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification Gates 0 through 4
-complete. Gate 5 frozen two-goal product qualification is the active
-boundary.**
+**Status: competitive lazy alternative certification stopped structurally at
+Gate 5. No implementation boundary is active; Oliver must choose the next
+chunk before implementation resumes.**
 
-Current plan:
-[Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
+Completed milestone:
+[Competitive Lazy Alternative Certification](docs/archive/2026-08-02-competitive-lazy-alternative-certification/README.md).
 
 Completed diagnostic:
 [Exact Reforge-Work Growth Diagnostic](docs/archive/2026-08-02-reforge-work-growth-diagnostic/README.md).
@@ -25,8 +25,9 @@ Current milestone commits: Gate 0 is
 `222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is
 `53c538143b3599b99b5b8cd8317557ada14e39c7`. Gate 2 is
 `c10b2e3cdc85aaab0ec7c0fc6293a9392e66bc16`. Gate 3 is
-`4c19d2c`; Gate 4 is recorded by the current local commit. Gate 5 has not
-begun.
+`4c19d2cc8d3b0569800457b90f91d9c62ad4e9e4`. Gate 4 is
+`68591b7d5bc20d7525fb8b7137e0061a05cdf4f7`. Gate 5 and the archive are
+recorded by the current local commit.
 
 Preserved proof-carrying quotient commits: Gate 0 is
 `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
@@ -173,9 +174,40 @@ Nothing has been pushed or merged. `main` remains unchanged at
   50.595% because carrier-wide alternative attempts occur after publication.
 - Evidence is tracked in
   `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json`.
-- Gate 5 now owns the single frozen `natural-t1-breadth-two-4e65dda9c53b`
-  20M/1 GiB/900-second run and 10,000-run verification if it publishes a
-  policy.
+- Gate 5 consumed the single frozen `natural-t1-breadth-two-4e65dda9c53b`
+  invocation. Its result is recorded below; the case must not be rerun as part
+  of this milestone.
+
+## Competitive lazy Gate 5 structural stop
+
+- The frozen two-goal case was invoked exactly once with all 27 product
+  actions, the unchanged 20M/1 GiB limits, exact evaluation and 10,000
+  simulations requested, and a 900-second external watchdog. The watchdog
+  completed in 6.234 seconds, did not fire, and left no survivor.
+- The coarse phase used 14,077,632 work. Two selected rows used the remaining
+  5,922,368 exactly and emitted 345,192 transitions. The solver returned
+  `refused_resource_cap` before its first partition or executable upper.
+- Four exact carriers and two kernels were materialized, but no carriers,
+  quotient classes, proof rows, or artifact were retained. Peak native-owned
+  memory was 375,483,695 bytes under the unchanged 1 GiB cap, with zero
+  production reference-adapter calls.
+- No alternative row was attempted and no obligation was created. Action
+  accounting is incomplete, and no carrier-wide obligation lower participates;
+  the reported `752.9009075663787` lower is the pre-quotient coarse bound.
+- Compilation, properness, lumpability, exact reconciliation, and simulation
+  are not applicable because no policy exists. This is the directive's
+  selected-closure structural failure, not a scheduler/pruning limit.
+- Gate 0's numerical prediction was “not presently estimable.” Its known risk
+  condition is now resolved: the selected closure does not fit the 5,922,368
+  post-coarse allowance. Gate 0 was correct to continue because this had not
+  previously been measured.
+- Structured evidence is tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate5-structural-stop.json`.
+  The raw one-shot artifacts remain ignored under
+  `build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/`.
+- Gates 6 and 7 were not reached. No broader native portfolio, release WASM,
+  web acceptance, TypeScript check, or full `scripts/test.ps1` run followed the
+  binding red.
 
 ## Preserved proof-carrying quotient Gate 0 boundary
 
@@ -395,21 +427,11 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Run competitive lazy Gate 5 exactly once:
-
-1. Execute `natural-t1-breadth-two-4e65dda9c53b` with its frozen full product
-   action vocabulary, 20M reforge-work cap, 1 GiB solver-owned cap, and
-   900-second external watchdog.
-2. Request exact compiled evaluation and 10,000 simulations. If no policy is
-   produced, report compilation/evaluation/simulation as not applicable.
-3. Classify the outcome precisely: bounded upper after unresolved/capped
-   alternatives is success; all competitive alternatives resolved may be
-   exact; a cap before any upper is a selected-closure structural failure.
-4. Record milestone work/time, selected and alternative work, obligation
-   lifecycle, lower provenance, quotient/memory facts, compilation,
-   reconciliation, simulations, and the frozen prediction score.
-5. Do not rerun the frozen case, change a cap, narrow vocabulary, or proceed
-   to Gate 6 unless the run produces a valid upper.
+Oliver must choose the next implementation chunk. Do not infer a successor
+from the archive or resume Gates 6–7: their prerequisite failed. Preserve the
+single frozen Gate 5 measurement; do not rerun it, raise a cap, narrow the
+vocabulary, or manufacture a bounded policy from its incomplete selected
+closure without a new owner-selected plan.
 
 Deterministic checkpoint/replay remains deferred.
 

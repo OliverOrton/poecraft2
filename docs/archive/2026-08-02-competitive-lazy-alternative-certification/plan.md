@@ -1,16 +1,16 @@
 # Competitive Lazy Alternative Certification
 
-**Status: Gates 0 through 4 complete; Gate 5 frozen two-goal product
-qualification is the active boundary.**
+**Status: Gates 0 through 4 complete; Gate 5 reached a binding selected-closure
+structural stop. Gates 6 and 7 were not run.**
 
 Owner: Oliver
 
-Parent: [Active work](README.md)
+Parent: [Documentation archive](../README.md)
 
 Starting commit: `bd288c9041a5b54fa4ec134c7e1dec90486ac385`.
 
 Source evidence:
-[Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md).
+[Exact Reforge-Work Growth Diagnostic](../2026-08-02-reforge-work-growth-diagnostic/README.md).
 
 ## Objective
 
@@ -40,7 +40,7 @@ authorities. Do not create a parallel policy subsystem.
 ## Gate 0 — frozen evidence and selected-closure risk
 
 **Status: complete.** Tracked evidence is
-[`competitive-lazy-alternative-certification-gate0.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate0.json).
+[`competitive-lazy-alternative-certification-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate0.json).
 
 The new bounded aggregate telemetry distinguishes inherited/current selected
 rows from alternatives, including rows begun and completed, reforge work,
@@ -123,7 +123,7 @@ accepts each admitted action exactly once as selected-certified,
 other-certified, or an explicit obligation. The dedicated memory-ledger
 category is independently recomputed from retained capacities. Focused native
 acceptance passed 316 checks with zero failures; tracked evidence is
-[`competitive-lazy-alternative-certification-gate1.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate1.json).
+[`competitive-lazy-alternative-certification-gate1.json`](../../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate1.json).
 
 ## Gate 2 — selected-policy-first quotient construction
 
@@ -167,12 +167,12 @@ avoided-row counts, proves a proper upper, compiles it, and exact-reconciles the
 artifact. The solve suite passes 98,140 checks and the quotient proof,
 partition, and Bellman suite passes 316 checks, all with zero failures. Tracked
 evidence is
-[`competitive-lazy-alternative-certification-gate2.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate2.json).
+[`competitive-lazy-alternative-certification-gate2.json`](../../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate2.json).
 
 ## Gate 3 — competitive alternative scheduler
 
 **Status: complete.** Tracked evidence is
-[`competitive-lazy-alternative-certification-gate3.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json).
+[`competitive-lazy-alternative-certification-gate3.json`](../../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json).
 
 After a proper upper exists, schedule an unresolved alternative only when it
 cannot currently be proved noncompetitive or a refinement counterexample
@@ -224,7 +224,7 @@ proof/partition/Bellman acceptance passes 353 checks, both with zero failures.
 ## Gate 4 — medium integration qualification
 
 **Status: complete.** Tracked evidence is
-[`competitive-lazy-alternative-certification-gate4.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json).
+[`competitive-lazy-alternative-certification-gate4.json`](../../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json).
 
 Run `reliability-class-belt` through the full native workflow. Require complete
 action accounting, selected closure before broad alternatives, exercised
@@ -262,7 +262,11 @@ numeric hard-case prediction is scored from this medium measurement.
 
 ## Gate 5 — frozen two-goal product case
 
-**Status: active.**
+**Status: structural stop.** The single frozen invocation exhausted the full
+5,922,368-work post-coarse allowance on two selected rows before the first
+partition or executable upper. No alternative row was attempted and no
+obligation was created. The result is `refused_resource_cap`, with compilation,
+exact evaluation, and simulation correctly not applicable.
 
 Run `natural-t1-breadth-two-4e65dda9c53b` once under the unchanged 20M/1 GiB/
 900-second limits and complete admitted vocabulary. Success requires a
@@ -279,6 +283,8 @@ without weakening exactness.
 
 ## Gate 6 — conditional broader native qualification
 
+**Status: not run because Gate 5 produced no upper.**
+
 Only if Gate 5 produces a valid upper, run the qualified Fracture full-four,
 natural representative four-goal, five-goal scale, 27-case smoke, 49-case
 portfolio, and relevant ring/armour representatives. Use 10,000 simulations
@@ -286,6 +292,8 @@ where compiled verification is required. Five-goal failure limits only the
 five-goal scale claim.
 
 ## Gate 7 — conditional release and final acceptance
+
+**Status: not run because native qualification did not proceed.**
 
 Only after native qualification, rebuild release WASM, verify all 61 exports
 and ABI 2, run required WASM reliability, `npm test`, `npx tsc --noEmit`, and

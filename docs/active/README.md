@@ -1,68 +1,26 @@
 # Active Work
 
-**Status: competitive lazy alternative certification Gates 0 through 4 are
-complete; Gate 5 frozen two-goal product qualification is active.**
+**Status: no implementation boundary is active. Oliver must choose the next
+chunk before implementation resumes.**
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Competitive Lazy Alternative Certification](competitive-lazy-alternative-certification.md).
-It closes and certifies the selected policy first, preserves every admitted
-alternative as an explicit unresolved lower-only obligation, and certifies an
-alternative only when Bellman competitiveness or a counterexample requires
-it. Gate 0 retains behavior-neutral aggregate work attribution and a frozen
-before/after medium comparison. Gate 1 supplies the collision-safe obligation,
-carrier-wide lower, lifecycle, action-accounting, invalidation, deterministic
-order, and memory-ledger contracts. The active plan defines the remaining
-qualification gates. Gate 2 wires those
-objects into production: selected closure and partition precede alternative
-kernel construction, while complete admitted-action accounting remains
-explicit. Gate 3 adds deterministic competitive scheduling, transactional
-carrier-wide certification, lower-relaxation participation, verdict
-revocation, and retained bounded publication after an alternative resource
-interruption.
-
-Gate 4 qualifies the full native medium workflow twice: first upper at 882
-selected work before 180 alternative attempts, 31 certified and 149 explicit
-partial obligations, matched exact compiled cost, and 10,000/10,000 successful
-simulations with zero off-policy failures.
-
 The completed
-[Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
-selected this boundary after the 50M and 100M runs measured an approximately
-linear exact-row slope with zero partition or executable progress.
-
-The completed
-[Solver Iteration Infrastructure And Decomposition](../archive/2026-08-01-solver-iteration-infrastructure/README.md)
-established the canonical fast native/WASM development paths, focused testing,
-one engine source inventory, and coherent solver source/header ownership before
-this algorithmic work. Replay remains deferred until quotient representation
-stabilizes.
+[Competitive Lazy Alternative Certification](../archive/2026-08-02-competitive-lazy-alternative-certification/README.md)
+milestone qualifies selected-policy-first bounded publication on the medium
+native case, then stops structurally when the single frozen two-goal run spends
+the complete 5,922,368-work post-coarse allowance on two selected rows before
+its first partition or executable upper. Conditional broader native, WASM,
+web, and full acceptance gates were not run.
 
 The preceding
-[Policy-Guided Exact Refinement qualification](../archive/2026-07-31-policy-guided-exact-refinement/README.md)
-retains the shared contract/refinement/evaluator/compiler foundation, but its
-reconstruct-then-merge adapter failed the unchanged 1 GiB two-goal decision
-gate before partition initialization. It is a correctness bridge, not the
-selected four/five-goal architecture.
-
-The completed
-[Cross-Base And Compiled-Strategy Reliability Pass](../archive/2026-07-30-cross-base-strategy-reliability/README.md)
-is the source boundary. It proved every published policy exact, but refused
-most solved coarse policies when selected actions observed discarded
-exclusion identity. This milestone converts those ordinary solutions into
-executable exact strategy regions rather than manufacturing a fallback.
-
-The qualified
-[Fracture-Local Coarse-Parent Prototype](../archive/2026-07-29-fracture-local-coarse-parent/README.md)
-remains a frozen non-regression boundary: six parent junk classes, 217 root
-Chaos successors, 927 states, and its qualified transition, policy, and
-compiled-strategy hashes must remain unchanged.
-
-The deferred executable-anchor library remains unselected and outside this
-boundary.
+[Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
+and
+[Proof-Carrying Quotient Refinement](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
+retain the pre-partition growth and proof/refinement boundaries that motivated
+the selected-first architecture.
 
 Older completed milestones are indexed in the
 [documentation archive](../archive/README.md). Unselected possibilities remain
-in [Future work](../future/README.md); neither archive nor future documents
-are current execution authority.
+in [Future work](../future/README.md); neither archive nor future documents are
+current execution authority.

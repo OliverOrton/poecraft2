@@ -11,6 +11,13 @@ selected active work.
 
 ## 2026-08-02
 
+- [Competitive Lazy Alternative Certification Structural Stop](2026-08-02-competitive-lazy-alternative-certification/README.md) —
+  retained proof-carrying alternative obligations, selected-policy-first
+  closure, competitive scheduling, and qualified medium bounded publication,
+  then stopped when the single binding two-goal run exhausted the full 20M
+  work cap on coarse plus two selected rows before its first partition or
+  upper; conditional broader native, WASM, and release gates were not run.
+
 - [Exact Reforge-Work Growth Diagnostic](2026-08-02-reforge-work-growth-diagnostic/README.md) —
   proved the coarse two-goal solve cap-independent through 100M, measured
   exactly 172,596 marginal transitions per completed exact kernel, retained a

@@ -21,7 +21,7 @@ rising per-row slope rather than falling cost.
 - [Archived diagnostic plan](plan.md)
 - [Full slope and projection report](report.md)
 - [Tracked diagnostic evidence](../../../fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json)
-- [Selected next boundary](../../active/competitive-lazy-alternative-certification.md)
+- [Completed selected follow-on](../2026-08-02-competitive-lazy-alternative-certification/README.md)
 
 No product cap, source, fixture, action filter, scheduling default, ABI, WASM,
 strategy format, or frontend behavior changed. Nothing was pushed or merged,

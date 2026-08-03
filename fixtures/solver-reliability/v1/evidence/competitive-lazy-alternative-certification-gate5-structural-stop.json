@@ -1,0 +1,223 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate5_structural_stop_v1",
+  "date": "2026-08-02",
+  "decision": "binding_core_selected_closure_structural_failure_stop_remaining_gates",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "starting_commit": "bd288c9041a5b54fa4ec134c7e1dec90486ac385",
+  "parent_gate_commit": "68591b7d5bc20d7525fb8b7137e0061a05cdf4f7",
+  "gate_commit": "the commit containing this evidence record",
+  "frozen_run": {
+    "invocation_count": 1,
+    "rerun_performed": false,
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "fixture_path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+    "fixture_sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be",
+    "corpus_manifest_sha256": "38d1630920a34d4dda82bfe97f460f03220d162f27d94c250add3bb8f9dcbe1f",
+    "artifact_manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "economy_content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "benchmark_binary_sha256": "18b55632d0840d78db639583105a815eb0089659bbd9d6cd1f7c8b63a0c0cca3",
+    "command": "poecraft_solver_benchmark --artifact data/compiled/current --corpus fixtures/solver-reliability/v1/manifest.json --case natural-t1-breadth-two-4e65dda9c53b --output build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json --partial-output build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/partial.json --strategy-output build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/strategies --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges --progress",
+    "limits": {
+      "max_reforge_work": 20000000,
+      "max_solver_owned_bytes": 1073741824,
+      "external_watchdog_seconds": 900
+    },
+    "external_watchdog": {
+      "implementation": "PowerShell Start-Process -WindowStyle Hidden plus Wait-Process and process-tree termination on timeout",
+      "fired": false,
+      "survivor": false,
+      "wall_ms": 6233.857,
+      "native_exit_code": null,
+      "exit_code_note": "the one-shot wrapper did not retain the exited child code; the native process emitted a complete valid report, a completion line, and empty stderr"
+    }
+  },
+  "raw_artifacts": {
+    "report": {
+      "path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/report.json",
+      "sha256": "17f2dee8fa8d91c3a383037fc4371945758932cdf61ec7d61ec803ba7292be0f"
+    },
+    "partial": {
+      "path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/partial.json",
+      "sha256": "3be88b4f6bc94dc3573cb2bdfd6fef55d6ddbaab354adcaa5165e5e525241c07"
+    },
+    "stdout": {
+      "path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/stdout.log",
+      "sha256": "d5c24da8243786c6fadeec98055ba61256a2514822b3a3ea6fa73f4138d46a3a"
+    },
+    "stderr": {
+      "path": "build/acceptance/competitive-lazy-alternative-certification/gate5-hard-once/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "outcome": {
+    "actual_status": "refused_resource_cap",
+    "workflow_solve_result_class": "capped_without_policy",
+    "termination": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "resource": "max_reforge_work",
+    "cap_hit_mask": 16,
+    "benchmark_classification_expectation_met": true,
+    "binding_success_condition_met": false,
+    "policy_available": false,
+    "policy_status": "none",
+    "lower_bound": 752.9009075663787,
+    "upper_bound": null,
+    "evaluated_policy_cost": null,
+    "classification": "cap_before_any upper because selected closure consumed the complete post-coarse allowance",
+    "structural_stop": true
+  },
+  "work_and_milestones": {
+    "coarse_reforge_work": 14077632,
+    "post_coarse_allowance": 5922368,
+    "selected": {
+      "rows_begun": 2,
+      "rows_completed": 2,
+      "reforge_work": 5922368,
+      "transitions": 345192
+    },
+    "alternatives": {
+      "rows_begun": 0,
+      "rows_completed": 0,
+      "reforge_work": 0,
+      "transitions": 0
+    },
+    "total_reforge_work": 20000000,
+    "work_to_first_partition": null,
+    "work_to_first_executable_upper": null,
+    "wall_ns_to_first_partition": null,
+    "wall_ns_to_first_executable_upper": null,
+    "exact_alternatives_materialized_before_first_upper": 0,
+    "report_solve_wall_ms": 3706.5743,
+    "report_total_wall_ms": 5854.3089
+  },
+  "action_and_obligation_accounting": {
+    "product_action_count": 27,
+    "candidate_action_count": 27,
+    "full_frozen_product_vocabulary_supplied": true,
+    "action_accounting_complete": false,
+    "alternative_obligations_created": 0,
+    "unresolved_alternative_obligations": 0,
+    "alternative_exact_rows_avoided_telemetry": 194,
+    "alternative_exact_rows_avoided_is_not_obligation_representation": true,
+    "scheduling_rounds": 0,
+    "obligations_scheduled": 0,
+    "obligations_certified": 0,
+    "obligations_partially_evaluated": 0,
+    "obligations_noncompetitive": 0,
+    "obligations_stale": 0,
+    "verdict_revocations": 0,
+    "obligations_resource_interrupted": 0,
+    "competitive_alternatives_remaining": 0,
+    "policy_improvements": 0,
+    "bounded_publication_retained": false,
+    "exact_alternative_envelope_closed": false
+  },
+  "lower_provenance": {
+    "reported_lower_bound": 752.9009075663787,
+    "authority": "pre-quotient coarse solver lower bound",
+    "carrier_wide_obligation_lower_participated": false,
+    "reason": "selected closure exhausted the budget before partition and obligation creation; no unresolved alternative lower existed",
+    "exactness_claimed": false
+  },
+  "quotient_and_memory": {
+    "exact_carriers_materialized": 4,
+    "retained_exact_carriers": 0,
+    "exact_kernels": 2,
+    "exact_transitions": 345192,
+    "exact_classes": 0,
+    "partition_refinement_rounds": 0,
+    "refinement_rounds": 3,
+    "backward_observation_rounds": 3,
+    "peak_live_slices": 1,
+    "peak_live_slice_bytes": 4883872,
+    "retained_artifact_bytes": 0,
+    "refinement_memory_bytes": 375156954,
+    "refinement_peak_memory_bytes": 375474378,
+    "native_live_owned_bytes": 305294516,
+    "native_peak_owned_bytes": 375483695,
+    "memory_limit_bytes": 1073741824,
+    "process_working_set_after_bytes": 386953216,
+    "reference_adapter_invocations": 0,
+    "transition_bits_hash": "4f26d305a908c59f",
+    "policy_bits_hash": "3e384d3eb52f9ab7"
+  },
+  "publication_and_verification": {
+    "properness_checked": false,
+    "lumpability_checked": false,
+    "compilation": "not_applicable_no_policy",
+    "exact_evaluation": "not_applicable_no_policy",
+    "simulation": "not_applicable_no_policy",
+    "exact_evaluation_requested": true,
+    "simulation_runs_requested": 10000,
+    "compilation_attempted": false,
+    "exact_reconciliation_attempted": false,
+    "simulation_attempted": false
+  },
+  "frozen_prediction_score": {
+    "prediction": "not presently estimable before selected-first hard-case measurement",
+    "numeric_score_applicable": false,
+    "known_budget_condition": "the selected row and recursive selected successor closure must fit within 5922368 post-coarse work",
+    "actual": "two selected rows consumed exactly 5922368 work before any partition or executable upper",
+    "known_risk_realized": true,
+    "gate0_continue_decision_was_appropriate": true,
+    "explanation": "Gate 0 had no measurement proving failure and correctly permitted implementation; the single binding measurement now proves this selected closure cannot fit the frozen cap"
+  },
+  "smallest_preserved_failure_witness": {
+    "input": "the frozen two-goal case",
+    "observed_prefix": "four exact carriers, two selected kernels, and 345192 exact transitions before the first partition class",
+    "compatibility_counterexample": {
+      "coarse_state": 18,
+      "action": "exalt",
+      "kind": "observation",
+      "required_feature_mask": 2297351,
+      "unavailable_feature_mask": 2097152,
+      "preserved_exclusion_witness": true
+    }
+  },
+  "structural_conclusion": "Selected-policy-first ordering succeeds on the medium integration case but does not fit the frozen two-goal product cap: selected closure alone consumes the entire exact allowance before partition initialization. Alternative scheduling and pruning are not reached, so changing their policy cannot repair this binding failure under the frozen limits.",
+  "qualification": {
+    "medium_native": "qualified_bounded",
+    "binding_two_goal": "unqualified_selected_closure_resource_refusal",
+    "broader_native": "not_run_after_binding_red",
+    "five_goal_scale": "not_run_after_binding_red",
+    "wasm_product": "not_run_after_binding_red",
+    "release_acceptance": "not_run_after_binding_red"
+  },
+  "skipped_after_binding_red": [
+    "qualified Fracture full-four regression",
+    "natural representative four-goal case",
+    "natural five-goal scale case",
+    "27-case native smoke corpus",
+    "49-case native reliability portfolio",
+    "ring and armour representatives",
+    "release WASM rebuild and 61-export ABI check",
+    "WASM reliability workflows",
+    "web tests and TypeScript check",
+    "final scripts/test.ps1"
+  ],
+  "source_sha256": {
+    "engine/src/solver_policy_oracle_improve.inc": "82d20cd867e24a8a5e6778b773e8a22f75a2132f12bdd43e23b7b128bc410ada",
+    "engine/src/solver_policy_refinement.cpp": "4e31136635d20e22b2baaf2d003b74f005f5782e9682cd745bc239ef38f53da9",
+    "engine/src/solver_policy_refinement.hpp": "93bacd79c082dda8a8d01a48c1ab75b86097ca291a52383c752c8b166d5c89db",
+    "engine/src/solver_solve_contracts.hpp": "d3b1679f0f0ce46050bd642d0711791e31affc9da452d0fb8cfd108bbd6390a9",
+    "engine/src/solver_solve_finish.cpp": "79f7724405a60136afaa7288ea5cb04755d85d2b9666dd80f2055bc3257dba27",
+    "engine/src/solver_solve_telemetry.cpp": "940f721d9847c64eb57d3c0cedf3f13a18fc174475ab4c7a1cfa5eba9b88dfc8",
+    "engine/tests/test_solver_solve.cpp": "475538983bc1a330b1d20d7e42930e3f8dec0c1aeefe2067030e1383b61ebfd9"
+  },
+  "scope": {
+    "gate5_run_performed_once": true,
+    "gate6_reached": false,
+    "gate7_reached": false,
+    "caps_or_defaults_changed": false,
+    "vocabulary_narrowed": false,
+    "mechanics_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_json_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "next_boundary": "Oliver must choose a new implementation chunk; no active boundary remains"
+}

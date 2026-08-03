@@ -1017,6 +1017,14 @@ carrier-wide optimistic lower participates only in the lower relaxation; it
 cannot support an executable upper. A stale obligation contributes neither a
 lower nor a noncompetition verdict.
 
+The frozen two-goal product measurement establishes a separate affordability
+boundary. Its coarse phase consumes 14,077,632 of the 20M work cap; two exact
+selected rows consume the remaining 5,922,368 before partition or obligation
+construction. Selected-first ordering therefore permits early publication on
+the qualified medium case but does not guarantee that a binding selected
+closure fits the product cap. A pre-partition stop still returns no policy and
+must not be relabelled as bounded publication.
+
 The feature telemetry uses the same numeric authority as the contract.
 `collapse_destroyed_feature_mask` and `collapse_preserved_feature_mask` use
 `RefinementFeature` bit positions. `collapse_events_by_feature` and
