@@ -1,22 +1,22 @@
 # Active Work
 
-**Status: no active implementation boundary.**
+**Status: competitive lazy alternative certification is the selected next
+structural boundary; implementation has not begun.**
 
 Parent: [Documentation map](../README.md)
 
-The completed
-[Proof-Carrying Quotient Refinement structural stop](../archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
-retains the streamed quotient implementation and passing focused/medium proof,
-partition, Bellman, properness, compilation, and verification gates. Its first
-binding two-goal acceptance case exhausted candidate-certification reforge work
-before the first quotient class, so core, five-goal scale, and WASM product
-qualification remain unqualified.
-
-The archived report recommends competitive lazy alternative certification:
-close and certify the selected policy first, preserve every admitted
-alternative as an explicit unresolved lower-only obligation, and certify an
+Current boundary:
+[Competitive Lazy Alternative Certification](competitive-lazy-alternative-certification.md).
+It closes and certifies the selected policy first, preserves every admitted
+alternative as an explicit unresolved lower-only obligation, and certifies an
 alternative only when Bellman competitiveness or a counterexample requires
-it. Oliver must select a new active plan before implementation resumes.
+it. A detailed implementation and qualification plan is required before source
+edits begin.
+
+The completed
+[Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
+selected this boundary after the 50M and 100M runs measured an approximately
+linear exact-row slope with zero partition or executable progress.
 
 The completed
 [Solver Iteration Infrastructure And Decomposition](../archive/2026-08-01-solver-iteration-infrastructure/README.md)

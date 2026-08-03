@@ -1028,6 +1028,42 @@ transactionally only when competitiveness or a counterexample demands it.
 Caps, mechanics, action filtering, ABI, and strategy vocabulary remain
 unchanged; checkpoint/replay remains deferred.
 
+## Exact Reforge-Work Growth Diagnostic
+
+The 2026-08-02
+[diagnostic report](archive/2026-08-02-reforge-work-growth-diagnostic/report.md)
+and
+[tracked evidence](../fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json)
+classify the proof-carrying quotient's eager pre-partition candidate growth.
+
+- The 20M, 50M, and 100M runs have exactly the same 171 discovered/expanded
+  coarse states, 7,107 rows, 4,292 transitions, 14,077,632 coarse reforge work,
+  bounds, 27-action product envelope, and transition/policy hashes.
+- Exact allowances of 5,922,368, 35,922,368, and 85,922,368 work complete 2,
+  17, and 40 kernels and emit 345,192, 2,934,132, and 6,903,840 transitions.
+- Both marginal segments emit exactly 172,596 transitions per completed
+  kernel. Work per marginal kernel is 2.000M then 2.174M; the post-startup
+  shape is approximately constant with a slight upward endpoint-censored
+  change, not falling.
+- All three points retain zero quotient classes, partition rounds,
+  certificates, policies, and reference calls. Additional work creates raw
+  pre-partition expansion only.
+- Native peak owned memory stays exactly `375,483,167` bytes. Fresh report
+  walls are 14.566 seconds at 50M and 25.074 seconds at 100M, safely inside
+  the unchanged 1 GiB/900-second boundaries.
+- A revised linear fit is 2,111,010 work per completed kernel. Applying it to
+  the archived 10,466 selected-policy kernel proxy gives about 22.11B total
+  work before candidate extras or any partition, Bellman, properness,
+  compilation, or verification phase. This is a planning model, not a proved
+  population identity.
+- The 200M run was not performed because the 100M point already distinguished
+  approximately linear from falling growth. No product cap or default changed.
+
+The result confirms and sharpens the archived structural conclusion and
+selects
+[Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md)
+as the next boundary.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

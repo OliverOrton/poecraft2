@@ -9,6 +9,15 @@ For current orientation, read [Project Direction](../direction.md). Root
 [HANDOFF](../../HANDOFF.md) names an exact boundary only when Oliver has
 selected active work.
 
+## 2026-08-02
+
+- [Exact Reforge-Work Growth Diagnostic](2026-08-02-reforge-work-growth-diagnostic/README.md) —
+  proved the coarse two-goal solve cap-independent through 100M, measured
+  exactly 172,596 marginal transitions per completed exact kernel, retained a
+  flat `375,483,167`-byte peak, and classified eager candidate certification
+  as an approximately linear pre-partition grind; 200M was not needed and
+  competitive lazy alternative certification is selected next.
+
 ## 2026-08-01
 
 - [Proof-Carrying Quotient Refinement Structural Stop](2026-08-01-proof-carrying-quotient-refinement/README.md) —

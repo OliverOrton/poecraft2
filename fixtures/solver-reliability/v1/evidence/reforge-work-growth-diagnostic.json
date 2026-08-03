@@ -1,0 +1,367 @@
+{
+  "schema_version": "reforge_work_growth_diagnostic_v1",
+  "date": "2026-08-02",
+  "decision": "approximately_linear_eager_candidate_grind_select_lazy_certification",
+  "branch": "codex/reforge-work-growth-diagnostic",
+  "starting_commit": "41d6a243947b0205a6e29c6373e79b21b0d8292a",
+  "constraints": {
+    "canonical_fixture_changed": false,
+    "production_source_changed": false,
+    "product_defaults_changed": false,
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_seconds": 900,
+    "maximum_authorized_reforge_work": 200000000,
+    "reference_adapter_required": 0,
+    "complete_admitted_vocabulary_required": true,
+    "complete_strict_graph_reconstruction_forbidden": true
+  },
+  "identities": {
+    "canonical_fixture": {
+      "path": "fixtures/solver-reliability/v1/cases/natural-t1-breadth-two-4e65dda9c53b.json",
+      "sha256": "1dc33be7a08e1049b22383886e8c6d00a8ed78c7eea8628f5de0e80f2c3cb3be"
+    },
+    "benchmark_binary_sha256": "9cf90458cdb27ead4732d3529d72f66958a041233ee273e7a849060e6843a718",
+    "artifact_manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "economy_content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "product_action_count": 27,
+    "product_action_order_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5",
+    "temporary_manifest_sha256": "b7bfc69b7d1aa775d93e966db52d386df4b41f1a438499034850a560d88f7b9f",
+    "temporary_case_sha256": {
+      "50m": "049f09f3820dc747d89276b05264c11b1e4d5eb774fe12ca1891aa162d5fc22e",
+      "100m": "fe11e7919b364708fe08c31d4c0cded1af2e7f4215c793be2bb89353f95962f2"
+    },
+    "semantic_fixture_comparison": "both temporary cases parsed equal to the canonical fixture after normalizing only caps.max_reforge_work back to 20000000",
+    "temporary_runtime_files_retained": false
+  },
+  "cap_semantics_audit": {
+    "consume_authority": {
+      "path": "engine/src/solver_calc.cpp",
+      "sha256": "852f35ecadcad3ee78b2cb54bef0ae778a88754ab7ee0e372699852167a532ca",
+      "semantics": "consume_reforge_work saturates telemetry at the context cap and throws max_reforge_work before an over-cap charge is applied"
+    },
+    "charge_sites": [
+      {
+        "path": "engine/src/solver_reforge.cpp",
+        "sha256": "3954d2bc9f888ebfa2b9fb2e541308d6f3dcefdf8b8bdec2074cd061f0f4c0b5",
+        "site": "raw identity table construction",
+        "charge": "one unit for each physical pool entry credited while deferred identity is enabled",
+        "primary_denominator": "raw identity entries"
+      },
+      {
+        "path": "engine/src/solver_reforge.cpp",
+        "sha256": "3954d2bc9f888ebfa2b9fb2e541308d6f3dcefdf8b8bdec2074cd061f0f4c0b5",
+        "site": "deferred identity expansion",
+        "charge": "one unit for every internal and leaf node in the exact raw-identity expansion tree",
+        "primary_denominator": "raw expansion tree nodes"
+      },
+      {
+        "path": "engine/src/solver_reforge.cpp",
+        "sha256": "3954d2bc9f888ebfa2b9fb2e541308d6f3dcefdf8b8bdec2074cd061f0f4c0b5",
+        "site": "Harvest guaranteed initial pick",
+        "charge": "bucket count before the first guaranteed-pick scan",
+        "primary_denominator": "roll buckets"
+      },
+      {
+        "path": "engine/src/solver_reforge.cpp",
+        "sha256": "3954d2bc9f888ebfa2b9fb2e541308d6f3dcefdf8b8bdec2074cd061f0f4c0b5",
+        "site": "ordered roll frontier",
+        "charge": "one plus bucket count for each frontier roll state before remaining-weight scans",
+        "primary_denominator": "frontier states times bucket scans"
+      },
+      {
+        "path": "engine/src/solver_options_automatic.cpp",
+        "sha256": "d3b5ea86a9ab1b8d584b40b85a2ec8a7f9fb94b3bb66c2b55f0d47aa8728b069",
+        "site": "automatic-option child contexts",
+        "charge": "propagates nested discovery/comparison reforge work into the parent context",
+        "primary_denominator": "nested exact reforge exploration"
+      }
+    ],
+    "coarse_exact_split": {
+      "path": "engine/src/solver_solve_finish.cpp",
+      "sha256": "9f5df33483418099b62526ca77f1818f5837d003d52ca59909df2975f858e1cd",
+      "semantics": "exact publication receives configured total max_reforge_work minus the completed coarse CalcContext reforge_frontier_work"
+    },
+    "prepartition_closure": {
+      "discovery_path": "engine/src/solver_policy_refinement.cpp",
+      "discovery_sha256": "b8c90c98601f71151aefc2f9ad3037efc961abdb5fd6a3fd92d53c2bcb20b96c",
+      "row_path": "engine/src/solver_policy_oracle_setup.inc",
+      "row_sha256": "cad248abe4cbe67981da50ff0de7896f784b892a1be00cf6ee326caba3405e51",
+      "semantics": "the locator loop completes compact exact rows, interns every successor locator, and closes the locator worklist before the shared partition is called; affected carriers attempt every already-admitted operator",
+      "direct_work_driver": "roll-frontier and raw-identity expansion within each exact compact action row",
+      "best_reported_proxy": "completed exact kernels, because each completed compact row increments strict_kernels_built once",
+      "emitted_transitions_are_not_the_charge_authority": true
+    }
+  },
+  "initial_projection_before_run_a": {
+    "smallest_source_slice": {
+      "carriers": {
+        "observed_lower_bound": 4,
+        "planning_proxy": 183062,
+        "basis": "the archived selected-policy reconstruct-then-merge run closed 183062 exact carriers; the current all-admitted closure relationship is not proved and may be larger"
+      },
+      "unique_kernels": {
+        "observed_lower_bound": 2,
+        "planning_proxy": 10466,
+        "basis": "the archived selected-policy closure built 10466 kernels; the eager candidate path can require additional rows"
+      },
+      "candidate_rows": {
+        "observed_completed_proxy": 2,
+        "observed_begun_lower_bound": 3,
+        "per_affected_carrier_upper_bound_from_vocabulary": 27,
+        "basis": "one completed compact row equals one completed kernel; the failing row attempt is not counted, and candidate-specific scheduled/evaluated counters are not committed on the prepartition exception"
+      },
+      "partition_requirement": "complete closure of the dynamically growing locator worklist, not the predicted final quotient-cell count"
+    },
+    "models": [
+      {
+        "name": "naive_independent_carrier_or_cell",
+        "assumption": "one carrier-like unit independently costs the preserved 1480592 work",
+        "units": 13076,
+        "projected_exact_work": 19360220992,
+        "validity": "valid only if one final quotient cell corresponds to one independently expensive prepartition carrier unit; no such relationship is proved",
+        "could_50m_100m_200m_reach_partition": [false, false, false]
+      },
+      {
+        "name": "archived_kernel_linear",
+        "assumption": "10466 selected-policy kernels each retain the preserved 2961184 work-per-kernel average",
+        "projected_exact_work": 30991751744,
+        "validity": "kernel population comes from the older selected-policy closure and does not include current eager alternatives",
+        "could_50m_100m_200m_reach_partition": [false, false, false]
+      },
+      {
+        "name": "archived_transition_linear",
+        "assumption": "423756 archived selected-policy transitions cost 17.16 work each",
+        "projected_exact_work": 7271652.96,
+        "validity": "weak and expected to undercount because current exact candidate rows already produce broad raw transition streams before closure",
+        "could_50m_100m_200m_reach_partition": [true, true, true]
+      },
+      {
+        "name": "root_candidate_row_linear",
+        "assumption": "the 27-action vocabulary costs approximately 2961184 work per completed exact row",
+        "projected_exact_work_for_one_full_affected_carrier": 79951968,
+        "validity": "estimates only one affected carrier slice and not recursive successor closure",
+        "could_50m_100m_200m_reach_partition": [false, false, false]
+      },
+      {
+        "name": "sharply_falling_early_cost",
+        "assumption": "the first two kernels are exceptional and later rows become much cheaper",
+        "projected_exact_work": null,
+        "validity": "the hypothesis Run A and Run B were designed to test",
+        "could_50m_100m_200m_reach_partition": [false, true, true]
+      }
+    ]
+  },
+  "coarse_cap_independence": {
+    "result": "proved_for_20m_50m_100m",
+    "discovered_states": 171,
+    "expanded_states": 171,
+    "frontier_states": 0,
+    "state_action_rows": 7107,
+    "transitions": 4292,
+    "reforge_work": 14077632,
+    "lower_bound": 752.9009075663787,
+    "upper_bound": 3323.6694369790375,
+    "transition_bits_hash": "4f26d305a908c59f",
+    "policy_bits_hash": "3e384d3eb52f9ab7",
+    "action_registry": 178,
+    "candidate_actions": 27,
+    "product_action_count": 27,
+    "product_action_order_sha256": "63bf653ba73e7fae48dc0a68815a558268d95b09c64d14937ef48072d0d60df5"
+  },
+  "runs": [
+    {
+      "name": "preserved_20m",
+      "configured_total_work": 20000000,
+      "coarse_work": 14077632,
+      "exact_allowance_and_consumed_work": 5922368,
+      "actual_status": "refused_resource_cap",
+      "stop_cause": "reforge_work_cap",
+      "reported_exact_states": 4,
+      "completed_exact_rows_kernel_proxy": 2,
+      "row_attempts_begun_lower_bound": 3,
+      "kernel_cache_hits": 0,
+      "exact_transitions": 345192,
+      "partition_classes": 0,
+      "partition_rounds": 0,
+      "certified_rows": 0,
+      "total_wall_ms": 5787.0836,
+      "solve_wall_ms": 3679.1468,
+      "native_peak_owned_bytes": 375483167,
+      "native_live_owned_bytes": 305293988,
+      "process_working_set_after_bytes": 386867200,
+      "policy_available": false,
+      "reference_adapter_invocations": 0,
+      "report_path": "build/acceptance/proof-carrying-quotient/gate5-native/two-goal/natural-t1-breadth-two-4e65dda9c53b.json",
+      "report_sha256": "fcef98a4ddadeec6d6c3cda51ab53d4710bba23097a86e1516f5dcbabfe32837"
+    },
+    {
+      "name": "run_a_50m",
+      "configured_total_work": 50000000,
+      "coarse_work": 14077632,
+      "exact_allowance_and_consumed_work": 35922368,
+      "actual_status": "refused_resource_cap",
+      "stop_cause": "reforge_work_cap",
+      "reported_exact_states": 19,
+      "completed_exact_rows_kernel_proxy": 17,
+      "row_attempts_begun_lower_bound": 18,
+      "candidate_specific_scheduled_counter": 0,
+      "candidate_specific_evaluated_counter": 0,
+      "candidate_counter_interpretation": "unavailable because the prepartition exception occurs before final Bellman telemetry assignment",
+      "kernel_cache_hits": 0,
+      "exact_transitions": 2934132,
+      "partition_classes": 0,
+      "partition_rounds": 0,
+      "certified_rows": 0,
+      "total_wall_ms": 14565.683,
+      "solve_wall_ms": 4076.2065,
+      "external_wall_seconds": 14.9624485,
+      "watchdog_fired": false,
+      "native_peak_owned_bytes": 375483167,
+      "native_live_owned_bytes": 305293990,
+      "process_working_set_after_bytes": 413233152,
+      "policy_available": false,
+      "reference_adapter_invocations": 0,
+      "report_path": "build/acceptance/reforge-work-growth-diagnostic/run-a-50m/report.json",
+      "report_sha256": "3a05a4f829a621e81e0b27c85c392d12e56e1fce800dff8e9bf99ba2afcd4264",
+      "partial_sha256": "82cb4e320879e465bdf162cecbb697c5c13ec2d5aadf6a2f0cf39b12ebc9ea8c",
+      "stdout_sha256": "ae7733cecb2076f57c241c24e5118fd62dba1fc938faf20b315fb9496401cb11",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "run_b_100m",
+      "configured_total_work": 100000000,
+      "coarse_work": 14077632,
+      "exact_allowance_and_consumed_work": 85922368,
+      "actual_status": "refused_resource_cap",
+      "stop_cause": "reforge_work_cap",
+      "reported_exact_states": 42,
+      "completed_exact_rows_kernel_proxy": 40,
+      "row_attempts_begun_lower_bound": 41,
+      "candidate_specific_scheduled_counter": 0,
+      "candidate_specific_evaluated_counter": 0,
+      "candidate_counter_interpretation": "unavailable because the prepartition exception occurs before final Bellman telemetry assignment",
+      "kernel_cache_hits": 0,
+      "exact_transitions": 6903840,
+      "partition_classes": 0,
+      "partition_rounds": 0,
+      "certified_rows": 0,
+      "total_wall_ms": 25074.3121,
+      "solve_wall_ms": 3737.5764,
+      "external_wall_seconds": 25.4517093,
+      "watchdog_fired": false,
+      "native_peak_owned_bytes": 375483167,
+      "native_live_owned_bytes": 305293990,
+      "process_working_set_after_bytes": 388255744,
+      "policy_available": false,
+      "reference_adapter_invocations": 0,
+      "report_path": "build/acceptance/reforge-work-growth-diagnostic/run-b-100m/report.json",
+      "report_sha256": "a92717eaa6049fc76c11602c00bbf18476e6ceea063a84ceeec2ee2d8b6c6afb",
+      "partial_sha256": "1c80fce5bcb8223648e2c9bbf7b79876506308f687c979e5918738c0ceb59aa7",
+      "stdout_sha256": "6e369335857223258faac439e484cb675faf0bd4c9bd3d822c8ec522d052056d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "marginal_slopes": [
+    {
+      "segment": "20m_to_50m",
+      "delta_exact_work": 30000000,
+      "delta_reported_states": 15,
+      "work_per_reported_state": 2000000,
+      "delta_completed_kernels": 15,
+      "work_per_completed_kernel_or_row": 2000000,
+      "delta_exact_transitions": 2588940,
+      "transitions_per_completed_kernel": 172596,
+      "work_per_transition": 11.5877540615,
+      "peak_memory_bytes_per_work": 0,
+      "marginal_total_time_microseconds_per_work": 0.29261998,
+      "classification": "falling versus the two-kernel startup averages, but one point cannot distinguish startup from a new slope"
+    },
+    {
+      "segment": "50m_to_100m",
+      "delta_exact_work": 50000000,
+      "delta_reported_states": 23,
+      "work_per_reported_state": 2173913.0434782607,
+      "delta_completed_kernels": 23,
+      "work_per_completed_kernel_or_row": 2173913.0434782607,
+      "delta_exact_transitions": 3969708,
+      "transitions_per_completed_kernel": 172596,
+      "work_per_transition": 12.5953848495,
+      "peak_memory_bytes_per_work": 0,
+      "marginal_total_time_microseconds_per_work": 0.210172582,
+      "classification": "approximately constant with an 8.70 percent upward endpoint-censored work-per-kernel change; transition output per completed kernel is exactly constant"
+    }
+  ],
+  "slope_classification": {
+    "reported_state": "rising mildly from 2.000m to 2.174m work per marginal state",
+    "completed_kernel_or_row": "approximately constant after startup; 2.000m then 2.174m",
+    "emitted_transition": "approximately constant after startup; 11.588 then 12.595 work per transition",
+    "transitions_per_completed_kernel": "exactly constant at 172596 in both marginal segments",
+    "peak_memory_per_work": "flat at zero marginal peak bytes through 100m",
+    "total_time_per_work": "falling from 0.293 to 0.210 microseconds per marginal work unit",
+    "best_explanatory_denominator": "completed exact compact rows/kernels, with roll-frontier and raw-identity tree nodes as the underlying charge authority",
+    "linear_fit_work_per_completed_kernel": 2111010.009099181,
+    "linear_fit_intercept_work": 1072504.487716109
+  },
+  "revised_projections": {
+    "one_full_27_row_affected_carrier": {
+      "projected_exact_work": 58069774.733394,
+      "projected_total_work_including_coarse": 72147406.733394,
+      "observed_bound": "at least one carrier slice must be complete by 100m because a carrier can publish no more than the 27 admitted semantic rows plus at most one distinct current row, while 40 rows completed"
+    },
+    "first_partition_initialization": {
+      "observed_total_work_lower_bound": 100000000,
+      "observed_reported_state_lower_bound": 42,
+      "observed_completed_kernel_lower_bound": 40,
+      "observed_transition_lower_bound": 6903840,
+      "planning_model_using_archived_10466_kernels_total_work": 22108980891.719742,
+      "planning_model_status": "plausible linear requirement, not a proof that the archived selected-policy kernel population equals the current all-admitted closure"
+    },
+    "first_executable_upper": {
+      "observed_total_work_lower_bound": 100000000,
+      "planning_floor": "strictly after first partition, so the 22.11b selected-kernel model is only a lower-order projection and excludes partition, Bellman, properness, compile, and verification work"
+    },
+    "predicted_final_quotient_population": {
+      "units": 13076,
+      "naive_preserved_1480592_work_per_unit": 19360220992,
+      "revised_linear_kernel_slope_if_each_unit_were_independent": 27603566878.98089,
+      "validity": "neither projection is authoritative because final quotient cells are not proved one-to-one with prepartition carriers or kernels"
+    },
+    "archived_183062_carrier_proxy_at_revised_slope": 386445714285.71423,
+    "latest_time_slope_implication": "19.36b to 22.11b work would take roughly 4069 to 4647 seconds at 0.210 microseconds per work, already beyond the 900-second product watchdog before later phases"
+  },
+  "run_c_200m": {
+    "performed": false,
+    "reason": "Run B already distinguished the early falling hypothesis from an approximately linear row/kernel grind: marginal transitions per kernel were exactly constant, work per kernel rose slightly, memory stayed safe, and no partition progress appeared. A 200m point was not needed to distinguish linear from falling growth."
+  },
+  "useful_progress": {
+    "raw_exact_rows_and_transitions_increased": true,
+    "first_carrier_slice_must_have_completed_by_100m": true,
+    "partition_or_certificate_progress": false,
+    "policy_publication_progress": false,
+    "conclusion": "additional work buys approximately linear prepartition expansion only; no executable or quotient-level progress appeared through 100m"
+  },
+  "archive_conclusion": {
+    "status": "confirmed_and_sharpened",
+    "reason": "higher diagnostic caps produced linear raw expansion but no partition or policy, while the measured full-closure models are in the tens of billions of work and exceed the product watchdog. The diagnostic does not justify changing production caps."
+  },
+  "next_milestone": {
+    "selected": "competitive_lazy_alternative_certification",
+    "requirements": [
+      "certify selected-policy closure before eager alternative closure",
+      "retain every admitted uncertified alternative as an explicit unresolved lower-only obligation",
+      "certify alternatives transactionally only when Bellman competitiveness or a counterexample requires them",
+      "preserve the complete admitted vocabulary and all existing mechanics and filtering",
+      "publish an upper only from current closed lumpable proper certified rows",
+      "do not change product caps, scheduling defaults, ABI, WASM, strategy format, or frontend authority in this diagnostic"
+    ]
+  },
+  "verification": {
+    "temporary_50m_case_validated": true,
+    "temporary_100m_case_validated": true,
+    "full_test_pipeline_run": false,
+    "reason_full_pipeline_not_run": "no production source, telemetry contract, fixture, or default changed; the two direct diagnostic runs are the selected acceptance",
+    "visual_review_performed": false
+  },
+  "pushed": false,
+  "merged": false
+}

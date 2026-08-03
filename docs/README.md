@@ -29,14 +29,16 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-No implementation boundary is active. The archived
-[Proof-Carrying Quotient Refinement structural stop](archive/2026-08-01-proof-carrying-quotient-refinement/README.md)
-retains Gates 0 through 4, but the first binding Gate 5 two-goal case exhausted
-`max_reforge_work` after four exact carriers and two large kernels, before
-partition initialization or policy publication. Core quotient, five-goal
-scale, and WASM product qualification are unqualified. The report recommends
-competitive lazy alternative certification as the next structural boundary;
-Oliver must select the next active chunk before implementation resumes.
+The selected next boundary is
+[Competitive Lazy Alternative Certification](active/competitive-lazy-alternative-certification.md).
+Implementation has not begun and requires a detailed qualification plan. The
+archived
+[Exact Reforge-Work Growth Diagnostic](archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
+measured an approximately linear eager-candidate grind through 100M total work:
+40 exact kernels and 6,903,840 transitions, but zero partition classes,
+certificates, or policy, with a flat `375,483,167`-byte peak. The selected
+follow-on certifies selected-policy closure first while preserving every
+uncertified admitted alternative as an explicit lower-only obligation.
 
 The archived
 [Solver Iteration Infrastructure And Decomposition](archive/2026-08-01-solver-iteration-infrastructure/README.md)

@@ -1,24 +1,33 @@
 # Session Handoff
 
-**Status: proof-carrying quotient refinement stopped at the first binding
-Gate 5 native case. No implementation boundary is active.**
+**Status: exact reforge-work growth diagnostic complete. Competitive lazy
+alternative certification is the selected next structural boundary;
+implementation has not begun.**
 
-Completed milestone:
+Current plan:
+[Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
+
+Completed diagnostic:
+[Exact Reforge-Work Growth Diagnostic](docs/archive/2026-08-02-reforge-work-growth-diagnostic/README.md).
+
+Source milestone:
 [Proof-Carrying Quotient Refinement Structural Stop](docs/archive/2026-08-01-proof-carrying-quotient-refinement/README.md).
 
 Completed enabling milestone:
 [Solver Iteration Infrastructure And Decomposition](docs/archive/2026-08-01-solver-iteration-infrastructure/README.md).
 
-Branch: `codex/proof-carrying-quotient-refinement`
+Branch: `codex/reforge-work-growth-diagnostic`
 
-Starting commit: `882e70968cd86090e9fc4e882fc6e01886aa62a4`
+Diagnostic starting commit:
+`41d6a243947b0205a6e29c6373e79b21b0d8292a`
 
 Gate commits: Gate 0 is `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
 Gate 1 is `5c531d0c9eff204954a5d3d6883a0a2e6d99726a`. Gate 2 is
 `9e0ae6f3135515a9b358ee178a16b3658bea9939`. Gate 3 is
 `62ca542e76829d39a27323fa2d5c1cc6266ba567`. Gate 4 is
-`dac7c6f9670a17e788381fd1ce4c33fc8c4925e2`. Gate 5 is recorded by the final
-archive commit.
+`dac7c6f9670a17e788381fd1ce4c33fc8c4925e2`. Gate 5 is
+`41d6a243947b0205a6e29c6373e79b21b0d8292a`. The diagnostic is recorded by
+the final archive commit.
 
 Nothing has been pushed or merged. `main` remains unchanged at
 `25d5bbe6791beb61eae803219563575346def2dc`.
@@ -211,20 +220,49 @@ tracked work counters. The tracked qualified Fracture evidence retains
   Tracked evidence is in
   `fixtures/solver-reliability/v1/evidence/proof-carrying-quotient-gate5-structural-stop.json`.
 
-## Recommended next boundary
+## Exact reforge-work growth diagnostic
 
-No active plan is selected. Oliver must choose the next chunk before
-implementation resumes. The evidence recommends competitive lazy alternative
-certification:
+- The coarse phase is cap-independent at 20M, 50M, and 100M: 171
+  discovered/expanded states, 7,107 rows, 4,292 transitions, 14,077,632 work,
+  identical bounds, the same 27-action envelope, and unchanged transition and
+  policy hashes.
+- Exact allowances of 5,922,368, 35,922,368, and 85,922,368 complete 2, 17,
+  and 40 kernels and emit 345,192, 2,934,132, and 6,903,840 transitions.
+- Each marginal completed kernel emits exactly 172,596 transitions. Work per
+  kernel is 2.000M then 2.174M; the post-startup shape is approximately linear
+  with a slight upward endpoint-censored change rather than falling.
+- All points retain zero partition classes, rounds, certificates, policies,
+  and reference calls. Peak native-owned memory remains exactly 375,483,167
+  bytes.
+- The 50M and 100M report walls are 14.566 and 25.074 seconds. Both stop only
+  on `max_reforge_work`; memory, watchdog, and correctness boundaries remain
+  safe.
+- A fitted 2,111,010 work/kernel slope projects about 22.11B total work for
+  the archived 10,466 selected-policy kernel proxy before eager extras or any
+  later publication phase. The proxy is a model, not a proved current
+  population identity.
+- Run C at 200M was not performed because Run B already distinguishes the
+  approximately linear path from falling cost. Additional work buys raw
+  pre-partition expansion, not useful quotient or executable progress.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json`.
+  No source, canonical fixture, default, cap, or public contract changed.
 
-1. Discover and certify selected-policy closure first.
-2. Preserve every admitted but uncertified alternative as an explicit
+## Exact next step
+
+The selected boundary is competitive lazy alternative certification:
+
+1. Establish a detailed implementation and qualification plan before source
+   edits begin.
+2. Discover and certify selected-policy closure before eager alternative
+   closure.
+3. Preserve every admitted but uncertified alternative as an explicit
    unresolved lower-only proof obligation.
-3. Certify an alternative transactionally only when Bellman competitiveness
+4. Certify an alternative transactionally only when Bellman competitiveness
    or a counterexample requires it; do not discard it or hard-code actions.
-4. Keep the executable upper fully certified, closed, lumpable, proper,
+5. Keep the executable upper fully certified, closed, lumpable, proper,
    compiled, and independently reconciled.
-5. Preserve the existing vocabulary, mechanics, action filtering, caps,
+6. Preserve the existing vocabulary, mechanics, action filtering, caps,
    public C ABI, strategy JSON, and frontend authority.
 
 Deterministic checkpoint/replay remains deferred.

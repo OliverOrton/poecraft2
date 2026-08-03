@@ -51,6 +51,14 @@ authorities and retains passing focused/medium behavior. Its binding two-goal
 case exhausted candidate-certification reforge work before partition
 initialization, so core qualification remains red.
 
+The subsequent
+[exact reforge-work growth diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
+holds the coarse graph exactly fixed through 100M total work and measures an
+approximately linear 2.0M-2.174M marginal work per completed exact row. It
+reaches 40 kernels and 6,903,840 transitions with zero partition or
+certificate progress, selecting competitive lazy alternative certification
+without changing caps or production behavior.
+
 The cross-base structural harness iterates all 979 engine-certified ordinary
 bases. It checks session/base/item-level identity, modifier/family/tier
 consistency, influence and implicit reachability, representative goals,
