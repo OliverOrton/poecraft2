@@ -1169,6 +1169,33 @@ requirement, price, and vocabulary revocation controls all recreate a
 deterministically schedulable blocker and refuse exactness. Focused acceptance
 is 98,156/0 solve checks and 353/0 quotient proof/partition/Bellman checks.
 
+## Competitive Lazy Alternative Certification Gate 4
+
+The tracked
+[`competitive-lazy-alternative-certification-gate4.json`](../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json)
+qualifies the repeated native `reliability-class-belt` workflow. Both runs
+retain the frozen `ce5a...2e4` / `6bee...2e4` coarse hashes, cost
+`9.143792577895411`, and compiled strategy SHA-256 `87a5...55bb`. Both exact
+evaluations match and both simulation runs complete 10,000/10,000 with zero
+off-policy failures.
+
+The selected closure reaches partition and a proper executable upper at 882
+work with zero alternatives materialized. The scheduler subsequently attempts
+180 alternatives, certifies 31, and retains 149 partial blockers after
+6,355,232 alternative work. The safe zero lower prunes none, so exact-envelope
+closure is refused while the compiled bounded policy remains valid. First
+partition wall time is 21.16-27.24 ms and first-upper wall time is 65.46-71.80
+ms. Peak solver-owned memory is 126,975,163 bytes, including 106,092,192 bytes
+of collision-checked obligation storage.
+
+This is also the scaled-breadth witness: the full 17-action medium vocabulary
+creates 180 obligations, and the first upper appears before all of them. The
+focused selected-row exact-kernel-cap control separately proves that a cap on
+the first competitive alternative retains that artifact. Gate 0's deliberately
+non-numeric hard-case prediction cannot be scored here; on the medium case,
+first-upper work falls 99.979% while total exact work rises 50.595% because
+carrier-wide alternative attempts occur after publication.
+
 ## Engine And WASM Evidence Boundaries
 
 The [engine performance archive](archive/2026-06-engine-performance/README.md)

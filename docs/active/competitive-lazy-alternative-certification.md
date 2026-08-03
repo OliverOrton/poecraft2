@@ -1,7 +1,7 @@
 # Competitive Lazy Alternative Certification
 
-**Status: Gates 0 through 3 complete; Gate 4 medium integration qualification
-is the active boundary.**
+**Status: Gates 0 through 4 complete; Gate 5 frozen two-goal product
+qualification is the active boundary.**
 
 Owner: Oliver
 
@@ -223,7 +223,8 @@ proof/partition/Bellman acceptance passes 353 checks, both with zero failures.
 
 ## Gate 4 — medium integration qualification
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`competitive-lazy-alternative-certification-gate4.json`](../../fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json).
 
 Run `reliability-class-belt` through the full native workflow. Require complete
 action accounting, selected closure before broad alternatives, exercised
@@ -236,7 +237,32 @@ upper can precede complete alternative certification. Record separate work,
 milestones, expansions before/after upper, pruning, replacements, quotient
 sizes, memory, time, and Gate 0 prediction scoring.
 
+Two native runs are semantically identical. Both return `bounded_feasible` at
+cost `9.143792577895411`, retain the frozen coarse hashes, compile to strategy
+SHA-256 `87a5c6a5...855bb`, exact-reconcile, and complete 10,000/10,000
+simulations with zero off-policy failures and zero production reference calls.
+The 19-cell quotient is proper and lumpable.
+
+Selected closure is 15 rows, 882 exact work, and 232 transitions. Partition
+and the first executable upper both occur at work 882, after 21.16-27.24 ms and
+65.46-71.80 ms respectively, with zero alternatives materialized. The
+post-upper scheduler attempts 180 alternative rows using 6,355,232 work,
+certifies 31 obligations, and retains 149 partial competitive blockers. The
+trivial carrier-wide lower prunes zero obligations, reported as a real 0%
+pruning result; the policy is therefore bounded rather than exact.
+
+The full 17-action / 180-obligation run plus the focused selected-row
+exact-kernel-cap control is the bounded scaled-breadth witness. The first upper
+uses only 0.0139% of eventual exact work and exists before every alternative.
+Peak solver-owned memory is 126,975,163 bytes under the unchanged 1 GiB cap.
+Relative to Gate 0, first-upper work falls 99.979%; total work rises 50.595%
+because carrier-wide post-upper attempts cover more exact rows. Gate 0's hard
+selected-closure prediction was deliberately “not presently estimable,” so no
+numeric hard-case prediction is scored from this medium measurement.
+
 ## Gate 5 — frozen two-goal product case
+
+**Status: active.**
 
 Run `natural-t1-breadth-two-4e65dda9c53b` once under the unchanged 20M/1 GiB/
 900-second limits and complete admitted vocabulary. Success requires a

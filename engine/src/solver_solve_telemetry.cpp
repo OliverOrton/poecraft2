@@ -1227,6 +1227,8 @@ std::string serialize_solver_telemetry(
                 "\"reforge_work\":null,\"transitions\":null},"
                 "\"work_to_first_partition\":null,"
                 "\"work_to_first_executable_upper\":null,"
+                "\"wall_ns_to_first_partition\":null,"
+                "\"wall_ns_to_first_executable_upper\":null,"
                 "\"exact_alternatives_materialized_before_first_upper\":"
                 "null,\"alternative_obligations_created\":null,"
                 "\"unresolved_alternative_obligations\":null,"
@@ -1359,6 +1361,20 @@ std::string serialize_solver_telemetry(
         if (refinement.work_to_first_executable_upper.has_value()) {
             json += std::to_string(
                 *refinement.work_to_first_executable_upper);
+        } else {
+            json += "null";
+        }
+        json += ",\"wall_ns_to_first_partition\":";
+        if (refinement.wall_ns_to_first_partition.has_value()) {
+            json += std::to_string(
+                *refinement.wall_ns_to_first_partition);
+        } else {
+            json += "null";
+        }
+        json += ",\"wall_ns_to_first_executable_upper\":";
+        if (refinement.wall_ns_to_first_executable_upper.has_value()) {
+            json += std::to_string(
+                *refinement.wall_ns_to_first_executable_upper);
         } else {
             json += "null";
         }

@@ -1503,6 +1503,14 @@ void run_policy_guided_exact_lift_tests() {
         *refinement_telemetry.work_to_first_partition <=
         *refinement_telemetry.work_to_first_executable_upper);
     PC_CHECK(
+        refinement_telemetry.wall_ns_to_first_partition.has_value());
+    PC_CHECK(
+        refinement_telemetry
+            .wall_ns_to_first_executable_upper.has_value());
+    PC_CHECK(
+        *refinement_telemetry.wall_ns_to_first_partition <=
+        *refinement_telemetry.wall_ns_to_first_executable_upper);
+    PC_CHECK(
         *refinement_telemetry.work_to_first_partition ==
         refinement_telemetry.selected_reforge_work);
     PC_CHECK(
@@ -1539,6 +1547,8 @@ void run_policy_guided_exact_lift_tests() {
     PC_CHECK(refinement_json.find("\"certification_work\":{") !=
              std::string::npos);
     PC_CHECK(refinement_json.find("\"work_to_first_partition\":") !=
+             std::string::npos);
+    PC_CHECK(refinement_json.find("\"wall_ns_to_first_partition\":") !=
              std::string::npos);
     PC_CHECK(refinement_json.find(
                  "\"alternative_obligations_created\":") !=

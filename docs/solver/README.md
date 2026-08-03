@@ -1008,7 +1008,8 @@ counts only contract-driven loss of a downstream observation after an action
 destroys it.
 
 `certification_work` separates selected and alternative row work and records
-the first partition and executable upper. Its alternative scheduler fields
+both work and monotonic wall nanoseconds to the first partition and executable
+upper. Its alternative scheduler fields
 report obligation lifecycle transitions, competitive blockers, verdict
 revocations, accepted policy improvements, retained bounded publication, and
 whether the exact alternative envelope closed. An unresolved obligation's

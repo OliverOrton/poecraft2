@@ -1,6 +1,8 @@
 #include "solver_policy_refinement_helpers.hpp"
 #include "solver_quotient_bellman.hpp"
 
+#include <chrono>
+
 namespace poecraft {
 namespace solver {
 namespace refinement {
@@ -831,6 +833,15 @@ PolicyExactLiftCertificate lift_policy_quotient(
             ? default_limits(coarse, solved, options)
             : *limits_override;
     PolicyLiftAdapterTelemetry telemetry;
+    const auto certification_started_at =
+        std::chrono::steady_clock::now();
+    const auto elapsed_certification_ns = [&] {
+        return static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() -
+                certification_started_at)
+                .count());
+    };
     try {
         ReoptimizationSeed seed;
         seed.coarse_parents.insert(
@@ -1211,6 +1222,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
         if (!telemetry.work_to_first_partition.has_value()) {
             telemetry.work_to_first_partition =
                 telemetry.strict_reforge_work;
+            telemetry.wall_ns_to_first_partition =
+                elapsed_certification_ns();
         }
         const std::uint64_t coarse_partition_owned =
             observation_coarse.estimated_memory_bytes >
@@ -1716,6 +1729,8 @@ PolicyExactLiftCertificate lift_policy_quotient(
         if (!telemetry.work_to_first_executable_upper.has_value()) {
             telemetry.work_to_first_executable_upper =
                 telemetry.strict_reforge_work;
+            telemetry.wall_ns_to_first_executable_upper =
+                elapsed_certification_ns();
             telemetry.alternatives_materialized_before_first_upper =
                 telemetry.alternative_rows_completed;
         }

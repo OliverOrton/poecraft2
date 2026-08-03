@@ -1513,6 +1513,10 @@ SolveResult SolveWork::Impl::finish() {
                 certificate.adapter.work_to_first_partition;
             telemetry.work_to_first_executable_upper =
                 certificate.adapter.work_to_first_executable_upper;
+            telemetry.wall_ns_to_first_partition =
+                certificate.adapter.wall_ns_to_first_partition;
+            telemetry.wall_ns_to_first_executable_upper =
+                certificate.adapter.wall_ns_to_first_executable_upper;
             telemetry.alternatives_materialized_before_first_upper =
                 certificate.adapter
                     .alternatives_materialized_before_first_upper;

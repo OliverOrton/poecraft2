@@ -1,7 +1,8 @@
 # Session Handoff
 
-**Status: competitive lazy alternative certification Gates 0 through 3
-complete. Gate 4 medium integration qualification is the active boundary.**
+**Status: competitive lazy alternative certification Gates 0 through 4
+complete. Gate 5 frozen two-goal product qualification is the active
+boundary.**
 
 Current plan:
 [Competitive Lazy Alternative Certification](docs/active/competitive-lazy-alternative-certification.md).
@@ -23,8 +24,9 @@ Milestone starting commit:
 Current milestone commits: Gate 0 is
 `222ef42242bb1c51cddb38444750bbd30cda6875`. Gate 1 is
 `53c538143b3599b99b5b8cd8317557ada14e39c7`. Gate 2 is
-`c10b2e3cdc85aaab0ec7c0fc6293a9392e66bc16`. Gate 3 is recorded by the
-current local commit; Gate 4 has not begun.
+`c10b2e3cdc85aaab0ec7c0fc6293a9392e66bc16`. Gate 3 is
+`4c19d2c`; Gate 4 is recorded by the current local commit. Gate 5 has not
+begun.
 
 Preserved proof-carrying quotient commits: Gate 0 is
 `4193f086bc7deffb5ce0e3b81f4045a42a4fe3c9`.
@@ -144,6 +146,36 @@ Nothing has been pushed or merged. `main` remains unchanged at
   `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate3.json`.
 - Gate 4 now owns the full `reliability-class-belt` workflow, deterministic
   repeat, 10,000 simulations, and scaled-breadth witness.
+
+## Competitive lazy Gate 4
+
+- Two frozen `reliability-class-belt` runs are semantically identical:
+  `bounded_feasible`, cost `9.143792577895411`, coarse hashes
+  `ce5a144282753b26` / `6bee45662f66d2e4`, compiled strategy SHA-256
+  `87a5c6a5c0980b1696156aadbd8a4e94e804d66f6a0ef062dfbee105197855bb`,
+  matched exact evaluation, and 10,000/10,000 simulations with zero off-policy
+  failures.
+- Fifteen selected rows reach partition and a proper executable upper at 882
+  work with zero alternatives materialized. First partition is 21.16-27.24 ms;
+  first upper is 65.46-71.80 ms.
+- The post-upper scheduler attempts 180 alternative rows using 6,355,232 work,
+  certifies 31 obligations, and retains 149 partial competitive blockers. The
+  trivial carrier-wide lower prunes zero, so publication remains honestly
+  bounded. There are no policy replacements.
+- The quotient has 165 exact carriers, 19 cells, 195 kernels, and 1,687
+  transitions. Peak solver-owned memory is 126,975,163 bytes under the 1 GiB
+  cap; obligation storage accounts for 106,092,192 bytes.
+- The 17-action / 180-obligation medium run plus the selected-row
+  exact-kernel-cap control is the scaled-breadth witness. The first upper uses
+  only 0.0139% of eventual exact work and precedes all alternatives.
+- Gate 0's hard selected-closure prediction was “not presently estimable.” On
+  the medium case, first-upper work drops 99.979% while total exact work rises
+  50.595% because carrier-wide alternative attempts occur after publication.
+- Evidence is tracked in
+  `fixtures/solver-reliability/v1/evidence/competitive-lazy-alternative-certification-gate4.json`.
+- Gate 5 now owns the single frozen `natural-t1-breadth-two-4e65dda9c53b`
+  20M/1 GiB/900-second run and 10,000-run verification if it publishes a
+  policy.
 
 ## Preserved proof-carrying quotient Gate 0 boundary
 
@@ -363,21 +395,21 @@ tracked work counters. The tracked qualified Fracture evidence retains
 
 ## Exact next step
 
-Run competitive lazy Gate 4:
+Run competitive lazy Gate 5 exactly once:
 
-1. Execute `reliability-class-belt` through the complete native benchmark,
-   exact compiled evaluation, and 10,000-run verification workflow twice.
-2. Require deterministic semantic results, complete admitted-action
-   accounting, selected closure and a first upper before alternative
-   exhaustion, exercised competitive certification, properness, lumpability,
-   zero reference calls, compilation, and exact reconciliation.
-3. Run a bounded scaled-breadth witness proving partition and upper progress
-   before all alternatives certify.
-4. Record selected/alternative work, milestone work and wall time, obligation
-   outcomes, lower pruning, policy replacements, quotient size, transitions,
-   memory, simulations, hashes, and Gate 0 prediction scoring.
-5. Preserve the existing vocabulary, mechanics, action filtering, caps,
-   public C ABI, strategy JSON, and frontend authority.
+1. Execute `natural-t1-breadth-two-4e65dda9c53b` with its frozen full product
+   action vocabulary, 20M reforge-work cap, 1 GiB solver-owned cap, and
+   900-second external watchdog.
+2. Request exact compiled evaluation and 10,000 simulations. If no policy is
+   produced, report compilation/evaluation/simulation as not applicable.
+3. Classify the outcome precisely: bounded upper after unresolved/capped
+   alternatives is success; all competitive alternatives resolved may be
+   exact; a cap before any upper is a selected-closure structural failure.
+4. Record milestone work/time, selected and alternative work, obligation
+   lifecycle, lower provenance, quotient/memory facts, compilation,
+   reconciliation, simulations, and the frozen prediction score.
+5. Do not rerun the frozen case, change a cap, narrow vocabulary, or proceed
+   to Gate 6 unless the run produces a valid upper.
 
 Deterministic checkpoint/replay remains deferred.
 

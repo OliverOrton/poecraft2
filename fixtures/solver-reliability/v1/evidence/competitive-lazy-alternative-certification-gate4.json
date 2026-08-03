@@ -1,0 +1,173 @@
+{
+  "schema_version": "competitive_lazy_alternative_certification_gate4_v1",
+  "date": "2026-08-02",
+  "decision": "gate4_qualified_medium_integration",
+  "branch": "codex/competitive-lazy-alternative-certification",
+  "parent_gate_commit": "4c19d2c",
+  "gate_commit": "the commit containing this evidence record",
+  "frozen_inputs": {
+    "case_id": "reliability-class-belt",
+    "case_sha256": "b9b363a45ff23a5aeb4c6b4f05800f537750f6098cbf63b8cc1dafbf16fe822d",
+    "artifact_manifest_sha256": "22bbb2ee77064bd21c205b99e231767416dfb6a8e7ba3ae0d7374423522e7de5",
+    "economy_content_sha256": "9175d37d83d90ab936e572f04c7599afbf18ff6cefc90786a5276da1759cd52f",
+    "product_action_count": 17,
+    "benchmark_binary_sha256": "18b55632d0840d78db639583105a815eb0089659bbd9d6cd1f7c8b63a0c0cca3",
+    "command": "poecraft_solver_benchmark --case reliability-class-belt --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges"
+  },
+  "deterministic_semantics": {
+    "actual_status": "bounded_feasible",
+    "expectation_met": true,
+    "lower_bound": 0.0,
+    "upper_bound": 9.143792577895411,
+    "exact_compiled_cost": 9.14379257789546,
+    "transition_bits_hash": "ce5a144282753b26",
+    "policy_bits_hash": "6bee45662f66d2e4",
+    "compiled_strategy_sha256": "87a5c6a5c0980b1696156aadbd8a4e94e804d66f6a0ef062dfbee105197855bb",
+    "proper": true,
+    "lumpable": true,
+    "compiled": true,
+    "cost_reconciled": true,
+    "zero_off_policy_mass": true,
+    "reference_adapter_invocations": 0,
+    "runs_equal_except_order_sensitive_wall_and_report_fields": true
+  },
+  "certification_work": {
+    "selected": {
+      "rows_begun": 15,
+      "rows_completed": 15,
+      "reforge_work": 882,
+      "transitions": 232
+    },
+    "alternatives": {
+      "rows_begun": 180,
+      "rows_completed": 180,
+      "reforge_work": 6355232,
+      "transitions": 1455
+    },
+    "work_to_first_partition": 882,
+    "work_to_first_executable_upper": 882,
+    "exact_alternatives_materialized_before_first_upper": 0,
+    "total_exact_reforge_work": 6356114
+  },
+  "milestone_wall_time": {
+    "run1": {
+      "first_partition_ns": 21163200,
+      "first_executable_upper_ns": 65456400,
+      "solve_wall_ms": 32.8676,
+      "total_wall_ms": 1367.7022
+    },
+    "run2": {
+      "first_partition_ns": 27236300,
+      "first_executable_upper_ns": 71798600,
+      "solve_wall_ms": 32.2981,
+      "total_wall_ms": 1384.3951
+    },
+    "wall_fields_order_sensitive": true
+  },
+  "alternative_envelope": {
+    "obligations_created": 180,
+    "obligations_scheduled": 180,
+    "obligations_certified": 31,
+    "obligations_partially_evaluated": 149,
+    "obligations_noncompetitive": 0,
+    "obligations_stale": 0,
+    "obligations_resource_interrupted": 0,
+    "competitive_alternatives_remaining": 149,
+    "lower_bound_pruning_rate": 0.0,
+    "certification_rate": 0.17222222222222222,
+    "partial_rate": 0.8277777777777777,
+    "policy_replacements": 0,
+    "bounded_publication_retained": true,
+    "exact_alternative_envelope_closed": false,
+    "bound_provenance": "trivial carrier-wide nonnegative-cost lower Q",
+    "interpretation": "the safe zero lower has no pruning power on this case; bounded publication succeeds because the selected upper precedes alternative exhaustion"
+  },
+  "quotient_and_memory": {
+    "exact_carriers": 165,
+    "quotient_cells": 19,
+    "exact_kernels": 195,
+    "exact_transitions": 1687,
+    "compiled_working_states": 15,
+    "compiled_policy_regions": 4,
+    "compiled_nodes": 14,
+    "compiled_edges": 33,
+    "memory_bytes": 126975163,
+    "peak_memory_bytes": 126975163,
+    "alternative_obligation_bytes": 106092192,
+    "memory_limit_bytes": 1073741824
+  },
+  "verification": {
+    "exact_strategy_evaluation_status": "matched",
+    "success_probability": 1.0000000000000306,
+    "off_policy_mass": 0.0,
+    "simulation_runs": 10000,
+    "simulation_successes": 10000,
+    "simulation_failures": 0,
+    "simulation_off_policy_failures": 0
+  },
+  "scaled_breadth_witness": {
+    "basis": "full 17-action medium product vocabulary plus focused selected-row exact-kernel-cap control",
+    "obligation_breadth": 180,
+    "first_upper_fraction_of_total_exact_work": 0.0001387640309786766,
+    "alternatives_uncertified_at_first_upper": 180,
+    "alternatives_still_blocking_at_publication": 149,
+    "first_partition_before_alternative_exhaustion": true,
+    "first_upper_before_alternative_exhaustion": true,
+    "resource_interruption_after_upper_retains_artifact": true
+  },
+  "gate0_prediction_score": {
+    "frozen_prediction": "not presently estimable",
+    "numeric_prediction_score_applicable": false,
+    "known_selected_closure_condition_satisfied": true,
+    "gate0_first_upper_work": 4220669,
+    "gate4_first_upper_work": 882,
+    "first_upper_work_reduction": 4219787,
+    "first_upper_work_reduction_percent": 99.97910283891014,
+    "gate0_total_exact_work": 4220669,
+    "gate4_total_exact_work": 6356114,
+    "total_exact_work_increase": 2135445,
+    "total_exact_work_increase_percent": 50.5949412285114,
+    "explanation": "selected-first ordering makes the first upper nearly immediate, while carrier-wide post-upper attempts build more exact alternative rows than the prior representative-oriented eager path; the extra work occurs after a usable artifact exists"
+  },
+  "runs": [
+    {
+      "report_path": "build/acceptance/competitive-lazy-alternative-certification/gate4-medium-timed-run1/report.json",
+      "report_sha256": "2fe8a326754c296a06ea70d75a9364d2587f0bc8ceabb1c8a43d891557747801",
+      "partial_sha256": "4ab0c3922c815055e9f30dc4f8cfc01526bee7739ac84d1f80afb6635dac3a50"
+    },
+    {
+      "report_path": "build/acceptance/competitive-lazy-alternative-certification/gate4-medium-timed-run2/report.json",
+      "report_sha256": "0b24c73f784cbb4f54ffd7c1982e000cec6951ca6ea1f17997ba9834330894a7",
+      "partial_sha256": "68c8194ba0fb877f2b37faf75a9be30f073cd8550cc74c6bb05612cbdae74291"
+    }
+  ],
+  "focused_acceptance": {
+    "command": "powershell -File scripts/dev-engine.ps1 -Task Test -Suite solve",
+    "checks": 98160,
+    "failures": 0,
+    "includes_scaled_breadth_resource_interruption_control": true
+  },
+  "source_sha256": {
+    "engine/src/solver_policy_oracle_improve.inc": "82d20cd867e24a8a5e6778b773e8a22f75a2132f12bdd43e23b7b128bc410ada",
+    "engine/src/solver_policy_refinement.cpp": "4e31136635d20e22b2baaf2d003b74f005f5782e9682cd745bc239ef38f53da9",
+    "engine/src/solver_policy_refinement.hpp": "93bacd79c082dda8a8d01a48c1ab75b86097ca291a52383c752c8b166d5c89db",
+    "engine/src/solver_solve_contracts.hpp": "d3b1679f0f0ce46050bd642d0711791e31affc9da452d0fb8cfd108bbd6390a9",
+    "engine/src/solver_solve_finish.cpp": "79f7724405a60136afaa7288ea5cb04755d85d2b9666dd80f2055bc3257dba27",
+    "engine/src/solver_solve_telemetry.cpp": "940f721d9847c64eb57d3c0cedf3f13a18fc174475ab4c7a1cfa5eba9b88dfc8",
+    "engine/tests/test_solver_solve.cpp": "475538983bc1a330b1d20d7e42930e3f8dec0c1aeefe2067030e1383b61ebfd9"
+  },
+  "scope": {
+    "two_goal_frozen_case_run": false,
+    "caps_or_defaults_changed": false,
+    "mechanics_changed": false,
+    "action_filtering_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false
+  },
+  "next_gate": "frozen two-goal product case",
+  "pushed": false,
+  "merged": false
+}

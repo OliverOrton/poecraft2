@@ -47,6 +47,8 @@ struct PolicyLiftAdapterTelemetry {
     std::uint64_t alternative_transitions = 0;
     std::optional<std::uint64_t> work_to_first_partition;
     std::optional<std::uint64_t> work_to_first_executable_upper;
+    std::optional<std::uint64_t> wall_ns_to_first_partition;
+    std::optional<std::uint64_t> wall_ns_to_first_executable_upper;
     std::uint64_t alternatives_materialized_before_first_upper = 0;
     std::uint64_t alternative_obligations_created = 0;
     std::uint64_t unresolved_alternative_obligations = 0;

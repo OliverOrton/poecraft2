@@ -1000,6 +1000,16 @@ void merge_adapter_telemetry(
             total.alternatives_materialized_before_first_upper,
             pass.alternatives_materialized_before_first_upper);
     }
+    if (!total.wall_ns_to_first_partition.has_value() &&
+        pass.wall_ns_to_first_partition.has_value()) {
+        total.wall_ns_to_first_partition =
+            pass.wall_ns_to_first_partition;
+    }
+    if (!total.wall_ns_to_first_executable_upper.has_value() &&
+        pass.wall_ns_to_first_executable_upper.has_value()) {
+        total.wall_ns_to_first_executable_upper =
+            pass.wall_ns_to_first_executable_upper;
+    }
     add_u32(
         total.local_reoptimization_rounds,
         pass.local_reoptimization_rounds);

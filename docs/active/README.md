@@ -1,7 +1,7 @@
 # Active Work
 
-**Status: competitive lazy alternative certification Gates 0 through 3 are
-complete; Gate 4 medium integration qualification is active.**
+**Status: competitive lazy alternative certification Gates 0 through 4 are
+complete; Gate 5 frozen two-goal product qualification is active.**
 
 Parent: [Documentation map](../README.md)
 
@@ -21,6 +21,11 @@ explicit. Gate 3 adds deterministic competitive scheduling, transactional
 carrier-wide certification, lower-relaxation participation, verdict
 revocation, and retained bounded publication after an alternative resource
 interruption.
+
+Gate 4 qualifies the full native medium workflow twice: first upper at 882
+selected work before 180 alternative attempts, 31 certified and 149 explicit
+partial obligations, matched exact compiled cost, and 10,000/10,000 successful
+simulations with zero off-policy failures.
 
 The completed
 [Exact Reforge-Work Growth Diagnostic](../archive/2026-08-02-reforge-work-growth-diagnostic/README.md)
