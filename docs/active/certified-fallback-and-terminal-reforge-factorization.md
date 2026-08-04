@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 2 and Track B Gates 3-4 are complete; Track B Gate 5
-exact equivalence is the active boundary.**
+**Status: Track A Gate 2 and Track B Gates 3-5 are complete; Track B Gate 6
+binding performance is the active boundary.**
 
 Owner: Oliver
 
@@ -256,7 +256,8 @@ Bellman equivalence belongs to Gate 5; the canonical hard case was not rerun.
 
 ### Gate 5 — exact equivalence
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate5.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json).
 
 Compare V3 with raw across ordinary reforges, forced Essence, targeted and
 exceptional-support Harvest, all relevant Fossil weight/addition/forced
@@ -268,7 +269,30 @@ goal/below mass, exclusion behavior, Bellman value, semantic action, and
 collision-checked deterministic cache identity. Adversarial junk modifiers
 that exclude different future groups must remain distinct.
 
+The raw oracle and V3 now agree across the focused synthetic ordinary,
+Essence, targeted Harvest, and Fossil matrix. Fossil coverage includes positive
+weighting, a zeroed pool, a direct addition, and a forced modifier. Prefix-
+only, suffix-only, mixed, and present-below-tier goal projections match in both
+directions. Goal-level-equivalent junk modifiers with distinct future group
+exclusions remain different classes and produce zero V3 identity mismatches.
+
+Real-artifact Vaal Regalia comparisons cover empty and fractured carriers for
+Chaos, one forced Essence, one viable targeted Harvest reforge, and one
+single-Fossil action. Legality, total mass, every canonical `AbstractState`
+mass, goal and below-tier mass, and group-exclusion behavior agree. Abstract
+state comparison deliberately preserves the virtual gated retry-basin bit;
+concrete materialization is not used as a lossy oracle for that state.
+
+Raw and V3 gated Bellman solves both publish a policy with the same evaluated
+cost, operator kind, and semantic action id. Forward and reversed V3 kernels
+have identical deterministic bits. The native build and focused solver-calc
+suite pass 252,035 checks with zero failures. Gate 5 changes tests only, does
+not rerun the canonical hard case, and authorizes the one Gate 6 binding
+diagnostic.
+
 ### Gate 6 — binding performance decision
+
+**Status: active.**
 
 Run the same hard-row diagnostic used for V1/V2. V3 qualifies only if:
 

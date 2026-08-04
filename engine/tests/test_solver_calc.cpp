@@ -209,6 +209,21 @@ std::map<std::uint32_t, double> project_distribution(
     return projected;
 }
 
+using AbstractMassMap = std::unordered_map<
+    AbstractState,
+    double,
+    decltype(&abstract_state_hash)>;
+
+AbstractMassMap abstract_distribution(
+    const CalcContext& source,
+    const OutcomeDistribution& distribution) {
+    AbstractMassMap mass(0, abstract_state_hash);
+    for (const OutcomeEntry& entry : distribution.entries) {
+        mass[source.state(entry.state)] += entry.probability;
+    }
+    return mass;
+}
+
 bool item_contains_mod(
     const pc_item_state& item,
     const std::uint32_t mod_id) {
@@ -586,7 +601,7 @@ void run_identity_reforge_factorization_tests() {
 void run_projected_reforge_frontier_equivalence_tests() {
     auto session = make_calc_session();
     session->essence_guaranteed_mod_ids = {3};
-    session->fossil_added_mod_ids = {{}};
+    session->fossil_added_mod_ids = {{4}};
     session->fossil_forced_mod_ids = {{3}};
     session->fossil_sell_price_mod_ids = {{}};
     auto data = std::const_pointer_cast<DataImpl>(session->data);
@@ -790,6 +805,9 @@ void run_projected_reforge_frontier_equivalence_tests() {
     PC_CHECK(gated_factored_reverse.supported);
     PC_CHECK(sums_to_one(gated_factored));
     PC_CHECK(sums_to_one(gated_factored_reverse));
+    PC_CHECK(
+        gated_factored.gated_kernel_bits_hash ==
+        gated_factored_reverse.gated_kernel_bits_hash);
     const auto gated_mass = project_distribution(
         projected, raw, gated);
     const auto gated_factored_mass = project_distribution(
@@ -865,6 +883,89 @@ void run_projected_reforge_frontier_equivalence_tests() {
             error.cap_name() == "max_reforge_work";
     }
     PC_CHECK(factored_work_cap_hit);
+    PC_CHECK(
+        factored.layout().junk_class_by_mod[3] !=
+        factored.layout().junk_class_by_mod[4]);
+    const auto compare_goal_shape =
+        [&](const GoalSpec& shape, const bool require_below_mass) {
+            CalcContext shape_raw(
+                session, shape, registry, actions,
+                false, false, true);
+            CalcContext shape_v3(
+                session, shape, registry, actions,
+                false, false, true, std::nullopt, {}, false, {}, false,
+                true, true, false, true);
+            const std::uint32_t shape_raw_start =
+                shape_raw.intern_item(rare);
+            const std::uint32_t shape_v3_start =
+                shape_v3.intern_item(rare);
+            const OutcomeDistribution& shape_raw_distribution =
+                shape_raw.outcomes(shape_raw_start, 0, true);
+            const OutcomeDistribution& shape_v3_distribution =
+                shape_v3.outcomes(shape_v3_start, 0, true);
+            PC_CHECK(shape_raw_distribution.supported);
+            PC_CHECK(shape_v3_distribution.supported);
+            PC_CHECK(sums_to_one(shape_raw_distribution));
+            PC_CHECK(sums_to_one(shape_v3_distribution));
+            const auto shape_raw_mass = abstract_distribution(
+                shape_raw, shape_raw_distribution);
+            const auto shape_v3_mass = abstract_distribution(
+                shape_v3, shape_v3_distribution);
+            PC_CHECK(
+                shape_raw_mass.size() == shape_v3_mass.size());
+            for (const auto& [state, probability] : shape_raw_mass) {
+                const auto found = shape_v3_mass.find(state);
+                PC_CHECK(found != shape_v3_mass.end());
+                if (found != shape_v3_mass.end()) {
+                    PC_CHECK(near(
+                        probability, found->second, 1e-12));
+                }
+            }
+            for (std::size_t slot = 0;
+                 slot < shape.slots.size(); ++slot) {
+                PC_CHECK(near(
+                    shape_raw_distribution
+                        .slot_satisfied_probability[slot],
+                    shape_v3_distribution
+                        .slot_satisfied_probability[slot],
+                    1e-12));
+                double raw_below = 0.0;
+                double v3_below = 0.0;
+                for (const OutcomeEntry& entry :
+                     shape_raw_distribution.entries) {
+                    if (shape_raw.state(entry.state)
+                            .slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::PresentBelowTier)) {
+                        raw_below += entry.probability;
+                    }
+                }
+                for (const OutcomeEntry& entry :
+                     shape_v3_distribution.entries) {
+                    if (shape_v3.state(entry.state)
+                            .slot_status[slot] ==
+                        static_cast<std::uint8_t>(
+                            GoalSlotStatus::PresentBelowTier)) {
+                        v3_below += entry.probability;
+                    }
+                }
+                PC_CHECK(near(raw_below, v3_below, 1e-12));
+                if (require_below_mass && slot == 0) {
+                    PC_CHECK(raw_below > 0.0);
+                }
+            }
+        };
+    GoalSpec prefix_goal = family_goal_100();
+    compare_goal_shape(prefix_goal, false);
+    GoalSpec suffix_goal;
+    GoalSlot suffix_slot;
+    suffix_slot.family_id = 104;
+    suffix_slot.min_tier = 1;
+    suffix_goal.slots = {suffix_slot};
+    compare_goal_shape(suffix_goal, false);
+    GoalSpec mixed_goal = prefix_goal;
+    mixed_goal.slots.push_back(suffix_slot);
+    compare_goal_shape(mixed_goal, true);
     const ReforgeBuildAttribution& terminal =
         projected.telemetry().reforge_build_attribution_samples.back();
     const ReforgeBuildAttribution& terminal_reverse =
@@ -1989,6 +2090,10 @@ void run_artifact_calc_tests(const char* artifact_dir) {
             session, goal, registry, candidates,
             false, false, false, std::nullopt, {}, false, {}, false,
             true, true);
+        CalcContext factored_reforge_calc(
+            session, goal, registry, candidates,
+            false, false, false, std::nullopt, {}, false, {}, false,
+            true, true, false, true);
         ActionContextImpl reforge_mc(31337);
         reforge_mc.session = session;
         const std::uint32_t reforge_start =
@@ -2005,6 +2110,8 @@ void run_artifact_calc_tests(const char* artifact_dir) {
                     reforge_calc.intern_item(item);
                 const std::uint32_t projected_state =
                     projected_reforge_calc.intern_item(item);
+                const std::uint32_t factored_state =
+                    factored_reforge_calc.intern_item(item);
                 PC_CHECK(
                     action_legal(
                         *session, registry.actions[action_index],
@@ -2012,6 +2119,13 @@ void run_artifact_calc_tests(const char* artifact_dir) {
                     action_legal(
                         *session, registry.actions[action_index],
                         projected_reforge_calc.state(projected_state)));
+                PC_CHECK(
+                    action_legal(
+                        *session, registry.actions[action_index],
+                        reforge_calc.state(raw_state)) ==
+                    action_legal(
+                        *session, registry.actions[action_index],
+                        factored_reforge_calc.state(factored_state)));
                 const OutcomeDistribution& raw_distribution =
                     reforge_calc.outcomes(raw_state, action_index);
                 const OutcomeDistribution& projected_distribution =
@@ -2046,6 +2160,62 @@ void run_artifact_calc_tests(const char* artifact_dir) {
                         projected_distribution
                             .slot_satisfied_probability[goal_slot],
                         1e-11));
+                }
+                const OutcomeDistribution& raw_gated_distribution =
+                    reforge_calc.outcomes(
+                        raw_state, action_index, true);
+                const OutcomeDistribution& factored_distribution =
+                    factored_reforge_calc.outcomes(
+                        factored_state, action_index, true);
+                PC_CHECK(raw_gated_distribution.supported);
+                PC_CHECK(factored_distribution.supported);
+                PC_CHECK(sums_to_one(raw_gated_distribution));
+                PC_CHECK(sums_to_one(factored_distribution));
+                const auto raw_gated_mass = abstract_distribution(
+                    reforge_calc, raw_gated_distribution);
+                const auto factored_mass = abstract_distribution(
+                    factored_reforge_calc, factored_distribution);
+                PC_CHECK(
+                    raw_gated_mass.size() == factored_mass.size());
+                for (const auto& [state, probability] :
+                     raw_gated_mass) {
+                    const auto found = factored_mass.find(state);
+                    PC_CHECK(found != factored_mass.end());
+                    if (found != factored_mass.end()) {
+                        PC_CHECK(near(
+                            probability, found->second, 1e-11));
+                    }
+                }
+                for (std::size_t goal_slot = 0;
+                     goal_slot < kMaxGoalSlots; ++goal_slot) {
+                    PC_CHECK(near(
+                        raw_gated_distribution
+                            .slot_satisfied_probability[goal_slot],
+                        factored_distribution
+                            .slot_satisfied_probability[goal_slot],
+                        1e-11));
+                    double raw_below = 0.0;
+                    double factored_below = 0.0;
+                    for (const OutcomeEntry& entry :
+                         raw_gated_distribution.entries) {
+                        if (reforge_calc.state(entry.state)
+                                .slot_status[goal_slot] ==
+                            static_cast<std::uint8_t>(
+                                GoalSlotStatus::PresentBelowTier)) {
+                            raw_below += entry.probability;
+                        }
+                    }
+                    for (const OutcomeEntry& entry :
+                         factored_distribution.entries) {
+                        if (factored_reforge_calc.state(entry.state)
+                                .slot_status[goal_slot] ==
+                            static_cast<std::uint8_t>(
+                                GoalSlotStatus::PresentBelowTier)) {
+                            factored_below += entry.probability;
+                        }
+                    }
+                    PC_CHECK(near(
+                        raw_below, factored_below, 1e-11));
                 }
             };
         for (const std::uint32_t action_index : projected_actions) {
@@ -2139,16 +2309,25 @@ void run_artifact_calc_tests(const char* artifact_dir) {
         bellman_options.max_state_action_rows = 500000;
         bellman_options.max_transitions = 5000000;
         bellman_options.max_reforge_work = 50000000;
+        bellman_options.goal_progress_gated_reforges = true;
         const SolveResult raw_bellman = solve(
             reforge_calc, empty_rare, bellman_prices, bellman_options);
         const SolveResult projected_bellman = solve(
             projected_reforge_calc, empty_rare, bellman_prices,
             bellman_options);
+        const SolveResult factored_bellman = solve(
+            factored_reforge_calc, empty_rare, bellman_prices,
+            bellman_options);
         PC_CHECK(raw_bellman.policy_available);
         PC_CHECK(projected_bellman.policy_available);
+        PC_CHECK(factored_bellman.policy_available);
         PC_CHECK(near(
             raw_bellman.evaluated_policy_cost,
             projected_bellman.evaluated_policy_cost,
+            1e-9));
+        PC_CHECK(near(
+            raw_bellman.evaluated_policy_cost,
+            factored_bellman.evaluated_policy_cost,
             1e-9));
         if (raw_bellman.policy_available &&
             projected_bellman.policy_available) {
@@ -2163,6 +2342,19 @@ void run_artifact_calc_tests(const char* artifact_dir) {
                 reforge_calc.operators()[raw_selected.index].id ==
                 projected_reforge_calc
                     .operators()[projected_selected.index].id);
+        }
+        if (raw_bellman.policy_available &&
+            factored_bellman.policy_available) {
+            const PolicyOperatorRef raw_selected =
+                raw_bellman.policy[raw_bellman.start_state];
+            const PolicyOperatorRef factored_selected =
+                factored_bellman.policy[
+                    factored_bellman.start_state];
+            PC_CHECK(raw_selected.kind == factored_selected.kind);
+            PC_CHECK(
+                reforge_calc.operators()[raw_selected.index].id ==
+                factored_reforge_calc
+                    .operators()[factored_selected.index].id);
         }
 
         /* S8.2 owner correction: Fossil and Essence share the same preserved

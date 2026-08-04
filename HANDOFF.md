@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback Gate 2 and terminal Gates 3-4 are complete.
-Track B Gate 5 exact equivalence is active.**
+**Status: certified fallback Gate 2 and terminal Gates 3-5 are complete.
+Track B Gate 6 binding performance is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -34,8 +34,9 @@ Current milestone commits: Gate 0 is
 `abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is
 `feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is
 `a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is
-`4dcf51d7e65dc483c5d8119c30d2919187f1de7a`. Gate 4 is recorded by the
-current local commit. Track B Gate 5 is the active implementation boundary.
+`4dcf51d7e65dc483c5d8119c30d2919187f1de7a`. Gate 4 is
+`6b0fec599b7342faf8021f2c369c0cc6731ba9ad`. Gate 5 is recorded by the
+current local commit. Track B Gate 6 is the active implementation boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -206,6 +207,28 @@ Nothing has been pushed or merged. `main` remains unchanged at
   pass 251,729 checks with zero failures, including forward/reverse V3 mass.
   The canonical hard case was not rerun. Evidence is
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json`.
+
+## Exact V3 equivalence Gate 5
+
+- Synthetic raw/V3 comparison covers ordinary Chaos-like reforges, forced
+  Essence, targeted Harvest, and Fossil positive, zeroed, added, and forced
+  channels. Prefix-only, suffix-only, mixed, and below-tier goal observations
+  match with forward and reversed enumeration.
+- Goal-level-equivalent junk modifiers carrying different future group
+  exclusions remain distinct. V3 records no subset identity mismatch and its
+  forward/reverse gated kernel bits are identical.
+- Real Vaal Regalia coverage compares empty and fractured carriers under
+  Chaos, one forced Essence, one viable targeted Harvest reforge, and one
+  single-Fossil action. Legality, total and per-`AbstractState` mass, goal and
+  below-tier mass, and exclusion behavior agree with raw.
+- Collision-checked abstract maps preserve the gated retry-basin bit. The
+  comparison does not materialize that virtual state and thereby erase its
+  Bellman identity.
+- Raw and V3 gated Bellman solves both produce a policy with identical value,
+  operator kind, and semantic action id. The native build and focused suite
+  pass 252,035 checks with zero failures. Gate 5 changes tests only and does
+  not rerun the canonical hard case. Evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json`.
 
 ## Selected-closure scaling Gate 0
 

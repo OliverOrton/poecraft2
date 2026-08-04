@@ -1,0 +1,79 @@
+{
+  "schema_version": "exact_v3_terminal_equivalence_gate5_v1",
+  "date": "2026-08-03",
+  "decision": "v3_sound_begin_binding_performance_decision",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "parent_gate_commit": "6b0fec599b7342faf8021f2c369c0cc6731ba9ad",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "test_only_change": true,
+    "v3_diagnostic_only": true,
+    "product_behavior_changed": false,
+    "canonical_hard_case_rerun": false
+  },
+  "equivalence_authority": {
+    "oracle": "independently selectable raw exact reforge evaluator",
+    "comparison_identity": "collision-checked AbstractState maps preserve virtual retry-basin identity without lossy materialization",
+    "synthetic_probability_tolerance": 1e-12,
+    "real_artifact_probability_tolerance": 1e-11,
+    "bellman_value_tolerance": 1e-9,
+    "forward_reverse_v3_kernel_bits_identical": true
+  },
+  "synthetic_matrix": {
+    "ordinary_chaos_like": true,
+    "forced_essence": true,
+    "targeted_harvest": true,
+    "fossil_positive_multiplier": true,
+    "fossil_zeroed_pool": true,
+    "fossil_pool_addition": true,
+    "fossil_forced_modifier": true,
+    "prefix_only_goal": true,
+    "suffix_only_goal": true,
+    "mixed_goal": true,
+    "present_below_tier_mass": true,
+    "forward_enumeration": true,
+    "reverse_enumeration": true,
+    "adversarial_junk_exclusion": {
+      "goal_level_equivalent": true,
+      "different_future_groups": true,
+      "remain_distinct": true,
+      "v3_identity_mismatches": 0
+    }
+  },
+  "real_artifact_matrix": {
+    "base": "Metadata/Items/Armours/BodyArmours/BodyInt17",
+    "item_level": 86,
+    "empty_rare": true,
+    "fractured_prefix_carrier": true,
+    "actions": ["chaos", "one forced Essence", "one viable targeted Harvest reforge", "one single-Fossil action"],
+    "legality_identical": true,
+    "total_mass_identical": true,
+    "per_canonical_target_mass_identical": true,
+    "goal_satisfied_mass_identical": true,
+    "below_tier_mass_identical": true,
+    "group_exclusion_behavior_identical": true,
+    "targeted_harvest_support_compared": true
+  },
+  "bellman": {
+    "goal_progress_gated_reforges": true,
+    "raw_policy_available": true,
+    "v2_policy_available": true,
+    "v3_policy_available": true,
+    "raw_v3_value_identical": true,
+    "raw_v3_selected_operator_kind_identical": true,
+    "raw_v3_selected_semantic_action_id_identical": true
+  },
+  "verification": {
+    "build_command": "powershell -File scripts/build.ps1",
+    "build_result": "passed",
+    "test_command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+    "test_result": "252035 checks, 0 failures"
+  },
+  "sha256": {
+    "engine/tests/test_solver_calc.cpp": "15564d4a5288e026989d2ecb7a8e8dab3e92a1b82ca8f4b227f679df70131e43",
+    "benchmark": "a54d12aa8188f9189ac49a33d965116bc886a555914dd6b244947f9dd1d20bb3",
+    "engine_dll": "9ece5a147dba23b4c15f6163569d41890059a8791341a8c61d477cc1b5e58b32",
+    "tests": "b7c161d296b51c00507b6d0b5499c34ca43e0a7624cb00e7a60e19ceae02d8aa"
+  },
+  "next_gate": "run one temporary binding-row diagnostic with V3 enabled and decide qualification without credit from the retained fallback"
+}
