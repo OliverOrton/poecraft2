@@ -1,0 +1,286 @@
+{
+  "schema_version": "reforge_resource_accounting_v3_qualification_gate5_v1",
+  "date": "2026-08-04",
+  "decision": "v3_qualified_and_retained_for_production_strict_reforge_rows",
+  "branch": "codex/reforge-resource-accounting-v3-qualification",
+  "parent_gate_commit": "5c5ffc0",
+  "gate_commit": "the commit containing this evidence record",
+  "scope": {
+    "mechanics_changed": false,
+    "action_vocabulary_changed": false,
+    "canonical_fixture_changed": false,
+    "product_or_default_cap_changed": false,
+    "coarse_evaluator_changed": false,
+    "strict_production_evaluator": "v3_factored",
+    "raw_v1_rollback_retained": true,
+    "selected_only_100m_invocations": 1,
+    "canonical_hard_20m_invocations": 1,
+    "standalone_five_goal_watchdog_invocations": 0,
+    "release_wasm_rebuilt": true,
+    "visual_review_performed": false,
+    "pushed": false,
+    "merged": false
+  },
+  "exact_equivalence_matrix": {
+    "authority": "engine/tests/test_solver_calc.cpp",
+    "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+    "checks": 252997,
+    "failures": 0,
+    "synthetic": {
+      "ordinary": true,
+      "essence_forced_modifier": true,
+      "harvest_targeted_and_exceptional_support": true,
+      "fossil_positive_weight": true,
+      "fossil_zero_weight": true,
+      "fossil_added_modifier": true,
+      "fossil_forced_modifier": true,
+      "prefix_only_goal": true,
+      "suffix_only_goal": true,
+      "mixed_goal": true,
+      "present_below_tier": true,
+      "identity_sensitive_exclusions": true,
+      "forward_and_reverse_enumeration": true
+    },
+    "real_artifact": {
+      "empty_carrier": true,
+      "fractured_carrier": true,
+      "ordinary_essence_harvest_fossil": true,
+      "legality_mass_goal_mass_and_below_tier_mass_identical": true,
+      "bellman_value_and_selected_semantic_action_identical": true
+    },
+    "conclusion": "Every completed V3 kernel has the same canonical target map and probabilities as raw V1; Bellman values and selected semantic actions remain identical."
+  },
+  "frozen_performance_criteria": {
+    "binding_native_minimum_improvement_percent": 25.0,
+    "aggregate_eligible_maximum_regression_percent": 0.0,
+    "nontrivial_row_maximum_regression_percent": 10.0,
+    "peak_owned_memory_maximum_regression_percent": 10.0,
+    "maximum_cooperative_step_regression_percent": 10.0,
+    "release_wasm_responsiveness_required": true
+  },
+  "native_binding": {
+    "source": "fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate2.json",
+    "same_binary_median_v1_raw_row_wall_ms": 697.594,
+    "same_binary_median_v3_factored_row_wall_ms": 507.4825,
+    "v3_improvement_percent": 27.252456299796158,
+    "v3_peak_memory_change_percent": 0.0,
+    "v3_maximum_step_change_percent": 9.553311492534986,
+    "exact": true,
+    "passed": true
+  },
+  "native_reliability_portfolio": {
+    "manifest": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/reliability-48-manifest.json",
+    "canonical_hard_case_excluded_for_reserved_run": true,
+    "cases": 48,
+    "expectations_met": 46,
+    "preserved_known_rare_renewal_misses": 2,
+    "compiled_strategies": 38,
+    "verification_runs": 380000,
+    "off_policy_failures": 0,
+    "strict_reforge_eligible_cases": 31,
+    "comparison": {
+      "v1_composite_sources": [
+        "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/native-reliability-48.json",
+        "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate8/native-reliability-corrected-affected.json"
+      ],
+      "aggregate_v1_solve_wall_ms": 20480.4217,
+      "aggregate_v3_solve_wall_ms": 20418.8625,
+      "aggregate_change_percent": -0.300575842146855,
+      "worst_eligible_case_change_percent": 6.65551572813856,
+      "worst_eligible_case": "reliability-class-helmet",
+      "maximum_v1_peak_owned_bytes": 540570828,
+      "maximum_v3_peak_owned_bytes": 540606012,
+      "maximum_peak_change_percent": 0.006508679529590111,
+      "maximum_v1_cooperative_step_ms": 2737.4281,
+      "maximum_v3_cooperative_step_ms": 2722.6498,
+      "maximum_step_change_percent": -0.5398596889410862,
+      "all_thresholds_passed": true
+    },
+    "preserved_failures": [
+      {
+        "case": "natural-t1-deep-four-dense-a64d3d932590",
+        "solver_cost": 39967848.233313486,
+        "exact_cost": 39967848.376564823,
+        "relative_delta": 3.5841643581801643e-9,
+        "simulation_successes": 16,
+        "finite_horizon_failures": 9984,
+        "off_policy_failures": 0
+      },
+      {
+        "case": "natural-t1-representative-three-bd85c8c40df7",
+        "solver_cost": 14280279.438800555,
+        "exact_cost": 14280279.356852014,
+        "relative_delta": 5.73858105900459e-9,
+        "simulation_successes": 66,
+        "finite_horizon_failures": 9934,
+        "off_policy_failures": 0
+      }
+    ],
+    "coarse_budget_interpretation": {
+      "changed_classifications": [
+        "natural-t1-representative-three-d0a2115efe54",
+        "natural-t1-representative-three-e03ecc5aba82"
+      ],
+      "reason": "honest pre-execution nested logical-budget enforcement reaches the coarse cap earlier than the archived post-hoc-saturation behavior",
+      "not_v3_dispatch": true,
+      "raw_v1_control_case": "natural-t1-representative-three-d0a2115efe54",
+      "raw_v1_and_production_v3_status_bounds_hashes_and_cap_identical": true,
+      "strict_rows_executed": 0,
+      "portfolio_expectation_regression": false
+    }
+  },
+  "release_wasm": {
+    "module_rebuilt": true,
+    "binding_carrier": {
+      "status": "refused_resource_cap",
+      "expectation_met": true,
+      "solve_wall_ms": 12861.403,
+      "total_wall_ms": 13477.023,
+      "maximum_worker_slice_ms": 307.456,
+      "wasm_heap_before_bytes": 278396928,
+      "wasm_heap_after_bytes": 577437696,
+      "wasm_heap_growth_bytes": 299040768,
+      "native_live_owned_bytes": 251180222,
+      "native_peak_owned_bytes": 314618217,
+      "transition_bits_hash": "4f26d305a908c59f",
+      "policy_bits_hash": "302ea0bcb228216e",
+      "lower": 752.9009075663787,
+      "upper": 3984.9346987650665,
+      "v1_release_solve_wall_ms": 12953.738,
+      "solve_change_percent": -0.7127819870402125,
+      "v1_release_maximum_worker_slice_ms": 286.965,
+      "maximum_worker_slice_change_percent": 7.140589472576416,
+      "passed": true
+    },
+    "cancellation": {
+      "case": "cancellation-oracle-two-mod",
+      "status": "cancelled",
+      "expectation_met": true,
+      "acknowledgement_ms": 15.522,
+      "limit_ms": 250.0,
+      "maximum_worker_slice_ms": 10.06,
+      "wasm_heap_growth_bytes": 0,
+      "passed": true
+    }
+  },
+  "selected_only_100m": {
+    "invocation_count": 1,
+    "case": "natural-t1-breadth-two-4e65dda9c53b",
+    "only_fixture_difference": "caps.max_reforge_work: 20000000 -> 100000000",
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_seconds": 900,
+    "status": "refused_resource_cap",
+    "logical_work_total": 100000000,
+    "coarse_logical_work": 14077632,
+    "strict_logical_work": 85922368,
+    "strict_v1_effort": 85922388,
+    "strict_v3_effort": 102322134,
+    "selected_rows_completed": 40,
+    "selected_transitions": 6903840,
+    "partition_reached": false,
+    "absence_of_partition_is_not_correctness_failure": true,
+    "v1_logical_envelope_rows_and_transitions_preserved": true,
+    "solve_wall_ms": 3755.0258,
+    "total_wall_ms": 40948.8714,
+    "maximum_cooperative_step_ms": 614.4728,
+    "native_live_owned_bytes": 305361565,
+    "native_peak_owned_bytes": 375668039,
+    "v1_solve_wall_ms": 3978.8401,
+    "v1_maximum_cooperative_step_ms": 651.5428,
+    "v1_peak_owned_bytes": 375474378,
+    "fallback_independently_retained": true,
+    "compiled_and_exact_evaluated": true,
+    "verification_runs": 10000,
+    "off_policy_failures": 0,
+    "passed": true
+  },
+  "canonical_hard_20m": {
+    "invocation_count": 1,
+    "case": "natural-t1-breadth-two-4e65dda9c53b",
+    "product_actions": 27,
+    "max_reforge_work": 20000000,
+    "max_solver_owned_bytes": 1073741824,
+    "watchdog_seconds": 900,
+    "status": "refused_resource_cap",
+    "stop_cause": "reforge_work_cap",
+    "termination": "exact_closed",
+    "lower": 752.9009075663787,
+    "upper": 3984.9346987650665,
+    "coarse_logical_work": 14077632,
+    "strict_logical_work": 5922368,
+    "strict_v1_effort": 5922409,
+    "strict_v3_effort": 6467919,
+    "selected_rows_completed": 2,
+    "selected_transitions": 345192,
+    "fallback_independently_retained": true,
+    "compiled_nodes": 4,
+    "compiled_edges": 4,
+    "compiled_strategy_sha256": "2be1d46e20de86f7f86d1d74e3ed897ed9e49f8753bfd69dade828d9a353bcf7",
+    "exact_evaluation": "matched",
+    "verification_runs": 10000,
+    "simulation_successes": 10000,
+    "off_policy_failures": 0,
+    "transition_bits_hash": "4f26d305a908c59f",
+    "policy_bits_hash": "302ea0bcb228216e",
+    "solve_wall_ms": 3699.7204,
+    "total_wall_ms": 23923.8165,
+    "maximum_cooperative_step_ms": 605.2446,
+    "native_live_owned_bytes": 305314456,
+    "native_peak_owned_bytes": 375519800,
+    "passed": true
+  },
+  "qualification_decision": {
+    "exactness": "passed",
+    "binding_native_performance": "passed",
+    "aggregate_native_performance": "passed",
+    "nontrivial_case_regression_limit": "passed",
+    "owned_memory": "passed",
+    "cooperative_latency": "passed",
+    "release_wasm": "passed",
+    "hard_fallback": "passed",
+    "production_selection": "v3_factored",
+    "conditional_dispatch_added": false,
+    "v1_rollback_available": true
+  },
+  "validation": [
+    {
+      "command": "build/engine/poecraft_engine_tests.exe --solver-calc-only data/compiled/current",
+      "result": "252997 checks, 0 failures"
+    },
+    {
+      "command": "powershell -File scripts/build-wasm.ps1 plus the script's exact newline normalization after the desktop wrapper timeout",
+      "result": "passed"
+    },
+    {
+      "command": "release-WASM binding and cancellation worker cases",
+      "result": "passed"
+    },
+    {
+      "command": "48-case native reliability portfolio with exact evaluation and 10000 simulations per compiled strategy",
+      "result": "46 expected passes and 2 preserved rare-renewal misses; zero off-policy failures"
+    },
+    {
+      "command": "one selected-only 100M diagnostic",
+      "result": "passed"
+    },
+    {
+      "command": "one canonical hard 20M fallback qualification",
+      "result": "passed"
+    }
+  ],
+  "artifact_identities": {
+    "native_benchmark_sha256": "2c354e89786fc94c8c058f032705baafce458aa772c1ea6ee93f32d99eb0cfca",
+    "native_engine_sha256": "eb27920285b3422ed8fdc3af88aa6cf39865eae7c19368f20726a7e2eb069862",
+    "native_tests_sha256": "3c89530a10d81fff2af9ad0c4d63dd9e1a0434430db413f7e947878a0bb3e3d5",
+    "release_mjs_sha256": "166a49ea0d0d5db6dfd2f0d852f08623995bb3d9488deab9932f26ce76bc112b",
+    "release_wasm_sha256": "33e14412bc1dac493217f925432dcb4a4562c3fde038c6d494e17830a363692a",
+    "calc_matrix_source_sha256": "a549200a42927e0978627e9a6bfdb96c452bd67f342f18574b0b0ec73f226ebc",
+    "wasm_binding_report_sha256": "28bfc45fc0acf486ce2c1c8aa5d0b6b8a4353c213244d9526e23c63e3591482f",
+    "wasm_cancellation_report_sha256": "a1ed66d2d02e47d1a8779a39fefb0335deaceb49c3e7978c6a0821c57962e3c4",
+    "native_reliability_report_sha256": "e721178dd47bae3b2347d6af8ef52710e2d9397d6f4d6af3b22b52ade841ea7f",
+    "raw_v1_control_report_sha256": "e0dbeb639d244e3020255864ac7c481667fe8c9b916f47ef7e8323384dbd97b6",
+    "selected_only_100m_report_sha256": "bbf64914569768e85737e423e2a410040b091e6f11acbd7f6ca6ef68a7b42c35",
+    "hard_20m_report_sha256": "3dd27d01767aa35737d446df6b57f1b03e0187121894719770acb620e95e896d"
+  },
+  "next_gate": "audit historical reforge-work conclusions, update stable documentation, run the single final acceptance pipeline and release checks, archive the plan, and clear HANDOFF"
+}

@@ -982,28 +982,44 @@ tracked work counters. The tracked qualified Fracture evidence retains
   `fixtures/solver-reliability/v1/evidence/reforge-work-growth-diagnostic.json`.
   No source, canonical fixture, default, cap, or public contract changed.
 
+## Versioned reforge accounting Gate 5 qualification
+
+- V3 is qualified and remains the production strict selected/alternative
+  evaluator; raw V1 remains available through its unnamed native diagnostic.
+- The full mechanic matrix passed 252,997 checks. The frozen binding row
+  improved 27.25%; the 31 eligible portfolio cases improved 0.30% in aggregate,
+  the worst case was +6.66%, and memory/latency stayed inside 10%.
+- Release WASM was rebuilt. Its binding solve improved 0.71%, preserved hashes
+  and bounds, and cancellation acknowledged in 15.5 ms against 250 ms.
+- The one reserved 100M run completed exactly 40 selected rows and 6,903,840
+  transitions under the unchanged 85,922,368 strict logical allowance. It
+  reached no partition. V3 evaluator effort was 102,322,134; it is not the cap
+  basis. The independently retained fallback compiled, exact-evaluated, and
+  simulated 10,000 times with zero off-policy failures.
+- The one canonical hard 20M run preserved two strict rows, 345,192
+  transitions, lower 752.9009075663787, upper 3984.9346987650665, hashes, and
+  the byte-identical `2be1d46e...53bcf7` fallback strategy. Exact evaluation
+  matched and all 10,000 simulations succeeded with zero off-policy failures.
+- The 48-case reliability portfolio retained 46 expected passes and the same
+  two known rare-renewal misses, with 380,000 simulations and zero off-policy
+  failures. Two other archived coarse-only status labels changed because honest
+  nested logical-budget enforcement replaces post-hoc saturation; a raw-V1
+  control is identical and executes zero strict rows, so this is not V3.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate5.json`.
+
 ## Exact next step
 
-Complete Gate 5 scaling and product qualification:
+Complete Gate 6 historical interpretation and release:
 
-1. Run the focused ordinary/Essence/Harvest/Fossil V1/V3 equivalence matrix,
-   including every carrier, goal, Fossil, Harvest, identity, and enumeration
-   edge named in the active plan. Measure nontrivial-row and aggregate runtime,
-   owned memory, and maximum cooperative step against the frozen criteria.
-2. Rebuild release WASM for the browser-visible strict evaluator and logical
-   progress contract, then qualify representative solve behavior and approved
-   worker cancellation/responsiveness.
-3. Run the one reserved selected-only 100M diagnostic and compare its logical
-   envelope, transitions, V3 effort, wall, memory, and latency with preserved
-   V1 evidence. Do not call absence of a partition a correctness failure.
-4. Run the canonical hard 20M case once with its frozen 27 actions, 1 GiB cap,
-   and 900-second watchdog. Preserve lower/unresolved honesty, independently
-   publish/compile/evaluate the fallback when selected refinement caps, and run
-   exactly 10,000 simulations with zero off-policy failures.
-5. Run the representative native reliability portfolio. Restore strict V1 if
-   any frozen exactness/performance/memory/latency/WASM criterion fails;
-   otherwise accept V3 and commit Gate 5 separately. Do not run the standalone
-   five-goal watchdog.
+1. Add the tracked historical audit without rewriting archived evidence.
+2. Update stable solver/evidence documentation and archive the active plan with
+   a final report answering all eleven frozen questions.
+3. Run benchmark validation, release-WASM worker/cancellation checks, native
+   focused acceptance, `npm test`, `npx tsc --noEmit`, and the complete
+   `powershell -File scripts/test.ps1` pipeline exactly once.
+4. Clear this handoff to no active boundary and commit locally. Do not push,
+   merge, rerun the standalone five-goal watchdog, or perform visual review.
 
 Deterministic checkpoint/replay remains deferred.
 

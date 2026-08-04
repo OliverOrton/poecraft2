@@ -315,33 +315,36 @@ strategy-vocabulary, or full-acceptance change ran in this gate. Evidence is
 
 ## Gate 5 — scaling and product qualification
 
-**Status: active.**
+**Status: complete.**
 
-After integration, run the focused exact-equivalence matrix across ordinary,
-Essence, Harvest, and Fossil rows, including positive/zero Fossil weights,
-Fossil additions/forced modifiers, targeted/exceptional Harvest support,
-empty/fractured carriers, prefix/suffix/mixed and present-below-tier goals,
-identity-sensitive exclusions, and forward/reverse enumeration.
+V3 qualified and remains the production strict-row evaluator. The focused
+ordinary/Essence/Harvest/Fossil matrix passed 252,997 checks with exact target
+maps, probabilities, Bellman values, semantic actions, carrier behavior,
+identity exclusions, and forward/reverse enumeration. The frozen native
+binding row improved 27.25%; the 31-case eligible reliability aggregate
+improved 0.30%, its worst case regressed only 6.66%, peak memory moved 0.007%,
+and maximum cooperative latency improved 0.54%. Release WASM preserved the
+binding hashes and bounds, improved solve wall by 0.71%, stayed within the
+memory/latency limits, and acknowledged cancellation in 15.5 ms.
 
-Run one temporary selected-only 100M diagnostic and compare it with preserved
-V1 evidence. Report logical envelope, V3 components, wall, memory, latency,
-and transitions separately. Failure to reach a partition is not V3 incorrectness.
+The single 100M diagnostic preserved the exact V1 logical envelope: 40 selected
+rows, 6,903,840 transitions, and no partition. V3's separate evaluator effort
+was 102,322,134. Absence of a partition remains a scaling result, not an
+exactness failure. The single canonical hard 20M run preserved the 14,077,632
+coarse plus 5,922,368 strict logical split, two completed strict rows, bounds,
+hashes, and byte-identical four-node fallback strategy. Exact evaluation
+matched and all 10,000 simulations succeeded with zero off-policy failures.
 
-Run the canonical hard 20M case once, with all 27 actions, 1 GiB owned memory,
-and a 900-second watchdog. Preserve lower/unresolved status, require fallback
-publication when selected refinement caps, compile and exact-evaluate, and run
-10,000 simulations with zero off-policy failures.
-
-Run the representative native reliability portfolio. Do not rerun the
-standalone five-goal watchdog unless bounded earlier evidence predicts a
-material change. Preserve known rare-renewal tolerance misses unless values or
-classifications regress.
-
-V3 qualifies only if exactness, native performance, WASM performance, memory,
-and latency all pass. Otherwise restore V1 production selection while retaining
-the accounting and exact V3 diagnostic.
+The 48-case portfolio produced 46 expected passes and only the two preserved
+rare-renewal reconciliation misses, with zero off-policy failures. Honest
+nested logical-budget enforcement changes two other archived coarse-only status
+labels; a same-binary raw-V1 control proves that neither change reaches strict
+V3 dispatch. The standalone five-goal watchdog was not rerun. Evidence is
+`fixtures/solver-reliability/v1/evidence/reforge-resource-accounting-v3-qualification-gate5.json`.
 
 ## Gate 6 — historical interpretation and release
+
+**Status: active.**
 
 Add a tracked audit classifying prior reforge-work conclusions as unchanged,
 evaluator-version-only, superseded/recovered, reopened, or unresolved. Preserve
