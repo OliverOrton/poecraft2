@@ -1,38 +1,17 @@
 # Active Work
 
-**Status: certified fallback portfolio Gate 1 is complete; Track A Gate 2
-hard-case qualification is active.**
+**Status: no implementation boundary is active.** Oliver must choose the next
+chunk before implementation resumes.
 
 Parent: [Documentation map](../README.md)
 
-Current boundary:
-[Certified Fallback Publication And Final-Depth Reforge Accumulation](certified-fallback-and-terminal-reforge-factorization.md).
-It has two independently scored tracks: preserve a publishable certified
-fallback when a cheaper preferred strict lift stops, then explain and attempt
-to factor the binding 638,365 final-depth reforge branches. Track A remains a
-product result even if Track B is rejected.
-
-Gate 0 freezes the exact current split. The hard report already contains a
-generic primitive Chaos renewal with success probability
-`0.00025094514103578676`, certified value `3984.9346987650665`, 24 validated
-non-goal carriers, and witness hash `5e2bd0c222942bda`. The preferred coarse
-candidate is cheaper at `3323.6694369790375`, but its selected Essence policy
-cannot finish strict refinement under 20M and previously left no published
-policy. Gate 1 now retains a bounded four-entry deterministic portfolio of
-independently executable compiled primitive-renewal artifacts. Focused
-regressions prove capped preferred publication, isolated compilation failure,
-cheaper preferred replacement, complete invalidation, deterministic ties, and
-memory accounting. Gate 2 owns the single canonical hard-case invocation,
-exact reconciliation, and 10,000 simulations.
-
 The completed
-[Selected-Closure Scaling And Exact Broad-Row Projection](../archive/2026-08-03-selected-closure-broad-row-scaling/README.md)
-milestone retains exact V2 as a diagnostic path. Its binding row falls from
-2,097,355 V1 work to 923,141 V2 work, but 638,365 final-depth branches keep it
-above the 300,000 gate and slower than raw. That boundary becomes Track B after
-fallback qualification.
+[Certified Fallback Publication And Final-Depth Reforge Accumulation](../archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md)
+milestone qualifies canonical hard-case fallback publication and keeps exact
+V3 terminal accumulation as a structurally rejected diagnostic. Its release
+pipeline is green, while rare-renewal reconciliation, finite-horizon behavior,
+and five-goal finalization remain disclosed unqualified boundaries.
 
-Older completed milestones are indexed in the
-[documentation archive](../archive/README.md). Unselected possibilities remain
-in [Future work](../future/README.md); neither archive nor future documents are
-current execution authority.
+Completed work is indexed in the [documentation archive](../archive/README.md).
+Unselected possibilities remain in [Future work](../future/README.md); neither
+archive nor future documents are current execution authority.

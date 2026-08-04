@@ -11,6 +11,12 @@ selected active work.
 
 ## 2026-08-03
 
+- [Certified Fallback Publication And Final-Depth Reforge Accumulation](2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md) —
+  qualifies canonical hard-case fallback publication, attributes the 638,365
+  final branches, and retains exact V3 as a structurally rejected diagnostic.
+  Release acceptance is green while rare-renewal reconciliation and five-goal
+  finalization remain disclosed unqualified boundaries.
+
 - [Selected-Closure Scaling And Exact Broad-Row Projection](2026-08-03-selected-closure-broad-row-scaling/README.md) —
   rejected a higher product work cap, attributed the binding 172,596-outcome
   selected row, and retained an exact opt-in sparse projected frontier with an

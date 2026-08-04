@@ -1,15 +1,17 @@
 # Session Handoff
 
-**Status: certified fallback Gate 2 is qualified. Terminal Gate 6 rejects V3
-and skips Gate 7. Gate 8 release acceptance is active.**
+**Status: no implementation boundary is active. Oliver must choose the next
+chunk before implementation resumes.**
 
-Current plan:
-[Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
+Current plan: none.
 
 Latest completed milestone:
-[Selected-Closure Scaling And Exact Broad-Row Projection](docs/archive/2026-08-03-selected-closure-broad-row-scaling/README.md).
+[Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md).
 
 Preceding completed milestone:
+[Selected-Closure Scaling And Exact Broad-Row Projection](docs/archive/2026-08-03-selected-closure-broad-row-scaling/README.md).
+
+Earlier completed milestone:
 [Competitive Lazy Alternative Certification](docs/archive/2026-08-02-competitive-lazy-alternative-certification/README.md).
 
 Completed diagnostic:
@@ -25,6 +27,8 @@ Completed milestone branch: `codex/competitive-lazy-alternative-certification`
 
 Completed milestone branch: `codex/selected-closure-broad-row-scaling`
 
+Completed milestone branch: `codex/fallback-and-terminal-reforge-factorization`
+
 Current branch: `codex/fallback-and-terminal-reforge-factorization`
 
 Current milestone starting commit:
@@ -36,8 +40,10 @@ Current milestone commits: Gate 0 is
 `a663bce98e24b793277f01bd4b56727aa8fceb9d`. Gate 3 is
 `4dcf51d7e65dc483c5d8119c30d2919187f1de7a`. Gate 4 is
 `6b0fec599b7342faf8021f2c369c0cc6731ba9ad`. Gate 5 is
-`bf5fa6b8a5af7cbbe0dce630fb215caeeebef85a`. Gate 6 is recorded by the
-current local commit. Gate 7 is skipped; Gate 8 is the active boundary.
+`bf5fa6b8a5af7cbbe0dce630fb215caeeebef85a`. Gate 6 is
+`1389bfb1296aae1d2c51efb5dbeffdead99047d1`. Gate 7 is skipped. Gate 8 is
+`54a459547b719e8c63dc0d136c967081484e54dc`. The archive and handoff are
+recorded by the current local commit.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -252,6 +258,40 @@ Nothing has been pushed or merged. `main` remains unchanged at
 - V3 is sound and remains diagnostic-only. It is not integrated into selected
   or alternative production rows, so Gate 7 is skipped. Evidence is
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json`.
+
+## Certified fallback release acceptance Gate 8
+
+- Release acceptance corrected bounded diagnostic sample sizes, replaced a
+  false exact/double occupancy comparison with direct high-precision quotient
+  flow auditing, aligned no-executable/bounded reliability classification,
+  and added the WASM 10,000-run override. The focused exact evaluator passes
+  16,787 checks with zero failures.
+- The final logical native portfolio reuses Gate 2's one canonical hard
+  invocation and passes 47 of 49 cases. Forty compiled strategies receive
+  400,000 requested simulations with zero off-policy failures. The canonical
+  fallback remains qualified.
+- Dense four-goal and representative three-goal rare renewals miss the frozen
+  `1e-9` relative exact-cost tolerance at `3.584e-9` and `5.739e-9`; only 16
+  and 66 of their 10,000 simulations finish within 100,000 actions. A full-four
+  Fracture probe has the same boundary at `7.512e-9` and 15 finite-horizon
+  successes. These are disclosed failures, not passes.
+- The five-goal native process reached the required roughly 900-second
+  watchdog with 30,775 states, 235,429 rows, 886,958 transitions, and
+  10,861,463 reforge work but no finalized strategy. It was terminated and was
+  not rerun.
+- The rebuilt release module exposes all 61 callable exports at ABI 2.
+  Exercised ring and body-armour strategies each succeed in all 10,000 runs
+  with zero off-policy failure. The 27-check worker smoke, `npm test`, and
+  TypeScript pass.
+- `powershell -File scripts/test.ps1` was invoked exactly once and passes in
+  68.9 seconds: artifact and Python layers, 12 benchmark specifications,
+  3,001,413 engine checks with zero failures, and all web/WASM tests. No visual
+  review was performed.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate8-release-acceptance.json`.
+  The completed report is
+  `docs/archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/report.md`.
+  No follow-on implementation is selected.
 
 ## Selected-closure scaling Gate 0
 

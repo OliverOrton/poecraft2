@@ -1,18 +1,19 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 2 is qualified; Track B Gate 6 structurally rejects V3
-and skips Gate 7. Gate 8 release acceptance is active.**
+**Status: archived. Track A Gate 2 is qualified; Track B Gate 6 structurally
+rejects V3 and skips Gate 7. Gate 8 completed with disclosed rare-renewal and
+five-goal qualification boundaries.**
 
 Owner: Oliver
 
-Parent: [Active work](README.md)
+Parent: [Archive report](README.md)
 
 Starting commit: `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`.
 
 Branch: `codex/fallback-and-terminal-reforge-factorization`.
 
 Source milestone:
-[Selected-Closure Scaling And Exact Broad-Row Projection](../archive/2026-08-03-selected-closure-broad-row-scaling/README.md).
+[Selected-Closure Scaling And Exact Broad-Row Projection](../2026-08-03-selected-closure-broad-row-scaling/README.md).
 
 ## Objective
 
@@ -33,7 +34,7 @@ the native engine.
 ## Gate 0 — frozen boundaries
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate0.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate0.json).
+[`fallback-and-terminal-reforge-factorization-gate0.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate0.json).
 
 The branch begins from clean commit `0b4ba38`. The source tree, release native
 binaries, compiled artifact, Mirage economy snapshot, canonical hard fixture,
@@ -72,7 +73,7 @@ test changed at this gate.
 ### Gate 1 — preserve independently publishable witnesses
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate1.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json).
+[`fallback-and-terminal-reforge-factorization-gate1.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json).
 
 Replace single-cheapest-incumbent ownership with a small deterministic
 portfolio. A retained candidate owns its certified upper, independently
@@ -137,7 +138,7 @@ Commit Gate 1 separately.
 ### Gate 2 — hard-case fallback qualification
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate2.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json).
+[`fallback-and-terminal-reforge-factorization-gate2.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json).
 
 Run the canonical hard two-goal case exactly once with the unchanged 20M work
 cap, 1 GiB solver-owned cap, complete 27-action vocabulary, and 900-second
@@ -173,7 +174,7 @@ authority. The canonical hard case will not be rerun in later gates.
 ### Gate 3 — explain the 638,365 terminal branches
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate3.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json).
+[`fallback-and-terminal-reforge-factorization-gate3.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json).
 
 Add bounded deterministic telemetry classifying final-depth contributions by
 target count, side, predecessor, terminal bucket, canonical successor,
@@ -216,7 +217,7 @@ fallback receives no Track B credit.
 ### Gate 4 — exact V3 terminal accumulator prototype
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate4.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json).
+[`fallback-and-terminal-reforge-factorization-gate4.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json).
 
 Choose the representation from Gate 3 evidence. Candidate forms include an
 unordered-set DP, factored last-pick transform, subset recurrence, cached
@@ -257,7 +258,7 @@ Bellman equivalence belongs to Gate 5; the canonical hard case was not rerun.
 ### Gate 5 — exact equivalence
 
 **Status: complete.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate5.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json).
+[`fallback-and-terminal-reforge-factorization-gate5.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json).
 
 Compare V3 with raw across ordinary reforges, forced Essence, targeted and
 exceptional-support Harvest, all relevant Fossil weight/addition/forced
@@ -293,7 +294,7 @@ diagnostic.
 ### Gate 6 — binding performance decision
 
 **Status: complete: V3 structurally rejected.** Tracked evidence is
-[`fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json).
+[`fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json).
 
 Run the same hard-row diagnostic used for V1/V2. V3 qualifies only if:
 
@@ -340,6 +341,10 @@ it. Raw remains a test oracle. Commit production integration separately.
 
 ## Gate 8 — native and release acceptance
 
+**Status: complete with disclosed qualification failures.** Tracked evidence
+is
+[`fallback-and-terminal-reforge-factorization-gate8-release-acceptance.json`](../../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate8-release-acceptance.json).
+
 Run this gate for the retained Track A product behavior whether or not V3
 qualifies. Cover the hard two-goal, Fracture full-four, natural representative
 four-goal, five-goal scale, 27-case smoke, 49-case reliability, and relevant
@@ -350,6 +355,22 @@ comparisons where practical. Then rebuild release WASM, verify 61 exports and
 ABI 2, run WASM reliability and cancellation/responsiveness checks, `npm test`,
 `npx tsc --noEmit`, and `scripts/test.ps1` once. Oliver owns visual review; do
 not perform it unless requested.
+
+The final logical native portfolio passes 47 of 49 cases. It includes 40
+compiled strategies and 400,000 requested simulations with zero off-policy
+failures, while reusing rather than rerunning Gate 2's one authorized hard
+case. The canonical bounded fallback remains qualified. Two extremely rare
+renewals miss the frozen `1e-9` relative exact-cost tolerance and mostly exceed
+the 100,000-action simulation horizon; the full-four Fracture probe has the
+same boundary and is not qualified. The five-goal process was terminated at
+the required roughly 900-second watchdog without a finalized strategy.
+
+The release WASM exposes all 61 expected callable exports at ABI 2. Its
+ring/body-armour checks each complete 10,000 successful simulations with zero
+off-policy failures. The 27-check worker smoke, `npm test`, and TypeScript all
+pass. The full repository pipeline was invoked once and passes 3,001,413
+engine checks with zero failures plus artifact, binding, solver-benchmark, and
+web/WASM acceptance. No visual review was performed.
 
 ## Final report and handoff
 

@@ -1271,7 +1271,7 @@ node plus 40 bucket probes. Only 185,825 bucket edges are positive, yielding a
 and identity-tree nodes are both zero. The raw DP commits 688,739 terminal
 arrivals, of which 516,143 merge into existing projected targets and carry
 0.25435223351246694 duplicate-arrival probability mass. The exact sparse
-projected prototype is therefore the active boundary.
+projected prototype was therefore the next boundary in that archived plan.
 
 ## Selected-Closure Scaling Gate 5 Structural Rejection
 
@@ -1341,6 +1341,35 @@ arithmetic. The focused solve suite passes 98,217 checks with zero failures.
 No mechanic, action envelope, cap/default, lower-bound authority, obligation
 semantics, C ABI, strategy vocabulary, WASM, or frontend changed. The canonical
 hard case remains unrun at Gate 1 and is reserved for Gate 2.
+
+## Certified Fallback And Terminal Factorization Closure
+
+The 2026-08-03
+[`Gate 8 release record`](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate8-release-acceptance.json)
+closes the
+[certified-fallback archive](archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md).
+Its earlier tracked records preserve the independently scored steps:
+
+- [Gate 2 hard qualification](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json)
+  publishes the retained primitive renewal at `3984.9346987650665`, preserves
+  lower `752.90090756637869`, reconciles to `3984.9346987639233`, and records
+  10,000 successful simulations. This is the only canonical hard invocation.
+- [Gate 3 attribution](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate3.json),
+  [Gate 4 construction](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate4.json),
+  and [Gate 5 equivalence](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate5.json)
+  establish the terminal causal breakdown and exact V3 recurrence.
+- [Gate 6](../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate6-structural-rejection.json)
+  rejects V3 structurally: its 2,514,591 work is above both V2's 923,141 and
+  raw V1's 2,097,355, and selected refinement reaches neither a partition nor
+  its own upper. Conditional Gate 7 is skipped.
+
+Gate 8 passes the one full repository pipeline and the exercised release-WASM
+ABI/export, worker, TypeScript, and web checks. Its logical native portfolio
+passes 47 of 49 cases across 400,000 requested simulations with zero off-policy
+failures. The record separately preserves two rare-renewal exact/horizon
+failures, an analogous full-four Fracture miss, and the five-goal watchdog.
+Those results do not revoke the canonical Track A qualification and are not
+claimed as broader qualification.
 
 ## Engine And WASM Evidence Boundaries
 

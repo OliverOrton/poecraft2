@@ -29,15 +29,13 @@ stable contract. [The inbox](notes/inbox.md) is for uncategorized raw material.
 
 ## Execution State
 
-The selected boundary is
-[Certified Fallback Publication And Final-Depth Reforge Accumulation](active/certified-fallback-and-terminal-reforge-factorization.md).
-Gate 1 now retains a deterministic, memory-accounted portfolio of generic
-compiled primitive-renewal fallbacks through a cheaper preferred candidate's
-publication failure, without contributing to the lower or resolving
-alternatives. Gate 2 is the active single hard-case qualification with exact
-reconciliation and 10,000 simulations. Track B then attributes and attempts
-exact factorization of the 638,365 final-depth branches in the binding selected
-reforge row. The archived
+No implementation boundary is active. Oliver must choose the next chunk before
+implementation resumes. The archived
+[Certified Fallback Publication And Final-Depth Reforge Accumulation](archive/2026-08-03-certified-fallback-and-terminal-reforge-factorization/README.md)
+milestone qualifies canonical hard-case fallback publication, structurally
+rejects exact V3 terminal accumulation, and passes the complete release
+pipeline while preserving rare-renewal and five-goal qualification limits.
+The preceding archived
 [Selected-Closure Scaling And Exact Broad-Row Projection](archive/2026-08-03-selected-closure-broad-row-scaling/README.md)
 milestone retains an exact opt-in sparse frontier and independent raw oracle.
 Its binding selected row drops from 2,097,355 comparable V1 work to 923,141 V2
