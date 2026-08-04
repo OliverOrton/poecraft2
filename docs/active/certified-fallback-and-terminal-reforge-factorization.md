@@ -1,7 +1,7 @@
 # Certified Fallback Publication And Final-Depth Reforge Accumulation
 
-**Status: Track A Gate 1 is complete; Gate 2 hard-case qualification is the
-active boundary.**
+**Status: Track A Gate 2 is complete; Track B Gate 3 terminal-branch
+attribution is the active boundary.**
 
 Owner: Oliver
 
@@ -136,7 +136,8 @@ Commit Gate 1 separately.
 
 ### Gate 2 — hard-case fallback qualification
 
-**Status: active.**
+**Status: complete.** Tracked evidence is
+[`fallback-and-terminal-reforge-factorization-gate2.json`](../../fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json).
 
 Run the canonical hard two-goal case exactly once with the unchanged 20M work
 cap, 1 GiB solver-owned cap, complete 27-action vocabulary, and 900-second
@@ -149,9 +150,29 @@ If the existing renewal cannot be published, diagnose its exact provenance or
 compiler failure. Do not synthesize a replacement or relax the contract.
 Commit Track A qualification separately.
 
+The one authorized canonical invocation completed at the unchanged 20M work
+and 1 GiB owned-memory caps with all 27 candidate actions. Preferred exact
+publication stopped on the remaining 5,922,368 reforge-work allowance, then
+the retained primitive-renewal fallback published once with no invalidation,
+compilation failure, or memory rejection. The result is bounded feasible:
+the full-envelope lower is `752.90090756637869`, while the compiled fallback
+upper and retained evaluated cost are `3984.9346987650665`.
+
+The four-node/four-edge, 1,208-byte strategy reconciles to
+`3984.9346987639233`; the absolute delta from the solver certificate is
+`1.1432348401285708e-09`, success mass is
+`0.99999999999923328`, and off-policy mass is zero. All 10,000 simulations
+succeeded with zero off-policy failures. Total wall was 24.669 seconds, peak
+native-owned memory was 375,494,320 bytes, all cap checks passed, stderr was
+empty, and the benchmark's final report records all expectations met. The
+fallback changed neither the focused lower nor unresolved-alternative
+authority. The canonical hard case will not be rerun in later gates.
+
 ## Track B — exact final-depth factorization
 
 ### Gate 3 — explain the 638,365 terminal branches
+
+**Status: active.**
 
 Add bounded deterministic telemetry classifying final-depth contributions by
 target count, side, predecessor, terminal bucket, canonical successor,

@@ -1,7 +1,7 @@
 # Session Handoff
 
-**Status: certified fallback portfolio Gate 1 is complete. Track A Gate 2,
-the single canonical hard-case fallback qualification, is active.**
+**Status: certified fallback hard-case qualification Gate 2 is complete.
+Track B Gate 3 terminal-branch attribution is active.**
 
 Current plan:
 [Certified Fallback Publication And Final-Depth Reforge Accumulation](docs/active/certified-fallback-and-terminal-reforge-factorization.md).
@@ -31,8 +31,9 @@ Current milestone starting commit:
 `0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c`
 
 Current milestone commits: Gate 0 is
-`abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is recorded by the
-current local commit. Track A Gate 2 is the active qualification boundary.
+`abe8e525d59cc6ae90663a1d56736d411da7ca6c`. Gate 1 is
+`feef64a25a1351b7111aab1fcb4d02e70404c80c`. Gate 2 is recorded by the
+current local commit. Track B Gate 3 is the active implementation boundary.
 
 Selected-closure milestone starting commit:
 `a6f7e13cf7d5cb202874c210992689d601c0e650`
@@ -125,6 +126,27 @@ Nothing has been pushed or merged. `main` remains unchanged at
   `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate1.json`.
 - The canonical hard case was not run in Gate 1; its one allowed invocation is
   reserved for Gate 2.
+
+## Certified fallback hard qualification Gate 2
+
+- The canonical hard two-goal case was invoked exactly once at the unchanged
+  20M reforge-work and 1 GiB solver-owned caps with the complete 27-action
+  candidate vocabulary and 10,000 requested verification runs.
+- Preferred exact publication exhausted the remaining 5,922,368 reforge work.
+  The retained certified primitive-renewal fallback then published once with
+  upper/evaluated cost `3984.9346987650665`, while the full-envelope lower
+  remained `752.90090756637869` and unresolved alternatives remained open.
+- The bounded-feasible result compiled to four nodes, four edges, and 1,208
+  bytes. Exact evaluation reconciled at `3984.9346987639233`, an absolute
+  delta of `1.1432348401285708e-09`, with zero off-policy mass.
+- All 10,000 simulations succeeded with zero off-policy failures. The run took
+  24.669 seconds total, peaked at 375,494,320 native-owned bytes, passed all
+  cap and corpus expectations, emitted empty stderr, and left no process
+  survivor.
+- Tracked evidence is
+  `fixtures/solver-reliability/v1/evidence/fallback-and-terminal-reforge-factorization-gate2.json`.
+  The hard case must not be rerun. Gate 3 now owns deterministic attribution
+  of the 638,365 exact final-depth branches.
 
 ## Selected-closure scaling Gate 0
 

@@ -1,0 +1,151 @@
+{
+  "schema_version": "certified_fallback_hard_qualification_gate2_v1",
+  "date": "2026-08-03",
+  "decision": "track_a_qualified_begin_terminal_branch_attribution",
+  "branch": "codex/fallback-and-terminal-reforge-factorization",
+  "starting_commit": "0b4ba38aa5754a39715640ad6d7a48cab2dc2b6c",
+  "parent_gate_commit": "feef64a25a1351b7111aab1fcb4d02e70404c80c",
+  "gate_commit": "the commit containing this evidence record",
+  "single_authorized_invocation": {
+    "case_id": "natural-t1-breadth-two-4e65dda9c53b",
+    "invocation_count": 1,
+    "rerun": false,
+    "command": "build/engine/poecraft_solver_benchmark.exe --artifact data/compiled/current --corpus fixtures/solver-reliability/v1/manifest.json --case natural-t1-breadth-two-4e65dda9c53b --output build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate2-hard-once/report.json --partial-output build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate2-hard-once/partial.json --strategy-output build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate2-hard-once/strategies --exact-strategy-evaluation --verification-runs 10000 --goal-progress-gated-reforges --progress",
+    "watchdog_seconds": 900,
+    "caps": {
+      "max_reforge_work": 20000000,
+      "max_solver_owned_bytes": 1073741824
+    },
+    "candidate_actions": 27,
+    "actual_status": "refused_resource_cap",
+    "workflow": {
+      "solve_result_class": "capped_with_policy",
+      "compile": "compiled",
+      "exact_evaluation": "matched",
+      "simulation": "completed"
+    },
+    "case_expectation_met": true,
+    "all_expectations_met": true,
+    "errors": []
+  },
+  "solve": {
+    "policy_available": true,
+    "policy_status": "bounded_feasible",
+    "stop_cause": "reforge_work_cap",
+    "cap_hit_mask": 16,
+    "reported_coarse_termination": "exact_closed",
+    "reported_coarse_termination_note": "The termination field describes closure of the coarse solve. The public policy status, actual benchmark status, stop cause, cap mask, and incomplete-resource-cap telemetry describe the retained result as bounded rather than exact.",
+    "expanded_states": 171,
+    "sweeps": 2,
+    "residual": 1.1368683772161603e-13,
+    "lower_bound": 752.90090756637869,
+    "upper_bound": 3984.9346987650665,
+    "evaluated_policy_cost": 3984.9346987650665,
+    "absolute_optimality_gap": 3232.033791198688,
+    "relative_optimality_gap": 4.2927744656938653,
+    "full_request_status": "incomplete_resource_cap",
+    "selected_refinement": {
+      "rows_begun": 2,
+      "rows_completed": 2,
+      "reforge_work": 5922368,
+      "transitions": 345192,
+      "bounded_publication_retained": true,
+      "exact_alternative_envelope_closed": false
+    }
+  },
+  "fallback_publication": {
+    "publication_attempts": 1,
+    "publication_successes": 1,
+    "invalidations": 0,
+    "compilation_failures": 0,
+    "memory_rejections": 0,
+    "preferred_candidate_upper": 752.90090756637869,
+    "published_upper": 3984.9346987650665,
+    "published_evaluated_cost": 3984.9346987650665,
+    "published_witness_hash": "5e2bd0c222942bda",
+    "published_kind": "gated_primitive_destructive_renewal",
+    "preferred_failure_reason": "policy_exact_refinement_resource_cap: solver exceeded max_reforge_work (5922368)",
+    "lower_bound_changed_by_fallback": false,
+    "alternative_envelope_closed_by_fallback": false
+  },
+  "compiled_strategy": {
+    "proper": true,
+    "nodes": 4,
+    "edges": 4,
+    "strategy_json_bytes": 1208,
+    "sha256": "2be1d46e20de86f7f86d1d74e3ed897ed9e49f8753bfd69dade828d9a353bcf7"
+  },
+  "exact_reconciliation": {
+    "completed": true,
+    "status": "matched",
+    "converged": true,
+    "cost_complete": true,
+    "zero_off_policy_mass": true,
+    "cost_reconciled": true,
+    "success_probability": 0.99999999999923328,
+    "off_policy_mass": 0,
+    "total_expected_cost": 3984.9346987639233,
+    "solver_cost_delta_absolute": 1.1432348401285708e-09,
+    "solver_cost_delta_relative": 2.8688922819308933e-13,
+    "wall_ms": 2490.5207
+  },
+  "simulation": {
+    "runs": 10000,
+    "finished": true,
+    "success_count": 10000,
+    "failure_count": 0,
+    "off_policy_failures": 0,
+    "success_rate": 1,
+    "mean_cost": 4060.7629999999999,
+    "verification_passed": true,
+    "action_id": "chaos",
+    "action_count": 40607630
+  },
+  "performance": {
+    "wall_ms": {
+      "registry_layout": 15.2159,
+      "solve": 3743.8438999999998,
+      "compile": 0.55700000000000005,
+      "exact_evaluation": 2490.5207,
+      "simulation": 16140.731400000001,
+      "total": 24668.6862
+    },
+    "solve_steps": 14,
+    "max_solve_step_ms": 624.42579999999998,
+    "native_live_owned_bytes": 305289957,
+    "native_peak_owned_bytes": 375494320,
+    "process_working_set_delta_bytes": 368148480,
+    "solver_telemetry_json_bytes": 383138
+  },
+  "artifacts": {
+    "report": {
+      "path": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate2-hard-once/report.json",
+      "sha256": "27f6dfef698376c5106509c14bf64eaf9787d1a689d864a60f284619d1f3af08"
+    },
+    "final_checkpoint": {
+      "path": "build/acceptance/certified-fallback-and-terminal-reforge-factorization/gate2-hard-once/partial.json",
+      "sha256": "045b7135b5071df87abb7be5cc83a01430c4cfaf2fc0dabef70352176f24f707"
+    },
+    "stdout_sha256": "a1943ad346c189823f37839f7945a4f29e7fc0b6e44f74651aa50acc8486f23c",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "benchmark_binary_sha256": "5d7a57ba27b8de19f12061c2a2d4c683094a3fa770d3c974fc80737aa0d7d929",
+    "engine_binary_sha256": "444a0aabb9b17159910693a45040a9ad99e405bbbdebcdc1e332bea87fb8bb0b"
+  },
+  "scope": {
+    "canonical_case_rerun_after_gate2": false,
+    "mechanics_changed": false,
+    "max_reforge_work_changed": false,
+    "max_solver_owned_bytes_changed": false,
+    "action_vocabulary_narrowed": false,
+    "lower_bound_authority_changed": false,
+    "alternative_obligation_semantics_changed": false,
+    "public_c_abi_changed": false,
+    "strategy_vocabulary_changed": false,
+    "wasm_rebuilt": false,
+    "frontend_changed": false,
+    "full_pipeline_run": false,
+    "pushed": false,
+    "merged": false
+  },
+  "next_gate": "add bounded deterministic attribution for the 638365 final-depth branches"
+}
